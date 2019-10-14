@@ -25,6 +25,323 @@
 
 
 /**
+ * Generate GSM modem notification channel configuration from SMSDrvConfig
+ *
+ * pszInitArgs format: portname,speed,databits,parity,stopbits,mode,blocksize,writedelay
+ */
+static String CreateNCDrvConfig_GSM(TCHAR *portName)
+{
+   String config;
+   TCHAR *p;
+   int parity = NOPARITY;
+   int stopBits = ONESTOPBIT;
+   int blockSize = 8;
+   int writeDelay = 100;
+
+   if ((p = _tcschr(portName, _T(','))) != NULL)
+   {
+      *p = 0; p++;
+      config.appendFormattedString(_T("portname=%s\n"),portName);
+      int tmp = _tcstol(p, NULL, 10);
+      if (tmp != 0)
+      {
+         config.appendFormattedString(_T("speed=%d\n"),tmp);
+
+         if ((p = _tcschr(p, _T(','))) != NULL)
+         {
+            *p = 0; p++;
+            tmp = _tcstol(p, NULL, 10);
+            if (tmp >= 5 && tmp <= 8)
+            {
+               config.appendFormattedString(_T("databits=%d\n"),tmp);
+
+               // parity
+               if ((p = _tcschr(p, _T(','))) != NULL)
+               {
+                  *p = 0; p++;
+                  config.append(_T("parity="));
+                  config.append(p, 1);
+
+                  // stop bits
+                  if ((p = _tcschr(p, _T(','))) != NULL)
+                  {
+                     *p = 0; p++;
+                     config.append(_T("\nstopbits="));
+                     config.append(p, 1);
+
+                     // Text or PDU mode
+                     if ((p = _tcschr(p, _T(','))) != NULL)
+                     {
+                        *p = 0; p++;
+                        config.append(_T("\ntextMode="));
+                        if (*p == _T('T'))
+                        {
+                           config.append(_T("yes"));
+                        }
+                        else if (*p == _T('P'))
+                        {
+                           config.append(_T("no"));
+                        }
+
+                        // Use quotes
+                        if ((p = _tcschr(p, _T(','))) != NULL)
+                        {
+                           *p = 0; p++;
+                           config.append(_T("\nuseQuotes="));
+                           if (*p == _T('N'))
+                           {
+                              config.append(_T("no"));
+                           }
+                           else
+                           {
+                              config.append(_T("yes"));
+                           }
+
+                           // block size
+                           if ((p = _tcschr(p, _T(','))) != NULL)
+                           {
+                              *p = 0; p++;
+                              blockSize = _tcstol(p, NULL, 10);
+                              if ((blockSize < 1) || (blockSize > 256))
+                                 blockSize = 8;
+                              config.appendFormattedString(_T("\nblocksize=%d\n"),blockSize);
+
+                              // write delay
+                              if ((p = _tcschr(p, _T(','))) != NULL)
+                              {
+                                 *p = 0; p++;
+                                 writeDelay = _tcstol(p, NULL, 10);
+                                 if ((writeDelay < 1) || (writeDelay > 10000))
+                                    writeDelay = 100;
+                                 config.appendFormattedString(_T("\nwritedelay=%d"),writeDelay);
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+   else
+   {
+      config.appendFormattedString(_T("portname=%s\n"),portName);
+   }
+   return config;
+}
+
+/**
+ * Generate remote NXAgent notification channel configuration from SMSDrvConfig
+ */
+static String CreateNCDrvConfig_NXAgent(TCHAR *temp)
+{
+   String config;
+   TCHAR *ptr, *eptr;
+   int field;
+   const TCHAR *array[] = { _T("hostname"), _T("port"), _T("timeout"), _T("secret")};
+   for(ptr = eptr = temp, field = 0; eptr != NULL; field++, ptr = eptr + 1)
+   {
+      eptr = _tcschr(ptr, ',');
+      if (eptr != NULL)
+         *eptr = 0;
+      config.appendFormattedString(_T("%s=%s\n"), array[field], ptr);
+   }
+   return config;
+}
+
+/**
+ * Generate default notification channel configuration from SMSDrvConfig
+ */
+static TCHAR *CreateNCDrvConfig_Default(TCHAR *oldConfiguration)
+{
+   TCHAR *tmp = _tcschr(oldConfiguration, _T(';'));
+   while(tmp != NULL)
+   {
+      tmp[0] = _T('\n');
+      tmp = _tcschr(tmp+1, _T(';'));
+   }
+   return oldConfiguration;
+}
+
+static void PrepareDriverNameAndConfig(TCHAR *driver, TCHAR *oldConfiguration,String &newDriverName, String &newConfiguration)
+{
+   //prepare driver name
+   TCHAR *driverName = NULL;
+   _tcslwr(driver);
+   TCHAR *tmp = _tcsrchr(driver, FS_PATH_SEPARATOR_CHAR);
+   if (tmp != NULL)
+      driverName = tmp + 1;
+   else
+      driverName = driver;
+   tmp = _tcsrchr(driverName, _T('.'));
+   if (tmp != NULL)
+   {
+      tmp[0] = 0;
+      if (!_tcscmp(tmp + 1, _T("so")))
+      {
+         tmp = _tcsrchr(driverName, _T('_'));
+         if (tmp != NULL)
+         {
+            driverName = tmp + 1;
+         }
+      }
+   }
+
+   if (!_tcscmp(driverName, _T("anysms")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("AnySMS");
+   }
+   else if (!_tcscmp(driverName, _T("dbemu")))// renamed to dbtable
+   {
+      newDriverName = _T("DBTable");
+   }
+   else if (!_tcscmp(driverName, _T("dummy")))
+   {
+      newDriverName = _T("Dummy");
+   }
+   else if (!_tcscmp(driverName, _T("generic")))
+   {
+      newConfiguration = CreateNCDrvConfig_GSM(oldConfiguration);
+      newDriverName = _T("GSM");
+   }
+   else if(!_tcscmp(driverName, _T("kannel")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("Kannel");
+   }
+   else if(!_tcscmp(driverName, _T("mymobile")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("MyMobile");
+   }
+   else if(!_tcscmp(driverName, _T("nexmo")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("Nexmo");
+   }
+   else if(!_tcscmp(driverName, _T("nxagent")))
+   {
+      newConfiguration = CreateNCDrvConfig_NXAgent(oldConfiguration);
+      newDriverName = _T("NXAgent");
+   }
+   else if(!_tcscmp(driverName, _T("portech")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("Portech");
+   }
+   else if(!_tcscmp(driverName, _T("slack")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("Slack");
+   }
+   else if(!_tcscmp(driverName, _T("smseagle")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("SMSEagle");
+   }
+   else if(!_tcscmp(driverName, _T("text2reach")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("Text2Reach");
+   }
+   else if(!_tcscmp(driverName, _T("websms")))
+   {
+      newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
+      newDriverName = _T("WebSMS");
+   }
+   else
+   {
+      newDriverName = driverName;
+      newConfiguration = oldConfiguration;
+   }
+}
+
+/**
+ * Upgrade from 30.101 to 30.102
+ */
+static bool H_UpgradeFromV101()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE notification_channels SET driver_name='GSM' WHERE driver_name='Generic'"))); //Rename for Generic griver
+
+   //fix when driver name is used in action instead of notification name
+   CHK_EXEC(SQLQuery(_T("UPDATE actions INNER JOIN notification_channels ON actions.channel_name = notification_channels.driver_name SET channel_name=notification_channels.name")));
+
+   TCHAR driver[64];
+   TCHAR name[64];
+   TCHAR *oldConfiguration = NULL;
+   String newConfiguration;
+   String newDriverName;
+   bool fixNeeded = false;
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT driver_name,name FROM notification_channels"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for (int i = 0; i < count; i++)
+      {
+         DBGetField(hResult, i, 0, driver, 64);
+         if(driver[0] == FS_PATH_SEPARATOR_CHAR || (driver[0] >= _T('a') && driver[0] <= _T('z')))
+         {
+            DBGetField(hResult, i, 1, name, 64);
+            fixNeeded = true;
+            break;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   if (fixNeeded)
+   {
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("SELECT configuration FROM notification_channels WHERE name=?"));
+      if(hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+               oldConfiguration = DBGetField(hResult, 0, 0, NULL, 0);
+            DBFreeResult(hResult);
+         }
+         else if (!g_ignoreErrors)
+           return false;
+
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+        return false;
+
+      if (oldConfiguration == NULL)
+         oldConfiguration = _tcsdup(_T(""));
+
+      PrepareDriverNameAndConfig(driver, oldConfiguration, newDriverName, newConfiguration);
+
+      hStmt = DBPrepare(g_dbHandle, _T("UPDATE notification_channels SET driver_name=?,configuration=? WHERE name=?"));
+      if (hStmt != NULL)
+      {
+        DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, static_cast<const TCHAR *>(newDriverName), DB_BIND_STATIC);
+        DBBind(hStmt, 2, DB_SQLTYPE_TEXT, static_cast<const TCHAR *>(newConfiguration), DB_BIND_STATIC);
+        DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, static_cast<const TCHAR *>(name), DB_BIND_STATIC);
+        if (!SQLExecute(hStmt) && !g_ignoreErrors)
+        {
+           DBFreeStatement(hStmt);
+           return false;
+        }
+        DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+        return false;
+   }
+
+   MemFree(oldConfiguration);
+
+   CHK_EXEC(SetMinorSchemaVersion(102));
+   return true;
+}
+
+/**
  * Upgrade from 30.100 to 30.101
  */
 static bool H_UpgradeFromV100()
@@ -170,147 +487,6 @@ static bool H_UpgradeFromV92()
 }
 
 /**
- * Generate GSM modem notification channel configuration from SMSDrvConfig
- *
- * pszInitArgs format: portname,speed,databits,parity,stopbits,mode,blocksize,writedelay
- */
-static String CreateNCDrvConfig_GSM(TCHAR *portName)
-{
-   String config;
-   TCHAR *p;
-   int parity = NOPARITY;
-   int stopBits = ONESTOPBIT;
-   int blockSize = 8;
-   int writeDelay = 100;
-
-   if ((p = _tcschr(portName, _T(','))) != NULL)
-   {
-      *p = 0; p++;
-      config.appendFormattedString(_T("portname=%s\n"),portName);
-      int tmp = _tcstol(p, NULL, 10);
-      if (tmp != 0)
-      {
-         config.appendFormattedString(_T("speed=%d\n"),tmp);
-
-         if ((p = _tcschr(p, _T(','))) != NULL)
-         {
-            *p = 0; p++;
-            tmp = _tcstol(p, NULL, 10);
-            if (tmp >= 5 && tmp <= 8)
-            {
-               config.appendFormattedString(_T("databits=%d\n"),tmp);
-
-               // parity
-               if ((p = _tcschr(p, _T(','))) != NULL)
-               {
-                  *p = 0; p++;
-                  config.append(_T("parity="));
-                  config.append(p, 1);
-
-                  // stop bits
-                  if ((p = _tcschr(p, _T(','))) != NULL)
-                  {
-                     *p = 0; p++;
-                     config.append(_T("\nstopbits="));
-                     config.append(p, 1);
-
-                     // Text or PDU mode
-                     if ((p = _tcschr(p, _T(','))) != NULL)
-                     {
-                        *p = 0; p++;
-                        config.append(_T("\ntextMode="));
-                        if (*p == _T('T'))
-                        {
-                           config.append(_T("yes"));
-                        }
-                        else if (*p == _T('P'))
-                        {
-                           config.append(_T("no"));
-                        }
-
-                        // Use quotes
-                        if ((p = _tcschr(p, _T(','))) != NULL)
-                        {
-                           *p = 0; p++;
-                           config.append(_T("\nuseQuotes="));
-                           if (*p == _T('N'))
-                           {
-                              config.append(_T("no"));
-                           }
-                           else
-                           {
-                              config.append(_T("yes"));
-                           }
-
-                           // block size
-                           if ((p = _tcschr(p, _T(','))) != NULL)
-                           {
-                              *p = 0; p++;
-                              blockSize = _tcstol(p, NULL, 10);
-                              if ((blockSize < 1) || (blockSize > 256))
-                                 blockSize = 8;
-                              config.appendFormattedString(_T("\nblocksize=%d\n"),blockSize);
-
-                              // write delay
-                              if ((p = _tcschr(p, _T(','))) != NULL)
-                              {
-                                 *p = 0; p++;
-                                 writeDelay = _tcstol(p, NULL, 10);
-                                 if ((writeDelay < 1) || (writeDelay > 10000))
-                                    writeDelay = 100;
-                                 config.appendFormattedString(_T("\nwritedelay=%d"),writeDelay);
-                              }
-                           }
-                        }
-                     }
-                  }
-               }
-            }
-         }
-      }
-   }
-   else
-   {
-      config.appendFormattedString(_T("portname=%s\n"),portName);
-   }
-   return config;
-}
-
-/**
- * Generate remote GSM modem notification channel configuration from SMSDrvConfig
- */
-static String CreateNCDrvConfig_NXAgent(TCHAR *temp)
-{
-   String config;
-   TCHAR *ptr, *eptr;
-   int field;
-   const TCHAR *array[] = { _T("hostname"), _T("port"), _T("timeout"), _T("secret")};
-   for(ptr = eptr = temp, field = 0; eptr != NULL; field++, ptr = eptr + 1)
-   {
-      eptr = _tcschr(ptr, ',');
-      if (eptr != NULL)
-         *eptr = 0;
-      config.appendFormattedString(_T("%s=%s\n"), array[field], ptr);
-   }
-   return config;
-}
-
-/**
- * Generate default notification channel configuration from SMSDrvConfig
- */
-static TCHAR *CreateNCDrvConfig_Default(TCHAR *oldConfiguration)
-{
-   TCHAR *tmp = _tcschr(oldConfiguration, _T(';'));
-   while(tmp != NULL)
-   {
-      tmp[0] = _T('\n');
-      tmp = _tcschr(tmp+1, _T(';'));
-   }
-   return oldConfiguration;
-
-}
-
-/**
  * Upgrade from 30.91 to 30.92
  */
 static bool H_UpgradeFromV91()
@@ -330,7 +506,7 @@ static bool H_UpgradeFromV91()
    String newConfiguration;
    String newDriverName;
 
-   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='SMSDriver'"));
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='SMSDriver'"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -340,7 +516,7 @@ static bool H_UpgradeFromV91()
 
    if ((driver != NULL) && (driver[0] != 0) && _tcscmp(driver, _T("<none>")))
    {
-      hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='SMSDrvConfig'"));
+      hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='SMSDrvConfig'"));
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -351,86 +527,7 @@ static bool H_UpgradeFromV91()
       if (oldConfiguration == NULL)
          oldConfiguration = _tcsdup(_T(""));
 
-      //prepare driver name
-      TCHAR *driverName = NULL;
-      _tcslwr(driver);
-      TCHAR *tmp = _tcsrchr(driver, FS_PATH_SEPARATOR_CHAR);
-      if (tmp != NULL)
-         driverName = tmp + 1;
-      else
-         driverName = driver;
-      tmp = _tcsrchr(driver, _T('.'));
-      if (tmp != NULL)
-      {
-         tmp[0] = 0;
-         if (_tcscmp(tmp + 1, _T("so")))
-         {
-            tmp = _tcsrchr(driver, _T('_'));
-            if (tmp != NULL)
-            {
-               driverName = tmp + 1;
-            }
-         }
-      }
-
-      if (!_tcscmp(driverName, _T("anysms")))
-      {
-         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
-         newDriverName = _T("AnySMS");
-      }
-      else if (!_tcscmp(driverName, _T("dbemu")))// renamed to dbtable
-      {
-         newDriverName = _T("DBTable");
-      }
-      else if (!_tcscmp(driverName, _T("dummy")))// renamed to dbtable
-      {
-         newDriverName = _T("Dummy");
-      }
-      else if (!_tcscmp(driverName, _T("generic")))
-      {
-         newConfiguration = CreateNCDrvConfig_GSM(oldConfiguration);
-         newDriverName = _T("Generic");
-      }
-      else if(!_tcscmp(driverName, _T("kannel")))
-      {
-         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
-         newDriverName = _T("Kannel");
-      }
-      else if(!_tcscmp(driverName, _T("nexmo")))
-      {
-         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
-         newDriverName = _T("Nexmo");
-      }
-      else if(!_tcscmp(driverName, _T("nxagent")))
-      {
-         newConfiguration = CreateNCDrvConfig_NXAgent(oldConfiguration);
-         newDriverName = _T("NXAgent");
-      }
-      else if(!_tcscmp(driverName, _T("portech")))
-      {
-         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
-         newDriverName = _T("Portech");
-      }
-      else if(!_tcscmp(driverName, _T("smseagle")))
-      {
-         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
-         newDriverName = _T("SMSEagle");
-      }
-      else if(!_tcscmp(driverName, _T("text2reach")))
-      {
-         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
-         newDriverName = _T("Text2Reach");
-      }
-      else if(!_tcscmp(driverName, _T("websms")))
-      {
-         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
-         newDriverName = _T("WebSMS");
-      }
-      else
-      {
-         newDriverName = driverName;
-         newConfiguration = oldConfiguration;
-      }
+      PrepareDriverNameAndConfig(driver, oldConfiguration, newDriverName, newConfiguration);
 
       DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES ('SMS',?,'Automatically migrated SMS driver configuration',?)"));
       if (hStmt != NULL)
@@ -447,21 +544,7 @@ static bool H_UpgradeFromV91()
       else if (!g_ignoreErrors)
         return false;
 
-      hStmt = DBPrepare(g_dbHandle, _T("UPDATE actions SET channel_name=? WHERE action_type=3"));
-      if (hStmt != NULL)
-      {
-        DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, static_cast<const TCHAR *>(newDriverName), DB_BIND_STATIC);
-        if (!SQLExecute(hStmt) && !g_ignoreErrors)
-        {
-           DBFreeStatement(hStmt);
-           return false;
-        }
-        DBFreeStatement(hStmt);
-      }
-      else if (!g_ignoreErrors)
-      {
-         return false;
-      }
+      CHK_EXEC(SQLQuery(_T("UPDATE actions SET channel_name='SMS' WHERE action_type=3")));
    }
 
    static const TCHAR *batch =
@@ -3491,6 +3574,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 101, 30, 102, H_UpgradeFromV101 },
    { 100, 30, 101, H_UpgradeFromV100 },
    { 99, 30, 100, H_UpgradeFromV99 },
    { 98, 30, 99, H_UpgradeFromV98 },

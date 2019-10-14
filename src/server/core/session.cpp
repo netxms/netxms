@@ -14983,22 +14983,29 @@ void ClientSession::addNotificationChannel(NXCPMessage *request)
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
+      TCHAR driverName[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      if (!IsNotificationChannelExists(name))
+      request->getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+      if (name[0] != 0 || driverName[0] != 0)
       {
-         TCHAR driverName[MAX_OBJECT_NAME];
-         TCHAR description[MAX_NC_DESCRIPTION];
-         request->getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
-         request->getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
-         char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, NULL, 0);
-         CreateNotificationChannelAndSave(name, description, driverName, configuration);
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Created new notification channel %s"), name);
+         if (!IsNotificationChannelExists(name))
+         {
+            TCHAR description[MAX_NC_DESCRIPTION];
+            request->getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+            char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, NULL, 0);
+            CreateNotificationChannelAndSave(name, description, driverName, configuration);
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+            writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Created new notification channel %s"), name);
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+         }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+         msg.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME_OR_DRIVER);
       }
    }
    else
@@ -15020,23 +15027,30 @@ void ClientSession::updateNotificationChannel(NXCPMessage *request)
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
+      TCHAR driverName[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      if (IsNotificationChannelExists(name))
+      request->getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+      if (name[0] != 0 || driverName[0] != 0)
       {
-         TCHAR driverName[MAX_OBJECT_NAME];
-         TCHAR description[MAX_NC_DESCRIPTION];
-         request->getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
-         request->getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
-         char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, NULL, 0);
-         UpdateNotificationChannel(name, description, driverName, configuration);
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
-         MemFree(configuration);
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Updated configuration of notification channel %s"), name);
+         if (IsNotificationChannelExists(name))
+         {
+            TCHAR description[MAX_NC_DESCRIPTION];
+            request->getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+            char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, NULL, 0);
+            UpdateNotificationChannel(name, description, driverName, configuration);
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+            MemFree(configuration);
+            writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Updated configuration of notification channel %s"), name);
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         msg.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME_OR_DRIVER);
       }
    }
    else
@@ -15097,17 +15111,35 @@ void ClientSession::renameNotificationChannel(NXCPMessage *request)
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR *name = request->getFieldAsString(VID_NAME);
-      if (IsNotificationChannelExists(name))
+      if (name[0] != 0)
       {
-         TCHAR *newName = request->getFieldAsString(VID_NEW_NAME);
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s renamed to %s"), name, newName);
-         RenameNotificationChannel(name, newName); //will release names
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         if (IsNotificationChannelExists(name))
+         {
+            TCHAR *newName = request->getFieldAsString(VID_NEW_NAME);
+            if (!IsNotificationChannelExists(newName))
+            {
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s renamed to %s"), name, newName);
+               RenameNotificationChannel(name, newName); //will release names
+               msg.setField(VID_RCC, RCC_SUCCESS);
+
+            }
+            else
+            {
+               MemFree(name);
+               MemFree(newName);
+               msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+            }
+         }
+         else
+         {
+            MemFree(name);
+            msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         }
       }
       else
       {
          MemFree(name);
-         msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         msg.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME_OR_DRIVER);
       }
    }
    else

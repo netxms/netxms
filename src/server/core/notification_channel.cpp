@@ -460,7 +460,7 @@ static void RenameNotificationChannelInDB(std::pair<TCHAR *, TCHAR *> *names)
 
    if(success)
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE actions SET channel_name=? WHERE channel_name=?"));
+      hStmt = DBPrepare(hdb, _T("UPDATE actions SET channel_name=? WHERE channel_name=? AND action_type=3"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, names->second, DB_BIND_STATIC);

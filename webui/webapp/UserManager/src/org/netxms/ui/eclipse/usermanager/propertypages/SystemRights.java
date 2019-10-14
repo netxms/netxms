@@ -87,7 +87,7 @@ public class SystemRights extends PropertyPage
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, Messages.get().SystemRights_ExecuteXMPPCommands);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, Messages.get().SystemRights_ControlSessions);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, Messages.get().SystemRights_ManageUsers);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, "Send notification");
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, "Send notifications");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, Messages.get().SystemRights_RegisterAgents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.get().SystemRights_LoginAsMobile);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, Messages.get().SystemRights_ManageImageLibrary);

@@ -637,7 +637,7 @@ UINT32 ModifyActionFromMessage(NXCPMessage *pMsg)
  */
 static EnumerationCallbackResult RenameChannel(const UINT32 *id, const Action *action, std::pair<TCHAR *, TCHAR *> *names)
 {
-   if (!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME))
+   if (!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME) && action->type == ACTION_NOTIFICATION)
    {
       _tcsncpy(const_cast<TCHAR *>(action->channelName), names->second, MAX_OBJECT_NAME);
       m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
