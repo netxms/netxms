@@ -16,6 +16,7 @@ import org.netxms.client.NotificationChannel;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -141,6 +142,18 @@ public class NotificationChannelDialog extends Dialog
    @Override
    protected void okPressed()
    {
+      if(textName.getText().isEmpty())
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Notification channel name should not be empty");
+         return;
+      }
+      
+      if(comboDriverName.getSelectionIndex() == -1)
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Notification driver should be selected");
+         return;
+      }
+      
       if(nc == null)
       {
          nc = new NotificationChannel();

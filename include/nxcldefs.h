@@ -622,6 +622,7 @@ enum SessionState
 #define RCC_CHANNEL_ALREADY_EXIST     ((UINT32)130)
 #define RCC_NO_CHANNEL_NAME           ((UINT32)131)
 #define RCC_CHANNEL_IN_USE            ((UINT32)132)
+#define RCC_INVALID_CHANNEL_NAME_OR_DRIVER ((UINT32)133)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
