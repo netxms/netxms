@@ -245,9 +245,13 @@ bool Dashboard::showThresholdSummary()
 json_t *Dashboard::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
    json_object_set_new(root, "numColumns", json_integer(m_numColumns));
    json_object_set_new(root, "options", json_integer(m_options));
    json_object_set_new(root, "elements", json_object_array(m_elements));
+   unlockProperties();
+
    return root;
 }
 

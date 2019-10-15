@@ -342,6 +342,8 @@ NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm)
 json_t *Sensor::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "macAddr", json_string_t(m_macAddress.toString(MacAddressNotation::FLAT_STRING)));
    json_object_set_new(root, "deviceClass", json_integer(m_deviceClass));
@@ -353,6 +355,8 @@ json_t *Sensor::toJson()
    json_object_set_new(root, "metaType", json_string_t(m_metaType));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "proxyNode", json_integer(m_proxyNodeId));
+   unlockProperties();
+
    return root;
 }
 

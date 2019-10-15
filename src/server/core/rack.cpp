@@ -158,8 +158,12 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
 json_t *Rack::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
    json_object_set_new(root, "height", json_integer(m_height));
    json_object_set_new(root, "topBottomNumbering", json_boolean(m_topBottomNumbering));
    json_object_set_new(root, "passiveElements", json_string_t(m_passiveElements));
+   unlockProperties();
+
    return root;
 }

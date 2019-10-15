@@ -351,6 +351,8 @@ NXSL_Value *MobileDevice::createNXSLObject(NXSL_VM *vm)
 json_t *MobileDevice::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
    json_object_set_new(root, "lastReportTime", json_integer(m_lastReportTime));
    json_object_set_new(root, "deviceId", json_string_t(m_deviceId));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
@@ -361,5 +363,7 @@ json_t *MobileDevice::toJson()
    json_object_set_new(root, "userId", json_string_t(m_userId));
    json_object_set_new(root, "batteryLevel", json_integer(m_batteryLevel));
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
+   unlockProperties();
+
    return root;
 }

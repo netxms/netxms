@@ -544,6 +544,8 @@ NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm)
 json_t *AccessPoint::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
    json_object_set_new(root, "index", json_integer(m_index));
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "nodeId", json_integer(m_nodeId));
@@ -555,5 +557,7 @@ json_t *AccessPoint::toJson()
    json_object_set_new(root, "radioInterfaces", json_object_array(m_radioInterfaces));
    json_object_set_new(root, "state", json_integer(m_apState));
    json_object_set_new(root, "prevState", json_integer(m_prevState));
+   unlockProperties();
+
    return root;
 }

@@ -464,6 +464,8 @@ json_t *Template::toJson()
    json_t *root = super::toJson();
    AutoBindTarget::toJson(root);
    VersionableObject::toJson(root);
+
+   lockProperties();
    Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
    while(it->hasNext())
    {
@@ -471,6 +473,7 @@ json_t *Template::toJson()
       json_object_set_new(root, "agentPolicy", object->toJson());
    }
    delete it;
+   unlockProperties();
 
    return root;
 }
