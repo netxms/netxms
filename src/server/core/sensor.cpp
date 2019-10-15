@@ -133,7 +133,7 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
    AgentConnectionEx *conn = sensor->getAgentConnection();
    if (conn == NULL)
    {
-      return sensor; //Unprovisoned sensor - will try to provison it on next connect
+      return sensor; // Unprovisioned sensor - will try to provision it on next connect
    }
 
    Config regConfig;
@@ -151,8 +151,6 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
    config.loadXmlConfigFromMemory(sensor->getXmlConfig(), (UINT32)strlen(sensor->getXmlConfig()), NULL, "config", false);
 #endif
 
-
-
    NXCPMessage msg(conn->getProtocolVersion());
    msg.setCode(CMD_REGISTER_LORAWAN_SENSOR);
    msg.setId(conn->generateRequestId());
@@ -161,7 +159,7 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
    msg.setField(VID_GUID, sensor->getGuid());
    msg.setField(VID_DECODER, config.getValueAsInt(_T("/decoder"), 0));
    msg.setField(VID_REG_TYPE, regConfig.getValueAsInt(_T("/registrationType"), 0));
-   if(regConfig.getValueAsInt(_T("/registrationType"), 0) == 0)
+   if (regConfig.getValueAsInt(_T("/registrationType"), 0) == 0)
    {
       msg.setField(VID_LORA_APP_EUI, regConfig.getValue(_T("/appEUI")));
       msg.setField(VID_LORA_APP_KEY, regConfig.getValue(_T("/appKey")));
@@ -171,10 +169,11 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
       msg.setField(VID_LORA_APP_S_KEY, regConfig.getValue(_T("/appSKey")));
       msg.setField(VID_LORA_NWK_S_KWY, regConfig.getValue(_T("/nwkSKey")));
    }
+
    NXCPMessage *response = conn->customRequest(&msg);
    if (response != NULL)
    {
-      if(response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
+      if (response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
       {
          sensor->lockProperties();
          sensor->setProvisoned();
@@ -195,13 +194,13 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
  */
 Sensor::~Sensor()
 {
-   free(m_vendor);
-   free(m_xmlRegConfig);
-   free(m_xmlConfig);
-   free(m_serialNumber);
-   free(m_deviceAddress);
-   free(m_metaType);
-   free(m_description);
+   MemFree(m_vendor);
+   MemFree(m_xmlRegConfig);
+   MemFree(m_xmlConfig);
+   MemFree(m_serialNumber);
+   MemFree(m_deviceAddress);
+   MemFree(m_metaType);
+   MemFree(m_description);
 }
 
 /**
@@ -338,7 +337,7 @@ NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
- * Sensor class serialization to json
+ * Sensor class serialization to JSON
  */
 json_t *Sensor::toJson()
 {
@@ -357,6 +356,9 @@ json_t *Sensor::toJson()
    return root;
 }
 
+/**
+ * Fill NXCP message
+ */
 void Sensor::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
    super::fillMessageInternal(msg, userId);
@@ -379,6 +381,9 @@ void Sensor::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 	msg->setField(VID_SENSOR_PROXY, m_proxyNodeId);
 }
 
+/**
+ * Modify object from NXCP message
+ */
 UINT32 Sensor::modifyFromMessageInternal(NXCPMessage *request)
 {
    if (request->isFieldExist(VID_FLAGS))

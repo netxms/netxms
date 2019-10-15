@@ -101,19 +101,14 @@ bool SMSCreatePDUString(const char *phoneNumber, const char *message, char *pduB
 		phoneNumberFormatted[i + 1] = phoneNumberFormatted[i];
 		phoneNumberFormatted[i] = tmp;
 	}
-	phoneNumberFormatted[phoneLength + (phoneLength % 2)] = '\0';
+	phoneNumberFormatted[phoneLength + (phoneLength % 2)] = 0;
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("Formatted phone: %hs"), phoneNumberFormatted);
 	SMSPack7BitChars(message, payload, &payloadSize, bufferSize);
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("Got payload size: %d"), payloadSize);
 
-	for (i = 0; i < payloadSize; i++)
-	{
-		payloadHex[i*2]		= bin2hex((((unsigned char)(payload[i]))&0xF0)>>4);
-		payloadHex[i*2 + 1]	= bin2hex(payload[i]&0xF);
-	}
-	payloadHex[i*2] = '\0';
-	snprintf(pduBuffer, PDU_BUFFER_SIZE, "0011000%X%X%s0000AA%02X%s", (int)strlen(phoneNumber), numberFormat, 
-		phoneNumberFormatted, (int)strlen(message), payloadHex);
+	BinToStrA(payload, payloadSize, payloadHex);
+	snprintf(pduBuffer, PDU_BUFFER_SIZE, "0011000%X%X%s0000AA%02X%s", phoneLength, numberFormat,
+	         phoneNumberFormatted, (int)strlen(message), payloadHex);
 
 	return true;
 }
