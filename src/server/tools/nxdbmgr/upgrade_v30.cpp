@@ -268,6 +268,7 @@ static bool H_UpgradeFromV101()
    switch (g_dbSyntax)
    {
       case DB_SYNTAX_DB2:
+      case DB_SYNTAX_ORACLE:
       case DB_SYNTAX_SQLITE:
          CHK_EXEC(SQLQuery(_T("UPDATE actions SET channel_name=(SELECT name FROM notification_channels WHERE driver_name=actions.channel_name) WHERE channel_name IN (SELECT driver_name FROM notification_channels)")));
          break;
@@ -277,8 +278,10 @@ static bool H_UpgradeFromV101()
       case DB_SYNTAX_PGSQL:
          CHK_EXEC(SQLQuery(_T("UPDATE actions SET channel_name=notification_channels.name FROM notification_channels WHERE actions.channel_name=notification_channels.driver_name")));
          break;
-      default:
+      case DB_SYNTAX_MYSQL:
          CHK_EXEC(SQLQuery(_T("UPDATE actions INNER JOIN notification_channels ON actions.channel_name=notification_channels.driver_name SET channel_name=notification_channels.name")));
+         break;
+      default:
          break;
    }
 
