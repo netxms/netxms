@@ -14672,7 +14672,7 @@ void ClientSession::onPolicyEditorClose(NXCPMessage *request)
  */
 static void ForceApplyPolicyChanges(void *arg)
 {
-   ((Template *)arg)->forceApplyPolicyChanges();
+   static_cast<Template*>(arg)->forceApplyPolicyChanges();
 }
 
 /**
