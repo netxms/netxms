@@ -942,6 +942,8 @@ NXSL_Array *Cluster::getNodesForNXSL(NXSL_VM *vm)
 json_t *Cluster::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
    json_object_set_new(root, "clusterType", json_integer(m_dwClusterType));
    json_object_set_new(root, "syncNetworks", json_object_array(m_syncNetworks));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
@@ -957,5 +959,7 @@ json_t *Cluster::toJson()
       json_array_append_new(resources, r);
    }
    json_object_set_new(root, "resources", resources);
+   unlockProperties();
+
    return root;
 }

@@ -416,6 +416,8 @@ void Chassis::setBindUnderController(bool doBind)
 json_t *Chassis::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
    json_object_set_new(root, "controllerId", json_integer(m_controllerId));
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
@@ -423,5 +425,7 @@ json_t *Chassis::toJson()
    json_object_set_new(root, "rackId", json_integer(m_rackId));
    json_object_set_new(root, "rackImageFront", m_rackImageFront.toJson());
    json_object_set_new(root, "rackImageRear", m_rackImageRear.toJson());
+   unlockProperties();
+
    return root;
 }
