@@ -2,6 +2,8 @@
 * 3.0
 *
 
+- SMS drivers replaced by notification channels
+- Agent policies were merged with templates
 - Event tags
 - ICMP polls for collecting ICMP response time statistic on server side
 - User agents (desktop support application)
@@ -31,6 +33,7 @@
 - Switched to pcre (from libtre) as regular expression matching engine
 - Event parameters exposed as writable "Event" class attributes in NXSL
 - New method "addParameter" in NXSL class "Event"
+- Some bit fields in NXSL classes (most notably flags in Node class) had changed their meaning
 - "Origin timestamp" for events
 - Object management functions in NXSL implemented as object methods
 - SNMP functions in NXSL implemented as transport methods
