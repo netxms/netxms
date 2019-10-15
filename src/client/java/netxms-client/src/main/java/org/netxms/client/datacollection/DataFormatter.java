@@ -84,6 +84,9 @@ public class DataFormatter
                int j;
                for(j = i; (j < format.length) && !Character.isLetter(format[j]); j++)
                   ;
+               
+               if(j+1 < format.length && (format[j] == 't' || format[j] == 'T') && Character.isLetter(format[j+1]))//t or T is prefix for date and time conversion characters
+                  j++;
 
                boolean useMultipliers = false;
                if (format[i] == '*')
@@ -96,7 +99,7 @@ public class DataFormatter
                i = j;
                try
                {
-                  Value v = getValueForFormat(value, useMultipliers, format[j] == 's', format[j] == 'd');
+                  Value v = getValueForFormat(value, useMultipliers, format[j] == 's' || format[j] == 'S', format[j] == 'd');
                   sb.append(String.format(f, v.value));
                   sb.append(v.suffix);
                }
