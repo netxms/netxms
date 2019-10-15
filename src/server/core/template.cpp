@@ -170,6 +170,8 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_POLICY))
    {
+      lockProperties();
+
       for(int i = 0; (i < m_deletedPolicyList->size()) && success; i++)
          success = m_deletedPolicyList->get(i)->deleteFromDatabase(hdb);
 
@@ -180,6 +182,8 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
          success = object->saveToDatabase(hdb);
       }
       delete it;
+
+      unlockProperties();
    }
 
    return success;
@@ -219,11 +223,11 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    bool success = super::loadFromDatabase(hdb, id);
 
-   if(success)
+   if (success)
       success = AutoBindTarget::loadFromDatabase(hdb, id);
-   if(success)
+   if (success)
       success = VersionableObject::loadFromDatabase(hdb, id);
-   if(success)
+   if (success)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,policy_type FROM ap_common WHERE owner_id=?"));
       if (hStmt != NULL)
@@ -342,6 +346,7 @@ void Template::createExportRecord(String &str)
 
    str.append(_T("\t\t\t</dataCollection>\n"));
 
+   lockProperties();
    Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
    while(it->hasNext())
    {
@@ -349,6 +354,7 @@ void Template::createExportRecord(String &str)
       object->createExportRecord(str);
    }
    delete it;
+   unlockProperties();
 
    AutoBindTarget::createExportRecord(str);
    str.append(_T("\t\t</template>\n"));
@@ -368,6 +374,9 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
    return super::applyToTarget(target);
 }
 
+/**
+ * Initiate forced policy installation
+ */
 void Template::forceInstallPolicy(DataCollectionTarget *target)
 {
    lockProperties();
@@ -439,20 +448,22 @@ void Template::updateFromImport(ConfigEntry *config)
    AutoBindTarget::updateFromImport(config);
    VersionableObject::updateFromImport(config);
 
+   lockProperties();
+
    m_policyList->clear();
-   ObjectArray<ConfigEntry> *dcis = config->getSubEntries(_T("agentPolicy#*"));
-   for(int i = 0; i < dcis->size(); i++)
+   ObjectArray<ConfigEntry> *policies = config->getSubEntries(_T("agentPolicy#*"));
+   for(int i = 0; i < policies->size(); i++)
    {
-      ConfigEntry *e = dcis->get(i);
+      ConfigEntry *e = policies->get(i);
       uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
       GenericAgentPolicy *curr = CreatePolicy(guid, m_id, e->getSubEntryValue(_T("policyType")));
       curr->updateFromImport(e);
       m_policyList->set(guid, curr);
    }
-   delete dcis;
+   delete policies;
 
-   lockProperties();
    setModified(MODIFY_ALL);
+
    unlockProperties();
 }
 
@@ -518,9 +529,8 @@ bool Template::hasPolicy(const uuid& guid)
  */
 GenericAgentPolicy *Template::getAgentPolicyCopy(const uuid& guid)
 {
-   GenericAgentPolicy *policy = NULL;
    lockProperties();
-   policy = m_policyList->get(guid);
+   GenericAgentPolicy *policy = m_policyList->get(guid);
    if (policy != NULL)
       policy = new GenericAgentPolicy(policy);
    unlockProperties();
@@ -549,20 +559,18 @@ void Template::fillPolicyMessage(NXCPMessage *pMsg)
 }
 
 /**
- * Update policy if guid is provided and create policy if uuid is NULL
+ * Update policy if GUID is provided and create policy if GUID is NULL
  */
 uuid Template::updatePolicyFromMessage(NXCPMessage *request)
 {
-   lockProperties();
-   NXCPMessage msg;
-   msg.setCode(CMD_UPDATE_AGENT_POLICY);
-   msg.setField(VID_TEMPLATE_ID, m_id);
-   uuid guid = request->getFieldAsGUID(VID_GUID);
-   TCHAR name[MAX_DB_STRING];
-   TCHAR policyType[32];
+   NXCPMessage msg(CMD_UPDATE_AGENT_POLICY, m_id);
 
+   lockProperties();
+
+   uuid guid;
    if (request->isFieldExist(VID_GUID))
    {
+      guid = request->getFieldAsGUID(VID_GUID);
       GenericAgentPolicy *policy = m_policyList->get(guid);
       if (policy != NULL)
       {
@@ -576,6 +584,7 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    }
    else
    {
+      TCHAR name[MAX_DB_STRING], policyType[32];
       GenericAgentPolicy *curr = CreatePolicy(request->getFieldAsString(VID_NAME, name, MAX_DB_STRING), request->getFieldAsString(VID_POLICY_TYPE, policyType, 32), m_id);
       curr->modifyFromMessage(request);
       m_policyList->set(curr->getGuid(), curr);
@@ -585,8 +594,10 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    updateVersion();
 
    setModified(MODIFY_POLICY, false);
-   NotifyClientsOnPolicyUpdate(&msg, this);
+
    unlockProperties();
+
+   NotifyClientsOnPolicyUpdate(&msg, this);
    return guid;
 }
 
@@ -634,16 +645,16 @@ void Template::applyPolicyChanges()
    for(int i = 0; i < m_childList->size(); i++)
    {
       NetObj *object = m_childList->get(i);
-      if(object->getObjectClass() == OBJECT_NODE)
+      if (object->getObjectClass() == OBJECT_NODE)
       {
          AgentPolicyInfo *ap;
-         AgentConnection *conn = ((Node *)object)->getAgentConnection();
-         if(conn != NULL)
+         AgentConnection *conn = static_cast<Node*>(object)->getAgentConnection();
+         if (conn != NULL)
          {
             UINT32 rcc = conn->getPolicyInventory(&ap);
-            if(rcc == RCC_SUCCESS)
+            if (rcc == RCC_SUCCESS)
             {
-               checkPolicyBind((Node *)object, ap, NULL, NULL);
+               checkPolicyBind(static_cast<Node*>(object), ap, NULL, NULL);
                delete ap;
             }
          }
@@ -657,13 +668,25 @@ void Template::applyPolicyChanges()
  */
 void Template::forceApplyPolicyChanges()
 {
+   ObjectArray<Node> nodes(64, 64, false);
    lockChildList(false);
    for(int i = 0; i < m_childList->size(); i++)
    {
       NetObj *object = m_childList->get(i);
-      if(object->getObjectClass() == OBJECT_NODE)
+      if (object->getObjectClass() == OBJECT_NODE)
       {
-         Node * node = (Node *)object;
+         object->incRefCount();
+         nodes.add(static_cast<Node*>(object));
+      }
+   }
+   unlockChildList();
+
+   if (!nodes.isEmpty())
+   {
+      lockProperties();
+      for(int i = 0; i < nodes.size(); i++)
+      {
+         Node *node = nodes.get(i);
          Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
          while(it->hasNext())
          {
@@ -681,8 +704,8 @@ void Template::forceApplyPolicyChanges()
          }
          delete it;
       }
+      unlockProperties();
    }
-   unlockChildList();
 }
 
 /**
@@ -694,13 +717,13 @@ void Template::applyPolicyChanges(DataCollectionTarget *object)
    if(object->getObjectClass() == OBJECT_NODE)
    {
       AgentPolicyInfo *ap;
-      AgentConnection *conn = ((Node *)object)->getAgentConnection();
-      if(conn != NULL)
+      AgentConnection *conn = static_cast<Node*>(object)->getAgentConnection();
+      if (conn != NULL)
       {
          UINT32 rcc = conn->getPolicyInventory(&ap);
-         if(rcc == RCC_SUCCESS)
+         if (rcc == RCC_SUCCESS)
          {
-            checkPolicyBind((Node *)object, ap, NULL, NULL);
+            checkPolicyBind(static_cast<Node*>(object), ap, NULL, NULL);
             delete ap;
          }
          conn->decRefCount();
