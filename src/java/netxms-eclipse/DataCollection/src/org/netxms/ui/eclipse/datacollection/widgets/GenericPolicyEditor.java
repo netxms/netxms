@@ -44,7 +44,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
       super(parent, style);      
-      this.policy = policy;  
+      this.policyObject = policy;  
       
       setLayout(new FillLayout());
       
@@ -66,13 +66,13 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    
    protected void updateControlsFromPolicy()
    {
-      editor.setText(policy.getContent());
+      editor.setText(policyObject.getContent());
    }
 
    public AgentPolicy getUpdatedPolicy()
    {
-      policy.setContent(editor.getText());
-      return policy;
+      policyObject.setContent(editor.getText());
+      return policyObject;
    }
 
    @Override

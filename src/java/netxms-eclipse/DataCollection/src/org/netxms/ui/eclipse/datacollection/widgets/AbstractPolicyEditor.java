@@ -11,7 +11,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener
 public abstract class AbstractPolicyEditor extends Composite implements IFindReplaceTarget
 {
    Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
-   AgentPolicy policy = null;  
+   AgentPolicy policyObject = null;  
    FindReplaceAction actionFindReplace = null;
 
    public AbstractPolicyEditor(Composite parent, int style)
@@ -44,9 +44,9 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
          l.modifyParser();
    }
 
-   public void updatePolicy(AgentPolicy policy)
+   public void updatePolicyObject(AgentPolicy policyObject)
    {
-      this.policy = policy;   
+      this.policyObject = policyObject;   
       updateControlsFromPolicy();
    }
 

@@ -149,7 +149,7 @@ public class PolicyListView extends ViewPart implements SessionListener
          }
       });
       
-      final String[] names = { "Name", "Tyape", "GUID" };
+      final String[] names = { "Name", "Type", "GUID" };
       final int[] widths = { 250, 200, 100 };
       
       policyList = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);

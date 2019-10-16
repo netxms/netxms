@@ -40,7 +40,7 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
    public LogParserPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
       super(parent, style);      
-      this.policy = policy;  
+      this.policyObject = policy;  
       
       setLayout(new FillLayout());
       
@@ -58,13 +58,13 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
    
    protected void updateControlsFromPolicy()
    {
-      editor.setParserXml(policy.getContent());
+      editor.setParserXml(policyObject.getContent());
    }
 
    public AgentPolicy getUpdatedPolicy()
    {
-      policy.setContent(editor.getParserXml());
-      return policy;
+      policyObject.setContent(editor.getParserXml());
+      return policyObject;
    }
 
    /* (non-Javadoc)

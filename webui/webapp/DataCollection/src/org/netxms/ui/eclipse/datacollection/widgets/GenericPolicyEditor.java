@@ -43,13 +43,12 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
       super(parent, style);      
-      this.policy = policy;  
+      this.policyObject = policy;  
       
       setLayout(new FillLayout());
       
       editor = new Text(this, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       editor.setFont(JFaceResources.getTextFont());
-      
       
       editor.addModifyListener(new ModifyListener() {
          @Override
@@ -70,7 +69,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
 
    public AgentPolicy getUpdatedPolicy()
    {
-      policy.setContent(editor.getText());
-      return policy;
+      policyObject.setContent(editor.getText());
+      return policyObject;
    }
 }

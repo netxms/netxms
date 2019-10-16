@@ -82,20 +82,20 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    
    private ColorSelector backgroundColor;
    private ColorSelector borderColor;
-   private ColorSelector headerColor;
+   private ColorSelector highlightColor;
    private ColorSelector textColor;
    private ColorSelector menuBackgroundColor;
    private ColorSelector menuHighligtColor;
    private ColorSelector menuSelectionColor;
    private ColorSelector menuTextColor;
    private Text welcomeMessageText;
-   private Button setColorSchemaCheckbox;
+   private Button customColorSchemaCheckbox;
    private Action addSubMenuAction;
    private Action addItemAction;
    private Action deleteAction;
    private Action editAction;
    private SortableTreeViewer viewer;
-   private SupportAppPolicy sPolicy;
+   private SupportAppPolicy policyData;
    private Label[] iconBox = new Label[4];
    private Image[] iconPreview = new Image[4];
    private byte[] iconFile = null;
@@ -106,63 +106,68 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policyObject)
    {
       super(parent, style);      
-      this.policy = policy;     
+      this.policyObject = policyObject;     
       
       try
       {
-         sPolicy = SupportAppPolicy.createFromXml(policy.getContent());
+         policyData = SupportAppPolicy.createFromXml(policyObject.getContent());
       }
       catch(Exception e)
       {
-         e.printStackTrace();
-         sPolicy = new SupportAppPolicy();
-         //print error of parsing in the log
+         Activator.logError("Cannot parse support application policy XML", e);
+         policyData = new SupportAppPolicy();
       }
 
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       layout.marginWidth = 0;
       layout.marginHeight = 0;
-      layout.numColumns = 2;
       setLayout(layout);
       
-      // Image
-      createIconSelector();
-      
-      Composite colorSelectors = new Composite(this, SWT.NONE);
+      Composite topArea = new Composite(this,  SWT.NONE);
       layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      layout.numColumns = 3;
+      layout.numColumns = 2;
+      topArea.setLayout(layout);
+      topArea.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+      
+      // Image
+      createIconSelector(topArea);
+      
+      Group colorSelectors = new Group(topArea, SWT.NONE);
+      colorSelectors.setText("Color schema");
+      layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.numColumns = 2;
       layout.makeColumnsEqualWidth = true;
       colorSelectors.setLayout(layout);
-      colorSelectors.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false));
+      colorSelectors.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 
       GridData gd = new GridData();
-      gd.horizontalSpan = 3;
-      setColorSchemaCheckbox = new Button(colorSelectors, SWT.CHECK);
-      setColorSchemaCheckbox.setText("Define color schema");
-      setColorSchemaCheckbox.setLayoutData(gd);
-      setColorSchemaCheckbox.setSelection(sPolicy.menuBackgroundColor != null);
+      gd.horizontalSpan = 2;
+      customColorSchemaCheckbox = new Button(colorSelectors, SWT.CHECK);
+      customColorSchemaCheckbox.setText("Use custom color schema");
+      customColorSchemaCheckbox.setLayoutData(gd);
+      customColorSchemaCheckbox.setSelection(policyData.menuBackgroundColor != null);
       
       backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);    
       textColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Text", WidgetHelper.DEFAULT_LAYOUT_DATA);      
       borderColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Border", WidgetHelper.DEFAULT_LAYOUT_DATA);     
-      headerColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Header text", WidgetHelper.DEFAULT_LAYOUT_DATA);     
+      highlightColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);     
       menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu background", WidgetHelper.DEFAULT_LAYOUT_DATA);   
       menuTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu text", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
       menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
       
-      welcomeMessageText = WidgetHelper.createLabeledText(this, SWT.MULTI | SWT.BORDER, SWT.DEFAULT,
+      welcomeMessageText = WidgetHelper.createLabeledText(topArea, SWT.MULTI | SWT.BORDER, SWT.DEFAULT,
             "Welcome message", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      GridData data = new GridData(SWT.FILL, SWT.TOP, true, false);
-      data.heightHint = 100;
-      welcomeMessageText.setLayoutData(data);
+      gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+      gd.heightHint = 100;
+      gd.horizontalSpan = 2;
+      welcomeMessageText.setLayoutData(gd);
       
       final String[] columnNames = { "Name", "Display name", "Command", "Icon" };
       final int[] columnWidths = { 300, 300, 300, 300 };         
@@ -170,9 +175,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       viewer.setContentProvider(new SupportAppMenuItemProvider());
       viewer.setLabelProvider(new SupportAppMenuItemLabelProvider());
 
-      gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-      gd.horizontalSpan = 5;
-      viewer.getControl().setLayoutData(gd);
+      viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -195,7 +198,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       backgroundColor.addListener(listener); 
       textColor.addListener(listener);
       borderColor.addListener(listener); 
-      headerColor.addListener(listener); 
+      highlightColor.addListener(listener); 
       menuBackgroundColor.addListener(listener); 
       menuTextColor.addListener(listener); 
       menuHighligtColor.addListener(listener); 
@@ -209,15 +212,15 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          }
       });  
 
-      setColorSchemaCheckbox.addSelectionListener(new SelectionListener() {
+      customColorSchemaCheckbox.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            boolean enableSelection = setColorSchemaCheckbox.getSelection();
+            boolean enableSelection = customColorSchemaCheckbox.getSelection();
             backgroundColor.setEnabled(enableSelection);
             textColor.setEnabled(enableSelection);
             borderColor.setEnabled(enableSelection);
-            headerColor.setEnabled(enableSelection);
+            highlightColor.setEnabled(enableSelection);
             menuBackgroundColor.setEnabled(enableSelection);
             menuTextColor.setEnabled(enableSelection);
             menuHighligtColor.setEnabled(enableSelection);
@@ -239,9 +242,9 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    /**
     * @param parent
     */
-   private void createIconSelector()
+   private void createIconSelector(Composite parent)
    {
-      Group group = new Group(this, SWT.NONE);
+      Group group = new Group(parent, SWT.NONE);
       group.setText("Application Icon");
       GridData gd = new GridData(SWT.FILL, SWT.FILL, false, false);
       group.setLayoutData(gd);
@@ -428,7 +431,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          return;
       
       if (selection.isEmpty())
-        sPolicy.menu.addSubItem(dlg.getItem());
+        policyData.menu.addSubItem(dlg.getItem());
       else
          ((AppMenuItem)selection.getFirstElement()).addSubItem(dlg.getItem());
 
@@ -531,7 +534,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     */
    private void updateIconFromPolicy()
    {
-      iconFile = sPolicy.getIcon();
+      iconFile = policyData.getIcon();
       updateIconPreview();
    }
    
@@ -543,26 +546,36 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    {             
       updateIconFromPolicy();
 
-      if (sPolicy.backgroundColor != null)
-         backgroundColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.backgroundColor));
-      if (sPolicy.borderColor != null)
-         borderColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.borderColor));
-      if (sPolicy.headerColor != null)
-         headerColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.headerColor));
-      if (sPolicy.textColor != null)
-         textColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.textColor));
-      if (sPolicy.menuBackgroundColor != null)
-         menuBackgroundColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuBackgroundColor));
-      if (sPolicy.menuHighligtColor != null)
-         menuHighligtColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuHighligtColor));
-      if (sPolicy.menuSelectionColor != null)
-         menuSelectionColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuSelectionColor));
-      if (sPolicy.menuTextColor != null)
-         menuTextColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuTextColor));
+      if (policyData.backgroundColor != null)
+         backgroundColor.setColorValue(ColorConverter.rgbFromInt(policyData.backgroundColor));
+      if (policyData.borderColor != null)
+         borderColor.setColorValue(ColorConverter.rgbFromInt(policyData.borderColor));
+      if (policyData.highlightColor != null)
+         highlightColor.setColorValue(ColorConverter.rgbFromInt(policyData.highlightColor));
+      if (policyData.textColor != null)
+         textColor.setColorValue(ColorConverter.rgbFromInt(policyData.textColor));
+      if (policyData.menuBackgroundColor != null)
+         menuBackgroundColor.setColorValue(ColorConverter.rgbFromInt(policyData.menuBackgroundColor));
+      if (policyData.menuHighligtColor != null)
+         menuHighligtColor.setColorValue(ColorConverter.rgbFromInt(policyData.menuHighligtColor));
+      if (policyData.menuSelectionColor != null)
+         menuSelectionColor.setColorValue(ColorConverter.rgbFromInt(policyData.menuSelectionColor));
+      if (policyData.menuTextColor != null)
+         menuTextColor.setColorValue(ColorConverter.rgbFromInt(policyData.menuTextColor));
+      
+      customColorSchemaCheckbox.setSelection(policyData.customColorSchema);
+      backgroundColor.setEnabled(policyData.customColorSchema);
+      textColor.setEnabled(policyData.customColorSchema);
+      borderColor.setEnabled(policyData.customColorSchema);
+      highlightColor.setEnabled(policyData.customColorSchema);
+      menuBackgroundColor.setEnabled(policyData.customColorSchema);
+      menuTextColor.setEnabled(policyData.customColorSchema);
+      menuHighligtColor.setEnabled(policyData.customColorSchema);
+      menuSelectionColor.setEnabled(policyData.customColorSchema);
 
-      welcomeMessageText.setText(sPolicy.welcomeMessage != null ? sPolicy.welcomeMessage : "");
+      welcomeMessageText.setText(policyData.welcomeMessage != null ? policyData.welcomeMessage : "");
 
-      viewer.setInput(new Object[] { sPolicy.menu });
+      viewer.setInput(new Object[] { policyData.menu });
    }
 
    /* (non-Javadoc)
@@ -571,42 +584,29 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    @Override
    public AgentPolicy getUpdatedPolicy()
    {
-      sPolicy.setIcon((iconFile != null) && (iconFile.length > 0) ? iconFile : null);
-      sPolicy.welcomeMessage = welcomeMessageText.getText();
+      policyData.setIcon((iconFile != null) && (iconFile.length > 0) ? iconFile : null);
+      policyData.welcomeMessage = welcomeMessageText.getText();
 
-      if (setColorSchemaCheckbox.getSelection())
-      {
-         sPolicy.backgroundColor = ColorConverter.rgbToInt(backgroundColor.getColorValue());
-         sPolicy.borderColor = ColorConverter.rgbToInt(borderColor.getColorValue());
-         sPolicy.headerColor = ColorConverter.rgbToInt(headerColor.getColorValue());
-         sPolicy.textColor = ColorConverter.rgbToInt(textColor.getColorValue());
-         sPolicy.menuBackgroundColor = ColorConverter.rgbToInt(menuBackgroundColor.getColorValue());
-         sPolicy.menuHighligtColor = ColorConverter.rgbToInt(menuHighligtColor.getColorValue());
-         sPolicy.menuSelectionColor = ColorConverter.rgbToInt(menuSelectionColor.getColorValue());
-         sPolicy.menuTextColor = ColorConverter.rgbToInt(menuTextColor.getColorValue());
-      }
-      else
-      {
-         sPolicy.backgroundColor = null;
-         sPolicy.borderColor = null;
-         sPolicy.headerColor = null;
-         sPolicy.textColor = null;
-         sPolicy.menuBackgroundColor = null;
-         sPolicy.menuHighligtColor = null;
-         sPolicy.menuSelectionColor = null;
-         sPolicy.menuTextColor = null;
-      }
+      policyData.customColorSchema = customColorSchemaCheckbox.getSelection();
+      policyData.backgroundColor = ColorConverter.rgbToInt(backgroundColor.getColorValue());
+      policyData.borderColor = ColorConverter.rgbToInt(borderColor.getColorValue());
+      policyData.highlightColor = ColorConverter.rgbToInt(highlightColor.getColorValue());
+      policyData.textColor = ColorConverter.rgbToInt(textColor.getColorValue());
+      policyData.menuBackgroundColor = ColorConverter.rgbToInt(menuBackgroundColor.getColorValue());
+      policyData.menuHighligtColor = ColorConverter.rgbToInt(menuHighligtColor.getColorValue());
+      policyData.menuSelectionColor = ColorConverter.rgbToInt(menuSelectionColor.getColorValue());
+      policyData.menuTextColor = ColorConverter.rgbToInt(menuTextColor.getColorValue());
       
       try
       {
-         policy.setContent(sPolicy.createXml());
+         policyObject.setContent(policyData.createXml());
       }
       catch(Exception e)
       {
-         policy.setContent("");
+         policyObject.setContent("");
          e.printStackTrace();
       }
-      return policy;
+      return policyObject;
    }
 
    /* (non-Javadoc)

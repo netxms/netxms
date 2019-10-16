@@ -183,6 +183,22 @@ void LoadConfig()
 
       g_closeOnDeactivate = config.getValueAsBoolean(_T("/closeOnDeactivate"), false);
 
+      if (config.getValueAsBoolean(_T("/customColorSchema"), false))
+      {
+         s_colors[APP_COLOR_BACKGROUND] = config.getValueAsUInt(_T("/backgroundColor"), s_defaultColors[APP_COLOR_BACKGROUND]);
+         s_colors[APP_COLOR_FOREGROUND] = config.getValueAsUInt(_T("/textColor"), s_defaultColors[APP_COLOR_FOREGROUND]);
+         s_colors[APP_COLOR_HIGHLIGHT] = config.getValueAsUInt(_T("/highlightColor"), s_defaultColors[APP_COLOR_HIGHLIGHT]);
+         s_colors[APP_COLOR_BORDER] = config.getValueAsUInt(_T("/borderColor"), s_defaultColors[APP_COLOR_BORDER]);
+         s_colors[APP_COLOR_MENU_BACKGROUND] = config.getValueAsUInt(_T("/menuBackgroundColor"), s_defaultColors[APP_COLOR_MENU_BACKGROUND]);
+         s_colors[APP_COLOR_MENU_SELECTED] = config.getValueAsUInt(_T("/menuSelectionColor"), s_defaultColors[APP_COLOR_MENU_SELECTED]);
+         s_colors[APP_COLOR_MENU_HIGHLIGHTED] = config.getValueAsUInt(_T("/menuHighligtColor"), s_defaultColors[APP_COLOR_MENU_HIGHLIGHTED]);
+         s_colors[APP_COLOR_MENU_FOREGROUND] = config.getValueAsUInt(_T("/menuTextColor"), s_defaultColors[APP_COLOR_MENU_FOREGROUND]);
+      }
+      else
+      {
+         memcpy(s_colors, s_defaultColors, sizeof(s_colors));
+      }
+
       LoadMenuItems(&config);
    }
    else

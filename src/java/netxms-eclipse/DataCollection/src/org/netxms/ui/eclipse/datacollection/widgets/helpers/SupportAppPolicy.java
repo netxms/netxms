@@ -13,28 +13,31 @@ import org.simpleframework.xml.core.Persister;
 public class SupportAppPolicy
 {
    @Element(required=false)
-   public Integer backgroundColor;
+   public boolean customColorSchema = false;
+
+   @Element(required=false)
+   public Integer backgroundColor = 0x303030;
    
    @Element(required=false)
-   public Integer borderColor;
+   public Integer textColor = 0xC0C0C0;
    
    @Element(required=false)
-   public Integer headerColor;
+   public Integer highlightColor = 0x2020C0;
    
    @Element(required=false)
-   public Integer textColor;
+   public Integer borderColor = 0xC0C0C0;
    
    @Element(required=false)
-   public Integer menuBackgroundColor;
+   public Integer menuBackgroundColor = 0x303030;
    
    @Element(required=false)
-   public Integer menuHighligtColor;
+   public Integer menuHighligtColor = 0x505050;
    
    @Element(required=false)
-   public Integer menuSelectionColor;
+   public Integer menuSelectionColor = 0x0069D2;
    
    @Element(required=false)
-   public Integer menuTextColor;
+   public Integer menuTextColor = 0xF0F0F0;
    
    @Element(required=false)
    public String icon;

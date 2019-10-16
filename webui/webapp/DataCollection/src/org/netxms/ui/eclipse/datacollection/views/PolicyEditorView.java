@@ -68,9 +68,10 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    }
 
    /**
-    * Set template object to edit
+    * Set policy object to edit
     * 
-    * @param policy policy object
+    * @param policyGUID policy object GUID
+    * @param templateId template object ID
     */
    public void setPolicy(UUID policyGUID, long templateId)
    {
