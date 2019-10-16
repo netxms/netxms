@@ -14859,34 +14859,36 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
-      IntegerArray<UINT32> *objectList = new IntegerArray<UINT32>(16, 16);
-      request->getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, objectList);
-      bool hasAccess = true;
-      for (int i = 0; i < objectList->size(); i++)
+      IntegerArray<UINT32> objectList(16, 16);
+      request->getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, &objectList);
+      UINT32 rcc = RCC_SUCCESS;
+      for (int i = 0; i < objectList.size(); i++)
       {
-         if(!FindObjectById(objectList->get(i))->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         NetObj *object = FindObjectById(objectList.get(i));
+         if (object == NULL)
          {
-            hasAccess = false;
-            writeAuditLog(AUDIT_SYSCFG, false, objectList->get(i), _T("Access denied on user agent notification creation"));
+            rcc = RCC_INVALID_OBJECT_ID;
+            break;
+         }
+         if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            rcc = RCC_ACCESS_DENIED;
+            writeAuditLog(AUDIT_SYSCFG, false, objectList.get(i), _T("Access denied on user agent notification creation"));
             break;
          }
       }
-      if (hasAccess)
+      if (rcc == RCC_SUCCESS)
       {
          TCHAR tmp[MAX_USER_AGENT_MESSAGE_SIZE];
-        UserAgentNotificationItem *uan = CreateNewUserAgentNotification(request->getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
-               objectList, request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3));
+         UserAgentNotificationItem *uan = CreateNewUserAgentNotification(request->getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
+               &objectList, request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3));
          json_t *objData = uan->toJson();
          WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), NULL, objData,
-            _T("User agent notification %d created"), uan->getId());
+               _T("User agent notification %d created"), uan->getId());
          json_decref(objData);
          uan->decRefCount();
       }
-      else
-      {
-         delete objectList;
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
+      msg.setField(VID_RCC, rcc);
    }
    else
    {

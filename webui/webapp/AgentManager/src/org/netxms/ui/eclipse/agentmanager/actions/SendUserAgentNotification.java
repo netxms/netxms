@@ -32,7 +32,10 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.dialogs.SendUserAgentNotificationDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -81,12 +84,13 @@ public class SendUserAgentNotification implements IObjectActionDelegate
 	{
 	   boolean isEnabled = true;
 	   Set<Long> tmp = new HashSet<Long>();
-		if ((selection instanceof IStructuredSelection) &&
-		    (((IStructuredSelection)selection).size() >= 1))
+		if (!selection.isEmpty() && (selection instanceof IStructuredSelection))
 		{
-		   for (Object obj : ((IStructuredSelection)selection).toArray())
+		   for (Object obj : ((IStructuredSelection)selection).toList())
 		   {
-   			if (((obj instanceof AbstractNode) && ((AbstractNode)obj).hasAgent()) || (obj instanceof Container))
+   			if (((obj instanceof AbstractNode) && ((AbstractNode)obj).hasAgent()) || 
+   			    (obj instanceof Container) || (obj instanceof ServiceRoot) || (obj instanceof Rack) ||
+   			    (obj instanceof Cluster))
    			{
    			   tmp.add(((AbstractObject)obj).getObjectId());
    			}
@@ -102,7 +106,7 @@ public class SendUserAgentNotification implements IObjectActionDelegate
          isEnabled = false;
 		}
       action.setEnabled(isEnabled);
-      if(isEnabled)
+      if (isEnabled)
          objects = tmp;
 	}
 

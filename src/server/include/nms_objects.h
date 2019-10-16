@@ -3887,7 +3887,7 @@ class UserAgentNotificationItem
 private:
    UINT32 m_id;
    TCHAR m_message[MAX_USER_AGENT_MESSAGE_SIZE];
-   IntegerArray<UINT32> *m_objectList; //like alarm category list
+   IntegerArray<UINT32> m_objects;
    time_t m_startTime;
    time_t m_endTime;
    bool m_recall;
@@ -3895,8 +3895,8 @@ private:
 
 public:
    UserAgentNotificationItem(DB_RESULT result, int row);
-   UserAgentNotificationItem(const TCHAR *message, IntegerArray<UINT32> *m_objectId, time_t startTime, time_t endTime);
-   ~UserAgentNotificationItem() { delete m_objectList; }
+   UserAgentNotificationItem(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime);
+   ~UserAgentNotificationItem() { }
 
    UINT32 getId() { return m_id; }
    time_t getEndTime() { return m_endTime; }
@@ -3977,7 +3977,6 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass);
 void DeleteUserFromAllObjects(UINT32 dwUserId);
 
 bool IsValidParentClass(int childClass, int parentClass);
-bool IsAgentPolicyObject(NetObj *object);
 bool IsEventSource(int objectClass);
 
 int DefaultPropagatedStatus(int iObjectStatus);
@@ -3987,9 +3986,9 @@ PollerInfo *RegisterPoller(PollerType type, NetObj *object, bool objectCreation 
 void ShowPollers(CONSOLE_CTX console);
 
 void InitUserAgentNotifications();
-void DeleteOldUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
+void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
 void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
-UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime);
+UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime);
 
 /**
  * Global variables

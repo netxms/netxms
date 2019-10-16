@@ -47,7 +47,10 @@ void InitUserAgentNotifications()
    DbgPrintf(2, _T("%d user agent messages loaded"), g_userAgentNotificationList.size());
 }
 
-void DeleteOldUserAgentNotifications(DB_HANDLE hdb, UINT32 retentionTime)
+/**
+ * Delete expired user agent notifications
+ */
+void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb, UINT32 retentionTime)
 {
    g_userAgentNotificationListMutex.lock();
    time_t now = time(NULL);
@@ -90,10 +93,13 @@ void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node)
    g_userAgentNotificationListMutex.unlock();
 }
 
-UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime)
+/**
+ * Create new user agent notification
+ */
+UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime)
 {
    g_userAgentNotificationListMutex.lock();
-   UserAgentNotificationItem *uan = new UserAgentNotificationItem(message, arr, startTime, endTime);
+   UserAgentNotificationItem *uan = new UserAgentNotificationItem(message, objects, startTime, endTime);
    g_userAgentNotificationList.add(uan);
    uan->incRefCount();
    uan->incRefCount();
@@ -107,22 +113,21 @@ UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, 
 /**
  * Create user agent message form database
  */
-UserAgentNotificationItem::UserAgentNotificationItem(DB_RESULT result, int row)
+UserAgentNotificationItem::UserAgentNotificationItem(DB_RESULT result, int row) : m_objects(64, 64)
 {
    m_id = DBGetFieldULong(result, row, 0);
    DBGetField(result, row, 1, m_message, MAX_USER_AGENT_MESSAGE_SIZE);
 
    TCHAR objectList[MAX_DB_STRING];
    DBGetField(result, row, 2, objectList, MAX_DB_STRING);
-   m_objectList = new IntegerArray<UINT32>(16, 16);
    int count;
    TCHAR **ids = SplitString(objectList, _T(','), &count);
    for(int i = 0; i < count; i++)
    {
-      m_objectList->add(_tcstoul(ids[i], NULL, 10));
-      free(ids[i]);
+      m_objects.add(_tcstoul(ids[i], NULL, 10));
+      MemFree(ids[i]);
    }
-   free(ids);
+   MemFree(ids);
 
    m_startTime = DBGetFieldLong(result, row, 3);
    m_endTime = DBGetFieldLong(result, row, 4);
@@ -133,11 +138,10 @@ UserAgentNotificationItem::UserAgentNotificationItem(DB_RESULT result, int row)
 /**
  * Create new user agent message
  */
-UserAgentNotificationItem::UserAgentNotificationItem(const TCHAR *message, IntegerArray<UINT32> *objectList, time_t startTime, time_t endTime)
+UserAgentNotificationItem::UserAgentNotificationItem(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime) : m_objects(objects)
 {
    m_id = CreateUniqueId(IDG_UA_MESSAGE);
    _tcslcpy(m_message, message, MAX_USER_AGENT_MESSAGE_SIZE);
-   m_objectList = objectList;
    m_startTime = startTime;
    m_endTime = endTime;
    m_recall = false;
@@ -149,9 +153,9 @@ UserAgentNotificationItem::UserAgentNotificationItem(const TCHAR *message, Integ
  */
 bool UserAgentNotificationItem::isApplicable(UINT32 nodeId)
 {
-   for (int i = 0; i < m_objectList->size(); i++)
+   for (int i = 0; i < m_objects.size(); i++)
    {
-      UINT32 id = m_objectList->get(i);
+      UINT32 id = m_objects.get(i);
       if(id == nodeId || IsParentObject(id, nodeId))
          return true;
    }
@@ -161,12 +165,12 @@ bool UserAgentNotificationItem::isApplicable(UINT32 nodeId)
 /**
  * Check if object is node - then send update, if container - iterate over children
  */
-static void SendUpdate(NXCPMessage *msg, NetObj *obj)
+static void SendUpdate(NXCPMessage *msg, NetObj *object)
 {
-   if (obj->getObjectClass() == OBJECT_NODE)
+   if (object->getObjectClass() == OBJECT_NODE)
    {
-      AgentConnectionEx *conn = static_cast<Node *>(obj)->getAgentConnection(false);
-      if(conn != NULL)
+      AgentConnectionEx *conn = static_cast<Node *>(object)->getAgentConnection(false);
+      if (conn != NULL)
       {
          msg->setId(conn->generateRequestId());
          conn->sendMessage(msg);
@@ -174,14 +178,13 @@ static void SendUpdate(NXCPMessage *msg, NetObj *obj)
    }
    else
    {
-      ObjectArray<NetObj> *list = obj->getChildList(OBJECT_NODE);
-      for(int j = 0; j < list->size(); j++)
+      ObjectArray<NetObj> *children = object->getChildList(OBJECT_NODE);
+      for(int j = 0; j < children->size(); j++)
       {
-         NetObj *obj = list->get(j);
-         SendUpdate(msg, obj);
+         SendUpdate(msg, children->get(j));
       }
+      delete children;
    }
-
 }
 
 /**
@@ -194,10 +197,11 @@ void UserAgentNotificationItem::processUpdate()
    fillMessage(VID_UA_NOTIFICATION_BASE, &msg, false);
 
    //create and fill message
-   for (int i = 0; i < m_objectList->size(); i++)
+   for (int i = 0; i < m_objects.size(); i++)
    {
-      NetObj *obj = FindObjectById(m_objectList->get(i));
-      SendUpdate(&msg, obj);
+      NetObj *object = FindObjectById(m_objects.get(i));
+      if (object != NULL)
+         SendUpdate(&msg, object);
    }
 
    saveToDatabase();
@@ -215,7 +219,7 @@ void UserAgentNotificationItem::fillMessage(UINT32 base, NXCPMessage *msg, bool 
    msg->setFieldFromTime(base + 3, m_endTime);
    if (fullInfo) // do not send info to agent
    {
-      msg->setFieldFromInt32Array(base + 4, m_objectList);
+      msg->setFieldFromInt32Array(base + 4, &m_objects);
       msg->setField(base + 5, m_recall);
    }
 }
@@ -228,8 +232,8 @@ void UserAgentNotificationItem::saveToDatabase()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    static const TCHAR *columns[] = {
-            _T("message"), _T("objects"), _T("start_time"), _T("end_time"), _T("recall"), NULL
-         };
+      _T("message"), _T("objects"), _T("start_time"), _T("end_time"), _T("recall"), NULL
+   };
 
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("user_agent_notifications"), _T("id"), m_id, columns);
    if (hStmt != NULL)
@@ -237,11 +241,11 @@ void UserAgentNotificationItem::saveToDatabase()
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_message, MAX_USER_AGENT_MESSAGE_SIZE);
 
       String buffer;
-      for(int i = 0; i < m_objectList->size(); i++)
+      for(int i = 0; i < m_objects.size(); i++)
       {
          if (buffer.length() > 0)
             buffer.append(_T(','));
-         buffer.append(m_objectList->get(i));
+         buffer.append(m_objects.get(i));
       }
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, buffer, MAX_USER_AGENT_MESSAGE_SIZE);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)m_startTime);
@@ -264,10 +268,9 @@ json_t *UserAgentNotificationItem::toJson() const
    json_t *root = json_object();
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "message", json_string_t(m_message));
-   json_object_set_new(root, "objectList", m_objectList->toJson());
+   json_object_set_new(root, "objectList", m_objects.toJson());
    json_object_set_new(root, "startTime", json_integer(m_startTime));
    json_object_set_new(root, "endTime", json_integer(m_endTime));
    json_object_set_new(root, "recalled", json_boolean(m_recall));
    return root;
-
 }

@@ -90,7 +90,63 @@
                class="org.netxms.ui.eclipse.agentmanager.actions.SendUserAgentNotification"
                enablesFor="+"
                icon="icons/user_agent_messages.png"
-               id="horg.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification"
+               id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_Node"
+               label="Send user agent notification"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.agentmanager.actions.popup.object.Container"
+            objectClass="org.netxms.client.objects.Container">
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.SendUserAgentNotification"
+               enablesFor="+"
+               icon="icons/user_agent_messages.png"
+               id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_Container"
+               label="Send user agent notification"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.agentmanager.actions.popup.object.ServiceRoot"
+            objectClass="org.netxms.client.objects.ServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.SendUserAgentNotification"
+               enablesFor="+"
+               icon="icons/user_agent_messages.png"
+               id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_ServiceRoot"
+               label="Send user agent notification"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.agentmanager.actions.popup.object.Rack"
+            objectClass="org.netxms.client.objects.Rack">
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.SendUserAgentNotification"
+               enablesFor="+"
+               icon="icons/user_agent_messages.png"
+               id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_Rack"
+               label="Send user agent notification"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.agentmanager.actions.popup.object.Cluster"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.SendUserAgentNotification"
+               enablesFor="+"
+               icon="icons/user_agent_messages.png"
+               id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_Cluster"
                label="Send user agent notification"
                menubarPath="objectmgmt"
                style="push">
