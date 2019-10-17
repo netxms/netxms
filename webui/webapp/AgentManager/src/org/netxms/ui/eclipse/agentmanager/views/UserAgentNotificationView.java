@@ -218,7 +218,7 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
                @Override
                protected void runInternal(IProgressMonitor monitor) throws Exception
                {
-                  session.userAgentNotificationRecall(msg.getId());
+                  session.recallUserAgentNotification(msg.getId());
                }
                
                @Override

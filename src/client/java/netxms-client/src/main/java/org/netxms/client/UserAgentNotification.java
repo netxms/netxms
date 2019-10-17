@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2019 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.client;
 
 import java.util.Arrays;
@@ -5,49 +23,50 @@ import java.util.Date;
 import org.netxms.base.NXCPMessage;
 
 /**
- * User agent notification class
+ * User agent notification
  */
 public class UserAgentNotification
 {
    private long id;
    private String message;
-   private long[] objectList;
-   private String objNames;
+   private long[] objects;
+   private String objectNames;
    private Date startTime;
    private Date endTime;
    private boolean recalled;
    
    /**
-    * Constructor for UsearAgentNotification class
+    * Create notification object from NXCP message. 
     * 
-    * @param response response message form server
-    * @param base base id of object
-    * @param session session
+    * @param msg NXCP message
+    * @param baseId base field ID for this object
+    * @param session associated client session
     */
-   public UserAgentNotification(NXCPMessage response, long base, NXCSession session)
+   public UserAgentNotification(NXCPMessage msg, long baseId, NXCSession session)
    {
-      id = response.getFieldAsInt32(base);
-      message = response.getFieldAsString(base + 1);
-      startTime = response.getFieldAsDate(base + 2);
-      endTime = response.getFieldAsDate(base + 3);
-      objectList = response.getFieldAsUInt32Array(base + 4);
-      
-      Arrays.sort(objectList); //Sort objects for comparator in table view
+      id = msg.getFieldAsInt32(baseId);
+      message = msg.getFieldAsString(baseId + 1);
+      startTime = msg.getFieldAsDate(baseId + 2);
+      endTime = msg.getFieldAsDate(baseId + 3);
+      objects = msg.getFieldAsUInt32Array(baseId + 4);
+
+      Arrays.sort(objects); // FIXME: really needed here? Sort objects for comparator in table view
       StringBuilder sb = new StringBuilder();
-      for(int i = 0; i < objectList.length; i++)
+      for(int i = 0; i < objects.length; i++)
       {
-         sb.append(session.findObjectById(objectList[i]).getObjectName());
-         if(i+1 < objectList.length)
-         {
+         if (i > 0)
             sb.append(", ");
-         }
+         sb.append(session.getObjectName(objects[i]));
       }
-      objNames = sb.toString();
-      recalled = response.getFieldAsBoolean(base + 5);
+      objectNames = sb.toString();
+
+      recalled = msg.getFieldAsBoolean(baseId + 5);
    }
 
    /**
-    * @return the id
+    * Get notification ID.
+    * 
+    * @return notification ID
     */
    public long getId()
    {
@@ -55,7 +74,9 @@ public class UserAgentNotification
    }
    
    /**
-    * @return the message
+    * Get notification message.
+    * 
+    * @return notification message
     */
    public String getMessage()
    {
@@ -63,20 +84,29 @@ public class UserAgentNotification
    }
    
    /**
-    * @return the objectList
+    * Get list of object identifiers where this notification was sent.
+    * 
+    * @return list of object identifiers where this notification was sent
     */
-   public long[] getObjectList()
+   public long[] getObjects()
    {
-      return objectList;
-   }
-   
-   public String getObjectNamesAsString()
-   {
-      return objNames;
+      return objects;
    }
    
    /**
-    * @return the startTime
+    * Get list of objects where this notification was sent as comma separated list.
+    * 
+    * @return list of objects where this notification was sent as comma separated list
+    */
+   public String getObjectNames()
+   {
+      return objectNames;
+   }
+   
+   /**
+    * Get notification start time.
+    * 
+    * @return notification start time
     */
    public Date getStartTime()
    {
@@ -84,7 +114,9 @@ public class UserAgentNotification
    }
    
    /**
-    * @return the endTime
+    * Get notification end time.
+    * 
+    * @return notification end time
     */
    public Date getEndTime()
    {
@@ -92,7 +124,9 @@ public class UserAgentNotification
    }
    
    /**
-    * @return the recalled
+    * Check if this notification was recalled.
+    * 
+    * @return true if this notification was recalled.
     */
    public boolean isRecalled()
    {

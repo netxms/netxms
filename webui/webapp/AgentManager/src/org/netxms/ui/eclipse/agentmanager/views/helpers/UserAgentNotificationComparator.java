@@ -45,7 +45,7 @@ public class UserAgentNotificationComparator extends ViewerComparator
 				result = Long.signum(uam1.getId() - uam2.getId());
 				break;
 			case UserAgentNotificationView.COL_OBJECTS:
-				result = uam1.getObjectNamesAsString().compareToIgnoreCase(uam2.getObjectNamesAsString());
+				result = uam1.getObjectNames().compareToIgnoreCase(uam2.getObjectNames());
 				break;
 			case UserAgentNotificationView.COL_MESSAGE:
 				result = uam1.getMessage().compareTo(uam2.getMessage());

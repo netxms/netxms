@@ -51,7 +51,7 @@ public class UserAgentNotificationLabelProvider extends LabelProvider implements
 			case UserAgentNotificationView.COL_ID:
 				return Long.toString(uaMessage.getId());
 			case UserAgentNotificationView.COL_OBJECTS:
-				return uaMessage.getObjectNamesAsString();
+				return uaMessage.getObjectNames();
 			case UserAgentNotificationView.COL_MESSAGE:
 				return uaMessage.getMessage();
 			case UserAgentNotificationView.COL_IS_RECALLED:

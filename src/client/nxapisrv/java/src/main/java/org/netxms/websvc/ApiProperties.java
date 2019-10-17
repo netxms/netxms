@@ -28,7 +28,7 @@ public class ApiProperties
 {
    private Logger log = LoggerFactory.getLogger(ApiProperties.class);
    private Properties properties;
-   private String host = "127.0.0.1";
+   private String host = "10.5.5.43"; //"127.0.0.1";
    private int port = 4701;
    
    /**

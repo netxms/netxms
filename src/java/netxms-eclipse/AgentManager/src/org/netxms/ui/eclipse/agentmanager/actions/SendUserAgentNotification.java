@@ -70,7 +70,7 @@ public class SendUserAgentNotification implements IObjectActionDelegate
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.createUserAgentNotification(dlg.getMessage(), objects.toArray(new Long[objects.size()]), dlg.getStartTime(), dlg.getEndTime());
+               session.createUserAgentNotification(dlg.getMessage(), objects, dlg.getStartTime(), dlg.getEndTime());
             }
          }.start();
       }

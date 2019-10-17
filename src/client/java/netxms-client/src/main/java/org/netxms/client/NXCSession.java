@@ -11164,13 +11164,13 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_UA_NOTIFICATIONS);
       sendMessage(msg);
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      List<UserAgentNotification> list = new ArrayList<UserAgentNotification>();
       int count = response.getFieldAsInt32(NXCPCodes.VID_USER_AGENT_MESSAGE_COUNT);
-      long base = NXCPCodes.VID_UA_NOTIFICATION_BASE;
-      for (int i = 0 ; i < count; i++, base+=10)
-         list.add(new UserAgentNotification(response, base, this));
-      
+      List<UserAgentNotification> list = new ArrayList<UserAgentNotification>(count);
+      long fieldId = NXCPCodes.VID_UA_NOTIFICATION_BASE;
+      for (int i = 0 ; i < count; i++, fieldId += 10)
+         list.add(new UserAgentNotification(response, fieldId, this));
       return list;
    }
 
@@ -11179,7 +11179,7 @@ public class NXCSession
     * 
     * @param id recall id
     */
-   public void userAgentNotificationRecall(long id) throws NXCException, IOException
+   public void recallUserAgentNotification(long id) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RECALL_UA_NOTIFICATION);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)id);
@@ -11195,7 +11195,7 @@ public class NXCSession
     * @param startTime notification's activation time
     * @param endTime notificaiton's display end time
     */
-   public void createUserAgentNotification(String message, Long[] objects, Date startTime, Date endTime) throws NXCException, IOException
+   public void createUserAgentNotification(String message, long[] objects, Date startTime, Date endTime) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_UA_NOTIFICATION);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE, message);
@@ -11204,6 +11204,23 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 3, endTime);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Create new user agent notifications
+    * 
+    * @param message notification message
+    * @param objects objects to show notifications
+    * @param startTime notification's activation time
+    * @param endTime notificaiton's display end time
+    */
+   public void createUserAgentNotification(String message, Collection<Long> objects, Date startTime, Date endTime) throws NXCException, IOException
+   {
+      long[] idList = new long[objects.size()];
+      int i = 0;
+      for(Long id : objects)
+         idList[i++] = id;
+      createUserAgentNotification(message, idList, startTime, endTime);
    }
 
    /**

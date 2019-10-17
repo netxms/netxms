@@ -40,7 +40,7 @@ public class UserAgentNotificationFilter extends ViewerFilter
          return true;
       else if (uam.getMessage().toLowerCase().contains(filterString))
          return true;
-      else if (uam.getObjectNamesAsString().toLowerCase().contains(filterString))
+      else if (uam.getObjectNames().toLowerCase().contains(filterString))
          return true;
       else if (RegionalSettings.getDateTimeFormat().format(uam.getEndTime()).contains(filterString))
          return true;

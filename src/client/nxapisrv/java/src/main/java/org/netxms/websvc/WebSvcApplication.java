@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import org.netxms.websvc.handlers.PredefinedGraphs;
 import org.netxms.websvc.handlers.RootHandler;
 import org.netxms.websvc.handlers.Sessions;
 import org.netxms.websvc.handlers.SummaryTableAdHoc;
+import org.netxms.websvc.handlers.UserAgentNotifications;
 import org.netxms.websvc.handlers.UserPassword;
 import org.netxms.websvc.handlers.Users;
 import org.restlet.Application;
@@ -93,6 +94,7 @@ public class WebSvcApplication extends Application
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
       router.attach("/summaryTable/adHoc", SummaryTableAdHoc.class);
+      router.attach("/userAgentNotifications", UserAgentNotifications.class);
       router.attach("/users", Users.class);
       router.attach("/users/{id}", Users.class);
       router.attach("/users/{id}/password", UserPassword.class);
