@@ -1,0 +1,24 @@
+# Dockerfile for building NetXMS debug image
+# Assumes that host will map NetXMS installation firectory (like /opt/netxms) to /data
+
+FROM ubuntu:bionic
+MAINTAINER Victor Kirhenshtein <victor@radensolutions.com>
+
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
+    apt-get update && \
+    apt-get install -y apt-utils && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+        libexpat1 \
+        libjansson4 \
+        libssh-4 \
+	libpq5 \
+        libmosquitto1 && \
+    ln -s /data /opt/netxms && \
+    apt-get -qq clean
+
+VOLUME /data
+
+EXPOSE 4701
+
+CMD ["/opt/netxms/bin/netxmsd","-S","-D6","-c","/opt/netxms/etc/netxmsd-docker.conf"]

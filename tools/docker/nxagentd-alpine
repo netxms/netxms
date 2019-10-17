@@ -1,0 +1,14 @@
+# Dockerfile for building NetXMS debug image
+# Assumes that host will map NetXMS installation firectory (like /opt/netxms) to /data
+
+FROM alpine
+MAINTAINER Victor Kirhenshtein <victor@radensolutions.com>
+
+RUN ln -s /data /opt/netxms
+
+VOLUME /data
+
+EXPOSE 4700
+
+#CMD ["/opt/netxms/bin/nxagentd","-S","-D6","-c","/opt/netxms/etc/nxagentd-docker.conf"]
+CMD ["/bin/sh"]
