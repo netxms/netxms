@@ -383,10 +383,12 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		// Delete empty subnets if needed
 		if (g_flags & AF_DELETE_EMPTY_SUBNETS)
+		{
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Checking for empty subnets"));
 			DeleteEmptySubnets();
+		}
 
 		// Remove expired DCI data
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing collected DCI data"));
       if (!ConfigReadBoolean(_T("Housekeeper.DisableCollectedDataCleanup"), false))
       {
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing collected DCI data"));
