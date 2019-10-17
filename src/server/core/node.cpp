@@ -9597,7 +9597,7 @@ bool Node::getIcmpStatistics(const TCHAR *target, UINT32 *last, UINT32 *min, UIN
 StringList *Node::getIcmpStatCollectors()
 {
    lockProperties();
-   StringList *collectors = m_icmpStatCollectors->keys();
+   StringList *collectors = (m_icmpStatCollectors != NULL) ? m_icmpStatCollectors->keys() : new StringList();
    unlockProperties();
    return collectors;
 }
