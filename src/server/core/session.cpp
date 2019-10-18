@@ -13388,6 +13388,7 @@ void ClientSession::queryAdHocSummaryTable(NXCPMessage *request)
    {
       msg.setField(VID_RCC, rcc);
    }
+   delete tableDefinition;
 
    // Send response
    sendMessage(&msg);
