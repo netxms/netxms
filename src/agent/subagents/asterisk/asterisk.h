@@ -193,9 +193,9 @@ public:
    const char *getDomain() const { return m_domain; }
    const char *getProxy() const { return m_proxy; }
    UINT32 getInterval() const { return m_interval; }
-   time_t getLastRunTime() const { return GetAttributeWithLock(&m_lastRunTime, m_mutex); }
-   INT32 getElapsedTime() const { return GetAttributeWithLock(&m_elapsedTime, m_mutex); }
-   int getStatus() const { return GetAttributeWithLock(&m_status, m_mutex); }
+   time_t getLastRunTime() const { return GetAttributeWithLock(m_lastRunTime, m_mutex); }
+   INT32 getElapsedTime() const { return GetAttributeWithLock(m_elapsedTime, m_mutex); }
+   int getStatus() const { return GetAttributeWithLock(m_status, m_mutex); }
 
    void start();
    void stop();

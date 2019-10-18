@@ -27,6 +27,7 @@
  * Static members
  */
 const ssize_t __EXPORT String::npos = -1;
+const String __EXPORT String::empty;
 
 /**
  * Create empty string
@@ -360,6 +361,15 @@ StringBuffer::StringBuffer(const String &src) : String(src)
 }
 
 /**
+ * Copy constructor
+ */
+StringBuffer::StringBuffer(const SharedString &src) : String(src.str())
+{
+   m_allocated = isInternalBuffer() ? 0 : m_length + 1;
+   m_allocationStep = 256;
+}
+
+/**
  * Create string buffer with given initial content
  */
 StringBuffer::StringBuffer(const TCHAR *init) : String(init)
@@ -445,6 +455,14 @@ StringBuffer& StringBuffer::operator =(const String &src)
    }
    m_allocationStep = 256;
    return *this;
+}
+
+/**
+ * Operator =
+ */
+StringBuffer& StringBuffer::operator =(const SharedString &src)
+{
+   return operator=(src.str());
 }
 
 /**

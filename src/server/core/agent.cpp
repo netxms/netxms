@@ -662,7 +662,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    if ((dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
    {
       debugPrintf(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch"),
-                  dcObject->getName(), dciId, target->getName(), target->getId());
+                  dcObject->getName().cstr(), dciId, target->getName(), target->getId());
       return ERR_INTERNAL_ERROR;
    }
 
@@ -671,7 +671,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    bool success = true;
 
    debugPrintf(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d]"),
-               dcObject->getName(), dciId, type, status, target->getName(), target->getId());
+               dcObject->getName().cstr(), dciId, type, status, target->getName(), target->getId());
 
    switch(status)
    {
@@ -691,7 +691,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
                break;
             default:
                debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
-                           type, dcObject->getName(), dciId, target->getName(), target->getId());
+                           type, dcObject->getName().cstr(), dciId, target->getName(), target->getId());
                return ERR_INTERNAL_ERROR;
          }
 
@@ -842,7 +842,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       if ((type != DCO_TYPE_ITEM) || (dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
       {
          debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch (element %d)"),
-                     dcObject->getName(), dciId, target->getName(), target->getId(), i);
+                     dcObject->getName().cstr(), dciId, target->getName(), target->getId(), i);
          status[i] = BULK_DATA_REC_FAILURE;
          continue;
       }
@@ -850,7 +850,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       void *value = request->getFieldAsString(fieldId + 5);
       UINT32 statusCode = request->getFieldAsUInt32(fieldId + 6);
       debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d] (element %d)"),
-                  dcObject->getName(), dciId, type, statusCode, target->getName(), target->getId(), i);
+                  dcObject->getName().cstr(), dciId, type, statusCode, target->getName(), target->getId(), i);
       time_t t = request->getFieldAsTime(fieldId + 4);
       bool success = true;
 

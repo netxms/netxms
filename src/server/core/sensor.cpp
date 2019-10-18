@@ -485,13 +485,13 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
       obj = (DataCollectionTarget *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
       if (obj == NULL)
       {
-         DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName(), dco->getId(), dco->getSourceNode());
+         DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
          return NULL;
       }
       if (!obj->isTrustedNode(m_id))
       {
          DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source sensor %s [%d]"),
-                  dco->getName(), dco->getId(), m_name, m_id, obj->getName(), obj->getId());
+                  dco->getName().cstr(), dco->getId(), m_name, m_id, obj->getName(), obj->getId());
          return NULL;
       }
    }

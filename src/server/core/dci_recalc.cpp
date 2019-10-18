@@ -34,7 +34,7 @@ DCIRecalculationJob::DCIRecalculationJob(DataCollectionTarget *object, DCItem *d
    m_cancelled = false;
 
    TCHAR buffer[1024];
-   _sntprintf(buffer, 1024, _T("Recalculate values for DCI \"%s\" on %s"), dci->getDescription(), object->getName());
+   _sntprintf(buffer, 1024, _T("Recalculate values for DCI \"%s\" on %s"), dci->getDescription().cstr(), object->getName());
    setDescription(buffer);
 }
 

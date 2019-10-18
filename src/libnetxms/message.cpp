@@ -787,6 +787,20 @@ MacAddress NXCPMessage::getFieldAsMacAddress(UINT32 fieldId) const
 }
 
 /**
+ * Get string field as shared string object
+ */
+SharedString NXCPMessage::getFieldAsSharedString(UINT32 fieldId, size_t maxSize) const
+{
+   if (maxSize > 0)
+   {
+      TCHAR *buffer = (TCHAR *)alloca(maxSize * sizeof(TCHAR));
+      getFieldAsString(fieldId, NULL, buffer, maxSize);
+      return SharedString(buffer);
+   }
+   return SharedString(getFieldAsString(fieldId, NULL, NULL, 0));
+}
+
+/**
  * Get string field
  * If buffer is NULL, memory block of required size will be allocated
  * for result; if buffer is not NULL, entire result or part of it will

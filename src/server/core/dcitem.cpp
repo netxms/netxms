@@ -88,9 +88,11 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay) : DCObject()
 {
+   TCHAR readBuffer[4096];
+
    m_owner = pNode;
    m_id = DBGetFieldULong(hResult, iRow, 0);
-   m_name = DBGetField(hResult, iRow, 1, NULL, 0);
+   m_name = DBGetField(hResult, iRow, 1, readBuffer, 4096);
    m_source = (BYTE)DBGetFieldLong(hResult, iRow, 2);
    m_dataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_iPollingInterval = DBGetFieldLong(hResult, iRow, 4);
@@ -101,8 +103,8 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *
    setTransformationScript(pszTmp);
    MemFree(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
-   m_description = DBGetField(hResult, iRow, 10, NULL, 0);
-   m_instance = DBGetField(hResult, iRow, 11, NULL, 0);
+   m_description = DBGetField(hResult, iRow, 10, readBuffer, 4096);
+   m_instance = DBGetField(hResult, iRow, 11, readBuffer, 4096);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_thresholds = NULL;
    m_cacheSize = 0;
@@ -117,11 +119,11 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *
 	m_nMultiplier = DBGetFieldLong(hResult, iRow, 17);
 	m_customUnitName = DBGetField(hResult, iRow, 18, NULL, 0);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 19, NULL, 0);
-	m_systemTag = DBGetField(hResult, iRow, 20, NULL, 0);
+	m_systemTag = DBGetField(hResult, iRow, 20, readBuffer, 4096);
 	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 21);
 	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, iRow, 22);
 	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 23);
-	m_instanceDiscoveryData = DBGetField(hResult, iRow, 24, NULL, 0);
+	m_instanceDiscoveryData = DBGetField(hResult, iRow, 24, readBuffer, 4096);
 	m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    pszTmp = DBGetField(hResult, iRow, 25, NULL, 0);
@@ -424,8 +426,8 @@ void DCItem::checkThresholds(ItemValue &value)
          case ThresholdCheckResult::ACTIVATED:
             {
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-					   s_paramNamesReach, m_name, m_description, t->getStringValue(),
-                  (const TCHAR *)checkValue, m_id, m_instance, 0, (const TCHAR *)value);
+					   s_paramNamesReach, m_name.cstr(), m_description.cstr(), t->getStringValue(),
+                  (const TCHAR *)checkValue, m_id, m_instance.cstr(), 0, (const TCHAR *)value);
 				   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
@@ -439,7 +441,7 @@ void DCItem::checkThresholds(ItemValue &value)
             break;
          case ThresholdCheckResult::DEACTIVATED:
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
-					s_paramNamesRearm, m_name, m_description, m_id, m_instance,
+					s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(),
 					t->getStringValue(), (const TCHAR *)checkValue, (const TCHAR *)value);
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
@@ -456,8 +458,8 @@ void DCItem::checkThresholds(ItemValue &value)
 				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now)))
 				   {
                   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-                     s_paramNamesReach, m_name, m_description, t->getStringValue(),
-                           (const TCHAR *)checkValue, m_id, m_instance, 1, (const TCHAR *)value);
+                     s_paramNamesReach, m_name.cstr(), m_description.cstr(), t->getStringValue(),
+                           (const TCHAR *)checkValue, m_id, m_instance.cstr(), 1, (const TCHAR *)value);
                   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
@@ -795,8 +797,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
          case ThresholdCheckResult::ACTIVATED:
             {
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-					   s_paramNamesReach, m_name, m_description, _T(""), _T(""),
-                  m_id, m_instance, 0, _T(""));
+					   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
+                  m_id, m_instance.cstr(), 0, _T(""));
                EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
@@ -812,7 +814,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
             break;
          case ThresholdCheckResult::DEACTIVATED:
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
-					s_paramNamesRearm, m_name, m_description, m_id, m_instance, _T(""), _T(""), _T(""));
+					s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(), _T(""), _T(""), _T(""));
             NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
@@ -822,8 +824,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
 				   {
 					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-						   s_paramNamesReach, m_name, m_description, _T(""), _T(""),
-						   m_id, m_instance, 1, _T(""));
+						   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
+						   m_id, m_instance.cstr(), 1, _T(""));
 					   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
@@ -873,14 +875,14 @@ void DCItem::generateEventsBasedOnThrDiff()
          if(t->isReached())
          {
             PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-                              s_paramNamesReach, m_name, m_description, t->getStringValue(),
-                              t->getLastCheckValue().getString(), m_id, m_instance, 0,
+                              s_paramNamesReach, m_name.cstr(), m_description.cstr(), t->getStringValue(),
+                              t->getLastCheckValue().getString(), m_id, m_instance.cstr(), 0,
                               (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
          }
          else
          {
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
-                              s_paramNamesRearm, m_name, m_description, m_id, m_instance, t->getStringValue(),
+                              s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(), t->getStringValue(),
                               t->getLastCheckValue().getString(),
                               (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
          }
@@ -1026,7 +1028,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          else if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
             DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
-                      m_description, m_id, getOwnerName(), getOwnerId());
+                      m_description.cstr(), m_id, getOwnerName(), getOwnerId());
          }
          else
          {
@@ -1037,7 +1039,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
                PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
                nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
-                        getOwnerName(), getOwnerId(), m_name, m_id, vm->getErrorText());
+                        getOwnerName(), getOwnerId(), m_name.cstr(), m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
             }
          }
@@ -1052,7 +1054,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
             _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
             PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, _T("Script load failed"), m_id);
             nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
-                     getOwnerName(), getOwnerId(), m_name, m_id);
+                     getOwnerName(), getOwnerId(), m_name.cstr(), m_id);
             m_lastScriptErrorReport = now;
          }
          success = false;
@@ -1136,7 +1138,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
    }
 
    nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::updateCacheSizeInternal(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
-            m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
+            m_name.cstr(), m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
 
    // Update cache if needed
    if (m_requiredCacheSize < m_cacheSize)
@@ -1167,7 +1169,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
       if (allowLoad && (m_owner != NULL) && (((m_requiredCacheSize - m_cacheSize) * m_iPollingInterval > 300) || (m_source == DS_PUSH_AGENT)))
       {
          m_bCacheLoaded = false;
-         g_dciCacheLoaderQueue.put(new DCObjectInfo(this));
+         g_dciCacheLoaderQueue.put(createDescriptor());
       }
       else
       {
@@ -1175,7 +1177,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
          m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
          for(UINT32 i = m_cacheSize; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
-         DbgPrintf(7, _T("Cache load skipped for parameter %s [%u]"), m_name, m_id);
+         DbgPrintf(7, _T("Cache load skipped for parameter %s [%u]"), m_name.cstr(), m_id);
          m_cacheSize = m_requiredCacheSize;
          m_bCacheLoaded = true;
       }
@@ -1302,7 +1304,7 @@ void DCItem::reloadCache(bool forceReload)
       }
 
       nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
-               m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
+               m_name.cstr(), m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
       if (hResult != NULL)
       {
          // Create cache entries
@@ -1325,7 +1327,7 @@ void DCItem::reloadCache(bool forceReload)
          if (i < m_requiredCacheSize)
          {
             nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
-                     m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize - i);
+                     m_name.cstr(), m_owner->getName(), m_owner->getId(), m_requiredCacheSize - i);
             for(; i < m_requiredCacheSize; i++)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
          }
@@ -1977,11 +1979,12 @@ void DCItem::fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly)
 /**
  * Check if DCI has active threshold
  */
-bool DCItem::hasActiveThreshold()
+bool DCItem::hasActiveThreshold() const
 {
 	bool result = false;
 	lock();
-	for(int i = 0; i < getThresholdCount(); i++)
+	int count = getThresholdCount();
+	for(int i = 0; i < count; i++)
 	{
 		if (m_thresholds->get(i)->isReached())
 		{
@@ -1996,7 +1999,7 @@ bool DCItem::hasActiveThreshold()
 /**
  * Get severity of active threshold. If no active threshold exist, returns SEVERITY_NORMAL.
  */
-int DCItem::getThresholdSeverity()
+int DCItem::getThresholdSeverity() const
 {
    int result = SEVERITY_NORMAL;
 	lock();
@@ -2162,4 +2165,15 @@ Threshold *DCItem::getThresholdById(UINT32 id) const
          return m_thresholds->get(i);
 
    return NULL;
+}
+
+/**
+ * Create descriptor for this object
+ */
+DCObjectInfo *DCItem::createDescriptor() const
+{
+   DCObjectInfo *info = DCObject::createDescriptor();
+   info->m_hasActiveThreshold = hasActiveThreshold();
+   info->m_thresholdSeverity = getThresholdSeverity();
+   return info;
 }

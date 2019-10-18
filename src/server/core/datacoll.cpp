@@ -140,7 +140,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer, (DataCollectionTarget *)pItem->getOwner());
+            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer, static_cast<DataCollectionTarget*>(pItem->getOwner()));
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
@@ -213,10 +213,11 @@ void DataCollector(shared_ptr<DCObject> dcObject)
 {
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(dcObject->getOwner());
 
+   SharedString dcObjectName = dcObject->getName();
    if (dcObject->isScheduledForDeletion())
    {
       nxlog_debug(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
-                  dcObject->getId(), dcObject->getName(), (target != NULL) ? (int)target->getId() : -1);
+                  dcObject->getId(), dcObjectName.cstr(), (target != NULL) ? (int)target->getId() : -1);
       dcObject->deleteFromDatabase();
       if (target != NULL)
          target->decRefCount();
@@ -226,7 +227,7 @@ void DataCollector(shared_ptr<DCObject> dcObject)
    if (target == NULL)
    {
       nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=%d \"%s\")"),
-                  dcObject->getId(), dcObject->getName());
+                  dcObject->getId(), dcObjectName.cstr());
 
       // Update item's last poll time and clear busy flag so item can be polled again
       dcObject->setLastPollTime(time(NULL));
@@ -241,7 +242,7 @@ void DataCollector(shared_ptr<DCObject> dcObject)
    }
 
    DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
-             dcObject->getId(), dcObject->getName(), (target != NULL) ? (int)target->getId() : -1, dcObject->getSourceNode());
+             dcObject->getId(), dcObjectName.cstr(), (target != NULL) ? (int)target->getId() : -1, dcObject->getSourceNode());
    UINT32 sourceNodeId = target->getEffectiveSourceNode(dcObject.get());
    if (sourceNodeId != 0)
    {
@@ -342,7 +343,7 @@ void DataCollector(shared_ptr<DCObject> dcObject)
    {
       DataCollectionOwner *n = dcObject->getOwner();
       nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
-                  dcObject->getId(), dcObject->getName(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
+                  dcObject->getId(), dcObjectName.cstr(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
    }
 
    // Update item's last poll time and clear busy flag so item can be polled again

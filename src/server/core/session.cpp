@@ -3740,14 +3740,14 @@ void ClientSession::recalculateDCIValues(NXCPMessage *request)
             {
                if (dci->getType() == DCO_TYPE_ITEM)
                {
-                  debugPrintf(4, _T("recalculateDCIValues: DCI \"%s\" [%d] at target %s [%d]"), dci->getDescription(), dciId, object->getName(), object->getId());
+                  debugPrintf(4, _T("recalculateDCIValues: DCI \"%s\" [%d] at target %s [%d]"), dci->getDescription().cstr(), dciId, object->getName(), object->getId());
                   DCIRecalculationJob *job = new DCIRecalculationJob(static_cast<DataCollectionTarget*>(object), static_cast<DCItem*>(dci.get()), m_dwUserId);
                   if (AddJob(job))
                   {
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      msg.setField(VID_JOB_ID, job->getId());
                      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Data recalculation for DCI \"%s\" [%d] on object \"%s\" [%d] started (job ID %d)"),
-                              dci->getDescription(), dci->getId(), object->getName(), object->getId(), job->getId());
+                              dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId(), job->getId());
                   }
                   else
                   {
@@ -3808,7 +3808,7 @@ void ClientSession::clearDCIData(NXCPMessage *request)
 					msg.setField(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
 					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dciId, object->getId());
 	            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data for DCI \"%s\" [%d] on object \"%s\" [%d] cleared"),
-	                     dci->getDescription(), dci->getId(), object->getName(), object->getId());
+	                     dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
 				}
 				else
 				{
@@ -3836,6 +3836,9 @@ void ClientSession::clearDCIData(NXCPMessage *request)
    sendMessage(&msg);
 }
 
+/**
+ * Delete single entry from collected DCI data
+ */
 void ClientSession::deleteDCIEntry(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
@@ -3856,7 +3859,7 @@ void ClientSession::deleteDCIEntry(NXCPMessage *request)
                msg.setField(VID_RCC, dci->deleteEntry(request->getFieldAsUInt32(VID_TIMESTAMP)) ? RCC_SUCCESS : RCC_DB_FAILURE);
                debugPrintf(4, _T("DeleteDCIEntry: DCI %d at node %d"), dciId, object->getId());
                writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data entry for DCI \"%s\" [%d] on object \"%s\" [%d] was deleted"),
-                        dci->getDescription(), dci->getId(), object->getName(), object->getId());
+                        dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
             }
             else
             {

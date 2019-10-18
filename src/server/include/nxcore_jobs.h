@@ -210,7 +210,7 @@ public:
 	FileUploadJob(const TCHAR *params, UINT32 nodeId, UINT32 userId);
 	virtual ~FileUploadJob();
 
-	virtual void rescheduleExecution();
+	virtual void rescheduleExecution() override;
 };
 
 /**

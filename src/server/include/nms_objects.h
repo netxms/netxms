@@ -1863,7 +1863,7 @@ public:
    UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
    UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
-   double getProxyLoadFactor() { return GetAttributeWithLock(&m_proxyLoadFactor, m_mutexProperties); }
+   double getProxyLoadFactor() { return GetAttributeWithLock(m_proxyLoadFactor, m_mutexProperties); }
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);

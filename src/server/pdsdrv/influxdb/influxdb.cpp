@@ -260,14 +260,15 @@ void InfluxDBStorageDriver::shutdown()
 bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const TCHAR *value)
 {
    nxlog_debug_tag(DEBUG_TAG, 8,
-            _T("Raw metric: OwnerName:%s SystemTag:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,
-            dci->getOwner()->getName(), dci->getSystemTag(), dci->getDataSource(), dci->getType(), dci->getName(),
-            dci->getDescription(), dci->getInstance(), dci->getDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(), value, static_cast<INT64>(timestamp));
+            _T("Raw metric: OwnerName:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,
+            dci->getOwnerName(), dci->getDataSource(), dci->getType(), dci->getName().cstr(), dci->getDescription().cstr(),
+            dci->getInstance().cstr(), dci->getDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(),
+            value, static_cast<INT64>(timestamp));
 
    // Dont't try to send empty values
    if (*value == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric %s [%u] not sent: empty value"), dci->getName(), dci->getId());
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric %s [%u] not sent: empty value"), dci->getName().cstr(), dci->getId());
       return true;
    }
 

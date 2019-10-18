@@ -380,7 +380,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 
    lockDciAccess(true);	// write lock
 
-   nxlog_debug(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName(), m_name);
+   nxlog_debug(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName().cstr(), m_name);
 
    // Check if that template item exists
 	int i;
@@ -631,7 +631,8 @@ void DataCollectionTarget::queueItemsForPolling()
          {
             ThreadPoolExecute(g_dataCollectorThreadPool, DataCollector, m_dcObjects->getShared(i));
          }
-			nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
+			nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"),
+			         m_name, object->getId(), object->getName().cstr());
       }
    }
    unlockDciAccess();
@@ -1054,7 +1055,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             if (tableDefinition->isMultiInstance())
             {
                // Find instance
-               const TCHAR *instance = ((DCItem *)object)->getInstance();
+               const TCHAR *instance = object->getInstance();
                for(row = baseRow; row < tableData->getNumRows(); row++)
                {
                   const TCHAR *v = tableData->getAsString(row, 1);
@@ -1290,7 +1291,7 @@ void DataCollectionTarget::reloadDCItemCache(UINT32 dciId)
    if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
    {
       nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%d] on %s [%d]"),
-               dci->getName(), dci->getId(), m_name, m_id);
+               dci->getName().cstr(), dci->getId(), m_name, m_id);
       static_cast<DCItem*>(dci.get())->reloadCache(true);
    }
    unlockDciAccess();
@@ -1669,8 +1670,8 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
    {
       DCObject *object = rootObjects.get(i);
       DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCO %s [%d]"),
-                m_name, m_id, object->getName(), object->getId());
-      sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), object->getName(), object->getId());
+                m_name, m_id, object->getName().cstr(), object->getId());
+      sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), object->getName().cstr(), object->getId());
       StringMap *instances = getInstanceList(object);
       INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
       if (instances != NULL)
@@ -1686,7 +1687,7 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
       else
       {
          DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): failed to get instance list for DCO %s [%d]"),
-                   m_name, m_id, object->getName(), object->getId());
+                   m_name, m_id, object->getName().cstr(), object->getId());
          sendPollerMsg(requestId, POLLER_ERROR _T("      Failed to get instance list\r\n"));
       }
       object->clearBusyFlag();
@@ -1705,9 +1706,9 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
 /**
  * Callback for finding instance
  */
-static EnumerationCallbackResult FindInstanceCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult FindInstanceCallback(const TCHAR *key, const InstanceDiscoveryData *value, const TCHAR *data)
 {
-   return !_tcscmp((const TCHAR *)data, key) ? _STOP : _CONTINUE;
+   return !_tcscmp(data, key) ? _STOP : _CONTINUE;
 }
 
 /**
@@ -1729,7 +1730,7 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const Insta
    DCObject *root = data->root;
 
    DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): creating new DCO for instance \"%s\""),
-             object->getName(), object->getId(), root->getName(), root->getId(), key);
+             object->getName(), object->getId(), root->getName().cstr(), root->getId(), key);
    object->sendPollerMsg(data->requestId, _T("      Creating new DCO for instance \"%s\"\r\n"), key);
 
    DCObject *dco = root->clone();
@@ -1763,12 +1764,12 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
       if ((object->getTemplateId() != m_id) || (object->getTemplateItemId() != root->getId()))
          continue;
 
-      const TCHAR *dcoInstance = object->getInstanceDiscoveryData();
-      if (instances->forEach(FindInstanceCallback, (void *)dcoInstance) == _STOP)
+      SharedString dcoInstance = object->getInstanceDiscoveryData();
+      if (instances->forEach(FindInstanceCallback, dcoInstance.cstr()) == _STOP)
       {
          // found, remove value from instances
          nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
-                   m_name, m_id, root->getName(), root->getId(), dcoInstance);
+                   m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
          InstanceDiscoveryData *instanceObject = instances->get(dcoInstance);
          const TCHAR *name = instanceObject->getInstance();
          bool notify = false;
@@ -1791,7 +1792,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
             notify = true;
          }
          instances->remove(dcoInstance);
-         if(notify)
+         if (notify)
             NotifyClientsOnDCIUpdate(this, object);
       }
       else
@@ -1803,8 +1804,8 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
             object->setInstanceGracePeriodStart(time(NULL));
             object->setStatus(ITEM_STATUS_DISABLED, false);
             nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, grace period started"),
-                      m_name, m_id, root->getName(), root->getId(), dcoInstance);
-            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found, grace period started\r\n"), dcoInstance);
+                      m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
+            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found, grace period started\r\n"), dcoInstance.cstr());
             changed = true;
          }
 
@@ -1812,8 +1813,8 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
          {
             // not found, delete DCO
             nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
-                      m_name, m_id, root->getName(), root->getId(), dcoInstance);
-            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance);
+                      m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
+            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance.cstr());
             deleteList.add(object->getId());
             changed = true;
          }

@@ -3435,7 +3435,7 @@ void Node::reconcileWithDuplicateNode(Node *node)
       if (!found)
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Creating copy of DCI \"%s\" [%u] from node %s [%u] on node %s [%u]"),
-                  dci->getName(), dci->getId(), node->m_name, node->m_id, m_name, m_id);
+                  dci->getName().cstr(), dci->getId(), node->m_name, node->m_id, m_name, m_id);
 
          DCObject *dciCopy = dci->clone();
          dciCopy->changeBinding(CreateUniqueId(IDG_ITEM), this, false);
@@ -4689,13 +4689,13 @@ StringMap *Node::getInstanceList(DCObject *dco)
       node = (Node *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
       if (node == NULL)
       {
-         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName(), dco->getId(), dco->getSourceNode());
+         nxlog_debug(6, _T("Node::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
          return NULL;
       }
       if (!node->isTrustedNode(m_id))
       {
-         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source node %s [%d]"),
-                  dco->getName(), dco->getId(), m_name, m_id, node->getName(), node->getId());
+         nxlog_debug(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source node %s [%d]"),
+                  dco->getName().cstr(), dco->getId(), m_name, m_id, node->getName(), node->getId());
          return NULL;
       }
    }

@@ -804,13 +804,13 @@ EnumerationCallbackResult EventGenerationCB(const TCHAR *key, const void *value,
    if(was != NULL && was->isActive() && (is == NULL || !is->isActive()))
    {
       PostDciEventWithNames(cbTh->threshold->getDeactivationEvent(), cbTh->table->getOwnerId(), cbTh->table->getId(),
-            "ssids", paramNames, cbTh->table->getName(), cbTh->table->getDescription(), cbTh->table->getId(),
+            "ssids", paramNames, cbTh->table->getName().cstr(), cbTh->table->getDescription().cstr(), cbTh->table->getId(),
             was->getRow(), key);
    }
    else if ((was == NULL || !was->isActive()) && is != NULL && is->isActive())
    {
       PostDciEventWithNames(cbTh->threshold->getActivationEvent(), cbTh->table->getOwnerId(), cbTh->table->getId(),
-            "ssids", paramNames, cbTh->table->getName(), cbTh->table->getDescription(), cbTh->table->getId(),
+            "ssids", paramNames, cbTh->table->getName().cstr(), cbTh->table->getDescription().cstr(), cbTh->table->getId(),
             is->getRow(), key);
    }
 

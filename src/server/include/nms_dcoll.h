@@ -221,12 +221,14 @@ enum class DCObjectStorageClass
  */
 class NXCORE_EXPORTABLE DCObject
 {
+   friend class DCObjectInfo;
+
 protected:
    UINT32 m_id;
    uuid m_guid;
-   TCHAR *m_name;
-   TCHAR *m_description;
-	TCHAR *m_systemTag;
+   SharedString m_name;
+   SharedString m_description;
+   SharedString m_systemTag;
    time_t m_tLastPoll;           // Last poll time
    int m_iPollingInterval;       // Polling interval in seconds
    int m_iRetentionTime;         // Retention time in days
@@ -252,27 +254,25 @@ protected:
 	TCHAR *m_comments;
 	ClientSession *m_pollingSession;
    WORD m_instanceDiscoveryMethod;
-   TCHAR *m_instanceDiscoveryData;
+   SharedString m_instanceDiscoveryData;
    TCHAR *m_instanceFilterSource;
    NXSL_Program *m_instanceFilter;
-   TCHAR *m_instance;
+   SharedString m_instance;
    IntegerArray<UINT32> *m_accessList;
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
    INT32 m_instanceRetentionTime;      // Retention time if instance is not found
    time_t m_startTime;                 // Time to start data collection
    UINT32 m_relatedObject;
 
-   void lock() { MutexLock(m_hMutex); }
-   bool tryLock() { return MutexTryLock(m_hMutex); }
-   void unlock() { MutexUnlock(m_hMutex); }
+   void lock() const { MutexLock(m_hMutex); }
+   bool tryLock() const { return MutexTryLock(m_hMutex); }
+   void unlock() const { MutexUnlock(m_hMutex); }
 
    bool loadAccessList(DB_HANDLE hdb);
 	bool loadCustomSchedules(DB_HANDLE hdb);
    bool matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currLocalTime, time_t currTimestamp);
 
-	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
-	void expandMacrosAndReplace(TCHAR **str, size_t maxLen);
-   void expandMacrosAndReplace(const TCHAR *src, TCHAR **dst, size_t maxLen);
+	StringBuffer expandMacros(const TCHAR *src, size_t dstLen);
 
    void setTransformationScript(const TCHAR *source);
 
@@ -306,13 +306,14 @@ public:
    virtual void updateThresholdsBeforeMaintenanceState();
    virtual void generateEventsBasedOnThrDiff();
 
+   virtual DCObjectInfo *createDescriptor() const;
+
 	UINT32 getId() const { return m_id; }
 	const uuid& getGuid() const { return m_guid; }
    int getDataSource() const { return m_source; }
    int getStatus() const { return m_status; }
-   const TCHAR *getName() const { return m_name; }
-   const TCHAR *getDescription() const { return m_description; }
-	const TCHAR *getSystemTag() const { return CHECK_NULL_EX(m_systemTag); }
+   SharedString getName() const { return GetAttributeWithLock(m_name, m_hMutex); }
+   SharedString getDescription() const { return GetAttributeWithLock(m_description, m_hMutex); }
 	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
    int getPollingInterval() const { return m_iPollingInterval; }
    int getEffectivePollingInterval() const { return (m_iPollingInterval > 0) ? m_iPollingInterval : m_defaultPollingInterval; }
@@ -336,11 +337,10 @@ public:
    int getRetentionTime() const { return m_iRetentionTime; }
    DCObjectStorageClass getStorageClass() const { return storageClassFromRetentionTime(m_iRetentionTime); }
    int getEffectiveRetentionTime() const { return (m_iRetentionTime > 0) ? m_iRetentionTime : m_defaultRetentionTime; }
-   const TCHAR *getComments() const { return m_comments; }
    INT16 getAgentCacheMode();
    bool hasValue();
    bool hasAccess(UINT32 userId);
-   UINT32 getRelatedObject() { return m_relatedObject; }
+   UINT32 getRelatedObject() const { return m_relatedObject; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
@@ -371,14 +371,14 @@ public:
 	bool prepareForDeletion();
 
 	WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
-   const TCHAR *getInstanceDiscoveryData() const { return m_instanceDiscoveryData; }
+	SharedString getInstanceDiscoveryData() const { return GetAttributeWithLock(m_instanceDiscoveryData, m_hMutex); }
    INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
    StringObjectMap<InstanceDiscoveryData> *filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
-   void setInstanceDiscoveryData(const TCHAR *data) { lock(); MemFree(m_instanceDiscoveryData); m_instanceDiscoveryData = MemCopyString(data); unlock(); }
+   void setInstanceDiscoveryData(const TCHAR *data) { lock(); m_instanceDiscoveryData = data; unlock(); }
    void setInstanceFilter(const TCHAR *pszScript);
-   void setInstance(const TCHAR *instance) { lock(); MemFree(m_instance); m_instance = MemCopyString(instance); unlock(); }
-   const TCHAR *getInstance() const { return CHECK_NULL_EX(m_instance); }
+   void setInstance(const TCHAR *instance) { lock(); m_instance = instance; unlock(); }
+   SharedString getInstance() const { return GetAttributeWithLock(m_instance, m_hMutex); }
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
@@ -396,6 +396,8 @@ public:
  */
 class NXCORE_EXPORTABLE DCItem : public DCObject
 {
+   friend class DCObjectInfo;
+
 protected:
    BYTE m_deltaCalculation;      // Delta calculation method
    BYTE m_dataType;
@@ -421,7 +423,7 @@ protected:
    bool hasScriptThresholds() const;
    Threshold *getThresholdById(UINT32 id) const;
 
-	virtual bool isCacheLoaded();
+	virtual bool isCacheLoaded() override;
 
    using DCObject::updateFromMessage;
 
@@ -434,7 +436,7 @@ public:
 	DCItem(ConfigEntry *config, DataCollectionOwner *owner);
    virtual ~DCItem();
 
-   virtual DCObject *clone() const;
+   virtual DCObject *clone() const override;
 
 	virtual int getType() const override { return DCO_TYPE_ITEM; }
 
@@ -445,6 +447,8 @@ public:
    virtual void deleteFromDatabase() override;
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb) override;
 
+   virtual DCObjectInfo *createDescriptor() const override;
+
    void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(true, conditionId); unlock(); }
    void reloadCache(bool forceReload);
 
@@ -453,8 +457,8 @@ public:
    int getDeltaCalculationMethod() const { return m_deltaCalculation; }
 	bool isInterpretSnmpRawValue() const { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
 	WORD getSnmpRawValueType() const { return m_snmpRawValueType; }
-	bool hasActiveThreshold();
-   int getThresholdSeverity();
+	bool hasActiveThreshold() const;
+   int getThresholdSeverity() const;
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 
@@ -670,6 +674,8 @@ public:
  */
 class NXCORE_EXPORTABLE DCTable : public DCObject
 {
+   friend class DCObjectInfo;
+
 protected:
 	ObjectArray<DCTableColumn> *m_columns;
    ObjectArray<DCTableThreshold> *m_thresholds;
@@ -749,6 +755,10 @@ struct TableThresholdCbData
  */
 class DCObjectInfo
 {
+   friend class DCObject;
+   friend class DCItem;
+   friend class DCTable;
+
 private:
    UINT32 m_id;
    UINT32 m_ownerId;
@@ -771,9 +781,11 @@ private:
    int m_thresholdSeverity;
    UINT32 m_relatedObject;
 
+protected:
+   DCObjectInfo(const DCObject *object);
+
 public:
-   DCObjectInfo(DCObject *object);
-   DCObjectInfo(const NXCPMessage *msg, DCObject *object);
+   DCObjectInfo(const NXCPMessage *msg, const DCObject *object);
    ~DCObjectInfo();
 
    UINT32 getId() const { return m_id; }

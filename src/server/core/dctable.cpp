@@ -156,19 +156,21 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay) : DCObject()
 {
+   TCHAR readBuffer[4096];
+
    m_owner = pNode;
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 2);
-	m_name = DBGetField(hResult, iRow, 3, NULL, 0);
-   m_description = DBGetField(hResult, iRow, 4, NULL, 0);
+	m_name = DBGetField(hResult, iRow, 3, readBuffer, 4096);
+   m_description = DBGetField(hResult, iRow, 4, readBuffer, 4096);
    m_flags = (WORD)DBGetFieldLong(hResult, iRow, 5);
    m_source = (BYTE)DBGetFieldLong(hResult, iRow, 6);
 	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 7);
    m_iPollingInterval = DBGetFieldLong(hResult, iRow, 8);
    m_iRetentionTime = DBGetFieldLong(hResult, iRow, 9);
    m_status = (BYTE)DBGetFieldLong(hResult, iRow, 10);
-	m_systemTag = DBGetField(hResult, iRow, 11, NULL, 0);
+	m_systemTag = DBGetField(hResult, iRow, 11, readBuffer, 4096);
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 12);
 	m_sourceNode = DBGetFieldULong(hResult, iRow, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
@@ -178,13 +180,13 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner
    setTransformationScript(pszTmp);
    MemFree(pszTmp);
    m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 18);
-   m_instanceDiscoveryData = DBGetField(hResult, iRow, 19, NULL, 0);
+   m_instanceDiscoveryData = DBGetField(hResult, iRow, 19, readBuffer, 4096);
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    pszTmp = DBGetField(hResult, iRow, 20, NULL, 0);
    setInstanceFilter(pszTmp);
    MemFree(pszTmp);
-   m_instance = DBGetField(hResult, iRow, 21, NULL, 0);
+   m_instance = DBGetField(hResult, iRow, 21, readBuffer, 4096);
    m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 22);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 23);
    m_relatedObject = DBGetFieldLong(hResult, iRow, 24);
@@ -459,7 +461,7 @@ bool DCTable::transform(Table *value)
          if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
             DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
-                            m_description, m_id, getOwnerName(), getOwnerId());
+                            m_description.cstr(), m_id, getOwnerName(), getOwnerId());
          }
          else
          {
@@ -470,7 +472,7 @@ bool DCTable::transform(Table *value)
                _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
                PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
                nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
-                        getOwnerName(), getOwnerId(), m_name, m_id, vm->getErrorText());
+                        getOwnerName(), getOwnerId(), m_name.cstr(), m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
             }
          }
@@ -486,7 +488,7 @@ bool DCTable::transform(Table *value)
          _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
          PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, _T("Script load error"), m_id);
          nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
-                  getOwnerName(), getOwnerId(), m_name, m_id);
+                  getOwnerName(), getOwnerId(), m_name.cstr(), m_id);
          m_lastScriptErrorReport = now;
       }
    }
@@ -512,13 +514,13 @@ void DCTable::checkThresholds(Table *value)
          switch(result)
          {
             case ThresholdCheckResult::ACTIVATED:
-               PostDciEventWithNames(t->getActivationEvent(), m_owner->getId(), m_id, "ssids", paramNames, m_name, m_description, m_id, row, instance);
+               PostDciEventWithNames(t->getActivationEvent(), m_owner->getId(), m_id, "ssids", paramNames, m_name.cstr(), m_description.cstr(), m_id, row, instance);
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing (for current row)
                NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), instance, result);
                break;
             case ThresholdCheckResult::DEACTIVATED:
-               PostDciEventWithNames(t->getDeactivationEvent(), m_owner->getId(), m_id, "ssids", paramNames, m_name, m_description, m_id, row, instance);
+               PostDciEventWithNames(t->getDeactivationEvent(), m_owner->getId(), m_id, "ssids", paramNames, m_name.cstr(), m_description.cstr(), m_id, row, instance);
                NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), instance, result);
                break;
             case ThresholdCheckResult::ALREADY_ACTIVE:
