@@ -183,7 +183,7 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, UINT32 objectId, const TCH
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_lastResponseTime);
 
    int sampleCount = 0;
-   String serializedResponseTimes;
+   StringBuffer serializedResponseTimes;
    for(int i = m_writePos, j = 0; j < m_bufferSize; j++)
    {
       if (m_rawResponseTimes[i] != 0xFFFF)

@@ -208,7 +208,7 @@ static bool InsertUsingStorageClass_IData(const TCHAR *sclass, const StringObjec
    if (elements->isEmpty())
       return true;
 
-   String query = _T("INSERT INTO idata_sc_");
+   StringBuffer query = _T("INSERT INTO idata_sc_");
    query.append(sclass);
    query.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES"));
    for(int i = 0; i < elements->size(); i++)
@@ -229,7 +229,7 @@ static bool InsertUsingStorageClass_TData(const TCHAR *sclass, const StringObjec
    if (elements->isEmpty())
       return true;
 
-   String query = _T("INSERT INTO tdata_sc_");
+   StringBuffer query = _T("INSERT INTO tdata_sc_");
    query.append(sclass);
    query.append(_T(" (item_id,tdata_timestamp,tdata_value) VALUES"));
    for(int i = 0; i < elements->size(); i++)

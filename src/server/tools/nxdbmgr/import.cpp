@@ -65,7 +65,7 @@ bool IsColumnFixNeeded(const TCHAR *table, const char *name)
  */
 static int ImportTableCB(void *arg, int cols, char **data, char **names)
 {
-	String query;
+   StringBuffer query;
 	int i;
 
 	query.appendFormattedString(_T("INSERT INTO %s ("), arg);

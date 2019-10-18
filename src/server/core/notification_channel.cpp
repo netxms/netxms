@@ -382,7 +382,7 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
    NCDriver *driver = NULL;
    NCDriverServerStorageManager *storageManager = new NCDriverServerStorageManager(name);
    const NCConfigurationTemplate *confTemplate = NULL;
-   String errorMessage;
+   StringBuffer errorMessage;
    if (dd != NULL)
    {
       Config config;
@@ -395,20 +395,25 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
          }
          else
          {
-            errorMessage.appendFormattedString(_T("Unable to create instance of %s driver"), driverName);
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to create instance of %s driver with configuration: %hs"), driverName, configuration);
+            errorMessage.append(_T("Unable to create instance of driver "));
+            errorMessage.append(driverName);
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to create instance of driver %s"), driverName);
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("   Configuration: %hs"), configuration);
          }
       }
       else
       {
-         errorMessage.appendFormattedString(_T("Cannot parse %s channel configuration"), name);
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse %s channel configuration: %hs"), name, configuration);
+         errorMessage.append(_T("Cannot parse configuration for channel "));
+         errorMessage.append(name);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse configuration for channel %s"), name);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("   Configuration: %hs"), configuration);
       }
    }
    else
    {
-      errorMessage.appendFormattedString(_T("Cannot find driver with name: %s"), driverName);
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot find driver with name: %s"), driverName);
+      errorMessage.append(_T("Cannot find driver "));
+      errorMessage.append(driverName);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot find driver %s"), driverName);
    }
 
    return new NotificationChannel(driver, storageManager, name, description, driverName, configuration, confTemplate, errorMessage);

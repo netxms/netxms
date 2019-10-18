@@ -152,7 +152,7 @@ private:
 	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp,
 	         LogParserCallback cb, void *context);
 	bool matchRepeatCount();
-   void expandMacros(const TCHAR *regexp, String &out);
+   void expandMacros(const TCHAR *regexp, StringBuffer &out);
    void incCheckCount(UINT32 objectId);
    void incMatchCount(UINT32 objectId);
 

@@ -300,7 +300,7 @@ bool GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size)
  */
 String GetCertificateSubjectString(X509 *cert)
 {
-   String text;
+   StringBuffer text;
    TCHAR buffer[256];
    if (GetCertificateSubjectField(cert, NID_countryName, buffer, 256))
    {

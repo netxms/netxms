@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2008-2018 Raden Solutions
+** Copyright (C) 2008-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -73,11 +73,11 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
       return false;
    }
 
-   String createStatement = _T("CREATE TABLE ");
+   StringBuffer createStatement = _T("CREATE TABLE ");
    createStatement.append(table);
    createStatement.append(_T(" ("));
 
-   String insertStatement = _T("INSERT INTO ");
+   StringBuffer insertStatement = _T("INSERT INTO ");
    insertStatement.append(table);
    insertStatement.append(_T(" ("));
 

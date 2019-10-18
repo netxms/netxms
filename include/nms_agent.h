@@ -852,7 +852,7 @@ class LIBNXAGENT_EXPORTABLE KeyValueOutputProcessExecutor : public ProcessExecut
 {
 private:
    StringMap m_data;
-   String m_buffer;
+   StringBuffer m_buffer;
    TCHAR m_separator;
 
 protected:

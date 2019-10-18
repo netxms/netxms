@@ -136,7 +136,7 @@ static bool MigrateTable(const TCHAR *table)
    }
 
    // build INSERT query
-   String query = _T("INSERT INTO ");
+   StringBuffer query = _T("INSERT INTO ");
    query += table;
    query += _T(" (");
 	int columnCount = DBGetColumnCount(hResult);
@@ -412,9 +412,9 @@ static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
 /**
  * Build data insert query for TSDB
  */
-static inline String BuildDataInsertQuery(bool tdata, const TCHAR *sclass)
+static inline StringBuffer BuildDataInsertQuery(bool tdata, const TCHAR *sclass)
 {
-   String query = _T("INSERT INTO ");
+   StringBuffer query = _T("INSERT INTO ");
    query.append(tdata ? _T("tdata") : _T("idata"));
    query.append(_T("_sc_"));
    query.append(sclass);
@@ -444,7 +444,7 @@ static bool MigrateDataToSingleTable_TSDB(UINT32 nodeId, bool tdata)
       return false;
    }
 
-   String queries[6];
+   StringBuffer queries[6];
    queries[0] = BuildDataInsertQuery(tdata, _T("default"));
    queries[1] = BuildDataInsertQuery(tdata, _T("7"));
    queries[2] = BuildDataInsertQuery(tdata, _T("30"));
@@ -463,7 +463,7 @@ static bool MigrateDataToSingleTable_TSDB(UINT32 nodeId, bool tdata)
       int *sclassPtr = s_dciStorageClasses.get(dciId);
       int sclass = (sclassPtr != NULL) ? *sclassPtr : 0;
 
-      String& query = queries[sclass];
+      StringBuffer& query = queries[sclass];
       query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
       query.append(dciId);
       query.append(_T(','));
@@ -560,7 +560,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
       return false;
    }
 
-   String queries[6];
+   StringBuffer queries[6];
    queries[0] = BuildDataInsertQuery(tdata, _T("default"));
    queries[1] = BuildDataInsertQuery(tdata, _T("7"));
    queries[2] = BuildDataInsertQuery(tdata, _T("30"));
@@ -579,7 +579,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
       int *sclassPtr = s_dciStorageClasses.get(dciId);
       int sclass = (sclassPtr != NULL) ? *sclassPtr : 0;
 
-      String& query = queries[sclass];
+      StringBuffer& query = queries[sclass];
       query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
       query.append(dciId);
       query.append(_T(','));

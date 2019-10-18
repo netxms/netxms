@@ -93,7 +93,7 @@ void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int p
 {
    if (nxlog_get_debug_level() >= 5)
    {
-      String argsText;
+      StringBuffer argsText;
       for(int i = 0; i < pcount; i++)
       {
          argsText.append(_T(", arg["));

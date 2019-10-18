@@ -303,17 +303,19 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Create management pack record
  */
-void Template::createExportRecord(String &str)
+void Template::createExportRecord(StringBuffer &xml)
 {
-   TCHAR guid[48];
-   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n")
-                             _T("\t\t\t<guid>%s</guid>\n")
-                             _T("\t\t\t<name>%s</name>\n")
-                             _T("\t\t\t<flags>%d</flags>\n")
-                             _T("\t\t\t<comments>%s</comments>\n"),
-                             m_id, m_guid.toString(guid),
-                             (const TCHAR *)EscapeStringForXML2(m_name), m_flags,
-                             (const TCHAR *)EscapeStringForXML2(m_comments));
+   xml.append(_T("\t\t<template id=\""));
+   xml.append(m_id);
+   xml.append(_T("\">\n\t\t\t<guid>"));
+   xml.append(m_guid.toString());
+   xml.append(_T("</guid>\n\t\t\t<name>"));
+   xml.append(EscapeStringForXML2(m_name));
+   xml.append(_T("</name>\n\t\t\t<flags>"));
+   xml.append(m_flags);
+   xml.append(_T("</flags>\n\t\t\t<comments>"));
+   xml.append(EscapeStringForXML2(m_comments));
+   xml.append(_T("</comments>\n"));
 
    // Path in groups
    StringList path;
@@ -328,36 +330,36 @@ void Template::createExportRecord(String &str)
    }
    delete list;
 
-   str.append(_T("\t\t\t<path>\n"));
+   xml.append(_T("\t\t\t<path>\n"));
    for(int j = path.size() - 1, id = 1; j >= 0; j--, id++)
    {
-      str.append(_T("\t\t\t\t<element id=\""));
-      str.append(id);
-      str.append(_T("\">"));
-      str.append(EscapeStringForXML2(path.get(j)));
-      str.append(_T("</element>\n"));
+      xml.append(_T("\t\t\t\t<element id=\""));
+      xml.append(id);
+      xml.append(_T("\">"));
+      xml.append(EscapeStringForXML2(path.get(j)));
+      xml.append(_T("</element>\n"));
    }
-   str.append(_T("\t\t\t</path>\n\t\t\t<dataCollection>\n"));
+   xml.append(_T("\t\t\t</path>\n\t\t\t<dataCollection>\n"));
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->createExportRecord(str);
+      m_dcObjects->get(i)->createExportRecord(xml);
    unlockDciAccess();
 
-   str.append(_T("\t\t\t</dataCollection>\n"));
+   xml.append(_T("\t\t\t</dataCollection>\n"));
 
    lockProperties();
    Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
    while(it->hasNext())
    {
       GenericAgentPolicy *object = it->next();
-      object->createExportRecord(str);
+      object->createExportRecord(xml);
    }
    delete it;
    unlockProperties();
 
-   AutoBindTarget::createExportRecord(str);
-   str.append(_T("\t\t</template>\n"));
+   AutoBindTarget::createExportRecord(xml);
+   xml.append(_T("\t\t</template>\n"));
 }
 
 /**

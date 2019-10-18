@@ -1252,7 +1252,7 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 static void ActionOutputHandler(ActionCallbackEvent event, const TCHAR *text, void *userData)
 {
    if (event == ACE_DATA)
-      static_cast<String*>(userData)->append(text);
+      static_cast<StringBuffer*>(userData)->append(text);
 }
 
 /**
@@ -1288,7 +1288,7 @@ static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Valu
       StringList list;
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
-      String output;
+      StringBuffer output;
       UINT32 rcc = conn->execAction(argv[1]->getValueAsCString(), list, true, ActionOutputHandler, &output);
       *ppResult = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
       conn->decRefCount();

@@ -180,7 +180,7 @@ MacAddress MacAddress::parse(const char *str)
                        "([0-9a-fA-F]{3})\\."
                        "([0-9a-fA-F]{3})$" };
 
-   String mac;
+   StringBuffer mac;
    const char *errptr;
    int erroffset;
    pcre *compRegex = pcre_compile(exp1, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, NULL);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -130,7 +130,7 @@ typedef struct
 {
    Table *table;
 	int state;
-	String *buffer;
+	StringBuffer *buffer;
 	int column;
 } XML_PARSER_STATE;
 
@@ -289,7 +289,7 @@ bool Table::parseXML(const char *xml)
    state.table = this;
    state.state = XML_STATE_INIT;
    state.column = -1;
-   state.buffer = new String();
+   state.buffer = new StringBuffer();
 
    bool success = (XML_Parse(parser, xml, (int)strlen(xml), TRUE) != XML_STATUS_ERROR);
    if (success)
@@ -352,7 +352,7 @@ Table *Table::createFromPackedXML(const char *packedXml)
  */
 TCHAR *Table::createXML() const
 {
-   String xml;
+   StringBuffer xml;
    xml.appendFormattedString(_T("<table extendedFormat=\"%s\" source=\"%d\"  name=\"%s\">\r\n"), m_extendedFormat ? _T("true") : _T("false"), m_source,
                               (const TCHAR *)EscapeStringForXML2(m_title, -1));
    xml.append(_T("<columns>\r\n"));
@@ -925,7 +925,7 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
       return;
    }
 
-   String instance;
+   StringBuffer instance;
    bool first = true;
    for(int i = 0; i < m_columns->size(); i++)
    {
@@ -939,12 +939,12 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
             instance += value;
       }
    }
-   if(instance.isEmpty())
+   if (instance.isEmpty())
    {
       instance.append(_T("#"));
       instance.append(row);
    }
-   _tcslcpy(buffer, (const TCHAR *)instance, bufLen);
+   _tcslcpy(buffer, instance.cstr(), bufLen);
 }
 
 /**

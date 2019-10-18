@@ -32,7 +32,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
          const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
          bool resetRepeat, const TCHAR *source, UINT32 level, UINT32 idStart, UINT32 idEnd)
 {
-	String expandedRegexp;
+	StringBuffer expandedRegexp;
 
 	m_parser = parser;
 	m_name = MemCopyString(CHECK_NULL_EX(name));
@@ -251,7 +251,7 @@ bool LogParserRule::matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, c
 /**
  * Expand macros in regexp
  */
-void LogParserRule::expandMacros(const TCHAR *regexp, String &out)
+void LogParserRule::expandMacros(const TCHAR *regexp, StringBuffer &out)
 {
 	const TCHAR *curr, *prev;
 	TCHAR name[256];

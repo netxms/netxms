@@ -63,7 +63,7 @@ private:
    IntegerArray<UINT32> *m_alarmCategoryList;
    UINT32 m_notificationCode; // notification code used when sending client notifications
 
-   String categoryListToString();
+   StringBuffer categoryListToString();
 
 public:
    Alarm(Event *event, const uuid& rule, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);

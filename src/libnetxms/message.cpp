@@ -1401,9 +1401,9 @@ static TCHAR *GetStringFromFieldUTF8(void *df)
 /**
  * Dump NXCP message
  */
-String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
+StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
 {
-   String out;
+   StringBuffer out;
    int i;
    TCHAR *str, buffer[128];
 

@@ -165,7 +165,7 @@ bool DataCollectionOwner::saveToDatabase(DB_HANDLE hdb)
  */
 static bool ProcessDeletedItems(DB_HANDLE hdb, const String& list)
 {
-   String query = _T("DELETE FROM thresholds WHERE item_id IN (");
+   StringBuffer query = _T("DELETE FROM thresholds WHERE item_id IN (");
    query.append(list);
    query.append(_T(')'));
    return DBQuery(hdb, query);
@@ -176,7 +176,7 @@ static bool ProcessDeletedItems(DB_HANDLE hdb, const String& list)
  */
 static bool ProcessDeletedTables(DB_HANDLE hdb, const String& list)
 {
-   String query = _T("DELETE FROM dc_table_columns WHERE table_id IN (");
+   StringBuffer query = _T("DELETE FROM dc_table_columns WHERE table_id IN (");
    query.append(list);
    query.append(_T(')'));
    if (!DBQuery(hdb, query))
@@ -193,7 +193,7 @@ static bool ProcessDeletedTables(DB_HANDLE hdb, const String& list)
  */
 static bool ProcessDeletedTableThresholds(DB_HANDLE hdb, const String& list)
 {
-   String query = _T("DELETE FROM dct_threshold_conditions WHERE threshold_id IN (");
+   StringBuffer query = _T("DELETE FROM dct_threshold_conditions WHERE threshold_id IN (");
    query.append(list);
    query.append(_T(')'));
    if (!DBQuery(hdb, query))
@@ -210,7 +210,7 @@ static bool ProcessDeletedTableThresholds(DB_HANDLE hdb, const String& list)
  */
 static bool ProcessDeletedDCObjects(DB_HANDLE hdb, const String& list)
 {
-   String query = _T("DELETE FROM dci_schedules WHERE item_id IN (");
+   StringBuffer query = _T("DELETE FROM dci_schedules WHERE item_id IN (");
    query.append(list);
    query.append(_T(')'));
    if (!DBQuery(hdb, query))
@@ -234,7 +234,7 @@ bool DataCollectionOwner::deleteFromDatabase(DB_HANDLE hdb)
    // Delete DCI configuration
    if (success)
    {
-      String listItems, listTables, listTableThresholds, listAll;
+      StringBuffer listItems, listTables, listTableThresholds, listAll;
       int countItems = 0, countTables = 0, countTableThresholds = 0, countAll = 0;
       for(int i = 0; (i < m_dcObjects->size()) && success; i++)
       {

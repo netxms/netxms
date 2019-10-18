@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -258,7 +258,7 @@ UINT32 LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers()
  */
 String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
 {
-   String s;
+   StringBuffer s;
 #ifdef _WITH_ENCRYPTION
    UINT32 cipherBit = 1;
    for(int i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)

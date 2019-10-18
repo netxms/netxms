@@ -408,7 +408,7 @@ void DCObject::expandMacrosAndReplace(const TCHAR *src, TCHAR **dst, size_t maxL
 void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 {
 	int index = 0, index2;
-	String temp = src;
+	StringBuffer temp = src;
 	while((index = temp.find(_T("%{"), index)) != String::npos)
 	{
 		String head = temp.substring(0, index);
@@ -417,7 +417,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 			break;	// Missing closing }
 
 		String rest = temp.substring(index2 + 1, -1);
-		String macro = temp.substring(index + 2, index2 - index - 2);
+		StringBuffer macro = temp.substring(index + 2, index2 - index - 2);
 		macro.trim();
 
 		temp = head;
@@ -448,7 +448,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 			if ((m_owner != NULL) && (m_owner->getObjectClass() == OBJECT_NODE))
 			{
 				TCHAR ipAddr[64];
-				temp += ((Node *)m_owner)->getIpAddress().toString(ipAddr);
+				temp += static_cast<Node*>(m_owner)->getIpAddress().toString(ipAddr);
 			}
 			else
 			{
@@ -974,7 +974,7 @@ bool DCObject::loadThresholdsFromDB(DB_HANDLE hdb)
  */
 void DCObject::expandInstance()
 {
-   String temp = m_name;
+   StringBuffer temp = m_name;
    temp.replace(_T("{instance}"), m_instanceDiscoveryData);
    temp.replace(_T("{instance-name}"), m_instance);
    MemFree(m_name);

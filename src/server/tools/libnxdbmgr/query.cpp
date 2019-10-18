@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput)
    if (*query == 0)
       return true;
 
-   String realQuery(query);
+   StringBuffer realQuery(query);
    realQuery.trim();
 
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
@@ -155,7 +155,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput)
  */
 bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
 {
-   String batch(batchSource);
+   StringBuffer batch(batchSource);
    TCHAR *pszBuffer, *pszQuery, *ptr;
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    bool success = true;

@@ -274,7 +274,7 @@ static void RunCommand(void *arg)
 {
    if (ConfigReadBoolean(_T("EscapeLocalCommands"), false))
    {
-      String s = (TCHAR *)arg;
+      StringBuffer s = (TCHAR *)arg;
 #ifdef _WIN32
       s.replace(_T("\t"), _T("\\t"));
       s.replace(_T("\n"), _T("\\n"));
@@ -284,13 +284,13 @@ static void RunCommand(void *arg)
       s.replace(_T("\n"), _T("\\\\n"));
       s.replace(_T("\r"), _T("\\\\r"));
 #endif
-      free(arg);
-      arg = _tcsdup(s.getBuffer());
+      MemFree(arg);
+      arg = MemCopyString(s.cstr());
    }
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing command \"%s\""), (TCHAR *)arg);
 	if (_tsystem((TCHAR *)arg) == -1)
 	   nxlog_debug_tag(DEBUG_TAG, 5, _T("RunCommandThread: failed to execute command \"%s\""), (TCHAR *)arg);
-	free(arg);
+	MemFree(arg);
 }
 
 /**
@@ -408,10 +408,10 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing action %d (%s) of type %s"),
             actionId, action->name, actionType[action->type]);
 
-         String expandedData = event->expandText(CHECK_NULL_EX(action->data), alarm);
+         StringBuffer expandedData = event->expandText(CHECK_NULL_EX(action->data), alarm);
          expandedData.trim();
 
-         String expandedRcpt = event->expandText(action->rcptAddr, alarm);
+         StringBuffer expandedRcpt = event->expandText(action->rcptAddr, alarm);
          expandedRcpt.trim();
 
          switch(action->type)
@@ -717,7 +717,7 @@ void SendActionsToClient(ClientSession *session, UINT32 requestId)
 /**
  * Export action configuration
  */
-void CreateActionExportRecord(String &xml, UINT32 id)
+void CreateActionExportRecord(StringBuffer &xml, UINT32 id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,")

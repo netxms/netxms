@@ -510,9 +510,9 @@ static void BroadcastNewTrap(ClientSession *pSession, NXCPMessage *msg)
 /**
  * Build trap varbind list
  */
-static String BuildVarbindList(SNMP_PDU *pdu)
+static StringBuffer BuildVarbindList(SNMP_PDU *pdu)
 {
-   String out;
+   StringBuffer out;
    TCHAR oidText[1024], data[4096];
 
    for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2; i < pdu->getNumVariables(); i++)
@@ -545,7 +545,7 @@ static String BuildVarbindList(SNMP_PDU *pdu)
  */
 void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
-   String varbinds;
+   StringBuffer varbinds;
    TCHAR buffer[4096];
 	BOOL processed = FALSE;
    int iResult;
@@ -1180,7 +1180,7 @@ UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
 /**
  * Create trap record in NXMP file
  */
-void CreateTrapExportRecord(String &xml, UINT32 id)
+void CreateTrapExportRecord(StringBuffer &xml, UINT32 id)
 {
 	TCHAR szBuffer[1024];
 	SNMPTrapConfiguration *trapCfg;

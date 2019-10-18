@@ -1072,11 +1072,11 @@ void DCTable::updateFromTemplate(DCObject *src)
 /**
  * Create management pack record
  */
-void DCTable::createExportRecord(String &str)
+void DCTable::createExportRecord(StringBuffer &xml)
 {
    lock();
 
-   str.appendFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
+   xml.appendFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
                           _T("\t\t\t\t\t<guid>%s</guid>\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
@@ -1101,66 +1101,66 @@ void DCTable::createExportRecord(String &str)
 
 	if (m_transformationScriptSource != NULL)
 	{
-		str.append(_T("\t\t\t\t\t<transformation>"));
-		str.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
-		str.append(_T("</transformation>\n"));
+		xml.append(_T("\t\t\t\t\t<transformation>"));
+		xml.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
+		xml.append(_T("</transformation>\n"));
 	}
 
    if ((m_schedules != NULL) && (m_schedules->size() > 0))
    {
-      str.append(_T("\t\t\t\t\t<schedules>\n"));
+      xml.append(_T("\t\t\t\t\t<schedules>\n"));
       for(int i = 0; i < m_schedules->size(); i++)
       {
-         str.append(_T("\t\t\t\t\t\t<schedule>"));
-         str.append(EscapeStringForXML2(m_schedules->get(i)));
-         str.append(_T("</schedule>\n"));
+         xml.append(_T("\t\t\t\t\t\t<schedule>"));
+         xml.append(EscapeStringForXML2(m_schedules->get(i)));
+         xml.append(_T("</schedule>\n"));
       }
-      str.append(_T("\t\t\t\t\t</schedules>\n"));
+      xml.append(_T("\t\t\t\t\t</schedules>\n"));
    }
 
 	if (m_columns != NULL)
 	{
-	   str.append(_T("\t\t\t\t\t<columns>\n"));
+	   xml.append(_T("\t\t\t\t\t<columns>\n"));
 		for(int i = 0; i < m_columns->size(); i++)
 		{
-			m_columns->get(i)->createNXMPRecord(str, i + 1);
+			m_columns->get(i)->createExportRecord(xml, i + 1);
 		}
-	   str.append(_T("\t\t\t\t\t</columns>\n"));
+	   xml.append(_T("\t\t\t\t\t</columns>\n"));
 	}
 
 	if (m_thresholds != NULL)
 	{
-	   str.append(_T("\t\t\t\t\t<thresholds>\n"));
+	   xml.append(_T("\t\t\t\t\t<thresholds>\n"));
 		for(int i = 0; i < m_thresholds->size(); i++)
 		{
-			m_thresholds->get(i)->createExportRecord(str, i + 1);
+			m_thresholds->get(i)->createExportRecord(xml, i + 1);
 		}
-	   str.append(_T("\t\t\t\t\t</thresholds>\n"));
+	   xml.append(_T("\t\t\t\t\t</thresholds>\n"));
 	}
 
 	if (m_pszPerfTabSettings != NULL)
 	{
-		str.append(_T("\t\t\t\t\t<perfTabSettings>"));
-		str.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
-		str.append(_T("</perfTabSettings>\n"));
+		xml.append(_T("\t\t\t\t\t<perfTabSettings>"));
+		xml.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
+		xml.append(_T("</perfTabSettings>\n"));
 	}
 
 	if (m_instanceDiscoveryData != NULL)
    {
-      str += _T("\t\t\t\t\t<instanceDiscoveryData>");
-      str.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
-      str += _T("</instanceDiscoveryData>\n");
+      xml += _T("\t\t\t\t\t<instanceDiscoveryData>");
+      xml.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
+      xml += _T("</instanceDiscoveryData>\n");
    }
 
    if (m_instanceFilterSource != NULL)
    {
-      str.append(_T("\t\t\t\t\t<instanceFilter>"));
-      str.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
-      str.append(_T("</instanceFilter>\n"));
+      xml.append(_T("\t\t\t\t\t<instanceFilter>"));
+      xml.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
+      xml.append(_T("</instanceFilter>\n"));
    }
 
    unlock();
-   str.append(_T("\t\t\t\t</dctable>\n"));
+   xml.append(_T("\t\t\t\t</dctable>\n"));
 }
 
 /**

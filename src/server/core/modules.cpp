@@ -63,7 +63,7 @@ static bool LoadNetXMSModule(const TCHAR *name)
    }
    else
    {
-      nx_strncpy(fullName, name, MAX_PATH);
+      _tcslcpy(fullName, name, MAX_PATH);
    }
    HMODULE hModule = DLOpen(fullName, szErrorText);
 #endif

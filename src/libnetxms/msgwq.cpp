@@ -414,16 +414,16 @@ EnumerationCallbackResult MsgWaitQueue::diagInfoCallback(const void *key, const 
    MsgWaitQueue *q = (MsgWaitQueue *)object;
    TCHAR buffer[256];
    _sntprintf(buffer, 256, _T("   %p size=%d holdTime=%d\n"), q, q->m_size, q->m_holdTime);
-   ((String *)arg)->append(buffer);
+   static_cast<StringBuffer*>(arg)->append(buffer);
    return _CONTINUE;
 }
 
 /**
  * Get diagnostic info
  */
-String MsgWaitQueue::getDiagInfo()
+StringBuffer MsgWaitQueue::getDiagInfo()
 {
-   String out;
+   StringBuffer out;
    MutexLock(m_housekeeperLock);
    out.append(m_activeQueues->size());
    out.append(_T(" active queues\nHousekeeper thread state is "));

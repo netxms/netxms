@@ -635,7 +635,7 @@ public:
    SummaryTableColumn(NXCPMessage *msg, UINT32 baseId);
    SummaryTableColumn(TCHAR *configStr);
 
-   void createExportRecord(String &xml, int id);
+   void createExportRecord(StringBuffer &xml, int id);
 };
 
 /**
@@ -677,7 +677,7 @@ public:
    bool isMultiInstance() const { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
    bool isTableDciSource() const { return (m_flags & SUMMARY_TABLE_TABLE_DCI_SOURCE) ? true : false; }
 
-   void createExportRecord(String &xml) const;
+   void createExportRecord(StringBuffer &xml) const;
 };
 
 /**
@@ -974,7 +974,7 @@ public:
 
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
 
-   String expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
+   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
 
    IntegerArray<UINT32> *getAllResponsibleUsers();
 
@@ -1082,7 +1082,7 @@ protected:
    void updateFromImport(ConfigEntry *config);
 
    void toJson(json_t *root);
-   void createExportRecord(String &str);
+   void createExportRecord(StringBuffer &str);
 
 public:
    AutoBindTarget(NetObj *_this);
@@ -1241,7 +1241,7 @@ public:
 
    virtual void updateFromImport(ConfigEntry *config);
    virtual json_t *toJson();
-   virtual void createExportRecord(String &str);
+   virtual void createExportRecord(StringBuffer &str);
 
    virtual bool createDeploymentMessage(NXCPMessage *msg, bool supportNewTypeFormat);
 };
@@ -1283,7 +1283,7 @@ public:
    virtual void updateFromImport(ConfigEntry *config) override;
    virtual json_t *toJson() override;
 
-   void createExportRecord(String &str);
+   void createExportRecord(StringBuffer &xml);
 
    GenericAgentPolicy *getAgentPolicyCopy(const uuid& guid);
    bool hasPolicy(const uuid& guid);
@@ -2320,8 +2320,8 @@ public:
    AgentConnectionEx *getAgentConnection();
 
    void checkDlmsConverterAccessibility();
-   void prepareDlmsDciParameters(String &parameter);
-   void prepareLoraDciParameters(String &parameter);
+   void prepareDlmsDciParameters(StringBuffer &parameter);
+   void prepareLoraDciParameters(StringBuffer &parameter);
 
    NetworkMapObjectList *buildInternalConnectionTopology();
 };

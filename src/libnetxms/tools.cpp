@@ -3169,7 +3169,7 @@ INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory()
  */
 String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
 {
-   String js;
+   StringBuffer js;
    if (s == NULL)
       return js;
    for(const TCHAR *p = s; *p != 0; p++)
@@ -3186,7 +3186,7 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
  */
 String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s)
 {
-   String out;
+   StringBuffer out;
    if (s == NULL)
       return out;
    for(const TCHAR *p = s; *p != 0; p++)

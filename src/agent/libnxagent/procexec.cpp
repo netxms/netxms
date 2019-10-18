@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -57,7 +57,7 @@ void KeyValueOutputProcessExecutor::onOutput(const char *text)
          m_buffer.append(lineStartPtr);
          if (m_buffer.length() > MAX_RESULT_LENGTH * 3)
          {
-            nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
+            nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), m_buffer.cstr());
             stop();
             m_buffer.clear();
             break;
@@ -68,7 +68,7 @@ void KeyValueOutputProcessExecutor::onOutput(const char *text)
          m_buffer.append(lineStartPtr);
          if (m_buffer.length() > MAX_RESULT_LENGTH * 3)
          {
-            nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
+            nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), m_buffer.cstr());
             stop();
             m_buffer.clear();
          }

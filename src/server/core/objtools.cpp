@@ -1148,7 +1148,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
 /**
  * Create export records for object tool columns
  */
-static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, String &xml, UINT32 id)
+static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, StringBuffer &xml, UINT32 id)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_number,col_name,col_oid,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=?"));
    if (hStmt == NULL)
@@ -1187,7 +1187,7 @@ static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, String &xml, UINT
 /**
  * Create export records for object tool input fields
  */
-static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, String &xml, UINT32 id)
+static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, StringBuffer &xml, UINT32 id)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config FROM object_tools_input_fields WHERE tool_id=?"));
    if (hStmt == NULL)
@@ -1224,9 +1224,9 @@ static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, String &xml, 
 }
 
 /**
- * Cerate export record for given object tool
+ * Create export record for given object tool
  */
-void CreateObjectToolExportRecord(String &xml, UINT32 id)
+void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 

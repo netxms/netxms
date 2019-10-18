@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ bool LIBNXDBMGR_EXPORTABLE GenerateGUID(const TCHAR *table, const TCHAR *idColum
  */
 bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery)
 {
-   String query(pszQuery);
+   StringBuffer query(pszQuery);
 
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {

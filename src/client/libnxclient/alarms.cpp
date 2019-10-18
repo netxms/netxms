@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -320,7 +320,7 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
 	   object = oc->findObjectById(alarm->sourceObject);
    }
 
-	String out;
+	StringBuffer out;
 	const TCHAR *prev, *curr;
    TCHAR buffer[128];
 	for(prev = format; *prev != 0; prev = curr)
@@ -394,5 +394,5 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
 		}
 		curr++;
 	}
-	return _tcsdup((const TCHAR *)out);
+	return MemCopyString(out);
 }

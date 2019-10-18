@@ -266,9 +266,9 @@ Alarm::~Alarm()
 /**
  * Convert alarm category list to string
  */
-String Alarm::categoryListToString()
+StringBuffer Alarm::categoryListToString()
 {
-   String buffer;
+   StringBuffer buffer;
    for(int i = 0; i < m_alarmCategoryList->size(); i++)
    {
       if (buffer.length() > 0)

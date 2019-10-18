@@ -148,7 +148,7 @@ bool InetAddressListElement::contains(const InetAddress& addr) const
  */
 String InetAddressListElement::toString() const
 {
-   String s = m_baseAddress.toString();
+   StringBuffer s = m_baseAddress.toString();
    if (m_type == InetAddressListElement_SUBNET)
    {
       s.append(_T('/'));

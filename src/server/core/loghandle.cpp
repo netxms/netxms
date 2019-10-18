@@ -96,13 +96,13 @@ void LogHandle::buildQueryColumnList()
 
 		if (!first)
 		{
-			m_queryColumns += _T(",");
+			m_queryColumns.append(_T(","));
 		}
 		else
 		{
 			first = false;
 		}
-		m_queryColumns += column->name;
+		m_queryColumns.append(column->name);
 		column++;
 	}
 }
@@ -139,9 +139,9 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount, const UINT32 userId)
 /**
  * Creates a SQL WHERE clause for restricting log to only objects accessible by given user.
  */
-String LogHandle::buildObjectAccessConstraint(const UINT32 userId) 
+StringBuffer LogHandle::buildObjectAccessConstraint(const UINT32 userId)
 {
-   String constraint;
+   StringBuffer constraint;
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
    IntegerArray<UINT32> *allowed = new IntegerArray<UINT32>(objects->size());
    IntegerArray<UINT32> *restricted = new IntegerArray<UINT32>(objects->size());
@@ -222,7 +222,7 @@ String LogHandle::buildObjectAccessConstraint(const UINT32 userId)
 bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 {
 	QWORD qwTimeStart = GetCurrentTimeMs();
-	String query;
+	StringBuffer query;
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
@@ -251,9 +251,9 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 		for(int i = 0; i < filterSize; i++)
 		{
 			ColumnFilter *cf = m_filter->getColumnFilter(i);
-			query += _T(" AND (");
-			query += cf->generateSql();
-			query += _T(")");
+			query.append(_T(" AND ("));
+			query.append(cf->generateSql());
+			query.append(_T(")"));
 		}
 	}
 
@@ -296,7 +296,7 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 	{
 		*rowCount = DBGetNumRows(m_resultSet);
 		ret = true;
-		DbgPrintf(4, _T("Log query successfull, %d rows fetched in %d ms"), (int)(*rowCount), (int)(GetCurrentTimeMs() - qwTimeStart));
+		DbgPrintf(4, _T("Log query successful, %d rows fetched in %d ms"), (int)(*rowCount), (int)(GetCurrentTimeMs() - qwTimeStart));
 	}
 	DBConnectionPoolReleaseConnection(dbHandle);
 

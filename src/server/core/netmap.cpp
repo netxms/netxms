@@ -867,7 +867,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             l->setConnector1Name(linkInfo->port1);
             l->setConnector2Name(linkInfo->port2);
             l->setName(linkInfo->name);
-            String config;
+            StringBuffer config;
             config.append(_T("<config>\n"));
             config.append(_T("\t<dciList length=\"0\"/>\n"));
             config.append(_T("\t<objectStatusList class=\"java.util.ArrayList\">\n"));

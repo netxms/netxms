@@ -369,7 +369,7 @@ NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *object, const char *attr)
    }
 	else
 	{
-	   String key;
+	   StringBuffer key;
       key.append(info->getSituationName());
       key.append(_T("."));
       key.append(info->getInstanceName());
@@ -435,7 +435,7 @@ static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 		return NXSL_ERR_BAD_CLASS;
 
 	SituationInfo *info = static_cast<SituationInfo*>(object->getData());
-	String key;
+	StringBuffer key;
 	key.append(info->getSituationName());
 	key.append(_T("."));
 	key.append(info->getInstanceName());

@@ -4104,8 +4104,7 @@ bool Node::confPollSnmp(UINT32 rqId)
                      FindAccessPointByMAC(info->getMacAddr());
             if (ap == NULL)
             {
-               String name;
-
+               StringBuffer name;
                if (info->getName() != NULL)
                {
                   name = info->getName();
@@ -9244,7 +9243,7 @@ void Node::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topolog
       }
    }
 
-   String protocols;
+   StringBuffer protocols;
 	if (!m_tunnelId.equals(uuid::NULL_UUID))
 	{
 	   topology->addObject(FindLocalMgmtNode());

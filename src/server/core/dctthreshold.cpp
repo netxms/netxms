@@ -832,13 +832,13 @@ void DCTableThreshold::generateEventsBasedOnThrDiff(TableThresholdCbData *data)
 /**
  * Create NXMP record for threshold
  */
-void DCTableThreshold::createExportRecord(String &str, int id) const
+void DCTableThreshold::createExportRecord(StringBuffer &xml, int id) const
 {
    TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
 
    EventNameFromCode(m_activationEvent, activationEvent);
    EventNameFromCode(m_deactivationEvent, deactivationEvent);
-   str.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
+   xml.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<activationEvent>%s</activationEvent>\n")
                           _T("\t\t\t\t\t\t\t<deactivationEvent>%s</deactivationEvent>\n")
                           _T("\t\t\t\t\t\t\t<sampleCount>%d</sampleCount>\n")
@@ -848,12 +848,12 @@ void DCTableThreshold::createExportRecord(String &str, int id) const
 								  m_sampleCount);
    for(int i = 0; i < m_groups->size(); i++)
    {
-      str.appendFormattedString(_T("\t\t\t\t\t\t\t\t<group id=\"%d\">\n\t\t\t\t\t\t\t\t\t<conditions>\n"), i + 1);
+      xml.appendFormattedString(_T("\t\t\t\t\t\t\t\t<group id=\"%d\">\n\t\t\t\t\t\t\t\t\t<conditions>\n"), i + 1);
       const ObjectArray<DCTableCondition> *conditions = m_groups->get(i)->getConditions();
       for(int j = 0; j < conditions->size(); j++)
       {
          DCTableCondition *c = conditions->get(j);
-         str.appendFormattedString(_T("\t\t\t\t\t\t\t\t\t\t<condition id=\"%d\">\n")
+         xml.appendFormattedString(_T("\t\t\t\t\t\t\t\t\t\t<condition id=\"%d\">\n")
                                 _T("\t\t\t\t\t\t\t\t\t\t\t<column>%s</column>\n")
                                 _T("\t\t\t\t\t\t\t\t\t\t\t<operation>%d</operation>\n")
                                 _T("\t\t\t\t\t\t\t\t\t\t\t<value>%s</value>\n")
@@ -861,9 +861,9 @@ void DCTableThreshold::createExportRecord(String &str, int id) const
                                 j + 1, (const TCHAR *)EscapeStringForXML2(c->getColumn()),
                                 c->getOperation(), (const TCHAR *)EscapeStringForXML2(c->getValue()));
       }
-      str.append(_T("\t\t\t\t\t\t\t\t\t</conditions>\n\t\t\t\t\t\t\t\t</group>\n"));
+      xml.append(_T("\t\t\t\t\t\t\t\t\t</conditions>\n\t\t\t\t\t\t\t\t</group>\n"));
    }
-   str.append(_T("\t\t\t\t\t\t\t</groups>\n\t\t\t\t\t\t</threshold>\n"));
+   xml.append(_T("\t\t\t\t\t\t\t</groups>\n\t\t\t\t\t\t</threshold>\n"));
 }
 
 /**

@@ -74,7 +74,7 @@ static int s_logHistorySize = 4;		// Keep up 4 previous log files
 static TCHAR s_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
 static time_t s_currentDayStart = 0;
 static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
-static String s_logBuffer;
+static StringBuffer s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
 static NxLogDebugWriter s_debugWriter = NULL;

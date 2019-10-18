@@ -283,7 +283,7 @@ void StringSet::addAllFromMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 
  */
 String StringSet::join(const TCHAR *separator)
 {
-   String result;
+   StringBuffer result;
    result.setAllocationStep(4096);
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)

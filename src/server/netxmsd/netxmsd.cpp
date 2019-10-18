@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -251,7 +251,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
                String ciphers = NXCPGetSupportedCiphersAsText();
                _tprintf(_T("NXCP: %d.%d.%d.%d (%s)\n"), 
                   NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,
-                  ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.getBuffer());
+                  ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.cstr());
                _tprintf(_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
             }
 				return FALSE;

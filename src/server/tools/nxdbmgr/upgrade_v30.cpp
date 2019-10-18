@@ -28,9 +28,9 @@
  *
  * pszInitArgs format: portname,speed,databits,parity,stopbits,mode,blocksize,writedelay
  */
-static String CreateNCDrvConfig_GSM(TCHAR *portName)
+static StringBuffer CreateNCDrvConfig_GSM(TCHAR *portName)
 {
-   String config;
+   StringBuffer config;
    TCHAR *p;
    int parity = NOPARITY;
    int stopBits = ONESTOPBIT;
@@ -133,9 +133,9 @@ static String CreateNCDrvConfig_GSM(TCHAR *portName)
 /**
  * Generate remote NXAgent notification channel configuration from SMSDrvConfig
  */
-static String CreateNCDrvConfig_NXAgent(TCHAR *temp)
+static StringBuffer CreateNCDrvConfig_NXAgent(TCHAR *temp)
 {
-   String config;
+   StringBuffer config;
    TCHAR *ptr, *eptr;
    int field;
    const TCHAR *array[] = { _T("hostname"), _T("port"), _T("timeout"), _T("secret")};
@@ -163,7 +163,7 @@ static TCHAR *CreateNCDrvConfig_Default(TCHAR *oldConfiguration)
    return oldConfiguration;
 }
 
-static void PrepareDriverNameAndConfig(TCHAR *driver, TCHAR *oldConfiguration,String &newDriverName, String &newConfiguration)
+static void PrepareDriverNameAndConfig(TCHAR *driver, TCHAR *oldConfiguration, StringBuffer &newDriverName, StringBuffer &newConfiguration)
 {
    //prepare driver name
    TCHAR *driverName = NULL;
@@ -288,8 +288,8 @@ static bool H_UpgradeFromV101()
    TCHAR driver[64];
    TCHAR name[64];
    TCHAR *oldConfiguration = NULL;
-   String newConfiguration;
-   String newDriverName;
+   StringBuffer newConfiguration;
+   StringBuffer newDriverName;
    bool fixNeeded = false;
 
    DB_RESULT hResult = SQLSelect(_T("SELECT driver_name,name FROM notification_channels"));
@@ -328,7 +328,9 @@ static bool H_UpgradeFromV101()
          DBFreeStatement(hStmt);
       }
       else if (!g_ignoreErrors)
+      {
         return false;
+      }
 
       if (oldConfiguration == NULL)
          oldConfiguration = _tcsdup(_T(""));
@@ -520,8 +522,8 @@ static bool H_UpgradeFromV91()
 
    TCHAR *driver = NULL;
    TCHAR *oldConfiguration = NULL;
-   String newConfiguration;
-   String newDriverName;
+   StringBuffer newConfiguration;
+   StringBuffer newDriverName;
 
    DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='SMSDriver'"));
    if (hResult != NULL)
@@ -889,7 +891,7 @@ static bool H_UpgradeFromV83()
    if (hResult != NULL)
    {
       UINT32 currEventCode = 0;
-      String tags;
+      StringBuffer tags;
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
@@ -898,7 +900,7 @@ static bool H_UpgradeFromV83()
          {
             if (!tags.isEmpty())
             {
-               String query = _T("UPDATE event_cfg SET tags=");
+               StringBuffer query = _T("UPDATE event_cfg SET tags=");
                query.append(DBPrepareString(g_dbHandle, tags));
                query.append(_T(" WHERE event_code="));
                query.append(currEventCode);
@@ -922,7 +924,7 @@ static bool H_UpgradeFromV83()
 
       if (!tags.isEmpty())
       {
-         String query = _T("UPDATE event_cfg SET tags=");
+         StringBuffer query = _T("UPDATE event_cfg SET tags=");
          query.append(DBPrepareString(g_dbHandle, tags));
          query.append(_T(" WHERE event_code="));
          query.append(currEventCode);

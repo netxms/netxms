@@ -318,29 +318,29 @@ EPRule::~EPRule()
 /**
  * Create management pack record
  */
-void EPRule::createNXMPRecord(String &str)
+void EPRule::createExportRecord(StringBuffer &xml)
 {
-   str.append(_T("\t\t<rule id=\""));
-   str.append(m_id + 1);
-   str.append(_T("\">\n\t\t\t<guid>"));
-   str.append(m_guid.toString());
-   str.append(_T("</guid>\n\t\t\t<flags>"));
-   str.append(m_flags);
-   str.append(_T("</flags>\n\t\t\t<alarmMessage>"));
-   str.append(EscapeStringForXML2(m_alarmMessage));
-   str.append(_T("</alarmMessage>\n\t\t\t<alarmKey>"));
-   str.append(EscapeStringForXML2(m_alarmKey));
-   str.append(_T("</alarmKey>\n\t\t\t<alarmSeverity>"));
-   str.append(m_alarmSeverity);
-   str.append(_T("</alarmSeverity>\n\t\t\t<alarmTimeout>"));
-   str.append(m_alarmTimeout);
-   str.append(_T("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>"));
-   str.append(m_alarmTimeoutEvent);
-   str.append(_T("</alarmTimeoutEvent>\n\t\t\t<script>"));
-   str.append(EscapeStringForXML2(m_scriptSource));
-   str.append(_T("</script>\n\t\t\t<comments>"));
-   str.append(EscapeStringForXML2(m_comments));
-   str.append(_T("</comments>\n\t\t\t<sources>\n"));
+   xml.append(_T("\t\t<rule id=\""));
+   xml.append(m_id + 1);
+   xml.append(_T("\">\n\t\t\t<guid>"));
+   xml.append(m_guid.toString());
+   xml.append(_T("</guid>\n\t\t\t<flags>"));
+   xml.append(m_flags);
+   xml.append(_T("</flags>\n\t\t\t<alarmMessage>"));
+   xml.append(EscapeStringForXML2(m_alarmMessage));
+   xml.append(_T("</alarmMessage>\n\t\t\t<alarmKey>"));
+   xml.append(EscapeStringForXML2(m_alarmKey));
+   xml.append(_T("</alarmKey>\n\t\t\t<alarmSeverity>"));
+   xml.append(m_alarmSeverity);
+   xml.append(_T("</alarmSeverity>\n\t\t\t<alarmTimeout>"));
+   xml.append(m_alarmTimeout);
+   xml.append(_T("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>"));
+   xml.append(m_alarmTimeoutEvent);
+   xml.append(_T("</alarmTimeoutEvent>\n\t\t\t<script>"));
+   xml.append(EscapeStringForXML2(m_scriptSource));
+   xml.append(_T("</script>\n\t\t\t<comments>"));
+   xml.append(EscapeStringForXML2(m_comments));
+   xml.append(_T("</comments>\n\t\t\t<sources>\n"));
 
    for(int i = 0; i < m_sources.size(); i++)
    {
@@ -348,7 +348,7 @@ void EPRule::createNXMPRecord(String &str)
       if (object != NULL)
       {
          TCHAR guidText[128];
-         str.appendFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
+         xml.appendFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
                                 _T("\t\t\t\t\t<name>%s</name>\n")
                                 _T("\t\t\t\t\t<guid>%s</guid>\n")
                                 _T("\t\t\t\t\t<class>%d</class>\n")
@@ -359,62 +359,62 @@ void EPRule::createNXMPRecord(String &str)
       }
    }
 
-   str += _T("\t\t\t</sources>\n\t\t\t<events>\n");
+   xml += _T("\t\t\t</sources>\n\t\t\t<events>\n");
 
    for(int i = 0; i < m_events.size(); i++)
    {
       TCHAR eventName[MAX_EVENT_NAME];
       EventNameFromCode(m_events.get(i), eventName);
-      str.appendFormattedString(_T("\t\t\t\t<event id=\"%d\">\n")
+      xml.appendFormattedString(_T("\t\t\t\t<event id=\"%d\">\n")
                              _T("\t\t\t\t\t<name>%s</name>\n")
                              _T("\t\t\t\t</event>\n"),
                              m_events.get(i), (const TCHAR *)EscapeStringForXML2(eventName));
    }
 
-   str.append(_T("\t\t\t</events>\n\t\t\t<actions>\n"));
+   xml.append(_T("\t\t\t</events>\n\t\t\t<actions>\n"));
    for(int i = 0; i < m_actions.size(); i++)
    {
-      str.append(_T("\t\t\t\t<action id=\""));
+      xml.append(_T("\t\t\t\t<action id=\""));
       const ActionExecutionConfiguration *a = m_actions.get(i);
-      str.append(a->actionId);
-      str.append(_T("\">\n\t\t\t\t\t<guid>"));
-      str.append(GetActionGUID(a->actionId));
-      str.append(_T("</guid>\n\t\t\t\t\t<timerDelay>\n"));
-      str.append(a->timerDelay);
-      str.append(_T("</timerDelay>\n\t\t\t\t\t<timerKey>\n"));
-      str.append(a->timerKey);
-      str.append(_T("</timerKey>\n\t\t\t\t</action>\n"));
+      xml.append(a->actionId);
+      xml.append(_T("\">\n\t\t\t\t\t<guid>"));
+      xml.append(GetActionGUID(a->actionId));
+      xml.append(_T("</guid>\n\t\t\t\t\t<timerDelay>"));
+      xml.append(a->timerDelay);
+      xml.append(_T("</timerDelay>\n\t\t\t\t\t<timerKey>"));
+      xml.append(a->timerKey);
+      xml.append(_T("</timerKey>\n\t\t\t\t</action>\n"));
    }
 
-   str.append(_T("\t\t\t</actions>\n\t\t\t<timerCancellations>\n"));
+   xml.append(_T("\t\t\t</actions>\n\t\t\t<timerCancellations>\n"));
    for(int i = 0; i < m_timerCancellations.size(); i++)
    {
-      str.append(_T("\t\t\t\t<timerKey>"));
-      str.append(m_timerCancellations.get(i));
-      str.append(_T("</timerKey>\n"));
+      xml.append(_T("\t\t\t\t<timerKey>"));
+      xml.append(m_timerCancellations.get(i));
+      xml.append(_T("</timerKey>\n"));
    }
 
-   str.append(_T("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n"));
+   xml.append(_T("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n"));
    StructArray<KeyValuePair> *arr = m_pstorageSetActions.toArray();
    for(int i = 0; i < arr->size(); i++)
    {
-      str.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" key=\"%s\">%s</set>\n"), i+1, arr->get(i)->key, arr->get(i)->value);
+      xml.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" key=\"%s\">%s</set>\n"), i+1, arr->get(i)->key, arr->get(i)->value);
    }
    delete arr;
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
    {
-      str.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i+1, m_pstorageDeleteActions.get(i));
+      xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i+1, m_pstorageDeleteActions.get(i));
    }
-   str += _T("\t\t\t</pStorageActions>\n\t\t\t<alarmCategories>\n");
+   xml += _T("\t\t\t</pStorageActions>\n\t\t\t<alarmCategories>\n");
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
       AlarmCategory *category = GetAlarmCategory(m_alarmCategoryList.get(i));
-      str.appendFormattedString(_T("\t\t\t\t<category id=\"%d\" name=\"%s\">"), category->getId(), category->getName());
-      str.append(category->getDescription());
-      str.append(_T("</category>\n"));
+      xml.appendFormattedString(_T("\t\t\t\t<category id=\"%d\" name=\"%s\">"), category->getId(), category->getName());
+      xml.append(category->getDescription());
+      xml.append(_T("</category>\n"));
       delete category;
    }
-   str += _T("\t\t\t</alarmCategories>\n\t\t</rule>\n");
+   xml.append(_T("\t\t\t</alarmCategories>\n\t\t</rule>\n"));
 }
 
 /**
@@ -1193,14 +1193,14 @@ bool EventPolicy::isCategoryInUse(UINT32 categoryId) const
 /**
  * Export rule
  */
-void EventPolicy::exportRule(String& str, const uuid& guid) const
+void EventPolicy::exportRule(StringBuffer& xml, const uuid& guid) const
 {
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
    {
       if (guid.equals(m_rules.get(i)->getGuid()))
       {
-         m_rules.get(i)->createNXMPRecord(str);
+         m_rules.get(i)->createExportRecord(xml);
          break;
       }
    }

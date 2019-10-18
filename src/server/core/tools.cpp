@@ -277,7 +277,7 @@ void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *psz
 /**
  * Escape string
  */
-void EscapeString(String &str)
+void EscapeString(StringBuffer &str)
 {
    str.escapeCharacter(_T('\\'), _T('\\'));
    str.escapeCharacter(_T('"'), _T('\\'));
@@ -462,7 +462,7 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDis
  */
 DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id, const TCHAR * const *columns)
 {
-   String query;
+   StringBuffer query;
    if (((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB)) && (g_flags & AF_DB_SUPPORTS_MERGE))
    {
       query.append(_T("INSERT INTO "));

@@ -576,7 +576,7 @@ static void TestPatternMatching()
  */
 static void TestString()
 {
-   String s;
+   StringBuffer s;
 
    StartTest(_T("String - append"));
    for(int i = 0; i < 256; i++)
@@ -654,44 +654,37 @@ static void TestString()
 
    StartTest(_T("String - substring #4"));
    s = _T("alpha beta gamma");
-   String ss = s.substring(0, 5);
-   AssertTrue(!_tcscmp(ss, _T("alpha")));
+   AssertTrue(!_tcscmp(s.substring(0, 5), _T("alpha")));
    EndTest();
 
    StartTest(_T("String - substring #5"));
    s = _T("alpha beta gamma");
-   ss = s.substring(5, -1);
-   AssertTrue(!_tcscmp(ss, _T(" beta gamma")));
+   AssertTrue(!_tcscmp(s.substring(5, -1), _T(" beta gamma")));
    EndTest();
 
    StartTest(_T("String - substring #6"));
    s = _T("alpha beta gamma");
-   ss = s.substring(14, 4);
-   AssertTrue(!_tcscmp(ss, _T("ma")));
+   AssertTrue(!_tcscmp(s.substring(14, 4), _T("ma")));
    EndTest();
 
    StartTest(_T("String - left #1"));
    s = _T("alpha beta gamma");
-   String ls = s.left(5);
-   AssertTrue(ls.equals(_T("alpha")));
+   AssertTrue(s.left(5).equals(_T("alpha")));
    EndTest();
 
    StartTest(_T("String - left #2"));
    s = _T("alpha");
-   ls = s.left(15);
-   AssertTrue(ls.equals(_T("alpha")));
+   AssertTrue(s.left(15).equals(_T("alpha")));
    EndTest();
 
    StartTest(_T("String - right #1"));
    s = _T("alpha beta gamma");
-   String rs = s.right(5);
-   AssertTrue(rs.equals(_T("gamma")));
+   AssertTrue(s.right(5).equals(_T("gamma")));
    EndTest();
 
    StartTest(_T("String - right #2"));
    s = _T("alpha");
-   rs = s.right(15);
-   AssertTrue(rs.equals(_T("alpha")));
+   AssertTrue(s.right(15).equals(_T("alpha")));
    EndTest();
 
    StartTest(_T("String - split"));
@@ -1057,15 +1050,15 @@ static void TestHashMap()
 
    String *s = hashMap->get(k1);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 1")));
 
    s = hashMap->get(k2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 2")));
 
    s = hashMap->get(k3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 3")));
 
    EndTest();
 
@@ -1073,7 +1066,7 @@ static void TestHashMap()
    hashMap->set(k2, new String(_T("REPLACE")));
    s = hashMap->get(k2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("REPLACE")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("REPLACE")));
    EndTest();
 
    StartTest(_T("HashMap - iterator"));
@@ -1137,20 +1130,20 @@ static void TestHashMap()
 
    s = ipAddrMap->get(addr2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("addr2")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("addr2")));
 
    s = ipAddrMap->get(addr3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("addr3")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("addr3")));
 
    s = ipAddrMap->get(addr4);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("addr4")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("addr4")));
 
    ipAddrMap->set(addr3, new String(_T("addr3_replaced")));
    s = ipAddrMap->get(addr3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("addr3_replaced")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("addr3_replaced")));
 
    AssertEquals(ipAddrMap->size(), 4);
 
@@ -1172,20 +1165,20 @@ static void TestHashMap()
 
    s = longKeyMap->get(lk2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("key2")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("key2")));
 
    s = longKeyMap->get(lk3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("key3")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("key3")));
 
    s = longKeyMap->get(lk4);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("key4")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("key4")));
 
    longKeyMap->set(lk3, new String(_T("key3_replaced")));
    s = longKeyMap->get(lk3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("key3_replaced")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("key3_replaced")));
 
    AssertEquals(longKeyMap->size(), 4);
 
@@ -1217,15 +1210,15 @@ static void TestSharedHashMap()
 
    String *s = sharedHashMap->get(k1);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 1")));
 
    s = sharedHashMap->get(k2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 2")));
 
    s = sharedHashMap->get(k3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 3")));
 
    s = sharedHashMap->get(k4);
    AssertNull(s);
@@ -1244,7 +1237,7 @@ static void TestSharedHashMap()
    AssertEquals(shared.use_count(), 2);
    delete sharedHashMap;
    AssertEquals(shared.use_count(), 1);
-   AssertTrue(!_tcscmp(shared->getBuffer(), _T("String 2")));
+   AssertTrue(!_tcscmp(shared->cstr(), _T("String 2")));
    EndTest();
 }
 
@@ -1272,15 +1265,15 @@ static void TestSynchronizedSharedHashMap()
 
    shared_ptr<String> s = hashMap->getShared(k1);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 1")));
 
    s = hashMap->getShared(k2);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 2")));
 
    s = hashMap->getShared(k3);
    AssertNotNull(s);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("String 3")));
 
    s = hashMap->getShared(k4);
    AssertNull(s);
@@ -1299,7 +1292,7 @@ static void TestSynchronizedSharedHashMap()
    AssertEquals(shared.use_count(), 2);
    delete hashMap;
    AssertEquals(shared.use_count(), 1);
-   AssertTrue(!_tcscmp(shared->getBuffer(), _T("String 2")));
+   AssertTrue(!_tcscmp(shared->cstr(), _T("String 2")));
    EndTest();
 }
 
@@ -1399,33 +1392,33 @@ static void TestObjectArray()
    AssertEquals(array->size(), 5);
    AssertNull(array->get(5));
    AssertNotNull(array->get(1));
-   AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(array->get(1)->cstr(), _T("value 2")));
    EndTest();
 
    StartTest(_T("ObjectArray: replace"));
    array->replace(0, new String(_T("replace")));
    AssertEquals(array->size(), 5);
-   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("replace")));
+   AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("replace")));
    EndTest();
 
    StartTest(_T("ObjectArray: remove"));
    array->remove(0);
    AssertEquals(array->size(), 4);
-   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("value 2")));
    array->remove(3);
    AssertEquals(array->size(), 3);
-   AssertTrue(!_tcscmp(array->get(2)->getBuffer(), _T("value 4")));
+   AssertTrue(!_tcscmp(array->get(2)->cstr(), _T("value 4")));
    EndTest();
 
    StartTest(_T("ObjectArray: iterator"));
    Iterator<String> *it = array->iterator();
    AssertTrue(it->hasNext());
    String *s = it->next();
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("value 2")));
    s = it->next();
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 3")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("value 3")));
    s = it->next();
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 4")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("value 4")));
    s = it->next();
    AssertNull(s);
    delete it;
@@ -1437,15 +1430,15 @@ static void TestObjectArray()
    while(it->hasNext())
    {
       String *s = it->next();
-      if (!_tcscmp(s->getBuffer(), _T("value 4")))
+      if (!_tcscmp(s->cstr(), _T("value 4")))
       {
          it->remove();
       }
    }
    delete it;
    AssertEquals(array->size(), 2);
-   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
-   AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 3")));
+   AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("value 2")));
+   AssertTrue(!_tcscmp(array->get(1)->cstr(), _T("value 3")));
    EndTest();
 
    delete array;
@@ -1470,22 +1463,22 @@ static void TestSharedObjectArray()
    AssertEquals(array->size(), 5);
    AssertNull(array->get(5));
    AssertNotNull(array->get(1));
-   AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(array->get(1)->cstr(), _T("value 2")));
    EndTest();
 
    StartTest(_T("SharedObjectArray: replace"));
    array->replace(0, new String(_T("replace")));
    AssertEquals(array->size(), 5);
-   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("replace")));
+   AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("replace")));
    EndTest();
 
    StartTest(_T("SharedObjectArray: remove"));
    array->remove(0);
    AssertEquals(array->size(), 4);
-   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("value 2")));
    array->remove(3);
    AssertEquals(array->size(), 3);
-   AssertTrue(!_tcscmp(array->get(2)->getBuffer(), _T("value 4")));
+   AssertTrue(!_tcscmp(array->get(2)->cstr(), _T("value 4")));
    EndTest();
 
    /*
@@ -1493,11 +1486,11 @@ static void TestSharedObjectArray()
    Iterator<String> *it = array->iterator();
    AssertTrue(it->hasNext());
    String *s = it->next();
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("value 2")));
    s = it->next();
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 3")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("value 3")));
    s = it->next();
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 4")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("value 4")));
    s = it->next();
    AssertNull(s);
    delete it;
@@ -1509,15 +1502,15 @@ static void TestSharedObjectArray()
    while(it->hasNext())
    {
       String *s = it->next();
-      if (!_tcscmp(s->getBuffer(), _T("value 4")))
+      if (!_tcscmp(s->cstr(), _T("value 4")))
       {
          it->remove();
       }
    }
    delete it;
    AssertEquals(array->size(), 2);
-   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
-   AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 3")));
+   AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("value 2")));
+   AssertTrue(!_tcscmp(array->get(1)->cstr(), _T("value 3")));
    EndTest();
    */
 
@@ -1531,7 +1524,7 @@ static void TestSharedObjectArray()
    AssertEquals(s.use_count(), 2);
    delete array2;
    AssertEquals(s.use_count(), 1);
-   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(s->cstr(), _T("value 2")));
    EndTest();
 }
 
@@ -1703,7 +1696,7 @@ static void TestDiff()
    static const TCHAR *expectedDiff = _T("-line 2\n-line3\n+line 3\n+line 4\n-alpha\n+beta\n");
 
    StartTest(_T("GenerateLineDiff (multiple lines)"));
-   String diff = GenerateLineDiff(diffLeft, diffRight);
+   StringBuffer diff = GenerateLineDiff(diffLeft, diffRight);
    AssertTrue(diff.equals(expectedDiff));
    EndTest();
 

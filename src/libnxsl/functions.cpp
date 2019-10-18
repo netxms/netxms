@@ -1504,7 +1504,7 @@ int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM 
 /**
  * Convert array to string (recursively for array values)
  */
-static void ArrayToString(NXSL_Array *a, String& s, const TCHAR *separator)
+static void ArrayToString(NXSL_Array *a, StringBuffer& s, const TCHAR *separator)
 {
    for(int i = 0; i < a->size(); i++)
    {
@@ -1533,7 +1533,7 @@ int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
    if (!argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   String s;
+   StringBuffer s;
    NXSL_Array *a = argv[0]->getValueAsArray();
    ArrayToString(a, s, argv[1]->getValueAsCString());
    *result = vm->createValue(s);
@@ -1555,9 +1555,9 @@ int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    for(int i = 0; i < count; i++)
    {
       a->append(vm->createValue(strings[i]));
-      free(strings[i]);
+      MemFree(strings[i]);
    }
-   free(strings);
+   MemFree(strings);
 
    *result = vm->createValue(a);
    return 0;

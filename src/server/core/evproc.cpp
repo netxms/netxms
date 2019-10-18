@@ -114,7 +114,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		int syntaxId = DBGetSyntax(hdb);
 		if (syntaxId == DB_SYNTAX_SQLITE)
 		{ 
-			String query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,origin,")
+			StringBuffer query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,origin,")
 			               _T("origin_timestamp,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) VALUES (");
 			query.append(pEvent->getId());
          query.append(_T(','));

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,20 +62,20 @@ LogFilter::~LogFilter()
 /**
  * Build ORDER BY clause
  */
-String LogFilter::buildOrderClause()
+StringBuffer LogFilter::buildOrderClause()
 {
-	String result;
+	StringBuffer result;
 
 	if (m_numOrderingColumns > 0)
 	{
-		result += _T(" ORDER BY ");
+		result.append(_T(" ORDER BY "));
 		for(int i = 0; i < m_numOrderingColumns; i++)
 		{
 			if (i > 0)
-				result += _T(",");
-			result += m_orderingColumns[i].name;
+				result.append(_T(","));
+			result.append(m_orderingColumns[i].name);
 			if (m_orderingColumns[i].descending)
-				result += _T(" DESC");
+				result.append(_T(" DESC"));
 		}
 	}
 

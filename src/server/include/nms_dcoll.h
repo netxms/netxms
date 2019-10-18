@@ -191,7 +191,7 @@ public:
 
    bool equals(const Threshold *t) const;
 
-   void createExportRecord(String &str, int index) const;
+   void createExportRecord(StringBuffer &xml, int index) const;
    json_t *toJson() const;
 
 	void associate(DCItem *pItem);
@@ -360,7 +360,7 @@ public:
 	virtual bool deleteEntry(time_t timestamp);
 
    virtual void getEventList(IntegerArray<UINT32> *eventList) = 0;
-   virtual void createExportRecord(String &str) = 0;
+   virtual void createExportRecord(StringBuffer &xml) = 0;
    virtual json_t *toJson();
 
    NXSL_Value *createNXSLObject(NXSL_VM *vm);
@@ -436,14 +436,14 @@ public:
 
    virtual DCObject *clone() const;
 
-	virtual int getType() const { return DCO_TYPE_ITEM; }
+	virtual int getType() const override { return DCO_TYPE_ITEM; }
 
-   virtual void updateFromTemplate(DCObject *dcObject);
-   virtual void updateFromImport(ConfigEntry *config);
+   virtual void updateFromTemplate(DCObject *dcObject) override;
+   virtual void updateFromImport(ConfigEntry *config) override;
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual void deleteFromDatabase();
-   virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual void deleteFromDatabase() override;
+   virtual bool loadThresholdsFromDB(DB_HANDLE hdb) override;
 
    void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(true, conditionId); unlock(); }
    void reloadCache(bool forceReload);
@@ -458,10 +458,10 @@ public:
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 
-   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError(bool noInstance, time_t now);
-   virtual void updateThresholdsBeforeMaintenanceState();
-   virtual void generateEventsBasedOnThrDiff();
+   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus) override;
+   virtual void processNewError(bool noInstance, time_t now) override;
+   virtual void updateThresholdsBeforeMaintenanceState() override;
+   virtual void generateEventsBasedOnThrDiff() override;
 
    void fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId);
    NXSL_Value *getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls);
@@ -470,18 +470,18 @@ public:
    ItemValue *getInternalLastValue();
    TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 
-   virtual void createMessage(NXCPMessage *pMsg);
-   void updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
+   virtual void createMessage(NXCPMessage *msg) override;
+   void updateFromMessage(NXCPMessage *msg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
 
-   virtual void changeBinding(UINT32 dwNewId, DataCollectionOwner *pNode, BOOL doMacroExpansion);
+   virtual void changeBinding(UINT32 dwNewId, DataCollectionOwner *pNode, BOOL doMacroExpansion) override;
 
-	virtual bool deleteAllData();
-   virtual bool deleteEntry(time_t timestamp);
+	virtual bool deleteAllData() override;
+   virtual bool deleteEntry(time_t timestamp) override;
 
-   virtual void getEventList(IntegerArray<UINT32> *eventList);
-   virtual void createExportRecord(String &str);
-   virtual json_t *toJson();
+   virtual void getEventList(IntegerArray<UINT32> *eventList) override;
+   virtual void createExportRecord(StringBuffer &str) override;
+   virtual json_t *toJson() override;
 
 	int getThresholdCount() const { return (m_thresholds != NULL) ? m_thresholds->size() : 0; }
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg);
@@ -527,7 +527,7 @@ public:
    bool isInstanceColumn() const { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
    bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 
-   void createNXMPRecord(String &str, int id) const;
+   void createExportRecord(StringBuffer &xml, int id) const;
    json_t *toJson() const;
 };
 
@@ -654,7 +654,7 @@ public:
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
    UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
-   void createExportRecord(String &str, int id) const;
+   void createExportRecord(StringBuffer &xml, int id) const;
    json_t *toJson() const;
 
    bool equals(const DCTableThreshold *t) const;
@@ -694,30 +694,30 @@ public:
    DCTable(ConfigEntry *config, DataCollectionOwner *owner);
 	virtual ~DCTable();
 
-	virtual DCObject *clone() const;
+	virtual DCObject *clone() const override;
 
-	virtual int getType() const { return DCO_TYPE_TABLE; }
+	virtual int getType() const override { return DCO_TYPE_TABLE; }
 
-   virtual void updateFromTemplate(DCObject *dcObject);
-   virtual void updateFromImport(ConfigEntry *config);
+   virtual void updateFromTemplate(DCObject *dcObject) override;
+   virtual void updateFromImport(ConfigEntry *config) override;
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual void deleteFromDatabase();
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual void deleteFromDatabase() override;
 
-   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError(bool noInstance, time_t now);
-   virtual void updateThresholdsBeforeMaintenanceState();
-   virtual void generateEventsBasedOnThrDiff();
+   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus) override;
+   virtual void processNewError(bool noInstance, time_t now) override;
+   virtual void updateThresholdsBeforeMaintenanceState() override;
+   virtual void generateEventsBasedOnThrDiff() override;
 
-   virtual void createMessage(NXCPMessage *pMsg);
-   virtual void updateFromMessage(NXCPMessage *pMsg);
+   virtual void createMessage(NXCPMessage *msg) override;
+   virtual void updateFromMessage(NXCPMessage *msg) override;
 
-	virtual bool deleteAllData();
-   virtual bool deleteEntry(time_t timestamp);
+	virtual bool deleteAllData() override;
+   virtual bool deleteEntry(time_t timestamp) override;
 
-   virtual void getEventList(IntegerArray<UINT32> *eventList);
-   virtual void createExportRecord(String &str);
-   virtual json_t *toJson();
+   virtual void getEventList(IntegerArray<UINT32> *eventList) override;
+   virtual void createExportRecord(StringBuffer &xml) override;
+   virtual json_t *toJson() override;
 
 	void fillLastValueMessage(NXCPMessage *msg);
    void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);

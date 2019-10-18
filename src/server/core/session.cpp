@@ -2707,7 +2707,7 @@ void ClientSession::onNewEvent(Event *pEvent)
  */
 void ClientSession::sendObjectUpdate(NetObj *object)
 {
-   String key(_T("ObjectUpdate"));
+   StringBuffer key(_T("ObjectUpdate"));
    key.append(m_id);
    UINT32 waitTime = ThreadPoolGetSerializedRequestMaxWaitTime(g_clientThreadPool, key);
 
@@ -7944,7 +7944,7 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void
 static StringList *SplitCommandLine(const TCHAR *command)
 {
    StringList *listOfStrings = new StringList();
-   String tmp;
+   StringBuffer tmp;
    int state = 0;
    int size = (int)_tcslen(command);
    for(int i = 0; i < size; i++)
@@ -7956,7 +7956,7 @@ static StringList *SplitCommandLine(const TCHAR *command)
             if (c == _T(' '))
             {
                listOfStrings->add(tmp);
-               tmp = _T("");
+               tmp.clear();
                state = 3;
             }
             else if (c == _T('"'))
@@ -8089,7 +8089,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                }
                debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 
-               String args;
+               StringBuffer args;
                args.appendPreallocated(list->join(_T(", ")));
                args.shrink(2);
 
@@ -9758,106 +9758,105 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
       if (i == dwNumTemplates)   // All objects passed test
       {
-         String str;
+         StringBuffer xml;
 			TCHAR *temp;
 
-         str = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>4</formatVersion>\n\t<description>");
+         xml = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>4</formatVersion>\n\t<description>");
 			temp = pRequest->getFieldAsString(VID_DESCRIPTION);
-			str.appendPreallocated(EscapeStringForXML(temp, -1));
-			free(temp);
-         str += _T("</description>\n");
+			xml.appendPreallocated(EscapeStringForXML(temp, -1));
+			MemFree(temp);
+         xml += _T("</description>\n");
 
          // Write events
-         str += _T("\t<events>\n");
+         xml += _T("\t<events>\n");
          UINT32 count = pRequest->getFieldAsUInt32(VID_NUM_EVENTS);
          pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_EVENT_LIST, count, pdwList);
          for(i = 0; i < count; i++)
-            CreateEventTemplateExportRecord(str, pdwList[i]);
-         free(pdwList);
-         str += _T("\t</events>\n");
+            CreateEventTemplateExportRecord(xml, pdwList[i]);
+         MemFree(pdwList);
+         xml += _T("\t</events>\n");
 
          // Write templates
-         str += _T("\t<templates>\n");
+         xml += _T("\t<templates>\n");
          for(i = 0; i < dwNumTemplates; i++)
          {
             object = FindObjectById(pdwTemplateList[i]);
             if (object != NULL)
             {
-               ((Template *)object)->createExportRecord(str);
+               ((Template *)object)->createExportRecord(xml);
             }
          }
-         str += _T("\t</templates>\n");
+         xml += _T("\t</templates>\n");
 
          // Write traps
-         str += _T("\t<traps>\n");
+         xml += _T("\t<traps>\n");
          count = pRequest->getFieldAsUInt32(VID_NUM_TRAPS);
          pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_TRAP_LIST, count, pdwList);
          for(i = 0; i < count; i++)
-            CreateTrapExportRecord(str, pdwList[i]);
+            CreateTrapExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
-         str += _T("\t</traps>\n");
+         xml += _T("\t</traps>\n");
 
          // Write rules
-         str += _T("\t<rules>\n");
+         xml += _T("\t<rules>\n");
          count = pRequest->getFieldAsUInt32(VID_NUM_RULES);
          DWORD varId = VID_RULE_LIST_BASE;
          uuid_t guid;
          for(i = 0; i < count; i++)
          {
             pRequest->getFieldAsBinary(varId++, guid, UUID_LENGTH);
-            g_pEventPolicy->exportRule(str, guid);
+            g_pEventPolicy->exportRule(xml, guid);
          }
-         str += _T("\t</rules>\n");
+         xml += _T("\t</rules>\n");
 
          // Write scripts
-         str.append(_T("\t<scripts>\n"));
+         xml.append(_T("\t<scripts>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_SCRIPTS);
          pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_SCRIPT_LIST, count, pdwList);
          for(i = 0; i < count; i++)
-            CreateScriptExportRecord(str, pdwList[i]);
+            CreateScriptExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
-         str.append(_T("\t</scripts>\n"));
+         xml.append(_T("\t</scripts>\n"));
 
          // Write object tools
-         str.append(_T("\t<objectTools>\n"));
+         xml.append(_T("\t<objectTools>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_TOOLS);
          pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_TOOL_LIST, count, pdwList);
          for(i = 0; i < count; i++)
-            CreateObjectToolExportRecord(str, pdwList[i]);
+            CreateObjectToolExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
-         str.append(_T("\t</objectTools>\n"));
+         xml.append(_T("\t</objectTools>\n"));
 
          // Write DCI summary tables
-         str.append(_T("\t<dciSummaryTables>\n"));
+         xml.append(_T("\t<dciSummaryTables>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
          pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, pdwList);
          for(i = 0; i < count; i++)
-            CreateSummaryTableExportRecord(pdwList[i], str);
+            CreateSummaryTableExportRecord(pdwList[i], xml);
          MemFree(pdwList);
-         str.append(_T("\t</dciSummaryTables>\n"));
+         xml.append(_T("\t</dciSummaryTables>\n"));
 
          // Write actions
-         str.append(_T("\t<actions>\n"));
+         xml.append(_T("\t<actions>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_ACTIONS);
          pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_ACTION_LIST, count, pdwList);
          for(i = 0; i < count; i++)
-            CreateActionExportRecord(str, pdwList[i]);
+            CreateActionExportRecord(xml, pdwList[i]);
          MemFree(pdwList);
-         str.append(_T("\t</actions>\n"));
-
+         xml.append(_T("\t</actions>\n"));
 
 			// Close document
-			str += _T("</configuration>\n");
+			xml += _T("</configuration>\n");
 
          // put result into message
          msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setField(VID_NXMP_CONTENT, (const TCHAR *)str);
+         msg.setField(VID_NXMP_CONTENT, xml);
       }
 
       MemFree(pdwTemplateList);
@@ -15189,14 +15188,14 @@ void ClientSession::startActiveDiscovery(NXCPMessage *request)
       {
          UINT32 fieldId = VID_ADDR_LIST_BASE;
          ObjectArray<InetAddressListElement> *addressList = new ObjectArray<InetAddressListElement>(0, 16, true);
-         String ranges;
+         StringBuffer ranges;
          for (int i = 0; i < count; i++, fieldId += 10)
          {
+            if (ranges.length() > 0)
+               ranges.append(_T(", "));
             InetAddressListElement *el = new InetAddressListElement(request, fieldId);
             addressList->add(el);
             ranges.append(el->toString());
-            if ((i+1) != count)
-               ranges.append(_T(", "));
          }
 
          ThreadPoolExecute(g_clientThreadPool, StartManualActiveDiscovery, addressList);

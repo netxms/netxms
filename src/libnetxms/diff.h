@@ -95,7 +95,7 @@ class Diff
 public:
   DiffOperation operation;
   // One of: INSERT, DELETE or EQUAL.
-  String text;
+  StringBuffer text;
   // The text associated with this diff operation.
 
   /**
@@ -377,7 +377,7 @@ public:
    * @return Source text.
    */
  public:
-  String diff_text1(const ObjectArray<Diff> &diffs);
+  StringBuffer diff_text1(const ObjectArray<Diff> &diffs);
 
   /**
    * Compute and return the destination text (all equalities and insertions).
@@ -385,7 +385,7 @@ public:
    * @return Destination text.
    */
  public:
-  String diff_text2(const ObjectArray<Diff> &diffs);
+  StringBuffer diff_text2(const ObjectArray<Diff> &diffs);
 
   /**
    * Compute the Levenshtein distance; the number of inserted, deleted or

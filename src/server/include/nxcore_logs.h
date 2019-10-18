@@ -122,7 +122,7 @@ public:
 
 	int getVariableCount() { return m_varCount; }
 
-	String generateSql();
+	StringBuffer generateSql();
 };
 
 /**
@@ -140,7 +140,7 @@ public:
 	LogFilter(NXCPMessage *msg);
 	~LogFilter();
 
-	String buildOrderClause();
+	StringBuffer buildOrderClause();
 
 	int getNumColumnFilter()
 	{
@@ -167,13 +167,13 @@ private:
 	NXCORE_LOG *m_log;
 	LogFilter *m_filter;
 	MUTEX m_lock;
-   String m_queryColumns;
+   StringBuffer m_queryColumns;
 	UINT32 m_rowCountLimit;
 	INT64 m_maxRecordId;
 	DB_RESULT m_resultSet;
 
 	void buildQueryColumnList();
-	String buildObjectAccessConstraint(const UINT32 userId);
+	StringBuffer buildObjectAccessConstraint(const UINT32 userId);
 	void deleteQueryResults();
 	bool queryInternal(INT64 *rowCount, const UINT32 userId);
 	Table *createTable();

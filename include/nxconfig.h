@@ -115,7 +115,7 @@ public:
    void addSubTree(const ConfigEntry *root, bool merge);
 
 	void print(FILE *file, int level, TCHAR *prefix);
-	void createXml(String &xml, int level = 0);
+	void createXml(StringBuffer &xml, int level = 0);
 };
 
 /**

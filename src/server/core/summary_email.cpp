@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,12 +23,12 @@
 #include "nxcore.h"
 
 static TCHAR s_recipients[MAX_CONFIG_VALUE];
-static String s_severities[8] = { _T("<td style=\"background:rgb(0, 192, 0)\">Normal</td>"), _T("<td style=\"background:rgb(0, 255, 255)\">Warning</td>"),
-                                  _T("<td style=\"background:rgb(231, 226, 0)\">Minor</td>"), _T("<td style=\"background:rgb(255, 128, 0)\">Major</td>"),
-                                  _T("<td style=\"background:rgb(192, 0, 0)\">Critical</td>"), _T("<td style=\"background:rgb(0, 0, 128)\">Unknown</td>"),
-                                  _T("<td style=\"background:darkred\">Terminate</td>"), _T("<td style=\"background:green\">Resolve</td>") };
-static String s_states[4] = { _T("<td style=\"background:gold\">Outstanding</td>"), _T("<td style=\"background:yellow\">Acknowledged</td>"),
-                              _T("<td style=\"background:green\">Resolved</td>"), _T("<td style=\"background:darkred\">Terminated</td>") };
+static const TCHAR *s_severities[8] = { _T("<td style=\"background:rgb(0, 192, 0)\">Normal</td>"), _T("<td style=\"background:rgb(0, 255, 255)\">Warning</td>"),
+         _T("<td style=\"background:rgb(231, 226, 0)\">Minor</td>"), _T("<td style=\"background:rgb(255, 128, 0)\">Major</td>"),
+         _T("<td style=\"background:rgb(192, 0, 0)\">Critical</td>"), _T("<td style=\"background:rgb(0, 0, 128)\">Unknown</td>"),
+         _T("<td style=\"background:darkred\">Terminate</td>"), _T("<td style=\"background:green\">Resolve</td>") };
+static const TCHAR *s_states[4] = { _T("<td style=\"background:gold\">Outstanding</td>"), _T("<td style=\"background:yellow\">Acknowledged</td>"),
+         _T("<td style=\"background:green\">Resolved</td>"), _T("<td style=\"background:darkred\">Terminated</td>") };
 
 /**
  * Formats time in seconds into date - dd.mm.yy HH:MM:SS
@@ -48,11 +48,11 @@ static TCHAR *FormatDate(time_t t, TCHAR *buffer, size_t bufferSize)
 /**
  * Creates a HTML formated alarm summary to be used in an email
  */
-static String CreateAlarmSummary()
+static StringBuffer CreateAlarmSummary()
 {
    TCHAR timeFmt[128], *objName, *message;
 
-   String summary(_T("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"));
+   StringBuffer summary(_T("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"));
    summary.append(_T("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"));
    summary.append(_T("<head>\n"));
    summary.append(_T("<meta charset=\"UTF-8\">\n"));
@@ -146,7 +146,7 @@ void EnableAlarmSummaryEmails()
  */
 void SendAlarmSummaryEmail(const ScheduledTaskParameters *params)
 {
-   String summary = CreateAlarmSummary();
+   StringBuffer summary = CreateAlarmSummary();
    time_t currTime;
    TCHAR timeFmt[128], subject[64];
 

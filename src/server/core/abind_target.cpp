@@ -267,7 +267,7 @@ void AutoBindTarget::toJson(json_t *root)
 /**
  * Create export record
  */
-void AutoBindTarget::createExportRecord(String &str)
+void AutoBindTarget::createExportRecord(StringBuffer &str)
 {
    internalLock();
    if (m_bindFilterSource != NULL)

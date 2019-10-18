@@ -547,7 +547,7 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
    if (mt != NULL)
    {
-      String mappedList;
+      StringBuffer mappedList;
       for(int i = 0; i < count; i++)
       {
          if (i > 0)

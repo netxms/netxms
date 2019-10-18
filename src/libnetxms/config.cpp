@@ -649,14 +649,14 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
 static EnumerationCallbackResult AddAttribute(const TCHAR *key, const void *value, void *userData)
 {
    if (_tcscmp(key, _T("id")))
-      ((String *)userData)->appendFormattedString(_T(" %s=\"%s\""), key, (const TCHAR *)value);
+      static_cast<StringBuffer*>(userData)->appendFormattedString(_T(" %s=\"%s\""), key, static_cast<const TCHAR*>(value));
    return _CONTINUE;
 }
 
 /**
  * Create XML element(s) from config entry
  */
-void ConfigEntry::createXml(String &xml, int level)
+void ConfigEntry::createXml(StringBuffer &xml, int level)
 {
    TCHAR *name = _tcsdup(m_name);
    TCHAR *ptr = _tcschr(name, _T('#'));
@@ -1339,7 +1339,7 @@ struct Config_XmlParserState
    const TCHAR *file;
    int level;
    ConfigEntry *stack[MAX_STACK_DEPTH];
-   String charData[MAX_STACK_DEPTH];
+   StringBuffer charData[MAX_STACK_DEPTH];
    bool trimValue[MAX_STACK_DEPTH];
    bool merge;
 };
@@ -1659,7 +1659,7 @@ void Config::print(FILE *file)
  */
 String Config::createXml()
 {
-   String xml;
+   StringBuffer xml;
    m_root->createXml(xml);
    return xml;
 }

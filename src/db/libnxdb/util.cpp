@@ -419,7 +419,7 @@ enum SQLileAlterOp
  */
 static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR *table, const TCHAR *column, const TCHAR *operationData)
 {
-   String query = _T("PRAGMA TABLE_INFO('");
+   StringBuffer query = _T("PRAGMA TABLE_INFO('");
    query.append(table);
    query.append(_T("')"));
    DB_RESULT hResult = DBSelect(hdb, query);
@@ -429,9 +429,9 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
    int numColumns = DBGetNumRows(hResult);
 
    // Intermediate buffers for SQLs
-   String originColumnList;
-   String targetColumnList;
-   String createList;
+   StringBuffer originColumnList;
+   StringBuffer targetColumnList;
+   StringBuffer createList;
 
    // TABLE_INFO() columns
    TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];

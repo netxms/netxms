@@ -427,7 +427,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
    int maxRecordsPerTxn = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    int maxRecordsPerStmt = ConfigReadInt(_T("DBWriter.MaxRecordsPerStatement"), 100);
 
-   String query;
+   StringBuffer query;
    query.setAllocationStep(65536);
 
    TCHAR data[1024];

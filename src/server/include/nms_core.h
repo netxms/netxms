@@ -1147,7 +1147,7 @@ void CreateTrapCfgMessage(NXCPMessage *msg);
 UINT32 CreateNewTrap(UINT32 *pdwTrapId);
 UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg);
 UINT32 DeleteTrap(UINT32 dwId);
-void CreateTrapExportRecord(String &xml, UINT32 id);
+void CreateTrapExportRecord(StringBuffer &xml, UINT32 id);
 UINT32 ResolveTrapGuid(const uuid& guid);
 void AddTrapCfgToList(SNMPTrapConfiguration *trapCfg);
 
@@ -1157,7 +1157,7 @@ UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSessi
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
 UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg);
-void CreateObjectToolExportRecord(String &xml, UINT32 id);
+void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id);
 bool ImportObjectTool(ConfigEntry *config, bool overwrite);
 UINT32 GetObjectToolsIntoMessage(NXCPMessage *msg, UINT32 userId, bool fullAccess);
 UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
@@ -1165,14 +1165,14 @@ UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
 UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId);
 UINT32 DeleteSummaryTable(LONG tableId);
 Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc);
-bool CreateSummaryTableExportRecord(INT32 id, String &xml);
+bool CreateSummaryTableExportRecord(INT32 id, StringBuffer &xml);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite);
 
 void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
 void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 
-void EscapeString(String &str);
+void EscapeString(StringBuffer &str);
 
 void InitAuditLog();
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32 userId,

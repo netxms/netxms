@@ -135,7 +135,7 @@ String Diff::strOperation(DiffOperation op)
  */
 String Diff::toString() const
 {
-   String prettyText = _T("Diff(");
+   StringBuffer prettyText = _T("Diff(");
    prettyText.append(strOperation(operation));
    prettyText.append(_T(",\""));
    prettyText.append(text);
@@ -213,13 +213,13 @@ ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text
    {
       // Trim off common prefix (speedup).
       int commonlength = diff_commonPrefix(text1, text2);
-      const String &commonprefix = text1.left(commonlength);
-      String textChopped1 = text1.substring(commonlength, -1);
-      String textChopped2 = text2.substring(commonlength, -1);
+      const String commonprefix = text1.left(commonlength);
+      StringBuffer textChopped1 = text1.substring(commonlength, -1);
+      StringBuffer textChopped2 = text2.substring(commonlength, -1);
 
       // Trim off common suffix (speedup).
       commonlength = diff_commonSuffix(textChopped1, textChopped2);
-      const String &commonsuffix = textChopped1.right(commonlength);
+      const String commonsuffix = textChopped1.right(commonlength);
       textChopped1 = textChopped1.left(textChopped1.length() - commonlength);
       textChopped2 = textChopped2.left(textChopped2.length() - commonlength);
 
@@ -526,8 +526,8 @@ String DiffEngine::diff_linesToCharsMunge(const String &text, StringList &lineAr
 {
    ssize_t lineStart = 0;
    ssize_t lineEnd = 0;
-   String line;
-   String chars;
+   StringBuffer line;
+   StringBuffer chars;
    // Walk the text, pulling out a substring for each line.
    // text.split('\n') would would temporarily double our memory footprint.
    // Modifying text would create many large strings to garbage collect.
@@ -562,7 +562,7 @@ void DiffEngine::diff_charsToLines(ObjectArray<Diff> *diffs, const StringList &l
    while(i.hasNext())
    {
       Diff *diff = i.next();
-      String text;
+      StringBuffer text;
       for(size_t y = 0; y < diff->text.length(); y++)
       {
          text.append(lineArray.get(static_cast<int>(diff->text.charAt(y))));
@@ -612,8 +612,8 @@ size_t DiffEngine::diff_commonOverlap(const String &text1, const String &text2)
       return 0;
    }
    // Truncate the longer string.
-   String text1_trunc = text1;
-   String text2_trunc = text2;
+   StringBuffer text1_trunc = text1;
+   StringBuffer text2_trunc = text2;
    if (text1_length > text2_length)
    {
       text1_trunc = text1.right(text2_length);
@@ -723,9 +723,9 @@ StringList *DiffEngine::diff_halfMatchI(const String &longtext, const String &sh
    // Start with a 1/4 length substring at position i as a seed.
    const String seed = safeMid(longtext, i, (int)(longtext.length() / 4));
    int j = -1;
-   String best_common;
-   String best_longtext_a, best_longtext_b;
-   String best_shorttext_a, best_shorttext_b;
+   StringBuffer best_common;
+   StringBuffer best_longtext_a, best_longtext_b;
+   StringBuffer best_shorttext_a, best_shorttext_b;
    while((j = shorttext.find(seed, j + 1)) != -1)
    {
       const int prefixLength = diff_commonPrefix(safeMid(longtext, i), safeMid(shorttext, j));
@@ -766,7 +766,7 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
    }
    bool changes = false;
    Stack<Diff> equalities;  // Stack of equalities.
-   String lastequality;  // Always equal to equalities.lastElement().text
+   StringBuffer lastequality;  // Always equal to equalities.lastElement().text
    MutableListIterator<Diff> pointer(&diffs);
    // Number of characters that changed prior to the equality.
    int length_insertions1 = 0;
@@ -921,11 +921,11 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
 
 void DiffEngine::diff_cleanupSemanticLossless(ObjectArray<Diff> &diffs)
 {
-   String equality1, edit, equality2;
-   String commonString;
+   StringBuffer equality1, edit, equality2;
+   StringBuffer commonString;
    int commonOffset;
    int score, bestScore;
-   String bestEquality1, bestEdit, bestEquality2;
+   StringBuffer bestEquality1, bestEdit, bestEquality2;
    // Create a new iterator at the start.
    MutableListIterator<Diff> pointer(&diffs);
    Diff *prevDiff = pointer.hasNext() ? pointer.next() : NULL;
@@ -1069,7 +1069,7 @@ void DiffEngine::diff_cleanupEfficiency(ObjectArray<Diff> &diffs)
    }
    bool changes = false;
    Stack<Diff> equalities;  // Stack of equalities.
-   String lastequality;  // Always equal to equalities.lastElement().text
+   StringBuffer lastequality;  // Always equal to equalities.lastElement().text
    MutableListIterator<Diff> pointer(&diffs);
    // Is there an insertion operation before the last equality.
    bool pre_ins = false;
@@ -1196,8 +1196,8 @@ void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
    MutableListIterator<Diff> pointer(&diffs);
    int count_delete = 0;
    int count_insert = 0;
-   String text_delete;
-   String text_insert;
+   StringBuffer text_delete;
+   StringBuffer text_insert;
    Diff *thisDiff = pointer.hasNext() ? pointer.next() : NULL;
    Diff *prevEqual = NULL;
    int commonlength;
@@ -1259,7 +1259,7 @@ void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
                   if (commonlength != 0)
                   {
                      thisDiff = pointer.next();
-                     String s = safeMid(text_insert, text_insert.length() - commonlength);
+                     StringBuffer s = safeMid(text_insert, text_insert.length() - commonlength);
                      s.append(thisDiff->text);
                      thisDiff->text = s;
                      text_insert = text_insert.left(text_insert.length() - commonlength);
@@ -1326,7 +1326,7 @@ void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
             String prefix = thisDiff->text.left(thisDiff->text.length() - prevDiff->text.length());
             thisDiff->text = prevDiff->text;
             thisDiff->text.append(prefix);
-            String tmp = prevDiff->text;
+            StringBuffer tmp = prevDiff->text;
             tmp.append(nextDiff->text);
             nextDiff->text = tmp;
             pointer.previous();  // Walk past nextDiff.
@@ -1398,7 +1398,7 @@ int DiffEngine::diff_xIndex(const ObjectArray<Diff> &diffs, int loc)
    return last_chars2 + (loc - last_chars1);
 }
 
-inline void AppendLines(String& out, const String& text, TCHAR prefix)
+inline void AppendLines(StringBuffer& out, const String& text, TCHAR prefix)
 {
    StringList *lines = text.split(_T("\n"));
    for(int i = 0; i < lines->size(); i++)
@@ -1416,7 +1416,7 @@ inline void AppendLines(String& out, const String& text, TCHAR prefix)
 
 String DiffEngine::diff_generateLineDiff(ObjectArray<Diff> *diffs)
 {
-   String out;
+   StringBuffer out;
    for(int i = 0; i < diffs->size(); i++)
    {
       Diff *aDiff = diffs->get(i);
@@ -1436,9 +1436,9 @@ String DiffEngine::diff_generateLineDiff(ObjectArray<Diff> *diffs)
    return out;
 }
 
-String DiffEngine::diff_text1(const ObjectArray<Diff> &diffs)
+StringBuffer DiffEngine::diff_text1(const ObjectArray<Diff> &diffs)
 {
-   String text;
+   StringBuffer text;
    for(int i = 0; i < diffs.size(); i++)
    {
       Diff *aDiff = diffs.get(i);
@@ -1450,15 +1450,15 @@ String DiffEngine::diff_text1(const ObjectArray<Diff> &diffs)
    return text;
 }
 
-String DiffEngine::diff_text2(const ObjectArray<Diff> &diffs)
+StringBuffer DiffEngine::diff_text2(const ObjectArray<Diff> &diffs)
 {
-   String text;
+   StringBuffer text;
    for(int i = 0; i < diffs.size(); i++)
    {
       Diff *aDiff = diffs.get(i);
       if (aDiff->operation != DIFF_DELETE)
       {
-         text += aDiff->text;
+         text.append(aDiff->text);
       }
    }
    return text;
@@ -1494,7 +1494,7 @@ int DiffEngine::diff_levenshtein(const ObjectArray<Diff> &diffs)
 
 String DiffEngine::diff_toDelta(const ObjectArray<Diff> &diffs)
 {
-   String text;
+   StringBuffer text;
    for(int i = 0; i < diffs.size(); i++)
    {
       Diff *aDiff = diffs.get(i);
@@ -1552,8 +1552,7 @@ ObjectArray<Diff> *DiffEngine::diff_fromDelta(const String &text1, const String 
                delete tokens;
                return diffs;
             }
-            String text;
-            text = safeMid(text1, pointer, n);
+            String text = safeMid(text1, pointer, n);
             pointer += n;
             if (token[0] == '=')
             {

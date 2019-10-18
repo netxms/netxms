@@ -534,7 +534,7 @@ void Event::expandMessageText()
 /**
  * Substitute % macros in given text with actual values
  */
-String Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) const
+StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) const
 {
    NetObj *obj = FindObjectById(m_sourceId);
    if (obj == NULL)
@@ -631,9 +631,9 @@ void Event::prepareMessage(NXCPMessage *msg) const
 /**
  * Get all tags as list
  */
-String Event::getTagsAsList() const
+StringBuffer Event::getTagsAsList() const
 {
-   String list;
+   StringBuffer list;
    if (!m_tags.isEmpty())
    {
       ConstIterator<const TCHAR> *it = m_tags.constIterator();
@@ -1421,7 +1421,7 @@ void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue)
 /**
  * Create export record for event template
  */
-void CreateEventTemplateExportRecord(String &str, UINT32 eventCode)
+void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode)
 {
    String strText, strDescr;
 

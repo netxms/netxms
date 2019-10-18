@@ -102,7 +102,7 @@ static void UnregisterPolicy(const uuid& guid)
  */
 static const String GetPolicyType(const uuid& guid)
 {
-   String type(_T(""));
+   StringBuffer type;
 	DB_HANDLE hdb = GetLocalDatabaseHandle();
 	if(hdb != NULL)
    {

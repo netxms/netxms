@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -232,7 +232,7 @@ const TCHAR *FileUploadJob::getAdditionalInfo()
  */
 const String FileUploadJob::serializeParameters()
 {
-   String params;
+   StringBuffer params;
    params.append(m_localFile);
    params.append(_T(','));
    params.append(CHECK_NULL_EX(m_remoteFile));

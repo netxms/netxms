@@ -121,7 +121,7 @@ public:
    void setField(UINT32 fieldId, UINT64 value) { set(fieldId, NXCP_DT_INT64, &value, false); }
    void setField(UINT32 fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
    void setField(UINT32 fieldId, bool value) { INT16 v = value ? 1 : 0; set(fieldId, NXCP_DT_INT16, &v, true); }
-   void setField(UINT32 fieldId, const String& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, (const TCHAR *)value); }
+   void setField(UINT32 fieldId, const String& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value.cstr()); }
    void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
    void setField(UINT32 fieldId, const BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
    void setField(UINT32 fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
@@ -167,7 +167,7 @@ public:
    void setEndOfSequence() { m_flags |= MF_END_OF_SEQUENCE; }
    void setReverseOrderFlag() { m_flags |= MF_REVERSE_ORDER; }
 
-   static String dump(const NXCP_MESSAGE *msg, int version);
+   static StringBuffer dump(const NXCP_MESSAGE *msg, int version);
 };
 
 /**
@@ -264,7 +264,7 @@ public:
    void setHoldTime(UINT32 holdTime) { m_holdTime = holdTime; }
 
    static void shutdown();
-   static String getDiagInfo();
+   static StringBuffer getDiagInfo();
 };
 
 /**

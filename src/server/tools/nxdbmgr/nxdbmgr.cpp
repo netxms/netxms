@@ -574,7 +574,7 @@ stop_search:
             strcpy(driver, "mysql");
          }
 
-         String initFile = shareDir;
+         StringBuffer initFile = shareDir;
          initFile.append(FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbinit_"));
          initFile.appendMBString(driver, strlen(driver), CP_ACP);
          initFile.append(_T(".sql"));
@@ -588,7 +588,7 @@ stop_search:
          TCHAR shareDir[MAX_PATH];
          GetNetXMSDirectory(nxDirShare, shareDir);
 
-         String initFile = shareDir;
+         StringBuffer initFile = shareDir;
          initFile.append(FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbinit_"));
          initFile.appendMBString(argv[optind + 1], strlen(argv[optind + 1]), CP_ACP);
          initFile.append(_T(".sql"));

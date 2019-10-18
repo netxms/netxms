@@ -153,7 +153,7 @@ void AgentActionExecutor::substituteArgs()
 {
    if (m_args != NULL && m_args->size() > 0)
    {
-      String cmd(m_cmd);
+      StringBuffer cmd(m_cmd);
       TCHAR macro[3];
       for(int i = 0; i < m_args->size() && i <= 9; i++)
       {
@@ -360,7 +360,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
    // Substitute $1 .. $9 with actual arguments
    if (data->m_args != NULL)
    {
-      String cmdLine;
+      StringBuffer cmdLine;
       for(const TCHAR *sptr = data->m_cmdLine; *sptr != 0; sptr++)
          if (*sptr == _T('$'))
          {

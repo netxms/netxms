@@ -93,7 +93,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length)
  */
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length)
 {
-	String s;
+	StringBuffer s;
 	s.setBuffer(EscapeStringForXML(str, length));
 	return s;
 }

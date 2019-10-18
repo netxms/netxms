@@ -743,7 +743,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 /**
  * Set all required parameters for LoRaWAN request
  */
-void Sensor::prepareLoraDciParameters(String &parameter)
+void Sensor::prepareLoraDciParameters(StringBuffer &parameter)
 {
    int place = parameter.find(_T(")"));
    if(place > 0)
@@ -762,7 +762,7 @@ void Sensor::prepareLoraDciParameters(String &parameter)
 /**
  * Set all required parameters for DLMS request
  */
-void Sensor::prepareDlmsDciParameters(String &parameter)
+void Sensor::prepareDlmsDciParameters(StringBuffer &parameter)
 {
    Config config;
 #ifdef UNICODE
@@ -847,7 +847,7 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
       return dwResult;
    }
 
-   String parameter(szParam);
+   StringBuffer parameter(szParam);
    switch(m_commProtocol)
    {
       case COMM_LORAWAN:
@@ -916,7 +916,7 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
       return dwResult;
    }
 
-   String parameter(name);
+   StringBuffer parameter(name);
    switch(m_commProtocol)
    {
       case COMM_LORAWAN:

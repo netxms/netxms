@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -94,30 +94,30 @@ ColumnFilter::~ColumnFilter()
 /**
  * Generate SQL for column filter
  */
-String ColumnFilter::generateSql()
+StringBuffer ColumnFilter::generateSql()
 {
-	String sql;
+	StringBuffer sql;
 
 	switch(m_type)
 	{
 		case FILTER_EQUALS:
 			if (m_negated)
-				sql += _T("NOT ");
+				sql.append(_T("NOT "));
 			sql.appendFormattedString(_T("%s = ") INT64_FMT, m_column, m_value.numericValue);
 			break;
 		case FILTER_LESS:
 			if (m_negated)
-				sql += _T("NOT ");
+            sql.append(_T("NOT "));
 			sql.appendFormattedString(_T("%s < ") INT64_FMT, m_column, m_value.numericValue);
 			break;
 		case FILTER_GREATER:
 			if (m_negated)
-				sql += _T("NOT ");
+            sql.append(_T("NOT "));
 			sql.appendFormattedString(_T("%s > ") INT64_FMT, m_column, m_value.numericValue);
 			break;
 		case FILTER_RANGE:
 			if (m_negated)
-				sql += _T("NOT ");
+            sql.append(_T("NOT "));
 			sql.appendFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
 			break;
 		case FILTER_LIKE:
@@ -131,7 +131,7 @@ String ColumnFilter::generateSql()
 			else
 			{
 				if (m_negated)
-					sql += _T("NOT ");
+					sql.append(_T("NOT "));
 				sql.appendFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_dbDriver, m_value.like));
 			}
 			break;
@@ -141,7 +141,7 @@ String ColumnFilter::generateSql()
 				bool first = true;
 				for(int i = 0; i < m_value.set.count; i++)
 				{
-					String subExpr = m_value.set.filters[i]->generateSql();
+					StringBuffer subExpr = m_value.set.filters[i]->generateSql();
 					if (!subExpr.isEmpty())
 					{
 						if (first)
@@ -150,18 +150,18 @@ String ColumnFilter::generateSql()
 						}
 						else
 						{
-							sql += (m_value.set.operation == SET_OPERATION_AND) ? _T(" AND ") : _T(" OR ");
+							sql.append((m_value.set.operation == SET_OPERATION_AND) ? _T(" AND ") : _T(" OR "));
 						}
-						sql += _T("(");
-						sql += subExpr;
-						sql += _T(")");
+						sql.append(_T("("));
+						sql.append(subExpr);
+						sql.append(_T(")"));
 					}
 				}
 			}
 			break;
 		case FILTER_CHILDOF:
 			if (m_negated)
-				sql += _T("NOT ");
+				sql.append(_T("NOT "));
 
 			{
 				NetObj *object = FindObjectById((UINT32)m_value.numericValue);
@@ -170,28 +170,28 @@ String ColumnFilter::generateSql()
 					ObjectArray<NetObj> *childObjects = object->getFullChildList(true, true);
 					if (childObjects->size() > 0)
 					{
-						sql += m_column;
-						sql += _T(" IN (");
+						sql.append(m_column);
+						sql.append(_T(" IN ("));
 						for(int i = 0; i < childObjects->size(); i++)
 						{
 							if (i > 0)
-								sql += _T(", ");
+								sql.append(_T(", "));
 							TCHAR buffer[32];
 							_sntprintf(buffer, 32, _T("%d"), (int)childObjects->get(i)->getId());
-							sql += (const TCHAR *)buffer;
+							sql.append(buffer);
                      childObjects->get(i)->decRefCount();
 						}
-						sql += _T(")");
+						sql.append(_T(")"));
 					}
 					else
 					{
-						sql += _T("0=1");
+						sql.append(_T("0=1"));
 					}
 					delete childObjects;
 				}
 				else
 				{
-					sql += _T("0=1");
+					sql.append(_T("0=1"));
 				}
 			}
 			break;

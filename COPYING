@@ -36,14 +36,13 @@ nxuilib         GPL
 
 all subagents   GPL
 all DB drivers  GPL
-all SMS drivers GPL
+all notification channel drivers GPL
 
 
 Third party components bundled with NetXMS:
 
 libexpat        BSD-like
 libipfix        LGPL
-scilexer        BSD-like
 sqlite          BSD-like
 zlib            BSD-like
 

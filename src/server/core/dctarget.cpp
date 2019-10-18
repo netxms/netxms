@@ -203,7 +203,7 @@ void DataCollectionTarget::calculateDciCutoffTimes(time_t *cutoffTimeIData, time
  */
 void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 {
-   String queryItems = _T("DELETE FROM idata");
+   StringBuffer queryItems = _T("DELETE FROM idata");
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {
       queryItems.append(_T(" WHERE node_id="));
@@ -217,7 +217,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
       queryItems.append(_T(" WHERE "));
    }
 
-   String queryTables = _T("DELETE FROM tdata");
+   StringBuffer queryTables = _T("DELETE FROM tdata");
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {
       queryTables.append(_T(" WHERE node_id="));

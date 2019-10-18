@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -59,7 +59,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    TCHAR libdir[MAX_PATH];
    GetNetXMSDirectory(nxDirLib, libdir);
 
-   String classpath = _T("-Djava.class.path=");
+   StringBuffer classpath = _T("-Djava.class.path=");
    classpath.append(libdir);
    classpath.append(FS_PATH_SEPARATOR_CHAR);
    classpath.append(_T("netxms-java-bridge.jar"));

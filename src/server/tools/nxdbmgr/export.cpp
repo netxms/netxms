@@ -69,7 +69,7 @@ static TCHAR *EscapeString(const TCHAR *str)
  */
 static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 {
-	String query;
+	StringBuffer query;
 	TCHAR buffer[256];
 	char *errmsg;
 	int i, columnCount = 0;

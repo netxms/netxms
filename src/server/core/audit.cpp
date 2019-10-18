@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -187,7 +187,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
                                                 const TCHAR *oldValue, const TCHAR *newValue,
                                                 const TCHAR *format, va_list args)
 {
-	String text;
+	StringBuffer text;
 	text.appendFormattedStringV(format, args);
 
 	TCHAR recordId[16], _time[32], success[2], _userId[16], _sessionId[16], _objectId[16];
@@ -224,7 +224,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 
 	if (m_auditServerAddr.isValidUnicast())
 	{
-		String extText = _T("[");
+		StringBuffer extText = _T("[");
 		TCHAR buffer[MAX_USER_NAME];
       extText.append(ResolveUserId(userId, buffer, true));
 		extText.append(_T('@'));

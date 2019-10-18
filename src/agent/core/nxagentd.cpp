@@ -514,9 +514,9 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 /**
  * Build command line for agent restart
  */
-static String BuildRestartCommandLine(bool withWaitPid)
+static StringBuffer BuildRestartCommandLine(bool withWaitPid)
 {
-   String command;
+   StringBuffer command;
    command.append(_T('"'));
    command.append(s_executableName);
    command.append(_T("\" -c \""));
@@ -624,7 +624,7 @@ LONG RestartAgent()
 
 	RestartExtSubagents();
 
-   String command = BuildRestartCommandLine(true);
+   StringBuffer command = BuildRestartCommandLine(true);
 #ifdef _WIN32
 	nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.getBuffer());
 
@@ -666,7 +666,7 @@ LONG RestartAgent()
    }
    return dwResult;
 #else
-	nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.getBuffer());
+	nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.cstr());
    return ExecuteCommand(command.getBuffer(), NULL, NULL);
 #endif
 }

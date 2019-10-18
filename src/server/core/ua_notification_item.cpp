@@ -240,7 +240,7 @@ void UserAgentNotificationItem::saveToDatabase()
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_message, MAX_USER_AGENT_MESSAGE_SIZE);
 
-      String buffer;
+      StringBuffer buffer;
       for(int i = 0; i < m_objects.size(); i++)
       {
          if (buffer.length() > 0)

@@ -126,7 +126,7 @@ public:
    UINT32 getDciId() const { return m_dciId; }
 	const TCHAR *getName() const { return m_name; }
    const TCHAR *getMessage() const { return m_messageText; }
-   String getTagsAsList() const;
+   StringBuffer getTagsAsList() const;
    time_t getTimestamp() const { return m_timestamp; }
    time_t getOriginTimestamp() const { return m_originTimestamp; }
    const Array *getParameterList() const { return &m_parameters; }
@@ -140,7 +140,7 @@ public:
    void prepareMessage(NXCPMessage *msg) const;
 
    void expandMessageText();
-   String expandText(const TCHAR *textTemplate, const Alarm *alarm = NULL) const;
+   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm = NULL) const;
    void setMessage(const TCHAR *text) { MemFree(m_messageText); m_messageText = MemCopyString(text); }
 
    bool hasTag(const TCHAR *tag) const { return m_tags.contains(tag); }
@@ -272,7 +272,7 @@ public:
 	bool saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
    void createMessage(NXCPMessage *pMsg);
-   void createNXMPRecord(String &str);
+   void createExportRecord(StringBuffer &xml);
    json_t *toJson() const;
 
    bool isActionInUse(UINT32 actionId) const;
@@ -302,7 +302,7 @@ public:
    void processEvent(Event *pEvent);
    void sendToClient(ClientSession *pSession, UINT32 dwRqId) const;
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
-   void exportRule(String& str, const uuid& guid) const;
+   void exportRule(StringBuffer& xml, const uuid& guid) const;
    void importRule(EPRule *rule, bool overwrite);
    void removeRuleCategory (UINT32 categoryId);
    json_t *toJson() const;
@@ -320,7 +320,7 @@ void ReloadEvents();
 UINT32 UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t **oldValue, json_t **newValue);
 UINT32 DeleteEventTemplate(UINT32 eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
-void CreateEventTemplateExportRecord(String &str, UINT32 eventCode);
+void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode);
 
 void CorrelateEvent(Event *pEvent);
 Event *LoadEventFromDatabase(UINT64 eventId);

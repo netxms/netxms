@@ -2696,7 +2696,7 @@ json_t *NetObj::toJson()
 /**
  * Expand text
  */
-String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields)
+StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields)
 {
    struct tm *lt;
 #if HAVE_LOCALTIME_R
@@ -2710,7 +2710,7 @@ String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
    DbgPrintf(8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
              m_id, CHECK_NULL(textTemplate), (alarm == NULL) ? 0 : alarm->getAlarmId() , (event == NULL) ? 0 : event->getId());
 
-   String output;
+   StringBuffer output;
    for(const TCHAR *curr = textTemplate; *curr != 0; curr++)
    {
       switch(*curr)

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -26,17 +26,16 @@
 /**
  * Static members
  */
-const int __EXPORT String::npos = -1;
+const ssize_t __EXPORT String::npos = -1;
 
 /**
  * Create empty string
  */
 String::String()
 {
-   m_buffer = NULL;
+   m_internalBuffer[0] = 0;
+   m_buffer = m_internalBuffer;
    m_length = 0;
-   m_allocated = 0;
-   m_allocationStep = 256;
 }
 
 /**
@@ -44,19 +43,16 @@ String::String()
  */
 String::String(const String &src)
 {
-   if ((src.m_length > 0) && (src.m_buffer != NULL))
+   m_length = src.m_length;
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
-      m_length = src.m_length;
-      m_allocated = src.m_length + 1;
-      m_buffer = static_cast<TCHAR*>(MemCopyBlock(src.m_buffer, m_allocated * sizeof(TCHAR)));
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, src.m_buffer, (m_length + 1) * sizeof(TCHAR));
    }
    else
    {
-      m_length = 0;
-      m_allocated = 0;
-      m_buffer = NULL;
+      m_buffer = MemCopyBlock(src.m_buffer, (m_length + 1) * sizeof(TCHAR));
    }
-   m_allocationStep = src.m_allocationStep;
 }
 
 /**
@@ -64,10 +60,34 @@ String::String(const String &src)
  */
 String::String(const TCHAR *init)
 {
-   m_buffer = MemCopyString(init);
-   m_length = _tcslen(init);
-   m_allocated = m_length + 1;
-   m_allocationStep = 256;
+   m_length = (init != NULL) ? _tcslen(init) : 0;
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, CHECK_NULL_EX(init), (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_buffer = MemCopyString(init);
+   }
+}
+
+/**
+ * Create string with given initial content
+ */
+String::String(const TCHAR *init, size_t len)
+{
+   m_length = len;
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_buffer = m_internalBuffer;
+   }
+   else
+   {
+      m_buffer = MemAllocString(m_length + 1);
+   }
+   memcpy(m_buffer, init, m_length * sizeof(TCHAR));
+   m_buffer[m_length] = 0;
 }
 
 /**
@@ -75,80 +95,8 @@ String::String(const TCHAR *init)
  */
 String::~String()
 {
-   MemFree(m_buffer);
-}
-
-/**
- * Operator =
- */
-String& String::operator =(const TCHAR *str)
-{
-   MemFree(m_buffer);
-   m_buffer = MemCopyString(CHECK_NULL_EX(str));
-   m_length = _tcslen(m_buffer);
-   m_allocated = m_length + 1;
-   return *this;
-}
-
-/**
- * Operator =
- */
-String& String::operator =(const String &src)
-{
-	if (&src == this)
-		return *this;
-   MemFree(m_buffer);
-   if ((src.m_length > 0) && (src.m_buffer != NULL))
-   {
-      m_length = src.m_length;
-      m_allocated = src.m_length + 1;
-      m_buffer = static_cast<TCHAR*>(MemCopyBlock(src.m_buffer, m_allocated * sizeof(TCHAR)));
-   }
-   else
-   {
-      m_length = 0;
-      m_allocated = 0;
-      m_buffer = NULL;
-   }
-   m_allocationStep = src.m_allocationStep;
-   return *this;
-}
-
-/**
- * Append given string to the end
- */
-String& String::operator +=(const TCHAR *str)
-{
-	if (str != NULL)
-	{
-   	size_t len = _tcslen(str);
-      if (m_length + len >= m_allocated)
-      {
-         m_allocated += std::max(m_allocationStep, len + 1);
-      	m_buffer = MemReallocArray(m_buffer, m_allocated);
-      }
-   	_tcscpy(&m_buffer[m_length], str);
-   	m_length += len;
-	}
-   return *this;
-}
-
-/**
- * Append given string to the end
- */
-String& String::operator +=(const String &str)
-{
-   if (str.m_length > 0)
-   {
-      if (m_length + str.m_length >= m_allocated)
-      {
-         m_allocated += std::max(m_allocationStep, str.m_length + 1);
-      	m_buffer = MemReallocArray(m_buffer, m_allocated);
-      }
-      memcpy(&m_buffer[m_length], str.m_buffer, (str.m_length + 1) * sizeof(TCHAR));
-	   m_length += str.m_length;
-   }
-   return *this;
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
 }
 
 /**
@@ -156,8 +104,15 @@ String& String::operator +=(const String &str)
  */
 String String::operator +(const String &right) const
 {
-   String result(*this);
-   result.append(right);
+   String result;
+   result.m_length = m_length + right.m_length;
+   if (result.m_length >= STRING_INTERNAL_BUFFER_SIZE)
+   {
+      result.m_buffer = MemAllocString(result.m_length + 1);
+   }
+   memcpy(result.m_buffer, m_buffer, m_length * sizeof(TCHAR));
+   memcpy(&result.m_buffer[m_length], right.m_buffer, right.m_length * sizeof(TCHAR));
+   result.m_buffer[result.m_length] = 0;
    return result;
 }
 
@@ -166,304 +121,20 @@ String String::operator +(const String &right) const
  */
 String String::operator +(const TCHAR *right) const
 {
-   String result(*this);
-   result.append(right);
+   if (right == NULL)
+      return String(*this);
+
+   size_t rlength = _tcslen(right);
+   String result;
+   result.m_length = m_length + rlength;
+   if (result.m_length >= STRING_INTERNAL_BUFFER_SIZE)
+   {
+      result.m_buffer = MemAllocString(result.m_length + 1);
+   }
+   memcpy(result.m_buffer, m_buffer, m_length * sizeof(TCHAR));
+   memcpy(&result.m_buffer[m_length], right, rlength * sizeof(TCHAR));
+   result.m_buffer[result.m_length] = 0;
    return result;
-}
-
-/**
- * Add formatted string to the end of buffer
- */
-void String::appendFormattedString(const TCHAR *format, ...)
-{
-   va_list args;
-	va_start(args, format);
-	appendFormattedStringV(format, args);
-	va_end(args);
-}
-
-void String::appendFormattedStringV(const TCHAR *format, va_list args)
-{
-   int len;
-   TCHAR *buffer;
-
-#ifdef UNICODE
-
-#if HAVE_VASWPRINTF
-	vaswprintf(&buffer, format, args);
-#elif HAVE_VSCWPRINTF && HAVE_DECL_VA_COPY
-	va_list argsCopy;
-	va_copy(argsCopy, args);
-
-	len = (int)vscwprintf(format, args) + 1;
-   buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
-
-   vsnwprintf(buffer, len, format, argsCopy);
-   va_end(argsCopy);
-#else
-	// No way to determine required buffer size, guess
-	len = wcslen(format) + NumCharsW(format, L'%') * 1000 + 1;
-   buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
-
-   nx_vswprintf(buffer, len, format, args);
-#endif
-
-#else		/* UNICODE */
-
-#if HAVE_VASPRINTF && !defined(_IPSO)
-	if (vasprintf(&buffer, format, args) == -1)
-	{
-		buffer = (char *)malloc(1);
-		*buffer = 0;
-	}
-#elif HAVE_VSCPRINTF && HAVE_DECL_VA_COPY
-	va_list argsCopy;
-	va_copy(argsCopy, args);
-
-	len = (int)vscprintf(format, args) + 1;
-   buffer = (char *)malloc(len);
-
-   vsnprintf(buffer, len, format, argsCopy);
-   va_end(argsCopy);
-#elif SNPRINTF_RETURNS_REQUIRED_SIZE && HAVE_DECL_VA_COPY
-	va_list argsCopy;
-	va_copy(argsCopy, args);
-
-	len = (int)vsnprintf(NULL, 0, format, args) + 1;
-	buffer = (char *)malloc(len);
-
-	vsnprintf(buffer, len, format, argsCopy);
-	va_end(argsCopy);
-#else
-	// No way to determine required buffer size, guess
-	len = strlen(format) + NumChars(format, '%') * 1000 + 1;
-   buffer = (char *)malloc(len);
-
-   vsnprintf(buffer, len, format, args);
-#endif
-
-#endif	/* UNICODE */
-
-   append(buffer, _tcslen(buffer));
-   free(buffer);
-}
-
-/**
- * Append string to the end of buffer
- */
-void String::append(const TCHAR *str, size_t len)
-{
-   if (len <= 0)
-      return;
-
-   if (m_length + len >= m_allocated)
-   {
-      m_allocated += std::max(m_allocationStep, len + 1);
-   	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
-   }
-   memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
-   m_length += len;
-   m_buffer[m_length] = 0;
-}
-
-/**
- * Append integer
- */
-void String::append(INT32 n, const TCHAR *format)
-{
-   TCHAR buffer[64];
-   if (format != NULL)
-   {
-      _sntprintf(buffer, 64, format, n);
-      append(buffer);
-   }
-   else
-   {
-      append(_itot(n, buffer, 10));
-   }
-}
-
-/**
- * Append integer
- */
-void String::append(UINT32 n, const TCHAR *format)
-{
-   TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != NULL) ? format : _T("%u"), n);
-   append(buffer);
-}
-
-/**
- * Append integer
- */
-void String::append(INT64 n, const TCHAR *format)
-{
-   TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != NULL) ? format : INT64_FMT, n);
-   append(buffer);
-}
-
-/**
- * Append integer
- */
-void String::append(UINT64 n, const TCHAR *format)
-{
-   TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != NULL) ? format : UINT64_FMT, n);
-   append(buffer);
-}
-
-/**
- * Append double
- */
-void String::append(double d, const TCHAR *format)
-{
-   TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != NULL) ? format : _T("%f"), d);
-   append(buffer);
-}
-
-/**
- * Append GUID
- */
-void String::append(const uuid& guid)
-{
-   TCHAR buffer[36];
-   guid.toString(buffer);
-   append(buffer, _tcslen(buffer));
-}
-
-/**
- * Append multibyte string to the end of buffer
- */
-void String::appendMBString(const char *str, size_t len, int nCodePage)
-{
-#ifdef UNICODE
-   if (m_length + len >= m_allocated)
-   {
-      m_allocated += std::max(m_allocationStep, len + 1);
-   	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
-   }
-	m_length += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len + 1);
-	m_buffer[m_length] = 0;
-#else
-	append(str, len);
-#endif
-}
-
-/**
- * Append widechar string to the end of buffer
- */
-void String::appendWideString(const WCHAR *str, size_t len)
-{
-#ifdef UNICODE
-	append(str, len);
-#else
-   if (m_length + len >= m_allocated)
-   {
-      m_allocated += std::max(m_allocationStep, len + 1);
-   	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
-   }
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, NULL, NULL);
-   m_length += len;
-	m_buffer[m_length] = 0;
-#endif
-}
-
-/**
- * Escape given character
- */
-void String::escapeCharacter(int ch, int esc)
-{
-   if (m_buffer == NULL)
-      return;
-
-   int nCount = NumChars(m_buffer, ch);
-   if (nCount == 0)
-      return;
-
-   if (m_length + nCount >= m_allocated)
-   {
-      m_allocated += std::max(m_allocationStep, (size_t)nCount);
-   	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
-   }
-
-   m_length += nCount;
-   for(int i = 0; m_buffer[i] != 0; i++)
-   {
-      if (m_buffer[i] == ch)
-      {
-         memmove(&m_buffer[i + 1], &m_buffer[i], (m_length - i) * sizeof(TCHAR));
-         m_buffer[i] = esc;
-         i++;
-      }
-   }
-   m_buffer[m_length] = 0;
-}
-
-/**
- * Set dynamically allocated string as a new buffer
- */
-void String::setBuffer(TCHAR *buffer)
-{
-   MemFree(m_buffer);
-   m_buffer = buffer;
-   if (m_buffer != NULL)
-   {
-      m_length = _tcslen(m_buffer);
-      m_allocated = m_length + 1;
-   }
-   else
-   {
-      m_length = 0;
-      m_allocated = 0;
-   }
-}
-
-/**
- * Replace all occurences of source substring with destination substring
- */
-void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
-{
-   if (m_buffer == NULL)
-      return;
-
-   size_t lenSrc = _tcslen(pszSrc);
-   size_t lenDst = _tcslen(pszDst);
-
-   for(size_t i = 0; (m_length >= lenSrc) && (i <= m_length - lenSrc); i++)
-   {
-      if (!memcmp(pszSrc, &m_buffer[i], lenSrc * sizeof(TCHAR)))
-      {
-         if (lenSrc == lenDst)
-         {
-            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
-            i += lenDst - 1;
-         }
-         else if (lenSrc > lenDst)
-         {
-            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
-            i += lenDst;
-            size_t delta = lenSrc - lenDst;
-            m_length -= delta;
-            memmove(&m_buffer[i], &m_buffer[i + delta], (m_length - i + 1) * sizeof(TCHAR));
-            i--;
-         }
-         else
-         {
-            size_t delta = lenDst - lenSrc;
-            if (m_length + delta >= m_allocated)
-            {
-               m_allocated += std::max(m_allocationStep, delta);
-               m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
-            }
-            memmove(&m_buffer[i + lenDst], &m_buffer[i + lenSrc], (m_length - i - lenSrc + 1) * sizeof(TCHAR));
-            m_length += delta;
-            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
-            i += lenDst - 1;
-         }
-      }
-   }
 }
 
 /**
@@ -471,21 +142,19 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
  */
 String String::substring(size_t start, ssize_t len) const
 {
-   String s;
-   if (start < m_length)
+   if (start >= m_length)
+      return String();
+
+   size_t count;
+   if (len == -1)
    {
-      size_t count;
-      if (len == -1)
-      {
-         count = m_length - start;
-      }
-      else
-      {
-         count = std::min(static_cast<size_t>(len), m_length - start);
-      }
-      s.append(&m_buffer[start], count);
+      count = m_length - start;
    }
-   return s;
+   else
+   {
+      count = std::min(static_cast<size_t>(len), m_length - start);
+   }
+   return String(&m_buffer[start], count);
 }
 
 /**
@@ -520,48 +189,13 @@ TCHAR *String::substring(size_t start, ssize_t len, TCHAR *buffer) const
 /**
  * Find substring in a string
  */
-int String::find(const TCHAR *str, size_t start) const
+ssize_t String::find(const TCHAR *str, size_t start) const
 {
 	if (start >= m_length)
 		return npos;
 
 	TCHAR *p = _tcsstr(&m_buffer[start], str);
-	return (p != NULL) ? (int)(((char *)p - (char *)m_buffer) / sizeof(TCHAR)) : npos;
-}
-
-/**
- * Strip leading and trailing spaces, tabs, newlines
- */
-void String::trim()
-{
-	if (m_buffer != NULL)
-	{
-		Trim(m_buffer);
-		m_length = _tcslen(m_buffer);
-	}
-}
-
-/**
- * Shring string by removing trailing characters
- */
-void String::shrink(size_t chars)
-{
-	if (m_length > 0)
-	{
-		m_length -= std::min(m_length, chars);
-		if (m_buffer != NULL)
-			m_buffer[m_length] = 0;
-	}
-}
-
-/**
- * Clear string
- */
-void String::clear()
-{
-   m_length = 0;
-   if (m_buffer != NULL)
-      m_buffer[m_length] = 0;
+	return (p != NULL) ? (ssize_t)(((char *)p - (char *)m_buffer) / sizeof(TCHAR)) : npos;
 }
 
 /**
@@ -689,19 +323,537 @@ StringList *String::split(const TCHAR *separator) const
 }
 
 /**
- * COnvert string to uppercase
+ * Create empty string buffer
  */
-void String::toUppercase()
+StringBuffer::StringBuffer() : String()
+{
+   m_allocated = 0;
+   m_allocationStep = 256;
+}
+
+/**
+ * Copy constructor
+ */
+StringBuffer::StringBuffer(const StringBuffer &src) : String()
+{
+   m_length = src.m_length;
+   m_allocationStep = src.m_allocationStep;
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_allocated = src.m_allocated;
+      memcpy(m_buffer, src.m_buffer, (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_allocated = src.m_allocated;
+      m_buffer = MemCopyBlock(src.m_buffer, m_allocated * sizeof(TCHAR));
+   }
+}
+
+/**
+ * Copy constructor
+ */
+StringBuffer::StringBuffer(const String &src) : String(src)
+{
+   m_allocated = isInternalBuffer() ? 0 : m_length + 1;
+   m_allocationStep = 256;
+}
+
+/**
+ * Create string buffer with given initial content
+ */
+StringBuffer::StringBuffer(const TCHAR *init) : String(init)
+{
+   m_allocated = isInternalBuffer() ? 0 : m_length + 1;
+   m_allocationStep = 256;
+}
+
+/**
+ * Destructor
+ */
+StringBuffer::~StringBuffer()
+{
+}
+
+/**
+ * Operator =
+ */
+StringBuffer& StringBuffer::operator =(const TCHAR *str)
+{
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
+   m_length = (str != NULL) ? _tcslen(str) : 0;
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_allocated = 0;
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, CHECK_NULL_EX(str), (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_buffer = MemCopyString(CHECK_NULL_EX(str));
+      m_allocated = m_length + 1;
+   }
+   return *this;
+}
+
+/**
+ * Operator =
+ */
+StringBuffer& StringBuffer::operator =(const StringBuffer &src)
+{
+   if (&src == this)
+      return *this;
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
+   m_length = src.m_length;
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_allocated = 0;
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, src.m_buffer, (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_allocated = src.m_allocated;
+      m_buffer = MemCopyBlock(src.m_buffer, m_allocated * sizeof(TCHAR));
+   }
+   m_allocationStep = src.m_allocationStep;
+   return *this;
+}
+
+/**
+ * Operator =
+ */
+StringBuffer& StringBuffer::operator =(const String &src)
+{
+   if (&src == this)
+      return *this;
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
+   m_length = src.length();
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_allocated = 0;
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, src.cstr(), (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_allocated = m_length + 1;
+      m_buffer = MemCopyBlock(src.cstr(), m_allocated * sizeof(TCHAR));
+   }
+   m_allocationStep = 256;
+   return *this;
+}
+
+/**
+ * Add formatted string to the end of buffer
+ */
+void StringBuffer::appendFormattedString(const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   appendFormattedStringV(format, args);
+   va_end(args);
+}
+
+/**
+ * Add formatted string to the end of buffer
+ */
+void StringBuffer::appendFormattedStringV(const TCHAR *format, va_list args)
+{
+   int len;
+   TCHAR *buffer;
+
+#ifdef UNICODE
+
+#if HAVE_VASWPRINTF
+   vaswprintf(&buffer, format, args);
+#elif HAVE_VSCWPRINTF && HAVE_DECL_VA_COPY
+   va_list argsCopy;
+   va_copy(argsCopy, args);
+
+   len = (int)vscwprintf(format, args) + 1;
+   buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
+
+   vsnwprintf(buffer, len, format, argsCopy);
+   va_end(argsCopy);
+#else
+   // No way to determine required buffer size, guess
+   len = wcslen(format) + NumCharsW(format, L'%') * 1000 + 1;
+   buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
+
+   nx_vswprintf(buffer, len, format, args);
+#endif
+
+#else    /* UNICODE */
+
+#if HAVE_VASPRINTF && !defined(_IPSO)
+   if (vasprintf(&buffer, format, args) == -1)
+   {
+      buffer = (char *)malloc(1);
+      *buffer = 0;
+   }
+#elif HAVE_VSCPRINTF && HAVE_DECL_VA_COPY
+   va_list argsCopy;
+   va_copy(argsCopy, args);
+
+   len = (int)vscprintf(format, args) + 1;
+   buffer = (char *)malloc(len);
+
+   vsnprintf(buffer, len, format, argsCopy);
+   va_end(argsCopy);
+#elif SNPRINTF_RETURNS_REQUIRED_SIZE && HAVE_DECL_VA_COPY
+   va_list argsCopy;
+   va_copy(argsCopy, args);
+
+   len = (int)vsnprintf(NULL, 0, format, args) + 1;
+   buffer = (char *)malloc(len);
+
+   vsnprintf(buffer, len, format, argsCopy);
+   va_end(argsCopy);
+#else
+   // No way to determine required buffer size, guess
+   len = strlen(format) + NumChars(format, '%') * 1000 + 1;
+   buffer = (char *)malloc(len);
+
+   vsnprintf(buffer, len, format, args);
+#endif
+
+#endif   /* UNICODE */
+
+   append(buffer, _tcslen(buffer));
+   free(buffer);
+}
+
+/**
+ * Append string to the end of buffer
+ */
+void StringBuffer::append(const TCHAR *str, size_t len)
+{
+   if (len <= 0)
+      return;
+
+   if (isInternalBuffer())
+   {
+      if (m_length + len >= STRING_INTERNAL_BUFFER_SIZE)
+      {
+         m_allocated = std::max(m_allocationStep, m_length + len + 1);
+         m_buffer = MemAllocString(m_allocated);
+         memcpy(m_buffer, m_internalBuffer, m_length * sizeof(TCHAR));
+      }
+   }
+   else
+   {
+      if (m_length + len >= m_allocated)
+      {
+         m_allocated += std::max(m_allocationStep, len + 1);
+         m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
+      }
+   }
+   memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
+   m_length += len;
+   m_buffer[m_length] = 0;
+}
+
+/**
+ * Append multibyte string to the end of buffer
+ */
+void StringBuffer::appendMBString(const char *str, size_t len, int codePage)
+{
+#ifdef UNICODE
+   if (isInternalBuffer())
+   {
+      if (m_length + len >= STRING_INTERNAL_BUFFER_SIZE)
+      {
+         m_allocated = m_length + len + 1;
+         m_buffer = MemAllocString(m_allocated);
+         memcpy(m_buffer, m_internalBuffer, m_length * sizeof(TCHAR));
+      }
+   }
+   else
+   {
+      if (m_length + len >= m_allocated)
+      {
+         m_allocated += std::max(m_allocationStep, len + 1);
+         m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
+      }
+   }
+   m_length += MultiByteToWideChar(codePage, (codePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len + 1);
+   m_buffer[m_length] = 0;
+#else
+   append(str, len);
+#endif
+}
+
+/**
+ * Append wide character string to the end of buffer
+ */
+void StringBuffer::appendWideString(const WCHAR *str, size_t len)
+{
+#ifdef UNICODE
+   append(str, len);
+#else
+   if (isInternalBuffer())
+   {
+      if (m_length + len >= STRING_INTERNAL_BUFFER_SIZE)
+      {
+         m_allocated = m_length + len + 1;
+         m_buffer = MemAllocString(m_allocated);
+         memcpy(m_buffer, m_internalBuffer, m_length * sizeof(TCHAR));
+      }
+   }
+   else
+   {
+      if (m_length + len >= m_allocated)
+      {
+         m_allocated += std::max(m_allocationStep, len + 1);
+         m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
+      }
+   }
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, NULL, NULL);
+   m_length += len;
+   m_buffer[m_length] = 0;
+#endif
+}
+
+/**
+ * Append integer
+ */
+void StringBuffer::append(INT32 n, const TCHAR *format)
+{
+   TCHAR buffer[64];
+   if (format != NULL)
+   {
+      _sntprintf(buffer, 64, format, n);
+      append(buffer);
+   }
+   else
+   {
+      append(_itot(n, buffer, 10));
+   }
+}
+
+/**
+ * Append integer
+ */
+void StringBuffer::append(UINT32 n, const TCHAR *format)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, (format != NULL) ? format : _T("%u"), n);
+   append(buffer);
+}
+
+/**
+ * Append integer
+ */
+void StringBuffer::append(INT64 n, const TCHAR *format)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, (format != NULL) ? format : INT64_FMT, n);
+   append(buffer);
+}
+
+/**
+ * Append integer
+ */
+void StringBuffer::append(UINT64 n, const TCHAR *format)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, (format != NULL) ? format : UINT64_FMT, n);
+   append(buffer);
+}
+
+/**
+ * Append double
+ */
+void StringBuffer::append(double d, const TCHAR *format)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, (format != NULL) ? format : _T("%f"), d);
+   append(buffer);
+}
+
+/**
+ * Append GUID
+ */
+void StringBuffer::append(const uuid& guid)
+{
+   TCHAR buffer[64];
+   guid.toString(buffer);
+   append(buffer, _tcslen(buffer));
+}
+
+/**
+ * Escape given character
+ */
+void StringBuffer::escapeCharacter(int ch, int esc)
+{
+   int nCount = NumChars(m_buffer, ch);
+   if (nCount == 0)
+      return;
+
+   if (isInternalBuffer())
+   {
+      if (m_length + nCount >= STRING_INTERNAL_BUFFER_SIZE)
+      {
+         m_allocated = std::max(m_allocationStep, m_length + nCount + 1);
+         m_buffer = MemAllocString(m_allocated);
+         memcpy(m_buffer, m_internalBuffer, (m_length + 1) * sizeof(TCHAR));
+      }
+   }
+   else
+   {
+      if (m_length + nCount >= m_allocated)
+      {
+         m_allocated += std::max(m_allocationStep, (size_t)nCount);
+         m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
+      }
+   }
+
+   m_length += nCount;
+   for(int i = 0; m_buffer[i] != 0; i++)
+   {
+      if (m_buffer[i] == ch)
+      {
+         memmove(&m_buffer[i + 1], &m_buffer[i], (m_length - i) * sizeof(TCHAR));
+         m_buffer[i] = esc;
+         i++;
+      }
+   }
+   m_buffer[m_length] = 0;
+}
+
+/**
+ * Set dynamically allocated string as a new buffer
+ */
+void StringBuffer::setBuffer(TCHAR *buffer)
+{
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
+   if (buffer != NULL)
+   {
+      m_buffer = buffer;
+      m_length = _tcslen(m_buffer);
+      m_allocated = m_length + 1;
+   }
+   else
+   {
+      m_buffer = m_internalBuffer;
+      m_buffer[0] = 0;
+      m_length = 0;
+      m_allocated = 0;
+   }
+}
+
+/**
+ * Replace all occurrences of source substring with destination substring
+ */
+void StringBuffer::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
+{
+   size_t lenSrc = _tcslen(pszSrc);
+   if (lenSrc > m_length)
+      return;
+
+   size_t lenDst = _tcslen(pszDst);
+
+   for(size_t i = 0; (m_length >= lenSrc) && (i <= m_length - lenSrc); i++)
+   {
+      if (!memcmp(pszSrc, &m_buffer[i], lenSrc * sizeof(TCHAR)))
+      {
+         if (lenSrc == lenDst)
+         {
+            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
+            i += lenDst - 1;
+         }
+         else if (lenSrc > lenDst)
+         {
+            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
+            i += lenDst;
+            size_t delta = lenSrc - lenDst;
+            m_length -= delta;
+            memmove(&m_buffer[i], &m_buffer[i + delta], (m_length - i + 1) * sizeof(TCHAR));
+            i--;
+         }
+         else
+         {
+            size_t delta = lenDst - lenSrc;
+            if (isInternalBuffer())
+            {
+               if (m_length + delta >= STRING_INTERNAL_BUFFER_SIZE)
+               {
+                  m_allocated = std::max(m_allocationStep, m_length + delta + 1);
+                  m_buffer = MemAllocString(m_allocated);
+                  memcpy(m_buffer, m_internalBuffer, (m_length + 1) * sizeof(TCHAR));
+               }
+            }
+            else
+            {
+               if (m_length + delta >= m_allocated)
+               {
+                  m_allocated += std::max(m_allocationStep, delta);
+                  m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
+               }
+            }
+            memmove(&m_buffer[i + lenDst], &m_buffer[i + lenSrc], (m_length - i - lenSrc + 1) * sizeof(TCHAR));
+            m_length += delta;
+            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
+            i += lenDst - 1;
+         }
+      }
+   }
+}
+
+/**
+ * Convert string to uppercase
+ */
+void StringBuffer::toUppercase()
 {
    for (size_t i = 0; i < m_length; i++)
       m_buffer[i] = _totupper(m_buffer[i]);
 }
 
 /**
-* COnvert string to lowercase
+* Convert string to lowercase
 */
-void String::toLowercase()
+void StringBuffer::toLowercase()
 {
    for (size_t i = 0; i < m_length; i++)
       m_buffer[i] = _totlower(m_buffer[i]);
+}
+
+/**
+ * Strip leading and trailing spaces, tabs, newlines
+ */
+void StringBuffer::trim()
+{
+   Trim(m_buffer);
+   m_length = _tcslen(m_buffer);
+}
+
+/**
+ * Shrink string by removing trailing characters
+ */
+void StringBuffer::shrink(size_t chars)
+{
+   if (m_length > 0)
+   {
+      m_length -= std::min(m_length, chars);
+      m_buffer[m_length] = 0;
+   }
+}
+
+/**
+ * Clear string
+ */
+void StringBuffer::clear()
+{
+   if (!isInternalBuffer())
+   {
+      MemFree(m_buffer);
+      m_buffer = m_internalBuffer;
+   }
+   m_length = 0;
+   m_buffer[m_length] = 0;
 }

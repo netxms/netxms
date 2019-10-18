@@ -840,63 +840,43 @@ public:
 class uuid;
 
 /**
- * Dynamic string class
+ * Size of internal buffer for String class
+ */
+#define STRING_INTERNAL_BUFFER_SIZE 64
+
+/**
+ * Immutable string
  */
 class LIBNETXMS_EXPORTABLE String
 {
 protected:
    TCHAR *m_buffer;
    size_t m_length;
-   size_t m_allocated;
-   size_t m_allocationStep;
+   TCHAR m_internalBuffer[STRING_INTERNAL_BUFFER_SIZE];
+
+   bool isInternalBuffer() { return m_buffer == m_internalBuffer; }
 
 public:
-	static const int npos;
+	static const ssize_t npos;
 
    String();
    String(const TCHAR *init);
+   String(const TCHAR *init, size_t len);
 	String(const String &src);
-   ~String();
+   virtual ~String();
 
-	TCHAR *getBuffer() { return m_buffer; }
-	TCHAR *takeBuffer() { TCHAR *b = m_buffer; m_buffer = NULL; m_allocated = 0; m_length = 0; return b; }
-   void setBuffer(TCHAR *buffer);
-
-   size_t getAllocationStep() { return m_allocationStep; }
-   void setAllocationStep(size_t step) { m_allocationStep = step; }
-
-   String& operator =(const TCHAR *str);
-	String& operator =(const String &src);
-   String& operator +=(const TCHAR *str);
-   String& operator +=(const String &str);
-   String operator +(const String &right) const;
-   String operator +(const TCHAR *right) const;
-   operator const TCHAR*() const { return CHECK_NULL_EX(m_buffer); }
+   operator const TCHAR*() const { return m_buffer; }
+   const TCHAR *cstr() const { return m_buffer; }
 
    bool operator ==(const String &s) const { return equals(s); }
    bool operator !=(const String &s) const { return !equals(s); }
 
+   String& operator =(const String &src) = delete;
+
+   String operator +(const String &right) const;
+   String operator +(const TCHAR *right) const;
+
 	char *getUTF8String() const;
-
-   void append(const TCHAR *str) { if (str != NULL) append(str, _tcslen(str)); }
-	void append(const TCHAR *str, size_t len);
-   void append(const TCHAR c) { append(&c, 1); }
-   void append(INT32 n, const TCHAR *format = NULL);
-   void append(UINT32 n, const TCHAR *format = NULL);
-   void append(INT64 n, const TCHAR *format = NULL);
-   void append(UINT64 n, const TCHAR *format = NULL);
-   void append(double d, const TCHAR *format = NULL);
-   void append(const uuid& guid);
-
-	void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); MemFree(str); } }
-
-	void appendMBString(const char *str, size_t len, int nCodePage);
-	void appendWideString(const WCHAR *str, size_t len);
-
-   void appendFormattedString(const TCHAR *format, ...);
-   void appendFormattedStringV(const TCHAR *format, va_list args);
-
-   void clear();
 
 	size_t length() const { return m_length; }
 	bool isEmpty() const { return m_length == 0; }
@@ -917,12 +897,63 @@ public:
 
    StringList *split(const TCHAR *separator) const;
 
-	int find(const TCHAR *str, size_t start = 0) const;
+	ssize_t find(const TCHAR *str, size_t start = 0) const;
+};
+
+/**
+ * Dynamic string
+ */
+class LIBNETXMS_EXPORTABLE StringBuffer : public String
+{
+protected:
+   size_t m_allocated;
+   size_t m_allocationStep;
+
+public:
+   StringBuffer();
+   StringBuffer(const TCHAR *init);
+   StringBuffer(const StringBuffer &src);
+   StringBuffer(const String &src);
+   virtual ~StringBuffer();
+
+   size_t getAllocationStep() const { return m_allocationStep; }
+   void setAllocationStep(size_t step) { m_allocationStep = step; }
+
+   TCHAR *getBuffer() { return m_buffer; }
+   TCHAR *takeBuffer() { TCHAR *b = m_buffer; m_buffer = NULL; m_allocated = 0; m_length = 0; return b; }
+   void setBuffer(TCHAR *buffer);
+
+   StringBuffer& operator =(const TCHAR *str);
+   StringBuffer& operator =(const StringBuffer &src);
+   StringBuffer& operator =(const String &src);
+
+   StringBuffer& operator +=(const TCHAR *str) { append(str); return *this; }
+   StringBuffer& operator +=(const String &str) { append(str); return *this; }
+
+   void append(const TCHAR *str) { if (str != NULL) append(str, _tcslen(str)); }
+   void append(const TCHAR *str, size_t len);
+   void append(const TCHAR c) { append(&c, 1); }
+   void append(INT32 n, const TCHAR *format = NULL);
+   void append(UINT32 n, const TCHAR *format = NULL);
+   void append(INT64 n, const TCHAR *format = NULL);
+   void append(UINT64 n, const TCHAR *format = NULL);
+   void append(double d, const TCHAR *format = NULL);
+   void append(const uuid& guid);
+
+   void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); MemFree(str); } }
+
+   void appendMBString(const char *str, size_t len, int nCodePage);
+   void appendWideString(const WCHAR *str, size_t len);
+
+   void appendFormattedString(const TCHAR *format, ...);
+   void appendFormattedStringV(const TCHAR *format, va_list args);
+
+   void clear();
 
    void escapeCharacter(int ch, int esc);
    void replace(const TCHAR *pszSrc, const TCHAR *pszDst);
-	void trim();
-	void shrink(size_t chars = 1);
+   void trim();
+   void shrink(size_t chars = 1);
 
    void toUppercase();
    void toLowercase();

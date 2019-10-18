@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ SummaryTableColumn::SummaryTableColumn(NXCPMessage *msg, UINT32 baseId)
 /**
  * Create export record for column
  */
-void SummaryTableColumn::createExportRecord(String &xml, int id)
+void SummaryTableColumn::createExportRecord(StringBuffer &xml, int id)
 {
    xml.append(_T("\t\t\t\t<column id=\""));
    xml.append(id);
@@ -367,7 +367,7 @@ Table *SummaryTable::createEmptyResultTable()
 /**
  * Create export record
  */
-void SummaryTable::createExportRecord(String &xml) const
+void SummaryTable::createExportRecord(StringBuffer &xml) const
 {
    TCHAR buffer[64];
 
@@ -448,7 +448,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
 /**
  * Create export record for summary table
  */
-bool CreateSummaryTableExportRecord(INT32 id, String &xml)
+bool CreateSummaryTableExportRecord(INT32 id, StringBuffer &xml)
 {
    UINT32 rcc;
    SummaryTable *t = SummaryTable::loadFromDB(id, &rcc);
@@ -467,7 +467,7 @@ static TCHAR *BuildColumnList(ConfigEntry *root)
    if (root == NULL)
       return _tcsdup(_T(""));
 
-   String s;
+   StringBuffer s;
    ObjectArray<ConfigEntry> *columns = root->getOrderedSubEntries(_T("column#*"));
    for(int i = 0; i < columns->size(); i++)
    {

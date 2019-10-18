@@ -199,9 +199,9 @@ private:
    static void uploadCallback(INT64 size, void *arg);
 
 protected:
-	virtual ServerJobResult run();
-	virtual const TCHAR *getAdditionalInfo();
-	virtual const String serializeParameters();
+	virtual ServerJobResult run() override;
+	virtual const TCHAR *getAdditionalInfo() override;
+	virtual const String serializeParameters() override;
 
 public:
 	static void init();
@@ -278,8 +278,8 @@ private:
    uuid m_policyGuid;
 
 protected:
-	virtual ServerJobResult run();
-	virtual const String serializeParameters();
+	virtual ServerJobResult run() override;
+	virtual const String serializeParameters() override;
 
 public:
 	PolicyInstallJob(DataCollectionTarget *node, UINT32 templateId, uuid policyGuid, const TCHAR *policyName, UINT32 userId);
@@ -297,8 +297,8 @@ private:
    uuid m_policyGuid;
 
 protected:
-	virtual ServerJobResult run();
-	virtual const String serializeParameters();
+	virtual ServerJobResult run() override;
+	virtual const String serializeParameters() override;
 
 public:
 	PolicyUninstallJob(DataCollectionTarget *node, const TCHAR *policyType, const uuid& policyGuid, UINT32 userId);

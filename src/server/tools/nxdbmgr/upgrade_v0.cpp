@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -164,7 +164,7 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
    if (_tcschr(text, _T('%')) == NULL)
       return true; // nothing to convert
 
-   String s;
+   StringBuffer s;
    for(const TCHAR *p = text; *p != 0; p++)
    {
       if (*p == _T('%'))
@@ -228,7 +228,7 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
       }
    }
 
-   String query = _T("UPDATE object_tools SET ");
+   StringBuffer query = _T("UPDATE object_tools SET ");
    query.append(column);
    query.append(_T('='));
    query.append(DBPrepareString(g_dbHandle, s));
@@ -1175,7 +1175,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
       DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO policy_pstorage_actions (rule_id,ps_key,value,action) VALUES (?,?,?,1)"));
       if (hStmt != NULL)
       {
-         String key;
+         StringBuffer key;
          for(int i = 0; i < count; i++)
          {
             TCHAR tmp[256];

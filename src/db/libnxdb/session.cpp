@@ -1812,7 +1812,7 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 /**
  * Prepare string for using in SQL statement
  */
-String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize)
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize)
 {
    return DBPrepareString(conn->m_driver, str, maxSize);
 }
@@ -1820,9 +1820,9 @@ String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int 
 /**
  * Prepare string for using in SQL statement
  */
-String LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int maxSize)
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int maxSize)
 {
-	String out;
+	StringBuffer out;
 	if ((maxSize > 0) && (str != NULL) && (maxSize < (int)_tcslen(str)))
 	{
 		TCHAR *temp = (TCHAR *)malloc((maxSize + 1) * sizeof(TCHAR));
@@ -1850,18 +1850,18 @@ String LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int m
  */
 #ifdef UNICODE
 
-String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int maxSize)
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int maxSize)
 {
 	WCHAR *wcs = WideStringFromMBString(str);
-	String s = DBPrepareString(conn, wcs, maxSize);
+	StringBuffer s = DBPrepareString(conn, wcs, maxSize);
 	MemFree(wcs);
 	return s;
 }
 
-String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int maxSize)
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int maxSize)
 {
    WCHAR *wcs = WideStringFromMBString(str);
-   String s = DBPrepareString(drv, wcs, maxSize);
+   StringBuffer s = DBPrepareString(drv, wcs, maxSize);
    MemFree(wcs);
    return s;
 }
@@ -1871,7 +1871,7 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int m
 /**
  * Prepare string for using in SQL statement (UTF8 string version)
  */
-String LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_HANDLE conn, const char *str, int maxSize)
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_HANDLE conn, const char *str, int maxSize)
 {
    return DBPrepareStringUTF8(conn->m_driver, str, maxSize);
 }
@@ -1879,15 +1879,15 @@ String LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_HANDLE conn, const char *str, i
 /**
  * Prepare string for using in SQL statement (UTF8 string version)
  */
-String LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_DRIVER drv, const char *str, int maxSize)
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_DRIVER drv, const char *str, int maxSize)
 {
 #ifdef UNICODE
    WCHAR *wcs = WideStringFromUTF8String(str);
-   String s = DBPrepareString(drv, wcs, maxSize);
+   StringBuffer s = DBPrepareString(drv, wcs, maxSize);
    MemFree(wcs);
 #else
    char *mbcs = MBStringFromUTF8String(str);
-   String s = DBPrepareString(drv, mbcs, maxSize);
+   StringBuffer s = DBPrepareString(drv, mbcs, maxSize);
    MemFree(mbcs);
 #endif
    return s;

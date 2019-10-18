@@ -182,7 +182,7 @@ ServerJobResult PolicyInstallJob::run()
  */
 const String PolicyInstallJob::serializeParameters()
 {
-   String params;
+   StringBuffer params;
    params.append(m_templateId);
    params.append(_T(','));
    params.append(m_policyGuid);
@@ -309,7 +309,7 @@ ServerJobResult PolicyUninstallJob::run()
  */
 const String PolicyUninstallJob::serializeParameters()
 {
-   String params;
+   StringBuffer params;
    params.append(m_policyGuid);
    params.append(_T(','));
    params.append(m_policyType);

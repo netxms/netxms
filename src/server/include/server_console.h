@@ -67,7 +67,7 @@ public:
 class LIBNXSRV_EXPORTABLE StringBufferConsole : public ServerConsole
 {
 private:
-   String m_buffer;
+   StringBuffer m_buffer;
    MUTEX m_mutex;
 
 protected:
@@ -77,7 +77,7 @@ public:
    StringBufferConsole();
    virtual ~StringBufferConsole();
 
-   const String& getOutput() const { return m_buffer; }
+   const StringBuffer& getOutput() const { return m_buffer; }
 };
 
 /**

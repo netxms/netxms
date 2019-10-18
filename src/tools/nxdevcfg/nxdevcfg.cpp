@@ -108,7 +108,7 @@ static void ShowHelp()
  */
 static void PrintFlags(const TCHAR *src)
 {
-	String s = src;
+	StringBuffer s = src;
 	s.replace(_T("${bindir}"), BINDIR);
 	s.replace(_T("${libdir}"), LIBDIR);
 	s.replace(_T("${localstatedir}"), STATEDIR);
@@ -116,7 +116,7 @@ static void PrintFlags(const TCHAR *src)
 	s.replace(_T("${pkglibdir}"), PKGLIBDIR);
 	s.replace(_T("${prefix}"), PREFIX);
 	s.escapeCharacter(_T('"'), _T('\\'));
-	_tprintf(_T("%s\n"), (const TCHAR *)s);
+	_tprintf(_T("%s\n"), s.cstr());
 }
 
 /**

@@ -847,13 +847,13 @@ bool Threshold::equals(const Threshold *t) const
 /**
  * Create management pack record
  */
-void Threshold::createExportRecord(String &str, int index) const
+void Threshold::createExportRecord(StringBuffer &xml, int index) const
 {
    TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
 
    EventNameFromCode(m_eventCode, activationEvent);
    EventNameFromCode(m_rearmEventCode, deactivationEvent);
-   str.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
+   xml.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<function>%d</function>\n")
                           _T("\t\t\t\t\t\t\t<condition>%d</condition>\n")
                           _T("\t\t\t\t\t\t\t<value>%s</value>\n")
@@ -868,11 +868,11 @@ void Threshold::createExportRecord(String &str, int index) const
 								  m_sampleCount, m_repeatInterval);
    if (m_scriptSource != NULL)
    {
-      str.append(_T("\t\t\t\t\t\t\t<script>"));
-      str.append(EscapeStringForXML2(m_scriptSource));
-      str.append(_T("</script>\n"));
+      xml.append(_T("\t\t\t\t\t\t\t<script>"));
+      xml.append(EscapeStringForXML2(m_scriptSource));
+      xml.append(_T("</script>\n"));
    }
-   str.append(_T("\t\t\t\t\t\t</threshold>\n"));
+   xml.append(_T("\t\t\t\t\t\t</threshold>\n"));
 }
 
 /**

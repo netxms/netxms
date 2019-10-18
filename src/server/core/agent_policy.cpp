@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -235,10 +235,11 @@ void GenericAgentPolicy::updateFromImport(ConfigEntry *config)
 /**
  * Create export record
  */
-void GenericAgentPolicy::createExportRecord(String &str)
+void GenericAgentPolicy::createExportRecord(StringBuffer &str)
 {
-
-   str.appendFormattedString(_T("\t\t\t<agentPolicy id=\"%s\">\n"), (const TCHAR *)m_guid.toString());
+   str.append(_T("\t\t\t<agentPolicy id=\""));
+   str.append(m_guid);
+   str.append(_T("\">\n"));
    str.append(_T("\t\t\t\t<name>"));
    str.append(m_name);
    str.append(_T("</name>\n"));
