@@ -1189,7 +1189,11 @@ if test "x$PLATFORM" = "xMinix"; then
 	AC_CHECK_PROG([CCC], [clang++], [clang++])
 fi
 if test "x$PLATFORM" = "xLinux" -a "x$ALLOW_CLANG" = "xyes"; then
+	AC_CHECK_PROG([CC], [clang-8], [clang-8])
+	AC_CHECK_PROG([CC], [clang-7], [clang-7])
 	AC_CHECK_PROG([CC], [clang], [clang])
+	AC_CHECK_PROG([CCC], [clang++-8], [clang++-8])
+	AC_CHECK_PROG([CCC], [clang++-7], [clang++-7])
 	AC_CHECK_PROG([CCC], [clang++], [clang++])
 fi
 AC_PROG_CC
@@ -1376,6 +1380,7 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 
 	AC_CPP_CHECK_OPTION(-Wno-unused-result)
 	AC_CPP_CHECK_OPTION(-Wno-format-truncation)
+	AC_CPP_CHECK_OPTION(-Wuseless-cast)
 	AC_CPP_CHECK_OPTION(-Werror=return-type)
 	AC_CXX_CHECK_OPTION(-fno-rtti)
 	AC_CXX_CHECK_OPTION(-fno-exceptions)
