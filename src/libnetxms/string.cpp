@@ -328,7 +328,7 @@ void String::append(double d, const TCHAR *format)
  */
 void String::append(const uuid& guid)
 {
-   TCHAR buffer[36];
+   TCHAR buffer[64];
    guid.toString(buffer);
    append(buffer, _tcslen(buffer));
 }
