@@ -205,9 +205,8 @@ int LIBNETXMS_EXPORTABLE _uuid_parse(const TCHAR *in, uuid_t uu)
 TCHAR LIBNETXMS_EXPORTABLE *_uuid_to_string(const uuid_t uu, TCHAR *out)
 {
 	struct __uuid uuid;
-
 	uuid_unpack(uu, &uuid);
-	_sntprintf(out, 64,
+	_sntprintf(out, 37,
 		_T("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x"),
 		uuid.time_low, uuid.time_mid, uuid.time_hi_and_version,
 		uuid.clock_seq >> 8, uuid.clock_seq & 0xFF,
@@ -224,9 +223,8 @@ TCHAR LIBNETXMS_EXPORTABLE *_uuid_to_string(const uuid_t uu, TCHAR *out)
 char LIBNETXMS_EXPORTABLE *_uuid_to_stringA(const uuid_t uu, char *out)
 {
    struct __uuid uuid;
-
    uuid_unpack(uu, &uuid);
-   snprintf(out, 64,
+   snprintf(out, 37,
       "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
       uuid.time_low, uuid.time_mid, uuid.time_hi_and_version,
       uuid.clock_seq >> 8, uuid.clock_seq & 0xFF,
