@@ -363,7 +363,7 @@ void CreateScriptExportRecord(String &xml, UINT32 id)
    NXSL_LibraryScript *script = LoadScriptFromDatabase(id);
    if (script == NULL)
    {
-      DbgPrintf(3, _T("CreateScriptExportRecord: failed to load script with ID %d from database"), (int)id);
+      nxlog_debug(3, _T("CreateScriptExportRecord: failed to load script with ID %u from database"), id);
       return;
    }
 
@@ -379,6 +379,8 @@ void CreateScriptExportRecord(String &xml, UINT32 id)
    xml.append(_T("\t\t\t<code>"));
    xml.append(EscapeStringForXML2(script->getCode()));
    xml.append(_T("</code>\n\t\t</script>\n"));
+
+   delete script;
 }
 
 /**
