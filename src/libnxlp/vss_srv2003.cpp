@@ -106,7 +106,7 @@ FileSnapshot *CreateSnapshotSrv2003(const TCHAR *path)
       return CreateFailure(hr, bc, _T("Call to IVssBackupComponents::GetSnapshotProperties failed (%s) HRESULT=0x%08X"));
 
    nxlog_debug_tag(DEBUG_TAG_VSS, 7, _T("Created VSS snapshot %s"), prop.m_pwszSnapshotDeviceObject);
-   String sname(prop.m_pwszSnapshotDeviceObject);
+   StringBuffer sname(prop.m_pwszSnapshotDeviceObject);
    sname.append(s);
 
    FileSnapshot *object = (FileSnapshot *)malloc(sizeof(FileSnapshot));

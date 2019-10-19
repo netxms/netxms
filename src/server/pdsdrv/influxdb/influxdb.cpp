@@ -127,16 +127,16 @@ std::string InfluxDBStorageDriver::getString(const TCHAR *tstr)
 {
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-   int len = ucs4_utf8len(tstr, -1);
+   size_t len = ucs4_utf8len(tstr, -1);
 #else
-   int len = ucs2_utf8len(tstr, -1);
+   size_t len = ucs2_utf8len(tstr, -1);
 #endif
 #if HAVE_ALLOCA
    char *buffer = static_cast<char*>(alloca(len + 1));
 #else
    char *buffer = static_cast<char*>(MemAlloc(len + 1));
 #endif
-   WideCharToMultiByte(CP_UTF8, 0, tstr, -1, buffer, len + 1, NULL, NULL);
+   WideCharToMultiByte(CP_UTF8, 0, tstr, -1, buffer, (int)len + 1, NULL, NULL);
 #if HAVE_ALLOCA
    return std::string(buffer);
 #else

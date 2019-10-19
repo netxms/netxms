@@ -182,7 +182,7 @@ bool ProcessExecutor::execute()
    si.hStdOutput = stdoutWrite;
    si.hStdError = stdoutWrite;
 
-   String cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
+   StringBuffer cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
    cmdLine.append(m_cmd);
    if (CreateProcess(NULL, cmdLine.getBuffer(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
    {

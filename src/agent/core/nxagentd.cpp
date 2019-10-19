@@ -590,7 +590,7 @@ void ScheduleDelayedRestart()
    _tcslcat(exe, _T("\\nxreload.exe"), MAX_PATH);
    if (VerifyFileSignature(exe))
    {
-      String command;
+      StringBuffer command;
       command.append(_T('"'));
       command.append(exe);
       command.append(_T("\" -- "));

@@ -901,10 +901,14 @@ public:
 	ssize_t find(const TCHAR *str, size_t start = 0) const;
 };
 
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE shared_ptr<String>;
+#endif
+
 /**
  * Shared string
  */
-class SharedString
+class LIBNETXMS_EXPORTABLE SharedString
 {
 private:
    shared_ptr<String> m_string;

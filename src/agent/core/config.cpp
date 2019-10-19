@@ -277,7 +277,7 @@ static void RecoverDataDirectory()
    if (_tcsicmp(appDataDir, g_szDataDirectory))
       return;  // Data directory is not in AppData
 
-   String oldAppDataDir(appDataDir);
+   StringBuffer oldAppDataDir(appDataDir);
    oldAppDataDir.toUppercase();
    oldAppDataDir.replace(_T("\\WINDOWS\\"), _T("\\WINDOWS.OLD\\"));
    if (_taccess(oldAppDataDir, 0) != 0)
