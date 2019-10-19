@@ -151,7 +151,7 @@ void LoadConfig()
       ConfigEntry *e = config.getEntry(_T("/welcomeMessage"));
       if (e != NULL)
       {
-         String buffer;
+         StringBuffer buffer;
          for (int i = 0; i < e->getValueCount(); i++)
          {
             const TCHAR *v = e->getValue(i);

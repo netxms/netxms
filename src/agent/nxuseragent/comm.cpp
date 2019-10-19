@@ -106,7 +106,7 @@ static void ShutdownAgent(bool restart)
       _tcslcat(exe, _T("\\nxreload.exe"), MAX_PATH);
       if (VerifyFileSignature(exe))
       {
-         String command;
+         StringBuffer command;
          command.append(_T('"'));
          command.append(exe);
          command.append(_T("\" -- \""));
@@ -120,7 +120,7 @@ static void ShutdownAgent(bool restart)
          si.cb = sizeof(STARTUPINFO);
 
          nxlog_debug(3, _T("Starting reload helper:"));
-         nxlog_debug(3, _T("%s"), command.getBuffer());
+         nxlog_debug(3, _T("%s"), command.cstr());
          if (CreateProcess(NULL, command.getBuffer(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
          {
             CloseHandle(pi.hThread);

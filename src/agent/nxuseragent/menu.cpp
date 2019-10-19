@@ -77,7 +77,7 @@ MenuItem::MenuItem(MenuItem *parent, ConfigEntry *config, const TCHAR *rootPath)
    m_name = MemCopyString(config->getSubEntryValue(_T("name"), 0, _T("")));
    m_displayName = MemCopyString(config->getSubEntryValue(_T("displayName"), 0, m_name));
 
-   String path = rootPath;
+   StringBuffer path = rootPath;
    if (!path.isEmpty())
       path.append(_T(" / "));
    path.append(m_name);
