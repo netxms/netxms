@@ -144,6 +144,7 @@
     <ClCompile Include="button.cpp" />
     <ClCompile Include="comm.cpp" />
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="desktop.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
     <ClCompile Include="msgwnd.cpp" />

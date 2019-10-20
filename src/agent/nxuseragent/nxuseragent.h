@@ -194,6 +194,8 @@ void ShowTrayNotification(const TCHAR *text);
 bool PrepareMessageWindow();
 void OpenMessageWindow();
 bool InitButtons();
+void DrawTextOnDesktop(const TCHAR *text);
+void UpdateDesktopWallpaper();
 
 /*** Global variables ***/
 extern HINSTANCE g_hInstance;
@@ -204,5 +206,6 @@ extern HFONT g_symbolFont;
 extern bool g_reloadConfig;
 extern bool g_connectedToAgent;
 extern bool g_closeOnDeactivate;
+extern TCHAR *g_desktopWallpaper;
 
 #endif

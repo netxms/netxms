@@ -64,6 +64,11 @@ UINT GetHotKey(UINT *modifiers)
 }
 
 /**
+ * Desktop wallpaper
+ */
+TCHAR *g_desktopWallpaper = NULL;
+
+/**
  * Application icon
  */
 static HICON s_appIcon = NULL;
@@ -183,6 +188,9 @@ void LoadConfig()
 
       g_closeOnDeactivate = config.getValueAsBoolean(_T("/closeOnDeactivate"), false);
 
+      MemFree(g_desktopWallpaper);
+      g_desktopWallpaper = MemCopyString(config.getValue(_T("/desktopWallpaper"), NULL));
+
       if (config.getValueAsBoolean(_T("/customColorSchema"), false))
       {
          s_colors[APP_COLOR_BACKGROUND] = config.getValueAsUInt(_T("/backgroundColor"), s_defaultColors[APP_COLOR_BACKGROUND]);
@@ -230,5 +238,26 @@ void UpdateConfig(const NXCPMessage *msg)
          g_reloadConfig = true;
       }
       _close(fd);
+   }
+
+   // Update path to agent's file store
+   if (msg->isFieldExist(VID_FILE_STORE))
+   {
+      TCHAR fileStore[MAX_PATH];
+      msg->getFieldAsString(VID_FILE_STORE, fileStore, MAX_PATH);
+      SetEnvironmentVariable(_T("NETXMS_FILE_STORE"), fileStore);
+
+      TCHAR *p = _tcsrchr(path, _T('\\'));
+      if (p != NULL)
+      {
+         p++;
+         _tcscpy(p, _T("filestore"));
+         fd = _topen(path, O_CREAT | O_TRUNC | O_BINARY | O_WRONLY, _S_IREAD | _S_IWRITE);
+         if (fd != -1)
+         {
+            _write(fd, fileStore, (int)_tcslen(fileStore) * sizeof(TCHAR));
+            _close(fd);
+         }
+      }
    }
 }

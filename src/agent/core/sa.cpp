@@ -334,6 +334,7 @@ void SessionAgentConnector::updateUserAgentConfig()
 
       NXCPMessage msg(CMD_UPDATE_AGENT_CONFIG, nextRequestId());
       msg.setField(VID_CONFIG_FILE_DATA, config.createXml());
+      msg.setField(VID_FILE_STORE, g_szFileStore);
       sendMessage(&msg);
    }
    else

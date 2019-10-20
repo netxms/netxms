@@ -1310,6 +1310,7 @@ typedef struct
 #define VID_PHY_CHASSIS             ((UINT32)659)
 #define VID_PHY_PIC                 ((UINT32)660)
 #define VID_AGENT_BUILD_TAG         ((UINT32)661)
+#define VID_FILE_STORE              ((UINT32)662)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

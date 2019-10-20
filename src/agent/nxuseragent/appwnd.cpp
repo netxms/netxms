@@ -369,6 +369,7 @@ void OpenApplicationWindow(POINT pt, bool hotkeyOpen)
    {
       nxlog_debug(3, _T("Configuration reload flag is set"));
       LoadConfig();
+      UpdateDesktopWallpaper();
       g_reloadConfig = false;
    }
 

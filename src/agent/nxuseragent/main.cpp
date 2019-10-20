@@ -36,6 +36,30 @@ static void InitLogging()
 }
 
 /**
+ * Load file store location
+ */
+static void LoadFileStoreLocation()
+{
+   TCHAR path[MAX_PATH];
+   if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path) != S_OK)
+      _tcscpy(path, _T("C:"));
+   _tcscat(path, _T("\\nxuseragent\\filestore"));
+
+   int fd = _topen(path, O_BINARY | O_RDONLY);
+   if (fd != -1)
+   {
+      TCHAR fileStore[MAX_PATH];
+      int bytes = _read(fd, fileStore, MAX_PATH * sizeof(TCHAR));
+      _close(fd);
+      if (bytes > 0)
+      {
+         fileStore[bytes / sizeof(TCHAR)] = 0;
+         SetEnvironmentVariable(_T("NETXMS_FILE_STORE"), fileStore);
+      }
+   }
+}
+
+/**
  * Application entry point
  */
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int cmdShow)
@@ -46,6 +70,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
    InitNetXMSProcess(false);
    InitLogging();
    LoadConfig();
+   LoadFileStoreLocation();
 
    WSADATA wsaData;
    int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -70,6 +95,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
    UpdateAddressList();
    StartAgentConnector();
    nxlog_write(NXLOG_INFO, _T("NetXMS user agent started"));
+
+   UpdateDesktopWallpaper();
 
    UINT modifiers;
    UINT keycode = GetHotKey(&modifiers);
