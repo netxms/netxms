@@ -897,6 +897,7 @@ BOOL Initialize()
 
    nxlog_write(NXLOG_INFO, _T("File store: %s"), g_szFileStore);
    CreateFolder(g_szFileStore);
+   SetEnvironmentVariable(_T("NETXMS_FILE_STORE"), g_szFileStore);
 
 #ifndef _WIN32
    nxlog_debug(2, _T("Effective user ID %d"), (int)geteuid());

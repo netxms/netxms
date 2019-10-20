@@ -3236,6 +3236,8 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, cons
                                              int cchByteChar, WCHAR *pWideCharStr,
                                              int cchWideChar);
 
+BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *value);
+
 #ifdef UNICODE
 int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
 int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...);

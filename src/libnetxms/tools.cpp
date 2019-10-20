@@ -3729,3 +3729,24 @@ TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port,
    closesocket(s);
    return result;
 }
+
+#ifndef _WIN32
+
+/**
+ * SetEnvironmentVariable implementation for non-Windows environments
+ */
+BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *value)
+{
+   size_t len = _tcslen(var) + _tcslen(value) + 2;
+   TCHAR *env = MemAllocString(len);
+   _sntprintf(env, len, _T("%s=%s"), var, value);
+#ifdef UNICODE
+   char *mbenv = MBStringFromWideStringSysLocale(env);
+   MemFree(env);
+   return putenv(mbenv) == 0;
+#else
+   return putenv(env) == 0;
+#endif
+}
+
+#endif
