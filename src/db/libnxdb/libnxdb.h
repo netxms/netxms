@@ -29,7 +29,7 @@
 #include <nxdbapi.h>
 
 #define DEBUG_TAG_CONNECTION  _T("db.conn")
-#define DEBUG_TAG_DRIVER      _T("db.driver")
+#define DEBUG_TAG_DRIVER      _T("db.drv")
 #define DEBUG_TAG_QUERY       _T("db.query")
 
 /**

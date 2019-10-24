@@ -6,7 +6,7 @@
 #include <nms_agent.h>
 #include <nxpython.h>
 
-#define PY_SUBAGENT_DEBUG_TAG _T("python")
+#define PY_SUBAGENT_DEBUG_TAG _T("sa.python")
 
 /**
  * Plugin information

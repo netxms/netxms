@@ -27,7 +27,7 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 
-#define DEBUG_TAG _T("asterisk")
+#define DEBUG_TAG _T("sa.asterisk")
 
 #define MAX_AMI_TAG_LEN       32
 #define MAX_AMI_SUBTYPE_LEN   64
