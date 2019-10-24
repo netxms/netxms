@@ -1,5 +1,7 @@
-agent.conn      Agent connections
-agent.tunnel    Agent tunnels
+action.*	Server actions
+
+agent.conn	Agent connections
+agent.tunnel	Agent tunnels
 
 alarm.*		Alarm management
 
@@ -16,6 +18,7 @@ db.*		Database related
 db.drv.*	Database drivers related
 db.drv.mariadb	MariaDB driver
 db.drv.oracle	Oracle driver
+db.cache	Caching of DB tables on start-up
 db.conn		DB connections
 db.cpool	DB connection pool
 db.query	SQL query trace
@@ -24,14 +27,17 @@ db.writer	DB background writers
 dload		Debug output of dynamic library loading functions
 
 event.*		Event related messages
-event.corr      Event correlation
+event.corr	Event correlation
 event.policy	Event processing policy
 event.proc	Event processor
+
+import.*	Server configuration import
 
 init.*		Generic process or library initialization
 
 java.*		Java components
 java.bridge	Java bridge library
+java.runtime	Java runtime
 
 job.*		Server jobs related
 job.manager	Job manager
@@ -40,36 +46,59 @@ housekeeper	Housekeeper messages
 
 logwatch.*	Messages from log monitoring library
 
-ndd.*		Network device drivers
+nc.*		Notification channels
+
+ncd.*		Notification channel drivers
+
+ndd.*           Network device drivers
 
 node.agent	Node agent (connections, etc.)
 node.poller	Node poller
 
-obj.*		Object related trace
+npe.*		Prediction engines
+npe.tsre	Time series regression engine
+
+obj.*		Object related
 obj.dc.*	Data collection related
 obj.locks.*	Locks
 obj.netmap	Network maps
+obj.poll.node	New node poll
 obj.sync	Object synchronization
 
 pdsdrv.*	Performance data storage drivers
+pdsdrv.influxdb	InfluxDB performance data storage driver
 
 poll.*		Polling
 poll.conf	Configuration poll
 poll.discovery	Network discovery
+poll.icmp	ICMP poll
+poll.manager	Polling manager
 poll.node	New node poll
 poll.route	Routing table poll
 poll.status	Status poll
 poll.topo	Topology poll
 
-proc.*          Process related trace
-proc.spexec     Sub-process executor
+proc.*		Process related trace
+proc.spexec	Sub-process executor
+
+proxy		Proxy related (in agent log)
 
 sa.*		Sub-agent related messages
-sa.aix          AIX platform subagent messages
+sa.aix		AIX platform subagent messages
+sa.asterisk	Asterisk subagent messages
 sa.freebsd	FreeBSD platform subagent messages
+sa.mysql	MySQL monitoring subagent messages
 sa.ping		Ping subagent
+sa.portcheck	Portcheck subagent messages
+sa.python	Python subagent messages
+sa.tuxedo	Tuxedo subagent messages
+sa.ups		UPS subagent messages
+sa.winnt	WINNT subagent messages
+
+smbios		SMBIOS related messages
 
 snmp.*		SNMP related messages
+snmp.discovery	
 snmp.entity	Entity MIB processing
 snmp.lib	SNMP library low-level diagnostic
 snmp.trap	SNMP trap processing
@@ -78,10 +107,17 @@ statcoll	Internal server statistic collector
 
 sync		Syncer messages
 
+syslog		Syslog server related messages
+
 threads.*	Thread related
 
 topo.*		Topology related
+topo.arp	ARP topology
 topo.ipv4	IPv4 topology
+
+tunnel		Tunnel (in agent log)
+
+xmpp		XMPP notifications
 
 zone.*		Zone related
 zone.proxy	Zone proxy related
