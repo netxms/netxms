@@ -20,7 +20,7 @@
 
 #include "mysql_subagent.h"
 
-#define DEBUG_TAG _T("mysql")
+#define DEBUG_TAG _T("sa.mysql")
 
 /**
  * Data to query
