@@ -394,7 +394,7 @@ void SummaryTable::createExportRecord(StringBuffer &xml) const
 }
 
 /**
- * Query summary table
+ * Query summary table. If ad-hoc definition is provided it will be deleted by this function.
  */
 Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc)
 {
@@ -402,11 +402,13 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
    if (object == NULL)
    {
       *rcc = RCC_INVALID_OBJECT_ID;
+      delete adHocDefinition;
       return NULL;
    }
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
    {
       *rcc = RCC_ACCESS_DENIED;
+      delete adHocDefinition;
       return NULL;
    }
    if ((object->getObjectClass() != OBJECT_CONTAINER) && (object->getObjectClass() != OBJECT_CLUSTER) &&
@@ -414,6 +416,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
        (object->getObjectClass() != OBJECT_ZONE) && (object->getObjectClass() != OBJECT_NETWORK))
    {
       *rcc = RCC_INCOMPATIBLE_OPERATION;
+      delete adHocDefinition;
       return NULL;
    }
 
@@ -434,7 +437,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
 
       if (tableDefinition->filter((DataCollectionTarget *)obj))
       {
-         ((DataCollectionTarget *)obj)->getDciValuesSummary(tableDefinition, tableData, userId);
+         static_cast<DataCollectionTarget*>(obj)->getDciValuesSummary(tableDefinition, tableData, userId);
       }
       obj->decRefCount();
    }
