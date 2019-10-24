@@ -232,25 +232,6 @@ extern "C" void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter wri
 /**
  * Format current time for output
  */
-static char *FormatLogTimestamp(char *buffer)
-{
-   INT64 now = GetCurrentTimeMs();
-   time_t t = now / 1000;
-#if HAVE_LOCALTIME_R
-   struct tm ltmBuffer;
-   struct tm *loc = localtime_r(&t, &ltmBuffer);
-#else
-   struct tm *loc = localtime(&t);
-#endif
-   strftime(buffer, 32, "%Y.%m.%d %H:%M:%S", loc);
-   snprintf(&buffer[19], 8, ".%03d", (int)(now % 1000));
-   return buffer;
-}
-
-
-/**
- * Format current time for output
- */
 static TCHAR *FormatLogTimestamp(TCHAR *buffer)
 {
 	INT64 now = GetCurrentTimeMs();
@@ -587,24 +568,28 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
       {
 			s_flags |= NXLOG_IS_OPEN;
 
-
+         TCHAR buffer[32];
          if (s_flags & NXLOG_BACKGROUND_WRITER)
          {
-            char buffer[32];
+#ifdef UNICODE
+#define TIMESTAMP_FORMAT_SPECIFIER  "%ls"
+#else
+#define TIMESTAMP_FORMAT_SPECIFIER  "%s"
+#endif
             if(s_flags & NXLOG_JSON_FORMAT)
             {
-               fprintf(s_logFileHandle, "\n{\"timestamp\":\"%s\",\"severity\":\"info\",\"tag\":\"\",\"message\":\"Log file opened (rotation policy %d, max size " INT64_FMTA ")\"}\n",
+               fprintf(s_logFileHandle, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"info\",\"tag\":\"\",\"message\":\"Log file opened (rotation policy %d, max size " INT64_FMTA ")\"}\n",
                       FormatLogTimestamp(buffer), s_rotationMode, s_maxLogSize);
             }
             else
             {
-               fprintf(s_logFileHandle, "\n%s Log file opened (rotation policy %d, max size " UINT64_FMTA ")\n",
-                         FormatLogTimestamp(buffer), s_rotationMode, s_maxLogSize);
+               fprintf(s_logFileHandle, "\n" TIMESTAMP_FORMAT_SPECIFIER " Log file opened (rotation policy %d, max size " UINT64_FMTA ")\n",
+                      FormatLogTimestamp(buffer), s_rotationMode, s_maxLogSize);
             }
+#undef TIMESTAMP_FORMAT_SPECIFIER
          }
          else
          {
-            TCHAR buffer[32];
             if(s_flags & NXLOG_JSON_FORMAT)
             {
                _ftprintf(s_logFileHandle, _T("\n{\"timestamp\":\"%s\",\"severity\":\"info\",\"tag\":\"\",\"message\":\"Log file opened (rotation policy %d, max size ") UINT64_FMT _T(")\"}\n"),
