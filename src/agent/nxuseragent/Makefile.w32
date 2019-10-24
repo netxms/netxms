@@ -1,7 +1,7 @@
 TARGET = nxuseragent.exe
 TYPE = exe
 SUBSYSTEM = WINDOWS
-SOURCES = appwnd.cpp button.cpp comm.cpp config.cpp main.cpp menu.cpp msgwnd.cpp \
+SOURCES = appwnd.cpp button.cpp comm.cpp config.cpp desktop.cpp main.cpp menu.cpp msgwnd.cpp \
           net.cpp notifications.cpp screenshot.cpp session.cpp tray.cpp
 RESOURCES = nxuseragent.rc
 
