@@ -2162,6 +2162,38 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
    {
       value = vm->createValue(event->getCustomMessage());
    }
+   else if (!strcmp(attr, "dci"))
+   {
+      UINT32 dciId = event->getDciId();
+      if (dciId != 0)
+      {
+         NetObj *object = FindObjectById(event->getSourceId());
+         if ((object != NULL) && object->isDataCollectionTarget())
+         {
+            shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId, 0, true);
+            if (dci != NULL)
+            {
+               value = dci->createNXSLObject(vm);
+            }
+            else
+            {
+               value = vm->createValue();
+            }
+         }
+         else
+         {
+            value = vm->createValue();
+         }
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (!strcmp(attr, "dciId"))
+   {
+      value = vm->createValue(event->getDciId());
+   }
    else if (!strcmp(attr, "id"))
    {
       value = vm->createValue(event->getId());
