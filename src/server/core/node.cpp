@@ -2145,11 +2145,18 @@ restart_agent_check:
             // Use TCP ping to check if node actually unreachable if possible
             if (m_ipAddress.isValidUnicast())
             {
+               nxlog_debug(6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
+               sendPollerMsg(rqId, _T("Checking primary IP address with TCP ping on agent's port\r\n"));
                TcpPingResult r = TcpPing(m_ipAddress, m_agentPort, 1000);
                if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
                {
                   nxlog_debug(6, _T("StatusPoll(%s): agent us unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
+                  sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
                   allDown = false;
+               }
+               else
+               {
+                  sendPollerMsg(rqId, POLLER_ERROR _T("   Primary IP address is not responding to TCP ping\r\n"));
                }
             }
          }
@@ -2162,6 +2169,21 @@ restart_agent_check:
           !(m_flags & NF_DISABLE_SNMP) && !(m_state & NSF_SNMP_UNREACHABLE))
       {
          allDown = false;
+      }
+      if (allDown && (m_flags & NF_PING_PRIMARY_IP) && m_ipAddress.isValidUnicast())
+      {
+         nxlog_debug(6, _T("StatusPoll(%s): using ICMP ping on primary IP address"), m_name);
+         sendPollerMsg(rqId, _T("Checking primary IP address with ICMP ping\r\n"));
+         if (IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, NULL, g_icmpPingSize, false) == ICMP_SUCCESS)
+         {
+            nxlog_debug(6, _T("StatusPoll(%s): primary IP address responds to ICMP ping, considering node as reachable"), m_name);
+            sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to ICMP ping\r\n"));
+            allDown = false;
+         }
+         else
+         {
+            sendPollerMsg(rqId, POLLER_ERROR _T("   Primary IP address is not responding to ICMP ping\r\n"));
+         }
       }
 
       nxlog_debug(6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
@@ -2254,7 +2276,7 @@ restart_agent_check:
       m_bootTime = 0;
    }
 
-   // Get agent uptime to check if it was restared
+   // Get agent uptime to check if it was restarted
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
@@ -6111,7 +6133,16 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_FLAGS))
    {
       bool wasRemoteAgent = ((m_flags & NF_REMOTE_AGENT) != 0);
-      m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
+      if (pRequest->isFieldExist(VID_FLAGS_MASK))
+      {
+         UINT32 mask = pRequest->getFieldAsUInt32(VID_FLAGS_MASK);
+         m_flags &= ~mask;
+         m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS);
+      }
+      else
+      {
+         m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
+      }
       if (wasRemoteAgent && !(m_flags & NF_REMOTE_AGENT) && m_ipAddress.isValidUnicast())
       {
          if (IsZoningEnabled())

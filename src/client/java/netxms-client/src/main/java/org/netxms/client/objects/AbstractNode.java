@@ -86,6 +86,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public static final int NF_DISABLE_ROUTE_POLL     = 0x00800000;
    public static final int NF_AGENT_OVER_TUNNEL_ONLY = 0x01000000;
    public static final int NF_SNMP_SETTINGS_LOCKED   = 0x02000000;
+   public static final int NF_PING_PRIMARY_IP        = 0x04000000;
 	
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;
@@ -1005,5 +1006,15 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public boolean isSnmpSettingsLocked()
    {
       return (flags & NF_SNMP_SETTINGS_LOCKED) != 0;      
+   }
+   
+   /**
+    * Check node flags for "Enable ICMP ping on primary IP" flag.
+    * 
+    * @return true if flag is set
+    */
+   public boolean isPingOnPrimaryIPEnabled()
+   {
+      return (flags & NF_PING_PRIMARY_IP) != 0;      
    }
 }

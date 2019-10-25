@@ -46,6 +46,7 @@ public class Communication extends PropertyPage
 	private AbstractNode node;
 	private LabeledText primaryName;
    private Button agentIsRemote;
+   private Button enablePingOnPrimaryIP;
 	private boolean primaryNameChanged = false;
 	
 	/* (non-Javadoc)
@@ -85,6 +86,14 @@ public class Communication extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       agentIsRemote.setLayoutData(gd);
       		
+      enablePingOnPrimaryIP = new Button(dialogArea, SWT.CHECK);
+      enablePingOnPrimaryIP.setText("Use ICMP ping on primary IP address to determine node status");
+      enablePingOnPrimaryIP.setSelection(node.isPingOnPrimaryIPEnabled());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      enablePingOnPrimaryIP.setLayoutData(gd);
+            
 		return dialogArea;
 	}
 
@@ -101,7 +110,7 @@ public class Communication extends PropertyPage
 		{
 			// Validate primary name
 			final String hostName = primaryName.getText().trim();
-			if (!hostName.matches("^(([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
+			if (!hostName.matches("^(([A-Za-z0-9_-]+\\.)*[A-Za-z0-9_-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
 			{
 				MessageDialogHelper.openWarning(getShell(), Messages.get().Communication_Warning, 
 				      String.format(Messages.get().Communication_WarningInvalidHostname, hostName));
@@ -118,9 +127,13 @@ public class Communication extends PropertyPage
          flags |= AbstractNode.NF_REMOTE_AGENT;
       else
          flags &= ~AbstractNode.NF_REMOTE_AGENT;
-		md.setObjectFlags(flags, AbstractNode.NF_REMOTE_AGENT);
+      if (enablePingOnPrimaryIP.getSelection())
+         flags |= AbstractNode.NF_PING_PRIMARY_IP;
+      else
+         flags &= ~AbstractNode.NF_PING_PRIMARY_IP;
+		md.setObjectFlags(flags, AbstractNode.NF_REMOTE_AGENT | AbstractNode.NF_PING_PRIMARY_IP);
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().Communication_JobName, node.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

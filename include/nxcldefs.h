@@ -224,6 +224,7 @@
 #define NF_DISABLE_ROUTE_POLL     0x00800000
 #define NF_AGENT_OVER_TUNNEL_ONLY 0x01000000
 #define NF_SNMP_SETTINGS_LOCKED   0x02000000
+#define NF_PING_PRIMARY_IP        0x04000000
 
 /**
  * Data Collection flags first half of int

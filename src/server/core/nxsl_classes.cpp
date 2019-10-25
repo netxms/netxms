@@ -775,16 +775,26 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
 /**
  * Generic implementation for flag changing methods
  */
-static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, UINT32 flag)
+static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, UINT32 flag, bool invert)
 {
    if (!arg->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   Node *node = (Node *)object->getData();
-   if (arg->getValueAsInt32())
-      node->clearFlag(flag);
+   Node *node = static_cast<Node*>(object->getData());
+   if (arg->isTrue())
+   {
+      if (invert)
+         node->clearFlag(flag);
+      else
+         node->setFlag(flag);
+   }
    else
-      node->setFlag(flag);
+   {
+      if (invert)
+         node->setFlag(flag);
+      else
+         node->clearFlag(flag);
+   }
 
    *result = object->vm()->createValue();
    return 0;
@@ -816,7 +826,7 @@ NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
  */
 NXSL_METHOD_DEFINITION(Node, enableAgent)
 {
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NXCP);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NXCP, true);
 }
 
 /**
@@ -824,7 +834,7 @@ NXSL_METHOD_DEFINITION(Node, enableAgent)
  */
 NXSL_METHOD_DEFINITION(Node, enableConfigurationPolling)
 {
-   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_CONF_POLL);
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_CONF_POLL, true);
 }
 
 /**
@@ -832,7 +842,7 @@ NXSL_METHOD_DEFINITION(Node, enableConfigurationPolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableDiscoveryPolling)
 {
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_DISCOVERY_POLL);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_DISCOVERY_POLL, true);
 }
 
 /**
@@ -840,7 +850,15 @@ NXSL_METHOD_DEFINITION(Node, enableDiscoveryPolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableIcmp)
 {
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ICMP);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ICMP, true);
+}
+
+/**
+ * enablePrimaryIPPing(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enablePrimaryIPPing)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_PING_PRIMARY_IP, false);
 }
 
 /**
@@ -848,7 +866,7 @@ NXSL_METHOD_DEFINITION(Node, enableIcmp)
  */
 NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
 {
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ROUTE_POLL);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ROUTE_POLL, true);
 }
 
 /**
@@ -856,7 +874,7 @@ NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableSnmp)
 {
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SNMP);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SNMP, true);
 }
 
 /**
@@ -864,7 +882,7 @@ NXSL_METHOD_DEFINITION(Node, enableSnmp)
  */
 NXSL_METHOD_DEFINITION(Node, enableStatusPolling)
 {
-   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_STATUS_POLL);
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_STATUS_POLL, true);
 }
 
 /**
@@ -872,7 +890,7 @@ NXSL_METHOD_DEFINITION(Node, enableStatusPolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 {
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_TOPOLOGY_POLL);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_TOPOLOGY_POLL, true);
 }
 
 /**
@@ -1008,6 +1026,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
+   NXSL_REGISTER_METHOD(Node, enablePrimaryIPPing, 1);
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);
