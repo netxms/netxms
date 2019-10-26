@@ -4,6 +4,7 @@
 
 - Can enable usage of ICMP ping on primary IP address during status poll
 - New attributes "dci" and "dciId" in NXSL class "Event"
+- Added physical links inventory for node interfaces and patch pannels
 - Fixed issues:
 	NX-1687 (User agent system tray menu closes when you click out of it)
 
