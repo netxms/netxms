@@ -309,7 +309,7 @@ static bool H_UpgradeFromV101()
       for (int i = 0; i < count; i++)
       {
          DBGetField(hResult, i, 0, driver, 64);
-         if(driver[0] == FS_PATH_SEPARATOR_CHAR || (driver[0] >= _T('a') && driver[0] <= _T('z')))
+         if(driver[0] == FS_PATH_SEPARATOR_CHAR || (driver[0] >= _T('a') && driver[0] <= _T('z')) || (driver[0] >= _T('0') && driver[0] <= _T('9')))
          {
             DBGetField(hResult, i, 1, name, 64);
             fixNeeded = true;
