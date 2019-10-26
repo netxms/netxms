@@ -2465,7 +2465,7 @@ NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
  */
 void NXSL_AlarmClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (Alarm *)object->getData();
+   delete static_cast<Alarm*>(object->getData());
 }
 
 /**
@@ -2570,7 +2570,7 @@ NXSL_AlarmCommentClass::NXSL_AlarmCommentClass() : NXSL_Class()
  */
 void NXSL_AlarmCommentClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (AlarmComment *)object->getData();
+   delete static_cast<AlarmComment*>(object->getData());
 }
 
 /**
@@ -2602,11 +2602,32 @@ NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *pObject, const char *at
 }
 
 /**
+ * DCI::forcePoll() method
+ */
+NXSL_METHOD_DEFINITION(DCI, forcePoll)
+{
+   DCObjectInfo *dci = static_cast<DCObjectInfo*>(object->getData());
+   NetObj *dcTarget = FindObjectById(dci->getOwnerId());
+   if ((dcTarget != NULL) && dcTarget->isDataCollectionTarget())
+   {
+      shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(dcTarget)->getDCObjectById(dci->getId(), 0, true);
+      if (dcObject != NULL)
+      {
+         dcObject->requestForcePoll(NULL);
+      }
+   }
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Implementation of "DCI" class: constructor
  */
 NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 {
    setName(_T("DCI"));
+
+   NXSL_REGISTER_METHOD(DCI, forcePoll, 0);
 }
 
 /**

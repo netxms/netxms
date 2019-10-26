@@ -89,6 +89,7 @@ DCObject::DCObject()
    m_transformationScript = NULL;
    m_lastScriptErrorReport = 0;
    m_comments = NULL;
+   m_doForcePoll = false;
    m_pollingSession = NULL;
    m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceFilterSource = NULL;
@@ -128,7 +129,8 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 	m_snmpPort = src->m_snmpPort;
 	m_comments = MemCopyString(src->m_comments);
-	m_pollingSession = src->m_pollingSession;
+	m_doForcePoll = false;
+	m_pollingSession = NULL;
 
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
@@ -182,6 +184,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_transformationScript = NULL;
    m_lastScriptErrorReport = 0;
    m_comments = NULL;
+   m_doForcePoll = false;
    m_pollingSession = NULL;
    m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceFilterSource = NULL;
@@ -230,6 +233,7 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
 	m_transformationScript = NULL;
    m_lastScriptErrorReport = 0;
    m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
+   m_doForcePoll = false;
    m_pollingSession = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
 
@@ -618,7 +622,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
       return false;
    }
 
-   if ((m_pollingSession != NULL) && !m_busy)
+   if (m_doForcePoll && !m_busy)
    {
       if ((m_status != ITEM_STATUS_DISABLED) &&
           isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
@@ -631,8 +635,12 @@ bool DCObject::isReadyForPolling(time_t currTime)
       {
          // DCI cannot be force polled at the moment, clear force poll request
          nxlog_debug(6, _T("Forced poll of DC object %s [%d] on node %s [%d] cancelled"), m_name.cstr(), m_id, m_owner->getName(), m_owner->getId());
-         m_pollingSession->decRefCount();
-         m_pollingSession = NULL;
+         if (m_pollingSession != NULL)
+         {
+            m_pollingSession->decRefCount();
+            m_pollingSession = NULL;
+         }
+         m_doForcePoll = false;
          unlock();
          return false;
       }
@@ -1196,6 +1204,7 @@ ClientSession *DCObject::processForcePoll()
    lock();
    ClientSession *session = m_pollingSession;
    m_pollingSession = NULL;
+   m_doForcePoll = false;
    unlock();
    return session;
 }
@@ -1209,7 +1218,9 @@ void DCObject::requestForcePoll(ClientSession *session)
    if (m_pollingSession != NULL)
       m_pollingSession->decRefCount();
    m_pollingSession = session;
-   m_pollingSession->incRefCount();
+   if (m_pollingSession != NULL)
+      m_pollingSession->incRefCount();
+   m_doForcePoll = true;
    unlock();
 }
 

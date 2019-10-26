@@ -2,10 +2,12 @@
 * 3.1
 *
 
+- Added physical links inventory for node interfaces and patch panels
 - Can enable usage of ICMP ping on primary IP address during status poll
 - New attributes "dci" and "dciId" in NXSL class "Event"
-- Added physical links inventory for node interfaces and patch pannels
+- New method "forcePoll" in NXSL class "DCI"
 - Fixed issues:
+	NX-1674 (Initiate DCI forced poll from NXSL)
 	NX-1687 (User agent system tray menu closes when you click out of it)
 
 

@@ -252,7 +252,8 @@ protected:
    NXSL_Program *m_transformationScript;  // Compiled transformation script
    time_t m_lastScriptErrorReport;
 	TCHAR *m_comments;
-	ClientSession *m_pollingSession;
+	bool m_doForcePoll;                    // Force poll indicator
+	ClientSession *m_pollingSession;       // Force poll requestor session
    WORD m_instanceDiscoveryMethod;
    SharedString m_instanceDiscoveryData;
    TCHAR *m_instanceFilterSource;
@@ -367,7 +368,7 @@ public:
 
    ClientSession *processForcePoll();
    void requestForcePoll(ClientSession *session);
-   ClientSession *getPollingSession() { return m_pollingSession; }
+   bool isForcePollRequested() { return m_doForcePoll; }
 	bool prepareForDeletion();
 
 	WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
