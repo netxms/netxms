@@ -63,7 +63,7 @@ public:
    void updateId() { m_id = CreateUniqueId(IDG_PHYSICAL_LINK); }
 };
 
-static AbstractIndex<std::shared_ptr<PhysicalLink>> s_physicalLinks(true);
+static AbstractIndex<shared_ptr<PhysicalLink>> s_physicalLinks(true);
 
 /**
  * Physical link constructor from database
@@ -273,7 +273,7 @@ bool LoadPhysicalLinks()
    for(int i = 0; i < count; i++)
    {
       PhysicalLink *link = new PhysicalLink(result, i);
-      s_physicalLinks.put(link->getId(), new std::shared_ptr<PhysicalLink>(link));
+      s_physicalLinks.put(link->getId(), new shared_ptr<PhysicalLink>(link));
    }
    DBFreeResult(result);
 
@@ -315,7 +315,7 @@ struct FillMessageCallbackData
 /**
  * Fill message with link information
  */
-void FillMessageCallback(std::shared_ptr<PhysicalLink> *pLink, FillMessageCallbackData *data)
+static void FillMessageCallback(shared_ptr<PhysicalLink> *pLink, FillMessageCallbackData *data)
 {
    bool rightFirst = false;
    PhysicalLink *link = pLink->get();
@@ -388,7 +388,7 @@ void GetObjectPhysicalLinks(NetObj *obj, UINT32 userId, UINT32 patchPannelId, NX
 /**
  * Find objects, that should be deleted
  */
-bool FindPLinksForDeletionCallback(std::shared_ptr<PhysicalLink> *link, void *data)
+static bool FindPLinksForDeletionCallback(shared_ptr<PhysicalLink> *link, void *data)
 {
    UINT32 *id = reinterpret_cast<UINT32 *>(data);
    if((*link)->getLeftObjectId() == *id || (*link)->getRightObjectId() == *id)
@@ -401,9 +401,9 @@ bool FindPLinksForDeletionCallback(std::shared_ptr<PhysicalLink> *link, void *da
 /**
  * Find objects, that should be deleted
  */
-bool FindPLinksForDeletionCallback2(std::shared_ptr<PhysicalLink> *link, void *data)
+static bool FindPLinksForDeletionCallback2(shared_ptr<PhysicalLink> *link, void *data)
 {
-   std::pair<UINT32, UINT32> *pair = reinterpret_cast<std::pair<UINT32, UINT32> *>(data);
+   auto pair = reinterpret_cast<std::pair<UINT32, UINT32>*>(data);
    if ((*link)->getLeftObjectId() == pair->first || (*link)->getRightObjectId() == pair->first)
    {
       if ((*link)->getLeftPatchPannelId() == pair->second || (*link)->getRightPatchPanelId() == pair->second)
@@ -439,7 +439,7 @@ void DeleteObjectFromPhysicalLinks(UINT32 id)
  */
 void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPannelId)
 {
-   std::pair<UINT32, UINT32> pair = std::pair<UINT32, UINT32>(rackId, patchPannelId);
+   auto pair = std::pair<UINT32, UINT32>(rackId, patchPannelId);
    ObjectArray<shared_ptr<PhysicalLink>> *objectsForDeletion = s_physicalLinks.findObjects(FindPLinksForDeletionCallback2, &pair);
    bool modified = false;
    for(int i = 0; i < objectsForDeletion->size(); i++)
@@ -486,7 +486,7 @@ bool AddLink(NXCPMessage *msg, UINT32 userId)
 
    if (link->getId() != 0)
    {
-      std::shared_ptr<PhysicalLink> oldLink = *s_physicalLinks.get(link->getId());
+      shared_ptr<PhysicalLink> oldLink = *s_physicalLinks.get(link->getId());
       if(!CheckAccess(oldLink->getLeftObjectId(), userId) || !CheckAccess(oldLink->getRightObjectId(), userId))
       {
          return false;
@@ -511,7 +511,7 @@ bool AddLink(NXCPMessage *msg, UINT32 userId)
  */
 bool DeleteLink(UINT32 id, UINT32 userId)
 {
-   std::shared_ptr<PhysicalLink> link = *s_physicalLinks.get(id);
+   shared_ptr<PhysicalLink> link = *s_physicalLinks.get(id);
    bool accessLeft = CheckAccess(link->getLeftObjectId(), userId);
    bool accessRight = CheckAccess(link->getRightObjectId(), userId);
 
