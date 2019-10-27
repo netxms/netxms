@@ -69,6 +69,11 @@ UINT GetHotKey(UINT *modifiers)
 TCHAR *g_desktopWallpaper = NULL;
 
 /**
+ * Main window position
+ */
+MainWindowPosition g_mainWindowPosition;
+
+/**
  * Application icon
  */
 static HICON s_appIcon = NULL;
@@ -205,6 +210,16 @@ void LoadConfig()
       else
       {
          memcpy(s_colors, s_defaultColors, sizeof(s_colors));
+      }
+
+      int pos = config.getValueAsInt(_T("/mainWindowPosition"), 0);
+      if ((pos >= 0x11) && (pos <= 0x33) && ((pos & 15) >= 1) && ((pos & 15) <= 3) && ((pos >> 4) >= 1) && ((pos >> 4) <= 3))
+      {
+         g_mainWindowPosition = static_cast<MainWindowPosition>(pos);
+      }
+      else
+      {
+         g_mainWindowPosition = MainWindowPosition::AUTOMATIC;
       }
 
       LoadMenuItems(&config);

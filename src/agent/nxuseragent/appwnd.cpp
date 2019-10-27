@@ -354,6 +354,59 @@ static POINT CalculateRequiredSize()
 }
 
 /**
+ * Calculate application window position
+ */
+static POINT CalculateAppWindowPosition(MainWindowPosition position, POINT size, POINT pt, DWORD *animateFlags)
+{
+   HMONITOR monitor = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
+
+   MONITORINFO mi;
+   mi.cbSize = sizeof(MONITORINFO);
+   GetMonitorInfo(monitor, &mi);
+
+   POINT wpos;
+   if (position == MainWindowPosition::AUTOMATIC)
+   {
+      wpos.x = (mi.rcWork.right - size.x - 5 >= pt.x) ? pt.x : mi.rcWork.right - size.x - 5;
+      wpos.y = mi.rcWork.bottom - size.y - 5;
+      *animateFlags = (wpos.x >= pt.x) ? AW_VER_NEGATIVE | AW_HOR_POSITIVE : AW_VER_NEGATIVE;
+   }
+   else
+   {
+      *animateFlags = (position == MainWindowPosition::MIDDLE_CENTER) ? AW_CENTER : 0;
+      switch (static_cast<int>(position) & 15)
+      {
+         case 1:  // Left
+            wpos.x = 5;
+            *animateFlags = *animateFlags | AW_HOR_POSITIVE;
+            break;
+         case 2:  // Center
+            wpos.x = mi.rcWork.right - (mi.rcWork.right - mi.rcWork.left) / 2 - size.x / 2;
+            break;
+         case 3:  // Right
+            wpos.x = mi.rcWork.right - size.x - 5;
+            *animateFlags = *animateFlags | AW_HOR_NEGATIVE;
+            break;
+      }
+      switch (static_cast<int>(position) >> 4)
+      {
+         case 1:  // Top
+            wpos.y = 5;
+            *animateFlags = *animateFlags | AW_VER_POSITIVE;
+            break;
+         case 2:  // Middle
+            wpos.y = mi.rcWork.bottom - (mi.rcWork.bottom - mi.rcWork.top) / 2 - size.y / 2;
+            break;
+         case 3:  // Bottom
+            wpos.y = mi.rcWork.bottom - size.y - 5;
+            *animateFlags = *animateFlags | AW_VER_NEGATIVE;
+            break;
+      }
+   }
+   return wpos;
+}
+
+/**
  * Open application window
  */
 void OpenApplicationWindow(POINT pt, bool hotkeyOpen)
@@ -373,28 +426,13 @@ void OpenApplicationWindow(POINT pt, bool hotkeyOpen)
       g_reloadConfig = false;
    }
 
-   HMONITOR monitor = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
-
-   MONITORINFO mi;
-   mi.cbSize = sizeof(MONITORINFO);
-   GetMonitorInfo(monitor, &mi);
-
    POINT size = CalculateRequiredSize();
-   int hpos, vpos;
-   if (hotkeyOpen)
-   {
-      hpos = mi.rcWork.right - (mi.rcWork.right - mi.rcWork.left) / 2 - size.x / 2;
-      vpos = mi.rcWork.bottom - (mi.rcWork.bottom - mi.rcWork.top) / 2 - size.y / 2;
-   }
-   else
-   {
-      hpos = (mi.rcWork.right - size.x - 5 >= pt.x) ? pt.x : mi.rcWork.right - size.x - 5;
-      vpos = mi.rcWork.bottom - size.y - 5;
-   }
+   DWORD animateFlags;
+   POINT pos = CalculateAppWindowPosition((hotkeyOpen && (g_mainWindowPosition == MainWindowPosition::AUTOMATIC)) ? MainWindowPosition::MIDDLE_CENTER : g_mainWindowPosition, size, pt, &animateFlags);
    s_hWnd = CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_TOOLWINDOW, APP_WINDOW_CLASS_NAME,
       _T("NetXMS User Agent"),
       WS_POPUP,
-      hpos, vpos, size.x, size.y, NULL, NULL, g_hInstance, NULL);
+      pos.x, pos.y, size.x, size.y, NULL, NULL, g_hInstance, NULL);
 
    // Create close button. It will be destroyed by WM_DESTROY handler of main window
    RECT rect;
@@ -405,7 +443,7 @@ void OpenApplicationWindow(POINT pt, bool hotkeyOpen)
    s_closeButton = new Button(s_hWnd, rect, _T("\x2716"), true, CloseApplicationWindow);
 
    ActivateMenuItem(s_hWnd, NULL);
-   if (!AnimateWindow(s_hWnd, 160, hotkeyOpen ? AW_CENTER : ((hpos >= pt.x) ? AW_VER_NEGATIVE | AW_HOR_POSITIVE : AW_VER_NEGATIVE)))
+   if (!AnimateWindow(s_hWnd, 160, animateFlags))
    {
       TCHAR buffer[1024];
       nxlog_debug(7, _T("OpenApplicationWindow(%d,%d): AnimateWindow failed: %s"), pt.x, pt.y, GetSystemErrorText(GetLastError(), buffer, 1024));

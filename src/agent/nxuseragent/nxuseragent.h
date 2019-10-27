@@ -42,6 +42,23 @@
 #define MENU_ITEM_CLASS_NAME  _T("NetXMS_UA_MenuItem")
 
 /**
+ * Main window positions
+ */
+enum class MainWindowPosition
+{
+   AUTOMATIC = 0,
+   TOP_LEFT = 0x11,
+   TOP_CENTER = 0x12,
+   TOP_RIGHT = 0x13,
+   MIDDLE_LEFT = 0x21,
+   MIDDLE_CENTER = 0x22,
+   MIDDLE_RIGHT = 0x23,
+   BOTTOM_LEFT = 0x31,
+   BOTTOM_CENTER = 0x32,
+   BOTTOM_RIGHT = 0x33
+};
+
+/**
  * Color identifiers
  */
 enum ApplicationColorId
@@ -207,5 +224,6 @@ extern bool g_reloadConfig;
 extern bool g_connectedToAgent;
 extern bool g_closeOnDeactivate;
 extern TCHAR *g_desktopWallpaper;
+extern MainWindowPosition g_mainWindowPosition;
 
 #endif
