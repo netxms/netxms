@@ -135,7 +135,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 0,  31, 1,  H_UpgradeFromV0 },
+   { 0,  31, 1, H_UpgradeFromV0 },
    { 0,  0,  0, NULL }
 };
 
@@ -160,7 +160,7 @@ bool MajorSchemaUpgrade_V31()
          _tprintf(_T("Unable to find upgrade procedure for version 30.%d\n"), minor);
          return false;
       }
-      _tprintf(_T("Upgrading from version 30.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
+      _tprintf(_T("Upgrading from version 31.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
       DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {

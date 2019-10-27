@@ -23,9 +23,8 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
 /**
- * Upgrade from 30.101 to 31.0
+ * Upgrade from 30.102 to 31.0
  */
 static bool H_UpgradeFromV102()
 {

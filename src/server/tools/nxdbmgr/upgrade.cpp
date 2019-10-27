@@ -41,8 +41,12 @@ bool SetMajorSchemaVersion(INT32 nextMajor, INT32 nextMinor)
    if (!DBGetSchemaVersion(g_dbHandle, &currMajor, &currMinor))
       return false;
 
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionLevel.%d','%d')"), currMajor, currMinor);
+   TCHAR var[64], query[256];
+   _sntprintf(var, 64, _T("SchemaVersionLevel.%d"), currMajor);
+   if (IsDatabaseRecordExist(g_dbHandle, _T("metadata"), _T("var_name"), var))
+      _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='%s'"), currMinor, var);
+   else
+      _sntprintf(query, 256, _T("INSERT INTO metadata (var_name,var_value) VALUES ('%s','%d')"), var, currMinor);
    if (!SQLQuery(query))
       return false;
 
@@ -82,8 +86,12 @@ INT32 GetSchemaLevelForMajorVersion(INT32 major)
  */
 bool SetSchemaLevelForMajorVersion(INT32 major, INT32 level)
 {
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersionLevel.%d'"), level, major);
+   TCHAR var[64], query[256];
+   _sntprintf(var, 64, _T("SchemaVersionLevel.%d"), major);
+   if (IsDatabaseRecordExist(g_dbHandle, _T("metadata"), _T("var_name"), var))
+      _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='%s'"), level, var);
+   else
+      _sntprintf(query, 256, _T("INSERT INTO metadata (var_name,var_value) VALUES ('%s','%d')"), var, level);
    return SQLQuery(query);
 }
 
