@@ -279,7 +279,7 @@ struct TagListCallbackData
 static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *value, TagListCallbackData *data)
 {
    int pmatch[9];
-   if (_pcre_exec_t(data->preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(key), _tcslen(key), 0, 0, pmatch, 9) >= 2) // MATCH
+   if (_pcre_exec_t(data->preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, pmatch, 9) >= 2) // MATCH
    {
       size_t slen = pmatch[3] - pmatch[2];
       TCHAR *s = MemAllocString(slen + 1);

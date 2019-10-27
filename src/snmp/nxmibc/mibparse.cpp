@@ -30,13 +30,13 @@
 static MP_OBJECT *CreateObject(const char *pszName, DWORD dwId)
 {
    MP_OBJECT *pObject = new MP_OBJECT;
-   pObject->pszName = strdup(pszName);
+   pObject->pszName = MemCopyStringA(pszName);
    pObject->iType = MIBC_OBJECT;
 
    MP_SUBID *pSubId = new MP_SUBID;
    pSubId->bResolved = TRUE;
    pSubId->dwValue = dwId;
-   pSubId->pszName = strdup(pszName);
+   pSubId->pszName = MemCopyStringA(pszName);
    pObject->pOID->add(pSubId);
    
    return pObject;
@@ -272,7 +272,7 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
    {
       pObject->iSyntax = pType->iSyntax;
 		if (pType->iType == MIBC_TEXTUAL_CONVENTION)
-         pObject->pszTextualConvention = (pType->pszDescription != NULL) ? strdup(pType->pszDescription) : NULL;
+         pObject->pszTextualConvention = MemCopyStringA(pType->pszDescription);
    }
    else
    {

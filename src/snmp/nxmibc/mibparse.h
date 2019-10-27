@@ -98,7 +98,7 @@ public:
    MP_SUBID(MP_SUBID *src)
    {
       dwValue = src->dwValue;
-      pszName = (src->pszName != NULL) ? strdup(src->pszName) : NULL;
+      pszName = MemCopyStringA(src->pszName);
       bResolved = src->bResolved;
    }
 

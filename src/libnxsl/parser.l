@@ -244,7 +244,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <STR>\"		{
 			BEGIN INITIAL;
 			yyextra->m_szStr[yyextra->m_nStrSize] = 0;
-			yylval->valStr = strdup(yyextra->m_szStr);
+			yylval->valStr = MemCopyStringA(yyextra->m_szStr);
 			return T_STRING;
 		}
 <STR>\r		;

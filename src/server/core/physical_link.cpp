@@ -260,9 +260,9 @@ bool LoadPhysicalLinks()
 {
    nxlog_debug(1, _T("Loading physical links"));
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    DB_RESULT result = DBSelect(hdb, _T("SELECT id,description,left_object_id,left_patch_pannel_id,left_port_number,left_front,")
             _T("right_object_id,right_patch_pannel_id,right_port_number,right_front FROM physical_links"));
-
    if (result == NULL)
    {
       DBConnectionPoolReleaseConnection(hdb);

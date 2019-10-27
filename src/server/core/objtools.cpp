@@ -289,7 +289,7 @@ static void GetAgentList(TOOL_STARTUP_INFO *toolData)
                         for(int i = 0; i < values->size(); i++)
                         {
                            const TCHAR *line = values->get(i);
-                           if (_pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), _tcslen(line), 0, 0, pMatchList, (numCols + 1) * 3) >= 0)
+                           if (_pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, pMatchList, (numCols + 1) * 3) >= 0)
                            {
                               table.addRow();
 

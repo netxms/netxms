@@ -701,7 +701,7 @@ static void ParseRange(const char *attr, int *start, int *end)
    if (tmpS == NULL)
       return;
 
-   char *tmpAttr = strdup(tmpS + 1);
+   char *tmpAttr = MemCopyStringA(tmpS + 1);
    char *tmpE = strchr(tmpAttr, '-');
    if (tmpE == NULL)
    {

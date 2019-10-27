@@ -1070,7 +1070,7 @@ static bool ObjectNameRegexAndClassFilter(NetObj *object, std::pair<int, PCRE*> 
    int ovector[30];
    return !object->isDeleted() &&
           (object->getObjectClass() == context->first) &&
-          (_pcre_exec_t(context->second, NULL, reinterpret_cast<const PCRE_TCHAR*>(object->getName()), _tcslen(object->getName()), 0, 0, ovector, 30) >= 0);
+          (_pcre_exec_t(context->second, NULL, reinterpret_cast<const PCRE_TCHAR*>(object->getName()), static_cast<int>(_tcslen(object->getName())), 0, 0, ovector, 30) >= 0);
 }
 
 /**

@@ -305,6 +305,7 @@
     <ClCompile Include="objtools.cpp" />
     <ClCompile Include="package.cpp" />
     <ClCompile Include="pds.cpp" />
+    <ClCompile Include="physical_link.cpp" />
     <ClCompile Include="poll.cpp" />
     <ClCompile Include="ps.cpp" />
     <ClCompile Include="rack.cpp" />

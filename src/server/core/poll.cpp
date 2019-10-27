@@ -644,12 +644,12 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
 
       time_t now = time(NULL);
 
-      int interval = ConfigReadInt(_T("NetworkDiscovery.ActiveDiscovery.Interval"), 7200);
+      UINT32 interval = ConfigReadULong(_T("NetworkDiscovery.ActiveDiscovery.Interval"), 7200);
       if (interval != 0)
       {
-         if (now - lastRun < interval)
+         if (static_cast<UINT32>(now - lastRun) < interval)
          {
-            sleepTime = (interval - (lastRun - now)) * 1000;
+            sleepTime = (interval - static_cast<UINT32>(lastRun - now)) * 1000;
             continue;
          }
       }

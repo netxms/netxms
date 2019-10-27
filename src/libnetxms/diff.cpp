@@ -264,7 +264,7 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
       ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, true);
       const String longtext = text1.length() > text2.length() ? text1 : text2;
       const String shorttext = text1.length() > text2.length() ? text2 : text1;
-      const int i = longtext.find(shorttext);
+      const ssize_t i = longtext.find(shorttext);
       if (i != String::npos)
       {
          // Shorter text is inside the longer text (speedup).
@@ -637,7 +637,7 @@ size_t DiffEngine::diff_commonOverlap(const String &text1, const String &text2)
    while(true)
    {
       String pattern = text1_trunc.right(length);
-      int found = text2_trunc.find(pattern);
+      ssize_t found = text2_trunc.find(pattern);
       if (found == String::npos)
       {
          return best;
@@ -722,7 +722,7 @@ StringList *DiffEngine::diff_halfMatchI(const String &longtext, const String &sh
 {
    // Start with a 1/4 length substring at position i as a seed.
    const String seed = safeMid(longtext, i, (int)(longtext.length() / 4));
-   int j = -1;
+   ssize_t j = -1;
    StringBuffer best_common;
    StringBuffer best_longtext_a, best_longtext_b;
    StringBuffer best_shorttext_a, best_shorttext_b;

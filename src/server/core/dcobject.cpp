@@ -364,12 +364,12 @@ bool DCObject::matchClusterResource()
  */
 StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 {
-	int index = 0, index2;
+	ssize_t index = 0;
 	StringBuffer dst = src;
 	while((index = dst.find(_T("%{"), index)) != String::npos)
 	{
 		String head = dst.substring(0, index);
-		index2 = dst.find(_T("}"), index);
+		ssize_t index2 = dst.find(_T("}"), index);
 		if (index2 == String::npos)
 			break;	// Missing closing }
 

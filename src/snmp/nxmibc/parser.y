@@ -825,47 +825,47 @@ BuiltInTypeAssignment:
     IP_ADDRESS_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_IPADDR);
-   $$->pszStr = strdup("IpAddress");
+   $$->pszStr = MemCopyStringA("IpAddress");
 }
 |   OPAQUE_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_OPAQUE);
-   $$->pszStr = strdup("Opaque");
+   $$->pszStr = MemCopyStringA("Opaque");
 }
 |   INTEGER32_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_INTEGER32);
-   $$->pszStr = strdup("Integer32");
+   $$->pszStr = MemCopyStringA("Integer32");
 }
 |   UNSIGNED32_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_UNSIGNED32);
-   $$->pszStr = strdup("Unsigned32");
+   $$->pszStr = MemCopyStringA("Unsigned32");
 }
 |   TIMETICKS_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_TIMETICKS);
-   $$->pszStr = strdup("TimeTicks");
+   $$->pszStr = MemCopyStringA("TimeTicks");
 }
 |   COUNTER_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_COUNTER);
-   $$->pszStr = strdup("Counter");
+   $$->pszStr = MemCopyStringA("Counter");
 }
 |   COUNTER32_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_COUNTER32);
-   $$->pszStr = strdup("Counter32");
+   $$->pszStr = MemCopyStringA("Counter32");
 }
 |   COUNTER64_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_COUNTER64);
-   $$->pszStr = strdup("Counter64");
+   $$->pszStr = MemCopyStringA("Counter64");
 }
 |   GAUGE32_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_GAUGE32);
-   $$->pszStr = strdup("Gauge32");
+   $$->pszStr = MemCopyStringA("Gauge32");
 }
 ;
 

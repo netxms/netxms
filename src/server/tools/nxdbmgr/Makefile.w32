@@ -4,7 +4,8 @@ COMPONENT = server
 SOURCES = check.cpp clear.cpp datacoll.cpp export.cpp import.cpp init.cpp migrate.cpp \
           mm.cpp modules.cpp nxdbmgr.cpp reindex.cpp resetadmin.cpp tables.cpp \
           tdata_convert.cpp unlock.cpp upgrade.cpp upgrade_online.cpp \
-          upgrade_v0.cpp upgrade_v21.cpp upgrade_v22.cpp upgrade_v30.cpp	
+          upgrade_v0.cpp upgrade_v21.cpp upgrade_v22.cpp upgrade_v30.cpp \
+          upgrade_v31.cpp
 GENERATED = tables.cpp
 
 CPPFLAGS = /I$(NETXMS_BASE)\src\sqlite

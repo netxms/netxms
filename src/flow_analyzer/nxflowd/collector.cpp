@@ -96,7 +96,7 @@ static struct
 
 static int H_DataRecord(ipfixs_node_t *node, ipfixt_node_t *trec, ipfix_datarecord_t *data, void *arg) 
 {
-	String fields, values;
+	StringBuffer fields, values;
 	char buffer[256];
 	INT64 flowStartTime = 0, flowEndTime = 0;
 
@@ -163,7 +163,7 @@ static int H_DataRecord(ipfixs_node_t *node, ipfixt_node_t *trec, ipfix_datareco
 
 	if (!fields.isEmpty() && (flowStartTime != 0) && (flowEndTime != 0))
 	{
-		String query = _T("INSERT INTO flows (flow_id,start_time,end_time");
+		StringBuffer query = _T("INSERT INTO flows (flow_id,start_time,end_time");
 		query += (const TCHAR *)fields;
 		query.appendFormattedString(_T(") VALUES (") INT64_FMT _T(",") INT64_FMT _T(",") INT64_FMT, s_flowId++, flowStartTime, flowEndTime);
 		query += (const TCHAR *)values;

@@ -78,7 +78,7 @@ void ExecuteStartupScripts();
 void CloseAgentTunnels();
 void StopDataCollection();
 void StopObjectMaintenanceThreads();
-void LoadPhysicalLinks();
+bool LoadPhysicalLinks();
 
 void ExecuteScheduledAction(const ScheduledTaskParameters *parameters);
 void ExecuteScheduledScript(const ScheduledTaskParameters *parameters);
@@ -1028,11 +1028,13 @@ retry_db_lock:
 	FileUploadJob::init();
 	InitMappingTables();
 
-	//Initialize user agent messages
 	InitUserAgentNotifications();
 
-	//Load physical links
-	LoadPhysicalLinks();
+   if (!LoadPhysicalLinks())
+   {
+      nxlog_write(NXLOG_ERROR, _T("Unable to load physical links"));
+      return FALSE;
+   }
 
    InitClientListeners();
    int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);

@@ -187,7 +187,7 @@ MacAddress MacAddress::parse(const char *str)
    if (compRegex != NULL)
    {
       int ovector[30];
-      int cgcount = pcre_exec(compRegex, NULL, str, strlen(str), 0, 0, ovector, 30);
+      int cgcount = pcre_exec(compRegex, NULL, str, static_cast<int>(strlen(str)), 0, 0, ovector, 30);
       if (cgcount >= 7) // at least 6 elements
       {
          for(int i = 1; i < cgcount; i++)
@@ -200,7 +200,7 @@ MacAddress MacAddress::parse(const char *str)
          pcre *compRegex = pcre_compile(exp2, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, NULL);
          if (compRegex != NULL)
          {
-            cgcount = pcre_exec(compRegex, NULL, str, strlen(str), 0, 0, ovector, 30);
+            cgcount = pcre_exec(compRegex, NULL, str, static_cast<int>(strlen(str)), 0, 0, ovector, 30);
             if (cgcount == 5)
             {
                for(int i = 1; i < cgcount; i++)
