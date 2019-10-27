@@ -8,6 +8,7 @@
 - New method "forcePoll" in NXSL class "DCI"
 - Fixed issues:
 	NX-1674 (Initiate DCI forced poll from NXSL)
+	NX-1686 (User Agent system tray menu covered by Windows system tray expanded hidden icon menu)
 	NX-1687 (User agent system tray menu closes when you click out of it)
 
 

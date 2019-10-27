@@ -13,6 +13,12 @@ import org.simpleframework.xml.core.Persister;
 public class SupportAppPolicy
 {
    @Element(required=false)
+   public boolean closeOnDeactivate = false;
+
+   @Element(required=false)
+   public Integer mainWindowPosition = null;
+   
+   @Element(required=false)
    public boolean customColorSchema = false;
 
    @Element(required=false)

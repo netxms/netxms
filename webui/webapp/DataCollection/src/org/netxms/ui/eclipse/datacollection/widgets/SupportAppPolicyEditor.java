@@ -47,6 +47,7 @@ import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
@@ -78,6 +79,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    public static final int ICON = 3;
    
    private static final int[] IMAGE_SIZE = { 128, 64, 32, 16 };
+   private static final Integer[] WINDOW_POSITION_CODES = { null, 0, 0x11, 0x12, 0x13, 0x21, 0x22, 0x23, 0x31, 0x32, 0x33 }; 
    
    private ColorSelector backgroundColor;
    private ColorSelector borderColor;
@@ -89,6 +91,8 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private ColorSelector menuTextColor;
    private Text welcomeMessageText;
    private Button customColorSchemaCheckbox;
+   private Button closeOnDeactivateCheckbox;
+   private Combo windowPositioning;
    private Action addSubMenuAction;
    private Action addItemAction;
    private Action deleteAction;
@@ -99,6 +103,20 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private Image[] iconPreview = new Image[4];
    private byte[] iconFile = null;
 
+   /**
+    * Get window position index from configuration value
+    *
+    * @param value window position code
+    * @return window position index
+    */
+   private static int windowPositionIndexFromValue(Integer value)
+   {
+      for(int i = 0; i < WINDOW_POSITION_CODES.length; i++)
+         if (value == WINDOW_POSITION_CODES[i])
+            return i;
+      return 0;   // Undefined for unknown values
+   }
+  
    /**
     * Constructor
     * 
@@ -168,6 +186,28 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       gd.horizontalSpan = 2;
       welcomeMessageText.setLayoutData(gd);
       
+      Group windowBehaviorGroup = new Group(topArea, SWT.NONE);
+      windowBehaviorGroup.setText("Window behavior");
+      windowBehaviorGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+      windowBehaviorGroup.setLayout(new GridLayout());
+      
+      closeOnDeactivateCheckbox = new Button(windowBehaviorGroup, SWT.CHECK);
+      closeOnDeactivateCheckbox.setText("Close on &deactivate");
+      
+      windowPositioning = WidgetHelper.createLabeledCombo(windowBehaviorGroup, SWT.DROP_DOWN | SWT.READ_ONLY, "Positioning", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      windowPositioning.add("Undefined");
+      windowPositioning.add("Automatic");
+      windowPositioning.add("Top - Left");
+      windowPositioning.add("Top - Center");
+      windowPositioning.add("Top - Right");
+      windowPositioning.add("Middle - Left");
+      windowPositioning.add("Middle - Center");
+      windowPositioning.add("Middle - Right");
+      windowPositioning.add("Bottom - Left");
+      windowPositioning.add("Bottom - Center");
+      windowPositioning.add("Bottom - Right");
+      windowPositioning.select(0);
+      
       final String[] columnNames = { "Name", "Display name", "Command", "Icon" };
       final int[] columnWidths = { 300, 300, 300, 300 };         
       viewer = new SortableTreeViewer(this, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
@@ -187,21 +227,21 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       
       updateControlsFromPolicy();      
 
-      IPropertyChangeListener listener = new IPropertyChangeListener() {
+      IPropertyChangeListener colorChangeListener = new IPropertyChangeListener() {
          @Override
          public void propertyChange(PropertyChangeEvent event)
          {
             fireModifyListeners();
          }
       };
-      backgroundColor.addListener(listener); 
-      textColor.addListener(listener);
-      borderColor.addListener(listener); 
-      highlightColor.addListener(listener); 
-      menuBackgroundColor.addListener(listener); 
-      menuTextColor.addListener(listener); 
-      menuHighligtColor.addListener(listener); 
-      menuSelectionColor.addListener(listener);
+      backgroundColor.addListener(colorChangeListener); 
+      textColor.addListener(colorChangeListener);
+      borderColor.addListener(colorChangeListener); 
+      highlightColor.addListener(colorChangeListener); 
+      menuBackgroundColor.addListener(colorChangeListener); 
+      menuTextColor.addListener(colorChangeListener); 
+      menuHighligtColor.addListener(colorChangeListener); 
+      menuSelectionColor.addListener(colorChangeListener);
 
       welcomeMessageText.addModifyListener(new ModifyListener() {
          @Override
@@ -233,6 +273,22 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
             widgetSelected(e);
          }
       });
+      
+      SelectionListener selectionListener = new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            fireModifyListeners();
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      };
+      closeOnDeactivateCheckbox.addSelectionListener(selectionListener);
+      windowPositioning.addSelectionListener(selectionListener);
       
       createActions();
       createPopupMenu();
@@ -573,6 +629,9 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuSelectionColor.setEnabled(policyData.customColorSchema);
 
       welcomeMessageText.setText(policyData.welcomeMessage != null ? policyData.welcomeMessage : "");
+      
+      closeOnDeactivateCheckbox.setSelection(policyData.closeOnDeactivate);
+      windowPositioning.select(windowPositionIndexFromValue(policyData.mainWindowPosition));
 
       viewer.setInput(new Object[] { policyData.menu });
    }
@@ -595,6 +654,9 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       policyData.menuHighligtColor = ColorConverter.rgbToInt(menuHighligtColor.getColorValue());
       policyData.menuSelectionColor = ColorConverter.rgbToInt(menuSelectionColor.getColorValue());
       policyData.menuTextColor = ColorConverter.rgbToInt(menuTextColor.getColorValue());
+      
+      policyData.closeOnDeactivate = closeOnDeactivateCheckbox.getSelection();
+      policyData.mainWindowPosition = WINDOW_POSITION_CODES[windowPositioning.getSelectionIndex()];
       
       try
       {
