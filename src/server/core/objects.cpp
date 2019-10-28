@@ -329,8 +329,8 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 				      }
 				      else
 				      {
-					      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
-					                (int)((Node *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
+					      nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"),
+					               static_cast<Node*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
 				      }
                }
                else
@@ -355,24 +355,24 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             break;
          case OBJECT_SUBNET:
             g_idxSubnetById.put(pObject->getId(), pObject);
-            if (((Subnet *)pObject)->getIpAddress().isValidUnicast())
+            if (static_cast<Subnet*>(pObject)->getIpAddress().isValidUnicast())
             {
 					if (IsZoningEnabled())
 					{
-						Zone *zone = (Zone *)g_idxZoneByUIN.get(((Subnet *)pObject)->getZoneUIN());
+						Zone *zone = (Zone *)g_idxZoneByUIN.get(static_cast<Subnet*>(pObject)->getZoneUIN());
 						if (zone != NULL)
 						{
 							zone->addToIndex((Subnet *)pObject);
 						}
 						else
 						{
-							DbgPrintf(2, _T("Cannot find zone object with GUID=%d for subnet object %s [%d]"),
-							          (int)((Subnet *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
+						   nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for subnet object %s [%u]"),
+						            static_cast<Subnet*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
 						}
 					}
 					else
 					{
-						g_idxSubnetByAddr.put(((Subnet *)pObject)->getIpAddress(), pObject);
+						g_idxSubnetByAddr.put(static_cast<Subnet*>(pObject)->getIpAddress(), pObject);
 					}
                if (newObject)
                {
@@ -393,19 +393,19 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 						}
 						else
 						{
-							DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
-							          (int)((Interface *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
+							nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for interface object %s [%u]"),
+							         static_cast<Interface*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
 						}
 					}
 					else
 					{
-						g_idxInterfaceByAddr.put(((Interface *)pObject)->getIpAddressList(), pObject);
+						g_idxInterfaceByAddr.put(static_cast<Interface*>(pObject)->getIpAddressList(), pObject);
 					}
             }
-            MacDbAddInterface((Interface *)pObject);
+            MacDbAddInterface(static_cast<Interface*>(pObject));
             break;
          case OBJECT_ZONE:
-				g_idxZoneByUIN.put(((Zone *)pObject)->getUIN(), pObject);
+				g_idxZoneByUIN.put(static_cast<Zone*>(pObject)->getUIN(), pObject);
             break;
          case OBJECT_CONDITION:
 				g_idxConditionById.put(pObject->getId(), pObject);
