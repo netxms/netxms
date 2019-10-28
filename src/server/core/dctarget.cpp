@@ -460,6 +460,11 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
 {
    if (removeDCI)
    {
+      if (getObjectClass() == OBJECT_NODE)
+      {
+         Template *obj = (Template *)FindObjectById(dwTemplateId, OBJECT_TEMPLATE);
+         obj->removeAllPolicies((Node *)this);
+      }
       lockDciAccess(true);  // write lock
 
 		UINT32 *deleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
