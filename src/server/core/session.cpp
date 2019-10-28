@@ -82,7 +82,7 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList);
 
 void GetObjectPhysicalLinks(NetObj *obj, UINT32 userId, UINT32 patchPannelId, NXCPMessage *msg);
-bool AddLink(NXCPMessage *msg, UINT32 userId);
+UINT32 AddLink(NXCPMessage *msg, UINT32 userId);
 bool DeleteLink(UINT32 id, UINT32 userId);
 
 /**
@@ -15271,15 +15271,21 @@ void ClientSession::updatePhysicalLink(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (AddLink(request, getUserId()))
+   UINT32 rcc = AddLink(request, getUserId());
+
+   if (rcc == RCC_SUCCESS)
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
       WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("%d physical link updated"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
    }
-   else
+   else if (rcc == RCC_ACCESS_DENIED)
    {
       WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on %d physical link update"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ENDPOINT_ALREADY_IN_USE);
    }
 
    sendMessage(&msg);

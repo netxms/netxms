@@ -52,10 +52,14 @@ public:
    UINT32 getId() const { return m_id; }
    UINT32 getLeftObjectId() const { return m_leftObjectId; }
    UINT32 getLeftParentId() const { return m_leftInterfaceParent; }
-   UINT32 getLeftPatchPannelId() const { return m_leftPatchPannelId; }
+   UINT32 getLeftPatchPanelId() const { return m_leftPatchPannelId; }
+   UINT32 getLeftPortNumber() const { return m_leftPortNumber; }
+   bool isLeftFront() const { return m_leftFront; }
    UINT32 getRightObjectId() const { return m_rightObjectId; }
    UINT32 getRightParentId() const { return m_rightInterfaceParent; }
    UINT32 getRightPatchPanelId() const { return m_rightPatchPannelId; }
+   UINT32 getRightPortNumber() const { return m_rightPortNumber; }
+   bool isRightFront() const { return m_rightFront; }
 
    json_t *toJson() const;
    void saveToDatabase();
@@ -326,7 +330,7 @@ static void FillMessageCallback(shared_ptr<PhysicalLink> *pLink, FillMessageCall
             data->filter->indexOf(link->getLeftParentId()) == -1)
          return;
 
-      if(data->patchPanelId != 0 && link->getLeftPatchPannelId() != data->patchPanelId && link->getRightPatchPanelId() != data->patchPanelId)
+      if(data->patchPanelId != 0 && link->getLeftPatchPanelId() != data->patchPanelId && link->getRightPatchPanelId() != data->patchPanelId)
          return;
    }
    //check access
@@ -406,7 +410,7 @@ static bool FindPLinksForDeletionCallback2(shared_ptr<PhysicalLink> *link, void 
    auto pair = reinterpret_cast<std::pair<UINT32, UINT32>*>(data);
    if ((*link)->getLeftObjectId() == pair->first || (*link)->getRightObjectId() == pair->first)
    {
-      if ((*link)->getLeftPatchPannelId() == pair->second || (*link)->getRightPatchPanelId() == pair->second)
+      if ((*link)->getLeftPatchPanelId() == pair->second || (*link)->getRightPatchPanelId() == pair->second)
          return true;
    }
    return false;
@@ -460,7 +464,7 @@ void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPannelId)
  */
 static bool CheckAccess(UINT32 objId, UINT32 userId)
 {
-   bool hasAccess = false;
+   bool hasAccess = true;
 
    NetObj *obj = FindObjectById(objId);
    if(obj != NULL)
@@ -469,19 +473,83 @@ static bool CheckAccess(UINT32 objId, UINT32 userId)
    return hasAccess;
 }
 
+struct EndPointSearchData
+{
+   PhysicalLink *link;
+   NetObj *leftObject;
+   NetObj *rightObject;
+};
+
+static bool CompareLinkSides(UINT32 objectId1, UINT32 patchPanelId1, UINT32 port1, bool frontSide1, UINT32 objectId2, UINT32 patchPanelId2, UINT32 port2, bool frontSide2, bool isRack)
+{
+   if(objectId1 == objectId2)
+   {
+      if(isRack)
+      {
+         if(patchPanelId1 == patchPanelId2 && port1 == port2 && frontSide1 == frontSide2)
+            return true;
+      }
+      else
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+/**
+ * Find object with the same endpoint
+ */
+static bool FindPLinksWithSameEndpoint(shared_ptr<PhysicalLink> *link, void *data)
+{
+   EndPointSearchData *tmp = reinterpret_cast<EndPointSearchData *>(data);
+   if((*link)->getId() == tmp->link->getId())
+      return false;
+
+   if(CompareLinkSides((*link)->getLeftObjectId(), (*link)->getLeftPatchPanelId(), (*link)->getLeftPortNumber(), (*link)->isLeftFront(),
+         tmp->link->getLeftObjectId(), tmp->link->getLeftPatchPanelId(), tmp->link->getLeftPortNumber(), tmp->link->isLeftFront(), tmp->leftObject->getObjectClass() == OBJECT_RACK) ||
+      CompareLinkSides((*link)->getRightObjectId(), (*link)->getRightPatchPanelId(), (*link)->getRightPortNumber(), (*link)->isRightFront(),
+         tmp->link->getLeftObjectId(), tmp->link->getLeftPatchPanelId(), tmp->link->getLeftPortNumber(), tmp->link->isLeftFront(), tmp->leftObject->getObjectClass() == OBJECT_RACK) ||
+      CompareLinkSides((*link)->getLeftObjectId(), (*link)->getLeftPatchPanelId(), (*link)->getLeftPortNumber(), (*link)->isLeftFront(),
+         tmp->link->getRightObjectId(), tmp->link->getRightPatchPanelId(), tmp->link->getRightPortNumber(), tmp->link->isRightFront(), tmp->rightObject->getObjectClass() == OBJECT_RACK) ||
+      CompareLinkSides((*link)->getRightObjectId(), (*link)->getRightPatchPanelId(), (*link)->getRightPortNumber(), (*link)->isRightFront(),
+         tmp->link->getRightObjectId(), tmp->link->getRightPatchPanelId(), tmp->link->getRightPortNumber(), tmp->link->isRightFront(), tmp->rightObject->getObjectClass() == OBJECT_RACK) )
+   {
+      return true;
+   }
+   return false;
+}
+
 /**
  * Add new physical link
  */
-bool AddLink(NXCPMessage *msg, UINT32 userId)
+UINT32 AddLink(NXCPMessage *msg, UINT32 userId)
 {
    auto link = make_shared<PhysicalLink>(msg);
 
-   bool accessLeft = CheckAccess(link->getLeftObjectId(), userId);
-   bool accessRight = CheckAccess(link->getRightObjectId(), userId);
+   bool accessLeft = false;
+   NetObj *leftObject = FindObjectById(link->getLeftObjectId());
+   if(leftObject != NULL)
+   {
+      leftObject->incRefCount();
+      accessLeft = leftObject->checkAccessRights(userId, OBJECT_ACCESS_READ);
+   }
+
+   bool accessRight = false;
+   NetObj *rightObject = FindObjectById(link->getRightObjectId());
+   if(rightObject != NULL)
+   {
+      rightObject->incRefCount();
+      accessRight = rightObject->checkAccessRights(userId, OBJECT_ACCESS_READ);
+   }
 
    if (!accessLeft || !accessRight)
    {
-      return false;
+      if(leftObject != NULL)
+         leftObject->decRefCount();
+      if(rightObject != NULL)
+         rightObject->decRefCount();
+      return RCC_ACCESS_DENIED;
    }
 
    if (link->getId() != 0)
@@ -489,9 +557,28 @@ bool AddLink(NXCPMessage *msg, UINT32 userId)
       shared_ptr<PhysicalLink> oldLink = *s_physicalLinks.get(link->getId());
       if(!CheckAccess(oldLink->getLeftObjectId(), userId) || !CheckAccess(oldLink->getRightObjectId(), userId))
       {
-         return false;
+         leftObject->decRefCount();
+         rightObject->decRefCount();
+         return RCC_ACCESS_DENIED;
       }
    }
+
+   //check for duplicate
+   EndPointSearchData epd;
+   epd.link = link.get();
+   epd.leftObject = leftObject;
+   epd.rightObject = rightObject;
+   ObjectArray<shared_ptr<PhysicalLink>> *matchedObjects = s_physicalLinks.findObjects(FindPLinksWithSameEndpoint, &epd);
+   leftObject->decRefCount();
+   rightObject->decRefCount();
+   if(matchedObjects->size() > 0 ||
+         CompareLinkSides(link->getRightObjectId(), link->getRightPatchPanelId(), link->getRightPortNumber(), link->isRightFront(),
+                  link->getLeftObjectId(), link->getLeftPatchPanelId(), link->getLeftPortNumber(), link->isLeftFront(), rightObject->getObjectClass() == OBJECT_RACK))
+   {
+      delete matchedObjects;
+      return RCC_ENDPOINT_ALREADY_IN_USE;
+   }
+   delete matchedObjects;
 
    if(link->getId() == 0)
       link->updateId();
@@ -503,7 +590,7 @@ bool AddLink(NXCPMessage *msg, UINT32 userId)
    NotifyClientSessions(NX_NOTIFY_PHYSICAL_LINK_UPDATE, 0);
 
    ThreadPoolExecuteSerialized(g_clientThreadPool, PL_THREAD_KEY, link, &PhysicalLink::saveToDatabase);
-   return true;
+   return RCC_SUCCESS;
 }
 
 /**
