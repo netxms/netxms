@@ -891,6 +891,8 @@ public:
    void deleteObject(NetObj *initiator = NULL);     // Prepare object for deletion
    void destroy();   // Destroy partially loaded object
 
+   void updateObjectIndexes();
+
    bool isHidden() { return m_isHidden; }
    void hide();
    void unhide();

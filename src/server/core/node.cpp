@@ -3045,6 +3045,13 @@ struct DeleteDuplicateNodeData
       duplicateNode = duplicate;
       reason = MemCopyString(_reason);
    }
+
+   ~DeleteDuplicateNodeData()
+   {
+      originalNode->decRefCount();
+      duplicateNode->decRefCount();
+      MemFree(reason);
+   }
 };
 
 /**
@@ -3057,9 +3064,9 @@ static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
             data->duplicateNode->getId(), data->duplicateNode->getName(), data->duplicateNode->getPrimaryName(),
             data->reason);
    data->duplicateNode->deleteObject(NULL);
-   data->duplicateNode->decRefCount();
-   data->originalNode->decRefCount();
-   MemFree(data->reason);
+   // Calling updateObjectIndexes will update all indexes that could be broken
+   // by deleting duplicate IP address entries
+   data->originalNode->updateObjectIndexes();
    delete data;
 }
 
@@ -6154,7 +6161,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
             }
             else
             {
-               DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneUIN, m_name, (int)m_id);
+               nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"), m_zoneUIN, m_name, m_id);
             }
          }
          else
@@ -6173,7 +6180,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
             }
             else
             {
-               DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneUIN, m_name, (int)m_id);
+               nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"), m_zoneUIN, m_name, m_id);
             }
          }
          else
