@@ -318,14 +318,14 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->getId(), pObject);
-            if (!(((Node *)pObject)->getFlags() & NF_REMOTE_AGENT))
+            if (!(static_cast<Node*>(pObject)->getFlags() & NF_REMOTE_AGENT))
             {
 			      if (IsZoningEnabled())
 			      {
-				      Zone *zone = (Zone *)g_idxZoneByUIN.get(((Node *)pObject)->getZoneUIN());
+				      Zone *zone = (Zone *)g_idxZoneByUIN.get(static_cast<Node*>(pObject)->getZoneUIN());
 				      if (zone != NULL)
 				      {
-					      zone->addToIndex((Node *)pObject);
+					      zone->addToIndex(static_cast<Node*>(pObject));
 				      }
 				      else
 				      {
@@ -335,8 +335,8 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
                }
                else
                {
-                  if (((Node *)pObject)->getIpAddress().isValidUnicast())
-					      g_idxNodeByAddr.put(((Node *)pObject)->getIpAddress(), pObject);
+                  if (static_cast<Node*>(pObject)->getIpAddress().isValidUnicast())
+					      g_idxNodeByAddr.put(static_cast<Node*>(pObject)->getIpAddress(), pObject);
                }
             }
             break;
@@ -480,24 +480,24 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->getId());
-         if (!(((Node *)pObject)->getFlags() & NF_REMOTE_AGENT))
+         if (!(static_cast<Node*>(pObject)->getFlags() & NF_REMOTE_AGENT))
          {
 			   if (IsZoningEnabled())
 			   {
-				   Zone *zone = (Zone *)g_idxZoneByUIN.get(((Node *)pObject)->getZoneUIN());
+				   Zone *zone = (Zone *)g_idxZoneByUIN.get(static_cast<Node*>(pObject)->getZoneUIN());
 				   if (zone != NULL)
 				   {
-					   zone->removeFromIndex((Node *)pObject);
+					   zone->removeFromIndex(static_cast<Node*>(pObject));
 				   }
 				   else
 				   {
-					   DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
-					             (int)((Node *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
+					   nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"),
+					            static_cast<Node*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
 				   }
             }
             else
             {
-			      if (((Node *)pObject)->getIpAddress().isValidUnicast())
+			      if (static_cast<Node*>(pObject)->getIpAddress().isValidUnicast())
 				      g_idxNodeByAddr.remove(((Node *)pObject)->getIpAddress());
             }
          }
@@ -657,7 +657,7 @@ static Node *FindNodeByIPInternal(UINT32 zoneUIN, const InetAddress& ipAddr)
    }
    else
    {
-      node = (Node *)g_idxNodeByAddr.get(ipAddr);
+      node = static_cast<Node*>(g_idxNodeByAddr.get(ipAddr));
    }
    if (node != NULL)
       return node;
@@ -672,7 +672,7 @@ static Node *FindNodeByIPInternal(UINT32 zoneUIN, const InetAddress& ipAddr)
    }
    else
    {
-      iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
+      iface = static_cast<Interface*>(g_idxInterfaceByAddr.get(ipAddr));
    }
    return (iface != NULL) ? iface->getParentNode() : NULL;
 }

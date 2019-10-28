@@ -844,7 +844,7 @@ void NetObj::deleteObject(NetObj *initiator)
 
    prepareForDeletion();
 
-   DbgPrintf(5, _T("NetObj::deleteObject(): deleting object %d from indexes"), m_id);
+   nxlog_debug(5, _T("NetObj::deleteObject(): deleting object %d from indexes"), m_id);
    NetObjDeleteFromIndexes(this);
 
    // Delete references to this object from child objects
@@ -877,7 +877,7 @@ void NetObj::deleteObject(NetObj *initiator)
    for(int i = 0; i < m_parentList->size(); i++)
    {
       // If parent is deletion initiator then this object already
-      // removed from parent's list
+      // removed from parent's child list
       NetObj *obj = m_parentList->get(i);
       if (obj != initiator)
       {
@@ -2140,6 +2140,20 @@ Node *NetObj::findChildNode(const InetAddress& addr)
    }
    unlockChildList();
    return node;
+}
+
+/**
+ * Update indexes for this object and all sub-objects
+ */
+void NetObj::updateObjectIndexes()
+{
+   NetObjInsert(this, false, false);
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+   {
+      NetObjInsert(m_childList->get(i), false, false);
+   }
+   unlockChildList();
 }
 
 /**
