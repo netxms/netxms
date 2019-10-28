@@ -1062,29 +1062,38 @@ UINT32 Interface::getParentNodeId()
 }
 
 /**
- * Update zone ID. New zone ID taken from parent node.
+ * Update zone UIN. New zone UIN taken from parent node.
  */
 void Interface::updateZoneUIN()
 {
-	Node *node = getParentNode();
-	if (node != NULL)
-	{
-		// Unregister from old zone
-		Zone *zone = FindZoneByUIN(m_zoneUIN);
-		if (zone != NULL)
-			zone->removeFromIndex(this);
+   Node *node = getParentNode();
+   if (node == NULL)
+      return;
 
-		UINT32 newZoneUIN = node->getZoneUIN();
-		lockProperties();
-		m_zoneUIN = newZoneUIN;
-		setModified(MODIFY_INTERFACE_PROPERTIES);
-		unlockProperties();
+   if (isExcludedFromTopology())
+   {
+      lockProperties();
+      m_zoneUIN = node->getZoneUIN();
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+      return;
+   }
 
-		// Register in new zone
-		zone = FindZoneByUIN(newZoneUIN);
-		if (zone != NULL)
-			zone->addToIndex(this);
-	}
+   // Unregister from old zone
+   Zone *zone = FindZoneByUIN(m_zoneUIN);
+   if (zone != NULL)
+      zone->removeFromIndex(this);
+
+   UINT32 newZoneUIN = node->getZoneUIN();
+   lockProperties();
+   m_zoneUIN = newZoneUIN;
+   setModified(MODIFY_INTERFACE_PROPERTIES);
+   unlockProperties();
+
+   // Register in new zone
+   zone = FindZoneByUIN(newZoneUIN);
+   if (zone != NULL)
+      zone->addToIndex(this);
 }
 
 /**

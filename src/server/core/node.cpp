@@ -6939,20 +6939,25 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
 /**
  * Change node's zone
  */
-void Node::changeZone(UINT32 newZone)
+void Node::changeZone(UINT32 newZoneUIN)
 {
    int i;
 
    _pollerLock();
 
+   // Unregister from old zone
+   Zone *zone = FindZoneByUIN(m_zoneUIN);
+   if (zone != NULL)
+      zone->removeFromIndex(this);
+
    lockProperties();
-   m_zoneUIN = newZone;
+   m_zoneUIN = newZoneUIN;
    m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
    unlockProperties();
 
    // Remove from subnets
    lockParentList(false);
-   NetObj **subnets = (NetObj **)malloc(sizeof(NetObj *) * m_parentList->size());
+   NetObj **subnets = MemAllocArray<NetObj*>(m_parentList->size());
    int count = 0;
    for(i = 0; i < m_parentList->size(); i++)
       if (m_parentList->get(i)->getObjectClass() == OBJECT_SUBNET)
@@ -6964,13 +6969,18 @@ void Node::changeZone(UINT32 newZone)
       deleteParent(subnets[i]);
       subnets[i]->deleteChild(this);
    }
-   free(subnets);
+   MemFree(subnets);
 
-   // Change zone ID on interfaces
+   // Register in new zone
+   zone = FindZoneByUIN(newZoneUIN);
+   if (zone != NULL)
+      zone->addToIndex(this);
+
+   // Change zone UIN on interfaces
    lockChildList(false);
    for(i = 0; i < m_childList->size(); i++)
       if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
-         ((Interface *)m_childList->get(i))->updateZoneUIN();
+         static_cast<Interface*>(m_childList->get(i))->updateZoneUIN();
    unlockChildList();
 
    lockProperties();
