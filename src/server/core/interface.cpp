@@ -1217,7 +1217,7 @@ void Interface::addIpAddress(const InetAddress& addr)
 			}
 			else
 			{
-				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneUIN, m_name, (int)m_id);
+				nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for interface object %s [%u]"), m_zoneUIN, m_name, m_id);
 			}
 		}
 		else

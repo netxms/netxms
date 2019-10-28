@@ -517,7 +517,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
       case OBJECT_SUBNET:
          g_idxSubnetById.remove(pObject->getId());
-         if (((Subnet *)pObject)->getIpAddress().isValidUnicast())
+         if (static_cast<Subnet*>(pObject)->getIpAddress().isValidUnicast())
          {
 				if (IsZoningEnabled())
 				{
@@ -528,13 +528,13 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					}
 					else
 					{
-						DbgPrintf(2, _T("Cannot find zone object with GUID=%d for subnet object %s [%d]"),
-						          (int)((Subnet *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
+					   nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for subnet object %s [%u]"),
+					            static_cast<Subnet*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
 					}
 				}
 				else
 				{
-					g_idxSubnetByAddr.remove(((Subnet *)pObject)->getIpAddress());
+					g_idxSubnetByAddr.remove(static_cast<Subnet*>(pObject)->getIpAddress());
 				}
          }
          break;
@@ -548,8 +548,8 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 				}
 				else
 				{
-					DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
-					          (int)((Interface *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
+					nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for interface object %s [%u]"),
+					         static_cast<Interface*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
 				}
 			}
 			else
