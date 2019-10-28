@@ -581,6 +581,7 @@ void Template::fillPolicyMessage(NXCPMessage *pMsg)
 uuid Template::updatePolicyFromMessage(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_UPDATE_AGENT_POLICY, m_id);
+   bool updated = false;
 
    lockProperties();
 
@@ -593,6 +594,7 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
       {
          policy->modifyFromMessage(request);
          policy->fillUpdateMessage(&msg);
+         updated = true;
       }
       else
       {
@@ -607,14 +609,22 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
       m_policyList->set(curr->getGuid(), curr);
       curr->fillUpdateMessage(&msg);
       guid = curr->getGuid();
+      updated = true;
    }
-   updateVersion();
 
-   setModified(MODIFY_POLICY, false);
+   if (updated)
+   {
+      updateVersion();
+      setModified(MODIFY_POLICY, false);
+   }
 
    unlockProperties();
 
-   NotifyClientsOnPolicyUpdate(&msg, this);
+   if(updated)
+   {
+      msg.setField(VID_TEMPLATE_ID, m_id);
+      NotifyClientsOnPolicyUpdate(&msg, this);
+   }
    return guid;
 }
 
