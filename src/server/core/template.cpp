@@ -510,9 +510,26 @@ void Template::prepareForDeletion()
       NetObj *object = m_childList->get(i);
       if (object->isDataCollectionTarget())
          queueRemoveFromTarget(object->getId(), true);
+      if (object->getObjectClass() == OBJECT_NODE)
+      {
+         removeAllPolicies((Node *)object);
+      }
    }
    unlockChildList();
    super::prepareForDeletion();
+}
+
+void Template::removeAllPolicies(Node *node)
+{
+   Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
+   while(it->hasNext())
+   {
+      GenericAgentPolicy *policy = it->next();
+      ServerJob *job = new PolicyUninstallJob(node, policy->getType(), policy->getGuid(), 0);
+      if (!AddJob(job))
+         delete job;
+   }
+   delete it;
 }
 
 /**
