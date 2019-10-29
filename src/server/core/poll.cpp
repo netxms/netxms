@@ -707,6 +707,11 @@ static void QueueForPolling(NetObj *object, void *data)
    if (IsShutdownInProgress())
       return;
 
+   // Only objects that are not yet completed construction or being
+   // prepared for deletion are hidden, so any kind of polling should not be scheduled
+   if (object->isHidden())
+      return;
+
    TCHAR threadKey[32];
    _sntprintf(threadKey, 32, _T("POLL_%u"), object->getId());
 
@@ -734,7 +739,7 @@ static void QueueForPolling(NetObj *object, void *data)
 	{
 		case OBJECT_NODE:
 			{
-				Node *node = static_cast<Node*>(object);
+				auto node = static_cast<Node*>(object);
 				if (node->lockForRoutePoll())
 				{
 					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for routing table poll"), node->getName(), node->getId());
@@ -759,7 +764,7 @@ static void QueueForPolling(NetObj *object, void *data)
 			break;
 		case OBJECT_CONDITION:
 			{
-			   ConditionObject *cond = static_cast<ConditionObject*>(object);
+			   auto cond = static_cast<ConditionObject*>(object);
 				if (cond->isReadyForPoll())
 				{
 					cond->lockForPoll();
@@ -770,7 +775,7 @@ static void QueueForPolling(NetObj *object, void *data)
 			break;
 		case OBJECT_BUSINESSSERVICE:
 			{
-				BusinessService *service = static_cast<BusinessService*>(object);
+				auto service = static_cast<BusinessService*>(object);
 				if (service->isReadyForPolling())
 				{
 					service->lockForPolling();
