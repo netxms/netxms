@@ -102,7 +102,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 
    const char *errptr;
    int erroffset;
-	pcre *preg = pcre_compile(szMatch, PCRE_EXTENDED | PCRE_CASELESS, &errptr, &erroffset, NULL);
+	pcre *preg = pcre_compile(szMatch, PCRE_COMMON_FLAGS_A | PCRE_CASELESS, &errptr, &erroffset, NULL);
 	if (preg == NULL)
 	{
 		return PC_ERR_BAD_PARAMS;
@@ -194,12 +194,12 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
 #ifdef _WITH_ENCRYPTION
    if (szMatch[0] == 0)
    {
-      strcpy(szMatch, "^HTTP/1.[01] 200 .*");
+      strcpy(szMatch, "^HTTP/(1\\.[01]|2) 200 .*");
    }
 
    const char *errptr;
    int erroffset;
-   pcre *preg = pcre_compile(szMatch, PCRE_EXTENDED | PCRE_CASELESS, &errptr, &erroffset, NULL);
+   pcre *preg = pcre_compile(szMatch, PCRE_COMMON_FLAGS_A | PCRE_CASELESS, &errptr, &erroffset, NULL);
    if (preg == NULL)
    {
       return PC_ERR_BAD_PARAMS;
