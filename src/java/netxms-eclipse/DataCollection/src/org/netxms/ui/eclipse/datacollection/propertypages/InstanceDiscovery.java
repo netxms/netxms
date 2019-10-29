@@ -205,6 +205,8 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 			case DataCollectionObject.IDM_SNMP_WALK_VALUES:
 			case DataCollectionObject.IDM_SNMP_WALK_OIDS:
 				return Messages.get().InstanceDiscovery_BaseOid;
+			case DataCollectionObject.IDM_SCRIPT:
+			   return "Script name";
 		}
 		return ""; //$NON-NLS-1$
 	}
