@@ -1810,7 +1810,7 @@ void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList,
 }
 
 /**
- * Hide object and all its childs
+ * Hide object and all its children
  */
 void NetObj::hide()
 {
