@@ -713,11 +713,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  ComponentTree *components = ((Node *)pObject)->getComponents();
+                  shared_ptr<ComponentTree> components = static_cast<Node*>(pObject)->getComponents();
                   if (components != NULL)
                   {
                      components->print(pCtx);
-                     components->decRefCount();
                   }
                   else
                   {

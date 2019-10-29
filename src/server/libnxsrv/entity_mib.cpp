@@ -31,19 +31,13 @@
 class NXSL_ComponentHandle
 {
 public:
-   ComponentTree *tree;
+   shared_ptr<ComponentTree> tree;
    Component *component;
 
-   NXSL_ComponentHandle(ComponentTree *t, Component *c)
+   NXSL_ComponentHandle(shared_ptr<ComponentTree> t, Component *c)
    {
       tree = t;
       component = c;
-      t->incRefCount();
-   }
-
-   ~NXSL_ComponentHandle()
-   {
-      tree->decRefCount();
    }
 
    NXSL_Array *getChildrenForNXSL(NXSL_VM *vm)
@@ -61,7 +55,7 @@ ComponentTree::ComponentTree(Component *root)
 }
 
 /**
- * Componnet tree destructor
+ * Component tree destructor
  */
 ComponentTree::~ComponentTree()
 {
@@ -92,9 +86,9 @@ bool ComponentTree::equals(const ComponentTree *t) const
 /**
  * Get root component as NXSL object
  */
-NXSL_Value *ComponentTree::getRootForNXSL(NXSL_VM *vm)
+NXSL_Value *ComponentTree::getRootForNXSL(NXSL_VM *vm, shared_ptr<ComponentTree> tree)
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, new NXSL_ComponentHandle(this, m_root)));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, new NXSL_ComponentHandle(tree, tree->m_root)));
 }
 
 /**
@@ -347,11 +341,11 @@ static UINT32 EntityWalker(SNMP_Variable *var, SNMP_Transport *transport, void *
 /**
  * Build components tree for given node
  */
-ComponentTree LIBNXSRV_EXPORTABLE *BuildComponentTree(SNMP_Transport *snmp, const TCHAR *debugInfo)
+shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport *snmp, const TCHAR *debugInfo)
 {
 	nxlog_debug_tag(DEBUG_TAG, 5, _T("Building component tree for %s"), debugInfo);
 	ObjectArray<Component> elements(16, 16);
-	ComponentTree *tree = NULL;
+	shared_ptr<ComponentTree> tree;
 	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements) == SNMP_ERR_SUCCESS)
 	{
 	   nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): %d elements found"), debugInfo, elements.size());
@@ -367,7 +361,8 @@ ComponentTree LIBNXSRV_EXPORTABLE *BuildComponentTree(SNMP_Transport *snmp, cons
 		if (root != NULL)
 		{
 			root->buildTree(&elements);
-			tree = new ComponentTree(root);
+			tree = make_shared<ComponentTree>(root);
+		   nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildComponentTree(%s [%d]): component tree created successfully"), debugInfo);
 		}
 		else
 		{
@@ -380,7 +375,6 @@ ComponentTree LIBNXSRV_EXPORTABLE *BuildComponentTree(SNMP_Transport *snmp, cons
 	   nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): SNMP WALK failed"), debugInfo);
 		elements.setOwner(true);	// cause element destruction on exit
 	}
-	nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildComponentTree(%s [%d]): %p"), debugInfo, tree);
 	return tree;
 }
 

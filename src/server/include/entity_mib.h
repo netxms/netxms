@@ -93,14 +93,14 @@ public:
 /**
  * Node component tree
  */
-class LIBNXSRV_EXPORTABLE ComponentTree : public RefCountObject
+class LIBNXSRV_EXPORTABLE ComponentTree
 {
 private:
    Component *m_root;
 
 public:
    ComponentTree(Component *root);
-   virtual ~ComponentTree();
+   ~ComponentTree();
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
    void print(ServerConsole *console) const { if (m_root != NULL) m_root->print(console, 0); }
@@ -109,13 +109,13 @@ public:
    const Component *getRoot() const { return m_root; }
    bool equals(const ComponentTree *t) const;
 
-   NXSL_Value *getRootForNXSL(NXSL_VM *vm);
+   static NXSL_Value *getRootForNXSL(NXSL_VM *vm, shared_ptr<ComponentTree> tree);
 };
 
 /**
  * Build component tree form entity MIB
  */
-ComponentTree LIBNXSRV_EXPORTABLE *BuildComponentTree(SNMP_Transport *snmp, const TCHAR *debugInfo);
+shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport *snmp, const TCHAR *debugInfo);
 
 /**
  * NXSL "Component" class

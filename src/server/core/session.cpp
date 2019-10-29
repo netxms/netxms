@@ -12905,12 +12905,11 @@ void ClientSession::getNodeComponents(NXCPMessage *request)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-			ComponentTree *components = node->getComponents();
+			shared_ptr<ComponentTree> components = node->getComponents();
 			if (components != NULL)
 			{
 				msg.setField(VID_RCC, RCC_SUCCESS);
 				components->fillMessage(&msg, VID_COMPONENT_LIST_BASE);
-				components->decRefCount();
 			}
 			else
 			{

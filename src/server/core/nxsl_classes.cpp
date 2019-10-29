@@ -1101,11 +1101,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (!strcmp(attr, "components"))
    {
-      ComponentTree *components = node->getComponents();
+      shared_ptr<ComponentTree> components = node->getComponents();
       if (components != NULL)
       {
-         value = components->getRootForNXSL(vm);
-         components->decRefCount();
+         value = ComponentTree::getRootForNXSL(vm, components);
       }
       else
       {

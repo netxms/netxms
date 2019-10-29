@@ -2543,7 +2543,7 @@ protected:
 	NetworkMapObjectList *m_topology;
 	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;
-	ComponentTree *m_components;		// Hardware components
+	shared_ptr<ComponentTree> m_components;		// Hardware components
 	ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
    ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
 	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
@@ -2782,7 +2782,7 @@ public:
 	shared_ptr<VlanList> getVlans();
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
-	ComponentTree *getComponents();
+	shared_ptr<ComponentTree> getComponents();
    bool getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
    void showLLDPInfo(CONSOLE_CTX console);
 

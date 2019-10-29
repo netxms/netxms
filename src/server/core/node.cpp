@@ -149,7 +149,6 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_totalApCount = 0;
    m_driver = NULL;
    m_driverData = NULL;
-   m_components = NULL;
    m_softwarePackages = NULL;
    m_hardwareComponents = NULL;
    m_winPerfObjects = NULL;
@@ -262,7 +261,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_totalApCount = 0;
    m_driver = NULL;
    m_driverData = NULL;
-   m_components = NULL;
    m_softwarePackages = NULL;
    m_hardwareComponents = NULL;
    m_winPerfObjects = NULL;
@@ -319,8 +317,6 @@ Node::~Node()
    if (m_fdb != NULL)
       m_fdb->decRefCount();
    delete m_wirelessStations;
-   if (m_components != NULL)
-      m_components->decRefCount();
    MemFree(m_lldpNodeId);
    delete m_lldpLocalPortInfo;
    delete m_softwarePackages;
@@ -606,7 +602,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
                if (root != NULL)
                {
                   root->buildTree(&elements);
-                  m_components = new ComponentTree(root);
+                  m_components = make_shared<ComponentTree>(root);
                }
                else
                {
@@ -3965,15 +3961,14 @@ bool Node::confPollSnmp(UINT32 rqId)
 
       TCHAR debugInfo[256];
       _sntprintf(debugInfo, 256, _T("%s [%u]"), m_name, m_id);
-      ComponentTree *components = BuildComponentTree(pTransport, debugInfo);
+      shared_ptr<ComponentTree> components = BuildComponentTree(pTransport, debugInfo);
       lockProperties();
       if (m_components != NULL)
       {
-         if ((components == NULL) || !components->equals(m_components))
+         if ((components == NULL) || !components->equals(m_components.get()))
          {
             setModified(MODIFY_COMPONENTS, false);
          }
-         m_components->decRefCount();
       }
       else if (components != NULL)
       {
@@ -8671,12 +8666,10 @@ bool Node::checkAgentPushRequestId(UINT64 requestId)
 /**
  * Get node's physical components
  */
-ComponentTree *Node::getComponents()
+shared_ptr<ComponentTree> Node::getComponents()
 {
    lockProperties();
-   ComponentTree *components = m_components;
-   if (components != NULL)
-      components->incRefCount();
+   shared_ptr<ComponentTree> components = m_components;
    unlockProperties();
    return components;
 }
