@@ -57,11 +57,125 @@ public:
    NCDriverServerStorageManager(const TCHAR *channelName) : NCDriverStorageManager() { _tcslcpy(m_channelName, channelName, MAX_OBJECT_NAME); }
    virtual ~NCDriverServerStorageManager() { }
 
-   virtual TCHAR *get(const TCHAR *key) override { return NULL; }
-   virtual StringList *getAll() override { return new StringList(); }
-   virtual void set(const TCHAR *key, const TCHAR *value) override { }
-   virtual void clear(const TCHAR *key) override { }
+   virtual TCHAR *get(const TCHAR *key) override;
+   virtual StringMap *getAll() override;
+   virtual void set(const TCHAR *key, const TCHAR *value) override;
+   virtual void clear(const TCHAR *key) override;
 };
+
+/**
+ * Get value for given key
+ */
+TCHAR *NCDriverServerStorageManager::get(const TCHAR *key)
+{
+   TCHAR *value = NULL;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_value FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            value = DBGetField(hResult, 0, 0, NULL, 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return value;
+}
+
+/**
+ * Get all keys for this channel
+ */
+StringMap *NCDriverServerStorageManager::getAll()
+{
+   StringMap *values = new StringMap();
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_name,entry_value FROM nc_persistent_storage WHERE channel_name=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR *key = DBGetField(hResult, i, 0, NULL, 0);
+            TCHAR *value = DBGetField(hResult, i, 1, NULL, 0);
+            if ((key != NULL) && (value != NULL))
+            {
+               values->setPreallocated(key, value);
+            }
+            else
+            {
+               MemFree(key);
+               MemFree(value);
+            }
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return values;
+}
+
+/**
+ * Set value for given key
+ */
+void NCDriverServerStorageManager::set(const TCHAR *key, const TCHAR *value)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_name FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
+   if (hStmt != NULL)
+   {
+      bool update = false;
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+          update = (DBGetNumRows(hResult) > 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+
+      hStmt = DBPrepare(hdb,
+               update ?
+                        _T("UPDATE nc_persistent_storage SET entry_value=? WHERE channel_name=? AND entry_name=?") :
+                        _T("INSERT INTO nc_persistent_storage (entry_value,channel_name,entry_name) VALUES (?,?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+         DBFreeStatement(hStmt);
+      }
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Delete given key
+ */
+void NCDriverServerStorageManager::clear(const TCHAR *key)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
 
 /**
  * Last known status for message sending

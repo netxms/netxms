@@ -57,7 +57,7 @@ protected:
 
 public:
    virtual TCHAR *get(const TCHAR *key) = 0;
-   virtual StringList *getAll() = 0;
+   virtual StringMap *getAll() = 0;
    virtual void set(const TCHAR *key, const TCHAR *value) = 0;
    virtual void clear(const TCHAR *key) = 0;
 };

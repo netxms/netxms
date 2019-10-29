@@ -2175,3 +2175,13 @@ CREATE TABLE notification_channels
    PRIMARY KEY(name)
 ) TABLE_TYPE;
 
+/**
+ * Persistent storage for notification channels
+ */
+CREATE TABLE nc_persistent_storage
+(
+   channel_name varchar(63) not null,
+   entry_name varchar(127) not null,
+   entry_value varchar(2000) null,
+   PRIMARY KEY(channel_name, entry_name)
+) TABLE_TYPE;

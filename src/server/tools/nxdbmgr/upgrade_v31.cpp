@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 31.1 to 31.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE nc_persistent_storage (")
+      _T("  channel_name varchar(63) not null,")
+      _T("  entry_name varchar(127) not null,")
+      _T("  entry_value varchar(2000) null,")
+      _T("PRIMARY KEY(channel_name, entry_name))")));
+
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 31.0 to 31.1
  */
 static bool H_UpgradeFromV0()
@@ -135,6 +151,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 1,  31, 2, H_UpgradeFromV1 },
    { 0,  31, 1, H_UpgradeFromV0 },
    { 0,  0,  0, NULL }
 };
