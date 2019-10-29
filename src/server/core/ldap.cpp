@@ -550,7 +550,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
       TCHAR *dn = dnFromMessage(entry);
       nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): Found DN: %s"), dn);
 
-      StringBuffer objectClasses;
+      String objectClasses;
       TCHAR *value;
       for(i = 0, value = getAttrValue(entry, "objectClass", i); value != NULL; value = getAttrValue(entry, "objectClass", ++i))
       {
@@ -693,15 +693,15 @@ TCHAR *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
    {
       if (pos + values[i]->bv_len > 1024)
          break;
-      memcpy(tmp+pos,values[i]->bv_val,values[i]->bv_len);
+      memcpy(tmp + pos, values[i]->bv_val, values[i]->bv_len);
       pos += values[i]->bv_len;
    }
    ldap_value_free_len(values);
    if (i == 0)
-      return _tcsdup(_T(""));
+      return MemCopyString(_T(""));
 
    CalculateSHA256Hash(tmp, pos, hash);
-   TCHAR *result = (TCHAR *)malloc(sizeof(TCHAR) * (SHA256_DIGEST_SIZE * 2 + 1));
+   TCHAR *result = MemAllocString(SHA256_DIGEST_SIZE * 2 + 1);
    BinToStr(hash, SHA256_DIGEST_SIZE, result);
    return result;
 }
@@ -718,11 +718,11 @@ static void ParseRange(const char *attr, int *start, int *end)
    if (tmpS == NULL)
       return;
 
-   char *tmpAttr = strdup(tmpS + 1);
+   char *tmpAttr = MemCopyStringA(tmpS + 1);
    char *tmpE = strchr(tmpAttr, '-');
    if (tmpE == NULL)
    {
-      free(tmpAttr);
+      MemFree(tmpAttr);
       return;
    }
    *tmpE = 0;
@@ -732,7 +732,7 @@ static void ParseRange(const char *attr, int *start, int *end)
    {
       *end = atoi(tmpE);
    }
-   free(tmpAttr);
+   MemFree(tmpAttr);
 }
 
 /**

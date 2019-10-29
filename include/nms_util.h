@@ -858,6 +858,7 @@ public:
 	String(const String &src);
    ~String();
 
+   const TCHAR *cstr() const { return CHECK_NULL_EX(m_buffer); }
 	TCHAR *getBuffer() { return m_buffer; }
 	TCHAR *takeBuffer() { TCHAR *b = m_buffer; m_buffer = NULL; m_allocated = 0; m_length = 0; return b; }
    void setBuffer(TCHAR *buffer);
@@ -871,7 +872,7 @@ public:
    String& operator +=(const String &str);
    String operator +(const String &right) const;
    String operator +(const TCHAR *right) const;
-   operator const TCHAR*() const { return CHECK_NULL_EX(m_buffer); }
+   operator const TCHAR*() const { return cstr(); }
 
    bool operator ==(const String &s) const { return equals(s); }
    bool operator !=(const String &s) const { return !equals(s); }
