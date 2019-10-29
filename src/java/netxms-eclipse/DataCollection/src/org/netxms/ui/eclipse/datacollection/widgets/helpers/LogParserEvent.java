@@ -34,6 +34,9 @@ public class LogParserEvent
 	@Attribute(name="params", required=false)
 	private Integer parameterCount = null;
 	
+   @Attribute(name="tag", required=false)
+   private String eventTag = null;
+	
 	/**
 	 * Protected constructor for XML parser
 	 */
@@ -45,10 +48,11 @@ public class LogParserEvent
 	 * @param event
 	 * @param parameterCount
 	 */
-	public LogParserEvent(String event, Integer parameterCount)
+	public LogParserEvent(String event, Integer parameterCount, String eventTag)
 	{
 		this.event = event;
 		this.parameterCount = parameterCount;
+		this.eventTag = eventTag;
 	}
 
 	/**
@@ -82,4 +86,20 @@ public class LogParserEvent
 	{
 		this.event = event;
 	}
+
+   /**
+    * @return the eventTag
+    */
+   public String getEventTag()
+   {
+      return eventTag;
+   }
+
+   /**
+    * @param eventTag the eventTag to set
+    */
+   public void setEventTag(String eventTag)
+   {
+      this.eventTag = eventTag;
+   }
 }

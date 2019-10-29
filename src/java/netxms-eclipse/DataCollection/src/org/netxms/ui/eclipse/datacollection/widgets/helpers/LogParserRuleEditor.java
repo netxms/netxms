@@ -76,7 +76,8 @@ public class LogParserRuleEditor extends DashboardComposite
 	private LabeledText description;
 	private LabeledText agentAction;
 	private EventSelector event;
-	private LabeledText context;
+   private LabeledText eventTag;
+   private LabeledText context;
 	private Combo contextAction;
 	private Combo contextResetMode;
 	private Button checkboxBreak;
@@ -432,8 +433,33 @@ public class LogParserRuleEditor extends DashboardComposite
 			public void modifyText(ModifyEvent e)
 			{
 				editor.fireModifyListeners();
+			   eventTag.setEnabled(event.getEventCode() != 0);	   
 			}
 		});
+
+      
+      String eventTagText = "";
+      if (rule.getEvent() != null)
+      {
+         eventTagText = rule.getEvent().getEventTag() != null ? rule.getEvent().getEventTag() : "";
+      }
+      
+      eventTag = new LabeledText(area, SWT.NONE);
+      toolkit.adapt(eventTag);
+      eventTag.setLabel("Event tag");
+      eventTag.setText(eventTagText); 
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      eventTag.setLayoutData(gd);
+      eventTag.getTextControl().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      });
+      eventTag.setEnabled(event.getEventCode() != 0);   
 		
 		final LogParserContext contextDefinition = rule.getContextDefinition();
 		
@@ -566,7 +592,8 @@ public class LogParserRuleEditor extends DashboardComposite
 		rule.setDescription(description.getText());
 		if (event.getEventCode() != 0)
 		{
-			rule.setEvent(new LogParserEvent(event.getEventName() != null ? event.getEventName() : Long.toString(event.getEventCode()), null));
+			rule.setEvent(new LogParserEvent(event.getEventName() != null ? event.getEventName() : Long.toString(event.getEventCode()), 
+			      null, eventTag.getText().isEmpty() ? null : eventTag.getText()));
 		}
 		else
 		{
