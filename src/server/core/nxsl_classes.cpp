@@ -547,6 +547,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
       object->getPrimaryIpAddress().toString(buffer);
       value = vm->createValue(buffer);
    }
+   else if (!strcmp(attr, "isInMaintenanceMode"))
+   {
+      value = vm->createValue(object->isInMaintenanceMode());
+   }
    else if (!strcmp(attr, "mapImage"))
    {
       TCHAR buffer[64];
