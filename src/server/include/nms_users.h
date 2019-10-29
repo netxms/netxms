@@ -125,11 +125,14 @@ private:
    int m_action;
    int m_secure;
    int m_pageSize;
+   StringObjectMap<Entry> *m_userIdEntryList;
+   StringObjectMap<Entry> *m_userDnEntryList;
+   StringObjectMap<Entry> *m_groupIdEntryList;
+   StringObjectMap<Entry> *m_groupDnEntryList;
 
    void closeLDAPConnection();
    void initLDAP();
    UINT32 loginLDAP();
-   TCHAR *getErrorString(int code);
    void getAllSyncParameters();
    void compareGroupList();
    void compareUserLists();
@@ -138,8 +141,10 @@ private:
    void prepareStringForInit(LDAP_CHAR *connectionLine);
    int readInPages(LDAP_CHAR *base);
    void fillLists(LDAPMessage *searchResult);
-   TCHAR *ldap_internal_get_dn(LDAP *conn, LDAPMessage *entry);
+   TCHAR *dnFromMessage(LDAPMessage *entry);
    void updateMembers(StringSet *memberList, const char *firstAttr, LDAPMessage *firstEntry, const LDAP_CHAR *dn);
+
+   static String getErrorString(int code);
 #endif // WITH_LDAP
 
 public:
@@ -433,10 +438,10 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(UINT32 id, TCHAR *buffer, bool noFail = false);
-void UpdateLDAPUser(const TCHAR* dn, Entry *obj);
+void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject);
 void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectMap<Entry> *entryListId, UINT32 m_action, bool isUser);
-void UpdateLDAPGroup(const TCHAR* dn, Entry *obj);
-void SyncLDAPGroupMembers(const TCHAR *dn, Entry *obj);
+void UpdateLDAPGroup(const TCHAR* dn, const Entry *ldapObject);
+void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject);
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);

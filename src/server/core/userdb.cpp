@@ -839,7 +839,7 @@ static TCHAR *GenerateUniqueName(const TCHAR *oldName, UINT32 id)
 /**
  * Update/Add LDAP user
  */
-void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
+void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
 {
    RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
@@ -850,8 +850,8 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
 
    // Check existing user with same DN
    UserDatabaseObject *object = NULL;
-   if(obj->m_id != NULL)
-      object = s_ldapUserId.get(obj->m_id);
+   if (ldapObject->m_id != NULL)
+      object = s_ldapUserId.get(ldapObject->m_id);
    else
       object = s_ldapNames.get(dn);
 
@@ -860,7 +860,7 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
       _sntprintf(description, MAX_USER_DESCR, _T("Got user with DN=%s but found existing group %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
       PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
-      DbgPrintf(4,  _T("UpdateLDAPUser(): %s"), description);
+      DbgPrintf(4, _T("UpdateLDAPUser(): %s"), description);
       conflict = true;
    }
 
@@ -870,19 +870,19 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
       if (!user->isDeleted())
       {
          user->removeSyncException();
-         if (!UserNameIsUnique(obj->m_loginName, user))
+         if (!UserNameIsUnique(ldapObject->m_loginName, user))
          {
-            TCHAR *userName = GenerateUniqueName(obj->m_loginName, user->getId());
+            TCHAR *userName = GenerateUniqueName(ldapObject->m_loginName, user->getId());
             if(_tcscmp(user->getName(), userName))
             {
                user->setName(userName);
-               _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), obj->m_loginName, userName);
+               _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
                object->getGuidAsText(guid);
                PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
-               DbgPrintf(4,  _T("UpdateLDAPUser(): %s"), description);
+               DbgPrintf(4, _T("UpdateLDAPUser(): %s"), description);
             }
-            user->setFullName(obj->m_fullName);
-            user->setDescription(obj->m_description);
+            user->setFullName(ldapObject->m_fullName);
+            user->setDescription(ldapObject->m_description);
             if(_tcscmp(user->getDn(), dn))
             {
                s_ldapNames.remove(user->getDn());
@@ -893,16 +893,16 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
          }
          else
          {
-            user->setName(obj->m_loginName);
-            user->setFullName(obj->m_fullName);
-            user->setDescription(obj->m_description);
+            user->setName(ldapObject->m_loginName);
+            user->setFullName(ldapObject->m_fullName);
+            user->setDescription(ldapObject->m_description);
             if(_tcscmp(user->getDn(), dn))
             {
                s_ldapNames.remove(user->getDn());
                user->setDn(dn);
                s_ldapNames.set(dn, user);
             }
-            DbgPrintf(4, _T("UpdateLDAPUser(): User updated: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
+            DbgPrintf(4, _T("UpdateLDAPUser(): User updated: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
          }
          if (user->isModified())
          {
@@ -914,37 +914,37 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
 
    if (!userModified && !conflict)
    {
-      if (UserNameIsUnique(obj->m_loginName, NULL))
+      if (UserNameIsUnique(ldapObject->m_loginName, NULL))
       {
-         User *user = new User(CreateUniqueId(IDG_USER), obj->m_loginName);
-         user->setFullName(obj->m_fullName);
-         user->setDescription(obj->m_description);
+         User *user = new User(CreateUniqueId(IDG_USER), ldapObject->m_loginName);
+         user->setFullName(ldapObject->m_fullName);
+         user->setDescription(ldapObject->m_description);
          user->setFlags(UF_MODIFIED | UF_LDAP_USER);
          user->setDn(dn);
-         if(obj->m_id != NULL)
-            user->setLdapId(obj->m_id);
+         if(ldapObject->m_id != NULL)
+            user->setLdapId(ldapObject->m_id);
          AddDatabaseObject(user);
          SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
-         DbgPrintf(4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
+         DbgPrintf(4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
       }
       else
       {
          UINT32 userId = CreateUniqueId(IDG_USER);
-         TCHAR *userName = GenerateUniqueName(obj->m_loginName, userId);
-         _sntprintf(description, MAX_USER_DESCR, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), obj->m_loginName, userName);
+         TCHAR *userName = GenerateUniqueName(ldapObject->m_loginName, userId);
+         _sntprintf(description, MAX_USER_DESCR, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
          DbgPrintf(4,  _T("UpdateLDAPUser(): %s"), description);
          User *user = new User(userId, userName);
-         user->setFullName(obj->m_fullName);
-         user->setDescription(obj->m_description);
+         user->setFullName(ldapObject->m_fullName);
+         user->setDescription(ldapObject->m_description);
          user->setFlags(UF_MODIFIED | UF_LDAP_USER);
          user->setDn(dn);
-         if(obj->m_id != NULL)
-            user->setLdapId(obj->m_id);
+         if(ldapObject->m_id != NULL)
+            user->setLdapId(ldapObject->m_id);
          AddDatabaseObject(user);
          SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
          user->getGuidAsText(guid);
          PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", user->getId(), guid, user->getDn(), user->getName(), description);
-         DbgPrintf(4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, userName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
+         DbgPrintf(4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, userName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
          MemFree(userName);
       }
    }
@@ -991,14 +991,14 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectM
  * Synchronize new user/group list with old user/group list of given group.
  * Note: none LDAP users and groups will not be changed.
  */
-void SyncLDAPGroupMembers(const TCHAR *dn, Entry *obj)
+void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
 {
    // Check existing user/group with same DN
    UserDatabaseObject *object = NULL;
    RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
-   if(obj->m_id != NULL)
-      object = s_ldapGroupId.get(obj->m_id);
+   if (ldapObject->m_id != NULL)
+      object = s_ldapGroupId.get(ldapObject->m_id);
    else
       object = s_ldapNames.get(dn);
 
@@ -1020,7 +1020,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, Entry *obj)
 
    DbgPrintf(4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), dn);
 
-   StringSet *newMembers = obj->m_memberList;
+   StringSet *newMembers = ldapObject->m_memberList;
    UINT32 *oldMembers = NULL;
    int count = group->getMembers(&oldMembers);
 
@@ -1068,7 +1068,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, Entry *obj)
 /**
  * Update/Add LDAP group
  */
-void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users inside group, and delete removed from the group
+void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, add users inside group, and delete removed from the group
 {
    RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
@@ -1080,8 +1080,8 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
    // Check existing user with same DN
    UserDatabaseObject *object = NULL;
 
-   if(obj->m_id != NULL)
-      object = s_ldapGroupId.get(obj->m_id);
+   if (ldapObject->m_id != NULL)
+      object = s_ldapGroupId.get(ldapObject->m_id);
    else
       object = s_ldapNames.get(dn);
    if ((object != NULL) && !object->isGroup())
@@ -1095,22 +1095,22 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
 
    if ((object != NULL) && !conflict)
    {
-      Group *group = (Group *)object;
+      Group *group = static_cast<Group*>(object);
       if (!group->isDeleted())
       {
          group->removeSyncException();
-         if (!GroupNameIsUnique(obj->m_loginName, group))
+         if (!GroupNameIsUnique(ldapObject->m_loginName, group))
          {
-            TCHAR *groupName = GenerateUniqueName(obj->m_loginName, group->getId());
+            TCHAR *groupName = GenerateUniqueName(ldapObject->m_loginName, group->getId());
             if(_tcscmp(group->getName(), groupName))
             {
                group->setName(groupName);
-               _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), obj->m_loginName, groupName);
+               _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
                object->getGuidAsText(guid);
                PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
                DbgPrintf(4,  _T("UpdateLDAPGroup(): %s"),description);
             }
-            group->setDescription(obj->m_description);
+            group->setDescription(ldapObject->m_description);
             if(_tcscmp(group->getDn(), dn))
             {
                s_ldapNames.remove(group->getDn());
@@ -1121,15 +1121,15 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
          }
          else
          {
-            group->setName(obj->m_loginName);
-            group->setDescription(obj->m_description);
+            group->setName(ldapObject->m_loginName);
+            group->setDescription(ldapObject->m_description);
             if(_tcscmp(group->getDn(), dn))
             {
                s_ldapNames.remove(group->getDn());
                group->setDn(dn);
                s_ldapNames.set(dn, group);
             }
-            DbgPrintf(4, _T("UpdateLDAPGroup(): Group updated: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
+            DbgPrintf(4, _T("UpdateLDAPGroup(): Group updated: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
          }
          if (group->isModified())
          {
@@ -1141,35 +1141,35 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
 
    if (!groupModified)
    {
-      if (GroupNameIsUnique(obj->m_loginName, NULL))
+      if (GroupNameIsUnique(ldapObject->m_loginName, NULL))
       {
-         Group *group = new Group(CreateUniqueId(IDG_USER_GROUP), obj->m_loginName);
-         group->setDescription(obj->m_description);
+         Group *group = new Group(CreateUniqueId(IDG_USER_GROUP), ldapObject->m_loginName);
+         group->setDescription(ldapObject->m_description);
          group->setFlags(UF_MODIFIED | UF_LDAP_USER);
          group->setDn(dn);
-         if(obj->m_id != NULL)
-            group->setLdapId(obj->m_id);
+         if(ldapObject->m_id != NULL)
+            group->setLdapId(ldapObject->m_id);
          SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
          AddDatabaseObject(group);
-         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
+         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
       }
       else
       {
          UINT32 id = CreateUniqueId(IDG_USER_GROUP);
-         TCHAR *groupName = GenerateUniqueName(obj->m_loginName, id);
-         _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), obj->m_loginName, groupName);
+         TCHAR *groupName = GenerateUniqueName(ldapObject->m_loginName, id);
+         _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
          DbgPrintf(4,  _T("UpdateLDAPGroup(): %s"),description);
          Group *group = new Group(id, groupName);
-         group->setDescription(obj->m_description);
+         group->setDescription(ldapObject->m_description);
          group->setFlags(UF_MODIFIED | UF_LDAP_USER);
          group->setDn(dn);
-         if(obj->m_id != NULL)
-            group->setLdapId(obj->m_id);
+         if(ldapObject->m_id != NULL)
+            group->setLdapId(ldapObject->m_id);
          SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
          AddDatabaseObject(group);
          group->getGuidAsText(guid);
          PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", group->getId(), guid, group->getDn(), group->getName(), description);
-         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
+         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
          MemFree(groupName);
       }
    }
