@@ -688,20 +688,20 @@ TCHAR *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
    memset(tmp, 0, 1024);
    berval **values = ldap_get_values_lenA(m_ldapConn, entry, (char *)attr);   // cast needed for Windows LDAP library
    int count = (int)ldap_count_values_len(values);
-   int i,pos;
+   int i, pos;
    for(i = 0, pos = 0; i < count; i++)
    {
       if (pos + values[i]->bv_len > 1024)
          break;
-      memcpy(tmp+pos,values[i]->bv_val,values[i]->bv_len);
+      memcpy(tmp + pos,values[i]->bv_val, values[i]->bv_len);
       pos += values[i]->bv_len;
    }
    ldap_value_free_len(values);
    if (i == 0)
-      return _tcsdup(_T(""));
+      return MemCopyString(_T(""));
 
    CalculateSHA256Hash(tmp, pos, hash);
-   TCHAR *result = (TCHAR *)malloc(sizeof(TCHAR) * (SHA256_DIGEST_SIZE * 2 + 1));
+   TCHAR *result = MemAllocString(SHA256_DIGEST_SIZE * 2 + 1);
    BinToStr(hash, SHA256_DIGEST_SIZE, result);
    return result;
 }
@@ -722,7 +722,7 @@ static void ParseRange(const char *attr, int *start, int *end)
    char *tmpE = strchr(tmpAttr, '-');
    if (tmpE == NULL)
    {
-      free(tmpAttr);
+      MemFree(tmpAttr);
       return;
    }
    *tmpE = 0;
@@ -732,7 +732,7 @@ static void ParseRange(const char *attr, int *start, int *end)
    {
       *end = atoi(tmpE);
    }
-   free(tmpAttr);
+   MemFree(tmpAttr);
 }
 
 /**
