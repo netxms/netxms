@@ -3199,7 +3199,7 @@ String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s)
 }
 
 /**
- * Parse command line into argumen list considering single and double quotes
+ * Parse command line into argument list considering single and double quotes
  */
 StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline)
 {

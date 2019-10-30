@@ -300,7 +300,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
     {
        List<?> l = selection.toList();
        for (int i = 0; i < l.size(); i++)
-          if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) > 0 )
+          if ((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) > 0)
                 return true;
        return false;
     }
@@ -313,7 +313,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
     {
        List<?> l = selection.toList();
        for (int i = 0; i < l.size(); i++)
-          if((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) == 0 )
+          if ((((ObjectTool)l.get(i)).getFlags() & ObjectTool.DISABLED) == 0)
              return true;
        return false;
     }
@@ -392,7 +392,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
          @Override
          public void run()
          {
-            setSelectedDisabled();
+            disableSelectedTools();
          }
       };
       
@@ -400,7 +400,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
          @Override
          public void run()
          {
-            setSelectedEnabled();
+            enableSelectedTools();
          }
       };
       
@@ -490,11 +490,11 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
       mgr.add(actionClone);  
 		mgr.add(new Separator());
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if(containsEnabled(selection))
+      if (containsEnabled(selection))
       {
          mgr.add(actionDisable);
       }
-      if(containsDisabled(selection))
+      if (containsDisabled(selection))
       {
          mgr.add(actionEnable);
       }
@@ -529,7 +529,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get(getDisplay()).ObjectToolsEditor_JobGetConfigError;
+				return Messages.get().ObjectToolsEditor_JobGetConfigError;
 			}
 		}.start();
 	}
@@ -609,7 +609,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private void saveObjectTool(final ObjectToolDetails details)
 	{
 		new ConsoleJob(Messages.get().ObjectToolsEditor_JobSave, this, Activator.PLUGIN_ID) {
-
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -637,64 +636,72 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		}.schedule();
 	}
 	
-	 private void setSelectedDisabled()
-    {
-	    IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-       if (selection.isEmpty())
-          return;
-       
-       if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ObjectToolsEditor_Confirmation, Messages.get().ObjectToolsEditor_AckToDisableObjectTool))
-          return;
-       
-       final Object[] objects = selection.toArray();
-       new ConsoleJob(Messages.get().ObjectToolsEditor_DisableObjTool, this, Activator.PLUGIN_ID) {
-          @Override
-          protected String getErrorMessage()
-          {
-             return Messages.get(getDisplay()).ObjectToolsEditor_ErrorDisablingObjectTools;
-          }
+   /**
+    * Disable selected object tools
+    */
+   private void disableSelectedTools()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
 
-          @Override
-          protected void runInternal(IProgressMonitor monitor) throws Exception
-          {
-             for(int i = 0; i < objects.length; i++)
-             {
-                if((((ObjectTool)objects[i]).getFlags() & ObjectTool.DISABLED) == 0 )
-                   session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId(), false);
-             }
-          }
-       }.start();
-    }
-	 
-	 private void setSelectedEnabled()
-    {
-	    IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-	      if (selection.isEmpty())
-	         return;
-	      
-	      if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ObjectToolsEditor_Confirmation, Messages.get().ObjectToolsEditor_AckToEnableObjTool))
-	         return;
-	      
-	      final Object[] objects = selection.toArray();
-	      new ConsoleJob(Messages.get().ObjectToolsEditor_EnableObjTool, this, Activator.PLUGIN_ID) {
-	         @Override
-	         protected String getErrorMessage()
-	         {
-	            return Messages.get(getDisplay()).ObjectToolsEditor_ErrorDisablingObjTools;
-	         }
+      if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ObjectToolsEditor_Confirmation,
+            Messages.get().ObjectToolsEditor_AckToDisableObjectTool))
+         return;
 
-	         @Override
-	         protected void runInternal(IProgressMonitor monitor) throws Exception
-	         {
-	            for(int i = 0; i < objects.length; i++)
-	            {
-	               if((((ObjectTool)objects[i]).getFlags() & ObjectTool.DISABLED) > 0 )
-	                  session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId(), true);
-	            }
-	         }
-	      }.start();       
-    }
-	 
+      final Object[] objects = selection.toArray();
+      new ConsoleJob(Messages.get().ObjectToolsEditor_DisableObjTool, this, Activator.PLUGIN_ID) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ObjectToolsEditor_ErrorDisablingObjectTools;
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(int i = 0; i < objects.length; i++)
+            {
+               if ((((ObjectTool)objects[i]).getFlags() & ObjectTool.DISABLED) == 0)
+                  session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId(), false);
+            }
+         }
+      }.start();
+   }
+
+   /**
+    * Enable selected object tools
+    */
+   private void enableSelectedTools()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openConfirm(getSite().getShell(), Messages.get().ObjectToolsEditor_Confirmation,
+            Messages.get().ObjectToolsEditor_AckToEnableObjTool))
+         return;
+
+      final Object[] objects = selection.toArray();
+      new ConsoleJob(Messages.get().ObjectToolsEditor_EnableObjTool, this, Activator.PLUGIN_ID) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ObjectToolsEditor_ErrorDisablingObjTools;
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(int i = 0; i < objects.length; i++)
+            {
+               if ((((ObjectTool)objects[i]).getFlags() & ObjectTool.DISABLED) > 0)
+                  session.changeObjecToolDisableStatuss(((ObjectTool)objects[i]).getId(), true);
+            }
+         }
+      }.start();
+   }
+
 	 /**
 	  * Clone object tool 
 	  */
@@ -704,7 +711,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
        if (selection.isEmpty())
           return;
        
-       final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), "Object tool");
+       final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), Messages.get().ObjectToolsEditor_ObjectTool);
        if (dlg.open() == Window.OK)
        {
           new ConsoleJob(Messages.get().ObjectToolsEditor_CloneObjectTool, this, Activator.PLUGIN_ID) {

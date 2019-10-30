@@ -124,13 +124,14 @@ public class ObjectToolDetails extends ObjectTool
           (type == TYPE_FILE_DOWNLOAD) || 
           (type == TYPE_LOCAL_COMMAND) || 
           (type == TYPE_SERVER_COMMAND) || 
+          (type == TYPE_SERVER_SCRIPT) || 
           (type == TYPE_URL))
       {
          validateInputFields();
       }
 		createDisplayName();
 	}
-	
+
 	/**
 	 * Fill NXCP message with tool's data.
 	 * 

@@ -108,7 +108,7 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
    public void executeScript(final String script, final long alarmId, final Map<String, String> inputValues)
    {
       actionRestart.setEnabled(false);
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       out = console.newOutputStream();
       lastScript = script;
       this.alarmId = alarmId;

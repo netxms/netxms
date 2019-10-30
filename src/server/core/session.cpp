@@ -8060,12 +8060,12 @@ void ClientSession::executeAction(NXCPMessage *request)
             if (pConn != NULL)
             {
                StringList *list = NULL;
-               if(request->getFieldAsBoolean(VID_EXPAND_STRING))
+               if (request->getFieldAsBoolean(VID_EXPAND_STRING))
                {
                   StringMap inputFields;
                   inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
                   Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
-                  if(alarm != NULL && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+                  if ((alarm != NULL) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
                      sendMessage(&msg);
