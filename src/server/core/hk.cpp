@@ -64,6 +64,7 @@ bool ThrottleHousekeeper()
  */
 static void DeleteEmptySubnetsFromList(ObjectArray<NetObj> *subnets)
 {
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: %d subnets to check"), subnets->size());
    for(int i = 0; i < subnets->size(); i++)
    {
       NetObj *object = subnets->get(i);
@@ -87,13 +88,16 @@ static void DeleteEmptySubnets()
    if (IsZoningEnabled())
    {
       ObjectArray<NetObj> *zones = g_idxZoneByUIN.getObjects(true);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: %d zones to check"), zones->size());
       for(int i = 0; i < zones->size(); i++)
       {
-         Zone *zone = (Zone *)zones->get(i);
+         Zone *zone = static_cast<Zone*>(zones->get(i));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: processing zone %s (UIN=%u)"), zone->getName(), zone->getUIN());
          ObjectArray<NetObj> *subnets = zone->getSubnets(true);
          DeleteEmptySubnetsFromList(subnets);
          delete subnets;
          zone->decRefCount();
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: zone processing completed"));
       }
       delete zones;
    }
@@ -386,6 +390,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		{
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Checking for empty subnets"));
 			DeleteEmptySubnets();
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Empty subnet check completed"));
 		}
 
 		// Remove expired DCI data
@@ -425,6 +430,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 	   }
 
 	   // Save object runtime data
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Saving object runtime data"));
 	   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
 	   for(int i = 0; i < objects->size(); i++)
 	   {
@@ -437,6 +443,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		DBConnectionPoolReleaseConnection(hdb);
 
 		// Validate template DCIs
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue template updates"));
 		g_idxObjectById.forEach(QueueTemplateUpdate, NULL);
 
       // Call hooks in loaded modules
@@ -452,6 +459,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		SaveCurrentFreeId();
 
 		// Run training on prediction engines
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue prediction engines training"));
 		g_idxObjectById.forEach(QueuePredictionEngineTraining, NULL);
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
