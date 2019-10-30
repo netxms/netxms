@@ -296,20 +296,23 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
    m_codeStack = new NXSL_Stack();
    m_catchStack = new NXSL_Stack();
 
-   // Create local variable system for main() and bind arguments
-   m_localVariables = new NXSL_VariableSystem(this);
-   for(int i = 0; i < args.size(); i++)
-   {
-      char name[32];
-      snprintf(name, 32, "$%d", i + 1);
-      m_localVariables->create(name, args.get(i));
-   }
-
    // Preserve original global variables and constants
    NXSL_VariableSystem *savedGlobals = new NXSL_VariableSystem(this, m_globalVariables);
    NXSL_VariableSystem *savedConstants = new NXSL_VariableSystem(this, m_constants);
    if (constants != NULL)
       m_constants->merge(constants);
+
+   // Create local variable system for main() and bind arguments
+   NXSL_Array *argsArray = new NXSL_Array(this);
+   m_localVariables = new NXSL_VariableSystem(this);
+   for(int i = 0; i < args.size(); i++)
+   {
+      argsArray->set(i + 1, createValue(args.get(i)));
+      char name[32];
+      snprintf(name, 32, "$%d", i + 1);
+      m_localVariables->create(name, args.get(i));
+   }
+   setGlobalVariable("$ARGS", createValue(argsArray));
 
    // If not NULL last used expression variables will be saved there
    m_exportedExpressionVariables = expressionVariables;
