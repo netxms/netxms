@@ -1315,6 +1315,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) SNMP trap OID'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_DISCARD_TRAP, 'SNMP_DISCARD_TRAP', '48f1217b-2eeb-4cde-88ab-da3de662bb2d',
+		EVENT_SEVERITY_NORMAL, 0,
+		'SNMP trap received: %1',
+		'Default event for discarded SNMP traps.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) SNMP trap OID'
+	);
 
 
 /*

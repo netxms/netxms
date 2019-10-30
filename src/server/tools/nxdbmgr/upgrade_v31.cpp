@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 31.2 to 31.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_SNMP_DISCARD_TRAP, _T("SNMP_DISCARD_TRAP"),
+            SEVERITY_NORMAL, 0, _T("48f1217b-2eeb-4cde-88ab-da3de662bb2d"),
+            _T("SNMP trap received: %1"),
+            _T("Default event for discarded SNMP traps.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) SNMP trap OID")
+            ));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 31.1 to 31.2
  */
 static bool H_UpgradeFromV1()
@@ -151,6 +167,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 2,  31, 3, H_UpgradeFromV2 },
    { 1,  31, 2, H_UpgradeFromV1 },
    { 0,  31, 1, H_UpgradeFromV0 },
    { 0,  0,  0, NULL }
