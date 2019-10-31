@@ -140,7 +140,7 @@ void NCDriverServerStorageManager::set(const TCHAR *key, const TCHAR *value)
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != NULL)
       {
-          update = (DBGetNumRows(hResult) > 0);
+         update = (DBGetNumRows(hResult) > 0);
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
@@ -154,6 +154,7 @@ void NCDriverServerStorageManager::set(const TCHAR *key, const TCHAR *value)
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+         DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
    }
@@ -449,6 +450,13 @@ static void DeleteNotificationChannelInternal(TCHAR *name)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM notification_channels WHERE name=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, nc->getName(), DB_BIND_STATIC);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   hStmt = DBPrepare(hdb, _T("DELETE FROM nc_persistent_storage WHERE channel_name=?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, nc->getName(), DB_BIND_STATIC);

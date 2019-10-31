@@ -53,19 +53,76 @@ struct Chat
    TCHAR *firstName;
    TCHAR *lastName;
 
+   /**
+    * Create from Telegram server message
+    */
    Chat(json_t *json)
    {
       id = json_object_get_integer(json, "id", -1);
       firstName = json_object_get_string_t(json, "first_name", _T(""));
       lastName = json_object_get_string_t(json, "last_name", _T(""));
-      userName = json_object_get_string_t(json, "username", _T(""));
+      const char *type = json_object_get_string_utf8(json, "type", "unknown");
+      userName = json_object_get_string_t(json, (!strcmp(type, "group") || !strcmp(type, "channel")) ? "title" : "username", _T(""));
    }
 
+   /**
+    * Create from channel persistent storage entry
+    */
+   Chat(const TCHAR *key, const TCHAR *value)
+   {
+      const TCHAR *p = _tcschr(key, _T('.'));
+      if (p != NULL)
+      {
+         p++;
+         id = _tcstoll(p, NULL, 10);
+      }
+      else
+      {
+         id = 0;
+      }
+
+      p = value;
+      firstName = extractSubstring(&p);
+      lastName = extractSubstring(&p);
+      userName = extractSubstring(&p);
+   }
+
+   /**
+    * Destructor
+    */
    ~Chat()
    {
       MemFree(userName);
       MemFree(firstName);
       MemFree(lastName);
+   }
+
+   /**
+    * Save to channel persistent storage
+    */
+   void save(NCDriverStorageManager *storageManager)
+   {
+      TCHAR key[64], value[2000];
+      _sntprintf(key, 64, _T("Chat.") INT64_FMT, id);
+      _sntprintf(value, 2000, _T("%d/%s%d/%s%d/%s"), _tcslen(firstName), firstName, _tcslen(lastName), lastName, _tcslen(userName), userName);
+      storageManager->set(key, value);
+   }
+
+   /**
+    * Extract substring from given position
+    */
+   static TCHAR *extractSubstring(const TCHAR **start)
+   {
+      TCHAR *eptr;
+      int l = _tcstol(*start, &eptr, 10);
+      if (*eptr != _T('/'))
+         return MemCopyString(_T(""));
+      eptr++;
+      TCHAR *s = MemAllocString(l + 1);
+      memcpy(s, eptr, l * sizeof(TCHAR));
+      s[l] = 0;
+      *start = eptr + l;
+      return s;
    }
 };
 
@@ -222,6 +279,25 @@ static json_t *SendTelegramRequest(const char *token, const char *method, json_t
 }
 
 /**
+ * Restore chats from persistent data
+ */
+static EnumerationCallbackResult RestoreChats(const TCHAR *key, const TCHAR *value, StringObjectMap<Chat> *chats)
+{
+   auto chat = new Chat(key, value);
+   if ((chat->id != 0) && (chat->userName != NULL) && (chat->userName[0] != 0))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Loaded chat object %s = ") INT64_FMT, chat->userName, chat->id);
+      chats->set(chat->userName, chat);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading chat object from storage entry \"%s\" = \"%s\""), key, value);
+      delete chat;
+   }
+   return _CONTINUE;
+}
+
+/**
  * Create driver instance
  */
 TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageManager *storageManager)
@@ -264,6 +340,10 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 #endif
                nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Telegram driver instantiated for bot %s"), driver->m_botName);
 
+               StringMap *data = storageManager->getAll();
+               data->forEach(RestoreChats, &driver->m_chats);
+               delete data;
+
                driver->m_updateHandlerThread = ThreadCreateEx(TelegramDriver::updateHandler, 0, driver);
 	         }
 	         else
@@ -288,6 +368,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 	{
 	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Telegram API call failed, driver configuration could be incorrect"));
 	}
+
 	return driver;
 }
 
@@ -407,6 +488,8 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
  */
 void TelegramDriver::processUpdate(json_t *data)
 {
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("Processing document: %hs"), json_dumps(data, 0));
+
    json_t *ok = json_object_get(data, "ok");
    if (!json_is_true(ok))
       return;
@@ -428,14 +511,18 @@ void TelegramDriver::processUpdate(json_t *data)
 
       json_t *message = json_object_get(update, "message");
       if (!json_is_object(message))
-         continue;
+      {
+         message = json_object_get(update, "channel_post");
+         if (!json_is_object(message))
+            continue;
+      }
 
       json_t *chat = json_object_get(message, "chat");
       if (!json_is_object(chat))
          continue;
 
       const char *type = json_object_get_string_utf8(chat, "type", "unknown");
-      TCHAR *username = json_object_get_string_t(chat, !strcmp(type, "group") ? "title" : "username", NULL);
+      TCHAR *username = json_object_get_string_t(chat, (!strcmp(type, "group") || !strcmp(type, "channel")) ? "title" : "username", NULL);
       if (username == NULL)
          continue;
 
@@ -446,6 +533,7 @@ void TelegramDriver::processUpdate(json_t *data)
       {
          chatObject = new Chat(chat);
          m_chats.set(username, chatObject);
+         chatObject->save(m_storageManager);
       }
       MutexUnlock(m_chatsLock);
 
