@@ -488,8 +488,6 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
  */
 void TelegramDriver::processUpdate(json_t *data)
 {
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("Processing document: %hs"), json_dumps(data, 0));
-
    json_t *ok = json_object_get(data, "ok");
    if (!json_is_true(ok))
       return;
