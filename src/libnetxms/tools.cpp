@@ -3174,9 +3174,24 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
       return js;
    for(const TCHAR *p = s; *p != 0; p++)
    {
-      if (*p == _T('"') || *p == _T('\\'))
-         js.append(_T('\\'));
-      js.append(*p);
+      if (*p == _T('\r'))
+      {
+         js.append(_T("\\r"));
+      }
+      else if (*p == _T('\n'))
+      {
+         js.append(_T("\\n"));
+      }
+      else if (*p == _T('\t'))
+      {
+         js.append(_T("\\t"));
+      }
+      else
+      {
+         if (*p == _T('"') || *p == _T('\\'))
+            js.append(_T('\\'));
+         js.append(*p);
+      }
    }
    return js;
 }

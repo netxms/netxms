@@ -9,6 +9,7 @@
 - New method "forcePoll" in NXSL class "DCI"
 - Added global array $ARGS in NXSL scripts for simplified access to script arguments
 - Notification channel driver for Telegram
+- Notification channel driver for Microsoft Teams
 - Fixed issues:
 	NX-1674 (Initiate DCI forced poll from NXSL)
 	NX-1686 (User Agent system tray menu covered by Windows system tray expanded hidden icon menu)
