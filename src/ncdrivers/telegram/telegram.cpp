@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: slack.cpp
+** File: telegram.cpp
 **
 **/
 
@@ -275,6 +275,7 @@ static json_t *SendTelegramRequest(const char *token, const char *method, json_t
    MemFree(responseData);
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
+   free(json);
    return response;
 }
 
@@ -544,7 +545,7 @@ void TelegramDriver::processUpdate(json_t *data)
 }
 
 /**
- * Send SMS
+ * Send notification
  */
 bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
 {
