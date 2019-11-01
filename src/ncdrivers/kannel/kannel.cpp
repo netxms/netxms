@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** SMS driver for Kannel gateway
+** Notification channel driver for Kannel gateway
 ** Copyright (C) 2014-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -69,29 +69,16 @@ KannelDriver::KannelDriver(Config *config)
    strcpy(m_login, "user");
    strcpy(m_password, "password");
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Driver loaded"));
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL version: %hs"), curl_version());
-#if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
-   curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
-   char protocols[1024] = {0};
-   const char * const *p = version->protocols;
-   while (*p != NULL)
-   {
-      strncat(protocols, *p, strlen(protocols) - 1);
-      strncat(protocols, " ", strlen(protocols) - 1);
-      p++;
-   }
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL supported protocols: %hs"), protocols);
-#endif
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
 
    NX_CFG_TEMPLATE configTemplate[] = 
-      {
-         { _T("login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },	
-         { _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	
-         { _T("host"), CT_MB_STRING, 0, 0, sizeof(m_hostname), 0,	m_hostname },	
-         { _T("port"), CT_LONG, 0, 0, 0, 0,	&m_port },
-         { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-      };
+   {
+      { _T("Host"), CT_MB_STRING, 0, 0, sizeof(m_hostname), 0, m_hostname },
+      { _T("Login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },
+      { _T("Password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },
+      { _T("Port"), CT_LONG, 0, 0, 0, 0,	&m_port },
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   };
 
 	config->parseTemplate(_T("Kannel"), configTemplate);
 }
