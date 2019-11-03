@@ -206,9 +206,13 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
 
    bool success = false;
 
-   char mburl[256];
-   WideCharToMultiByte(CP_UTF8, 0, url, -1, mburl, 256, NULL, NULL);
-   if (curl_easy_setopt(curl, CURLOPT_URL, mburl) == CURLE_OK)
+   char utf8url[256];
+#ifdef UNICODE
+   WideCharToMultiByte(CP_UTF8, 0, url, -1, utf8url, 256, NULL, NULL);
+#else
+   mb_to_utf8(url, -1, utf8url, 256);
+#endif
+   if (curl_easy_setopt(curl, CURLOPT_URL, utf8url) == CURLE_OK)
    {
       if (curl_easy_perform(curl) == CURLE_OK)
       {
