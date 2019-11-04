@@ -314,10 +314,9 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup time is %02d:%02d"), hour, minute);
 
    int sleepTime = GetSleepTime(hour, minute, 0);
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Sleeping for %d seconds"), sleepTime);
-
    while(!s_shutdown)
    {
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Sleeping for %d seconds"), sleepTime);
       ConditionWait(s_wakeupCondition, sleepTime * 1000);
       if (s_shutdown)
          break;
@@ -385,6 +384,17 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
             break;
 		}
 
+      // Delete old user agent messages
+      dwRetentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);
+      if (dwRetentionTime > 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing user agent messages log (retention time %d days)"), dwRetentionTime);
+         dwRetentionTime *= 86400;  // Convert days to seconds
+         DeleteExpiredUserAgentNotifications(hdb, dwRetentionTime);
+         if (!ThrottleHousekeeper())
+            break;
+      }
+
 		// Delete empty subnets if needed
 		if (g_flags & AF_DELETE_EMPTY_SUBNETS)
 		{
@@ -417,17 +427,6 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       {
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Collected DCI data cleanup disabled"));
       }
-
-		// Delete old user agent messages
-	   dwRetentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);
-	   if (dwRetentionTime > 0)
-	   {
-	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing user agent messages log (retention time %d days)"), dwRetentionTime);
-	      dwRetentionTime *= 86400;  // Convert days to seconds
-	      DeleteExpiredUserAgentNotifications(hdb, dwRetentionTime);
-         if (!ThrottleHousekeeper())
-            break;
-	   }
 
 	   // Save object runtime data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Saving object runtime data"));
@@ -464,7 +463,6 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
       sleepTime = GetSleepTime(hour, minute, 0);
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Sleeping for %d seconds"), sleepTime);
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper thread terminated"));
