@@ -51,7 +51,7 @@ DebugTagTreeNode::DebugTagTreeNode(const TCHAR *value, size_t len)
 }
 
 /**
- * Get debug LvL from tree node, returns longest match (recursive)
+ * Get debug level from tree node, returns longest match (recursive)
  */
 int DebugTagTreeNode::getDebugLevel(const TCHAR *tag) const
 {
@@ -178,14 +178,14 @@ void DebugTagTreeNode::getAllTags(const TCHAR *prefix, ObjectArray<DebugTagInfo>
 }
 
 /**
- * Get debug LvL from tree, returns longest match (recursive)
+ * Get debug level from tree, returns longest match (recursive)
  */
 int DebugTagTree::getDebugLevel(const TCHAR *tags)
 {
    int result;
    if (tags == NULL)
    {
-       result = m_root->getWildcardDebugLevel();
+      result = m_root->getWildcardDebugLevel();
    }
    else
    {

@@ -176,36 +176,36 @@ void Rack::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
+UINT32 Rack::modifyFromMessageInternal(NXCPMessage *request)
 {
-	if (pRequest->isFieldExist(VID_HEIGHT))
-		m_height = (int)pRequest->getFieldAsUInt16(VID_HEIGHT);
+	if (request->isFieldExist(VID_HEIGHT))
+		m_height = request->getFieldAsUInt16(VID_HEIGHT);
 
-   if (pRequest->isFieldExist(VID_TOP_BOTTOM))
-      m_topBottomNumbering = (int)pRequest->getFieldAsBoolean(VID_TOP_BOTTOM);
+   if (request->isFieldExist(VID_TOP_BOTTOM))
+      m_topBottomNumbering = request->getFieldAsBoolean(VID_TOP_BOTTOM);
 
-   if(pRequest->isFieldExist(VID_NUM_ELEMENTS))
+   if (request->isFieldExist(VID_NUM_ELEMENTS))
    {
-      ObjectArray<RackPassiveElement> newElements(0, 16, false);
-      int count = pRequest->getFieldAsInt32(VID_NUM_ELEMENTS);
-      UINT32 base = VID_ELEMENT_LIST_BASE;
+      int count = request->getFieldAsInt32(VID_NUM_ELEMENTS);
+      ObjectArray<RackPassiveElement> newElements(count, 16, false);
+      UINT32 fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         newElements.add(new RackPassiveElement(pRequest, base));
-         base += 10;
+         newElements.add(new RackPassiveElement(request, fieldId));
+         fieldId += 10;
       }
 
       for(int i = 0; i < m_passiveElements->size(); i++) //delete links for deleted patch panels
       {
-         RackPassiveElement *el = m_passiveElements->get(i);
-         if (m_passiveElements->get(i)->getType() == PATCH_PANEL)
+         RackPassiveElement *e = m_passiveElements->get(i);
+         if (e->getType() == PATCH_PANEL)
          {
             int j;
             for(j = 0; j < newElements.size(); j++)
-               if(m_passiveElements->get(i)->getId() == newElements.get(j)->getId())
+               if (e->getId() == newElements.get(j)->getId())
                   break;
-            if(j == newElements.size())
-               DeletePatchPanelFromPhysicalLinks(m_id, m_passiveElements->get(i)->getId());
+            if (j == newElements.size())
+               DeletePatchPanelFromPhysicalLinks(m_id, e->getId());
          }
       }
 
@@ -216,7 +216,7 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
       }
    }
 
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**

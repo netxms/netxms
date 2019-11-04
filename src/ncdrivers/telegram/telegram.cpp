@@ -232,7 +232,7 @@ static json_t *SendTelegramRequest(const char *token, const char *method, json_t
    char *json;
    if (data != NULL)
    {
-      char *json = json_dumps(data, 0);
+      json = json_dumps(data, 0);
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
       headers = curl_slist_append(headers, "Content-Type: application/json");
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
