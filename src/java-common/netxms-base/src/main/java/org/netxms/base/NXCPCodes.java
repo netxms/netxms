@@ -1086,6 +1086,8 @@ public class NXCPCodes
    public static final long VID_LINK_COUNT = 663;
    public static final long VID_PATCH_PANEL_ID = 662;
    public static final long VID_PHYSICAL_LINK_ID = 665;
+   public static final long VID_POLLING_SCHEDULE_TYPE = 666;
+   public static final long VID_RETENTION_TYPE = 667;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

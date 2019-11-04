@@ -44,6 +44,7 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
@@ -164,8 +165,10 @@ public class CreateSnmpDci implements IObjectActionDelegate
 		}
 
 		final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
-		dci.setPollingInterval(pollingInterval);
-		dci.setRetentionTime(retentionTime);
+      dci.setPollingScheduleType(DataCollectionObject.POLLING_SCHEDULE_CUSTOM);
+      dci.setPollingInterval(Integer.toString(pollingInterval));
+      dci.setRetentionType(DataCollectionObject.RETENTION_CUSTOM);
+      dci.setRetentionTime(Integer.toString(retentionTime));
 		dci.setOrigin(DataCollectionItem.SNMP);
 		dci.setDataType(dciTypeFromAsnType(value.getType()));
 		dci.setStatus(DataCollectionItem.ACTIVE);

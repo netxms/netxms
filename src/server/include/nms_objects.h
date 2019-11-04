@@ -1816,6 +1816,8 @@ protected:
    void doInstanceDiscovery(UINT32 requestId);
    bool updateInstances(DCObject *root, StringObjectMap<InstanceDiscoveryData> *instances, UINT32 requestId);
 
+   void updateDataCollectionTimeIntervals();
+
    void _pollerLock() { MutexLock(m_hPollerMutex); }
    void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
@@ -1875,7 +1877,7 @@ public:
    void cleanDCIData(DB_HANDLE hdb);
    void calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData);
    void queueItemsForPolling();
-   bool processNewDCValue(shared_ptr<DCObject> dco, time_t currTime, const void *value);
+   bool processNewDCValue(shared_ptr<DCObject> dco, time_t currTime, void *value);
    void scheduleItemDataCleanup(UINT32 dciId);
    void scheduleTableDataCleanup(UINT32 dciId);
    void queuePredictionEngineTraining();

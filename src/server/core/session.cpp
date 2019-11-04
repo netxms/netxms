@@ -3559,7 +3559,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
          {
             UINT32 i, itemId, dwNumMaps, *pdwMapId, *pdwMapIndex;
             DCObject *dcObject;
-            bool success = FALSE;
+            bool success = false;
 
             json_t *oldValue = object->toJson();
 
@@ -3568,21 +3568,20 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
             {
                case CMD_MODIFY_NODE_DCI:
                   itemId = request->getFieldAsUInt32(VID_DCI_ID);
-                  if(itemId == 0)//create new if id is 0
+                  if (itemId == 0)//create new if id is 0
                   {
+                     TCHAR retentionTime[MAX_DB_STRING], pollingInterval[MAX_DB_STRING];
                      int dcObjectType = (int)request->getFieldAsUInt16(VID_DCOBJECT_TYPE);
                      // Create dummy DCI
                      switch(dcObjectType)
                      {
                         case DCO_TYPE_ITEM:
                            dcObject = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, DCI_DT_INT,
-                              ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
-                              ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)object);
+                                    NULL, NULL, static_cast<DataCollectionOwner*>(object));
                            break;
                         case DCO_TYPE_TABLE:
                            dcObject = new DCTable(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL,
-                              ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
-                              ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)object);
+                                    NULL, NULL, static_cast<DataCollectionOwner*>(object));
                            break;
                         default:
                            dcObject = NULL;
@@ -3591,7 +3590,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                      if (dcObject != NULL)
                      {
                         dcObject->setStatus(ITEM_STATUS_DISABLED, false);
-                        if ((success = ((DataCollectionOwner *)object)->addDCObject(dcObject, false, false)))
+                        if (static_cast<DataCollectionOwner*>(object)->addDCObject(dcObject, false, false))
                         {
                            itemId = dcObject->getId();
                            msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3612,17 +3611,20 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                      }
                   }
                   else
-                     success = true;
-                  //Update existing
-                  if(success)
                   {
-                     success = ((DataCollectionOwner *)object)->updateDCObject(itemId, request, &dwNumMaps, &pdwMapIndex, &pdwMapId, m_dwUserId);
+                     success = true;
+                  }
+
+                  // Update existing
+                  if (success)
+                  {
+                     success = static_cast<DataCollectionOwner*>(object)->updateDCObject(itemId, request, &dwNumMaps, &pdwMapIndex, &pdwMapId, m_dwUserId);
                      if (success)
                      {
                         msg.setField(VID_RCC, RCC_SUCCESS);
-                        shared_ptr<DCObject> dco = ((DataCollectionOwner *)object)->getDCObjectById(itemId, 0, true);
-                        if(dco != NULL)
-                           NotifyClientsOnDCIUpdate((DataCollectionOwner *)object, dco.get());
+                        shared_ptr<DCObject> dco = static_cast<DataCollectionOwner*>(object)->getDCObjectById(itemId, 0, true);
+                        if (dco != NULL)
+                           NotifyClientsOnDCIUpdate(static_cast<DataCollectionOwner*>(object), dco.get());
 
                         // Send index to id mapping for newly created thresholds to client
                         if (dcObjectType == DCO_TYPE_ITEM)
@@ -3635,8 +3637,8 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                            }
                            msg.setField(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(UINT32) * dwNumMaps);
                            msg.setField(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(UINT32) * dwNumMaps);
-                           free(pdwMapId);
-                           free(pdwMapIndex);
+                           MemFree(pdwMapId);
+                           MemFree(pdwMapIndex);
                         }
                      }
                      else
@@ -3647,7 +3649,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                   break;
                case CMD_DELETE_NODE_DCI:
                   itemId = request->getFieldAsUInt32(VID_DCI_ID);
-                  success = ((DataCollectionOwner *)object)->deleteDCObject(itemId, true, m_dwUserId);
+                  success = static_cast<DataCollectionOwner*>(object)->deleteDCObject(itemId, true, m_dwUserId);
                   msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                   break;
             }
@@ -5418,18 +5420,13 @@ void ClientSession::createObject(NXCPMessage *request)
 								   {
 									   ((NodeLink *)object)->applyTemplates();
 								   }
-								   if (object->getObjectClass() == OBJECT_NETWORKSERVICE)
+								   else if ((object->getObjectClass() == OBJECT_NETWORKSERVICE) && request->getFieldAsBoolean(VID_CREATE_STATUS_DCI))
 								   {
-									   if (request->getFieldAsUInt16(VID_CREATE_STATUS_DCI))
-									   {
-										   TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
-
-										   _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), object->getId());
-										   _sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), object->getName());
-										   ((Node *)parent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
-											   ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
-											   ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)parent, dciDescription));
-									   }
+                              TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
+                              _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), object->getId());
+                              _sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), object->getName());
+                              static_cast<Node*>(parent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
+                                       NULL, NULL, static_cast<Node*>(parent), dciDescription));
 								   }
 							   }
 

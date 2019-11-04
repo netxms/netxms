@@ -474,17 +474,15 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->isString() || !argv[2]->isString() || !argv[3]->isString() || !argv[4]->isString())
+	if (!argv[1]->isString() || !argv[2]->isString() || !argv[3]->isString() ||
+	    !argv[4]->isString() || !(argv[5]->isString() || argv[5]->isNull()) || !(argv[6]->isString() || argv[6]->isNull()))
 		return NXSL_ERR_NOT_STRING;
-
-	if (!argv[5]->isInteger() || !argv[6]->isInteger())
-		return NXSL_ERR_NOT_INTEGER;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName())
 	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslSensorClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
-	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
+	DataCollectionTarget *node = static_cast<DataCollectionTarget*>(object->getData());
 
 	// Origin
 	static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("cpsnmp"),
@@ -509,13 +507,11 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 			break;
 		}
 
-	int pollingInterval = argv[5]->getValueAsInt32();
-	int retentionTime = argv[6]->getValueAsInt32();
-
-	if ((origin != -1) && (dataType != -1) && (pollingInterval >= 0) && (retentionTime >= 0))
+	if ((origin != -1) && (dataType != -1))
 	{
 		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(),
-			origin, dataType, pollingInterval, retentionTime, node, argv[3]->getValueAsCString());
+		         origin, dataType, argv[5]->isString() ? argv[5]->getValueAsCString() : NULL,
+			      argv[6]->isString() ? argv[6]->getValueAsCString() : NULL, node, argv[3]->getValueAsCString());
 		node->addDCObject(dci);
 		*ppResult = dci->createNXSLObject(vm);
 	}
@@ -550,10 +546,10 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 
    bool success = false;
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-   if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT))
+   if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getType() == DCO_TYPE_ITEM))
    {
       time_t t = time(NULL);
-      success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString());
+      success = node->processNewDCValue(dci, t, const_cast<TCHAR*>(argv[2]->getValueAsCString())); // value will not be modified by processNewDCValue
       if (success)
          dci->setLastPollTime(t);
    }

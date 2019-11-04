@@ -70,11 +70,15 @@ DCObject::DCObject()
    m_dwTemplateItemId = 0;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
-   m_iPollingInterval = 3600;
-   m_iRetentionTime = 0;
+	m_pollingScheduleType = DC_POLLING_SCHEDULE_DEFAULT;
+   m_pollingInterval = 0;
+   m_pollingIntervalSrc = NULL;
+   m_retentionType = DC_RETENTION_DEFAULT;
+   m_retentionTime = 0;
+   m_retentionTimeSrc = NULL;
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
-   m_tLastPoll = 0;
+   m_lastPoll = 0;
    m_owner = NULL;
    m_hMutex = MutexCreateRecursive();
    m_schedules = NULL;
@@ -114,11 +118,15 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_dwTemplateItemId = src->m_dwTemplateItemId;
    m_busy = shadowCopy ? src->m_busy : 0;
 	m_scheduledForDeletion = 0;
-   m_iPollingInterval = src->m_iPollingInterval;
-   m_iRetentionTime = src->m_iRetentionTime;
+	m_pollingScheduleType = src->m_pollingScheduleType;
+   m_pollingInterval = src->m_pollingInterval;
+   m_pollingIntervalSrc = MemCopyString(src->m_pollingIntervalSrc);
+   m_retentionType = src->m_retentionType;
+   m_retentionTime = src->m_retentionTime;
+   m_retentionTimeSrc = MemCopyString(src->m_retentionTimeSrc);
    m_source = src->m_source;
    m_status = src->m_status;
-   m_tLastPoll = shadowCopy ? src->m_tLastPoll : 0;
+   m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
    m_owner = src->m_owner;
    m_hMutex = MutexCreateRecursive();
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
@@ -153,24 +161,26 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 /**
  * Constructor for creating new DCObject from scratch
  */
-DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
-               int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
-               const TCHAR *pszDescription, const TCHAR *systemTag) :
-         m_name(szName), m_description(pszDescription), m_systemTag(systemTag),
+DCObject::DCObject(UINT32 id, const TCHAR *name, int source,
+               const TCHAR *pollingInterval, const TCHAR *retentionTime, DataCollectionOwner *owner,
+               const TCHAR *description, const TCHAR *systemTag) :
+         m_name(name), m_description(description), m_systemTag(systemTag),
          m_instanceDiscoveryData(_T("")), m_instance(_T(""))
 {
-   m_id = dwId;
+   m_id = id;
    m_guid = uuid::generate();
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
-   m_source = iSource;
-   m_iPollingInterval = iPollingInterval;
-   m_iRetentionTime = iRetentionTime;
+   m_source = source;
+   m_pollingScheduleType = (pollingInterval != NULL) ? DC_POLLING_SCHEDULE_CUSTOM : DC_POLLING_SCHEDULE_DEFAULT;
+   m_pollingIntervalSrc = MemCopyString(pollingInterval);
+   m_retentionTime = (retentionTime != NULL) ? DC_RETENTION_CUSTOM : DC_RETENTION_DEFAULT;
+   m_retentionTimeSrc = MemCopyString(retentionTime);
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
-   m_tLastPoll = 0;
-   m_owner = pNode;
+   m_lastPoll = 0;
+   m_owner = owner;
    m_hMutex = MutexCreateRecursive();
    m_flags = 0;
    m_schedules = NULL;
@@ -194,6 +204,8 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
    m_relatedObject = 0;
+
+   updateTimeIntervalsInternal();
 }
 
 /**
@@ -211,13 +223,19 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, NULL);
 	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
-   m_iPollingInterval = config->getSubEntryValueAsInt(_T("interval"));
-   m_iRetentionTime = config->getSubEntryValueAsInt(_T("retention"));
+   m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
+   m_pollingScheduleType = !_tcscmp(m_pollingIntervalSrc, _T("0")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+   m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
+   m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("0")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
 	m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
-   m_tLastPoll = 0;
+	if (m_flags & 1)  // for compatibility with old format
+	   m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
+   if (m_flags & 0x200) // for compatibility with old format
+      m_retentionType = DC_RETENTION_NONE;
+   m_lastPoll = 0;
    m_owner = owner;
    m_hMutex = MutexCreateRecursive();
    m_tLastCheck = 0;
@@ -239,7 +257,7 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
 
    // for compatibility with old format
 	if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
-		m_flags |= DCF_ADVANCED_SCHEDULE;
+      m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
 
 	ConfigEntry *schedules = config->findEntry(_T("schedules"));
 	if (schedules != NULL)
@@ -265,6 +283,8 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
    m_relatedObject = 0;
+
+   updateTimeIntervalsInternal();
 }
 
 /**
@@ -272,6 +292,8 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
  */
 DCObject::~DCObject()
 {
+   MemFree(m_retentionTimeSrc);
+   MemFree(m_pollingIntervalSrc);
    MemFree(m_transformationScriptSource);
    delete m_transformationScript;
    delete m_schedules;
@@ -315,7 +337,7 @@ bool DCObject::loadAccessList(DB_HANDLE hdb)
  */
 bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
 {
-   if (!(m_flags & DCF_ADVANCED_SCHEDULE))
+   if (m_pollingScheduleType != DC_POLLING_SCHEDULE_ADVANCED)
 		return true;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT schedule FROM dci_schedules WHERE item_id=?"));
@@ -382,7 +404,7 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 		{
 			if (m_owner != NULL)
 			{
-				dst.appendFormattedString(_T("%d"), m_owner->getId());
+				dst.append(m_owner->getId());
 			}
 			else
 			{
@@ -463,13 +485,13 @@ bool DCObject::deleteEntry(time_t timestamp)
 /**
  * Set new ID and node/template association
  */
-void DCObject::changeBinding(UINT32 dwNewId, DataCollectionOwner *newOwner, BOOL doMacroExpansion)
+void DCObject::changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doMacroExpansion)
 {
    lock();
    m_owner = newOwner;
-	if (dwNewId != 0)
+	if (newId != 0)
 	{
-		m_id = dwNewId;
+		m_id = newId;
 		m_guid = uuid::generate();
 	}
 
@@ -479,6 +501,8 @@ void DCObject::changeBinding(UINT32 dwNewId, DataCollectionOwner *newOwner, BOOL
 		m_description = expandMacros(m_description, MAX_DB_STRING);
 		m_instance = expandMacros(m_instance, MAX_ITEM_NAME);
 	}
+
+   updateTimeIntervalsInternal();
 
    unlock();
 }
@@ -651,7 +675,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
        matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
    {
-      if (m_flags & DCF_ADVANCED_SCHEDULE)
+      if (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)
       {
          if (m_schedules != NULL)
          {
@@ -688,9 +712,9 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
 			if (m_status == ITEM_STATUS_NOT_SUPPORTED)
-		      result = ((m_tLastPoll + getEffectivePollingInterval() * 10 <= currTime) && (m_startTime <= currTime));
+		      result = ((m_lastPoll + getEffectivePollingInterval() * 10 <= currTime) && (m_startTime <= currTime));
 			else
-		      result = ((m_tLastPoll + getEffectivePollingInterval() <= currTime) && (m_startTime <= currTime));
+		      result = ((m_lastPoll + getEffectivePollingInterval() <= currTime) && (m_startTime <= currTime));
       }
    }
    else
@@ -741,8 +765,10 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
    pMsg->setField(VID_FLAGS, m_flags);
    pMsg->setField(VID_SYSTEM_TAG, m_systemTag);
-   pMsg->setField(VID_POLLING_INTERVAL, (UINT32)m_iPollingInterval);
-   pMsg->setField(VID_RETENTION_TIME, (UINT32)m_iRetentionTime);
+   pMsg->setField(VID_POLLING_SCHEDULE_TYPE, static_cast<INT16>(m_pollingScheduleType));
+   pMsg->setField(VID_POLLING_INTERVAL, m_pollingIntervalSrc);
+   pMsg->setField(VID_RETENTION_TYPE, static_cast<INT16>(m_retentionType));
+   pMsg->setField(VID_RETENTION_TIME, m_retentionTimeSrc);
    pMsg->setField(VID_DCI_SOURCE_TYPE, (WORD)m_source);
    pMsg->setField(VID_DCI_STATUS, (WORD)m_status);
 	pMsg->setField(VID_RESOURCE_ID, m_dwResourceId);
@@ -783,14 +809,24 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
    m_systemTag = pMsg->getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DB_STRING);
 	m_flags = pMsg->getFieldAsUInt16(VID_FLAGS);
    m_source = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
-   m_iPollingInterval = pMsg->getFieldAsUInt32(VID_POLLING_INTERVAL);
-   m_iRetentionTime = pMsg->getFieldAsUInt32(VID_RETENTION_TIME);
    setStatus(pMsg->getFieldAsUInt16(VID_DCI_STATUS), true);
 	m_dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
 	m_sourceNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
    m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
 	pMsg->getFieldAsString(VID_PERFTAB_SETTINGS, &m_pszPerfTabSettings);
    pMsg->getFieldAsString(VID_COMMENTS, &m_comments);
+
+   m_pollingScheduleType = static_cast<BYTE>(pMsg->getFieldAsUInt16(VID_POLLING_SCHEDULE_TYPE));
+   if (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM)
+      pMsg->getFieldAsString(VID_POLLING_INTERVAL, &m_pollingIntervalSrc);
+   else
+      MemFreeAndNull(m_pollingIntervalSrc);
+   m_retentionType = static_cast<BYTE>(pMsg->getFieldAsUInt16(VID_RETENTION_TYPE));
+   if (m_retentionType == DC_POLLING_SCHEDULE_CUSTOM)
+      pMsg->getFieldAsString(VID_RETENTION_TIME, &m_retentionTimeSrc);
+   else
+      MemFreeAndNull(m_retentionTimeSrc);
+   updateTimeIntervalsInternal();
 
    TCHAR *pszStr = pMsg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
    setTransformationScript(pszStr);
@@ -955,8 +991,14 @@ void DCObject::updateFromTemplate(DCObject *src)
 	m_description = expandMacros(src->m_description, MAX_DB_STRING);
 	m_systemTag = expandMacros(src->m_systemTag, MAX_DB_STRING);
 
-   m_iPollingInterval = src->m_iPollingInterval;
-   m_iRetentionTime = src->m_iRetentionTime;
+	m_pollingScheduleType = src->m_pollingScheduleType;
+	MemFree(m_pollingIntervalSrc);
+   m_pollingIntervalSrc = MemCopyString(src->m_pollingIntervalSrc);
+   m_retentionType = src->m_retentionType;
+   MemFree(m_retentionTimeSrc);
+   m_retentionTimeSrc = MemCopyString(src->m_retentionTimeSrc);
+   updateTimeIntervalsInternal();
+
    m_source = src->m_source;
 	m_flags = src->m_flags;
 	m_sourceNode = src->m_sourceNode;
@@ -1005,7 +1047,7 @@ void DCObject::updateFromTemplate(DCObject *src)
  *
  * @return true on success
  */
-bool DCObject::processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus)
+bool DCObject::processNewValue(time_t nTimeStamp, void *value, bool *updateStatus)
 {
    *updateStatus = false;
    return false;
@@ -1122,7 +1164,7 @@ INT16 DCObject::getAgentCacheMode()
 }
 
 /**
- * Create DCObject from import file
+ * Update data collection object from import file
  */
 void DCObject::updateFromImport(ConfigEntry *config)
 {
@@ -1132,13 +1174,17 @@ void DCObject::updateFromImport(ConfigEntry *config)
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, NULL);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
-   m_iPollingInterval = config->getSubEntryValueAsInt(_T("interval"));
-   m_iRetentionTime = config->getSubEntryValueAsInt(_T("retention"));
    m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    MemFree(m_pszPerfTabSettings);
    m_pszPerfTabSettings = MemCopyString(perfTabSettings);
    m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
+
+   MemFree(m_pollingIntervalSrc);
+   MemFree(m_retentionTimeSrc);
+   m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
+   m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
+   updateTimeIntervalsInternal();
 
    setTransformationScript(config->getSubEntryValue(_T("transformation")));
 
@@ -1237,13 +1283,13 @@ struct FilterCallbackData
 /**
  * Callback for filtering instances
  */
-static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *value, FilterCallbackData *data)
 {
    if (g_flags & AF_SHUTDOWN)
       return _STOP;
 
-   NXSL_VM *instanceFilter = static_cast<FilterCallbackData*>(data)->instanceFilter;
-   DCObject *dco = static_cast<FilterCallbackData*>(data)->dco;
+   NXSL_VM *instanceFilter = data->instanceFilter;
+   DCObject *dco = data->dco;
    SharedString dcObjectName = dco->getName();
 
    SetupServerScriptVM(instanceFilter, dco->getOwner(), dco);
@@ -1319,7 +1365,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
       }
       if (accepted)
       {
-         ((FilterCallbackData *)data)->filteredInstances->set(instance, new InstanceDiscoveryData(name, relatedObject));
+         data->filteredInstances->set(instance, new InstanceDiscoveryData(name, relatedObject));
       }
       else
       {
@@ -1332,11 +1378,14 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
       TCHAR szBuffer[1024];
       _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
       PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dco->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dco->getId());
-      static_cast<FilterCallbackData*>(data)->filteredInstances->set(key, new InstanceDiscoveryData((const TCHAR *)value, 0));
+      data->filteredInstances->set(key, new InstanceDiscoveryData((const TCHAR *)value, 0));
    }
    return _CONTINUE;
 }
 
+/**
+ * Copy instance discovery data elements
+ */
 static EnumerationCallbackResult CopyElements(const TCHAR *key, const TCHAR *value, StringObjectMap<InstanceDiscoveryData> *map)
 {
    map->set(key, new InstanceDiscoveryData(value, 0));
@@ -1414,6 +1463,34 @@ void DCObject::setInstanceFilter(const TCHAR *pszScript)
 }
 
 /**
+ * Update time intervals (polling and retention) from sources
+ */
+void DCObject::updateTimeIntervalsInternal()
+{
+   if ((m_retentionTimeSrc != NULL) && (*m_retentionTimeSrc != 0))
+   {
+      StringBuffer exp = m_owner->expandText(m_retentionTimeSrc, NULL, NULL, NULL, NULL);
+      m_retentionTime = _tcstol(exp, NULL, 10);
+   }
+   else
+   {
+      m_retentionTime = 0;
+   }
+
+   if ((m_pollingIntervalSrc != NULL) && (*m_pollingIntervalSrc != 0))
+   {
+      StringBuffer exp = m_owner->expandText(m_pollingIntervalSrc, NULL, NULL, NULL, NULL);
+      m_pollingInterval = _tcstol(exp, NULL, 10);
+   }
+   else
+   {
+      m_pollingInterval = 0;
+   }
+
+   nxlog_debug(6, _T("DCObject::updateTimeIntervalsInternal(%s [%d]): retentionTime=%d, pollingInterval=%d"), m_name.cstr(), m_id, m_retentionTime, m_pollingInterval);
+}
+
+/**
  * Checks if this DCO object is visible by current user
  */
 bool DCObject::hasAccess(UINT32 userId)
@@ -1452,9 +1529,9 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "systemTag", json_string_t(m_systemTag));
-   json_object_set_new(root, "lastPoll", json_integer(m_tLastPoll));
-   json_object_set_new(root, "pollingInterval", json_integer(m_iPollingInterval));
-   json_object_set_new(root, "retentionTime", json_integer(m_iRetentionTime));
+   json_object_set_new(root, "lastPoll", json_integer(m_lastPoll));
+   json_object_set_new(root, "pollingInterval", json_string_t(m_pollingIntervalSrc));
+   json_object_set_new(root, "retentionTime", json_string_t(m_retentionTimeSrc));
    json_object_set_new(root, "source", json_integer(m_source));
    json_object_set_new(root, "status", json_integer(m_status));
    json_object_set_new(root, "busy", json_integer(m_busy));
@@ -1513,7 +1590,7 @@ DCObjectInfo::DCObjectInfo(const DCObject *object)
    m_status = object->m_status;
    m_errorCount = object->m_dwErrorCount;
    m_pollingInterval = object->getEffectivePollingInterval();
-   m_lastPollTime = object->m_tLastPoll;
+   m_lastPollTime = object->m_lastPoll;
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
    m_relatedObject = object->getRelatedObject();

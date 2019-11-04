@@ -120,16 +120,25 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 			case DataCollectionEditor.COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())
 					return Messages.get().DciLabelProvider_CustomSchedule;
-				if (dci.getPollingInterval() <= 0)
+				if (dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT)
 				   return Messages.get().DciLabelProvider_Default;
-				return Integer.toString(dci.getPollingInterval());
+				return dci.getPollingInterval();
 			case DataCollectionEditor.COLUMN_RETENTION:
-			   if ((dci.getFlags() & DataCollectionItem.DCF_NO_STORAGE) != 0)
+			   if (dci.getRetentionType() == DataCollectionObject.RETENTION_NONE)
 			      return Messages.get().DciLabelProvider_None;
-				int days = dci.getRetentionTime();
-				if (days <= 0)
-				   return Messages.get().DciLabelProvider_Default;
-				return Integer.toString(days) + ((days == 1) ? Messages.get().DciLabelProvider_Day : Messages.get().DciLabelProvider_Days);
+			   if (dci.getRetentionType() == DataCollectionObject.RETENTION_DEFAULT)
+               return Messages.get().DciLabelProvider_Default;
+			   try
+			   {
+   				int days = Integer.parseInt(dci.getRetentionTime());
+   				if (days <= 0)
+   				   return Messages.get().DciLabelProvider_Default;
+   				return Integer.toString(days) + ((days == 1) ? Messages.get().DciLabelProvider_Day : Messages.get().DciLabelProvider_Days);
+			   }
+			   catch(NumberFormatException e)
+			   {
+			      return dci.getRetentionTime();
+			   }
 			case DataCollectionEditor.COLUMN_STATUS:
 				return statusTexts.get(dci.getStatus());
 			case DataCollectionEditor.COLUMN_THRESHOLD:

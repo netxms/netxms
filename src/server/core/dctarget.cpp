@@ -583,7 +583,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(shared_ptr<DCObject> dco, time_t currTime, const void *value)
+bool DataCollectionTarget::processNewDCValue(shared_ptr<DCObject> dco, time_t currTime, void *value)
 {
    bool updateStatus;
 	bool result = dco->processNewValue(currTime, value, &updateStatus);
@@ -639,6 +639,19 @@ void DataCollectionTarget::queueItemsForPolling()
 			nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"),
 			         m_name, object->getId(), object->getName().cstr());
       }
+   }
+   unlockDciAccess();
+}
+
+/**
+ * Update time intervals in data collection objects
+ */
+void DataCollectionTarget::updateDataCollectionTimeIntervals()
+{
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      m_dcObjects->get(i)->updateTimeIntervals();
    }
    unlockDciAccess();
 }
@@ -1608,6 +1621,9 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    {
       poller->setStatus(_T("instance discovery"));
       doInstanceDiscovery(requestId);
+
+      // Update time intervals in data collection objects
+      updateDataCollectionTimeIntervals();
 
       // Execute hook script
       poller->setStatus(_T("hook"));

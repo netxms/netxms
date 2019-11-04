@@ -24,6 +24,83 @@
 #include <nxevent.h>
 
 /**
+ * Convert flags in items and dc_tables
+ */
+static bool ConvertDCObjectFlags(const TCHAR *table)
+{
+   TCHAR query[256] = _T("SELECT item_id,flags,retention_time,polling_interval FROM ");
+   _tcslcat(query, table, 256);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      UINT32 id = DBGetFieldULong(hResult, i, 0);
+      UINT32 flags = DBGetFieldULong(hResult, i, 1);
+      int retentionTime = DBGetFieldLong(hResult, i, 2);
+      int pollingInterval = DBGetFieldLong(hResult, i, 2);
+      if (((flags & 0x201) != 0) || (pollingInterval > 0) || (retentionTime > 0))
+      {
+         _sntprintf(query, 256, _T("UPDATE %s SET polling_schedule_type='%c',retention_type='%c',flags=%d WHERE item_id=%u"),
+                  table, (flags & 1) ? _T('2') : ((pollingInterval <= 0) ? _T('0') : _T('1')),
+                  (flags & 0x200) ? _T('2') : (retentionTime <= 0) ? _T('0') : _T('1'),
+                  flags & ~0x201, id);
+         CHK_EXEC(SQLQuery(query));
+      }
+   }
+
+   DBFreeResult(hResult);
+   return true;
+}
+
+/**
+ * Upgrade from 31.4 to 31.5
+ */
+static bool H_UpgradeFromV4()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE items ADD polling_schedule_type char(1)\n")
+            _T("ALTER TABLE items ADD retention_type char(1)\n")
+            _T("UPDATE items SET polling_schedule_type='0',retention_type='0'\n")
+            _T("ALTER TABLE dc_tables ADD polling_schedule_type char(1)\n")
+            _T("ALTER TABLE dc_tables ADD retention_type char(1)\n")
+            _T("UPDATE dc_tables SET polling_schedule_type='0',retention_type='0'\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("polling_schedule_type")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("retention_type")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("polling_schedule_type")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("retention_type")));
+
+   CHK_EXEC(ConvertDCObjectFlags(_T("items")));
+   CHK_EXEC(ConvertDCObjectFlags(_T("dc_tables")));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
+ * Upgrade from 31.3 to 31.4
+ */
+static bool H_UpgradeFromV3()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE items ADD polling_interval_src varchar(255)\n")
+            _T("ALTER TABLE items ADD retention_time_src varchar(255)\n")
+            _T("UPDATE items SET polling_interval_src=polling_interval,retention_time_src=retention_time\n")
+            _T("ALTER TABLE dc_tables ADD polling_interval_src varchar(255)\n")
+            _T("ALTER TABLE dc_tables ADD retention_time_src varchar(255)\n")
+            _T("UPDATE dc_tables SET polling_interval_src=polling_interval,retention_time_src=retention_time\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 31.2 to 31.3
  */
 static bool H_UpgradeFromV2()
@@ -167,6 +244,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4,  31, 5, H_UpgradeFromV4 },
+   { 3,  31, 4, H_UpgradeFromV3 },
    { 2,  31, 3, H_UpgradeFromV2 },
    { 1,  31, 2, H_UpgradeFromV1 },
    { 0,  31, 1, H_UpgradeFromV0 },

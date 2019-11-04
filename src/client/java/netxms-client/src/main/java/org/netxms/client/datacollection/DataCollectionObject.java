@@ -55,12 +55,10 @@ public abstract class DataCollectionObject
 	public static final int NOT_SUPPORTED = 2;
 	
 	// common data collection flags
-	public static final int DCF_ADVANCED_SCHEDULE     = 0x0001;
-	public static final int DCF_AGGREGATE_ON_CLUSTER  = 0x0080;
-   public static final int DCF_TRANSFORM_AGGREGATED  = 0x0100;
-   public static final int DCF_NO_STORAGE            = 0x0200;
-   public static final int DCF_CACHE_MODE_MASK       = 0x3000;
-   public static final int DCF_AGGREGATE_WITH_ERRORS = 0x4000;
+	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x0080;
+   public static final int DCF_TRANSFORM_AGGREGATED     = 0x0100;
+   public static final int DCF_CACHE_MODE_MASK          = 0x3000;
+   public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x4000;
    public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x8000;
    
    // Instance discovery methods
@@ -70,14 +68,26 @@ public abstract class DataCollectionObject
    public static final int IDM_SNMP_WALK_VALUES = 3;
    public static final int IDM_SNMP_WALK_OIDS = 4;
    public static final int IDM_SCRIPT = 5;
+   
+   // Polling schedule types
+   public static final int POLLING_SCHEDULE_DEFAULT  = 0;
+   public static final int POLLING_SCHEDULE_CUSTOM   = 1;
+   public static final int POLLING_SCHEDULE_ADVANCED = 2;
+   
+   // Retention types
+   public static final int RETENTION_DEFAULT = 0;
+   public static final int RETENTION_CUSTOM  = 1;
+   public static final int RETENTION_NONE    = 2;
 	
 	protected DataCollectionConfiguration owner;
 	protected long id;
 	protected long templateId;
 	protected long resourceId;
 	protected long sourceNode;
-	protected int pollingInterval;
-	protected int retentionTime;
+	protected int pollingScheduleType;
+	protected String pollingInterval;
+   protected int retentionType;
+	protected String retentionTime;
 	protected int origin;
 	protected int status;
 	protected int flags;
@@ -111,8 +121,10 @@ public abstract class DataCollectionObject
 		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		resourceId = msg.getFieldAsInt64(NXCPCodes.VID_RESOURCE_ID);
 		sourceNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
-		pollingInterval = msg.getFieldAsInt32(NXCPCodes.VID_POLLING_INTERVAL);
-		retentionTime = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TIME);
+		pollingScheduleType = msg.getFieldAsInt32(NXCPCodes.VID_POLLING_SCHEDULE_TYPE);
+		pollingInterval = msg.getFieldAsString(NXCPCodes.VID_POLLING_INTERVAL);
+		retentionType = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TYPE);
+		retentionTime = msg.getFieldAsString(NXCPCodes.VID_RETENTION_TIME);
 		origin = msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE);
 		status = msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
@@ -159,8 +171,10 @@ public abstract class DataCollectionObject
 		templateId = 0;
 		resourceId = 0;
 		sourceNode = 0;
-		pollingInterval = 0; // system default
-		retentionTime = 0; // system default
+		pollingScheduleType = POLLING_SCHEDULE_DEFAULT;
+		pollingInterval = null;
+		retentionType = RETENTION_DEFAULT;
+		retentionTime = null;
 		origin = AGENT;
 		status = ACTIVE;
 		flags = 0;
@@ -191,7 +205,9 @@ public abstract class DataCollectionObject
 	   templateId = dco.templateId;
 	   resourceId = dco.resourceId;
 	   sourceNode = dco.sourceNode;
+	   pollingScheduleType = dco.pollingScheduleType;
 	   pollingInterval = dco.pollingInterval;
+	   retentionType = dco.retentionType;
 	   retentionTime = dco.retentionTime;
 	   origin = dco.origin;
 	   status = dco.status;
@@ -222,8 +238,10 @@ public abstract class DataCollectionObject
 	public void fillMessage(final NXCPMessage msg)
 	{
 		msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)id);
-		msg.setFieldInt32(NXCPCodes.VID_POLLING_INTERVAL, pollingInterval);
-		msg.setFieldInt32(NXCPCodes.VID_RETENTION_TIME, retentionTime);
+		msg.setFieldInt16(NXCPCodes.VID_POLLING_SCHEDULE_TYPE, pollingScheduleType);
+		msg.setField(NXCPCodes.VID_POLLING_INTERVAL, pollingInterval);
+      msg.setFieldInt16(NXCPCodes.VID_RETENTION_TYPE, retentionType);
+		msg.setField(NXCPCodes.VID_RETENTION_TIME, retentionTime);
 		msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
 		msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
 		msg.setField(NXCPCodes.VID_NAME, name);
@@ -312,7 +330,7 @@ public abstract class DataCollectionObject
 	/**
 	 * @return the pollingInterval
 	 */
-	public int getPollingInterval()
+	public String getPollingInterval()
 	{
 		return pollingInterval;
 	}
@@ -322,25 +340,52 @@ public abstract class DataCollectionObject
     */
    public int getComparablePollingInterval()
    {
-      if ((flags & DCF_ADVANCED_SCHEDULE) != 0)
-         return -1;
-      if (pollingInterval <= 0)
-         return 0;
-      return pollingInterval;
+      switch(pollingScheduleType)
+      {
+         case POLLING_SCHEDULE_DEFAULT:
+            return 0;
+         case POLLING_SCHEDULE_ADVANCED:
+            return -1;
+         default:
+            try
+            {
+               return Integer.parseInt(pollingInterval);
+            }
+            catch(NumberFormatException e)
+            {
+               return 0;
+            }
+      }
    }
 
-	/**
+   /**
 	 * @param pollingInterval the pollingInterval to set
 	 */
-	public void setPollingInterval(int pollingInterval)
+	public void setPollingInterval(String pollingInterval)
 	{
 		this.pollingInterval = pollingInterval;
 	}
 
 	/**
+    * @return the pollingScheduleType
+    */
+   public int getPollingScheduleType()
+   {
+      return pollingScheduleType;
+   }
+
+   /**
+    * @param pollingScheduleType the pollingScheduleType to set
+    */
+   public void setPollingScheduleType(int pollingScheduleType)
+   {
+      this.pollingScheduleType = pollingScheduleType;
+   }
+
+	/**
 	 * @return the retentionTime
 	 */
-	public int getRetentionTime()
+	public String getRetentionTime()
 	{
 		return retentionTime;
 	}
@@ -350,20 +395,47 @@ public abstract class DataCollectionObject
 	 */
 	public int getComparableRetentionTime()
 	{
-	   if ((flags & DCF_NO_STORAGE) != 0)
-	      return -1;
-	   if (retentionTime <= 0)
-	      return 0;
-	   return retentionTime;
+	   switch(retentionType)
+	   {
+	      case RETENTION_DEFAULT:
+	         return 0;
+	      case RETENTION_NONE:
+	         return -1;
+	      default:
+	         try
+	         {
+	            return Integer.parseInt(retentionTime);
+	         }
+	         catch(NumberFormatException e)
+	         {
+	            return 0;
+	         }
+	   }
 	}
 
+   /**
+    * @param retentionTime the retentionTime to set
+    */
+   public void setRetentionTime(String retentionTime)
+   {
+      this.retentionTime = retentionTime;
+   }
+
 	/**
-	 * @param retentionTime the retentionTime to set
-	 */
-	public void setRetentionTime(int retentionTime)
-	{
-		this.retentionTime = retentionTime;
-	}
+    * @return the retentionType
+    */
+   public int getRetentionType()
+   {
+      return retentionType;
+   }
+
+   /**
+    * @param retentionType the retentionType to set
+    */
+   public void setRetentionType(int retentionType)
+   {
+      this.retentionType = retentionType;
+   }
 
 	/**
 	 * @return the origin
@@ -402,18 +474,7 @@ public abstract class DataCollectionObject
 	 */
 	public boolean isUseAdvancedSchedule()
 	{
-		return (flags & DCF_ADVANCED_SCHEDULE) != 0;
-	}
-
-	/**
-	 * @param useAdvancedSchedule the useAdvancedSchedule to set
-	 */
-	public void setUseAdvancedSchedule(boolean useAdvancedSchedule)
-	{
-		if (useAdvancedSchedule)
-			flags |= DCF_ADVANCED_SCHEDULE;
-		else
-			flags &= ~DCF_ADVANCED_SCHEDULE;
+		return pollingScheduleType == POLLING_SCHEDULE_ADVANCED;
 	}
 
 	/**

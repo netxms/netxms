@@ -43,6 +43,7 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -165,8 +166,10 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		}
 
 		final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
-		dci.setPollingInterval(pollingInterval);
-		dci.setRetentionTime(retentionTime);
+		dci.setPollingScheduleType(DataCollectionObject.POLLING_SCHEDULE_CUSTOM);
+		dci.setPollingInterval(Integer.toString(pollingInterval));
+		dci.setRetentionType(DataCollectionObject.RETENTION_CUSTOM);
+		dci.setRetentionTime(Integer.toString(retentionTime));
 		if (node.hasAgent())
 		{
 			dci.setOrigin(DataCollectionItem.AGENT);

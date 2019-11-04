@@ -217,6 +217,26 @@ enum class DCObjectStorageClass
 };
 
 /**
+ * Data collection object poll schedule types
+ */
+enum DCObjectPollingScheduleType
+{
+   DC_POLLING_SCHEDULE_DEFAULT = 0,
+   DC_POLLING_SCHEDULE_CUSTOM = 1,
+   DC_POLLING_SCHEDULE_ADVANCED = 2
+};
+
+/**
+ * Data collection object retention types
+ */
+enum DCObjectRetentionType
+{
+   DC_RETENTION_DEFAULT = 0,
+   DC_RETENTION_CUSTOM = 1,
+   DC_RETENTION_NONE = 2
+};
+
+/**
  * Generic data collection object
  */
 class NXCORE_EXPORTABLE DCObject
@@ -229,9 +249,13 @@ protected:
    SharedString m_name;
    SharedString m_description;
    SharedString m_systemTag;
-   time_t m_tLastPoll;           // Last poll time
-   int m_iPollingInterval;       // Polling interval in seconds
-   int m_iRetentionTime;         // Retention time in days
+   time_t m_lastPoll;           // Last poll time
+   int m_pollingInterval;       // Polling interval in seconds
+   int m_retentionTime;         // Retention time in days
+   TCHAR *m_pollingIntervalSrc;
+   TCHAR *m_retentionTimeSrc;
+   BYTE m_pollingScheduleType;   // Polling schedule type - default, custom fixed, advanced
+   BYTE m_retentionType;         // Retention type - default, custom, do not store
    BYTE m_source;                // origin: SNMP, agent, etc.
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
@@ -273,6 +297,8 @@ protected:
 	bool loadCustomSchedules(DB_HANDLE hdb);
    bool matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currLocalTime, time_t currTimestamp);
 
+   void updateTimeIntervalsInternal();
+
 	StringBuffer expandMacros(const TCHAR *src, size_t dstLen);
 
    void setTransformationScript(const TCHAR *source);
@@ -281,8 +307,8 @@ protected:
 
 	// --- constructors ---
    DCObject();
-   DCObject(UINT32 dwId, const TCHAR *szName, int iSource, int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
-            const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
+   DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime, DataCollectionOwner *owner,
+            const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
 	DCObject(ConfigEntry *config, DataCollectionOwner *owner);
    DCObject(const DCObject *src, bool shadowCopy);
 
@@ -301,7 +327,7 @@ public:
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
-   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    void processNewError(bool noInstance);
    virtual void processNewError(bool noInstance, time_t now);
    virtual void updateThresholdsBeforeMaintenanceState();
@@ -316,8 +342,7 @@ public:
    SharedString getName() const { return GetAttributeWithLock(m_name, m_hMutex); }
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_hMutex); }
 	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
-   int getPollingInterval() const { return m_iPollingInterval; }
-   int getEffectivePollingInterval() const { return (m_iPollingInterval > 0) ? m_iPollingInterval : m_defaultPollingInterval; }
+   int getEffectivePollingInterval() const { return (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? std::max(m_pollingInterval, 1) : m_defaultPollingInterval; }
    DataCollectionOwner *getOwner() const { return m_owner; }
    UINT32 getOwnerId() const;
    const TCHAR *getOwnerName() const;
@@ -325,7 +350,7 @@ public:
    UINT32 getTemplateItemId() const { return m_dwTemplateItemId; }
 	UINT32 getResourceId() const { return m_dwResourceId; }
 	UINT32 getSourceNode() const { return m_sourceNode; }
-	time_t getLastPollTime() const { return m_tLastPoll; }
+	time_t getLastPollTime() const { return m_lastPoll; }
 	UINT32 getErrorCount() const { return m_dwErrorCount; }
 	WORD getSnmpPort() const { return m_snmpPort; }
    bool isShowOnObjectTooltip() const { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
@@ -333,11 +358,10 @@ public:
    bool isAggregateOnCluster() const { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
 	bool isStatusDCO() const { return (m_flags & DCF_CALCULATE_NODE_STATUS) ? true : false; }
    bool isAggregateWithErrors() const { return (m_flags & DCF_AGGREGATE_WITH_ERRORS) ? true : false; }
-   bool isAdvancedSchedule() const { return (m_flags & DCF_ADVANCED_SCHEDULE) ? true : false; }
+   bool isAdvancedSchedule() const { return m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED; }
    int getAggregationFunction() const { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
-   int getRetentionTime() const { return m_iRetentionTime; }
-   DCObjectStorageClass getStorageClass() const { return storageClassFromRetentionTime(m_iRetentionTime); }
-   int getEffectiveRetentionTime() const { return (m_iRetentionTime > 0) ? m_iRetentionTime : m_defaultRetentionTime; }
+   DCObjectStorageClass getStorageClass() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? storageClassFromRetentionTime(m_retentionTime) : DCObjectStorageClass::DEFAULT; }
+   int getEffectiveRetentionTime() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? std::max(m_retentionTime, 1) : m_defaultRetentionTime; }
    INT16 getAgentCacheMode();
    bool hasValue();
    bool hasAccess(UINT32 userId);
@@ -346,16 +370,17 @@ public:
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
-   void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
+   void setLastPollTime(time_t lastPoll) { m_lastPoll = lastPoll; }
    void setStatus(int status, bool generateEvent);
    void setBusyFlag() { m_busy = 1; }
    void clearBusyFlag() { m_busy = 0; }
    void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
+   void updateTimeIntervals() { lock(); updateTimeIntervalsInternal(); unlock(); }
 
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
 
-   virtual void changeBinding(UINT32 dwNewId, DataCollectionOwner *newOwner, BOOL doMacroExpansion);
+   virtual void changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doMacroExpansion);
 
 	virtual bool deleteAllData();
 	virtual bool deleteEntry(time_t timestamp);
@@ -430,10 +455,10 @@ protected:
 
 public:
    DCItem(const DCItem *src, bool shadowCopy);
-   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay);
-   DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
-          int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
-          const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
+   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay);
+   DCItem(UINT32 id, const TCHAR *name, int source, int dataType,
+          const TCHAR *pollingInterval, const TCHAR *retentionTime, DataCollectionOwner *owner,
+          const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
 	DCItem(ConfigEntry *config, DataCollectionOwner *owner);
    virtual ~DCItem();
 
@@ -463,7 +488,7 @@ public:
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 
-   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus) override;
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus) override;
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void updateThresholdsBeforeMaintenanceState() override;
    virtual void generateEventsBasedOnThrDiff() override;
@@ -479,7 +504,7 @@ public:
    void updateFromMessage(NXCPMessage *msg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
 
-   virtual void changeBinding(UINT32 dwNewId, DataCollectionOwner *pNode, BOOL doMacroExpansion) override;
+   virtual void changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doMacroExpansion) override;
 
 	virtual bool deleteAllData() override;
    virtual bool deleteEntry(time_t timestamp) override;
@@ -695,9 +720,9 @@ protected:
 
 public:
    DCTable(const DCTable *src, bool shadowCopy);
-   DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
-         DataCollectionOwner *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
-   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay);
+   DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
+         DataCollectionOwner *owner, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
+   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay);
    DCTable(ConfigEntry *config, DataCollectionOwner *owner);
 	virtual ~DCTable();
 
@@ -711,7 +736,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
 
-   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus) override;
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus) override;
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void updateThresholdsBeforeMaintenanceState() override;
    virtual void generateEventsBasedOnThrDiff() override;

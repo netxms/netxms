@@ -81,7 +81,7 @@ bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, DCObjectS
    if (dci->getType() != DCO_TYPE_ITEM)
       return false;
 
-   time_t interval = dci->getPollingInterval();
+   time_t interval = dci->getEffectivePollingInterval();
    time_t t = time(NULL);
    for(int i = 0; i < count; i++)
    {

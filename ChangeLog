@@ -4,6 +4,7 @@
 
 - Added physical links inventory for node interfaces and patch panels
 - Can enable usage of ICMP ping on primary IP address during status poll
+- Macro expansion in DCI polling interval and retention time values
 - New attribute "isInMaintenanceMode" in NXSL class "NetObj"
 - New attributes "dci" and "dciId" in NXSL class "Event"
 - New method "forcePoll" in NXSL class "DCI"

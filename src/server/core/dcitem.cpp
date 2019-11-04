@@ -84,58 +84,63 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
  *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
- *    instance_retention_time,grace_period_start,related_object
+ *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
+ *    retention_type,polling_interval_src,retention_time_src
  */
-DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay) : DCObject()
+DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay) : DCObject()
 {
    TCHAR readBuffer[4096];
 
-   m_owner = pNode;
-   m_id = DBGetFieldULong(hResult, iRow, 0);
-   m_name = DBGetField(hResult, iRow, 1, readBuffer, 4096);
-   m_source = (BYTE)DBGetFieldLong(hResult, iRow, 2);
-   m_dataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
-   m_iPollingInterval = DBGetFieldLong(hResult, iRow, 4);
-   m_iRetentionTime = DBGetFieldLong(hResult, iRow, 5);
-   m_status = (BYTE)DBGetFieldLong(hResult, iRow, 6);
-   m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
-   TCHAR *pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
+   m_owner = owner;
+   m_id = DBGetFieldULong(hResult, row, 0);
+   m_name = DBGetField(hResult, row, 1, readBuffer, 4096);
+   m_source = (BYTE)DBGetFieldLong(hResult, row, 2);
+   m_dataType = (BYTE)DBGetFieldLong(hResult, row, 3);
+   m_pollingInterval = DBGetFieldLong(hResult, row, 4);
+   m_retentionTime = DBGetFieldLong(hResult, row, 5);
+   m_status = (BYTE)DBGetFieldLong(hResult, row, 6);
+   m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, row, 7);
+   TCHAR *pszTmp = DBGetField(hResult, row, 8, NULL, 0);
    setTransformationScript(pszTmp);
    MemFree(pszTmp);
-   m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
-   m_description = DBGetField(hResult, iRow, 10, readBuffer, 4096);
-   m_instance = DBGetField(hResult, iRow, 11, readBuffer, 4096);
-   m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
+   m_dwTemplateId = DBGetFieldULong(hResult, row, 9);
+   m_description = DBGetField(hResult, row, 10, readBuffer, 4096);
+   m_instance = DBGetField(hResult, row, 11, readBuffer, 4096);
+   m_dwTemplateItemId = DBGetFieldULong(hResult, row, 12);
    m_thresholds = NULL;
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
-   m_flags = (WORD)DBGetFieldLong(hResult, iRow, 13);
-	m_dwResourceId = DBGetFieldULong(hResult, iRow, 14);
-	m_sourceNode = DBGetFieldULong(hResult, iRow, 15);
-	m_nBaseUnits = DBGetFieldLong(hResult, iRow, 16);
-	m_nMultiplier = DBGetFieldLong(hResult, iRow, 17);
-	m_customUnitName = DBGetField(hResult, iRow, 18, NULL, 0);
-	m_pszPerfTabSettings = DBGetField(hResult, iRow, 19, NULL, 0);
-	m_systemTag = DBGetField(hResult, iRow, 20, readBuffer, 4096);
-	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 21);
-	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, iRow, 22);
-	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 23);
-	m_instanceDiscoveryData = DBGetField(hResult, iRow, 24, readBuffer, 4096);
+   m_flags = (WORD)DBGetFieldLong(hResult, row, 13);
+	m_dwResourceId = DBGetFieldULong(hResult, row, 14);
+	m_sourceNode = DBGetFieldULong(hResult, row, 15);
+	m_nBaseUnits = DBGetFieldLong(hResult, row, 16);
+	m_nMultiplier = DBGetFieldLong(hResult, row, 17);
+	m_customUnitName = DBGetField(hResult, row, 18, NULL, 0);
+	m_pszPerfTabSettings = DBGetField(hResult, row, 19, NULL, 0);
+	m_systemTag = DBGetField(hResult, row, 20, readBuffer, 4096);
+	m_snmpPort = (WORD)DBGetFieldLong(hResult, row, 21);
+	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, row, 22);
+	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 23);
+	m_instanceDiscoveryData = DBGetField(hResult, row, 24, readBuffer, 4096);
 	m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
-   pszTmp = DBGetField(hResult, iRow, 25, NULL, 0);
+   pszTmp = DBGetField(hResult, row, 25, NULL, 0);
 	setInstanceFilter(pszTmp);
    MemFree(pszTmp);
-	m_sampleCount = DBGetFieldLong(hResult, iRow, 26);
-   m_comments = DBGetField(hResult, iRow, 27, NULL, 0);
-   m_guid = DBGetFieldGUID(hResult, iRow, 28);
-   DBGetField(hResult, iRow, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
-   m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 30);
-   m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 31);
-   m_relatedObject = DBGetFieldLong(hResult, iRow, 32);
+	m_sampleCount = DBGetFieldLong(hResult, row, 26);
+   m_comments = DBGetField(hResult, row, 27, NULL, 0);
+   m_guid = DBGetFieldGUID(hResult, row, 28);
+   DBGetField(hResult, row, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
+   m_instanceRetentionTime = DBGetFieldLong(hResult, row, 30);
+   m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 31);
+   m_relatedObject = DBGetFieldLong(hResult, row, 32);
+   m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 33));
+   m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 34));
+   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 35, NULL, 0) : NULL;
+   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 36, NULL, 0) : NULL;
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
@@ -151,24 +156,26 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *
 		   TCHAR szBuffer[MAX_DB_STRING];
          m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
          m_tPrevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
-         m_tLastPoll = m_tPrevValueTimeStamp;
+         m_lastPoll = m_tPrevValueTimeStamp;
       }
       DBFreeResult(hTempResult);
    }
 
    loadAccessList(hdb);
 	loadCustomSchedules(hdb);
+
+	updateTimeIntervalsInternal();
 }
 
 /**
  * Constructor for creating new DCItem from scratch
  */
-DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
-               int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
-               const TCHAR *pszDescription, const TCHAR *systemTag)
-	: DCObject(dwId, szName, iSource, iPollingInterval, iRetentionTime, pNode, pszDescription, systemTag)
+DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType,
+         const TCHAR *pollingInterval, const TCHAR *retentionTime, DataCollectionOwner *owner,
+         const TCHAR *description, const TCHAR *systemTag)
+	: DCObject(id, name, source, pollingInterval, retentionTime, owner, description, systemTag)
 {
-   m_dataType = iDataType;
+   m_dataType = dataType;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
    m_thresholds = NULL;
@@ -308,7 +315,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       _T("flags"), _T("resource_id"), _T("proxy_node"), _T("base_units"), _T("unit_multiplier"), _T("custom_units_name"),
       _T("perftab_settings"), _T("system_tag"), _T("snmp_port"), _T("snmp_raw_value_type"), _T("instd_method"), _T("instd_data"),
       _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
-      _T("grace_period_start"),_T("related_object"),
+      _T("grace_period_start"),_T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
+      _T("polling_schedule_type"), _T("retention_type"),
       NULL
    };
 
@@ -323,8 +331,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME - 1);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_source);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_dataType);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_iPollingInterval);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_iRetentionTime);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_pollingInterval);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_retentionTime);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_status);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_deltaCalculation);
 	DBBind(hStmt, 10, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
@@ -351,7 +359,16 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
    DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
    DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_relatedObject);
-   DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_pollingIntervalSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
+   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_retentionTimeSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
+   TCHAR pt[2], rt[2];
+   pt[0] = m_pollingScheduleType + '0';
+   pt[1] = 0;
+   rt[0] = m_retentionType + '0';
+   rt[1] = 0;
+   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
+   DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
+   DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_id);
 
    bool bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -639,7 +656,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
  *
  * @return true on success
  */
-bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool *updateStatus)
+bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *updateStatus)
 {
    ItemValue rawValue, *pValue;
 
@@ -653,7 +670,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    }
 
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue((const TCHAR *)originalValue, tmTimeStamp);
+   pValue = new ItemValue(static_cast<TCHAR*>(originalValue), tmTimeStamp);
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
@@ -687,12 +704,12 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
       m_tPrevValueTimeStamp = tmTimeStamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(tmTimeStamp, m_id, (const TCHAR *)originalValue, pValue->getString());
+      QueueRawDciDataUpdate(tmTimeStamp, m_id, static_cast<TCHAR*>(originalValue), pValue->getString());
    }
 
 	// Save transformed value to database
-   if ((m_flags & DCF_NO_STORAGE) == 0)
-	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, (const TCHAR *)originalValue, pValue->getString(), getStorageClass());
+   if (m_retentionType != DC_RETENTION_NONE)
+	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), getStorageClass());
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
@@ -1075,12 +1092,12 @@ int DCItem::getNXSLDataType() const
 /**
  * Set new ID and node/template association
  */
-void DCItem::changeBinding(UINT32 dwNewId, DataCollectionOwner *pNewNode, BOOL doMacroExpansion)
+void DCItem::changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doMacroExpansion)
 {
-	DCObject::changeBinding(dwNewId, pNewNode, doMacroExpansion);
+	DCObject::changeBinding(newId, newOwner, doMacroExpansion);
 
    lock();
-	if (dwNewId != 0)
+	if (newId != 0)
 	{
 		for(int i = 0; i < getThresholdCount(); i++)
          m_thresholds->get(i)->bindToItem(m_id, m_owner->getId());
@@ -1166,7 +1183,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
       // Load missing values from database
       // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
       // to reduce load on database at server startup
-      if (allowLoad && (m_owner != NULL) && (((m_requiredCacheSize - m_cacheSize) * m_iPollingInterval > 300) || (m_source == DS_PUSH_AGENT)))
+      if (allowLoad && (m_owner != NULL) && (((m_requiredCacheSize - m_cacheSize) * getEffectivePollingInterval() > 300) || (m_source == DS_PUSH_AGENT)))
       {
          m_bCacheLoaded = false;
          g_dciCacheLoaderQueue.put(createDescriptor());
@@ -1780,8 +1797,8 @@ void DCItem::createExportRecord(StringBuffer &xml)
                           _T("\t\t\t\t\t<dataType>%d</dataType>\n")
                           _T("\t\t\t\t\t<samples>%d</samples>\n")
                           _T("\t\t\t\t\t<origin>%d</origin>\n")
-                          _T("\t\t\t\t\t<interval>%d</interval>\n")
-                          _T("\t\t\t\t\t<retention>%d</retention>\n")
+                          _T("\t\t\t\t\t<interval>%s</interval>\n")
+                          _T("\t\t\t\t\t<retention>%s</retention>\n")
                           _T("\t\t\t\t\t<instance>%s</instance>\n")
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<delta>%d</delta>\n")
@@ -1794,7 +1811,9 @@ void DCItem::createExportRecord(StringBuffer &xml)
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
-                          m_dataType, m_sampleCount, (int)m_source, m_iPollingInterval, m_iRetentionTime,
+                          m_dataType, m_sampleCount, (int)m_source,
+                          (const TCHAR *)EscapeStringForXML2(m_pollingIntervalSrc),
+                          (const TCHAR *)EscapeStringForXML2(m_retentionTimeSrc),
                           (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_deltaCalculation, (int)m_flags,
@@ -2098,7 +2117,7 @@ json_t *DCItem::toJson()
 void DCItem::prepareForRecalc()
 {
    m_tPrevValueTimeStamp = 0;
-   m_tLastPoll = 0;
+   m_lastPoll = 0;
    updateCacheSizeInternal(false);
 }
 
@@ -2134,7 +2153,7 @@ void DCItem::recalculateValue(ItemValue &value)
       m_ppValueCache[0] = new ItemValue(&value);
    }
 
-   m_tLastPoll = value.getTimeStamp();
+   m_lastPoll = value.getTimeStamp();
 }
 
 /**

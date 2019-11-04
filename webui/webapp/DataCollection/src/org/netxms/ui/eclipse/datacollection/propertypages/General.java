@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,8 +91,8 @@ public class General extends DCIPropertyPageDialog
 	private Combo agentCacheMode;
 	private Combo schedulingMode;
 	private Combo retentionMode;
-	private LabeledSpinner pollingInterval;
-	private LabeledSpinner retentionTime;
+	private LabeledText pollingInterval;
+	private LabeledText retentionTime;
 	private LabeledSpinner sampleCount;
 	private Button statusActive;
 	private Button statusDisabled;
@@ -350,7 +350,7 @@ public class General extends DCIPropertyPageDialog
       schedulingMode.add(Messages.get().General_FixedIntervalsDefault);
       schedulingMode.add(Messages.get().General_FixedIntervalsCustom);
       schedulingMode.add(Messages.get().General_CustomSchedule);
-      schedulingMode.select(dci.isUseAdvancedSchedule() ? 2 : ((dci.getPollingInterval() > 0) ? 1 : 0));
+      schedulingMode.select(dci.getPollingScheduleType());
       schedulingMode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
 			@Override
@@ -366,11 +366,10 @@ public class General extends DCIPropertyPageDialog
 			}
       });
       
-      pollingInterval = new LabeledSpinner(groupPolling, SWT.NONE);
+      pollingInterval = new LabeledText(groupPolling, SWT.NONE);
       pollingInterval.setLabel(Messages.get().General_PollingInterval);
-      pollingInterval.setRange(1, 99999);
-      pollingInterval.setSelection((dci.getPollingInterval() > 0) ? dci.getPollingInterval() : ConsoleSharedData.getSession().getDefaultDciPollingInterval());
-      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getPollingInterval() > 0) && (dci.getOrigin() != DataCollectionItem.PUSH));
+      pollingInterval.setText(dci.getPollingInterval());
+      pollingInterval.setEnabled((dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dci.getOrigin() != DataCollectionItem.PUSH));
       fd = new FormData();
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.right = new FormAttachment(100, 0);
@@ -420,7 +419,7 @@ public class General extends DCIPropertyPageDialog
       retentionMode.add(Messages.get().General_UseDefaultRetention);
       retentionMode.add(Messages.get().General_UseCustomRetention);
       retentionMode.add(Messages.get().General_NoStorage);
-      retentionMode.select(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0) ? 2 : ((dci.getRetentionTime() > 0) ? 1 : 0));
+      retentionMode.select(dci.getRetentionType());
       retentionMode.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
@@ -436,23 +435,14 @@ public class General extends DCIPropertyPageDialog
          }
       });
       
-      retentionTime = new LabeledSpinner(groupStorage, SWT.NONE);
+      retentionTime = new LabeledText(groupStorage, SWT.NONE);
       retentionTime.setLabel(Messages.get().General_RetentionTime);
-      retentionTime.setRange(1, 99999);
-      retentionTime.setSelection((dci.getRetentionTime() > 0) ? dci.getRetentionTime() : ConsoleSharedData.getSession().getDefaultDciRetentionTime());
-      retentionTime.setEnabled(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) == 0) && (dci.getRetentionTime() > 0));
+      retentionTime.setText(dci.getRetentionTime());
+      retentionTime.setEnabled(dci.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       retentionTime.setLayoutData(gd);
-      
-      int mode = 0;
-      if ((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0)
-         mode = 2;
-      else if (dci.getRetentionTime() > 0)
-         mode = 1;
-      retentionMode.select(mode);
-      retentionTime.setEnabled(mode == 1);
       
       onOriginChange();
       return dialogArea;
@@ -558,9 +548,10 @@ public class General extends DCIPropertyPageDialog
 		dci.setSampleCount(sampleCount.getSelection());
 		dci.setSourceNode(sourceNode.getObjectId());
 		dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
-		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 2);
-		dci.setPollingInterval((schedulingMode.getSelectionIndex() == 0) ? 0 : pollingInterval.getSelection());
-		dci.setRetentionTime((retentionMode.getSelectionIndex() == 0) ? 0 : retentionTime.getSelection());
+		dci.setPollingScheduleType(schedulingMode.getSelectionIndex());
+		dci.setPollingInterval((schedulingMode.getSelectionIndex() == 1) ? pollingInterval.getText() : null);
+		dci.setRetentionType(retentionMode.getSelectionIndex());
+		dci.setRetentionTime((retentionMode.getSelectionIndex() == 1) ? retentionTime.getText() : null);
 		dci.setSnmpRawValueInOctetString(checkInterpretRawSnmpValue.getSelection());
 		dci.setSnmpRawValueType(snmpRawType.getSelectionIndex());
 		if (checkUseCustomSnmpPort.getSelection())
@@ -579,11 +570,6 @@ public class General extends DCIPropertyPageDialog
 		else if (statusUnsupported.getSelection())
 			dci.setStatus(DataCollectionItem.NOT_SUPPORTED);
 		
-      if (retentionMode.getSelectionIndex() == 2)
-         dci.setFlags(dci.getFlags() | DataCollectionObject.DCF_NO_STORAGE);
-      else
-         dci.setFlags(dci.getFlags() & ~DataCollectionObject.DCF_NO_STORAGE);
-      
 		editor.modify();
 		return true;
 	}
@@ -614,14 +600,15 @@ public class General extends DCIPropertyPageDialog
 	{
 		super.performDefaults();
 		
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		NXCSession session = ConsoleSharedData.getSession();
 		
 		schedulingMode.select(0);
-		pollingInterval.setSelection(session.getDefaultDciPollingInterval());
+		pollingInterval.setText(Integer.toString(session.getDefaultDciPollingInterval()));
 		statusActive.setSelection(true);
 		statusDisabled.setSelection(false);
 		statusUnsupported.setSelection(false);
-		retentionTime.setSelection(session.getDefaultDciRetentionTime());
+		retentionMode.select(0);
+		retentionTime.setText(Integer.toString(session.getDefaultDciRetentionTime()));
 		checkInterpretRawSnmpValue.setSelection(false);
 		checkUseCustomSnmpPort.setSelection(false);
 		customSnmpPort.setSelection(161);

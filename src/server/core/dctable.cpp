@@ -135,9 +135,9 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
 /**
  * Constructor for creating new DCTable from scratch
  */
-DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
-                 DataCollectionOwner *node, const TCHAR *description, const TCHAR *systemTag)
-        : DCObject(id, name, source, pollingInterval, retentionTime, node, description, systemTag)
+DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
+                 DataCollectionOwner *owner, const TCHAR *description, const TCHAR *systemTag)
+        : DCObject(id, name, source, pollingInterval, retentionTime, owner, description, systemTag)
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
@@ -152,44 +152,49 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance,instance_retention_time,grace_period_start,
- *    related_object
+ *    related_object,polling_schedule_type,retention_type,polling_interval_src,
+ *    retention_time_src
  */
-DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay) : DCObject()
+DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay) : DCObject()
 {
    TCHAR readBuffer[4096];
 
-   m_owner = pNode;
-   m_id = DBGetFieldULong(hResult, iRow, 0);
-   m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
-   m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 2);
-	m_name = DBGetField(hResult, iRow, 3, readBuffer, 4096);
-   m_description = DBGetField(hResult, iRow, 4, readBuffer, 4096);
-   m_flags = (WORD)DBGetFieldLong(hResult, iRow, 5);
-   m_source = (BYTE)DBGetFieldLong(hResult, iRow, 6);
-	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 7);
-   m_iPollingInterval = DBGetFieldLong(hResult, iRow, 8);
-   m_iRetentionTime = DBGetFieldLong(hResult, iRow, 9);
-   m_status = (BYTE)DBGetFieldLong(hResult, iRow, 10);
-	m_systemTag = DBGetField(hResult, iRow, 11, readBuffer, 4096);
-	m_dwResourceId = DBGetFieldULong(hResult, iRow, 12);
-	m_sourceNode = DBGetFieldULong(hResult, iRow, 13);
-	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
-   TCHAR *pszTmp = DBGetField(hResult, iRow, 15, NULL, 0);
-   m_comments = DBGetField(hResult, iRow, 16, NULL, 0);
-   m_guid = DBGetFieldGUID(hResult, iRow, 17);
+   m_owner = owner;
+   m_id = DBGetFieldULong(hResult, row, 0);
+   m_dwTemplateId = DBGetFieldULong(hResult, row, 1);
+   m_dwTemplateItemId = DBGetFieldULong(hResult, row, 2);
+	m_name = DBGetField(hResult, row, 3, readBuffer, 4096);
+   m_description = DBGetField(hResult, row, 4, readBuffer, 4096);
+   m_flags = (WORD)DBGetFieldLong(hResult, row, 5);
+   m_source = (BYTE)DBGetFieldLong(hResult, row, 6);
+	m_snmpPort = (WORD)DBGetFieldLong(hResult, row, 7);
+   m_pollingInterval = DBGetFieldLong(hResult, row, 8);
+   m_retentionTime = DBGetFieldLong(hResult, row, 9);
+   m_status = (BYTE)DBGetFieldLong(hResult, row, 10);
+	m_systemTag = DBGetField(hResult, row, 11, readBuffer, 4096);
+	m_dwResourceId = DBGetFieldULong(hResult, row, 12);
+	m_sourceNode = DBGetFieldULong(hResult, row, 13);
+	m_pszPerfTabSettings = DBGetField(hResult, row, 14, NULL, 0);
+   TCHAR *pszTmp = DBGetField(hResult, row, 15, NULL, 0);
+   m_comments = DBGetField(hResult, row, 16, NULL, 0);
+   m_guid = DBGetFieldGUID(hResult, row, 17);
    setTransformationScript(pszTmp);
    MemFree(pszTmp);
-   m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 18);
-   m_instanceDiscoveryData = DBGetField(hResult, iRow, 19, readBuffer, 4096);
+   m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 18);
+   m_instanceDiscoveryData = DBGetField(hResult, row, 19, readBuffer, 4096);
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
-   pszTmp = DBGetField(hResult, iRow, 20, NULL, 0);
+   pszTmp = DBGetField(hResult, row, 20, NULL, 0);
    setInstanceFilter(pszTmp);
    MemFree(pszTmp);
-   m_instance = DBGetField(hResult, iRow, 21, readBuffer, 4096);
-   m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 22);
-   m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 23);
-   m_relatedObject = DBGetFieldLong(hResult, iRow, 24);
+   m_instance = DBGetField(hResult, row, 21, readBuffer, 4096);
+   m_instanceRetentionTime = DBGetFieldLong(hResult, row, 22);
+   m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 23);
+   m_relatedObject = DBGetFieldLong(hResult, row, 24);
+   m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 25));
+   m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 26));
+   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 27, NULL, 0) : NULL;
+   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 28, NULL, 0) : NULL;
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
@@ -217,6 +222,8 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner
 
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
    loadThresholds(hdb);
+
+   updateTimeIntervalsInternal();
 }
 
 /**
@@ -335,7 +342,7 @@ bool DCTable::deleteEntry(time_t timestamp)
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateStatus)
+bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
 {
    *updateStatus = false;
    lock();
@@ -344,7 +351,7 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
    if (m_owner == NULL)
    {
       unlock();
-      ((Table *)value)->decRefCount();
+      static_cast<Table*>(value)->decRefCount();
       return false;
    }
 
@@ -353,10 +360,10 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
    // should not be used on aggregation
    if ((m_owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform((Table *)value))
+      if (!transform(static_cast<Table*>(value)))
       {
          unlock();
-         ((Table *)value)->decRefCount();
+         static_cast<Table*>(value)->decRefCount();
          return false;
       }
    }
@@ -364,16 +371,16 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
    m_dwErrorCount = 0;
    if (m_lastValue != NULL)
       m_lastValue->decRefCount();
-	m_lastValue = (Table *)value;
+	m_lastValue = static_cast<Table*>(value);
 	m_lastValue->setTitle(m_description);
    m_lastValue->setSource(m_source);
 
 	// Copy required fields into local variables
 	UINT32 tableId = m_id;
 	UINT32 nodeId = m_owner->getId();
-   bool save = (m_flags & DCF_NO_STORAGE) == 0;
+   bool save = (m_retentionType != DC_RETENTION_NONE);
 
-   ((Table *)value)->incRefCount();
+   static_cast<Table*>(value)->incRefCount();
 
    unlock();
 
@@ -389,7 +396,7 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
       }
 
       bool success = false;
-	   Table *data = (Table *)value;
+	   Table *data = static_cast<Table*>(value);
 
 	   DB_STATEMENT hStmt;
 	   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
@@ -429,12 +436,12 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
 	   DBConnectionPoolReleaseConnection(hdb);
    }
    if ((g_offlineDataRelevanceTime <= 0) || (timestamp > (time(NULL) - g_offlineDataRelevanceTime)))
-      checkThresholds((Table *)value);
+      checkThresholds(static_cast<Table*>(value));
 
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
-      PerfDataStorageRequest(this, timestamp, (Table *)value);
+      PerfDataStorageRequest(this, timestamp, static_cast<Table*>(value));
 
-   ((Table *)value)->decRefCount();
+   static_cast<Table*>(value)->decRefCount();
    return true;
 }
 
@@ -581,7 +588,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       _T("snmp_port"), _T("polling_interval"), _T("retention_time"), _T("status"), _T("system_tag"), _T("resource_id"),
       _T("proxy_node"), _T("perftab_settings"), _T("transformation_script"), _T("comments"), _T("guid"),
       _T("instd_method"), _T("instd_data"), _T("instd_filter"), _T("instance"), _T("instance_retention_time"),
-      _T("grace_period_start"), _T("related_object"),
+      _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
+      _T("polling_schedule_type"), _T("retention_type"),
       NULL
    };
 
@@ -599,8 +607,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_source);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (UINT32)m_snmpPort);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_iPollingInterval);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_iRetentionTime);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_pollingInterval);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_retentionTime);
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_status);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwResourceId);
@@ -616,7 +624,16 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
    DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
    DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_relatedObject);
-   DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_pollingIntervalSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
+   DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_retentionTimeSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
+   TCHAR pt[2], rt[2];
+   pt[0] = m_pollingScheduleType + '0';
+   pt[1] = 0;
+   rt[0] = m_retentionType + '0';
+   rt[1] = 0;
+   DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
+   DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
+   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -862,7 +879,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId)
    pMsg->setField(dwId++, (WORD)m_source);
    pMsg->setField(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
    pMsg->setField(dwId++, _T(""));             // compatibility: value
-   pMsg->setField(dwId++, (UINT32)m_tLastPoll);
+   pMsg->setField(dwId++, (UINT32)m_lastPoll);
    pMsg->setField(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
 	pMsg->setField(dwId++, (WORD)getType());
 	pMsg->setField(dwId++, m_dwErrorCount);
@@ -1083,8 +1100,8 @@ void DCTable::createExportRecord(StringBuffer &xml)
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
                           _T("\t\t\t\t\t<origin>%d</origin>\n")
-                          _T("\t\t\t\t\t<interval>%d</interval>\n")
-                          _T("\t\t\t\t\t<retention>%d</retention>\n")
+                          _T("\t\t\t\t\t<interval>%s</interval>\n")
+                          _T("\t\t\t\t\t<retention>%s</retention>\n")
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
@@ -1095,7 +1112,8 @@ void DCTable::createExportRecord(StringBuffer &xml)
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
-                          (int)m_source, m_iPollingInterval, m_iRetentionTime,
+                          (int)m_source, (const TCHAR *)EscapeStringForXML2(m_pollingIntervalSrc),
+                          (const TCHAR *)EscapeStringForXML2(m_retentionTimeSrc),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_flags, (int)m_snmpPort, (int)m_instanceDiscoveryMethod,
 								  (const TCHAR *)EscapeStringForXML2(m_instance), m_instanceRetentionTime,

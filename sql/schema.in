@@ -748,8 +748,12 @@ CREATE TABLE items
   source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
   snmp_port integer not null,
   datatype integer not null,
+  polling_schedule_type char(1) not null,
   polling_interval integer not null,
+  polling_interval_src varchar(255) null,
+  retention_type char(1) not null,
   retention_time integer not null,
+  retention_time_src varchar(255) null,
   status integer not null,      // ACTIVE, DISABLED or NOT_SUPPORTED
   snmp_raw_value_type integer not null,
   delta_calculation integer not null,
@@ -820,8 +824,12 @@ CREATE TABLE dc_tables
   flags integer not null,
   source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
   snmp_port integer not null,
+  polling_schedule_type char(1) not null,
   polling_interval integer not null,
+  polling_interval_src varchar(255) null,
+  retention_type char(1) not null,
   retention_time integer not null,
+  retention_time_src varchar(255) null,
   status integer not null,      // ACTIVE, DISABLED or NOT_SUPPORTED
   system_tag varchar(255) null,         // System tag
   resource_id integer not null,   // associated cluster resource ID
