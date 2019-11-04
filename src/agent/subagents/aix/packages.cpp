@@ -74,8 +74,8 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
       {
          value->addRow();
 
-         // use fileset name if product type is "fileset" and name otherwise
-         value->set(0, *(data[6]) == 'F' ? data[1] : data[0]);
+         // use name if product type is "RPM" and fileset name otherwise
+         value->set(0, *(data[6]) == 'R' ? data[0] : data[1]);
          value->set(1, data[2]);
          value->set(5, data[7]);
       }
