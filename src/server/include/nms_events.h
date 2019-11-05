@@ -272,7 +272,8 @@ public:
 	bool saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
    void createMessage(NXCPMessage *pMsg);
-   void createExportRecord(StringBuffer &xml);
+   void createExportRecord(StringBuffer &xml) const;
+   void createOrderingExportRecord(StringBuffer &xml) const;
    json_t *toJson() const;
 
    bool isActionInUse(UINT32 actionId) const;
@@ -291,6 +292,7 @@ private:
    void readLock() const { RWLockReadLock(m_rwlock, INFINITE); }
    void writeLock() { RWLockWriteLock(m_rwlock, INFINITE); }
    void unlock() const { RWLockUnlock(m_rwlock); }
+   int findRuleIndexByGuid(const uuid& guid, int shift = 0) const;
 
 public:
    EventPolicy();
@@ -303,7 +305,8 @@ public:
    void sendToClient(ClientSession *pSession, UINT32 dwRqId) const;
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
    void exportRule(StringBuffer& xml, const uuid& guid) const;
-   void importRule(EPRule *rule, bool overwrite);
+   void exportRuleOrgering(StringBuffer& xml) const;
+   void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
    void removeRuleCategory (UINT32 categoryId);
    json_t *toJson() const;
 

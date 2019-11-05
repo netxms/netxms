@@ -430,6 +430,29 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
 }
 
 /**
+ * Fill rule ordering array
+ */
+static ObjectArray<uuid> *GetRuleOrdering(ConfigEntry *ruleOrdering)
+{
+   ObjectArray<uuid> *ordering = NULL;
+   if(ruleOrdering != NULL)
+   {
+      ObjectArray<ConfigEntry> *rules = ruleOrdering->getOrderedSubEntries(_T("rule#*"));
+      if (rules->size() > 0)
+      {
+         ordering = new ObjectArray<uuid>(0, 16, true);
+         for(int i = 0; i < rules->size(); i++)
+         {
+            ordering->add(new uuid(uuid::parse(rules->get(i)->getValue())));
+         }
+      }
+      delete rules;
+   }
+
+   return ordering;
+}
+
+/**
  * Import configuration
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
@@ -534,11 +557,14 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		rules = rulesRoot->getOrderedSubEntries(_T("rule#*"));
 		if (rules->size() > 0)
 		{
+		   //get rule ordering
+		   ObjectArray<uuid> *ruleOrdering = GetRuleOrdering(config->getEntry(_T("/ruleOrdering")));
          for(i = 0; i < rules->size(); i++)
          {
             EPRule *rule = new EPRule(rules->get(i));
-            g_pEventPolicy->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0);
+            g_pEventPolicy->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
          }
+         delete ruleOrdering;
          if (!g_pEventPolicy->saveToDB())
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): unable to import event processing policy rules"));

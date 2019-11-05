@@ -316,9 +316,21 @@ EPRule::~EPRule()
 }
 
 /**
+ * Create rule ordering entry
+ */
+void EPRule::createOrderingExportRecord(StringBuffer &xml) const
+{
+   xml.append(_T("\t\t<rule id=\""));
+   xml.append(m_id + 1);
+   xml.append(_T("\">"));
+   xml.append(m_guid.toString());
+   xml.append(_T("</rule>\n"));
+}
+
+/**
  * Create management pack record
  */
-void EPRule::createExportRecord(StringBuffer &xml)
+void EPRule::createExportRecord(StringBuffer &xml) const
 {
    xml.append(_T("\t\t<rule id=\""));
    xml.append(m_id + 1);
@@ -1208,37 +1220,104 @@ void EventPolicy::exportRule(StringBuffer& xml, const uuid& guid) const
 }
 
 /**
+ * Export rules ordering
+ */
+void EventPolicy::exportRuleOrgering(StringBuffer& xml) const
+{
+   readLock();
+   for(int i = 0; i < m_rules.size(); i++)
+   {
+      m_rules.get(i)->createOrderingExportRecord(xml);
+   }
+   unlock();
+}
+
+/**
+ * Finds rule index by guid and adds index shift if found
+ */
+int EventPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
+{
+   for (int i = 0; i < m_rules.size(); i++)
+   {
+      if (guid.equals(m_rules.get(i)->getGuid()))
+      {
+         return i + shift;
+      }
+   }
+   return -1;
+}
+
+/**
  * Import rule
  */
-void EventPolicy::importRule(EPRule *rule, bool overwrite)
+void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering)
 {
    writeLock();
 
    // Find rule with same GUID and replace it if found
-   bool newRule = true;
-   for(int i = 0; i < m_rules.size(); i++)
+   int ruleIndex = findRuleIndexByGuid(rule->getGuid());
+   if (ruleIndex != -1)
    {
-      if (rule->getGuid().equals(m_rules.get(i)->getGuid()))
+      if (overwrite)
       {
-         if (overwrite)
-         {
-            rule->setId(i);
-            m_rules.set(i, rule);
-         }
-         else
-         {
-            delete rule;
-         }
-         newRule = false;
-         break;
+         rule->setId(ruleIndex);
+         m_rules.set(ruleIndex, rule);
+      }
+      else
+      {
+         delete rule;
       }
    }
-
-   // Add new rule at the end
-   if (newRule)
+   else //insert new rule
    {
-      rule->setId(m_rules.size());
-      m_rules.add(rule);
+      bool foundPreviousIndex = true;
+      if(ruleOrdering != NULL)
+      {
+         int newRulePrevIndex = -1;
+         for (int i = 0; i < ruleOrdering->size(); i++)
+         {
+            if(ruleOrdering->get(i)->equals(rule->getGuid()))
+            {
+               newRulePrevIndex = i;
+               break;
+            }
+         }
+
+         if(newRulePrevIndex != -1)
+         {
+            //find rule before this rule
+            if (newRulePrevIndex > 0)
+               ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(newRulePrevIndex - 1), 1);
+
+            //if rule after this rule if before not found
+            if(ruleIndex == -1 && (newRulePrevIndex + 1) < ruleOrdering->size())
+               ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(newRulePrevIndex + 1));
+
+            //check if any rule before this rule already exist if before not found
+            for (int i = newRulePrevIndex - 2; ruleIndex == -1 && i >= 0; i--)
+               ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i), 1);
+
+            //check if any rule after this rule already exist if before not found
+            for (int i = newRulePrevIndex + 2; ruleIndex == -1 && i < ruleOrdering->size(); i++)
+               ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i));
+
+         }
+      }
+
+      if(ruleIndex == -1) // Add new rule at the end
+      {
+         rule->setId(m_rules.size());
+         m_rules.add(rule);
+      }
+      else
+      {
+         rule->setId(ruleIndex);
+         m_rules.insert(ruleIndex, rule);
+         for(int i = ruleIndex + 1; i < m_rules.size(); i++)
+         {
+            m_rules.get(i)->setId(i);
+         }
+      }
    }
 
    unlock();

@@ -9827,6 +9827,13 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          }
          xml += _T("\t</rules>\n");
 
+         if (count > 0) //add rule order information if at least one rule is exported
+         {
+            xml += _T("\t<ruleOrdering>\n");
+            g_pEventPolicy->exportRuleOrgering(xml);
+            xml += _T("\t</ruleOrdering>\n");
+         }
+
          // Write scripts
          xml.append(_T("\t<scripts>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_SCRIPTS);
