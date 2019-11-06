@@ -22,6 +22,8 @@
 
 #include "mikrotik.h"
 
+#define DEBUG_TAG _T("ndd.mikrotik")
+
 /**
  * Driver name
  */
@@ -169,7 +171,10 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
 
          TCHAR name[MAX_OBJECT_NAME];
          AccessPointInfo *ap = new AccessPointInfo(apIndex, macAddr, InetAddress::INVALID, AP_ADOPTED, var->getValueAsString(name, MAX_OBJECT_NAME), NULL, NULL, NULL);
-      
+
+         TCHAR macAddrText[64];
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("AP: index=%d name=%s macAddr=%s"), apIndex, name, MACToStr(macAddr, macAddrText));
+
          RadioInterfaceInfo radio;
          memset(&radio, 0, sizeof(RadioInterfaceInfo));
          response->getVariable(2)->getValueAsString(radio.name, 64);
