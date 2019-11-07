@@ -298,11 +298,27 @@ typedef int bool;
 #endif
 
 #ifndef S_IRUSR
-# define S_IRUSR      0400
+#define S_IRUSR      _S_IREAD
 #endif
 #ifndef S_IWUSR
-# define S_IWUSR      0200
+#define S_IWUSR      _S_IWRITE
 #endif
+#ifndef S_IRGRP
+#define S_IRGRP      _S_IREAD
+#endif
+#ifndef S_IWGRP
+#define S_IWGRP      _S_IWRITE
+#endif
+#ifndef S_IROTH
+#define S_IROTH      _S_IREAD
+#endif
+#ifndef S_IWOTH
+#define S_IWOTH      _S_IWRITE
+#endif
+
+#define STDIN_FILENO    _fileno(stdin)
+#define STDOUT_FILENO   _fileno(stdout)
+#define STDERR_FILENO   _fileno(stderr)
 
 #define snprintf     _snprintf
 #define vsnprintf    _vsnprintf
