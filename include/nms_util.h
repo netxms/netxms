@@ -344,10 +344,12 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, ssize_t srcLen, c
 #define utf8_to_wchar   utf8_to_ucs4
 #define utf8_wcharlen   utf8_ucs4len
 #define wchar_to_utf8   ucs4_to_utf8
+#define wchar_utf8len   ucs4_utf8len
 #else
 #define utf8_to_wchar   utf8_to_ucs2
 #define utf8_wcharlen   utf8_ucs2len
 #define wchar_to_utf8   ucs2_to_utf8
+#define wchar_utf8len   ucs2_utf8len
 #endif
 
 #ifdef UNICODE_UCS4
