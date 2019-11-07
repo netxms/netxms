@@ -1411,9 +1411,9 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
    data.instanceFilter = new NXSL_VM(new NXSL_ServerEnv());
    if (!data.instanceFilter->load(m_instanceFilter))
    {
-      TCHAR szBuffer[1024];
-      _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
-      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", szBuffer, data.instanceFilter->getErrorText(), m_id);
+      TCHAR scriptIdentification[1024];
+      _sntprintf(scriptIdentification, 1024, _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
+      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", scriptIdentification, data.instanceFilter->getErrorText(), m_id);
    }
    unlock();
 
@@ -1447,6 +1447,10 @@ void DCObject::setInstanceFilter(const TCHAR *pszScript)
             {
                nxlog_write(NXLOG_WARNING, _T("Failed to compile instance filter script for object %s [%u] DCI %s [%u] (%s)"),
                         getOwnerName(), getOwnerId(), m_name.cstr(), m_id, errorText);
+
+               TCHAR scriptIdentification[1024];
+               _sntprintf(scriptIdentification, 1024, _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
+               PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", scriptIdentification, errorText, m_id);
             }
          }
       }
