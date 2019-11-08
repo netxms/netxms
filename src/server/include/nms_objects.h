@@ -1369,6 +1369,7 @@ public:
 
    Node *getParentNode();
    UINT32 getParentNodeId();
+   String getParentNodeName();
    UINT32 getParentInterfaceId() const { return m_parentInterfaceId; }
 
    const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }

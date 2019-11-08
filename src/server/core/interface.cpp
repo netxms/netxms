@@ -1062,6 +1062,15 @@ UINT32 Interface::getParentNodeId()
 }
 
 /**
+ * Get name of parent node object
+ */
+String Interface::getParentNodeName()
+{
+   Node *node = getParentNode();
+   return (node != NULL) ? String(node->getName()) : String(_T("<none>"));
+}
+
+/**
  * Update zone UIN. New zone UIN taken from parent node.
  */
 void Interface::updateZoneUIN()
