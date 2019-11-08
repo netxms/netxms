@@ -700,14 +700,11 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *_path)
 
 FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type)
 {
-   char *command, *type;
-   FILE *f;
-
-   command = MBStringFromWideString(_command);
-   type = MBStringFromWideString(_type);
-   f = popen(command, type);
+   char *command = MBStringFromWideStringSysLocale(_command);
+   char type[64];
+   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, _type, -1, type, 64, NULL, NULL);
+   FILE *f = popen(command, type);
    MemFree(command);
-   MemFree(type);
    return f;
 }
 
