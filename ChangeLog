@@ -19,6 +19,7 @@
 	NX-1694 (Russian language problem in Windows log)
 	NX-1706 (Compose interface name from the actual name and a suffix)
 	NX-1708 (Event tags in log file monitoring are not represented in UI)
+	NX-1712 (Add support for reading WMI query result as list or table)
 
 
 *

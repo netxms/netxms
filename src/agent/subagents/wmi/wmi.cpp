@@ -304,9 +304,7 @@ static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 
 				if (pClassObject->Get(prop, 0, &v, 0, 0) == S_OK)
 				{
-					TCHAR *str;
-
-					str = VariantToString(&v);
+					TCHAR *str = VariantToString(&v);
 					if (str != NULL)
 					{
 						ret_string(value, str);
@@ -338,6 +336,123 @@ static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 	{
 		AgentWriteDebugLog(5, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
 	}
+   return rc;
+}
+
+/**
+  * Handler for generic WMI query that return list of values
+  * Format: WMI.Query(namespace, query, property)
+  */
+static LONG H_WMIListQuery(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   WMI_QUERY_CONTEXT ctx;
+   IEnumWbemClassObject *pEnumObject = NULL;
+   IWbemClassObject *pClassObject = NULL;
+   TCHAR ns[256], query[256], prop[256];
+   ULONG uRet;
+   LONG rc = SYSINFO_RC_ERROR;
+
+   if (!AgentGetParameterArg(cmd, 1, ns, 256) ||
+       !AgentGetParameterArg(cmd, 2, query, 256) ||
+       !AgentGetParameterArg(cmd, 3, prop, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   pEnumObject = DoWMIQuery(ns, query, &ctx);
+   if (pEnumObject != NULL)
+   {
+      while (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
+      {
+         VARIANT v;
+         if (pClassObject->Get(prop, 0, &v, 0, 0) == S_OK)
+         {
+            TCHAR *str = VariantToString(&v);
+            if (str != NULL)
+            {
+               value->add(str);
+               MemFree(str);
+            }
+            else
+            {
+               value->add(_T("<WMI result conversion error>"));
+            }
+            VariantClear(&v);
+         }
+         else
+         {
+            AgentWriteDebugLog(5, _T("WMI: cannot get property \"%s\" from query \"%s\" in namespace \"%s\""), prop, query, ns);
+         }
+         pClassObject->Release();
+      }
+      pEnumObject->Release();
+      CloseWMIQuery(&ctx);
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      AgentWriteDebugLog(5, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
+   }
+   return rc;
+}
+
+/**
+  * Handler for generic WMI query that return table
+  * Format: WMI.Query(namespace, query)
+  */
+static LONG H_WMITableQuery(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   WMI_QUERY_CONTEXT ctx;
+   IEnumWbemClassObject *pEnumObject = NULL;
+   IWbemClassObject *pClassObject = NULL;
+   TCHAR ns[256], query[256];
+   ULONG uRet;
+   LONG rc = SYSINFO_RC_ERROR;
+
+   if (!AgentGetParameterArg(cmd, 1, ns, 256) ||
+       !AgentGetParameterArg(cmd, 2, query, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   pEnumObject = DoWMIQuery(ns, query, &ctx);
+   if (pEnumObject != NULL)
+   {
+      bool headerCreated = false;
+      StringList properties;
+      while (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
+      {
+         value->addRow();
+         pClassObject->BeginEnumeration(0);
+         VARIANT v;
+         BSTR prop;
+         long flavor;
+         while (pClassObject->Next(0, &prop, &v, NULL, &flavor) == S_OK)
+         {
+            if ((flavor & WBEM_FLAVOR_MASK_ORIGIN) == WBEM_FLAVOR_ORIGIN_SYSTEM)
+               continue;   // Ignore system properties
+
+            int index = value->getColumnIndex(prop);
+            if (index == -1)
+            {
+               index = value->addColumn(prop);
+            }
+
+            TCHAR *str = VariantToString(&v);
+            if (str != NULL)
+            {
+               value->set(index, str);
+               MemFree(str);
+            }
+            VariantClear(&v);
+            SysFreeString(prop);
+         }
+         pClassObject->Release();
+      }
+      pEnumObject->Release();
+      CloseWMIQuery(&ctx);
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      AgentWriteDebugLog(5, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
+   }
    return rc;
 }
 
@@ -447,7 +562,8 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("ACPI.ThermalZones"), H_ACPIThermalZones, NULL },
    { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersList, NULL },
    { _T("WMI.Classes(*)"), H_WMIClasses, NULL },
-   { _T("WMI.NameSpaces"), H_WMINameSpaces, NULL }
+   { _T("WMI.NameSpaces"), H_WMINameSpaces, NULL },
+   { _T("WMI.Query(*)"), H_WMIListQuery, NULL, }
 };
 
 /**
@@ -455,7 +571,8 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersTable, NULL, _T("INDEX"), DCTDESC_HARDWARE_NETWORK_ADAPTERS }
+   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersTable, NULL, _T("INDEX"), DCTDESC_HARDWARE_NETWORK_ADAPTERS },
+   { _T("WMI.Query(*)"), H_WMITableQuery, NULL, _T(""), _T("Generic WMI query") }
 };
 
 /**
