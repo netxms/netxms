@@ -76,13 +76,13 @@ static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
    if (dwError == ERR_SUCCESS)
    {
       if (bShowName)
-         _tprintf(_T("%s = %s\n"), pszParam, szBuffer);
+         WriteToTerminalEx(_T("%s = %s\n"), pszParam, szBuffer);
       else
-         _tprintf(_T("%s\n"), szBuffer);
+         WriteToTerminalEx(_T("%s\n"), szBuffer);
    }
    else
    {
-      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    fflush(stdout);
    return (dwError == ERR_SUCCESS) ? 0 : 1;
@@ -98,12 +98,12 @@ static int List(AgentConnection *pConn, const TCHAR *pszParam)
    if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < data->size(); i++)
-         _tprintf(_T("%s\n"), data->get(i));
+         WriteToTerminalEx(_T("%s\n"), data->get(i));
       delete data;
    }
    else
    {
-      _tprintf(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
    return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
@@ -125,7 +125,7 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
    }
    else
    {
-      _tprintf(_T("%u: %s\n"), rcc, AgentErrorCodeToText(rcc));
+      WriteToTerminalEx(_T("%u: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
    return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
@@ -142,11 +142,11 @@ static int CheckService(AgentConnection *pConn, int serviceType, UINT32 dwServic
                                         wProto, pszRequest, pszResponse);
    if (dwError == ERR_SUCCESS)
    {
-      printf("Service status: %d\n", dwStatus);
+      WriteToTerminalEx(_T("Service status: %d\n"), dwStatus);
    }
    else
    {
-      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -166,7 +166,7 @@ static int ListParameters(AgentConnection *pConn)
       for(int i = 0; i < paramList->size(); i++)
       {
 			AgentParameterDefinition *p = paramList->get(i);
-         _tprintf(_T("%s %s \"%s\"\n"), p->getName(),
+         WriteToTerminalEx(_T("%s %s \"%s\"\n"), p->getName(),
             pszDataType[(p->getDataType() < 6) && (p->getDataType() >= 0) ? p->getDataType() : 6],
             p->getDescription());
       }
@@ -175,7 +175,7 @@ static int ListParameters(AgentConnection *pConn)
    }
    else
    {
-      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -205,7 +205,7 @@ static int GetConfig(AgentConnection *pConn)
    }
    else
    {
-      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -237,7 +237,7 @@ static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const 
    }
    else
    {
-      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -724,7 +724,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+               WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
             conn->decRefCount();
