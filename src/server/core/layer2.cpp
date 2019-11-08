@@ -109,8 +109,8 @@ NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
 					   Interface *iface = node->findInterfaceByIndex(ifIndex);
 					   if (iface != NULL)
 					   {
-						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
-									    iface->getName(), (int)iface->getId(), iface->getParentNode()->getName(), (int)iface->getParentNode()->getId());
+						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%u] on node %s [%u]"), macAddrText,
+									    iface->getName(), iface->getId(), iface->getParentNodeName().cstr(), iface->getParentNodeId());
                      cp = iface;
                      *type = CP_TYPE_DIRECT;
 					   }

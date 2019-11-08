@@ -328,8 +328,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
    bool success;
    if (m_modified & MODIFY_INTERFACE_PROPERTIES)
    {
-      Node *pNode = getParentNode();
-      UINT32 nodeId = (pNode != NULL) ? pNode->getId() : 0;
+      UINT32 nodeId = getParentNodeId();
 
       static const TCHAR *columns[] = {
          _T("node_id"), _T("if_type"), _T("if_index"), _T("mac_addr"), _T("required_polls"), _T("bridge_port"),
@@ -635,7 +634,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 	}
 
 	int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount :
-	                    ((getParentNode()->getRequiredPollCount() > 0) ? getParentNode()->getRequiredPollCount() : g_requiredPolls);
+	                    ((pNode->getRequiredPollCount() > 0) ? pNode->getRequiredPollCount() : g_requiredPolls);
 	sendPollerMsg(rqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
 	              GetStatusAsText(newStatus, true), m_statusPollCount, (m_statusPollCount == 1) ? _T("") : _T("s"),
 	              requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
