@@ -2550,10 +2550,11 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
                    ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
                     (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
                {
-                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
-                              m_name, m_id, iface->getName(), iface->getId(), iface->getParentNode()->getName(), iface->getParentNode()->getId());
+                  String parentNodeName = iface->getParentNodeName();
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%u]): upstream interface %s [%u] on switch %s [%u] is down"),
+                              m_name, m_id, iface->getName(), iface->getId(), parentNodeName.cstr(), iface->getParentNodeId());
                   sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"),
-                                iface->getName(), iface->getParentNode()->getName());
+                                iface->getName(), parentNodeName.cstr());
                   return true;
                }
             }
@@ -8122,7 +8123,6 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
             if (peerNode != NULL)
             {
                LL_NEIGHBOR_INFO info;
-
                info.ifLocal = ifLocal->getIfIndex();
                info.ifRemote = ifRemote->getIfIndex();
                info.objectId = peerNode->getId();

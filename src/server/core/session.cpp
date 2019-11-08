@@ -11726,7 +11726,7 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 			}
 			else if (object->getObjectClass() == OBJECT_INTERFACE)
 			{
-				localNodeId = ((Interface *)object)->getParentNode()->getId();
+				localNodeId = static_cast<Interface*>(object)->getParentNodeId();
 				localIfId = objectId;
 				memcpy(localMacAddr, ((Interface *)object)->getMacAddr().value(), MAC_ADDR_LENGTH);
 				cp = FindInterfaceConnectionPoint(MacAddress(localMacAddr, MAC_ADDR_LENGTH), &type);
@@ -11748,7 +11748,7 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 			debugPrintf(5, _T("findNodeConnection: cp=%p type=%d"), cp, type);
 			if (cp != NULL)
 			{
-            Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+            Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface*>(cp)->getParentNode() : static_cast<AccessPoint*>(cp)->getParentNode();
             if (node != NULL)
             {
                msg.setField(VID_OBJECT_ID, node->getId());
@@ -11806,7 +11806,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 		if (localIf != NULL)
 		{
 			localIfId = localIf->getId();
-			localNodeId = localIf->getParentNode()->getId();
+			localNodeId = localIf->getParentNodeId();
 		}
 		else
 		{
@@ -11814,19 +11814,19 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 			localNodeId = 0;
 		}
 
-      Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+      Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface*>(cp)->getParentNode() : static_cast<AccessPoint*>(cp)->getParentNode();
       if (node != NULL)
       {
 		   msg.setField(VID_OBJECT_ID, node->getId());
 		   msg.setField(VID_INTERFACE_ID, cp->getId());
-         msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
+         msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface*>(cp)->getIfIndex() : (UINT32)0);
 	      msg.setField(VID_LOCAL_NODE_ID, localNodeId);
 		   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
 		   msg.setField(VID_MAC_ADDR, macAddr);
          msg.setField(VID_IP_ADDRESS, (localIf != NULL) ? localIf->getIpAddressList()->getFirstUnicastAddress() : InetAddress::INVALID);
 		   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
          if (cp->getObjectClass() == OBJECT_INTERFACE)
-            debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->getId(), cp->getId(), cp->getName(), ((Interface *)cp)->getIfIndex());
+            debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->getId(), cp->getId(), cp->getName(), static_cast<Interface*>(cp)->getIfIndex());
          else
             debugPrintf(5, _T("findMacAddress: nodeId=%d apId=%d apName=%s"), node->getId(), cp->getId(), cp->getName());
       }
@@ -11859,8 +11859,8 @@ void ClientSession::findMacAddress(NXCPMessage *request)
          }
 
          TCHAR buffer[64];
-         debugPrintf(5, _T("findMacAddress: MAC address %s not found in FDB but interface found (%s on %s [%d])"),
-                     macAddr.toString(buffer), localIf->getName(), localIf->getParentNode()->getName(), localIf->getParentNodeId());
+         debugPrintf(5, _T("findMacAddress: MAC address %s not found in FDB but interface found (%s on %s [%u])"),
+                     macAddr.toString(buffer), localIf->getName(), localIf->getParentNodeName().cstr(), localIf->getParentNodeId());
       }
 	}
 
@@ -11923,7 +11923,7 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 			if (localIf != NULL)
 			{
 				localIfId = localIf->getId();
-				localNodeId = localIf->getParentNode()->getId();
+				localNodeId = localIf->getParentNodeId();
 			}
 			else
 			{
@@ -11931,21 +11931,26 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 				localNodeId = 0;
 			}
 
-         Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+         Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface*>(cp)->getParentNode() : static_cast<AccessPoint*>(cp)->getParentNode();
          if (node != NULL)
          {
 		      msg.setField(VID_OBJECT_ID, node->getId());
 			   msg.setField(VID_INTERFACE_ID, cp->getId());
-            msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
+            msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface*>(cp)->getIfIndex() : (UINT32)0);
 			   msg.setField(VID_LOCAL_NODE_ID, localNodeId);
 			   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
 			   msg.setField(VID_MAC_ADDR, macAddr);
 			   msg.setField(VID_IP_ADDRESS, ipAddr);
 			   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
             if (cp->getObjectClass() == OBJECT_INTERFACE)
-               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifName=%s ifIndex=%d"), ipAddr.toString(ipAddrText), node->getId(), cp->getId(), cp->getName(), ((Interface *)cp)->getIfIndex());
+            {
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifName=%s ifIndex=%d"), ipAddr.toString(ipAddrText),
+                        node->getId(), cp->getId(), cp->getName(), static_cast<Interface*>(cp)->getIfIndex());
+            }
             else
+            {
                debugPrintf(5, _T("findIpAddress(%s): nodeId=%d apId=%d apName=%s"), ipAddr.toString(ipAddrText), node->getId(), cp->getId(), cp->getName());
+            }
          }
 		}
 		else if (iface != NULL)

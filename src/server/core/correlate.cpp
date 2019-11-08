@@ -125,7 +125,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                     (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING))
                {
                   nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on switch %s [%d] for current node %s [%d] is down"),
-                              iface->getName(), iface->getId(), iface->getParentNode()->getName(), iface->getParentNode()->getId(),
+                              iface->getName(), iface->getId(), iface->getParentNodeName().cstr(), iface->getParentNodeId(),
                               pNode->getName(), pNode->getId());
                   return;
                }
