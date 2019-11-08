@@ -1051,12 +1051,12 @@ size_t NXCPMessage::getFieldAsBinary(UINT32 fieldId, BYTE *pBuffer, size_t buffe
  */
 const BYTE *NXCPMessage::getBinaryFieldPtr(UINT32 fieldId, size_t *size) const
 {
-   BYTE *data;
-   void *value = get(fieldId, NXCP_DT_BINARY);
-   if (value != NULL)
+   BYTE *data, type;
+   void *value = get(fieldId, 0xFF, &type);
+   if ((value != NULL) && ((type == NXCP_DT_BINARY) || (type == NXCP_DT_STRING) || (type == NXCP_DT_UTF8_STRING)))
    {
-      *size = (size_t)(*((UINT32 *)value));
-      data = (BYTE *)value + 4;
+      *size = static_cast<size_t>(*static_cast<UINT32*>(value));
+      data = static_cast<BYTE*>(value) + 4;
    }
    else
    {
