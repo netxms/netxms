@@ -156,10 +156,10 @@ size_t LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, ssize_t srcLen)
  */
 size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   size_t len = strlen(src) + 1;
+   size_t len = (srcLen == -1) ? strlen(src) + 1 : srcLen;
    WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)MemAlloc(len * sizeof(WCHAR));
-   MultiByteToWideChar(CP_UTF8, 0, src, -1, buffer, (int)len);
-   int ret = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, dst, (int)dstLen, NULL, NULL);
+   int ret = MultiByteToWideChar(CP_UTF8, 0, src, (int)srcLen, buffer, (int)len);
+   ret = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, (srcLen == -1) ? -1 : ret, dst, (int)dstLen, NULL, NULL);
    if (len > 32768)
       MemFree(buffer);
    return ret;
