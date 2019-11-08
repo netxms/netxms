@@ -976,7 +976,7 @@ public:
 
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
 
-   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
+   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields);
 
    IntegerArray<UINT32> *getAllResponsibleUsers();
 
@@ -1370,6 +1370,7 @@ public:
 
    Node *getParentNode();
    UINT32 getParentNodeId();
+   String getParentNodeName();
    UINT32 getParentInterfaceId() const { return m_parentInterfaceId; }
 
    const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
@@ -1528,6 +1529,8 @@ public:
 	void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
    void setExcludeFromTopology(bool excluded);
    void setIncludeInIcmpPoll(bool included);
+
+   void expandName(const TCHAR *originalName, TCHAR *expandedName);
 };
 
 /**

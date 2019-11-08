@@ -370,7 +370,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    else
    {
       const ItemValue& tvalue = m_expandValue ?
-               ItemValue(target->expandText(m_value.getString(), NULL, NULL, NULL, NULL), m_value.getTimeStamp()) :
+               ItemValue(target->expandText(m_value.getString(), NULL, NULL, NULL, NULL, NULL), m_value.getTimeStamp()) :
                m_value;
       switch(m_operation)
       {

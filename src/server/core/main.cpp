@@ -222,7 +222,7 @@ void FillComponentsMessage(NXCPMessage *msg)
 void NXCORE_EXPORTABLE ShutdownDB()
 {
    DBConnectionPoolShutdown();
-	DBUnloadDriver(g_dbDriver);
+   DBUnloadDriver(g_dbDriver);
 }
 
 /**
@@ -306,14 +306,14 @@ static void LoadGlobalConfig()
 
    g_conditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
    g_configurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
-	g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
+   g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
    g_icmpPollingInterval = ConfigReadInt(_T("ICMP.PollingInterval"), 60);
-	g_instancePollingInterval = ConfigReadInt(_T("InstancePollingInterval"), 600);
-	g_routingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
+   g_instancePollingInterval = ConfigReadInt(_T("InstancePollingInterval"), 600);
+   g_routingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
    g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
    g_statusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
-	g_topologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
-	DCObject::m_defaultPollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
+   g_topologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
+   DCObject::m_defaultPollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
    DCObject::m_defaultRetentionTime = ConfigReadInt(_T("DefaultDCIRetentionTime"), 30);
    g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF);
    if ((g_defaultAgentCacheMode != AGENT_CACHE_ON) && (g_defaultAgentCacheMode != AGENT_CACHE_OFF))
@@ -322,35 +322,35 @@ static void LoadGlobalConfig()
       ConfigWriteInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF, true, true, true);
       g_defaultAgentCacheMode = AGENT_CACHE_OFF;
    }
-	if (ConfigReadBoolean(_T("DeleteEmptySubnets"), true))
-		g_flags |= AF_DELETE_EMPTY_SUBNETS;
-	if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
-		g_flags |= AF_ENABLE_SNMP_TRAPD;
-	if (ConfigReadBoolean(_T("ProcessTrapsFromUnmanagedNodes"), false))
-		g_flags |= AF_TRAPS_FROM_UNMANAGED_NODES;
-	if (ConfigReadBoolean(_T("EnableZoning"), false))
-		g_flags |= AF_ENABLE_ZONING;
-	if (ConfigReadBoolean(_T("EnableObjectTransactions"), false))
-		g_flags |= AF_ENABLE_OBJECT_TRANSACTIONS;
-	if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
+   if (ConfigReadBoolean(_T("DeleteEmptySubnets"), true))
+      g_flags |= AF_DELETE_EMPTY_SUBNETS;
+   if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
+      g_flags |= AF_ENABLE_SNMP_TRAPD;
+   if (ConfigReadBoolean(_T("ProcessTrapsFromUnmanagedNodes"), false))
+      g_flags |= AF_TRAPS_FROM_UNMANAGED_NODES;
+   if (ConfigReadBoolean(_T("EnableZoning"), false))
+      g_flags |= AF_ENABLE_ZONING;
+   if (ConfigReadBoolean(_T("EnableObjectTransactions"), false))
+      g_flags |= AF_ENABLE_OBJECT_TRANSACTIONS;
+   if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
    if (ConfigReadBoolean(_T("UseSyslogForDiscovery"), false))
       g_flags |= AF_SYSLOG_DISCOVERY;
-	if (ConfigReadBoolean(_T("ResolveNodeNames"), true))
-		g_flags |= AF_RESOLVE_NODE_NAMES;
-	if (ConfigReadBoolean(_T("SyncNodeNamesWithDNS"), false))
-		g_flags |= AF_SYNC_NODE_NAMES_WITH_DNS;
-	if (ConfigReadBoolean(_T("CheckTrustedNodes"), true))
-		g_flags |= AF_CHECK_TRUSTED_NODES;
+   if (ConfigReadBoolean(_T("Objects.Nodes.ResolveNames"), true))
+      g_flags |= AF_RESOLVE_NODE_NAMES;
+   if (ConfigReadBoolean(_T("Objects.Nodes.SyncNamesWithDNS"), false))
+      g_flags |= AF_SYNC_NODE_NAMES_WITH_DNS;
+   if (ConfigReadBoolean(_T("CheckTrustedNodes"), true))
+      g_flags |= AF_CHECK_TRUSTED_NODES;
    if (ConfigReadBoolean(_T("NetworkDiscovery.EnableParallelProcessing"), false))
       g_flags |= AF_PARALLEL_NETWORK_DISCOVERY;
    if (ConfigReadBoolean(_T("NetworkDiscovery.MergeDuplicateNodes"), false))
       g_flags |= AF_MERGE_DUPLICATE_NODES;
-	if (ConfigReadBoolean(_T("NXSL.EnableContainerFunctions"), true))
-	{
-		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
-		nxlog_debug(3, _T("NXSL container management functions enabled"));
-	}
+   if (ConfigReadBoolean(_T("NXSL.EnableContainerFunctions"), true))
+   {
+      g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
+      nxlog_debug(3, _T("NXSL container management functions enabled"));
+   }
    if (ConfigReadBoolean(_T("NXSL.EnableFileIOFunctions"), false))
    {
       g_flags |= AF_ENABLE_NXSL_FILE_IO_FUNCTIONS;
@@ -360,7 +360,7 @@ static void LoadGlobalConfig()
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
    if (ConfigReadBoolean(_T("ApplyDCIFromTemplateToDisabledDCI"), true))
       g_flags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
-   if (ConfigReadBoolean(_T("ResolveDNSToIPOnStatusPoll"), false))
+   if (ConfigReadBoolean(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll"), false))
       g_flags |= AF_RESOLVE_IP_FOR_EACH_STATUS_POLL;
    if (ConfigReadBoolean(_T("CaseInsensitiveLoginNames"), false))
       g_flags |= AF_CASE_INSENSITIVE_LOGINS;
@@ -395,15 +395,15 @@ static void LoadGlobalConfig()
    }
 
    g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
-	g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
-	g_lockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
-	g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
-	g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
-	g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
-	g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);
-	g_instanceRetentionTime = ConfigReadInt(_T("InstanceRetentionTime"), 0); // Config values are in days
+   g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
+   g_lockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
+   g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
+   g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
+   g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
+   g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);
+   g_instanceRetentionTime = ConfigReadInt(_T("InstanceRetentionTime"), 0); // Config values are in days
 
-	UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 1500);
+   UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 1500);
    SnmpSetDefaultTimeout(snmpTimeout);
 }
 
@@ -413,10 +413,8 @@ static void LoadGlobalConfig()
 static bool InitCryptography()
 {
 #ifdef _WITH_ENCRYPTION
-	bool success = false;
-
    if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F)))
-		return FALSE;
+      return false;
    nxlog_debug(4, _T("Supported ciphers: %s"), (const TCHAR *)NXCPGetSupportedCiphersAsText());
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
@@ -426,6 +424,7 @@ static bool InitCryptography()
    SSL_load_error_strings();
 #endif
 
+   bool success = false;
    if (LoadServerCertificate(&g_pServerKey))
    {
       nxlog_debug(1, _T("Server certificate loaded"));
@@ -484,14 +483,14 @@ static bool InitCryptography()
       }
    }
 
-	int iPolicy = ConfigReadInt(_T("DefaultEncryptionPolicy"), 1);
-	if ((iPolicy < 0) || (iPolicy > 3))
-		iPolicy = 1;
-	SetAgentDEP(iPolicy);
+   int iPolicy = ConfigReadInt(_T("DefaultEncryptionPolicy"), 1);
+   if ((iPolicy < 0) || (iPolicy > 3))
+      iPolicy = 1;
+   SetAgentDEP(iPolicy);
 
-	return success;
+   return success;
 #else
-	return TRUE;
+   return true;
 #endif
 }
 
@@ -501,26 +500,26 @@ static bool InitCryptography()
 static bool IsNetxmsdProcess(UINT32 pid)
 {
 #ifdef _WIN32
-	bool result = false;
-	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
-	if (hProcess != NULL)
-	{
-	   TCHAR szExtModule[MAX_PATH], szIntModule[MAX_PATH];
-		if ((GetModuleBaseName(hProcess, NULL, szExtModule, MAX_PATH) > 0) &&
-			 (GetModuleBaseName(GetCurrentProcess(), NULL, szIntModule, MAX_PATH) > 0))
-		{
-			result = (_tcsicmp(szExtModule, szIntModule) == 0);
-		}
-		else
-		{
-			// Cannot read process name, for safety assume that it's a server process
-			result = true;
-		}
-		CloseHandle(hProcess);
-	}
-	return result;
+   bool result = false;
+   HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+   if (hProcess != NULL)
+   {
+      TCHAR szExtModule[MAX_PATH], szIntModule[MAX_PATH];
+      if ((GetModuleBaseName(hProcess, NULL, szExtModule, MAX_PATH) > 0) &&
+          (GetModuleBaseName(GetCurrentProcess(), NULL, szIntModule, MAX_PATH) > 0))
+      {
+         result = (_tcsicmp(szExtModule, szIntModule) == 0);
+      }
+      else
+      {
+         // Cannot read process name, for safety assume that it's a server process
+         result = true;
+      }
+      CloseHandle(hProcess);
+   }
+   return result;
 #else
-	return kill((pid_t)pid, 0) != -1;
+   return kill((pid_t)pid, 0) != -1;
 #endif
 }
 
@@ -848,34 +847,34 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
    MetaDataPreLoad();
 
-	// Read server ID
+   // Read server ID
    TCHAR buffer[256];
-	MetaDataReadStr(_T("ServerID"), buffer, 256, _T(""));
-	StrStrip(buffer);
-	if (buffer[0] != 0)
-	{
+   MetaDataReadStr(_T("ServerID"), buffer, 256, _T(""));
+   StrStrip(buffer);
+   if (buffer[0] != 0)
+   {
       g_serverId = _tcstoull(buffer, NULL, 16);
-	}
-	else
-	{
-		// Generate new ID
-		g_serverId = ((UINT64)time(NULL) << 31) | (UINT64)((UINT32)rand() & 0x7FFFFFFF);
+   }
+   else
+   {
+      // Generate new ID
+      g_serverId = ((UINT64)time(NULL) << 31) | (UINT64)((UINT32)rand() & 0x7FFFFFFF);
       _sntprintf(buffer, 256, UINT64X_FMT(_T("016")), g_serverId);
-		MetaDataWriteStr(_T("ServerID"), buffer);
-	}
-	nxlog_write(NXLOG_INFO, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
+      MetaDataWriteStr(_T("ServerID"), buffer);
+   }
+   nxlog_write(NXLOG_INFO, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
 
-	// Initialize locks
+   // Initialize locks
 retry_db_lock:
    InetAddress addr;
-	if (!InitLocks(&addr, buffer))
-	{
-		if (addr.isValidUnicast())     // Database already locked by another server instance
-		{
-			// Check for lock from crashed/terminated local process
-			if (GetLocalIpAddr().equals(addr))
-			{
-				UINT32 pid = ConfigReadULong(_T("DBLockPID"), 0);
+   if (!InitLocks(&addr, buffer))
+   {
+      if (addr.isValidUnicast())     // Database already locked by another server instance
+      {
+         // Check for lock from crashed/terminated local process
+         if (GetLocalIpAddr().equals(addr))
+         {
+            UINT32 pid = ConfigReadULong(_T("DBLockPID"), 0);
 				if (!IsNetxmsdProcess(pid) || (pid == GetCurrentProcessId()))
 				{
 					UnlockDB();
@@ -903,9 +902,9 @@ retry_db_lock:
 	}
 	g_flags |= AF_DB_LOCKED;
 
-	// Load global configuration parameters
+   // Load global configuration parameters
    ConfigPreLoad();
-	LoadGlobalConfig();
+   LoadGlobalConfig();
    CASReadSettings();
    nxlog_debug(1, _T("Global configuration loaded"));
 
@@ -915,120 +914,120 @@ retry_db_lock:
             ConfigReadInt(_T("ThreadPool.Global.WaitTimeHighWatermark"), 200),
             ConfigReadInt(_T("ThreadPool.Global.WaitTimeLowWatermark"), 100));
 
-	// Check data directory
-	if (!CheckDataDir())
-		return FALSE;
+   // Check data directory
+   if (!CheckDataDir())
+      return FALSE;
 
-	// Initialize cryptography
-	if (!InitCryptography())
-	{
-		nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptografy module"));
-		return FALSE;
-	}
+   // Initialize cryptography
+   if (!InitCryptography())
+   {
+      nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptografy module"));
+      return FALSE;
+   }
 
-	// Initialize certificate store and CA
-	InitCertificates();
+   // Initialize certificate store and CA
+   InitCertificates();
 
-	// Call custom initialization code
+   // Call custom initialization code
 #ifdef CUSTOM_INIT_CODE
-	if (!ServerCustomInit())
-	   return FALSE;
+   if (!ServerCustomInit())
+      return FALSE;
 #endif
 
    // Create thread pools
-	nxlog_debug(2, _T("Creating thread pools"));
-	g_mainThreadPool = ThreadPoolCreate(_T("MAIN"),
-            ConfigReadInt(_T("ThreadPool.Main.BaseSize"), 8),
-            ConfigReadInt(_T("ThreadPool.Main.MaxSize"), 256));
-	g_agentConnectionThreadPool = ThreadPoolCreate(_T("AGENT"),
-            ConfigReadInt(_T("ThreadPool.Agent.BaseSize"), 4),
-            ConfigReadInt(_T("ThreadPool.Agent.MaxSize"), 256));
+   nxlog_debug(2, _T("Creating thread pools"));
+   g_mainThreadPool = ThreadPoolCreate(_T("MAIN"),
+         ConfigReadInt(_T("ThreadPool.Main.BaseSize"), 8),
+         ConfigReadInt(_T("ThreadPool.Main.MaxSize"), 256));
+   g_agentConnectionThreadPool = ThreadPoolCreate(_T("AGENT"),
+         ConfigReadInt(_T("ThreadPool.Agent.BaseSize"), 4),
+         ConfigReadInt(_T("ThreadPool.Agent.MaxSize"), 256));
 
-	// Setup unique identifiers table
-	if (!InitIdTable())
-		return FALSE;
-	nxlog_debug(2, _T("ID table created"));
+   // Setup unique identifiers table
+   if (!InitIdTable())
+      return FALSE;
+   nxlog_debug(2, _T("ID table created"));
 
-	InitCountryList();
-	InitCurrencyList();
+   InitCountryList();
+   InitCurrencyList();
 
-	// Update status for unfinished jobs in job history
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DBQuery(hdb, _T("UPDATE job_history SET status=4,failure_message='Aborted due to server shutdown or crash' WHERE status NOT IN (3,4,5)"));
-	DBConnectionPoolReleaseConnection(hdb);
+   // Update status for unfinished jobs in job history
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DBQuery(hdb, _T("UPDATE job_history SET status=4,failure_message='Aborted due to server shutdown or crash' WHERE status NOT IN (3,4,5)"));
+   DBConnectionPoolReleaseConnection(hdb);
 
-	// Load and compile scripts
-	LoadScripts();
+   // Load and compile scripts
+   LoadScripts();
 
-	// Initialize persistent storage
-	PersistentStorageInit();
+   // Initialize persistent storage
+   PersistentStorageInit();
 
-	// Initialize watchdog
-	WatchdogInit();
+   // Initialize watchdog
+   WatchdogInit();
 
    // Start database _T("lazy") write thread
    StartDBWriter();
 
-	// Load modules
-	if (!LoadNetXMSModules())
-		return FALSE;	// Mandatory module not loaded
-	RegisterPredictionEngines();
+   // Load modules
+   if (!LoadNetXMSModules())
+      return FALSE;   // Mandatory module not loaded
+   RegisterPredictionEngines();
 
-	// Initialize mailer
-	InitMailer();
+   // Initialize mailer
+   InitMailer();
 
-	// Load users from database
-	InitUsers();
-	if (!LoadUsers())
-	{
-		nxlog_write(NXLOG_ERROR, _T("Unable to load users and user groups from database (probably database is corrupted)"));
-		return FALSE;
-	}
-	nxlog_debug(2, _T("User accounts loaded"));
+   // Load users from database
+   InitUsers();
+   if (!LoadUsers())
+   {
+      nxlog_write(NXLOG_ERROR, _T("Unable to load users and user groups from database (probably database is corrupted)"));
+      return FALSE;
+   }
+   nxlog_debug(2, _T("User accounts loaded"));
 
-	// Initialize audit
-	InitAuditLog();
+   // Initialize audit
+   InitAuditLog();
 
-	// Initialize event handling subsystem
-	if (!InitEventSubsystem())
-		return FALSE;
+   // Initialize event handling subsystem
+   if (!InitEventSubsystem())
+      return FALSE;
 
-	// Initialize alarms
+   // Initialize alarms
    LoadAlarmCategories();
-	if (!InitAlarmManager())
-		return FALSE;
+   if (!InitAlarmManager())
+      return FALSE;
 
-	// Initialize notification channels
-	LoadNotificationChannelDrivers();
+   // Initialize notification channels
+   LoadNotificationChannelDrivers();
    LoadNotificationChannels();
 
-	// Initialize objects infrastructure and load objects from database
-	LoadNetworkDeviceDrivers();
-	ObjectsInit();
-	if (!LoadObjects())
-		return FALSE;
-	nxlog_debug(1, _T("Objects loaded and initialized"));
+   // Initialize objects infrastructure and load objects from database
+   LoadNetworkDeviceDrivers();
+   ObjectsInit();
+   if (!LoadObjects())
+      return FALSE;
+   nxlog_debug(1, _T("Objects loaded and initialized"));
 
-	// Initialize and load event actions
-	if (!LoadActions())
-	{
-		nxlog_write(NXLOG_ERROR, _T("Unable to initialize actions"));
-		return FALSE;
-	}
+   // Initialize and load event actions
+   if (!LoadActions())
+   {
+      nxlog_write(NXLOG_ERROR, _T("Unable to initialize actions"));
+      return FALSE;
+   }
 
    // Initialize helpdesk link
    SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
    LoadHelpDeskLink();
 
-	// Initialize data collection subsystem
+   // Initialize data collection subsystem
    LoadPerfDataStorageDrivers();
-	InitDataCollector();
+   InitDataCollector();
 
-	InitLogAccess();
-	FileUploadJob::init();
-	InitMappingTables();
+   InitLogAccess();
+   FileUploadJob::init();
+   InitMappingTables();
 
-	InitUserAgentNotifications();
+   InitUserAgentNotifications();
 
    if (!LoadPhysicalLinks())
    {
@@ -1038,18 +1037,18 @@ retry_db_lock:
 
    InitClientListeners();
    int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);
-	if (importMode > 0)
-	   ImportLocalConfiguration(importMode == 2);
+   if (importMode > 0)
+      ImportLocalConfiguration(importMode == 2);
 
-	// Check if management node object presented in database
-	CheckForMgmtNode();
-	if (g_dwMgmtNode == 0)
-	{
-		nxlog_write(NXLOG_ERROR, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
-		return FALSE;
-	}
+   // Check if management node object presented in database
+   CheckForMgmtNode();
+   if (g_dwMgmtNode == 0)
+   {
+      nxlog_write(NXLOG_ERROR, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
+      return FALSE;
+   }
 
-	// Create syncer thread pool
+   // Create syncer thread pool
    maxSize = ConfigReadInt(_T("ThreadPool.Syncer.MaxSize"), 1);
    if (maxSize > 1)
    {
@@ -1063,42 +1062,42 @@ retry_db_lock:
       g_discoveryThreadPool = ThreadPoolCreate(_T("DISCOVERY"), ConfigReadInt(_T("ThreadPool.Discovery.BaseSize"), 1), maxSize);
    }
 
-	// Start threads
-	ThreadCreate(WatchdogThread, 0, NULL);
-	ThreadCreate(NodePoller, 0, NULL);
-	ThreadCreate(JobManagerThread, 0, NULL);
-	s_syncerThread = ThreadCreateEx(Syncer, 0, NULL);
+   // Start threads
+   ThreadCreate(WatchdogThread, 0, NULL);
+   ThreadCreate(NodePoller, 0, NULL);
+   ThreadCreate(JobManagerThread, 0, NULL);
+   s_syncerThread = ThreadCreateEx(Syncer, 0, NULL);
 
-	CONDITION pollManagerInitialized = ConditionCreate(true);
-	s_pollManagerThread = ThreadCreateEx(PollManager, 0, pollManagerInitialized);
+   CONDITION pollManagerInitialized = ConditionCreate(true);
+   s_pollManagerThread = ThreadCreateEx(PollManager, 0, pollManagerInitialized);
 
    StartHouseKeeper();
 
-	// Start event processor
+   // Start event processor
    s_eventProcessorThread = ThreadCreateEx(EventProcessor, 0, NULL);
 
-	// Start SNMP trapper
-	InitTraps();
-	if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
-		ThreadCreate(SNMPTrapReceiver, 0, NULL);
+   // Start SNMP trapper
+   InitTraps();
+   if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
+      ThreadCreate(SNMPTrapReceiver, 0, NULL);
 
-	// Start built-in syslog daemon
+   // Start built-in syslog daemon
    StartSyslogServer();
 
-	// Start beacon host poller
-	ThreadCreate(BeaconPoller, 0, NULL);
+   // Start beacon host poller
+   ThreadCreate(BeaconPoller, 0, NULL);
 
-	// Start inter-server communication listener
-	if (ConfigReadBoolean(_T("EnableISCListener"), false))
-		ThreadCreate(ISCListener, 0, NULL);
+   // Start inter-server communication listener
+   if (ConfigReadBoolean(_T("EnableISCListener"), false))
+      ThreadCreate(ISCListener, 0, NULL);
 
-	// Start reporting server connector
-	if (ConfigReadBoolean(_T("EnableReportingServer"), false))
-		ThreadCreate(ReportingServerConnector, 0, NULL);
+   // Start reporting server connector
+   if (ConfigReadBoolean(_T("EnableReportingServer"), false))
+      ThreadCreate(ReportingServerConnector, 0, NULL);
 
    // Start LDAP synchronization
-   if (ConfigReadInt(_T("LdapSyncInterval"), 0))
-		ThreadCreate(SyncLDAPUsers, 0, NULL);
+   if (ConfigReadInt(_T("LDAP.SyncInterval"), 0))
+      ThreadCreate(SyncLDAPUsers, 0, NULL);
 
    // Wait for initialization of critical threads
    ConditionWait(pollManagerInitialized, INFINITE);
@@ -1109,8 +1108,8 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
    RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
-	RegisterSchedulerTaskHandler(_T("Policy.Deploy"), ScheduleDeployPolicy, 0); //No access right because it will be used only by server
-	RegisterSchedulerTaskHandler(_T("Policy.Uninstall"), ScheduleUninstallPolicy, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(_T("Policy.Deploy"), ScheduleDeployPolicy, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(_T("Policy.Uninstall"), ScheduleUninstallPolicy, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(ALARM_SUMMARY_EMAIL_TASK_ID, SendAlarmSummaryEmail, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
@@ -1141,18 +1140,18 @@ retry_db_lock:
    // Schedule poll timers reset
    AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
 
-	// Start listeners
+   // Start listeners
    s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread, 0, NULL);
-	s_clientListenerThread = ThreadCreateEx(ClientListenerThread, 0, NULL);
-	InitMobileDeviceListeners();
-	s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread, 0, NULL);
+   s_clientListenerThread = ThreadCreateEx(ClientListenerThread, 0, NULL);
+   InitMobileDeviceListeners();
+   s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread, 0, NULL);
 
-	// Start uptime calculator for SLM
-	ThreadCreate(UptimeCalculator, 0, NULL);
+   // Start uptime calculator for SLM
+   ThreadCreate(UptimeCalculator, 0, NULL);
 
-	nxlog_debug(2, _T("LIBDIR: %s"), g_netxmsdLibDir);
+   nxlog_debug(2, _T("LIBDIR: %s"), g_netxmsdLibDir);
 
-	// Call startup functions for the modules
+   // Call startup functions for the modules
    CALL_ALL_MODULES(pfServerStarted, ());
 
 #if XMPP_SUPPORTED
@@ -1172,10 +1171,10 @@ retry_db_lock:
    // and thread pools already created
    s_statCollectorThread = ThreadCreateEx(ServerStatCollector, 0, NULL);
 
-	g_flags |= AF_SERVER_INITIALIZED;
-	PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, NULL);
-	nxlog_debug(1, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
-	return TRUE;
+   g_flags |= AF_SERVER_INITIALIZED;
+   PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, NULL);
+   nxlog_debug(1, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
+   return TRUE;
 }
 
 /**
@@ -1183,12 +1182,12 @@ retry_db_lock:
  */
 void NXCORE_EXPORTABLE Shutdown()
 {
-	// Notify clients
-	NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
+   // Notify clients
+   NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
-	nxlog_write(NXLOG_INFO, _T("NetXMS Server stopped"));
+   nxlog_write(NXLOG_INFO, _T("NetXMS Server stopped"));
    g_flags |= AF_SHUTDOWN;     // Set shutdown flag
-	InitiateProcessShutdown();
+   InitiateProcessShutdown();
 
    // Call shutdown functions for the modules
    // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag

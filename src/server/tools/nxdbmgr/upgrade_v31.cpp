@@ -56,6 +56,45 @@ static bool ConvertDCObjectFlags(const TCHAR *table)
 }
 
 /**
+ * Upgrade from 31.5 to 31.6
+ */
+static bool H_UpgradeFromV5()
+{
+   static const TCHAR *batch =
+            _T("UPDATE config SET var_name='Objects.Interfaces.DefaultExpectedState' WHERE var_name='DefaultInterfaceExpectedState'\n")
+            _T("UPDATE config SET var_name='Objects.Interfaces.UseAliases' WHERE var_name='UseInterfaceAliases'\n")
+            _T("UPDATE config SET var_name='Objects.Interfaces.UseIfXTable' WHERE var_name='UseIfXTable'\n")
+            _T("UPDATE config SET var_name='Objects.Nodes.ResolveDNSToIPOnStatusPoll' WHERE var_name='ResolveDNSToIPOnStatusPoll'\n")
+            _T("UPDATE config SET var_name='Objects.Nodes.ResolveNames' WHERE var_name='ResolveNodeNames'\n")
+            _T("UPDATE config SET var_name='Objects.Nodes.SyncNamesWithDNS' WHERE var_name='SyncNodeNamesWithDNS'\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateConfigParam(_T("Objects.Interfaces.NamePattern"), _T(""), _T("Custom name pattern for interface objects."), NULL, 'S', true, false, false, false));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_name FROM config WHERE var_name LIKE 'Ldap%'"));
+   if (hResult != NULL)
+   {
+      TCHAR name[128], query[512];
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         DBGetField(hResult, i, 0, name, 128);
+         _sntprintf(query, 512, _T("UPDATE config SET var_name='LDAP.%s' WHERE var_name='%s'"), &name[4], name);
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 31.4 to 31.5
  */
 static bool H_UpgradeFromV4()
@@ -244,6 +283,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 5,  31, 6, H_UpgradeFromV5 },
    { 4,  31, 5, H_UpgradeFromV4 },
    { 3,  31, 4, H_UpgradeFromV3 },
    { 2,  31, 3, H_UpgradeFromV2 },

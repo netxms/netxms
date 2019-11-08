@@ -2710,7 +2710,7 @@ json_t *NetObj::toJson()
 /**
  * Expand text
  */
-StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields)
+StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields)
 {
    struct tm *lt;
 #if HAVE_LOCALTIME_R
@@ -2781,7 +2781,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case 'n':   // Name of event source
-                  output.append(getName());
+                  output.append((objectName != NULL) ? objectName : getName());
                   break;
                case 'N':   // Event name
                   if (event != NULL)

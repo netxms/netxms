@@ -1612,7 +1612,7 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
          inputFields = NULL;
 
       TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
-      m_cmd = MemCopyString(object->expandText(cmd, NULL, NULL, session->getLoginName(), inputFields));
+      m_cmd = MemCopyString(object->expandText(cmd, NULL, NULL, session->getLoginName(), NULL, inputFields));
       free(cmd);
       delete inputFields;
    }

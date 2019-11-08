@@ -1062,6 +1062,15 @@ UINT32 Interface::getParentNodeId()
 }
 
 /**
+ * Get name of parent node object
+ */
+String Interface::getParentNodeName()
+{
+   Node *node = getParentNode();
+   return (node != NULL) ? String(node->getName()) : String(_T("<none>"));
+}
+
+/**
  * Update zone UIN. New zone UIN taken from parent node.
  */
 void Interface::updateZoneUIN()
@@ -1329,6 +1338,30 @@ NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm)
    }
    unlockProperties();
    return vm->createValue(a);
+}
+
+/**
+ * Build expanded interface name from original name. Expanded name buffer must be at least MAX_OBJECT_NAME characters.
+ */
+void Interface::expandName(const TCHAR *originalName, TCHAR *expandedName)
+{
+   TCHAR namePattern[MAX_DB_STRING];
+   ConfigReadStr(_T("Objects.Interfaces.NamePattern"), namePattern, MAX_DB_STRING, _T(""));
+   Trim(namePattern);
+   if (namePattern[0] == 0)
+   {
+      _tcslcpy(expandedName, originalName, MAX_OBJECT_NAME);
+      return;
+   }
+
+   StringBuffer e = expandText(namePattern, NULL, NULL, NULL, originalName, NULL);
+   _tcslcpy(expandedName, e.cstr(), MAX_OBJECT_NAME);
+   Trim(expandedName);
+   if (expandedName[0] == 0)
+      _tcslcpy(expandedName, originalName, MAX_OBJECT_NAME);
+
+   nxlog_debug(6, _T("Interface [%u] on node %s [%u] name expanded: \"%s\" -> \"%s\""),
+            m_id, getParentNodeName().cstr(), getParentNodeId(), originalName, expandedName);
 }
 
 /**

@@ -834,7 +834,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       data.driverAttributes = new StringMap();
       data.driver->analyzeDevice(pTransport, data.snmpObjectId, data.driverAttributes, &data.driverData);
       data.ifList = data.driver->getInterfaces(pTransport, data.driverAttributes, data.driverData,
-               ConfigReadInt(_T("UseInterfaceAliases"), 0), ConfigReadBoolean(_T("UseIfXTable"), true));
+               ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0), ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
    }
 
    // TODO: check all interfaces for matching existing nodes

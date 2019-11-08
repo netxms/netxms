@@ -251,13 +251,13 @@ void LDAPConnection::getAllSyncParameters()
 {
    TCHAR tmpPwd[MAX_PASSWORD];
    TCHAR tmpLogin[MAX_CONFIG_VALUE];
-   ConfigReadStr(_T("LdapSyncUserPassword"), tmpPwd, MAX_PASSWORD, _T(""));
-   ConfigReadStr(_T("LdapSyncUser"), tmpLogin, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("LDAP.SyncUserPassword"), tmpPwd, MAX_PASSWORD, _T(""));
+   ConfigReadStr(_T("LDAP.SyncUser"), tmpLogin, MAX_CONFIG_VALUE, _T(""));
    DecryptPassword(tmpLogin, tmpPwd, tmpPwd, MAX_PASSWORD);
-   LdapConfigRead(_T("LdapConnectionString"), m_connList, MAX_CONFIG_VALUE, _TLDAP(""));
-   LdapConfigRead(_T("LdapSyncUser"), m_userDN, MAX_CONFIG_VALUE, _TLDAP(""));
-   LdapConfigRead(_T("LdapSearchBase"), m_searchBase, MAX_CONFIG_VALUE, _TLDAP(""));
-   LdapConfigRead(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, _TLDAP("(objectClass=*)"));
+   LdapConfigRead(_T("LDAP.ConnectionString"), m_connList, MAX_CONFIG_VALUE, _TLDAP(""));
+   LdapConfigRead(_T("LDAP.SyncUser"), m_userDN, MAX_CONFIG_VALUE, _TLDAP(""));
+   LdapConfigRead(_T("LDAP.SearchBase"), m_searchBase, MAX_CONFIG_VALUE, _TLDAP(""));
+   LdapConfigRead(_T("LDAP.SearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, _TLDAP("(objectClass=*)"));
    if (m_searchFilter[0] == 0)
       ldap_strcpy(m_searchFilter, _TLDAP("(objectClass=*)"));
 #ifdef _WIN32
@@ -275,16 +275,16 @@ void LDAPConnection::getAllSyncParameters()
 #endif // UNICODE
 
 #endif //win32
-   ConfigReadStrUTF8(_T("LdapUserMappingName"), m_ldapUserLoginNameAttr, MAX_CONFIG_VALUE, "");
-   ConfigReadStrUTF8(_T("LdapGroupMappingName"), m_ldapGroupLoginNameAttr, MAX_CONFIG_VALUE, "");
-   ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_CONFIG_VALUE, "");
-   ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_CONFIG_VALUE, "");
-   ConfigReadStrUTF8(_T("LdapUserUniqueId"), m_ldapUsreIdAttr, MAX_CONFIG_VALUE, "");
-   ConfigReadStrUTF8(_T("LdapGroupUniqueId"), m_ldapGroupIdAttr, MAX_CONFIG_VALUE, "");
-   ConfigReadStr(_T("LdapGroupClass"), m_groupClass, MAX_CONFIG_VALUE, _T(""));
-   ConfigReadStr(_T("LdapUserClass"), m_userClass, MAX_CONFIG_VALUE, _T(""));
-   m_action = ConfigReadInt(_T("LdapUserDeleteAction"), 1); //default value - to disable user(value=1)
-   m_pageSize = ConfigReadInt(_T("LdapPageSize"), 1000); //default value - 1000
+   ConfigReadStrUTF8(_T("LDAP.UserMappingName"), m_ldapUserLoginNameAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LDAP.GroupMappingName"), m_ldapGroupLoginNameAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LDAP.MappingFullName"), m_ldapFullNameAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LDAP.MappingDescription"), m_ldapDescriptionAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LDAP.UserUniqueId"), m_ldapUsreIdAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LDAP.GroupUniqueId"), m_ldapGroupIdAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStr(_T("LDAP.GroupClass"), m_groupClass, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("LDAP.UserClass"), m_userClass, MAX_CONFIG_VALUE, _T(""));
+   m_action = ConfigReadInt(_T("LDAP.UserDeleteAction"), 1); //default value - to disable user(value=1)
+   m_pageSize = ConfigReadInt(_T("LDAP.PageSize"), 1000); //default value - 1000
 }
 
 /**
@@ -1031,7 +1031,7 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg)
 {
    ThreadSetName("LDAPSync");
-   UINT32 syncInterval = ConfigReadInt(_T("LdapSyncInterval"), 0);
+   UINT32 syncInterval = ConfigReadInt(_T("LDAP.SyncInterval"), 0);
    if (syncInterval == 0)
    {
       nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("SyncLDAPUsers: sync thread will not start because LDAP sync is disabled"));

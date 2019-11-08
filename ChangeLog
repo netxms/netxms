@@ -9,6 +9,7 @@
 - New attributes "dci" and "dciId" in NXSL class "Event"
 - New method "forcePoll" in NXSL class "DCI"
 - Added global array $ARGS in NXSL scripts for simplified access to script arguments
+- Interface object names can be expanded from actual interface names using macros
 - Notification channel driver for Telegram
 - Notification channel driver for Microsoft Teams
 - Fixed issues:
@@ -16,6 +17,7 @@
 	NX-1686 (User Agent system tray menu covered by Windows system tray expanded hidden icon menu)
 	NX-1687 (User agent system tray menu closes when you click out of it)
 	NX-1694 (Russian language problem in Windows log)
+	NX-1706 (Compose interface name from the actual name and a suffix)
 	NX-1708 (Event tags in log file monitoring are not represented in UI)
 
 

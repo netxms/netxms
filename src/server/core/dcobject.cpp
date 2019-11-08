@@ -1473,7 +1473,7 @@ void DCObject::updateTimeIntervalsInternal()
 {
    if ((m_retentionTimeSrc != NULL) && (*m_retentionTimeSrc != 0))
    {
-      StringBuffer exp = m_owner->expandText(m_retentionTimeSrc, NULL, NULL, NULL, NULL);
+      StringBuffer exp = m_owner->expandText(m_retentionTimeSrc, NULL, NULL, NULL, NULL, NULL);
       m_retentionTime = _tcstol(exp, NULL, 10);
    }
    else
@@ -1483,7 +1483,7 @@ void DCObject::updateTimeIntervalsInternal()
 
    if ((m_pollingIntervalSrc != NULL) && (*m_pollingIntervalSrc != 0))
    {
-      StringBuffer exp = m_owner->expandText(m_pollingIntervalSrc, NULL, NULL, NULL, NULL);
+      StringBuffer exp = m_owner->expandText(m_pollingIntervalSrc, NULL, NULL, NULL, NULL, NULL);
       m_pollingInterval = _tcstol(exp, NULL, 10);
    }
    else

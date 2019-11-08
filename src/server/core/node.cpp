@@ -1192,14 +1192,14 @@ InterfaceList *Node::getInterfaceList()
          bool useIfXTable;
          if (m_nUseIfXTable == IFXTABLE_DEFAULT)
          {
-            useIfXTable = ConfigReadBoolean(_T("UseIfXTable"), true);
+            useIfXTable = ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true);
          }
          else
          {
             useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED) ? true : false;
          }
 
-         int useAliases = ConfigReadInt(_T("UseInterfaceAliases"), 0);
+         int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
          DbgPrintf(6, _T("Node::getInterfaceList(node=%s [%d]): calling driver (useAliases=%d, useIfXTable=%d)"),
                   m_name, (int)m_id, useAliases, useIfXTable);
          pIfList = m_driver->getInterfaces(pTransport, &m_customAttributes, m_driverData, useAliases, useIfXTable);
@@ -1571,7 +1571,12 @@ Interface *Node::createInterfaceObject(InterfaceInfo *info, bool manuallyCreated
    iface->setSpeed(info->speed);
    iface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
 
-   int defaultExpectedState = ConfigReadInt(_T("DefaultInterfaceExpectedState"), IF_DEFAULT_EXPECTED_STATE_UP);
+   // Expand interface name
+   TCHAR expandedName[MAX_OBJECT_NAME];
+   iface->expandName(iface->getName(), expandedName);
+   iface->setName(expandedName);
+
+   int defaultExpectedState = ConfigReadInt(_T("Objects.Interfaces.DefaultExpectedState"), IF_DEFAULT_EXPECTED_STATE_UP);
    switch(defaultExpectedState)
    {
       case IF_DEFAULT_EXPECTED_STATE_AUTO:
@@ -4439,9 +4444,11 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      pInterface->setMacAddr(MacAddress(ifInfo->macAddr, MAC_ADDR_LENGTH), true);
                      interfaceUpdated = true;
                   }
-                  if (_tcscmp(ifInfo->name, pInterface->getName()))
+                  TCHAR expandedName[MAX_OBJECT_NAME];
+                  pInterface->expandName(ifInfo->name, expandedName);
+                  if (_tcscmp(expandedName, pInterface->getName()))
                   {
-                     pInterface->setName(ifInfo->name);
+                     pInterface->setName(expandedName);
                      interfaceUpdated = true;
                   }
                   if (_tcscmp(ifInfo->description, pInterface->getDescription()))
@@ -9383,7 +9390,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "statusPollType", json_integer(m_iStatusPollType));
    json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
-   json_object_set_new(root, "nUseIfXTable", json_integer(m_nUseIfXTable));
+   json_object_set_new(root, "useIfXTable", json_integer(m_nUseIfXTable));
    json_object_set_new(root, "snmpSecurity", (m_snmpSecurity != NULL) ? m_snmpSecurity->toJson() : json_object());
    json_object_set_new(root, "agentVersion", json_string_t(m_agentVersion));
    json_object_set_new(root, "platformName", json_string_t(m_platformName));

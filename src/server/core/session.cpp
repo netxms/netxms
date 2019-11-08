@@ -8069,7 +8069,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                      delete alarm;
                      return;
                   }
-                  list = SplitCommandLine(object->expandText(action, alarm, NULL, m_loginName, &inputFields));
+                  list = SplitCommandLine(object->expandText(action, alarm, NULL, m_loginName, NULL, &inputFields));
                   _tcsncpy(action, list->get(0), MAX_PARAM_NAME);
                   list->remove(0);
                   delete alarm;
@@ -10869,7 +10869,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             bool expand = request->getFieldAsBoolean(VID_EXPAND_STRING);
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
 				FileDownloadJob *job = new FileDownloadJob((Node *)object,
-				         expand ? object->expandText(remoteFile, alarm, NULL, m_loginName, &inputFields) : remoteFile,
+				         expand ? object->expandText(remoteFile, alarm, NULL, m_loginName, NULL, &inputFields) : remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
 				delete alarm;
 				if (AddJob(job))
@@ -11244,7 +11244,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      delete inputFields;
                      return;
                   }
-                  String expScript = object->expandText(script, alarm, NULL, m_loginName, inputFields);
+                  String expScript = object->expandText(script, alarm, NULL, m_loginName, NULL, inputFields);
                   MemFree(script);
                   script = MemCopyString(expScript);
                   delete alarm;
@@ -14534,7 +14534,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
          return;
       }
 
-      String result = obj->expandText(textToExpand, alarm, NULL, m_loginName, &inputFields);
+      String result = obj->expandText(textToExpand, alarm, NULL, m_loginName, NULL, &inputFields);
       msg.setField(outFieldId, result);
       debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, (const TCHAR *)result);
       MemFree(textToExpand);
