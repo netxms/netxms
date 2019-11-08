@@ -75,6 +75,13 @@ static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
 static bool s_shutdownFlag = false;
 
 /**
+ * Original console codepage
+ */
+#ifdef _WIN32
+UINT s_originalConsoleCodePage = 0;
+#endif
+
+/**
  * Process exit handler
  */
 static void OnProcessExit()
@@ -83,6 +90,9 @@ static void OnProcessExit()
    MsgWaitQueue::shutdown();
    ConditionDestroy(s_shutdownCondition);
    LibCURLCleanup();
+#ifdef _WIN32
+   SetConsoleOutputCP(s_originalConsoleCodePage);
+#endif
 }
 
 /**
@@ -135,6 +145,11 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 #endif
 
    srand(static_cast<unsigned int>(time(NULL)));
+
+#ifdef _WIN32
+   s_originalConsoleCodePage = GetConsoleOutputCP();
+   SetConsoleOutputCP(CP_UTF8);
+#endif
 
    atexit(OnProcessExit);
 }

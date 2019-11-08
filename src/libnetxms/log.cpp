@@ -35,6 +35,10 @@
 
 typedef TCHAR msg_buffer_t[LOCAL_MSG_BUFFER_SIZE];
 
+#ifdef _WIN32
+static void DefaultConsoleWriter(const TCHAR *, ...);
+#endif
+
 /**
  * Debug tags
  */
@@ -73,7 +77,11 @@ static UINT64 s_maxLogSize = 4096 * 1024;	// 4 MB
 static int s_logHistorySize = 4;		// Keep up 4 previous log files
 static TCHAR s_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
 static time_t s_currentDayStart = 0;
+#ifdef _WIN32
+static NxLogConsoleWriter m_consoleWriter = DefaultConsoleWriter;
+#else
 static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
+#endif
 static StringBuffer s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
@@ -158,7 +166,7 @@ static inline void FileWrite(int fh, const TCHAR *text)
    char localBuffer[LOCAL_MSG_BUFFER_SIZE];
    char *buffer = AllocateStringBufferA(len + 1, localBuffer);
    wchar_to_utf8(text, -1, buffer, len + 1);
-   _write(s_logFileHandle, buffer, strlen(buffer));
+   _write(fh, buffer, strlen(buffer));
    FreeStringBuffer(buffer, localBuffer);
 #else
    _write(fh, text, strlen(text));
@@ -178,6 +186,24 @@ static inline void FileFormattedWrite(int fh, const TCHAR *format, ...)
    FileWrite(fh, msg);
    FreeFormattedString(msg, localBuffer);
 }
+
+#ifdef _WIN32
+
+/**
+ * Default console writer for Windows
+ */
+static void DefaultConsoleWriter(const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   msg_buffer_t localBuffer;
+   TCHAR *msg = FormatString(localBuffer, format, args);
+   va_end(args);
+   FileWrite(STDOUT_FILENO, msg);
+   FreeFormattedString(msg, localBuffer);
+}
+
+#endif
 
 /**
  * Set debug level

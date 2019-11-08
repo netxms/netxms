@@ -885,14 +885,15 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
  */
 void CommSession::getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR szParameter[MAX_RUNTIME_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
-   UINT32 dwErrorCode;
+   TCHAR parameter[MAX_RUNTIME_PARAM_NAME];
+   pRequest->getFieldAsString(VID_PARAMETER, parameter, MAX_RUNTIME_PARAM_NAME);
 
-   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_RUNTIME_PARAM_NAME);
-   dwErrorCode = GetParameterValue(szParameter, szValue, this);
-   pMsg->setField(VID_RCC, dwErrorCode);
-   if (dwErrorCode == ERR_SUCCESS)
-      pMsg->setField(VID_VALUE, szValue);
+   TCHAR value[MAX_RESULT_LENGTH];
+   UINT32 errorCode = GetParameterValue(parameter, value, this);
+
+   pMsg->setField(VID_RCC, errorCode);
+   if (errorCode == ERR_SUCCESS)
+      pMsg->setField(VID_VALUE, value);
 }
 
 /**

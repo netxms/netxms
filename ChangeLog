@@ -15,6 +15,7 @@
 	NX-1674 (Initiate DCI forced poll from NXSL)
 	NX-1686 (User Agent system tray menu covered by Windows system tray expanded hidden icon menu)
 	NX-1687 (User agent system tray menu closes when you click out of it)
+	NX-1694 (Russian language problem in Windows log)
 	NX-1708 (Event tags in log file monitoring are not represented in UI)
 
 
