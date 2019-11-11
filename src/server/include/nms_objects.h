@@ -124,8 +124,8 @@ public:
    AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
    AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
 
-   UINT32 deployPolicy(GenericAgentPolicy *policy, bool supportNewTypeFormat);
-   UINT32 uninstallPolicy(uuid guid, TCHAR *type, bool supportNewTypeFormat);
+   UINT32 deployPolicy(GenericAgentPolicy *policy, bool newTypeFormatSupported);
+   UINT32 uninstallPolicy(uuid guid, TCHAR *type, bool newTypeFormatSupported);
 
    void setTunnel(AgentTunnel *tunnel);
 
@@ -1245,7 +1245,8 @@ public:
    virtual json_t *toJson();
    virtual void createExportRecord(StringBuffer &str);
 
-   virtual bool createDeploymentMessage(NXCPMessage *msg, bool supportNewTypeFormat);
+   virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported);
+   virtual bool createDeploymentMessage(NXCPMessage *msg, bool newTypeFormatSupported);
 };
 
 /**

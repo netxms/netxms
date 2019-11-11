@@ -173,7 +173,7 @@ UINT32 GenericAgentPolicy::modifyFromMessage(NXCPMessage *msg)
 /**
  * Create deployment message
  */
-bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool supportNewTypeFormat)
+bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool newTypeFormatSupported)
 {
    if (m_fileContent == NULL)
       return false;  // Policy cannot be deployed
@@ -186,7 +186,7 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool supportN
    msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (UINT32)strlen(m_fileContent));
 #endif
 
-   if (supportNewTypeFormat)
+   if (newTypeFormatSupported)
    {
       msg->setField(VID_POLICY_TYPE, m_policyType);
    }
@@ -205,6 +205,14 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool supportN
    msg->setField(VID_VERSION, m_version);
 
    return true;
+}
+
+/**
+ * Deploy policy to agent. Default implementation calls connector's deployPolicy() method
+ */
+UINT32 GenericAgentPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSupported)
+{
+   return conn->deployPolicy(this, newTypeFormatSupported);
 }
 
 /**

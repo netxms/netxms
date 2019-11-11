@@ -525,7 +525,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
 /**
  * Deploy policy to agent
  */
-UINT32 AgentConnectionEx::deployPolicy(GenericAgentPolicy *policy, bool supportNewTypeFormat)
+UINT32 AgentConnectionEx::deployPolicy(GenericAgentPolicy *policy, bool newTypeFormatSupported)
 {
 	UINT32 rqId, rcc;
 	NXCPMessage msg(getProtocolVersion());
@@ -533,7 +533,7 @@ UINT32 AgentConnectionEx::deployPolicy(GenericAgentPolicy *policy, bool supportN
    rqId = generateRequestId();
    msg.setId(rqId);
 	msg.setCode(CMD_DEPLOY_AGENT_POLICY);
-	if (policy->createDeploymentMessage(&msg, supportNewTypeFormat))
+	if (policy->createDeploymentMessage(&msg, newTypeFormatSupported))
 	{
 		if (sendMessage(&msg))
 		{
@@ -554,7 +554,7 @@ UINT32 AgentConnectionEx::deployPolicy(GenericAgentPolicy *policy, bool supportN
 /**
  * Uninstall policy from agent
  */
-UINT32 AgentConnectionEx::uninstallPolicy(uuid guid, TCHAR *type, bool supportNewTypeFormat)
+UINT32 AgentConnectionEx::uninstallPolicy(uuid guid, TCHAR *type, bool newTypeFormatSupported)
 {
 	UINT32 rqId, rcc;
 	NXCPMessage msg(getProtocolVersion());
@@ -562,7 +562,7 @@ UINT32 AgentConnectionEx::uninstallPolicy(uuid guid, TCHAR *type, bool supportNe
    rqId = generateRequestId();
    msg.setId(rqId);
 	msg.setCode(CMD_UNINSTALL_AGENT_POLICY);
-	if(supportNewTypeFormat)
+	if (newTypeFormatSupported)
    {
 	   msg.setField(VID_POLICY_TYPE, type);
    }

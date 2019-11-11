@@ -150,7 +150,7 @@ ServerJobResult PolicyInstallJob::run()
    AgentConnectionEx *conn = getNode()->createAgentConnection(true);
    if (conn != NULL)
    {
-      UINT32 rcc = conn->deployPolicy(policy, getNode()->supportNewTypeFormat());
+      UINT32 rcc = policy->deploy(conn, getNode()->supportNewTypeFormat());
       conn->decRefCount();
       if (rcc == ERR_SUCCESS)
       {
