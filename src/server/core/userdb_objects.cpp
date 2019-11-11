@@ -420,11 +420,11 @@ NXSL_Value *UserDatabaseObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCH
 NXSL_Value *UserDatabaseObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
 {
    NXSL_HashMap *map = new NXSL_HashMap(vm);
-   StructArray<KeyValuePair> *attributes = m_attributes.toArray();
+   StructArray<KeyValuePair<TCHAR>> *attributes = m_attributes.toArray();
    for(int i = 0; i < attributes->size(); i++)
    {
-      KeyValuePair *p = attributes->get(i);
-      map->set(p->key, vm->createValue(static_cast<const TCHAR*>(p->value)));
+      KeyValuePair<TCHAR> *p = attributes->get(i);
+      map->set(p->key, vm->createValue(p->value));
    }
    delete attributes;
    return vm->createValue(map);

@@ -233,18 +233,27 @@ NXSL_METHOD_DEFINITION(NetObj, setComments)
 }
 
 /**
- * NetObj::setCustomAttribute(name, value)
+ * NetObj::setCustomAttribute(name, value, ...)
  */
 NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
 {
+   if (argc > 3 || argc < 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isString() || !argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
+
+   if(argc == 3 && !argv[2]->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
 
    NetObj *netxmsObject = static_cast<NetObj*>(object->getData());
    const TCHAR *name = argv[0]->getValueAsCString();
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, name);
+   StateChange inherit = StateChange::IGNORE;
+   if(argc == 3)
+      inherit = argv[2]->getValueAsBoolean() ? StateChange::SET : StateChange::CLEAR;
    *result = (value != NULL) ? value : vm->createValue(); // Return NULL if attribute not found
-   netxmsObject->setCustomAttribute(name, argv[1]->getValueAsCString());
+   netxmsObject->setCustomAttribute(name, argv[1]->getValueAsCString(), inherit);
    return 0;
 }
 
@@ -461,7 +470,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, manage, 0);
    NXSL_REGISTER_METHOD(NetObj, rename, 1);
    NXSL_REGISTER_METHOD(NetObj, setComments, 1);
-   NXSL_REGISTER_METHOD(NetObj, setCustomAttribute, 2);
+   NXSL_REGISTER_METHOD(NetObj, setCustomAttribute, -1);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
    NXSL_REGISTER_METHOD(NetObj, setMapImage, 1);
    NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);

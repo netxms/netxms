@@ -45,10 +45,10 @@ NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
 NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src) : NXSL_HandleCountObject(src->m_vm)
 {
    m_values = new NXSL_StringValueMap(src->m_vm, true);
-   StructArray<KeyValuePair> *values = src->m_values->toArray();
+   StructArray<KeyValuePair<void>> *values = src->m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
-      KeyValuePair *p = values->get(i);
+      KeyValuePair<void> *p = values->get(i);
       m_values->set(p->key, m_vm->createValue((const NXSL_Value *)p->value));
    }
    delete values;
@@ -68,10 +68,10 @@ NXSL_HashMap::~NXSL_HashMap()
 NXSL_Value *NXSL_HashMap::getKeys() const
 {
    NXSL_Array *array = new NXSL_Array(m_vm);
-   StructArray<KeyValuePair> *values = m_values->toArray();
+   StructArray<KeyValuePair<void>> *values = m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
-      KeyValuePair *p = values->get(i);
+      KeyValuePair<void> *p = values->get(i);
       array->append(m_vm->createValue(p->key));
    }
    delete values;
@@ -84,10 +84,10 @@ NXSL_Value *NXSL_HashMap::getKeys() const
 NXSL_Value *NXSL_HashMap::getValues() const
 {
    NXSL_Array *array = new NXSL_Array(m_vm);
-   StructArray<KeyValuePair> *values = m_values->toArray();
+   StructArray<KeyValuePair<void>> *values = m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
-      KeyValuePair *p = values->get(i);
+      KeyValuePair<void> *p = values->get(i);
       array->append(m_vm->createValue((const NXSL_Value *)p->value));
    }
    delete values;
@@ -101,10 +101,10 @@ NXSL_Value *NXSL_HashMap::getValues() const
 StringMap *NXSL_HashMap::toStringMap() const
 {
    StringMap *map = new StringMap();
-   StructArray<KeyValuePair> *values = m_values->toArray();
+   StructArray<KeyValuePair<void>> *values = m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
-      KeyValuePair *p = values->get(i);
+      KeyValuePair<void> *p = values->get(i);
       const TCHAR *s = ((NXSL_Value *)p->value)->getValueAsCString();
       if (s != NULL)
          map->set(p->key, s);

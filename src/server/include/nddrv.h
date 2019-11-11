@@ -311,24 +311,24 @@ public:
    virtual const TCHAR *getCustomTestOID();
    virtual int isPotentialDevice(const TCHAR *oid);
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
-   virtual void getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, 
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
                                   int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
-   virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
+   virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
    virtual bool isPerVlanFdbSupported();
-   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+   virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
                                                 UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
                                                 const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
    virtual bool hasMetrics();
-   virtual DataCollectionError getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
-   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
+   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual ArpCache *getArpCache(SNMP_Transport *snmp, DriverData *driverData);
 };
 

@@ -57,23 +57,23 @@ bool PassportDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * this function.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
 	int model = _tcstol(&oid[18], NULL, 10);
 	if ((model == 43) || (model == 44) || (model == 45))	// Passport 1600 series
 	{
-		attributes->set(_T(".rapidCity.is1600"), _T("true"));
-		attributes->set(_T(".rapidCity.maxSlot"), _T("1"));
+		node->setCustomAttribute(_T(".rapidCity.is1600"), _T("true"), StateChange::IGNORE);
+		node->setCustomAttribute(_T(".rapidCity.maxSlot"), _T("1"), StateChange::IGNORE);
 	}
 	else if ((model == 31) || (model == 33) || (model == 48) || (model == 50))
 	{
-		attributes->set(_T(".rapidCity.maxSlot"), _T("6"));
+		node->setCustomAttribute(_T(".rapidCity.maxSlot"), _T("6"), StateChange::IGNORE);
 	}
 	else if (model == 34)
 	{
-		attributes->set(_T(".rapidCity.maxSlot"), _T("3"));
+		node->setCustomAttribute(_T(".rapidCity.maxSlot"), _T("3"), StateChange::IGNORE);
 	}
 }
 
@@ -81,17 +81,17 @@ void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = AvayaERSDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = AvayaERSDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
-	UINT32 maxSlot = attributes->getUInt32(_T(".rapidCity.maxSlot"), 10);
-	bool is1600Series = attributes->getBoolean(_T(".rapidCity.is1600"), false);
+	UINT32 maxSlot = node->getCustomAttributeAsUInt32(_T(".rapidCity.maxSlot"), 10);
+	bool is1600Series = node->getCustomAttributeAsBoolean(_T(".rapidCity.is1600"), false);
 	
 	// Calculate slot/port pair from ifIndex
 	for(int i = 0; i < ifList->size(); i++)

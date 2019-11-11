@@ -65,9 +65,9 @@ bool NtwsDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * this function.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
 }
 
@@ -78,7 +78,7 @@ void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int NtwsDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+int NtwsDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return CLUSTER_MODE_UNKNOWN;
 }
@@ -90,7 +90,7 @@ int NtwsDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, Driv
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool NtwsDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+bool NtwsDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -222,7 +222,7 @@ static UINT32 HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, vo
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
@@ -333,7 +333,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *tra
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
 

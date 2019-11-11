@@ -39,6 +39,7 @@ import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectUrl;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.services.ServiceManager;
 
 /**
@@ -144,7 +145,7 @@ public abstract class AbstractObject
 	protected final HashSet<Long> parents = new HashSet<Long>(0);
 	protected final HashSet<Long> children = new HashSet<Long>(0);
 	protected final List<Long> dashboards = new ArrayList<Long>(0);
-	protected final Map<String, String> customAttributes = new HashMap<String, String>(0);
+	protected final Map<String, CustomAttribute> customAttributes = new HashMap<String, CustomAttribute>(0);
 	protected final List<ObjectUrl> urls = new ArrayList<ObjectUrl>(0);
    protected final List<Long> responsibleUsers = new ArrayList<Long>(0);
 	protected Map<String, Object> moduleData = null;
@@ -266,9 +267,9 @@ public abstract class AbstractObject
 		
 		// Custom attributes
 		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
-		for(i = 0, id = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++, id += 2)
+		for(i = 0, id = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++, id += 4)
 		{
-			customAttributes.put(msg.getFieldAsString(id), msg.getFieldAsString(id + 1));
+			customAttributes.put(msg.getFieldAsString(id), new CustomAttribute(msg, id+1));
 		}
 		
 		// URLs
@@ -800,10 +801,18 @@ public abstract class AbstractObject
 	/**
 	 * Get object's custom attributes
 	 */
-	public Map<String, String> getCustomAttributes()
+	public Map<String, CustomAttribute> getCustomAttributes()
 	{
 		return customAttributes;
 	}
+
+   /**
+    * Get object's custom attribute by key
+    */
+   public CustomAttribute getCustomAttribute(String key)
+   {
+      return customAttributes.get(key);
+   }
 
 	/**
 	 * @return the geolocation
@@ -1007,8 +1016,8 @@ public abstract class AbstractObject
       addString(strings, objectName);
       if ((postalAddress != null) && !postalAddress.isEmpty())
          strings.add(postalAddress.getAddressLine());
-      for(String s : customAttributes.values())
-         addString(strings, s);
+      for(CustomAttribute s : customAttributes.values())
+         addString(strings, s.getValue());
       for(ObjectUrl u : urls)
       {
          addString(strings, u.getUrl().toString());

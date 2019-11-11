@@ -73,13 +73,13 @@ bool IgniteNetDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  *
  * @param snmp SNMP transport
- * @param attributes node's custom attributes
+ * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
  */
-void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex,
+void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
                                         int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    UINT32 state = 0;

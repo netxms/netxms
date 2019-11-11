@@ -143,10 +143,10 @@ LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abs
    s_lock.lock();
    if (s_services != NULL)
    {
-      StructArray<KeyValuePair> *services = s_services->toArray();
+      StructArray<KeyValuePair<TuxedoService>> *services = s_services->toArray();
       for(int i = 0; i < services->size(); i++)
       {
-         value->add(((TuxedoService *)services->get(i)->value)->m_name);
+         value->add(services->get(i)->value->m_name);
       }
       delete services;
    }
@@ -174,11 +174,11 @@ LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstrac
       value->addColumn(_T("LOAD"), DCI_DT_INT, _T("Load"));
       value->addColumn(_T("PRIO"), DCI_DT_INT, _T("Priority"));
 
-      StructArray<KeyValuePair> *services = s_services->toArray();
+      StructArray<KeyValuePair<TuxedoService>> *services = s_services->toArray();
       for(int i = 0; i < services->size(); i++)
       {
          value->addRow();
-         TuxedoService *s = (TuxedoService *)services->get(i)->value;
+         const TuxedoService *s = services->get(i)->value;
          value->set(0, s->m_name);
          value->set(1, s->m_state);
          value->set(2, s->m_routingName);

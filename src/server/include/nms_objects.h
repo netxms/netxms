@@ -707,7 +707,7 @@ public:
 /**
  * Base class for network objects
  */
-class NXCORE_EXPORTABLE NetObj
+class NXCORE_EXPORTABLE NetObj : public NObject
 {
    friend class AutoBindTarget;
    friend class VersionableObject;
@@ -715,16 +715,15 @@ class NXCORE_EXPORTABLE NetObj
    DISABLE_COPY_CTOR(NetObj)
 
 private:
+   typedef NObject super;
+
 	static void onObjectDeleteCallback(NetObj *object, void *data);
 
 	void getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly);
 
 protected:
-   UINT32 m_id;
-	uuid m_guid;
    time_t m_timestamp;       // Last change time stamp
    UINT32 m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
-   TCHAR m_name[MAX_OBJECT_NAME];
    TCHAR *m_comments;      // User comments
    int m_status;
    int m_savedStatus;      // Object status in database
@@ -748,8 +747,6 @@ protected:
 	uuid m_image;
    MUTEX m_mutexProperties;         // Object data access mutex
    MUTEX m_mutexRefCount;     // Reference counter access mutex
-   RWLOCK m_rwlockParentList; // Lock for parent list
-   RWLOCK m_rwlockChildList;  // Lock for child list
 	GeoLocation m_geoLocation;
    PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
@@ -759,16 +756,12 @@ protected:
 	UINT32 m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
    UINT32 m_backupZoneProxyId;      // ID of assigned backup zone proxy node
 
-   ObjectArray<NetObj> *m_childList;     // Array of pointers to child objects
-   ObjectArray<NetObj> *m_parentList;    // Array of pointers to parent objects
-
    AccessList *m_accessList;
    bool m_inheritAccessRights;
    MUTEX m_mutexACL;
 
    IntegerArray<UINT32> *m_trustedNodes;
 
-	StringMap m_customAttributes;
    StringObjectMap<ModuleData> *m_moduleData;
 
    IntegerArray<UINT32> *m_responsibleUsers;
@@ -778,22 +771,6 @@ protected:
    void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() { MutexLock(m_mutexACL); }
    void unlockACL() { MutexUnlock(m_mutexACL); }
-   void lockParentList(bool writeLock)
-   {
-      if (writeLock)
-         RWLockWriteLock(m_rwlockParentList, INFINITE);
-      else
-         RWLockReadLock(m_rwlockParentList, INFINITE);
-   }
-   void unlockParentList() { RWLockUnlock(m_rwlockParentList); }
-   void lockChildList(bool writeLock)
-   {
-      if (writeLock)
-         RWLockWriteLock(m_rwlockChildList, INFINITE);
-      else
-         RWLockReadLock(m_rwlockChildList, INFINITE);
-   }
-   void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
    void lockResponsibleUsersList(bool writeLock)
    {
       if (writeLock)
@@ -843,15 +820,12 @@ public:
 
    virtual InetAddress getPrimaryIpAddress() const { return InetAddress::INVALID; }
 
-   UINT32 getId() const { return m_id; }
-   const TCHAR *getName() const { return m_name; }
    int getStatus() const { return m_status; }
    UINT32 getState() const { return m_state; }
    UINT32 getRuntimeFlags() const { return m_runtimeFlags; }
    UINT32 getFlags() const { return m_flags; }
    int getPropagatedStatus();
    time_t getTimeStamp() const { return m_timestamp; }
-	const uuid& getGuid() const { return m_guid; }
 	const TCHAR *getComments() const { return CHECK_NULL_EX(m_comments); }
 
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
@@ -867,8 +841,8 @@ public:
    bool isModified(UINT32 bit) const { return (m_modified & bit) != 0; }
    bool isDeleted() const { return m_isDeleted; }
    bool isDeleteInitiated() const { return m_isDeleteInitiated; }
-   bool isOrphaned() const { return m_parentList->size() == 0; }
-   bool isEmpty() const { return m_childList->size() == 0; }
+   bool isOrphaned() const { return getParentCount() == 0; }
+   bool isEmpty() const { return getChildCount() == 0; }
 
 	bool isSystem() const { return m_isSystem; }
 	void setSystemFlag(bool flag) { m_isSystem = flag; }
@@ -879,15 +853,18 @@ public:
    void incRefCount();
    void decRefCount();
 
-   bool isChild(UINT32 id);
-   bool isDirectChild(UINT32 id);
 	bool isTrustedNode(UINT32 id);
+
+   virtual void onCustomAttributeChange() override;
 
    void addChild(NetObj *object);     // Add reference to child object
    void addParent(NetObj *object);    // Add reference to parent object
 
    void deleteChild(NetObj *object);  // Delete reference to child object
    void deleteParent(NetObj *object); // Delete reference to parent object
+
+   ObjectArray<NetObj> *getChildList() { return reinterpret_cast<ObjectArray<NetObj> *>(super::getChildList()); }
+   ObjectArray<NetObj> *getParentList() { return reinterpret_cast<ObjectArray<NetObj> *>(super::getParentList()); }
 
    void deleteObject(NetObj *initiator = NULL);     // Prepare object for deletion
    void destroy();   // Destroy partially loaded object
@@ -934,16 +911,6 @@ public:
    void addChildNodesToList(ObjectArray<Node> *nodeList, UINT32 dwUserId);
    void addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, UINT32 dwUserId);
 
-   TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
-   TCHAR *getCustomAttributeCopy(const TCHAR *name) const;
-   StringMap *getCustomAttributes(bool (*filter)(const TCHAR *, const TCHAR *, void *) = NULL, void *context = NULL) const;
-   StringMap *getCustomAttributes(const TCHAR *regexp) const;
-   NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
-   NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
-   void setCustomAttribute(const TCHAR *name, const TCHAR *value);
-   void setCustomAttributePV(const TCHAR *name, TCHAR *value);
-   void deleteCustomAttribute(const TCHAR *name);
-
    UINT32 getAssignedZoneProxyId(bool backup = false) const { return backup ? m_backupZoneProxyId : m_primaryZoneProxyId; }
    void setAssignedZoneProxyId(UINT32 id, bool backup) { if (backup) m_backupZoneProxyId = id; else m_primaryZoneProxyId = id; }
 
@@ -960,9 +927,6 @@ public:
 
    NetObj *findChildObject(const TCHAR *name, int typeFilter);
    Node *findChildNode(const InetAddress& addr);
-
-   int getChildCount() { return m_childList->size(); }
-   int getParentCount() { return m_parentList->size(); }
 
 	virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm);
 	virtual NXSL_Array *getChildrenForNXSL(NXSL_VM *vm);
@@ -984,9 +948,6 @@ public:
    virtual json_t *toJson();
 
    // Debug methods
-   const TCHAR *dbgGetParentList(TCHAR *szBuffer);
-   const TCHAR *dbgGetChildList(TCHAR *szBuffer);
-
    static const WCHAR *getObjectClassNameW(int objectClass);
    static const char *getObjectClassNameA(int objectClass);
 #ifdef UNICODE

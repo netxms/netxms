@@ -57,9 +57,9 @@ bool BayStackDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * this function.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
 	UINT32 slotSize;
 	
@@ -80,36 +80,36 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
 		slotSize = 64;
 	}
 
-	attributes->set(_T(".baystack.slotSize"), slotSize);
+	node->setCustomAttribute(_T(".baystack.slotSize"), slotSize);
 
 	UINT32 numVlans;
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), NULL, 0, &numVlans, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
-		attributes->set(_T(".baystack.rapidCity.vlan"), numVlans);
+		node->setCustomAttribute(_T(".baystack.rapidCity.vlan"), numVlans);
 	else
-		attributes->set(_T(".baystack.rapidCity.vlan"), (UINT32)0);
+		node->setCustomAttribute(_T(".baystack.rapidCity.vlan"), (UINT32)0);
 }
 
 /**
  * Get slot size from object's custom attributes. Default implementation always return constant value 64.
  *
- * @param attributes object's custom attributes
+ * @param node object to get custom attribute
  * @return slot size
  */
-UINT32 BayStackDriver::getSlotSize(StringMap *attributes)
+UINT32 BayStackDriver::getSlotSize(NObject *node)
 {
-	return attributes->getUInt32(_T(".baystack.slotSize"), 64);
+	return node->getCustomAttributeAsUInt32(_T(".baystack.slotSize"), 64);
 }
 
 /**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
@@ -146,7 +146,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
    }
 	
 	// Calculate slot/port pair from ifIndex
-	UINT32 slotSize = attributes->getUInt32(_T(".baystack.slotSize"), 64);
+	UINT32 slotSize = node->getCustomAttributeAsUInt32(_T(".baystack.slotSize"), 64);
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		UINT32 slot = ifList->get(i)->index / slotSize + 1;
@@ -158,7 +158,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		}
 	}
 
-	if (attributes->getUInt32(_T(".baystack.rapidCity.vlan"), 0) > 0)
+	if (node->getCustomAttributeAsUInt32(_T(".baystack.rapidCity.vlan"), 0) > 0)
 		getVlanInterfaces(snmp, ifList);
 
 	UINT32 mgmtIpAddr, mgmtNetMask;

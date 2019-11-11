@@ -161,10 +161,10 @@ void NodeLink::execute()
 	DbgPrintf(6, _T("NodeLink::execute() started for %s [%ld]"), m_name, (long)m_id);
 
    lockChildList(false);
-	for (int i = 0; i < m_childList->size(); i++)
+	for (int i = 0; i < getChildList()->size(); i++)
 	{
-		if (m_childList->get(i)->getObjectClass() == OBJECT_SLMCHECK)
-			((SlmCheck *)m_childList->get(i))->execute();
+		if (getChildList()->get(i)->getObjectClass() == OBJECT_SLMCHECK)
+			((SlmCheck *)getChildList()->get(i))->execute();
 	}
    unlockChildList();
 
@@ -181,12 +181,12 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 	// Check if we already have check created from this template
 	SlmCheck *check = NULL;
 	lockChildList(false);
-	for(int i = 0; i < m_childList->size(); i++)
+	for(int i = 0; i < getChildList()->size(); i++)
 	{
-		if ((m_childList->get(i)->getObjectClass() == OBJECT_SLMCHECK) &&
-		    (((SlmCheck *)m_childList->get(i))->getTemplateId() == tmpl->getId()))
+		if ((getChildList()->get(i)->getObjectClass() == OBJECT_SLMCHECK) &&
+		    (((SlmCheck *)getChildList()->get(i))->getTemplateId() == tmpl->getId()))
 		{
-			check = (SlmCheck *)m_childList->get(i);
+			check = (SlmCheck *)getChildList()->get(i);
 			break;
 		}
 	}
@@ -214,12 +214,12 @@ void NodeLink::applyTemplates()
 	ObjectArray<SlmCheck> templates;
 
 	lockParentList(false);
-	for(int i = 0; i < m_parentList->size(); i++)
+	for(int i = 0; i < getParentList()->size(); i++)
 	{
-		if (m_parentList->get(i)->getObjectClass() != OBJECT_BUSINESSSERVICE)
+		if (getParentList()->get(i)->getObjectClass() != OBJECT_BUSINESSSERVICE)
 			continue;
 
-		BusinessService *parent = (BusinessService *)m_parentList->get(i);
+		BusinessService *parent = (BusinessService *)getParentList()->get(i);
 		parent->getApplicableTemplates(this, &templates);
 	}
 	unlockParentList();

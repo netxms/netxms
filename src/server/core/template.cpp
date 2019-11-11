@@ -146,15 +146,15 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
       // Update members list
       success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
       lockChildList(false);
-      if (success && !m_childList->isEmpty())
+      if (success && !getChildList()->isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"), getChildList()->size() > 1);
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; success && (i < m_childList->size()); i++)
+            for(int i = 0; success && (i < getChildList()->size()); i++)
             {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList()->get(i)->getId());
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -509,9 +509,9 @@ void Template::onDataCollectionChange()
 void Template::prepareForDeletion()
 {
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = getChildList()->get(i);
       if (object->isDataCollectionTarget())
          queueRemoveFromTarget(object->getId(), true);
       if (object->getObjectClass() == OBJECT_NODE)
@@ -645,9 +645,9 @@ bool Template::removePolicy(const uuid& guid)
    if (policy != NULL)
    {
       lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
+      for(int i = 0; i < getChildList()->size(); i++)
       {
-         NetObj *object = m_childList->get(i);
+         NetObj *object = getChildList()->get(i);
          if (object->getObjectClass() == OBJECT_NODE)
          {
             ServerJob *job = new PolicyUninstallJob((Node *)object, policy->getType(), guid, 0);
@@ -675,9 +675,9 @@ bool Template::removePolicy(const uuid& guid)
 void Template::applyPolicyChanges()
 {
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = getChildList()->get(i);
       if (object->getObjectClass() == OBJECT_NODE)
       {
          AgentPolicyInfo *ap;
@@ -703,9 +703,9 @@ void Template::forceApplyPolicyChanges()
 {
    ObjectArray<Node> nodes(64, 64, false);
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = getChildList()->get(i);
       if (object->getObjectClass() == OBJECT_NODE)
       {
          object->incRefCount();

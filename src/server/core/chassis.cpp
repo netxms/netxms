@@ -70,9 +70,9 @@ void Chassis::updateRackBinding()
    ObjectArray<NetObj> deleteList(16, 16, false);
 
    lockParentList(true);
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      NetObj *object = m_parentList->get(i);
+      NetObj *object = getParentList()->get(i);
       if (object->getObjectClass() != OBJECT_RACK)
          continue;
       if (object->getId() == m_rackId)
@@ -118,9 +118,9 @@ void Chassis::updateControllerBinding()
    bool controllerFound = false;
 
    lockParentList(true);
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      NetObj *object = m_parentList->get(i);
+      NetObj *object = getParentList()->get(i);
       if (object->getId() == m_controllerId)
       {
          controllerFound = true;

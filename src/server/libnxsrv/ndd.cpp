@@ -179,10 +179,10 @@ bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
  *
  * @param snmp SNMP transport
  * @param oid Device OID
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
 }
 
@@ -366,11 +366,11 @@ static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *sn
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
    bool success = false;
 
@@ -573,7 +573,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  * 
  * @param snmp SNMP transport
- * @param attributes node's custom attributes
+ * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
  * @param ifTableSuffixLen length of interface table suffix
@@ -581,7 +581,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
  */
-void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, 
+void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
                                             int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    UINT32 state = 0;
@@ -715,11 +715,11 @@ static UINT32 HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transpo
  * Get list of VLANs on given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
 	VlanList *list = new VlanList();
 	
@@ -750,11 +750,11 @@ failure:
  * Get orientation of the modules in the device. Default implementation always returns NDD_ORIENTATION_HORIZONTAL.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
 	return NDD_ORIENTATION_HORIZONTAL;
 }
@@ -763,12 +763,12 @@ int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *
  * Get port layout of given module. Default implementation always set NDD_PN_UNKNOWN as layout.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
 	layout->numberingScheme = NDD_PN_UNKNOWN;
 	layout->rows = 2;
@@ -789,11 +789,11 @@ bool NetworkDeviceDriver::isPerVlanFdbSupported()
  * Get device cluster mode. Default implementation always return CLUSTER_MODE_STANDALONE.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return cluster mode (one of CLUSTER_MODE_STANDALONE, CLUSTER_MODE_ACTIVE, CLUSTER_MODE_STANDBY)
  */
-int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return CLUSTER_MODE_STANDALONE;
 }
@@ -802,11 +802,11 @@ int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attribu
  * Returns true if device is a wireless controller. Default implementation always return false.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return true if device is a wireless controller
  */
-bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return false;
 }
@@ -815,11 +815,11 @@ bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, StringMap *
  * Get list of wireless access points managed by this controller. Default implementation always return NULL.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of access points
  */
-ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return NULL;
 }
@@ -828,11 +828,11 @@ ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transpor
  * Get list of associated wireless stations. Default implementation always return NULL.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of associated wireless stations
  */
-ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return NULL;
 }
@@ -841,7 +841,7 @@ ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_
  * Get access point state
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
  * @param macAddr access point MAC address
@@ -849,7 +849,7 @@ ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_
  * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, 
+AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
                                                           UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
                                                           const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
@@ -868,14 +868,14 @@ bool NetworkDeviceDriver::hasMetrics()
  * Get value of given metric
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param name metric name
  * @param value buffer for metric value (size at least MAX_RESULT_LENGTH)
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError NetworkDeviceDriver::getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+DataCollectionError NetworkDeviceDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
    return DCE_NOT_SUPPORTED;
 }
@@ -884,11 +884,11 @@ DataCollectionError NetworkDeviceDriver::getMetric(SNMP_Transport *snmp, StringM
  * Get list of metrics supported by driver
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
-ObjectArray<AgentParameterDefinition> *NetworkDeviceDriver::getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<AgentParameterDefinition> *NetworkDeviceDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return NULL;
 }

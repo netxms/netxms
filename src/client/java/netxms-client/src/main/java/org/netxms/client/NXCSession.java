@@ -160,6 +160,7 @@ import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
+import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.client.objecttools.ObjectTool;
@@ -5137,16 +5138,19 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.CUSTOM_ATTRIBUTES))
       {
-         Map<String, String> attrList = data.getCustomAttributes();
+         Map<String, CustomAttribute> attrList = data.getCustomAttributes();
          Iterator<String> it = attrList.keySet().iterator();
          long id = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
          int count = 0;
          while(it.hasNext())
          {
             String key = it.next();
-            String value = attrList.get(key);
+            CustomAttribute attr = attrList.get(key);
+            if (attr.getSourceObject() != 0 && !attr.isRedefined())
+               continue;
             msg.setField(id++, key);
-            msg.setField(id++, value);
+            msg.setField(id++, attr.getValue());
+            msg.setFieldInt32(id++, (int)attr.getFlags());
             count++;
          }
          msg.setFieldInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, count);
@@ -5706,7 +5710,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void setObjectCustomAttributes(final long objectId, final Map<String, String> attrList) throws IOException, NXCException
+   public void setObjectCustomAttributes(final long objectId, final Map<String, CustomAttribute> attrList) throws IOException, NXCException
    {
       NXCObjectModificationData data = new NXCObjectModificationData(objectId);
       data.setCustomAttributes(attrList);

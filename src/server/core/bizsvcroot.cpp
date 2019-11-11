@@ -53,12 +53,12 @@ bool BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
       // Update members list
       success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
       lockChildList(false);
-      if (success && !m_childList->isEmpty())
+      if (success && !getChildList()->isEmpty())
       {
          TCHAR szQuery[1024];
-         for(int i = 0; (i < m_childList->size()) && success; i++)
+         for(int i = 0; (i < getChildList()->size()) && success; i++)
          {
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, getChildList()->get(i)->getId());
             success = DBQuery(hdb, szQuery);
          }
       }

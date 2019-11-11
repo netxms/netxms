@@ -232,10 +232,10 @@ LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abstr
    s_lock.lock();
    if (s_queues != NULL)
    {
-      StructArray<KeyValuePair> *queues = s_queues->toArray();
+      StructArray<KeyValuePair<TuxedoQueue>> *queues = s_queues->toArray();
       for(int i = 0; i < queues->size(); i++)
       {
-         value->add(((TuxedoQueue *)queues->get(i)->value)->m_name);
+         value->add(queues->get(i)->value->m_name);
       }
       delete queues;
    }
@@ -267,11 +267,11 @@ LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
       value->addColumn(_T("WK_TOTAL"), DCI_DT_INT, _T("Total Workloads"));
       value->addColumn(_T("WK_CURRENT"), DCI_DT_INT, _T("Current Workloads"));
 
-      StructArray<KeyValuePair> *queues = s_queues->toArray();
+      StructArray<KeyValuePair<TuxedoQueue>> *queues = s_queues->toArray();
       for(int i = 0; i < queues->size(); i++)
       {
          value->addRow();
-         TuxedoQueue *q = (TuxedoQueue *)queues->get(i)->value;
+         const TuxedoQueue *q = queues->get(i)->value;
          value->set(0, q->m_name);
          value->set(1, q->m_lmid);
          value->set(2, q->m_serverName);

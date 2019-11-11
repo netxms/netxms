@@ -184,9 +184,9 @@ void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *p
 
 	// Loop through the kids and execute their either scripts or thresholds
    lockChildList(false);
-	for (int i = 0; i < m_childList->size(); i++)
+	for (int i = 0; i < getChildList()->size(); i++)
 	{
-	   NetObj *object = m_childList->get(i);
+	   NetObj *object = getChildList()->get(i);
 		if (object->getObjectClass() == OBJECT_SLMCHECK)
 			((SlmCheck *)object)->execute();
 		else if (object->getObjectClass() == OBJECT_NODELINK)
@@ -208,9 +208,9 @@ void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *p
 void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates)
 {
 	lockChildList(false);
-	for(int i = 0; i < m_childList->size(); i++)
+	for(int i = 0; i < getChildList()->size(); i++)
 	{
-      NetObj *object = m_childList->get(i);
+      NetObj *object = getChildList()->get(i);
 		if ((object->getObjectClass() == OBJECT_SLMCHECK) &&
           ((SlmCheck *)object)->isTemplate())
 		{
@@ -221,9 +221,9 @@ void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArr
 	unlockChildList();
 
 	lockParentList(false);
-	for(int i = 0; i < m_parentList->size(); i++)
+	for(int i = 0; i < getParentList()->size(); i++)
 	{
-      NetObj *object = m_parentList->get(i);
+      NetObj *object = getParentList()->get(i);
 		if (object->getObjectClass() == OBJECT_BUSINESSSERVICE)
 		{
 			((BusinessService *)object)->getApplicableTemplates(target, templates);

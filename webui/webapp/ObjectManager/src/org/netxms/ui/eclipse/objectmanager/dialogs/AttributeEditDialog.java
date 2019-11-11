@@ -22,9 +22,11 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -36,17 +38,22 @@ public class AttributeEditDialog extends Dialog
 {
 	private LabeledText textName;
 	private LabeledText textValue;
+	private Button checkInherite;
 	private String name;
 	private String value;
+	private long flags;
+	private boolean inherited;
 	
 	/**
 	 * @param parentShell
 	 */
-	public AttributeEditDialog(Shell parentShell, String name, String value)
+	public AttributeEditDialog(Shell parentShell, String name, String value, long flags, boolean inherited)
 	{
 		super(parentShell);
 		this.name = name;
 		this.value = value;
+		this.flags = flags;
+		this.inherited = inherited;
 	}
 
 	/* (non-Javadoc)
@@ -87,6 +94,16 @@ public class AttributeEditDialog extends Dialog
       if (name != null)
       	textValue.setFocus();
       
+      checkInherite = new Button(dialogArea, SWT.CHECK);
+      checkInherite.setText("Inheritable");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      checkInherite.setLayoutData(gd);
+      
+      checkInherite.setSelection(inherited || (flags & CustomAttribute.INHERITABLE) > 0);
+      checkInherite.setEnabled(!inherited);
+      
 		return dialogArea;
 	}
 
@@ -116,6 +133,14 @@ public class AttributeEditDialog extends Dialog
 		return value;
 	}
 	
+	/**
+	 * Get variable flags
+	 */
+	public long getFlags()
+	{
+	   return flags;
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
@@ -124,6 +149,11 @@ public class AttributeEditDialog extends Dialog
 	{
 		name = textName.getText().trim();
 		value = textValue.getText();
+		flags = 0;
+		if(checkInherite.getSelection())
+		   flags |= CustomAttribute.INHERITABLE;
+		if(inherited)
+		   flags |= CustomAttribute.REDEFINED | CustomAttribute.INHERITABLE;
 		super.okPressed();
 	}
 }

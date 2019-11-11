@@ -1041,10 +1041,10 @@ Node *Interface::getParentNode()
    Node *pNode = NULL;
 
    lockParentList(false);
-   for(int i = 0; i < m_parentList->size(); i++)
-      if (m_parentList->get(i)->getObjectClass() == OBJECT_NODE)
+   for(int i = 0; i < getParentList()->size(); i++)
+      if (getParentList()->get(i)->getObjectClass() == OBJECT_NODE)
       {
-         pNode = (Node *)m_parentList->get(i);
+         pNode = (Node *)getParentList()->get(i);
          break;
       }
    unlockParentList();

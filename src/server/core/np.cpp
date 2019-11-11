@@ -395,11 +395,10 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 /**
  * Node information for autodiscovery filter
  */
-struct DiscoveryFilterData
+struct DiscoveryFilterData : public NObject
 {
    InetAddress ipAddr;
    NetworkDeviceDriver *driver;
-   StringMap *driverAttributes;
    DriverData *driverData;
    InterfaceList *ifList;
    UINT32 zoneUIN;
@@ -411,10 +410,9 @@ struct DiscoveryFilterData
    TCHAR agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR platform[MAX_PLATFORM_NAME_LEN];
 
-   ~DiscoveryFilterData()
+   virtual ~DiscoveryFilterData()
    {
       delete ifList;
-      delete driverAttributes;
       delete driverData;
    }
 };
@@ -831,9 +829,8 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
    if ((data.ifList == NULL) && (data.flags & NNF_IS_SNMP))
    {
-      data.driverAttributes = new StringMap();
-      data.driver->analyzeDevice(pTransport, data.snmpObjectId, data.driverAttributes, &data.driverData);
-      data.ifList = data.driver->getInterfaces(pTransport, data.driverAttributes, data.driverData,
+      data.driver->analyzeDevice(pTransport, data.snmpObjectId, &data, &data.driverData);
+      data.ifList = data.driver->getInterfaces(pTransport, &data, data.driverData,
                ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0), ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
    }
 

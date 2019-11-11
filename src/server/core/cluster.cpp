@@ -250,12 +250,12 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             lockChildList(false);
-            for(int i = 0; (i < m_childList->size()) && success; i++)
+            for(int i = 0; (i < getChildList()->size()) && success; i++)
             {
-               if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
+               if (getChildList()->get(i)->getObjectClass() != OBJECT_NODE)
                   continue;
 
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList()->get(i)->getId());
                success = DBExecute(hStmt);
             }
             unlockChildList();
@@ -576,12 +576,12 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
    UINT32 modified = 0;
 
    // Create polling list
-	ObjectArray<DataCollectionTarget> pollList(m_childList->size(), 16, false);
+	ObjectArray<DataCollectionTarget> pollList(getChildList()->size(), 16, false);
    lockChildList(false);
    int i;
-   for(i = 0; i < m_childList->size(); i++)
+   for(i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = getChildList()->get(i);
       if ((object->getStatus() != STATUS_UNMANAGED) && object->isDataCollectionTarget())
       {
          object->incRefCount();
@@ -783,13 +783,13 @@ UINT32 Cluster::getResourceOwnerInternal(UINT32 id, const TCHAR *name)
 UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
    lockChildList(false);
-   ObjectArray<ItemValue> values(m_childList->size(), 32, true);
-   for(int i = 0; i < m_childList->size(); i++)
+   ObjectArray<ItemValue> values(getChildList()->size(), 32, true);
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
+      if (getChildList()->get(i)->getObjectClass() != OBJECT_NODE)
          continue;
 
-      Node *node = static_cast<Node*>(m_childList->get(i));
+      Node *node = static_cast<Node*>(getChildList()->get(i));
       shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(item->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
@@ -849,14 +849,14 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 {
    lockChildList(false);
-   Table **values = (Table **)malloc(sizeof(Table *) * m_childList->size());
+   Table **values = (Table **)malloc(sizeof(Table *) * getChildList()->size());
    int valueCount = 0;
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
+      if (getChildList()->get(i)->getObjectClass() != OBJECT_NODE)
          continue;
 
-      Node *node = static_cast<Node*>(m_childList->get(i));
+      Node *node = static_cast<Node*>(getChildList()->get(i));
       shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(table->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
@@ -924,11 +924,11 @@ NXSL_Array *Cluster::getNodesForNXSL(NXSL_VM *vm)
    int index = 0;
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      if (m_childList->get(i)->getObjectClass() == OBJECT_NODE)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_NODE)
       {
-         nodes->set(index++, m_childList->get(i)->createNXSLObject(vm));
+         nodes->set(index++, getChildList()->get(i)->createNXSLObject(vm));
       }
    }
    unlockChildList();

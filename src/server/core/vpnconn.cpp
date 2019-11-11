@@ -206,9 +206,9 @@ Node *VPNConnector::getParentNode()
    Node *pNode = NULL;
 
    lockParentList(false);
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      NetObj *object = m_parentList->get(i);
+      NetObj *object = getParentList()->get(i);
       if (object->getObjectClass() == OBJECT_NODE)
       {
          pNode = (Node *)object;

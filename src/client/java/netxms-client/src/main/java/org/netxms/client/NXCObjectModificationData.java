@@ -46,6 +46,7 @@ import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
+import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
 
 /**
@@ -144,7 +145,7 @@ public class NXCObjectModificationData
    private String primaryName;
    private AccessListElement[] acl;
    private boolean inheritAccessRights;
-   private Map<String, String> customAttributes;
+   private Map<String, CustomAttribute> customAttributes;
    private String autoBindFilter;
    private int version;
    private String description;
@@ -340,7 +341,7 @@ public class NXCObjectModificationData
    /**
     * @return the customAttributes
     */
-   public Map<String, String> getCustomAttributes()
+   public Map<String, CustomAttribute> getCustomAttributes()
    {
       return customAttributes;
    }
@@ -348,7 +349,7 @@ public class NXCObjectModificationData
    /**
     * @param customAttributes the customAttributes to set
     */
-   public void setCustomAttributes(Map<String, String> customAttributes)
+   public void setCustomAttributes(Map<String, CustomAttribute> customAttributes)
    {
       this.customAttributes = customAttributes;
       fieldSet.add(CUSTOM_ATTRIBUTES);

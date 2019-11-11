@@ -65,9 +65,9 @@ bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * this function.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
 }
 
@@ -117,12 +117,12 @@ static UINT32 IPv6WalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
@@ -139,11 +139,11 @@ InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attribu
  * Get orientation of the modules in the device
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int H3CDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+int H3CDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return NDD_ORIENTATION_HORIZONTAL;
 }
@@ -151,12 +151,12 @@ int H3CDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes
 /**
  * Get port layout of given module
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void H3CDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void H3CDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_DU_LR;
    layout->rows = 2;

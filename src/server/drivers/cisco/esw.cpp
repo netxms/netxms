@@ -61,12 +61,12 @@ bool CiscoEswDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *CiscoEswDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CiscoEswDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 

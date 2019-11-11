@@ -73,12 +73,12 @@ bool ExtremeDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
@@ -117,11 +117,11 @@ InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
  * Get orientation of the modules in the device
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int ExtremeDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+int ExtremeDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return NDD_ORIENTATION_HORIZONTAL;
 }
@@ -129,12 +129,12 @@ int ExtremeDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attrib
 /**
  * Get port layout of given module
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void ExtremeDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void ExtremeDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_UD_LR;
    layout->rows = 2;

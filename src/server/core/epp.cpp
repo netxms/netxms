@@ -407,7 +407,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    }
 
    xml.append(_T("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n"));
-   StructArray<KeyValuePair> *arr = m_pstorageSetActions.toArray();
+   StructArray<KeyValuePair<TCHAR>> *arr = m_pstorageSetActions.toArray();
    for(int i = 0; i < arr->size(); i++)
    {
       xml.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" key=\"%s\">%s</set>\n"), i+1, arr->get(i)->key, arr->get(i)->value);

@@ -37,7 +37,7 @@ const TCHAR *AvayaERSDriver::getVersion()
  * @param attributes object's custom attributes
  * @return slot size
  */
-UINT32 AvayaERSDriver::getSlotSize(StringMap *attributes)
+UINT32 AvayaERSDriver::getSlotSize(NObject *node)
 {
 	return 64;
 }
@@ -107,7 +107,7 @@ static UINT32 HandlerVlanList(SNMP_Variable *pVar, SNMP_Transport *pTransport, v
 /**
  * Get VLANs 
  */
-VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
 	VlanList *list = new VlanList();
 	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)

@@ -931,6 +931,9 @@ public:
    const TCHAR *cstr() const { const String *s = m_string.get(); return (s != NULL) ? s->cstr() : _T(""); }
    operator const TCHAR*() const { return cstr(); }
    operator const String&() const { return str(); }
+
+   bool isNull() const { return m_string == NULL; }
+   bool isEmpty() const { const String *s = m_string.get(); return (s != NULL) ? s->isEmpty() : true; }
 };
 
 /**
@@ -1345,10 +1348,10 @@ struct StringMapEntry;
 /**
  * Key/value pair
  */
-struct KeyValuePair
+template <typename T> struct KeyValuePair
 {
    const TCHAR *key;
-   const void *value;
+   const T *value;
 };
 
 class StringMapBase;
@@ -1419,7 +1422,7 @@ public:
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData) const;
    const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const;
 
-   StructArray<KeyValuePair> *toArray() const;
+   StructArray<KeyValuePair<void>> *toArray(bool (*filter)(const TCHAR *, const void *, void *) = NULL, void *userData = NULL) const;
    StringList *keys() const;
 };
 
@@ -1466,6 +1469,18 @@ public:
 
    Iterator<std::pair<const TCHAR*, const TCHAR*>> *iterator() { return new Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(this)); }
 
+
+   template <typename C>
+   StructArray<KeyValuePair<TCHAR>> *toArray(bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context = NULL) const
+   {
+      return reinterpret_cast<StructArray<KeyValuePair<TCHAR>>*>(StringMapBase::toArray(reinterpret_cast<bool (*)(const TCHAR*, const void*, void*)>(filter), (void *)context));
+   }
+
+   StructArray<KeyValuePair<TCHAR>> *toArray() const
+   {
+      return reinterpret_cast<StructArray<KeyValuePair<TCHAR>>*>(StringMapBase::toArray(NULL, NULL));
+   }
+
    using StringMapBase::forEach;
    template <typename C>
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const TCHAR *, C *), C *context) const
@@ -1500,6 +1515,17 @@ public:
    T *unlink(const TCHAR *key) { return (T*)StringMapBase::unlink(key); }
 
    Iterator<std::pair<const TCHAR*, T*>> *iterator() { return new Iterator<std::pair<const TCHAR*, T*>>(new StringMapIterator(this)); }
+
+   template <typename C>
+   StructArray<KeyValuePair<T>> *toArray(bool (*filter)(const TCHAR *, const T *, C *), C *context = NULL) const
+   {
+      return reinterpret_cast<StructArray<KeyValuePair<T>>*>(StringMapBase::toArray(reinterpret_cast<bool (*)(const TCHAR*, const void*, void*)>(filter), (void *)context));
+   }
+
+   StructArray<KeyValuePair<T>> *toArray() const
+   {
+      return reinterpret_cast<StructArray<KeyValuePair<T>>*>(StringMapBase::toArray(NULL, NULL));
+   }
 
    using StringMapBase::forEach;
    template <typename C>
@@ -3570,6 +3596,13 @@ enum TcpPingResult
    TCP_PING_SOCKET_ERROR = 1,
    TCP_PING_TIMEOUT = 2,
    TCP_PING_REJECT = 3
+};
+
+enum class StateChange
+{
+   IGNORE = 0,
+   SET = 1,
+   CLEAR = 2
 };
 
 #define EMA_FP_SHIFT  11                  /* nr of bits of precision */

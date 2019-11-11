@@ -23,6 +23,24 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+
+/**
+ * Upgrade from 31.7 to 31.8
+ */
+static bool H_UpgradeFromV7()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE object_custom_attributes ADD flags integer\n")
+            _T("UPDATE object_custom_attributes SET flags=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_custom_attributes"), _T("flags")));
+
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
 /**
  * Convert flags in items and dc_tables
  */
@@ -303,6 +321,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 7,  31, 8, H_UpgradeFromV7 },
    { 6,  31, 7, H_UpgradeFromV6 },
    { 5,  31, 6, H_UpgradeFromV5 },
    { 4,  31, 5, H_UpgradeFromV4 },

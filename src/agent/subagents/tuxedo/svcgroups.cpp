@@ -195,10 +195,10 @@ LONG H_ServiceGroupsList(const TCHAR *param, const TCHAR *arg, StringList *value
    s_lock.lock();
    if (s_serviceGroups != NULL)
    {
-      StructArray<KeyValuePair> *serviceGroups = s_serviceGroups->toArray();
+      StructArray<KeyValuePair<TuxedoServiceGropup>> *serviceGroups = s_serviceGroups->toArray();
       for(int i = 0; i < serviceGroups->size(); i++)
       {
-         auto group = static_cast<const TuxedoServiceGropup*>(serviceGroups->get(i)->value);
+         auto group = serviceGroups->get(i)->value;
          TCHAR buffer[128];
          _sntprintf(buffer, 128, _T("%s,%s,%hs"), group->m_svcName, group->m_srvGroup, group->m_lmid);
          value->add(buffer);
@@ -242,11 +242,11 @@ LONG H_ServiceGroupsTable(const TCHAR *param, const TCHAR *arg, Table *value, Ab
       value->addColumn(_T("EXECTIME_MIN"), DCI_DT_INT, _T("Failed Requests"));
 #endif
 
-      StructArray<KeyValuePair> *serviceGroups = s_serviceGroups->toArray();
+      StructArray<KeyValuePair<TuxedoServiceGropup>> *serviceGroups = s_serviceGroups->toArray();
       for(int i = 0; i < serviceGroups->size(); i++)
       {
          value->addRow();
-         auto group = static_cast<const TuxedoServiceGropup*>(serviceGroups->get(i)->value);
+         auto group = serviceGroups->get(i)->value;
          value->set(0, group->m_svcName);
          value->set(1, group->m_srvGroup);
          value->set(2, group->m_lmid);

@@ -77,7 +77,7 @@ bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+int SymbolDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    int ret = CLUSTER_MODE_UNKNOWN;
 
@@ -120,7 +120,7 @@ int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, Dr
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -328,7 +328,7 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
@@ -377,14 +377,14 @@ static UINT32 HandlerAccessPointFindUnadopted(SNMP_Variable *var, SNMP_Transport
  * Get access point state
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
  * @param macAdddr access point MAC address
  * @param ipAddr access point IP address
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
                                                    UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
 						   const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
@@ -486,7 +486,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *tra
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
 

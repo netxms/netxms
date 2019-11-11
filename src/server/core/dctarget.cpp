@@ -673,9 +673,9 @@ NetObj *DataCollectionTarget::objectFromParameter(const TCHAR *param)
    // Find child object with requested ID or name
    NetObj *object = NULL;
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = getChildList()->get(i);
       if (((objectId == 0) && (!_tcsicmp(curr->getName(), arg))) ||
           (objectId == curr->getId()))
       {
@@ -1958,9 +1958,9 @@ NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
    int index = 0;
 
    lockParentList(false);
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      NetObj *object = m_parentList->get(i);
+      NetObj *object = getParentList()->get(i);
       if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedNode(m_id))
       {
          parents->set(index++, object->createNXSLObject(vm));

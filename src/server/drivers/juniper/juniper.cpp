@@ -63,12 +63,12 @@ bool JuniperDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 	{
 	   nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getInterfaces: call to NetworkDeviceDriver::getInterfaces failed"));
@@ -140,13 +140,13 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 /**
  * Get VLANs
  */
-VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    SNMP_Snapshot *vlanTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1"));
    if (vlanTable == NULL)
    {
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of VLAN table, fallback to NetworkDeviceDriver::getVlans"));
-      return NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
+      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
    }
 
    SNMP_Snapshot *portTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.7.1"));
@@ -154,7 +154,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, D
    {
       delete vlanTable;
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of port table, fallback to NetworkDeviceDriver::getVlans"));
-      return NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
+      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
    }
 
    VlanList *vlans = new VlanList();
@@ -198,11 +198,11 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, D
  * Get orientation of the modules in the device
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int JuniperDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+int JuniperDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return NDD_ORIENTATION_HORIZONTAL;
 }
@@ -210,12 +210,12 @@ int JuniperDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attrib
 /**
  * Get port layout of given module
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void JuniperDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void JuniperDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_UD_LR;
    layout->rows = 2;

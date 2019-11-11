@@ -70,27 +70,27 @@ bool PowerConnectDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oi
  * this function.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
-	attributes->set(_T(".powerConnect.slotSize"), _T("52"));
+	node->setCustomAttribute(_T(".powerConnect.slotSize"), _T("52"), StateChange::IGNORE);
 }
 
 /**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
-	UINT32 slotSize = attributes->getUInt32(_T(".powerConnect.slotSize"), 52);
+	UINT32 slotSize = node->getCustomAttributeAsUInt32(_T(".powerConnect.slotSize"), 52);
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)

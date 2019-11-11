@@ -67,9 +67,9 @@ bool OptixDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * this function.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-void OptixDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void OptixDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
 }
 
@@ -191,9 +191,9 @@ static UINT32 HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, void 
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	InterfaceList *ifList = new InterfaceList();
 
@@ -220,7 +220,7 @@ InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  *
  * @param snmp SNMP transport
- * @param attributes node's custom attributes
+ * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
  * @param ifTableSuffixLen length of interface table suffix
@@ -228,7 +228,7 @@ InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
  */
-void OptixDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex,
+void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
                                     int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    *adminState = IF_ADMIN_STATE_UNKNOWN;

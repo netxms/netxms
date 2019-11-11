@@ -199,10 +199,10 @@ LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
    s_lock.lock();
    if (s_clients != NULL)
    {
-      StructArray<KeyValuePair> *clients = s_clients->toArray();
+      StructArray<KeyValuePair<TuxedoClient>> *clients = s_clients->toArray();
       for(int i = 0; i < clients->size(); i++)
       {
-         value->add(((TuxedoClient *)clients->get(i)->value)->m_id);
+         value->add(clients->get(i)->value->m_id);
       }
       delete clients;
    }
@@ -246,11 +246,11 @@ LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
       value->addColumn(_T("NETADDR"), DCI_DT_STRING, _T("Network Address"));
       value->addColumn(_T("ENCBITS"), DCI_DT_INT, _T("Encryption Bits"));
 
-      StructArray<KeyValuePair> *clients = s_clients->toArray();
+      StructArray<KeyValuePair<TuxedoClient>> *clients = s_clients->toArray();
       for(int i = 0; i < clients->size(); i++)
       {
          value->addRow();
-         TuxedoClient *c = (TuxedoClient *)clients->get(i)->value;
+         const TuxedoClient *c = clients->get(i)->value;
          value->set(0, c->m_id);
          value->set(1, c->m_name);
          value->set(2, c->m_lmid);

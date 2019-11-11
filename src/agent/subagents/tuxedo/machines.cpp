@@ -263,10 +263,10 @@ LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abs
    s_lock.lock();
    if (s_machines != NULL)
    {
-      StructArray<KeyValuePair> *machines = s_machines->toArray();
+      StructArray<KeyValuePair<TuxedoMachine>> *machines = s_machines->toArray();
       for(int i = 0; i < machines->size(); i++)
       {
-         value->add(((TuxedoMachine *)machines->get(i)->value)->m_id);
+         value->add(machines->get(i)->value->m_id);
       }
       delete machines;
    }
@@ -309,11 +309,11 @@ LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstrac
       value->addColumn(_T("TLOG_DEVICE"), DCI_DT_STRING, _T("TLOG Device"));
       value->addColumn(_T("TLOG_NAME"), DCI_DT_STRING, _T("TLOG Name"));
 
-      StructArray<KeyValuePair> *machines = s_machines->toArray();
+      StructArray<KeyValuePair<TuxedoMachine>> *machines = s_machines->toArray();
       for(int i = 0; i < machines->size(); i++)
       {
          value->addRow();
-         TuxedoMachine *m = (TuxedoMachine *)machines->get(i)->value;
+         const TuxedoMachine *m = machines->get(i)->value;
          value->set(0, m->m_id);
          value->set(1, m->m_pmid);
          value->set(2, m->m_type);

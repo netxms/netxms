@@ -90,12 +90,12 @@ static UINT32 IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
    // Get interface list from standard MIB
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
    if (ifList == NULL)
       return NULL;
 
@@ -245,11 +245,11 @@ static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, vo
  * Get list of VLANs on given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList *CiscoNexusDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+VlanList *CiscoNexusDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    VlanList *list = new VlanList();
 

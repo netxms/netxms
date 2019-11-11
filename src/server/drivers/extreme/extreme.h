@@ -38,9 +38,9 @@ public:
 
 	virtual int isPotentialDevice(const TCHAR *oid) override;
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
-   virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
-   virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
+   virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
 };
 
 #endif

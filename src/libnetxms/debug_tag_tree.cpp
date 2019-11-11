@@ -156,12 +156,12 @@ void DebugTagTreeNode::getAllTags(const TCHAR *prefix, ObjectArray<DebugTagInfo>
    if (*prefix != 0)
       _tcslcat(name, _T("."), 1024);
    size_t l = _tcslen(name);
-   StructArray<KeyValuePair> *c = m_children->toArray();
+   StructArray<KeyValuePair<DebugTagTreeNode>> *c = m_children->toArray();
    for(int i = 0; i < c->size(); i++)
    {
-      KeyValuePair *p = c->get(i);
+      KeyValuePair<DebugTagTreeNode> *p = c->get(i);
       _tcslcpy(&name[l], p->key, 1024 - l);
-      const DebugTagTreeNode *n = static_cast<const DebugTagTreeNode*>(p->value);
+      const DebugTagTreeNode *n = p->value;
       if (n->m_direct)
       {
          tags->add(new DebugTagInfo(name, n->m_directLevel));

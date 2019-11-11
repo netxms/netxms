@@ -81,7 +81,7 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	NetObj *netxmsObject = static_cast<NetObj*>(object->getData());
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
    *ppResult = (value != NULL) ? value : vm->createValue(); // Return NULL if attribute not found
-	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
+	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString(), StateChange::IGNORE);
 	return 0;
 }
 

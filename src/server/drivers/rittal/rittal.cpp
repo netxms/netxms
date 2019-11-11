@@ -68,10 +68,10 @@ bool RittalDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  *
  * @param snmp SNMP transport
  * @param oid Device OID
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void RittalDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void RittalDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
    if (*driverData == NULL)
       *driverData = new RittalDriverData();
@@ -91,14 +91,14 @@ bool RittalDriver::hasMetrics()
  * Get value of given metric
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param name metric name
  * @param value buffer for metric value (size at least MAX_RESULT_LENGTH)
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
    if (driverData == NULL)
       return DCE_COLLECTION_ERROR;
@@ -124,11 +124,11 @@ DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, StringMap *att
  * Get list of metrics supported by driver
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
-ObjectArray<AgentParameterDefinition> *RittalDriver::getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<AgentParameterDefinition> *RittalDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, true);
    registerHostMibMetrics(metrics);

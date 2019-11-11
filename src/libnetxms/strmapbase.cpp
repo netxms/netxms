@@ -273,18 +273,21 @@ void StringMapBase::filterElements(bool (*filter)(const TCHAR *, const void *, v
 }
 
 /**
- * Convert to key/value array
+ * Filter elements (return those for which filter callback return true)
  */
-StructArray<KeyValuePair> *StringMapBase::toArray() const
+StructArray<KeyValuePair<void>> *StringMapBase::toArray(bool (*filter)(const TCHAR *, const void *, void *), void *userData) const
 {
-   StructArray<KeyValuePair> *a = new StructArray<KeyValuePair>(size());
+   StructArray<KeyValuePair<void>> *a = new StructArray<KeyValuePair<void>>();
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      KeyValuePair p;
-      p.key = m_ignoreCase ? entry->originalKey : entry->key;
-      p.value = entry->value;
-      a->add(&p);
+      if ((filter == NULL) || filter(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
+      {
+         KeyValuePair<void> p;
+         p.key = m_ignoreCase ? entry->originalKey : entry->key;
+         p.value = entry->value;
+         a->add(&p);
+      }
    }
    return a;
 }

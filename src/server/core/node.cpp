@@ -1202,7 +1202,7 @@ InterfaceList *Node::getInterfaceList()
          int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
          DbgPrintf(6, _T("Node::getInterfaceList(node=%s [%d]): calling driver (useAliases=%d, useIfXTable=%d)"),
                   m_name, (int)m_id, useAliases, useIfXTable);
-         pIfList = m_driver->getInterfaces(pTransport, &m_customAttributes, m_driverData, useAliases, useIfXTable);
+         pIfList = m_driver->getInterfaces(pTransport, this, m_driverData, useAliases, useIfXTable);
 
          if ((pIfList != NULL) && (m_capabilities & NC_IS_BRIDGE))
          {
@@ -1301,10 +1301,10 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 Interface *Node::findInterfaceByIndex(UINT32 ifIndex)
 {
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+   for(int i = 0; i < getChildList()->size(); i++)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *pInterface = (Interface *)m_childList->get(i);
+         Interface *pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
          if (pInterface->getIfIndex() == ifIndex)
          {
             unlockChildList();
@@ -1327,10 +1327,10 @@ Interface *Node::findInterfaceByName(const TCHAR *name)
    Interface *pInterface;
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+   for(int i = 0; i < getChildList()->size(); i++)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         pInterface = (Interface *)m_childList->get(i);
+         pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
          if (!_tcsicmp(pInterface->getName(), name) || !_tcsicmp(pInterface->getDescription(), name))
          {
             unlockChildList();
@@ -1348,10 +1348,10 @@ Interface *Node::findInterfaceByName(const TCHAR *name)
 Interface *Node::findInterfaceByLocation(const InterfacePhysicalLocation& location)
 {
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+   for(int i = 0; i < getChildList()->size(); i++)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *pInterface = (Interface *)m_childList->get(i);
+         Interface *pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
          if (pInterface->isPhysicalPort() && pInterface->getPhysicalLocation().equals(location))
          {
             unlockChildList();
@@ -1370,9 +1370,9 @@ Interface *Node::findInterfaceByMAC(const MacAddress& macAddr)
 {
    Interface *iface = NULL;
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
       if (curr->getObjectClass() == OBJECT_INTERFACE)
       {
          if (static_cast<Interface*>(curr)->getMacAddr().equals(macAddr))
@@ -1396,10 +1396,10 @@ Interface *Node::findInterfaceByIP(const InetAddress& addr)
       return NULL;
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+   for(int i = 0; i < getChildList()->size(); i++)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *pInterface = (Interface *)m_childList->get(i);
+         Interface *pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
          if (pInterface->getIpAddressList()->hasAddress(addr))
          {
             unlockChildList();
@@ -1416,10 +1416,10 @@ Interface *Node::findInterfaceByIP(const InetAddress& addr)
 Interface *Node::findBridgePort(UINT32 bridgePortNumber)
 {
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+   for(int i = 0; i < getChildList()->size(); i++)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *pInterface = (Interface *)m_childList->get(i);
+         Interface *pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
          if (pInterface->getBridgePortNumber() == bridgePortNumber)
          {
             unlockChildList();
@@ -1437,11 +1437,11 @@ NetObj *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *ty
 {
    NetObj *cp = NULL;
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *iface = (Interface *)m_childList->get(i);
+         Interface *iface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
          cp = FindInterfaceConnectionPoint(iface->getMacAddr(), type);
          if (cp != NULL)
          {
@@ -1462,9 +1462,9 @@ AccessPoint *Node::findAccessPointByMAC(const MacAddress& macAddr)
 {
    AccessPoint *ap = NULL;
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
       if (curr->getObjectClass() == OBJECT_ACCESSPOINT)
       {
          if (static_cast<AccessPoint*>(curr)->getMacAddr().equals(macAddr))
@@ -1485,9 +1485,9 @@ AccessPoint *Node::findAccessPointByRadioId(int rfIndex)
 {
    AccessPoint *ap = NULL;
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
       if (curr->getObjectClass() == OBJECT_ACCESSPOINT)
       {
          if (((AccessPoint *)curr)->isMyRadio(rfIndex))
@@ -1508,9 +1508,9 @@ AccessPoint *Node::findAccessPointByBSSID(const BYTE *bssid)
 {
    AccessPoint *ap = NULL;
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
       if (curr->getObjectClass() == OBJECT_ACCESSPOINT)
       {
          if (static_cast<AccessPoint*>(curr)->getMacAddr().equals(bssid) ||
@@ -1531,10 +1531,10 @@ AccessPoint *Node::findAccessPointByBSSID(const BYTE *bssid)
 bool Node::isMyIP(const InetAddress& addr)
 {
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+   for(int i = 0; i < getChildList()->size(); i++)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         if (((Interface *)m_childList->get(i))->getIpAddressList()->hasAddress(addr))
+         if (((Interface *)static_cast<NetObj *>(getChildList()->get(i)))->getIpAddressList()->hasAddress(addr))
          {
             unlockChildList();
             return true;
@@ -1754,9 +1754,9 @@ void Node::deleteInterface(Interface *iface)
          const InetAddress *addr = list->get(i);
 
          lockChildList(false);
-         for(int j = 0; j < m_childList->size(); j++)
+         for(int j = 0; j < getChildList()->size(); j++)
          {
-            NetObj *curr = m_childList->get(j);
+            NetObj *curr = getChildList()->get(j);
             if ((curr->getObjectClass() == OBJECT_INTERFACE) && (curr != iface) &&
                 ((Interface *)curr)->getIpAddressList()->findSameSubnetAddress(*addr).isValid())
             {
@@ -1858,8 +1858,8 @@ restart_agent_check:
       {
          poller->setStatus(_T("check SNMP"));
          sendPollerMsg(rqId, _T("Checking SNMP agent connectivity\r\n"));
-         const TCHAR *testOid = m_customAttributes.get(_T("snmp.testoid"));
-         if (testOid == NULL)
+         SharedString testOid = getCustomAttribute(_T("snmp.testoid"));
+         if (testOid.isEmpty())
          {
             testOid = _T(".1.3.6.1.2.1.1.2.0");
          }
@@ -2070,9 +2070,9 @@ restart_agent_check:
    // Create polling list
    ObjectArray<NetObj> pollList(32, 32, false);
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
       if (curr->getStatus() != STATUS_UNMANAGED)
       {
          curr->incRefCount();
@@ -2126,9 +2126,9 @@ restart_agent_check:
    {
       bool allDown = true;
       lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
+      for(int i = 0; i < getChildList()->size(); i++)
       {
-         NetObj *curr = m_childList->get(i);
+         NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
          if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
              (((Interface *)curr)->getAdminState() != IF_ADMIN_STATE_DOWN) &&
              (((Interface *)curr)->getConfirmedOperState() == IF_OPER_STATE_UP) &&
@@ -2201,9 +2201,9 @@ restart_agent_check:
 
                // Set interfaces and network services to UNKNOWN state
                lockChildList(false);
-               for(int i = 0; i < m_childList->size(); i++)
+               for(int i = 0; i < getChildList()->size(); i++)
                {
-                  NetObj *curr = m_childList->get(i);
+                  NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
                   if ((curr->getObjectClass() == OBJECT_INTERFACE) || (curr->getObjectClass() == OBJECT_NETWORKSERVICE))
                   {
                      curr->resetStatus();
@@ -2724,11 +2724,11 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
          uuid guid = ap->getGuid(i);
          bool found = false;
          lockParentList(false);
-         for(int i = 0; i < m_parentList->size(); i++)
+         for(int i = 0; i < getParentList()->size(); i++)
          {
-            if (m_parentList->get(i)->getObjectClass() == OBJECT_TEMPLATE)
+            if (static_cast<NetObj *>(getParentList()->get(i))->getObjectClass() == OBJECT_TEMPLATE)
             {
-                if(((Template*)m_parentList->get(i))->hasPolicy(guid))
+                if(((Template*)static_cast<NetObj *>(getParentList()->get(i)))->hasPolicy(guid))
                 {
                    found = true;
                    break;
@@ -2749,13 +2749,13 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
       // Check for bound but not installed policies and schedule it's installation again
       //Job will be unbound if it was not possible to add job
       lockParentList(false);
-      NetObj **unbindList = (NetObj **)malloc(sizeof(NetObj *) * m_parentList->size());
+      NetObj **unbindList = (NetObj **)malloc(sizeof(NetObj *) * getParentList()->size());
       int unbindListSize = 0;
-      for(int i = 0; i < m_parentList->size(); i++)
+      for(int i = 0; i < getParentList()->size(); i++)
       {
-         if (m_parentList->get(i)->getObjectClass() == OBJECT_TEMPLATE)
+         if (static_cast<NetObj *>(getParentList()->get(i))->getObjectClass() == OBJECT_TEMPLATE)
          {
-            ((Template *)m_parentList->get(i))->checkPolicyBind(this, ap, unbindList, &unbindListSize);
+            ((Template *)static_cast<NetObj *>(getParentList()->get(i)))->checkPolicyBind(this, ap, unbindList, &unbindListSize);
          }
       }
       unlockParentList();
@@ -3479,9 +3479,9 @@ void Node::reconcileWithDuplicateNode(Node *node)
 
    // Apply all manual templates from duplicate node
    node->lockParentList(false);
-   for(int i = 0; i < node->m_parentList->size(); i++)
+   for(int i = 0; i < node->getParentList()->size(); i++)
    {
-      NetObj *object = node->m_parentList->get(i);
+      NetObj *object = getParentList()->get(i);
       if (object->getObjectClass() != OBJECT_TEMPLATE)
          continue;
 
@@ -3815,8 +3815,8 @@ bool Node::confPollSnmp(UINT32 rqId)
    sendPollerMsg(rqId, _T("   Checking SNMP...\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_name);
    StringList oids;
-   const TCHAR *customOid = m_customAttributes.get(_T("snmp.testoid"));
-   if (customOid != NULL)
+   SharedString customOid = getCustomAttribute(_T("snmp.testoid"));
+   if (!customOid.isEmpty())
       oids.add(customOid);
    oids.add(_T(".1.3.6.1.2.1.1.2.0"));
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
@@ -3902,14 +3902,14 @@ bool Node::confPollSnmp(UINT32 rqId)
    unlockProperties();
 
    // Allow driver to gather additional info
-   m_driver->analyzeDevice(pTransport, m_snmpObjectId, &m_customAttributes, &m_driverData);
+   m_driver->analyzeDevice(pTransport, m_snmpObjectId, this, &m_driverData);
    if (m_driverData != NULL)
    {
       m_driverData->attachToNode(m_id, m_guid, m_name);
    }
 
    NDD_MODULE_LAYOUT layout;
-   m_driver->getModuleLayout(pTransport, &m_customAttributes, m_driverData, 1, &layout); // TODO module set to 1
+   m_driver->getModuleLayout(pTransport, this, m_driverData, 1, &layout); // TODO module set to 1
    if (layout.numberingScheme == NDD_PN_UNKNOWN)
    {
       // Try to find port numbering information in database
@@ -3920,7 +3920,7 @@ bool Node::confPollSnmp(UINT32 rqId)
 
    if (m_driver->hasMetrics())
    {
-      ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(pTransport, &m_customAttributes, m_driverData);
+      ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(pTransport, this, m_driverData);
       if (metrics != NULL)
       {
          lockProperties();
@@ -4106,7 +4106,7 @@ bool Node::confPollSnmp(UINT32 rqId)
    }
 
    // Get wireless controller data
-   if ((m_driver != NULL) && m_driver->isWirelessController(pTransport, &m_customAttributes, m_driverData))
+   if ((m_driver != NULL) && m_driver->isWirelessController(pTransport, this, m_driverData))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
       sendPollerMsg(rqId, _T("   Reading wireless access point information\r\n"));
@@ -4114,9 +4114,9 @@ bool Node::confPollSnmp(UINT32 rqId)
       m_capabilities |= NC_IS_WIFI_CONTROLLER;
       unlockProperties();
 
-      int clusterMode = m_driver->getClusterMode(pTransport, &m_customAttributes, m_driverData);
+      int clusterMode = m_driver->getClusterMode(pTransport, this, m_driverData);
 
-      ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, &m_customAttributes, m_driverData);
+      ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, this, m_driverData);
       if (aps != NULL)
       {
          sendPollerMsg(rqId, POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
@@ -4318,17 +4318,17 @@ bool Node::deleteDuplicateInterfaces(UINT32 rqid)
    ObjectArray<Interface> deleteList(16, 16, false);
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
 
       if ((curr->getObjectClass() != OBJECT_INTERFACE) ||
           ((Interface *)curr)->isManuallyCreated())
          continue;
       Interface *iface = (Interface *)curr;
-      for(int j = i + 1; j < m_childList->size(); j++)
+      for(int j = i + 1; j < getChildList()->size(); j++)
       {
-         NetObj *next = m_childList->get(j);
+         NetObj *next = getChildList()->get(j);
 
          if ((next->getObjectClass() != OBJECT_INTERFACE) ||
              ((Interface *)next)->isManuallyCreated() ||
@@ -4370,12 +4370,12 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 
       // Find non-existing interfaces
       lockChildList(false);
-      ObjectArray<Interface> deleteList(m_childList->size(), 8, false);
-      for(int i = 0; i < m_childList->size(); i++)
+      ObjectArray<Interface> deleteList(getChildList()->size(), 8, false);
+      for(int i = 0; i < getChildList()->size(); i++)
       {
-         if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+         if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
          {
-            Interface *iface = (Interface *)m_childList->get(i);
+            Interface *iface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
             if (iface->isFake())
             {
                // always delete fake interfaces if we got actual interface list
@@ -4423,11 +4423,11 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          bool isNewInterface = true;
 
          lockChildList(false);
-         for(int i = 0; i < m_childList->size(); i++)
+         for(int i = 0; i < getChildList()->size(); i++)
          {
-            if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+            if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
             {
-               Interface *pInterface = static_cast<Interface*>(m_childList->get(i));
+               Interface *pInterface = static_cast<Interface*>(static_cast<NetObj *>(getChildList()->get(i)));
                if (ifInfo->index == pInterface->getIfIndex())
                {
                   bool interfaceUpdated = false;
@@ -4606,11 +4606,11 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       if (m_runtimeFlags & NDF_RECHECK_CAPABILITIES)
       {
          lockChildList(false);
-         Interface **ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_childList->size());
+         Interface **ppDeleteList = (Interface **)malloc(sizeof(Interface *) * getChildList()->size());
          int delCount = 0;
-         for(int i = 0; i < m_childList->size(); i++)
+         for(int i = 0; i < getChildList()->size(); i++)
          {
-            NetObj *curr = m_childList->get(i);
+            NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
             if ((curr->getObjectClass() == OBJECT_INTERFACE) && !((Interface *)curr)->isManuallyCreated())
                ppDeleteList[delCount++] = (Interface *)curr;
          }
@@ -5536,7 +5536,7 @@ DataCollectionError Node::getItemFromDeviceDriver(const TCHAR *param, TCHAR *buf
    SNMP_Transport *transport = createSnmpTransport();
    if (transport == NULL)
       return DCE_COMM_ERROR;
-   DataCollectionError rc = driver->getMetric(transport, &m_customAttributes, m_driverData, param, buffer, size);
+   DataCollectionError rc = driver->getMetric(transport, this, m_driverData, param, buffer, size);
    delete transport;
    return rc;
 }
@@ -6209,10 +6209,10 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       {
          // Check if received IP address is one of node's interface addresses
          lockChildList(false);
-         int i, count = m_childList->size();
+         int i, count = getChildList()->size();
          for(i = 0; i < count; i++)
-            if ((m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE) &&
-                ((Interface *)m_childList->get(i))->getIpAddressList()->hasAddress(ipAddr))
+            if ((static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE) &&
+                ((Interface *)static_cast<NetObj *>(getChildList()->get(i)))->getIpAddressList()->hasAddress(ipAddr))
                break;
          unlockChildList();
          if (i == count)
@@ -6251,10 +6251,10 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       {
          // Check if received IP address is one of node's interface addresses
          lockChildList(false);
-         int i, count = m_childList->size();
+         int i, count = getChildList()->size();
          for(i = 0; i < count; i++)
-            if ((m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE) &&
-                ((Interface *)m_childList->get(i))->getIpAddressList()->hasAddress(ipAddr))
+            if ((static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE) &&
+                ((Interface *)static_cast<NetObj *>(getChildList()->get(i)))->getIpAddressList()->hasAddress(ipAddr))
                break;
          unlockChildList();
          if (i == count)
@@ -6479,9 +6479,9 @@ UINT32 Node::wakeUp()
 
    lockChildList(false);
 
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
       if ((object->getObjectClass() == OBJECT_INTERFACE) &&
           (object->getStatus() != STATUS_UNMANAGED) &&
           ((Interface *)object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
@@ -6495,9 +6495,9 @@ UINT32 Node::wakeUp()
    // If no interface found try to find interface in unmanaged state
    if (dwResult != RCC_SUCCESS)
    {
-      for(int i = 0; i < m_childList->size(); i++)
+      for(int i = 0; i < getChildList()->size(); i++)
       {
-         NetObj *object = m_childList->get(i);
+         NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
          if ((object->getObjectClass() == OBJECT_INTERFACE) &&
              (object->getStatus() == STATUS_UNMANAGED) &&
              ((Interface *)object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
@@ -6520,7 +6520,7 @@ void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 index, 
 {
    if (m_driver != NULL)
    {
-      m_driver->getInterfaceState(pTransport, &m_customAttributes, m_driverData, index, ifTableSuffixLen, ifTableSuffix, adminState, operState);
+      m_driver->getInterfaceState(pTransport, this, m_driverData, index, ifTableSuffixLen, ifTableSuffix, adminState, operState);
    }
    else
    {
@@ -6921,9 +6921,9 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
       // Change status of node and all it's children to UNKNOWN
       m_status = STATUS_UNKNOWN;
       lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
+      for(int i = 0; i < getChildList()->size(); i++)
       {
-         NetObj *object = m_childList->get(i);
+         NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
          object->resetStatus();
          if (object->getObjectClass() == OBJECT_INTERFACE)
          {
@@ -6967,11 +6967,11 @@ void Node::changeZone(UINT32 newZoneUIN)
 
    // Remove from subnets
    lockParentList(false);
-   NetObj **subnets = MemAllocArray<NetObj*>(m_parentList->size());
+   NetObj **subnets = MemAllocArray<NetObj*>(getParentList()->size());
    int count = 0;
-   for(i = 0; i < m_parentList->size(); i++)
-      if (m_parentList->get(i)->getObjectClass() == OBJECT_SUBNET)
-         subnets[count++] = m_parentList->get(i);
+   for(i = 0; i < getParentList()->size(); i++)
+      if (static_cast<NetObj *>(getParentList()->get(i))->getObjectClass() == OBJECT_SUBNET)
+         subnets[count++] = static_cast<NetObj *>(getParentList()->get(i));
    unlockParentList();
 
    for(i = 0; i < count; i++)
@@ -6988,9 +6988,9 @@ void Node::changeZone(UINT32 newZoneUIN)
 
    // Change zone UIN on interfaces
    lockChildList(false);
-   for(i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
-         static_cast<Interface*>(m_childList->get(i))->updateZoneUIN();
+   for(i = 0; i < getChildList()->size(); i++)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
+         static_cast<Interface*>(static_cast<NetObj *>(getChildList()->get(i)))->updateZoneUIN();
    unlockChildList();
 
    lockProperties();
@@ -7026,11 +7026,11 @@ UINT32 Node::getInterfaceCount(Interface **ppInterface)
 {
    lockChildList(false);
    UINT32 count = 0;
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+   for(int i = 0; i < getChildList()->size(); i++)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
          count++;
-         *ppInterface = (Interface *)m_childList->get(i);
+         *ppInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
       }
    unlockChildList();
    return count;
@@ -7116,9 +7116,9 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
    // Check directly connected networks and VPN connectors
    bool nonFunctionalInterfaceFound = false;
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
       if (object->getObjectClass() == OBJECT_VPNCONNECTOR)
       {
          if (((VPNConnector *)object)->isRemoteAddr(destAddr) &&
@@ -7374,10 +7374,10 @@ Cluster *Node::getMyCluster()
    Cluster *pCluster = NULL;
 
    lockParentList(false);
-   for(int i = 0; i < m_parentList->size(); i++)
-      if (m_parentList->get(i)->getObjectClass() == OBJECT_CLUSTER)
+   for(int i = 0; i < getParentList()->size(); i++)
+      if (static_cast<NetObj *>(getParentList()->get(i))->getObjectClass() == OBJECT_CLUSTER)
       {
-         pCluster = (Cluster *)m_parentList->get(i);
+         pCluster = (Cluster *)static_cast<NetObj *>(getParentList()->get(i));
          break;
       }
    unlockParentList();
@@ -7580,11 +7580,11 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
    {
       // Try to resolve each interface's IP address
       lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
+      for(int i = 0; i < getChildList()->size(); i++)
       {
-         if ((m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE) && !((Interface *)m_childList->get(i))->isLoopback())
+         if ((static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE) && !((Interface *)static_cast<NetObj *>(getChildList()->get(i)))->isLoopback())
          {
-            const InetAddressList *list = ((Interface *)m_childList->get(i))->getIpAddressList();
+            const InetAddressList *list = ((Interface *)static_cast<NetObj *>(getChildList()->get(i)))->getIpAddressList();
             for(int n = 0; n < list->size(); n++)
             {
                const InetAddress& a = list->get(i);
@@ -7724,9 +7724,9 @@ void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, U
    {
       ObjectArray<Subnet> subnets;
       lockParentList(false);
-      for(int i = 0; i < m_parentList->size(); i++)
+      for(int i = 0; i < getParentList()->size(); i++)
       {
-         NetObj *object = m_parentList->get(i);
+         NetObj *object = static_cast<NetObj *>(getParentList()->get(i));
 
          if ((object->getId() == seedSubnet) || (object->getObjectClass() != OBJECT_SUBNET))
             continue;
@@ -7750,9 +7750,9 @@ void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, U
 
       ObjectArray<Node> peers;
       lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
+      for(int i = 0; i < getChildList()->size(); i++)
       {
-         NetObj *object = m_childList->get(i);
+         NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
 
          if (object->getObjectClass() != OBJECT_VPNCONNECTOR)
             continue;
@@ -7822,15 +7822,15 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       SNMP_Transport *snmp = createSnmpTransport();
       if (snmp != NULL)
       {
-         VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes, m_driverData);
+         VlanList *vlanList = m_driver->getVlans(snmp, this, m_driverData);
          delete snmp;
 
          if (vlanList != NULL)
          {
             lockChildList(false);
-            for(int i = 0; i < m_childList->size(); i++)
+            for(int i = 0; i < getChildList()->size(); i++)
             {
-               NetObj *object = m_childList->get(i);
+               NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
                if (object->getObjectClass() == OBJECT_INTERFACE)
                {
                   static_cast<Interface*>(object)->clearVlanList();
@@ -7951,12 +7951,12 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       }
 
       lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
+      for(int i = 0; i < getChildList()->size(); i++)
       {
-         if (m_childList->get(i)->getObjectClass() != OBJECT_INTERFACE)
+         if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() != OBJECT_INTERFACE)
             continue;
 
-         Interface *iface = (Interface *)m_childList->get(i);
+         Interface *iface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
 
          // Clear self-linked interfaces caused by bug in previous release
          if ((iface->getPeerNodeId() == m_id) && (iface->getPeerInterfaceId() == iface->getId()))
@@ -8021,7 +8021,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       SNMP_Transport *snmp = createSnmpTransport();
       if (snmp != NULL)
       {
-         ObjectArray<WirelessStationInfo> *stations = m_driver->getWirelessStations(snmp, &m_customAttributes, m_driverData);
+         ObjectArray<WirelessStationInfo> *stations = m_driver->getWirelessStations(snmp, this, m_driverData);
          delete snmp;
          if (stations != NULL)
          {
@@ -8102,12 +8102,12 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
    DbgPrintf(5, _T("Node::addHostConnections(%s [%d]): FDB retrieved"), m_name, (int)m_id);
 
    lockChildList(false);
-   for(int i = 0; i < (int)m_childList->size(); i++)
+   for(int i = 0; i < (int)getChildList()->size(); i++)
    {
-      if (m_childList->get(i)->getObjectClass() != OBJECT_INTERFACE)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() != OBJECT_INTERFACE)
          continue;
 
-      Interface *ifLocal = (Interface *)m_childList->get(i);
+      Interface *ifLocal = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
       BYTE macAddr[MAC_ADDR_LENGTH];
       if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), macAddr))
       {
@@ -8145,12 +8145,12 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 {
    lockChildList(false);
-   for(int i = 0; i < (int)m_childList->size(); i++)
+   for(int i = 0; i < (int)getChildList()->size(); i++)
    {
-      if (m_childList->get(i)->getObjectClass() != OBJECT_INTERFACE)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() != OBJECT_INTERFACE)
          continue;
 
-      Interface *ifLocal = (Interface *)m_childList->get(i);
+      Interface *ifLocal = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
       if ((ifLocal->getPeerNodeId() != 0) && (ifLocal->getPeerInterfaceId() != 0))
       {
          Interface *ifRemote = (Interface *)FindObjectById(ifLocal->getPeerInterfaceId(), OBJECT_INTERFACE);
@@ -8284,11 +8284,11 @@ void Node::checkSubnetBinding()
    // Build consolidated IP address list
    InetAddressList addrList;
    lockChildList(false);
-   for(int n = 0; n < m_childList->size(); n++)
+   for(int n = 0; n < getChildList()->size(); n++)
    {
-      if (m_childList->get(n)->getObjectClass() != OBJECT_INTERFACE)
+      if (getChildList()->get(n)->getObjectClass() != OBJECT_INTERFACE)
          continue;
-      Interface *iface = (Interface *)m_childList->get(n);
+      Interface *iface = (Interface *)getChildList()->get(n);
       if (iface->isExcludedFromTopology())
          continue;
       for(int m = 0; m < iface->getIpAddressList()->size(); m++)
@@ -8419,12 +8419,12 @@ void Node::checkSubnetBinding()
    // Check for incorrect parent subnets
    lockParentList(false);
    lockChildList(false);
-   ObjectArray<NetObj> unlinkList(m_parentList->size(), 8, false);
-   for(int i = 0; i < m_parentList->size(); i++)
+   ObjectArray<NetObj> unlinkList(getParentList()->size(), 8, false);
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      if (m_parentList->get(i)->getObjectClass() == OBJECT_SUBNET)
+      if (static_cast<NetObj *>(getParentList()->get(i))->getObjectClass() == OBJECT_SUBNET)
       {
-         Subnet *pSubnet = (Subnet *)m_parentList->get(i);
+         Subnet *pSubnet = (Subnet *)static_cast<NetObj *>(getParentList()->get(i));
          if (pSubnet->getIpAddress().contain(m_ipAddress) && !(m_flags & NF_REMOTE_AGENT))
             continue;   // primary IP is in given subnet
 
@@ -8488,11 +8488,11 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
          InterfaceInfo *ifInfo = pIfList->get(j);
 
          lockChildList(false);
-         for(int i = 0; i < m_childList->size(); i++)
+         for(int i = 0; i < getChildList()->size(); i++)
          {
-            if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+            if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
             {
-               Interface *pInterface = (Interface *)m_childList->get(i);
+               Interface *pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
 
                if (ifInfo->index == pInterface->getIfIndex())
                {
@@ -8541,9 +8541,9 @@ NXSL_Array *Node::getParentsForNXSL(NXSL_VM *vm)
    int index = 0;
 
    lockParentList(FALSE);
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      NetObj *object = m_parentList->get(i);
+      NetObj *object = static_cast<NetObj *>(getParentList()->get(i));
       if (((object->getObjectClass() == OBJECT_CONTAINER) ||
            (object->getObjectClass() == OBJECT_CLUSTER) ||
            (object->getObjectClass() == OBJECT_SUBNET) ||
@@ -8567,11 +8567,11 @@ NXSL_Array *Node::getInterfacesForNXSL(NXSL_VM *vm)
    int index = 0;
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
+      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         ifaces->set(index++, m_childList->get(i)->createNXSLObject(vm));
+         ifaces->set(index++, static_cast<NetObj *>(getChildList()->get(i))->createNXSLObject(vm));
       }
    }
    unlockChildList();
@@ -8856,7 +8856,7 @@ AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmp
 {
    if (m_driver == NULL)
       return AP_UNKNOWN;
-   return m_driver->getAccessPointState(snmpTransport, &m_customAttributes, m_driverData, ap->getIndex(), ap->getMacAddr(), ap->getIpAddress(), radioInterfaces);
+   return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddr(), ap->getIpAddress(), radioInterfaces);
 }
 
 /**
@@ -9042,9 +9042,9 @@ void Node::updatePhysicalContainerBinding(int containerClass, UINT32 containerId
    ObjectArray<NetObj> deleteList(16, 16, false);
 
    lockParentList(true);
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      NetObj *object = m_parentList->get(i);
+      NetObj *object = static_cast<NetObj *>(getParentList()->get(i));
       if (object->getObjectClass() != containerClass)
          continue;
       if (object->getId() == containerId)
@@ -9503,9 +9503,9 @@ void Node::icmpPoll(PollerInfo *poller)
    unlockProperties();
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
       if (curr->getStatus() == STATUS_UNMANAGED)
          continue;
 

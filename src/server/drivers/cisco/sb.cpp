@@ -151,12 +151,12 @@ int CiscoSbDriver::getPhysicalPortLayout(SNMP_Transport *snmp, SB_MODULE_LAYOUT 
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
@@ -220,12 +220,12 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
  * Get port layout of given module. Default implementation always set NDD_PN_UNKNOWN as layout.
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void CiscoSbDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void CiscoSbDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_LR_UD;
    SB_MODULE_LAYOUT modules[SB_MAX_MODULE_NUMBER];

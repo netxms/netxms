@@ -494,8 +494,8 @@ void ConditionObject::check()
    if (iOldStatus != m_status)
    {
       lockParentList(false);
-      for(int i = 0; i < m_parentList->size(); i++)
-         m_parentList->get(i)->calculateCompoundStatus();
+      for(int i = 0; i < getParentList()->size(); i++)
+         getParentList()->get(i)->calculateCompoundStatus();
       unlockParentList();
    }
 }

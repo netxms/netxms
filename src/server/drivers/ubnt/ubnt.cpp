@@ -76,7 +76,7 @@ bool UbiquityNetworksDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool UbiquityNetworksDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+bool UbiquityNetworksDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -189,7 +189,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *UbiquityNetworksDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<AccessPointInfo> *UbiquityNetworksDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
    if (SnmpWalk(snmp, _T(".1.2.840.10036.1.1.1.1"),   // dot11StationID
@@ -239,7 +239,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *UbiquityNetworksDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *UbiquityNetworksDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.3"), // mtxrWlRtabStrength

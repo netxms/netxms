@@ -118,9 +118,9 @@ bool Subnet::saveToDatabase(DB_HANDLE hdb)
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_id);
       DBQuery(hdb, szQuery);
       lockChildList(false);
-      for(int i = 0; success && (i < m_childList->size()); i++)
+      for(int i = 0; success && (i < getChildList()->size()); i++)
       {
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, getChildList()->get(i)->getId());
          success = DBQuery(hdb, szQuery);
       }
       unlockChildList();
@@ -208,9 +208,9 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
 
    ObjectArray<Node> nodes(256, 256, false);
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *o = m_childList->get(i);
+      NetObj *o = getChildList()->get(i);
       if ((o->getObjectClass() == OBJECT_NODE) &&
           (o->getStatus() != STATUS_UNMANAGED) &&
           (static_cast<Node*>(o)->isNativeAgent() || static_cast<Node*>(o)->isSNMPSupported()))
@@ -260,9 +260,9 @@ void Subnet::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth,
 {
 	ObjectArray<Node> nodes;
 	lockChildList(false);
-	for(int i = 0; i < m_childList->size(); i++)
+	for(int i = 0; i < getChildList()->size(); i++)
 	{
-	   NetObj *object = m_childList->get(i);
+	   NetObj *object = getChildList()->get(i);
 		if ((object->getId() == seedNode) || (object->getObjectClass() != OBJECT_NODE))
 			continue;
 		if (!includeEndNodes && !((Node *)object)->isRouter())

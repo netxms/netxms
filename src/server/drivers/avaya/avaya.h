@@ -32,13 +32,13 @@
 class AvayaERSDriver : public NetworkDeviceDriver
 {
 protected:
-	virtual UINT32 getSlotSize(StringMap *attributes);
+	virtual UINT32 getSlotSize(NObject *node);
 
 	void getVlanInterfaces(SNMP_Transport *pTransport, InterfaceList *pIfList);
 
 public:
    virtual const TCHAR *getVersion() override;
-	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+	virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
 
 /**
@@ -47,15 +47,15 @@ public:
 class BayStackDriver : public AvayaERSDriver
 {
 protected:
-   virtual UINT32 getSlotSize(StringMap *attributes) override;
+   virtual UINT32 getSlotSize(NObject *node) override;
 
 public:
    virtual const TCHAR *getName() override;
 
    virtual int isPotentialDevice(const TCHAR *oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 /**
@@ -68,8 +68,8 @@ public:
 
    virtual int isPotentialDevice(const TCHAR *oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 /**
@@ -83,11 +83,11 @@ public:
 
    virtual int isPotentialDevice(const TCHAR *oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData) override;
-   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
-   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
-   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
 
 #endif

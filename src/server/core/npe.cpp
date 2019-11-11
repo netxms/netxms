@@ -246,11 +246,11 @@ PredictionEngine NXCORE_EXPORTABLE *FindPredictionEngine(const TCHAR *name)
  */
 void GetPredictionEngines(NXCPMessage *msg)
 {
-   StructArray<KeyValuePair> *a = s_engines.toArray();
+   StructArray<KeyValuePair<PredictionEngine>> *a = s_engines.toArray();
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < a->size(); i++)
    {
-      const PredictionEngine *e = (const PredictionEngine *)a->get(i)->value;
+      const PredictionEngine *e = a->get(i)->value;
       msg->setField(fieldId++, e->getName());
       msg->setField(fieldId++, e->getDescription());
       msg->setField(fieldId++, e->getVersion());

@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include <netxms-regex.h>
 
 /**
  * Class names
@@ -62,16 +61,12 @@ static const char *s_classNameA[]=
  */
 NetObj::NetObj()
 {
-   m_id = 0;
    m_dwRefCount = 0;
    m_mutexProperties = MutexCreateFast();
    m_mutexRefCount = MutexCreateFast();
    m_mutexACL = MutexCreate();
-   m_rwlockParentList = RWLockCreate();
-   m_rwlockChildList = RWLockCreate();
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
-   m_name[0] = 0;
    m_comments = NULL;
    m_modified = 0;
    m_isDeleted = false;
@@ -79,8 +74,6 @@ NetObj::NetObj()
    m_isHidden = false;
 	m_isSystem = false;
 	m_maintenanceEventId = 0;
-   m_childList = new ObjectArray<NetObj>(0, 16, false);
-   m_parentList = new ObjectArray<NetObj>(4, 4, false);
    m_accessList = new AccessList();
    m_inheritAccessRights = true;
 	m_trustedNodes = NULL;
@@ -119,10 +112,6 @@ NetObj::~NetObj()
    MutexDestroy(m_mutexProperties);
    MutexDestroy(m_mutexRefCount);
    MutexDestroy(m_mutexACL);
-   RWLockDestroy(m_rwlockParentList);
-   RWLockDestroy(m_rwlockChildList);
-   delete m_childList;
-   delete m_parentList;
    delete m_accessList;
 	delete m_trustedNodes;
    MemFree(m_comments);
@@ -390,29 +379,14 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	// Load custom attributes
 	if (success)
 	{
-		hStmt = DBPrepare(hdb, _T("SELECT attr_name,attr_value FROM object_custom_attributes WHERE object_id=?"));
+		hStmt = DBPrepare(hdb, _T("SELECT attr_name,attr_value,flags FROM object_custom_attributes WHERE object_id=?"));
 		if (hStmt != NULL)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != NULL)
 			{
-				int i, count;
-				TCHAR *name, *value;
-
-				count = DBGetNumRows(hResult);
-				for(i = 0; i < count; i++)
-				{
-		   		name = DBGetField(hResult, i, 0, NULL, 0);
-		   		if (name != NULL)
-		   		{
-						value = DBGetField(hResult, i, 1, NULL, 0);
-						if (value != NULL)
-						{
-							m_customAttributes.setPreallocated(name, value);
-						}
-					}
-				}
+			   setCustomAttributeFromDatabase(hResult);
 				DBFreeResult(hResult);
 			}
 			else
@@ -521,11 +495,14 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 /**
  * Callback for saving custom attribute in database
  */
-static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const CustomAttribute *value, DB_STATEMENT hStmt)
 {
-   DB_STATEMENT hStmt = (DB_STATEMENT)data;
+   if(value->sourceObject != 0 && (value->flags & CAF_REDEFINED) == 0) //do not save inherited attributes
+      return _CONTINUE;
+
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value->value, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, value->flags);
    return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
 
@@ -622,13 +599,13 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 		TCHAR szQuery[512];
 		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_id);
       success = DBQuery(hdb, szQuery);
-		if (success && !m_customAttributes.isEmpty())
+		if (success && getCustomAttributeSize() != 0)
 		{
-			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"), true);
+			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value,flags) VALUES (?,?,?,?)"), true);
 			if (hStmt != NULL)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            success = (m_customAttributes.forEach(SaveAttributeCallback, hStmt) == _CONTINUE);
+            success = (forEachCustomAttribute(SaveAttributeCallback, hStmt) == _CONTINUE);
 				DBFreeStatement(hStmt);
 			}
 			else
@@ -722,18 +699,19 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 }
 
 /**
+ * Method called on cutom attribute change
+ */
+void NetObj::onCustomAttributeChange()
+{
+   setModified(MODIFY_CUSTOM_ATTRIBUTES);
+}
+
+/**
  * Add reference to the new child object
  */
 void NetObj::addChild(NetObj *object)
 {
-   lockChildList(true);
-   if (m_childList->contains(object))
-   {
-      unlockChildList();
-      return;     // Already in the child list
-   }
-   m_childList->add(object);
-   unlockChildList();
+   super::addChild(object);
 	incRefCount();
 	markAsModified(MODIFY_RELATIONS);
    DbgPrintf(7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
@@ -744,14 +722,7 @@ void NetObj::addChild(NetObj *object)
  */
 void NetObj::addParent(NetObj *object)
 {
-   lockParentList(true);
-   if (m_parentList->contains(object))
-   {
-      unlockParentList();
-      return;     // Already in the parents list
-   }
-   m_parentList->add(object);
-   unlockParentList();
+   super::addParent(object);
 	incRefCount();
 	markAsModified(MODIFY_RELATIONS);
    DbgPrintf(7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
@@ -762,22 +733,8 @@ void NetObj::addParent(NetObj *object)
  */
 void NetObj::deleteChild(NetObj *object)
 {
-   int i;
-
-   lockChildList(true);
-   for(i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i) == object)
-         break;
-
-   if (i == m_childList->size())   // No such object
-   {
-      unlockChildList();
-      return;
-   }
-
    DbgPrintf(7, _T("NetObj::deleteChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
-   m_childList->remove(i);
-   unlockChildList();
+   super::deleteChild(object);
 	decRefCount();
 	markAsModified(MODIFY_RELATIONS);
 }
@@ -787,22 +744,8 @@ void NetObj::deleteChild(NetObj *object)
  */
 void NetObj::deleteParent(NetObj *object)
 {
-   int i;
-
-   lockParentList(true);
-   for(i = 0; i < m_parentList->size(); i++)
-      if (m_parentList->get(i) == object)
-         break;
-   if (i == m_parentList->size())   // No such object
-   {
-      unlockParentList();
-      return;
-   }
-
    DbgPrintf(7, _T("NetObj::deleteParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
-
-   m_parentList->remove(i);
-   unlockParentList();
+   super::deleteParent(object);
 	decRefCount();
 	markAsModified(MODIFY_RELATIONS);
 }
@@ -851,9 +794,9 @@ void NetObj::deleteObject(NetObj *initiator)
    DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_id);
    ObjectArray<NetObj> *deleteList = NULL;
    lockChildList(true);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *o = m_childList->get(i);
+      NetObj *o = static_cast<NetObj *>(getChildList()->get(i));
       if (o->getParentCount() == 1)
       {
          // last parent, delete object
@@ -867,18 +810,18 @@ void NetObj::deleteObject(NetObj *initiator)
       }
 		decRefCount();
    }
-   m_childList->clear();
+   getChildList()->clear();
    unlockChildList();
 
    // Remove references to this object from parent objects
    DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_id);
    ObjectArray<NetObj> *recalcList = NULL;
    lockParentList(true);
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
       // If parent is deletion initiator then this object already
       // removed from parent's child list
-      NetObj *obj = m_parentList->get(i);
+      NetObj *obj = static_cast<NetObj *>(getParentList()->get(i));
       if (obj != initiator)
       {
          obj->deleteChild(this);
@@ -897,7 +840,7 @@ void NetObj::deleteObject(NetObj *initiator)
       }
 		decRefCount();
    }
-   m_parentList->clear();
+   getParentList()->clear();
    unlockParentList();
 
    // Delete orphaned child objects and empty subnets
@@ -961,9 +904,9 @@ void NetObj::onObjectDelete(UINT32 objectId)
 void NetObj::destroy()
 {
    // Delete references to this object from child objects
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *o = m_childList->get(i);
+      NetObj *o = static_cast<NetObj *>(getChildList()->get(i));
       o->deleteParent(this);
       if (o->getParentCount() == 0)
       {
@@ -973,52 +916,12 @@ void NetObj::destroy()
    }
 
    // Remove references to this object from parent objects
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      m_parentList->get(i)->deleteChild(this);
+      static_cast<NetObj *>(getParentList()->get(i))->deleteChild(this);
    }
 
    delete this;
-}
-
-/**
- * Get childs IDs in printable form
- */
-const TCHAR *NetObj::dbgGetChildList(TCHAR *szBuffer)
-{
-   TCHAR *pBuf = szBuffer;
-   *pBuf = 0;
-   lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-   {
-      _sntprintf(pBuf, 10, _T("%d "), m_childList->get(i)->getId());
-      while(*pBuf)
-         pBuf++;
-   }
-   unlockChildList();
-   if (pBuf != szBuffer)
-      *(pBuf - 1) = 0;
-   return szBuffer;
-}
-
-/**
- * Get parents IDs in printable form
- */
-const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
-{
-   TCHAR *pBuf = szBuffer;
-   *pBuf = 0;
-   lockParentList(false);
-   for(int i = 0; i < m_parentList->size(); i++)
-   {
-      _sntprintf(pBuf, 10, _T("%d "), m_parentList->get(i)->getId());
-      while(*pBuf)
-         pBuf++;
-   }
-   unlockParentList();
-   if (pBuf != szBuffer)
-      *(pBuf - 1) = 0;
-   return szBuffer;
 }
 
 /**
@@ -1059,9 +962,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    {
       case SA_CALCULATE_MOST_CRITICAL:
          lockChildList(false);
-         for(i = 0, count = 0, mostCriticalStatus = -1; i < m_childList->size(); i++)
+         for(i = 0, count = 0, mostCriticalStatus = -1; i < getChildList()->size(); i++)
          {
-            iChildStatus = m_childList->get(i)->getPropagatedStatus();
+            iChildStatus = static_cast<NetObj *>(static_cast<NetObj *>(getChildList()->get(i)))->getPropagatedStatus();
             if ((iChildStatus < STATUS_UNKNOWN) &&
                 (iChildStatus > mostCriticalStatus))
             {
@@ -1077,9 +980,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
          // Step 1: calculate severity raitings
          memset(nRating, 0, sizeof(int) * 5);
          lockChildList(false);
-         for(i = 0, count = 0; i < m_childList->size(); i++)
+         for(i = 0, count = 0; i < getChildList()->size(); i++)
          {
-            iChildStatus = m_childList->get(i)->getPropagatedStatus();
+            iChildStatus = static_cast<NetObj *>(getChildList()->get(i))->getPropagatedStatus();
             if (iChildStatus < STATUS_UNKNOWN)
             {
                while(iChildStatus >= 0)
@@ -1156,8 +1059,8 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    if ((oldStatus != m_status) || bForcedRecalc)
    {
       lockParentList(false);
-      for(i = 0; i < m_parentList->size(); i++)
-         m_parentList->get(i)->calculateCompoundStatus();
+      for(i = 0; i < getParentList()->size(); i++)
+         static_cast<NetObj *>(getParentList()->get(i))->calculateCompoundStatus();
       unlockParentList();
       lockProperties();
       setModified(MODIFY_RUNTIME);  // only notify clients
@@ -1254,6 +1157,18 @@ static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, const 
 }
 
 /**
+ * Callback to fill message with custom attributes
+ */
+static EnumerationCallbackResult CustomAttributeFillMessage(const TCHAR *key, const CustomAttribute *attr, std::pair<NXCPMessage *, UINT32 *> *data)
+{
+   data->first->setField((*data->second)++, key);
+   data->first->setField((*data->second)++, attr->value);
+   data->first->setField((*data->second)++, attr->flags);
+   data->first->setField((*data->second)++, attr->sourceObject);
+   return _CONTINUE;
+}
+
+/**
  * Fill NXCP message with object's data
  * Object's properties are locked when this method is called. Method should not do any other locks.
  * Data required other locks should be filled in fillMessageInternalStage2().
@@ -1300,7 +1215,10 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 	}
    pMsg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
 
-   m_customAttributes.fillMessage(pMsg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
+   UINT32 base = VID_CUSTOM_ATTRIBUTES_BASE;
+   std::pair<NXCPMessage *, UINT32 *> data(pMsg, &base);
+   forEachCustomAttribute(CustomAttributeFillMessage, &data);
+   pMsg->setField(VID_NUM_CUSTOM_ATTRIBUTES, getCustomAttributeSize());
 
 	m_geoLocation.fillMessage(*pMsg);
 
@@ -1362,15 +1280,15 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
    int i;
 
    lockParentList(false);
-   msg->setField(VID_PARENT_CNT, m_parentList->size());
-   for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_parentList->size(); i++, dwId++)
-      msg->setField(dwId, m_parentList->get(i)->getId());
+   msg->setField(VID_PARENT_CNT, getParentList()->size());
+   for(i = 0, dwId = VID_PARENT_ID_BASE; i < getParentList()->size(); i++, dwId++)
+      msg->setField(dwId, static_cast<NetObj *>(getParentList()->get(i))->getId());
    unlockParentList();
 
    lockChildList(false);
-   msg->setField(VID_CHILD_CNT, m_childList->size());
-   for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_childList->size(); i++, dwId++)
-      msg->setField(dwId, m_childList->get(i)->getId());
+   msg->setField(VID_CHILD_CNT, getChildList()->size());
+   for(i = 0, dwId = VID_CHILD_ID_BASE; i < getChildList()->size(); i++, dwId++)
+      msg->setField(dwId, static_cast<NetObj *>(getChildList()->get(i))->getId());
    unlockChildList();
 
    lockResponsibleUsersList(false);
@@ -1471,23 +1389,6 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 		pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
    }
 
-   // Change custom attributes
-   if (pRequest->isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
-   {
-      UINT32 i, dwId, dwNumElements;
-      TCHAR *name, *value;
-
-      dwNumElements = pRequest->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
-      m_customAttributes.clear();
-      for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < dwNumElements; i++)
-      {
-      	name = pRequest->getFieldAsString(dwId++);
-      	value = pRequest->getFieldAsString(dwId++);
-      	if ((name != NULL) && (value != NULL))
-	      	m_customAttributes.setPreallocated(name, value);
-      }
-   }
-
 	// Change geolocation
 	if (pRequest->isFieldExist(VID_GEOLOCATION_TYPE))
 	{
@@ -1558,6 +1459,12 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
  */
 UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *pRequest)
 {
+   // Change custom attributes
+   if (pRequest->isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
+   {
+      updateCustomAttributeFromMessage(pRequest);
+   }
+
    if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))
    {
       lockResponsibleUsersList(true);
@@ -1609,8 +1516,8 @@ UINT32 NetObj::getUserRights(UINT32 userId)
       {
          dwRights = 0;
          lockParentList(false);
-         for(int i = 0; i < m_parentList->size(); i++)
-            dwRights |= m_parentList->get(i)->getUserRights(userId);
+         for(int i = 0; i < getParentList()->size(); i++)
+            dwRights |= static_cast<NetObj *>(getParentList()->get(i))->getUserRights(userId);
          unlockParentList();
       }
    }
@@ -1675,66 +1582,15 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
 
    // Change status for child objects also
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      m_childList->get(i)->setMgmtStatus(bIsManaged);
+   for(int i = 0; i < getChildList()->size(); i++)
+      static_cast<NetObj *>(getChildList()->get(i))->setMgmtStatus(bIsManaged);
    unlockChildList();
 
    // Cause parent object(s) to recalculate it's status
    lockParentList(false);
-   for(int i = 0; i < m_parentList->size(); i++)
-      m_parentList->get(i)->calculateCompoundStatus();
+   for(int i = 0; i < getParentList()->size(); i++)
+      static_cast<NetObj *>(getParentList()->get(i))->calculateCompoundStatus();
    unlockParentList();
-}
-
-/**
- * Check if given object is an our child (possibly indirect, i.e child of child)
- *
- * @param id object ID to test
- */
-bool NetObj::isChild(UINT32 id)
-{
-   bool result = isDirectChild(id);
-
-   // If given object is not in child list, check if it is indirect child
-   if (!result)
-   {
-      lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
-         if (m_childList->get(i)->isChild(id))
-         {
-            result = true;
-            break;
-         }
-      unlockChildList();
-   }
-
-   return result;
-}
-
-/**
- * Check if given object is our direct child
- *
- * @param id object ID to test
- */
-bool NetObj::isDirectChild(UINT32 id)
-{
-   // Check for our own ID (object ID should never change, so we may not lock object's data)
-   if (m_id == id)
-      return true;
-
-   bool result = false;
-
-   // First, walk through our own child list
-   lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getId() == id)
-      {
-         result = true;
-         break;
-      }
-   unlockChildList();
-
-   return result;
 }
 
 /**
@@ -1763,9 +1619,9 @@ void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, UINT32 dwUserId)
    lockChildList(false);
 
    // Walk through our own child list
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
       if (object->getObjectClass() == OBJECT_NODE)
       {
          // Check if this node already in the list
@@ -1797,9 +1653,9 @@ void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList,
    lockChildList(false);
 
    // Walk through our own child list
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
       if (!object->checkAccessRights(dwUserId, OBJECT_ACCESS_READ))
          continue;
 
@@ -1828,8 +1684,8 @@ void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList,
 void NetObj::hide()
 {
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      m_childList->get(i)->hide();
+   for(int i = 0; i < getChildList()->size(); i++)
+      static_cast<NetObj *>(getChildList()->get(i))->hide();
    unlockChildList();
 
 	lockProperties();
@@ -1849,8 +1705,8 @@ void NetObj::unhide()
    unlockProperties();
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      m_childList->get(i)->unhide();
+   for(int i = 0; i < getChildList()->size(); i++)
+      static_cast<NetObj *>(getChildList()->get(i))->unhide();
    unlockChildList();
 }
 
@@ -2013,9 +1869,9 @@ NXSL_Array *NetObj::getParentsForNXSL(NXSL_VM *vm)
 	int index = 0;
 
 	lockParentList(false);
-	for(int i = 0; i < m_parentList->size(); i++)
+	for(int i = 0; i < getParentList()->size(); i++)
 	{
-	   NetObj *obj = m_parentList->get(i);
+	   NetObj *obj = static_cast<NetObj *>(getParentList()->get(i));
 		if ((obj->getObjectClass() == OBJECT_CONTAINER) ||
 			 (obj->getObjectClass() == OBJECT_SERVICEROOT) ||
 			 (obj->getObjectClass() == OBJECT_NETWORK))
@@ -2037,9 +1893,9 @@ NXSL_Array *NetObj::getChildrenForNXSL(NXSL_VM *vm)
 	int index = 0;
 
 	lockChildList(false);
-	for(int i = 0; i < m_childList->size(); i++)
+	for(int i = 0; i < getChildList()->size(); i++)
 	{
-      children->set(index++, m_childList->get(i)->createNXSLObject(vm));
+      children->set(index++, static_cast<NetObj *>(getChildList()->get(i))->createNXSLObject(vm));
 	}
 	unlockChildList();
 
@@ -2052,9 +1908,9 @@ NXSL_Array *NetObj::getChildrenForNXSL(NXSL_VM *vm)
 void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly)
 {
 	lockChildList(false);
-	for(int i = 0; i < m_childList->size(); i++)
+	for(int i = 0; i < getChildList()->size(); i++)
 	{
-      NetObj *obj = m_childList->get(i);
+      NetObj *obj = static_cast<NetObj *>(getChildList()->get(i));
 		if (!eventSourceOnly || IsEventSource(obj->getObjectClass()))
 			list->put(obj->getId(), obj);
 		obj->getFullChildListInternal(list, eventSourceOnly);
@@ -2085,11 +1941,11 @@ ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly, bool updateR
 ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
 {
 	lockChildList(false);
-	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_childList->size(), 16, false);
-	for(int i = 0; i < m_childList->size(); i++)
+	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)getChildList()->size(), 16, false);
+	for(int i = 0; i < getChildList()->size(); i++)
 	{
-		if ((typeFilter == -1) || (typeFilter == m_childList->get(i)->getObjectClass()))
-			list->add(m_childList->get(i));
+		if ((typeFilter == -1) || (typeFilter == static_cast<NetObj *>(getChildList()->get(i))->getObjectClass()))
+			list->add(static_cast<NetObj *>(getChildList()->get(i)));
 	}
 	unlockChildList();
 	return list;
@@ -2105,11 +1961,11 @@ ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
 ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
 {
     lockParentList(false);
-    ObjectArray<NetObj> *list = new ObjectArray<NetObj>(m_parentList->size(), 16, false);
-    for(int i = 0; i < m_parentList->size(); i++)
+    ObjectArray<NetObj> *list = new ObjectArray<NetObj>(getParentList()->size(), 16, false);
+    for(int i = 0; i < getParentList()->size(); i++)
     {
-        if ((typeFilter == -1) || (typeFilter == m_parentList->get(i)->getObjectClass()))
-            list->add(m_parentList->get(i));
+        if ((typeFilter == -1) || (typeFilter == static_cast<NetObj *>(getParentList()->get(i))->getObjectClass()))
+            list->add(static_cast<NetObj *>(getParentList()->get(i)));
     }
     unlockParentList();
     return list;
@@ -2122,9 +1978,9 @@ NetObj *NetObj::findChildObject(const TCHAR *name, int typeFilter)
 {
    NetObj *object = NULL;
 	lockChildList(false);
-	for(int i = 0; i < m_childList->size(); i++)
+	for(int i = 0; i < getChildList()->size(); i++)
 	{
-	   NetObj *o = m_childList->get(i);
+	   NetObj *o = static_cast<NetObj *>(getChildList()->get(i));
       if (((typeFilter == -1) || (typeFilter == o->getObjectClass())) && !_tcsicmp(name, o->getName()))
       {
          object = o;
@@ -2142,9 +1998,9 @@ Node *NetObj::findChildNode(const InetAddress& addr)
 {
    Node *node = NULL;
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = m_childList->get(i);
+      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
       if ((curr->getObjectClass() == OBJECT_NODE) && addr.equals(((Node *)curr)->getIpAddress()))
       {
          node = (Node *)curr;
@@ -2162,9 +2018,9 @@ void NetObj::updateObjectIndexes()
 {
    NetObjInsert(this, false, false);
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObjInsert(m_childList->get(i), false, false);
+      NetObjInsert(static_cast<NetObj *>(getChildList()->get(i)), false, false);
    }
    unlockChildList();
 }
@@ -2440,9 +2296,9 @@ void NetObj::enterMaintenanceMode(const TCHAR *comments)
    DbgPrintf(4, _T("Entering maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
       if (object->getStatus() != STATUS_UNMANAGED)
          object->enterMaintenanceMode(comments);
    }
@@ -2457,171 +2313,13 @@ void NetObj::leaveMaintenanceMode()
    DbgPrintf(4, _T("Leaving maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
       if (object->getStatus() != STATUS_UNMANAGED)
          object->leaveMaintenanceMode();
    }
    unlockChildList();
-}
-
-/**
- * Set custom attribute
- */
-void NetObj::setCustomAttribute(const TCHAR *name, const TCHAR *value)
-{
-   lockProperties();
-   const TCHAR *curr = m_customAttributes.get(name);
-   if ((curr == NULL) || _tcscmp(curr, value))
-   {
-      m_customAttributes.set(name, value);
-      setModified(MODIFY_CUSTOM_ATTRIBUTES);
-   }
-   unlockProperties();
-}
-
-/**
- * Set custom attribute (value is preallocated)
- */
-void NetObj::setCustomAttributePV(const TCHAR *name, TCHAR *value)
-{
-   lockProperties();
-   const TCHAR *curr = m_customAttributes.get(name);
-   if ((curr == NULL) || _tcscmp(curr, value))
-   {
-      m_customAttributes.setPreallocated(MemCopyString(name), value);
-      setModified(MODIFY_CUSTOM_ATTRIBUTES);
-   }
-   else
-   {
-      MemFree(value);
-   }
-   unlockProperties();
-}
-
-/**
- * Delete custom attribute
- */
-void NetObj::deleteCustomAttribute(const TCHAR *name)
-{
-   lockProperties();
-   if (m_customAttributes.contains(name))
-   {
-      m_customAttributes.remove(name);
-      setModified(MODIFY_CUSTOM_ATTRIBUTES);
-   }
-   unlockProperties();
-}
-
-/**
- * Get custom attribute into buffer
- */
-TCHAR *NetObj::getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const
-{
-   TCHAR *result;
-   lockProperties();
-   const TCHAR *value = m_customAttributes.get(name);
-   if (value != NULL)
-   {
-      _tcslcpy(buffer, value, size);
-      result = buffer;
-   }
-   else
-   {
-      result = NULL;
-   }
-   unlockProperties();
-   return result;
-}
-
-/**
- * Get copy of custom attribute. Returned value must be freed by caller
- */
-TCHAR *NetObj::getCustomAttributeCopy(const TCHAR *name) const
-{
-   lockProperties();
-   const TCHAR *value = m_customAttributes.get(name);
-   TCHAR *result = MemCopyString(value);
-   unlockProperties();
-   return result;
-}
-
-/**
- * Get all custom attributes matching given filter. Filter can be NULL to return all attributes.
- * Filter arguments: attribute name, attribute value, context
- */
-StringMap *NetObj::getCustomAttributes(bool (*filter)(const TCHAR *, const TCHAR *, void *), void *context) const
-{
-   StringMap *attributes = new StringMap();
-   lockProperties();
-   attributes->addAll(&m_customAttributes, filter, context);
-   unlockProperties();
-   return attributes;
-}
-
-/**
- * Callback filter for matching attribute name by regular expression
- */
-static bool RegExpAttrFilter(const TCHAR *name, const TCHAR *value, PCRE *preg)
-{
-   int ovector[30];
-   return _pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(name), _tcslen(name), 0, 0, ovector, 30) >= 0;
-}
-
-/**
- * Get all custom attributes matching given regular expression. Regular expression can be NULL to return all attributes.
- * Filter arguments: attribute name, attribute value, context
- */
-StringMap *NetObj::getCustomAttributes(const TCHAR *regexp) const
-{
-   if (regexp == NULL)
-      return getCustomAttributes(NULL, NULL);
-
-   const char *eptr;
-   int eoffset;
-   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regexp), PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
-   if (preg == NULL)
-      return new StringMap();
-
-   StringMap *attributes = new StringMap();
-   lockProperties();
-   attributes->addAll(&m_customAttributes, RegExpAttrFilter, preg);
-   unlockProperties();
-   _pcre_free_t(preg);
-   return attributes;
-}
-
-/**
- * Get custom attribute as NXSL value
- */
-NXSL_Value *NetObj::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const
-{
-   NXSL_Value *value = NULL;
-   lockProperties();
-   const TCHAR *av = m_customAttributes.get(name);
-   if (av != NULL)
-      value = vm->createValue(av);
-   unlockProperties();
-   return value;
-}
-
-/**
- * Get all custom attributes as NXSL hash map
- */
-NXSL_Value *NetObj::getCustomAttributesForNXSL(NXSL_VM *vm) const
-{
-   NXSL_HashMap *map = new NXSL_HashMap(vm);
-   lockProperties();
-   StructArray<KeyValuePair> *attributes = m_customAttributes.toArray();
-   for(int i = 0; i < attributes->size(); i++)
-   {
-      KeyValuePair *p = attributes->get(i);
-      map->set(p->key, vm->createValue((const TCHAR *)p->value));
-   }
-   unlockProperties();
-   delete attributes;
-   return vm->createValue(map);
 }
 
 /**
@@ -2660,12 +2358,22 @@ void NetObj::executeHookScript(const TCHAR *hookName)
    vm.destroy();
 }
 
+EnumerationCallbackResult CustomAttributeToJson(const TCHAR *key, const CustomAttribute *attr, json_t *customAttributes)
+{
+   if(attr->sourceObject != 0 && (attr->flags & CAF_REDEFINED) == 0)
+      return _CONTINUE;
+
+   json_array_append_new(customAttributes, attr->toJson(key));
+   return _CONTINUE;
+}
+
 /**
  * Serialize object to JSON
  */
 json_t *NetObj::toJson()
 {
    json_t *root = json_object();
+
    lockProperties();
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", m_guid.toJson());
@@ -2691,20 +2399,23 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "accessList", m_accessList->toJson());
    json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
    json_object_set_new(root, "trustedNodes", (m_trustedNodes != NULL) ? m_trustedNodes->toJson() : json_array());
-   json_object_set_new(root, "customAttributes", m_customAttributes.toJson());
+
+   json_t *customAttributes = json_array();
+   forEachCustomAttribute(CustomAttributeToJson, customAttributes);
+   json_object_set_new(root, "customAttributes", customAttributes);
    unlockProperties();
 
    json_t *children = json_array();
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
-      json_array_append_new(children, json_integer(m_childList->get(i)->getId()));
+   for(int i = 0; i < getChildList()->size(); i++)
+      json_array_append_new(children, json_integer(static_cast<NetObj *>(getChildList()->get(i))->getId()));
    unlockChildList();
    json_object_set_new(root, "children", children);
 
    json_t *parents = json_array();
    lockParentList(false);
-   for(int i = 0; i < m_parentList->size(); i++)
-      json_array_append_new(parents, json_integer(m_parentList->get(i)->getId()));
+   for(int i = 0; i < getParentList()->size(); i++)
+      json_array_append_new(parents, json_integer(static_cast<NetObj *>(getParentList()->get(i))->getId()));
    unlockParentList();
    json_object_set_new(root, "parents", parents);
 
@@ -3073,9 +2784,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
 {
    lockParentList(false);
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < getParentList()->size(); i++)
    {
-      NetObj *obj = m_parentList->get(i);
+      NetObj *obj = static_cast<NetObj *>(getParentList()->get(i));
       obj->lockResponsibleUsersList(false);
       if (obj->m_responsibleUsers != NULL)
       {
@@ -3087,7 +2798,7 @@ void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
          }
       }
       obj->unlockResponsibleUsersList();
-      m_parentList->get(i)->getAllResponsibleUsersInternal(list);
+      static_cast<NetObj *>(getParentList()->get(i))->getAllResponsibleUsersInternal(list);
    }
    unlockParentList();
 }

@@ -882,9 +882,9 @@ BOOL DataCollectionOwner::applyToTarget(DataCollectionTarget *target)
 void DataCollectionOwner::queueUpdate()
 {
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = m_childList->get(i);
+      NetObj *object = getChildList()->get(i);
       if (object->isDataCollectionTarget())
       {
          incRefCount();

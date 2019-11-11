@@ -77,7 +77,7 @@ bool AirespaceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int AirespaceDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+int AirespaceDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    /* TODO: check if other cluster modes possible */
    return CLUSTER_MODE_STANDALONE;
@@ -90,7 +90,7 @@ int AirespaceDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes,
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool AirespaceDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+bool AirespaceDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -192,7 +192,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *AirespaceDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<AccessPointInfo> *AirespaceDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
@@ -268,7 +268,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
 
@@ -286,7 +286,7 @@ ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Tran
  * Get access point state
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
  * @param macAdddr access point MAC address
@@ -294,7 +294,7 @@ ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Tran
  * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState AirespaceDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+AccessPointState AirespaceDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
                                                       UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
                                                       const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {

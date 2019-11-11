@@ -75,12 +75,12 @@ bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  */
-InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, 0, false);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, 0, false);
 	if (ifList == NULL)
 		return NULL;
 
@@ -114,7 +114,7 @@ static UINT32 CountingSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *tra
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool MikrotikDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+bool MikrotikDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    int count = 0;
    SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), CountingSnmpWalkerCallback, &count);
@@ -207,7 +207,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"),
@@ -223,7 +223,7 @@ ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *sn
  * Get access point state
  *
  * @param snmp SNMP transport
- * @param attributes Node's custom attributes
+ * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
  * @param macAdddr access point MAC address
@@ -231,7 +231,7 @@ ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *sn
  * @param radioInterfaces radio interfaces of this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
                                                      UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
 						     const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
@@ -274,7 +274,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.1"), // mtxrWlRtabAddr

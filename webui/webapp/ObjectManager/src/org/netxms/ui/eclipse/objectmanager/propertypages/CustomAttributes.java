@@ -48,14 +48,15 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrListLabelProvider;
-import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrViewerComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -66,13 +67,15 @@ public class CustomAttributes extends PropertyPage
 {
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VALUE = 1;
+	public static final int COLUMN_INHERITABLE = 2;
+	public static final int COLUMN_INHERETED_FROM = 3;
 	
 	private AbstractObject object = null;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
-	private Map<String, String> attributes = null;
+	private Map<String, CustomAttribute> attributes = null;
 	private boolean isModified = false;
 
 	/* (non-Javadoc)
@@ -93,15 +96,16 @@ public class CustomAttributes extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.get().CustomAttributes_Name, Messages.get().CustomAttributes_Value };
-      final int[] columnWidths = { 150, 250 };
+      final String[] columnNames = { Messages.get().CustomAttributes_Name, Messages.get().CustomAttributes_Value, "Inheritable", "Inherited From" };
+      final int[] columnWidths = { 150, 250, 80, 250 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new AttrListLabelProvider());
-      viewer.setComparator(new AttrViewerComparator());
+      AttrListLabelProvider labelProvider = new AttrListLabelProvider();
+      viewer.setLabelProvider(labelProvider);
+      viewer.setComparator(new ObjectLabelComparator(labelProvider));
       
-      attributes = new HashMap<String, String>(object.getCustomAttributes());
+      attributes = new HashMap<String, CustomAttribute>(object.getCustomAttributes());
       viewer.setInput(attributes.entrySet());
       
       if (!Platform.getPreferencesService().getBoolean("org.netxms.ui.eclipse.console", "SHOW_HIDDEN_ATTRIBUTES", false, null)) //$NON-NLS-1$ //$NON-NLS-2$
@@ -150,7 +154,7 @@ public class CustomAttributes extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null);
+				final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null, 0, false);
 				if (dlg.open() == Window.OK)
 				{
 					if (attributes.containsKey(dlg.getName()))
@@ -160,7 +164,7 @@ public class CustomAttributes extends PropertyPage
 					}
 					else
 					{
-						attributes.put(dlg.getName(), dlg.getValue());
+						attributes.put(dlg.getName(), new CustomAttribute(dlg.getValue(), dlg.getFlags(), 0));
 				      viewer.setInput(attributes.entrySet());
 				      CustomAttributes.this.isModified = true;
 					}
@@ -187,11 +191,12 @@ public class CustomAttributes extends PropertyPage
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				if (selection.size() == 1)
 				{
-					Entry<String, String> element = (Entry<String, String>)selection.getFirstElement();
-					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), element.getValue());
+					Entry<String, CustomAttribute> element = (Entry<String, CustomAttribute>)selection.getFirstElement();
+					CustomAttribute attr = element.getValue();
+					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), attr.getValue(), attr.getFlags(), attr.getSourceObject() != 0);
 					if (dlg.open() == Window.OK)
 					{
-						attributes.put(dlg.getName(), dlg.getValue());
+						attributes.put(dlg.getName(), new CustomAttribute(dlg.getValue(), dlg.getFlags(), attr.getSourceObject()));
 				      viewer.setInput(attributes.entrySet());
 				      CustomAttributes.this.isModified = true;
 					}

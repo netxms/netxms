@@ -454,9 +454,9 @@ UINT32 SlmCheck::getOwnerId()
 	UINT32 ownerId = 0;
 
 	lockParentList(false);
-	for(int i = 0; i < m_parentList->size(); i++)
+	for(int i = 0; i < getParentList()->size(); i++)
 	{
-      NetObj *object = m_parentList->get(i);
+      NetObj *object = getParentList()->get(i);
 		if ((object->getObjectClass() == OBJECT_BUSINESSSERVICE) ||
 		    (object->getObjectClass() == OBJECT_NODELINK))
 		{
@@ -478,9 +478,9 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL(NXSL_VM *vm)
 	UINT32 nodeId = 0;
 
 	lockParentList(false);
-	for(int i = 0; i < m_parentList->size(); i++)
+	for(int i = 0; i < getParentList()->size(); i++)
 	{
-	   NetObj *object = m_parentList->get(i);
+	   NetObj *object = getParentList()->get(i);
 		if (object->getObjectClass() == OBJECT_NODELINK)
 		{
 			nodeId = ((NodeLink *)object)->getNodeId();
