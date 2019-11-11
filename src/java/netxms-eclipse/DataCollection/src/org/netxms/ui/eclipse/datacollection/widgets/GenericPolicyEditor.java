@@ -43,8 +43,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
     */
    public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
-      super(parent, style);      
-      this.policyObject = policy;  
+      super(parent, style, policy);      
       
       setLayout(new FillLayout());
       
@@ -56,61 +55,87 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
          public void modifyText(ModifyEvent e)
          {
             fireModifyListeners();
-            actionFindReplace.update();
+            updateFindAndReplaceAction();
          }
       });   
       editor.setText(policy.getContent());
       
-      updateControlsFromPolicy();
+      updateControlFromPolicy();
    }
    
-   protected void updateControlsFromPolicy()
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
+    */
+   @Override
+   protected void updateControlFromPolicy()
    {
-      editor.setText(policyObject.getContent());
-   }
-
-   public AgentPolicy getUpdatedPolicy()
-   {
-      policyObject.setContent(editor.getText());
-      return policyObject;
+      editor.setText(getPolicy().getContent());
    }
 
    @Override
-   public boolean isFindReplaceRequired()
+   public AgentPolicy updatePolicyFromControl()
+   {
+      getPolicy().setContent(editor.getText());
+      return getPolicy();
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#isFindAndReplaceRequired()
+    */
+   @Override
+   public boolean isFindAndReplaceRequired()
    {
       return false;
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#canPerformFind()
+    */
    @Override
    public boolean canPerformFind()
    {
       return true;
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#findAndSelect(int, java.lang.String, boolean, boolean, boolean)
+    */
    @Override
    public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
    {
       return editor.findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord);
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#getSelection()
+    */
    @Override
    public Point getSelection()
    {
       return editor.getSelection();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#getSelectionText()
+    */
    @Override
    public String getSelectionText()
    {
       return editor.getSelectionText();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#isEditable()
+    */
    @Override
    public boolean isEditable()
    {
       return true;
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#replaceSelection(java.lang.String)
+    */
    @Override
    public void replaceSelection(String text)
    {

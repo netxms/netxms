@@ -348,7 +348,9 @@ public class PolicyListView extends ViewPart implements SessionListener
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
    }
   
-   
+   /**
+    * Rename selected policy
+    */
    protected void renamePolicy()
    {
       IStructuredSelection selection = (IStructuredSelection)policyList.getSelection();
@@ -358,7 +360,7 @@ public class PolicyListView extends ViewPart implements SessionListener
       AgentPolicy policy = (AgentPolicy)selection.getFirstElement();
 
       CreatePolicyDialog dlg = new CreatePolicyDialog(getViewSite().getShell(), policy);  
-      if(dlg.open() != dlg.OK)
+      if (dlg.open() != Window.OK)
          return;
 
       final AgentPolicy newPolicy = dlg.getPolicy();
@@ -497,13 +499,11 @@ public class PolicyListView extends ViewPart implements SessionListener
    protected void createNewPolicy()
    {
       CreatePolicyDialog dlg = new CreatePolicyDialog(getViewSite().getShell(), null);  
-      if(dlg.open() != dlg.OK)
+      if (dlg.open() != Window.OK)
          return;
       
       final AgentPolicy newPolicy = dlg.getPolicy();
-      
       new ConsoleJob("Save policy", this, Activator.PLUGIN_ID, null) {
-         
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

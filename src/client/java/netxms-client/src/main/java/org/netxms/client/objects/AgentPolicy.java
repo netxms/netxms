@@ -24,13 +24,13 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * Generic agent policy object
- *
  */
 public class AgentPolicy
 {   
-   public static final String logParser = "LogParserConfig";
-   public static final String agent = "AgentConfig";
-   public static final String supportApplication = "SupportApplicationConfig";
+   public static final String AGENT_CONFIG = "AgentConfig";
+   public static final String FILE_DELIVERY = "FileDelivery";
+   public static final String LOG_PARSER = "LogParserConfig";
+   public static final String SUPPORT_APPLICATION = "SupportApplicationConfig";
    
    private UUID guid;
    private String name;

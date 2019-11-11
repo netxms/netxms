@@ -10,13 +10,21 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener
 
 public abstract class AbstractPolicyEditor extends Composite implements IFindReplaceTarget
 {
-   Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
-   AgentPolicy policyObject = null;  
-   FindReplaceAction actionFindReplace = null;
+   private AgentPolicy policy;  
+   private Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
+   private FindReplaceAction actionFindReplace = null;
 
-   public AbstractPolicyEditor(Composite parent, int style)
+   /**
+    * Create abstract policy editor
+    * 
+    * @param parent parent composite
+    * @param style control style
+    * @param policy policy object
+    */
+   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
       super(parent, style);
+      this.policy = policy;
    }
 
    /**
@@ -43,20 +51,43 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
       for(PolicyModifyListener l : listeners)
          l.modifyParser();
    }
-
-   public void updatePolicyObject(AgentPolicy policyObject)
+   
+   /**
+    * Get policy object currently being edited
+    * 
+    * @return policy object currently being edited
+    */
+   protected AgentPolicy getPolicy()
    {
-      this.policyObject = policyObject;   
-      updateControlsFromPolicy();
+      return policy;
+   }
+
+   /**
+    * Set new policy object to edit
+    * 
+    * @param policy new policy object to edit
+    */
+   public void setPolicy(AgentPolicy policy)
+   {
+      this.policy = policy;   
+      updateControlFromPolicy();
    }
 
    /**
     * Update editor controls from policy
     */
-   protected abstract void updateControlsFromPolicy();
+   protected abstract void updateControlFromPolicy();
 
-   public abstract AgentPolicy getUpdatedPolicy();
+   /**
+    * Get policy object updated from editor content
+    * 
+    * @return policy object updated from editor content
+    */
+   public abstract AgentPolicy updatePolicyFromControl();
    
+   /**
+    * Create actions for editor
+    */
    protected void createActions()
    {
    }
@@ -66,10 +97,32 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
     * 
     * @return true if Find/Replace action is required for this editor
     */
-   public abstract boolean isFindReplaceRequired();
+   public abstract boolean isFindAndReplaceRequired();
 
+   /**
+    * Set Find/Replace action for this editor
+    * 
+    * @param actionFindReplace
+    */
    public void setFindAndReplaceAction(FindReplaceAction actionFindReplace)
    {
       this.actionFindReplace = actionFindReplace;
+   }
+
+   /**
+    * @return the actionFindReplace
+    */
+   protected FindReplaceAction getFindAndReplaceAction()
+   {
+      return actionFindReplace;
+   }
+   
+   /**
+    * Call update() on Find/Replace action 
+    */
+   protected void updateFindAndReplaceAction()
+   {
+      if (actionFindReplace != null)
+         actionFindReplace.update();
    }
 }

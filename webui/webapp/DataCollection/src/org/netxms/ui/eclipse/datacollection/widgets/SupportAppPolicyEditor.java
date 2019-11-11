@@ -123,14 +123,13 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policyObject)
+   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
-      super(parent, style);      
-      this.policyObject = policyObject;     
+      super(parent, style, policy);      
       
       try
       {
-         policyData = SupportAppPolicy.createFromXml(policyObject.getContent());
+         policyData = SupportAppPolicy.createFromXml(policy.getContent());
       }
       catch(Exception e)
       {
@@ -225,7 +224,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          }
       });
       
-      updateControlsFromPolicy();      
+      updateControlFromPolicy();      
 
       IPropertyChangeListener colorChangeListener = new IPropertyChangeListener() {
          @Override
@@ -597,7 +596,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlsFromPolicy()
     */
    @Override
-   protected void updateControlsFromPolicy()
+   protected void updateControlFromPolicy()
    {             
       updateIconFromPolicy();
 
@@ -636,11 +635,11 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       viewer.setInput(new Object[] { policyData.menu });
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#getUpdatedPolicy()
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
     */
    @Override
-   public AgentPolicy getUpdatedPolicy()
+   public AgentPolicy updatePolicyFromControl()
    {
       policyData.setIcon((iconFile != null) && (iconFile.length > 0) ? iconFile : null);
       policyData.welcomeMessage = welcomeMessageText.getText();
@@ -660,13 +659,13 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       
       try
       {
-         policyObject.setContent(policyData.createXml());
+         getPolicy().setContent(policyData.createXml());
       }
       catch(Exception e)
       {
-         policyObject.setContent("");
+         getPolicy().setContent("");
          e.printStackTrace();
       }
-      return policyObject;
+      return getPolicy();
    }
 }

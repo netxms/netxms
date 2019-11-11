@@ -39,8 +39,7 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
     */
    public LogParserPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
-      super(parent, style);      
-      this.policyObject = policy;  
+      super(parent, style, policy);      
       
       setLayout(new FillLayout());
       
@@ -53,22 +52,30 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
          }
       });
       
-      updateControlsFromPolicy();
+      updateControlFromPolicy();
    }
    
-   protected void updateControlsFromPolicy()
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
+    */
+   @Override
+   protected void updateControlFromPolicy()
    {
-      editor.setParserXml(policyObject.getContent());
+      editor.setParserXml(getPolicy().getContent());
    }
 
-   public AgentPolicy getUpdatedPolicy()
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
+    */
+   @Override
+   public AgentPolicy updatePolicyFromControl()
    {
-      policyObject.setContent(editor.getParserXml());
-      return policyObject;
+      getPolicy().setContent(editor.getParserXml());
+      return getPolicy();
    }
 
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+   /**
+    * @see org.eclipse.swt.widgets.Composite#setFocus()
     */
    @Override
    public boolean setFocus()

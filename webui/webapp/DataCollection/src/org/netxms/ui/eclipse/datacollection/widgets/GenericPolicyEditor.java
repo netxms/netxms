@@ -42,8 +42,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
     */
    public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
-      super(parent, style);      
-      this.policyObject = policy;  
+      super(parent, style, policy);      
       
       setLayout(new FillLayout());
       
@@ -59,17 +58,22 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
       });   
       editor.setText(policy.getContent());
       
-      updateControlsFromPolicy();
+      updateControlFromPolicy();
    }
    
-   protected void updateControlsFromPolicy()
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
+    */
+   @Override
+   protected void updateControlFromPolicy()
    {
-      editor.setText(policyObject.getContent());
+      editor.setText(getPolicy().getContent());
    }
 
-   public AgentPolicy getUpdatedPolicy()
+   @Override
+   public AgentPolicy updatePolicyFromControl()
    {
-      policyObject.setContent(editor.getText());
-      return policyObject;
+      getPolicy().setContent(editor.getText());
+      return getPolicy();
    }
 }

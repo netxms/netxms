@@ -28,6 +28,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.dialogs.SavePolicyDialog;
 import org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.AgentConfigPolicyEditor;
+import org.netxms.ui.eclipse.datacollection.widgets.FileDeliveryPolicyEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.GenericPolicyEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.LogParserPolicyEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.SupportAppPolicyEditor;
@@ -201,7 +202,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          @Override
          protected String getErrorMessage()
          {
-            return "Can not load policy";
+            return "Cannot load policy";
          }
          
       };
@@ -220,15 +221,19 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          editor = null;
       }
       
-      if (policy.getPolicyType().equals(AgentPolicy.agent))
+      if (policy.getPolicyType().equals(AgentPolicy.AGENT_CONFIG))
       {
          editor = new AgentConfigPolicyEditor(content, SWT.NONE, policy);            
       }
-      else if (policy.getPolicyType().equals(AgentPolicy.logParser))
+      else if (policy.getPolicyType().equals(AgentPolicy.FILE_DELIVERY))
+      {
+         editor = new FileDeliveryPolicyEditor(content, SWT.NONE, policy);      
+      }
+      else if (policy.getPolicyType().equals(AgentPolicy.LOG_PARSER))
       {
          editor = new LogParserPolicyEditor(content, SWT.NONE, policy);      
       }
-      else if (policy.getPolicyType().equals(AgentPolicy.supportApplication))
+      else if (policy.getPolicyType().equals(AgentPolicy.SUPPORT_APPLICATION))
       {
          editor = new SupportAppPolicyEditor(content, SWT.NONE, policy);  
       }
@@ -246,7 +251,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       });       
 
       editor.setFindAndReplaceAction(actionFindReplace);
-      actionFindReplace.setEnabled(editor.isFindReplaceRequired());
+      actionFindReplace.setEnabled(editor.isFindAndReplaceRequired());
       actionFindReplace.update();
       content.layout(true, true);
       editor.setFocus();
@@ -303,7 +308,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       saveInProgress = true;
       modifiedBuOtherUser = false;      
       throwExceptionOnSave = true;
-      policy = editor.getUpdatedPolicy();
+      policy = editor.updatePolicyFromControl();
       new ConsoleJob("Save agent policy", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -387,7 +392,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                                            "Do you really want to save the policy?\n You will overwrite other user changes."))
                return CANCEL;
          }      
-         policy = editor.getUpdatedPolicy();
+         policy = editor.updatePolicyFromControl();
          return YES;
       }
       if (rc == SavePolicyDialog.CANCEL)

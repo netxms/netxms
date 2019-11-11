@@ -8,12 +8,20 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener
 
 public abstract class AbstractPolicyEditor extends Composite
 {
-   Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
-   AgentPolicy policyObject = null;  
+   private AgentPolicy policy;  
+   private Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
 
-   public AbstractPolicyEditor(Composite parent, int style)
+   /**
+    * Create abstract policy editor
+    * 
+    * @param parent parent composite
+    * @param style control style
+    * @param policy policy object
+    */
+   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
       super(parent, style);
+      this.policy = policy;
    }
 
    /**
@@ -40,22 +48,44 @@ public abstract class AbstractPolicyEditor extends Composite
       for(PolicyModifyListener l : listeners)
          l.modifyParser();
    }
-
-   public void updatePolicyObject(AgentPolicy policyObject)
+   
+   /**
+    * Get policy object currently being edited
+    * 
+    * @return policy object currently being edited
+    */
+   protected AgentPolicy getPolicy()
    {
-      this.policyObject = policyObject;   
-      updateControlsFromPolicy();
+      return policy;
+   }
+
+   /**
+    * Set new policy object to edit
+    * 
+    * @param policy new policy object to edit
+    */
+   public void setPolicy(AgentPolicy policy)
+   {
+      this.policy = policy;   
+      updateControlFromPolicy();
    }
 
    /**
     * Update editor controls from policy
     */
-   protected abstract void updateControlsFromPolicy();
+   protected abstract void updateControlFromPolicy();
 
-   public abstract AgentPolicy getUpdatedPolicy();
+   /**
+    * Get policy object updated from editor content
+    * 
+    * @return policy object updated from editor content
+    */
+   public abstract AgentPolicy updatePolicyFromControl();
    
+   /**
+    * Create actions for editor
+    */
    protected void createActions()
    {
    }
-
 }

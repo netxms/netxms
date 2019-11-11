@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
@@ -29,6 +31,21 @@ import org.netxms.ui.eclipse.datacollection.views.PolicyListView;
  */
 public class PolicyLabelProvider extends LabelProvider implements ITableLabelProvider
 {   
+   private Map<String, String> policyTypeDisplayNames;
+
+   /**
+    * Default constructor
+    */
+   public PolicyLabelProvider()
+   {
+      super();
+      policyTypeDisplayNames = new HashMap<String, String>();
+      policyTypeDisplayNames.put(AgentPolicy.AGENT_CONFIG, "Agent Configuration");
+      policyTypeDisplayNames.put(AgentPolicy.FILE_DELIVERY, "File Delivery");
+      policyTypeDisplayNames.put(AgentPolicy.LOG_PARSER, "Log Parser");
+      policyTypeDisplayNames.put(AgentPolicy.SUPPORT_APPLICATION, "User Support Application");
+   }
+   
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -50,10 +67,21 @@ public class PolicyLabelProvider extends LabelProvider implements ITableLabelPro
          case PolicyListView.COLUMN_NAME:
             return policy.getName();
          case PolicyListView.COLUMN_TYPE:
-            return policy.getPolicyType();
+            return getPolicyTypeDisplayName(policy.getPolicyType());
          case PolicyListView.COLUMN_GUID:
             return policy.getGuid().toString();
       }
       return null;
+   }
+   
+   /**
+    * Get display name for given policy type
+    * 
+    * @param type policy type
+    * @return policy type display name
+    */
+   public String getPolicyTypeDisplayName(String type)
+   {
+      return policyTypeDisplayNames.getOrDefault(type, type);
    }
 }

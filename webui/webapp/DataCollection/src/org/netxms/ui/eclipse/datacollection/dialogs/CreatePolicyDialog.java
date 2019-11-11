@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,15 +27,17 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.AgentPolicy;
+import org.netxms.ui.eclipse.datacollection.views.helpers.PolicyLabelProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Object creation dialog
- *
+ * Policy creation dialog
  */
 public class CreatePolicyDialog extends Dialog
 {
+   private static final String[] POLICY_TYPE_ORDER = { AgentPolicy.AGENT_CONFIG, AgentPolicy.FILE_DELIVERY, AgentPolicy.LOG_PARSER, AgentPolicy.SUPPORT_APPLICATION };
+
 	private String policyName;
    private String policyType;
 	private Text textName;
@@ -84,33 +86,32 @@ public class CreatePolicyDialog extends Dialog
       textName.setTextLimit(63);
       textName.setFocus();
       
-      if(policy != null)
+      if (policy != null)
       {
          textName.setText(policy.getName());
       }
       else
       {         
-         typeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Policy type",
-               WidgetHelper.DEFAULT_LAYOUT_DATA);
-         typeSelector.add(AgentPolicy.agent);
-         typeSelector.add(AgentPolicy.logParser);
-         typeSelector.add(AgentPolicy.supportApplication);
+         typeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Policy type", WidgetHelper.DEFAULT_LAYOUT_DATA);
+         PolicyLabelProvider labelProvider = new PolicyLabelProvider();
+         for(String t : POLICY_TYPE_ORDER)
+            typeSelector.add(labelProvider.getPolicyTypeDisplayName(t));
          typeSelector.select(0);
       }
       
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
 	@Override
 	protected void okPressed()
 	{
 		policyName = textName.getText().trim();
-      if(policy == null)
+      if (policy == null)
       {
-         policyType = typeSelector.getText();
+         policyType = POLICY_TYPE_ORDER[typeSelector.getSelectionIndex()];
       }
 		if (policyName.isEmpty())
 		{
@@ -122,7 +123,7 @@ public class CreatePolicyDialog extends Dialog
 
    public AgentPolicy getPolicy()
    {
-      if(policy == null)
+      if (policy == null)
          return new AgentPolicy(policyName, policyType);
       
       policy.setName(policyName);

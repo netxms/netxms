@@ -18,52 +18,41 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AgentPolicy;
-import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 
 /**
- * Editor for agent configuration policy
+ * Editor for file delivery policy
  */
-public class AgentConfigPolicyEditor extends AbstractPolicyEditor
+public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
 {
-   private AgentConfigEditor editor;
+   private TreeViewer fileTree;
 
    /**
-    * Constructor
-    * 
     * @param parent
     * @param style
     */
-   public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public FileDeliveryPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
-      super(parent, style, policy);      
-
+      super(parent, style, policy);
+      
       setLayout(new FillLayout());
       
-      editor = new AgentConfigEditor(this, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
-      editor.getTextWidget().addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            fireModifyListeners();
-         }
-      }); 
-      
-      updateControlFromPolicy();
+      fileTree = new TreeViewer(this, SWT.NONE);
    }
-   
+
    /**
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
    protected void updateControlFromPolicy()
    {
-      editor.setText(getPolicy().getContent());
+      // TODO Auto-generated method stub
+
    }
 
    /**
@@ -72,28 +61,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public AgentPolicy updatePolicyFromControl()
    {
-      getPolicy().setContent(editor.getText());
-      return getPolicy();
-   }   
-
-   /**
-    * @see org.eclipse.swt.widgets.Composite#setFocus()
-    */
-   @Override
-   public boolean setFocus()
-   {
-      return editor.setFocus();      
+      // TODO Auto-generated method stub
+      return null;
    }
-   
-   /* toto add find and replace in the view
-   protected void createActions()
-   {
-      actionFindReplace = NXFindAndReplaceAction.getFindReplaceAction(this.getParent());
-   }
-
-   protected void fillLocalPullDown(IMenuManager manager)
-   {
-      manager.add(actionFindReplace);
-   }
-   */
 }

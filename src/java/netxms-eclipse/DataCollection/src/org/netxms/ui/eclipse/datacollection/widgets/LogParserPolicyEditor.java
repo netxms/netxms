@@ -41,8 +41,7 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
     */
    public LogParserPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
-      super(parent, style);      
-      this.policyObject = policy;  
+      super(parent, style, policy);      
       
       setLayout(new FillLayout());
       
@@ -55,22 +54,30 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
          }
       });
       
-      updateControlsFromPolicy();
+      updateControlFromPolicy();
    }
    
-   protected void updateControlsFromPolicy()
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
+    */
+   @Override
+   protected void updateControlFromPolicy()
    {
-      editor.setParserXml(policyObject.getContent());
+      editor.setParserXml(getPolicy().getContent());
    }
 
-   public AgentPolicy getUpdatedPolicy()
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
+    */
+   @Override
+   public AgentPolicy updatePolicyFromControl()
    {
-      policyObject.setContent(editor.getParserXml());
-      return policyObject;
+      getPolicy().setContent(editor.getParserXml());
+      return getPolicy();
    }
 
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+   /**
+    * @see org.eclipse.swt.widgets.Composite#setFocus()
     */
    @Override
    public boolean setFocus()
@@ -78,47 +85,73 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
       return editor.setFocus();      
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#isFindAndReplaceRequired()
+    */
    @Override
-   public boolean isFindReplaceRequired()
+   public boolean isFindAndReplaceRequired()
    {
       return editor.isEditorTabSelected(); 
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#setFindAndReplaceAction(org.eclipse.ui.texteditor.FindReplaceAction)
+    */
+   @Override
    public void setFindAndReplaceAction(FindReplaceAction actionFindReplace)
    {
+      super.setFindAndReplaceAction(actionFindReplace);
       editor.setFindAndReplaceAction(actionFindReplace);
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#canPerformFind()
+    */
    @Override
    public boolean canPerformFind()
    {
       return editor.isEditorTabSelected();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#findAndSelect(int, java.lang.String, boolean, boolean, boolean)
+    */
    @Override
    public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
    {
       return editor.findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord);
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#getSelection()
+    */
    @Override
    public Point getSelection()
    {
       return editor.getSelection();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#getSelectionText()
+    */
    @Override
    public String getSelectionText()
    {
       return editor.getSelectionText();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#isEditable()
+    */
    @Override
    public boolean isEditable()
    {
       return editor.isEditable();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#replaceSelection(java.lang.String)
+    */
    @Override
    public void replaceSelection(String text)
    {

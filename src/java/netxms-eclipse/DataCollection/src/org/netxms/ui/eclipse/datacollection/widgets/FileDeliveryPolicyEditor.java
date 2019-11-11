@@ -18,54 +18,41 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AgentPolicy;
-import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 
 /**
- * Editor for agent configuration policy
+ * Editor for file delivery policy
  */
-public class AgentConfigPolicyEditor extends AbstractPolicyEditor
+public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
 {
-   private AgentConfigEditor editor;
+   private TreeViewer fileTree;
 
    /**
-    * Constructor
-    * 
     * @param parent
     * @param style
     */
-   public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public FileDeliveryPolicyEditor(Composite parent, int style, AgentPolicy policy)
    {
-      super(parent, style, policy);      
-
+      super(parent, style, policy);
+      
       setLayout(new FillLayout());
       
-      editor = new AgentConfigEditor(this, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
-      editor.getTextWidget().addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            fireModifyListeners();
-            updateFindAndReplaceAction();
-         }
-      }); 
-      
-      updateControlFromPolicy();
+      fileTree = new TreeViewer(this, SWT.NONE);
    }
-   
+
    /**
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
    protected void updateControlFromPolicy()
    {
-      editor.setText(getPolicy().getContent());
+      // TODO Auto-generated method stub
+
    }
 
    /**
@@ -74,26 +61,18 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public AgentPolicy updatePolicyFromControl()
    {
-      getPolicy().setContent(editor.getText());
-      return getPolicy();
-   }   
-
-   /**
-    * @see org.eclipse.swt.widgets.Composite#setFocus()
-    */
-   @Override
-   public boolean setFocus()
-   {
-      return editor.setFocus();      
+      // TODO Auto-generated method stub
+      return null;
    }
-
+   
    /**
     * @see org.eclipse.jface.text.IFindReplaceTarget#canPerformFind()
     */
    @Override
    public boolean canPerformFind()
    {
-      return editor.getFindReplaceTarget().canPerformFind();
+      // TODO Auto-generated method stub
+      return false;
    }
 
    /**
@@ -102,7 +81,8 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
    {
-      return editor.getFindReplaceTarget().findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord);
+      // TODO Auto-generated method stub
+      return 0;
    }
 
    /**
@@ -111,7 +91,8 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public Point getSelection()
    {
-      return editor.getFindReplaceTarget().getSelection();
+      // TODO Auto-generated method stub
+      return null;
    }
 
    /**
@@ -120,7 +101,8 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public String getSelectionText()
    {
-      return editor.getFindReplaceTarget().getSelectionText();
+      // TODO Auto-generated method stub
+      return null;
    }
 
    /**
@@ -129,7 +111,8 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public boolean isEditable()
    {
-      return true;
+      // TODO Auto-generated method stub
+      return false;
    }
 
    /**
@@ -138,15 +121,18 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public void replaceSelection(String text)
    {
-      editor.getFindReplaceTarget().replaceSelection(text);
+      // TODO Auto-generated method stub
+
    }
 
-   /**
+    /**
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#isFindAndReplaceRequired()
     */
    @Override
    public boolean isFindAndReplaceRequired()
    {
-      return true;
+      // TODO Auto-generated method stub
+      return false;
    }
+
 }

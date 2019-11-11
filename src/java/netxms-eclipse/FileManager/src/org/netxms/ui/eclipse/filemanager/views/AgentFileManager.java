@@ -196,7 +196,6 @@ public class AgentFileManager extends ViewPart
       });
       
       String os = ((Node)session.findObjectById(objectId)).getSystemDescription(); //$NON-NLS-1$
-
       if (os.contains("Windows")) //if OS is windows don't show group and access rights columns //$NON-NLS-1$
       {
          final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, Messages.get().AgentFileManager_ColOwner };
