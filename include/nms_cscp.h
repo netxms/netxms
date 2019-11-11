@@ -637,6 +637,7 @@ typedef struct
 #define CMD_GET_PHYSICAL_LINKS            0x0189
 #define CMD_UPDATE_PHYSICAL_LINK          0x018A
 #define CMD_DELETE_PHYSICAL_LINK          0x018B
+#define CMD_GET_FILE_SET_DETAILS          0x018C
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

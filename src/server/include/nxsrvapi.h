@@ -554,6 +554,30 @@ public:
 };
 
 /**
+ * Remote file information
+ */
+class LIBNXSRV_EXPORTABLE RemoteFileInfo
+{
+private:
+   TCHAR *m_name;
+   UINT64 m_size;
+   time_t m_mtime;
+   BYTE m_hash[MD5_DIGEST_SIZE];
+   UINT32 m_status;
+
+public:
+   RemoteFileInfo(NXCPMessage *msg, UINT32 baseId, const TCHAR *name);
+   ~RemoteFileInfo();
+
+   const TCHAR *name() const { return m_name; }
+   UINT32 status() const { return m_status; }
+   bool isValid() const { return m_status == ERR_SUCCESS; }
+   UINT64 size() const { return m_size; }
+   time_t modificationTime() const { return m_mtime; }
+   const BYTE *hash() const { return m_hash; }
+};
+
+/**
  * Agent connection
  */
 class LIBNXSRV_EXPORTABLE AgentConnection
@@ -679,6 +703,7 @@ public:
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL,
             void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+   UINT32 getFileSetInfo(const StringList &fileSet, ObjectArray<RemoteFileInfo> **info);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
@@ -709,6 +734,7 @@ public:
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);
+
    void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
    UINT32 cancelFileDownload();
 };

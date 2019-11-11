@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2018 Raden Solutions
+ ** Copyright (C) 2014-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -128,11 +128,11 @@ static void SubagentShutdown()
 /**
  * Converts path to absolute removing "//", "../", "./" ...
  */
-static TCHAR *GetRealPath(TCHAR *path)
+static TCHAR *GetRealPath(const TCHAR *path)
 {
-   if(path == NULL || path[0] == 0)
+   if (path == NULL || path[0] == 0)
       return NULL;
-   TCHAR *result = (TCHAR*)malloc(sizeof(TCHAR)*MAX_PATH);
+   TCHAR *result = MemAllocString(MAX_PATH);
    _tcscpy(result,path);
    TCHAR *current = result;
 
@@ -203,45 +203,51 @@ static TCHAR *GetRealPath(TCHAR *path)
 #endif
 
 /**
- * Takes folder/file path - make it absolute (result will be written back to the folder variable)
+ * Takes folder/file path - make it absolute (result will be written to "fullPath" parameter)
  * and check that this folder/file is under allowed root path.
- * If second parameter is set to true - then request is for getting content and "/" path should be accepted
+ * If third parameter is set to true - then request is for getting content and "/" path should be accepted
  * and afterwards interpreted as "give list of all allowed folders".
  */
-static bool CheckFullPath(TCHAR *folder, bool withHomeDir, bool isModify = false)
+static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir, bool isModify = false)
 {
-   AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: input is %s"), folder);
-   if (withHomeDir && !_tcscmp(folder, FS_PATH_SEPARATOR))
+   AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: input is %s"), path);
+   if (withHomeDir && !_tcscmp(path, FS_PATH_SEPARATOR))
    {
+      *fullPath = MemCopyString(path);
       return true;
    }
 
+   *fullPath = NULL;
+
 #ifdef _WIN32
-   TCHAR *fullPathT = _tfullpath(NULL, folder, MAX_PATH);
+   TCHAR *fullPathBuffer = MemAllocString(MAX_PATH);
+   TCHAR *fullPathT = _tfullpath(fullPathBuffer, path, MAX_PATH);
 #else
-   TCHAR *fullPathT = GetRealPath(folder);
+   TCHAR *fullPathT = GetRealPath(path);
 #endif
    AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: Full path %s"), fullPathT);
-   if (fullPathT != NULL)
+   if (fullPathT == NULL)
    {
-      _tcscpy(folder, fullPathT);
-      free(fullPathT);
-   }
-   else
-   {
+#ifdef _WIN32
+      MemFree(fullPathBuffer);
+#endif
       return false;
    }
+
    for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
    {
-      if (!_tcsncmp(g_rootFileManagerFolders->get(i)->getFolder(), folder, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
+      if (!_tcsncmp(g_rootFileManagerFolders->get(i)->getFolder(), path, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
       {
-         if (isModify && g_rootFileManagerFolders->get(i)->isReadOnly())
-            return false;
-         else
+         if (!isModify || !g_rootFileManagerFolders->get(i)->isReadOnly())
+         {
+            *fullPath = fullPathT;
             return true;
+         }
+         break;
       }
    }
 
+   MemFree(fullPathT);
    return false;
 }
 
@@ -577,8 +583,8 @@ static BOOL Delete(const TCHAR *name)
       ThreadCreateEx(SendFileUpdatesOverNXCP, 0, flData);
    }
    data->session->decRefCount();
-   free(data->fileName);
-   free(data->fileNameCode);
+   MemFree(data->fileName);
+   MemFree(data->fileNameCode);
    g_downloadFileStopMarkers->remove(data->id);
    delete data;
    return THREAD_OK;
@@ -627,6 +633,445 @@ static void GetFolderInfo(const TCHAR *folder, UINT64 *fileCount, UINT64 *folder
 }
 
 /**
+ * Handler for "get folder size" command
+ */
+static void CH_GetFolderSize(NXCPMessage *request, NXCPMessage *response)
+{
+   TCHAR directory[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
+   if (directory[0] == 0)
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_SIZE): File name should be set."));
+      return;
+   }
+
+   ConvertPathToHost(directory);
+
+   TCHAR *fullPath;
+   if (CheckFullPath(directory, &fullPath, false))
+   {
+      UINT64 fileCount = 0, fileSize = 0;
+      GetFolderInfo(fullPath, &fileCount, &fileSize);
+      response->setField(VID_RCC, ERR_SUCCESS);
+      response->setField(VID_FOLDER_SIZE, fileSize);
+      response->setField(VID_FILE_COUNT, fileCount);
+      MemFree(fullPath);
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_SIZE): Access denied"));
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
+ * Handler for "get folder content" command
+ */
+static void CH_GetFolderContent(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR directory[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
+   if (directory[0] == 0)
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_CONTENT): File name should be set."));
+      return;
+   }
+
+   ConvertPathToHost(directory);
+
+   bool rootFolder = request->getFieldAsUInt16(VID_ROOT) ? 1 : 0;
+   TCHAR *fullPath;
+   if (CheckFullPath(directory, &fullPath, rootFolder))
+   {
+      GetFolderContent(fullPath, response, rootFolder, request->getFieldAsBoolean(VID_ALLOW_MULTIPART), session);
+      MemFree(fullPath);
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_CONTENT): Access denied"));
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
+ * Handler for "create folder" command
+ */
+static void CH_CreateFolder(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR directory[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
+   if (directory[0] == 0)
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): File name should be set."));
+      return;
+   }
+
+   ConvertPathToHost(directory);
+
+   TCHAR *fullPath = NULL;
+   if (CheckFullPath(directory, &fullPath, false, true) && session->isMasterServer())
+   {
+      if (VerifyFileOperation(fullPath, false, response))
+      {
+         if (CreateFolder(fullPath))
+         {
+            response->setField(VID_RCC, ERR_SUCCESS);
+         }
+         else
+         {
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Could not create directory \"%s\""), fullPath);
+            response->setField(VID_RCC, ERR_IO_FAILURE);
+         }
+      }
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Access denied"));
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+   MemFree(fullPath);
+}
+
+/**
+ * Handler for "delete file" command
+ */
+static void CH_DeleteFile(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR file[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, file, MAX_PATH);
+   if (file[0] == 0)
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): File name should be set."));
+      return;
+   }
+
+   ConvertPathToHost(file);
+
+   TCHAR *fullPath = NULL;
+   if (CheckFullPath(file, &fullPath, false, true) && session->isMasterServer())
+   {
+      if (Delete(fullPath))
+      {
+         response->setField(VID_RCC, ERR_SUCCESS);
+      }
+      else
+      {
+         response->setField(VID_RCC, ERR_IO_FAILURE);
+         AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): Delete failed on \"%s\""), fullPath);
+      }
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): Access denied on \"%s\""), file);
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+   MemFree(fullPath);
+}
+
+/**
+ * Handler for "rename file" command
+ */
+static void CH_RenameFile(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR oldName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
+   TCHAR newName[MAX_PATH];
+   request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
+   bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
+
+   if (oldName[0] == 0 && newName[0] == 0)
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_RENAME_FILE): File names should be set."));
+      return;
+   }
+
+   ConvertPathToHost(oldName);
+   ConvertPathToHost(newName);
+
+   TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
+   if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
+   {
+      if (VerifyFileOperation(fullPathNew, allowOverwirite, response))
+      {
+         if (_trename(fullPathOld, fullPathNew) == 0)
+         {
+            response->setField(VID_RCC, ERR_SUCCESS);
+         }
+         else
+         {
+            response->setField(VID_RCC, ERR_IO_FAILURE);
+         }
+      }
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_RENAME_FILE): Access denied"));
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+   MemFree(fullPathOld);
+   MemFree(fullPathNew);
+}
+
+/**
+ * Handler for "move file" command
+ */
+static void CH_MoveFile(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR oldName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
+   TCHAR newName[MAX_PATH];
+   request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
+   bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
+   if ((oldName[0] == 0) && (newName[0] == 0))
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_MOVE_FILE): File names should be set."));
+      return;
+   }
+
+   ConvertPathToHost(oldName);
+   ConvertPathToHost(newName);
+
+   TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
+   if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
+   {
+      if (VerifyFileOperation(fullPathNew, allowOverwirite, response))
+      {
+         if (MoveFileOrDirectory(fullPathOld, fullPathNew))
+         {
+            response->setField(VID_RCC, ERR_SUCCESS);
+         }
+         else
+         {
+            response->setField(VID_RCC, ERR_IO_FAILURE);
+         }
+      }
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_MOVE_FILE): Access denied"));
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+   MemFree(fullPathOld);
+   MemFree(fullPathNew);
+}
+
+/**
+ * Handler for "copy file" command
+ */
+static void CH_CopyFile(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR oldName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
+   TCHAR newName[MAX_PATH];
+   request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
+   bool allowOverwrite = request->getFieldAsBoolean(VID_OVERWRITE);
+   response->setField(VID_RCC, ERR_SUCCESS);
+
+   if ((oldName[0] == 0) && (newName[0] == 0))
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): File names should be set."));
+      return;
+   }
+   ConvertPathToHost(oldName);
+   ConvertPathToHost(newName);
+
+   TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
+   if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
+   {
+      if (VerifyFileOperation(fullPathNew, allowOverwrite, response))
+      {
+         if (!CopyFileOrDirectory(fullPathOld, fullPathNew))
+            response->setField(VID_RCC, ERR_IO_FAILURE);
+      }
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): Access denied"));
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+   MemFree(fullPathOld);
+   MemFree(fullPathNew);
+}
+
+/**
+ * Handler for "upload" command
+ */
+static void CH_Upload(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR name[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
+   bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
+   if (name[0] == 0)
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_UPLOAD): File name should be set."));
+      return;
+   }
+
+   ConvertPathToHost(name);
+
+   TCHAR *fullPath = NULL;
+   if (CheckFullPath(name, &fullPath, false, true) && session->isMasterServer())
+   {
+      if (VerifyFileOperation(fullPath, allowOverwirite, response))
+         response->setField(VID_RCC, session->openFile(fullPath, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_UPLOAD): Access denied"));
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+   MemFree(fullPath);
+}
+
+/**
+ * Handler for "get file details" command
+ */
+static void CH_GetFileDetails(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR fileName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+   ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
+
+   TCHAR *fullPath;
+   if (CheckFullPath(fileName, &fullPath, false))
+   {
+      NX_STAT_STRUCT fs;
+      if (CALL_STAT(fullPath, &fs) == 0)
+      {
+         response->setField(VID_FILE_SIZE, (UINT64)fs.st_size);
+         response->setField(VID_MODIFICATION_TIME, (UINT64)fs.st_mtime);
+         response->setField(VID_RCC, ERR_SUCCESS);
+      }
+      else
+      {
+         response->setField(VID_RCC, ERR_FILE_STAT_FAILED);
+      }
+      MemFree(fullPath);
+   }
+   else
+   {
+      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FILE_DETAILS): Access denied"));
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
+ * Handler for "get file set details" command
+ */
+static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response)
+{
+   StringList files(request, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < files.size(); i++)
+   {
+      TCHAR *file;
+      if (CheckFullPath(files.get(i), &file, false))
+      {
+         NX_STAT_STRUCT fs;
+         if (CALL_STAT(file, &fs) == 0)
+         {
+            response->setField(fieldId++, ERR_SUCCESS);
+            response->setField(fieldId++, static_cast<UINT64>(fs.st_size));
+            response->setField(fieldId++, static_cast<UINT64>(fs.st_mtime));
+            BYTE hash[MD5_DIGEST_SIZE];
+            if (!CalculateFileMD5Hash(file, hash))
+               memset(hash, 0, MD5_DIGEST_SIZE);
+            response->setField(fieldId++, hash, MD5_DIGEST_SIZE);
+            fieldId += 6;
+         }
+         else
+         {
+            response->setField(fieldId++, ERR_FILE_STAT_FAILED);
+            fieldId += 9;
+         }
+         MemFree(file);
+      }
+      else
+      {
+         response->setField(fieldId++, ERR_ACCESS_DENIED);
+         fieldId += 9;
+      }
+   }
+   response->setField(VID_NUM_ELEMENTS, files.size());
+   response->setField(VID_RCC, ERR_SUCCESS);
+}
+
+/**
+ * Handler for "get file" command
+ */
+static void CH_GetFile(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR fileName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+   ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
+
+   TCHAR *fullPath;
+   if (CheckFullPath(fileName, &fullPath, false))
+   {
+      MessageData *data = new MessageData();
+      data->fileName = fullPath;
+      data->fileNameCode = request->getFieldAsString(VID_NAME);
+      data->follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
+      data->allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
+      data->id = request->getId();
+      data->offset = request->getFieldAsUInt32(VID_FILE_OFFSET);
+      data->session = session;
+      session->incRefCount();
+      g_downloadFileStopMarkers->set(request->getId(), new VolatileCounter(0));
+
+      ThreadCreateEx(SendFile, 0, data);
+
+      response->setField(VID_RCC, ERR_SUCCESS);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
+ * Handler for "cancel file download" command
+ */
+static void CH_CancelFileDownload(NXCPMessage *request, NXCPMessage *response)
+{
+   VolatileCounter *counter = g_downloadFileStopMarkers->get(request->getFieldAsUInt32(VID_REQUEST_ID));
+   if (counter != NULL)
+   {
+      InterlockedIncrement(counter);
+      response->setField(VID_RCC, ERR_SUCCESS);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+   }
+}
+
+/**
+ * Handler for "cancel file monitoring" command
+ */
+static void CH_CancelFileMonitoring(NXCPMessage *request, NXCPMessage *response)
+{
+   TCHAR fileName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+   if (g_monitorFileList.remove(fileName))
+   {
+      response->setField(VID_RCC, ERR_SUCCESS);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+   }
+}
+
+/**
  * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
  */
 static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
@@ -634,356 +1079,49 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
    switch(command)
    {
    	case CMD_GET_FOLDER_SIZE:
-   	{
-   	   TCHAR directory[MAX_PATH];
-   	   request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
-   	   response->setId(request->getId());
-   	   if (directory[0] == 0)
-         {
-            response->setField(VID_RCC, ERR_IO_FAILURE);
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_SIZE): File name should be set."));
-            return true;
-         }
-         ConvertPathToHost(directory);
-
-         if (CheckFullPath(directory, false))
-         {
-            UINT64 fileCount = 0, fileSize = 0;
-            GetFolderInfo(directory, &fileCount, &fileSize);
-            response->setField(VID_RCC, ERR_SUCCESS);
-            response->setField(VID_FOLDER_SIZE, fileSize);
-            response->setField(VID_FILE_COUNT, fileCount);
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_SIZE): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-
-         return true;
-   	}
+   	   CH_GetFolderSize(request, response);
+         break;
       case CMD_GET_FOLDER_CONTENT:
-      {
-         TCHAR directory[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
-         response->setId(request->getId());
-         if (directory[0] == 0)
-         {
-            response->setField(VID_RCC, ERR_IO_FAILURE);
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_CONTENT): File name should be set."));
-            return true;
-         }
-         ConvertPathToHost(directory);
-
-         bool rootFolder = request->getFieldAsUInt16(VID_ROOT) ? 1 : 0;
-         if (CheckFullPath(directory, rootFolder))
-         {
-            GetFolderContent(directory, response, rootFolder, request->getFieldAsBoolean(VID_ALLOW_MULTIPART), session);
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_CONTENT): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
-      case CMD_FILEMGR_DELETE_FILE:
-      {
-         TCHAR file[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, file, MAX_PATH);
-         response->setId(request->getId());
-         if (file[0] == 0)
-         {
-            response->setField(VID_RCC, ERR_IO_FAILURE);
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): File name should be set."));
-            return true;
-         }
-         ConvertPathToHost(file);
-
-         if (CheckFullPath(file, false, true) && session->isMasterServer())
-         {
-            if (Delete(file))
-            {
-               response->setField(VID_RCC, ERR_SUCCESS);
-            }
-            else
-            {
-               response->setField(VID_RCC, ERR_IO_FAILURE);
-            }
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
-      case CMD_FILEMGR_RENAME_FILE:
-      {
-         TCHAR oldName[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
-         TCHAR newName[MAX_PATH];
-         request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
-         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
-         response->setId(request->getId());
-         if (oldName[0] == 0 && newName[0] == 0)
-         {
-            response->setField(VID_RCC, ERR_IO_FAILURE);
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_RENAME_FILE): File names should be set."));
-            return true;
-         }
-         ConvertPathToHost(oldName);
-         ConvertPathToHost(newName);
-
-         if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
-         {
-            if(VerifyFileOperation(newName, allowOverwirite, response))
-            {
-               if (_trename(oldName, newName) == 0)
-               {
-                  response->setField(VID_RCC, ERR_SUCCESS);
-               }
-               else
-               {
-                  response->setField(VID_RCC, ERR_IO_FAILURE);
-               }
-            }
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_RENAME_FILE): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
-      case CMD_FILEMGR_MOVE_FILE:
-      {
-         TCHAR oldName[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
-         TCHAR newName[MAX_PATH];
-         request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
-         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
-         response->setId(request->getId());
-         if ((oldName[0] == 0) && (newName[0] == 0))
-         {
-            response->setField(VID_RCC, ERR_IO_FAILURE);
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_MOVE_FILE): File names should be set."));
-            return TRUE;
-         }
-         ConvertPathToHost(oldName);
-         ConvertPathToHost(newName);
-
-         if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
-         {
-            if (VerifyFileOperation(newName, allowOverwirite, response))
-            {
-               if (MoveFileOrDirectory(oldName, newName))
-               {
-                  response->setField(VID_RCC, ERR_SUCCESS);
-               }
-               else
-               {
-                  response->setField(VID_RCC, ERR_IO_FAILURE);
-               }
-            }
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_MOVE_FILE): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
-      case CMD_FILEMGR_UPLOAD:
-      {
-         TCHAR name[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
-         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
-         response->setId(request->getId());
-         if (name[0] == 0)
-         {
-            response->setField(VID_RCC, ERR_IO_FAILURE);
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_UPLOAD): File name should be set."));
-            return TRUE;
-         }
-         ConvertPathToHost(name);
-
-         if (CheckFullPath(name, false, true) && session->isMasterServer())
-         {
-            if(VerifyFileOperation(name, allowOverwirite, response))
-               response->setField(VID_RCC, session->openFile(name, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_UPLOAD): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
-      case CMD_GET_FILE_DETAILS:
-      {
-         TCHAR fileName[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-         ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
-         response->setId(request->getId());
-
-      	if (CheckFullPath(fileName, false))
-         {
-            NX_STAT_STRUCT fs;
-
-            //prepare file name
-            if (CALL_STAT(fileName, &fs) == 0)
-            {
-               response->setField(VID_FILE_SIZE, (UINT64)fs.st_size);
-               response->setField(VID_MODIFICATION_TIME, (UINT64)fs.st_mtime);
-               response->setField(VID_RCC, ERR_SUCCESS);
-            }
-            else
-            {
-               response->setField(VID_RCC, ERR_FILE_STAT_FAILED);
-            }
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FILE_DETAILS): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
-      case CMD_GET_AGENT_FILE:
-      {
-         response->setId(request->getId());
-         TCHAR fileName[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-         ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
-
-         if (CheckFullPath(fileName, false))
-         {
-            TCHAR *fileNameCode = (TCHAR*)malloc(MAX_PATH * sizeof(TCHAR));
-            request->getFieldAsString(VID_NAME, fileNameCode, MAX_PATH);
-
-            MessageData *data = new MessageData();
-            data->fileName = _tcsdup(fileName);
-            data->fileNameCode = fileNameCode;
-            data->follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
-            data->allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
-            data->id = request->getId();
-            data->offset = request->getFieldAsUInt32(VID_FILE_OFFSET);
-            data->session = session;
-            session->incRefCount();
-            g_downloadFileStopMarkers->set(request->getId(), new VolatileCounter(0));
-
-            ThreadCreateEx(SendFile, 0, data);
-
-            response->setField(VID_RCC, ERR_SUCCESS);
-         }
-         else
-         {
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
-      case CMD_CANCEL_FILE_DOWNLOAD:
-      {
-         VolatileCounter *counter = g_downloadFileStopMarkers->get(request->getFieldAsUInt32(VID_REQUEST_ID));
-         if (counter != NULL)
-         {
-            InterlockedIncrement(counter);
-            response->setField(VID_RCC, ERR_SUCCESS);
-         }
-         else
-         {
-            response->setField(VID_RCC, ERR_INTERNAL_ERROR);
-         }
-         return true;
-      }
-      case CMD_CANCEL_FILE_MONITORING:
-      {
-         response->setId(request->getId());
-         TCHAR fileName[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-         if (g_monitorFileList.remove(fileName))
-         {
-            response->setField(VID_RCC, ERR_SUCCESS);
-         }
-         else
-         {
-            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
-         }
-         return true;
-      }
+         CH_GetFolderContent(request, response, session);
+         break;
       case CMD_FILEMGR_CREATE_FOLDER:
-      {
-         TCHAR directory[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
-         response->setId(request->getId());
-         if (directory[0] == 0)
-         {
-            response->setField(VID_RCC, ERR_IO_FAILURE);
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): File name should be set."));
-            return true;
-         }
-         ConvertPathToHost(directory);
-
-         if (CheckFullPath(directory, false, true) && session->isMasterServer())
-         {
-            if(VerifyFileOperation(directory, false, response))
-            {
-               if (CreateFolder(directory))
-               {
-                  response->setField(VID_RCC, ERR_SUCCESS);
-               }
-               else
-               {
-                  AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Could not create directory"));
-                  response->setField(VID_RCC, ERR_IO_FAILURE);
-               }
-            }
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
+         CH_CreateFolder(request, response, session);
+         break;
+      case CMD_GET_FILE_DETAILS:
+         CH_GetFileDetails(request, response, session);
+         break;
+      case CMD_GET_FILE_SET_DETAILS:
+         CH_GetFileSetDetails(request, response);
+         break;
+      case CMD_FILEMGR_DELETE_FILE:
+         CH_DeleteFile(request, response, session);
+         break;
+      case CMD_FILEMGR_RENAME_FILE:
+         CH_RenameFile(request, response, session);
+         break;
+      case CMD_FILEMGR_MOVE_FILE:
+         CH_MoveFile(request, response, session);
+         break;
       case CMD_FILEMGR_COPY_FILE:
-      {
-         TCHAR oldName[MAX_PATH];
-         request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
-         TCHAR newName[MAX_PATH];
-         request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
-         bool allowOverwrite = request->getFieldAsBoolean(VID_OVERWRITE);
-         response->setId(request->getId());
-         response->setField(VID_RCC, ERR_SUCCESS);
-
-         if ((oldName[0] == 0) && (newName[0] == 0))
-         {
-            response->setField(VID_RCC, ERR_IO_FAILURE);
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): File names should be set."));
-            return true;
-         }
-         ConvertPathToHost(oldName);
-         ConvertPathToHost(newName);
-
-         if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
-         {
-            if (VerifyFileOperation(newName, allowOverwrite, response))
-            {
-               if (!CopyFileOrDirectory(oldName, newName))
-                  response->setField(VID_RCC, ERR_IO_FAILURE);
-            }
-         }
-         else
-         {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): Access denied"));
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
-         }
-         return true;
-      }
+         CH_CopyFile(request, response, session);
+         break;
+      case CMD_FILEMGR_UPLOAD:
+         CH_Upload(request, response, session);
+         break;
+      case CMD_GET_AGENT_FILE:
+         CH_GetFile(request, response, session);
+         break;
+      case CMD_CANCEL_FILE_DOWNLOAD:
+         CH_CancelFileDownload(request, response);
+         break;
+      case CMD_CANCEL_FILE_MONITORING:
+         CH_CancelFileMonitoring(request, response);
+         break;
       default:
          return false;
    }
+
+   return true;
 }
 
 /**

@@ -2445,6 +2445,55 @@ void AgentConnection::processTcpProxyData(UINT32 channelId, const void *data, si
 }
 
 /**
+ * Get file set information
+ */
+UINT32 AgentConnection::getFileSetInfo(const StringList &fileSet, ObjectArray<RemoteFileInfo> **fileSetInfo)
+{
+   *fileSetInfo = NULL;
+   UINT32 requestId = generateRequestId();
+   NXCPMessage msg(CMD_GET_FILE_SET_DETAILS, requestId, m_nProtocolVersion);
+   fileSet.fillMessage(&msg, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+   UINT32 rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_dwCommandTimeout);
+      if (response != NULL)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            int count = response->getFieldAsInt32(VID_NUM_ELEMENTS);
+            if (count == fileSet.size())
+            {
+               auto info = new ObjectArray<RemoteFileInfo>(count, 16, true);
+               UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+               for(int i = 0; i < count; i++)
+               {
+                  info->add(new RemoteFileInfo(response, fieldId, fileSet.get(i)));
+                  fieldId += 10;
+               }
+               *fileSetInfo = info;
+            }
+            else
+            {
+               rcc = ERR_INTERNAL_ERROR;
+            }
+         }
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
  * Create new agent parameter definition from NXCP message
  */
 AgentParameterDefinition::AgentParameterDefinition(NXCPMessage *msg, UINT32 baseId)
@@ -2562,4 +2611,33 @@ UINT32 AgentTableDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId)
 
    msg->setField(baseId, varId - baseId);
    return varId - baseId;
+}
+
+/**
+ * Create remote file info object
+ */
+RemoteFileInfo::RemoteFileInfo(NXCPMessage *msg, UINT32 baseId, const TCHAR *name)
+{
+   m_name = MemCopyString(name);
+   m_status = msg->getFieldAsUInt32(baseId);
+   if (m_status == ERR_SUCCESS)
+   {
+      m_size = msg->getFieldAsUInt64(baseId + 1);
+      m_mtime = msg->getFieldAsTime(baseId + 2);
+      msg->getFieldAsBinary(baseId + 3, m_hash, MD5_DIGEST_SIZE);
+   }
+   else
+   {
+      m_size = 0;
+      m_mtime = 0;
+      memset(m_hash, 0, MD5_DIGEST_SIZE);
+   }
+}
+
+/**
+ * Destroy remote file info object
+ */
+RemoteFileInfo::~RemoteFileInfo()
+{
+   MemFree(m_name);
 }

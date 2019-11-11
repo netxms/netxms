@@ -437,10 +437,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_START_ACTIVE_DISCOVERY"),
       _T("CMD_GET_PHYSICAL_LINKS"),
       _T("CMD_UPDATE_PHYSICAL_LINK"),
-      _T("CMD_DELETE_PHYSICAL_LINK")
+      _T("CMD_DELETE_PHYSICAL_LINK"),
+      _T("CMD_GET_FILE_SET_DETAILS")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_DELETE_PHYSICAL_LINK))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_FILE_SET_DETAILS))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

@@ -44,13 +44,14 @@ static TCHAR s_tableOutputDelimiter = 0;
  */
 enum Operation
 {
-   CMD_GET            = 0,
-   CMD_LIST           = 1,
-   CMD_CHECK_SERVICE  = 2,
-   CMD_GET_PARAMS     = 3,
-   CMD_GET_CONFIG     = 4,
-   CMD_TABLE          = 5,
-   CMD_GET_SCREENSHOT = 6
+   CMD_GET,
+   CMD_LIST,
+   CMD_CHECK_SERVICE,
+   CMD_GET_PARAMS,
+   CMD_GET_CONFIG,
+   CMD_TABLE,
+   CMD_GET_SCREENSHOT,
+   CMD_FILE_SET_INFO
 };
 
 /**
@@ -243,6 +244,49 @@ static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const 
 }
 
 /**
+ * Get information about file set
+ */
+static int GetFileSetInfo(AgentConnection *conn, int argc, char **argv)
+{
+   StringList fileSet;
+   for(int i = 0; i < argc; i++)
+   {
+#ifdef UNICODE
+      fileSet.addPreallocated(WideStringFromMBStringSysLocale(argv[i]));
+#else
+      fileSet.add(argv[i]);
+#endif
+   }
+
+   ObjectArray<RemoteFileInfo> *info;
+   UINT32 rcc = conn->getFileSetInfo(fileSet, &info);
+   if (rcc == ERR_SUCCESS)
+   {
+      for(int i = 0; i < info->size(); i++)
+      {
+         if (i > 0)
+            WriteToTerminal(_T("\n"));
+         RemoteFileInfo *rfi = info->get(i);
+         WriteToTerminalEx(_T("\x1b[1m%s\x1b[0m\n   Status: \x1b[%s;1m%s\x1b[0m\n"),
+                  rfi->name(), rfi->isValid() ? _T("32") : _T("31"), AgentErrorCodeToText(rfi->status()));
+         if (rfi->isValid())
+         {
+            TCHAR hash[64];
+            WriteToTerminalEx(_T("   Size:  ") UINT64_FMT _T("\n   Time:  ") INT64_FMT _T("\n   Hash:  %s\n"),
+                     rfi->size(), static_cast<INT64>(rfi->modificationTime()),
+                     BinToStr(rfi->hash(), MD5_DIGEST_SIZE, hash));
+         }
+      }
+      delete info;
+   }
+   else
+   {
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
+   }
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
+}
+
+/**
  * Startup
  */
 int main(int argc, char *argv[])
@@ -281,7 +325,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:A:bCd:D:e:Ehi:IK:lno:O:p:P:r:R:s:S:t:Tvw:W:X:Z:")) != -1)
+   while((ch = getopt(argc, argv, "a:A:bCd:D:e:EFhi:IK:lno:O:p:P:r:R:s:S:t:Tvw:W:X:Z:")) != -1)
    {
       switch(ch)
       {
@@ -304,6 +348,7 @@ int main(int argc, char *argv[])
                      _T("                  Default value is 1.\n")
 #endif
                      _T("   -E           : Take screenshot. First parameter is file name, second (optional) is session name.\n")
+                     _T("   -F           : Get information about given file set. Each parameter is separate file name.\n")
                      _T("   -h           : Display help and exit.\n")
                      _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
                      _T("   -I           : Get list of supported parameters.\n")
@@ -379,6 +424,9 @@ int main(int argc, char *argv[])
             break;
          case 'E':
             operation = CMD_GET_SCREENSHOT;
+            break;
+         case 'F':
+            operation = CMD_FILE_SET_INFO;
             break;
          case 'I':
             operation = CMD_GET_PARAMS;
@@ -714,6 +762,9 @@ int main(int argc, char *argv[])
                         break;
                      case CMD_GET_SCREENSHOT:
                         iExitCode = GetScreenshot(conn, (argc > optind + 2) ? argv[optind + 2] : "Console", argv[optind + 1]);
+                        break;
+                     case CMD_FILE_SET_INFO:
+                        iExitCode = GetFileSetInfo(conn, argc - optind - 1, &argv[optind + 1]);
                         break;
                      default:
                         break;
