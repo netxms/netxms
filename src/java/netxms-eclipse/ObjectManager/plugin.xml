@@ -477,13 +477,6 @@
                menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.CreateSensor"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createSensor_Container"
-               label="Create Sensor"
-               menubarPath="CreateObjectSubmenu/additions">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_Container"
