@@ -6,15 +6,25 @@ package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 
 /**
  * Path element for file delivery policy
  */
+@Root(name = "element")
 public class PathElement
 {
+   @Attribute
    private String name;
+   
    private PathElement parent;
+   
+   @ElementList(required = false)
    private Set<PathElement> children;
+   
+   @Attribute(required = false)
    private UUID guid;
    
    /**
@@ -38,8 +48,42 @@ public class PathElement
       {
          if (parent.children == null)
             parent.children = new HashSet<PathElement>();
-         children.add(this);
+         parent.children.add(this);
       }
+   }
+   
+   /**
+    * Default constructor
+    */
+   public PathElement()
+   {
+      name = "";
+      parent = null;
+      children = null;
+      guid = null;
+   }
+   
+   /**
+    * Update parent reference recursively
+    */
+   public void updateParentReference(PathElement parent)
+   {
+      this.parent = parent;
+      if (children != null)
+      {
+         for(PathElement e : children)
+            e.updateParentReference(this);
+      }
+   }
+   
+   /**
+    * Remove this element
+    */
+   public void remove()
+   {
+      if (parent != null)
+         parent.children.remove(this);
+      parent = null;
    }
 
    /**
@@ -52,14 +96,34 @@ public class PathElement
       return guid != null;
    }
    
+   /**
+    * Get element's parent
+    * 
+    * @return element's parent
+    */
    public PathElement getParent()
    {
       return parent;
    }
 
+   /**
+    * Get element's children
+    * 
+    * @return element's children
+    */
    public PathElement[] getChildren()
    {
       return (children != null) ? children.toArray(new PathElement[children.size()]) : new PathElement[0];
+   }
+   
+   /**
+    * Check if this element has children
+    * 
+    * @return true if this element has children
+    */
+   public boolean hasChildren()
+   {
+      return (children != null) && !children.isEmpty();
    }
 
    /**

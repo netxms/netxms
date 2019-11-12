@@ -2,6 +2,8 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener;
@@ -81,11 +83,22 @@ public abstract class AbstractPolicyEditor extends Composite
     * @return policy object updated from editor content
     */
    public abstract AgentPolicy updatePolicyFromControl();
-   
+
    /**
-    * Create actions for editor
+    * Fill local pull down menu with additional actions
+    * 
+    * @param manager menu manager
     */
-   protected void createActions()
+   public void fillLocalPullDown(IMenuManager manager)
+   {
+   }
+
+   /**
+    * Fill local tool bar with additional actions
+    * 
+    * @param manager menu manager
+    */
+   public void fillLocalToolBar(IToolBarManager manager)
    {
    }
 }

@@ -2,6 +2,8 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.texteditor.FindReplaceAction;
@@ -84,14 +86,7 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
     * @return policy object updated from editor content
     */
    public abstract AgentPolicy updatePolicyFromControl();
-   
-   /**
-    * Create actions for editor
-    */
-   protected void createActions()
-   {
-   }
-   
+
    /**
     * Check if Find/Replace action is required for this editor
     * 
@@ -124,5 +119,23 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    {
       if (actionFindReplace != null)
          actionFindReplace.update();
+   }
+
+   /**
+    * Fill local pull down menu with additional actions
+    * 
+    * @param manager menu manager
+    */
+   public void fillLocalPullDown(IMenuManager manager)
+   {
+   }
+
+   /**
+    * Fill local tool bar with additional actions
+    * 
+    * @param manager menu manager
+    */
+   public void fillLocalToolBar(IToolBarManager manager)
+   {
    }
 }

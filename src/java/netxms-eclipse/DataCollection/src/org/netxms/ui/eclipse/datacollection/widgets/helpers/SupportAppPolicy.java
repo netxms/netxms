@@ -64,9 +64,9 @@ public class SupportAppPolicy
    public static SupportAppPolicy createFromXml(final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      SupportAppPolicy obj = serializer.read(SupportAppPolicy.class, xml);
-      obj.updateMenuParents();
-      return obj;
+      SupportAppPolicy policy = serializer.read(SupportAppPolicy.class, xml);
+      policy.updateMenuParents();
+      return policy;
    }
    
    /**

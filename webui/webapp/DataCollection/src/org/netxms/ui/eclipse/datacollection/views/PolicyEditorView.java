@@ -25,6 +25,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.dialogs.SavePolicyDialog;
 import org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.AgentConfigPolicyEditor;
+import org.netxms.ui.eclipse.datacollection.widgets.FileDeliveryPolicyEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.GenericPolicyEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.LogParserPolicyEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.SupportAppPolicyEditor;
@@ -48,7 +49,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    private boolean throwExceptionOnSave;
    private Exception saveException;
    private Display display;
-   private boolean modifiedBuOtherUser = false;
+   private boolean modifiedByOtherUser = false;
    private boolean saveInProgress = false;
    
    private CompositeWithMessageBar contentWrapper;
@@ -133,8 +134,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    protected void contributeToActionBars()
    {
       IActionBars bars = getViewSite().getActionBars();
+      bars.getMenuManager().removeAll();
+      bars.getToolBarManager().removeAll();
       fillLocalPullDown(bars.getMenuManager());
       fillLocalToolBar(bars.getToolBarManager());
+      bars.updateActionBars();
    }
 
    /**
@@ -145,6 +149,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    protected void fillLocalPullDown(IMenuManager manager)
    {
+      if (editor != null)
+      {
+         editor.fillLocalPullDown(manager);
+      }
+      manager.add(new Separator());
       manager.add(actionSave);
       //manager.add(actionFindReplace);
       manager.add(new Separator());
@@ -159,15 +168,23 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      if (editor != null)
+      {
+         editor.fillLocalToolBar(manager);
+      }
+      manager.add(new Separator());
       manager.add(actionSave);
       //manager.add(actionFindReplace);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
    
+   /**
+    * Refresh editor
+    */
    private void refresh()
    {
-      if(modifiedBuOtherUser && modified)
+      if(modifiedByOtherUser && modified)
       {
          if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
                                         "Do you really want to refresh the policy?\n You will loose all your changes."))
@@ -177,7 +194,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          firePropertyChange(PROP_DIRTY);
          actionSave.setEnabled(false);         
       }      
-      modifiedBuOtherUser = false;
+      modifiedByOtherUser = false;
       
       ConsoleJob job = new ConsoleJob("Get agent policy", this, Activator.PLUGIN_ID, null) {
          @Override
@@ -237,6 +254,8 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          editor = new GenericPolicyEditor(content, SWT.NONE, policy);
       }
       
+      contributeToActionBars();   // Action bars has to be updated after editor update
+      
       editor.addModifyListener(new PolicyModifyListener() {
          @Override
          public void modifyParser()
@@ -264,6 +283,9 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       actionSave.setEnabled(true);
    }
    
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
    @Override
    public void doSave(IProgressMonitor monitor)
    {
@@ -282,6 +304,9 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       }
    }
 
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
    @Override
    public void doSaveAs()
    {
@@ -292,7 +317,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    private void save()
    {
-      if(modifiedBuOtherUser && modified)
+      if (modifiedByOtherUser && modified)
       {
          if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
                                         "Do you really want to save the policy?\n You will overwrite other user changes."))
@@ -300,7 +325,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          contentWrapper.hideMessage();       
       }     
       saveInProgress = true;
-      modifiedBuOtherUser = false;      
+      modifiedByOtherUser = false;      
       throwExceptionOnSave = true;
       policy = editor.updatePolicyFromControl();
       new ConsoleJob("Save agent policy", this, Activator.PLUGIN_ID, null) {
@@ -352,18 +377,27 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          editor.setFocus();
    }
 
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
    @Override
    public boolean isDirty()
    {
       return modified;
    }
 
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
    @Override
    public boolean isSaveAsAllowed()
    {
       return false;
    }
 
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
    @Override
    public boolean isSaveOnCloseNeeded()
    {
@@ -380,7 +414,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       int rc = dlg.open();
       if (rc == SavePolicyDialog.SAVE_ID)
       {
-         if (modifiedBuOtherUser && modified)
+         if (modifiedByOtherUser && modified)
          {
             if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
                                            "Do you really want to save the policy?\n You will overwrite other user changes."))
@@ -396,6 +430,9 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       return NO;
    }
 
+   /**
+    * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
+    */
    @Override
    public void notificationHandler(SessionNotification n)
    {
@@ -419,7 +456,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                   else if (!saveInProgress)
                   { 
                      contentWrapper.showMessage(0, "Policy is modified by other user");
-                     modifiedBuOtherUser = true;
+                     modifiedByOtherUser = true;
                   }
                }
             });

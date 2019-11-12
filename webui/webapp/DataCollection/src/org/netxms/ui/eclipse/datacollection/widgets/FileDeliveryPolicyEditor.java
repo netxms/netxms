@@ -18,12 +18,33 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.objects.AgentPolicy;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicy;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyContentProvider;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyLabelProvider;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.PathElement;
 
 /**
  * Editor for file delivery policy
@@ -31,6 +52,13 @@ import org.netxms.client.objects.AgentPolicy;
 public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
 {
    private TreeViewer fileTree;
+   private Set<PathElement> rootElements = new HashSet<PathElement>();
+   private Action actionAddRoot;
+   private Action actionAddDirectory;
+   private Action actionAddFile;
+   private Action actionDelete;
+   private Action actionRename;
+   private Action actionUpdate;
 
    /**
     * @param parent
@@ -43,6 +71,122 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       setLayout(new FillLayout());
       
       fileTree = new TreeViewer(this, SWT.NONE);
+      fileTree.setContentProvider(new FileDeliveryPolicyContentProvider());
+      fileTree.setLabelProvider(new FileDeliveryPolicyLabelProvider());
+      fileTree.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            PathElement p1 = (PathElement)e1;
+            PathElement p2 = (PathElement)e2;
+            if (p1.isFile() && !p2.isFile())
+               return 1;
+            if (!p1.isFile() && p2.isFile())
+               return -1;
+            return p1.getName().compareToIgnoreCase(p2.getName());
+         }
+      });
+      
+      actionAddRoot = new Action("&Add root directory...", SharedIcons.ADD_OBJECT) {
+         @Override
+         public void run()
+         {
+            addElement(null);
+         }
+      };
+
+      actionAddDirectory = new Action("Add d&irectory...") {
+         @Override
+         public void run()
+         {
+            addDirectory();
+         }
+      };
+      
+      actionAddFile = new Action("Add &file...") {
+         @Override
+         public void run()
+         {
+         }
+      };
+      
+      actionRename = new Action("&Rename...") {
+         @Override
+         public void run()
+         {
+         }
+      };
+      
+      actionDelete = new Action("&Delete") {
+         @Override
+         public void run()
+         {
+         }
+      };
+      
+      actionUpdate = new Action("&Update...") {
+         @Override
+         public void run()
+         {
+         }
+      };
+      
+      createPopupMenu();
+      
+      updateControlFromPolicy();
+   }
+
+   /**
+    * Create pop-up menu for user list
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager manager)
+         {
+            fillContextMenu(manager);
+         }
+      });
+
+      // Create menu
+      Menu menu = menuMgr.createContextMenu(fileTree.getControl());
+      fileTree.getControl().setMenu(menu);
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param manager Menu manager
+    */
+   protected void fillContextMenu(final IMenuManager manager)
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if (selection.isEmpty())
+      {
+         manager.add(actionAddRoot);
+      }
+      else if (selection.size() == 1)
+      {
+         PathElement e = (PathElement)selection.getFirstElement();
+         if (e.isFile())
+         {
+            manager.add(actionUpdate);
+         }
+         else
+         {
+            manager.add(actionAddDirectory);
+            manager.add(actionAddFile);
+         }
+         manager.add(actionRename);
+         manager.add(actionDelete);
+      }
+      else
+      {
+         manager.add(actionDelete);
+      }
    }
 
    /**
@@ -51,8 +195,17 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    @Override
    protected void updateControlFromPolicy()
    {
-      // TODO Auto-generated method stub
-
+      rootElements.clear();
+      try
+      {
+         FileDeliveryPolicy policyData = FileDeliveryPolicy.createFromXml(getPolicy().getContent());
+         rootElements.addAll(Arrays.asList(policyData.elements));
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Cannot parse file delivery policy XML", e);
+      }
+      fileTree.setInput(rootElements.toArray());
    }
 
    /**
@@ -61,7 +214,77 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    @Override
    public AgentPolicy updatePolicyFromControl()
    {
-      // TODO Auto-generated method stub
-      return null;
+      FileDeliveryPolicy data = new FileDeliveryPolicy();
+      data.elements = rootElements.toArray(new PathElement[rootElements.size()]);
+      try
+      {
+         getPolicy().setContent(data.createXml());
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Error serializing file delivery policy", e);
+      }
+      return getPolicy();
+   }
+   
+   /**
+    * Add new directory to currently selected element
+    */
+   private void addDirectory()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if ((selection.size() != 1) || ((PathElement)selection.getFirstElement()).isFile())
+         return;
+      
+      addElement((PathElement)selection.getFirstElement());
+   }
+   
+   /**
+    * Add new element
+    */
+   private void addElement(PathElement parent)
+   {
+      InputDialog dlg = new InputDialog(getShell(), (parent == null) ? "New Root Element" : "New element", "Enter name for new element", "", new IInputValidator() {
+         @Override
+         public String isValid(String newText)
+         {
+            if (newText.isEmpty())
+               return "Name cannot be empty";
+            return null;
+         }
+      });
+      if (dlg.open() != Window.OK)
+         return;
+      
+      PathElement e = new PathElement(parent, dlg.getValue());
+      if (parent == null)
+      {
+         rootElements.add(e);
+         fileTree.setInput(rootElements.toArray());
+      }
+      else
+      {
+         fileTree.refresh();
+      }
+      
+      fireModifyListeners();
+   }
+   
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   public void fillLocalPullDown(IMenuManager manager)
+   {
+      manager.add(actionAddRoot);
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   public void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionAddRoot);
    }
 }
