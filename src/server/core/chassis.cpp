@@ -178,7 +178,7 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
    if (request->isFieldExist(VID_RACK_ID))
    {
       m_rackId = request->getFieldAsUInt32(VID_RACK_ID);
-      updateRackBinding();
+      ThreadPoolExecute(g_mainThreadPool, this, &Chassis::updateRackBinding);
    }
    if (request->isFieldExist(VID_RACK_IMAGE_FRONT))
       m_rackImageFront = request->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
