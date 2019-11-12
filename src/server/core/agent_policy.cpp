@@ -25,10 +25,10 @@
 /**
  * Constructor for user-initiated object creation
  */
-GenericAgentPolicy::GenericAgentPolicy(uuid guid, UINT32 ownerId)
+GenericAgentPolicy::GenericAgentPolicy(const uuid& guid, const TCHAR *type, UINT32 ownerId)
 {
    m_name[0] = 0;
-   m_policyType[0] = 0;
+   _tcslcpy(m_policyType, type, MAX_OBJECT_NAME);
    m_guid = guid;
    m_ownerId = ownerId;
    m_fileContent = NULL;
@@ -38,14 +38,14 @@ GenericAgentPolicy::GenericAgentPolicy(uuid guid, UINT32 ownerId)
 /**
  * Copy constructor
  */
-GenericAgentPolicy::GenericAgentPolicy(GenericAgentPolicy *policy)
+GenericAgentPolicy::GenericAgentPolicy(const GenericAgentPolicy *src)
 {
-   _tcslcpy(m_name, policy->m_name, MAX_OBJECT_NAME);
-   _tcslcpy(m_policyType, policy->m_policyType, MAX_OBJECT_NAME);
-   m_guid = policy->m_guid;
-   m_ownerId = policy->m_ownerId;
-   m_fileContent = MemCopyString(policy->m_fileContent);
-   m_version = policy->m_version;
+   _tcslcpy(m_name, src->m_name, MAX_OBJECT_NAME);
+   _tcslcpy(m_policyType, src->m_policyType, MAX_OBJECT_NAME);
+   m_guid = src->m_guid;
+   m_ownerId = src->m_ownerId;
+   m_fileContent = MemCopyString(src->m_fileContent);
+   m_version = src->m_version;
 }
 
 /**
@@ -67,6 +67,14 @@ GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UIN
 GenericAgentPolicy::~GenericAgentPolicy()
 {
    MemFree(m_fileContent);
+}
+
+/**
+ * Create copy of this policy object
+ */
+GenericAgentPolicy *GenericAgentPolicy::clone() const
+{
+   return new GenericAgentPolicy(this);
 }
 
 /**
@@ -258,4 +266,23 @@ void GenericAgentPolicy::createExportRecord(StringBuffer &str)
    str.append(m_fileContent);
    str.append(_T("</fileContent>\n"));
    str.append(_T("</agentPolicy>\n"));
+}
+
+/**
+ * Clone file delivery policy
+ */
+GenericAgentPolicy *FileDeliveryPolicy::clone() const
+{
+   return new FileDeliveryPolicy(this);
+}
+
+/**
+ * Deploy file delivery policy
+ */
+UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSupported)
+{
+   if (!newTypeFormatSupported)
+      return ERR_NOT_IMPLEMENTED;
+
+   return ERR_SUCCESS;
 }

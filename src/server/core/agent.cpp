@@ -568,11 +568,11 @@ UINT32 AgentConnectionEx::uninstallPolicy(uuid guid, TCHAR *type, bool newTypeFo
    }
    else
    {
-      if(!_tcscmp(type, _T("AgentConfig")))
+      if (!_tcscmp(type, _T("AgentConfig")))
       {
          msg.setField(VID_POLICY_TYPE, AGENT_POLICY_CONFIG);
       }
-      else if(!_tcscmp(type, _T("LogParserConfig")))
+      else if (!_tcscmp(type, _T("LogParserConfig")))
       {
          msg.setField(VID_POLICY_TYPE, AGENT_POLICY_LOG_PARSER);
       }

@@ -1209,7 +1209,6 @@ public:
 	void associateItems();
 };
 
-
 /**
  * Generic agent policy object
  */
@@ -1223,11 +1222,14 @@ protected:
    TCHAR *m_fileContent;
    UINT32 m_version;
 
+   GenericAgentPolicy(const GenericAgentPolicy *src);
+
 public:
-   GenericAgentPolicy(uuid guid, UINT32 ownerId);
+   GenericAgentPolicy(const uuid& guid, const TCHAR *type, UINT32 ownerId);
    GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId);
-   GenericAgentPolicy(GenericAgentPolicy *policy);
    virtual ~GenericAgentPolicy();
+
+   virtual GenericAgentPolicy *clone() const;
 
    const TCHAR *getName() const { return m_name; }
    const uuid getGuid() const { return m_guid; }
@@ -1243,11 +1245,29 @@ public:
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest);
 
    virtual void updateFromImport(ConfigEntry *config);
-   virtual json_t *toJson();
    virtual void createExportRecord(StringBuffer &str);
+
+   virtual json_t *toJson();
 
    virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported);
    virtual bool createDeploymentMessage(NXCPMessage *msg, bool newTypeFormatSupported);
+};
+
+/**
+ * File delivery policy
+ */
+class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
+{
+protected:
+   FileDeliveryPolicy(const FileDeliveryPolicy *src) : GenericAgentPolicy(src) { }
+
+public:
+   FileDeliveryPolicy(const uuid& guid, UINT32 ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
+   FileDeliveryPolicy(const TCHAR *name, UINT32 ownerId) : GenericAgentPolicy(name, _T("FileDelivery"), ownerId) { }
+
+   virtual GenericAgentPolicy *clone() const override;
+
+   virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported) override;
 };
 
 /**

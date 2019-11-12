@@ -38,20 +38,18 @@ bool TemplateGroup::showThresholdSummary()
    return false;
 }
 
-static GenericAgentPolicy *CreatePolicy(uuid guid, UINT32 m_id, const TCHAR *type)
+static GenericAgentPolicy *CreatePolicy(uuid guid, const TCHAR *type, UINT32 ownerId)
 {
-   GenericAgentPolicy *obj;
-   //add special rules for other than existing example: FileUpload
-   obj = new GenericAgentPolicy(guid, m_id);
-   return obj;
+   if (!_tcsicmp(type, _T("FileDelivery")))
+      return new GenericAgentPolicy(guid, type, ownerId);
+   return new GenericAgentPolicy(guid, type, ownerId);
 }
 
-static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UINT32 m_id)
+static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId)
 {
-   GenericAgentPolicy *obj;
-   //add special rules for other than existing example: FileUpload
-   obj = new GenericAgentPolicy(name, type, m_id);
-   return obj;
+   if (!_tcsicmp(type, _T("FileDelivery")))
+      return new GenericAgentPolicy(name, type, ownerId);
+   return new GenericAgentPolicy(name, type, ownerId);
 }
 
 Template::Template() : super(), AutoBindTarget(this), VersionableObject(this)
@@ -82,7 +80,7 @@ Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, co
    {
       ConfigEntry *e = dcis->get(i);
       uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-      GenericAgentPolicy *curr = CreatePolicy(guid, m_id, e->getSubEntryValue(_T("policyType")));
+      GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("policyType")), m_id);
       curr->updateFromImport(e);
       m_policyList->set(guid, curr);
    }
@@ -242,7 +240,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
                TCHAR type[32];
                uuid guid = DBGetFieldGUID(hResult, i, 0);
                DBGetField(hResult, i, 1, type, 32);
-               GenericAgentPolicy *curr = CreatePolicy(guid, m_id, type);
+               GenericAgentPolicy *curr = CreatePolicy(guid, type, m_id);
                success = curr->loadFromDatabase(hdb);
                m_policyList->set(guid, curr);
             }
@@ -458,7 +456,7 @@ void Template::updateFromImport(ConfigEntry *config)
    {
       ConfigEntry *e = policies->get(i);
       uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-      GenericAgentPolicy *curr = CreatePolicy(guid, m_id, e->getSubEntryValue(_T("policyType")));
+      GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("policyType")), m_id);
       curr->updateFromImport(e);
       m_policyList->set(guid, curr);
    }
@@ -551,7 +549,7 @@ GenericAgentPolicy *Template::getAgentPolicyCopy(const uuid& guid)
    lockProperties();
    GenericAgentPolicy *policy = m_policyList->get(guid);
    if (policy != NULL)
-      policy = new GenericAgentPolicy(policy);
+      policy = policy->clone();
    unlockProperties();
    return policy;
 }
