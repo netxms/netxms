@@ -97,7 +97,9 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	      success = true;
 	   }
 	   else
+	   {
 	      success = false;
+	   }
 	}
 	if (hStmt != NULL)
 	   DBFreeStatement(hStmt);
@@ -133,9 +135,7 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 	if (success)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
 	for(int i = 0; i < m_passiveElements->size() && success; i++)
-	{
 	   success = m_passiveElements->get(i)->saveToDatabase(hdb, m_id);
-	}
 	return success;
 }
 
@@ -150,9 +150,7 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
    for(int i = 0; i < m_passiveElements->size() && success; i++)
-   {
       success = m_passiveElements->get(i)->deleteChildren(hdb, m_id);
-   }
    return success;
 }
 
@@ -169,7 +167,7 @@ void Rack::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    for(int i = 0; i < m_passiveElements->size(); i++)
    {
       m_passiveElements->get(i)->fillMessage(pMsg, base);
-      base+=10;
+      base += 10;
    }
 }
 

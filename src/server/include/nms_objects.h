@@ -820,6 +820,7 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
    virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
+   virtual UINT32 modifyFromMessageInternalStage2(NXCPMessage *msg);
 
    void addLocationToHistory();
    bool isLocationTableExists(DB_HANDLE hdb);

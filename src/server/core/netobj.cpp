@@ -1410,8 +1410,10 @@ UINT32 NetObj::modifyFromMessage(NXCPMessage *msg)
 {
    lockProperties();
    UINT32 rcc = modifyFromMessageInternal(msg);
-   setModified(MODIFY_ALL);
    unlockProperties();
+   if (rcc == RCC_SUCCESS)
+      rcc = modifyFromMessageInternalStage2(msg);
+   markAsModified(MODIFY_ALL);
    return rcc;
 }
 
@@ -1545,6 +1547,17 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
       }
    }
 
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify object from NXCP message - stage 2
+ * Object's properties are not locked when this method is called. Should be
+ * used when more direct control over locks is needed (for example when
+ * code should lock parent or children list without holding property lock).
+ */
+UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *pRequest)
+{
    if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))
    {
       lockResponsibleUsersList(true);
