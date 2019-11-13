@@ -44,7 +44,9 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProgressListener;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -54,6 +56,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyLa
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PathElement;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Editor for file delivery policy
@@ -73,9 +76,9 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public FileDeliveryPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public FileDeliveryPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
    {
-      super(parent, style, policy);
+      super(parent, style, policy, viewPart);
       
       setLayout(new FillLayout());
       
@@ -124,6 +127,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          @Override
          public void run()
          {
+            renameElement();
          }
       };
       
@@ -131,6 +135,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          @Override
          public void run()
          {
+            deleteElements();
          }
       };
       
@@ -138,6 +143,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          @Override
          public void run()
          {
+            updateFile();
          }
       };
       
@@ -236,7 +242,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       }
       return getPolicy();
    }
-   
+
    /**
     * Add new directory to currently selected element
     */
@@ -248,7 +254,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       
       addElement((PathElement)selection.getFirstElement());
    }
-   
+
    /**
     * Add file
     */
@@ -257,11 +263,11 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       IStructuredSelection selection = fileTree.getStructuredSelection();
       if ((selection.size() != 1) || ((PathElement)selection.getFirstElement()).isFile())
          return;
-      
+
       FileDialog dlg = new FileDialog(getShell(), SWT.OPEN | SWT.MULTI);
       if (dlg.open() == null)
          return;
-      
+
       final List<PathElement> uploadList = new ArrayList<PathElement>();
       for(String name : dlg.getFileNames())
       {
@@ -272,14 +278,14 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             uploadList.add(e);
          }
       }
-      
+
       if (!uploadList.isEmpty())
       {
          fileTree.refresh();
          fireModifyListeners();
          
          final NXCSession session = ConsoleSharedData.getSession();
-         new ConsoleJob("Upload files", null, Activator.PLUGIN_ID, null) {
+         new ConsoleJob("Upload files", getViewPart(), Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -301,13 +307,61 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }.start();
       }
    }
-   
+
+   /**
+    * Update file content
+    */
+   private void updateFile()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if ((selection.size() != 1) || !((PathElement)selection.getFirstElement()).isFile())
+         return;
+
+      FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
+      String fileName = dlg.open();
+      if (fileName == null)
+         return;
+
+      final File file = new File(fileName);
+      if (!file.exists())
+         return;
+
+      final UUID guid = ((PathElement)selection.getFirstElement()).getGuid();
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Upload file", getViewPart(), Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(final IProgressMonitor monitor) throws Exception
+         {
+            session.uploadFileToServer(file, "FileDelivery-" + guid.toString(), new ProgressListener() {
+               @Override
+               public void setTotalWorkAmount(long workTotal)
+               {
+                  monitor.beginTask("Upload file", (int)file.length());
+               }
+               
+               @Override
+               public void markProgress(long workDone)
+               {
+                  monitor.worked((int)workDone);
+               }
+            });
+            monitor.done();
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot upload file";
+         }
+      }.start();
+   }
+
    /**
     * Add new element
     */
    private void addElement(PathElement parent)
    {
-      InputDialog dlg = new InputDialog(getShell(), (parent == null) ? "New Root Element" : "New element", "Enter name for new element", "", new IInputValidator() {
+      InputDialog dlg = new InputDialog(getShell(), (parent == null) ? "New root element" : "New element", "Enter name for new element", "", new IInputValidator() {
          @Override
          public String isValid(String newText)
          {
@@ -318,7 +372,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       });
       if (dlg.open() != Window.OK)
          return;
-      
+
       PathElement e = new PathElement(parent, dlg.getValue());
       if (parent == null)
       {
@@ -329,10 +383,80 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       {
          fileTree.refresh();
       }
-      
+
       fireModifyListeners();
    }
-   
+
+   /**
+    * Rename selected element
+    */
+   private void renameElement()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      PathElement element = (PathElement)selection.getFirstElement();
+      InputDialog dlg = new InputDialog(getShell(), "Rename element", "Enter element name", element.getName(), new IInputValidator() {
+         @Override
+         public String isValid(String newText)
+         {
+            if (newText.isEmpty())
+               return "Name cannot be empty";
+            return null;
+         }
+      });
+      if (dlg.open() != Window.OK)
+         return;
+
+      if (element.getParent() == null)
+      {
+         rootElements.remove(element);
+         element.setName(dlg.getValue());
+         rootElements.add(element);
+         fileTree.refresh();
+      }
+      else
+      {
+         element.setName(dlg.getValue());
+         fileTree.update(element, null);
+      }
+      fireModifyListeners();
+   }
+
+   /**
+    * Delete selected elements
+    */
+   private void deleteElements()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getShell(), "Delete", "Delete selected elements?"))
+         return;
+
+      boolean inputChanged = false;
+      for(Object o : selection.toList())
+      {
+         if (((PathElement)o).getParent() == null)
+         {
+            rootElements.remove(o);
+            inputChanged = true;
+         }
+         else
+         {
+            ((PathElement)o).remove();
+         }
+      }
+
+      if (inputChanged)
+         fileTree.setInput(rootElements.toArray());
+      else
+         fileTree.refresh();
+      fireModifyListeners();
+   }
+
    /**
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
     */

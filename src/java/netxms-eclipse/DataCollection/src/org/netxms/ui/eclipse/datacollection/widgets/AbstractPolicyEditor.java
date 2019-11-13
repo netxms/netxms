@@ -6,6 +6,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener;
@@ -15,6 +16,7 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    private AgentPolicy policy;  
    private Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
    private FindReplaceAction actionFindReplace = null;
+   private IViewPart viewPart;
 
    /**
     * Create abstract policy editor
@@ -23,10 +25,11 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
     * @param style control style
     * @param policy policy object
     */
-   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
    {
       super(parent, style);
       this.policy = policy;
+      this.viewPart = viewPart;
    }
 
    /**
@@ -137,5 +140,13 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
     */
    public void fillLocalToolBar(IToolBarManager manager)
    {
+   }
+
+   /**
+    * @return the viewPart
+    */
+   public IViewPart getViewPart()
+   {
+      return viewPart;
    }
 }

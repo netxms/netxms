@@ -25,6 +25,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.objects.AgentPolicy;
 
 /**
@@ -40,9 +41,9 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
    {
-      super(parent, style, policy);      
+      super(parent, style, policy, viewPart);      
       
       setLayout(new FillLayout());
       

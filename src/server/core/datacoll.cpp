@@ -357,15 +357,15 @@ void DataCollector(shared_ptr<DCObject> dcObject)
 /**
  * Callback for queueing DCIs
  */
-static void QueueItems(NetObj *object, void *data)
+static void QueueItems(NetObj *object, UINT32 *watchdogId)
 {
    if (IsShutdownInProgress())
       return;
 
-   WatchdogNotify(*((UINT32 *)data));
+   WatchdogNotify(*watchdogId);
 	nxlog_debug(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
 				   object->getName(), object->getId());
-	((DataCollectionTarget *)object)->queueItemsForPolling();
+	static_cast<DataCollectionTarget*>(object)->queueItemsForPolling();
 }
 
 /**

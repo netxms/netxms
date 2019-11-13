@@ -23,6 +23,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 
@@ -39,13 +40,13 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
    {
-      super(parent, style, policy);      
+      super(parent, style, policy, viewPart);      
 
       setLayout(new FillLayout());
       
-      editor = new AgentConfigEditor(this, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
+      editor = new AgentConfigEditor(this, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
       editor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)

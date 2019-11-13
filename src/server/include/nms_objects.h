@@ -1249,7 +1249,7 @@ public:
 
    virtual json_t *toJson();
 
-   virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported);
+   virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported, const TCHAR *debugId);
    virtual bool createDeploymentMessage(NXCPMessage *msg, bool newTypeFormatSupported);
 };
 
@@ -1267,7 +1267,7 @@ public:
 
    virtual GenericAgentPolicy *clone() const override;
 
-   virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported) override;
+   virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported, const TCHAR *debugId) override;
 };
 
 /**

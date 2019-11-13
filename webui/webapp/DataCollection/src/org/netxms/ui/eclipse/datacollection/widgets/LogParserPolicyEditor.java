@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserModifyListener;
 
@@ -37,9 +38,9 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public LogParserPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public LogParserPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
    {
-      super(parent, style, policy);      
+      super(parent, style, policy, viewPart);      
       
       setLayout(new FillLayout());
       

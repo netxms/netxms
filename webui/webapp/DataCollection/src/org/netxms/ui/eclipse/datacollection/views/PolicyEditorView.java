@@ -235,23 +235,23 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       
       if (policy.getPolicyType().equals(AgentPolicy.AGENT_CONFIG))
       {
-         editor = new AgentConfigPolicyEditor(content, SWT.NONE, policy);            
+         editor = new AgentConfigPolicyEditor(content, SWT.NONE, policy, this);            
       }
       else if (policy.getPolicyType().equals(AgentPolicy.FILE_DELIVERY))
       {
-         editor = new FileDeliveryPolicyEditor(content, SWT.NONE, policy);      
+         editor = new FileDeliveryPolicyEditor(content, SWT.NONE, policy, this);      
       }
       else if (policy.getPolicyType().equals(AgentPolicy.LOG_PARSER))
       {
-         editor = new LogParserPolicyEditor(content, SWT.NONE, policy);      
+         editor = new LogParserPolicyEditor(content, SWT.NONE, policy, this);      
       }
       else if (policy.getPolicyType().equals(AgentPolicy.SUPPORT_APPLICATION))
       {
-         editor = new SupportAppPolicyEditor(content, SWT.NONE, policy);  
+         editor = new SupportAppPolicyEditor(content, SWT.NONE, policy, this);  
       }
       else
       {
-         editor = new GenericPolicyEditor(content, SWT.NONE, policy);
+         editor = new GenericPolicyEditor(content, SWT.NONE, policy, this);
       }
       
       contributeToActionBars();   // Action bars has to be updated after editor update

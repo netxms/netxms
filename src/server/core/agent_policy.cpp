@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("agent.policy")
+
 /**
  * Constructor for user-initiated object creation
  */
@@ -211,8 +213,9 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool newTypeF
 /**
  * Deploy policy to agent. Default implementation calls connector's deployPolicy() method
  */
-UINT32 GenericAgentPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSupported)
+UINT32 GenericAgentPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSupported, const TCHAR *debugId)
 {
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Calling GenericAgentPolicy::deploy at %s (type=%s, newTypeFormat=%d)"), debugId, m_type, newTypeFormatSupported);
    return conn->deployPolicy(this, newTypeFormatSupported);
 }
 
@@ -327,14 +330,17 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
 /**
  * Deploy file delivery policy
  */
-UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSupported)
+UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSupported, const TCHAR *debugId)
 {
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s):)"), debugId);
+
    if (!newTypeFormatSupported)
       return ERR_NOT_IMPLEMENTED;
 
    if (m_content == NULL)
       return ERR_BAD_ARGUMENTS;
 
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::deploy(%s): preparing file list"), debugId);
    ObjectArray<FileInfo> files(64, 64, true);
    Config data;
    data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
@@ -349,10 +355,39 @@ UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSup
       delete rootElements;
    }
 
+   StringList fileRequest;
    for(int i = 0; i < files.size(); i++)
    {
-      nxlog_debug(4, _T("FileDeliveryPolicy::deploy: processing file path %s"), files.get(i)->path);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): processing file path %s"), debugId, files.get(i)->path);
+      fileRequest.add(files.get(i)->path);
    }
+   ObjectArray<RemoteFileInfo> *remoteFiles;
+   UINT32 rcc = conn->getFileSetInfo(&fileRequest, &remoteFiles);
+   if (rcc != RCC_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): call to AgentConnection::getFileSetInfo failed (%s)"), debugId, AgentErrorCodeToText(rcc));
+      return rcc;
+   }
+
+   for(int i = 0; i < remoteFiles->size(); i++)
+   {
+      RemoteFileInfo *remoteFile = remoteFiles->get(i);
+      if ((remoteFile->status() != ERR_SUCCESS) && (remoteFile->status() != ERR_FILE_STAT_FAILED))
+         continue;
+
+      StringBuffer localFile = g_netxmsdDataDir;
+      localFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
+      localFile.append(files.get(i)->guid.toString());
+
+      BYTE localHash[MD5_DIGEST_SIZE];
+      if (CalculateFileMD5Hash(localFile, localHash) && ((remoteFile->status() == ERR_FILE_STAT_FAILED) || memcmp(localHash, remoteFile->hash(), MD5_DIGEST_SIZE)))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): uploading %s"), debugId, files.get(i)->path);
+         rcc = conn->uploadFile(localFile, remoteFile->name());
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed (%s)"), debugId, AgentErrorCodeToText(rcc));
+      }
+   }
+   delete remoteFiles;
 
    return ERR_SUCCESS;
 }

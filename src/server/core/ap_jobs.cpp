@@ -144,13 +144,15 @@ ServerJobResult PolicyInstallJob::run()
    ServerJobResult result = JOB_RESULT_FAILED;
 
    TCHAR jobName[1024];
-   _sntprintf(jobName, 1024, _T("Deploy policy %s"), policy->getName());
+   _sntprintf(jobName, 1024, _T("Deploy policy %s from template %s"), policy->getName(), t->getName());
 
    setDescription(jobName);
    AgentConnectionEx *conn = getNode()->createAgentConnection(true);
    if (conn != NULL)
    {
-      UINT32 rcc = policy->deploy(conn, getNode()->supportNewTypeFormat());
+      TCHAR debugId[256];
+      _sntprintf(debugId, 256, _T("%s [%u] from %s/%s"), getNode()->getName(), getNode()->getId(), t->getName(), policy->getName());
+      UINT32 rcc = policy->deploy(conn, getNode()->supportNewTypeFormat(), debugId);
       conn->decRefCount();
       if (rcc == ERR_SUCCESS)
       {

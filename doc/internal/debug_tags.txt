@@ -1,6 +1,7 @@
 action.*	Server actions
 
 agent.conn	Agent connections
+agent.policy	Agent policies
 agent.tunnel	Agent tunnels
 
 alarm.*		Alarm management

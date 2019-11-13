@@ -55,6 +55,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -124,9 +125,9 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policy)
+   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
    {
-      super(parent, style, policy);      
+      super(parent, style, policy, viewPart);      
       
       try
       {
