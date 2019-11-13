@@ -18,9 +18,14 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -37,7 +42,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -45,6 +52,8 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyContentProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyLabelProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PathElement;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Editor for file delivery policy
@@ -107,6 +116,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          @Override
          public void run()
          {
+            addFile();
          }
       };
       
@@ -237,6 +247,59 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          return;
       
       addElement((PathElement)selection.getFirstElement());
+   }
+   
+   /**
+    * Add file
+    */
+   private void addFile()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if ((selection.size() != 1) || ((PathElement)selection.getFirstElement()).isFile())
+         return;
+      
+      FileDialog dlg = new FileDialog(getShell(), SWT.OPEN | SWT.MULTI);
+      if (dlg.open() == null)
+         return;
+      
+      final List<PathElement> uploadList = new ArrayList<PathElement>();
+      for(String name : dlg.getFileNames())
+      {
+         File f = new File(name);
+         if (f.exists())
+         {
+            PathElement e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID());
+            uploadList.add(e);
+         }
+      }
+      
+      if (!uploadList.isEmpty())
+      {
+         fileTree.refresh();
+         fireModifyListeners();
+         
+         final NXCSession session = ConsoleSharedData.getSession();
+         new ConsoleJob("Upload files", null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               monitor.beginTask("Upload files", uploadList.size());
+               for(PathElement e : uploadList)
+               {
+                  monitor.subTask(e.getName());
+                  session.uploadFileToServer(e.getLocalFile(), "FileDelivery-" + e.getGuid().toString(), null);
+                  monitor.worked(1);
+               }
+               monitor.done();
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot upload file";
+            }
+         }.start();
+      }
    }
    
    /**

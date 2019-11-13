@@ -24,14 +24,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import org.netxms.client.TimePeriod;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.client.xml.XmlDateConverter;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.convert.Convert;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Base class for all chart widget configs
@@ -127,7 +126,7 @@ public class ChartConfig
 	 */
    public static ChartConfig createFromXml(final String xml) throws Exception
    {
-      Serializer serializer = new Persister(new AnnotationStrategy());
+      Serializer serializer = XMLTools.createSerializer();
       return serializer.read(ChartConfig.class, xml);
    }
 	
@@ -139,7 +138,7 @@ public class ChartConfig
 	 */
 	public String createXml() throws Exception
 	{
-		Serializer serializer = new Persister(new AnnotationStrategy());
+		Serializer serializer = XMLTools.createSerializer();
 		Writer writer = new StringWriter();
 		serializer.write(this, writer);
 		return writer.toString();

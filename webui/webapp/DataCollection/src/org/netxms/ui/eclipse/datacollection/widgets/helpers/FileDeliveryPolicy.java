@@ -20,10 +20,10 @@ package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * File delivery policy
@@ -43,13 +43,13 @@ public class FileDeliveryPolicy
     */
    public static FileDeliveryPolicy createFromXml(final String xml) throws Exception
    {
-      Serializer serializer = new Persister();
+      Serializer serializer = XMLTools.createSerializer();
       FileDeliveryPolicy policy = serializer.read(FileDeliveryPolicy.class, xml);
       for(PathElement e : policy.elements)
          e.updateParentReference(null);
       return policy;
    }
-   
+
    /**
     * Create XML from configuration entry
     * 
@@ -58,7 +58,7 @@ public class FileDeliveryPolicy
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = new Persister();
+      Serializer serializer = XMLTools.createSerializer();
       Writer writer = new StringWriter();
       serializer.write(this, writer);
       return writer.toString();

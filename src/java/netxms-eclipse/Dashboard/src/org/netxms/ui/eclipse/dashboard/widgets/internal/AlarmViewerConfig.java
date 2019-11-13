@@ -22,10 +22,10 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for alarm viewer widget
@@ -53,7 +53,7 @@ public class AlarmViewerConfig extends DashboardElementConfig
 	 */
 	public static AlarmViewerConfig createFromXml(final String xml) throws Exception
 	{
-		Serializer serializer = new Persister();
+		Serializer serializer = XMLTools.createSerializer();
 		return serializer.read(AlarmViewerConfig.class, xml);
 	}
 	
@@ -63,7 +63,7 @@ public class AlarmViewerConfig extends DashboardElementConfig
 	@Override
 	public String createXml() throws Exception
 	{
-		Serializer serializer = new Persister();
+		Serializer serializer = XMLTools.createSerializer();
 		Writer writer = new StringWriter();
 		serializer.write(this, writer);
 		return writer.toString();

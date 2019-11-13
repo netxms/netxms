@@ -27,7 +27,7 @@
  */
 void ScheduleDeployPolicy(const ScheduledTaskParameters *parameters)
 {
-   Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
+   Node *object = static_cast<Node*>(FindObjectById(parameters->m_objectId, OBJECT_NODE));
    if (object != NULL)
    {
       if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))

@@ -20,11 +20,11 @@ package org.netxms.client.maps.configs;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Base class for all DCI configuration for line
@@ -56,7 +56,7 @@ public class DciContainerConfiguration
     */
    public static DciContainerConfiguration createFromXml(final String xml) throws Exception
    {
-      Serializer serializer = new Persister();
+      Serializer serializer = XMLTools.createSerializer();
       return serializer.read(DciContainerConfiguration.class, xml);
    }
    
@@ -68,7 +68,7 @@ public class DciContainerConfiguration
     */
    public String createXml() throws Exception
    {
-      Serializer serializer = new Persister();
+      Serializer serializer = XMLTools.createSerializer();
       Writer writer = new StringWriter();
       serializer.write(this, writer);
       return writer.toString();

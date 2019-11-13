@@ -1217,9 +1217,9 @@ class NXCORE_EXPORTABLE GenericAgentPolicy
 protected:
    UINT32 m_ownerId;
    uuid m_guid;
-   TCHAR m_name[MAX_DB_STRING];
-   TCHAR m_policyType[32];
-   TCHAR *m_fileContent;
+   TCHAR m_name[MAX_OBJECT_NAME];
+   TCHAR m_type[MAX_POLICY_TYPE_LEN];
+   char *m_content;
    UINT32 m_version;
 
    GenericAgentPolicy(const GenericAgentPolicy *src);
@@ -1234,15 +1234,15 @@ public:
    const TCHAR *getName() const { return m_name; }
    const uuid getGuid() const { return m_guid; }
    const UINT32 getVersion() const { return m_version; }
-   const TCHAR *getType() const { return m_policyType; }
+   const TCHAR *getType() const { return m_type; }
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb);
 
-   virtual void fillMessage(NXCPMessage *pMsg, UINT32 baseId);
+   virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
    virtual void fillUpdateMessage(NXCPMessage *msg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest);
+   virtual UINT32 modifyFromMessage(NXCPMessage *request);
 
    virtual void updateFromImport(ConfigEntry *config);
    virtual void createExportRecord(StringBuffer &str);

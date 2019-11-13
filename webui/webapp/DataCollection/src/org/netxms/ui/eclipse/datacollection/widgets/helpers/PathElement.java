@@ -3,10 +3,12 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
@@ -24,25 +26,28 @@ public class PathElement
    @ElementList(required = false)
    private Set<PathElement> children;
    
-   @Attribute(required = false)
+   @Element(required = false)
    private UUID guid;
+   
+   private File localFile = null;
    
    /**
     * Create new path element 
     */
    public PathElement(PathElement parent, String name)
    {
-      this(parent, name, null);
+      this(parent, name, null, null);
    }
 
    /**
     * Create new path element 
     */
-   public PathElement(PathElement parent, String name, UUID guid)
+   public PathElement(PathElement parent, String name, File localFile, UUID guid)
    {
       this.parent = parent;
       this.name = name;
       this.guid = guid;
+      this.localFile = localFile;
       children = null;
       if (parent != null)
       {
@@ -148,6 +153,14 @@ public class PathElement
    public UUID getGuid()
    {
       return guid;
+   }
+
+   /**
+    * @return the localFile
+    */
+   public File getLocalFile()
+   {
+      return localFile;
    }
 
    /**

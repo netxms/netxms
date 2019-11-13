@@ -5,10 +5,10 @@ package org.netxms.client.objecttools;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Additional options for input field
@@ -46,7 +46,7 @@ public class InputFieldOptions
    {
       try
       {
-         Serializer serializer = new Persister();
+         Serializer serializer = XMLTools.createSerializer();
          return serializer.read(InputFieldOptions.class, xml);
       }
       catch(Exception e)
@@ -64,7 +64,7 @@ public class InputFieldOptions
    {
       try
       {
-         Serializer serializer = new Persister();
+         Serializer serializer = XMLTools.createSerializer();
          Writer writer = new StringWriter();
          serializer.write(this, writer);
          return writer.toString();

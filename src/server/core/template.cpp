@@ -38,17 +38,23 @@ bool TemplateGroup::showThresholdSummary()
    return false;
 }
 
+/**
+ * Create policy object of correct class based on type ID
+ */
 static GenericAgentPolicy *CreatePolicy(uuid guid, const TCHAR *type, UINT32 ownerId)
 {
    if (!_tcsicmp(type, _T("FileDelivery")))
-      return new GenericAgentPolicy(guid, type, ownerId);
+      return new FileDeliveryPolicy(guid, ownerId);
    return new GenericAgentPolicy(guid, type, ownerId);
 }
 
+/**
+ * Create policy object of correct class based on type ID
+ */
 static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId)
 {
    if (!_tcsicmp(type, _T("FileDelivery")))
-      return new GenericAgentPolicy(name, type, ownerId);
+      return new FileDeliveryPolicy(name, ownerId);
    return new GenericAgentPolicy(name, type, ownerId);
 }
 
@@ -64,11 +70,11 @@ Template::Template() : super(), AutoBindTarget(this), VersionableObject(this)
 Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, config), VersionableObject(this, config)
 {
    UINT32 flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
-   if(flags != 0)
+   if (flags != 0)
    {
-      if(flags & AAF_AUTO_APPLY)
+      if (flags & AAF_AUTO_APPLY)
          m_autoBindFlag = true;
-      if(flags & AAF_AUTO_REMOVE)
+      if (flags & AAF_AUTO_REMOVE)
          m_autoUnbindFlag = true;
       m_flags &= !(AAF_AUTO_APPLY | AAF_AUTO_REMOVE);
    }
