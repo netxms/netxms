@@ -259,7 +259,7 @@ void GenericAgentPolicy::createExportRecord(StringBuffer &str)
    str.append(m_type);
    str.append(_T("</policyType>\n"));
    str.append(_T("\t\t\t\t<fileContent>"));
-   str.appendPreallocated(WideStringFromUTF8String(CHECK_NULL_EX_A(m_content)));
+   str.appendPreallocated(TStringFromUTF8String(CHECK_NULL_EX_A(m_content)));
    str.append(_T("</fileContent>\n"));
    str.append(_T("</agentPolicy>\n"));
 }

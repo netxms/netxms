@@ -404,8 +404,10 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src);
 
 #ifdef UNICODE
 #define UTF8StringFromTString(s) UTF8StringFromWideString(s)
+#define TStringFromUTF8String(s) WideStringFromUTF8String(s)
 #else
 #define UTF8StringFromTString(s) UTF8StringFromMBString(s)
+#define TStringFromUTF8String(s) MBStringFromUTF8String(s)
 #endif
 
 #ifdef __cplusplus
