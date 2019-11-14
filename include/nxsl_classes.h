@@ -915,7 +915,8 @@ public:
    void disableExpressionVariables(int line);
    void registerExpressionVariable(const NXSL_Identifier& identifier);
 
-   UINT32 getCodeSize() { return m_instructionSet->size(); }
+   UINT32 getCodeSize() const { return m_instructionSet->size(); }
+   bool isEmpty() const { return m_instructionSet->isEmpty() || ((m_instructionSet->size() == 1) && (m_instructionSet->get(0)->m_opCode == 28)); }
 
    void dump(FILE *fp) { dump(fp, m_instructionSet); }
    static void dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructionSet);
@@ -943,18 +944,19 @@ public:
    ~NXSL_LibraryScript();
 
    bool isValid() const { return m_program != NULL; }
+   bool isEmpty() const { return (m_program == NULL) || m_program->isEmpty(); }
 
-   const uuid& getGuid() { return m_guid; }
-   UINT32 getId() { return m_id; }
+   const uuid& getGuid() const { return m_guid; }
+   UINT32 getId() const { return m_id; }
 
-   const TCHAR *getName() { return m_name; }
-   const TCHAR *getCode() { return m_source; }
-   const TCHAR *getError() { return m_error; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getCode() const { return m_source; }
+   const TCHAR *getError() const { return m_error; }
 
-   NXSL_Program *getProgram() { return m_program; }
+   NXSL_Program *getProgram() const { return m_program; }
 
-   void fillMessage(NXCPMessage *msg, UINT32 base);
-   void fillMessage(NXCPMessage *msg);
+   void fillMessage(NXCPMessage *msg, UINT32 base) const;
+   void fillMessage(NXCPMessage *msg) const;
 };
 
 /**
@@ -980,7 +982,9 @@ public:
    void deleteScript(UINT32 id);
    NXSL_Program *findNxslProgram(const TCHAR *name);
    NXSL_LibraryScript *findScript(UINT32 id);
+   NXSL_LibraryScript *findScript(const TCHAR *name);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
+   NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(void*), bool (*scriptValidator)(NXSL_LibraryScript*, void*), void *context);
 
    void fillMessage(NXCPMessage *msg);
 };

@@ -2644,10 +2644,11 @@ void NetObj::executeHookScript(const TCHAR *hookName)
 
    TCHAR scriptName[MAX_PATH] = _T("Hook::");
    _tcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
-   NXSL_VM *vm = CreateServerScriptVM(scriptName, this);
-   if (vm == NULL)
+   ScriptVMHandle vm = CreateServerScriptVM(scriptName, this);
+   if (!vm.isValid())
    {
-      DbgPrintf(7, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_name, m_id, scriptName);
+      DbgPrintf(7, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" %s"), m_name, m_id,
+               scriptName, (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
       return;
    }
 
@@ -2656,7 +2657,7 @@ void NetObj::executeHookScript(const TCHAR *hookName)
       DbgPrintf(4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
                 m_name, m_id, scriptName, vm->getErrorText());
    }
-   delete vm;
+   vm.destroy();
 }
 
 /**

@@ -52,25 +52,50 @@ NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, DCOb
 }
 
 /**
+ * Server environment creator
+ */
+static NXSL_Environment *CreateServerEnvironment(void *context)
+{
+   return new NXSL_ServerEnv();
+}
+
+/**
+ * Server script validator
+ */
+static bool ScriptValidator(NXSL_LibraryScript *script, void *context)
+{
+   if (script->isValid() && script->isEmpty())
+   {
+      *static_cast<ScriptVMFailureReason*>(context) = ScriptVMFailureReason::SCRIPT_IS_EMPTY;
+      return false;
+   }
+   return true;
+}
+
+/**
  * Create NXSL VM from library script
  */
-NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const TCHAR *name, NetObj *object, DCObject *dci)
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, NetObj *object, DCObject *dci)
 {
-   return SetupServerScriptVM(s_scriptLibrary.createVM(name, new NXSL_ServerEnv()), object, dci);
+   ScriptVMFailureReason failureReason = ScriptVMFailureReason::SCRIPT_NOT_FOUND;
+   NXSL_VM *vm = s_scriptLibrary.createVM(name, CreateServerEnvironment, ScriptValidator, &failureReason);
+   return (vm == NULL) ? ScriptVMHandle(failureReason): ScriptVMHandle(SetupServerScriptVM(vm, object, dci));
 }
 
 /**
  * Create NXSL VM from compiled script
  */
-NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const NXSL_Program *script, NetObj *object, DCObject *dci)
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, NetObj *object, DCObject *dci)
 {
+   if (script->isEmpty())
+      return ScriptVMHandle(ScriptVMFailureReason::SCRIPT_IS_EMPTY);
    NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
    if (!vm->load(script))
    {
       delete vm;
-      return NULL;
+      return ScriptVMHandle(ScriptVMFailureReason::SCRIPT_LOAD_ERROR);
    }
-   return SetupServerScriptVM(vm, object, dci);
+   return ScriptVMHandle(SetupServerScriptVM(vm, object, dci));
 }
 
 /**
@@ -122,9 +147,9 @@ NXSL_LibraryScript *LoadScriptFromDatabase(UINT32 id)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            TCHAR buffer[MAX_DB_STRING];
+            TCHAR name[MAX_DB_STRING];
             script = new NXSL_LibraryScript(DBGetFieldULong(hResult, 0, 0), DBGetFieldGUID(hResult, 0, 1),
-                     DBGetField(hResult, 0, 2, buffer, MAX_DB_STRING), DBGetField(hResult, 0, 3, NULL, 0));
+                     DBGetField(hResult, 0, 2, name, MAX_DB_STRING), DBGetField(hResult, 0, 3, NULL, 0));
          }
          DBFreeResult(hResult);
       }

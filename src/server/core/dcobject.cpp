@@ -443,7 +443,7 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 				{
 					NXSL_Value *result = vm->getResult();
 					if (result != NULL)
-						dst += CHECK_NULL_EX(result->getValueAsCString());
+						dst.append(result->getValueAsCString());
 		         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_id, src, &macro[7]);
 				}
 				else
@@ -562,7 +562,7 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
                      if (temp != NULL)
                      {
                         DbgPrintf(7, _T("DCObject::matchSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
-                        nx_strncpy(expandedSchedule, temp, 1024);
+                        _tcslcpy(expandedSchedule, temp, 1024);
                         realSchedule = expandedSchedule;
                         success = true;
                      }

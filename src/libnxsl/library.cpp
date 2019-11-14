@@ -109,6 +109,45 @@ NXSL_LibraryScript *NXSL_Library::findScript(UINT32 id)
 }
 
 /**
+ * Find script by name
+ */
+NXSL_LibraryScript *NXSL_Library::findScript(const TCHAR *name)
+{
+   for(int i = 0; i < m_scriptList->size(); i++)
+   {
+      NXSL_LibraryScript *script = m_scriptList->get(i);
+      if (!_tcsicmp(script->getName(), name))
+      {
+         return script;
+      }
+   }
+   return NULL;
+}
+
+/**
+ * Create ready to run VM for given script using provided environment creator and script validator.
+ * This method will do library lock internally.
+ * VM must be deleted by caller when no longer needed.
+ */
+NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(void*), bool (*scriptValidator)(NXSL_LibraryScript*, void*), void *context)
+{
+   NXSL_VM *vm = NULL;
+   lock();
+   NXSL_LibraryScript *s = findScript(name);
+   if ((s != NULL) && s->isValid() && ((scriptValidator == NULL) || scriptValidator(s, context)))
+   {
+      vm = new NXSL_VM(environmentCreator(context));
+      if (!vm->load(s->getProgram()))
+      {
+         delete vm;
+         vm = NULL;
+      }
+   }
+   unlock();
+   return vm;
+}
+
+/**
  * Create ready to run VM for given script. This method will do library lock internally.
  * VM must be deleted by caller when no longer needed.
  */
@@ -155,7 +194,7 @@ void NXSL_Library::fillMessage(NXCPMessage *msg)
 NXSL_LibraryScript::NXSL_LibraryScript()
 {
    m_id = 0;
-   nx_strncpy(m_name, _T(""), 1);
+   _tcslcpy(m_name, _T(""), 1);
    m_source = NULL;
    m_program = new NXSL_Program();
 }
@@ -167,9 +206,9 @@ NXSL_LibraryScript::NXSL_LibraryScript(UINT32 id, uuid guid, const TCHAR *name, 
 {
    m_id = id;
    m_guid = guid;
-   nx_strncpy(m_name, name, 1024);
+   _tcslcpy(m_name, name, 1024);
    m_source = source;
-   m_program = (NXSL_Program *)NXSLCompile(m_source, m_error, 1024, NULL);
+   m_program = NXSLCompile(m_source, m_error, 1024, NULL);
 }
 
 /**
@@ -177,14 +216,14 @@ NXSL_LibraryScript::NXSL_LibraryScript(UINT32 id, uuid guid, const TCHAR *name, 
  */
 NXSL_LibraryScript::~NXSL_LibraryScript()
 {
-   free(m_source);
+   MemFree(m_source);
    delete m_program;
 }
 
 /**
  * Fill message with script id and name for list
  */
-void NXSL_LibraryScript::fillMessage(NXCPMessage *msg, UINT32 base)
+void NXSL_LibraryScript::fillMessage(NXCPMessage *msg, UINT32 base) const
 {
    msg->setField(base, m_id);
    msg->setField(base + 1, m_name);
@@ -193,10 +232,9 @@ void NXSL_LibraryScript::fillMessage(NXCPMessage *msg, UINT32 base)
 /**
  * Fill message with script data
  */
-void NXSL_LibraryScript::fillMessage(NXCPMessage *msg)
+void NXSL_LibraryScript::fillMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_SCRIPT_ID, m_id);
    msg->setField(VID_NAME, m_name);
    msg->setField(VID_SCRIPT_CODE, m_source);
 }
-

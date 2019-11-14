@@ -454,8 +454,8 @@ bool DCTable::transform(Table *value)
       return true;
 
    bool success = false;
-   NXSL_VM *vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
-   if (vm != NULL)
+   ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
+   if (vm.isValid())
    {
       NXSL_Value *nxslValue = vm->createValue(new NXSL_Object(vm, &g_nxslStaticTableClass, value));
 
@@ -484,9 +484,9 @@ bool DCTable::transform(Table *value)
             }
          }
       }
-      delete vm;
+      vm.destroy();
    }
-   else
+   else if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
    {
       time_t now = time(NULL);
       if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)

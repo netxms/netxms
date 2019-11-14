@@ -999,8 +999,8 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
    if (m_transformationScript != NULL)
    {
-      NXSL_VM *vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
-      if (vm != NULL)
+      ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
+      if (vm.isValid())
       {
          NXSL_Value *nxslValue = vm->createValue(value.getString());
          if (nxslValue->isNumeric() && (m_dataType != DCI_DT_STRING))
@@ -1060,9 +1060,9 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                m_lastScriptErrorReport = now;
             }
          }
-         delete vm;
+         vm.destroy();
       }
-      else
+      else if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
       {
          time_t now = time(NULL);
          if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
