@@ -85,7 +85,7 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *arg)
 {
    static_cast<CommSession *>(arg)->readThread();
-   UnregisterSession(static_cast<CommSession *>(arg)->getIndex(), static_cast<CommSession *>(arg)->getId());
+   UnregisterSession(static_cast<CommSession*>(arg)->getIndex(), static_cast<CommSession*>(arg)->getId());
    static_cast<CommSession *>(arg)->debugPrintf(6, _T("Receiver thread stopped"));
    static_cast<CommSession *>(arg)->decRefCount();
    return THREAD_OK;
@@ -126,7 +126,7 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
    _sntprintf(m_key, 32, _T("CommSession-%u"), m_id);
-   m_processingQueue = new Queue;
+   m_processingQueue = new ObjectQueue<NXCPMessage>(true);
    m_channel = channel;
    m_channel->incRefCount();
    m_protocolVersion = NXCP_VERSION;
@@ -170,10 +170,6 @@ CommSession::~CommSession()
       closesocket(m_hProxySocket);
    m_disconnected = true;
 
-   void *p;
-   while((p = m_processingQueue->get()) != NULL)
-      if (p != INVALID_POINTER_VALUE)
-         delete (NXCPMessage *)p;
    delete m_processingQueue;
 	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
 		m_pCtx->decRefCount();
@@ -314,6 +310,7 @@ void CommSession::readThread()
                }
                MutexUnlock(m_tcpProxyLock);
             }
+            delete msg;
          }
          else if (msg->isControl())
          {
@@ -367,7 +364,8 @@ void CommSession::readThread()
                   if (rcc == ERR_SUCCESS)
                   {
                      InterlockedIncrement(&s_activeProxySessions);
-                     m_processingQueue->put(INVALID_POINTER_VALUE);
+                     m_processingQueue->clear();
+                     m_processingQueue->setShutdownMode();
                   }
                   else
                   {
@@ -417,7 +415,7 @@ void CommSession::readThread()
    }
 
    // Notify other threads to exit
-   m_processingQueue->put(INVALID_POINTER_VALUE);
+   m_processingQueue->setShutdownMode();
    if (m_hProxySocket != INVALID_SOCKET)
       shutdown(m_hProxySocket, SHUT_RDWR);
 
@@ -545,7 +543,7 @@ void CommSession::processingThread()
 {
    while(true)
    {
-      NXCPMessage *request = (NXCPMessage *)m_processingQueue->getOrBlock();
+      NXCPMessage *request = m_processingQueue->getOrBlock();
       if (request == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
       UINT32 command = request->getCode();

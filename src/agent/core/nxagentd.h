@@ -315,7 +315,7 @@ private:
    TCHAR m_key[32];  // key for serialized background tasks
    AbstractCommChannel *m_channel;
    int m_protocolVersion;
-   Queue *m_processingQueue;
+   ObjectQueue<NXCPMessage> *m_processingQueue;
    THREAD m_processingThread;
    THREAD m_proxyReadThread;
    THREAD m_tcpProxyReadThread;
