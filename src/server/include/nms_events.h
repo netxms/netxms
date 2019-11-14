@@ -327,6 +327,7 @@ void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode);
 
 void CorrelateEvent(Event *pEvent);
 Event *LoadEventFromDatabase(UINT64 eventId);
+Event *FindEventInLoggerQueue(UINT64 eventId);
 
 bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);

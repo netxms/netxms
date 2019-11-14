@@ -8,6 +8,7 @@
 - New attribute "isInMaintenanceMode" in NXSL class "NetObj"
 - New attributes "dci" and "dciId" in NXSL class "Event"
 - New method "forcePoll" in NXSL class "DCI"
+- New NXSL function "LoadEvent"
 - Added global array $ARGS in NXSL scripts for simplified access to script arguments
 - Interface object names can be expanded from actual interface names using macros
 - Notification channel driver for Telegram

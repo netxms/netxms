@@ -218,10 +218,10 @@ void Queue::setShutdownMode()
 
 /**
  * Find element in queue using given key and comparator
- * Returns pointer to element or NULL if element was not found.
+ * Returns pointer to element (optionally transformed) or NULL if element was not found.
  * Element remains in the queue
  */
-void *Queue::find(const void *key, QueueComparator comparator)
+void *Queue::find(const void *key, QueueComparator comparator, void *(*transform)(void*))
 {
 	void *element = NULL;
 
@@ -230,7 +230,7 @@ void *Queue::find(const void *key, QueueComparator comparator)
 	{
 		if ((m_elements[pos] != NULL) && (m_elements[pos] != INVALID_POINTER_VALUE) && comparator(key, m_elements[pos]))
 		{
-			element = m_elements[pos];
+			element = (transform != NULL) ? transform(m_elements[pos]) : m_elements[pos];
 			break;
 		}
 		pos++;

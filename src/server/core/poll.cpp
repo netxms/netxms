@@ -246,9 +246,9 @@ void CheckForMgmtNode()
 /**
  * Comparator for poller queue elements
  */
-static bool PollerQueueElementComparator(const void *key, const DiscoveredAddress *element)
+static bool PollerQueueElementComparator(const InetAddress *key, const DiscoveredAddress *element)
 {
-   return static_cast<const InetAddress*>(key)->equals(element->ipAddr);
+   return key->equals(element->ipAddr);
 }
 
 /**

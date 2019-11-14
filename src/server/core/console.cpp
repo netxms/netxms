@@ -166,7 +166,7 @@ static void PrintScanCallback(const InetAddress& addr, UINT32 zoneUIN, Node *pro
 /**
  * Callback for enumerating discovery queue
  */
-static EnumerationCallbackResult ShowDiscoveryQueueElement(const DiscoveredAddress *address, void *context)
+static EnumerationCallbackResult ShowDiscoveryQueueElement(const DiscoveredAddress *address, CONSOLE_CTX console)
 {
    static const TCHAR *sourceTypes[] = { _T("arp"), _T("route"), _T("agent reg"), _T("snmp trap"), _T("syslog"), _T("active") };
    TCHAR ipAddrText[48], nodeInfo[256];
@@ -179,7 +179,7 @@ static EnumerationCallbackResult ShowDiscoveryQueueElement(const DiscoveredAddre
    {
       nodeInfo[0] = 0;
    }
-   ConsolePrintf(static_cast<CONSOLE_CTX>(context), _T("%-40s %-10s %s\n"),
+   ConsolePrintf(console, _T("%-40s %-10s %s\n"),
             address->ipAddr.toString(ipAddrText), sourceTypes[address->sourceType], nodeInfo);
    return _CONTINUE;
 }

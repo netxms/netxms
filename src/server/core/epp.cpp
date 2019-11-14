@@ -505,7 +505,7 @@ bool EPRule::matchScript(Event *pEvent)
       return true;
 
    SetupServerScriptVM(m_script, FindObjectById(pEvent->getSourceId()), NULL);
-   m_script->setGlobalVariable("$event", m_script->createValue(new NXSL_Object(m_script, &g_nxslEventClass, pEvent)));
+   m_script->setGlobalVariable("$event", m_script->createValue(new NXSL_Object(m_script, &g_nxslEventClass, pEvent, true)));
    m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue());
    m_script->setGlobalVariable("EVENT_CODE", m_script->createValue(pEvent->getCode()));
    m_script->setGlobalVariable("SEVERITY", m_script->createValue(pEvent->getSeverity()));

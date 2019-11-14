@@ -77,7 +77,7 @@ public:
    size_t size() const { return m_numElements; }
    size_t allocated() const { return m_bufferSize; }
    void clear();
-	void *find(const void *key, QueueComparator comparator);
+	void *find(const void *key, QueueComparator comparator, void *(*transform)(void*) = NULL);
 	bool remove(const void *key, QueueComparator comparator);
 	void forEach(QueueEnumerationCallback callback, void *context);
 };
@@ -99,9 +99,9 @@ public:
 
    T *get() { return (T*)Queue::get(); }
    T *getOrBlock(UINT32 timeout = INFINITE) { return (T*)Queue::getOrBlock(timeout); }
-   void *find(const void *key, bool (*comparator)(const void *, const T *)) { return Queue::find(key, (QueueComparator)comparator); }
-   bool remove(const void *key, bool (*comparator)(const void *, const T *)) { return Queue::remove(key, (QueueComparator)comparator); }
-   void forEach(EnumerationCallbackResult (*callback)(const T *, void *), void *context) { Queue::forEach((QueueEnumerationCallback)callback, context); }
+   template<typename K> T *find(const K *key, bool (*comparator)(const K *, const T *), T *(*transform)(T*) = NULL) { return (T*)Queue::find(key, (QueueComparator)comparator, (void *(*)(void*))transform); }
+   template<typename K> bool remove(const K *key, bool (*comparator)(const K *, const T *)) { return Queue::remove(key, (QueueComparator)comparator); }
+   template<typename C> void forEach(EnumerationCallbackResult (*callback)(const T *, C *), C *context) { Queue::forEach((QueueEnumerationCallback)callback, (void *)context); }
 };
 
 #endif    /* _nxqueue_h_ */

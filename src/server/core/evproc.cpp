@@ -278,6 +278,31 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 }
 
 /**
+ * Compare event with ID
+ */
+static bool CompareEvent(const UINT64 *id, const Event *event)
+{
+   return event->getId() == *id;
+}
+
+/**
+ * Copy event (transformation for Queue::find)
+ */
+static Event *CopyEvent(Event *event)
+{
+   return new Event(event);
+}
+
+/**
+ * Find event in logger's queue. If found, copy of queued event is returned.
+ * Returned event object should be destroyed by caller.
+ */
+Event *FindEventInLoggerQueue(UINT64 eventId)
+{
+   return s_loggerQueue.find(&eventId, CompareEvent, CopyEvent);
+}
+
+/**
  * Get size of event log writer queue
  */
 INT64 GetEventLogWriterQueueSize()

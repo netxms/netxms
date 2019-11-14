@@ -551,6 +551,21 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 }
 
 /**
+ * Load event from database by ID
+ */
+static int F_LoadEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   Event *e = FindEventInLoggerQueue(argv[0]->getValueAsUInt64());
+   if (e == NULL)
+      e = LoadEventFromDatabase(argv[0]->getValueAsUInt64());
+   *result = (e != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, e, false)) : vm->createValue();
+   return 0;
+}
+
+/**
  * Create node object
  * Syntax:
  *    CreateNode(parent, name, primaryHostName, zoneUIN)
@@ -1630,6 +1645,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "FindNodeObject", F_FindNodeObject, 2 },
 	{ "FindObject", F_FindObject, -1 },
    { "LeaveMaintenance", F_LeaveMaintenance, 1 },
+   { "LoadEvent", F_LoadEvent, 1 },
    { "ManageObject", F_ManageObject, 1 },
 	{ "PostEvent", F_PostEvent, -1 },
 	{ "RenameObject", F_RenameObject, 2 },

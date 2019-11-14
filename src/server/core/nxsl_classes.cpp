@@ -2052,7 +2052,7 @@ NXSL_METHOD_DEFINITION(Event, setMessage)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   Event *event = (Event *)object->getData();
+   Event *event = static_cast<Event*>(object->getData());
    event->setMessage(argv[0]->getValueAsCString());
    *result = vm->createValue();
    return 0;
@@ -2069,7 +2069,7 @@ NXSL_METHOD_DEFINITION(Event, setSeverity)
    int s = argv[0]->getValueAsInt32();
    if ((s >= SEVERITY_NORMAL) && (s <= SEVERITY_CRITICAL))
    {
-      Event *event = (Event *)object->getData();
+      Event *event = static_cast<Event*>(object->getData());
       event->setSeverity(s);
    }
    *result = vm->createValue();
@@ -2168,6 +2168,14 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 }
 
 /**
+ * Destructor
+ */
+void NXSL_EventClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<Event*>(object->getData());
+}
+
+/**
  * NXSL class Event: get attribute
  */
 NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
@@ -2175,7 +2183,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
    NXSL_Value *value = NULL;
 
    NXSL_VM *vm = pObject->vm();
-   const Event *event = static_cast<const Event*>(pObject->getData());
+   const Event *event = static_cast<Event*>(pObject->getData());
    if (!strcmp(attr, "code"))
    {
       value = vm->createValue(event->getCode());
@@ -2249,6 +2257,10 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
       for(int i = 0; i < event->getParametersCount(); i++)
          array->set(i + 1, vm->createValue(event->getParameterName(i)));
       value = vm->createValue(array);
+   }
+   else if (!strcmp(attr, "rootId"))
+   {
+      value = vm->createValue(event->getRootId());
    }
    else if (!strcmp(attr, "severity"))
    {
