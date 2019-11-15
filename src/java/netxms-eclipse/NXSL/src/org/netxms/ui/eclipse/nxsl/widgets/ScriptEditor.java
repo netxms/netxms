@@ -122,7 +122,7 @@ public class ScriptEditor extends Composite
 		proposalIcons[3] = Activator.getImageDescriptor("icons/constant.gif").createImage(); //$NON-NLS-1$
 		
 		ruler = new CompositeRuler();
-		editor = new SourceViewer(this, ruler, editorStyle);
+		editor = new SourceViewer(this, ruler, editorStyle | SWT.MULTI);
 		editor.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		editor.configure(new NXSLSourceViewerConfiguration(this));
 		if (showLineNumbers)
