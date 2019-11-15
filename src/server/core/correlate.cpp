@@ -216,7 +216,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
  */
 void CorrelateEvent(Event *pEvent)
 {
-   Node *node = (Node *)FindObjectById(pEvent->getSourceId(), OBJECT_NODE);
+   Node *node = static_cast<Node*>(FindObjectById(pEvent->getSourceId(), OBJECT_NODE));
    if (node == NULL)
 		return;
 

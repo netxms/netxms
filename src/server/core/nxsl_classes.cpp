@@ -2111,6 +2111,20 @@ NXSL_METHOD_DEFINITION(Event, addTag)
 }
 
 /**
+ * Event::correlateTo() method
+ */
+NXSL_METHOD_DEFINITION(Event, correlateTo)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   Event *event = static_cast<Event*>(object->getData());
+   event->setRootId(argv[0]->getValueAsUInt64());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Event::hasTag() method
  */
 NXSL_METHOD_DEFINITION(Event, hasTag)
@@ -2160,6 +2174,7 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 
    NXSL_REGISTER_METHOD(Event, addParameter, -1);
    NXSL_REGISTER_METHOD(Event, addTag, 1);
+   NXSL_REGISTER_METHOD(Event, correlateTo, 1);
    NXSL_REGISTER_METHOD(Event, hasTag, 1);
    NXSL_REGISTER_METHOD(Event, removeTag, 1);
    NXSL_REGISTER_METHOD(Event, setMessage, 1);

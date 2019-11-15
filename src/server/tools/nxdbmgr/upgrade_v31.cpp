@@ -56,6 +56,26 @@ static bool ConvertDCObjectFlags(const TCHAR *table)
 }
 
 /**
+ * Upgrade from 31.6 to 31.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(SQLQuery(
+         _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+         _T("VALUES ('5648916c-ad47-45a5-8960-443a98dace46',21,'Hook::EventProcessor','")
+         _T("/* Available global variables:\r\n")
+         _T(" *  $object - event source object, one of ''NetObj'' subclasses\r\n")
+         _T(" *  $node - event source object if it is ''Node'' class\n\n")
+         _T(" *  $event - event being processed (object of ''Event'' class)\r\n")
+         _T(" *\r\n")
+         _T(" * Expected return value:\r\n")
+         _T(" *  none - returned value is ignored\r\n */\r\n')")));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 31.5 to 31.6
  */
 static bool H_UpgradeFromV5()
@@ -283,6 +303,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 6,  31, 7, H_UpgradeFromV6 },
    { 5,  31, 6, H_UpgradeFromV5 },
    { 4,  31, 5, H_UpgradeFromV4 },
    { 3,  31, 4, H_UpgradeFromV3 },

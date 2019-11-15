@@ -226,20 +226,40 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		// Pass event to modules
       CALL_ALL_MODULES(pfEventHandler, (pEvent));
 
+      NetObj *sourceObject = FindObjectById(pEvent->getSourceId());
+      if (sourceObject == NULL)
+      {
+         sourceObject = FindObjectById(g_dwMgmtNode);
+         if (sourceObject == NULL)
+            sourceObject = g_pEntireNet;
+      }
+
+      ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::EventProcessor"), sourceObject);
+      if (vm.isValid())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Running event processor hook script"));
+         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, pEvent, true)));
+         if (!vm->run())
+         {
+            if (pEvent->getCode() != EVENT_SCRIPT_ERROR) // To avoid infinite loop
+            {
+               PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::EventProcessor"), vm->getErrorText(), 0);
+            }
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Event processor hook script execution error (%s)"), vm->getErrorText());
+         }
+      }
+
       // Send event to all connected clients
       EnumerateClientSessions(BroadcastEvent, pEvent);
 
       // Write event information to debug
       if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 5)
       {
-         NetObj *pObject = FindObjectById(pEvent->getSourceId());
-         if (pObject == NULL)
-            pObject = g_pEntireNet;
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAGS:\"%s\"%s) FROM %s: %s"),
                          pEvent->getName(), pEvent->getCode(), pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
 						       (const TCHAR *)pEvent->getTagsAsList(),
                          (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
-                         pObject->getName(), pEvent->getMessage());
+                         sourceObject->getName(), pEvent->getMessage());
       }
 
       // Pass event through event processing policy if it is not correlated
