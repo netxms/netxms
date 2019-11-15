@@ -80,7 +80,7 @@ public class ScriptEditor extends Composite
 	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints)
 	{
 		super(parent, style);
-		
+
       hintText = hints;
 
       GridLayout layout = new GridLayout();
@@ -94,7 +94,7 @@ public class ScriptEditor extends Composite
          createHintsArea();
       }
 		
-		editor = new Text(this, editorStyle);
+		editor = new Text(this, editorStyle | SWT.MULTI);
 		editor.setData(RWT.CUSTOM_VARIANT, "monospace");
 		editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	}
