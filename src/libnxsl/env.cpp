@@ -359,4 +359,6 @@ void NXSL_Environment::print(NXSL_Value *value)
  */
 void NXSL_Environment::configureVM(NXSL_VM *vm)
 {
+   vm->addConstant("NXSL::BUILD_TAG", vm->createValue(NETXMS_BUILD_TAG));
+   vm->addConstant("NXSL::VERSION", vm->createValue(NETXMS_VERSION_STRING));
 }

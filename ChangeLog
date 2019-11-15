@@ -10,6 +10,7 @@
 - New method "forcePoll" in NXSL class "DCI"
 - New NXSL function "LoadEvent"
 - Added global array $ARGS in NXSL scripts for simplified access to script arguments
+- Added NXSL constants NXSL::VERSION and NXSL::BUILD_TAG
 - Interface object names can be expanded from actual interface names using macros
 - Notification channel driver for Telegram
 - Notification channel driver for Microsoft Teams

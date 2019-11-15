@@ -1722,6 +1722,8 @@ void NXSL_ServerEnv::print(NXSL_Value *value)
  */
 void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
 {
+   NXSL_Environment::configureVM(vm);
+
    vm->setStorage(&g_nxslPstorage);
 
    // Add DCI data types

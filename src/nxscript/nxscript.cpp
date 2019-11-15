@@ -38,6 +38,7 @@ public:
 
 void NXSL_TestEnv::configureVM(NXSL_VM *vm)
 {
+   NXSL_Environment::configureVM(vm);
    vm->setGlobalVariable("$nxscript", vm->createValue(NETXMS_VERSION_STRING));
 }
 
