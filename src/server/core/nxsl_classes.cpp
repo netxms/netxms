@@ -161,6 +161,19 @@ NXSL_METHOD_DEFINITION(NetObj, enterMaintenance)
 }
 
 /**
+ * NetObj::expandString() method
+ */
+NXSL_METHOD_DEFINITION(NetObj, expandString)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NetObj *n = static_cast<NetObj*>(object->getData());
+   *result = vm->createValue(n->expandText(argv[0]->getValueAsCString(), NULL, NULL, NULL, NULL, NULL));
+   return 0;
+}
+
+/**
  * NetObj::getCustomAttribute(name)
  */
 NXSL_METHOD_DEFINITION(NetObj, getCustomAttribute)
@@ -442,6 +455,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, delete, 0);
    NXSL_REGISTER_METHOD(NetObj, deleteCustomAttribute, 1);
    NXSL_REGISTER_METHOD(NetObj, enterMaintenance, -1);
+   NXSL_REGISTER_METHOD(NetObj, expandString, 1);
    NXSL_REGISTER_METHOD(NetObj, getCustomAttribute, 1);
    NXSL_REGISTER_METHOD(NetObj, leaveMaintenance, 0);
    NXSL_REGISTER_METHOD(NetObj, manage, 0);
@@ -2125,6 +2139,19 @@ NXSL_METHOD_DEFINITION(Event, correlateTo)
 }
 
 /**
+ * Event::expandString() method
+ */
+NXSL_METHOD_DEFINITION(Event, expandString)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = static_cast<Event*>(object->getData());
+   *result = vm->createValue(event->expandText(argv[0]->getValueAsCString()));
+   return 0;
+}
+
+/**
  * Event::hasTag() method
  */
 NXSL_METHOD_DEFINITION(Event, hasTag)
@@ -2175,6 +2202,7 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Event, addParameter, -1);
    NXSL_REGISTER_METHOD(Event, addTag, 1);
    NXSL_REGISTER_METHOD(Event, correlateTo, 1);
+   NXSL_REGISTER_METHOD(Event, expandString, 1);
    NXSL_REGISTER_METHOD(Event, hasTag, 1);
    NXSL_REGISTER_METHOD(Event, removeTag, 1);
    NXSL_REGISTER_METHOD(Event, setMessage, 1);

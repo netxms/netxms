@@ -8,8 +8,9 @@
 - New attribute "isInMaintenanceMode" in NXSL class "NetObj"
 - New attributes "dci" and "dciId" in NXSL class "Event"
 - New method "forcePoll" in NXSL class "DCI"
-- New NXSL function "LoadEvent"
-- New method "correlateTo" in NXSL class "Event"
+- New NXSL functions "ExpandString" and "LoadEvent"
+- New methods "correlateTo" and "expandString" in NXSL class "Event"
+- New method "expandString" in NXSL class "NetObj"
 - New hook "Hook::EventProcessor" that is called for each event before passing it to EPP
 - Added global array $ARGS in NXSL scripts for simplified access to script arguments
 - Added NXSL constants NXSL::VERSION and NXSL::BUILD_TAG

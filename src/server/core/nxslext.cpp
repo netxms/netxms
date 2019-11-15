@@ -1572,7 +1572,7 @@ static int F_CountScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **
  * Return value:
  *     message id
  */
-static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
@@ -1596,8 +1596,48 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
 
    UserAgentNotificationItem *uan = CreateNewUserAgentNotification(message, arr, startTime, endTime);
 
-   *ppResult = vm->createValue(uan->getId());
+   *result = vm->createValue(uan->getId());
    uan->decRefCount();
+   return 0;
+}
+
+/**
+ * Expand macros in string
+ * Syntax:
+ *    ExpandString(string, [object], [event])
+ * Returnded value:
+ *    expanded string
+ */
+static int F_ExpandString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NetObj *object;
+   if (argc > 1)
+   {
+      if (!argv[1]->isObject(_T("NetObj")))
+         return NXSL_ERR_NOT_OBJECT;
+      object = static_cast<NetObj*>(argv[1]->getValueAsObject()->getData());
+   }
+   else
+   {
+      object = FindObjectById(g_dwMgmtNode);
+      if (object == NULL)
+         object = g_pEntireNet;
+   }
+
+   Event *event = NULL;
+   if (argc > 2)
+   {
+      if (!argv[2]->isObject(_T("Event")))
+         return NXSL_ERR_NOT_OBJECT;
+   }
+
+   *result = vm->createValue(object->expandText(argv[0]->getValueAsCString(), NULL, event, NULL, NULL, NULL));
    return 0;
 }
 
@@ -1626,6 +1666,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "EnterMaintenance", F_EnterMaintenance, -1 },
    { "EventNameFromCode", F_EventNameFromCode, 1 },
    { "EventCodeFromName", F_EventCodeFromName, 1 },
+   { "ExpandString", F_ExpandString, -1 },
    { "GetAllNodes", F_GetAllNodes, -1 },
    { "GetConfigurationVariable", F_GetConfigurationVariable, -1 },
    { "GetCustomAttribute", F_GetCustomAttribute, 2 },
