@@ -101,7 +101,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcre16.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -124,7 +124,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcre16.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -141,7 +141,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcre16.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -163,7 +163,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcre16.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -183,6 +183,7 @@
     <ClCompile Include="isc.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ndd.cpp" />
+    <ClCompile Include="nobject.cpp" />
     <ClCompile Include="snmpproxy.cpp" />
     <ClCompile Include="vlan.cpp" />
   </ItemGroup>
@@ -207,6 +208,9 @@
     <Message_compiler Include="messages.mc" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\db\libnxdb\libnxdb.vcxproj">
+      <Project>{f3e29541-3a0e-45ec-8bec-e193f2401622}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\jansson\jansson.vcxproj">
       <Project>{12d6e037-84d8-406a-8a9b-3e00d3e0d426}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

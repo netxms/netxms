@@ -55,7 +55,7 @@ const TCHAR *RRDToolStorageDriver::getName()
  */
 bool RRDToolStorageDriver::saveDCItemValue(DCItem *dcObject, time_t timestamp, const TCHAR *value)
 {
-   _tprintf(_T("SAVE: %s %s\n\n"), dcObject->getName(), value);
+   _tprintf(_T("SAVE: %s %s\n\n"), dcObject->getName().cstr(), value);
    return true;
 }
 
@@ -64,7 +64,7 @@ bool RRDToolStorageDriver::saveDCItemValue(DCItem *dcObject, time_t timestamp, c
  */
 bool RRDToolStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value)
 {
-   _tprintf(_T("SAVE TABLE: %s %d\n\n"), dcObject->getName(), value->getNumRows());
+   _tprintf(_T("SAVE TABLE: %s %d\n\n"), dcObject->getName().cstr(), value->getNumRows());
    return true;
 }
 

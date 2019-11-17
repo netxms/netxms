@@ -295,7 +295,7 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
    if (children == NULL)
       return;
 
-   int pathPos = currPath->length();
+   size_t pathPos = currPath->length();
    currPath->append(currEntry->getAttribute(_T("name")));
    currPath->append(_T("/"));
 
@@ -308,7 +308,7 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
          if (!guid.isNull())
          {
-            int pos = currPath->length();
+            size_t pos = currPath->length();
             currPath->append(e->getAttribute(_T("name")));
             auto f = new FileInfo;
             f->guid = guid;

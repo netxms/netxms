@@ -104,7 +104,8 @@ struct Chat
    {
       TCHAR key[64], value[2000];
       _sntprintf(key, 64, _T("Chat.") INT64_FMT, id);
-      _sntprintf(value, 2000, _T("%d/%s%d/%s%d/%s"), _tcslen(firstName), firstName, _tcslen(lastName), lastName, _tcslen(userName), userName);
+      _sntprintf(value, 2000, _T("%d/%s%d/%s%d/%s"), static_cast<int>(_tcslen(firstName)), firstName,
+            static_cast<int>(_tcslen(lastName)), lastName, static_cast<int>(_tcslen(userName)), userName);
       storageManager->set(key, value);
    }
 

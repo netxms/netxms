@@ -3598,6 +3598,12 @@ enum TcpPingResult
    TCP_PING_REJECT = 3
 };
 
+// Defined by Windows header files and not used in our code anyway
+#undef IGNORE
+
+/**
+ * Generic state change instruction
+ */
 enum class StateChange
 {
    IGNORE = 0,

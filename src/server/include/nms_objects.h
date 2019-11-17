@@ -2416,9 +2416,10 @@ public:
    time_t getLastConnectTime() const { return m_lastConnect; }
 };
 
-// Explicit instantiation of shared_ptr<VlanList> to enable DLL interface for it
+// Explicit instantiation of shared_ptr<*> to enable DLL interface for them
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
+template class NXCORE_EXPORTABLE shared_ptr<ComponentTree>;
 #endif
 
 /**
