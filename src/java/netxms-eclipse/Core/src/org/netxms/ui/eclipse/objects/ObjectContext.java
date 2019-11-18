@@ -68,7 +68,7 @@ public class ObjectContext extends ObjectContextBase
                   }
                   if ((object != null) && (attr.length() > 0))
                   {
-                     String value = object.getCustomAttributes().get(attr.toString()).getValue();
+                     String value = object.getCustomAttributeValue(attr.toString());
                      if (value != null)
                         sb.append(value);
                   }

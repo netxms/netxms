@@ -13,7 +13,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.109.0",
  org.netxms.ui.eclipse.console;bundle-version="3.1.0",
  org.eclipse.ui.forms;bundle-version="3.5.200",
  org.eclipse.ui.console;bundle-version="3.5.100"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.nxsl.dialogs,
  org.netxms.ui.eclipse.nxsl.tools,

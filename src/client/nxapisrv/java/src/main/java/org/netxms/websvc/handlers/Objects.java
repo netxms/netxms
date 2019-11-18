@@ -223,7 +223,7 @@ public class Objects extends AbstractObjectHandler
                {
                   for(Entry<String, Object> e : customAttributes.entrySet())
                   {
-                     String value = o.getCustomAttributes().get(e.getKey());
+                     String value = o.getCustomAttributeValue(e.getKey());
                      if ((value == null) || !((Pattern)e.getValue()).matcher(value).matches())
                      {
                         match = false;
@@ -235,7 +235,7 @@ public class Objects extends AbstractObjectHandler
                {
                   for(Entry<String, Object> e : customAttributes.entrySet())
                   {
-                     String value = o.getCustomAttributes().get(e.getKey());
+                     String value = o.getCustomAttributeValue(e.getKey());
                      if ((value == null) || !Glob.matchIgnoreCase((String)e.getValue(), value))
                      {
                         match = false;

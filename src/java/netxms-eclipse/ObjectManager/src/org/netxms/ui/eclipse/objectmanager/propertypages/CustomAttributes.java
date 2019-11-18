@@ -292,7 +292,7 @@ public class CustomAttributes extends PropertyPage
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setCustomAttributes(attributes);
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().CustomAttributes_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

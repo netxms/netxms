@@ -2,6 +2,9 @@ package org.netxms.client;
 
 import org.netxms.base.NXCPMessage;
 
+/**
+ * Represents physical link between devices or patch panels
+ */
 public class PhysicalLink
 {
    private long id;
@@ -92,7 +95,9 @@ public class PhysicalLink
    }
 
    /**
-    * @return the id
+    * Get link object ID
+    * 
+    * @return link object ID
     */
    public long getId()
    {
@@ -100,7 +105,9 @@ public class PhysicalLink
    }
 
    /**
-    * @param id the id to set
+    * Set link object ID
+    * 
+    * @param id new link object ID
     */
    public void setId(long id)
    {
@@ -180,11 +187,13 @@ public class PhysicalLink
    }
 
    /**
-    * @param leftSite the leftFront to set
+    * Set "isFront" flag for left side of the link
+    * 
+    * @param front true if this link comes to front side on the left
     */
-   public void setLeftFront(boolean leftFront)
+   public void setLeftFront(boolean front)
    {
-      this.leftFront = leftFront;
+      this.leftFront = front;
    }
 
    /**
@@ -244,10 +253,12 @@ public class PhysicalLink
    }
 
    /**
-    * @param rightFront the rightSFront to set
+    * Set "isFront" flag for right side of the link
+    * 
+    * @param front true if this link comes to front side on the right
     */
-   public void setRightFront(boolean rightFront)
+   public void setRightFront(boolean front)
    {
-      this.rightFront = rightFront;
+      this.rightFront = front;
    }
 }

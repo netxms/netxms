@@ -193,7 +193,7 @@ public class CustomAttributes extends PropertyPage
 				{
 					Entry<String, CustomAttribute> element = (Entry<String, CustomAttribute>)selection.getFirstElement();
 					CustomAttribute attr = element.getValue();
-					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), attr.getValue(), attr.getFlags(), attr.getSourceObject() != 0);
+					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), attr.getValue(), attr.getFlags(), attr.isInherited());
 					if (dlg.open() == Window.OK)
 					{
 						attributes.put(dlg.getName(), new CustomAttribute(dlg.getValue(), dlg.getFlags(), attr.getSourceObject()));
@@ -221,16 +221,37 @@ public class CustomAttributes extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				Iterator<Entry<String, String>> it = selection.iterator();
+				Iterator<Entry<String, CustomAttribute>> it = selection.iterator();
+				boolean modified = false;
 				if (it.hasNext())
 				{
 					while(it.hasNext())
 					{
-						Entry<String, String> element = it.next();
-						attributes.remove(element.getKey());
+						Entry<String, CustomAttribute> element = it.next();
+						if (element.getValue().isInherited() && !element.getValue().isRedefined())
+						   continue;
+						if (element.getValue().isRedefined())
+						{
+						   for(AbstractObject obj : object.getParentsAsArray())
+						   {
+						      CustomAttribute ca = obj.getCustomAttribute(element.getKey());
+						      if (ca != null)
+						      {
+						         attributes.put(element.getKey(), 
+						               new CustomAttribute(ca.getValue(), CustomAttribute.INHERITABLE, ca.isInherited() && !ca.isRedefined() ? ca.getSourceObject() : obj.getObjectId()));						         						         
+						         break;
+						      }
+						   }	
+						   modified = true;
+						}
+						else
+						{
+						   attributes.remove(element.getKey());		
+						   modified = true;
+						}
 					}
 			      viewer.setInput(attributes.entrySet());
-			      CustomAttributes.this.isModified = true;
+			      CustomAttributes.this.isModified = modified;
 				}
 			}
       });
@@ -271,7 +292,7 @@ public class CustomAttributes extends PropertyPage
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setCustomAttributes(attributes);
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().CustomAttributes_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

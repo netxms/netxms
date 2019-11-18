@@ -808,10 +808,23 @@ public abstract class AbstractObject
 
    /**
     * Get object's custom attribute by key
+    * 
+    * @return custom attribute object or null
     */
    public CustomAttribute getCustomAttribute(String key)
    {
       return customAttributes.get(key);
+   }
+
+   /**
+    * Get object's custom attribute's value by key
+    * 
+    * @return custom attribute's value or null
+    */
+   public String getCustomAttributeValue(String key)
+   {
+      CustomAttribute a = customAttributes.get(key);
+      return (a != null) ? a.getValue() : null;
    }
 
 	/**
