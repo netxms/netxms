@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.console;
 
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -204,7 +203,7 @@ public class BrandingManager
 	 * @param properties system properties
 	 * @return custom login form or default login form if no branding provider defines one.
 	 */
-	public Window getLoginForm(Shell parentShell, Properties properties)
+	public Window getLoginForm(Shell parentShell, AppPropertiesLoader properties)
 	{
 		for(BrandingProvider p : providers.values())
 		{
@@ -222,7 +221,7 @@ public class BrandingManager
     * @param properties system properties
     * @return custom login form or default login form if no branding provider defines one.
     */
-   public Window getMobileLoginForm(Shell parentShell, Properties properties)
+   public Window getMobileLoginForm(Shell parentShell, AppPropertiesLoader properties)
    {
       for(BrandingProvider p : providers.values())
       {

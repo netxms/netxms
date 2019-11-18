@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.console.dialogs;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
@@ -48,6 +47,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.base.VersionInfo;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.AppPropertiesLoader;
 import org.netxms.ui.eclipse.console.BrandingManager;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.api.LoginForm;
@@ -64,7 +64,7 @@ public class DefaultLoginForm extends Window implements LoginForm
    private static final RGB FORM_BACKGROUND = new RGB(240, 240, 240);
    private static final RGB VERSION_FOREGROUND = new RGB(16, 16, 16);
    
-	private Properties properties;
+	private AppPropertiesLoader properties;
 	private boolean advancedSettingsEnabled;
 	private ColorCache colors;
 	private LabeledText textLogin;
@@ -75,7 +75,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 	/**
 	 * @param parentShell
 	 */
-	public DefaultLoginForm(Shell parentShell, Properties properties)
+	public DefaultLoginForm(Shell parentShell, AppPropertiesLoader properties)
 	{
 		super(parentShell);
 		setBlockOnOpen(true);

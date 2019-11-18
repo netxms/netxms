@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.console;
 
 import java.util.Locale;
-import java.util.Properties;
 import java.util.TimeZone;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -48,17 +47,9 @@ public class Application implements IApplication
 		if (lang != null)
 			RWT.setLocale(new Locale(lang));
 		
-		final Properties properties = new AppPropertiesLoader().load();
-		int timeout;
-		try
-		{
-			timeout = Integer.parseInt(properties.getProperty("sessionTimeout", "600"));			
-		}
-		catch(NumberFormatException e)
-		{
-			timeout = 600;
-		}
-		
+		final AppPropertiesLoader properties = new AppPropertiesLoader();
+		int timeout = properties.getPropertyAsInteger("sessionTimeout", 600);
+
 		final Display display = PlatformUI.createDisplay();
 		RWT.getUISession().getHttpSession().setMaxInactiveInterval(timeout);
 		display.disposeExec(new Runnable() {

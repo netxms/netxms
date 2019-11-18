@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.console.dialogs;
 
 import java.net.URL;
-import java.util.Properties;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -41,6 +40,7 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.AppPropertiesLoader;
 import org.netxms.ui.eclipse.console.BrandingManager;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.api.LoginForm;
@@ -64,7 +64,7 @@ public class DefaultMobileLoginForm extends Window implements LoginForm
 	/**
 	 * @param parentShell
 	 */
-	public DefaultMobileLoginForm(Shell parentShell, Properties properties)
+	public DefaultMobileLoginForm(Shell parentShell, AppPropertiesLoader properties)
 	{
 		super(parentShell);
 		setBlockOnOpen(true);

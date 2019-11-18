@@ -18,12 +18,12 @@
  */
 package org.netxms.ui.eclipse.console.api;
 
-import java.util.Properties;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.console.AppPropertiesLoader;
 
 /**
  * Branding provider interface
@@ -79,7 +79,7 @@ public interface BrandingProvider
 	 * @param properties system properties
 	 * @return
 	 */
-	public Window getLoginForm(Shell parentShell, Properties properties);
+	public Window getLoginForm(Shell parentShell, AppPropertiesLoader properties);
 	
    /**
     * Get custom login form for mobile web UI. Form must implement LoginForm interface.
@@ -88,7 +88,7 @@ public interface BrandingProvider
     * @param properties system properties
     * @return
     */
-   public Window getMobileLoginForm(Shell parentShell, Properties properties);
+   public Window getMobileLoginForm(Shell parentShell, AppPropertiesLoader properties);
    
 	/**
 	 * Get custom "About" dialog. New dialog must be returned on each call.

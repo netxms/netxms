@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.console;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Properties;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -140,7 +139,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	{
 		boolean success = false;
 		
-		final Properties properties = new AppPropertiesLoader().load();
+		final AppPropertiesLoader properties = new AppPropertiesLoader();
 		
 		String password = "";
 		boolean autoLogin = (Application.getParameter("auto") != null); //$NON-NLS-1$
