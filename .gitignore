@@ -230,6 +230,7 @@ target
 /src/server/nxreportd/java/.classpath
 /src/server/nxreportd/java/.project
 /src/server/nxreportd/java/.settings
+/src/server/tools/nddload/nddload
 /src/server/tools/nxaction/nxaction
 /src/server/tools/nxadm/nxadm
 /src/server/tools/nxap/nxap

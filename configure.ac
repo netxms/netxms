@@ -4460,6 +4460,7 @@ AC_CONFIG_FILES([
 	src/server/spe/Makefile
 	src/server/tools/Makefile
 	src/server/tools/libnxdbmgr/Makefile
+	src/server/tools/nddload/Makefile
 	src/server/tools/nxaction/Makefile
 	src/server/tools/nxadm/Makefile
 	src/server/tools/nxap/Makefile

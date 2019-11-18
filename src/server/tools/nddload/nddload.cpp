@@ -1,6 +1,6 @@
 /* 
 ** nddload - command line tool for network device driver testing
-** Copyright (C) 2013-2017 Raden Solutions
+** Copyright (C) 2013-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,9 @@ NETXMS_EXECUTABLE_HEADER(nddload)
  * Driver data
  */
 static DriverData *s_driverData = NULL;
-static StringMap s_customAttributes;
+static NObject s_object;
+static TCHAR *s_driverName = NULL;
+static ObjectArray<NetworkDeviceDriver> *s_drivers = NULL;
 
 /**
  * Print access points reported by wireless switch
@@ -133,9 +135,11 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
 
    _tprintf(_T("Device is supported by driver\n"));
    
-   driver->analyzeDevice(transport, oid, &s_customAttributes, &s_driverData);
+   driver->analyzeDevice(transport, oid, &s_object, &s_driverData);
    _tprintf(_T("Custom attributes after device analyze:\n"));
-   s_customAttributes.forEach(PrintAttributeCallback, NULL);
+   auto attributes = s_object.getCustomAttributes();
+   attributes->forEach(PrintAttributeCallback, NULL);
+   delete attributes;
    return true;
 }
 
@@ -164,30 +168,47 @@ static void LoadDriver(const char *driver, const char *host, int snmpVersion, in
    transport->setSecurityContext(new SNMP_SecurityContext(community));
 
    int *apiVersion = (int *)DLGetSymbolAddr(hModule, "nddAPIVersion", errorText);
-   NetworkDeviceDriver *(* CreateInstance)() = (NetworkDeviceDriver *(*)())DLGetSymbolAddr(hModule, "nddCreateInstance", errorText);
-   if ((apiVersion != NULL) && (CreateInstance != NULL))
+   ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = (ObjectArray<NetworkDeviceDriver> *(*)())DLGetSymbolAddr(hModule, "nddCreateInstances", errorText);
+   if ((apiVersion != NULL) && (CreateInstances != NULL))
    {
       if (*apiVersion == NDDRV_API_VERSION)
       {
-         NetworkDeviceDriver *driver = CreateInstance();
-
-         _tprintf(_T("Driver %s (version %s) loaded, connecting to host %hs:%d using community string %hs\n"), 
-            driver->getName(), driver->getVersion(), host, snmpPort, community);
-
-         if (ConnectToDevice(driver, transport))
+         s_drivers = CreateInstances();
+         if (s_drivers != NULL)
          {
-            if (driver->isWirelessController(transport, &s_customAttributes, s_driverData))
+            NetworkDeviceDriver *driver = s_drivers->get(0);
+            for(int i = 0; i < s_drivers->size(); i++)
             {
-               _tprintf(_T("Device is a wireless controller\n"));
-               _tprintf(_T("Cluster Mode: %d\n"), driver->getClusterMode(transport, NULL, NULL));
+               _tprintf(_T("Driver %s (version %s) loaded\n"), s_drivers->get(i)->getName(), s_drivers->get(i)->getVersion());
+               if ((s_driverName != NULL) && !_tcsicmp(s_driverName, s_drivers->get(i)->getName()))
+               {
+                  driver = s_drivers->get(i);
+               }
+            }
 
-               PrintAccessPoints(driver, transport);
-               PrintMobileUnits(driver, transport);
-            }
-            else
+            _tprintf(_T("Connecting to host %hs:%d using community string %hs and driver %s\n"),
+                     host, snmpPort, community, driver->getName());
+
+            if (ConnectToDevice(driver, transport))
             {
-               _tprintf(_T("Device is not a wireless controller\n"));
+               if (driver->isWirelessController(transport, &s_object, s_driverData))
+               {
+                  _tprintf(_T("Device is a wireless controller\n"));
+                  _tprintf(_T("Cluster Mode: %d\n"), driver->getClusterMode(transport, NULL, NULL));
+
+                  PrintAccessPoints(driver, transport);
+                  PrintMobileUnits(driver, transport);
+               }
+               else
+               {
+                  _tprintf(_T("Device is not a wireless controller\n"));
+               }
             }
+         }
+         else
+         {
+            _tprintf(_T("Initialization of network device driver failed"));
+            DLClose(hModule);
          }
       }
       else
@@ -219,12 +240,19 @@ int main(int argc, char *argv[])
    opterr = 1;
    int ch;
    char *eptr;
-   while((ch = getopt(argc, argv, "c:p:v:")) != -1)
+   while((ch = getopt(argc, argv, "c:n:p:v:")) != -1)
    {
       switch(ch)
       {
          case 'c':
             community = optarg;
+            break;
+         case 'n':
+#ifdef UNICODE
+            s_driverName = WideStringFromMBStringSysLocale(optarg);
+#else
+            s_driverName = strdup(optarg);
+#endif
             break;
          case 'p':   // Port number
             snmpPort = strtol(optarg, &eptr, 0);
@@ -262,7 +290,7 @@ int main(int argc, char *argv[])
 
    if (argc - optind < 2)
    {
-      _tprintf(_T("Usage: nddload [-c community] [-p port] [-v snmpVersion] driver device\n"));
+      _tprintf(_T("Usage: nddload [-c community] [-n driverName] [-p port] [-v snmpVersion] driver device\n"));
       return 1;
    }
 
@@ -274,5 +302,6 @@ int main(int argc, char *argv[])
 
    LoadDriver(argv[optind], argv[optind + 1], snmpVersion, snmpPort, community);
 
+   MemFree(s_driverName);
    return 0;
 }
