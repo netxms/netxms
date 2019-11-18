@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.console.dialogs;
 
-import java.util.Properties;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -26,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.console.AppPropertiesLoader;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -37,13 +37,13 @@ public class LoginSettingsDialog extends Dialog
 {
 	private static final long serialVersionUID = 1L;
 
-	private Properties properties;
+	private AppPropertiesLoader properties;
 	private LabeledText serverAddress;
 	
 	/**
 	 * @param parentShell
 	 */
-	protected LoginSettingsDialog(Shell parentShell, Properties properties)
+	protected LoginSettingsDialog(Shell parentShell, AppPropertiesLoader properties)
 	{
 		super(parentShell);
 		this.properties = properties;

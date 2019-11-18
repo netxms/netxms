@@ -108,6 +108,8 @@ public class LoginJob implements IRunnableWithProgress
          {
             hostName = server;
          }
+         
+         Activator.logInfo("Connecting to " + hostName + " port " + port);
 
          final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(language);
