@@ -666,11 +666,10 @@ TCHAR *NObject::getCustomAttributeCopy(const TCHAR *name) const
 {
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
-   TCHAR *result = MemCopyString(attr->value);
+   TCHAR *result = (attr != NULL) ? MemCopyString(attr->value) : NULL;
    unlockCustomAttributes();
    return result;
 }
-
 
 /**
  * Get custom attribute value by key as INT32
