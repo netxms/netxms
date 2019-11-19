@@ -28,7 +28,7 @@ public class SecurityFilter implements Filter
    @Override
    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
    {
-      ((HttpServletResponse)response).addHeader("X-Frame-Options", "DENY");
+      ((HttpServletResponse)response).addHeader("X-Frame-Options", "SAMEORIGIN");
       chain.doFilter(request, response);
    }
 
