@@ -4,7 +4,7 @@
    <groupId>org.netxms</groupId>
    <artifactId>netxms-webui-filters</artifactId>
    <packaging>jar</packaging>
-   <version>1.0.0</version>
+   <version>1.0.1</version>
    <name>NetXMS Web UI Filters</name>
    <url>http://netxms.org</url>
 
