@@ -946,7 +946,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
          NXSL_Value *param = vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data));
          if (vm->run(1, &param))
          {
-            result = (vm->getResult()->getValueAsInt32() != 0);
+            result = vm->getResult()->getValueAsBoolean();
             nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Filter script result: %d"), szIpAddr, result);
          }
          else

@@ -413,7 +413,7 @@ void ConditionObject::check()
    if (m_script->run(numValues, ppValueList))
    {
       pValue = m_script->getResult();
-      if (pValue->getValueAsInt32() == 0)
+      if (pValue->isFalse())
       {
          if (m_isActive)
          {

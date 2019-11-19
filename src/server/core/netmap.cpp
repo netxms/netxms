@@ -1008,7 +1008,7 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 		if (m_filter->run())
 		{
 			NXSL_Value *value = m_filter->getResult();
-			result = ((value != NULL) && (value->getValueAsInt32() != 0));
+			result = ((value != NULL) && value->isTrue());
 		}
 		else
 		{

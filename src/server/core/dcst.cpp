@@ -332,7 +332,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
       NXSL_Value *value = m_filter->getResult();
       if (value != NULL)
       {
-         result = value->getValueAsInt32() ? true : false;
+         result = value->getValueAsBoolean();
       }
    }
    else

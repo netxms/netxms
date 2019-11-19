@@ -9237,7 +9237,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
             if (vm->run(5, ppArgList))
             {
                NXSL_Value *pValue = vm->getResult();
-               if (pValue->getValueAsInt32() != 0)
+               if (pValue->isTrue())
                {
                   DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"),
                             dwCfgId, m_clientAddr.toString(szBuffer));

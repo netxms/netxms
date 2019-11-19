@@ -1385,7 +1385,7 @@ NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
       return NXSL_ERR_NOT_INTEGER;
 
    Interface *iface = static_cast<Interface*>(object->getData());
-   iface->setExcludeFromTopology(argv[0]->getValueAsInt32() != 0);
+   iface->setExcludeFromTopology(argv[0]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
 }
@@ -1429,7 +1429,7 @@ NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
       return NXSL_ERR_NOT_INTEGER;
 
    Interface *iface = static_cast<Interface*>(object->getData());
-   iface->setIncludeInIcmpPoll(argv[0]->getValueAsInt32() != 0);
+   iface->setIncludeInIcmpPoll(argv[0]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
 }
