@@ -279,7 +279,7 @@ CREATE TABLE rack_passive_elements
 (
   id integer not null,
   rack_id integer not null,
-  name varchar(255) not null,
+  name varchar(255) null,
   type integer not null,
   position integer not null,
   orientation integer not null,
@@ -293,7 +293,7 @@ CREATE TABLE rack_passive_elements
 CREATE TABLE physical_links
 (
   id integer not null,
-  description varchar(255) not null,
+  description varchar(255) null,
   left_object_id integer not null,
   left_patch_pannel_id integer not null,
   left_port_number integer not null,

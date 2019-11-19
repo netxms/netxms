@@ -26,6 +26,18 @@
 
 
 /**
+ * Upgrade from 31.8 to 31.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("rack_passive_elements"), _T("name")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("physical_links"), _T("description")));
+
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 31.7 to 31.8
  */
 static bool H_UpgradeFromV7()
@@ -321,6 +333,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 8,  31, 9, H_UpgradeFromV8 },
    { 7,  31, 8, H_UpgradeFromV7 },
    { 6,  31, 7, H_UpgradeFromV6 },
    { 5,  31, 6, H_UpgradeFromV5 },
