@@ -1319,7 +1319,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
             NXSL_Array *array = result->getValueAsArray();
             if (array->size() > 0)
             {
-               accepted = array->get(0)->getValueAsInt32() ? true : false;
+               accepted = array->get(0)->getValueAsBoolean();
                if (accepted && (array->size() > 1))
                {
                   // transformed value
@@ -1356,7 +1356,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
          }
          else
          {
-            accepted = result->getValueAsInt32() ? true : false;
+            accepted = result->getValueAsBoolean();
          }
       }
       else

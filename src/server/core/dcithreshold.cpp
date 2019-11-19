@@ -329,7 +329,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                NXSL_Value *result = vm->getResult();
                if (result != NULL)
                {
-                  match = (result->getValueAsInt32() != 0);
+                  match = result->getValueAsBoolean();
                }
             }
             else

@@ -527,7 +527,7 @@ bool EPRule::matchScript(Event *pEvent)
       NXSL_Value *value = m_script->getResult();
       if (value != NULL)
       {
-         bRet = value->getValueAsInt32() ? true : false;
+         bRet = value->getValueAsBoolean();
          if (bRet)
          {
          	NXSL_Variable *var = globals->find("CUSTOM_MESSAGE");

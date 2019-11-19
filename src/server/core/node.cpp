@@ -1607,7 +1607,7 @@ Interface *Node::createInterfaceObject(InterfaceInfo *info, bool manuallyCreated
          NXSL_Value *result = vm->getResult();
          if ((result != NULL) && result->isInteger())
          {
-            pass = (result->getValueAsInt32() != 0);
+            pass = result->getValueAsBoolean();
          }
       }
       else
@@ -8228,7 +8228,7 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
          NXSL_Value *result = vm->getResult();
          if ((result != NULL) && result->isInteger())
          {
-            pass = (result->getValueAsInt32() != 0);
+            pass = result->getValueAsBoolean();
          }
       }
       else
