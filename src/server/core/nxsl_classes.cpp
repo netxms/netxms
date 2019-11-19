@@ -249,10 +249,8 @@ NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
    NetObj *netxmsObject = static_cast<NetObj*>(object->getData());
    const TCHAR *name = argv[0]->getValueAsCString();
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, name);
-   StateChange inherit = StateChange::IGNORE;
-   if(argc == 3)
-      inherit = argv[2]->getValueAsBoolean() ? StateChange::SET : StateChange::CLEAR;
    *result = (value != NULL) ? value : vm->createValue(); // Return NULL if attribute not found
+   StateChange inherit = (argc == 3) ? (argv[2]->getValueAsBoolean() ? StateChange::SET : StateChange::CLEAR) : StateChange::IGNORE;
    netxmsObject->setCustomAttribute(name, argv[1]->getValueAsCString(), inherit);
    return 0;
 }
