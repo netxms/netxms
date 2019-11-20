@@ -2443,8 +2443,11 @@ bool NXSL_EventClass::setAttr(NXSL_Object *object, const char *attr, NXSL_Value 
  */
 NXSL_METHOD_DEFINITION(Alarm, acknowledge)
 {
-   Alarm *alarm = (Alarm *)object->getData();
-   *result = vm->createValue(AckAlarmById(alarm->getAlarmId(), NULL, false, 0));
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   Alarm *alarm = static_cast<Alarm*>(object->getData());
+   *result = vm->createValue(AckAlarmById(alarm->getAlarmId(), NULL, false, 0, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
    return 0;
 }
 
@@ -2453,8 +2456,11 @@ NXSL_METHOD_DEFINITION(Alarm, acknowledge)
  */
 NXSL_METHOD_DEFINITION(Alarm, resolve)
 {
-   Alarm *alarm = (Alarm *)object->getData();
-   *result = vm->createValue(ResolveAlarmById(alarm->getAlarmId(), NULL, false));
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   Alarm *alarm = static_cast<Alarm*>(object->getData());
+   *result = vm->createValue(ResolveAlarmById(alarm->getAlarmId(), NULL, false, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
    return 0;
 }
 
@@ -2463,8 +2469,11 @@ NXSL_METHOD_DEFINITION(Alarm, resolve)
  */
 NXSL_METHOD_DEFINITION(Alarm, terminate)
 {
-   Alarm *alarm = (Alarm *)object->getData();
-   *result = vm->createValue(ResolveAlarmById(alarm->getAlarmId(), NULL, true));
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   Alarm *alarm = static_cast<Alarm*>(object->getData());
+   *result = vm->createValue(ResolveAlarmById(alarm->getAlarmId(), NULL, true, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
    return 0;
 }
 
@@ -2485,7 +2494,7 @@ NXSL_METHOD_DEFINITION(Alarm, addComment)
          syncWithHelpdesk = argv[1]->getValueAsBoolean();
    }
 
-   Alarm *alarm = (Alarm *)object->getData();
+   Alarm *alarm = static_cast<Alarm*>(object->getData());
    UINT32 id = 0;
    UINT32 rcc = UpdateAlarmComment(alarm->getAlarmId(), &id, argv[0]->getValueAsCString(), 0, syncWithHelpdesk);
    if(rcc != RCC_SUCCESS)
@@ -2518,9 +2527,9 @@ NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
 {
    setName(_T("Alarm"));
 
-   NXSL_REGISTER_METHOD(Alarm, acknowledge, 0);
-   NXSL_REGISTER_METHOD(Alarm, resolve, 0);
-   NXSL_REGISTER_METHOD(Alarm, terminate, 0);
+   NXSL_REGISTER_METHOD(Alarm, acknowledge, -1);
+   NXSL_REGISTER_METHOD(Alarm, resolve, -1);
+   NXSL_REGISTER_METHOD(Alarm, terminate, -1);
    NXSL_REGISTER_METHOD(Alarm, addComment, -1);
    NXSL_REGISTER_METHOD(Alarm, getComments, 0);
 }
@@ -2578,6 +2587,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
    {
       value = vm->createValue(alarm->getAlarmId());
    }
+   else if (!strcmp(attr, "impact"))
+   {
+      value = vm->createValue(alarm->getImpact());
+   }
    else if (!strcmp(attr, "key"))
    {
       value = vm->createValue(alarm->getKey());
@@ -2594,6 +2607,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
    {
       value = vm->createValue(alarm->getOriginalSeverity());
    }
+   else if (!strcmp(attr, "parentId"))
+   {
+      value = vm->createValue(alarm->getParentAlarmId());
+   }
    else if (!strcmp(attr, "repeatCount"))
    {
       value = vm->createValue(alarm->getRepeatCount());
@@ -2601,6 +2618,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
    else if (!strcmp(attr, "resolvedBy"))
    {
       value = vm->createValue(alarm->getResolvedByUser());
+   }
+   else if (!strcmp(attr, "rcaScriptName"))
+   {
+      value = vm->createValue(alarm->getRcaScriptName());
    }
    else if (!strcmp(attr, "ruleGuid"))
    {

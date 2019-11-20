@@ -536,6 +536,9 @@ void Event::expandMessageText()
  */
 StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) const
 {
+   if (textTemplate == NULL)
+      return StringBuffer();
+
    NetObj *obj = FindObjectById(m_sourceId);
    if (obj == NULL)
    {

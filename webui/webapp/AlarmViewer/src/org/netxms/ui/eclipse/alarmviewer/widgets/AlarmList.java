@@ -36,12 +36,11 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.UrlLauncher;
@@ -82,6 +81,7 @@ import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmAcknowledgeTimeFun
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
+import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmTreeContentProvider;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -95,7 +95,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.MessageBar;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Alarm list widget
@@ -119,7 +119,7 @@ public class AlarmList extends CompositeWithMessageBar
 	private NXCSession session = null;
 	private SessionListener clientListener = null;
 	private RefreshTimer refreshTimer;
-	private SortableTableViewer alarmViewer;
+	private SortableTreeViewer alarmViewer;
    private AlarmListLabelProvider labelProvider;
 	private AlarmListFilter alarmFilter;
    private FilterText filterText;
@@ -187,35 +187,35 @@ public class AlarmList extends CompositeWithMessageBar
 		// Setup table columns
 		final String[] names = { 
 		      Messages.get().AlarmList_ColumnSeverity, 
-		      Messages.get().AlarmList_ColumnState, 
+		      Messages.get().AlarmList_ColumnState,
 		      Messages.get().AlarmList_ColumnSource,
 		      "Zone",
-		      Messages.get().AlarmList_ColumnMessage, 
-		      Messages.get().AlarmList_ColumnCount, 
-		      Messages.get().AlarmList_Comments, 
+		      Messages.get().AlarmList_ColumnMessage,
+		      Messages.get().AlarmList_ColumnCount,
+		      Messages.get().AlarmList_Comments,
             Messages.get().AlarmList_HelpdeskId, 
-		      Messages.get().AlarmList_AckBy, 
+		      Messages.get().AlarmList_AckBy,
 		      Messages.get().AlarmList_ColumnCreated, 
 		      Messages.get().AlarmList_ColumnLastChange
 		   };
 		final int[] widths = { 100, 100, 150, 130, 300, 70, 70, 120, 100, 100, 100 };
-		alarmViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+		alarmViewer = new SortableTreeViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTreeViewer.DEFAULT_STYLE);
       if (!session.isZoningEnabled())
          alarmViewer.removeColumnById(COLUMN_ZONE);
-      WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
+      WidgetHelper.restoreTreeViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 
       labelProvider = new AlarmListLabelProvider(alarmViewer);
       labelProvider.setShowColor(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_ALARM_STATUS_COLORS"));
       alarmViewer.setLabelProvider(labelProvider);
-      alarmViewer.setContentProvider(new ArrayContentProvider());
+      alarmViewer.setContentProvider(new AlarmTreeContentProvider());
       alarmViewer.setComparator(new AlarmComparator());
       alarmFilter = new AlarmListFilter();
-		alarmViewer.addFilter(alarmFilter);
-      alarmViewer.getTable().addDisposeListener(new DisposeListener() {
+      alarmViewer.addFilter(alarmFilter);
+      alarmViewer.getTree().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
+            WidgetHelper.saveTreeViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
          }
       });
       alarmViewer.addDoubleClickListener(new IDoubleClickListener() {
@@ -240,12 +240,12 @@ public class AlarmList extends CompositeWithMessageBar
          }
       });
 
-		if ((visibilityValidator == null) || visibilityValidator.isVisible())
-		   refresh();
-		else
-		   needInitialRefresh = true;
-		
-		refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
+      if ((visibilityValidator == null) || visibilityValidator.isVisible())
+         refresh();
+      else
+         needInitialRefresh = true;
+
+      refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
          @Override
          public void run()
          {
@@ -256,27 +256,27 @@ public class AlarmList extends CompositeWithMessageBar
          }
       });
 
-		// Add client library listener
-		clientListener = new SessionListener() {
+      // Add client library listener
+      clientListener = new SessionListener() {
          @Override
-			public void notificationHandler(SessionNotification n)
-			{
-				switch(n.getCode())
-				{
-					case SessionNotification.NEW_ALARM:
-					   synchronized(alarmList)
+         public void notificationHandler(SessionNotification n)
+         {
+            switch(n.getCode())
+            {
+               case SessionNotification.NEW_ALARM:
+                  synchronized(alarmList)
                   {
-					      newAlarmList.add((Alarm)n.getObject());// Add to this list only new alms to be able to notify with sound
+                     newAlarmList.add((Alarm)n.getObject());// Add to this list only new alms to be able to notify with sound
                   }
-					case SessionNotification.ALARM_CHANGED:
-						synchronized(alarmList)
-						{
-							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
-						}
-						refreshTimer.execute();
-						break;
-					case SessionNotification.ALARM_TERMINATED:
-					case SessionNotification.ALARM_DELETED:
+               case SessionNotification.ALARM_CHANGED:
+                  synchronized(alarmList)
+                  {
+                     alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                  }
+                  refreshTimer.execute();
+                  break;
+               case SessionNotification.ALARM_TERMINATED:
+               case SessionNotification.ALARM_DELETED:
                   synchronized(alarmList)
                   {
                      alarmList.remove(((Alarm)n.getObject()).getId());
@@ -299,13 +299,13 @@ public class AlarmList extends CompositeWithMessageBar
                   refreshTimer.execute();
                   break;
                case SessionNotification.MULTIPLE_ALARMS_TERMINATED:
-						synchronized(alarmList)
-						{
-						   for(Long id : ((BulkAlarmStateChangeData)n.getObject()).getAlarms())
-						   {
-						      alarmList.remove(id);
-						   }
-						}
+                  synchronized(alarmList)
+                  {
+                     for(Long id : ((BulkAlarmStateChangeData)n.getObject()).getAlarms())
+                     {
+                        alarmList.remove(id);
+                     }
+                  }
                   refreshTimer.execute();
                   break;
                default:
@@ -333,7 +333,7 @@ public class AlarmList extends CompositeWithMessageBar
                   alarmViewer.refresh();
                }
             }
-			}
+         }
       };
       ps.addPropertyChangeListener(propertyChangeListener);
 
@@ -348,7 +348,7 @@ public class AlarmList extends CompositeWithMessageBar
             ps.setDefault("INIT_SHOW_FILTER", initShowfilter);
          }
       });
-      
+
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -368,17 +368,17 @@ public class AlarmList extends CompositeWithMessageBar
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly*/
-	}
+   }
 	
    /**
-	 * Get selection provider of alarm list
-	 * 
-	 * @return
-	 */
-	public ISelectionProvider getSelectionProvider()
-	{
-		return alarmViewer;
-	}
+    * Get selection provider of alarm list
+    * 
+    * @return
+    */
+   public ISelectionProvider getSelectionProvider()
+   {
+      return alarmViewer;
+   }
 
    /**
     * Create actions
@@ -677,8 +677,8 @@ public class AlarmList extends CompositeWithMessageBar
 			manager.add(actionShowObjectDetails);
 			manager.add(new Separator());
 		}
-		
-		manager.add(actionExportToCsv);
+
+      manager.add(actionExportToCsv);
 
       if (selection.size() == 1)
       {
@@ -785,7 +785,7 @@ public class AlarmList extends CompositeWithMessageBar
             filteredAlarmList.add(alarm);
          }
       }
-      
+
       // limit number of alarms to display
       if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() > session.getAlarmListDisplayLimit()))
       {
@@ -797,7 +797,7 @@ public class AlarmList extends CompositeWithMessageBar
                return -(alarm1.getLastChangeTime().compareTo(alarm2.getLastChangeTime()));
             }
          });
-         
+
          filteredAlarmList = filteredAlarmList.subList(0, session.getAlarmListDisplayLimit());
       }
 
@@ -810,7 +810,7 @@ public class AlarmList extends CompositeWithMessageBar
 
             if ((visibilityValidator != null) && !visibilityValidator.isVisible())
                return;
-            
+
             synchronized(alarmList)
             {
                alarmViewer.setInput(filteredAlarmList);
@@ -821,14 +821,14 @@ public class AlarmList extends CompositeWithMessageBar
                else
                {
                   hideMessage();
-               }               
+               }
 
                if(!notifier.isGlobalSoundEnabled() && viewPart.getSite().getPage().isPartVisible(viewPart) && isLocalNotificationsEnabled)
                {
                   for(Alarm a : newAlarmList)
                   {
-                     if(filteredAlarmList.contains(a))
-                     	notifier.processNewAlarm(a);            
+                     if (filteredAlarmList.contains(a))
+                     	notifier.processNewAlarm(a);
                   }
                }
                newAlarmList.clear();
@@ -837,13 +837,14 @@ public class AlarmList extends CompositeWithMessageBar
       });
    }
 
-	/**
+   /**
     * Refresh alarm list
     */
    public void refresh()
    {
       if ((visibilityValidator != null) && !visibilityValidator.isVisible())
 	      return;
+
 		new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, this) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -1134,7 +1135,7 @@ public class AlarmList extends CompositeWithMessageBar
     * 
     * @return
     */
-   public TableViewer getViewer()
+   public TreeViewer getViewer()
    {
       return alarmViewer;
    }

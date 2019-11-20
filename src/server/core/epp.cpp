@@ -34,8 +34,10 @@ EPRule::EPRule(UINT32 id) : m_actions(0, 16, true)
    m_flags = 0;
    m_comments = NULL;
    m_alarmSeverity = 0;
-   m_alarmKey[0] = 0;
-   m_alarmMessage[0] = 0;
+   m_alarmKey = NULL;
+   m_alarmMessage = NULL;
+   m_alarmImpact = NULL;
+   m_rcaScriptName = NULL;
    m_scriptSource = NULL;
    m_script = NULL;
 	m_alarmTimeout = 0;
@@ -73,8 +75,10 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
    m_alarmSeverity = config->getSubEntryValueAsInt(_T("alarmSeverity"));
 	m_alarmTimeout = config->getSubEntryValueAsUInt(_T("alarmTimeout"));
 	m_alarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
-   _tcslcpy(m_alarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
-   _tcslcpy(m_alarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
+   m_alarmKey = MemCopyString(config->getSubEntryValue(_T("alarmKey")));
+   m_alarmMessage = MemCopyString(config->getSubEntryValue(_T("alarmMessage")));
+   m_alarmImpact = MemCopyString(config->getSubEntryValue(_T("alarmImpact")));
+   m_rcaScriptName = MemCopyString(config->getSubEntryValue(_T("rootCauseAnalysisScript")));
 
    ConfigEntry *pStorageEntry = config->findEntry(_T("pStorageActions"));
    if (pStorageEntry != NULL)
@@ -187,7 +191,7 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
  * Construct event policy rule from database record
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
- * alarm_timeout,alarm_timeout_event
+ * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact
  */
 EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, true)
 {
@@ -195,9 +199,9 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, true)
    m_guid = DBGetFieldGUID(hResult, row, 1);
    m_flags = DBGetFieldULong(hResult, row, 2);
    m_comments = DBGetField(hResult, row, 3, NULL, 0);
-	DBGetField(hResult, row, 4, m_alarmMessage, MAX_EVENT_MSG_LENGTH);
+   m_alarmMessage = DBGetField(hResult, row, 4, NULL, 0);
    m_alarmSeverity = DBGetFieldLong(hResult, row, 5);
-   DBGetField(hResult, row, 6, m_alarmKey, MAX_DB_STRING);
+   m_alarmKey = DBGetField(hResult, row, 6, NULL, 0);
    m_scriptSource = DBGetField(hResult, row, 7, NULL, 0);
    if ((m_scriptSource != NULL) && (*m_scriptSource != 0))
    {
@@ -219,6 +223,8 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, true)
    }
 	m_alarmTimeout = DBGetFieldULong(hResult, row, 8);
 	m_alarmTimeoutEvent = DBGetFieldULong(hResult, row, 9);
+	m_rcaScriptName = DBGetField(hResult, row, 10, NULL, 0);
+   m_alarmImpact = DBGetField(hResult, row, 11, NULL, 0);
 }
 
 /**
@@ -262,11 +268,13 @@ EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, true)
    msg->getFieldAsInt32Array(VID_RULE_EVENTS, &m_events);
    msg->getFieldAsInt32Array(VID_RULE_SOURCES, &m_sources);
 
-   msg->getFieldAsString(VID_ALARM_KEY, m_alarmKey, MAX_DB_STRING);
-   msg->getFieldAsString(VID_ALARM_MESSAGE, m_alarmMessage, MAX_DB_STRING);
+   m_alarmKey = msg->getFieldAsString(VID_ALARM_KEY);
+   m_alarmMessage = msg->getFieldAsString(VID_ALARM_MESSAGE);
+   m_alarmImpact = msg->getFieldAsString(VID_IMPACT);
    m_alarmSeverity = msg->getFieldAsUInt16(VID_ALARM_SEVERITY);
 	m_alarmTimeout = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT);
 	m_alarmTimeoutEvent = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
+	m_rcaScriptName = msg->getFieldAsString(VID_RCA_SCRIPT_NAME);
 
    msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
 
@@ -310,6 +318,10 @@ EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, true)
  */
 EPRule::~EPRule()
 {
+   MemFree(m_alarmMessage);
+   MemFree(m_alarmImpact);
+   MemFree(m_alarmKey);
+   MemFree(m_rcaScriptName);
    MemFree(m_comments);
    MemFree(m_scriptSource);
    delete m_script;
@@ -340,9 +352,13 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    xml.append(m_flags);
    xml.append(_T("</flags>\n\t\t\t<alarmMessage>"));
    xml.append(EscapeStringForXML2(m_alarmMessage));
-   xml.append(_T("</alarmMessage>\n\t\t\t<alarmKey>"));
+   xml.append(_T("</alarmMessage>\n\t\t\t<alarmImpact>"));
+   xml.append(EscapeStringForXML2(m_alarmImpact));
+   xml.append(_T("</alarmImpact>\n\t\t\t<alarmKey>"));
    xml.append(EscapeStringForXML2(m_alarmKey));
-   xml.append(_T("</alarmKey>\n\t\t\t<alarmSeverity>"));
+   xml.append(_T("</alarmKey>\n\t\t\t<rootCauseAnalysisScript>"));
+   xml.append(EscapeStringForXML2(m_rcaScriptName));
+   xml.append(_T("</rootCauseAnalysisScript>\n\t\t\t<alarmSeverity>"));
    xml.append(m_alarmSeverity);
    xml.append(_T("</alarmSeverity>\n\t\t\t<alarmTimeout>"));
    xml.append(m_alarmTimeout);
@@ -656,9 +672,35 @@ UINT32 EPRule::generateAlarm(Event *event)
 	}
 	else	// Generate new alarm
 	{
-	   alarmId = CreateNewAlarm(m_guid, m_alarmMessage, m_alarmKey, ALARM_STATE_OUTSTANDING,
+	   UINT32 parentAlarmId = 0;
+	   if ((m_rcaScriptName != NULL) && (m_rcaScriptName[0] != 0))
+	   {
+	      NetObj *object = FindObjectById(event->getSourceId());
+	      NXSL_VM *vm = CreateServerScriptVM(m_rcaScriptName, object, NULL);
+	      if (vm != NULL)
+	      {
+	         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+	         if (vm->run())
+	         {
+	            NXSL_Value *result = vm->getResult();
+	            if (result->isObject(_T("Alarm")))
+	            {
+	               parentAlarmId = static_cast<Alarm*>(result->getValueAsObject()->getData())->getAlarmId();
+	               nxlog_debug_tag(DEBUG_TAG, 5, _T("Root cause analysis script in rule %d has found parent alarm %u (%s)"),
+	                        m_id + 1, parentAlarmId, static_cast<Alarm*>(result->getValueAsObject()->getData())->getMessage());
+	            }
+	         }
+	         else
+	         {
+	            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", m_rcaScriptName, vm->getErrorText(), 0);
+	            nxlog_write(NXLOG_ERROR, _T("Failed to execute root cause analysis script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
+	         }
+	         delete vm;
+	      }
+	   }
+	   alarmId = CreateNewAlarm(m_guid, CHECK_NULL_EX(m_alarmMessage), CHECK_NULL_EX(m_alarmKey), m_alarmImpact, ALARM_STATE_OUTSTANDING,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
-                     m_alarmTimeout, m_alarmTimeoutEvent, event, 0, &m_alarmCategoryList,
+                     m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, &m_alarmCategoryList,
                      ((m_flags & RF_CREATE_TICKET) != 0) ? true : false);
 	}
 	return alarmId;
@@ -806,9 +848,9 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
 	int i;
 	TCHAR pszQuery[1024];
    // General attributes
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,")
-                                  _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)")
-                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
+                                  _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,rca_script_name) ")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != NULL)
    {
       TCHAR guidText[128];
@@ -816,12 +858,14 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
       DBBind(hStmt, 2, DB_CTYPE_STRING, m_guid.toString(guidText), DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_CTYPE_INT32, m_flags);
       DBBind(hStmt, 4, DB_CTYPE_STRING,  m_comments, DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_CTYPE_STRING, m_alarmMessage, DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_CTYPE_INT32, m_alarmSeverity);
-      DBBind(hStmt, 7, DB_CTYPE_STRING, m_alarmKey, DB_BIND_STATIC);
-      DBBind(hStmt, 8, DB_CTYPE_STRING, m_scriptSource, DB_BIND_STATIC);
-      DBBind(hStmt, 9, DB_CTYPE_INT32, m_alarmTimeout);
-      DBBind(hStmt, 10, DB_CTYPE_INT32, m_alarmTimeoutEvent);
+      DBBind(hStmt, 5, DB_CTYPE_STRING, m_alarmMessage, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
+      DBBind(hStmt, 6, DB_CTYPE_STRING, m_alarmImpact, DB_BIND_STATIC, 1000);
+      DBBind(hStmt, 7, DB_CTYPE_INT32, m_alarmSeverity);
+      DBBind(hStmt, 8, DB_CTYPE_STRING, m_alarmKey, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 9, DB_CTYPE_STRING, m_scriptSource, DB_BIND_STATIC);
+      DBBind(hStmt, 10, DB_CTYPE_INT32, m_alarmTimeout);
+      DBBind(hStmt, 11, DB_CTYPE_INT32, m_alarmTimeoutEvent);
+      DBBind(hStmt, 12, DB_CTYPE_STRING, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -950,9 +994,11 @@ void EPRule::createMessage(NXCPMessage *msg)
    msg->setField(VID_ALARM_SEVERITY, (WORD)m_alarmSeverity);
    msg->setField(VID_ALARM_KEY, m_alarmKey);
    msg->setField(VID_ALARM_MESSAGE, m_alarmMessage);
+   msg->setField(VID_IMPACT, m_alarmImpact);
    msg->setField(VID_ALARM_TIMEOUT, m_alarmTimeout);
    msg->setField(VID_ALARM_TIMEOUT_EVENT, m_alarmTimeoutEvent);
    msg->setFieldFromInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
+   msg->setField(VID_RCA_SCRIPT_NAME, m_rcaScriptName);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_NUM_ACTIONS, (UINT32)m_actions.size());
    UINT32 fieldId = VID_ACTION_LIST_BASE;
@@ -1004,10 +1050,12 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "comments", json_string_t(m_comments));
    json_object_set_new(root, "script", json_string_t(m_scriptSource));
    json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
+   json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
    json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
    json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
    json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
    json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
+   json_object_set_new(root, "rcaScriptName", json_string_t(m_rcaScriptName));
    json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
    json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
@@ -1052,8 +1100,8 @@ bool EventPolicy::loadFromDB()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
-                           _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event ")
-                           _T("FROM event_policy ORDER BY rule_id"));
+                           _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
+                           _T("rca_script_name,alarm_impact FROM event_policy ORDER BY rule_id"));
    if (hResult != NULL)
    {
       success = true;

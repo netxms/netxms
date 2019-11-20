@@ -69,11 +69,12 @@ public class RuleAlarm extends PropertyPage
 	private LabeledText alarmTimeout;
 	private AlarmCategorySelector alarmCategory;
 	private EventSelector timeoutEvent;
+	private ScriptSelector rcaScript;
 	private LabeledText alarmKeyTerminate;
 	private Button checkTerminateWithRegexp;
 	private Button checkCreateHelpdeskTicket;
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -82,7 +83,7 @@ public class RuleAlarm extends PropertyPage
 		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
 		rule = editor.getRule();
 		alarmAction = calculateAlarmAction();
-		
+
 		dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING * 2;
@@ -98,7 +99,7 @@ public class RuleAlarm extends PropertyPage
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		radioGroup.setLayoutData(gd);
-		
+
 		alarmNoAction = new Button(radioGroup, SWT.RADIO);
 		alarmNoAction.setText(Messages.get().RuleAlarm_DoNotChange);
 		alarmNoAction.setSelection(alarmAction == ALARM_NO_ACTION);
@@ -108,14 +109,14 @@ public class RuleAlarm extends PropertyPage
 			{
 				changeAlarmAction(ALARM_NO_ACTION);
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
 		});
-		
+
 		alarmCreate = new Button(radioGroup, SWT.RADIO);
 		alarmCreate.setText(Messages.get().RuleAlarm_CreateNew);
 		alarmCreate.setSelection(alarmAction == ALARM_CREATE);
@@ -125,14 +126,14 @@ public class RuleAlarm extends PropertyPage
 			{
 				changeAlarmAction(ALARM_CREATE);
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
 		});
-		
+
 		alarmResolve = new Button(radioGroup, SWT.RADIO);
 		alarmResolve.setText(Messages.get().RuleAlarm_Resolve);
 		alarmResolve.setSelection(alarmAction == ALARM_RESOLVE);
@@ -142,14 +143,14 @@ public class RuleAlarm extends PropertyPage
 			{
 				changeAlarmAction(ALARM_RESOLVE);
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
 		});
-		
+
 		alarmTerminate = new Button(radioGroup, SWT.RADIO);
 		alarmTerminate.setText(Messages.get().RuleAlarm_Terminate);
 		alarmTerminate.setSelection(alarmAction == ALARM_TERMINATE);
@@ -159,14 +160,14 @@ public class RuleAlarm extends PropertyPage
 			{
 				changeAlarmAction(ALARM_TERMINATE);
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
 		});
-		
+
 		alarmCreationGroup = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -180,7 +181,7 @@ public class RuleAlarm extends PropertyPage
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		alarmCreationGroup.setLayout(layout);
-		
+
 		alarmMessage = new LabeledText(alarmCreationGroup, SWT.NONE);
 		alarmMessage.setLabel(Messages.get().RuleAlarm_Message);
 		alarmMessage.setText(rule.getAlarmMessage());
@@ -188,7 +189,7 @@ public class RuleAlarm extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		alarmMessage.setLayoutData(gd);
-		
+
 		alarmKeyCreate = new LabeledText(alarmCreationGroup, SWT.NONE);
 		alarmKeyCreate.setLabel(Messages.get().RuleAlarm_Key);
 		alarmKeyCreate.setText(rule.getAlarmKey());
@@ -196,7 +197,7 @@ public class RuleAlarm extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		alarmKeyCreate.setLayoutData(gd);
-		
+
 		Composite alarmCreationSubgroup = new Composite(alarmCreationGroup, SWT.NONE);
 		layout = new GridLayout();
 		layout.numColumns = 2;
@@ -229,7 +230,7 @@ public class RuleAlarm extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		alarmSeverity.setLayoutData(gd);
-		
+
 		alarmTimeout = new LabeledText(alarmCreationSubgroup, SWT.NONE);
 		alarmTimeout.setLabel(Messages.get().RuleAlarm_Timeout);
 		alarmTimeout.getTextControl().setTextLimit(5);
@@ -238,7 +239,7 @@ public class RuleAlarm extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		alarmTimeout.setLayoutData(gd);
-		
+
 		timeoutEvent = new EventSelector(alarmCreationGroup, SWT.NONE);
 		timeoutEvent.setLabel(Messages.get().RuleAlarm_TimeoutEvent);
 		timeoutEvent.setEventCode(rule.getAlarmTimeoutEvent());
@@ -246,7 +247,16 @@ public class RuleAlarm extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		timeoutEvent.setLayoutData(gd);
-      
+
+      rcaScript = new ScriptSelector(alarmCreationGroup, SWT.NONE, false, true);
+      rcaScript.setLabel("Root cause analysis script");
+      rcaScript.setScriptName(rule.getRcaScriptName());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 2;
+      rcaScript.setLayoutData(gd);
+		
       alarmCategory = new AlarmCategorySelector(alarmCreationGroup, SWT.NONE);
       alarmCategory.setLabel("Alarm category");
       alarmCategory.setCategoryId(rule.getAlarmCategories());
@@ -254,14 +264,14 @@ public class RuleAlarm extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       alarmCategory.setLayoutData(gd);
-      
+
       checkCreateHelpdeskTicket = new Button(alarmCreationGroup, SWT.CHECK);
       checkCreateHelpdeskTicket.setText("Create helpdesk ticket on alarm creation");
       checkCreateHelpdeskTicket.setSelection((rule.getFlags() & EventProcessingPolicyRule.CREATE_TICKET) != 0);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       checkCreateHelpdeskTicket.setLayoutData(gd);
-		
+
 		alarmTerminationGroup = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -275,7 +285,7 @@ public class RuleAlarm extends PropertyPage
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		alarmTerminationGroup.setLayout(layout);
-		
+
 		alarmKeyTerminate = new LabeledText(alarmTerminationGroup, SWT.NONE);
 		alarmKeyTerminate.setLabel((alarmAction == ALARM_TERMINATE)? Messages.get().RuleAlarm_TerminateAll : Messages.get().RuleAlarm_ResolveAll);
 		alarmKeyTerminate.setText(rule.getAlarmKey());
@@ -283,18 +293,18 @@ public class RuleAlarm extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		alarmKeyTerminate.setLayoutData(gd);
-		
+
 		checkTerminateWithRegexp = new Button(alarmTerminationGroup, SWT.CHECK);
 		checkTerminateWithRegexp.setText((alarmAction == ALARM_TERMINATE)? Messages.get().RuleAlarm_UseRegexpForTerminate : Messages.get().RuleAlarm_UseRegexpForResolve);
 		checkTerminateWithRegexp.setSelection((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0);
 
-		return dialogArea;
+      return dialogArea;
 	}
 
 	/**
 	 * Calculate alarm action for the rule
 	 * 
-	 * @return
+	 * @return alarm action for the rule
 	 */
 	private int calculateAlarmAction()
 	{
@@ -362,6 +372,7 @@ public class RuleAlarm extends PropertyPage
 				rule.setAlarmSeverity(Severity.getByValue(alarmSeverity.getSelectionIndex()));
 				rule.setAlarmTimeoutEvent(timeoutEvent.getEventCode());
 				rule.setAlarmCategories(alarmCategory.getCategoryId());				
+				rule.setRcaScriptName(rcaScript.getScriptName());
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
 				if (checkCreateHelpdeskTicket.getSelection())
 				   rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.CREATE_TICKET);
@@ -386,8 +397,8 @@ public class RuleAlarm extends PropertyPage
 		editor.setModified(true);
 		return true;
 	}
-	
-	/* (non-Javadoc)
+
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
@@ -396,7 +407,7 @@ public class RuleAlarm extends PropertyPage
 		doApply();
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override

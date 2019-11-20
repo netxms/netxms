@@ -242,12 +242,15 @@ private:
    TCHAR *m_scriptSource;
    NXSL_VM *m_script;
 
-   TCHAR m_alarmMessage[MAX_EVENT_MSG_LENGTH];
+   TCHAR *m_alarmMessage;
+   TCHAR *m_alarmImpact;
    int m_alarmSeverity;
-   TCHAR m_alarmKey[MAX_DB_STRING];
+   TCHAR *m_alarmKey;
 	UINT32 m_alarmTimeout;
 	UINT32 m_alarmTimeoutEvent;
 	IntegerArray<UINT32> m_alarmCategoryList;
+	TCHAR *m_rcaScriptName;    // Name of library script used for root cause analysis
+
 	StringMap m_pstorageSetActions;
 	StringList m_pstorageDeleteActions;
 

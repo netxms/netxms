@@ -18,6 +18,7 @@
  */
 package org.netxms.client.events;
 
+import java.util.Arrays;
 import java.util.Date;
 
 import org.netxms.base.NXCPCodes;
@@ -44,6 +45,7 @@ public class Alarm
 
    // Alarm attributes
    private long id;
+   private long parentId;
    private Severity currentSeverity;
    private Severity originalSeverity;
    private int repeatCount;
@@ -67,6 +69,7 @@ public class Alarm
    private int commentsCount;
    private int ackTime;
    private long[] categories;
+   private long[] subordinateAlarms;
 
    /**
     * @param msg Source NXCP message
@@ -74,6 +77,7 @@ public class Alarm
    public Alarm(NXCPMessage msg)
    {
       id = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_ID);
+      parentId = msg.getFieldAsInt64(NXCPCodes.VID_PARENT_ALARM_ID);
       currentSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CURRENT_SEVERITY));
       originalSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_ORIGINAL_SEVERITY));
       repeatCount = msg.getFieldAsInt32(NXCPCodes.VID_REPEAT_COUNT);
@@ -97,6 +101,7 @@ public class Alarm
       commentsCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COMMENTS);
       ackTime = msg.getFieldAsInt32(NXCPCodes.VID_TIMESTAMP);
       categories = msg.getFieldAsUInt32Array(NXCPCodes.VID_CATEGORY_LIST);
+      subordinateAlarms = msg.getFieldAsUInt32Array(NXCPCodes.VID_SUBORDINATE_ALARMS);
    }
 
    /**
@@ -120,6 +125,14 @@ public class Alarm
    public long getId()
    {
       return id;
+   }
+
+   /**
+    * @return the parentId
+    */
+   public long getParentId()
+   {
+      return parentId;
    }
 
    /**
@@ -314,5 +327,42 @@ public class Alarm
    public long[] getCategories()
    {
       return (categories != null) ? categories : new long[0];
+   }
+
+   /**
+    * Get list of subordinate alarm identifiers.
+    *
+    * @return list of subordinate alarm identifiers
+    */
+   public long[] getSubordinateAlarms()
+   {
+      return (subordinateAlarms != null) ? subordinateAlarms : new long[0];
+   }
+   
+   /**
+    * Check if this alarm has any subordinated alarms.
+    * 
+    * @return true if this alarm has any subordinated alarms
+    */
+   public boolean hasSubordinatedAlarms()
+   {
+      return (subordinateAlarms != null) && (subordinateAlarms.length > 0);
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "Alarm [id=" + id + ", parentId=" + parentId + ", currentSeverity=" + currentSeverity + ", originalSeverity="
+            + originalSeverity + ", repeatCount=" + repeatCount + ", state=" + state + ", sticky=" + sticky
+            + ", acknowledgedByUser=" + acknowledgedByUser + ", resolvedByUser=" + resolvedByUser + ", terminatedByUser="
+            + terminatedByUser + ", sourceEventId=" + sourceEventId + ", sourceEventCode=" + sourceEventCode + ", sourceObjectId="
+            + sourceObjectId + ", dciId=" + dciId + ", creationTime=" + creationTime + ", lastChangeTime=" + lastChangeTime
+            + ", message=" + message + ", key=" + key + ", helpdeskState=" + helpdeskState + ", helpdeskReference="
+            + helpdeskReference + ", timeout=" + timeout + ", timeoutEvent=" + timeoutEvent + ", commentsCount=" + commentsCount
+            + ", ackTime=" + ackTime + ", categories=" + Arrays.toString(categories) + ", subordinateAlarms="
+            + Arrays.toString(subordinateAlarms) + "]";
    }
 }

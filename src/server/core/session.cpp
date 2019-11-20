@@ -5866,7 +5866,7 @@ void ClientSession::acknowledgeAlarm(NXCPMessage *pRequest)
 			msg.setField(VID_RCC,
             byHelpdeskRef ?
             AckAlarmByHDRef(hdref, this, pRequest->getFieldAsUInt16(VID_STICKY_FLAG) != 0, pRequest->getFieldAsUInt32(VID_TIMESTAMP)) :
-            AckAlarmById(alarmId, this, pRequest->getFieldAsUInt16(VID_STICKY_FLAG) != 0, pRequest->getFieldAsUInt32(VID_TIMESTAMP)));
+            AckAlarmById(alarmId, this, pRequest->getFieldAsUInt16(VID_STICKY_FLAG) != 0, pRequest->getFieldAsUInt32(VID_TIMESTAMP), false));
       }
       else
       {
@@ -5897,7 +5897,7 @@ void ClientSession::bulkResolveAlarms(NXCPMessage *pRequest, bool terminate)
    IntegerArray<UINT32> alarmIds, failIds, failCodes;
    pRequest->getFieldAsInt32Array(VID_ALARM_ID_LIST, &alarmIds);
 
-   ResolveAlarmsById(&alarmIds, &failIds, &failCodes, this, terminate);
+   ResolveAlarmsById(&alarmIds, &failIds, &failCodes, this, terminate, false);
    msg.setField(VID_RCC, RCC_SUCCESS);
 
    if (failIds.size() > 0)
@@ -5943,7 +5943,7 @@ void ClientSession::resolveAlarm(NXCPMessage *pRequest, bool terminate)
          msg.setField(VID_RCC,
             byHelpdeskRef ?
             ResolveAlarmByHDRef(hdref, this, terminate) :
-            ResolveAlarmById(alarmId, this, terminate));
+            ResolveAlarmById(alarmId, this, terminate, false));
       }
       else
       {

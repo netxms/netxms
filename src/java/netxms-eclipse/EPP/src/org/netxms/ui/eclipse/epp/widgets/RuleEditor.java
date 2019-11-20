@@ -726,6 +726,10 @@ public class RuleEditor extends Composite
             {
                createLabel(clientArea, 1, false, String.format(Messages.get().RuleEditor_WithKey, rule.getAlarmKey()), null);
             }
+            if ((rule.getRcaScriptName() != null) && !rule.getRcaScriptName().isEmpty())
+            {
+               createLabel(clientArea, 1, false, String.format("using root cause analysis script \"%s\"", rule.getRcaScriptName()), null);
+            }
          }
          else if (rule.getAlarmSeverity() == Severity.TERMINATE)
          {

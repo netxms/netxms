@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -57,15 +57,15 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	private boolean blinkState = true;
    private boolean showColor = true;
 	private WorkbenchLabelProvider wbLabelProvider;
-	private TableViewer viewer;
+	private TreeViewer viewer;
 	
 	/**
 	 * Default constructor 
 	 */
-	public AlarmListLabelProvider(TableViewer viewer)
+	public AlarmListLabelProvider(TreeViewer viewer)
 	{
 	   this.viewer = viewer;
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		
 		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
 		stateImages[1] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
@@ -83,7 +83,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
+		switch((Integer)viewer.getTree().getColumn(columnIndex).getData("ID"))
 		{
 			case AlarmList.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusImage(((Alarm)element).getCurrentSeverity());
@@ -108,7 +108,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-      switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
+      switch((Integer)viewer.getTree().getColumn(columnIndex).getData("ID"))
 		{
 			case AlarmList.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(((Alarm)element).getCurrentSeverity());

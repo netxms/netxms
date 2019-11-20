@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -36,7 +38,7 @@ public class SortableTreeViewer extends TreeViewer
 	public static final int DEFAULT_STYLE = -1;
 	
 	private boolean initialized = false;
-	private TreeColumn[] columns;
+	private List<TreeColumn> columns;
 	private TreeSortingListener sortingListener;
 	
 	/**
@@ -86,19 +88,20 @@ public class SortableTreeViewer extends TreeViewer
 		
 		sortingListener = new TreeSortingListener(this);
 		
-		columns = new TreeColumn[names.length];
+		columns = new ArrayList<TreeColumn>(names.length);
 		for(int i = 0; i < names.length; i++)
 		{
-			columns[i] = new TreeColumn(getTree(), SWT.LEFT);
-			columns[i].setText(names[i]);
+			TreeColumn c = new TreeColumn(getTree(), SWT.LEFT);
+			c.setText(names[i]);
 			if (widths != null)
-				columns[i].setWidth(widths[i]);
-			columns[i].setData("ID", new Integer(i)); //$NON-NLS-1$
-			columns[i].addSelectionListener(sortingListener);
+				c.setWidth(widths[i]);
+			c.setData("ID", new Integer(i)); //$NON-NLS-1$
+			c.addSelectionListener(sortingListener);
+			columns.add(c);
 		}
 
 		if ((defaultSortingColumn >= 0) && (defaultSortingColumn < names.length))
-			getTree().setSortColumn(columns[defaultSortingColumn]);
+			getTree().setSortColumn(columns.get(defaultSortingColumn));
 		getTree().setSortDirection(defaultSortDir);
 	}
 	
@@ -109,11 +112,11 @@ public class SortableTreeViewer extends TreeViewer
 	 */
 	public TreeColumn getColumnById(int id)
 	{
-		for(int i = 0; i < columns.length; i++)
+		for(TreeColumn c : columns)
 		{
-			if ((Integer)columns[i].getData("ID") == id) //$NON-NLS-1$
+			if ((Integer)c.getData("ID") == id) //$NON-NLS-1$
 			{
-				return columns[i];
+				return c;
 			}
 		}
 		return null;
@@ -155,8 +158,26 @@ public class SortableTreeViewer extends TreeViewer
 	 */
 	public void disableSorting()
 	{
-		for(int i = 0; i < columns.length; i++)
-			columns[i].removeSelectionListener(sortingListener);
+		for(TreeColumn c : columns)
+			c.removeSelectionListener(sortingListener);
 		getTree().setSortColumn(null);
 	}
+
+   /**
+    * Remove column by ID
+    * 
+    * @param id column ID
+    */
+   public void removeColumnById(int id)
+   {
+      for(TreeColumn c : columns)
+      {
+         if (!c.isDisposed() && ((Integer)c.getData("ID") == id)) //$NON-NLS-1$
+         {
+            columns.remove(c);
+            c.dispose();
+            return;
+         }
+      }
+   }
 }

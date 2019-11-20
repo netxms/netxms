@@ -716,6 +716,10 @@ public class RuleEditor extends Composite
             {
                createLabel(clientArea, 1, false, String.format(Messages.get().RuleEditor_WithKey, rule.getAlarmKey()), null);
             }
+            if ((rule.getRcaScriptName() != null) && !rule.getRcaScriptName().isEmpty())
+            {
+               createLabel(clientArea, 1, false, String.format("using root cause analysis script \"%s\"", rule.getRcaScriptName()), null);
+            }
          }
          else if (rule.getAlarmSeverity() == Severity.TERMINATE)
          {
@@ -1061,7 +1065,7 @@ public class RuleEditor extends Composite
     */
    private void processRuleMouseEvent(MouseEvent e)
    {
-      boolean ctrlPressed = (e.stateMask & SWT.CTRL) != 0;
+      boolean ctrlPressed = (e.stateMask & SWT.MOD1) != 0;
       boolean shiftPressed = (e.stateMask & SWT.SHIFT) != 0;
 
       if (ctrlPressed)

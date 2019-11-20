@@ -23,7 +23,14 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
+/**
+ * Upgrade from 31.10 to 32.0
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(SetMajorSchemaVersion(32, 0));
+   return true;
+}
 
 /**
  * Upgrade from 31.9 to 31.10
@@ -349,17 +356,18 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 10, 32, 0,  H_UpgradeFromV10 },
    { 9,  31, 10, H_UpgradeFromV9 },
-   { 8,  31, 9, H_UpgradeFromV8 },
-   { 7,  31, 8, H_UpgradeFromV7 },
-   { 6,  31, 7, H_UpgradeFromV6 },
-   { 5,  31, 6, H_UpgradeFromV5 },
-   { 4,  31, 5, H_UpgradeFromV4 },
-   { 3,  31, 4, H_UpgradeFromV3 },
-   { 2,  31, 3, H_UpgradeFromV2 },
-   { 1,  31, 2, H_UpgradeFromV1 },
-   { 0,  31, 1, H_UpgradeFromV0 },
-   { 0,  0,  0, NULL }
+   { 8,  31, 9,  H_UpgradeFromV8 },
+   { 7,  31, 8,  H_UpgradeFromV7 },
+   { 6,  31, 7,  H_UpgradeFromV6 },
+   { 5,  31, 6,  H_UpgradeFromV5 },
+   { 4,  31, 5,  H_UpgradeFromV4 },
+   { 3,  31, 4,  H_UpgradeFromV3 },
+   { 2,  31, 3,  H_UpgradeFromV2 },
+   { 1,  31, 2,  H_UpgradeFromV1 },
+   { 0,  31, 1,  H_UpgradeFromV0 },
+   { 0,  0,  0,  NULL }
 };
 
 /**
@@ -371,7 +379,7 @@ bool MajorSchemaUpgrade_V31()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while((major == 31) && (minor < DB_SCHEMA_VERSION_V31_MINOR))
+   while(major == 31)
    {
       // Find upgrade procedure
       int i;
@@ -380,7 +388,7 @@ bool MajorSchemaUpgrade_V31()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == NULL)
       {
-         _tprintf(_T("Unable to find upgrade procedure for version 30.%d\n"), minor);
+         _tprintf(_T("Unable to find upgrade procedure for version 31.%d\n"), minor);
          return false;
       }
       _tprintf(_T("Upgrading from version 31.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);

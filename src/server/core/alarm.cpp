@@ -35,7 +35,19 @@
    _T("hd_state,hd_ref,ack_by,repeat_count,") \
    _T("alarm_state,timeout,timeout_event,resolved_by,") \
    _T("ack_timeout,dci_id,alarm_category_ids,") \
-   _T("rule_guid,event_tags")
+   _T("rule_guid,parent_alarm_id,event_tags,") \
+   _T("rca_script_name,impact")
+
+/**
+ * Alarm comments constructor
+ */
+AlarmComment::AlarmComment(UINT32 id, time_t changeTime, UINT32 userId, TCHAR *text)
+{
+   m_id = id;
+   m_changeTime = changeTime;
+   m_userId = userId;
+   m_text = text;
+}
 
 /**
  * Alarm list
@@ -57,7 +69,15 @@ public:
    int size() { return m_list.size(); }
 
    Alarm *get(int index) { return m_list.get(index); }
-   Alarm *get(const TCHAR *key) { return m_keyIndex.get(key); }
+
+   Alarm *find(const TCHAR *key) { return m_keyIndex.get(key); }
+   Alarm *find(UINT32 id)
+   {
+      for(int i = 0; i < m_list.size(); i++)
+         if (m_list.get(i)->getAlarmId() == id)
+            return m_list.get(i);
+      return NULL;
+   }
 
    void add(Alarm *alarm)
    {
@@ -69,6 +89,12 @@ public:
    void remove(int index)
    {
       Alarm *alarm = m_list.get(index);
+      if (alarm->getParentAlarmId() != 0)
+      {
+         Alarm *parent = find(alarm->getParentAlarmId());
+         if (parent != NULL)
+            parent->removeSubordinateAlarm(alarm->getAlarmId());
+      }
       if (*alarm->getKey() != 0)
          m_keyIndex.remove(alarm->getKey());
       m_list.remove(index);
@@ -76,6 +102,12 @@ public:
 
    void remove(Alarm *alarm)
    {
+      if (alarm->getParentAlarmId() != 0)
+      {
+         Alarm *parent = find(alarm->getParentAlarmId());
+         if (parent != NULL)
+            parent->removeSubordinateAlarm(alarm->getAlarmId());
+      }
       if (*alarm->getKey() != 0)
          m_keyIndex.remove(alarm->getKey());
       m_list.remove(alarm);
@@ -88,7 +120,117 @@ public:
 static AlarmList s_alarmList;
 static Condition s_shutdown(true);
 static THREAD s_watchdogThread = INVALID_THREAD_HANDLE;
+static THREAD s_rootCauseUpdateThread = INVALID_THREAD_HANDLE;
 static UINT32 s_resolveExpirationTime = 0;
+static bool s_rootCauseUpdateNeeded = false;
+static bool s_rootCauseUpdatePossible = false;
+
+/**
+ * Client notification data
+ */
+struct CLIENT_NOTIFICATION_DATA
+{
+   UINT32 code;
+   const Alarm *alarm;
+};
+
+/**
+ * Callback for client session enumeration
+ */
+static void SendAlarmNotification(ClientSession *session, void *arg)
+{
+   session->onAlarmUpdate(((CLIENT_NOTIFICATION_DATA *)arg)->code,
+                          ((CLIENT_NOTIFICATION_DATA *)arg)->alarm);
+}
+
+/**
+ * Callback for client session enumeration
+ */
+static void SendBulkAlarmTerminateNotification(ClientSession *session, void *arg)
+{
+   session->sendMessage((NXCPMessage *)arg);
+}
+
+/**
+ * Notify connected clients about changes
+ */
+static void NotifyClients(UINT32 code, const Alarm *alarm)
+{
+   CALL_ALL_MODULES(pfAlarmChangeHook, (code, alarm));
+
+   CLIENT_NOTIFICATION_DATA data;
+   data.code = code;
+   data.alarm = alarm;
+   EnumerateClientSessions(SendAlarmNotification, &data);
+}
+
+/**
+ * Notify clients in background
+ */
+static void NotifyClientsInBackground(Alarm *alarm)
+{
+   NotifyClients(alarm->getNotificationCode(), alarm);
+   delete alarm;
+}
+
+/**
+ * Background processing data
+ */
+struct AlarmBackgroundProcessingData
+{
+   IntegerArray<UINT32> *alarms;
+   bool terminate;
+   bool sticky;
+   bool includeSubordinates;
+   UINT32 ackTime;
+
+   AlarmBackgroundProcessingData(IntegerArray<UINT32> *_alarms, bool _terminate, bool _includeSubordinates)
+   {
+      alarms = new IntegerArray<UINT32>(_alarms);
+      terminate = _terminate;
+      sticky = false;
+      ackTime = 0;
+      includeSubordinates = _includeSubordinates;
+   }
+
+   AlarmBackgroundProcessingData(IntegerArray<UINT32> *_alarms, bool _sticky, UINT32 _ackTime, bool _includeSubordinates)
+   {
+      alarms = new IntegerArray<UINT32>(_alarms);
+      terminate = false;
+      sticky = _sticky;
+      ackTime = _ackTime;
+      includeSubordinates = _includeSubordinates;
+   }
+
+   ~AlarmBackgroundProcessingData()
+   {
+      delete alarms;
+   }
+};
+
+/**
+ * Background callback for resolving alarms
+ */
+static void ResolveAlarmsInBackground(AlarmBackgroundProcessingData *data)
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Processing background alarm %s"), data->terminate ? _T("termination") : _T("resolution"));
+   IntegerArray<UINT32> failIds, failCodes;
+   ResolveAlarmsById(data->alarms, &failIds, &failCodes, NULL, data->terminate, data->includeSubordinates);
+   delete data;
+}
+
+/**
+ * Background callback for acknowledging alarms
+ */
+static void AckAlarmsInBackground(AlarmBackgroundProcessingData *data)
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Processing background alarm acknowledgment"));
+   for(int i = 0; i < data->alarms->size(); i++)
+   {
+      AckAlarmById(data->alarms->get(i), NULL, data->sticky, data->ackTime, data->includeSubordinates);
+   }
+   delete data;
+}
 
 /**
  * Get number of comments for alarm
@@ -115,9 +257,12 @@ static UINT32 GetCommentCount(DB_HANDLE hdb, UINT32 alarmId)
 /**
  * Create new alarm from event
  */
-Alarm::Alarm(Event *event, const uuid& rule, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList)
+Alarm::Alarm(Event *event, UINT32 parentAlarmId, const TCHAR *rcaScriptName, const uuid& rule, const TCHAR *message, const TCHAR *key,
+         const TCHAR *impact, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
+   m_parentAlarmId = parentAlarmId;
+   m_rcaScriptName = MemCopyString(rcaScriptName);
    m_sourceEventId = event->getId();
    m_sourceEventCode = event->getCode();
    m_eventTags = MemCopyString(event->getTagsAsList());
@@ -133,6 +278,7 @@ Alarm::Alarm(Event *event, const uuid& rule, const TCHAR *message, const TCHAR *
    m_repeatCount = 1;
    m_helpDeskState = ALARM_HELPDESK_IGNORED;
    m_helpDeskRef[0] = 0;
+   m_impact = MemCopyString(impact);
    m_timeout = timeout;
    m_timeoutEvent = timeoutEvent;
    m_commentCount = 0;
@@ -146,6 +292,7 @@ Alarm::Alarm(Event *event, const uuid& rule, const TCHAR *message, const TCHAR *
    _tcslcpy(m_key, key, MAX_DB_STRING);
    m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
    m_notificationCode = 0;
+   m_subordinateAlarms = new IntegerArray<UINT32>(0, 16);
 }
 
 /**
@@ -189,7 +336,10 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
    MemFree(ids);
 
    m_rule = DBGetFieldGUID(hResult, row, 22);
-   m_eventTags = DBGetField(hResult, row, 23, NULL, 0);
+   m_parentAlarmId = DBGetFieldULong(hResult, row, 23);
+   m_eventTags = DBGetField(hResult, row, 24, NULL, 0);
+   m_rcaScriptName = DBGetField(hResult, row, 25, NULL, 0);
+   m_impact = DBGetField(hResult, row, 26, NULL, 0);
    m_notificationCode = 0;
 
    m_commentCount = GetCommentCount(hdb, m_alarmId);
@@ -209,6 +359,8 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
       }
       DBFreeResult(eventResult);
    }
+
+   m_subordinateAlarms = new IntegerArray<UINT32>(0, 16);
 }
 
 /**
@@ -218,6 +370,8 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, UINT32 notificationCode)
 {
    m_sourceEventId = src->m_sourceEventId;
    m_alarmId = src->m_alarmId;
+   m_parentAlarmId = src->m_parentAlarmId;
+   m_rcaScriptName = MemCopyString(src->m_rcaScriptName);
    m_creationTime = src->m_creationTime;
    m_lastChangeTime = src->m_lastChangeTime;
    m_rule = src->m_rule;
@@ -240,6 +394,7 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, UINT32 notificationCode)
    _tcscpy(m_message, src->m_message);
    _tcscpy(m_key, src->m_key);
    _tcscpy(m_helpDeskRef, src->m_helpDeskRef);
+   m_impact = MemCopyString(src->m_impact);
    m_commentCount = src->m_commentCount;
    if (copyEvents && (src->m_relatedEvents != NULL))
    {
@@ -251,6 +406,7 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, UINT32 notificationCode)
    }
    m_alarmCategoryList = new IntegerArray<UINT32>(src->m_alarmCategoryList);
    m_notificationCode = notificationCode;
+   m_subordinateAlarms = new IntegerArray<UINT32>(src->m_subordinateAlarms);
 }
 
 /**
@@ -261,6 +417,28 @@ Alarm::~Alarm()
    delete m_relatedEvents;
    delete m_alarmCategoryList;
    MemFree(m_eventTags);
+   delete m_subordinateAlarms;
+   MemFree(m_impact);
+   MemFree(m_rcaScriptName);
+}
+
+/**
+ * Add subordinate alarm to list
+ */
+void Alarm::addSubordinateAlarm(UINT32 alarmId)
+{
+   if (!m_subordinateAlarms->contains(alarmId))
+      m_subordinateAlarms->add(alarmId);
+}
+
+/**
+ * Remove subordinate alarm from list
+ */
+void Alarm::removeSubordinateAlarm(UINT32 alarmId)
+{
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Removing subordinate alarm %u from alarm %u"), alarmId, m_alarmId);
+   m_subordinateAlarms->remove(m_subordinateAlarms->indexOf(alarmId));
+   ThreadPoolExecute(g_mainThreadPool, NotifyClientsInBackground, new Alarm(this, false, NX_NOTIFY_ALARM_CHANGED));
 }
 
 /**
@@ -295,45 +473,6 @@ bool Alarm::checkCategoryAccess(ClientSession *session) const
 }
 
 /**
- * Client notification data
- */
-struct CLIENT_NOTIFICATION_DATA
-{
-   UINT32 code;
-   const Alarm *alarm;
-};
-
-/**
- * Callback for client session enumeration
- */
-static void SendAlarmNotification(ClientSession *session, void *arg)
-{
-   session->onAlarmUpdate(((CLIENT_NOTIFICATION_DATA *)arg)->code,
-                          ((CLIENT_NOTIFICATION_DATA *)arg)->alarm);
-}
-
-/**
- * Callback for client session enumeration
- */
-static void SendBulkAlarmTerminateNotification(ClientSession *session, void *arg)
-{
-   session->sendMessage((NXCPMessage *)arg);
-}
-
-/**
- * Notify connected clients about changes
- */
-static void NotifyClients(UINT32 code, const Alarm *alarm)
-{
-   CALL_ALL_MODULES(pfAlarmChangeHook, (code, alarm));
-
-   CLIENT_NOTIFICATION_DATA data;
-   data.code = code;
-   data.alarm = alarm;
-   EnumerateClientSessions(SendAlarmNotification, &data);
-}
-
-/**
  * Create alarm record in database
  */
 void Alarm::createInDatabase()
@@ -341,42 +480,46 @@ void Alarm::createInDatabase()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
-              _T("INSERT INTO alarms (alarm_id,creation_time,last_change_time,")
+              _T("INSERT INTO alarms (alarm_id,parent_alarm_id,creation_time,last_change_time,")
               _T("source_object_id,zone_uin,source_event_code,message,original_severity,")
               _T("current_severity,alarm_key,alarm_state,ack_by,resolved_by,hd_state,")
               _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id,")
-              _T("ack_timeout,dci_id,alarm_category_ids,rule_guid,event_tags) ")
-              _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+              _T("ack_timeout,dci_id,alarm_category_ids,rule_guid,event_tags,rca_script_name,")
+              _T("impact) ")
+              _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_alarmId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (UINT32)m_creationTime);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)m_lastChangeTime);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_sourceObject);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_zoneUIN);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_sourceEventCode);
-      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC);
-      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_originalSeverity);
-      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
-      DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_key, DB_BIND_STATIC);
-      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_state);
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_ackByUser);
-      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_resolvedByUser);
-      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_helpDeskState);
-      DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, m_helpDeskRef, DB_BIND_STATIC);
-      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_repeatCount);
-      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_termByUser);
-      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_timeout);
-      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_timeoutEvent);
-      DBBind(hStmt, 20, DB_SQLTYPE_BIGINT, m_sourceEventId);
-      DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
-      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_dciId);
-      DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_parentAlarmId);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)m_creationTime);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_lastChangeTime);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_sourceObject);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_zoneUIN);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_sourceEventCode);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_originalSeverity);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
+      DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_key, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_state);
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_ackByUser);
+      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_resolvedByUser);
+      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_helpDeskState);
+      DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, m_helpDeskRef, DB_BIND_STATIC, MAX_HELPDESK_REF_LEN);
+      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_repeatCount);
+      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_termByUser);
+      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_timeout);
+      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_timeoutEvent);
+      DBBind(hStmt, 21, DB_SQLTYPE_BIGINT, m_sourceEventId);
+      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
+      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_dciId);
+      DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
       if (!m_rule.isNull())
-         DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_rule);
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_rule);
       else
-         DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-      DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC);
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+      DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -397,7 +540,8 @@ void Alarm::updateInDatabase()
             _T("last_change_time=?,current_severity=?,repeat_count=?,")
             _T("hd_state=?,hd_ref=?,timeout=?,timeout_event=?,")
             _T("message=?,resolved_by=?,ack_timeout=?,source_object_id=?,")
-            _T("dci_id=?,alarm_category_ids=?,rule_guid=?,event_tags=? WHERE alarm_id=?"));
+            _T("dci_id=?,alarm_category_ids=?,rule_guid=?,event_tags=?,")
+            _T("parent_alarm_id=?,rca_script_name=?,impact=? WHERE alarm_id=?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_state);
@@ -407,10 +551,10 @@ void Alarm::updateInDatabase()
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_repeatCount);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_helpDeskState);
-      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_helpDeskRef, DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_helpDeskRef, DB_BIND_STATIC, MAX_HELPDESK_REF_LEN);
       DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_timeout);
       DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_timeoutEvent);
-      DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC);
+      DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
       DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_resolvedByUser);
       DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
       DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceObject);
@@ -420,8 +564,11 @@ void Alarm::updateInDatabase()
          DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_rule);
       else
          DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-      DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC);
-      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_alarmId);
+      DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_parentAlarmId);
+      DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
+      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_alarmId);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -443,6 +590,8 @@ void Alarm::updateInDatabase()
 void Alarm::fillMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_ALARM_ID, m_alarmId);
+   msg->setField(VID_PARENT_ALARM_ID, m_parentAlarmId);
+   msg->setField(VID_RCA_SCRIPT_NAME, m_rcaScriptName);
    msg->setField(VID_ACK_BY_USER, m_ackByUser);
    msg->setField(VID_RESOLVED_BY_USER, m_resolvedByUser);
    msg->setField(VID_TERMINATED_BY_USER, m_termByUser);
@@ -456,6 +605,7 @@ void Alarm::fillMessage(NXCPMessage *msg) const
    msg->setFieldFromTime(VID_LAST_CHANGE_TIME, m_lastChangeTime);
    msg->setField(VID_ALARM_KEY, m_key);
    msg->setField(VID_ALARM_MESSAGE, m_message);
+   msg->setField(VID_IMPACT, m_impact);
    msg->setField(VID_STATE, (WORD)(m_state & ALARM_STATE_MASK)); // send only state to client, without flags
    msg->setField(VID_IS_STICKY, (WORD)((m_state & ALARM_STATE_STICKY) ? 1 : 0));
    msg->setField(VID_CURRENT_SEVERITY, (WORD)m_currentSeverity);
@@ -468,6 +618,7 @@ void Alarm::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_NUM_COMMENTS, m_commentCount);
    msg->setField(VID_TIMESTAMP, (UINT32)((m_ackTimeout != 0) ? (m_ackTimeout - time(NULL)) : 0));
    msg->setFieldFromInt32Array(VID_CATEGORY_LIST, m_alarmCategoryList);
+   msg->setFieldFromInt32Array(VID_SUBORDINATE_ALARMS, m_subordinateAlarms);
    if (m_notificationCode != 0)
       msg->setField(VID_NOTIFICATION_CODE, m_notificationCode);
 }
@@ -541,10 +692,10 @@ static UINT32 GetCorrelatedEvents(QWORD eventId, NXCPMessage *msg, UINT32 baseId
  */
 static void FillAlarmEventsMessage(NXCPMessage *msg, UINT32 alarmId)
 {
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	const TCHAR *query;
-	switch(g_dbSyntax)
-	{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   const TCHAR *query;
+   switch(g_dbSyntax)
+   {
 		case DB_SYNTAX_ORACLE:
 			query = _T("SELECT * FROM (SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC) WHERE ROWNUM<=200");
 			break;
@@ -578,17 +729,21 @@ static void FillAlarmEventsMessage(NXCPMessage *msg, UINT32 alarmId)
 			DBFreeResult(hResult);
 			msg->setField(VID_NUM_ELEMENTS, (varId - VID_ELEMENT_LIST_BASE) / 10);
 		}
-		DBFreeStatement(hStmt);
-	}
-	DBConnectionPoolReleaseConnection(hdb);
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
  * Update existing alarm from event
  */
-void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, const TCHAR *message, IntegerArray<UINT32> *alarmCategoryList)
+void Alarm::updateFromEvent(Event *event, UINT32 parentAlarmId, const TCHAR *rcaScriptName, int state, int severity, UINT32 timeout, UINT32 timeoutEvent,
+         UINT32 ackTimeout, const TCHAR *message, const TCHAR *impact, IntegerArray<UINT32> *alarmCategoryList)
 {
    m_repeatCount++;
+   m_parentAlarmId = parentAlarmId;
+   MemFree(m_rcaScriptName);
+   m_rcaScriptName = MemCopyString(rcaScriptName);
    m_lastChangeTime = (UINT32)time(NULL);
    m_sourceObject = event->getSourceId();
    m_dciId = event->getDciId();
@@ -600,6 +755,8 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
    if ((m_state & ALARM_STATE_STICKY) == 0)
       m_ackTimeout = ackTimeout;
    _tcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
+   MemFree(m_impact);
+   m_impact = MemCopyString(impact);
    delete m_alarmCategoryList;
    m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
 
@@ -608,10 +765,32 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
 }
 
 /**
+ * Update parent alarm ID
+ */
+void Alarm::updateParentAlarm(UINT32 parentAlarmId)
+{
+   // Update parent's subordinate list if parent is changed
+   if (m_parentAlarmId != parentAlarmId)
+   {
+      Alarm *parent = (m_parentAlarmId != 0) ? s_alarmList.find(m_parentAlarmId) : NULL;
+      if (parent != NULL)
+         parent->removeSubordinateAlarm(m_alarmId);
+      parent = (parentAlarmId != 0) ? s_alarmList.find(parentAlarmId) : NULL;
+      if (parent != NULL)
+         parent->addSubordinateAlarm(m_alarmId);
+   }
+   m_parentAlarmId = parentAlarmId;
+
+   NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
+   updateInDatabase();
+}
+
+/**
  * Create new alarm
  */
-UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
-         UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue)
+UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
+         int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 parentAlarmId, const TCHAR *rcaScriptName, Event *event,
+         UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue)
 {
    UINT32 alarmId = 0;
    bool newAlarm = true;
@@ -620,16 +799,27 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, TCHAR *message, TCHAR 
    // Expand alarm's message and key
    String expMsg = event->expandText(message);
    String expKey = event->expandText(key);
+   String expImpact = event->expandText(impact);
 
    // Check if we have a duplicate alarm
    if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && !expKey.isEmpty())
    {
       s_alarmList.lock();
 
-      Alarm *alarm = s_alarmList.get(expKey);
+      Alarm *alarm = s_alarmList.find(expKey);
       if (alarm != NULL)
       {
-         alarm->updateFromEvent(event, state, severity, timeout, timeoutEvent, ackTimeout, expMsg, alarmCategoryList);
+         // Update parent's subordinate list if parent is changed
+         if (alarm->getParentAlarmId() != parentAlarmId)
+         {
+            Alarm *parent = (alarm->getParentAlarmId() != 0) ? s_alarmList.find(alarm->getParentAlarmId()) : NULL;
+            if (parent != NULL)
+               parent->removeSubordinateAlarm(alarm->getAlarmId());
+            parent = (parentAlarmId != 0) ? s_alarmList.find(parentAlarmId) : NULL;
+            if (parent != NULL)
+               parent->addSubordinateAlarm(alarm->getAlarmId());
+         }
+         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, state, severity, timeout, timeoutEvent, ackTimeout, expMsg, expImpact, alarmCategoryList);
          if (!alarm->isEventRelated(event->getId()))
          {
             alarmId = alarm->getAlarmId();      // needed for correct update of related events
@@ -649,7 +839,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, TCHAR *message, TCHAR 
    if (newAlarm)
    {
       // Create new alarm structure
-      Alarm *alarm = new Alarm(event, rule, expMsg, expKey, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
+      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, rule, expMsg, expKey, expImpact, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
       alarmId = alarm->getAlarmId();
 
       // Open helpdesk issue
@@ -667,6 +857,13 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, TCHAR *message, TCHAR 
 
 		alarm->createInDatabase();
       updateRelatedEvent = true;
+
+      if (parentAlarmId != 0)
+      {
+         Alarm *parent = s_alarmList.find(parentAlarmId);
+         if (parent != NULL)
+            parent->addSubordinateAlarm(alarm->getAlarmId());
+      }
 
       // Notify connected clients about new alarm
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);
@@ -692,13 +889,23 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, TCHAR *message, TCHAR 
                       8, sqlTypes, values);
    }
 
+   if (s_rootCauseUpdateNeeded)
+   {
+      s_rootCauseUpdatePossible = true;
+   }
+   else if ((parentAlarmId == 0) && (rcaScriptName != NULL) && (*rcaScriptName != 0))
+   {
+      // Alarm has root cause analyze script but root cause was not found
+      s_rootCauseUpdateNeeded = true;
+   }
+
    return alarmId;
 }
 
 /**
  * Do acknowledge
  */
-UINT32 Alarm::acknowledge(ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
+UINT32 Alarm::acknowledge(ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime, bool includeSubordinates)
 {
    if ((m_state & ALARM_STATE_MASK) != ALARM_STATE_OUTSTANDING)
       return RCC_ALARM_NOT_OUTSTANDING;
@@ -719,13 +926,17 @@ UINT32 Alarm::acknowledge(ClientSession *session, bool sticky, UINT32 acknowledg
    m_lastChangeTime = (UINT32)time(NULL);
    NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
    updateInDatabase();
+
+   if (includeSubordinates && !m_subordinateAlarms->isEmpty())
+      ThreadPoolExecute(g_mainThreadPool, AckAlarmsInBackground, new AlarmBackgroundProcessingData(m_subordinateAlarms, sticky, acknowledgmentActionTime, true));
+
    return RCC_SUCCESS;
 }
 
 /**
  * Acknowledge alarm with given ID
  */
-UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 alarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
+UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 alarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime, bool includeSubordinates)
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
@@ -735,7 +946,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 alarmId, ClientSession *session, bo
       Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
-         dwRet = alarm->acknowledge(session, sticky, acknowledgmentActionTime);
+         dwRet = alarm->acknowledge(session, sticky, acknowledgmentActionTime, includeSubordinates);
          dwObject = alarm->getSourceObject();
          break;
       }
@@ -760,7 +971,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *sess
       Alarm *alarm = s_alarmList.get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
-         dwRet = alarm->acknowledge(session, sticky, acknowledgmentActionTime);
+         dwRet = alarm->acknowledge(session, sticky, acknowledgmentActionTime, false);
          dwObject = alarm->getSourceObject();
          break;
       }
@@ -775,8 +986,11 @@ UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *sess
 /**
  * Resolve alarm
  */
-void Alarm::resolve(UINT32 userId, Event *event, bool terminate, bool notify)
+void Alarm::resolve(UINT32 userId, Event *event, bool terminate, bool notify, bool includeSubordinates)
 {
+   if (includeSubordinates && !m_subordinateAlarms->isEmpty())
+      ThreadPoolExecute(g_mainThreadPool, ResolveAlarmsInBackground, new AlarmBackgroundProcessingData(m_subordinateAlarms, terminate, true));
+
    if (terminate)
       m_termByUser = userId;
    else
@@ -813,11 +1027,11 @@ void Alarm::resolve(UINT32 userId, Event *event, bool terminate, bool notify)
  * Resolve and possibly terminate alarm with given ID
  * Should return RCC which can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session, bool terminate)
+UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session, bool terminate, bool includeSubordinates)
 {
    IntegerArray<UINT32> list(1), failIds, failCodes;
    list.add(alarmId);
-   ResolveAlarmsById(&list, &failIds, &failCodes, session, terminate);
+   ResolveAlarmsById(&list, &failIds, &failCodes, session, terminate, includeSubordinates);
 
    if (failCodes.size() > 0)
    {
@@ -833,7 +1047,8 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session
  * Resolve and possibly terminate alarms with given ID
  * Should return RCC which can be sent to client
  */
-void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, IntegerArray<UINT32> *failIds, IntegerArray<UINT32> *failCodes, ClientSession *session, bool terminate)
+void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, IntegerArray<UINT32> *failIds,
+         IntegerArray<UINT32> *failCodes, ClientSession *session, bool terminate, bool includeSubordinates)
 {
    IntegerArray<UINT32> processedAlarms, updatedObjects;
 
@@ -868,7 +1083,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
                         alarm->getAlarmId(), alarm->getMessage(), object->getName());
                   }
 
-                  alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, false);
+                  alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, false, includeSubordinates);
                   processedAlarms.add(alarm->getAlarmId());
                   if (!updatedObjects.contains(object->getId()))
                      updatedObjects.add(object->getId());
@@ -933,7 +1148,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
                objectList.add(alarm->getSourceObject());
 
             // Resolve or terminate alarm
-            alarm->resolve(0, pEvent, terminate, true);
+            alarm->resolve(0, pEvent, terminate, true, false);
             if (terminate)
             {
                s_alarmList.remove(i);
@@ -951,7 +1166,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
    {
       UINT32 objectId = 0;
       s_alarmList.lock();
-      Alarm *alarm = s_alarmList.get(pszKey);
+      Alarm *alarm = s_alarmList.find(pszKey);
       if ((alarm != NULL) &&
           ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
           (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
@@ -960,7 +1175,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
          objectId = alarm->getSourceObject();
 
          // Resolve or terminate alarm
-         alarm->resolve(0, pEvent, terminate, true);
+         alarm->resolve(0, pEvent, terminate, true, false);
          if (terminate)
          {
             s_alarmList.remove(alarm);
@@ -993,7 +1208,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
             objectList.add(alarm->getSourceObject());
 
          // Resolve or terminate alarm
-         alarm->resolve(0, NULL, terminate, true);
+         alarm->resolve(0, NULL, terminate, true, false);
          if (terminate)
          {
             s_alarmList.remove(i);
@@ -1033,7 +1248,7 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *
                   alarm->getAlarmId(), alarm->getMessage(), GetObjectName(objectId, _T("")));
             }
 
-            alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, true);
+            alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, true, false);
             if (terminate)
             {
                s_alarmList.remove(i);
@@ -1527,11 +1742,8 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 {
    ThreadSetName("AlarmWatchdog");
 
-	while(true)
+	while(!s_shutdown.wait(1000))
 	{
-		if (s_shutdown.wait(1000))
-			break;
-
 		if (!(g_flags & AF_SERVER_INITIALIZED))
 		   continue;   // Server not initialized yet
 
@@ -1579,7 +1791,7 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 			{
             nxlog_debug_tag(DEBUG_TAG, 5, _T("Resolve timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
                      alarm->getAlarmId(), alarm->getLastChangeTime(), s_resolveExpirationTime, (UINT32)now);
-            alarm->resolve(0, NULL, true, true);
+            alarm->resolve(0, NULL, true, true, false);
             s_alarmList.remove(i);
             i--;
 			}
@@ -1920,14 +2132,11 @@ int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
       return NXSL_ERR_NOT_STRING;
 
    const TCHAR *key = argv[0]->getValueAsCString();
-   Alarm *alarm = NULL;
 
    s_alarmList.lock();
-   Alarm *a = s_alarmList.get(key);
-   if (a != NULL)
-   {
-      alarm = new Alarm(a, false);
-   }
+   Alarm *alarm = s_alarmList.find(key);
+   if (alarm != NULL)
+      alarm = new Alarm(alarm, false);
    s_alarmList.unlock();
 
    *result = (alarm != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
@@ -1969,16 +2178,10 @@ Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
    if (alarmId == 0)
       return NULL;
 
-   Alarm *alarm = NULL;
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      if (s_alarmList.get(i)->getAlarmId() == alarmId)
-      {
-         alarm = new Alarm(s_alarmList.get(i), false);
-         break;
-      }
-   }
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != NULL)
+      alarm = new Alarm(alarm, false);
    s_alarmList.unlock();
    return alarm;
 }
@@ -2019,6 +2222,78 @@ void UpdateAlarmExpirationTimes()
 {
    s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Resolved alarms expiration time set to %u seconds"), s_resolveExpirationTime);
+}
+
+/**
+ * Root cause update thread
+ */
+static THREAD_RESULT THREAD_CALL RootCauseUpdateThread(void *arg)
+{
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Root cause update thread started"));
+   while(!s_shutdown.wait(60000))
+   {
+      if (!(g_flags & AF_SERVER_INITIALIZED))
+         continue;   // Server not initialized yet
+
+      if (!s_rootCauseUpdateNeeded || !s_rootCauseUpdatePossible)
+         continue;
+
+      s_rootCauseUpdatePossible = false;
+      s_rootCauseUpdateNeeded = false;
+
+      ObjectArray<Alarm> updateList(0, 32, true);
+      s_alarmList.lock();
+      for(int i = 0; i < s_alarmList.size(); i++)
+      {
+         Alarm *a = s_alarmList.get(i);
+         if ((*a->getRcaScriptName() != 0) && (a->getParentAlarmId() == 0))
+         {
+            updateList.add(new Alarm(a, false));
+         }
+      }
+      s_alarmList.unlock();
+
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("%d alarms for re-evaluation by background root cause analyzer"));
+
+      for(int i = 0; i < updateList.size(); i++)
+      {
+         Alarm *alarm = updateList.get(i);
+         NetObj *object = FindObjectById(alarm->getSourceObject());
+         NXSL_VM *vm = CreateServerScriptVM(alarm->getRcaScriptName(), object, NULL);
+         if (vm != NULL)
+         {
+            Event *event = LoadEventFromDatabase(alarm->getSourceEventId());
+            if (event != NULL)
+               vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, false)));
+            if (vm->run())
+            {
+               NXSL_Value *result = vm->getResult();
+               if (result->isObject(_T("Alarm")))
+               {
+                  UINT32 parentAlarmId = static_cast<Alarm*>(result->getValueAsObject()->getData())->getAlarmId();
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("Background root cause analysis script in has found parent alarm %u (%s)"),
+                           parentAlarmId, static_cast<Alarm*>(result->getValueAsObject()->getData())->getMessage());
+
+                  s_alarmList.lock();
+                  Alarm *originalAlarm = s_alarmList.find(alarm->getAlarmId());
+                  if (originalAlarm != NULL)
+                  {
+                     originalAlarm->updateParentAlarm(parentAlarmId);
+                  }
+                  s_alarmList.unlock();
+               }
+            }
+            else
+            {
+               PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", alarm->getRcaScriptName(), vm->getErrorText(), 0);
+               nxlog_write(NXLOG_ERROR, _T("Failed to execute background root cause analysis script %s (%s)"), alarm->getRcaScriptName(), vm->getErrorText());
+            }
+            delete vm;
+         }
+      }
+   }
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Root cause update thread stopped"));
+   return THREAD_OK;
 }
 
 /**
@@ -2065,7 +2340,20 @@ bool InitAlarmManager()
    if (cachedb != NULL)
       DBCloseInMemoryDatabase(cachedb);
 
+   // Update subordinate alarm lists
+   for(int i = 0; i < s_alarmList.size(); i++)
+   {
+      Alarm *curr = s_alarmList.get(i);
+      if (curr->getParentAlarmId() != 0)
+      {
+         Alarm *parent = s_alarmList.find(curr->getParentAlarmId());
+         if (parent != NULL)
+            parent->addSubordinateAlarm(curr->getAlarmId());
+      }
+   }
+
    s_watchdogThread = ThreadCreateEx(WatchdogThread, 0, NULL);
+   s_rootCauseUpdateThread = ThreadCreateEx(RootCauseUpdateThread, 0, NULL);
    return true;
 }
 
@@ -2076,15 +2364,5 @@ void ShutdownAlarmManager()
 {
    s_shutdown.set();
    ThreadJoin(s_watchdogThread);
-}
-
-/**
- * Alarm comments constructor
- */
-AlarmComment::AlarmComment(UINT32 id, time_t changeTime, UINT32 userId, TCHAR *text)
-{
-   m_id = id;
-   m_changeTime = changeTime;
-   m_userId = userId;
-   m_text = text;
+   ThreadJoin(s_rootCauseUpdateThread);
 }

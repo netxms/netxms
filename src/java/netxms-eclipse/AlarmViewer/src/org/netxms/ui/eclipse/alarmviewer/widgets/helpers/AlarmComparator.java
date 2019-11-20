@@ -18,11 +18,11 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
-import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TreeColumn;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
@@ -42,7 +42,7 @@ public class AlarmComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		TableColumn sortColumn = ((TableViewer)viewer).getTable().getSortColumn();
+		TreeColumn sortColumn = ((TreeViewer)viewer).getTree().getSortColumn();
 		if (sortColumn == null)
 			return 0;
 		
@@ -93,7 +93,7 @@ public class AlarmComparator extends ViewerComparator
 				rc = 0;
 				break;
 		}
-		int dir = ((TableViewer)viewer).getTable().getSortDirection();
+		int dir = ((TreeViewer)viewer).getTree().getSortDirection();
 		return (dir == SWT.UP) ? rc : -rc;
 	}
 }

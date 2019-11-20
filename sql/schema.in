@@ -1233,10 +1233,12 @@ CREATE TABLE event_policy
   comments SQL_TEXT null,
   script SQL_TEXT null,
   alarm_message varchar(2000) null,
+  alarm_impact varchar(1000) null,
   alarm_severity integer not null,
   alarm_key varchar(255) null,    // Alarm key (used for auto termination)
   alarm_timeout integer not null, // Timeout before sending event
   alarm_timeout_event integer not null,  // Event to be sent on timeout
+  rca_script_name varchar(255) null,
   PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
@@ -1300,6 +1302,7 @@ CREATE TABLE policy_pstorage_actions
 CREATE TABLE alarms
 (
   alarm_id integer not null,  // Unique alarm identifier
+  parent_alarm_id integer not null,
   alarm_state integer not null,
   hd_state integer not null,  // Help desk system state
   hd_ref varchar(63) null,  // Help desk reference
@@ -1315,15 +1318,17 @@ CREATE TABLE alarms
   original_severity integer not null,
   current_severity integer not null,
   repeat_count integer not null,
-  alarm_key varchar(255) null,     // Alarm key (used for auto acknowlegment)
-  ack_by integer not null,         // ID of user who was acknowleged alarm
-  resolved_by integer not null,    // ID of user who was resolved alarm
-  term_by integer not null,        // ID of user who was terminated alarm
+  alarm_key varchar(255) null,       // Alarm key (used for auto acknowlegment)
+  ack_by integer not null,           // ID of user who acknowleged alarm
+  resolved_by integer not null,      // ID of user who resolved alarm
+  term_by integer not null,          // ID of user who terminated alarm
   timeout integer not null,
   timeout_event integer not null,
   ack_timeout integer not null,
   alarm_category_ids varchar(255) null,
   event_tags varchar(2000) null,
+  rca_script_name varchar(255) null, // Name of root cause analysis script used during creation
+  impact varchar(1000) null,
 #ifdef DB_TSDB
   PRIMARY KEY(alarm_id,source_object_id,creation_time)
 #else

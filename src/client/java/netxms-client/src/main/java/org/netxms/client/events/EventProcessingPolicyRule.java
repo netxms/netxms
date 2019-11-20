@@ -62,6 +62,7 @@ public class EventProcessingPolicyRule
    private int alarmTimeout;
    private long alarmTimeoutEvent;
    private List<Long> alarmCategoryIds;
+   private String rcaScriptName;
    private List<ActionExecutionConfiguration> actions;
    private List<String> timerCancellations;
    private Map<String, String> persistentStorageSet;
@@ -85,6 +86,7 @@ public class EventProcessingPolicyRule
       alarmTimeout = 0;
       alarmTimeoutEvent = 43;
       alarmCategoryIds = new ArrayList<Long>(0);
+      rcaScriptName = null;
       actions = new ArrayList<ActionExecutionConfiguration>(0);
       timerCancellations = new ArrayList<String>(0);
       persistentStorageSet = new HashMap<String, String>(0);
@@ -109,6 +111,7 @@ public class EventProcessingPolicyRule
       alarmTimeout = src.alarmTimeout;
       alarmTimeoutEvent = src.alarmTimeoutEvent;
       alarmCategoryIds = src.alarmCategoryIds;
+      rcaScriptName = src.rcaScriptName;
       actions = new ArrayList<ActionExecutionConfiguration>(src.actions.size());
       for(ActionExecutionConfiguration d : src.actions)
          actions.add(new ActionExecutionConfiguration(d));
@@ -137,6 +140,7 @@ public class EventProcessingPolicyRule
       alarmTimeout = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT);
       alarmTimeoutEvent = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
       alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
+      rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
       comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 
       int actionCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ACTIONS);
@@ -202,8 +206,8 @@ public class EventProcessingPolicyRule
       msg.setFieldInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity.getValue());
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
-
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds.toArray(new Long[alarmCategoryIds.size()]));
+      msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_SET_PSTORAGE, persistentStorageSet.size());
       fieldId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
@@ -369,6 +373,11 @@ public class EventProcessingPolicyRule
       this.alarmCategoryIds = alarmCategoryIds;
    }
 
+   /**
+    * Remove specific alarm category from categories list
+    * 
+    * @param categoryId alarm category ID
+    */
    public void removeAlarmCategory(Long categoryId)
    {
       for(int i = 0; i < alarmCategoryIds.size(); i++)
@@ -380,6 +389,26 @@ public class EventProcessingPolicyRule
          }
       }
 
+   }
+
+   /**
+    * Get name of root cause analysis script.
+    * 
+    * @return name of root cause analysis script (can be null or empty string if not set)
+    */
+   public String getRcaScriptName()
+   {
+      return rcaScriptName;
+   }
+
+   /**
+    * Set name of root cause analysis script.
+    *
+    * @param rcaScriptName name of root cause analysis script (can be null or empty string to disable RCA)
+    */
+   public void setRcaScriptName(String rcaScriptName)
+   {
+      this.rcaScriptName = rcaScriptName;
    }
 
    /**

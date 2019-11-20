@@ -2437,6 +2437,9 @@ json_t *NetObj::toJson()
  */
 StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields)
 {
+   if (textTemplate == NULL)
+      return StringBuffer();
+
    struct tm *lt;
 #if HAVE_LOCALTIME_R
    struct tm tmbuffer;
