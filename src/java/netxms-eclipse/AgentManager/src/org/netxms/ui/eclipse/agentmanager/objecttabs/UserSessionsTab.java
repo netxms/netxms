@@ -353,6 +353,9 @@ public class UserSessionsTab extends ObjectTab
    @Override
    public void refresh()
    {
+      if (!isActive())
+         return;
+      
       new ConsoleJob("Get list of agent sessions", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
