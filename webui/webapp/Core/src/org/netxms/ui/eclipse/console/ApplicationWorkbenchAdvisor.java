@@ -115,8 +115,8 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		{
 			LoginJob job = new LoginJob(Display.getCurrent(), server, login, false, false);
 			job.setPassword(password);
-			ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
-			pd.run(false, false, job);
+			ProgressMonitorWindow progressMonitor = new ProgressMonitorWindow(Display.getCurrent().getActiveShell());
+			progressMonitor.run(job);
 			success = true;
 		}
 		catch(InvocationTargetException e)

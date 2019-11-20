@@ -152,18 +152,24 @@ public abstract class ConsoleJob extends Job
 	 */
 	public void start()
 	{
-		display.asyncExec(new Runnable() {
-			@Override
-			public void run()
-			{
-				if (siteService != null)
-					siteService.schedule(ConsoleJob.this, 0, true);
-				else
-					schedule();
-			}
-		});
+		display.asyncExec(new Starter());
 	}
 	
+	/**
+	 * Starter class
+	 */
+	public class Starter implements Runnable
+	{
+      @Override
+      public void run()
+      {
+         if (siteService != null)
+            siteService.schedule(ConsoleJob.this, 0, true);
+         else
+            schedule();
+      }
+	}
+
    /**
     * Executes job. Called from within Job.run(). If job fails, this method should throw appropriate exception.
     * 

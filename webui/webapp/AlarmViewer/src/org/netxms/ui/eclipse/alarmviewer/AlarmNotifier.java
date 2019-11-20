@@ -80,7 +80,7 @@ public class AlarmNotifier
       this.session = session;
       this.display = display;
       
-      display.syncExec(new Runnable() {
+      RWT.getUISession(display).exec(new Runnable() {
          @Override
          public void run()
          {
@@ -98,7 +98,7 @@ public class AlarmNotifier
          {
             if ((n.getCode() == SessionNotification.NEW_ALARM) || (n.getCode() == SessionNotification.ALARM_CHANGED))
             {
-               if(isGlobalSoundEnabled())
+               if (isGlobalSoundEnabled())
                   processNewAlarm((Alarm)n.getObject());
             }
          }

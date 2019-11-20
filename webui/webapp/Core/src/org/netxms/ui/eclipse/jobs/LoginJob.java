@@ -159,7 +159,7 @@ public class LoginJob implements IRunnableWithProgress
 
          RWT.getUISession(display).setAttribute(ConsoleSharedData.ATTRIBUTE_SESSION, session);
 
-         display.syncExec(new Runnable() {
+         RWT.getUISession(display).exec(new Runnable() {
             @Override
             public void run()
             {
@@ -171,6 +171,7 @@ public class LoginJob implements IRunnableWithProgress
          callLoginListeners(session);
          monitor.worked(5);
 
+         Activator.logInfo("Creating keepalive timer");
          new KeepAliveTimer(session).start();
       }
       catch(Exception e)
@@ -182,6 +183,8 @@ public class LoginJob implements IRunnableWithProgress
          monitor.setTaskName(""); //$NON-NLS-1$
          monitor.done();
       }
+
+      Activator.logInfo("Login job completed");
    }
 
    /**

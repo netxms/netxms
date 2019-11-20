@@ -96,7 +96,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	{
 		super.postWindowCreate();
 		
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		NXCSession session = ConsoleSharedData.getSession();
 		
 		// Changes the page title at runtime
       JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
@@ -248,7 +248,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
     */
    private void showMessageOfTheDay()
    {   
-      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      NXCSession session = ConsoleSharedData.getSession();
       String message = session.getMessageOfTheDay();
       
       if (!message.isEmpty())
