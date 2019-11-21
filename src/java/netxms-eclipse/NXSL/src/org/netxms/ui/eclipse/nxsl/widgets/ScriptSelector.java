@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,47 +28,51 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ScriptSelector extends AbstractSelector
 {
-	private String scriptName = ""; //$NON-NLS-1$
-	
-	/**
-	 * @param parent
-	 * @param style
-	 * @param useHyperlink
-	 */
-	public ScriptSelector(Composite parent, int style, boolean useHyperlink, boolean showLabel)
-	{
-		super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0) | (showLabel ? 0 : HIDE_LABEL));
-	}
+   private String scriptName = ""; //$NON-NLS-1$
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
-	 */
-	@Override
-	protected void selectionButtonHandler()
-	{
-		SelectScriptDialog dlg = new SelectScriptDialog(getShell());
-		if (dlg.open() == Window.OK)
-		{
-			scriptName = dlg.getScript().getName();
-			setText(scriptName);
-			fireModifyListeners();
-		}
-	}
+   /**
+    * @param parent
+    * @param style
+    * @param useHyperlink
+    */
+   public ScriptSelector(Composite parent, int style, boolean useHyperlink, boolean showLabel)
+   {
+      super(parent, style, USE_TEXT | (useHyperlink ? USE_HYPERLINK : 0) | (showLabel ? 0 : HIDE_LABEL));
+   }
 
-	/**
-	 * @return the scriptName
-	 */
-	public final String getScriptName()
-	{
-		return scriptName;
-	}
+   /** 
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+    */
+   @Override
+   protected void selectionButtonHandler()
+   {
+      SelectScriptDialog dlg = new SelectScriptDialog(getShell());
+      if (dlg.open() == Window.OK)
+      {
+         scriptName = dlg.getScript().getName();
+         setText(scriptName);
+         fireModifyListeners();
+      }
+   }
 
-	/**
-	 * @param scriptName the scriptName to set
-	 */
-	public final void setScriptName(String scriptName)
-	{
-		this.scriptName = scriptName;
-		setText(scriptName);
-	}
+   /**
+    * Get name of selected script.
+    *
+    * @return name of selected script or empty string if script was not selected
+    */
+   public final String getScriptName()
+   {
+      return scriptName;
+   }
+
+   /**
+    * Set script name.
+    *
+    * @param scriptName script name, empty string, or null
+    */
+   public final void setScriptName(String scriptName)
+   {
+      this.scriptName = (scriptName != null) ? scriptName : "";
+      setText(this.scriptName);
+   }
 }
