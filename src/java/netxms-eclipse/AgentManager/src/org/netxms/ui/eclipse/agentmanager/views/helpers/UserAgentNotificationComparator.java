@@ -53,6 +53,9 @@ public class UserAgentNotificationComparator extends ViewerComparator
 			case UserAgentNotificationView.COL_IS_RECALLED:
 				result = Boolean.compare(uam1.isRecalled(), uam2.isRecalled());
 				break;
+         case UserAgentNotificationView.COL_IS_STARTUP:
+            result = Boolean.compare(uam1.isStartupNotification(), uam2.isStartupNotification());
+            break;
 			case UserAgentNotificationView.COL_START_TIME:
 				result = uam1.getStartTime().compareTo(uam2.getStartTime());
 				break;

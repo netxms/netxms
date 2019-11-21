@@ -34,6 +34,7 @@ public class UserAgentNotification
    private Date startTime;
    private Date endTime;
    private boolean recalled;
+   private boolean onStartup;
    
    /**
     * Create notification object from NXCP message. 
@@ -48,7 +49,8 @@ public class UserAgentNotification
       message = msg.getFieldAsString(baseId + 1);
       startTime = msg.getFieldAsDate(baseId + 2);
       endTime = msg.getFieldAsDate(baseId + 3);
-      objects = msg.getFieldAsUInt32Array(baseId + 4);
+      onStartup = msg.getFieldAsBoolean(baseId + 4);
+      objects = msg.getFieldAsUInt32Array(baseId + 5);
 
       Arrays.sort(objects); // FIXME: really needed here? Sort objects for comparator in table view
       StringBuilder sb = new StringBuilder();
@@ -60,7 +62,7 @@ public class UserAgentNotification
       }
       objectNames = sb.toString();
 
-      recalled = msg.getFieldAsBoolean(baseId + 5);
+      recalled = msg.getFieldAsBoolean(baseId + 6);
    }
 
    /**
@@ -131,5 +133,15 @@ public class UserAgentNotification
    public boolean isRecalled()
    {
       return recalled;
+   }
+   
+   /**
+    * Check if thus notification should be shown every startup
+    * 
+    * @return true if notification should be shown every startup
+    */
+   public boolean isStartupNotification()
+   {
+      return onStartup;
    }
 }

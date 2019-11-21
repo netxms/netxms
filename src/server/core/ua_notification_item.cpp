@@ -33,7 +33,7 @@ void InitUserAgentNotifications()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,message,objects,start_time,end_time,recall FROM user_agent_notifications"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,message,objects,start_time,end_time,recall,on_startup FROM user_agent_notifications"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
@@ -96,10 +96,10 @@ void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node)
 /**
  * Create new user agent notification
  */
-UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime)
+UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool onStartup)
 {
    g_userAgentNotificationListMutex.lock();
-   UserAgentNotificationItem *uan = new UserAgentNotificationItem(message, objects, startTime, endTime);
+   UserAgentNotificationItem *uan = new UserAgentNotificationItem(message, objects, startTime, endTime, onStartup);
    g_userAgentNotificationList.add(uan);
    uan->incRefCount();
    uan->incRefCount();
@@ -132,19 +132,21 @@ UserAgentNotificationItem::UserAgentNotificationItem(DB_RESULT result, int row) 
    m_startTime = DBGetFieldLong(result, row, 3);
    m_endTime = DBGetFieldLong(result, row, 4);
    m_recall = DBGetFieldLong(result, row, 5) ? true : false;
+   m_onStartup = DBGetFieldLong(result, row, 6) ? true : false;
    m_refCount = 0;
 }
 
 /**
  * Create new user agent message
  */
-UserAgentNotificationItem::UserAgentNotificationItem(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime) : m_objects(objects)
+UserAgentNotificationItem::UserAgentNotificationItem(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool startup) : m_objects(objects)
 {
    m_id = CreateUniqueId(IDG_UA_MESSAGE);
    _tcslcpy(m_message, message, MAX_USER_AGENT_MESSAGE_SIZE);
    m_startTime = startTime;
    m_endTime = endTime;
    m_recall = false;
+   m_onStartup = startup;
    m_refCount = 0;
 }
 
@@ -174,6 +176,7 @@ static void SendUpdate(NXCPMessage *msg, NetObj *object)
       {
          msg->setId(conn->generateRequestId());
          conn->sendMessage(msg);
+         conn->decRefCount();
       }
    }
    else
@@ -217,10 +220,11 @@ void UserAgentNotificationItem::fillMessage(UINT32 base, NXCPMessage *msg, bool 
    msg->setField(base + 1, m_message);
    msg->setFieldFromTime(base + 2, m_startTime);
    msg->setFieldFromTime(base + 3, m_endTime);
+   msg->setField(base + 4, m_onStartup);
    if (fullInfo) // do not send info to agent
    {
-      msg->setFieldFromInt32Array(base + 4, &m_objects);
-      msg->setField(base + 5, m_recall);
+      msg->setFieldFromInt32Array(base + 5, &m_objects);
+      msg->setField(base + 6, m_recall);
    }
 }
 
@@ -232,7 +236,7 @@ void UserAgentNotificationItem::saveToDatabase()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    static const TCHAR *columns[] = {
-      _T("message"), _T("objects"), _T("start_time"), _T("end_time"), _T("recall"), NULL
+      _T("message"), _T("objects"), _T("start_time"), _T("end_time"), _T("recall"), _T("on_startup"), NULL
    };
 
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("user_agent_notifications"), _T("id"), m_id, columns);
@@ -251,7 +255,8 @@ void UserAgentNotificationItem::saveToDatabase()
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)m_startTime);
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_endTime);
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, (m_recall ? _T("1") : _T("0")), DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, (m_onStartup ? _T("1") : _T("0")), DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -272,5 +277,6 @@ json_t *UserAgentNotificationItem::toJson() const
    json_object_set_new(root, "startTime", json_integer(m_startTime));
    json_object_set_new(root, "endTime", json_integer(m_endTime));
    json_object_set_new(root, "recalled", json_boolean(m_recall));
+   json_object_set_new(root, "onStartup", json_boolean(m_onStartup));
    return root;
 }

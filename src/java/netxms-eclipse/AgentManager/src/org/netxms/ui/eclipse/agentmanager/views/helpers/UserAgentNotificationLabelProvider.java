@@ -56,6 +56,8 @@ public class UserAgentNotificationLabelProvider extends LabelProvider implements
 				return uaMessage.getMessage();
 			case UserAgentNotificationView.COL_IS_RECALLED:
 				return uaMessage.isRecalled() ? "Yes" : "No";
+         case UserAgentNotificationView.COL_IS_STARTUP:
+            return uaMessage.isStartupNotification() ? "Yes" : "No";
 			case UserAgentNotificationView.COL_START_TIME:
 				return uaMessage.getStartTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(uaMessage.getStartTime());
 			case UserAgentNotificationView.COL_END_TIME:

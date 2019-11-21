@@ -31,6 +31,7 @@ UserAgentNotification::UserAgentNotification(UINT64 serverId, const NXCPMessage 
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
    m_endTime = msg->getFieldAsTime(baseId + 3);
+   m_onStartup = msg->getFieldAsTime(baseId + 4);
    m_read = false;
 }
 
@@ -43,18 +44,20 @@ UserAgentNotification::UserAgentNotification(const NXCPMessage *msg, UINT32 base
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
    m_endTime = msg->getFieldAsTime(baseId + 3);
+   m_onStartup = msg->getFieldAsTime(baseId + 4);
    m_read = false;
 }
 
 /**
  * User agent notification constructor
  */
-UserAgentNotification::UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end)
+UserAgentNotification::UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end, bool onStartup)
       : m_id(serverId, notificationId)
 {
    m_message = message;
    m_startTime = start;
    m_endTime = end;
+   m_onStartup = onStartup;
    m_read = false;
 }
 
@@ -66,6 +69,7 @@ UserAgentNotification::UserAgentNotification(const UserAgentNotification *src) :
    m_message = MemCopyString(src->m_message);
    m_startTime = src->m_startTime;
    m_endTime = src->m_endTime;
+   m_onStartup = src->m_onStartup;
    m_read = src->m_read;
 }
 
@@ -96,9 +100,9 @@ void UserAgentNotification::saveToDatabase(DB_HANDLE db)
 {
    TCHAR query[2048];
    _sntprintf(query, 2048,
-         _T("INSERT INTO user_agent_notifications (server_id,notification_id,message,start_time,end_time)")
-         _T(" VALUES (") INT64_FMT _T(",%u,%s,%d,%d)"), m_id.serverId, m_id.objectId,
+         _T("INSERT INTO user_agent_notifications (server_id,notification_id,message,start_time,end_time,on_startup)")
+         _T(" VALUES (") INT64_FMT _T(",%u,%s,%d,%d,%s)"), m_id.serverId, m_id.objectId,
          (const TCHAR *)DBPrepareString(db, m_message, 1023), static_cast<unsigned int>(m_startTime),
-         static_cast<unsigned int>(m_endTime));
+         static_cast<unsigned int>(m_endTime), m_onStartup ? _T("1") : _T("0"));
    DBQuery(db, query);
 }

@@ -48,6 +48,8 @@ public class UserAgentNotificationFilter extends ViewerFilter
          return true;
       else if (uam.isRecalled() ? "yes".contains(filterString) : "no".contains(filterString))
          return true;
+      else if (uam.isStartupNotification() ? "yes".contains(filterString) : "no".contains(filterString))
+         return true;
       return false;
    }
    

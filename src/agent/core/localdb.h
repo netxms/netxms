@@ -27,7 +27,7 @@
 /**
  * Database schema version
  */
-#define DB_SCHEMA_VERSION     9
+#define DB_SCHEMA_VERSION     10
 
 bool OpenLocalDatabase();
 void CloseLocalDatabase();

@@ -11228,13 +11228,14 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createUserAgentNotification(String message, long[] objects, Date startTime, Date endTime) throws NXCException, IOException
+   public void createUserAgentNotification(String message, long[] objects, Date startTime, Date endTime, boolean startup) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_UA_NOTIFICATION);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE, message);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 1, objects);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 2, startTime);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 3, endTime);
+      msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 4, startup);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -11247,13 +11248,13 @@ public class NXCSession
     * @param startTime notification's activation time
     * @param endTime notificaiton's display end time
     */
-   public void createUserAgentNotification(String message, Collection<Long> objects, Date startTime, Date endTime) throws NXCException, IOException
+   public void createUserAgentNotification(String message, Collection<Long> objects, Date startTime, Date endTime, boolean onStartup) throws NXCException, IOException
    {
       long[] idList = new long[objects.size()];
       int i = 0;
       for(Long id : objects)
          idList[i++] = id;
-      createUserAgentNotification(message, idList, startTime, endTime);
+      createUserAgentNotification(message, idList, startTime, endTime, onStartup);
    }
 
    /**

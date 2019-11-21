@@ -1019,12 +1019,13 @@ private:
    TCHAR *m_message;
    time_t m_startTime;
    time_t m_endTime;
+   bool m_onStartup;
    bool m_read;
 
 public:
    UserAgentNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
    UserAgentNotification(const NXCPMessage *msg, UINT32 baseId);
-   UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end);
+   UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end, bool onStartup);
    UserAgentNotification(const UserAgentNotification *src);
    ~UserAgentNotification();
 

@@ -765,7 +765,7 @@ void LoadUserAgentNotifications()
    }
 
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("SELECT server_id,notification_id,message,start_time,end_time FROM user_agent_notifications"));
+   _sntprintf(query, 1024, _T("SELECT server_id,notification_id,message,start_time,end_time,on_startup FROM user_agent_notifications"));
 
    DB_RESULT hResult = DBSelect(db, query);
    if (hResult != NULL)
@@ -778,7 +778,8 @@ void LoadUserAgentNotifications()
                   DBGetFieldULong(hResult, i, 1),
                   DBGetField(hResult, i, 2, NULL, 0),
                   (time_t)DBGetFieldInt64(hResult, i, 3),
-                  (time_t)DBGetFieldInt64(hResult, i, 4));
+                  (time_t)DBGetFieldInt64(hResult, i, 4),
+                  DBGetFieldULong(hResult, i, 5) ? true : false);
 
          s_userAgentNotifications.set(n->getId(), n);
       }

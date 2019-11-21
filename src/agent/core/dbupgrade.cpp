@@ -41,6 +41,20 @@ static DB_HANDLE s_db = NULL;
 /**
  * Upgrade from V8 to V9
  */
+static BOOL H_UpgradeFromV9(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(_T("ALTER TABLE user_agent_notifications ADD on_startup char(1)")));
+   CHK_EXEC(Query(_T("UPDATE user_agent_notifications SET on_startup='0'")));
+   CHK_EXEC(DBSetNotNullConstraint(s_db, _T("user_agent_notifications"), _T("on_startup")));
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 10));
+   return TRUE;
+}
+
+
+/**
+ * Upgrade from V8 to V9
+ */
 static BOOL H_UpgradeFromV8(int currVersion, int newVersion)
 {
    TCHAR createUserAgentNotifications[] =
@@ -390,6 +404,7 @@ static struct
    { 6, 7, H_UpgradeFromV6 },
    { 7, 8, H_UpgradeFromV7 },
    { 8, 9, H_UpgradeFromV8 },
+   { 9, 10, H_UpgradeFromV9 },
    { 0, 0, NULL }
 };
 

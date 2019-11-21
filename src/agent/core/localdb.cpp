@@ -99,6 +99,7 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  message varchar(1023) not null,")
    _T("  start_time integer not null,")
    _T("  end_time integer not null,")
+   _T("  on_startup char(1) not null,")
    _T("  PRIMARY KEY(server_id,notification_id))"),
 
    _T("CREATE TABLE zone_config (")

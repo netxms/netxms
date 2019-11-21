@@ -1583,6 +1583,9 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
    if (!argv[2]->isNumeric() || !argv[3]->isNumeric())
       return NXSL_ERR_NOT_INTEGER;
 
+   if (!argv[4]->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
+
    NXSL_Object *object = argv[0]->getValueAsObject();
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
       return NXSL_ERR_BAD_CLASS;
@@ -1594,7 +1597,7 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
    time_t startTime = (time_t)argv[2]->getValueAsUInt64();
    time_t endTime = (time_t)argv[3]->getValueAsUInt64();
 
-   UserAgentNotificationItem *uan = CreateNewUserAgentNotification(message, arr, startTime, endTime);
+   UserAgentNotificationItem *uan = CreateNewUserAgentNotification(message, arr, startTime, endTime, argv[3]->getValueAsBoolean());
 
    *result = vm->createValue(uan->getId());
    uan->decRefCount();

@@ -48,6 +48,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class SendUserAgentNotificationDialog extends Dialog
 {
    private LabeledText textMessage;
+   private Button checkStartup;
    private Button radioOneTime;
    private Button radioInterval;
    private DateTimeSelector startDateSelector;
@@ -58,6 +59,7 @@ public class SendUserAgentNotificationDialog extends Dialog
    private String message;
    private Date startTime;
    private Date endTime;   
+   private boolean startupNotification;
 	
 	/**
 	 * Constrictor
@@ -101,7 +103,6 @@ public class SendUserAgentNotificationDialog extends Dialog
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      //gd.widthHint = 200;
       gd.heightHint = 200;
       gd.horizontalSpan = 2;
       textMessage.setLayoutData(gd);
@@ -115,6 +116,8 @@ public class SendUserAgentNotificationDialog extends Dialog
             days.setEnabled(radioInterval.getSelection());
             hours.setEnabled(radioInterval.getSelection());
             minutes.setEnabled(radioInterval.getSelection());
+            if (radioOneTime.getSelection())
+               checkStartup.setSelection(false);
          }
          
          @Override
@@ -124,9 +127,39 @@ public class SendUserAgentNotificationDialog extends Dialog
          }
       };
       
+      checkStartup = new Button(dialogArea, SWT.CHECK);
+      checkStartup.setText("Startup notification");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkStartup.setLayoutData(gd);
+      checkStartup.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            if (checkStartup.getSelection())
+            {
+               radioInterval.setSelection(true);
+               radioOneTime.setSelection(false);
+               startDateSelector.setEnabled(radioInterval.getSelection());
+               days.setEnabled(radioInterval.getSelection());
+               hours.setEnabled(radioInterval.getSelection());
+               minutes.setEnabled(radioInterval.getSelection());
+            }
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
       radioOneTime = new Button(dialogArea, SWT.RADIO);
       radioOneTime.setText("One time");
       radioOneTime.setSelection(true);
+      radioOneTime.addSelectionListener(listener);
       
       radioInterval = new Button(dialogArea, SWT.RADIO);
       radioInterval.setText("Interval");
@@ -234,6 +267,7 @@ public class SendUserAgentNotificationDialog extends Dialog
 	protected void okPressed()
 	{
 	   message = textMessage.getText();
+	   startupNotification = checkStartup.getSelection();
 	   if(radioInterval.getSelection())
 	   {
    	   startTime = startDateSelector.getValue();
@@ -275,5 +309,10 @@ public class SendUserAgentNotificationDialog extends Dialog
    public Date getEndTime()
    {
       return endTime;
+   }
+   
+   public boolean isStartupNotification()
+   {
+      return startupNotification;
    }
 }

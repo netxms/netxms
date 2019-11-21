@@ -49,8 +49,9 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
    public static final int COL_OBJECTS = 1;
    public static final int COL_MESSAGE = 2;
    public static final int COL_IS_RECALLED = 3;
-   public static final int COL_START_TIME = 4;
-   public static final int COL_END_TIME = 5;
+   public static final int COL_IS_STARTUP = 4;
+   public static final int COL_START_TIME = 5;
+   public static final int COL_END_TIME = 6;
    
    private SortableTableViewer viewer; 
    private UserAgentNotificationFilter filter;
@@ -88,8 +89,8 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
          }
       });
       
-      final String[] names = { "ID", "Objects", "Message", "Is recalled", "Start time", "End time" };
-      final int[] widths = { 80, 300, 300, 80, 100, 100 };
+      final String[] names = { "ID", "Objects", "Message", "Is recalled", "Is startup", "Start time", "End time" };
+      final int[] widths = { 80, 300, 300, 80, 80, 100, 100 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new UserAgentNotificationLabelProvider());

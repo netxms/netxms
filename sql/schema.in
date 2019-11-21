@@ -2169,6 +2169,7 @@ CREATE TABLE user_agent_notifications
    start_time integer not null,
    end_time integer not null,
    recall char(1) not null,
+   on_startup char(1) not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
 
