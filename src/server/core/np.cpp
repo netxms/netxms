@@ -395,8 +395,9 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 /**
  * Node information for autodiscovery filter
  */
-struct DiscoveryFilterData : public NObject
+class DiscoveryFilterData : public NObject
 {
+public:
    InetAddress ipAddr;
    NetworkDeviceDriver *driver;
    DriverData *driverData;
@@ -409,6 +410,21 @@ struct DiscoveryFilterData : public NObject
    TCHAR snmpObjectId[MAX_OID_LEN * 4];    // SNMP OID
    TCHAR agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR platform[MAX_PLATFORM_NAME_LEN];
+
+   DiscoveryFilterData(const InetAddress& _ipAddr, UINT32 _zoneUIN) : NObject(), ipAddr(_ipAddr)
+   {
+      driver = NULL;
+      driverData = NULL;
+      ifList = NULL;
+      zoneUIN = _zoneUIN;
+      flags = 0;
+      snmpVersion = 0;
+      dnsNameResolved = false;
+      memset(dnsName, 0, sizeof(dnsName));
+      memset(snmpObjectId, 0, sizeof(snmpObjectId));
+      memset(agentVersion, 0, sizeof(agentVersion));
+      memset(platform, 0, sizeof(platform));
+   }
 
    virtual ~DiscoveryFilterData()
    {
@@ -763,10 +779,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    StrStrip(szFilter);
 
    // Initialize discovered node data
-   DiscoveryFilterData data;
-   memset(&data, 0, sizeof(DiscoveryFilterData));
-   data.ipAddr = newNodeData->ipAddr;
-   data.zoneUIN = newNodeData->zoneUIN;
+   DiscoveryFilterData data(newNodeData->ipAddr, newNodeData->zoneUIN);
 
    // Check for address range if we use simple filter instead of script
    UINT32 autoFilterFlags = 0;
