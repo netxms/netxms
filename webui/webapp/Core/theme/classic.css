@@ -53,7 +53,8 @@ Display {
   
   rwt-fontlist: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, "Liberation Mono", "Courier New";
   
-  background-image: url( theme/classic.resources/display/browser_bg.png );
+  background-image: none; /* url( theme/classic.resources/display/browser_bg.png ); */
+  background-color: #ffffff;
   font: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
@@ -2121,6 +2122,11 @@ Link.login {
   font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
+Composite.LoginForm {
+  border: 1px solid #303030;
+  /*border-radius: 8px;*/
+}
+
 
 /* FileUpload */
 
@@ -2182,6 +2188,6 @@ FileUpload-FocusIndicator {
 /* Wait indicator */
 
 SystemMessage-DisplayOverlay {
-  background-color: rgba( 224, 224, 224, 0.7 );
-  background-image: url( theme/classic.resources/display/loading.gif );
+  background-color: rgba( 224, 224, 224, 0.0 );
+  /*background-image: url( theme/classic.resources/display/loading.gif );*/
 }

@@ -60,10 +60,10 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class DefaultLoginForm extends Window implements LoginForm
 {
-   private static final RGB SCREEN_BACKGROUND = new RGB(240, 240, 240);
-   private static final RGB FORM_BACKGROUND = new RGB(240, 240, 240);
-   private static final RGB VERSION_FOREGROUND = new RGB(16, 16, 16);
-   
+   private static final RGB DEFAULT_SCREEN_BACKGROUND_COLOR = new RGB(255, 255, 255);
+   private static final RGB DEFAULT_FORM_BACKGROUND_COLOR = new RGB(255, 255, 255);
+   private static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(16, 16, 16);
+
 	private AppPropertiesLoader properties;
 	private boolean advancedSettingsEnabled;
 	private ColorCache colors;
@@ -80,7 +80,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		super(parentShell);
 		setBlockOnOpen(true);
 		this.properties = properties;
-		advancedSettingsEnabled = Boolean.parseBoolean(properties.getProperty("enableAdvancedSettings", "true")); //$NON-NLS-1$ //$NON-NLS-2$
+		advancedSettingsEnabled = Boolean.parseBoolean(properties.getProperty("enableAdvancedSettings", "false")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -101,10 +101,11 @@ public class DefaultLoginForm extends Window implements LoginForm
 	{
 		colors = new ColorCache(parent);
 		
-      parent.setBackground(colors.create(SCREEN_BACKGROUND));
+      RGB screenBkgnd = BrandingManager.getInstance().getLoginScreenBackgroundColor(DEFAULT_SCREEN_BACKGROUND_COLOR);
+      parent.setBackground(colors.create(screenBkgnd));
 		
       Composite fillerTop = new Composite(parent, SWT.NONE);
-      fillerTop.setBackground(colors.create(SCREEN_BACKGROUND));
+      fillerTop.setBackground(colors.create(screenBkgnd));
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = false;
@@ -112,10 +113,12 @@ public class DefaultLoginForm extends Window implements LoginForm
       gd.verticalAlignment = SWT.FILL;
       gd.heightHint = 100;
       fillerTop.setLayoutData(gd);
-      
-		final Canvas content = new Canvas(parent, SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
+
+      RGB formBkgnd = BrandingManager.getInstance().getLoginFormBackgroundColor(DEFAULT_FORM_BACKGROUND_COLOR);
+
+		final Canvas content = new Canvas(parent, SWT.BORDER | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+		layout.numColumns = 1;
 		layout.marginWidth = 10;
 		layout.marginHeight = 10;
 		layout.horizontalSpacing = 10;
@@ -127,18 +130,19 @@ public class DefaultLoginForm extends Window implements LoginForm
 		gd.horizontalAlignment = SWT.CENTER;
 		gd.verticalAlignment = SWT.CENTER;
 		content.setLayoutData(gd);
-		content.setBackground(colors.create(FORM_BACKGROUND));
+		content.setBackground(colors.create(formBkgnd));
+		content.setData(RWT.CUSTOM_VARIANT, "LoginForm");
 		
 		final Image userImage = (properties.getProperty("loginFormImage") != null) ? loadUserImage() : null;		
 		final ImageDescriptor customImage = BrandingManager.getInstance().getLoginTitleImage();
 		final Image loginImage = (userImage != null) ? userImage : ((customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.png").createImage()); //$NON-NLS-1$
 		Label logo = new Label(content, SWT.NONE);
-		logo.setBackground(colors.create(FORM_BACKGROUND));
+		logo.setBackground(colors.create(formBkgnd));
 		logo.setImage(loginImage);
 		logo.setLayoutData(new GridData(SWT.CENTER, SWT.TOP, false, false));
 		
 		Composite loginArea = new Composite(content, SWT.NONE);
-		loginArea.setBackground(colors.create(FORM_BACKGROUND));
+		loginArea.setBackground(colors.create(formBkgnd));
 		layout = new GridLayout();
 		loginArea.setLayout(layout);
 		gd = new GridData();
@@ -148,7 +152,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		loginArea.setLayoutData(gd);
 		
 		textLogin = new LabeledText(loginArea, SWT.NONE);
-		textLogin.setBackground(colors.create(FORM_BACKGROUND));
+		textLogin.setBackground(colors.create(formBkgnd));
 		textLogin.setLabel(Messages.get().LoginForm_UserName);
       textLogin.getTextControl().setData(RWT.CUSTOM_VARIANT, "login");
 		gd = new GridData();
@@ -157,7 +161,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		textLogin.setLayoutData(gd);
 		
 		textPassword = new LabeledText(loginArea, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
-		textPassword.setBackground(colors.create(FORM_BACKGROUND));
+		textPassword.setBackground(colors.create(formBkgnd));
 		textPassword.setLabel(Messages.get().LoginForm_Password);
 		textPassword.getTextControl().setData(RWT.CUSTOM_VARIANT, "login");
 		gd = new GridData();
@@ -167,7 +171,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		
 		Button okButton = new Button(loginArea, SWT.PUSH);
 		okButton.setText(Messages.get().LoginForm_LoginButton);
-		okButton.setData(RWT.CUSTOM_VARIANT, "login");
+		//okButton.setData(RWT.CUSTOM_VARIANT, "login");
 		okButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -182,49 +186,52 @@ public class DefaultLoginForm extends Window implements LoginForm
 			}
 		});
 		gd = new GridData();
-		gd.horizontalAlignment = SWT.LEFT;
+		gd.horizontalAlignment = SWT.RIGHT;
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
 		gd.verticalIndent = 5;
 		okButton.setLayoutData(gd);
 
-		final ImageHyperlink setupLink = new ImageHyperlink(loginArea, SWT.NONE);
-		setupLink.setText(Messages.get().LoginForm_Options);
-		setupLink.setForeground(colors.create(33, 0, 127));
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.RIGHT;
-		gd.verticalAlignment = SWT.BOTTOM;
-		gd.grabExcessVerticalSpace = true;
-		setupLink.setLayoutData(gd);
-		setupLink.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-         public void linkEntered(HyperlinkEvent e)
-         {
-            super.linkEntered(e);
-            setupLink.setUnderlined(true);
-         }
+		if (advancedSettingsEnabled)
+		{
+   		final ImageHyperlink setupLink = new ImageHyperlink(loginArea, SWT.NONE);
+   		setupLink.setText(Messages.get().LoginForm_Options);
+   		setupLink.setForeground(colors.create(33, 0, 127));
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.RIGHT;
+   		gd.verticalAlignment = SWT.BOTTOM;
+   		gd.grabExcessVerticalSpace = true;
+   		setupLink.setLayoutData(gd);
+   		setupLink.addHyperlinkListener(new HyperlinkAdapter() {
+   			@Override
+            public void linkEntered(HyperlinkEvent e)
+            {
+               super.linkEntered(e);
+               setupLink.setUnderlined(true);
+            }
+   
+            @Override
+            public void linkExited(HyperlinkEvent e)
+            {
+               super.linkExited(e);
+               setupLink.setUnderlined(false);
+            }
+   
+            @Override
+   			public void linkActivated(HyperlinkEvent e)
+   			{
+   				if (advancedSettingsEnabled)
+   				{
+   					LoginSettingsDialog dlg = new LoginSettingsDialog(getShell(), properties);
+   					dlg.open();
+   				}
+   				else
+   				{
+   					MessageDialog.openError(getShell(), Messages.get().LoginForm_Error, Messages.get().LoginForm_AdvOptionsDisabled);
+   				}
+   			}
+   		});
+		}
 
-         @Override
-         public void linkExited(HyperlinkEvent e)
-         {
-            super.linkExited(e);
-            setupLink.setUnderlined(false);
-         }
-
-         @Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				if (advancedSettingsEnabled)
-				{
-					LoginSettingsDialog dlg = new LoginSettingsDialog(getShell(), properties);
-					dlg.open();
-				}
-				else
-				{
-					MessageDialog.openError(getShell(), Messages.get().LoginForm_Error, Messages.get().LoginForm_AdvOptionsDisabled);
-				}
-			}
-		});
-		
 		content.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent event)
@@ -234,13 +241,13 @@ public class DefaultLoginForm extends Window implements LoginForm
 		});
 		
 		Composite fillerBottom = new Composite(parent, SWT.NONE);
-		fillerBottom.setBackground(colors.create(SCREEN_BACKGROUND));
+		fillerBottom.setBackground(colors.create(screenBkgnd));
 		fillerBottom.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		Label version = new Label(parent, SWT.NONE);
 		version.setText(String.format(Messages.get().LoginForm_Version, VersionInfo.version()));
 		version.setBackground(parent.getBackground());
-		version.setForeground(colors.create(VERSION_FOREGROUND));
+		version.setForeground(colors.create(BrandingManager.getInstance().getLoginScreenTextColor(DEFAULT_SCREEN_TEXT_COLOR)));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.RIGHT;
 		gd.verticalAlignment = SWT.BOTTOM;

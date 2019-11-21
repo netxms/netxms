@@ -195,7 +195,58 @@ public class BrandingManager
 		}
 		return null;
 	}
-	
+
+   /**
+    * Get background color for login screen.
+    * 
+    * @param defaultValue default value to be used if not provided by branding providers
+    * @return background color for login screen
+    */
+   public RGB getLoginScreenBackgroundColor(RGB defaultValue)
+   {
+      for(BrandingProvider p : providers.values())
+      {
+         RGB rgb = p.getLoginScreenBackgroundColor();
+         if (rgb != null)
+            return rgb;
+      }
+      return defaultValue;
+   }
+
+   /**
+    * Get background color for login form.
+    * 
+    * @param defaultValue default value to be used if not provided by branding providers
+    * @return background color for login form
+    */
+   public RGB getLoginFormBackgroundColor(RGB defaultValue)
+   {
+      for(BrandingProvider p : providers.values())
+      {
+         RGB rgb = p.getLoginFormBackgroundColor();
+         if (rgb != null)
+            return rgb;
+      }
+      return defaultValue;
+   }
+
+   /**
+    * Get text color for login screen.
+    * 
+    * @param defaultValue default value to be used if not provided by branding providers
+    * @return text color for login screen
+    */
+   public RGB getLoginScreenTextColor(RGB defaultValue)
+   {
+      for(BrandingProvider p : providers.values())
+      {
+         RGB rgb = p.getLoginScreenTextColor();
+         if (rgb != null)
+            return rgb;
+      }
+      return defaultValue;
+   }
+
 	/**
 	 * Get custom login form. It is guaranteed that returned form implements LoginForm interface.
 	 * 

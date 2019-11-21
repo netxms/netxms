@@ -24,6 +24,7 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
@@ -46,14 +47,17 @@ import org.netxms.ui.eclipse.tools.ColorCache;
  */
 public class ProgressMonitorWindow extends Window
 {
-   private static final RGB SCREEN_BACKGROUND = new RGB(240, 240, 240);
-   private static final RGB VERSION_FOREGROUND = new RGB(16, 16, 16);
+   private static final RGB DEFAULT_SCREEN_BACKGROUND_COLOR = new RGB(255, 255, 255);
+   private static final RGB DEFAULT_FORM_BACKGROUND_COLOR = new RGB(255, 255, 255);
+   private static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(16, 16, 16);
 
    private ColorCache colors;
    private ProgressBar progressBar;
    private Label progressMessage;
    private Object startMutex = new Object();
    private boolean controlsCreated = false;
+   private boolean taskIsRunning = false;
+   private InvocationTargetException taskException = null;
    private List<Runnable> asyncExecQueue = new ArrayList<Runnable>(16);
    private List<Runnable> asyncJobQueue = new ArrayList<Runnable>(16);
    private Runnable[] syncExecTask = new Runnable[1];
@@ -86,10 +90,11 @@ public class ProgressMonitorWindow extends Window
    {
       colors = new ColorCache(parent);
       
-      parent.setBackground(colors.create(SCREEN_BACKGROUND));
+      RGB screenBkgnd = BrandingManager.getInstance().getLoginScreenBackgroundColor(DEFAULT_SCREEN_BACKGROUND_COLOR);
+      parent.setBackground(colors.create(screenBkgnd));
       
       Composite fillerTop = new Composite(parent, SWT.NONE);
-      fillerTop.setBackground(colors.create(SCREEN_BACKGROUND));
+      fillerTop.setBackground(colors.create(screenBkgnd));
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = false;
@@ -98,11 +103,13 @@ public class ProgressMonitorWindow extends Window
       gd.heightHint = 100;
       fillerTop.setLayoutData(gd);
 
-      final Canvas content = new Canvas(parent, SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
+      RGB formBkgnd = BrandingManager.getInstance().getLoginFormBackgroundColor(DEFAULT_FORM_BACKGROUND_COLOR);
+      
+      final Canvas content = new Canvas(parent, SWT.BORDER | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
       GridLayout layout = new GridLayout();
       layout.numColumns = 1;
-      layout.marginWidth = 10;
-      layout.marginHeight = 10;
+      layout.marginWidth = 30;
+      layout.marginHeight = 30;
       layout.horizontalSpacing = 10;
       layout.verticalSpacing = 10;
       content.setLayout(layout);
@@ -112,25 +119,28 @@ public class ProgressMonitorWindow extends Window
       gd.horizontalAlignment = SWT.CENTER;
       gd.verticalAlignment = SWT.CENTER;
       content.setLayoutData(gd);
-      content.setBackground(colors.create(SCREEN_BACKGROUND));
+      content.setBackground(colors.create(formBkgnd));
+      content.setData(RWT.CUSTOM_VARIANT, "LoginForm");
       
       progressBar = new ProgressBar(content, SWT.SMOOTH | SWT.HORIZONTAL);
       gd = new GridData();
-      gd.widthHint = 500;
+      gd.widthHint = 800;
       progressBar.setLayoutData(gd);
+
       progressMessage = new Label(content, SWT.NONE);
+      progressMessage.setBackground(colors.create(formBkgnd));
       gd = new GridData();
-      gd.widthHint = 500;
+      gd.widthHint = 800;
       progressMessage.setLayoutData(gd);
       
       Composite fillerBottom = new Composite(parent, SWT.NONE);
-      fillerBottom.setBackground(colors.create(SCREEN_BACKGROUND));
+      fillerBottom.setBackground(colors.create(screenBkgnd));
       fillerBottom.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       
       Label version = new Label(parent, SWT.NONE);
       version.setText(String.format(Messages.get().LoginForm_Version, VersionInfo.version()));
       version.setBackground(parent.getBackground());
-      version.setForeground(colors.create(VERSION_FOREGROUND));
+      version.setForeground(colors.create(BrandingManager.getInstance().getLoginScreenTextColor(DEFAULT_SCREEN_TEXT_COLOR)));
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       gd.verticalAlignment = SWT.BOTTOM;
@@ -164,6 +174,8 @@ public class ProgressMonitorWindow extends Window
     */
    public void run(IRunnableWithProgress runnable) throws InvocationTargetException
    {
+      taskIsRunning = true;
+
       final Display display = Display.getCurrent();
       final IProgressMonitor monitor = new IProgressMonitor() {
          @Override
@@ -254,7 +266,6 @@ public class ProgressMonitorWindow extends Window
       Synchronizer oldSynchronizer = display.getSynchronizer();
       display.setSynchronizer(new DisplaySynchronizer(display));
       
-      final InvocationTargetException[] exceptionContainer = new InvocationTargetException[1];
       Thread worker = new Thread() {
          @Override
          public void run()
@@ -284,7 +295,7 @@ public class ProgressMonitorWindow extends Window
             catch(InvocationTargetException e)
             {
                Activator.logError("Progress monitor: exception in task", e);
-               exceptionContainer[0] = e;
+               taskException = e;
             }
             catch(InterruptedException e)
             {
@@ -326,9 +337,11 @@ public class ProgressMonitorWindow extends Window
          for(Runnable r : asyncJobQueue)
             display.asyncExec(r);
       }
+
+      taskIsRunning = false;
       
-      if (exceptionContainer[0] != null)
-         throw exceptionContainer[0];
+      if (taskException != null)
+         throw taskException;
    }
    
    /**
@@ -342,7 +355,7 @@ public class ProgressMonitorWindow extends Window
          @Override
          public void run()
          {
-            if ((getShell() != null) && !getShell().isDisposed())
+            if (taskIsRunning)
                display.timerExec(50, this);
          }
       };

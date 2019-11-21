@@ -73,6 +73,27 @@ public interface BrandingProvider
 	public String getLoginTitle();
 	
 	/**
+	 * Get background color for login screen.
+	 * 
+	 * @return background color for login screen
+	 */
+	public RGB getLoginScreenBackgroundColor();
+	
+   /**
+    * Get background color for login form.
+    * 
+    * @return background color for login form
+    */
+	public RGB getLoginFormBackgroundColor();
+	
+   /**
+    * Get text color for login screen.
+    * 
+    * @return text color for login screen
+    */
+	public RGB getLoginScreenTextColor();
+	
+	/**
 	 * Get custom login form. Form must implement LoginForm interface.
 	 * 
 	 * @param parentShell parent shell for login form
