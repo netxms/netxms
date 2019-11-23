@@ -4,7 +4,7 @@ libnxsrv_la_SOURCES = agent.cpp apinfo.cpp arp.cpp console.cpp \
                       iflist.cpp isc.cpp main.cpp ndd.cpp \
                       nobject.cpp snmpproxy.cpp vlan.cpp
 libnxsrv_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -DLIBNXSRV_EXPORTS -I@top_srcdir@/build
-libnxsrv_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION)
+libnxsrv_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsrv_la_LIBADD = \
 	../../db/libnxdb/libnxdb.la \
 	../../libnxsl/libnxsl.la \

@@ -6,7 +6,7 @@ libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
                      program.cpp selectors.cpp stack.cpp storage.cpp \
                      table.cpp value.cpp variable.cpp vm.cpp
 libnxsl_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNXSL_EXPORTS -I@top_srcdir@/build
-libnxsl_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION)
+libnxsl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsl_la_LIBADD = ../libnetxms/libnetxms.la
 
 EXTRA_DIST = Makefile.w32 libnxsl.vcxproj libnxsl.vcxproj.filters libnxsl.h parser.l parser.y parser.tab.hpp
