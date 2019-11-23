@@ -20,12 +20,14 @@ import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.widgets.PhysicalLinkWidget;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
 /**
  * Physical link tab for Racks and Nodes
  */
 public class PhysicalLinkTab extends ObjectTab
 {
+   private CompositeWithMessageBar content;
    private PhysicalLinkWidget linkWidget;
    private boolean initShowFilter = false;
 
@@ -37,8 +39,9 @@ public class PhysicalLinkTab extends ObjectTab
       
       FormLayout formLayout = new FormLayout();
       parent.setLayout(formLayout);
-      
-      linkWidget = new PhysicalLinkWidget(getViewPart(), parent, SWT.NONE, getObject() == null ? -1 : getObject().getObjectId(), 
+
+      content = new CompositeWithMessageBar(parent, SWT.NONE);
+      linkWidget = new PhysicalLinkWidget(getViewPart(), content, SWT.NONE, getObject() == null ? -1 : getObject().getObjectId(), 
             0, initShowFilter, new VisibilityValidator() {  
          @Override
          public boolean isVisible()

@@ -3,6 +3,8 @@ package org.netxms.ui.eclipse.objectview.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -47,7 +49,9 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -69,6 +73,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
    private ViewPart viewPart;
    private NXCSession session;
    private SortableTableViewer viewer;
+   private Composite parent;
    private Action actionRefresh;
    private Action actionAdd;
    private Action actionDelete;
@@ -103,6 +108,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       this.patchPanelId = patchPanelId;
       initShowFilter = enablefilter;
       this.visibilityValidator = visibilityValidator;
+      this.parent = parent;
       
       setLayout(new FormLayout());
       
@@ -223,6 +229,23 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
          protected String getErrorMessage()
          {
             return "Error getting physical link list";
+         }         
+
+         @Override
+         protected IStatus createFailureStatus(final Exception e)
+         {
+            if(!(parent instanceof CompositeWithMessageBar))//set error message only for tab 
+               return super.createFailureStatus(e);
+            
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  ((CompositeWithMessageBar)parent).showMessage(MessageBar.ERROR, getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
+               }
+            });
+            return Status.OK_STATUS;
          }
       }.start();
    }
