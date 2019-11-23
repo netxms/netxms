@@ -160,6 +160,7 @@ bool SlackDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
 
       char request[4096];
       snprintf(request, 4095, "payload=%s", json_body);
+      MemFree(json_body);
 
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
       json_decref(root);
