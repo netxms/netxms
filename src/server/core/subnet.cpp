@@ -331,6 +331,28 @@ void Subnet::prepareForDeletion()
 }
 
 /**
+ * Get child node other than given one (useful for subnets representing point to point links)
+ */
+Node *Subnet::getOtherNode(UINT32 nodeId)
+{
+   Node *node = NULL;
+   lockChildList(false);
+   for(int i = 0; i < getChildList()->size(); i++)
+   {
+      NetObj *curr = getChildList()->get(i);
+      if (curr->getId() == nodeId)
+         continue;
+      if (curr->getObjectClass() == OBJECT_NODE)
+      {
+         node = static_cast<Node*>(curr);
+         break;
+      }
+   }
+   unlockChildList();
+   return node;
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *Subnet::toJson()

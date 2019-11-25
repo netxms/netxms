@@ -1368,13 +1368,7 @@ public:
 	UINT32 getModule() const { return m_physicalLocation.module; }
    UINT32 getPIC() const { return m_physicalLocation.pic; }
 	UINT32 getPort() const { return m_physicalLocation.port; }
-	InterfacePhysicalLocation getPhysicalLocation() const
-	{
-	   lockProperties();
-	   auto l = m_physicalLocation;
-	   unlockProperties();
-	   return l;
-	}
+	InterfacePhysicalLocation getPhysicalLocation() const { return GetAttributeWithLock(m_physicalLocation, m_mutexProperties); }
 	UINT32 getPeerNodeId() const { return m_peerNodeId; }
 	UINT32 getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
@@ -1401,6 +1395,7 @@ public:
              !_tcscmp(m_name, _T("unknown"));
    }
    bool isSubInterface() const { return m_parentInterfaceId != 0; }
+   bool isPointToPoint() const;
    bool isIncludedInIcmpPoll() const { return (m_flags & IF_INCLUDE_IN_ICMP_POLL) ? true : false; }
    NXSL_Value *getVlanListForNXSL(NXSL_VM *vm);
 
@@ -2756,6 +2751,7 @@ public:
    Interface *findInterfaceByName(const TCHAR *name);
 	Interface *findInterfaceByMAC(const MacAddress& macAddr);
 	Interface *findInterfaceByIP(const InetAddress& addr);
+   Interface *findInterfaceBySubnet(const InetAddress& subnet);
 	Interface *findInterfaceByLocation(const InterfacePhysicalLocation& location);
 	Interface *findBridgePort(UINT32 bridgePortNumber);
    AccessPoint *findAccessPointByMAC(const MacAddress& macAddr);
@@ -3016,6 +3012,7 @@ public:
    virtual json_t *toJson() override;
 
    void addNode(Node *node) { addChild(node); node->addParent(this); calculateCompoundStatus(TRUE); }
+   Node *getOtherNode(UINT32 nodeId);
 
    virtual bool showThresholdSummary() override;
 

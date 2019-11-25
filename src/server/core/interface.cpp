@@ -1340,6 +1340,36 @@ NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm)
 }
 
 /**
+ * Check if this interface is a point-to-point link (from IP protocol point of view).
+ */
+bool Interface::isPointToPoint() const
+{
+   static UINT32 ptpTypes[] = {
+            IFTYPE_LAPB, IFTYPE_E1, IFTYPE_PROP_PTP_SERIAL, IFTYPE_PPP, IFTYPE_SLIP,
+            IFTYPE_RS232, IFTYPE_V35, IFTYPE_ADSL, IFTYPE_RADSL, IFTYPE_SDSL, IFTYPE_VDSL,
+            IFTYPE_HDLC, IFTYPE_MSDSL, IFTYPE_IDSL, IFTYPE_HDSL2, IFTYPE_SHDSL, 0
+   };
+   for(int i = 0; ptpTypes[i] != 0; i++)
+      if (m_type == ptpTypes[i])
+         return true;
+
+   if (m_ipAddressList.size() == 0)
+      return false;
+
+   for(int i = 0; i < m_ipAddressList.size(); i++)
+   {
+      InetAddress a = m_ipAddressList.get(i);
+      if (a.isMulticast())
+         return false;
+      if ((a.getFamily() == AF_INET) && (a.getMaskBits() < 30))
+         return false;
+      if ((a.getFamily() == AF_INET6) && (a.getMaskBits() < 126))
+         return false;
+   }
+   return true;
+}
+
+/**
  * Build expanded interface name from original name. Expanded name buffer must be at least MAX_OBJECT_NAME characters.
  */
 void Interface::expandName(const TCHAR *originalName, TCHAR *expandedName)
