@@ -369,7 +369,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          public void widgetSelected(SelectionEvent e)
          {
             setModified();
-            if(radioActiveDiscoveryInterval.getSelection())
+            if (radioActiveDiscoveryInterval.getSelection())
             {
                config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));  
                activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval() == 0 ? DiscoveryConfig.DEFAULT_ACTIVE_INTERVAL : config.getActiveDiscoveryPollInterval());
@@ -409,7 +409,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       activeDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, "Active discovery interval", 0,
             0xffffff, gd);      
       activeDiscoveryInterval.addModifyListener(new ModifyListener() {
-         
          @Override
          public void modifyText(ModifyEvent e)
          {
@@ -422,11 +421,9 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       activeDiscoverySchedule = new LabeledText(clientArea, SWT.NONE, SWT.SINGLE | SWT.BORDER, toolkit);
       activeDiscoverySchedule.setLabel("Active discovery schedule");   
       activeDiscoverySchedule.getTextControl().addModifyListener(new ModifyListener() {
-         
          @Override
          public void modifyText(ModifyEvent e)
          {
-            config.setActiveDiscoveryPollInterval(0);
             config.setActiveDiscoveryPollSchedule(activeDiscoverySchedule.getText());
             setModified();
          }
