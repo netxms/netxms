@@ -71,6 +71,7 @@ public class AlarmNotifier
    private static URL workspaceUrl;
    private static LinkedBlockingQueue<String> soundQueue = new LinkedBlockingQueue<String>(4);
    private static AtomicInteger trayPopupCount = new AtomicInteger(0);
+   private static AtomicInteger trayPopupError = new AtomicInteger(0);
 
    /**
     * Initialize alarm notifier
@@ -224,6 +225,32 @@ public class AlarmNotifier
       }, "AlarmSoundPlayer");
       playerThread.setDaemon(true);
       playerThread.start();
+      
+
+      Thread alarmCountResetThread = new Thread(new Runnable() {
+         @Override
+         public void run()
+         {
+            while(true)
+            {
+               try
+               {
+                  Thread.sleep(5000);
+               }
+               catch(InterruptedException e)
+               {
+               }
+               
+               if (trayPopupCount.get() > 0)
+               {
+                  trayPopupCount.set(0);    
+                  trayPopupError.set(0);      
+               }
+            }
+         }
+      }, "AlarmCountResetThread"); //$NON-NLS-1$
+      alarmCountResetThread.setDaemon(true);
+      alarmCountResetThread.start();
    }
 
    /**
@@ -432,6 +459,37 @@ public class AlarmNotifier
             // Too many notifications to show
             trayPopupCount.decrementAndGet();
             Activator.logInfo("Skipping alarm tray popup creation - too many consecutive alarms");
+            
+            if(trayPopupError.get() == 0)
+            {
+               trayPopupError.incrementAndGet();
+               new UIJob("Create alarm popup") { //$NON-NLS-1$
+                  @Override
+                  public IStatus runInUIThread(IProgressMonitor monitor)
+                  {
+      
+                     int severityFlag = SWT.ICON_INFORMATION;
+      
+                     IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                     if (window == null)
+                     {
+                        IWorkbenchWindow[] wl = PlatformUI.getWorkbench().getWorkbenchWindows();
+                        if (wl.length > 0)
+                           window = wl[0];
+                     }
+                     if (window != null)
+                     {
+                        final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
+                        tip.setText("Too many consecutive alarms"); //$NON-NLS-1$ //$NON-NLS-1$
+                        tip.setMessage("Skipping alarm tray popup creation - too many consecutive alarms"); //$NON-NLS-1$
+                        tip.setAutoHide(true);
+                        trayIcon.setToolTip(tip);
+                        tip.setVisible(true);
+                     }
+                     return Status.OK_STATUS;
+                  }
+               }.schedule();
+            }
          }
       }
    }
