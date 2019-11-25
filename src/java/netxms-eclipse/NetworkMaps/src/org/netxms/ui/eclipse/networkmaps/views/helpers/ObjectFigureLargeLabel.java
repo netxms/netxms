@@ -72,7 +72,7 @@ public class ObjectFigureLargeLabel extends ObjectFigure
       setConstraint(icon, gd);
       
 		name = new Label(object.getObjectName());
-		name.setFont(JFaceResources.getDefaultFont());
+		name.setFont(labelProvider.getTitleFont());
 		name.setLabelAlignment(PositionConstants.LEFT);
 		add(name);
       gd = new GridData();

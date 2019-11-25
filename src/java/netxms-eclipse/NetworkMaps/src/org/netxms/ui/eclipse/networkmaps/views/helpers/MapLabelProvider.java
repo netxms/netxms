@@ -159,8 +159,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage(); //$NON-NLS-1$
 
 		final Display display = viewer.getControl().getDisplay();	
-		fontLabel = new Font(display, "Verdana", WidgetHelper.scaleTextPoints(display, 6), SWT.NORMAL); //$NON-NLS-1$
-		fontTitle = new Font(display, "Verdana", WidgetHelper.scaleTextPoints(display, 10), SWT.NORMAL); //$NON-NLS-1$
+		fontLabel = new Font(display, "Verdana", 7, SWT.NORMAL); //$NON-NLS-1$
+		fontTitle = new Font(display, "Verdana", 10, SWT.NORMAL); //$NON-NLS-1$
 
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon"); //$NON-NLS-1$
