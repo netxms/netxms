@@ -8269,6 +8269,11 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 }
 
 /**
+ * Subnet creation lock
+ */
+static Mutex s_subnetCreationMutex;
+
+/**
  * Create new subnet and binds to this node
  */
 Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
@@ -8312,26 +8317,39 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
 
    if (subnet != NULL)
    {
-      NetObjInsert(subnet, true, false);
-      if (g_flags & AF_ENABLE_ZONING)
+      // Insert new subnet atomically - otherwise two polls running in parallel could create same subnet twice
+      s_subnetCreationMutex.lock();
+      Subnet *s = FindSubnetByIP(m_zoneUIN, subnet->getIpAddress());
+      if (s == NULL)
       {
-         Zone *zone = FindZoneByUIN(m_zoneUIN);
-         if (zone != NULL)
+         NetObjInsert(subnet, true, false);
+         if (g_flags & AF_ENABLE_ZONING)
          {
-            zone->addSubnet(subnet);
+            Zone *zone = FindZoneByUIN(m_zoneUIN);
+            if (zone != NULL)
+            {
+               zone->addSubnet(subnet);
+            }
+            else
+            {
+               DbgPrintf(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneUIN);
+            }
          }
          else
          {
-            DbgPrintf(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneUIN);
+            g_pEntireNet->AddSubnet(subnet);
          }
+         nxlog_debug(4, _T("Node::createSubnet(): Created new subnet %s [%d] for node %s [%d]"),
+                  subnet->getName(), subnet->getId(), m_name, m_id);
       }
       else
       {
-         g_pEntireNet->AddSubnet(subnet);
+         // This subnet already exist
+         delete_and_null(subnet);
+         subnet = s;
       }
+      s_subnetCreationMutex.unlock();
       subnet->addNode(this);
-      nxlog_debug(4, _T("Node::createSubnet(): Created new subnet %s [%d] for node %s [%d]"),
-               subnet->getName(), subnet->getId(), m_name, m_id);
    }
    return subnet;
 }
