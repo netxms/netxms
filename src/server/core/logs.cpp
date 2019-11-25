@@ -81,6 +81,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("event_message"), _T("Message"), LC_TEXT },
 			{ _T("event_tags"), _T("Event tags"), LC_TEXT },
          { _T("root_event_id"), _T("Root ID"), LC_INTEGER },
+         { _T("raw_data"), _T("Raw data"), LC_TEXT },
 			{ NULL, NULL, 0 }
 		}
 	},
