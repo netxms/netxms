@@ -271,7 +271,7 @@ public class SendUserAgentNotificationDialog extends Dialog
 	   if(radioInterval.getSelection())
 	   {
    	   startTime = startDateSelector.getValue();
-   	   endTime = new Date(new Date().getTime() + (days.getSelection() * 86400 + hours.getSelection() * 3600 + minutes.getSelection() * 60)*1000);
+   	   endTime = new Date(new Date().getTime() + (days.getSelection() * 86400L + hours.getSelection() * 3600L + minutes.getSelection() * 60L)*1000L);
 	   }
 	   else
 	   {

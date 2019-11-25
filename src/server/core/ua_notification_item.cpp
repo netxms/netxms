@@ -171,6 +171,9 @@ static void SendUpdate(NXCPMessage *msg, NetObj *object)
 {
    if (object->getObjectClass() == OBJECT_NODE)
    {
+      if ((static_cast<Node *>(object)->getCapabilities() & NC_HAS_USER_AGENT) == 0)
+         return;
+
       AgentConnectionEx *conn = static_cast<Node *>(object)->getAgentConnection(false);
       if (conn != NULL)
       {
