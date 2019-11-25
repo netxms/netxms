@@ -1750,15 +1750,17 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
                 iface->getName(), &addr, addr.getMaskBits(), iface->getIfIndex());
    }
 
-   for(int i = 0; i < bindList.size(); i++)
-      bindList.get(i)->addNode(this);
-
-   for(int i = 0; i < createList.size(); i++)
+   if (!iface->isExcludedFromTopology())
    {
-      InetAddress addr = InetAddress(createList.get(i));
-      createSubnet(addr, bSyntheticMask);
-   }
+      for(int i = 0; i < bindList.size(); i++)
+         bindList.get(i)->addNode(this);
 
+      for(int i = 0; i < createList.size(); i++)
+      {
+         InetAddress addr = InetAddress(createList.get(i));
+         createSubnet(addr, bSyntheticMask);
+      }
+   }
    return iface;
 }
 
