@@ -39,7 +39,7 @@ ObjLink::ObjLink()
 /**
  * Object link copy constructor
  */
-ObjLink::ObjLink(const ObjLink *src)
+ObjLink::ObjLink(const ObjLink *src) : name(src->name)
 {
    id1 = src->id1;
    id2 = src->id2;
@@ -55,7 +55,6 @@ ObjLink::ObjLink(const ObjLink *src)
 	}
 
 	flags = src->flags;
-	name = src->name;
 }
 
 /**

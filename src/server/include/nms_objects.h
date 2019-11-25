@@ -2622,7 +2622,7 @@ protected:
    bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(NULL); }
 
-	void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
+	void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject, const TCHAR *linkName, bool vpnLink, bool includeEndNodes);
 	void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology);
    void buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, UINT32 seedNode, bool agentConnectionOnly, bool checkAllProxies);
 	bool checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies);
@@ -2979,7 +2979,8 @@ inline bool Node::lockForIcmpPoll()
  */
 class NXCORE_EXPORTABLE Subnet : public NetObj
 {
-	friend void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes);
+	friend void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth,
+	         UINT32 seedObject, const TCHAR *linkName, bool vpnLink, bool includeEndNodes);
 
 private:
    typedef NetObj super;
@@ -3019,6 +3020,7 @@ public:
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
 	bool isSyntheticMask() const { return m_bSyntheticMask; }
+	bool isPointToPoint() const;
 
 	void setCorrectMask(const InetAddress& addr);
 

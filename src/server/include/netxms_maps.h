@@ -70,7 +70,7 @@ public:
 	UINT32 portIdArray1[MAX_PORT_COUNT];
 	UINT32 portIdArray2[MAX_PORT_COUNT];
 	UINT32 flags;
-	StringBuffer name;
+	MutableString name;
 
    ObjLink();
    ObjLink(const ObjLink *src);

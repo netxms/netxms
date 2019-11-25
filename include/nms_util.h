@@ -905,6 +905,21 @@ public:
 	ssize_t find(const TCHAR *str, size_t start = 0) const;
 };
 
+/**
+ * Mutable string - value can be re-assigned
+ */
+class LIBNETXMS_EXPORTABLE MutableString : public String
+{
+public:
+   MutableString() : String() { }
+   MutableString(const TCHAR *init) : String(init) { }
+   MutableString(const TCHAR *init, size_t len) : String(init, len) { }
+   MutableString(const String &src) : String(src) { }
+
+   MutableString& operator =(const String &src);
+   MutableString& operator =(const TCHAR *src);
+};
+
 #ifdef _WIN32
 template class LIBNETXMS_EXPORTABLE shared_ptr<String>;
 #endif

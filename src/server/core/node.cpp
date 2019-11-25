@@ -7726,31 +7726,48 @@ NetworkMapObjectList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool 
 {
    int maxDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
    NetworkMapObjectList *topology = new NetworkMapObjectList();
-   buildIPTopologyInternal(*topology, maxDepth, 0, false, includeEndNodes);
+   buildIPTopologyInternal(*topology, maxDepth, 0, NULL, false, includeEndNodes);
    return topology;
 }
 
 /**
+ * Peer information
+ */
+struct PeerInfo
+{
+   Node *node;
+   String linkName;
+   bool vpnLink;
+
+   PeerInfo(Node *_node, const TCHAR *_linkName, bool _vpnLink) : linkName(_linkName)
+   {
+      node = _node;
+      vpnLink = _vpnLink;
+   }
+};
+
+/**
  * Build IP topology
  */
-void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes)
+void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject,
+         const TCHAR *linkName, bool vpnLink, bool includeEndNodes)
 {
    if (topology.isObjectExist(m_id))
    {
       // this node was processed already
       if (seedObject != 0)
-         topology.linkObjects(seedObject, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL);
+         topology.linkObjects(seedObject, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL, linkName);
       return;
    }
 
    topology.addObject(m_id);
    if (seedObject != 0)
-      topology.linkObjects(seedObject, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL);
+      topology.linkObjects(seedObject, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL, linkName);
 
    if (nDepth > 0)
    {
       ObjectArray<Subnet> subnets;
-      ObjectArray<std::pair<Node*, bool>> peers(0, 64, true);
+      ObjectArray<PeerInfo> peers(0, 64, true);
 
       lockParentList(false);
       for(int i = 0; i < getParentList()->size(); i++)
@@ -7767,18 +7784,15 @@ void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, U
          if (object->getChildCount() == 2)
          {
             Interface *iface = findInterfaceBySubnet(static_cast<Subnet*>(object)->getIpAddress());
-            if (iface != NULL)
+            if (((iface != NULL) && iface->isPointToPoint()) || static_cast<Subnet*>(object)->isPointToPoint())
             {
-               if (iface->isPointToPoint())
+               Node *node = static_cast<Subnet*>(object)->getOtherNode(m_id);
+               if ((node != NULL) && (node->getId() != seedObject) && !topology.isObjectExist(node->getId()))
                {
-                  Node *node = static_cast<Subnet*>(object)->getOtherNode(m_id);
-                  if ((node != NULL) && (node->getId() != seedObject) && !topology.isObjectExist(node->getId()))
-                  {
-                     node->incRefCount();
-                     peers.add(new std::pair<Node*, bool>(node, false));
-                  }
-                  continue;
+                  node->incRefCount();
+                  peers.add(new PeerInfo(node, object->getName(), false));
                }
+               continue;
             }
          }
 
@@ -7811,16 +7825,16 @@ void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, U
          if ((node != NULL) && (node->getId() != seedObject) && !topology.isObjectExist(node->getId()))
          {
             node->incRefCount();
-            peers.add(new std::pair<Node*, bool>(node, true));
+            peers.add(new PeerInfo(node, object->getName(), true));
          }
       }
       unlockChildList();
 
       for(int i = 0; i < peers.size(); i++)
       {
-         auto n = peers.get(i);
-         n->first->buildIPTopologyInternal(topology, nDepth - 1, m_id, n->second, includeEndNodes);
-         n->first->decRefCount();
+         auto p = peers.get(i);
+         p->node->buildIPTopologyInternal(topology, nDepth - 1, m_id, p->linkName, p->vpnLink, includeEndNodes);
+         p->node->decRefCount();
       }
    }
 }

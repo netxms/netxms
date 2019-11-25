@@ -275,7 +275,7 @@ void Subnet::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth,
 	for(int j = 0; j < nodes.size(); j++)
 	{
 		Node *n = nodes.get(j);
-		n->buildIPTopologyInternal(topology, nDepth - 1, m_id, false, includeEndNodes);
+		n->buildIPTopologyInternal(topology, nDepth - 1, m_id, NULL, false, includeEndNodes);
 		n->decRefCount();
 	}
 }
@@ -350,6 +350,19 @@ Node *Subnet::getOtherNode(UINT32 nodeId)
    }
    unlockChildList();
    return node;
+}
+
+/**
+ * Check if this subnet is point-to-point
+ */
+bool Subnet::isPointToPoint() const
+{
+   lockProperties();
+   bool result = (!m_ipAddress.isMulticast() &&
+        (((m_ipAddress.getFamily() == AF_INET) && (m_ipAddress.getMaskBits() >= 30)) ||
+         ((m_ipAddress.getFamily() == AF_INET6) && (m_ipAddress.getMaskBits() >= 126))));
+   unlockProperties();
+   return result;
 }
 
 /**

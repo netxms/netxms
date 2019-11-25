@@ -18,6 +18,7 @@
 - Notification channel driver for Telegram
 - Notification channel driver for Microsoft Teams
 - File delivery policies for agents
+- Improved automatic IP topology maps
 - Fixed issues:
 	NX-1674 (Initiate DCI forced poll from NXSL)
 	NX-1686 (User Agent system tray menu covered by Windows system tray expanded hidden icon menu)

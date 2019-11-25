@@ -875,3 +875,45 @@ void StringBuffer::clear()
    m_length = 0;
    m_buffer[m_length] = 0;
 }
+
+/**
+ * Operator = for mutable string
+ */
+MutableString& MutableString::operator =(const String &src)
+{
+   if (&src == this)
+      return *this;
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
+   m_length = src.length();
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, src.cstr(), (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_buffer = MemCopyString(src.cstr());
+   }
+   return *this;
+}
+
+/**
+ * Operator = for mutable string
+ */
+MutableString& MutableString::operator =(const TCHAR *src)
+{
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
+   m_length = _tcslen(src);
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, src, (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_buffer = MemCopyString(src);
+   }
+   return *this;
+}
