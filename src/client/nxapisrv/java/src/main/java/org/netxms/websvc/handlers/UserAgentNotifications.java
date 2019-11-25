@@ -57,10 +57,11 @@ public class UserAgentNotifications extends AbstractHandler
          JSONArray objects = data.getJSONArray("objects");
          long startTime = data.has("startTime") ? data.getLong("startTime") * 1000 : 0;
          long endTime = data.has("endTime") ? data.getLong("endTime") * 1000 : 0;
+         boolean onStartup = data.has("onStartup") ? data.getBoolean("onStartup") : false;
          long[] objectIds = new long[objects.length()];
          for(int i = 0; i < objects.length(); i++)
             objectIds[i] = objects.getLong(i);
-         getSession().createUserAgentNotification(message, objectIds, new Date(startTime), new Date(endTime));
+         getSession().createUserAgentNotification(message, objectIds, new Date(startTime), new Date(endTime), onStartup);
          return new JSONObject();
       }
       catch(JSONException e)
