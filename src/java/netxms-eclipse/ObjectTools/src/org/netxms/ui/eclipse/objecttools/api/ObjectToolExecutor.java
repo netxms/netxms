@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,7 +70,7 @@ public final class ObjectToolExecutor
    }
    
    /**
-    * Check if tool is allowed for execution on each node from set
+    * Check if tool is allowed for execution on at least one node from set
     * 
     * @param tool
     * @param nodes
@@ -84,9 +85,9 @@ public final class ObjectToolExecutor
       if (handler != null)
       {
          for(ObjectContext n : nodes)
-            if (!handler.canExecuteOnNode(n.object, tool))
-               return false;
-         return true;
+            if (handler.canExecuteOnNode(n.object, tool))
+               return true;
+         return false;
       }
       else
       {
@@ -95,7 +96,7 @@ public final class ObjectToolExecutor
    }
    
    /**
-    * Check if given tool is applicable for all nodes in set
+    * Check if given tool is applicable for at least one nodes in set
     * 
     * @param tool
     * @param nodes
@@ -104,9 +105,9 @@ public final class ObjectToolExecutor
    public static boolean isToolApplicable(ObjectTool tool, Set<ObjectContext> nodes)
    {
       for(ObjectContext n : nodes)
-         if (!tool.isApplicableForNode(n.object))
-            return false;
-      return true;
+         if (tool.isApplicableForNode(n.object))
+            return true;
+      return false;
    }
    
    /**
@@ -114,8 +115,23 @@ public final class ObjectToolExecutor
     * 
     * @param tool Object tool
     */
-   public static void execute(final Set<ObjectContext> nodes, final ObjectTool tool)
+   public static void execute(final Set<ObjectContext> allNodes, final ObjectTool tool)
    {
+      //Filter allowed and applicable nodes for execution
+      final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
+      ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
+      if ((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler != null)
+      {
+         for(ObjectContext n : allNodes)
+            if (((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler.canExecuteOnNode(n.object, tool)) 
+                  && tool.isApplicableForNode(n.object))
+               nodes.add(n);
+      }
+      else
+      {
+         return;
+      }
+      
       final Map<String, String> inputValues;
       final InputField[] fields = tool.getInputFields();
       if (fields.length > 0)
