@@ -161,8 +161,11 @@ public class ObjectStatusMapView extends ViewPart
          @Override
          public void run()
          {
-            ((ObjectStatusMap)map).setGroupObjects(false);
-            map.refresh();
+            if (map instanceof ObjectStatusMap)
+            {
+               ((ObjectStatusMap)map).setGroupObjects(false);
+               map.refresh();
+            }
          }
       };
       actionFlatView.setChecked(displayOption == 0);
@@ -172,8 +175,11 @@ public class ObjectStatusMapView extends ViewPart
 			@Override
 			public void run()
 			{
-	         ((ObjectStatusMap)map).setGroupObjects(true);
-				map.refresh();
+			   if (map instanceof ObjectStatusMap)
+			   {
+			      ((ObjectStatusMap)map).setGroupObjects(true);
+			      map.refresh();
+			   }
 			}
 		};
 		actionGroupView.setChecked(displayOption == 1);
