@@ -26,6 +26,7 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.Bendpoint;
 import org.eclipse.draw2d.BendpointConnectionRouter;
 import org.eclipse.draw2d.ConnectionEndpointLocator;
+import org.eclipse.draw2d.ConnectionLocator;
 import org.eclipse.draw2d.ConnectionRouter;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
@@ -33,6 +34,7 @@ import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.PolylineDecoration;
+import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
 import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
@@ -583,7 +585,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       
       if ((hasName || hasDciData) && connectionLabelsVisible)
       {
-         MultiLabelConnectionLocator nameLocator = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link);
+         ConnectionLocator nameLocator;
+         if(link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && link.getBendPoints() != null && link.getBendPoints().length > 0)
+         {
+            nameLocator = new ConnectionLocator(connection.getConnectionFigure());
+            nameLocator.setRelativePosition(PositionConstants.CENTER);
+         }
+         else
+            nameLocator = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link);
          
          String labelString = ""; //$NON-NLS-1$
          if (hasName)
