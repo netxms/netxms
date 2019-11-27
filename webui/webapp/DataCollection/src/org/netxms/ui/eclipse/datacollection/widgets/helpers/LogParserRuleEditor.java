@@ -298,6 +298,7 @@ public class LogParserRuleEditor extends DashboardComposite
       
       timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Repeat interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeRange.setSelection(rule.getMatch().getTimeRagne()); 
+      timeRange.addModifyListener(listener);
       toolkit.adapt(timeRange);
       
       timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, "", WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -305,6 +306,7 @@ public class LogParserRuleEditor extends DashboardComposite
       timeUnits.add("Minutes");
       timeUnits.add("Hours");
       timeUnits.select(rule.getMatch().getTimeUnit()); 
+      timeUnits.addModifyListener(listener);
       toolkit.adapt(timeUnits);
       //time range
 
@@ -582,7 +584,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	{
 	   rule.setName(name.getText().trim());
 		rule.setMatch(new LogParserMatch(regexp.getText(), checkboxInvert.getSelection(), intOrNull(repeatCount.getText()), 
-		                                 Integer.parseInt(timeRange.getText()) *(timeUnits.getSelectionIndex() * 60), 
+		                                 Integer.parseInt(timeRange.getText()) * (int)Math.pow(60, timeUnits.getSelectionIndex()), 
 		                                 checkboxReset.getSelection()));
       rule.setFacilityOrId(intOrNull(facility.getText()));
       rule.setSeverityOrLevel(intOrNull(severity.getText()));
