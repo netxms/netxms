@@ -885,7 +885,7 @@ InterfaceList *AgentConnection::getInterfaceList()
 
          pIfList->add(iface);
       }
-      free(line);
+      MemFree(line);
    }
 
    delete data;
