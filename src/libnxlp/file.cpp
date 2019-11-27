@@ -220,7 +220,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 						memset(eptr, 0, 4);
 						break;
 					default:
-						if (*(eptr - 1) == '\r')
+						if ((eptr - ptr >= 1) && *(eptr - 1) == '\r')
 							eptr--;
 						*eptr = 0;
 						break;
