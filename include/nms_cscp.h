@@ -1320,6 +1320,8 @@ typedef struct
 #define VID_PHYSICAL_LINK_ID        ((UINT32)665)
 #define VID_POLLING_SCHEDULE_TYPE   ((UINT32)666)
 #define VID_RETENTION_TYPE          ((UINT32)667)
+#define VID_IS_REFRESH              ((UINT32)668)
+
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

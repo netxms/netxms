@@ -481,10 +481,12 @@ void DataCollectionOwner::deleteChildDCIs(UINT32 dcObjectId)
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *subObject = m_dcObjects->get(i);
+
       if (subObject->getTemplateItemId() == dcObjectId)
       {
          nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_id);
          deleteDCObject(subObject);
+         NotifyClientsOnDCIDelete(this, subObject->getId());
          m_dcObjects->remove(i);
          i--;
       }

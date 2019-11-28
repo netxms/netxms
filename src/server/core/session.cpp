@@ -3449,13 +3449,15 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
          {
             bSuccess = TRUE;
             msg.setField(VID_RCC, RCC_SUCCESS);
-
-            MutexLock(m_openDCIListLock);
-            // modify list of open nodes DCI lists
-            m_pOpenDCIList = (UINT32 *)realloc(m_pOpenDCIList, sizeof(UINT32) * (m_dwOpenDCIListSize + 1));
-            m_pOpenDCIList[m_dwOpenDCIListSize] = dwObjectId;
-            m_dwOpenDCIListSize++;
-            MutexUnlock(m_openDCIListLock);
+            if (!request->getFieldAsBoolean(VID_IS_REFRESH))
+            {
+               MutexLock(m_openDCIListLock);
+               // modify list of open nodes DCI lists
+               m_pOpenDCIList = (UINT32 *)realloc(m_pOpenDCIList, sizeof(UINT32) * (m_dwOpenDCIListSize + 1));
+               m_pOpenDCIList[m_dwOpenDCIListSize] = dwObjectId;
+               m_dwOpenDCIListSize++;
+               MutexUnlock(m_openDCIListLock);
+            }
          }
          else
          {

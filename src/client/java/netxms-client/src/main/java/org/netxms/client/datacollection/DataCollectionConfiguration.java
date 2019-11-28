@@ -129,6 +129,46 @@ public class DataCollectionConfiguration
       session.addListener(listener);
       isOpen = true;
    }
+   
+   /**
+    * Force refresh DCI list 
+    * 
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void refreshDataCollectionList() throws IOException, NXCException
+   {
+      NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_NODE_DCI_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setField(NXCPCodes.VID_IS_REFRESH, true);
+      session.sendMessage(msg);
+      session.waitForRCC(msg.getMessageId());
+      items.clear();
+
+      while(true)
+      {
+         final NXCPMessage response = session.waitForMessage(NXCPCodes.CMD_NODE_DCI, msg.getMessageId());
+         if (response.isEndOfSequence())
+            break;
+
+         int type = response.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
+         DataCollectionObject dco;
+         switch(type)
+         {
+            case DataCollectionObject.DCO_TYPE_ITEM:
+               dco = new DataCollectionItem(this, response);
+               break;
+            case DataCollectionObject.DCO_TYPE_TABLE:
+               dco = new DataCollectionTable(this, response);
+               break;
+            default:
+               dco = null;
+               break;
+         }
+         if (dco != null)
+            items.put(dco.getId(), dco);
+      }      
+   }
 
    /**
     * Close data collection configuration.

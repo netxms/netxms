@@ -450,7 +450,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
-				viewer.setInput(dciConfig.getItems());
+			   refresh();
 			}
 		};
 
@@ -562,6 +562,46 @@ public class DataCollectionEditor extends ViewPart
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true); 
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+	}
+	
+	/**
+	 * Refresh DCI list
+	 */
+	private void refresh()
+	{
+      new ConsoleJob("Reftesh data collection configuration for " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            dciConfig.refreshDataCollectionList();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(dciConfig.getItems());
+               }
+            });
+         }
+
+         @Override
+         protected void jobFailureHandler()
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  DataCollectionEditor.this.getViewSite().getPage().hideView(DataCollectionEditor.this);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot refresh data collection configuration for " + object.getObjectName();
+         }
+      }.start();
+	   
 	}
 
 	/**
