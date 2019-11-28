@@ -21,12 +21,17 @@
 - Improved automatic IP topology maps
 - Fixed issues:
 	NX-1674 (Initiate DCI forced poll from NXSL)
+	NX-1681 (In NetXMS console refresh from view pull-down menu is not working on Data Collection Configuration)
 	NX-1686 (User Agent system tray menu covered by Windows system tray expanded hidden icon menu)
 	NX-1687 (User agent system tray menu closes when you click out of it)
+	NX-1691 (Network map link bend points seem a bit broken in 3.0)
 	NX-1694 (Russian language problem in Windows log)
 	NX-1706 (Compose interface name from the actual name and a suffix)
 	NX-1708 (Event tags in log file monitoring are not represented in UI)
+	NX-1710 (Add serealized to json event to event log)
 	NX-1712 (Add support for reading WMI query result as list or table)
+	NX-1713 (Object tool for container should be shown if it can be executed on at least one node)
+	NX-1717 (Alarm pop-ups apear only on console start, afterwards are not shown)
 
 
 *
