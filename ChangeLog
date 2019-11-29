@@ -19,6 +19,7 @@
 - Notification channel driver for Microsoft Teams
 - File delivery policies for agents
 - Improved automatic IP topology maps
+- Added custom attributes inheritance
 - Fixed issues:
 	NX-1674 (Initiate DCI forced poll from NXSL)
 	NX-1681 (In NetXMS console refresh from view pull-down menu is not working on Data Collection Configuration)
