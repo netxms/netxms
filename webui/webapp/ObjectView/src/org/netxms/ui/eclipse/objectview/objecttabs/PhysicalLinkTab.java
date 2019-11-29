@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2019 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import org.eclipse.core.commands.Command;
@@ -20,14 +38,12 @@ import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.widgets.PhysicalLinkWidget;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
-import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
 /**
  * Physical link tab for Racks and Nodes
  */
 public class PhysicalLinkTab extends ObjectTab
 {
-   private CompositeWithMessageBar content;
    private PhysicalLinkWidget linkWidget;
    private boolean initShowFilter = false;
 
@@ -40,8 +56,7 @@ public class PhysicalLinkTab extends ObjectTab
       FormLayout formLayout = new FormLayout();
       parent.setLayout(formLayout);
 
-      content = new CompositeWithMessageBar(parent, SWT.NONE);
-      linkWidget = new PhysicalLinkWidget(getViewPart(), content, SWT.NONE, getObject() == null ? -1 : getObject().getObjectId(), 
+      linkWidget = new PhysicalLinkWidget(getViewPart(), parent, SWT.NONE, getObject() == null ? -1 : getObject().getObjectId(), 
             0, initShowFilter, new VisibilityValidator() {  
          @Override
          public boolean isVisible()

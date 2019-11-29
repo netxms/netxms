@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2019 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.objectview.widgets;
 
 import java.util.ArrayList;
@@ -25,6 +43,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -73,7 +92,6 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
    private ViewPart viewPart;
    private NXCSession session;
    private SortableTableViewer viewer;
-   private Composite parent;
    private Action actionRefresh;
    private Action actionAdd;
    private Action actionDelete;
@@ -83,6 +101,8 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
    private long objectId;
    private long patchPanelId;
    private VisibilityValidator visibilityValidator;
+   private CompositeWithMessageBar messageBarComposite;
+   private Composite content;
 
    private FilterText filterText;
    private PhysicalLinkFilter filter;
@@ -108,12 +128,17 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       this.patchPanelId = patchPanelId;
       initShowFilter = enablefilter;
       this.visibilityValidator = visibilityValidator;
-      this.parent = parent;
       
-      setLayout(new FormLayout());
-      
+      setLayout(new FillLayout());
+
+      messageBarComposite = new CompositeWithMessageBar(this, SWT.NONE);
+
+      content = new Composite(messageBarComposite, SWT.NONE);
+      messageBarComposite.setContent(content);
+      content.setLayout(new FormLayout());
+
       // Create filter
-      filterText = new FilterText(this, SWT.NONE);
+      filterText = new FilterText(content, SWT.NONE);
       filterText.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -132,7 +157,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
 
       final int[] widths = { 50, 200, 200, 400, 200, 400 };
       final String[] names = { "Id", "Description", "Object 1", "Port 1", "Object 2", "Port 2" };
-      viewer = new SortableTableViewer(this, names, widths, PHYSICAL_LINK_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer = new SortableTableViewer(content, names, widths, PHYSICAL_LINK_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
       PhysicalLinkLabelProvider labelPrivater = new PhysicalLinkLabelProvider();
@@ -233,16 +258,12 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
 
          @Override
          protected IStatus createFailureStatus(final Exception e)
-         {
-            if(!(parent instanceof CompositeWithMessageBar))//set error message only for tab 
-               return super.createFailureStatus(e);
-            
-            
+         {            
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  ((CompositeWithMessageBar)parent).showMessage(MessageBar.ERROR, getErrorMessage() + " (" + e.getLocalizedMessage() + ")");
+                  messageBarComposite.showMessage(MessageBar.ERROR, String.format("%s (%s)", getErrorMessage(), e.getLocalizedMessage()));
                }
             });
             return Status.OK_STATUS;
@@ -567,5 +588,4 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
    {
       filterText.setCloseAction(action);      
    }
-
 }
