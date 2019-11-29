@@ -81,6 +81,7 @@ public class NotificationChannelDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.heightHint = 300;
+      gd.widthHint = 900;
       textConfiguraiton.setLayoutData(gd);          
 
       if(nc != null)
