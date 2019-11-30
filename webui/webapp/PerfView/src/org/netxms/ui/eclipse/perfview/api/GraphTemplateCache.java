@@ -26,9 +26,11 @@ import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
+/**
+ * Cache for graph templates
+ */
 public class GraphTemplateCache
 {
    private static GraphTemplateCache instance = null;
@@ -154,9 +156,19 @@ public class GraphTemplateCache
       return graphs;
    }
 
-   public static void execute(final AbstractNode node, final GraphSettings data, final DciValue[] values, final Display disp) throws IOException, NXCException
+   /**
+    * Instantiate graph template.
+    *
+    * @param node
+    * @param data
+    * @param values
+    * @param session
+    * @param display
+    * @throws IOException
+    * @throws NXCException
+    */
+   public static void instantiate(final AbstractNode node, GraphSettings data, final DciValue[] values, NXCSession session, Display display) throws IOException, NXCException
    {
-      final NXCSession session = ConsoleSharedData.getSession();
       List<String> textsToExpand = new ArrayList<String>();
       textsToExpand.add(data.getTitle());
       String name = session.substitureMacross(new ObjectContext(node, null), textsToExpand, new HashMap<String, String>()).get(0); 
@@ -174,14 +186,14 @@ public class GraphTemplateCache
          int j;
          for(j = 0; j < values.length; j++)
          {
-            if(!conf[i].dciName.isEmpty() && namePattern.matcher(values[j].getName()).find())
+            if (!conf[i].dciName.isEmpty() && namePattern.matcher(values[j].getName()).find())
             {
                newList.add(new ChartDciConfig(values[j]));
                foundDCICount++;
                if(!conf[i].multiMatch)
                   break;
             }
-            if(!conf[i].dciDescription.isEmpty() && descriptionPattern.matcher(values[j].getDescription()).find())
+            if (!conf[i].dciDescription.isEmpty() && descriptionPattern.matcher(values[j].getDescription()).find())
             {
                foundByDescription = j;
                if(conf[i].multiMatch)
@@ -192,16 +204,15 @@ public class GraphTemplateCache
             }
          }
          
-         if(!conf[i].multiMatch && j == values.length && foundByDescription >= 0)
+         if (!conf[i].multiMatch && j == values.length && foundByDescription >= 0)
          {
             foundDCICount++;
             newList.add(new ChartDciConfig(values[foundByDescription]));
          }
       }
-      if(foundDCICount > 0)
+      if (foundDCICount > 0)
       {
-         disp.syncExec(new Runnable() {
-            
+         display.syncExec(new Runnable() {
             @Override
             public void run()
             {
@@ -212,8 +223,7 @@ public class GraphTemplateCache
       }
       else
       {
-         disp.syncExec(new Runnable() {
-            
+         display.syncExec(new Runnable() {
             @Override
             public void run()
             {  

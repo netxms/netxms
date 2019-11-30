@@ -108,21 +108,20 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
                @Override
                public void widgetSelected(SelectionEvent e)
                {
-                  final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+                  final NXCSession session = ConsoleSharedData.getSession();
                   final GraphSettings gs = (GraphSettings)item.getData();
-                  ConsoleJob job = new ConsoleJob("Get last values of " + node.getObjectName() , null, Activator.PLUGIN_ID, null) {
+                  ConsoleJob job = new ConsoleJob(String.format("Display graph from template for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
                      @Override
                      protected String getErrorMessage()
                      {
-                        return "Not possible to get last values for node" + node.getObjectName();
+                        return String.format("Cannot craete graph from template for node %s", node.getObjectName());
                      }
 
                      @Override
                      protected void runInternal(IProgressMonitor monitor) throws Exception
                      {
-                        
                         final DciValue[] data = session.getLastValues(node.getObjectId());
-                        GraphTemplateCache.execute(node, gs, data, getDisplay());
+                        GraphTemplateCache.instantiate(node, gs, data, session, getDisplay());
                      }
                   };
                   job.setUser(false);
