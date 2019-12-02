@@ -146,6 +146,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
       resetPos = _lseek(fh, 0, SEEK_CUR);
       if ((bytes = _read(fh, &buffer[bufPos], READ_BUFFER_SIZE - bufPos)) > 0)
       {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Read %d bytes into buffer at offset %d"), bytes, bufPos);
          bytes += bufPos;
          for(ptr = buffer;; ptr = eptr + 1)
          {
@@ -241,7 +242,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
 #ifdef UNICODE_UCS2
-						nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+						wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
 #else
                   ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #endif
@@ -251,14 +252,14 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
 #ifdef UNICODE_UCS2
-						nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+						wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
 #else
                   ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #endif
                   break;
                case LP_FCP_UCS2:
 #ifdef UNICODE_UCS2
-						_tcslcpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+						wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
 #else
                   ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #endif
@@ -270,7 +271,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 #ifdef UNICODE_UCS2
                   ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #else
-                  _tcslcpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+                  wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
 #endif
                   break;
                case LP_FCP_UCS4_BE:
@@ -280,14 +281,14 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 #ifdef UNICODE_UCS2
                   ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #else
-                  _tcslcpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+                  wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
 #endif
                   break;
                case LP_FCP_UCS4:
 #ifdef UNICODE_UCS2
                   ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #else
-                  _tcslcpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+                  wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
 #endif
                   break;
 					default:
@@ -343,7 +344,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
       {
          bytes = 0;
       }
-   } while(bytes == READ_BUFFER_SIZE);
+   } while(bytes > 0);
    return resetPos;
 }
 
