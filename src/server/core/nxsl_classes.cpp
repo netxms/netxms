@@ -3184,11 +3184,11 @@ NXSL_Value *NXSL_UserDBObjectClass::getAttr(NXSL_Object *object, const char *att
    {
       value = vm->createValue(dbObject->isLDAPUser());
    }
-   else if (!strcmp(attr, "LDAPDomain"))
+   else if (!strcmp(attr, "ldapDomain"))
    {
       value = vm->createValue(dbObject->getDn());
    }
-   else if (!strcmp(attr, "LDAPId"))
+   else if (!strcmp(attr, "ldapId"))
    {
       value = vm->createValue(dbObject->getLdapId());
    }

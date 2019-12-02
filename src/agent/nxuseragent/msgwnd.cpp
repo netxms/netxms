@@ -98,6 +98,9 @@ bool PrepareMessageWindow()
    return true;
 }
 
+/**
+ * Create control displaying single message
+ */
 static void CreateMessageControl(HWND parent, RECT &rect, UserAgentNotification *n)
 {
    HWND hWnd = CreateWindowEx(0, WC_LINK,
