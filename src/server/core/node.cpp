@@ -3508,7 +3508,7 @@ void Node::reconcileWithDuplicateNode(Node *node)
    node->lockParentList(false);
    for(int i = 0; i < node->getParentList()->size(); i++)
    {
-      NetObj *object = getParentList()->get(i);
+      NetObj *object = node->getParentList()->get(i);
       if (object->getObjectClass() != OBJECT_TEMPLATE)
          continue;
 
