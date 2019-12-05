@@ -33,6 +33,8 @@
 
 #define DEBUG_TAG _T("ncd.msteams")
 
+static const NCConfigurationTemplate s_config(true, true); 
+
 /**
  * Flags
  */
@@ -255,7 +257,7 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(MicrosoftTeams, NULL)
+DECLARE_NCD_ENTRY_POINT(MicrosoftTeams, &s_config)
 {
    if (!InitializeLibCURL())
    {
