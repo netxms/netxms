@@ -594,7 +594,7 @@ bool EPRule::processEvent(Event *event)
        !matchSeverity(event->getSeverity()) || !matchScript(event))
       return false;
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), event->getId(), (int)m_id);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), event->getId(), (int)m_id + 1);
 
    // Generate alarm if requested
    UINT32 alarmId = 0;
