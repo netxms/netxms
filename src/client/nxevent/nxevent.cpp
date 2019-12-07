@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Command line event sender
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,9 +47,25 @@ static void DebugCallback(const TCHAR *pMsg)
 }
 
 /**
+ * Send even in a loop
+ */
+static UINT32 SendEventInLoop(EventController *ctrl, UINT32 code, const TCHAR *name, UINT32 objectId, int argc, TCHAR **argv, const TCHAR *userTag, UINT32 repeatInterval, UINT32 repeatCount)
+{
+   while(repeatCount-- > 0)
+   {
+      UINT32 rcc = ctrl->sendEvent(code, name, m_dwObjectId, argc, argv, userTag);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+      if (repeatInterval > 0)
+         ThreadSleepMs(repeatInterval);
+   }
+   return RCC_SUCCESS;
+}
+
+/**
  * Send event to server
  */
-static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
+static DWORD SendEvent(int iNumArgs, char **pArgList, bool encrypt, bool repeat, UINT32 repeatInterval, UINT32 repeatCount)
 {
    DWORD dwResult = RCC_SYSTEM_FAILURE;
 
@@ -64,7 +80,7 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 
       NXCSession *session = new NXCSession();
       static UINT32 protocolVersions[] = { CPV_INDEX_TRAP };
-      dwResult = session->connect(m_szServer, m_szLogin, m_szPassword, bEncrypt ? NXCF_ENCRYPT : 0, _T("nxevent/") NETXMS_VERSION_STRING,
+      dwResult = session->connect(m_szServer, m_szLogin, m_szPassword, encrypt ? NXCF_ENCRYPT : 0, _T("nxevent/") NETXMS_VERSION_STRING,
                                   protocolVersions, sizeof(protocolVersions) / sizeof(UINT32));
       if (dwResult != RCC_SUCCESS)
       {
@@ -75,15 +91,21 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
          session->setCommandTimeout(m_dwTimeOut * 1000);
          EventController *ctrl = (EventController *)session->getController(CONTROLLER_EVENTS);
 #ifdef UNICODE
-			WCHAR **argList = (WCHAR **)malloc(sizeof(WCHAR *) * iNumArgs);
+			WCHAR **argList = MemAllocArray<WCHAR*>(iNumArgs);
 			for(int i = 0; i < iNumArgs; i++)
-				argList[i] = WideStringFromMBString(pArgList[i]);
-         dwResult = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag);
+				argList[i] = WideStringFromMBStringSysLocale(pArgList[i]);
+			if (repeat)
+			   dwResult = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag, repeatInterval, repeatCount);
+			else
+			   dwResult = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag);
 			for(int i = 0; i < iNumArgs; i++)
-				free(argList[i]);
-			free(argList);
+				MemFree(argList[i]);
+			MemFree(argList);
 #else
-         dwResult = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
+			if (repeat)
+            dwResult = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag, repeatInterval, repeatCount);
+         else
+			   dwResult = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
 #endif
          if (dwResult != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
@@ -95,9 +117,9 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 }
 
 #ifdef _WIN32
-#define CMDLINE_OPTIONS "deho:P:T:u:vw:"
+#define CMDLINE_OPTIONS "C:dehi:o:P:T:u:vw:"
 #else
-#define CMDLINE_OPTIONS "c:deho:P:T:u:vw:"
+#define CMDLINE_OPTIONS "c:C:dehi:o:P:T:u:vw:"
 #endif
 
 /**
@@ -106,7 +128,8 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 int main(int argc, char *argv[])
 {
    int ch, rcc = RCC_INVALID_ARGUMENT;
-   BOOL bStart = TRUE, bEncrypt = FALSE;
+   bool start = true, encrypt = true, repeat = false;
+   UINT32 repeatInterval = 100, repeatCount = 10000;
 
    InitNetXMSProcess(true);
 
@@ -122,9 +145,12 @@ int main(int argc, char *argv[])
 #ifndef _WIN32
                    "   -c            : Codepage (default is " ICONV_DEFAULT_CODEPAGE ")\n"
 #endif
+                   "   -C <count>    : Repeat event sending given number of times.\n"
                    "   -d            : Turn on debug mode.\n"
-                   "   -e            : Encrypt session.\n"
+                   "   -e            : Encrypt session (default).\n"
                    "   -h            : Display help and exit.\n"
+                   "   -i <interval> : Repeat event sending with given interval in milliseconds.\n"
+                   "   -n            : Do not encrypt session.\n"
                    "   -o <id>       : Specify source object ID.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
                    "   -T <tag>      : User tag to be associated with the message. Default is empty.\n"
@@ -133,18 +159,29 @@ int main(int argc, char *argv[])
                    "   -w <seconds>  : Specify command timeout (default is 3 seconds).\n"
                    "Event could be specified either by code or by name\n"
                    "\n");
-            bStart = FALSE;
+            start = false;
             break;
 #ifndef _WIN32
          case 'c':
             SetDefaultCodepage(optarg);
             break;
 #endif
+         case 'C':
+            repeat = true;
+            repeatCount = strtoul(optarg, NULL, 0);
+            break;
          case 'd':
-            m_bDebug = TRUE;
+            m_bDebug = true;
             break;
          case 'e':
-            bEncrypt = TRUE;
+            encrypt = true;
+            break;
+         case 'i':
+            repeat = true;
+            repeatInterval = strtoul(optarg, NULL, 0);
+            break;
+         case 'n':
+            encrypt = false;
             break;
          case 'o':
             m_dwObjectId = strtoul(optarg, NULL, 0);
@@ -154,7 +191,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szLogin, MAX_DB_STRING);
 				m_szLogin[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(m_szLogin, optarg, MAX_DB_STRING);
+            strlcpy(m_szLogin, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'P':
@@ -162,7 +199,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szPassword, MAX_DB_STRING);
 				m_szPassword[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(m_szPassword, optarg, MAX_DB_STRING);
+            strlcpy(m_szPassword, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'T':
@@ -170,7 +207,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szUserTag, MAX_USERTAG_LENGTH);
 				m_szUserTag[MAX_USERTAG_LENGTH - 1] = 0;
 #else
-            nx_strncpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
+            strlcpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
 #endif
             break;
          case 'w':
@@ -178,15 +215,15 @@ int main(int argc, char *argv[])
             if ((m_dwTimeOut < 1) || (m_dwTimeOut > 120))
             {
                _tprintf(_T("Invalid timeout %hs\n"), optarg);
-               bStart = FALSE;
+               start = false;
             }
             break;
          case 'v':
             _tprintf(_T("NetXMS Event Sender  Version ") NETXMS_VERSION_STRING _T("\n"));
-            bStart = FALSE;
+            start = false;
             break;
          case '?':
-            bStart = FALSE;
+            start = false;
             break;
          default:
             break;
@@ -194,7 +231,7 @@ int main(int argc, char *argv[])
    }
 
    // Do requested action if everything is OK
-   if (bStart)
+   if (start)
    {
       if (argc - optind < 2)
       {
@@ -215,7 +252,7 @@ int main(int argc, char *argv[])
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, m_szServer, 256);
 			m_szServer[255] = 0;
 #else
-         nx_strncpy(m_szServer, argv[optind], 256);
+         strlcpy(m_szServer, argv[optind], 256);
 #endif
 
          char *eptr;
@@ -228,11 +265,11 @@ int main(int argc, char *argv[])
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, m_eventName, MAX_EVENT_NAME);
             m_eventName[MAX_EVENT_NAME - 1] = 0;
 #else
-            nx_strncpy(m_eventName, argv[optind + 1], MAX_EVENT_NAME);
+            strlcpy(m_eventName, argv[optind + 1], MAX_EVENT_NAME);
 #endif
          }
 
-         rcc = (int)SendEvent(argc - optind - 2, &argv[optind + 2], bEncrypt);
+         rcc = (int)SendEvent(argc - optind - 2, &argv[optind + 2], encrypt, repeat, repeatInterval, repeatCount);
       }
    }
 
