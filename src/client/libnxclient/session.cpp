@@ -79,6 +79,8 @@ NXCSession::~NXCSession()
    MutexDestroy(m_dataLock);
    MutexDestroy(m_msgSendLock);
    delete m_protocolVersions;
+   if (m_encryptionContext != NULL)
+      m_encryptionContext->decRefCount();
 }
 
 /**
