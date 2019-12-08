@@ -51,14 +51,29 @@ static void DebugCallback(const TCHAR *pMsg)
  */
 static UINT32 SendEventInLoop(EventController *ctrl, UINT32 code, const TCHAR *name, UINT32 objectId, int argc, TCHAR **argv, const TCHAR *userTag, UINT32 repeatInterval, UINT32 repeatCount)
 {
-   while(repeatCount-- > 0)
+   UINT32 sendCount = 0;
+   INT64 lastReportTime = GetCurrentTimeMs();
+   INT64 startTime = lastReportTime;
+   for(int i = 0; i < repeatCount; i++)
    {
       UINT32 rcc = ctrl->sendEvent(code, name, m_dwObjectId, argc, argv, userTag);
       if (rcc != RCC_SUCCESS)
          return rcc;
+      sendCount++;
+
+      INT64 now = GetCurrentTimeMs();
+      if (now - lastReportTime >= 2000)
+      {
+         UINT32 eventsPerSecond = sendCount * 1000 / static_cast<UINT32>(now - lastReportTime);
+         _tprintf(_T("%u events/sec\n"), eventsPerSecond);
+         sendCount = 0;
+         lastReportTime = GetCurrentTimeMs();
+      }
+
       if (repeatInterval > 0)
          ThreadSleepMs(repeatInterval);
    }
+   _tprintf(_T("Batch average: %u events/sec\n"), static_cast<UINT32>(static_cast<INT64>(repeatCount) * _LL(1000) / (GetCurrentTimeMs() - startTime)));
    return RCC_SUCCESS;
 }
 
