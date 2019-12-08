@@ -50,7 +50,6 @@ public class GraphTemplateCache
       reload();
       
       session.addListener(new SessionListener() {
-         
          @Override
          public void notificationHandler(SessionNotification n)
          {

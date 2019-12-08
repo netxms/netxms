@@ -42,24 +42,22 @@ public class LoginListener implements ConsoleLoginListener
 	public void afterLogin(final NXCSession session, final Display display)
 	{
 		ImageProvider.createInstance(display, session);
-		Job job = new Job(Messages.get().LoginListener_JobName) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				try
-				{
-					ImageProvider.getInstance().syncMetaData();
-					session.addListener(new ImageLibraryListener(display, session));
-				}
-				catch(Exception e)
-				{
-					// FIXME
-					e.printStackTrace();
-				}
-				return Status.OK_STATUS;
-			}
-		};
-		job.setSystem(true);
-		job.schedule();
+		Thread worker = new Thread(new Runnable() {
+         @Override
+         public void run()
+         {
+            try
+            {
+               ImageProvider.getInstance().syncMetaData();
+               session.addListener(new ImageLibraryListener(display, session));
+            }
+            catch(Exception e)
+            {
+               Activator.logError("Exception in login listener worker thread", e);
+            }
+         }
+      }, "");
+		worker.setDaemon(true);
+		worker.start();
 	}
 }
