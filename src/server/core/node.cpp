@@ -5986,7 +5986,7 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       }
       else if (!_tcsicmp(param, _T("Server.TotalEventsProcessed")))
       {
-         _sntprintf(buffer, bufSize, INT64_FMT, g_totalEventsProcessed);
+         _sntprintf(buffer, bufSize, UINT64_FMT, g_totalEventsProcessed);
       }
       else
       {

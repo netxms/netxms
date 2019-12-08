@@ -131,7 +131,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.ThreadPool.MinSize(*)", "Thread pool {instance}: minimum size", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.ScheduledRequests(*)", "Thread pool {instance}: scheduled requests", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.Usage(*)", "Thread pool {instance}: usage", DataType.INT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataType.UINT64)); //$NON-NLS-1$
 		}
 
 		if ((object instanceof Template) || (object instanceof MobileDevice))

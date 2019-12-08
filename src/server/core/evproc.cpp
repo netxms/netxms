@@ -31,7 +31,7 @@
 /**
  * Number of processed events since start
  */
-INT64 g_totalEventsProcessed = 0;
+UINT64 g_totalEventsProcessed = 0;
 
 /**
  * Static data
@@ -56,7 +56,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 {
    ThreadSetName("EvtStormDetect");
 
-	INT64 numEvents, prevEvents, eventsPerSecond;
+	UINT64 numEvents, prevEvents, eventsPerSecond;
 	int duration, actualDuration = 0;
 	
 	if (!ConfigReadBoolean(_T("EnableEventStormDetection"), false))
