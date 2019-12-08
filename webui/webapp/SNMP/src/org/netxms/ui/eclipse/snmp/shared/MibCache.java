@@ -54,79 +54,85 @@ public final class MibCache implements ConsoleLoginListener
 	@Override
 	public void afterLogin(final NXCSession session, Display display)
 	{
-		ConsoleJob job = new ConsoleJob(Messages.get(display).LoginListener_JobTitle, null, Activator.PLUGIN_ID, null, display) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				Location loc = Platform.getInstanceLocation();
-				if (loc != null)
-				{
-					File targetDir;
-					try
-					{
-						targetDir = new File(loc.getURL().toURI());
-					}
-					catch(URISyntaxException e)
-					{
-						targetDir = new File(loc.getURL().getPath());
-					}
-					File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
-					
-					Date serverMibTimestamp = session.getMibFileTimestamp();
-					if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
-					{
-						File file = session.downloadMibFile();
-						Activator.logInfo("MIB file downloaded to: " + file.getPath() + " (size " + file.length() + " bytes)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-						if (mibFile.exists())
-							mibFile.delete();
-						
-						if (!file.renameTo(mibFile))
-						{
-							// Rename failed, try to copy file
-							InputStream in = null;
-							OutputStream out = null;
-							try
-							{
-								in = new FileInputStream(file);
-								out = new FileOutputStream(mibFile);
-								byte[] buffer = new byte[16384];
-						      int len;
-						      while((len = in.read(buffer)) > 0)
-						      	out.write(buffer, 0, len);
-							}
-							catch(Exception e)
-							{
-								throw e;
-							}
-							finally
-							{
-								if (in != null)
-									in.close();
-								if (out != null)
-									out.close();
-							}
-					      
-					      file.delete();
-						}
-						
-						// invalidate already loaded tree
-						synchronized(MUTEX)
+	   display.asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            ConsoleJob job = new ConsoleJob(Messages.get().LoginListener_JobTitle, null, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  Location loc = Platform.getInstanceLocation();
+                  if (loc != null)
                   {
-						   mibTree = null;
-                  }
-					}
-				}
-			}
+                     File targetDir;
+                     try
+                     {
+                        targetDir = new File(loc.getURL().toURI());
+                     }
+                     catch(URISyntaxException e)
+                     {
+                        targetDir = new File(loc.getURL().getPath());
+                     }
+                     File mibFile = new File(targetDir, "netxms.mib"); //$NON-NLS-1$
+                     
+                     Date serverMibTimestamp = session.getMibFileTimestamp();
+                     if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
+                     {
+                        File file = session.downloadMibFile();
+                        Activator.logInfo("MIB file downloaded to: " + file.getPath() + " (size " + file.length() + " bytes)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().LoginListener_JobError;
-			}
-		};
-		job.setUser(false);
-		job.start();
+                        if (mibFile.exists())
+                           mibFile.delete();
+                        
+                        if (!file.renameTo(mibFile))
+                        {
+                           // Rename failed, try to copy file
+                           InputStream in = null;
+                           OutputStream out = null;
+                           try
+                           {
+                              in = new FileInputStream(file);
+                              out = new FileOutputStream(mibFile);
+                              byte[] buffer = new byte[16384];
+                              int len;
+                              while((len = in.read(buffer)) > 0)
+                                 out.write(buffer, 0, len);
+                           }
+                           catch(Exception e)
+                           {
+                              throw e;
+                           }
+                           finally
+                           {
+                              if (in != null)
+                                 in.close();
+                              if (out != null)
+                                 out.close();
+                           }
+                           
+                           file.delete();
+                        }
+                        
+                        // invalidate already loaded tree
+                        synchronized(MUTEX)
+                        {
+                           mibTree = null;
+                        }
+                     }
+                  }
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return Messages.get().LoginListener_JobError;
+               }
+            };
+            job.setUser(false);
+            job.start();
+         }
+      });
 	}
 
 	/**

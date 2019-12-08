@@ -1,10 +1,6 @@
 package org.netxms.ui.eclipse.imagelibrary;
 
 import java.util.UUID;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -45,24 +41,22 @@ public class LoginListener implements ConsoleLoginListener
 	public void afterLogin(final NXCSession session, final Display display)
 	{
 		ImageProvider.createInstance(display, session);
-		Job job = new Job(Messages.get(display).LoginListener_JobName) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				try
-				{
-					ImageProvider.getInstance(display).syncMetaData();
-					session.addListener(new ImageLibraryListener(display, session));
-				}
-				catch(Exception e)
-				{
-					// FIXME
-					e.printStackTrace();
-				}
-				return Status.OK_STATUS;
-			}
-		};
-		job.setSystem(true);
-		job.schedule();
+		Thread worker = new Thread(new Runnable() {
+         @Override
+         public void run()
+         {
+            try
+            {
+               ImageProvider.getInstance(display).syncMetaData();
+               session.addListener(new ImageLibraryListener(display, session));
+            }
+            catch(Exception e)
+            {
+               Activator.logError("Exception in login listener worker thread", e);
+            }
+         }
+      }, "");
+		worker.setDaemon(true);
+		worker.start();
 	}
 }
