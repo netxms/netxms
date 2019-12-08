@@ -366,6 +366,6 @@ const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
  */
 extern ObjectQueue<Event> g_eventQueue;
 extern EventPolicy *g_pEventPolicy;
-extern INT64 g_totalEventsProcessed;
+extern UINT64 g_totalEventsProcessed;
 
 #endif   /* _nms_events_h_ */
