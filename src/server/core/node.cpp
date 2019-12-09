@@ -2021,7 +2021,7 @@ restart_agent_check:
       else
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"), m_name, (int)error, (int)socketError, m_pollCountAgent, m_requiredPollCount);
-         sendPollerMsg(rqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
+         sendPollerMsg(rqId, POLLER_ERROR _T("Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(error));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
             if ((tNow > m_failTimeAgent + tExpire) && !(m_state & DCSF_UNREACHABLE))
@@ -3657,7 +3657,7 @@ bool Node::confPollAgent(UINT32 rqId)
       }
       else
       {
-         sendPollerMsg(rqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
+         sendPollerMsg(rqId, POLLER_INFO _T("   NetXMS agent is active\r\n"));
       }
       unlockProperties();
 
@@ -3813,6 +3813,7 @@ bool Node::confPollAgent(UINT32 rqId)
    else
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
+      sendPollerMsg(rqId, POLLER_ERROR _T("   Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(rcc));
    }
    pAgentConn->decRefCount();
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
