@@ -275,59 +275,74 @@ static bool H_UpgradeFromV0()
       _T("PRIMARY KEY(id))")));
 
    int id = 1;
-   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT id,passive_elements FROM racks"));
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,passive_elements FROM racks"));
    if (hResult != NULL)
    {
-      int nRows = DBGetNumRows(hResult);
-      for(int i = 0; i < nRows; i++)
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle,
+                    _T("INSERT INTO rack_passive_elements (id,rack_id,name,type,position,orientation,port_count)")
+                    _T(" VALUES (?,?,?,?,?,?,0)"));
+      if (hStmt != NULL)
       {
-         UINT32 rackId = DBGetFieldULong(hResult, i, 0);
-         char *xml = DBGetFieldA(hResult, i, 1, NULL, 0);
-         Config cfg;
-         bool success = cfg.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "passiveElementGroup", false);
-         ObjectArray<ConfigEntry> *list = cfg.getSubEntries(_T("/elements"), NULL);
-         DB_STATEMENT hStmt = DBPrepare(g_dbHandle,
-                       _T("INSERT INTO rack_passive_elements (id,rack_id,name,type,position,orientation,port_count)")
-                       _T(" VALUES (?,?,?,?,?,?,0)"));
-
-         if (list != NULL)
+         int nRows = DBGetNumRows(hResult);
+         for(int i = 0; i < nRows; i++)
          {
-            for(int i = 0; i < list->size(); i++)
+            UINT32 rackId = DBGetFieldULong(hResult, i, 0);
+            char *xml = DBGetFieldUTF8(hResult, i, 1, NULL, 0);
+            if (xml != NULL)
             {
-               ConfigEntry *e = list->get(i);
-               const TCHAR *tmp = e->getSubEntryValue(_T("type"));
-               int type = 0;
-               if(!_tcscmp(tmp, _T("FILLER_PANEL")))
-                  type = 1;
-               else if(!_tcscmp(tmp, _T("ORGANISER")))
-                  type = 2;
-
-               tmp = e->getSubEntryValue(_T("orientation"));
-               int orientation = 0;
-               if(!_tcscmp(tmp, _T("FRONT")))
-                  orientation = 1;
-               else if(!_tcscmp(tmp, _T("REAR")))
-                  orientation = 2;
-
-               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, id++);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, rackId);
-               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, e->getSubEntryValue(_T("name")), DB_BIND_STATIC);
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, type);
-               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, e->getSubEntryValueAsInt(_T("position")));
-               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, orientation);
-               if (!SQLExecute(hStmt) && !g_ignoreErrors)
+               Config cfg;
+               if (cfg.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "passiveElementGroup", false))
                {
-                  MemFree(xml);
-                  DBFreeStatement(hStmt);
-                  DBFreeResult(hResult);
-                  delete list;
-                  return false;
+                  ObjectArray<ConfigEntry> *list = cfg.getSubEntries(_T("/elements"), NULL);
+                  if (list != NULL)
+                  {
+                     for(int i = 0; i < list->size(); i++)
+                     {
+                        ConfigEntry *e = list->get(i);
+                        const TCHAR *tmp = e->getSubEntryValue(_T("type"), 0, _T("FILLER_PANEL"));
+                        int type = 0;
+                        if (!_tcscmp(tmp, _T("FILLER_PANEL")))
+                           type = 1;
+                        else if (!_tcscmp(tmp, _T("ORGANISER")))
+                           type = 2;
+
+                        tmp = e->getSubEntryValue(_T("orientation"), 0, _T("FRONT"));
+                        int orientation = 0;
+                        if (!_tcscmp(tmp, _T("FRONT")))
+                           orientation = 1;
+                        else if (!_tcscmp(tmp, _T("REAR")))
+                           orientation = 2;
+
+                        DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, id++);
+                        DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, rackId);
+                        DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, e->getSubEntryValue(_T("name")), DB_BIND_STATIC);
+                        DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, type);
+                        DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, e->getSubEntryValueAsInt(_T("position")));
+                        DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, orientation);
+                        if (!SQLExecute(hStmt) && !g_ignoreErrors)
+                        {
+                           MemFree(xml);
+                           DBFreeStatement(hStmt);
+                           DBFreeResult(hResult);
+                           delete list;
+                           return false;
+                        }
+                     }
+                     delete list;
+                  }
                }
             }
-            delete list;
+            MemFree(xml);
          }
-         MemFree(xml);
          DBFreeStatement(hStmt);
+      }
+      else
+      {
+         if (!g_ignoreErrors)
+         {
+            DBFreeResult(hResult);
+            return false;
+         }
       }
       DBFreeResult(hResult);
    }
