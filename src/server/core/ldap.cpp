@@ -583,31 +583,31 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
       for(attribute = ldap_first_attributeA(m_ldapConn, entry, &ber); attribute != NULL; attribute = ldap_next_attributeA(m_ldapConn, entry, ber))
       {
          // We get values only for those attributes that are used for user/group creation
-         if (!strcmp(attribute, m_ldapFullNameAttr))
+         if (!stricmp(attribute, m_ldapFullNameAttr))
          {
             ldapObject->m_fullName = getAttrValue(entry, attribute);
          }
-         if (!strcmp(attribute, m_ldapUserLoginNameAttr) && ldapObject->m_type == LDAP_USER)
+         if (!stricmp(attribute, m_ldapUserLoginNameAttr) && ldapObject->m_type == LDAP_USER)
          {
             ldapObject->m_loginName = getAttrValue(entry, attribute);
          }
-         if (!strcmp(attribute, m_ldapGroupLoginNameAttr) && ldapObject->m_type == LDAP_GROUP)
+         if (!stricmp(attribute, m_ldapGroupLoginNameAttr) && ldapObject->m_type == LDAP_GROUP)
          {
             ldapObject->m_loginName = getAttrValue(entry, attribute);
          }
-         if (!strcmp(attribute, m_ldapDescriptionAttr))
+         if (!stricmp(attribute, m_ldapDescriptionAttr))
          {
             ldapObject->m_description = getAttrValue(entry, attribute);
          }
-         if (m_ldapUsreIdAttr[0] != 0 && !strcmp(attribute, m_ldapUsreIdAttr) && ldapObject->m_type == LDAP_USER)
+         if (m_ldapUsreIdAttr[0] != 0 && !stricmp(attribute, m_ldapUsreIdAttr) && ldapObject->m_type == LDAP_USER)
          {
             ldapObject->m_id = getIdAttrValue(entry, attribute);
          }
-         if (m_ldapGroupIdAttr[0] != 0 && !strcmp(attribute, m_ldapGroupIdAttr) && ldapObject->m_type == LDAP_GROUP)
+         if (m_ldapGroupIdAttr[0] != 0 && !stricmp(attribute, m_ldapGroupIdAttr) && ldapObject->m_type == LDAP_GROUP)
          {
             ldapObject->m_id = getIdAttrValue(entry, attribute);
          }
-         if (!strcmp(attribute, "member"))
+         if (!stricmp(attribute, "member"))
          {
             i = 0;
             TCHAR *value = getAttrValue(entry, attribute, i);
