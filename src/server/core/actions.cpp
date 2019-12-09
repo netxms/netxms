@@ -226,41 +226,11 @@ static BOOL ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
       }
    }
 
-   StringList list;
+   StringList *list = SplitCommandLine(pszAction);
 	TCHAR *pTmp = MemCopyString(pszAction);
-	int nLen = (int)_tcslen(pTmp);
-	for(int i = 0, nState = 0, nCount = 1; (i < nLen) && (nCount < 127); i++)
-	{
-		switch(pTmp[i])
-		{
-			case _T(' '):
-				if (nState == 0)
-				{
-					pTmp[i] = 0;
-					if (pTmp[i + 1] != 0)
-					{
-					   list.add(pTmp + i + 1);
-					}
-				}
-				break;
-			case _T('"'):
-				nState == 0 ? nState++ : nState--;
-
-				memmove(pTmp + i, pTmp + i + 1, (nLen - i) * sizeof(TCHAR));
-				i--;
-				break;
-			case _T('\\'):
-				if (pTmp[i + 1] == _T('"'))
-				{
-					memmove(pTmp + i, pTmp + i + 1, (nLen - i) * sizeof(TCHAR));
-				}
-				break;
-			default:
-				break;
-		}
-	}
 
    UINT32 rcc = pConn->execAction(pTmp, list);
+   delete list;
    pConn->disconnect();
    pConn->decRefCount();
    MemFree(pTmp);

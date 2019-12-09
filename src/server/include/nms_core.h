@@ -1136,6 +1136,7 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneUIN, const TCHAR *hostn
 
 BOOL ExecCommand(TCHAR *pszCommand);
 bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
+StringList *SplitCommandLine(const TCHAR *command);
 
 BOOL InitIdTable();
 UINT32 CreateUniqueId(int iGroup);
