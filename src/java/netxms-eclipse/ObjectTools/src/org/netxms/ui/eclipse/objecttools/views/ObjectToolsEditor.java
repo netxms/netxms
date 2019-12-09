@@ -141,7 +141,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 
 		// Initiate loading of required plugins if they was not loaded yet
 		try
@@ -185,8 +185,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		viewer.addFilter(filter);
 		
 		viewer.setComparator(new ObjectToolsComparator());
-		viewer.addSelectionChangedListener(new ISelectionChangedListener()
-		{
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
@@ -230,6 +229,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
       fd.right = new FormAttachment(100, 0);
       filterText.setLayoutData(fd);
 		
+      getSite().setSelectionProvider(viewer);
+
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();

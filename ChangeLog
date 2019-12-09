@@ -21,6 +21,7 @@
 - Improved automatic IP topology maps
 - Added custom attributes inheritance
 - Fixed issues:
+	NX-1668 ("Execute server script" appears in context menu in object tools configurator)
 	NX-1674 (Initiate DCI forced poll from NXSL)
 	NX-1675 (Context menu for containers and "Service Root" shows "Create sensor" twice)
 	NX-1681 (In NetXMS console refresh from view pull-down menu is not working on Data Collection Configuration)
