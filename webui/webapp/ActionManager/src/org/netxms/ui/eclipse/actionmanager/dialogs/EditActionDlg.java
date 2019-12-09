@@ -249,7 +249,7 @@ public class EditActionDlg extends Dialog
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get notificationchannels";
+            return "Cannot get notification channels";
          }
       }.start();
 		
@@ -330,20 +330,30 @@ public class EditActionDlg extends Dialog
 		super.okPressed();
 	}
 	
+	/**
+	 * Update list of available channels
+	 */
 	private void updateChannelList()
 	{
 	   channelName.removeAll();
+
+      boolean needRecipient = false;
+      boolean needSubject = false;
+	   
 	   for(int i = 0; i < ncList.size(); i++)
 	   {
 	      NotificationChannel nc = ncList.get(i);
 	      channelName.add(nc.getName());
-	      if(nc.getName().equals(action.getChannelName()))
+	      if (nc.getName().equals(action.getChannelName()))
 	      {
 	         channelName.select(i);
-            recipient.setEnabled(nc.getConfigurationTemplate().needRecipient);
-            subject.setEnabled(nc.getConfigurationTemplate().needSubject);
+	         needRecipient = nc.getConfigurationTemplate().needRecipient;
+	         needSubject = nc.getConfigurationTemplate().needSubject;
 	      }
 	   }
+
+      recipient.setEnabled(needRecipient);
+      subject.setEnabled(needSubject);
 	}
 	
 	/**
