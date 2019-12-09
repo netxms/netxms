@@ -35,6 +35,8 @@
 	NX-1713 (Object tool for container should be shown if it can be executed on at least one node)
 	NX-1717 (Alarm pop-ups apear only on console start, afterwards are not shown)
 	NX-1719 (File monitoring with rescan is not matching text past 4KB of the monitored file)
+	NX-1725 (LDAP attribute names should be case insensitive)
+	NX-1728 (No error description in poller output when configuration or status poll for a node cannot connect to NetXMS agent)
 
 
 *
