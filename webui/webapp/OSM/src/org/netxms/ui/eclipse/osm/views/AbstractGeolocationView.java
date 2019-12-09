@@ -29,6 +29,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -249,6 +250,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 	{
 		AbstractObject object = map.getObjectAtPoint(map.getCurrentPoint());
 		selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
+		fireSelectionChangedListeners();
 		if (!selection.isEmpty())
 		{
 		   ObjectContextMenu.fill(manager, getSite(), this);
@@ -293,6 +295,16 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 	protected MapAccessor getMapAccessor()
 	{
 		return mapAccessor;
+	}
+	
+	/**
+	 * Fire selection changed listeners
+	 */
+	protected void fireSelectionChangedListeners()
+	{
+	   SelectionChangedEvent e = new SelectionChangedEvent(this, selection);
+      for(ISelectionChangedListener l : selectionChangeListeners)
+         l.selectionChanged(e);
 	}
 
    /* (non-Javadoc)

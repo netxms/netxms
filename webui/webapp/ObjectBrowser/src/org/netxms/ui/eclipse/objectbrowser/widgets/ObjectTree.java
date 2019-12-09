@@ -112,7 +112,7 @@ public class ObjectTree extends Composite
 	{
 		super(parent, style);
 		
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		this.hideNodeComponents = hideNodeComponents;
       refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), this, new Runnable() {
          @Override
