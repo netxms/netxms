@@ -386,7 +386,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != NULL)
 			{
-			   setCustomAttributeFromDatabase(hResult);
+			   setCustomAttributesFromDatabase(hResult);
 				DBFreeResult(hResult);
 			}
 			else
@@ -533,6 +533,29 @@ bool NetObj::saveModuleData(DB_HANDLE hdb)
  */
 bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 {
+   // Save custom attributes
+   bool success = true;
+   if (m_modified & MODIFY_CUSTOM_ATTRIBUTES)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM object_custom_attributes WHERE object_id=?"));
+      if (success && getCustomAttributeSize() != 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value,flags) VALUES (?,?,?,?)"), true);
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            success = (forEachCustomAttribute(SaveAttributeCallback, hStmt) == _CONTINUE);
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      if (!success)
+         return false;
+   }
+
    if (!(m_modified & MODIFY_COMMON_PROPERTIES))
       return saveModuleData(hdb);
 
@@ -590,30 +613,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
 
-   bool success = DBExecute(hStmt);
+   success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
-
-   // Save custom attributes
-   if (success)
-   {
-		TCHAR szQuery[512];
-		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_id);
-      success = DBQuery(hdb, szQuery);
-		if (success && getCustomAttributeSize() != 0)
-		{
-			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value,flags) VALUES (?,?,?,?)"), true);
-			if (hStmt != NULL)
-			{
-				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            success = (forEachCustomAttribute(SaveAttributeCallback, hStmt) == _CONTINUE);
-				DBFreeStatement(hStmt);
-			}
-			else
-			{
-				success = false;
-			}
-		}
-   }
 
    // Save dashboard associations
    if (success)
@@ -699,11 +700,11 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 }
 
 /**
- * Method called on cutom attribute change
+ * Method called on custom attribute change
  */
 void NetObj::onCustomAttributeChange()
 {
-   setModified(MODIFY_CUSTOM_ATTRIBUTES);
+   markAsModified(MODIFY_CUSTOM_ATTRIBUTES);
 }
 
 /**
@@ -1462,7 +1463,7 @@ UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *pRequest)
    // Change custom attributes
    if (pRequest->isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
    {
-      updateCustomAttributeFromMessage(pRequest);
+      setCustomAttributesFromMessage(pRequest);
    }
 
    if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))

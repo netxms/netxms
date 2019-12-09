@@ -323,14 +323,14 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
       onCustomAttributeChange();
    }
 
-   bool inherite = curr->isInheritable();
-   if(inherite)
+   bool inherit = curr->isInheritable();
+   if (inherit)
       source = curr->isRedefined() || !curr->isInherited() ? m_id : curr->sourceObject;
    unlockCustomAttributes();
 
-   if(inherite)
+   if (inherit)
       populate(name, value, source);
-   else if(remove)
+   else if (remove)
       populateRemove(name);
 }
 
@@ -371,7 +371,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, UINT32 p
 
    unlockCustomAttributes();
 
-   if(callPopulate)
+   if (callPopulate)
       populate(name, value, source);
 }
 
@@ -417,24 +417,8 @@ void NObject::setCustomAttribute(const TCHAR *key, UINT64 value)
 }
 
 /**
- * Set custom attribute from message
+ * Hook method called on removing child object
  */
-bool NObject::setCustomAttributeFromMessage(NXCPMessage *msg, UINT32 base)
-{
-   bool success = false;
-   TCHAR *name = msg->getFieldAsString(base++);
-   TCHAR *value = msg->getFieldAsString(base++);
-   UINT32 flags = msg->getFieldAsUInt32(base++);
-   if ((name != NULL) && (value != NULL))
-   {
-      setCustomAttribute(name, value, (flags & CAF_INHERITABLE) > 0 ? StateChange::SET : StateChange::CLEAR);
-      success = true;
-   }
-   MemFree(name);
-   MemFree(value);
-   return success;
-}
-
 void NObject::onChildRemove()
 {
    StringList remove;
@@ -454,7 +438,7 @@ void NObject::onChildRemove()
 }
 
 /**
- * Populate custom attributes on child add
+ * Hook method called on adding child object
  */
 void NObject::onChildAdd()
 {
@@ -501,9 +485,9 @@ void NObject::populateRemove(const TCHAR *name)
 }
 
 /**
- * Set custom attribute from db query
+ * Set custom attributes from database query
  */
-void NObject::setCustomAttributeFromDatabase(DB_RESULT hResult)
+void NObject::setCustomAttributesFromDatabase(DB_RESULT hResult)
 {
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
@@ -525,19 +509,38 @@ void NObject::setCustomAttributeFromDatabase(DB_RESULT hResult)
 }
 
 /**
- * Set custom attribute from db query
+ * Set custom attribute from message
  */
-void NObject::updateCustomAttributeFromMessage(NXCPMessage *pRequest)
+bool NObject::setCustomAttributeFromMessage(NXCPMessage *msg, UINT32 base)
+{
+   bool success = false;
+   TCHAR *name = msg->getFieldAsString(base++);
+   TCHAR *value = msg->getFieldAsString(base++);
+   UINT32 flags = msg->getFieldAsUInt32(base++);
+   if ((name != NULL) && (value != NULL))
+   {
+      setCustomAttribute(name, value, (flags & CAF_INHERITABLE) > 0 ? StateChange::SET : StateChange::CLEAR);
+      success = true;
+   }
+   MemFree(name);
+   MemFree(value);
+   return success;
+}
+
+/**
+ * Set custom attributes from NXCP message
+ */
+void NObject::setCustomAttributesFromMessage(NXCPMessage *msg)
 {
    StringList existingAttibutes;
    StringList deletionList;
    ObjectArray<std::pair<String, UINT32>> updateList(0, 16, true);
 
-   UINT32 dwId, dwNumElements = pRequest->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
+   UINT32 dwId, dwNumElements = msg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
    for(int i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < dwNumElements; i++, dwId += 3)
    {
-      if(setCustomAttributeFromMessage(pRequest, dwId))
-         existingAttibutes.addPreallocated(pRequest->getFieldAsString(dwId));
+      if (setCustomAttributeFromMessage(msg, dwId))
+         existingAttibutes.addPreallocated(msg->getFieldAsString(dwId));
    }
 
    lockCustomAttributes();
@@ -847,4 +850,11 @@ NXSL_Value *NObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
    unlockCustomAttributes();
    delete attributes;
    return vm->createValue(map);
+}
+
+/**
+ * Hook method called after change in custom attributes
+ */
+void NObject::onCustomAttributeChange()
+{
 }
