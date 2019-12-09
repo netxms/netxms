@@ -23,8 +23,6 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
-
 /**
  * Upgrade from 31.9 to 31.10
  */
@@ -66,38 +64,6 @@ static bool H_UpgradeFromV7()
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_custom_attributes"), _T("flags")));
 
    CHK_EXEC(SetMinorSchemaVersion(8));
-   return true;
-}
-
-/**
- * Convert flags in items and dc_tables
- */
-static bool ConvertDCObjectFlags(const TCHAR *table)
-{
-   TCHAR query[256] = _T("SELECT item_id,flags,retention_time,polling_interval FROM ");
-   _tcslcat(query, table, 256);
-   DB_RESULT hResult = SQLSelect(query);
-   if (hResult == NULL)
-      return false;
-
-   int count = DBGetNumRows(hResult);
-   for(int i = 0; i < count; i++)
-   {
-      UINT32 id = DBGetFieldULong(hResult, i, 0);
-      UINT32 flags = DBGetFieldULong(hResult, i, 1);
-      int retentionTime = DBGetFieldLong(hResult, i, 2);
-      int pollingInterval = DBGetFieldLong(hResult, i, 2);
-      if (((flags & 0x201) != 0) || (pollingInterval > 0) || (retentionTime > 0))
-      {
-         _sntprintf(query, 256, _T("UPDATE %s SET polling_schedule_type='%c',retention_type='%c',flags=%d WHERE item_id=%u"),
-                  table, (flags & 1) ? _T('2') : ((pollingInterval <= 0) ? _T('0') : _T('1')),
-                  (flags & 0x200) ? _T('2') : (retentionTime <= 0) ? _T('0') : _T('1'),
-                  flags & ~0x201, id);
-         CHK_EXEC(SQLQuery(query));
-      }
-   }
-
-   DBFreeResult(hResult);
    return true;
 }
 
@@ -157,6 +123,38 @@ static bool H_UpgradeFromV5()
    }
 
    CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
+ * Convert flags in items and dc_tables
+ */
+static bool ConvertDCObjectFlags(const TCHAR *table)
+{
+   TCHAR query[256] = _T("SELECT item_id,flags,retention_time,polling_interval FROM ");
+   _tcslcat(query, table, 256);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   for (int i = 0; i < count; i++)
+   {
+      UINT32 id = DBGetFieldULong(hResult, i, 0);
+      UINT32 flags = DBGetFieldULong(hResult, i, 1);
+      int retentionTime = DBGetFieldLong(hResult, i, 2);
+      int pollingInterval = DBGetFieldLong(hResult, i, 3);
+      if (((flags & 0x201) != 0) || (pollingInterval > 0) || (retentionTime > 0))
+      {
+         _sntprintf(query, 256, _T("UPDATE %s SET polling_schedule_type='%c',retention_type='%c',flags=%d WHERE item_id=%u"),
+            table, (flags & 1) ? _T('2') : ((pollingInterval <= 0) ? _T('0') : _T('1')),
+            (flags & 0x200) ? _T('2') : (retentionTime <= 0) ? _T('0') : _T('1'),
+            flags & ~0x201, id);
+         CHK_EXEC(SQLQuery(query));
+      }
+   }
+
+   DBFreeResult(hResult);
    return true;
 }
 
