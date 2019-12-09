@@ -500,8 +500,11 @@ private:
    ObjectArray<NObject> *m_parentList;    // Array of pointers to parent objects
 
    SharedString getCustomAttributeFromParent(const TCHAR *name);
-   void onChildAdd();
-   void onChildRemove();
+   bool setCustomAttributeFromMessage(NXCPMessage *msg, UINT32 base);
+   void setCustomAttribute(const TCHAR *name, SharedString value, UINT32 parent);
+   void deletePopulatedCustomAttribute(const TCHAR *name);
+   void populate(const TCHAR *name, SharedString value, UINT32 parentId);
+   void populateRemove(const TCHAR *name);
 
 protected:
    UINT32 m_id;
@@ -531,7 +534,9 @@ protected:
    }
    void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
-   bool setCustomAttributeFromMessage(NXCPMessage *msg, UINT32 base);
+   virtual void onChildAdd();
+   virtual void onChildRemove();
+   virtual void onCustomAttributeChange();
 
 public:
    NObject();
@@ -572,22 +577,17 @@ public:
    StringMap *getCustomAttributes(const TCHAR *regexp) const;
 
    void setCustomAttribute(const TCHAR *name, SharedString value, StateChange inheritable);
-   void setCustomAttribute(const TCHAR *name, SharedString value, UINT32 parent);
    void setCustomAttribute(const TCHAR *key, INT32 value);
    void setCustomAttribute(const TCHAR *key, UINT32 value);
    void setCustomAttribute(const TCHAR *key, INT64 value);
    void setCustomAttribute(const TCHAR *key, UINT64 value);
 
-   void updateCustomAttributeFromMessage(NXCPMessage *pRequest);
-   void setCustomAttributeFromDatabase(DB_RESULT hResult);
+   void setCustomAttributesFromMessage(NXCPMessage *msg);
+   void setCustomAttributesFromDatabase(DB_RESULT hResult);
    void deleteCustomAttribute(const TCHAR *name, bool force = false);
-   void deletePopulatedCustomAttribute(const TCHAR *name);
    NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
    NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
-   virtual void onCustomAttributeChange() { }
    int getCustomAttributeSize() const { return m_customAttributes->size(); }
-   void populate(const TCHAR *name, SharedString value, UINT32 parentId);
-   void populateRemove(const TCHAR *name);
 
    template <typename C>
    EnumerationCallbackResult forEachCustomAttribute(EnumerationCallbackResult (*cb)(const TCHAR *, const CustomAttribute *, C *), C *context) const
