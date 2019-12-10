@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.function.BiConsumer;
+import javax.naming.InitialContext;
 import javax.servlet.ServletContext;
 import org.eclipse.rap.rwt.RWT;
 
@@ -67,6 +68,15 @@ public class AppPropertiesLoader
     */
    public String getProperty(String name, String defaultValue)
    {
+      try
+      {
+         InitialContext context = new InitialContext();
+         return context.lookup("java:comp/env/nxmc/" + name).toString();
+      }
+      catch(Exception e)
+      {
+      }
+
       String value = properties.getProperty(name);
       if (value != null)
          return value;
