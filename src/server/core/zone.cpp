@@ -724,6 +724,7 @@ void Zone::healthCheck(PollerInfo *poller)
    // Calculate average load
    int count = 0;
    double dataSenderLoad = 0, dataCollectorLoad = 0, cpuLoad = 0;
+   UINT32 assignments = 0;
    for(int i = 0; i < m_proxyNodes->size(); i++)
    {
       ZoneProxy *p = m_proxyNodes->get(i);
@@ -733,6 +734,7 @@ void Zone::healthCheck(PollerInfo *poller)
       dataSenderLoad += p->dataSenderLoad;
       dataCollectorLoad += p->dataCollectorLoad;
       cpuLoad += p->cpuLoad;
+      assignments += p->assignments;
       count++;
    }
 
@@ -742,12 +744,13 @@ void Zone::healthCheck(PollerInfo *poller)
       dataSenderLoad /= count;
       dataCollectorLoad /= count;
       cpuLoad /= count;
+      assignments /= count;
       nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): %d active proxies, average values: %f/%f/%f"),
                m_name, m_uin, count, dataSenderLoad, dataCollectorLoad, cpuLoad);
 
       time_t now = time(NULL);
-      ObjectArray<ZoneProxy> sources(16, 16, false);  // potential sources for removing load
-      ObjectArray<ZoneProxy> targets(16, 16, false);  // potential sources for adding load
+      ObjectArray<ZoneProxy> sources(count, 16, false);  // potential sources for removing load
+      ObjectArray<ZoneProxy> targets(count, 16, false);  // potential sources for adding load
       for(int i = 0; i < m_proxyNodes->size(); i++)
       {
          ZoneProxy *p = m_proxyNodes->get(i);
@@ -757,6 +760,7 @@ void Zone::healthCheck(PollerInfo *poller)
          if ((p->dataSenderLoad <= dataSenderLoad) &&
              (p->dataCollectorLoad <= dataCollectorLoad) &&
              (p->cpuLoad <= cpuLoad) &&
+             (p->assignments <= assignments) &&
              (now - p->loadBalanceTimestamp >= 420))  // was not re-balanced within last 7 minutes
          {
             targets.add(p);
@@ -764,7 +768,8 @@ void Zone::healthCheck(PollerInfo *poller)
          else if (((p->dataSenderLoad > dataSenderLoad) ||
                    (p->dataSenderLoadTrend > 0) ||
                    (p->dataCollectorLoad > dataCollectorLoad) ||
-                   ((p->cpuLoad > cpuLoad) && (p->cpuLoad > 1))) &&
+                   ((p->cpuLoad > cpuLoad) && (p->cpuLoad > 1)) ||
+                   (p->assignments > assignments * 2)) &&
                   (now - p->loadBalanceTimestamp >= 420))  // was not re-balanced within last 7 minutes
          {
             sources.add(p);
