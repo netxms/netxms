@@ -3233,7 +3233,6 @@ struct ZoneProxy
    bool isAvailable;    // True if proxy is available
    UINT32 assignments;  // Number of objects where this proxy is assigned
    INT64 rawDataSenderLoad;
-   double loadFactor;   // Load factor calculated from assigned nodes' DCIs
    double cpuLoad;
    double dataCollectorLoad;
    double dataSenderLoad;
@@ -3246,7 +3245,6 @@ struct ZoneProxy
       isAvailable = false;
       assignments = 0;
       rawDataSenderLoad = 0;
-      loadFactor = 0;
       cpuLoad = 0;
       dataCollectorLoad = 0;
       dataSenderLoad = 0;
@@ -3269,19 +3267,19 @@ struct ZoneProxy
          return 1;
 
       double d = fabs(dataSenderLoadTrend) - fabs(p->dataSenderLoadTrend);
-      if (fabs(d) > 0.01)
+      if (fabs(d) > 0.1)
          return (d < 0) ? -1 : 1;
 
       d = dataSenderLoad - p->dataSenderLoad;
-      if (fabs(d) > 0.01)
+      if (fabs(d) > 0.1)
          return (d < 0) ? -1 : 1;
 
       d = dataCollectorLoad - p->dataCollectorLoad;
-      if (fabs(d) > 0.01)
+      if (fabs(d) > 0.1)
          return (d < 0) ? -1 : 1;
 
       d = cpuLoad - p->cpuLoad;
-      if (fabs(d) > 0.01)
+      if (fabs(d) > 0.1)
          return (d < 0) ? -1 : 1;
 
       return 0;
