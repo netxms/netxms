@@ -470,6 +470,16 @@ void NXSL_Program::removeInstructions(UINT32 start, int count)
          instr->m_addr2 -= count;
 		}
 	}
+
+	// Update function table
+   for(i = 0; i < m_functions->size(); i++)
+   {
+      NXSL_Function *f = m_functions->get(i);
+      if (f->m_dwAddr > start)
+      {
+         f->m_dwAddr -= count;
+      }
+   }
 }
 
 /**
