@@ -301,6 +301,7 @@ public:
 
 	void setThread(THREAD th) { m_thread = th; }
 	THREAD getThread() { return m_thread; }
+   CONDITION getStopCondition() { return m_stopCondition; }
 
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() const { return m_processAllRules; }
