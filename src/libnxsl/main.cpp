@@ -80,7 +80,7 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFile
    {
       if (fstat(fd, &fs) != -1)
       {
-         pBuffer = (char *)malloc(fs.st_size + 1);
+         pBuffer = (char *)MemAlloc(fs.st_size + 1);
          if (pBuffer != NULL)
          {
             *pdwFileSize = fs.st_size;
@@ -111,7 +111,7 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFile
 		return NULL;
 
 	WCHAR *ucBuffer = WideStringFromUTF8String(pBuffer);
-	free(pBuffer);
+	MemFree(pBuffer);
 	return ucBuffer;
 #else
    return pBuffer;

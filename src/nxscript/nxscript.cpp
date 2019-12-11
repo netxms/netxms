@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005-2013 Victor Kirhenshtein
+** Copyright (C) 2005-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
    strcpy(func.m_name, "__new");
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
-                   _T("Copyright (c) 2005-2018 Victor Kirhenshtein\n\n"));
+                   _T("Copyright (c) 2005-2019 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
@@ -173,9 +173,6 @@ int main(int argc, char *argv[])
 
 	if (pScript != NULL)
 	{
-		if (dump)
-			pScript->dump(stdout);
-
       if (outFile[0] != 0)
       {
          int f = open(outFile, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IREAD | S_IWRITE);
@@ -203,6 +200,9 @@ int main(int argc, char *argv[])
          NXSL_VM *vm = new NXSL_VM(pEnv);
          if (vm->load(pScript))
          {
+            if (dump)
+               vm->dump(stdout);
+
             while(runCount-- > 0)
             {
 		         // Prepare arguments
@@ -242,17 +242,24 @@ int main(int argc, char *argv[])
          }
          else
          {
+            if (dump)
+               pScript->dump(stdout);
+
             WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
             rc = 1;
          }
          delete vm;
       }
+      else if (dump)
+      {
+         pScript->dump(stdout);
+      }
       delete pScript;
-	}
-	else
-	{
-		WriteToTerminalEx(_T("%s\n"), szError);
-            rc = 1;
-	}
+   }
+   else
+   {
+      WriteToTerminalEx(_T("%s\n"), szError);
+      rc = 1;
+   }
    return rc;
 }

@@ -315,14 +315,14 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
       pData = NXSLLoadFile(szBuffer, &dwSize);
       if (pData != NULL)
       {
-         pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0, NULL);
+         pScript = NXSLCompile(pData, NULL, 0, NULL);
          if (pScript != NULL)
          {
             vm->loadModule(pScript, importInfo);
             delete pScript;
             bRet = true;
          }
-         free(pData);
+         MemFree(pData);
       }
    }
 

@@ -207,7 +207,7 @@ NXSL_VM::~NXSL_VM()
    delete m_functions;
    delete m_modules;
 
-   free(m_errorText);
+   MemFree(m_errorText);
 }
 
 /**
@@ -2305,7 +2305,10 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    // Add function names from module
    for(i = 0; i < module->m_functions->size(); i++)
    {
-      NXSL_Function *f = new NXSL_Function(module->m_functions->get(i));
+      NXSL_Function *mf = module->m_functions->get(i);
+      if (!strcmp(mf->m_name.value, "main") || !strcmp(mf->m_name.value, "$main"))
+         continue;
+      NXSL_Function *f = new NXSL_Function(mf);
       f->m_dwAddr += (UINT32)start;
       m_functions->add(f);
    }
@@ -2315,7 +2318,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
 
    // Register module as loaded
    NXSL_Module *m = new NXSL_Module;
-   nx_strncpy(m->m_name, importInfo->name, MAX_PATH);
+   _tcslcpy(m->m_name, importInfo->name, MAX_PATH);
    m->m_codeStart = (UINT32)start;
    m->m_codeSize = module->m_instructionSet->size();
    m->m_functionStart = m_functions->size() - module->m_functions->size();
@@ -2608,7 +2611,7 @@ void NXSL_VM::error(int errorCode, int sourceLine)
    TCHAR szBuffer[1024];
    _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
    MemFree(m_errorText);
-   m_errorText = _tcsdup(szBuffer);
+   m_errorText = MemCopyString(szBuffer);
 
    m_cp = INVALID_ADDRESS;
 }
@@ -2706,4 +2709,22 @@ void NXSL_VM::setSecurityContext(NXSL_SecurityContext *context)
 {
    delete m_securityContext;
    m_securityContext = context;
+}
+
+/**
+ * Dump VM code
+ */
+void NXSL_VM::dump(FILE *fp)
+{
+   NXSL_Program::dump(fp, m_instructionSet);
+
+   if (!m_functions->isEmpty())
+   {
+      _ftprintf(fp, _T("\nFunctions:\n"));
+      for(int i = 0; i < m_functions->size(); i++)
+      {
+         NXSL_Function *f = m_functions->get(i);
+         _ftprintf(fp, _T("  %04X %hs\n"), f->m_dwAddr, f->m_name.value);
+      }
+   }
 }

@@ -1127,7 +1127,7 @@ public:
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 
 	void trace(int level, const TCHAR *text);
-   void dump(FILE *fp) { NXSL_Program::dump(fp, m_instructionSet); }
+   void dump(FILE *fp);
    int getErrorCode() { return m_errorCode; }
    int getErrorLine() { return m_errorLine; }
    const TCHAR *getErrorText() { return CHECK_NULL_EX(m_errorText); }
