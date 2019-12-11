@@ -2048,7 +2048,7 @@ int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime)
  * Match schedule element
  * NOTE: We assume that pattern can be modified during processing
  */
-bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime)
+bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime, bool checkSeconds)
 {
    TCHAR *ptr, *curr;
    int nStep, nCurr, nPrev;
@@ -2060,7 +2060,7 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
 
 	// Check if time() step was specified (% - special syntax)
 	ptr = _tcschr(pszPattern, _T('%'));
-	if (ptr != NULL)
+	if (checkSeconds && ptr != NULL)
 		return (currTime % GetStepSize(ptr)) != 0;
 
    // Check if step was specified
@@ -2129,22 +2129,22 @@ bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, struct tm *currTi
 
    // Minute
    const TCHAR *curr = ExtractWord(schedule, value);
-   if (!MatchScheduleElement(value, currTime->tm_min, 59, currTime, now))
+   if (!MatchScheduleElement(value, currTime->tm_min, 59, currTime, now, false))
       return false;
 
    // Hour
    curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_hour, 23, currTime, now))
+   if (!MatchScheduleElement(value, currTime->tm_hour, 23, currTime, now, false))
       return false;
 
    // Day of month
    curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_mday, GetLastMonthDay(currTime), currTime, now))
+   if (!MatchScheduleElement(value, currTime->tm_mday, GetLastMonthDay(currTime), currTime, now, false))
       return false;
 
    // Month
    curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_mon + 1, 12, currTime, now))
+   if (!MatchScheduleElement(value, currTime->tm_mon + 1, 12, currTime, now, false))
       return false;
 
    // Day of week
@@ -2152,7 +2152,7 @@ bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, struct tm *currTi
    for(int i = 0; value[i] != 0; i++)
       if (value[i] == _T('7'))
          value[i] = _T('0');
-   if (!MatchScheduleElement(value, currTime->tm_wday, 7, currTime, now))
+   if (!MatchScheduleElement(value, currTime->tm_wday, 6, currTime, now, false))
       return false;
 
    return true;

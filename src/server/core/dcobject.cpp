@@ -592,22 +592,22 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
 
    // Minute
    const TCHAR *pszCurr = ExtractWord(realSchedule, szValue);
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_min, 59, currLocalTime, currTimestamp))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_min, 59, currLocalTime, currTimestamp, false))
       return false;
 
    // Hour
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_hour, 23, currLocalTime, currTimestamp))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_hour, 23, currLocalTime, currTimestamp, false))
       return false;
 
    // Day of month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_mday, GetLastMonthDay(currLocalTime), currLocalTime, currTimestamp))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_mday, GetLastMonthDay(currLocalTime), currLocalTime, currTimestamp, false))
       return false;
 
    // Month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_mon + 1, 12, currLocalTime, currTimestamp))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_mon + 1, 12, currLocalTime, currTimestamp, false))
       return false;
 
    // Day of week
@@ -615,7 +615,7 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
    for(int i = 0; szValue[i] != 0; i++)
       if (szValue[i] == _T('7'))
          szValue[i] = _T('0');
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_wday, 7, currLocalTime, currTimestamp))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_wday, 6, currLocalTime, currTimestamp, false))
       return false;
 
    // Seconds
@@ -625,7 +625,7 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
    {
       if (withSeconds != NULL)
          *withSeconds = true;
-      return MatchScheduleElement(szValue, currLocalTime->tm_sec, 59, currLocalTime, currTimestamp);
+      return MatchScheduleElement(szValue, currLocalTime->tm_sec, 59, currLocalTime, currTimestamp, true);
    }
 
    return true;
