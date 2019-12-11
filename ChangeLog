@@ -40,6 +40,7 @@
 	NX-1725 (LDAP attribute names should be case insensitive)
 	NX-1726 ("Tools" and "Graphs" menu items missing in object context menu on world map)
 	NX-1728 (No error description in poller output when configuration or status poll for a node cannot connect to NetXMS agent)
+	NX-1731 (NXSL method Node::readAgentList causes NetXMS server crash)
 
 
 *
