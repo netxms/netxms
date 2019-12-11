@@ -95,6 +95,8 @@ NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : super()
    m_filterSource = NULL;
    m_filter = NULL;
 	m_isHidden = true;
+   setCreationTime();
+
 }
 
 /**

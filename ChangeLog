@@ -1,4 +1,12 @@
 *
+* 3.2
+*
+
+- Fixed issues:
+	NX-1523 (Store object creation time)
+
+
+*
 * 3.1
 *
 

@@ -41,6 +41,7 @@ VPNConnector::VPNConnector(bool hidden) : super()
    m_localNetworks = new ObjectArray<InetAddress>(8, 8, true);
    m_remoteNetworks = new ObjectArray<InetAddress>(8, 8, true);
    m_isHidden = hidden;
+   setCreationTime();
 }
 
 /**

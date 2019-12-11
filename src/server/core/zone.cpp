@@ -61,6 +61,7 @@ Zone::Zone(UINT32 uin, const TCHAR *name) : super()
 	m_idxSubnetByAddr = new InetAddressIndex;
    m_lastHealthCheck = NEVER;
    m_lockedForHealthCheck = false;
+   setCreationTime();
 }
 
 /**

@@ -45,6 +45,7 @@ DataCollectionOwner::DataCollectionOwner(const TCHAR *pszName) : super()
    m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
+   setCreationTime();
 }
 
 /**
@@ -88,6 +89,7 @@ DataCollectionOwner::DataCollectionOwner(ConfigEntry *config)
       }
       delete dctables;
    }
+   setCreationTime();
 }
 
 /**

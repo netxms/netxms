@@ -716,6 +716,7 @@ class NXCORE_EXPORTABLE NetObj : public NObject
 
 private:
    typedef NObject super;
+   time_t m_creationTime; //Object creation time
 
 	static void onObjectDeleteCallback(NetObj *object, void *data);
 
@@ -888,6 +889,8 @@ public:
    void setName(const TCHAR *pszName) { lockProperties(); _tcslcpy(m_name, pszName, MAX_OBJECT_NAME); setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
    void resetStatus() { lockProperties(); m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); unlockProperties(); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
+   void setCreationTime() { m_creationTime = time(NULL); }
+   time_t getCreationTime() { return m_creationTime; }
 
    bool isInMaintenanceMode() const { return m_maintenanceEventId != 0; }
    UINT64 getMaintenanceEventId() const { return m_maintenanceEventId; }

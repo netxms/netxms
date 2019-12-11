@@ -53,6 +53,7 @@ SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : super()
 	m_isTemplate = isTemplate;
 	m_templateId = 0;
 	m_currentTicketId = 0;
+   setCreationTime();
 }
 
 
@@ -73,6 +74,7 @@ SlmCheck::SlmCheck(SlmCheck *tmpl) : super()
 	m_templateId = tmpl->getId();
 	m_currentTicketId = 0;
 	compileScript();
+   setCreationTime();
 }
 
 /**

@@ -59,6 +59,7 @@ ConditionObject::ConditionObject(bool hidden) : super()
    m_queuedForPolling = false;
    m_activationEventCode = EVENT_CONDITION_ACTIVATED;
    m_deactivationEventCode = EVENT_CONDITION_DEACTIVATED;
+   setCreationTime();
 }
 
 /**

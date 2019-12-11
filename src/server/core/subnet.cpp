@@ -40,6 +40,7 @@ Subnet::Subnet(const InetAddress& addr, UINT32 zoneUIN, bool bSyntheticMask) : s
    m_ipAddress = addr;
    m_zoneUIN = zoneUIN;
 	m_bSyntheticMask = bSyntheticMask;
+   setCreationTime();
 }
 
 /**

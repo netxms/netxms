@@ -77,6 +77,8 @@ public class GeneralInfo extends TableElement
          addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()) + Messages.get().GeneralInfo_Maintenance);
 		else
 		   addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
+      if (object.getCreationTime() != null && object.getCreationTime().getTime() != 0)
+         addPair("Creation time", RegionalSettings.getDateTimeFormat().format(object.getCreationTime()), false);
 		switch(object.getObjectClass())
 		{
          case AbstractObject.OBJECT_CHASSIS:

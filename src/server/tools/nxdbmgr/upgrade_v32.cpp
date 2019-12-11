@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.3 to 32.4
+ */
+static bool H_UpgradeFromV3()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE object_properties ADD creation_time integer\n")
+            _T("UPDATE object_properties SET creation_time=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("creation_time")));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 32.2 to 32.3 (also included in 31.10)
  */
 static bool H_UpgradeFromV2()
@@ -85,6 +100,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 3,  32, 4, H_UpgradeFromV3 },
    { 2,  32, 3, H_UpgradeFromV2 },
    { 1,  32, 2, H_UpgradeFromV1 },
    { 0,  32, 1, H_UpgradeFromV0 },

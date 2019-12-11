@@ -102,6 +102,7 @@ NetObj::NetObj()
    m_flags = 0;
    m_responsibleUsers = NULL;
    m_rwlockResponsibleUsers = RWLockCreate();
+   m_creationTime = 0;
 }
 
 /**
@@ -310,7 +311,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 									  _T("location_type,latitude,longitude,location_accuracy,")
 									  _T("location_timestamp,guid,image,submap_id,country,city,")
                              _T("street_address,postcode,maint_event_id,state_before_maint,")
-                             _T("state,flags FROM object_properties ")
+                             _T("state,flags,creation_time FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -368,6 +369,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             m_state = DBGetFieldULong(hResult, 0, 28);
             m_runtimeFlags = 0;
             m_flags = DBGetFieldULong(hResult, 0, 29);
+            m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 30));
 
 				success = true;
 			}
@@ -565,7 +567,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
       _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("image"), _T("submap_id"), _T("country"), _T("city"),
       _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
-      NULL
+      _T("creation_time"), NULL
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -611,7 +613,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
 	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_state);
 	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)m_creationTime);
+	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_id);
 
    success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1205,6 +1208,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
 	pMsg->setField(VID_IMAGE, m_image);
 	pMsg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
+	pMsg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedNodes != NULL) && (m_trustedNodes->size() > 0))
 	{
 	   pMsg->setField(VID_NUM_TRUSTED_NODES, m_trustedNodes->size());
@@ -2400,6 +2404,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "accessList", m_accessList->toJson());
    json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
    json_object_set_new(root, "trustedNodes", (m_trustedNodes != NULL) ? m_trustedNodes->toJson() : json_array());
+   json_object_set_new(root, "creationTime", json_integer(m_creationTime));
 
    json_t *customAttributes = json_array();
    forEachCustomAttribute(CustomAttributeToJson, customAttributes);

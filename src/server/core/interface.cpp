@@ -94,6 +94,7 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSynt
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = NULL;
    m_vlans = NULL;
+   setCreationTime();
 }
 
 /**
@@ -136,6 +137,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = NULL;
    m_vlans = NULL;
+   setCreationTime();
 }
 
 /**

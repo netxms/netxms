@@ -20,6 +20,7 @@ package org.netxms.client.objects;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -142,6 +143,7 @@ public abstract class AbstractObject
 	protected ObjectStatus[] statusTransformation;
 	protected int statusSingleThreshold;
 	protected int[] statusThresholds;
+   protected Date creationTime;
 	protected final HashSet<Long> parents = new HashSet<Long>(0);
 	protected final HashSet<Long> children = new HashSet<Long>(0);
 	protected final List<Long> dashboards = new ArrayList<Long>(0);
@@ -216,6 +218,7 @@ public abstract class AbstractObject
 		drillDownObjectId = msg.getFieldAsInt64(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID);
 		if (image == null)
 			image = NXCommon.EMPTY_GUID;
+		creationTime = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
 		
 		statusCalculationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_CALCULATION_ALG);
 		statusPropagationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_PROPAGATION_ALG);
@@ -1047,5 +1050,13 @@ public abstract class AbstractObject
    public List<Long> getResponsibleUsers()
    {
       return responsibleUsers;
+   }
+
+   /**
+    * @return the creationTime
+    */
+   public Date getCreationTime()
+   {
+      return creationTime;
    }
 }

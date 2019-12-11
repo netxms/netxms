@@ -282,6 +282,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_agentId = newNodeData->agentId;
    m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
    m_icmpStatCollectors = NULL;
+   setCreationTime();
 }
 
 /**

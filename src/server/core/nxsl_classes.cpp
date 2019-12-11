@@ -545,6 +545,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    {
       value = vm->createValue(object->getPostalAddress()->getCountry());
    }
+   else if (!strcmp(attr, "creationTime"))
+   {
+      value = vm->createValue(static_cast<INT64>(object->getCreationTime()));
+   }
    else if (!strcmp(attr, "customAttributes"))
    {
       value = object->getCustomAttributesForNXSL(vm);

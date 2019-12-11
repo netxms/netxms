@@ -40,6 +40,7 @@ AbstractContainer::AbstractContainer(const TCHAR *pszName, UINT32 dwCategory) : 
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
    m_isHidden = true;
+   setCreationTime();
 }
 
 /**
