@@ -962,7 +962,7 @@ NXSL_METHOD_DEFINITION(Node, readAgentList)
       return NXSL_ERR_NOT_STRING;
 
    StringList *list;
-   UINT32 rcc = static_cast<Node*>(object->getData())->getListFromAgent(argv[1]->getValueAsCString(), &list);
+   UINT32 rcc = static_cast<Node*>(object->getData())->getListFromAgent(argv[0]->getValueAsCString(), &list);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
    delete list;
    return 0;
@@ -991,7 +991,7 @@ NXSL_METHOD_DEFINITION(Node, readAgentTable)
       return NXSL_ERR_NOT_STRING;
 
    Table *table;
-   UINT32 rcc = static_cast<Node*>(object->getData())->getTableFromAgent(argv[1]->getValueAsCString(), &table);
+   UINT32 rcc = static_cast<Node*>(object->getData())->getTableFromAgent(argv[0]->getValueAsCString(), &table);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
    return 0;
 }
