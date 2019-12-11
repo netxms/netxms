@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -70,6 +70,10 @@ struct NXSL_VariablePtr
 {
    UT_hash_handle hh;
    NXSL_Variable v;
+
+   // Implicitly delete destructor because NXSL_Variable contained inside
+   // will be disposed by owning variable system
+   ~NXSL_VariablePtr() = delete;
 };
 
 /**
@@ -118,7 +122,7 @@ void NXSL_VariableSystem::clear()
    {
       HASH_DEL(m_variables, var);
       var->v.~NXSL_Variable();
-      free(var);
+      MemFree(var);
    }
 }
 
@@ -178,7 +182,7 @@ NXSL_Variable *NXSL_VariableSystem::find(const NXSL_Identifier& name)
  */
 NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Value *value)
 {
-   NXSL_VariablePtr *var = (NXSL_VariablePtr *)calloc(1, sizeof(NXSL_VariablePtr));
+   NXSL_VariablePtr *var = MemAllocStruct<NXSL_VariablePtr>();
    NXSL_Variable *v = new (&var->v) NXSL_Variable(m_vm, name, (value != NULL) ? value : m_vm->createValue(), m_isConstant);
    HASH_ADD_KEYPTR(hh, m_variables, v->m_name.value, v->m_name.length, var);
    return v;

@@ -95,12 +95,13 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;WINNT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -118,12 +119,13 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;WINNT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -141,6 +143,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -163,6 +166,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>

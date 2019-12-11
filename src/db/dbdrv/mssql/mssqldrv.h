@@ -23,20 +23,12 @@
 #ifndef _mssqldrv_h_
 #define _mssqldrv_h_
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0502
-#endif
-
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 
-#include <winsock2.h>
-#include <windows.h>
-#include <stdio.h>
-#include <string.h>
-#include <dbdrv.h>
 #include <nms_util.h>
+#include <dbdrv.h>
 
 #include <sql.h>
 #include <sqlext.h>

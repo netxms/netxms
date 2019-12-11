@@ -23,8 +23,6 @@
 #ifndef _nxsagent_h_
 #define _nxsagent_h_
 
-#define _WIN32_WINNT 0x0501
-
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nms_threads.h>

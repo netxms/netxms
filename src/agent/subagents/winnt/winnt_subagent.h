@@ -24,8 +24,7 @@
 #define _winnt_subagent_h_
 
 #define PSAPI_VERSION 1
-#define NTDDI_VERSION NTDDI_VISTA
-#define _WIN32_WINNT 0x0600
+#define NTDDI_VERSION NTDDI_WIN7
 
 #include <nms_common.h>
 #include <nms_agent.h>

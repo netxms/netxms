@@ -3570,9 +3570,8 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
             {
                case CMD_MODIFY_NODE_DCI:
                   itemId = request->getFieldAsUInt32(VID_DCI_ID);
-                  if (itemId == 0)//create new if id is 0
+                  if (itemId == 0) // create new if id is 0
                   {
-                     TCHAR retentionTime[MAX_DB_STRING], pollingInterval[MAX_DB_STRING];
                      int dcObjectType = (int)request->getFieldAsUInt16(VID_DCOBJECT_TYPE);
                      // Create dummy DCI
                      switch(dcObjectType)

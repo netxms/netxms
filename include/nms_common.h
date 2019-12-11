@@ -209,8 +209,9 @@ typedef int bool;
 //   4577 -  'noexcept' used with no exception handling mode specified
 #pragma warning(disable: 4577)
 
+// Set API version to Windows 7
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT		0x0501
+#define _WIN32_WINNT		0x0601
 #endif
 
 /**

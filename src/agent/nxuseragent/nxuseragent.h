@@ -1,7 +1,7 @@
 #ifndef _nxuseragent_h_
 #define _nxuseragent_h_
 
-#define _WIN32_WINNT                0x0600
+#define _WIN32_WINNT                0x0601
 #define SECURITY_WIN32
 
 #include <nms_common.h>
