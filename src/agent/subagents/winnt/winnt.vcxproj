@@ -102,6 +102,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <AdditionalDependencies>netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -126,6 +127,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <AdditionalDependencies>netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
