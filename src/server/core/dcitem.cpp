@@ -1797,7 +1797,9 @@ void DCItem::createExportRecord(StringBuffer &xml)
                           _T("\t\t\t\t\t<dataType>%d</dataType>\n")
                           _T("\t\t\t\t\t<samples>%d</samples>\n")
                           _T("\t\t\t\t\t<origin>%d</origin>\n")
+                          _T("\t\t\t\t\t<scheduleType>%d</scheduleType>\n")
                           _T("\t\t\t\t\t<interval>%s</interval>\n")
+                          _T("\t\t\t\t\t<retentionType>%d</retentionType>\n")
                           _T("\t\t\t\t\t<retention>%s</retention>\n")
                           _T("\t\t\t\t\t<instance>%s</instance>\n")
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
@@ -1812,7 +1814,9 @@ void DCItem::createExportRecord(StringBuffer &xml)
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
                           m_dataType, m_sampleCount, (int)m_source,
+                          m_pollingScheduleType,
                           (const TCHAR *)EscapeStringForXML2(m_pollingIntervalSrc),
+                          m_retentionType,
                           (const TCHAR *)EscapeStringForXML2(m_retentionTimeSrc),
                           (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
