@@ -223,18 +223,32 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, NULL);
 	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
+   m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
-   m_pollingScheduleType = !_tcscmp(m_pollingIntervalSrc, _T("")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+   if(config->findEntry(_T("scheduleType")) != NULL)
+   {
+      m_pollingScheduleType = config->getSubEntryValueAsInt(_T("scheduleType"));
+   }
+   else
+   {
+      m_pollingScheduleType = !_tcscmp(m_pollingIntervalSrc, _T("")) || !_tcscmp(m_pollingIntervalSrc, _T("0")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+      if (m_flags & 1)  // for compatibility with old format
+         m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
+   }
    m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
-   m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+   if(config->findEntry(_T("retentionType")) != NULL)
+   {
+      m_retentionType = config->getSubEntryValueAsInt(_T("retentionType"));
+   }
+   else
+   {
+      m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) || !_tcscmp(m_retentionTimeSrc, _T("")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      if (m_flags & 0x200) // for compatibility with old format
+         m_retentionType = DC_RETENTION_NONE;
+   }
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
-	m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
-	if (m_flags & 1)  // for compatibility with old format
-	   m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
-   if (m_flags & 0x200) // for compatibility with old format
-      m_retentionType = DC_RETENTION_NONE;
    m_lastPoll = 0;
    m_owner = owner;
    m_hMutex = MutexCreateRecursive();
@@ -1183,13 +1197,27 @@ void DCObject::updateFromImport(ConfigEntry *config)
    MemFree(m_pollingIntervalSrc);
    MemFree(m_retentionTimeSrc);
    m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
-   m_pollingScheduleType = !_tcscmp(m_pollingIntervalSrc, _T("")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+   if(config->findEntry(_T("scheduleType")) != NULL)
+   {
+      m_pollingScheduleType = config->getSubEntryValueAsInt(_T("scheduleType"));
+   }
+   else
+   {
+      m_pollingScheduleType = !_tcscmp(m_pollingIntervalSrc, _T("")) || !_tcscmp(m_pollingIntervalSrc, _T("0")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+      if (m_flags & 1)  // for compatibility with old format
+         m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
+   }
    m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
-   m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
-   if (m_flags & 1)  // for compatibility with old format
-      m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
-   if (m_flags & 0x200) // for compatibility with old format
-      m_retentionType = DC_RETENTION_NONE;
+   if(config->findEntry(_T("retentionType")) != NULL)
+   {
+      m_retentionType = config->getSubEntryValueAsInt(_T("retentionType"));
+   }
+   else
+   {
+      m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) || !_tcscmp(m_retentionTimeSrc, _T("")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      if (m_flags & 0x200) // for compatibility with old format
+         m_retentionType = DC_RETENTION_NONE;
+   }
 
    updateTimeIntervalsInternal();
 
