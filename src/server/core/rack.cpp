@@ -129,7 +129,7 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_height);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_topBottomNumbering ? _T("1") : _T("0"), DB_BIND_STATIC);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 	if (success)
