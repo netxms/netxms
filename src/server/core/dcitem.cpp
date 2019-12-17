@@ -435,16 +435,16 @@ void DCItem::checkThresholds(ItemValue &value)
    for(int i = 0; i < m_thresholds->size(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
-      ItemValue checkValue;
-      ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue, m_owner, this);
+      ItemValue checkValue, thresholdValue;
+      ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue, thresholdValue, m_owner, this);
       t->setLastCheckedValue(checkValue);
       switch(result)
       {
          case ThresholdCheckResult::ACTIVATED:
             {
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-					   s_paramNamesReach, m_name.cstr(), m_description.cstr(), t->getStringValue(),
-                  (const TCHAR *)checkValue, m_id, m_instance.cstr(), 0, (const TCHAR *)value);
+                     s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
+                     checkValue.getString(), m_id, m_instance.cstr(), 0, value.getString());
 				   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
@@ -458,8 +458,8 @@ void DCItem::checkThresholds(ItemValue &value)
             break;
          case ThresholdCheckResult::DEACTIVATED:
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
-					s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(),
-					t->getStringValue(), (const TCHAR *)checkValue, (const TCHAR *)value);
+                  s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(),
+                  thresholdValue.getString(), checkValue.getString(), value.getString());
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
                // this flag used to re-send activation event for next active threshold
@@ -475,8 +475,8 @@ void DCItem::checkThresholds(ItemValue &value)
 				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now)))
 				   {
                   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-                     s_paramNamesReach, m_name.cstr(), m_description.cstr(), t->getStringValue(),
-                           (const TCHAR *)checkValue, m_id, m_instance.cstr(), 1, (const TCHAR *)value);
+                        s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
+                        checkValue.getString(), m_id, m_instance.cstr(), 1, value.getString());
                   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
