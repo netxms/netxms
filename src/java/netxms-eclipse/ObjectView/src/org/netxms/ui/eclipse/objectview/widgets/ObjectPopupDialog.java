@@ -40,7 +40,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.RackElement;
+import org.netxms.client.objects.ElementForPhysicalPlacment;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
@@ -62,7 +62,7 @@ public class ObjectPopupDialog extends PopupDialog
     */
    public ObjectPopupDialog(Shell parent, Object object, Point location)
    {
-      super(parent, HOVER_SHELLSTYLE, true, false, false, false, false, object instanceof RackElement ? ((AbstractObject)object).getObjectName() : ((PassiveRackElement)object).getType().toString(), null);
+      super(parent, HOVER_SHELLSTYLE, true, false, false, false, false, object instanceof ElementForPhysicalPlacment ? ((AbstractObject)object).getObjectName() : ((PassiveRackElement)object).getType().toString(), null);
       this.object = object;
       this.location = (location != null) ? location : Display.getCurrent().getCursorLocation();
       labelProvider = new WorkbenchLabelProvider();
@@ -104,7 +104,7 @@ public class ObjectPopupDialog extends PopupDialog
       CLabel title = new CLabel(parent, SWT.NONE);
       GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).span(2, 1).applyTo(title);
       title.setImage(labelProvider.getImage(object));
-      title.setText(object instanceof RackElement ? ((AbstractObject)object).getObjectName() : ((PassiveRackElement)object).getType().toString());
+      title.setText(object instanceof ElementForPhysicalPlacment ? ((AbstractObject)object).getObjectName() : ((PassiveRackElement)object).getType().toString());
       
       FontData fd = title.getFont().getFontData()[0];
       fd.setStyle(SWT.BOLD);
@@ -122,7 +122,7 @@ public class ObjectPopupDialog extends PopupDialog
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-      if (object instanceof RackElement)
+      if (object instanceof ElementForPhysicalPlacment)
       {
          AbstractObject abstractObject = (AbstractObject)object;
          statusLabel = new CLabel(dialogArea, SWT.NONE);

@@ -281,12 +281,12 @@
            </enabledWhen>
         </page>
         <page
-              class="org.netxms.ui.eclipse.objectmanager.propertypages.RackPlacement"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.PhysicalContainerPlacement"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.RackPlacement"
-              name="%page.name.Rack">
+              name="Rack or Chassis">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.client.objects.RackElement">
+                    value="org.netxms.client.objects.ElementForPhysicalPlacment">
               </instanceof>
            </enabledWhen>
         </page>

@@ -71,9 +71,9 @@ public class NodeListLabelProvider extends LabelProvider implements ITableLabelP
          case NodesTab.COLUMN_AGENT_VERSION:
             return node.getAgentVersion();
          case NodesTab.COLUMN_RACK:
-            if (node.getRackId() != 0)
+            if (node.getPhysicalContainerId() != 0)
             {
-               Rack rack = session.findObjectById(node.getRackId(), Rack.class);
+               Rack rack = session.findObjectById(node.getPhysicalContainerId(), Rack.class);
                if (rack != null)
                {
                   return String.format(Messages.get().GeneralInfo_Units, rack.getObjectName(),

@@ -154,10 +154,9 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_winPerfObjects = NULL;
    memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
    m_fileUpdateConn = NULL;
-   m_rackId = 0;
+   m_physicalContainer = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
-   m_chassisId = 0;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
    m_sshLogin[0] = 0;
@@ -169,6 +168,7 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_rackOrientation = FILL;
    m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
    m_icmpStatCollectors = NULL;
+   m_chassisPlacementConf = NULL;
 }
 
 /**
@@ -266,10 +266,9 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_winPerfObjects = NULL;
    memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
    m_fileUpdateConn = NULL;
-   m_rackId = 0;
+   m_physicalContainer = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
-   m_chassisId = 0;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
    _tcslcpy(m_sshLogin, newNodeData->sshLogin, MAX_SSH_LOGIN_LEN);
@@ -283,6 +282,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
    m_icmpStatCollectors = NULL;
    setCreationTime();
+   m_chassisPlacementConf = NULL;
 }
 
 /**
@@ -330,6 +330,7 @@ Node::~Node()
    MemFree(m_agentCertSubject);
    MemFree(m_hypervisorInfo);
    delete m_icmpStatCollectors;
+   MemFree(m_chassisPlacementConf);
 }
 
 /**
@@ -360,13 +361,13 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
       _T("down_since,boot_time,driver_name,icmp_proxy,")
       _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
-      _T("rack_id,rack_image_front,rack_position,rack_height,")
+      _T("physical_container_id,rack_image_front,rack_position,rack_height,")
       _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
       _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
       _T("tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,")
       _T("rack_orientation,rack_image_rear,agent_id,agent_cert_subject,")
-      _T("hypervisor_type,hypervisor_info,icmp_poll_mode")
+      _T("hypervisor_type,hypervisor_info,icmp_poll_mode,chassis_placement_config")
       _T(" FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
@@ -453,7 +454,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_sysContact = DBGetField(hResult, 0, 29, NULL, 0);
    m_sysLocation = DBGetField(hResult, 0, 30, NULL, 0);
 
-   m_rackId = DBGetFieldULong(hResult, 0, 31);
+   m_physicalContainer = DBGetFieldULong(hResult, 0, 31);
    m_rackImageFront = DBGetFieldGUID(hResult, 0, 32);
    m_rackPosition = (INT16)DBGetFieldLong(hResult, 0, 33);
    m_rackHeight = (INT16)DBGetFieldLong(hResult, 0, 34);
@@ -496,6 +497,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
          break;
    }
+   m_chassisPlacementConf = DBGetField(hResult, 0, 58, NULL, 0);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -557,8 +559,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
    }
 
-   updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
-   updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
+   updatePhysicalContainerBinding(m_physicalContainer);
 
    if (bResult)
    {
@@ -823,12 +824,12 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_version"), _T("platform_name"), _T("poller_node_id"), _T("zone_guid"), _T("proxy_node"), _T("snmp_proxy"),
          _T("icmp_proxy"), _T("required_polls"), _T("use_ifxtable"), _T("usm_auth_password"), _T("usm_priv_password"),
          _T("usm_methods"), _T("snmp_sys_name"), _T("bridge_base_addr"), _T("down_since"), _T("driver_name"),
-         _T("rack_image_front"), _T("rack_position"), _T("rack_height"), _T("rack_id"), _T("boot_time"), _T("agent_cache_mode"),
+         _T("rack_image_front"), _T("rack_position"), _T("rack_height"), _T("physical_container_id"), _T("boot_time"), _T("agent_cache_mode"),
          _T("snmp_sys_contact"), _T("snmp_sys_location"), _T("last_agent_comm_time"), _T("syslog_msg_count"),
          _T("snmp_trap_count"), _T("node_type"), _T("node_subtype"), _T("ssh_login"), _T("ssh_password"), _T("ssh_proxy"),
-         _T("chassis_id"), _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
+         _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
          _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
-         _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"),
+         _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
          NULL
       };
 
@@ -892,7 +893,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_rackImageFront);   // rack image front
          DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
          DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
-         DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_rackId);   // rack ID
+         DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_physicalContainer);   // rack ID
          DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);
          DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC, 1);
          DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC, 127);
@@ -905,21 +906,21 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_sshLogin, DB_BIND_STATIC);
          DBBind(hStmt, 43, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC);
          DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, m_sshProxy);
-         DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_chassisId);
-         DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_portRowCount);
-         DBBind(hStmt, 47, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
-         DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
-         DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_tunnelId);
-         DBBind(hStmt, 50, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
-         DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
-         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
-         DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_rackOrientation);
-         DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_rackImageRear);
-         DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentId);
-         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
-         DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
-         DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
-         DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
+         DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_portRowCount);
+         DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
+         DBBind(hStmt, 47, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
+         DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, m_tunnelId);
+         DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
+         DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
+         DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
+         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_rackOrientation);
+         DBBind(hStmt, 53, DB_SQLTYPE_VARCHAR, m_rackImageRear);
+         DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_agentId);
+         DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
+         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
+         DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
+         DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
+         DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, m_chassisPlacementConf, DB_BIND_STATIC);
          DBBind(hStmt, 60, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
@@ -6126,7 +6127,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       pMsg->setField(VID_DRIVER_NAME, m_driver->getName());
       pMsg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
    }
-   pMsg->setField(VID_RACK_ID, m_rackId);
+   pMsg->setField(VID_PHYSICAL_CONTAINER_ID, m_physicalContainer);
    pMsg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);
    pMsg->setField(VID_RACK_IMAGE_REAR, m_rackImageRear);
    pMsg->setField(VID_RACK_POSITION, m_rackPosition);
@@ -6139,6 +6140,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
    pMsg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
    pMsg->setField(VID_ICMP_COLLECTION_MODE, (INT16)m_icmpStatCollectionMode);
+   pMsg->setField(VID_CHASSIS_PLACEMENT_CONFIG, m_chassisPlacementConf);
    if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != NULL))
    {
       IcmpStatCollector *collector = m_icmpStatCollectors->get(_T("PRI"));
@@ -6397,11 +6399,11 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_USE_IFXTABLE))
       m_nUseIfXTable = (BYTE)pRequest->getFieldAsUInt16(VID_USE_IFXTABLE);
 
-   // Rack settings
-   if (pRequest->isFieldExist(VID_RACK_ID))
+   // Physical container settings
+   if (pRequest->isFieldExist(VID_PHYSICAL_CONTAINER_ID))
    {
-      m_rackId = pRequest->getFieldAsUInt32(VID_RACK_ID);
-      ThreadPoolExecute(g_mainThreadPool, this, &Node::updatePhysicalContainerBinding, OBJECT_RACK, m_rackId);
+      m_physicalContainer = pRequest->getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);
+      ThreadPoolExecute(g_mainThreadPool, this, &Node::updatePhysicalContainerBinding, m_physicalContainer);
    }
    if (pRequest->isFieldExist(VID_RACK_IMAGE_FRONT))
       m_rackImageFront = pRequest->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
@@ -6411,12 +6413,10 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_rackPosition = pRequest->getFieldAsInt16(VID_RACK_POSITION);
    if (pRequest->isFieldExist(VID_RACK_HEIGHT))
       m_rackHeight = pRequest->getFieldAsInt16(VID_RACK_HEIGHT);
-
-   // Chassis
-   if (pRequest->isFieldExist(VID_CHASSIS_ID))
+   if (pRequest->isFieldExist(VID_CHASSIS_PLACEMENT_CONFIG))
    {
-      m_chassisId = pRequest->getFieldAsUInt32(VID_CHASSIS_ID);
-      ThreadPoolExecute(g_mainThreadPool, this, &Node::updatePhysicalContainerBinding, OBJECT_CHASSIS, m_chassisId);
+      MemFree(m_chassisPlacementConf);
+      m_chassisPlacementConf = pRequest->getFieldAsString(VID_CHASSIS_PLACEMENT_CONFIG);
    }
 
    if (pRequest->isFieldExist(VID_SSH_PROXY))
@@ -9120,8 +9120,25 @@ void Node::forceSyncDataCollectionConfig()
 /**
  * Update physical container (rack or chassis) binding
  */
-void Node::updatePhysicalContainerBinding(int containerClass, UINT32 containerId)
+void Node::updatePhysicalContainerBinding(UINT32 containerId)
 {
+   if(containerId == 0)
+      return;
+
+   NetObj *container = FindObjectById(containerId);
+   if (container == NULL)
+   {
+      nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): object [%d] not found"),
+                  m_name, m_id, containerId);
+      return;
+   }
+   else if (container->getObjectClass() != OBJECT_RACK && container->getObjectClass() != OBJECT_CHASSIS)
+   {
+      nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): incorrect object %s [%d] class"),
+                  m_name, m_id, container->getName(), containerId);
+      return;
+   }
+
    bool containerFound = false;
    ObjectArray<NetObj> deleteList(16, 16, false);
 
@@ -9129,7 +9146,7 @@ void Node::updatePhysicalContainerBinding(int containerClass, UINT32 containerId
    for(int i = 0; i < getParentList()->size(); i++)
    {
       NetObj *object = static_cast<NetObj *>(getParentList()->get(i));
-      if (object->getObjectClass() != containerClass)
+      if(object->getObjectClass() != OBJECT_RACK && object->getObjectClass() != OBJECT_CHASSIS)
          continue;
       if (object->getId() == containerId)
       {
@@ -9150,19 +9167,13 @@ void Node::updatePhysicalContainerBinding(int containerClass, UINT32 containerId
       container->decRefCount();
    }
 
-   if (!containerFound && (containerId != 0))
+   if (!containerFound)
    {
-      NetObj *container = FindObjectById(containerId, containerClass);
       if (container != NULL)
       {
          nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): add binding %s [%d]"), m_name, m_id, container->getName(), container->getId());
          container->addChild(this);
          addParent(container);
-      }
-      else
-      {
-         nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): object [%d] of class %d (%s) not found"),
-                     m_name, m_id, containerId, containerClass, NetObj::getObjectClassName(containerClass));
       }
    }
 }
@@ -9234,24 +9245,6 @@ const TCHAR *Node::typeName(NodeType type)
 {
    static const TCHAR *names[] = { _T("Unknown"), _T("Physical"), _T("Virtual"), _T("Controller"), _T("Container") };
    return (((int)type >= 0) && ((int)type < sizeof(names) / sizeof(const TCHAR *))) ? names[type] : names[0];
-}
-
-/**
- * Set node's chassis
- */
-void Node::setChassis(UINT32 chassisId)
-{
-   lockProperties();
-   if (chassisId == m_chassisId)
-   {
-      unlockProperties();
-      return;
-   }
-
-   m_chassisId = chassisId;
-   unlockProperties();
-
-   updatePhysicalContainerBinding(OBJECT_CHASSIS, chassisId);
 }
 
 /**
@@ -9499,10 +9492,9 @@ json_t *Node::toJson()
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
    json_object_set_new(root, "rackOrientation", json_integer(m_rackOrientation));
-   json_object_set_new(root, "rackId", json_integer(m_rackId));
+   json_object_set_new(root, "physicalContainerId", json_integer(m_physicalContainer));
    json_object_set_new(root, "rackImageFront", m_rackImageFront.toJson());
    json_object_set_new(root, "rackImageRear", m_rackImageRear.toJson());
-   json_object_set_new(root, "chassisId", json_integer(m_chassisId));
    json_object_set_new(root, "syslogMessageCount", json_integer(m_syslogMessageCount));
    json_object_set_new(root, "snmpTrapCount", json_integer(m_snmpTrapCount));
    json_object_set_new(root, "sshLogin", json_string_t(m_sshLogin));
@@ -9512,6 +9504,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "portRowCount", json_integer(m_portRowCount));
    json_object_set_new(root, "icmpStatCollectionMode", json_integer((int)m_icmpStatCollectionMode));
    json_object_set_new(root, "icmpTargets", m_icmpTargets.toJson());
+   json_object_set_new(root, "chassisPlacementConfig", json_string_t(m_chassisPlacementConf));
    unlockProperties();
    return root;
 }

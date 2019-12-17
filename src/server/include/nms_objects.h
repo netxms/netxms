@@ -2537,10 +2537,9 @@ protected:
 	AgentConnection *m_fileUpdateConn;
 	INT16 m_rackHeight;
 	INT16 m_rackPosition;
-	UINT32 m_rackId;
+	UINT32 m_physicalContainer;
 	uuid m_rackImageFront;
    uuid m_rackImageRear;
-	UINT32 m_chassisId;
 	INT64 m_syslogMessageCount;
 	INT64 m_snmpTrapCount;
 	TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
@@ -2552,6 +2551,7 @@ protected:
    IcmpStatCollectionMode m_icmpStatCollectionMode;
    StringObjectMap<IcmpStatCollector> *m_icmpStatCollectors;
    InetAddressList m_icmpTargets;
+   TCHAR *m_chassisPlacementConf;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
@@ -2617,7 +2617,7 @@ protected:
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void executeInterfaceUpdateHook(Interface *iface);
-   void updatePhysicalContainerBinding(int containerClass, UINT32 containerId);
+   void updatePhysicalContainerBinding(UINT32 containerId);
    DuplicateCheckResult checkForDuplicates(Node **duplicate, TCHAR *reason, size_t size);
    bool isDuplicateOf(Node *node, TCHAR *reason, size_t size);
    void reconcileWithDuplicateNode(Node *node);
@@ -2711,7 +2711,7 @@ public:
    INT16 getAgentCacheMode() const { return (m_state & NSF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
 	const TCHAR *getSharedSecret() const { return m_szSharedSecret; }
    UINT32 getAgentProxy() const { return m_agentProxy; }
-	UINT32 getRackId() const { return m_rackId; }
+	UINT32 getPhysicalContainerId() const { return m_physicalContainer; }
    INT16 getRackHeight() const { return m_rackHeight; }
    INT16 getRackPosition() const { return m_rackPosition; }
 	bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
@@ -2784,7 +2784,6 @@ public:
    void icmpPollWorkerEntry(PollerInfo *poller);
 	void checkSubnetBinding();
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
-   void setChassis(UINT32 chassisId);
    virtual void resetPollTimers() override;
 
 	void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }

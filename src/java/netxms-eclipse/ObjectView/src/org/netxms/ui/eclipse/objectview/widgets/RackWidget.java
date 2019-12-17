@@ -44,7 +44,7 @@ import org.eclipse.ui.PlatformUI;
 import org.netxms.base.NXCommon;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.RackElement;
+import org.netxms.client.objects.ElementForPhysicalPlacment;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -252,8 +252,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       }
       
       // Draw units
-      List<RackElement> units = rack.getUnits();
-      for(RackElement n : units)
+      List<ElementForPhysicalPlacment> units = rack.getUnits();
+      for(ElementForPhysicalPlacment n : units)
       {
          if ((n.getRackPosition() < 1) || (n.getRackPosition() > rack.getHeight()) || 
              (rack.isTopBottomNumbering() && (n.getRackPosition() + n.getRackHeight() > rack.getHeight() + 1)) ||
@@ -400,8 +400,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    public void imageUpdated(UUID guid)
    {
       boolean found = false;
-      List<RackElement> units = rack.getUnits();
-      for(RackElement e : units)
+      List<ElementForPhysicalPlacment> units = rack.getUnits();
+      for(ElementForPhysicalPlacment e : units)
       {
          if (guid.equals(e.getFrontRackImage()) || guid.equals(e.getRearRackImage()))
          {

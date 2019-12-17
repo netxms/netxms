@@ -1286,13 +1286,29 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((INT32)node->getType());
    }
+   else if (!strcmp(attr, "physicalContainer"))
+   {
+      NetObj *object = FindObjectById(node->getPhysicalContainerId());
+      if (object != NULL)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (!strcmp(attr, "physicalContainerId"))
+   {
+      value = vm->createValue(node->getPhysicalContainerId());
+   }
    else if (!strcmp(attr, "platformName"))
    {
       value = vm->createValue(node->getPlatformName());
    }
    else if (!strcmp(attr, "rack"))
    {
-      Rack *rack = (Rack *)FindObjectById(node->getRackId(), OBJECT_RACK);
+      Rack *rack = (Rack *)FindObjectById(node->getPhysicalContainerId(), OBJECT_RACK);
       if (rack != NULL)
       {
          value = rack->createNXSLObject(vm);
@@ -1304,7 +1320,13 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (!strcmp(attr, "rackId"))
    {
-      value = vm->createValue(node->getRackId());
+      Rack *rack = (Rack *)FindObjectById(node->getPhysicalContainerId(), OBJECT_RACK);
+      if (rack != NULL)
+      {
+         value = vm->createValue(node->getPhysicalContainerId());
+      }
+      else
+         value = 0;
    }
    else if (!strcmp(attr, "rackHeight"))
    {

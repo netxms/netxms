@@ -91,9 +91,9 @@ public class GeneralInfo extends TableElement
                   addPair(Messages.get().GeneralInfo_Controller, node.getObjectName());
                }
             }
-            if (chassis.getRackId() != 0)
+            if (chassis.getPhysicalContainerId() != 0)
             {
-               Rack rack = session.findObjectById(chassis.getRackId(), Rack.class);
+               Rack rack = session.findObjectById(chassis.getPhysicalContainerId(), Rack.class);
                if (rack != null)
                {
                   addPair(Messages.get().GeneralInfo_Rack, String.format(Messages.get().GeneralInfo_Units, rack.getObjectName(),
@@ -169,9 +169,9 @@ public class GeneralInfo extends TableElement
                addPair(Messages.get().GeneralInfo_AgentStatus, (node.getStateFlags() & Node.NSF_AGENT_UNREACHABLE) != 0 ? Messages.get().GeneralInfo_Unreachable : Messages.get().GeneralInfo_Connected);
             if (node.getLastAgentCommTime() != null)
                addPair(Messages.get().GeneralInfo_LastAgentContact, RegionalSettings.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
-            if (node.getRackId() != 0)
+            if (node.getPhysicalContainerId() != 0)
             {
-               Rack rack = session.findObjectById(node.getRackId(), Rack.class);
+               Rack rack = session.findObjectById(node.getPhysicalContainerId(), Rack.class);
                if (rack != null)
                {
                   addPair(Messages.get().GeneralInfo_Rack, String.format(Messages.get().GeneralInfo_Units, rack.getObjectName(),

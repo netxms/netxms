@@ -1169,7 +1169,7 @@ typedef struct
 #define VID_SERVER_COMMAND_TIMEOUT  ((UINT32)514)
 #define VID_SYS_CONTACT             ((UINT32)515)
 #define VID_SYS_LOCATION            ((UINT32)516)
-#define VID_RACK_ID                 ((UINT32)517)
+#define VID_PHYSICAL_CONTAINER_ID   ((UINT32)517)
 #define VID_RACK_IMAGE_FRONT        ((UINT32)518)
 #define VID_RACK_POSITION           ((UINT32)519)
 #define VID_RACK_HEIGHT             ((UINT32)520)
@@ -1325,6 +1325,7 @@ typedef struct
 #define VID_RCA_SCRIPT_NAME         ((UINT32)670)
 #define VID_SUBORDINATE_ALARMS      ((UINT32)671)
 #define VID_IMPACT                  ((UINT32)672)
+#define VID_CHASSIS_PLACEMENT_CONFIG ((UINT32)673)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

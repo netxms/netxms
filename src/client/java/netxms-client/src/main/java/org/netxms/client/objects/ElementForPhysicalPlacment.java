@@ -21,11 +21,12 @@ package org.netxms.client.objects;
 import java.util.UUID;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RackOrientation;
+import org.netxms.client.objects.configs.ChassisPlacement;
 
 /**
  * Common interface for rack elements (anything that can be mounted in rack)
  */
-public interface RackElement
+public interface ElementForPhysicalPlacment
 {
    /**
     * Get object ID
@@ -49,11 +50,11 @@ public interface RackElement
    public ObjectStatus getStatus();
    
    /**
-    * Get rack object ID
+    * Get physical container object ID
     * 
-    * @return rack object ID
+    * @return physical container object ID
     */
-   public long getRackId();
+   public long getPhysicalContainerId();
 
    /**
     * Get front rack image
@@ -89,4 +90,11 @@ public interface RackElement
     * @return orientation of object in rack
     */
    public RackOrientation getRackOrientation();
+
+   /**
+    * Get chassis placement configuration
+    * 
+    * @return chassis placement configuration
+    */
+   public ChassisPlacement getChassisPlacement();
 }

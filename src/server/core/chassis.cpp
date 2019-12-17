@@ -160,7 +160,7 @@ void Chassis::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_CONTROLLER_ID, m_controllerId);
-   msg->setField(VID_RACK_ID, m_rackId);
+   msg->setField(VID_PHYSICAL_CONTAINER_ID, m_rackId);
    msg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);
    msg->setField(VID_RACK_IMAGE_REAR, m_rackImageRear);
    msg->setField(VID_RACK_POSITION, m_rackPosition);
@@ -175,9 +175,9 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
 {
    if (request->isFieldExist(VID_CONTROLLER_ID))
       m_controllerId = request->getFieldAsUInt32(VID_CONTROLLER_ID);
-   if (request->isFieldExist(VID_RACK_ID))
+   if (request->isFieldExist(VID_PHYSICAL_CONTAINER_ID))
    {
-      m_rackId = request->getFieldAsUInt32(VID_RACK_ID);
+      m_rackId = request->getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);
       ThreadPoolExecute(g_mainThreadPool, this, &Chassis::updateRackBinding);
    }
    if (request->isFieldExist(VID_RACK_IMAGE_FRONT))

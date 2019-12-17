@@ -138,6 +138,7 @@ public class NXCObjectModificationData
    public static final int RESPONSIBLE_USERS      = 81;
    public static final int ICMP_POLL_MODE         = 82;
    public static final int ICMP_POLL_TARGETS      = 83;
+   public static final int CHASSIS_PLACEMENT      = 84;
 
    private Set<Integer> fieldSet;
    private long objectId;
@@ -217,7 +218,7 @@ public class NXCObjectModificationData
    private AgentCacheMode agentCacheMode;
    private AgentCompressionMode agentCompressionMode;
    private MapObjectDisplayMode mapObjectDisplayMode;
-   private long rackId;
+   private long physicalContainerObjectId;
    private UUID rackImageFront;
    private UUID rackImageRear;
    private short rackPosition;
@@ -248,6 +249,7 @@ public class NXCObjectModificationData
    private boolean isAutoUnbindEnabled;
    private IcmpStatCollectionMode icmpStatCollectionMode;
    private List<InetAddress> icmpTargets;
+   private String chassisPlacement;
 
    /**
     * Constructor for creating modification data for given object
@@ -1585,11 +1587,11 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the rackId
+    * @return the physicalContainerObjectId
     */
-   public long getRackId()
+   public long getPhysicalContainerObjectId()
    {
-      return rackId;
+      return physicalContainerObjectId;
    }
 
    /**
@@ -1637,17 +1639,16 @@ public class NXCObjectModificationData
    /**
     * Set rack placement data
     *
-    * @param rackId         The rack ID to set
+    * @param physicalContainerObjectId         The rack ID to set
     * @param rackImageFront The front rack image to set
     * @param rackImageRear  The rear rack image to set
     * @param rackPosition   The rack position to set
     * @param rackHeight     the rack height to set
     * @param rackOrientation Rack orientation (front/rear)
     */
-   public void setRackPlacement(long rackId, UUID rackImageFront, UUID rackImageRear, short rackPosition, short rackHeight,
+   public void setRackPlacement(UUID rackImageFront, UUID rackImageRear, short rackPosition, short rackHeight,
          RackOrientation rackOrientation)
    {
-      this.rackId = rackId;
       this.rackImageFront = rackImageFront;
       this.rackImageRear = rackImageRear;
       this.rackPosition = rackPosition;
@@ -2086,5 +2087,35 @@ public class NXCObjectModificationData
    {
       this.icmpTargets = new ArrayList<InetAddress>(icmpTargets);
       fieldSet.add(ICMP_POLL_TARGETS);
+   }
+
+   /**
+    * Set physical container for object
+    * Will be set together with CHASSIS_PLACEMENT or RACK_PLACEMENT so no need to set fields
+    * 
+    * @param physicalContainerObjectId
+    */
+   public void setPhysicalContainer(long physicalContainerObjectId)
+   {
+      this.physicalContainerObjectId = physicalContainerObjectId;
+   }
+
+   /**
+    * Set chassis placement information
+    * 
+    * @param placementConfig chassis placement XML config
+    */
+   public void setChassisPlacement(String placementConfig)
+   {
+      chassisPlacement = placementConfig;
+      fieldSet.add(CHASSIS_PLACEMENT);
+   }
+
+   /**
+    * @return the chassisPlacement
+    */
+   public String getChassisPlacement()
+   {
+      return chassisPlacement;
    }
 }

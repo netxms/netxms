@@ -362,13 +362,12 @@ CREATE TABLE nodes
   down_since integer not null,
   boot_time integer not null,
   driver_name varchar(32) null,
-  rack_id integer not null,
+  physical_container_id integer not null,
   rack_image_front varchar(36) null,
   rack_image_rear varchar(36) null,
   rack_position integer not null,
   rack_height integer not null,
   rack_orientation integer not null,
-  chassis_id integer not null,
   agent_cache_mode char(1) not null,
   last_agent_comm_time integer not null,
   syslog_msg_count SQL_INT64 not null,
@@ -387,6 +386,7 @@ CREATE TABLE nodes
   fail_time_snmp integer not null,
   fail_time_agent integer not null,
   icmp_poll_mode char(1) not null,
+  chassis_placement_config varchar(2000) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

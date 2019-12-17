@@ -71,8 +71,8 @@ public class NodeListComparator extends ViewerComparator
 				result = ComparatorHelper.compareInetAddresses(node1.getPrimaryIP().getAddress(), node2.getPrimaryIP().getAddress());
 				break;
          case NodesTab.COLUMN_RACK:
-            Rack rack1 = session.findObjectById(node1.getRackId(), Rack.class);
-            Rack rack2 = session.findObjectById(node2.getRackId(), Rack.class);
+            Rack rack1 = session.findObjectById(node1.getPhysicalContainerId(), Rack.class);
+            Rack rack2 = session.findObjectById(node2.getPhysicalContainerId(), Rack.class);
             if ((rack1 != null) && (rack2 != null))
             {
                result = rack1.getObjectName().compareToIgnoreCase(rack2.getObjectName());
@@ -83,7 +83,7 @@ public class NodeListComparator extends ViewerComparator
             }
             else
             {
-               result = Long.signum(node1.getRackId() - node2.getRackId());
+               result = Long.signum(node1.getPhysicalContainerId() - node2.getPhysicalContainerId());
             }
             break;
 			default:

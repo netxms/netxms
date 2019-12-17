@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.InetAddressEx;
+import org.netxms.base.Logger;
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -34,11 +35,12 @@ import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.NodeType;
 import org.netxms.client.constants.RackOrientation;
+import org.netxms.client.objects.configs.ChassisPlacement;
 
 /**
  * Abstract base class for node objects.
  */
-public abstract class AbstractNode extends DataCollectionTarget implements RackElement, ZoneMember, PollingTarget
+public abstract class AbstractNode extends DataCollectionTarget implements ElementForPhysicalPlacment, ZoneMember, PollingTarget
 {
 	// SNMP versions
 	public static final int SNMP_VERSION_1 = 0;
@@ -140,13 +142,12 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	protected int ifXTablePolicy;
 	protected Date bootTime;
 	protected Date lastAgentCommTime;
-	protected long rackId;
+	protected long physicalContainerId;
 	protected UUID rackImageFront;
    protected UUID rackImageRear;
 	protected short rackPosition;
 	protected short rackHeight;
    protected RackOrientation rackOrientation;
-   protected long chassisId;
    protected String sshLogin;
    protected String sshPassword;
    protected long sshProxyId;
@@ -160,6 +161,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    protected int icmpMaxResponseTime;
    protected int icmpAverageResponseTime;
    protected int icmpPacketLoss;
+   protected ChassisPlacement chassisPlacement;
 	
 	/**
 	 * Create new node object.
@@ -224,12 +226,11 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
 		bridgeBaseAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
 		ifXTablePolicy = msg.getFieldAsInt32(NXCPCodes.VID_USE_IFXTABLE);
-		rackId = msg.getFieldAsInt64(NXCPCodes.VID_RACK_ID);
+		physicalContainerId = msg.getFieldAsInt64(NXCPCodes.VID_PHYSICAL_CONTAINER_ID);
 		rackImageFront = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE_FRONT);
       rackImageRear = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE_REAR);
 		rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
       rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
-      chassisId = msg.getFieldAsInt64(NXCPCodes.VID_CHASSIS_ID);
       sshLogin = msg.getFieldAsString(NXCPCodes.VID_SSH_LOGIN);
       sshPassword = msg.getFieldAsString(NXCPCodes.VID_SSH_PASSWORD);
       sshProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
@@ -243,6 +244,21 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       icmpMaxResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_MAX_RESPONSE_TIME);
       icmpMinResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_MIN_RESPONSE_TIME);
       icmpPacketLoss = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_PACKET_LOSS);
+      
+      chassisPlacement = null;
+      String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
+      System.out.println(config);
+      if(config != null && !config.isEmpty())
+      {
+         try
+         {
+            chassisPlacement = ChassisPlacement.createFromXml(config);
+         }
+         catch(Exception e)
+         {
+            Logger.debug("AbstractNode.AbstractNode", "Cannot parse ChassisPlacement XML: ", e);
+         }
+      }
       
       int count = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_TARGET_COUNT);
       if (count > 0)
@@ -764,9 +780,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
     * @see org.netxms.client.objects.RackElement#getRackId()
     */
    @Override
-   public long getRackId()
+   public long getPhysicalContainerId()
    {
-      return rackId;
+      return physicalContainerId;
    }
 
    /* (non-Javadoc)
@@ -813,14 +829,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public Date getLastAgentCommTime()
    {
       return lastAgentCommTime;
-   }
-
-   /**
-    * @return the chassisId
-    */
-   public long getChassisId()
-   {
-      return chassisId;
    }
 
    /**
@@ -1016,5 +1024,11 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public boolean isPingOnPrimaryIPEnabled()
    {
       return (flags & NF_PING_PRIMARY_IP) != 0;      
+   }
+
+   @Override
+   public ChassisPlacement getChassisPlacement()
+   {
+      return chassisPlacement;
    }
 }

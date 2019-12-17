@@ -4966,7 +4966,6 @@ public class NXCSession
             msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
             msg.setFieldInt32(NXCPCodes.VID_ICMP_PROXY, (int)data.getIcmpProxyId());
             msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, (int)data.getSshProxyId());
-            msg.setFieldInt32(NXCPCodes.VID_CHASSIS_ID, (int)data.getChassisId());
             msg.setField(NXCPCodes.VID_SSH_LOGIN, data.getSshLogin());
             msg.setField(NXCPCodes.VID_SSH_PASSWORD, data.getSshPassword());
             break;
@@ -5540,7 +5539,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.RACK_PLACEMENT))
       {
-         msg.setFieldInt32(NXCPCodes.VID_RACK_ID, (int)data.getRackId());
+         msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, (int)data.getPhysicalContainerObjectId());
          msg.setField(NXCPCodes.VID_RACK_IMAGE_FRONT, data.getFrontRackImage());
          msg.setField(NXCPCodes.VID_RACK_IMAGE_REAR, data.getRearRackImage());
          msg.setFieldInt16(NXCPCodes.VID_RACK_POSITION, data.getRackPosition());
@@ -5548,14 +5547,15 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_RACK_ORIENTATION, data.getRackOrientation().getValue());
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.CHASSIS_PLACEMENT))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, (int)data.getPhysicalContainerObjectId());
+         msg.setField(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG, data.getChassisPlacement());
+      }
+
       if (data.isFieldSet(NXCObjectModificationData.DASHBOARD_LIST))
       {
          msg.setField(NXCPCodes.VID_DASHBOARDS, data.getDashboards());
-      }
-
-      if (data.isFieldSet(NXCObjectModificationData.CHASSIS_ID))
-      {
-         msg.setFieldInt32(NXCPCodes.VID_CHASSIS_ID, (int)data.getChassisId());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.CONTROLLER_ID))

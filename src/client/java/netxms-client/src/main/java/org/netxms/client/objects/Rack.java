@@ -113,17 +113,17 @@ public class Rack extends GenericObject
 	 * 
 	 * @return rack units, ordered by unit numbers
 	 */
-	public List<RackElement> getUnits()
+	public List<ElementForPhysicalPlacment> getUnits()
 	{
-	   List<RackElement> units = new ArrayList<RackElement>();
+	   List<ElementForPhysicalPlacment> units = new ArrayList<ElementForPhysicalPlacment>();
 	   for(AbstractObject o : getChildrenAsArray())
 	   {
-	      if (o instanceof RackElement)
-	         units.add((RackElement)o);
+	      if (o instanceof ElementForPhysicalPlacment)
+	         units.add((ElementForPhysicalPlacment)o);
 	   }
-	   Collections.sort(units, new Comparator<RackElement>() {
+	   Collections.sort(units, new Comparator<ElementForPhysicalPlacment>() {
          @Override
-         public int compare(RackElement e1, RackElement e2)
+         public int compare(ElementForPhysicalPlacment e1, ElementForPhysicalPlacment e2)
          {
             return e1.getRackPosition() - e2.getRackPosition();
          }

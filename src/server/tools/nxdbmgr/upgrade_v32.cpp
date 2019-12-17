@@ -26,6 +26,18 @@
 /**
  * Upgrade from 32.3 to 32.4
  */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("nodes"), _T("chassis_id")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("nodes"), _T("rack_id"), _T("physical_container_id")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD chassis_placement_config varchar(2000)\n")));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
+ * Upgrade from 32.3 to 32.4
+ */
 static bool H_UpgradeFromV3()
 {
    static const TCHAR *batch =
@@ -100,6 +112,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4,  31, 5, H_UpgradeFromV4 },
    { 3,  32, 4, H_UpgradeFromV3 },
    { 2,  32, 3, H_UpgradeFromV2 },
    { 1,  32, 2, H_UpgradeFromV1 },

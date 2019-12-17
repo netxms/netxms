@@ -23,11 +23,12 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
+import org.netxms.client.objects.configs.ChassisPlacement;
 
 /**
  * Chassis object
  */
-public class Chassis extends DataCollectionTarget implements RackElement
+public class Chassis extends DataCollectionTarget implements ElementForPhysicalPlacment
 {
    protected long controllerId;
    protected long rackId;
@@ -45,7 +46,7 @@ public class Chassis extends DataCollectionTarget implements RackElement
    {
       super(msg, session);
       controllerId = msg.getFieldAsInt64(NXCPCodes.VID_CONTROLLER_ID);
-      rackId = msg.getFieldAsInt64(NXCPCodes.VID_RACK_ID);
+      rackId = msg.getFieldAsInt64(NXCPCodes.VID_PHYSICAL_CONTAINER_ID);
       rackImageFront = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE_FRONT);
       rackImageRear = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE_REAR);
       rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
@@ -83,7 +84,7 @@ public class Chassis extends DataCollectionTarget implements RackElement
     * @see org.netxms.client.objects.RackElement#getRackId()
     */
    @Override
-   public long getRackId()
+   public long getPhysicalContainerId()
    {
       return rackId;
    }
@@ -131,5 +132,11 @@ public class Chassis extends DataCollectionTarget implements RackElement
    public RackOrientation getRackOrientation()
    {
       return rackOrientation;
+   }
+
+   @Override
+   public ChassisPlacement getChassisPlacement()
+   {
+      return null;
    }
 }
