@@ -950,7 +950,8 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t or
       _sntprintf(name, 64, _T("Parameter%d"), i + 1);
       pmap.set(name, parameters.get(i));
    }
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, &pmap, NULL, NULL, NULL, NULL);
+   va_list dummy;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, &pmap, NULL, NULL, dummy, NULL);
 }
 
 /**
@@ -1122,7 +1123,8 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, 
  */
 bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, parameters, NULL, NULL, NULL, NULL);
+   va_list dummy;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, parameters, NULL, NULL, dummy, NULL);
 }
 
 /**
@@ -1164,7 +1166,8 @@ bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceI
  */
 bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, parameters, NULL, NULL, NULL, NULL);
+   va_list dummy;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, parameters, NULL, NULL, dummy, NULL);
 }
 
 /**
@@ -1208,7 +1211,8 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  */
 bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, NULL, parameters, NULL, NULL, NULL, NULL);
+   va_list dummy;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, NULL, parameters, NULL, NULL, dummy, NULL);
 }
 
 /**
@@ -1257,7 +1261,8 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin or
 bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
          UINT32 sourceId, const TCHAR *tag, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, NULL, NULL, NULL, NULL);
+   va_list dummy;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, NULL, NULL, dummy, NULL);
 }
 
 /**
@@ -1313,7 +1318,8 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, EventOrigin origin, ti
       _sntprintf(name, 64, _T("Parameter%d"), i + 1);
       pmap.set(name, parameters.get(i));
    }
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, userTag, &pmap, NULL, NULL, NULL, NULL);
+   va_list dummy;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, userTag, &pmap, NULL, NULL, dummy, NULL);
 }
 
 /**
@@ -1392,7 +1398,8 @@ bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, UINT32 event
 bool NXCORE_EXPORTABLE TransformAndPostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
          UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, NULL, NULL, NULL, vm);
+   va_list dummy;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, NULL, NULL, dummy, vm);
 }
 
 /**
@@ -1405,7 +1412,8 @@ bool NXCORE_EXPORTABLE TransformAndPostEvent(UINT32 eventCode, EventOrigin origi
  */
 bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, tag, parameters, NULL, NULL, NULL, vm);
+   va_list dummy;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, tag, parameters, NULL, NULL, dummy, vm);
 }
 
 /**
