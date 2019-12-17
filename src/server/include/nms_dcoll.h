@@ -180,7 +180,7 @@ public:
    void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
 
    BOOL saveToDB(DB_HANDLE hdb, UINT32 dwIndex);
-   ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, NetObj *target, DCItem *dci);
+   ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, NetObj *target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
    void createMessage(NXCPMessage *msg, UINT32 baseId) const;

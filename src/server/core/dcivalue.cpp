@@ -41,7 +41,7 @@ ItemValue::ItemValue()
  */
 ItemValue::ItemValue(const TCHAR *value, time_t timestamp)
 {
-   nx_strncpy(m_string, value, MAX_DB_STRING);
+   _tcslcpy(m_string, value, MAX_DB_STRING);
    m_int32 = _tcstol(m_string, NULL, 0);
    m_int64 = _tcstoll(m_string, NULL, 0);
    m_uint32 = _tcstoul(m_string, NULL, 0);
@@ -76,7 +76,7 @@ ItemValue::~ItemValue()
  */
 const ItemValue& ItemValue::operator=(const ItemValue &src)
 {
-   _tcscpy(m_string, src.m_string);
+   memcpy(m_string, src.m_string, sizeof(TCHAR) * MAX_DB_STRING);
    m_int32 = src.m_int32;
    m_int64 = src.m_int64;
    m_uint32 = src.m_uint32;
@@ -87,7 +87,7 @@ const ItemValue& ItemValue::operator=(const ItemValue &src)
 
 const ItemValue& ItemValue::operator=(const TCHAR *value)
 {
-   nx_strncpy(m_string, CHECK_NULL_EX(value), MAX_DB_STRING);
+   _tcslcpy(m_string, CHECK_NULL_EX(value), MAX_DB_STRING);
    m_int32 = _tcstol(m_string, NULL, 0);
    m_int64 = _tcstoll(m_string, NULL, 0);
    m_uint32 = _tcstoul(m_string, NULL, 0);

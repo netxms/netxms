@@ -247,7 +247,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
  *    THRESHOLD_REARMED - when item's value doesn't match the threshold condition while previous check do
  *    NO_ACTION - when there are no changes in item's value match to threshold's condition
  */
-ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, NetObj *target, DCItem *dci)
+ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, NetObj *target, DCItem *dci)
 {
    // check if there is enough cached data
    switch(m_function)
@@ -366,10 +366,11 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          DbgPrintf(7, _T("Script not compiled for threshold %d of DCI %d of data collection target %s [%u]"),
                    m_id, dci->getId(), target->getName(), target->getId());
       }
+      tvalue = m_value;
    }
    else
    {
-      const ItemValue& tvalue = m_expandValue ?
+      tvalue = m_expandValue ?
                ItemValue(target->expandText(m_value.getString(), NULL, NULL, NULL, NULL, NULL), m_value.getTimeStamp()) :
                m_value;
       switch(m_operation)
