@@ -40,7 +40,7 @@
 //
 
 #define INVALID_MUTEX_HANDLE        (NULL)
-#define INVALID_CONDITION_HANDLE    INVALID_HANDLE_VALUE
+#define INVALID_CONDITION_HANDLE    (NULL)
 #define INVALID_THREAD_HANDLE       (NULL)
 
 #ifdef UNDER_CE
@@ -61,7 +61,16 @@ typedef unsigned int THREAD_ID;
 extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
 
 typedef win_mutex_t *MUTEX;
-typedef HANDLE CONDITION;
+
+struct netxms_cond_t
+{
+   CONDITION_VARIABLE v;
+   CRITICAL_SECTION lock;
+   bool broadcast;
+   bool isSet;
+};
+typedef netxms_cond_t *CONDITION;
+
 struct netxms_thread_t
 {
 	HANDLE handle;
@@ -266,36 +275,99 @@ inline void MutexUnlock(MUTEX mutex)
    UnlockMutex(mutex);
 }
 
-inline CONDITION ConditionCreate(bool bBroadcast)
+inline CONDITION ConditionCreate(bool broadcast)
 {
-   return CreateEvent(NULL, bBroadcast, FALSE, NULL);
+   CONDITION c = MemAllocStruct<netxms_cond_t>();
+   InitializeCriticalSectionAndSpinCount(&c->lock, 4000);
+   InitializeConditionVariable(&c->v);
+   c->broadcast = broadcast;
+   c->isSet = false;
+   return c;
 }
 
-inline void ConditionDestroy(CONDITION hCond)
+inline void ConditionDestroy(CONDITION c)
 {
-   CloseHandle(hCond);
+   if (c != INVALID_CONDITION_HANDLE)
+   {
+      DeleteCriticalSection(&c->lock);
+      MemFree(c);
+   }
 }
 
-inline void ConditionSet(CONDITION hCond)
+inline void ConditionSet(CONDITION cond)
 {
-   SetEvent(hCond);
+   if (cond != INVALID_CONDITION_HANDLE)
+   {
+      EnterCriticalSection(&cond->lock);
+      cond->isSet = true;
+      if (cond->broadcast)
+      {
+         WakeAllConditionVariable(&cond->v);
+      }
+      else
+      {
+         WakeConditionVariable(&cond->v);
+      }
+      LeaveCriticalSection(&cond->lock);
+   }
 }
 
-inline void ConditionReset(CONDITION hCond)
+inline void ConditionReset(CONDITION cond)
 {
-   ResetEvent(hCond);
+   if (cond != INVALID_CONDITION_HANDLE)
+   {
+      EnterCriticalSection(&cond->lock);
+      cond->isSet = FALSE;
+      LeaveCriticalSection(&cond->lock);
+   }
 }
 
-inline void ConditionPulse(CONDITION hCond)
+inline void ConditionPulse(CONDITION cond)
 {
-   PulseEvent(hCond);
+   if (cond != INVALID_CONDITION_HANDLE)
+   {
+      EnterCriticalSection(&cond->lock);
+      if (cond->broadcast)
+      {
+         WakeAllConditionVariable(&cond->v);
+      }
+      else
+      {
+         WakeConditionVariable(&cond->v);
+      }
+      cond->isSet = FALSE;
+      LeaveCriticalSection(&cond->lock);
+   }
 }
 
-inline bool ConditionWait(CONDITION hCond, UINT32 dwTimeOut)
+inline bool ConditionWait(CONDITION cond, UINT32 timeout)
 {
-	if (hCond == INVALID_CONDITION_HANDLE)
+	if (cond == INVALID_CONDITION_HANDLE)
 		return false;
-   return WaitForSingleObject(hCond, dwTimeOut) == WAIT_OBJECT_0;
+
+   bool success;
+
+   EnterCriticalSection(&cond->lock);
+
+   if (cond->isSet)
+   {
+      success = true;
+      if (!cond->broadcast)
+         cond->isSet = false;
+   }
+   else if (SleepConditionVariableCS(&cond->v, &cond->lock, timeout))
+   {
+      if (!cond->broadcast)
+         cond->isSet = false;
+      success = true;
+   }
+   else
+   {
+      success = false;
+   }
+
+   LeaveCriticalSection(&cond->lock);
+   return success;
 }
 
 #elif defined(_USE_GNU_PTH)
@@ -1006,16 +1078,11 @@ inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
       {
 		   if (dwTimeOut != INFINITE)
 		   {
-#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP || defined(_NETWARE)
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
 			   struct timespec timeout;
-
 			   timeout.tv_sec = dwTimeOut / 1000;
 			   timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
-#ifdef _NETWARE
-			   retcode = pthread_cond_timedwait(&cond->cond, &cond->mutex, &timeout);
-#else
 			   retcode = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
-#endif
 #else
 			   struct timeval now;
 			   struct timespec timeout;
