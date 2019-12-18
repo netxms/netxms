@@ -43,8 +43,11 @@ class LIBNETXMS_EXPORTABLE Queue
    DISABLE_COPY_CTOR(Queue)
 
 private:
-   MUTEX m_mutexQueueAccess;
-   CONDITION m_condWakeup;
+#ifdef _WIN32
+#else
+   pthread_mutex_t m_lock;
+   pthread_cond_t m_wakeupCondition;
+#endif
    void **m_elements;
    size_t m_numElements;
    size_t m_bufferSize;
@@ -56,9 +59,14 @@ private:
 	bool m_owner;
 
 	void commonInit();
-   void lock() { MutexLock(m_mutexQueueAccess); }
-   void unlock() { MutexUnlock(m_mutexQueueAccess); }
+#ifdef _WIN32
+#else
+   void lock() { pthread_mutex_lock(&m_lock); }
+   void unlock() { pthread_mutex_unlock(&m_lock); }
+#endif
+
    void shrink();
+   void *getInternal();
 
 protected:
    void (*m_destructor)(void*);

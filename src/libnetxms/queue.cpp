@@ -52,8 +52,23 @@ Queue::Queue(bool owner)
  */
 void Queue::commonInit()
 {
-   m_mutexQueueAccess = MutexCreate();
-   m_condWakeup = ConditionCreate(FALSE);
+#ifdef _WIN32
+#else
+
+#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
+   pthread_mutexattr_t a;
+   pthread_mutexattr_init(&a);
+   MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+   pthread_mutex_init(&m_lock, &a);
+   pthread_mutexattr_destroy(&a);
+#else
+   pthread_mutex_init(&m_lock, NULL);
+#endif
+
+   pthread_cond_init(&m_wakeupCondition, NULL);
+
+#endif
+
    m_numElements = 0;
    m_first = 0;
    m_last = 0;
@@ -78,9 +93,13 @@ Queue::~Queue()
             pos = 0;
       }
    }
-   MutexDestroy(m_mutexQueueAccess);
-   ConditionDestroy(m_condWakeup);
    MemFree(m_elements);
+
+#ifdef _WIN32
+#else
+   pthread_mutex_destroy(&m_lock);
+   pthread_cond_destroy(&m_wakeupCondition);
+#endif
 }
 
 /**
@@ -103,8 +122,13 @@ void Queue::put(void *pElement)
    m_elements[m_last++] = pElement;
    if (m_last == m_bufferSize)
       m_last = 0;
-   m_numElements++;
-   ConditionSet(m_condWakeup);
+   if (++m_numElements == 1)
+   {
+#ifdef _WIN32
+#else
+      pthread_cond_signal(&m_wakeupCondition);
+#endif
+   }
    unlock();
 }
 
@@ -128,9 +152,33 @@ void Queue::insert(void *pElement)
    if (m_first == 0)
       m_first = m_bufferSize;
    m_elements[--m_first] = pElement;
-   m_numElements++;
-   ConditionSet(m_condWakeup);
+   if (++m_numElements == 1)
+   {
+#ifdef _WIN32
+#else
+      pthread_cond_signal(&m_wakeupCondition);
+#endif
+   }
    unlock();
+}
+
+/**
+ * Get element from queue. Current thread must own queue lock.
+ */
+void *Queue::getInternal()
+{
+   if (m_shutdownFlag)
+      return INVALID_POINTER_VALUE;
+
+   void *element = NULL;
+   while((m_numElements > 0) && (element == NULL))
+   {
+      element = m_elements[m_first++];
+      if (m_first == m_bufferSize)
+         m_first = 0;
+      m_numElements--;
+   }
+   return element;
 }
 
 /**
@@ -138,26 +186,11 @@ void Queue::insert(void *pElement)
  */
 void *Queue::get()
 {
-   void *pElement = NULL;
-
    lock();
-	if (m_shutdownFlag)
-	{
-		pElement = INVALID_POINTER_VALUE;
-	}
-	else
-   {
-		while((m_numElements > 0) && (pElement == NULL))
-		{
-			pElement = m_elements[m_first++];
-			if (m_first == m_bufferSize)
-				m_first = 0;
-			m_numElements--;
-		}
-      shrink();
-   }
+   void *element = getInternal();
+   shrink();
    unlock();
-   return pElement;
+   return element;
 }
 
 /**
@@ -165,19 +198,44 @@ void *Queue::get()
  */
 void *Queue::getOrBlock(UINT32 timeout)
 {
-   void *pElement = get();
-   if (pElement != NULL)
+   lock();
+   void *element = getInternal();
+   while(element == NULL)
    {
-      return pElement;
-   }
+#ifdef _WIN32
+#else
+      int rc;
+      if (timeout != INFINITE)
+      {
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+         struct timespec ts;
+         ts.tv_sec = timeout / 1000;
+         ts.tv_nsec = (timeout % 1000) * 1000000;
+         rc = pthread_cond_reltimedwait_np(&m_wakeupCondition, &m_lock, &ts);
+#else
+         struct timeval now;
+         struct timespec ts;
+         gettimeofday(&now, NULL);
+         ts.tv_sec = now.tv_sec + (timeout / 1000);
+         now.tv_usec += (timeout % 1000) * 1000;
+         ts.tv_sec += now.tv_usec / 1000000;
+         ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
+         rc = pthread_cond_timedwait(&m_wakeupCondition, &m_lock, &ts);
+#endif
+      }
+      else
+      {
+         rc = pthread_cond_wait(&m_wakeupCondition, &m_lock);
+      }
 
-   do
-   {
-      if (!ConditionWait(m_condWakeup, timeout))
+      if (rc != 0)
          break;
-      pElement = get();
-   } while(pElement == NULL);
-   return pElement;
+#endif
+
+      element = getInternal();
+   }
+   unlock();
+   return element;
 }
 
 /**
@@ -212,7 +270,10 @@ void Queue::setShutdownMode()
 {
 	lock();
 	m_shutdownFlag = true;
-	ConditionSet(m_condWakeup);
+#ifdef _WIN32
+#else
+	pthread_cond_broadcast(&m_wakeupCondition);
+#endif
 	unlock();
 }
 
@@ -224,7 +285,6 @@ void Queue::setShutdownMode()
 void *Queue::find(const void *key, QueueComparator comparator, void *(*transform)(void*))
 {
 	void *element = NULL;
-
 	lock();
 	for(size_t i = 0, pos = m_first; i < m_numElements; i++)
 	{
@@ -248,7 +308,6 @@ void *Queue::find(const void *key, QueueComparator comparator, void *(*transform
 bool Queue::remove(const void *key, QueueComparator comparator)
 {
 	bool success = false;
-
 	lock();
 	for(size_t i = 0, pos = m_first; i < m_numElements; i++)
 	{
