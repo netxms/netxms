@@ -27,6 +27,7 @@
  */
 static ObjectArray<SessionAgentConnector> s_agents(8, 8, false);
 static RWLOCK s_lock = RWLockCreate();
+static int s_sessionAgentCount = 0;
 static int s_userAgentCount = 0;
 
 /**
@@ -42,6 +43,7 @@ static void RegisterSessionAgent(SessionAgentConnector *c)
 {
    RWLockWriteLock(s_lock, INFINITE);
    s_agents.add(c);
+   s_sessionAgentCount++;
    if (c->isUserAgent())
       s_userAgentCount++;
    RWLockUnlock(s_lock);
@@ -57,6 +59,7 @@ static void UnregisterSessionAgent(UINT32 id)
    {
       if (s_agents.get(i)->getId() == id)
       {
+         s_sessionAgentCount--;
          if (s_agents.get(i)->isUserAgent())
             s_userAgentCount--;
          s_agents.remove(i);
@@ -205,6 +208,8 @@ void SessionAgentConnector::readThread()
                delete msg;
                DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d] (%s client)"), 
                   m_id, getUserName(), getSessionName(), m_sessionId, m_userAgent ? _T("extended") : _T("basic"));
+
+               RegisterSessionAgent(this);
 
                if (m_userAgent)
                {
@@ -476,7 +481,6 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
 
          // Create new session structure and threads
 		   SessionAgentConnector *c = new SessionAgentConnector(id++, hClientSocket);
-         RegisterSessionAgent(c);
          c->run();
       }
       else if (nRet == -1)
@@ -600,7 +604,7 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
  */
 LONG H_SessionAgentCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_int(value, s_userAgentCount);
+   ret_int(value, (*arg == _T('U')) ? s_userAgentCount : s_sessionAgentCount);
    return SYSINFO_RC_SUCCESS;
 }
 

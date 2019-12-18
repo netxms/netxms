@@ -224,6 +224,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_TIMEDOUTREQUESTS               _T("Number of timed out requests to agent")
 #define DCIDESC_AGENT_UNSUPPORTEDREQUESTS            _T("Number of requests for unsupported parameters")
 #define DCIDESC_AGENT_UPTIME                         _T("Agent's uptime")
+#define DCIDESC_AGENT_USER_AGENTS_COUNT              _T("Number of connected user agents")
 #define DCIDESC_AGENT_VERSION                        _T("Agent's version")
 #define DCIDESC_FILE_COUNT                           _T("Number of files {instance}")
 #define DCIDESC_FILE_FOLDERCOUNT                     _T("Number of folders {instance}")
