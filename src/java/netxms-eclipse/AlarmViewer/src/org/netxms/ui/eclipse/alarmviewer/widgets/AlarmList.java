@@ -285,10 +285,7 @@ public class AlarmList extends CompositeWithMessageBar
          @Override
          public void run()
          {
-            synchronized(alarmList)
-            {
-               filterAndLimit();
-            }
+            startFilterAndLimit();
          }
       });
 
@@ -861,10 +858,7 @@ public class AlarmList extends CompositeWithMessageBar
       }
       else
       {
-         synchronized(alarmList)
-         {
-   	      filterAndLimit();
-         }
+         startFilterAndLimit();
       }
    }
 
@@ -878,16 +872,39 @@ public class AlarmList extends CompositeWithMessageBar
       alarmFilter.setRootObjects(selectedObjects);
       if ((visibilityValidator == null) || visibilityValidator.isVisible())
       {
-         synchronized(alarmList)
-         {
-            filterAndLimit();
-         }
+         startFilterAndLimit();
       }
    }
 
    /**
+    * Call filterAndLimit() method on background thread
+    */
+   private void startFilterAndLimit()
+   {
+      ConsoleJob job = new ConsoleJob("Filter alarms", viewPart, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            synchronized(alarmList)
+            {
+               filterAndLimit();
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot filter alartm list";
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
     * Filter all alarms (e.g. by chosen object), sort them by last change and reduce the size to maximum as it is set in
-    * configuration parameter <code>AlarmListDisplayLimit</code>.
+    * configuration parameter <code>AlarmListDisplayLimit</code>, and update list control.
+    * This method should be called on background thread with alarm list locked.
     */
    private void filterAndLimit()
    {
