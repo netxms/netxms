@@ -53,6 +53,8 @@ Queue::Queue(bool owner)
 void Queue::commonInit()
 {
 #ifdef _WIN32
+   InitializeCriticalSectionAndSpinCount(&m_lock, 4000);
+   InitializeConditionVariable(&m_wakeupCondition);
 #else
 
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
@@ -96,6 +98,7 @@ Queue::~Queue()
    MemFree(m_elements);
 
 #ifdef _WIN32
+   DeleteCriticalSection(&m_lock);
 #else
    pthread_mutex_destroy(&m_lock);
    pthread_cond_destroy(&m_wakeupCondition);
@@ -105,7 +108,7 @@ Queue::~Queue()
 /**
  * Put new element into queue
  */
-void Queue::put(void *pElement)
+void Queue::put(void *element)
 {
    lock();
    if (m_numElements == m_bufferSize)
@@ -119,12 +122,13 @@ void Queue::put(void *pElement)
               sizeof(void *) * (m_bufferSize - m_first - m_bufferIncrement));
       m_first += m_bufferIncrement;
    }
-   m_elements[m_last++] = pElement;
+   m_elements[m_last++] = element;
    if (m_last == m_bufferSize)
       m_last = 0;
    if (++m_numElements == 1)
    {
 #ifdef _WIN32
+      WakeConditionVariable(&m_wakeupCondition);
 #else
       pthread_cond_signal(&m_wakeupCondition);
 #endif
@@ -155,6 +159,7 @@ void Queue::insert(void *pElement)
    if (++m_numElements == 1)
    {
 #ifdef _WIN32
+      WakeConditionVariable(&m_wakeupCondition);
 #else
       pthread_cond_signal(&m_wakeupCondition);
 #endif
@@ -203,6 +208,8 @@ void *Queue::getOrBlock(UINT32 timeout)
    while(element == NULL)
    {
 #ifdef _WIN32
+      if (!SleepConditionVariableCS(&m_wakeupCondition, &m_lock, timeout))
+         break;
 #else
       int rc;
       if (timeout != INFINITE)
@@ -271,6 +278,7 @@ void Queue::setShutdownMode()
 	lock();
 	m_shutdownFlag = true;
 #ifdef _WIN32
+   WakeAllConditionVariable(&m_wakeupCondition);
 #else
 	pthread_cond_broadcast(&m_wakeupCondition);
 #endif

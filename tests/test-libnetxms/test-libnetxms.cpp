@@ -964,6 +964,14 @@ static void TestItoa()
 }
 
 /**
+ * Test comparator for the queue
+ */
+static bool TestQueueComparator(const void *key, const void *value)
+{
+   return strcmp(static_cast<const char*>(key), static_cast<const char*>(value)) == 0;
+}
+
+/**
  * Test queue
  */
 static void TestQueue()
@@ -981,6 +989,35 @@ static void TestQueue()
       AssertNotNull(p);
       AssertEquals(CAST_FROM_POINTER(p, int), i + 1);
    }
+   AssertEquals(q->size(), 0);
+   EndTest();
+
+   StartTest(_T("Queue: insert"));
+   for (int i = 0; i < 20; i++)
+      q->put((void*)"LowPriority");
+   AssertEquals(q->size(), 20);
+   q->insert((void*)"HighPriority");
+   AssertEquals(q->size(), 21);
+   AssertTrue(!strcmp(static_cast<char*>(q->get()), "HighPriority"));
+   AssertEquals(q->size(), 20);
+   AssertTrue(!strcmp(static_cast<char*>(q->get()), "LowPriority"));
+   AssertEquals(q->size(), 19);
+   EndTest();
+
+   StartTest(_T("Queue: find/remove"));
+   q->put((void*)"HighPriority");
+   q->put((void*)"LowPriority");
+   q->put((void*)"LowPriority");
+   AssertEquals(q->size(), 22);
+   AssertTrue(q->find("HighPriority", TestQueueComparator));
+   AssertEquals(q->size(), 22);
+   AssertTrue(q->remove("HighPriority", TestQueueComparator));
+   AssertFalse(q->find("HighPriority", TestQueueComparator));
+   EndTest();
+
+   StartTest(_T("Queue: clear"));
+   q->clear();
+   AssertEquals(q->size(), 0);
    EndTest();
 
    StartTest(_T("Queue: shrink"));
