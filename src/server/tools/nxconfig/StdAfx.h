@@ -25,7 +25,7 @@
 #if _MSC_VER >= 1400
 
 #ifndef WINVER
-#define WINVER 0x0501
+#define WINVER 0x0601
 #endif
 
 #ifndef _WIN32_WINNT
@@ -48,8 +48,8 @@
 #define _WIN32_WINDOWS 0x0410 // Change this to the appropriate value to target Windows Me or later.
 #endif
 
-#ifndef _WIN32_IE			// Allow use of features specific to IE 6.0 or later.
-#define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
+#ifndef _WIN32_IE			// Allow use of features specific to IE 8.0 or later.
+#define _WIN32_IE 0x0800	// Change this to the appropriate value to target other versions of IE.
 #endif
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
