@@ -60,10 +60,20 @@ static void LoadFileStoreLocation()
 }
 
 /**
+ * Check if user agent already running in this session
+ */
+static void CheckIfRunning()
+{
+   // ToDO: implement this check
+}
+
+/**
  * Application entry point
  */
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int cmdShow)
 {
+   CheckIfRunning();
+
    g_hInstance = hInstance;
    g_mainThreadId = GetCurrentThreadId();
 

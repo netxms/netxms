@@ -283,7 +283,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, NULL },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, NULL },
    { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, NULL },
-   { _T("EnableArbitraryCommandExecution"), CT_BOOLEAN, 0, 0, AF_ENABLE_SYSTEM_EXECUTE, 0, &g_dwFlags, NULL },
    { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnablePushConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_PUSH_CONNECTOR, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, NULL },
@@ -1039,12 +1038,17 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
-      if (g_dwFlags & AF_ENABLE_SYSTEM_EXECUTE)
+      if (g_config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
       {
+         nxlog_write(NXLOG_INFO, _T("Arbitrary command execution enabled"));
          AddAction(_T("System.Execute"), AGENT_ACTION_SUBAGENT, NULL, H_SystemExecute, _T("CORE"), _T("Execute system command"));
 #ifdef _WIN32
          AddAction(_T("System.ExecuteInAllSessions"), AGENT_ACTION_SUBAGENT, NULL, H_SystemExecuteInAllSessions, _T("CORE"), _T("Execute system command in all sessions"));
 #endif
+      }
+      else
+      {
+         nxlog_write(NXLOG_INFO, _T("Arbitrary command execution disabled"));
       }
 
 	   // Load platform subagents
@@ -1299,7 +1303,7 @@ BOOL Initialize()
       s_tunnelManagerThread = ThreadCreateEx(TunnelManager, 0, NULL);
 	}
 
-#if defined(_WIN32)
+#ifdef _WIN32
    s_shutdownCondition = ConditionCreate(TRUE);
 #endif
    ThreadSleep(1);
@@ -1319,8 +1323,23 @@ BOOL Initialize()
          DeleteRegistryEntry(_T("upgrade.file"));
 	   }
 
-	   //Update policy inventory according to files that exist on file system
+	   // Update policy inventory according to files that exist on file system
       UpdatePolicyInventory();
+
+#ifdef _WIN32
+      if (g_config->getValueAsBoolean(_T("/CORE/AutoStartUserAgent"), false))
+      {
+         nxlog_debug(NXLOG_INFO, _T("Starting user agents for all logged in users"));
+
+         TCHAR binDir[MAX_PATH];
+         GetNetXMSDirectory(nxDirBin, binDir);
+
+         StringBuffer command = _T("\"");
+         command.append(binDir);
+         command.append(_T("\\nxuseragent.exe\""));
+         ExecuteInAllSessions(command);
+      }
+#endif
 	}
 
    return TRUE;
