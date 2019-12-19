@@ -9122,23 +9122,6 @@ void Node::forceSyncDataCollectionConfig()
  */
 void Node::updatePhysicalContainerBinding(UINT32 containerId)
 {
-   if(containerId == 0)
-      return;
-
-   NetObj *container = FindObjectById(containerId);
-   if (container == NULL)
-   {
-      nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): object [%d] not found"),
-                  m_name, m_id, containerId);
-      return;
-   }
-   else if (container->getObjectClass() != OBJECT_RACK && container->getObjectClass() != OBJECT_CHASSIS)
-   {
-      nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): incorrect object %s [%d] class"),
-                  m_name, m_id, container->getName(), containerId);
-      return;
-   }
-
    bool containerFound = false;
    ObjectArray<NetObj> deleteList(16, 16, false);
 
@@ -9167,9 +9150,23 @@ void Node::updatePhysicalContainerBinding(UINT32 containerId)
       container->decRefCount();
    }
 
+   if(containerId == 0)
+      return;
+
    if (!containerFound)
    {
-      if (container != NULL)
+      NetObj *container = FindObjectById(containerId);
+      if (container == NULL)
+      {
+         nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): object [%d] not found"),
+                     m_name, m_id, containerId);
+      }
+      else if (container->getObjectClass() != OBJECT_RACK && container->getObjectClass() != OBJECT_CHASSIS)
+      {
+         nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): incorrect object %s [%d] class"),
+                     m_name, m_id, container->getName(), containerId);
+      }
+      else
       {
          nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): add binding %s [%d]"), m_name, m_id, container->getName(), container->getId());
          container->addChild(this);

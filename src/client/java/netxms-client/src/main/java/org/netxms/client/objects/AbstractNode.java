@@ -247,7 +247,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
-      System.out.println(config);
       if(config != null && !config.isEmpty())
       {
          try

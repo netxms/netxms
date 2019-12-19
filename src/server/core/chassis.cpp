@@ -183,7 +183,7 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
    if (request->isFieldExist(VID_RACK_IMAGE_FRONT))
       m_rackImageFront = request->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
    if (request->isFieldExist(VID_RACK_IMAGE_REAR))
-      m_rackImageFront = request->getFieldAsGUID(VID_RACK_IMAGE_REAR);
+      m_rackImageRear = request->getFieldAsGUID(VID_RACK_IMAGE_REAR);
    if (request->isFieldExist(VID_RACK_POSITION))
       m_rackPosition = request->getFieldAsInt16(VID_RACK_POSITION);
    if (request->isFieldExist(VID_RACK_HEIGHT))

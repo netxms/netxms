@@ -400,7 +400,7 @@ public class PhysicalContainerPlacement extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Filed to update rack placement";
+				return "Failed to update rack/chassis placement";
 			}
 
 			@Override
