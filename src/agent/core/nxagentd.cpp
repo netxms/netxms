@@ -283,6 +283,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, NULL },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, NULL },
    { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, NULL },
+   { _T("EnableArbitraryCommandExecution"), CT_BOOLEAN, 0, 0, AF_ENABLE_SYSTEM_EXECUTE, 0, &g_dwFlags, NULL },
    { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnablePushConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_PUSH_CONNECTOR, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, NULL },
@@ -680,6 +681,35 @@ static LONG H_RestartAgent(const TCHAR *action, const StringList *args, const TC
 }
 
 /**
+ * Handler for System.Execute action
+ */
+static LONG H_SystemExecute(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+{
+   return ERR_NOT_IMPLEMENTED;
+}
+
+#ifdef _WIN32
+
+/**
+ * Handler for System.ExecuteInAllSessions action
+ */
+static LONG H_SystemExecuteInAllSessions(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+{
+   if (args->isEmpty())
+      return ERR_BAD_ARGUMENTS;
+   StringBuffer command;
+   for (int i = 0; i < args->size(); i++)
+   {
+      command.append(command.isEmpty() ? _T("\"") : _T(" \""));
+      command.append(args->get(i));
+      command.append(_T("\""));
+   }
+   return ExecuteInAllSessions(command) ? ERR_SUCCESS : ERR_EXEC_FAILED;
+}
+
+#endif
+
+/**
  * This function writes message from subagent to agent's log
  */
 static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *message)
@@ -1009,6 +1039,13 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
+      if (g_dwFlags & AF_ENABLE_SYSTEM_EXECUTE)
+      {
+         AddAction(_T("System.Execute"), AGENT_ACTION_SUBAGENT, NULL, H_SystemExecute, _T("CORE"), _T("Execute system command"));
+#ifdef _WIN32
+         AddAction(_T("System.ExecuteInAllSessions"), AGENT_ACTION_SUBAGENT, NULL, H_SystemExecuteInAllSessions, _T("CORE"), _T("Execute system command in all sessions"));
+#endif
+      }
 
 	   // Load platform subagents
 #if !defined(_WIN32)

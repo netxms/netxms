@@ -120,6 +120,7 @@
 #define AF_SYSTEMD_DAEMON           0x08000000
 #define AF_JSON_LOG                 0x10000000
 #define AF_LOG_TO_STDOUT            0x20000000
+#define AF_ENABLE_SYSTEM_EXECUTE    0x40000000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
@@ -185,7 +186,7 @@ struct ACTION
    int iType;
    union
    {
-      TCHAR *pszCmdLine;      // to TCHAR
+      TCHAR *pszCmdLine;
       struct __subagentAction
       {
          LONG (*fpHandler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *);
@@ -801,8 +802,6 @@ AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *,
 bool RestartService(UINT32 pid);
 #endif
 
-void KillProcess(UINT32 pid);
-
 #ifdef _WIN32
 
 void InitService();
@@ -814,7 +813,7 @@ bool WaitForService(DWORD dwDesiredState);
 void InstallEventSource(const TCHAR *path);
 void RemoveEventSource();
 
-TCHAR *GetPdhErrorText(UINT32 dwError, TCHAR *pszBuffer, int iBufSize);
+bool ExecuteInAllSessions(const TCHAR *command);
 
 #endif
 
