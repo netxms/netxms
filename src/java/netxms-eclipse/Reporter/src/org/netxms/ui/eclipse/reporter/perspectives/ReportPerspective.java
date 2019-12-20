@@ -1,5 +1,6 @@
 package org.netxms.ui.eclipse.reporter.perspectives;
 
+import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
 import org.netxms.ui.eclipse.reporter.views.ReportNavigator;
@@ -11,12 +12,16 @@ public class ReportPerspective implements IPerspectiveFactory
 	public void createInitialLayout(IPageLayout layout)
 	{
 		layout.setEditorAreaVisible(false);
+
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective"); //$NON-NLS-1$
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.reporter.ReportPerspective"); //$NON-NLS-1$
 
-		layout.addView(ReportNavigator.ID, IPageLayout.LEFT, 0, null);
-		layout.addView(ReportView.ID, IPageLayout.RIGHT, 0.20f, ReportNavigator.ID);
-	}
+      final IFolderLayout navigationFolder = layout.createFolder("org.netxms.ui.eclipse.folders.navigation", IPageLayout.LEFT, 0.20f, layout.getEditorArea()); //$NON-NLS-1$ //$NON-NLS-2$
+      navigationFolder.addView(ReportNavigator.ID);
 
+      final IFolderLayout mainFolder = layout.createFolder(IPageLayout.ID_EDITOR_AREA, IPageLayout.RIGHT, 0.20f, "org.netxms.ui.eclipse.folders.navigation"); //$NON-NLS-1$ //$NON-NLS-2$
+      mainFolder.addView(ReportView.ID);
+      mainFolder.addPlaceholder("*"); //$NON-NLS-1$
+	}
 }
