@@ -574,9 +574,10 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       }
       conn->setCommandTimeout(10000);
 
-      TCHAR ipAddr1[16], ipAddr2[16];
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s via proxy %s [%u]"),
-               IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
+      TCHAR ipAddr1[64], ipAddr2[64], rangeText[128];
+      _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s via proxy %s [%u]"),
+               rangeText, proxy->getName(), proxy->getId());
       while((from < to) && !IsShutdownInProgress())
       {
          TCHAR request[256];
@@ -594,8 +595,8 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          }
          from += 256;
       }
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s via proxy %s [%u]"),
-               IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s via proxy %s [%u]"),
+               rangeText, proxy->getName(), proxy->getId());
 
       conn->decRefCount();
    }
