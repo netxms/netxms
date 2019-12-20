@@ -57,6 +57,7 @@ private:
    size_t m_first;
    size_t m_last;
    size_t m_bufferIncrement;
+   size_t m_readers;
 	bool m_shutdownFlag;
 	bool m_owner;
 

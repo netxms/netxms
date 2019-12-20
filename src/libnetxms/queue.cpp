@@ -72,6 +72,7 @@ void Queue::commonInit()
 #endif
 
    m_numElements = 0;
+   m_readers = 0;
    m_first = 0;
    m_last = 0;
    m_elements = MemAllocArray<void*>(m_bufferSize);
@@ -125,7 +126,8 @@ void Queue::put(void *element)
    m_elements[m_last++] = element;
    if (m_last == m_bufferSize)
       m_last = 0;
-   if (++m_numElements == 1)
+   m_numElements++;
+   if (m_readers > 0)
    {
 #ifdef _WIN32
       WakeConditionVariable(&m_wakeupCondition);
@@ -156,7 +158,8 @@ void Queue::insert(void *pElement)
    if (m_first == 0)
       m_first = m_bufferSize;
    m_elements[--m_first] = pElement;
-   if (++m_numElements == 1)
+   m_numElements++;
+   if (m_readers > 0)
    {
 #ifdef _WIN32
       WakeConditionVariable(&m_wakeupCondition);
@@ -193,7 +196,6 @@ void *Queue::get()
 {
    lock();
    void *element = getInternal();
-   shrink();
    unlock();
    return element;
 }
@@ -204,6 +206,7 @@ void *Queue::get()
 void *Queue::getOrBlock(UINT32 timeout)
 {
    lock();
+   m_readers++;
    void *element = getInternal();
    while(element == NULL)
    {
@@ -241,6 +244,7 @@ void *Queue::getOrBlock(UINT32 timeout)
 
       element = getInternal();
    }
+   m_readers--;
    unlock();
    return element;
 }
@@ -277,11 +281,14 @@ void Queue::setShutdownMode()
 {
 	lock();
 	m_shutdownFlag = true;
+	if (m_readers > 0)
+	{
 #ifdef _WIN32
-   WakeAllConditionVariable(&m_wakeupCondition);
+	   WakeAllConditionVariable(&m_wakeupCondition);
 #else
-	pthread_cond_broadcast(&m_wakeupCondition);
+	   pthread_cond_broadcast(&m_wakeupCondition);
 #endif
+	}
 	unlock();
 }
 
