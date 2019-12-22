@@ -36,7 +36,7 @@ ThreadPool *g_dataCollectorThreadPool = NULL;
 /**
  * DCI cache loader queue
  */
-ObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue(true);
+ObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue(256, true);
 
 /**
  * Average time to queue DCI

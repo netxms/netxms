@@ -53,10 +53,9 @@ private:
    void **m_elements;
    size_t m_numElements;
    size_t m_bufferSize;
-   size_t m_initialSize;
+   size_t m_blockSize;
    size_t m_first;
    size_t m_last;
-   size_t m_bufferIncrement;
    size_t m_readers;
 	bool m_shutdownFlag;
 	bool m_owner;
@@ -77,8 +76,8 @@ protected:
    void (*m_destructor)(void*);
 
 public:
-   Queue(bool owner = false);
-   Queue(size_t initialSize, size_t bufferIncrement, bool owner = false);
+   Queue();
+   Queue(size_t blockSize, bool owner);
    virtual ~Queue();
 
    void put(void *object);
@@ -106,8 +105,8 @@ private:
    static void destructor(void *object) { delete static_cast<T*>(object); }
 
 public:
-   ObjectQueue(bool owner = false) : Queue(owner) { m_destructor = destructor; }
-   ObjectQueue(size_t initialSize, size_t bufferIncrement, bool owner = false) : Queue(initialSize, bufferIncrement, owner) { }
+   ObjectQueue() : Queue() { m_destructor = destructor; }
+   ObjectQueue(size_t blockSize, bool owner) : Queue(blockSize, owner) { }
    virtual ~ObjectQueue() { }
 
    T *get() { return (T*)Queue::get(); }

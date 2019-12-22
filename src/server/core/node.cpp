@@ -1847,7 +1847,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    UINT32 oldCapabilities = m_capabilities;
    UINT32 oldState = m_state;
 
-   ObjectQueue<Event> *eventQueue = new ObjectQueue<Event>(true);     // Delayed event queue
+   ObjectQueue<Event> *eventQueue = new ObjectQueue<Event>(64, true);     // Delayed event queue
    poller->setStatus(_T("wait for lock"));
    pollerLock(status);
 

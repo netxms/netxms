@@ -54,7 +54,7 @@ struct SNMPPacket
 /**
  * Sender queue
  */
-static ObjectQueue<SNMPPacket> s_snmpTrapQueue(true);
+static ObjectQueue<SNMPPacket> s_snmpTrapQueue(256, true);
 
 /**
  * Shutdown trap sender

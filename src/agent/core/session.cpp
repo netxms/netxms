@@ -126,7 +126,7 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
    _sntprintf(m_key, 32, _T("CommSession-%u"), m_id);
-   m_processingQueue = new ObjectQueue<NXCPMessage>(true);
+   m_processingQueue = new ObjectQueue<NXCPMessage>(64, true);
    m_channel = channel;
    m_channel->incRefCount();
    m_protocolVersion = NXCP_VERSION;

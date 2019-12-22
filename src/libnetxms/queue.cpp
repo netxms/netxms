@@ -26,11 +26,10 @@
 /**
  * Queue constructor
  */
-Queue::Queue(size_t initialSize, size_t bufferIncrement, bool owner)
+Queue::Queue(size_t blockSize, bool owner)
 {
-   m_initialSize = initialSize;
-   m_bufferSize = initialSize;
-   m_bufferIncrement = bufferIncrement;
+   m_blockSize = blockSize;
+   m_bufferSize = blockSize;
    m_owner = owner;
 	commonInit();
 }
@@ -38,12 +37,11 @@ Queue::Queue(size_t initialSize, size_t bufferIncrement, bool owner)
 /**
  * Default queue constructor
  */
-Queue::Queue(bool owner)
+Queue::Queue()
 {
-   m_initialSize = 256;
+   m_blockSize = 256;
    m_bufferSize = 256;
-   m_bufferIncrement = 32;
-   m_owner = owner;
+   m_owner = false;
 	commonInit();
 }
 
@@ -115,13 +113,13 @@ void Queue::put(void *element)
    if (m_numElements == m_bufferSize)
    {
       // Extend buffer
-      m_bufferSize += m_bufferIncrement;
+      m_bufferSize += m_blockSize;
       m_elements = MemReallocArray(m_elements, m_bufferSize);
       
       // Move free space
-      memmove(&m_elements[m_first + m_bufferIncrement], &m_elements[m_first],
-              sizeof(void *) * (m_bufferSize - m_first - m_bufferIncrement));
-      m_first += m_bufferIncrement;
+      memmove(&m_elements[m_first + m_blockSize], &m_elements[m_first],
+              sizeof(void *) * (m_bufferSize - m_first - m_blockSize));
+      m_first += m_blockSize;
    }
    m_elements[m_last++] = element;
    if (m_last == m_bufferSize)
@@ -147,13 +145,13 @@ void Queue::insert(void *pElement)
    if (m_numElements == m_bufferSize)
    {
       // Extend buffer
-      m_bufferSize += m_bufferIncrement;
+      m_bufferSize += m_blockSize;
       m_elements = MemReallocArray(m_elements, m_bufferSize);
       
       // Move free space
-      memmove(&m_elements[m_first + m_bufferIncrement], &m_elements[m_first],
-              sizeof(void *) * (m_bufferSize - m_first - m_bufferIncrement));
-      m_first += m_bufferIncrement;
+      memmove(&m_elements[m_first + m_blockSize], &m_elements[m_first],
+              sizeof(void *) * (m_bufferSize - m_first - m_blockSize));
+      m_first += m_blockSize;
    }
    if (m_first == 0)
       m_first = m_bufferSize;
@@ -367,7 +365,7 @@ void Queue::forEach(QueueEnumerationCallback callback, void *context)
  */
 void Queue::shrink()
 {
-   if ((m_bufferSize == m_initialSize) || (m_numElements > m_initialSize / 2) || ((m_numElements > 0) && (m_last < m_first)))
+   if ((m_bufferSize == m_blockSize) || (m_numElements > m_blockSize / 2) || ((m_numElements > 0) && (m_last < m_first)))
       return;
 
    if ((m_numElements > 0) && (m_first > 0))
@@ -376,6 +374,6 @@ void Queue::shrink()
       m_last -= m_first;
       m_first = 0;
    }
-   m_bufferSize = m_initialSize;
+   m_bufferSize = m_blockSize;
    m_elements = MemReallocArray(m_elements, m_bufferSize);
 }
