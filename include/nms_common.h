@@ -1128,6 +1128,7 @@ using std::make_shared;
 #ifdef __cplusplus
 
 inline void *MemAlloc(size_t size) { return malloc(size); }
+inline void *MemAllocZeroed(size_t size) { return calloc(size, 1); }
 inline char *MemAllocStringA(size_t size) { return static_cast<char*>(MemAlloc(size)); }
 inline WCHAR *MemAllocStringW(size_t size) { return static_cast<WCHAR*>(MemAlloc(size * sizeof(WCHAR))); }
 template <typename T> T *MemAllocStruct() { return (T*)calloc(1, sizeof(T)); }
@@ -1146,6 +1147,7 @@ template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p =
 #else /* __cplusplus */
 
 #define MemAlloc(size) malloc(size)
+#define MemAllocZeroed(size) calloc(size, 1)
 #define MemAllocStringA(size) MemAlloc(size)
 #define MemAllocStringW(size) MemAlloc(size * sizeof(WCHAR))
 #define MemAllocArray(count, size) calloc(count, size)
