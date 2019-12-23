@@ -2,14 +2,38 @@
 #define _testtools_h_
 
 /**
+ * Exit test process
+ */
+#if HAVE_SYS_PTRACE_H
+
+#include <sys/ptrace.h>
+
+inline void ExitTestProcess()
+{
+   if (ptrace(PT_TRACE_ME, 0, NULL, 0) == -1)
+      abort();
+   else
+      exit(1);
+}
+
+#else
+
+inline void ExitTestProcess()
+{
+   exit(1);
+}
+
+#endif
+
+/**
  * Assert failure
  */
-#define Assert(c) do { if (!(c)) { _tprintf(_T("FAIL\n   Assert failed at %hs:%d\n"), __FILE__, __LINE__); exit(1); } } while(0)
+#define Assert(c) do { if (!(c)) { _tprintf(_T("FAIL\n   Assert failed at %hs:%d\n"), __FILE__, __LINE__); ExitTestProcess(); } } while(0)
 
 /**
  * Assert failure with additional message
  */
-#define AssertEx(c, m) do { if (!(c)) { _tprintf(_T("FAIL\n   %s\n   Assert failed at %hs:%d\n"), (m), __FILE__, __LINE__); exit(1); } } while(0)
+#define AssertEx(c, m) do { if (!(c)) { _tprintf(_T("FAIL\n   %s\n   Assert failed at %hs:%d\n"), (m), __FILE__, __LINE__); ExitTestProcess(); } } while(0)
 
 /**
  * Assert that two values are equal
