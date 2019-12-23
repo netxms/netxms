@@ -43,6 +43,7 @@
 	NX-1731 (NXSL method Node::readAgentList causes NetXMS server crash)
 	NX-1740 (When macro is used in threshold, it's value does not get expanded in event)
 	NX-1746 (Auto start user agent/support app process after agent install/upgrade)
+	NX-1750 (Configurable retention time for node hardware and software components)
 
 
 *

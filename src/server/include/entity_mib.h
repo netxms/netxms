@@ -97,6 +97,7 @@ class LIBNXSRV_EXPORTABLE ComponentTree
 {
 private:
    Component *m_root;
+   time_t m_timestamp;
 
 public:
    ComponentTree(Component *root);
@@ -108,6 +109,7 @@ public:
    bool isEmpty() const { return m_root == NULL; }
    const Component *getRoot() const { return m_root; }
    bool equals(const ComponentTree *t) const;
+   time_t getTimestamp() const { return m_timestamp; }
 
    static NXSL_Value *getRootForNXSL(NXSL_VM *vm, shared_ptr<ComponentTree> tree);
 };
