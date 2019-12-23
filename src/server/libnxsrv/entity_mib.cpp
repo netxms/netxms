@@ -52,6 +52,7 @@ public:
 ComponentTree::ComponentTree(Component *root)
 {
 	m_root = root;
+	m_timestamp = time(NULL);
 }
 
 /**

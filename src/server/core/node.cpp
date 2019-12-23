@@ -4001,16 +4001,26 @@ bool Node::confPollSnmp(UINT32 rqId)
       lockProperties();
       if (m_components != NULL)
       {
-         if ((components == NULL) || !components->equals(m_components.get()))
+         if (components == NULL)
          {
+            time_t expirationTime = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
+            if (m_components->getTimestamp() + expirationTime < time(NULL))
+            {
+               m_components = components;
+               setModified(MODIFY_COMPONENTS, false);
+            }
+         }
+         else if (!components->equals(m_components.get()))
+         {
+            m_components = components;
             setModified(MODIFY_COMPONENTS, false);
          }
       }
       else if (components != NULL)
       {
+         m_components = components;
          setModified(MODIFY_COMPONENTS, false);
       }
-      m_components = components;
       unlockProperties();
    }
    else
