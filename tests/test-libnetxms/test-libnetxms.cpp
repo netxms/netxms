@@ -1018,6 +1018,7 @@ static void TestQueue()
    StartTest(_T("Queue: clear"));
    q->clear();
    AssertEquals(q->size(), 0);
+   AssertEquals(q->allocated(), 16);
    EndTest();
 
    StartTest(_T("Queue: shrink"));

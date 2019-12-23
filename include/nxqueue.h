@@ -36,6 +36,11 @@ typedef bool (*QueueComparator)(const void *key, const void *object);
 typedef EnumerationCallbackResult (*QueueEnumerationCallback)(const void *object, void *context);
 
 /**
+ * Internal queue buffer
+ */
+struct QueueBuffer;
+
+/**
  * Queue class
  */
 class LIBNETXMS_EXPORTABLE Queue
@@ -50,13 +55,12 @@ private:
    pthread_mutex_t m_lock;
    pthread_cond_t m_wakeupCondition;
 #endif
-   void **m_elements;
-   size_t m_numElements;
-   size_t m_bufferSize;
+   QueueBuffer *m_head;
+   QueueBuffer *m_tail;
+   size_t m_size;
    size_t m_blockSize;
-   size_t m_first;
-   size_t m_last;
-   size_t m_readers;
+   size_t m_blockCount;
+   int m_readers;
 	bool m_shutdownFlag;
 	bool m_owner;
 
@@ -69,7 +73,6 @@ private:
    void unlock() { pthread_mutex_unlock(&m_lock); }
 #endif
 
-   void shrink();
    void *getInternal();
 
 protected:
@@ -86,8 +89,8 @@ public:
 	void setOwner(bool owner) { m_owner = owner; }
    void *get();
    void *getOrBlock(UINT32 timeout = INFINITE);
-   size_t size() const { return m_numElements; }
-   size_t allocated() const { return m_bufferSize; }
+   size_t size() const { return m_size; }
+   size_t allocated() const { return m_blockSize * m_blockCount; }
    void clear();
 	void *find(const void *key, QueueComparator comparator, void *(*transform)(void*) = NULL);
 	bool remove(const void *key, QueueComparator comparator);

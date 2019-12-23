@@ -24,12 +24,23 @@
 #include <nxqueue.h>
 
 /**
+ * Internal queue buffer
+ */
+struct QueueBuffer
+{
+   QueueBuffer *next;
+   size_t head;
+   size_t tail;
+   size_t count;
+   void *elements[1];   // actual size determined by Queue class
+};
+
+/**
  * Queue constructor
  */
 Queue::Queue(size_t blockSize, bool owner)
 {
    m_blockSize = blockSize;
-   m_bufferSize = blockSize;
    m_owner = owner;
 	commonInit();
 }
@@ -40,7 +51,6 @@ Queue::Queue(size_t blockSize, bool owner)
 Queue::Queue()
 {
    m_blockSize = 256;
-   m_bufferSize = 256;
    m_owner = false;
 	commonInit();
 }
@@ -69,11 +79,11 @@ void Queue::commonInit()
 
 #endif
 
-   m_numElements = 0;
+   m_blockCount = 1;
+   m_size = 0;
    m_readers = 0;
-   m_first = 0;
-   m_last = 0;
-   m_elements = MemAllocArray<void*>(m_bufferSize);
+   m_head = static_cast<QueueBuffer*>(MemAllocZeroed(sizeof(QueueBuffer) + (m_blockSize - 1) * sizeof(void*)));
+   m_tail = m_head;
 	m_shutdownFlag = false;
 	m_destructor = MemFree;
 }
@@ -83,18 +93,24 @@ void Queue::commonInit()
  */
 Queue::~Queue()
 {
-   if (m_owner)
+   for(auto buffer = m_head; buffer != NULL;)
    {
-      for(size_t i = 0, pos = m_first; i < m_numElements; i++)
+      if (m_owner)
       {
-         if (m_elements[pos] != INVALID_POINTER_VALUE)
-            m_destructor(m_elements[pos]);
-         pos++;
-         if (pos == m_bufferSize)
-            pos = 0;
+         for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
+         {
+            if (buffer->elements[pos] != INVALID_POINTER_VALUE)
+               m_destructor(buffer->elements[pos]);
+            pos++;
+            if (pos == m_blockSize)
+               pos = 0;
+         }
       }
+
+      auto next = buffer->next;
+      MemFree(buffer);
+      buffer = next;
    }
-   MemFree(m_elements);
 
 #ifdef _WIN32
    DeleteCriticalSection(&m_lock);
@@ -110,21 +126,18 @@ Queue::~Queue()
 void Queue::put(void *element)
 {
    lock();
-   if (m_numElements == m_bufferSize)
+   if (m_tail->count == m_blockSize)
    {
-      // Extend buffer
-      m_bufferSize += m_blockSize;
-      m_elements = MemReallocArray(m_elements, m_bufferSize);
-      
-      // Move free space
-      memmove(&m_elements[m_first + m_blockSize], &m_elements[m_first],
-              sizeof(void *) * (m_bufferSize - m_first - m_blockSize));
-      m_first += m_blockSize;
+      // Allocate new buffer
+      m_tail->next = static_cast<QueueBuffer*>(MemAllocZeroed(sizeof(QueueBuffer) + (m_blockSize - 1) * sizeof(void*)));
+      m_tail = m_tail->next;
+      m_blockCount++;
    }
-   m_elements[m_last++] = element;
-   if (m_last == m_bufferSize)
-      m_last = 0;
-   m_numElements++;
+   m_tail->elements[m_tail->tail++] = element;
+   if (m_tail->tail == m_blockSize)
+      m_tail->tail = 0;
+   m_tail->count++;
+   m_size++;
    if (m_readers > 0)
    {
 #ifdef _WIN32
@@ -139,24 +152,22 @@ void Queue::put(void *element)
 /**
  * Insert new element into the beginning of a queue
  */
-void Queue::insert(void *pElement)
+void Queue::insert(void *element)
 {
    lock();
-   if (m_numElements == m_bufferSize)
+   if (m_head->count == m_blockSize)
    {
-      // Extend buffer
-      m_bufferSize += m_blockSize;
-      m_elements = MemReallocArray(m_elements, m_bufferSize);
-      
-      // Move free space
-      memmove(&m_elements[m_first + m_blockSize], &m_elements[m_first],
-              sizeof(void *) * (m_bufferSize - m_first - m_blockSize));
-      m_first += m_blockSize;
+      // Allocate new buffer
+      auto newHead = static_cast<QueueBuffer*>(MemAllocZeroed(sizeof(QueueBuffer) + (m_blockSize - 1) * sizeof(void*)));
+      newHead->next = m_head;
+      m_head = newHead;
+      m_blockCount++;
    }
-   if (m_first == 0)
-      m_first = m_bufferSize;
-   m_elements[--m_first] = pElement;
-   m_numElements++;
+   if (m_head->head == 0)
+      m_head->head = m_blockSize;
+   m_head->elements[--m_head->head] = element;
+   m_head->count++;
+   m_size++;
    if (m_readers > 0)
    {
 #ifdef _WIN32
@@ -177,12 +188,20 @@ void *Queue::getInternal()
       return INVALID_POINTER_VALUE;
 
    void *element = NULL;
-   while((m_numElements > 0) && (element == NULL))
+   while((m_size > 0) && (element == NULL))
    {
-      element = m_elements[m_first++];
-      if (m_first == m_bufferSize)
-         m_first = 0;
-      m_numElements--;
+      element = m_head->elements[m_head->head++];
+      if (m_head->head == m_blockSize)
+         m_head->head = 0;
+      m_size--;
+      m_head->count--;
+      if ((m_head->count == 0) && (m_head->next != NULL))
+      {
+         auto tmp = m_head;
+         m_head = m_head->next;
+         MemFree(tmp);
+         m_blockCount--;
+      }
    }
    return element;
 }
@@ -253,21 +272,38 @@ void *Queue::getOrBlock(UINT32 timeout)
 void Queue::clear()
 {
    lock();
-   if (m_owner)
+   for(auto buffer = m_head; buffer != NULL;)
    {
-      for(size_t i = 0, pos = m_first; i < m_numElements; i++)
+      if (m_owner)
       {
-         if (m_elements[pos] != INVALID_POINTER_VALUE)
-            m_destructor(m_elements[pos]);
-         pos++;
-         if (pos == m_bufferSize)
-            pos = 0;
+         for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
+         {
+            if (buffer->elements[pos] != INVALID_POINTER_VALUE)
+               m_destructor(buffer->elements[pos]);
+            pos++;
+            if (pos == m_blockSize)
+               pos = 0;
+         }
+      }
+
+      if (buffer == m_head)
+      {
+         buffer = buffer->next;
+         m_head->next = NULL;
+         m_head->count = 0;
+         m_head->head = 0;
+         m_head->tail = 0;
+      }
+      else
+      {
+         auto next = buffer->next;
+         MemFree(buffer);
+         buffer = next;
       }
    }
-   m_numElements = 0;
-   m_first = 0;
-   m_last = 0;
-   shrink();
+   m_tail = m_head;
+   m_blockCount = 1;
+   m_size = 0;
    unlock();
 }
 
@@ -299,17 +335,21 @@ void *Queue::find(const void *key, QueueComparator comparator, void *(*transform
 {
 	void *element = NULL;
 	lock();
-	for(size_t i = 0, pos = m_first; i < m_numElements; i++)
-	{
-		if ((m_elements[pos] != NULL) && (m_elements[pos] != INVALID_POINTER_VALUE) && comparator(key, m_elements[pos]))
-		{
-			element = (transform != NULL) ? transform(m_elements[pos]) : m_elements[pos];
-			break;
-		}
-		pos++;
-		if (pos == m_bufferSize)
-			pos = 0;
-	}
+   for(auto buffer = m_head; buffer != NULL; buffer = buffer->next)
+   {
+      for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
+      {
+         void *curr = buffer->elements[pos];
+         if ((curr != NULL) && (curr != INVALID_POINTER_VALUE) && comparator(key, curr))
+         {
+            element = (transform != NULL) ? transform(curr) : curr;
+            break;
+         }
+         pos++;
+         if (pos == m_blockSize)
+            pos = 0;
+      }
+   }
 	unlock();
 	return element;
 }
@@ -322,20 +362,25 @@ bool Queue::remove(const void *key, QueueComparator comparator)
 {
 	bool success = false;
 	lock();
-	for(size_t i = 0, pos = m_first; i < m_numElements; i++)
-	{
-		if ((m_elements[pos] != NULL) && comparator(key, m_elements[pos]))
-		{
-		   if (m_owner && (m_elements[pos] != INVALID_POINTER_VALUE))
-		      m_destructor(m_elements[pos]);
-			m_elements[pos] = NULL;
-			success = true;
-			break;
-		}
-		pos++;
-		if (pos == m_bufferSize)
-			pos = 0;
+   for(auto buffer = m_head; buffer != NULL; buffer = buffer->next)
+   {
+      for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
+      {
+         void *curr = buffer->elements[pos];
+         if ((curr != NULL) && (curr != INVALID_POINTER_VALUE) && comparator(key, curr))
+         {
+            if (m_owner)
+               m_destructor(curr);
+            buffer->elements[pos] = NULL;
+            success = true;
+            goto remove_completed;
+         }
+         pos++;
+         if (pos == m_blockSize)
+            pos = 0;
+      }
 	}
+remove_completed:
 	unlock();
 	return success;
 }
@@ -346,34 +391,21 @@ bool Queue::remove(const void *key, QueueComparator comparator)
 void Queue::forEach(QueueEnumerationCallback callback, void *context)
 {
    lock();
-   for(size_t i = 0, pos = m_first; i < m_numElements; i++)
+   for(auto buffer = m_head; buffer != NULL; buffer = buffer->next)
    {
-      if ((m_elements[pos] != NULL) && (m_elements[pos] != INVALID_POINTER_VALUE))
+      for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
       {
-         if (callback(m_elements[pos], context) == _STOP)
-            break;
+         void *curr = buffer->elements[pos];
+         if ((curr != NULL) && (curr != INVALID_POINTER_VALUE))
+         {
+            if (callback(curr, context) == _STOP)
+               goto stop_enumeration;
+         }
+         pos++;
+         if (pos == m_blockSize)
+            pos = 0;
       }
-      pos++;
-      if (pos == m_bufferSize)
-         pos = 0;
    }
+stop_enumeration:
    unlock();
-}
-
-/**
- * Shrink queue if possible
- */
-void Queue::shrink()
-{
-   if ((m_bufferSize == m_blockSize) || (m_numElements > m_blockSize / 2) || ((m_numElements > 0) && (m_last < m_first)))
-      return;
-
-   if ((m_numElements > 0) && (m_first > 0))
-   {
-      memmove(&m_elements[0], &m_elements[m_first], sizeof(void *) * m_numElements);
-      m_last -= m_first;
-      m_first = 0;
-   }
-   m_bufferSize = m_blockSize;
-   m_elements = MemReallocArray(m_elements, m_bufferSize);
 }
