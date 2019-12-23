@@ -71,8 +71,8 @@ public:
 /**
  * Queues
  */
-Queue g_syslogProcessingQueue(1000, 100);
-Queue g_syslogWriteQueue(1000, 100);
+Queue g_syslogProcessingQueue(1024, false);
+Queue g_syslogWriteQueue(1024, false);
 
 /**
  * Total number of received syslog messages

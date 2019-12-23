@@ -976,7 +976,7 @@ static bool TestQueueComparator(const void *key, const void *value)
  */
 static void TestQueue()
 {
-   Queue *q = new Queue(16, 16);
+   Queue *q = new Queue(16, false);
 
    StartTest(_T("Queue: put/get"));
    for(int i = 0; i < 40; i++)

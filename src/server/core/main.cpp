@@ -737,7 +737,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	InitLocalNetInfo();
 
 	// Create queue for delayed SQL queries
-	g_dbWriterQueue = new Queue(256, 64);
+	g_dbWriterQueue = new Queue(1024, false);
 
 	// Initialize database driver and connect to database
 	if (!DBInit())
