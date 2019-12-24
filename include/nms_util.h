@@ -1404,22 +1404,25 @@ class LIBNETXMS_EXPORTABLE StringMapBase
 {
    friend class StringMapIterator;
 
+private:
+   StringMapEntry *find(const TCHAR *key, size_t keyLen) const;
+   void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
+
 protected:
    StringMapEntry *m_data;
-	bool m_objectOwner;
+   bool m_objectOwner;
    bool m_ignoreCase;
 	void (*m_objectDestructor)(void *, StringMapBase *);
+   void *m_context;
 
-	StringMapEntry *find(const TCHAR *key, size_t keyLen) const;
 	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
 	void *getObject(const TCHAR *key) const;
    void *getObject(const TCHAR *key, size_t len) const;
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
 	void fillValues(Array *a) const;
    void *unlink(const TCHAR *key);
 
 public:
-	StringMapBase(bool objectOwner);
+	StringMapBase(bool objectOwner, void (*destructor)(void *, StringMapBase *) = NULL);
 	virtual ~StringMapBase();
 
    void setOwner(bool owner) { m_objectOwner = owner; }
@@ -1439,6 +1442,9 @@ public:
 
    StructArray<KeyValuePair<void>> *toArray(bool (*filter)(const TCHAR *, const void *, void *) = NULL, void *userData = NULL) const;
    StringList *keys() const;
+
+   void setContext(void *context) { m_context = context; }
+   void *getContext() const { return m_context; }
 };
 
 /**
@@ -1484,7 +1490,6 @@ public:
 
    Iterator<std::pair<const TCHAR*, const TCHAR*>> *iterator() { return new Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(this)); }
 
-
    template <typename C>
    StructArray<KeyValuePair<TCHAR>> *toArray(bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context = NULL) const
    {
@@ -1520,7 +1525,7 @@ private:
 	static void destructor(void *object, StringMapBase *map) { delete (T*)object; }
 
 public:
-	StringObjectMap(bool objectOwner) : StringMapBase(objectOwner) { m_objectDestructor = destructor; }
+	StringObjectMap(bool objectOwner, void (*_destructor)(void *, StringMapBase *) = destructor) : StringMapBase(objectOwner, _destructor) { }
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	void setPreallocated(TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, true); }
@@ -1549,6 +1554,82 @@ public:
       return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
    }
 };
+
+/**
+ * String to object map that holds shared pointers
+ */
+template <class T> class SharedStringObjectMap
+{
+   DISABLE_COPY_CTOR(SharedStringObjectMap)
+
+private:
+   ObjectMemoryPool<shared_ptr<T>> m_pool;
+   StringObjectMap<shared_ptr<T>> m_data;
+
+   static shared_ptr<T> m_null;
+
+   static void destructor(void *element, StringMapBase *stringMapBase)
+   {
+      static_cast<SharedStringObjectMap<T>*>(stringMapBase->getContext())->m_pool.destroy(static_cast<shared_ptr<T>*>(element));
+   }
+
+public:
+   SharedStringObjectMap() : m_pool(64), m_data(true, SharedStringObjectMap<T>::destructor) { m_data.setContext(this); }
+
+   void set(const TCHAR *key, shared_ptr<T> object) { m_data.set(key, new(m_pool.allocate()) shared_ptr<T>(object)); }
+   void set(const TCHAR *key, T *object) { m_data.set(key, new(m_pool.allocate()) shared_ptr<T>(object)); }
+   void setPreallocated(TCHAR *key, T *object) { m_data.setPreallocated(key, new(m_pool.allocate()) shared_ptr<T>(object)); }
+   void setPreallocated(TCHAR *key, shared_ptr<T> object) { m_data.setPreallocated(key, new(m_pool.allocate()) shared_ptr<T>(object)); }
+
+   int size() const { return m_data.size(); }
+   bool isEmpty() const { return m_data.isEmpty(); }
+   bool contains(const TCHAR *key) const { return m_data.contains(key); }
+   bool contains(const TCHAR *key, size_t len) const { return m_data.containes(key, len); }
+
+   T *get(const TCHAR *key) const
+   {
+      auto p = m_data.get(key);
+      return (p != NULL) ? p->get() : NULL;
+   }
+
+   T *get(const TCHAR *key, size_t len) const
+   {
+      auto p = m_data.get(key, len);
+      return (p != NULL) ? p->get() : NULL;
+   }
+
+   shared_ptr<T> getShared(const TCHAR *key) const
+   {
+      auto p = m_data.get(key);
+      return (p != NULL) ? *p : m_null;
+   }
+
+   shared_ptr<T> getShared(const TCHAR *key, size_t len) const
+   {
+      auto p = m_data.get(key, len);
+      return (p != NULL) ? *p : m_null;
+   }
+
+   void clear() { m_data.clear(); }
+   void remove(const TCHAR *key) { m_data.remove(key); }
+   void filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *context) { m_data.filterElements(filter, context); }
+
+   shared_ptr<T> unlink(const TCHAR *key)
+   {
+      auto p = m_data.unlink(key);
+      return (p != NULL) ? *p : m_null;
+   }
+
+   Iterator<std::pair<const TCHAR*, shared_ptr<T>*>> *iterator() { return m_data.iterator(); }
+
+   template <typename C>
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const shared_ptr<T> *, C *), C *context) const
+   {
+      return m_data.forEach(cb, context);
+   }
+};
+
+template <class T> shared_ptr<T> SharedStringObjectMap<T>::m_null = shared_ptr<T>();
 
 /**
  * String list class
@@ -1909,6 +1990,8 @@ public:
    void unlink(const K& key) { m_data.unlink(key); }
    void clear() { m_data.clear(); }
    bool contains(const K& key) { return m_data.contains(key); }
+
+   Iterator<shared_ptr<V>> *iterator() { return m_data.iterator(); }
 
    int size() const { return m_data.size(); }
 

@@ -35,13 +35,14 @@ EventPolicy *g_pEventPolicy = NULL;
 /**
  * Static data
  */
-static RefCountHashMap<UINT32, EventTemplate> s_eventTemplates(true);
+static SharedHashMap<UINT32, EventTemplate> s_eventTemplates;
+static SharedStringObjectMap<EventTemplate> s_eventNameIndex;
 static RWLOCK s_eventTemplatesLock;
 
 /**
  * Create event template from DB record
  */
-EventTemplate::EventTemplate(DB_RESULT hResult, int row) : RefCountObject()
+EventTemplate::EventTemplate(DB_RESULT hResult, int row)
 {
    m_code = DBGetFieldULong(hResult, row, 0);
    m_description = DBGetField(hResult, row, 1, NULL, 0);
@@ -56,7 +57,7 @@ EventTemplate::EventTemplate(DB_RESULT hResult, int row) : RefCountObject()
 /**
  * Create event template from message
  */
-EventTemplate::EventTemplate(NXCPMessage *msg) : RefCountObject()
+EventTemplate::EventTemplate(NXCPMessage *msg)
 {
    m_guid = uuid::generate();
    m_code = CreateUniqueId(IDG_EVENT);
@@ -757,9 +758,9 @@ static bool LoadEventConfiguration()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         EventTemplate *t = new EventTemplate(hResult, i);
+         auto t = make_shared<EventTemplate>(hResult, i);
          s_eventTemplates.set(t->getCode(), t);
-         t->decRefCount();
+         s_eventNameIndex.set(t->getName(), t);
       }
       DBFreeResult(hResult);
       success = true;
@@ -816,6 +817,7 @@ void ReloadEvents()
 {
    RWLockWriteLock(s_eventTemplatesLock, INFINITE);
    s_eventTemplates.clear();
+   s_eventNameIndex.clear();
    LoadEventConfiguration();
    RWLockUnlock(s_eventTemplatesLock);
 }
@@ -851,7 +853,7 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
          const char *format, const TCHAR **names, va_list args, NXSL_VM *vm)
 {
    RWLockReadLock(s_eventTemplatesLock, INFINITE);
-   EventTemplate *eventTemplate = s_eventTemplates.get(eventCode);
+   shared_ptr<EventTemplate> eventTemplate = s_eventTemplates.getShared(eventCode);
    RWLockUnlock(s_eventTemplatesLock);
 
    bool success;
@@ -859,8 +861,8 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
    {
       // Template found, create new event
       Event *evt = (namedArgs != NULL) ?
-               new Event(eventTemplate, origin, originTimestamp, sourceId, dciId, eventTag, namedArgs) :
-               new Event(eventTemplate, origin, originTimestamp, sourceId, dciId, eventTag, format, names, args);
+               new Event(eventTemplate.get(), origin, originTimestamp, sourceId, dciId, eventTag, namedArgs) :
+               new Event(eventTemplate.get(), origin, originTimestamp, sourceId, dciId, eventTag, format, names, args);
       if (eventId != NULL)
          *eventId = evt->getId();
 
@@ -878,7 +880,6 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
       // Add new event to queue
       queue->put(evt);
 
-      eventTemplate->decRefCount();
       success = true;
    }
    else
@@ -1461,7 +1462,6 @@ void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode)
       str.append(_T("</message>\n\t\t\t<tags>"));
       str.append(EscapeStringForXML2(e->getTags()));
       str.append(_T("</tags>\n\t\t</event>\n"));
-      e->decRefCount();
    }
 
    RWLockUnlock(s_eventTemplatesLock);
@@ -1480,7 +1480,6 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
    if (e != NULL)
    {
       _tcscpy(buffer, e->getName());
-      e->decRefCount();
       bRet = true;
    }
    else
@@ -1495,10 +1494,10 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
 /**
  * Find event template by code - suitable for external call
  */
-EventTemplate *FindEventTemplateByCode(UINT32 code)
+shared_ptr<EventTemplate> FindEventTemplateByCode(UINT32 code)
 {
    RWLockReadLock(s_eventTemplatesLock, INFINITE);
-   EventTemplate *e = s_eventTemplates.get(code);
+   shared_ptr<EventTemplate> e = s_eventTemplates.getShared(code);
    RWLockUnlock(s_eventTemplatesLock);
    return e;
 }
@@ -1506,25 +1505,12 @@ EventTemplate *FindEventTemplateByCode(UINT32 code)
 /**
  * Find event template by name - suitable for external call
  */
-EventTemplate *FindEventTemplateByName(const TCHAR *name)
+shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name)
 {
-   EventTemplate *result = NULL;
-
    RWLockReadLock(s_eventTemplatesLock, INFINITE);
-   Iterator<EventTemplate> *it = s_eventTemplates.iterator();
-   while(it->hasNext())
-   {
-      EventTemplate *e = it->next();
-      if (!_tcscmp(e->getName(), name))
-      {
-         result = e;
-         result->incRefCount();
-         break;
-      }
-   }
-   delete it;
+   shared_ptr<EventTemplate> e = s_eventNameIndex.getShared(name);
    RWLockUnlock(s_eventTemplatesLock);
-   return result;
+   return e;
 }
 
 /**
@@ -1533,12 +1519,8 @@ EventTemplate *FindEventTemplateByName(const TCHAR *name)
  */
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
 {
-   EventTemplate *evt = FindEventTemplateByName(name);
-	if (evt == NULL)
-	   return defaultValue;
-	UINT32 code = evt->getCode();
-	evt->decRefCount();
-	return code;
+   shared_ptr<EventTemplate> e = FindEventTemplateByName(name);
+	return (e != NULL) ? e->getCode() : defaultValue;
 }
 
 /**
@@ -1581,26 +1563,29 @@ UINT32 UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t *
    if (!IsValidObjectName(name, TRUE))
       return RCC_INVALID_OBJECT_NAME;
 
-   EventTemplate *e;
+   shared_ptr<EventTemplate> e;
    UINT32 eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
    RWLockWriteLock(s_eventTemplatesLock, INFINITE);
 
    if (eventCode == 0)
    {
-      e = new EventTemplate(request);
+      e = make_shared<EventTemplate>(request);
       s_eventTemplates.set(e->getCode(), e);
+      s_eventNameIndex.set(e->getName(), e);
       *oldValue = NULL;
    }
    else
    {
-      e = s_eventTemplates.get(eventCode);
+      e = s_eventTemplates.getShared(eventCode);
       if (e == NULL)
       {
          RWLockUnlock(s_eventTemplatesLock);
          return RCC_INVALID_EVENT_CODE;
       }
       *oldValue = e->toJson();
+      s_eventNameIndex.remove(e->getName());
       e->modifyFromMessage(request);
+      s_eventNameIndex.set(e->getName(), e);
    }
    *newValue = e->toJson();
    bool success = e->saveToDatabase();
@@ -1614,7 +1599,6 @@ UINT32 UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t *
 
       response->setField(VID_EVENT_CODE, e->getCode());
    }
-   e->decRefCount();
 
    RWLockUnlock(s_eventTemplatesLock);
 
@@ -1643,56 +1627,10 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
    DB_STATEMENT hStmt;
 
    RWLockWriteLock(s_eventTemplatesLock, INFINITE);
-   if (eventCode & GROUP_FLAG_BIT)
+   auto e = s_eventTemplates.get(eventCode);
+   if (e != NULL)
    {
-      if(s_eventTemplates.contains(eventCode))
-      {
-         bool success = DBBegin(hdb);
-         if (success)
-         {
-            hStmt = DBPrepare(hdb, _T("DELETE FROM event_groups WHERE id=?"));
-            if (hStmt != NULL)
-            {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, eventCode);
-               success = DBExecute(hStmt);
-               DBFreeStatement(hStmt);
-            }
-            else
-            {
-               success = false;
-            }
-
-            if (success)
-            {
-               hStmt = DBPrepare(hdb, _T("DELETE FROM event_group_members WHERE group_id=?"));
-               if (hStmt != NULL)
-               {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, eventCode);
-                  success = DBExecute(hStmt);
-                  DBFreeStatement(hStmt);
-               }
-               else
-               {
-                  success = false;
-               }
-            }
-            if (success)
-               success = DBCommit(hdb);
-            else
-               DBRollback(hdb);
-         }
-         rcc = success ? RCC_SUCCESS : RCC_DB_FAILURE;
-      }
-   }
-   else if (s_eventTemplates.contains(eventCode))
-   {
-      hStmt = DBPrepare(hdb, _T("DELETE FROM event_cfg WHERE event_code=?"));
-      if (hStmt != NULL)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, eventCode);
-         rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
-         DBFreeStatement(hStmt);
-      }
+      rcc = ExecuteQueryOnObject(hdb, eventCode, _T("DELETE FROM event_cfg WHERE event_code=?")) ? RCC_SUCCESS : RCC_DB_FAILURE;
    }
    else
    {
@@ -1701,6 +1639,7 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
 
    if (rcc == RCC_SUCCESS)
    {
+      s_eventNameIndex.remove(e->getName());
       s_eventTemplates.remove(eventCode);
       NXCPMessage nmsg;
       nmsg.setCode(CMD_EVENT_DB_UPDATE);
@@ -1722,11 +1661,11 @@ void GetEventConfiguration(NXCPMessage *msg)
    RWLockWriteLock(s_eventTemplatesLock, INFINITE);
    UINT32 base = VID_ELEMENT_LIST_BASE;
    msg->setField(VID_NUM_EVENTS, s_eventTemplates.size());
-   Iterator<EventTemplate> *it = s_eventTemplates.iterator();
+   auto it = s_eventTemplates.iterator();
    while(it->hasNext())
    {
-      EventTemplate *e = it->next();
-      e->fillMessage(msg, base);
+      auto e = it->next();
+      (*e)->fillMessage(msg, base);
       base += 10;
    }
    delete it;

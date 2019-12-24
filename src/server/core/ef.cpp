@@ -65,12 +65,11 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 			if (name != NULL)
 			{
 				DbgPrintf(5, _T("Event specified by name (%s)"), name);
-				EventTemplate *pt = FindEventTemplateByName(name);
+				shared_ptr<EventTemplate> pt = FindEventTemplateByName(name);
 				if (pt != NULL)
 				{
 					code = pt->getCode();
 					DbgPrintf(5, _T("Event name %s resolved to event code %d"), name, code);
-					pt->decRefCount();
 				}
 				else
 				{

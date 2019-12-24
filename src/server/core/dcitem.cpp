@@ -445,11 +445,10 @@ void DCItem::checkThresholds(ItemValue &value)
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
                      s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
                      checkValue.getString(), m_id, m_instance.cstr(), 0, value.getString());
-				   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
+				   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
 					   t->markLastEvent(evt->getSeverity());
-					   evt->decRefCount();
 				   }
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing
@@ -477,11 +476,10 @@ void DCItem::checkThresholds(ItemValue &value)
                   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
                         s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
                         checkValue.getString(), m_id, m_instance.cstr(), 1, value.getString());
-                  EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
+                  shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
 						   t->markLastEvent(evt->getSeverity());
-						   evt->decRefCount();
 					   }
 				   }
             }
@@ -816,11 +814,10 @@ void DCItem::processNewError(bool noInstance, time_t now)
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 					   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
                   m_id, m_instance.cstr(), 0, _T(""));
-               EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
+               shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
 					   t->markLastEvent(evt->getSeverity());
-					   evt->decRefCount();
 				   }
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                {
@@ -843,11 +840,10 @@ void DCItem::processNewError(bool noInstance, time_t now)
 					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 						   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
 						   m_id, m_instance.cstr(), 1, _T(""));
-					   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
+					   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
 						   t->markLastEvent(evt->getSeverity());
-						   evt->decRefCount();
 					   }
 				   }
             }

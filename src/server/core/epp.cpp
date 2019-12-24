@@ -61,11 +61,10 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
 		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
       for(int i = 0; i < events->size(); i++)
       {
-         EventTemplate *e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
+         shared_ptr<EventTemplate> e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
          if (e != NULL)
          {
             m_events.add(e->getCode());
-            e->decRefCount();
          }
       }
       delete events;

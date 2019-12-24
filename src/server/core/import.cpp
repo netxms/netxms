@@ -29,12 +29,9 @@
  */
 static bool IsEventExist(const TCHAR *name, Config *config)
 {
-   EventTemplate *e = FindEventTemplateByName(name);
+   shared_ptr<EventTemplate> e = FindEventTemplateByName(name);
 	if (e != NULL)
-	{
-	   e->decRefCount();
 		return true;
-	}
 
 	ConfigEntry *eventsRoot = config->getEntry(_T("/events"));
 	if (eventsRoot != NULL)
@@ -321,7 +318,7 @@ static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
 static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions needed?
 {
    UINT32 rcc = RCC_INTERNAL_ERROR;
-	EventTemplate *eventTemplate = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
+   shared_ptr<EventTemplate> eventTemplate = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
 	if (eventTemplate == NULL)
 		return rcc;
 
@@ -339,8 +336,6 @@ static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions
    }
 
 	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, eventTemplate->getCode());
-	eventTemplate->decRefCount();
-
 	if (!trapCfg->getOid().isValid())
 	{
 	   delete trapCfg;

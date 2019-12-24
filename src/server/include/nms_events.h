@@ -45,7 +45,7 @@ enum class EventOrigin
 /**
  * Event template
  */
-class EventTemplate : public RefCountObject
+class EventTemplate
 {
 private:
    uuid m_guid;
@@ -57,12 +57,10 @@ private:
    TCHAR *m_messageTemplate;
    TCHAR *m_description;
 
-protected:
-   virtual ~EventTemplate();
-
 public:
    EventTemplate(DB_RESULT hResult, int row);
    EventTemplate(NXCPMessage *msg);
+   ~EventTemplate();
 
    const uuid& getGuid() const { return m_guid; }
    UINT32 getCode() const { return m_code; }
@@ -334,8 +332,8 @@ Event *FindEventInLoggerQueue(UINT64 eventId);
 
 bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
-EventTemplate *FindEventTemplateByCode(UINT32 code);
-EventTemplate *FindEventTemplateByName(const TCHAR *name);
+shared_ptr<EventTemplate> FindEventTemplateByCode(UINT32 code);
+shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name);
 
 bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, ...);
 bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const StringList& parameters);

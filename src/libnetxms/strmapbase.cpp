@@ -35,12 +35,13 @@ static void ObjectDestructor(void *object, StringMapBase *map)
 /**
  * Constructors
  */
-StringMapBase::StringMapBase(bool objectOwner)
+StringMapBase::StringMapBase(bool objectOwner, void (*destructor)(void *, StringMapBase *))
 {
 	m_data = NULL;
 	m_objectOwner = objectOwner;
    m_ignoreCase = true;
-	m_objectDestructor = ObjectDestructor;
+   m_context = NULL;
+	m_objectDestructor = (destructor != NULL) ? destructor : ObjectDestructor;
 }
 
 /**
