@@ -853,7 +853,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 #endif
                break;
             case CT_STRING_LIST:
-               *((TCHAR **)cfgTemplate[i].buffer) = (TCHAR *)malloc(sizeof(TCHAR) * (entry->getConcatenatedValuesLength() + 1));
+               *((TCHAR **)cfgTemplate[i].buffer) = MemAllocString(entry->getConcatenatedValuesLength() + 1);
                for(j = 0, curr = *((TCHAR **) cfgTemplate[i].buffer); j < entry->getValueCount(); j++)
                {
                   _tcscpy(curr, entry->getValue(j));

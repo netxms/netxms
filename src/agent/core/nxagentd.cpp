@@ -831,8 +831,12 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 		if (pEnd != NULL)
 			*pEnd = 0;
 		StrStrip(pItem);
-
-      g_serverList.add(new ServerInfo(pItem, isControl, isMaster));
+		if (*pItem != 0)
+		{
+         g_serverList.add(new ServerInfo(pItem, isControl, isMaster));
+         nxlog_debug(3, _T("Added server access record %s (control=%s, master=%s)"), pItem,
+                  isControl ? _T("true") : _T("false"), isMaster ? _T("true") : _T("false"));
+		}
 	}
 	MemFree(serverList);
 }
@@ -1086,7 +1090,7 @@ BOOL Initialize()
    // Parse action list
    if (m_pszActionList != NULL)
    {
-      for(pItem = pEnd = m_pszActionList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszActionList; pEnd != NULL && (*pItem != 0); pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
@@ -1099,7 +1103,7 @@ BOOL Initialize()
    }
    if (m_pszShellActionList != NULL)
    {
-      for(pItem = pEnd = m_pszShellActionList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszShellActionList; pEnd != NULL && (*pItem != 0); pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
 

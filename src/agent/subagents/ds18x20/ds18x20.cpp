@@ -1,6 +1,6 @@
 /*
 ** NetXMS DS18x20 sensor subagent
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,6 +66,17 @@ static LONG H_SensorTemperature(const TCHAR *param, const TCHAR *arg, TCHAR *val
 }
 
 /**
+ * Handler for DS18X20.SensorNames list
+ */
+static LONG H_SensorNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   StringList *names = s_sensorNames.keys();
+   value->addAll(names);
+   delete names;
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Called by master agent at unload
  */
 static void SubagentShutdown()
@@ -112,27 +123,25 @@ static bool SubagentInit(Config *config)
 		// Parse sensor list
 		if (s_sensorList != NULL)
 		{
-			TCHAR *pItem, *pEnd;
-
-			for(pItem = pEnd = s_sensorList; pEnd != NULL; pItem = pEnd + 1)
+			TCHAR *curr, *next;
+			for(curr = next = s_sensorList; (next != NULL) && (*curr != 0); curr = next + 1)
 			{
-				pEnd = _tcschr(pItem, _T('\n'));
-				if (pEnd != NULL)
-					*pEnd = 0;
-				StrStrip(pItem);
-				if (!AddSensorNameMapping(pItem))
+				next = _tcschr(curr, _T('\n'));
+				if (next != NULL)
+					*next = 0;
+				StrStrip(curr);
+				if (!AddSensorNameMapping(curr))
 				{
 					AgentWriteLog(EVENTLOG_WARNING_TYPE,
-							_T("Unable to add sensor from configuration file. ")
-							_T("Original configuration record: %s"), pItem);
+							_T("Unable to add sensor from configuration file. Original configuration record: %s"), curr);
 				}
 			}
-			free(s_sensorList);
+			MemFree(s_sensorList);
 		}
 	}
 	else
 	{
-		free(s_sensorList);
+		MemFree(s_sensorList);
 	}
 
 	return success;
@@ -141,9 +150,17 @@ static bool SubagentInit(Config *config)
 /**
  * Supported parameters
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
 	{ _T("Sensor.Temperature(*)"), H_SensorTemperature, NULL, DCI_DT_FLOAT, _T("Temperature reported by sensor {instance}") }
+};
+
+/**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST s_lists[] =
+{
+   { _T("DS18X20.SensorNames"), H_SensorNames, NULL, _T("Names of predefined sensors") }
 };
 
 /**
@@ -154,9 +171,10 @@ static NETXMS_SUBAGENT_INFO s_info =
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("DS18X20"), NETXMS_VERSION_STRING,
 	SubagentInit, SubagentShutdown, NULL, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	0, NULL, // lists
+	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+	s_parameters,
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   s_lists,
 	0, NULL,	// tables
    0, NULL,	// actions
 	0, NULL	// push parameters
