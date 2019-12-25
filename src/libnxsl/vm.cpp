@@ -881,7 +881,7 @@ void NXSL_VM::execute()
                      int startIndex = start->isNull() ? 0 : start->getValueAsInt32();
                      int endIndex = pValue->isNull() ? static_cast<int>(slen) : pValue->getValueAsInt32();
 
-                     if ((startIndex >= 0) && (endIndex >= 0) && (startIndex < slen) && (endIndex >= startIndex))
+                     if ((startIndex >= 0) && (endIndex >= 0) && (startIndex < static_cast<int>(slen)) && (endIndex >= startIndex))
                      {
                         base += startIndex;
                         slen -= startIndex;

@@ -249,8 +249,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
    WCHAR *js1w = WideStringFromUTF8String(js1);
    WCHAR *js2w = WideStringFromUTF8String(js2);
    WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1w, js2w, format, args);
-   free(js1w);
-   free(js2w);
+   MemFree(js1w);
+   MemFree(js2w);
 #else
    WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1, js2, format, args);
 #endif

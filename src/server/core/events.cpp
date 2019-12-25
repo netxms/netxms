@@ -22,6 +22,10 @@
 
 #include "nxcore.h"
 
+#ifdef _WIN32
+#pragma warning(disable : 4700)
+#endif
+
 /**
  * Event processing queue
  */
@@ -1624,7 +1628,6 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
 {
    UINT32 rcc = RCC_SUCCESS;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt;
 
    RWLockWriteLock(s_eventTemplatesLock, INFINITE);
    auto e = s_eventTemplates.get(eventCode);

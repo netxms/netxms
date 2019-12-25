@@ -745,8 +745,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
  */
 void Sensor::prepareLoraDciParameters(StringBuffer &parameter)
 {
-   int place = parameter.find(_T(")"));
-   if(place > 0)
+   if (parameter.find(_T(")")) > 0)
    {
       parameter.replace(_T(")"), m_guid.toString());
       parameter.append(_T(")"));
@@ -775,8 +774,7 @@ void Sensor::prepareDlmsDciParameters(StringBuffer &parameter)
    ConfigEntry *configRoot = config.getEntry(_T("/connections"));
 	if (configRoot != NULL)
 	{
-	   int place = parameter.find(_T(")"));
-	   if(place > 0)
+	   if (parameter.find(_T(")")) > 0)
 	   {
 	      parameter.replace(_T(")"), _T(""));
 	   }

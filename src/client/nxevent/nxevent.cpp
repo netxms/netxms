@@ -49,12 +49,13 @@ static void DebugCallback(const TCHAR *pMsg)
 /**
  * Send even in a loop
  */
-static UINT32 SendEventInLoop(EventController *ctrl, UINT32 code, const TCHAR *name, UINT32 objectId, int argc, TCHAR **argv, const TCHAR *userTag, UINT32 repeatInterval, UINT32 repeatCount)
+static UINT32 SendEventInLoop(EventController *ctrl, UINT32 code, const TCHAR *name, UINT32 objectId, int argc, TCHAR **argv,
+   const TCHAR *userTag, UINT32 repeatInterval, UINT32 repeatCount)
 {
    UINT32 sendCount = 0;
    INT64 lastReportTime = GetCurrentTimeMs();
    INT64 startTime = lastReportTime;
-   for(int i = 0; i < repeatCount; i++)
+   for(UINT32 i = 0; i < repeatCount; i++)
    {
       UINT32 rcc = ctrl->sendEvent(code, name, m_dwObjectId, argc, argv, userTag);
       if (rcc != RCC_SUCCESS)

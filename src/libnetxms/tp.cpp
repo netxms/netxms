@@ -326,7 +326,7 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThre
    p->workerIdleTimeout = MIN_WORKER_IDLE_TIMEOUT;
    p->activeRequests = 0;
    p->threads = new HashMap<UINT64, WorkerThreadInfo>();
-   p->queue = new Queue(64, 64);
+   p->queue = new Queue(64, false);
    p->mutex = MutexCreate();
    p->maintThreadWakeup = ConditionCreate(false);
    p->serializationQueues = new StringObjectMap<SerializationQueue>(true);

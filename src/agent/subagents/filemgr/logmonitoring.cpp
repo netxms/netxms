@@ -171,7 +171,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    while (follow)
    {
       NX_FSTAT(hFile, &st);
-      long newOffset = (long)st.st_size;
+      ssize_t newOffset = st.st_size;
       if (flData->getOffset() < newOffset)
       {
          size_t readSize = newOffset - flData->getOffset();
@@ -187,9 +187,13 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             msg.setId(0);
             msg.setField(VID_FILE_NAME, flData->getFileId());
 
+#ifdef _WIN32
+            _lseeki64(hFile, flData->getOffset(), SEEK_SET);
+#else
             _lseek(hFile, flData->getOffset(), SEEK_SET);
+#endif
             char *content = static_cast<char*>(MemAlloc(readSize + 1));
-            readSize = _read(hFile, content, readSize);
+            readSize = _read(hFile, content, static_cast<int>(readSize));
             for(size_t j = 0; j < readSize; j++)
                if (content[j] == 0)
                   content[j] = ' ';

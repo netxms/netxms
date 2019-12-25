@@ -536,11 +536,12 @@ void NObject::setCustomAttributesFromMessage(NXCPMessage *msg)
    StringList deletionList;
    ObjectArray<std::pair<String, UINT32>> updateList(0, 16, true);
 
-   UINT32 dwId, dwNumElements = msg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
-   for(int i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < dwNumElements; i++, dwId += 3)
+   int count = msg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
+   UINT32 fieldId = VID_CUSTOM_ATTRIBUTES_BASE;
+   for(int i = 0; i < count; i++, fieldId += 3)
    {
-      if (setCustomAttributeFromMessage(msg, dwId))
-         existingAttibutes.addPreallocated(msg->getFieldAsString(dwId));
+      if (setCustomAttributeFromMessage(msg, fieldId))
+         existingAttibutes.addPreallocated(msg->getFieldAsString(fieldId));
    }
 
    lockCustomAttributes();
@@ -566,7 +567,6 @@ void NObject::setCustomAttributesFromMessage(NXCPMessage *msg)
 
    for(int i = 0; i < deletionList.size(); i++)
       populateRemove(deletionList.get(i));
-
 
    for(int i = 0; i < updateList.size(); i++)
       setCustomAttribute(updateList.get(i)->first, getCustomAttributeFromParent(updateList.get(i)->first), updateList.get(i)->second);
@@ -789,7 +789,7 @@ StringMap *NObject::getCustomAttributes(bool (*filter)(const TCHAR *, const Cust
 static bool RegExpAttrFilter(const TCHAR *name, const CustomAttribute *value, PCRE *preg)
 {
    int ovector[30];
-   return _pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(name), _tcslen(name), 0, 0, ovector, 30) >= 0;
+   return _pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(name), static_cast<int>(_tcslen(name)), 0, 0, ovector, 30) >= 0;
 }
 
 /**
