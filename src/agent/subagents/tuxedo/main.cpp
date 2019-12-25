@@ -409,7 +409,7 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
 static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-   _T("TUXEDO"), NETXMS_BUILD_TAG,
+   _T("TUXEDO"), NETXMS_VERSION_STRING,
    SubAgentInit, SubAgentShutdown, NULL, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,

@@ -86,7 +86,7 @@ static void SubAgentShutdown()
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("MQTT"), NETXMS_BUILD_TAG,
+	_T("MQTT"), NETXMS_VERSION_STRING,
 	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	0, NULL,    // parameters
 	0, NULL,		// lists

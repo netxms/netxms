@@ -164,17 +164,17 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
  */
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("XEN"), NETXMS_BUILD_TAG,
-	SubagentInit, SubagentShutdown, NULL, NULL,
-	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	s_parameters,
-	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
-	s_lists,
-	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
-	s_tables,	// tables
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("XEN"), NETXMS_VERSION_STRING,
+   SubagentInit, SubagentShutdown, NULL, NULL,
+   sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+   s_parameters,
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   s_lists,
+   sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+   s_tables,	// tables
    0, NULL,	// actions
-	0, NULL	// push parameters
+   0, NULL	// push parameters
 };
 
 /**
@@ -182,8 +182,8 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(XEN)
 {
-	*ppInfo = &m_info;
-	return true;
+   *ppInfo = &m_info;
+   return true;
 }
 
 #ifdef _WIN32
@@ -193,9 +193,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(XEN)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
 }
 
 #endif

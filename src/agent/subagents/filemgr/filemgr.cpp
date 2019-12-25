@@ -1130,7 +1130,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-   _T("FILEMGR"), NETXMS_BUILD_TAG,
+   _T("FILEMGR"), NETXMS_VERSION_STRING,
    SubagentInit, SubagentShutdown, ProcessCommands, NULL,
    0, NULL, // parameters
    0, NULL, // lists
