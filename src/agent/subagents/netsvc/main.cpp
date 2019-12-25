@@ -230,7 +230,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-   _T("NETSVC"), NETXMS_BUILD_TAG,
+   _T("NETSVC"), NETXMS_VERSION_STRING,
    SubagentInit, SubagentShutdown, NULL, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,

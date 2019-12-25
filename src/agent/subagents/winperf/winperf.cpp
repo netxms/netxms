@@ -374,14 +374,14 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("WinPerf"), NETXMS_VERSION_STRING,
+   _T("WinPerf"), NETXMS_VERSION_STRING,
    SubAgentInit, SubAgentShutdown, NULL, NULL,     // handlers
    0, NULL,             // parameters
-	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_lists,
-	0, NULL,	// tables
+   sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   m_lists,
+   0, NULL,	// tables
    0, NULL,	// actions
-	0, NULL	// push parameters
+   0, NULL	// push parameters
 };
 
 /**

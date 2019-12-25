@@ -70,7 +70,7 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("DBQUERY"), NETXMS_BUILD_TAG,
+	_T("DBQUERY"), NETXMS_VERSION_STRING,
    SubAgentInit, SubAgentShutdown, NULL, NULL,
 	0,	NULL, // parameters
 	0, NULL,	// lists

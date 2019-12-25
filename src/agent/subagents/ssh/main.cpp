@@ -144,16 +144,16 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
  */
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("SSH"), NETXMS_BUILD_TAG,
-	SubagentInit, SubagentShutdown, NULL, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("SSH"), NETXMS_VERSION_STRING,
+   SubagentInit, SubagentShutdown, NULL, NULL,
+   sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+   m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    m_lists,
-	0, NULL,	// tables
+   0, NULL,	// tables
    0, NULL,	// actions
-	0, NULL	// push parameters
+   0, NULL	// push parameters
 };
 
 /**
@@ -161,8 +161,8 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(SSH)
 {
-	*ppInfo = &m_info;
-	return true;
+   *ppInfo = &m_info;
+   return true;
 }
 
 #ifdef _WIN32
@@ -172,9 +172,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(SSH)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
 }
 
 #endif

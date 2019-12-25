@@ -64,14 +64,14 @@ PyObject *PyInit_netxms_subagent();
  */
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("PYTHON"), NETXMS_BUILD_TAG,
-	NULL, NULL, NULL, NULL,
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("PYTHON"), NETXMS_VERSION_STRING,
+   NULL, NULL, NULL, NULL,
    0, NULL,    // parameters
-	0, NULL,		// lists
-	0, NULL,		// tables
-	0, NULL,		// actions
-	0, NULL		// push parameters
+   0, NULL,		// lists
+   0, NULL,		// tables
+   0, NULL,		// actions
+   0, NULL		// push parameters
 };
 
 /**

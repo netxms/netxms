@@ -304,7 +304,7 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("ASTERISK"), NETXMS_BUILD_TAG,
+	_T("ASTERISK"), NETXMS_VERSION_STRING,
 	SubagentInit, SubagentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
