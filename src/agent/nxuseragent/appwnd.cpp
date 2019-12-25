@@ -429,7 +429,7 @@ void OpenApplicationWindow(POINT pt, bool hotkeyOpen)
    POINT size = CalculateRequiredSize();
    DWORD animateFlags;
    POINT pos = CalculateAppWindowPosition((hotkeyOpen && (g_mainWindowPosition == MainWindowPosition::AUTOMATIC)) ? MainWindowPosition::MIDDLE_CENTER : g_mainWindowPosition, size, pt, &animateFlags);
-   s_hWnd = CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_TOOLWINDOW, APP_WINDOW_CLASS_NAME,
+   s_hWnd = CreateWindowEx(WS_EX_CONTROLPARENT | WS_EX_TOOLWINDOW | WS_EX_TOPMOST, APP_WINDOW_CLASS_NAME,
       _T("NetXMS User Agent"),
       WS_POPUP,
       pos.x, pos.y, size.x, size.y, NULL, NULL, g_hInstance, NULL);
