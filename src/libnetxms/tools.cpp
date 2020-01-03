@@ -710,6 +710,10 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 				if (rc > 0)
 				{
 					result[rc] = 0;
+               char *lf = strchr(result, '\r');
+               if (lf != NULL)
+                  *lf = 0;
+
 					char *lf = strchr(result, '\n');
 					if (lf != NULL)
 						*lf = 0;
