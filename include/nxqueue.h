@@ -109,7 +109,7 @@ private:
 
 public:
    ObjectQueue() : Queue() { m_destructor = destructor; }
-   ObjectQueue(size_t blockSize, bool owner) : Queue(blockSize, owner) { }
+   ObjectQueue(size_t blockSize, bool owner) : Queue(blockSize, owner) { m_destructor = destructor; }
    virtual ~ObjectQueue() { }
 
    T *get() { return (T*)Queue::get(); }
