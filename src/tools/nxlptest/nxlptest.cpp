@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Log Parser Testing Utility
-** Copyright (C) 2009-2018 Victor Kirhenshtein
+** Copyright (C) 2009-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ NETXMS_EXECUTABLE_HEADER(nxlptest)
  */
 static TCHAR m_helpText[] =
    _T("NetXMS Log Parsing Tester  Version ") NETXMS_VERSION_STRING _T("\n")
-   _T("Copyright (c) 2009-2012 Victor Kirhenshtein\n\n")
+   _T("Copyright (c) 2009-2020 Victor Kirhenshtein\n\n")
    _T("Usage:\n")
    _T("   nxlptest [options] parser\n\n")
    _T("Where valid options are:\n")
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
             return 0;
          case 'v':
 				_tprintf(_T("NetXMS Log Parsing Tester  Version ") NETXMS_VERSION_STRING _T("\n")
-				         _T("Copyright (c) 2009-2017 Victor Kirhenshtein\n\n"));
+				         _T("Copyright (c) 2009-2020 Victor Kirhenshtein\n\n"));
             return 0;
 			case 'f':
 #ifdef UNICODE
