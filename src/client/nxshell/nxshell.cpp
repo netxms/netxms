@@ -1,6 +1,6 @@
 /* 
 ** nxshell - launcher for main Java application
-** Copyright (C) 2017-2019 Raden Solutions
+** Copyright (C) 2017-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -168,7 +168,7 @@ static void ShowUsage(bool showVersion)
    {
       _tprintf(
          _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
-         _T("Copyright (c) 2006-2019 Raden Solutions\n\n"));
+         _T("Copyright (c) 2006-2020 Raden Solutions\n\n"));
    }
 
 	_tprintf(
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 		   case 'v': // version
             _tprintf(
                _T("NetXMS Interactive Shell  Version ") NETXMS_BUILD_TAG _T("\n")
-               _T("Copyright (c) 2006-2019 Raden Solutions\n\n"));
+               _T("Copyright (c) 2006-2020 Raden Solutions\n\n"));
 			   exit(0);
 			   break;
 		   case '?':

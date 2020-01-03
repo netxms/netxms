@@ -45,7 +45,7 @@ public class TestConstants
       try
       {
          String propFile = "/etc/test.properties";
-         if(System.getProperty("ConfigFile") != null && !System.getProperty("ConfigFile").isEmpty())
+         if (System.getProperty("ConfigFile") != null && !System.getProperty("ConfigFile").isEmpty())
             propFile = System.getProperty("ConfigFile");
          InputStream stream = new FileInputStream(propFile);
          Properties properties = new Properties();
