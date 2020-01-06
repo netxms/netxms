@@ -1318,7 +1318,7 @@ void NetObj::setModified(UINT32 flags, bool notify)
    if (g_bModificationsLocked)
       return;
 
-   m_modified |= flags;
+   InterlockedOr(&m_modified, flags);
    m_timestamp = time(NULL);
 
    // Send event to all connected clients

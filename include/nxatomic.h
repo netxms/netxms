@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -74,36 +74,12 @@ FORCEINLINE LONGLONG InterlockedDecrement64(LONGLONG volatile *v)
 typedef volatile uint32_t VolatileCounter;
 typedef volatile uint64_t VolatileCounter64;
 
-#if !HAVE_ATOMIC_INC_32_NV
-extern "C" volatile uint32_t solaris9_atomic_inc32(volatile uint32_t *v);
-#endif
-
-#if !HAVE_ATOMIC_DEC_32_NV
-extern "C" volatile uint32_t solaris9_atomic_dec32(volatile uint32_t *v);
-#endif
-
-#if !HAVE_ATOMIC_INC_64_NV
-extern "C" volatile uint64_t solaris9_atomic_inc64(volatile uint64_t *v);
-#endif
-
-#if !HAVE_ATOMIC_DEC_64_NV
-extern "C" volatile uint64_t solaris9_atomic_dec64(volatile uint64_t *v);
-#endif
-
-#if !HAVE_ATOMIC_SWAP_PTR
-extern "C" void *solaris9_atomic_swap_ptr(volatile *void *target, void *value);
-#endif
-
 /**
  * Atomically increment 32-bit value by 1
  */
 inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 {
-#if HAVE_ATOMIC_INC_32_NV
    return atomic_inc_32_nv(v);
-#else
-   return solaris9_atomic_inc32(v);
-#endif
 }
 
 /**
@@ -111,11 +87,15 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
  */
 inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 {
-#if HAVE_ATOMIC_DEC_32_NV
    return atomic_dec_32_nv(v);
-#else
-   return solaris9_atomic_dec32(v);
-#endif
+}
+
+/**
+ * Atomically exchange 32-bit values
+ */
+inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, UINT32 exchange, UINT32 comparand)
+{
+   return atomic_cas_32(target, comparand, exchange);
 }
 
 /**
@@ -123,11 +103,7 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
  */
 inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
 {
-#if HAVE_ATOMIC_INC_64_NV
    return atomic_inc_64_nv(v);
-#else
-   return solaris9_atomic_inc64(v);
-#endif
 }
 
 /**
@@ -135,11 +111,7 @@ inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
  */
 inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
 {
-#if HAVE_ATOMIC_DEC_64_NV
    return atomic_dec_64_nv(v);
-#else
-   return solaris9_atomic_dec64(v);
-#endif
 }
 
 /**
@@ -147,11 +119,15 @@ inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
  */
 inline void *InterlockedExchangePointer(void *volatile *target, void *value)
 {
-#if HAVE_ATOMIC_SWAP_PTR
    return atomic_swap_ptr(target, value);
-#else
-   return solaris9_atomic_swap_ptr(target, value);
-#endif
+}
+
+/**
+ * Atomic bitwise OR
+ */
+inline void InterlockedOr(VolatileCounter *target, UINT32 bits)
+{
+   atomic_or_32(target, bits);
 }
 
 #elif defined(__HP_aCC)
@@ -293,6 +269,20 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 }
 
 /**
+ * Atomically exchange 32-bit values
+ */
+inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, UINT32 exchange, UINT32 comparand)
+{
+#if !HAVE_DECL___SYNC_VAL_COMPARE_AND_SWAP
+   INT32 oldval = comparand;
+   __compare_and_swap(target, &oldval, exchange);
+   return oldval;
+#else
+   return __sync_val_compare_and_swap(target, comparand, exchange);
+#endif
+}
+
+/**
  * Atomically increment 64-bit value by 1
  */
 inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
@@ -347,6 +337,22 @@ inline void *InterlockedExchangePointer(void *volatile *target, void *value)
    return oldval;
 }
 
+/**
+ * Atomic bitwise OR
+ */
+inline void InterlockedOr(VolatileCounter *target, UINT32 bits)
+{
+#if !HAVE_DECL___SYNC_OR_AND_FETCH
+   UINT32 c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange(target, c | bits, c) != c)
+#else
+   __sync_or_and_fetch(target, bits);
+#endif
+}
+
 #else /* not Solaris nor HP-UX nor AIX */
 
 typedef volatile INT32 VolatileCounter;
@@ -377,6 +383,18 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
    return temp - 1;
 #else
    return __sync_sub_and_fetch(v, 1);
+#endif
+}
+
+/**
+ * Atomically exchange 32-bit values
+ */
+inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, UINT32 exchange, UINT32 comparand)
+{
+#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
+   __asm__ __volatile__("xchgl %2, %1" : "=a" (comparand), "+m" (*target) : "0" (exchange));
+#else
+   return __sync_val_compare_and_swap(target, comparand, exchange);
 #endif
 }
 
@@ -424,6 +442,22 @@ inline void *InterlockedExchangePointer(void* volatile *target, void *value)
 #else
    __sync_synchronize();
    return __sync_lock_test_and_set(target, value);
+#endif
+}
+
+/**
+ * Atomic bitwise OR
+ */
+inline void InterlockedOr(VolatileCounter *target, UINT32 bits)
+{
+#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
+   UINT32 c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange(target, c | bits, c) != c)
+#else
+   __sync_or_and_fetch(target, bits);
 #endif
 }
 
