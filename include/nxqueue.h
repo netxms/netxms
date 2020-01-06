@@ -94,7 +94,7 @@ private:
 
 public:
    ObjectQueue(bool owner = false) : Queue(owner) { m_destructor = destructor; }
-   ObjectQueue(size_t initialSize, size_t bufferIncrement, bool owner = false) : Queue(initialSize, bufferIncrement, owner) { }
+   ObjectQueue(size_t initialSize, size_t bufferIncrement, bool owner = false) : Queue(initialSize, bufferIncrement, owner) { m_destructor = destructor; }
    virtual ~ObjectQueue() { }
 
    T *get() { return (T*)Queue::get(); }
