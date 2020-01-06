@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -738,7 +738,7 @@ protected:
    UINT32 m_runtimeFlags;
    UINT32 m_state;
    UINT32 m_stateBeforeMaintenance;
-   UINT32 m_modified;
+   VolatileCounter m_modified;
    bool m_isDeleted;
    bool m_isDeleteInitiated;
    bool m_isHidden;
@@ -874,8 +874,8 @@ public:
    bool isHidden() { return m_isHidden; }
    void hide();
    void unhide();
-   void markAsModified(UINT32 flags) { lockProperties(); setModified(flags); unlockProperties(); }  // external API to mark object as modified
-   void markAsSaved() { lockProperties(); m_modified = 0; unlockProperties(); }
+   void markAsModified(UINT32 flags) { setModified(flags); }  // external API to mark object as modified
+   void markAsSaved() { m_modified = 0; }
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool saveRuntimeData(DB_HANDLE hdb);
