@@ -63,8 +63,8 @@ public class NetworkMapLink
    /**
     * @param name
     * @param type
-    * @param element1
-    * @param element2
+    * @param element1 network map internal element id
+    * @param element2 network map internal element id
     * @param connectorName1
     * @param connectorName2
     * @param dciList
@@ -81,8 +81,8 @@ public class NetworkMapLink
    /**
     * @param name
     * @param type
-    * @param element1
-    * @param element2
+    * @param element1 network map internal element id
+    * @param element2 network map internal element id
     * @param connectorName1
     * @param connectorName2
     * @param flags
@@ -96,8 +96,8 @@ public class NetworkMapLink
    /**
     * @param name
     * @param type
-    * @param element1
-    * @param element2
+    * @param element1 network map internal element id
+    * @param element2 network map internal element id
     * @param connectorName1
     * @param connectorName2
     * @param flags
@@ -116,8 +116,8 @@ public class NetworkMapLink
 
    /**
     * @param type
-    * @param element1
-    * @param element2
+    * @param element1 network map internal element id
+    * @param element2 network map internal element id
     */
    public NetworkMapLink(int type, long element1, long element2)
    {
