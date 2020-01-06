@@ -52,18 +52,6 @@
 #define AGENT_DEFAULT_LOG        _T("C:\\nxagentd.log")
 #define AGENT_DEFAULT_FILE_STORE _T("C:\\")
 #define AGENT_DEFAULT_DATA_DIR   _T("{default}")
-#elif defined(_NETWARE)
-#define AGENT_DEFAULT_CONFIG     "SYS:ETC/nxagentd.conf"
-#define AGENT_DEFAULT_CONFIG_D   "SYS:ETC/nxagentd.conf.d"
-#define AGENT_DEFAULT_LOG        "SYS:ETC/nxagentd.log"
-#define AGENT_DEFAULT_FILE_STORE "SYS:\\"
-#define AGENT_DEFAULT_DATA_DIR   "SYS:ETC"
-#elif defined(_IPSO)
-#define AGENT_DEFAULT_CONFIG     _T("/opt/netxms/etc/nxagentd.conf")
-#define AGENT_DEFAULT_CONFIG_D   _T("/opt/netxms/etc/nxagentd.conf.d")
-#define AGENT_DEFAULT_LOG        _T("/opt/netxms/log/nxagentd.log")
-#define AGENT_DEFAULT_FILE_STORE _T("/opt/netxms/store")
-#define AGENT_DEFAULT_DATA_DIR   _T("/opt/netxms/data")
 #else
 #define AGENT_DEFAULT_CONFIG     _T("{search}")
 #define AGENT_DEFAULT_CONFIG_D   _T("{search}")
