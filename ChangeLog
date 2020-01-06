@@ -47,6 +47,7 @@
 	NX-1749 (User Agent menu stay on top)
 	NX-1750 (Configurable retention time for node hardware and software components)
 	NX-1751 (DS18X20 on RPi erroneously writes to log "Unable to add sensor from configuration file...")
+	NX-1755 (In object tool `command` in file name truncates last char of command output)
 
 
 *
