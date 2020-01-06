@@ -714,13 +714,13 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
                if (lf != NULL)
                   *lf = 0;
 
-					char *lf = strchr(result, '\n');
+					lf = strchr(result, '\n');
 					if (lf != NULL)
 						*lf = 0;
 
 					len = (int)std::min(strlen(result), bufSize - outpos - 1);
 #ifdef UNICODE
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, result, len, &buffer[outpos], len);
+					len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, result, len, &buffer[outpos], len + 1);
 #else
 					memcpy(&buffer[outpos], result, len);
 #endif

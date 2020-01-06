@@ -207,6 +207,13 @@
             name="Physical links"
             order="30">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.ChassisTab"
+            icon="icons/chassis.png"
+            id="org.netxms.ui.eclipse.objectview.objecttabs.ChassisTab"
+            name="Chassis"
+            order="15">
+      </tab>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
