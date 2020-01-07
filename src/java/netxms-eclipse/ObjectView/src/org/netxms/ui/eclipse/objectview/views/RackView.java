@@ -45,7 +45,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
-import org.netxms.ui.eclipse.objectview.widgets.helpers.RackSelectionListener;
+import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -114,7 +114,7 @@ public class RackView extends ViewPart implements ISelectionProvider
          }
       });
 
-      RackSelectionListener listener = new RackSelectionListener() {
+      ElementSelectionListener listener = new ElementSelectionListener() {
          @Override
          public void objectSelected(Object object)
          {

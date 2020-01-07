@@ -51,7 +51,7 @@ import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
-import org.netxms.ui.eclipse.objectview.widgets.helpers.RackSelectionListener;
+import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -190,7 +190,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
          }
       });
       
-      RackSelectionListener listener = new RackSelectionListener() {
+      ElementSelectionListener listener = new ElementSelectionListener() {
          @Override
          public void objectSelected(Object object)
          {

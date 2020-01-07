@@ -60,7 +60,7 @@ public class PhysicalContainerPlacement extends PropertyPage
    private final static String[] ORIENTATION = { "Fill", "Front", "Rear" };
    private final static String[] CHASSIS_ORIENTATION = { "Front", "Rear" };
    private final static String[] VERTICAL_UNITS = { "units", "mm" };
-   private final static String[] HORIZONTAL_UNITS = { "h peach", "mm" };
+   private final static String[] HORIZONTAL_UNITS = { "HP", "mm" };
    
    private Composite dialogArea;
 	private ElementForPhysicalPlacment object;
@@ -182,7 +182,7 @@ public class PhysicalContainerPlacement extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       elementHeight.setLayoutData(gd);
 
-      elementHeightUnits = new Combo(chassisElements, SWT.NONE);
+      elementHeightUnits = new Combo(chassisElements, SWT.READ_ONLY);
       elementHeightUnits.setItems(VERTICAL_UNITS);
       elementHeightUnits.select(placement.getHeightUnits());
       gd = new GridData();
@@ -198,7 +198,7 @@ public class PhysicalContainerPlacement extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       elementWidth.setLayoutData(gd);
 
-      elementWidthUnits = new Combo(chassisElements, SWT.NONE);
+      elementWidthUnits = new Combo(chassisElements, SWT.READ_ONLY);
       elementWidthUnits.setItems(HORIZONTAL_UNITS);
       elementWidthUnits.select(placement.getWidthUnits());
       gd = new GridData();
@@ -207,16 +207,16 @@ public class PhysicalContainerPlacement extends PropertyPage
       elementWidthUnits.setLayoutData(gd);
       
       elementPositionHeight = new LabeledText(chassisElements, SWT.NONE);
-      elementPositionHeight.setLabel("Position hight");
-      elementPositionHeight.setText(Integer.toString(placement.getPositionHight()));
+      elementPositionHeight.setLabel("Position height");
+      elementPositionHeight.setText(Integer.toString(placement.getPositionHeight()));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       elementPositionHeight.setLayoutData(gd);
 
-      elementPositionHeightUnits = new Combo(chassisElements, SWT.NONE);
+      elementPositionHeightUnits = new Combo(chassisElements, SWT.READ_ONLY);
       elementPositionHeightUnits.setItems(VERTICAL_UNITS);
-      elementPositionHeightUnits.select(placement.getPositionHightUnits());
+      elementPositionHeightUnits.select(placement.getPositionHeightUnits());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -230,7 +230,7 @@ public class PhysicalContainerPlacement extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       elementPositionWidth.setLayoutData(gd);
 
-      elementPositionWidthUnits = new Combo(chassisElements, SWT.NONE);
+      elementPositionWidthUnits = new Combo(chassisElements, SWT.READ_ONLY);
       elementPositionWidthUnits.setItems(HORIZONTAL_UNITS);
       elementPositionWidthUnits.select(placement.getPositionWidthUnits());
       gd = new GridData();
@@ -243,7 +243,7 @@ public class PhysicalContainerPlacement extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       elementOrientation = WidgetHelper.createLabeledCombo(chassisElements, SWT.READ_ONLY, "Orientation", gd);
       elementOrientation.setItems(CHASSIS_ORIENTATION);
-      elementOrientation.select(placement.getOritentaiton());
+      elementOrientation.select(placement.getOritentaiton() - 1);
    }
 
 	/**
@@ -368,7 +368,7 @@ public class PhysicalContainerPlacement extends PropertyPage
             ChassisPlacement placement = new ChassisPlacement(chassisImageSelector.getImageGuid(), Integer.parseInt(elementHeight.getText()), 
                   elementHeightUnits.getSelectionIndex(), Integer.parseInt(elementWidth.getText()), elementWidthUnits.getSelectionIndex(), 
                   Integer.parseInt(elementPositionHeight.getText()), elementPositionHeightUnits.getSelectionIndex(), 
-                  Integer.parseInt(elementPositionWidth.getText()), elementPositionWidthUnits.getSelectionIndex(), elementOrientation.getSelectionIndex());
+                  Integer.parseInt(elementPositionWidth.getText()), elementPositionWidthUnits.getSelectionIndex(), elementOrientation.getSelectionIndex()+1);
             String placementConfig = null;
             try
             {

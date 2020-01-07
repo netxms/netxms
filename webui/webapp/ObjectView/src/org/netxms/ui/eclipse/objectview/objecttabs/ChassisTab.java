@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -38,21 +37,21 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Chassis;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
-import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
+import org.netxms.ui.eclipse.objectview.widgets.ChassisWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
 
 /**
- * "Rack" tab
+ * "Chassis" tab
  */
-public class RackTab extends ObjectTab implements ISelectionProvider
+public class ChassisTab extends ObjectTab implements ISelectionProvider
 {
    private ScrolledComposite scroller;
    private Composite content;
-   private RackWidget rackFrontWidget;
-   private RackWidget rackRearWidget;
+   private ChassisWidget chassisFrontWidget;
+   private ChassisWidget chassisRearWidget;
    private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
    
@@ -68,11 +67,11 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null) || (hHint == SWT.DEFAULT))
+            if ((chassisFrontWidget == null) || (chassisRearWidget == null) || (wHint == SWT.DEFAULT))
                return super.computeSize(wHint, hHint, changed);
             
-            Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
-            return new Point(s.x * 2, s.y);
+            Point s = chassisFrontWidget.computeSize(wHint, hHint, changed);
+            return new Point(s.x , s.y * 2);
          }
 	   };
 	   content.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
@@ -80,9 +79,9 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          @Override
          public void controlResized(ControlEvent e)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null))
+            if ((chassisFrontWidget == null) || (chassisRearWidget == null))
                return;
-            updateRackWidgetsSize();
+            updateChassisWidgetsSize();
          }
       });
 	   
@@ -93,21 +92,21 @@ public class RackTab extends ObjectTab implements ISelectionProvider
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {
-            scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));
+            scroller.setMinSize(content.computeSize(scroller.getSize().x, SWT.DEFAULT));
          }
       });
 	}
 	
    /**
-    * Update size and position of rack widgets 
+    * Update size and position of chassis widgets 
     */
-   protected void updateRackWidgetsSize()
+   protected void updateChassisWidgetsSize()
    {
-      int height = content.getSize().y;
-      Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
-      rackFrontWidget.setSize(size);
-      rackRearWidget.setSize(size);
-      rackRearWidget.setLocation(size.x, 0);
+      int width = content.getSize().x;
+      Point size = chassisFrontWidget.computeSize(width, SWT.DEFAULT, true);
+      chassisFrontWidget.setSize(size);
+      chassisRearWidget.setSize(size);
+      chassisRearWidget.setLocation(0, size.y);
    }
 
    /**
@@ -126,11 +125,11 @@ public class RackTab extends ObjectTab implements ISelectionProvider
       });
 
       // Create menu.
-      Menu menu = menuMgr.createContextMenu(rackFrontWidget);
-      rackFrontWidget.setMenu(menu);
+      Menu menu = menuMgr.createContextMenu(chassisFrontWidget);
+      chassisFrontWidget.setMenu(menu);
       
-      menu = menuMgr.createContextMenu(rackRearWidget);
-      rackRearWidget.setMenu(menu);
+      menu = menuMgr.createContextMenu(chassisRearWidget);
+      chassisRearWidget.setMenu(menu);
 
       // Register menu for extension.
       getViewPart().getSite().registerContextMenu(menuMgr, this);
@@ -143,8 +142,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
     */
    private void fillContextMenu(IMenuManager manager)
    {
-      if(selection != null && ((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
-         ObjectContextMenu.fill(manager, getViewPart().getSite(), this);
+      ObjectContextMenu.fill(manager, getViewPart().getSite(), this);
    }
 
    /* (non-Javadoc)
@@ -170,15 +168,15 @@ public class RackTab extends ObjectTab implements ISelectionProvider
 	@Override
 	public void objectChanged(final AbstractObject object)
 	{
-      if (rackFrontWidget != null)
+      if (chassisFrontWidget != null)
       {
-         rackFrontWidget.dispose();
-         rackFrontWidget = null;
+         chassisFrontWidget.dispose();
+         chassisFrontWidget = null;
       }
-      if (rackRearWidget != null)
+      if (chassisRearWidget != null)
       {
-         rackRearWidget.dispose();
-         rackRearWidget = null;
+         chassisRearWidget.dispose();
+         chassisRearWidget = null;
       }
 
       if (object != null)
@@ -189,18 +187,18 @@ public class RackTab extends ObjectTab implements ISelectionProvider
             {
                selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
                for(ISelectionChangedListener listener : selectionListeners)
-                  listener.selectionChanged(new SelectionChangedEvent(RackTab.this, selection));
+                  listener.selectionChanged(new SelectionChangedEvent(ChassisTab.this, selection));
             }
          };
          
-         rackFrontWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.FRONT);
-         rackFrontWidget.addSelectionListener(listener);
+         chassisFrontWidget = new ChassisWidget(content, SWT.NONE, (Chassis)object, RackOrientation.FRONT, true);
+         chassisFrontWidget.addSelectionListener(listener);
 
-         rackRearWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.REAR);
-         rackRearWidget.addSelectionListener(listener);
+         chassisRearWidget = new ChassisWidget(content, SWT.NONE, (Chassis)object, RackOrientation.REAR, true);
+         chassisRearWidget.addSelectionListener(listener);
          
-         scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));
-         updateRackWidgetsSize();
+         scroller.setMinSize(content.computeSize(scroller.getSize().x, SWT.DEFAULT));
+         updateChassisWidgetsSize();
          createPopupMenu();
 	   }
 	}
@@ -211,7 +209,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		return (object instanceof Rack);
+		return (object instanceof Chassis);
 	}
 
    /* (non-Javadoc)

@@ -43,16 +43,18 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.base.NXCommon;
 import org.netxms.client.constants.RackOrientation;
-import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.ElementForPhysicalPlacment;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.views.ChassisView;
 import org.netxms.ui.eclipse.objectview.views.PhysicalLinkView;
-import org.netxms.ui.eclipse.objectview.widgets.helpers.RackSelectionListener;
+import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -85,7 +87,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private Image imageOrganiserPanel;
    private List<ObjectImage> objects = new ArrayList<ObjectImage>();
    private Object selectedObject = null;
-   private Set<RackSelectionListener> selectionListeners = new HashSet<RackSelectionListener>(0);
+   private Set<ElementSelectionListener> selectionListeners = new HashSet<ElementSelectionListener>(0);
    private Object tooltipObject = null;
    private ObjectPopupDialog tooltipDialog = null;
    private RackOrientation view;
@@ -282,8 +284,12 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          // draw status indicator
          gc.setBackground(StatusDisplayInfo.getStatusColor(n.getStatus()));
          gc.fillRectangle(unitRect.x - borderWidth + borderWidth / 4 + 1, unitRect.y + 1, borderWidth / 2 - 1, Math.min(borderWidth, (int)unitHeight - 2));
-         
-         if ((n.getRearRackImage() != null) && !n.getRearRackImage().equals(NXCommon.EMPTY_GUID) && view == RackOrientation.REAR)
+
+         if(n instanceof Chassis)
+         {
+            ChassisWidget.drawChassis(gc, unitRect, (Chassis)n, imageDefaultRear, imageDefaultTop, view, null);
+         }
+         else if ((n.getRearRackImage() != null) && !n.getRearRackImage().equals(NXCommon.EMPTY_GUID) && view == RackOrientation.REAR)
          {
             Image image = ImageProvider.getInstance().getImage(n.getRearRackImage());
             Rectangle r = image.getBounds();
@@ -455,6 +461,17 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             MessageDialogHelper.openError(getShell(), "Error openning Physical link view", String.format("Cannot open Physical link view: %s", ex.getLocalizedMessage()));
          }
       }
+      else if (selectedObject instanceof Chassis)
+      {
+         try 
+         {
+            PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(ChassisView.ID, String.valueOf(((Chassis)selectedObject).getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);            
+         } 
+         catch (PartInitException ex) 
+         {
+            MessageDialogHelper.openError(getShell(), "Error openning Physical link view", String.format("Cannot open Physical link view: %s", ex.getLocalizedMessage()));
+         }
+      }
    }
 
    /* (non-Javadoc)
@@ -530,7 +547,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     * 
     * @param listener
     */
-   public void addSelectionListener(RackSelectionListener listener)
+   public void addSelectionListener(ElementSelectionListener listener)
    {
       selectionListeners.add(listener);
    }
@@ -540,7 +557,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     * 
     * @param listener
     */
-   public void removeSelectionListener(RackSelectionListener listener)
+   public void removeSelectionListener(ElementSelectionListener listener)
    {
       selectionListeners.remove(listener);
    }
@@ -553,7 +570,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private void setCurrentObject(Object o)
    {
       selectedObject = o;
-      for(RackSelectionListener l : selectionListeners)
+      for(ElementSelectionListener l : selectionListeners)
          l.objectSelected(selectedObject);
    }
    

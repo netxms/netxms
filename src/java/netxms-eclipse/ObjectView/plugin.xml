@@ -51,6 +51,14 @@
             name="Physical links"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objectview.views.ChassisView"
+            icon="icons/chassis.png"
+            id="org.netxms.ui.eclipse.objectview.views.ChassisView"
+            name="Chassis"
+            restorable="true">
+      </view>
    </extension>
 
    <extension

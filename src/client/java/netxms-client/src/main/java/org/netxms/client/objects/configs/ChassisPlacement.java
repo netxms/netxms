@@ -15,6 +15,9 @@ import org.simpleframework.xml.core.Persister;
 @Root(name="placement")
 public class ChassisPlacement
 {
+   static final double UNIT_HEIGHT = 44.45;
+   static final double HORIZONTAL_PITCH = 5.08;
+   
    @Element(required=false)
    private String image;
    
@@ -31,10 +34,10 @@ public class ChassisPlacement
    private int widthUnits;
 
    @Element(required=false)
-   private int positionHight;
+   private int positionHeight;
 
    @Element(required=false)
-   private int positionHightUnits;
+   private int positionHeightUnits;
 
    @Element(required=false)
    private int positionWidth;
@@ -83,26 +86,26 @@ public class ChassisPlacement
       heightUnits = 0;
       width = 0;
       widthUnits = 0;
-      positionHight = 0;
-      positionHightUnits = 0;
+      positionHeight = 0;
+      positionHeightUnits = 0;
       positionWidth = 0;
       positionWidthUnits = 0;
-      oritentaiton = 0;
+      oritentaiton = 1;
    }
    
    /**
     * Constructor
     */
-   public ChassisPlacement(UUID image, int height, int heightUnits, int width, int widthUnits, int positionHight, 
-         int positionHightUnits, int positionWidth, int positionWidthUnits, int oritentaiton)
+   public ChassisPlacement(UUID image, int height, int heightUnits, int width, int widthUnits, int positionHeight, 
+         int positionHeightUnits, int positionWidth, int positionWidthUnits, int oritentaiton)
    {
       this.image = image.toString();
       this.height = height;
       this.heightUnits = heightUnits;
       this.width = width;
       this.widthUnits = widthUnits;
-      this.positionHight = positionHight;
-      this.positionHightUnits = positionHightUnits;
+      this.positionHeight = positionHeight;
+      this.positionHeightUnits = positionHeightUnits;
       this.positionWidth = positionWidth;
       this.positionWidthUnits = positionWidthUnits;
       this.oritentaiton = oritentaiton;
@@ -151,19 +154,19 @@ public class ChassisPlacement
    }
 
    /**
-    * @return the positionHight
+    * @return the positionHeight
     */
-   public int getPositionHight()
+   public int getPositionHeight()
    {
-      return positionHight;
+      return positionHeight;
    }
 
    /**
-    * @return the positionHightUnits
+    * @return the positionHeightUnits
     */
-   public int getPositionHightUnits()
+   public int getPositionHeightUnits()
    {
-      return positionHightUnits;
+      return positionHeightUnits;
    }
 
    /**
@@ -189,5 +192,60 @@ public class ChassisPlacement
    {
       return oritentaiton;
    }
+   
+   /**
+    * Get unit position height in mm
+    * 
+    * @return position height in mm
+    */
+   public double getPositionHeightInMm()
+   {
+      if (positionHeightUnits == 0)
+      {
+         return UNIT_HEIGHT * positionHeight;
+      }
+      return positionHeight;
+   }
+   
+   /**
+    * Get unit position width in mm
+    * 
+    * @return position width in mm
+    */
+   public double getPositionWidthInMm()
+   {
+      if (positionWidthUnits == 0)
+      {
+         return HORIZONTAL_PITCH * positionWidth;
+      }
+      return positionWidth;      
+   }
 
+   /**
+    * Get unit height in mm
+    * 
+    * @return unit height in mm
+    */
+   public double getHeightInMm()
+   {
+      if (heightUnits == 0)
+      {
+         return UNIT_HEIGHT * height;
+      }
+      return height;
+   }
+   
+   /**
+    * Get unit unit in mm
+    * 
+    * @return unit height in mm
+    */
+   public double getWidthInMm()
+   {
+      if (widthUnits == 0)
+      {
+         return HORIZONTAL_PITCH * width;
+      }
+      return width;
+   }
 }

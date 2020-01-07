@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -40,25 +39,24 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Chassis;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
-import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
+import org.netxms.ui.eclipse.objectview.widgets.ChassisWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Rack view
+ * Chassis view
  */
-public class RackView extends ViewPart implements ISelectionProvider
+public class ChassisView extends ViewPart implements ISelectionProvider
 {
-   public static final String ID = "org.netxms.ui.eclipse.objectview.views.RackView";
+   public static final String ID = "org.netxms.ui.eclipse.objectview.views.ChassisView";
    
-   private Composite rackArea;
-   private Rack rack;
-   private RackWidget rackFrontWidget;
-   private RackWidget rackRearWidget;
+   private Composite chassisArea;
+   private Chassis chassis;
+   private ChassisWidget chassisFrontWidget;
+   private ChassisWidget chassisRearWidget;
    private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 
@@ -72,10 +70,10 @@ public class RackView extends ViewPart implements ISelectionProvider
       
       NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
-      rack = session.findObjectById(Long.parseLong((parts.length > 0) ? parts[0] : site.getSecondaryId()), Rack.class);
-      if (rack == null)
-         throw new PartInitException("Rack object not found");
-      setPartName(String.format("Rack - %s", rack.getObjectName()));
+      chassis = session.findObjectById(Long.parseLong((parts.length > 0) ? parts[0] : site.getSecondaryId()), Chassis.class);
+      if (chassis == null)
+         throw new PartInitException("Chassis object not found");
+      setPartName(String.format("Chassis - %s", chassis.getObjectName()));
    }
    
    /* (non-Javadoc)
@@ -84,33 +82,33 @@ public class RackView extends ViewPart implements ISelectionProvider
    @Override
    public void createPartControl(Composite parent)
    {
-      rackArea = new Composite(parent, SWT.NONE) {
+      chassisArea = new Composite(parent, SWT.NONE) {
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null) || (hHint == SWT.DEFAULT))
+            if ((chassisFrontWidget == null) || (chassisRearWidget == null) || (wHint == SWT.DEFAULT))
                return super.computeSize(wHint, hHint, changed);
             
-            Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
-            return new Point(s.x * 2, s.y);
+            Point s = chassisFrontWidget.computeSize(wHint, hHint, changed);
+            return new Point(s.x , s.y * 2);
          }
       };
-      rackFrontWidget = new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT);
-      rackRearWidget = new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR);
+      chassisFrontWidget = new ChassisWidget(chassisArea, SWT.NONE, chassis, RackOrientation.FRONT, true);
+      chassisRearWidget = new ChassisWidget(chassisArea, SWT.NONE, chassis, RackOrientation.REAR, true);
       
-      rackArea.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
-      rackArea.addControlListener(new ControlAdapter() {
+      chassisArea.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
+      chassisArea.addControlListener(new ControlAdapter() {
          @Override
          public void controlResized(ControlEvent e)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null))
+            if ((chassisFrontWidget == null) || (chassisRearWidget == null))
                return;
             
-            int height = rackArea.getSize().y;
-            Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
-            rackFrontWidget.setSize(size);
-            rackRearWidget.setSize(size);
-            rackRearWidget.setLocation(size.x, 0);
+            int width = chassisArea.getSize().x;
+            Point size = chassisFrontWidget.computeSize(width, SWT.DEFAULT, true);
+            chassisFrontWidget.setSize(size);
+            chassisRearWidget.setSize(size);
+            chassisRearWidget.setLocation(0, size.y);
          }
       });
 
@@ -120,11 +118,11 @@ public class RackView extends ViewPart implements ISelectionProvider
          {
             selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
             for(ISelectionChangedListener listener : selectionListeners)
-               listener.selectionChanged(new SelectionChangedEvent(RackView.this, selection));
+               listener.selectionChanged(new SelectionChangedEvent(ChassisView.this, selection));
          }
       };
-      rackFrontWidget.addSelectionListener(listener);
-      rackRearWidget.addSelectionListener(listener);
+      chassisFrontWidget.addSelectionListener(listener);
+      chassisRearWidget.addSelectionListener(listener);
       
       getSite().setSelectionProvider(this);
       createPopupMenu();
@@ -154,11 +152,11 @@ public class RackView extends ViewPart implements ISelectionProvider
       });
 
       // Create menu.
-      Menu menu = menuMgr.createContextMenu(rackFrontWidget);
-      rackFrontWidget.setMenu(menu);
+      Menu menu = menuMgr.createContextMenu(chassisFrontWidget);
+      chassisFrontWidget.setMenu(menu);
       
-      menu = menuMgr.createContextMenu(rackRearWidget);
-      rackRearWidget.setMenu(menu);
+      menu = menuMgr.createContextMenu(chassisRearWidget);
+      chassisRearWidget.setMenu(menu);
 
       // Register menu for extension.
       getSite().registerContextMenu(menuMgr, this);
@@ -171,8 +169,7 @@ public class RackView extends ViewPart implements ISelectionProvider
     */
    private void fillContextMenu(IMenuManager manager)
    {
-      if(selection != null && ((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
-         ObjectContextMenu.fill(manager, getSite(), this);
+      ObjectContextMenu.fill(manager, getSite(), this);
    }
 
    /* (non-Javadoc)

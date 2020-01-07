@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.objectview.widgets.helpers;
 /**
  * Rack selection listener interface
  */
-public interface RackSelectionListener
+public interface ElementSelectionListener
 {
    /**
     * Called when object is selected
