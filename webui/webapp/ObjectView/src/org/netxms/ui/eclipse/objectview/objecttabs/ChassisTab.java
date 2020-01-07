@@ -88,7 +88,7 @@ public class ChassisTab extends ObjectTab implements ISelectionProvider
 	   scroller.setContent(content);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
-      scroller.getHorizontalBar().setIncrement(20);
+      //scroller.getHorizontalBar().setIncrement(20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {
