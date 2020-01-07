@@ -26,6 +26,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -142,7 +143,8 @@ public class RackTab extends ObjectTab implements ISelectionProvider
     */
    private void fillContextMenu(IMenuManager manager)
    {
-      ObjectContextMenu.fill(manager, getViewPart().getSite(), this);
+      if(selection != null && ((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
+         ObjectContextMenu.fill(manager, getViewPart().getSite(), this);
    }
 
    /* (non-Javadoc)
