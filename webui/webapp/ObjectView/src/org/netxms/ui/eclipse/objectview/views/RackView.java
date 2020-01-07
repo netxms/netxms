@@ -26,6 +26,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -39,6 +40,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
@@ -169,7 +171,8 @@ public class RackView extends ViewPart implements ISelectionProvider
     */
    private void fillContextMenu(IMenuManager manager)
    {
-      ObjectContextMenu.fill(manager, getSite(), this);
+      if(selection != null && ((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
+         ObjectContextMenu.fill(manager, getSite(), this);
    }
 
    /* (non-Javadoc)
