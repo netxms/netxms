@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 Raden Solutions
+ * Copyright (C) 2019-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -360,7 +360,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
     */
    private void addElement(PathElement parent)
    {
-      InputDialog dlg = new InputDialog(getShell(), (parent == null) ? "New root element" : "New element", "Enter name for new element", "", new IInputValidator() {
+      InputDialog dlg = new InputDialog(getShell(), (parent == null) ? "New root directory" : "New directory", "Enter name for new directory", "", new IInputValidator() {
          @Override
          public String isValid(String newText)
          {
@@ -396,7 +396,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          return;
 
       PathElement element = (PathElement)selection.getFirstElement();
-      InputDialog dlg = new InputDialog(getShell(), "Rename element", "Enter element name", element.getName(), new IInputValidator() {
+      InputDialog dlg = new InputDialog(getShell(), element.isFile() ? "Rename file" : "Rename directory", "Enter new name", element.getName(), new IInputValidator() {
          @Override
          public String isValid(String newText)
          {
@@ -432,7 +432,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getShell(), "Delete", "Delete selected elements?"))
+      if (!MessageDialogHelper.openQuestion(getShell(), "Delete confirmation", "Delete selected files?"))
          return;
 
       boolean inputChanged = false;
