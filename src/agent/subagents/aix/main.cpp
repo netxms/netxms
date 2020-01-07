@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2019 Victor Kirhenshtein
+** Copyright (C) 2005-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -118,12 +118,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Disk.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
 
    { _T("FileSystem.Avail(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL, DCI_DT_UINT64, DCIDESC_FS_AVAIL },
+   { _T("FileSystem.AvailInodes(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_INODES, DCI_DT_UINT64, DCIDESC_FS_AVAILINODES },
+   { _T("FileSystem.AvailInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILINODESPERC },
    { _T("FileSystem.AvailPerc(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILPERC },
    { _T("FileSystem.Free(*)"), H_DiskInfo, (TCHAR *)DISK_FREE, DCI_DT_UINT64, DCIDESC_FS_FREE },
+   { _T("FileSystem.FreeInodes(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_INODES, DCI_DT_UINT64, DCIDESC_FS_FREEINODES },
+   { _T("FileSystem.FreeInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEINODESPERC },
    { _T("FileSystem.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
    { _T("FileSystem.Total(*)"), H_DiskInfo, (TCHAR *)DISK_TOTAL, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
+   { _T("FileSystem.TotalInodes(*)"), H_DiskInfo, (TCHAR *)DISK_TOTAL_INODES, DCI_DT_UINT64, DCIDESC_FS_TOTALINODES },
    { _T("FileSystem.Type(*)"), H_DiskInfo, (TCHAR *)DISK_FSTYPE, DCI_DT_STRING, DCIDESC_FS_TYPE },
    { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
+   { _T("FileSystem.UsedInodes(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES, DCI_DT_UINT64, DCIDESC_FS_USEDINODES },
+   { _T("FileSystem.UsedInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDINODESPERC },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
    { _T("LVM.LogicalVolume.Size(*)"), H_LvmLogicalVolumeInfo, (TCHAR *)LVM_LV_SIZE, DCI_DT_UINT64, DCIDESC_LVM_LV_SIZE },
@@ -147,18 +154,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("LVM.VolumeGroup.Used(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_USED, DCI_DT_UINT64, DCIDESC_LVM_VG_USED },
    { _T("LVM.VolumeGroup.UsedPerc(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_USED_PERC, DCI_DT_FLOAT, DCIDESC_LVM_VG_USEDPERC },
 
-	{ _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStatus, (TCHAR *)IF_INFO_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
-	{ _T("Net.Interface.BytesIn(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
-	{ _T("Net.Interface.BytesOut(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
-	{ _T("Net.Interface.Description(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_DESCRIPTION, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
-	{ _T("Net.Interface.InErrors(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
-	{ _T("Net.Interface.Link(*)"), H_NetInterfaceStatus, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-	{ _T("Net.Interface.OperStatus(*)"), H_NetInterfaceStatus, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
-	{ _T("Net.Interface.MTU(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_MTU, DCI_DT_INT, DCIDESC_NET_INTERFACE_MTU },
-	{ _T("Net.Interface.OutErrors(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
-	{ _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
-	{ _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
-	{ _T("Net.Interface.Speed(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_SPEED, DCI_DT_INT, DCIDESC_NET_INTERFACE_SPEED },
+   { _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStatus, (TCHAR *)IF_INFO_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
+   { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
+   { _T("Net.Interface.BytesOut(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
+   { _T("Net.Interface.Description(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_DESCRIPTION, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
+   { _T("Net.Interface.InErrors(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
+   { _T("Net.Interface.Link(*)"), H_NetInterfaceStatus, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceStatus, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
+   { _T("Net.Interface.MTU(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_MTU, DCI_DT_INT, DCIDESC_NET_INTERFACE_MTU },
+   { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
+   { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.Speed(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_SPEED, DCI_DT_INT, DCIDESC_NET_INTERFACE_SPEED },
 
    { _T("Process.Count(*)"), H_ProcessCount, NULL, DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
    { _T("Process.CPUTime(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_CPUTIME, DCI_DT_UINT64, DCIDESC_PROCESS_CPUTIME },
@@ -175,12 +182,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.LoadAvg5"), H_LoadAvg, _T("1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
    { _T("System.CPU.LoadAvg15"), H_LoadAvg, _T("2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
    
-	{ _T("System.CPU.Usage"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
-	{ _T("System.CPU.Usage5"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
-	{ _T("System.CPU.Usage15"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
-	{ _T("System.CPU.Usage(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
-	{ _T("System.CPU.Usage5(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
-	{ _T("System.CPU.Usage15(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
+   { _T("System.CPU.Usage"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
+   { _T("System.CPU.Usage5"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
+   { _T("System.CPU.Usage15"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
+   { _T("System.CPU.Usage(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
+   { _T("System.CPU.Usage5(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
+   { _T("System.CPU.Usage15(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_OVERALL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
 
 	{ _T("System.CPU.Usage.Idle"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE },
 	{ _T("System.CPU.Usage5.Idle"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE },
