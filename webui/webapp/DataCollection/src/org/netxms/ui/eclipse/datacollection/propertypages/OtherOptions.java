@@ -72,7 +72,7 @@ public class OtherOptions extends DCIPropertyPageDialog
       checkCalculateStatus.setSelection(dci.isUsedForNodeStatusCalculation());
 
       checkHideOnLastValues = new Button(dialogArea, SWT.CHECK);
-      checkHideOnLastValues.setText("Hide valie on \"Last Values\" page");
+      checkHideOnLastValues.setText("Hide value on \"Last Values\" page");
       checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
 
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
