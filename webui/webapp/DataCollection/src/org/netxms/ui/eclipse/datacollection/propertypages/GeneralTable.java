@@ -518,7 +518,9 @@ public class GeneralTable extends DCIPropertyPageDialog
 		dci.setOrigin(origin.getSelectionIndex());
 		dci.setSourceNode(sourceNode.getObjectId());
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
+      dci.setPollingScheduleType(schedulingMode.getSelectionIndex());
       dci.setPollingInterval((schedulingMode.getSelectionIndex() == 1) ? pollingInterval.getText() : null);
+      dci.setRetentionType(retentionMode.getSelectionIndex());
       dci.setRetentionTime((retentionMode.getSelectionIndex() == 1) ? retentionTime.getText() : null);
 		if (checkUseCustomSnmpPort.getSelection())
 		{
