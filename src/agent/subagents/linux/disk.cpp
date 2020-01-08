@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2015 Raden Solutions
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -109,6 +109,23 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
             {
                ret_double(pValue, 0.0);
             }
+            break;
+         case DISK_TOTAL_INODES:
+            ret_uint64(pValue, s.f_files);
+            break;
+         case DISK_FREE_INODES:
+         case DISK_AVAIL_INODES:
+            ret_uint64(pValue, s.f_ffree);
+            break;
+         case DISK_FREE_INODES_PERC:
+         case DISK_AVAIL_INODES_PERC:
+            ret_double(pValue, (s.f_files > 0) ? s.f_ffree * 100.0 / s.f_files : 0);
+            break;
+         case DISK_USED_INODES:
+            ret_uint64(pValue, s.f_files - s.f_ffree);
+            break;
+         case DISK_USED_INODES_PERC:
+            ret_double(pValue, (s.f_files > 0) ? (s.f_files - s.f_ffree) * 100.0 / s.f_files : 0);
             break;
          default:
             nRet = SYSINFO_RC_UNSUPPORTED;

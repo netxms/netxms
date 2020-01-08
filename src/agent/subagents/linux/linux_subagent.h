@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2018 Raden Solutions
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,13 +97,20 @@ typedef struct
  */
 enum
 {
-	DISK_FREE,
-	DISK_AVAIL,
-	DISK_USED,
-	DISK_TOTAL,
-	DISK_FREE_PERC,
-	DISK_AVAIL_PERC,
-	DISK_USED_PERC
+   DISK_AVAIL,
+   DISK_AVAIL_INODES,
+   DISK_AVAIL_INODES_PERC,
+   DISK_AVAIL_PERC,
+   DISK_FREE,
+   DISK_FREE_INODES,
+   DISK_FREE_INODES_PERC,
+   DISK_FREE_PERC,
+   DISK_TOTAL,
+   DISK_TOTAL_INODES,
+   DISK_USED,
+   DISK_USED_INODES,
+   DISK_USED_INODES_PERC,
+   DISK_USED_PERC
 };
 
 /**
