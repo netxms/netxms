@@ -4,6 +4,7 @@
 
 - Fixed issues:
 	NX-1523 (Store object creation time)
+	NX-1724 (Implement agent parameters for inode usage)
 
 
 *
