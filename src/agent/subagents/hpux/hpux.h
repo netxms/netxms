@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /*
 ** NetXMS subagent for HP-UX
-** Copyright (C) 2006 Alex Kirhenshtein
+** Copyright (C) 2006-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

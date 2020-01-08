@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for HP-UX
-** Copyright (C) 2006-2010 Alex Kirhenshtein
+** Copyright (C) 2006-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,11 +37,11 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 	{
 		nRet = SYSINFO_RC_SUCCESS;
 		
-		QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
-		QWORD totalBlocks = (QWORD)s.f_blocks;
-		QWORD blockSize = (QWORD)s.f_bsize;
-		QWORD freeBlocks = (QWORD)s.f_bfree;
-		QWORD availableBlocks = (QWORD)s.f_bavail;
+		UINT64 usedBlocks = (UINT64)(s.f_blocks - s.f_bfree);
+		UINT64 totalBlocks = (UINT64)s.f_blocks;
+		UINT64 blockSize = (UINT64)s.f_bsize;
+		UINT64 freeBlocks = (UINT64)s.f_bfree;
+		UINT64 availableBlocks = (UINT64)s.f_bavail;
 		
 		switch((long)pArg)
 		{
@@ -58,35 +58,35 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 				ret_uint64(pValue, availableBlocks * blockSize);
 				break;
 			case DISK_USED_PERC:
-			   if (totalBlocks > 0)
-			   {
-			      ret_double(pValue, (usedBlocks * 100.0) / totalBlocks);
-			   }
-			   else
-			   {
-               ret_double(pValue, 0.0);
-			   }
+				ret_double(pValue, (totalBlocks > 0) ? (usedBlocks * 100.0) / totalBlocks : 0);
 				break;
 			case DISK_AVAIL_PERC:
-            if (totalBlocks > 0)
-            {
-               ret_double(pValue, (availableBlocks * 100.0) / totalBlocks);
-            }
-            else
-            {
-               ret_double(pValue, 0.0);
-            }
+				ret_double(pValue, (totalBlocks > 0) ? (availableBlocks * 100.0) / totalBlocks : 0);
 				break;
 			case DISK_FREE_PERC:
-            if (totalBlocks > 0)
-            {
-               ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
-            }
-            else
-            {
-               ret_double(pValue, 0.0);
-            }
+				ret_double(pValue, (totalBlocks > 0) ? (freeBlocks * 100.0) / totalBlocks : 0);
 				break;
+         case DISK_TOTAL_INODES:
+            ret_uint64(pValue, s.f_files);
+			   break;
+         case DISK_USED_INODES:
+            ret_uint64(pValue, s.f_files - s.f_ffree);
+            break;
+         case DISK_FREE_INODES:
+            ret_uint64(pValue, s.f_ffree);
+            break;
+         case DISK_AVAIL_INODES:
+            ret_uint64(pValue, s.f_favail);
+            break;
+         case DISK_USED_INODES_PERC:
+            ret_double(pValue, (s.f_files > 0) ? ((s.f_files - s.f_ffree) * 100.0 / s.f_files) : 0);
+            break;
+         case DISK_FREE_INODES_PERC:
+            ret_double(pValue, (s.f_files > 0) ? (s.f_ffree * 100.0 / s.f_files) : 0);
+            break;
+         case DISK_AVAIL_INODES_PERC:
+            ret_double(pValue, (s.f_files > 0) ? (s.f_favail * 100.0 / s.f_files) : 0);
+            break;
 			default:
 				nRet = SYSINFO_RC_ERROR;
 				break;
@@ -144,11 +144,11 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
          struct statvfs s;
          if (statvfs(mountPoint, &s) == 0)
          {
-            QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
-            QWORD totalBlocks = (QWORD)s.f_blocks;
-            QWORD blockSize = (QWORD)s.f_bsize;
-            QWORD freeBlocks = (QWORD)s.f_bfree;
-            QWORD availableBlocks = (QWORD)s.f_bavail;
+            UINT64 usedBlocks = (UINT64)(s.f_blocks - s.f_bfree);
+            UINT64 totalBlocks = (UINT64)s.f_blocks;
+            UINT64 blockSize = (UINT64)s.f_bsize;
+            UINT64 freeBlocks = (UINT64)s.f_bfree;
+            UINT64 availableBlocks = (UINT64)s.f_bavail;
 
             table->set(4, totalBlocks * blockSize);
             table->set(5, freeBlocks * blockSize);
@@ -163,13 +163,13 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
             TCHAR buffer[1024];
             AgentWriteDebugLog(4, _T("HP-UX: H_FileSystems: Call to statfs(\"%hs\") failed (%hs)"), mountPoint, strerror(errno));
 
-            table->set(4, (QWORD)0);
-            table->set(5, (QWORD)0);
-            table->set(6, (QWORD)0);
-            table->set(7, (QWORD)0);
-            table->set(8, (QWORD)0);
-            table->set(9, (QWORD)0);
-            table->set(10, (QWORD)0);
+            table->set(4, (UINT64)0);
+            table->set(5, (UINT64)0);
+            table->set(6, (UINT64)0);
+            table->set(7, (UINT64)0);
+            table->set(8, (UINT64)0);
+            table->set(9, (UINT64)0);
+            table->set(10, (UINT64)0);
          }
       }
       fclose(in);
