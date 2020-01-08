@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -215,12 +215,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Disk.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
 
    { _T("FileSystem.Avail(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL, DCI_DT_UINT64, DCIDESC_FS_AVAIL },
+   { _T("FileSystem.AvailInodes(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_INODES, DCI_DT_UINT64, DCIDESC_FS_AVAILINODES },
+   { _T("FileSystem.AvailInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILINODESPERC },
    { _T("FileSystem.AvailPerc(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILPERC },
    { _T("FileSystem.Free(*)"), H_DiskInfo, (TCHAR *)DISK_FREE, DCI_DT_UINT64, DCIDESC_FS_FREE },
+   { _T("FileSystem.FreeInodes(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_INODES, DCI_DT_UINT64, DCIDESC_FS_FREEINODES },
+   { _T("FileSystem.FreeInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEINODESPERC },
    { _T("FileSystem.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
    { _T("FileSystem.Total(*)"), H_DiskInfo, (TCHAR *)DISK_TOTAL, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
+   { _T("FileSystem.TotalInodes(*)"), H_DiskInfo, (TCHAR *)DISK_TOTAL_INODES, DCI_DT_UINT64, DCIDESC_FS_TOTALINODES },
    { _T("FileSystem.Type(*)"), H_DiskInfo, (TCHAR *)DISK_FSTYPE, DCI_DT_STRING, DCIDESC_FS_TYPE },
    { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
+   { _T("FileSystem.UsedInodes(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES, DCI_DT_UINT64, DCIDESC_FS_USEDINODES },
+   { _T("FileSystem.UsedInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDINODESPERC },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
    { _T("Hardware.Baseboard.Manufacturer"), SMBIOS_ParameterHandler, _T("bM"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER },

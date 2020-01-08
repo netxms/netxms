@@ -1412,27 +1412,27 @@ protected:
    StringMapEntry *m_data;
    bool m_objectOwner;
    bool m_ignoreCase;
-	void (*m_objectDestructor)(void *, StringMapBase *);
+   void (*m_objectDestructor)(void *, StringMapBase *);
    void *m_context;
 
-	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
-	void *getObject(const TCHAR *key) const;
+   void setObject(TCHAR *key, void *value, bool keyPreAlloc);
+   void *getObject(const TCHAR *key) const;
    void *getObject(const TCHAR *key, size_t len) const;
-	void fillValues(Array *a) const;
+   void fillValues(Array *a) const;
    void *unlink(const TCHAR *key);
 
 public:
-	StringMapBase(bool objectOwner, void (*destructor)(void *, StringMapBase *) = NULL);
-	virtual ~StringMapBase();
+   StringMapBase(bool objectOwner, void (*destructor)(void *, StringMapBase *) = NULL);
+   virtual ~StringMapBase();
 
    void setOwner(bool owner) { m_objectOwner = owner; }
    void setIgnoreCase(bool ignore);
 
-	void remove(const TCHAR *key);
-	void clear();
+   void remove(const TCHAR *key);
+   void clear();
    void filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *userData);
 
-	int size() const;
+   int size() const;
    bool isEmpty() const { return size() == 0; }
    bool contains(const TCHAR *key) const { return (key != NULL) ? (find(key, _tcslen(key) * sizeof(TCHAR)) != NULL) : false; }
    bool contains(const TCHAR *key, size_t len) const { return (key != NULL) ? (find(key, len * sizeof(TCHAR)) != NULL) : false; }

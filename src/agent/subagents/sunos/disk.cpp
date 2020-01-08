@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,6 +66,27 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
             break;
          case DISK_FREE_PERC:
             ret_double(pValue, (totalBlocks > 0) ? (freeBlocks * 100.0) / totalBlocks : 0);
+            break;
+         case DISK_TOTAL_INODES:
+            ret_uint64(pValue, sv.f_files);
+            break;
+         case DISK_USED_INODES:
+            ret_uint64(pValue, sv.f_files - sv.f_ffree);
+            break;
+         case DISK_FREE_INODES:
+            ret_uint64(pValue, sv.f_ffree);
+            break;
+         case DISK_AVAIL_INODES:
+            ret_uint64(pValue, sv.f_favail);
+            break;
+         case DISK_USED_INODES_PERC:
+            ret_double(pValue, (sv.f_files > 0) ? ((sv.f_files - sv.f_ffree) * 100.0 / sv.f_files) : 0);
+            break;
+         case DISK_FREE_INODES_PERC:
+            ret_double(pValue, (sv.f_files > 0) ? (sv.f_ffree * 100.0 / sv.f_files) : 0);
+            break;
+         case DISK_AVAIL_INODES_PERC:
+            ret_double(pValue, (sv.f_files > 0) ? (sv.f_favail * 100.0 / sv.f_files) : 0);
             break;
          case DISK_FSTYPE:
             ret_mbstring(pValue, sv.f_basetype);
