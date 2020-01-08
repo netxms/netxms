@@ -21,10 +21,10 @@ def readManifestFile(name):
 
 def processDirectory(directory):
    manifestFile = directory + "/MANIFEST.MF" 
-   print "Processing " + manifestFile
+   print("Processing " + manifestFile)
    tags = readManifestFile(manifestFile)
    if not (tags.get("Bundle-Vendor", "") in Set(["netxms.org", "Raden Solutions"])):
-      print "Skipping (wrong vendor)"
+      print("Skipping (wrong vendor)")
       return
    try:
       fIn = open(manifestFile)
@@ -45,7 +45,7 @@ def processDirectory(directory):
       fOut.close()
       os.rename(manifestFile + ".tmp", manifestFile)
    except IOError:
-      print "I/O error"
+      print("I/O error")
 
 def main():
     for (root, dirs, files) in os.walk(sys.argv[1]):
@@ -57,4 +57,4 @@ def main():
 if len(sys.argv) == 3:
     main()
 else:
-    print "Usage: ./update_plugin_versions.py <source root> <version>"
+    print("Usage: ./update_plugin_versions.py <source root> <version>")
