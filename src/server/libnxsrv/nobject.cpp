@@ -306,15 +306,15 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
    UINT32 source = 0;
    bool remove = false;
 
-   if ((curr == NULL))
+   if (curr == NULL)
    {
       curr = new CustomAttribute(value, GetResultingFlag(0, inheritable, CAF_INHERITABLE));
       m_customAttributes->set(name, curr);
       onCustomAttributeChange();
    }
-   else if(_tcscmp(curr->value, value) || curr->flags != GetResultingFlag(curr->flags, inheritable, CAF_INHERITABLE))
+   else if (_tcscmp(curr->value, value) || (curr->flags != GetResultingFlag(curr->flags, inheritable, CAF_INHERITABLE)))
    {
-      remove = curr->flags != GetResultingFlag(curr->flags, inheritable, CAF_INHERITABLE);
+      remove = (curr->flags != GetResultingFlag(curr->flags, inheritable, CAF_INHERITABLE));
       curr->value = value;
       if (curr->isInherited())
          curr->flags |= CAF_INHERITABLE | CAF_REDEFINED;
@@ -325,7 +325,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
 
    bool inherit = curr->isInheritable();
    if (inherit)
-      source = curr->isRedefined() || !curr->isInherited() ? m_id : curr->sourceObject;
+      source = (curr->isRedefined() || !curr->isInherited()) ? m_id : curr->sourceObject;
    unlockCustomAttributes();
 
    if (inherit)
@@ -343,13 +343,13 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, UINT32 p
    CustomAttribute *curr = m_customAttributes->get(name);
    UINT32 source = parent;
    bool callPopulate = true;
-   if ((curr == NULL))
+   if (curr == NULL)
    {
       curr = new CustomAttribute(value, CAF_INHERITABLE, parent);
       m_customAttributes->set(name, curr);
       onCustomAttributeChange();
    }
-   else if(_tcscmp(curr->value, value) || curr->sourceObject == 0)
+   else if (_tcscmp(curr->value, value) || (curr->sourceObject == 0))
    {
       callPopulate = curr->isInheritable() && !curr->isRedefined();
       curr->flags |= CAF_INHERITABLE;
