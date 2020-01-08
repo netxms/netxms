@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for FreeBSD
-** Copyright (C) 2004-2018 Raden Solutions
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,35 +73,41 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("Disk.Avail(*)"),                H_DiskInfo,        (const TCHAR *)DISK_AVAIL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ _T("Disk.AvailPerc(*)"),            H_DiskInfo,        (const TCHAR *)DISK_AVAIL_PERC,	DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ _T("Disk.Free(*)"),                 H_DiskInfo,        (const TCHAR *)DISK_FREE,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ _T("Disk.FreePerc(*)"),             H_DiskInfo,        (const TCHAR *)DISK_FREE_PERC,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ _T("Disk.Total(*)"),                H_DiskInfo,        (const TCHAR *)DISK_TOTAL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ _T("Disk.Used(*)"),                 H_DiskInfo,        (const TCHAR *)DISK_USED,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ _T("Disk.UsedPerc(*)"),             H_DiskInfo,        (const TCHAR *)DISK_USED_PERC,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+   { _T("Disk.Avail(*)"),                H_DiskInfo, (const TCHAR *)DISK_AVAIL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+   { _T("Disk.AvailPerc(*)"),            H_DiskInfo, (const TCHAR *)DISK_AVAIL_PERC,	DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+   { _T("Disk.Free(*)"),                 H_DiskInfo, (const TCHAR *)DISK_FREE,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+   { _T("Disk.FreePerc(*)"),             H_DiskInfo, (const TCHAR *)DISK_FREE_PERC,	DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+   { _T("Disk.Total(*)"),                H_DiskInfo, (const TCHAR *)DISK_TOTAL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+   { _T("Disk.Used(*)"),                 H_DiskInfo, (const TCHAR *)DISK_USED,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+   { _T("Disk.UsedPerc(*)"),             H_DiskInfo, (const TCHAR *)DISK_USED_PERC,	DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 
-	{ _T("FileSystem.Avail(*)"),          H_DiskInfo,        (const TCHAR *)DISK_AVAIL,        DCI_DT_UINT64,	DCIDESC_FS_AVAIL },
-	{ _T("FileSystem.AvailPerc(*)"),      H_DiskInfo,        (const TCHAR *)DISK_AVAIL_PERC,   DCI_DT_FLOAT,	DCIDESC_FS_AVAILPERC },
-	{ _T("FileSystem.Free(*)"),           H_DiskInfo,        (const TCHAR *)DISK_FREE,         DCI_DT_UINT64,	DCIDESC_FS_FREE },
-	{ _T("FileSystem.FreePerc(*)"),       H_DiskInfo,        (const TCHAR *)DISK_FREE_PERC,    DCI_DT_FLOAT,	DCIDESC_FS_FREEPERC },
-	{ _T("FileSystem.Total(*)"),          H_DiskInfo,        (const TCHAR *)DISK_TOTAL,        DCI_DT_UINT64,	DCIDESC_FS_TOTAL },
-	{ _T("FileSystem.Used(*)"),           H_DiskInfo,        (const TCHAR *)DISK_USED,         DCI_DT_UINT64,	DCIDESC_FS_USED },
-	{ _T("FileSystem.UsedPerc(*)"),       H_DiskInfo,        (const TCHAR *)DISK_USED_PERC,    DCI_DT_FLOAT,	DCIDESC_FS_USEDPERC },
+   { _T("FileSystem.Avail(*)"),           H_DiskInfo, (const TCHAR *)DISK_AVAIL,             DCI_DT_UINT64,	DCIDESC_FS_AVAIL },
+   { _T("FileSystem.AvailInodes(*)"),     H_DiskInfo, (const TCHAR *)DISK_AVAIL_INODES,      DCI_DT_UINT64,	DCIDESC_FS_AVAILINODES },
+   { _T("FileSystem.AvailInodesPerc(*)"), H_DiskInfo, (const TCHAR *)DISK_AVAIL_INODES_PERC, DCI_DT_FLOAT,	DCIDESC_FS_AVAILINODESPERC },
+   { _T("FileSystem.AvailPerc(*)"),       H_DiskInfo, (const TCHAR *)DISK_AVAIL_PERC,        DCI_DT_FLOAT,	DCIDESC_FS_AVAILPERC },
+   { _T("FileSystem.Free(*)"),            H_DiskInfo, (const TCHAR *)DISK_FREE,              DCI_DT_UINT64,	DCIDESC_FS_FREE },
+   { _T("FileSystem.FreeInodes(*)"),      H_DiskInfo, (const TCHAR *)DISK_FREE_INODES,       DCI_DT_UINT64,	DCIDESC_FS_FREEINODES },
+   { _T("FileSystem.FreePerc(*)"),        H_DiskInfo, (const TCHAR *)DISK_FREE_PERC,         DCI_DT_FLOAT,	DCIDESC_FS_FREEPERC },
+   { _T("FileSystem.FreeInodesPerc(*)"),  H_DiskInfo, (const TCHAR *)DISK_FREE_INODES_PERC,  DCI_DT_FLOAT,	DCIDESC_FS_FREEINODESPERC },
+   { _T("FileSystem.Total(*)"),           H_DiskInfo, (const TCHAR *)DISK_TOTAL,             DCI_DT_UINT64,	DCIDESC_FS_TOTAL },
+   { _T("FileSystem.TotalInodes(*)"),     H_DiskInfo, (const TCHAR *)DISK_TOTAL_INODES,      DCI_DT_UINT64,	DCIDESC_FS_TOTALINODES },
+   { _T("FileSystem.Used(*)"),            H_DiskInfo, (const TCHAR *)DISK_USED,              DCI_DT_UINT64,	DCIDESC_FS_USED },
+   { _T("FileSystem.UsedInodes(*)"),      H_DiskInfo, (const TCHAR *)DISK_USED_INODES,       DCI_DT_UINT64,	DCIDESC_FS_USEDINODES },
+   { _T("FileSystem.UsedInodesPerc(*)"),  H_DiskInfo, (const TCHAR *)DISK_USED_INODES_PERC,  DCI_DT_FLOAT,	DCIDESC_FS_USEDINODESPERC },
 
-	{ _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
+   { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
 
-	{ _T("Net.Interface.64BitCounters"), H_NetInterface64bitSupport, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_64BITCOUNTERS },
+   { _T("Net.Interface.64BitCounters"), H_NetInterface64bitSupport, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_64BITCOUNTERS },
 
-	{ _T("Net.Interface.AdminStatus(*)"), H_NetIfAdminStatus, NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_ADMINSTATUS },
-	{ _T("Net.Interface.BytesIn(*)"),     H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_IN,    DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
-	{ _T("Net.Interface.BytesOut(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_OUT,   DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
-	{ _T("Net.Interface.InErrors(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_IN_ERRORS,   DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
-	{ _T("Net.Interface.Link(*)"),        H_NetIfOperStatus, NULL,				DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ _T("Net.Interface.OperStatus(*)"),  H_NetIfOperStatus, NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_OPERSTATUS },
-	{ _T("Net.Interface.OutErrors(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_OUT_ERRORS,  DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
-	{ _T("Net.Interface.PacketsIn(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_IN,  DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
-	{ _T("Net.Interface.PacketsOut(*)"),  H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.AdminStatus(*)"), H_NetIfAdminStatus, NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_ADMINSTATUS },
+   { _T("Net.Interface.BytesIn(*)"),     H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_IN,    DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
+   { _T("Net.Interface.BytesOut(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_OUT,   DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
+   { _T("Net.Interface.InErrors(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_IN_ERRORS,   DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
+   { _T("Net.Interface.Link(*)"),        H_NetIfOperStatus, NULL,				DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+   { _T("Net.Interface.OperStatus(*)"),  H_NetIfOperStatus, NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_OPERSTATUS },
+   { _T("Net.Interface.OutErrors(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_OUT_ERRORS,  DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.PacketsIn(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_IN,  DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
+   { _T("Net.Interface.PacketsOut(*)"),  H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
 
 #if __FreeBSD__ >= 10
 	{ _T("Net.Interface.BytesIn64(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_IN_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },
