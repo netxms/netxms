@@ -31,6 +31,7 @@ int F_acos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_asin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_atan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_atan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -128,6 +129,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "acos", F_acos, 1 },
    { "assert", F_assert, 1 },
    { "atan", F_atan, 1 },
+   { "atan2", F_atan2, 2 },
    { "ceil", F_ceil, 1 },
    { "chr", F_chr, 1 },
    { "classof", F_classof, 1 },
