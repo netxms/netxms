@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("topo.lldp")
+
 /**
  * Handler for walking local port table
  */
@@ -34,17 +36,16 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
 	const SNMP_ObjectId& oid = var->getName();
 	UINT32 newOid[128];
 	memcpy(newOid, oid.value(), oid.length() * sizeof(UINT32));
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
 	newOid[oid.length() - 2] = 4;	// lldpLocPortDescr
-	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid.length()));
+	request.bindVariable(new SNMP_Variable(newOid, oid.length()));
 
    newOid[oid.length() - 2] = 2;   // lldpLocPortIdSubtype
-   pRqPDU->bindVariable(new SNMP_Variable(newOid, oid.length()));
+   request.bindVariable(new SNMP_Variable(newOid, oid.length()));
 
 	SNMP_PDU *pRespPDU = NULL;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
-	delete pRqPDU;
+   UINT32 rcc = transport->doRequest(&request, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 	   if (pRespPDU->getNumVariables() >= 2)
@@ -57,6 +58,7 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
 	else
 	{
 		_tcscpy(port->ifDescr, _T("###error###"));
+	   nxlog_debug_tag(DEBUG_TAG, 5, _T("PortLocalInfoHandler: failed SNMP request for port information (%s)"), SNMPGetErrorText(rcc));
 	}
 
 	((ObjectArray<LLDP_LOCAL_PORT_INFO> *)arg)->add(port);
@@ -68,6 +70,7 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
  */
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
 {
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Reading LLDP local port information"));
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *ports = new ObjectArray<LLDP_LOCAL_PORT_INFO>(64, 64, true);
 	if (SnmpWalk(snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports) != SNMP_ERR_SUCCESS)
 	{
@@ -87,27 +90,30 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
  */
 static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_t idLen)
 {
-   LLDP_LOCAL_PORT_INFO port;
-	TCHAR ifName[130], buffer[256];
-	Interface *ifc;
-
-   DbgPrintf(5, _T("LLDPTopoHandler(%s [%d]): FindRemoteInterface: idType=%d id=%s (%d)"), node->getName(), node->getId(), idType, BinToStr(id, idLen, buffer), (int)idLen);
+	TCHAR buffer[256];
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("LLDPTopoHandler(%s [%d]): FindRemoteInterface: idType=%d id=%s (%d)"), node->getName(), node->getId(), idType, BinToStr(id, idLen, buffer), (int)idLen);
 
 	// Try local LLDP port info first
+   Interface *ifc = NULL;
+   LLDP_LOCAL_PORT_INFO port;
    if (node->getLldpLocalPortInfo(idType, id, idLen, &port))
    {
-      DbgPrintf(5, _T("LLDPTopoHandler(%s [%d]): FindRemoteInterface: getLldpLocalPortInfo found port: %d \"%s\""), node->getName(), node->getId(), port.portNumber, port.ifDescr);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("LLDPTopoHandler(%s [%d]): FindRemoteInterface: getLldpLocalPortInfo found port: %d \"%s\""), node->getName(), node->getId(), port.portNumber, port.ifDescr);
       if (node->isBridge())
          ifc = node->findBridgePort(port.portNumber);
-      else
+      // Node: some Juniper devices may have bridge port numbers for certain interfaces but still use ifIndex in LLDP local port list
+      if (ifc == NULL)  // unable to find interface by bridge port number or device is not a bridge
          ifc = node->findInterfaceByIndex(port.portNumber);
       if (ifc == NULL)  // unable to find interface by bridge port number or interface index, try description
          ifc = node->findInterfaceByName(port.ifDescr);  /* TODO: find by cached ifName value */
+      if (ifc == NULL)  // some devices may report interface alias as description in LLDP local port list
+         ifc = node->findInterfaceByAlias(port.ifDescr);
       if (ifc != NULL)
          return ifc;
    }
 
-   DbgPrintf(5, _T("LLDPTopoHandler(%s [%d]): FindRemoteInterface: interface not found by getLldpLocalPortInfo"), node->getName(), node->getId());
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("LLDPTopoHandler(%s [%d]): FindRemoteInterface: interface not found by getLldpLocalPortInfo"), node->getName(), node->getId());
+   TCHAR ifName[130];
 	switch(idType)
 	{
 		case 3:	// MAC address
@@ -198,13 +204,13 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
 		   TCHAR sysName[256] = _T("");
 		   lldpRemSysName->getValueAsString(sysName, 256);
 		   Trim(sysName);
-         DbgPrintf(5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s: FindNodeByLLDPId failed, fallback to sysName (\"%s\")"), node->getName(), node->getId(), remoteId, sysName);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s: FindNodeByLLDPId failed, fallback to sysName (\"%s\")"), node->getName(), node->getId(), remoteId, sysName);
          remoteNode = FindNodeBySysName(sysName);
 		}
 
 		if (remoteNode != NULL)
 		{
-	      DbgPrintf(5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s remoteNode=%s [%d]"), node->getName(), node->getId(), remoteId, remoteNode->getName(), remoteNode->getId());
+	      nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s remoteNode=%s [%d]"), node->getName(), node->getId(), remoteId, remoteNode->getName(), remoteNode->getId());
 
 			BYTE remoteIfId[1024];
 			size_t remoteIfIdLen = lldpRemPortId->getRawValue(remoteIfId, 1024);
@@ -214,7 +220,7 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
             // Try to find remote interface by description
             TCHAR *ifDescr = lldpRemPortDesc->getValueAsString((TCHAR *)remoteIfId, 1024 / sizeof(TCHAR));
             Trim(ifDescr);
-            DbgPrintf(5, _T("ProcessLLDPConnectionEntry(%s [%d]): FindRemoteInterface failed, lookup by description (\"%s\")"), node->getName(), node->getId(), CHECK_NULL(ifDescr));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): FindRemoteInterface failed, lookup by description (\"%s\")"), node->getName(), node->getId(), CHECK_NULL(ifDescr));
             if (ifDescr != NULL)
                ifRemote = remoteNode->findInterfaceByName(ifDescr);
          }
@@ -246,7 +252,7 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
 				Interface *localIf = node->findBridgePort(localPort);
 				if (localIf != NULL)
 					info.ifLocal = localIf->getIfIndex();
-            DbgPrintf(5, _T("ProcessLLDPConnectionEntry(%s [%d]): lookup bridge port: localPort=%d iface=%s"), node->getName(), node->getId(), localPort, (localIf != NULL) ? localIf->getName() : _T("(null)"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): lookup bridge port: localPort=%d iface=%s"), node->getName(), node->getId(), localPort, (localIf != NULL) ? localIf->getName() : _T("(null)"));
 			}
 			else
 			{
@@ -254,18 +260,18 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
 			}
 
 			nbs->addConnection(&info);
-         DbgPrintf(5, _T("ProcessLLDPConnectionEntry(%s [%d]): added connection: objectId=%d ifRemote=%d ifLocal=%d"), node->getName(), node->getId(), info.objectId, info.ifRemote, info.ifLocal);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): added connection: objectId=%d ifRemote=%d ifLocal=%d"), node->getName(), node->getId(), info.objectId, info.ifRemote, info.ifLocal);
 		}
 		else
 		{
-         DbgPrintf(5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s: remote node not found"), node->getName(), node->getId(), remoteId);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s: remote node not found"), node->getName(), node->getId(), remoteId);
 		}
 	}
 	else
 	{
       TCHAR remoteId[256];
       BinToStr(var->getValue(), var->getValueLength(), remoteId);
-	   DbgPrintf(5, _T("ProcessLLDPConnectionEntry(%s [%d]): SNMP get failed for remote ID %s"), node->getName(), node->getId(), remoteId);
+	   nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): SNMP get failed for remote ID %s"), node->getName(), node->getId(), remoteId);
 	}
 }
 
@@ -287,7 +293,7 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getCapabilities() & NC_IS_LLDP))
 		return;
 
-	DbgPrintf(5, _T("LLDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("LLDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
 
 	// Entire table should be cached before processing because some devices (D-Link for example)
 	// do not allow GET requests for table elements
@@ -295,7 +301,7 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
    node->callSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1"), LLDPTopoHandler, &connections);
    if (connections.size() > 0)
    {
-      DbgPrintf(5, _T("LLDP: %d entries in connection database for node %s [%d]"), connections.size(), node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("LLDP: %d entries in connection database for node %s [%d]"), connections.size(), node->getName(), node->getId());
       StringList *oids = connections.keys();
       for(int i = 0; i < oids->size(); i++)
       {
@@ -309,9 +315,9 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
    }
    else
    {
-      DbgPrintf(5, _T("LLDP: connection database empty for node %s [%d]"), node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("LLDP: connection database empty for node %s [%d]"), node->getName(), node->getId());
    }
-	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
 }
 
 /**

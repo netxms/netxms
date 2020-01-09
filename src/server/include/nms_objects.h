@@ -2596,25 +2596,25 @@ protected:
    void checkInterfaceNames(InterfaceList *pIfList);
    Interface *createInterfaceObject(InterfaceInfo *info, bool manuallyCreated, bool fakeInterface, bool syntheticMask);
    Subnet *createSubnet(InetAddress& baseAddr, bool syntheticMask);
-	void checkAgentPolicyBinding(AgentConnection *conn);
-	void updatePrimaryIpAddr();
-	bool confPollAgent(UINT32 dwRqId);
-	bool confPollSnmp(UINT32 dwRqId);
-	NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
-	bool updateSoftwarePackages(PollerInfo *poller, UINT32 requestId);
+   void checkAgentPolicyBinding(AgentConnection *conn);
+   void updatePrimaryIpAddr();
+   bool confPollAgent(UINT32 dwRqId);
+   bool confPollSnmp(UINT32 dwRqId);
+   NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
+   bool updateSoftwarePackages(PollerInfo *poller, UINT32 requestId);
    bool updateHardwareComponents(PollerInfo *poller, UINT32 requestId);
-	bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
-	void checkBridgeMib(SNMP_Transport *pTransport);
-	void checkIfXTable(SNMP_Transport *pTransport);
-	bool checkNetworkPath(UINT32 requestId);
+   bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
+   void checkBridgeMib(SNMP_Transport *pTransport);
+   void checkIfXTable(SNMP_Transport *pTransport);
+   bool checkNetworkPath(UINT32 requestId);
    bool checkNetworkPathLayer2(UINT32 requestId, bool secondPass);
    bool checkNetworkPathLayer3(UINT32 requestId, bool secondPass);
-	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass);
-	void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
+   bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass);
+   void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
 
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
-	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
+   bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void executeInterfaceUpdateHook(Interface *iface);
    void updatePhysicalContainerBinding(UINT32 containerId);
@@ -2625,10 +2625,10 @@ protected:
    bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(NULL); }
 
-	void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject, const TCHAR *linkName, bool vpnLink, bool includeEndNodes);
-	void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology);
+   void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject, const TCHAR *linkName, bool vpnLink, bool includeEndNodes);
+   void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology);
    void buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, UINT32 seedNode, bool agentConnectionOnly, bool checkAllProxies);
-	bool checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies);
+   bool checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies);
 
 public:
    Node();
@@ -2658,7 +2658,7 @@ public:
 
    virtual json_t *toJson() override;
 
-	Cluster *getMyCluster();
+   Cluster *getMyCluster();
 
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
@@ -2681,9 +2681,9 @@ public:
    bool isBridge() const { return m_capabilities & NC_IS_BRIDGE ? true : false; }
    bool isRouter() const { return m_capabilities & NC_IS_ROUTER ? true : false; }
    bool isLocalManagement() const { return m_capabilities & NC_IS_LOCAL_MGMT ? true : false; }
-	bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
-	bool isWirelessController() const { return m_capabilities & NC_IS_WIFI_CONTROLLER ? true : false; }
-	bool supportNewTypeFormat() const { return m_capabilities & NC_IS_NEW_POLICY_TYPES ? true : false; }
+   bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
+   bool isWirelessController() const { return m_capabilities & NC_IS_WIFI_CONTROLLER ? true : false; }
+   bool supportNewTypeFormat() const { return m_capabilities & NC_IS_NEW_POLICY_TYPES ? true : false; }
 
    bool isIcmpStatCollectionEnabled() const
    {
@@ -2692,29 +2692,29 @@ public:
    }
 
    const uuid& getAgentId() const { return m_agentId; }
-	const TCHAR *getAgentVersion() const { return m_agentVersion; }
-	const TCHAR *getPlatformName() const { return m_platformName; }
+   const TCHAR *getAgentVersion() const { return m_agentVersion; }
+   const TCHAR *getPlatformName() const { return m_platformName; }
    INT16 getSNMPVersion() const { return m_snmpVersion; }
    UINT16 getSNMPPort() const { return m_snmpPort; }
    UINT32 getSNMPProxy() const { return m_snmpProxy; }
    const TCHAR *getSNMPObjectId() const { return m_snmpObjectId; }
-	const TCHAR *getSysName() const { return CHECK_NULL_EX(m_sysName); }
-	const TCHAR *getSysDescription() const { return CHECK_NULL_EX(m_sysDescription); }
+   const TCHAR *getSysName() const { return CHECK_NULL_EX(m_sysName); }
+   const TCHAR *getSysDescription() const { return CHECK_NULL_EX(m_sysDescription); }
    const TCHAR *getSysContact() const { return CHECK_NULL_EX(m_sysContact); }
    const TCHAR *getSysLocation() const { return CHECK_NULL_EX(m_sysLocation); }
    time_t getBootTime() const { return m_bootTime; }
-	const TCHAR *getLLDPNodeId() const { return m_lldpNodeId; }
+   const TCHAR *getLLDPNodeId() const { return m_lldpNodeId; }
    const BYTE *getBridgeId() const { return m_baseBridgeAddress; }
-	const TCHAR *getDriverName() const { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
-	UINT16 getAgentPort() const { return m_agentPort; }
-	INT16 getAgentAuthMethod() const { return m_agentAuthMethod; }
+   const TCHAR *getDriverName() const { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
+   UINT16 getAgentPort() const { return m_agentPort; }
+   INT16 getAgentAuthMethod() const { return m_agentAuthMethod; }
    INT16 getAgentCacheMode() const { return (m_state & NSF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
-	const TCHAR *getSharedSecret() const { return m_szSharedSecret; }
+   const TCHAR *getSharedSecret() const { return m_szSharedSecret; }
    UINT32 getAgentProxy() const { return m_agentProxy; }
-	UINT32 getPhysicalContainerId() const { return m_physicalContainer; }
+   UINT32 getPhysicalContainerId() const { return m_physicalContainer; }
    INT16 getRackHeight() const { return m_rackHeight; }
    INT16 getRackPosition() const { return m_rackPosition; }
-	bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
+   bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
    UINT32 getIcmpProxy() const { return m_icmpProxy; }
    const TCHAR *getSshLogin() const { return m_sshLogin; }
    const TCHAR *getSshPassword() const { return m_sshPassword; }
@@ -2726,7 +2726,7 @@ public:
    UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
-	time_t getDownTime() const { return m_downSince; }
+   time_t getDownTime() const { return m_downSince; }
 
    void setNewTunnelBindFlag() { lockProperties(); m_runtimeFlags |= NDF_NEW_TUNNEL_BIND; unlockProperties(); }
    void clearNewTunnelBindFlag() { lockProperties(); m_runtimeFlags &= ~NDF_NEW_TUNNEL_BIND; unlockProperties(); }
@@ -2736,14 +2736,14 @@ public:
    Interface *createNewInterface(const InetAddress& ipAddr, const MacAddress& macAddr, bool fakeInterface);
    void deleteInterface(Interface *iface);
 
-	void setPrimaryName(const TCHAR *name) { lockProperties(); _tcslcpy(m_primaryName, name, MAX_DNS_NAME); unlockProperties(); }
-	void setAgentPort(UINT16 port) { m_agentPort = port; }
-	void setSnmpPort(UINT16 port) { m_snmpPort = port; }
+   void setPrimaryName(const TCHAR *name) { lockProperties(); _tcslcpy(m_primaryName, name, MAX_DNS_NAME); unlockProperties(); }
+   void setAgentPort(UINT16 port) { m_agentPort = port; }
+   void setSnmpPort(UINT16 port) { m_snmpPort = port; }
    void setSshCredentials(const TCHAR *login, const TCHAR *password);
    void changeIPAddress(const InetAddress& ipAddr);
-	void changeZone(UINT32 newZone);
-	void setTunnelId(const uuid& tunnelId, const TCHAR *certSubject);
-	void setFileUpdateConnection(AgentConnection *conn);
+   void changeZone(UINT32 newZone);
+   void setTunnelId(const uuid& tunnelId, const TCHAR *certSubject);
+   void setFileUpdateConnection(AgentConnection *conn);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void forceSyncDataCollectionConfig();
    void relatedNodeDataCollectionChanged() { onDataCollectionChange(); }
@@ -2752,25 +2752,26 @@ public:
    InterfaceList *getInterfaceList();
    Interface *findInterfaceByIndex(UINT32 ifIndex);
    Interface *findInterfaceByName(const TCHAR *name);
-	Interface *findInterfaceByMAC(const MacAddress& macAddr);
-	Interface *findInterfaceByIP(const InetAddress& addr);
+   Interface *findInterfaceByAlias(const TCHAR *alias);
+   Interface *findInterfaceByMAC(const MacAddress& macAddr);
+   Interface *findInterfaceByIP(const InetAddress& addr);
    Interface *findInterfaceBySubnet(const InetAddress& subnet);
-	Interface *findInterfaceByLocation(const InterfacePhysicalLocation& location);
-	Interface *findBridgePort(UINT32 bridgePortNumber);
+   Interface *findInterfaceByLocation(const InterfacePhysicalLocation& location);
+   Interface *findBridgePort(UINT32 bridgePortNumber);
    AccessPoint *findAccessPointByMAC(const MacAddress& macAddr);
    AccessPoint *findAccessPointByBSSID(const BYTE *bssid);
    AccessPoint *findAccessPointByRadioId(int rfIndex);
    ObjectArray<WirelessStationInfo> *getWirelessStations();
-	bool isMyIP(const InetAddress& addr);
+   bool isMyIP(const InetAddress& addr);
    void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
-	LinkLayerNeighbors *getLinkLayerNeighbors();
-	shared_ptr<VlanList> getVlans();
+   LinkLayerNeighbors *getLinkLayerNeighbors();
+   shared_ptr<VlanList> getVlans();
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
-	shared_ptr<ComponentTree> getComponents();
+   shared_ptr<ComponentTree> getComponents();
    bool getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
    void showLLDPInfo(CONSOLE_CTX console);
 

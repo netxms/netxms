@@ -30,6 +30,7 @@
 - Improved automatic IP topology maps
 - Added custom attributes inheritance
 - Web UI properties can be set via JNDI
+- Improved LLDP based network topology discovery
 - Fixed issues:
 	NX-1668 ("Execute server script" appears in context menu in object tools configurator)
 	NX-1674 (Initiate DCI forced poll from NXSL)

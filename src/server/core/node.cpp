@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1304,13 +1304,13 @@ Interface *Node::findInterfaceByIndex(UINT32 ifIndex)
 {
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
-      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
-         if (pInterface->getIfIndex() == ifIndex)
+         auto iface = static_cast<Interface*>(getChildList()->get(i));
+         if (iface->getIfIndex() == ifIndex)
          {
             unlockChildList();
-            return pInterface;
+            return iface;
          }
       }
    unlockChildList();
@@ -1326,17 +1326,39 @@ Interface *Node::findInterfaceByName(const TCHAR *name)
    if ((name == NULL) || (name[0] == 0))
       return NULL;
 
-   Interface *pInterface;
-
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
       if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
       {
-         pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
-         if (!_tcsicmp(pInterface->getName(), name) || !_tcsicmp(pInterface->getDescription(), name))
+         auto iface = static_cast<Interface*>(getChildList()->get(i));
+         if (!_tcsicmp(iface->getName(), name) || !_tcsicmp(iface->getDescription(), name))
          {
             unlockChildList();
-            return pInterface;
+            return iface;
+         }
+      }
+   unlockChildList();
+   return NULL;
+}
+
+/**
+ * Find interface by alias
+ * Returns pointer to interface object or NULL if appropriate interface couldn't be found
+ */
+Interface *Node::findInterfaceByAlias(const TCHAR *alias)
+{
+   if ((alias == NULL) || (alias[0] == 0))
+      return NULL;
+
+   lockChildList(false);
+   for(int i = 0; i < getChildList()->size(); i++)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_INTERFACE)
+      {
+         auto iface = static_cast<Interface*>(getChildList()->get(i));
+         if (!_tcsicmp(iface->getAlias(), alias))
+         {
+            unlockChildList();
+            return iface;
          }
       }
    unlockChildList();
@@ -1351,13 +1373,13 @@ Interface *Node::findInterfaceByLocation(const InterfacePhysicalLocation& locati
 {
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
-      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
-         if (pInterface->isPhysicalPort() && pInterface->getPhysicalLocation().equals(location))
+         auto iface = static_cast<Interface*>(getChildList()->get(i));
+         if (iface->isPhysicalPort() && iface->getPhysicalLocation().equals(location))
          {
             unlockChildList();
-            return pInterface;
+            return iface;
          }
       }
    unlockChildList();
@@ -1374,7 +1396,7 @@ Interface *Node::findInterfaceByMAC(const MacAddress& macAddr)
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
+      NetObj *curr = getChildList()->get(i);
       if (curr->getObjectClass() == OBJECT_INTERFACE)
       {
          if (static_cast<Interface*>(curr)->getMacAddr().equals(macAddr))
@@ -1399,9 +1421,9 @@ Interface *Node::findInterfaceByIP(const InetAddress& addr)
 
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
-      if (static_cast<NetObj*>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *iface = static_cast<Interface*>(getChildList()->get(i));
+         auto iface = static_cast<Interface*>(getChildList()->get(i));
          if (iface->getIpAddressList()->hasAddress(addr))
          {
             unlockChildList();
@@ -1420,9 +1442,9 @@ Interface *Node::findInterfaceBySubnet(const InetAddress& subnet)
 {
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
-      if (static_cast<NetObj*>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *iface = static_cast<Interface*>(getChildList()->get(i));
+         auto iface = static_cast<Interface*>(getChildList()->get(i));
          const InetAddressList *addrList = iface->getIpAddressList();
          for(int j = 0; j < addrList->size(); j++)
          {
@@ -1444,13 +1466,13 @@ Interface *Node::findBridgePort(UINT32 bridgePortNumber)
 {
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
-      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *pInterface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
-         if (pInterface->getBridgePortNumber() == bridgePortNumber)
+         auto iface = static_cast<Interface*>(getChildList()->get(i));
+         if (iface->getBridgePortNumber() == bridgePortNumber)
          {
             unlockChildList();
-            return pInterface;
+            return iface;
          }
       }
    unlockChildList();
@@ -1466,9 +1488,9 @@ NetObj *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *ty
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {
-      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         Interface *iface = (Interface *)static_cast<NetObj *>(getChildList()->get(i));
+         auto iface = static_cast<Interface*>(getChildList()->get(i));
          cp = FindInterfaceConnectionPoint(iface->getMacAddr(), type);
          if (cp != NULL)
          {
@@ -1491,7 +1513,7 @@ AccessPoint *Node::findAccessPointByMAC(const MacAddress& macAddr)
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
+      NetObj *curr = getChildList()->get(i);
       if (curr->getObjectClass() == OBJECT_ACCESSPOINT)
       {
          if (static_cast<AccessPoint*>(curr)->getMacAddr().equals(macAddr))
@@ -1514,12 +1536,12 @@ AccessPoint *Node::findAccessPointByRadioId(int rfIndex)
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
+      NetObj *curr = getChildList()->get(i);
       if (curr->getObjectClass() == OBJECT_ACCESSPOINT)
       {
-         if (((AccessPoint *)curr)->isMyRadio(rfIndex))
+         if (static_cast<AccessPoint*>(curr)->isMyRadio(rfIndex))
          {
-            ap = (AccessPoint *)curr;
+            ap = static_cast<AccessPoint*>(curr);
             break;
          }
       }
@@ -1537,7 +1559,7 @@ AccessPoint *Node::findAccessPointByBSSID(const BYTE *bssid)
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
+      NetObj *curr = getChildList()->get(i);
       if (curr->getObjectClass() == OBJECT_ACCESSPOINT)
       {
          if (static_cast<AccessPoint*>(curr)->getMacAddr().equals(bssid) ||
@@ -1559,9 +1581,9 @@ bool Node::isMyIP(const InetAddress& addr)
 {
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
-      if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
+      if (getChildList()->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         if (((Interface *)static_cast<NetObj *>(getChildList()->get(i)))->getIpAddressList()->hasAddress(addr))
+         if (static_cast<Interface*>(getChildList()->get(i))->getIpAddressList()->hasAddress(addr))
          {
             unlockChildList();
             return true;
