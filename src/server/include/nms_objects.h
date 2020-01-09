@@ -724,7 +724,7 @@ private:
 
 protected:
    time_t m_timestamp;       // Last change time stamp
-   UINT32 m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
+   VolatileCounter m_refCount;        // Number of references. Object can be destroyed only when this counter is zero
    TCHAR *m_comments;      // User comments
    int m_status;
    int m_savedStatus;      // Object status in database
@@ -747,7 +747,6 @@ protected:
 	UINT64 m_maintenanceEventId;
 	uuid m_image;
    MUTEX m_mutexProperties;         // Object data access mutex
-   MUTEX m_mutexRefCount;     // Reference counter access mutex
 	GeoLocation m_geoLocation;
    PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
@@ -850,9 +849,9 @@ public:
 	void setFlag(UINT32 flag) { lockProperties(); m_flags |= flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 	void clearFlag(UINT32 flag) { lockProperties(); m_flags &= ~flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
-   UINT32 getRefCount();
-   void incRefCount();
-   void decRefCount();
+   UINT32 getRefCount() const { return static_cast<UINT32>(m_refCount); }
+   void incRefCount() { InterlockedIncrement(&m_refCount); }
+   void decRefCount() { InterlockedDecrement(&m_refCount); }
 
 	bool isTrustedNode(UINT32 id);
 
@@ -959,40 +958,6 @@ public:
    static const char *getObjectClassName(int objectClass) { return getObjectClassNameA(objectClass); }
 #endif
 };
-
-/**
- * Get object's reference count
- */
-inline UINT32 NetObj::getRefCount()
-{
-   UINT32 dwRefCount;
-
-   MutexLock(m_mutexRefCount);
-   dwRefCount = m_dwRefCount;
-   MutexUnlock(m_mutexRefCount);
-   return dwRefCount;
-}
-
-/**
- * Increment object's reference count
- */
-inline void NetObj::incRefCount()
-{
-   MutexLock(m_mutexRefCount);
-   m_dwRefCount++;
-   MutexUnlock(m_mutexRefCount);
-}
-
-/**
- * Decrement object's reference count
- */
-inline void NetObj::decRefCount()
-{
-   MutexLock(m_mutexRefCount);
-   if (m_dwRefCount > 0)
-      m_dwRefCount--;
-   MutexUnlock(m_mutexRefCount);
-}
 
 /**
  * Generic versionable object

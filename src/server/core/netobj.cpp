@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,9 +61,8 @@ static const char *s_classNameA[]=
  */
 NetObj::NetObj()
 {
-   m_dwRefCount = 0;
+   m_refCount = 0;
    m_mutexProperties = MutexCreateFast();
-   m_mutexRefCount = MutexCreateFast();
    m_mutexACL = MutexCreate();
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
@@ -111,7 +110,6 @@ NetObj::NetObj()
 NetObj::~NetObj()
 {
    MutexDestroy(m_mutexProperties);
-   MutexDestroy(m_mutexRefCount);
    MutexDestroy(m_mutexACL);
    delete m_accessList;
 	delete m_trustedNodes;
