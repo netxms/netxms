@@ -115,6 +115,7 @@ threads.*	Thread related
 topo.*		Topology related
 topo.arp	ARP topology
 topo.ipv4	IPv4 topology
+topo.lldp	LLDP related messages
 
 tunnel		Tunnel (in agent log)
 
