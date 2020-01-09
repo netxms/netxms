@@ -736,6 +736,7 @@ void Template::forceApplyPolicyChanges()
             }
          }
          delete it;
+         node->decRefCount();
       }
       unlockProperties();
    }
@@ -747,7 +748,7 @@ void Template::forceApplyPolicyChanges()
 void Template::applyPolicyChanges(DataCollectionTarget *object)
 {
    lockChildList(false);
-   if(object->getObjectClass() == OBJECT_NODE)
+   if (object->getObjectClass() == OBJECT_NODE)
    {
       AgentPolicyInfo *ap;
       AgentConnection *conn = static_cast<Node*>(object)->getAgentConnection();

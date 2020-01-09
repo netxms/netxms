@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -238,6 +238,8 @@ void DataCollector(shared_ptr<DCObject> dcObject)
    if (IsShutdownInProgress())
    {
       dcObject->clearBusyFlag();
+      if (target != NULL)
+         target->decRefCount();
       return;
    }
 
@@ -246,7 +248,7 @@ void DataCollector(shared_ptr<DCObject> dcObject)
    UINT32 sourceNodeId = target->getEffectiveSourceNode(dcObject.get());
    if (sourceNodeId != 0)
    {
-      Node *sourceNode = (Node *)FindObjectById(sourceNodeId, OBJECT_NODE);
+      Node *sourceNode = static_cast<Node*>(FindObjectById(sourceNodeId, OBJECT_NODE));
       if (sourceNode != NULL)
       {
          if (((target->getObjectClass() == OBJECT_CHASSIS) && (((Chassis *)target)->getControllerId() == sourceNodeId)) ||
@@ -337,7 +339,7 @@ void DataCollector(shared_ptr<DCObject> dcObject)
 
       // Decrement node's usage counter
       target->decRefCount();
-      if ((dcObject->getSourceNode() != 0) && (dcObject->getOwner() != NULL))
+      if ((sourceNodeId != 0) && (dcObject->getOwner() != NULL))
       {
          dcObject->getOwner()->decRefCount();
       }
