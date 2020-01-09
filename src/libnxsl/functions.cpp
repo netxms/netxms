@@ -273,6 +273,18 @@ int F_atan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 }
 
 /**
+ * Calculates 2-argument arc tangent
+ */
+int F_atan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(atan2(argv[0]->getValueAsReal(), argv[1]->getValueAsReal()));
+   return 0;
+}
+
+/**
  * Convert string to uppercase
  */
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)

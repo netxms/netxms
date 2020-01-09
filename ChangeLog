@@ -21,6 +21,7 @@
 - New methods "correlateTo" and "expandString" in NXSL class "Event"
 - New method "expandString" in NXSL class "NetObj"
 - New hook "Hook::EventProcessor" that is called for each event before passing it to EPP
+- New NXSL function "atan2"
 - Added global array $ARGS in NXSL scripts for simplified access to script arguments
 - Added NXSL constants NXSL::VERSION and NXSL::BUILD_TAG
 - Interface object names can be expanded from actual interface names using macros
