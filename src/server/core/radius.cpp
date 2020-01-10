@@ -1,6 +1,6 @@
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2019 Victor Kirhenshtein
+ ** Copyright (C) 2003-2020 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -31,6 +31,8 @@
 #include <openssl/md4.h>
 #include <openssl/sha.h>
 #include <openssl/des.h>
+
+#define DEBUG_TAG _T("radius")
 
 /**
  * Calculate NT password hash
@@ -639,9 +641,9 @@ static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int
 	auth = (AUTH_HDR *)buffer;
 	totallen = ntohs(auth->length);
 
-	if(totallen != length)
+	if (totallen != length)
 	{
-		DbgPrintf(3, _T("RADIUS: Received invalid reply length from server (want %d - got %d)"), totallen, length);
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("Received invalid reply length from RADIUS server (want %d - got %d)"), totallen, length);
 		return 8;
 	}
 
@@ -654,11 +656,11 @@ static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int
 
 	if(memcmp(reply_digest, calc_digest, AUTH_VECTOR_LEN) != 0)
 	{
-		DbgPrintf(3, _T("RADIUS: Received invalid reply digest from server"));
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("Received invalid reply digest from RADIUS server"));
 	}
 
 	host.toString(szHostName);
-	DbgPrintf(3, _T("RADIUS: Packet from host %s code=%d, id=%d, length=%d"), szHostName, auth->code, auth->id, totallen);
+	nxlog_debug_tag(DEBUG_TAG, 3, _T("RADIUS packet from host %s code=%d, id=%d, length=%d"), szHostName, auth->code, auth->id, totallen);
 	return (auth->code == PW_AUTHENTICATION_REJECT) ? 1 : 0;
 }
 
@@ -672,8 +674,8 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	int port, result = 0, length, i;
 	int nRetries, nTimeout;
 	SOCKET sockfd;
-	int send_buffer[512];
-	int recv_buffer[512];
+	int send_buffer[1024];
+	char recv_buffer[4096];
 	BYTE vector[AUTH_VECTOR_LEN];
 	char szSecret[256];
 
@@ -685,7 +687,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 
 	if (!strcmp(serverName, "none"))
 	{
-		DbgPrintf(4, _T("RADIUS: %s server set to none, skipping"), useSecondaryServer ? _T("secondary") : _T("primary"));
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("%s RADIUS server set to none, skipping"), useSecondaryServer ? _T("Secondary") : _T("Primary"));
 		return 10;
 	}
 
@@ -707,7 +709,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 
    char authMethod[16];
    ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "PAP");
-	nxlog_debug(4, _T("RADIUS: authenticating user %hs on server %hs using %hs"), login, serverName, authMethod);
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("Authenticating user %hs on RADIUS server %hs using %hs"), login, serverName, authMethod);
    if (!stricmp(authMethod, "PAP"))
    {
 	   vp = paircreate(PW_PASSWORD, PW_TYPE_STRING, "User-Password");
@@ -801,7 +803,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 #endif
    else
    {
-      nxlog_debug(3, _T("RADIUS: unknown authentication method %hs"), authMethod);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown RADIUS authentication method %hs"), authMethod);
 		pairfree(req);
 		return 11;
    }
@@ -810,7 +812,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	InetAddress serverAddr = InetAddress::resolveHostName(serverName);
 	if (!serverAddr.isValidUnicast())
 	{
-		nxlog_debug(3, _T("RADIUS: cannot resolve server name \"%hs\""), serverName);
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot resolve RADIUS server name \"%hs\""), serverName);
 		pairfree(req);
 		return 3;
 	}
@@ -819,7 +821,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	sockfd = CreateSocket(serverAddr.getFamily(), SOCK_DGRAM, 0);
 	if (sockfd == INVALID_SOCKET)
 	{
-		nxlog_debug(3, _T("RADIUS: Cannot create socket"));
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot create socket"));
 		pairfree(req);
 		return 5;
 	}
@@ -838,7 +840,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	{
 		if (i > 0)
 		{
-			nxlog_debug(5, _T("RADIUS: Re-sending request..."));
+			nxlog_debug_tag(DEBUG_TAG, 5, _T("Re-sending RADIUS request"));
 		}
 		sendto(sockfd, (char *)auth, length, 0, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa));
 
@@ -846,12 +848,13 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 		sp.add(sockfd);
 		if (sp.poll(nTimeout * 1000) <= 0)
 		{
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Timeout waiting for RADIUS server response"));
 			continue;
 		}
 
 		SockAddrBuffer sarecv;
 		socklen_t salen = sizeof(sa);
-		result = recvfrom(sockfd, (char *)recv_buffer, sizeof(recv_buffer), 0, (struct sockaddr *)&sarecv, &salen);
+		result = recvfrom(sockfd, recv_buffer, sizeof(recv_buffer), 0, (struct sockaddr *)&sarecv, &salen);
 		InetAddress addrRecv = InetAddress::createFromSockaddr((struct sockaddr *)&sarecv);
 		if ((result >= 0) && addrRecv.equals(serverAddr) && (SA_PORT(&sarecv) == SA_PORT(&sa)))
 		{
@@ -863,7 +866,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 
 	if (result > 0 && i < nRetries)
 	{
-		result = result_recv(serverAddr, port, (char *)recv_buffer, result, vector, szSecret);
+		result = result_recv(serverAddr, port, recv_buffer, result, vector, szSecret);
 	}
 	else
 	{
@@ -880,6 +883,14 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 static bool CanRetry(int result)
 {
    return (result == 3) || (result == 7) || (result == 10); // Bad server name, timeout, comm. error, or server not configured
+}
+
+/**
+ * Check if authentication failed because of timeout
+ */
+static bool IsTimeout(int result)
+{
+   return result == 7;
 }
 
 #else /* USE_RADCLI */
@@ -909,7 +920,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    ConfigReadStrA(useSecondaryServer ? _T("RADIUSSecondaryServer") : _T("RADIUSServer"), serverName, 256, "none");
    if (!strcmp(serverName, "none"))
    {
-      DbgPrintf(4, _T("RADIUS: %s server set to none, skipping"), useSecondaryServer ? _T("secondary") : _T("primary"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("%s RADIUS server set to none, skipping"), useSecondaryServer ? _T("Secondary") : _T("Primary"));
       return -127;
    }
 
@@ -951,7 +962,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 
    char authMethod[16];
    ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "PAP");
-	nxlog_debug(4, _T("RADIUS: authenticating user %hs on server %hs using %hs"), login, serverName, authMethod);
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("Authenticating user %hs on RADIUS server %hs using %hs"), login, serverName, authMethod);
    if (!stricmp(authMethod, "PAP"))
    {
       PAIR_ADD(PW_USER_PASSWORD, passwd);
@@ -1025,7 +1036,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 #endif
    else
    {
-      nxlog_debug(3, _T("RADIUS: unknown authentication method %hs"), authMethod);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown RADIUS authentication method %hs"), authMethod);
       rc_destroy(rh);
       rc_avpair_free(request);
       return ERROR_RC;
@@ -1045,6 +1056,14 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 static bool CanRetry(int result)
 {
    return (result == -127) || (result == BADRESP_RC) || (result == TIMEOUT_RC); // Bad server name, timeout, comm. error, or server not configured
+}
+
+/**
+ * Check if authentication failed because of timeout
+ */
+static bool IsTimeout(int result)
+{
+   return result == TIMEOUT_RC;
 }
 
 #endif
@@ -1067,18 +1086,20 @@ bool RadiusAuth(const TCHAR *login, const TCHAR *passwd)
    rlogin[255] = 0;
    rpasswd[255] = 0;
    int result = DoRadiusAuth(rlogin, rpasswd, useSecondary, server);
-	nxlog_debug(4, _T("RADIUS: DoRadiusAuth returned %d for user %s"), result, login);
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("DoRadiusAuth returned %d for user %s"), result, login);
 	if (CanRetry(result))
 	{
 		useSecondary = !useSecondary;
-		nxlog_debug(3, _T("RADIUS: unable to use %s server, switching to %s"), useSecondary ? _T("primary") : _T("secondary"), useSecondary ? _T("secondary") : _T("primary"));
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("Unable to use %s RADIUS server, switching to %s"), useSecondary ? _T("primary") : _T("secondary"), useSecondary ? _T("secondary") : _T("primary"));
 		result = DoRadiusAuth(rlogin, rpasswd, useSecondary, server);
-	   nxlog_debug(4, _T("RADIUS: DoRadiusAuth returned %d for user %s"), result, login);
+	   nxlog_debug_tag(DEBUG_TAG, 4, _T("DoRadiusAuth returned %d for user %s"), result, login);
 	}
-	nxlog_write(NXLOG_INFO,
+	nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
 	         (result == 0) ?
 	                  _T("User %s was successfully authenticated by RADIUS server %hs") :
-	                  _T("Authentication request for user %s was rejected by RADIUS server %hs"),
+	                  (IsTimeout(result) ?
+                           _T("Authentication request for user %s timed out using RADIUS server %hs") :
+	                        _T("Authentication request for user %s was rejected by RADIUS server %hs")),
 	                  login, server);
 	return result == 0;
 }
