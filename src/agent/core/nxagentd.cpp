@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1886,17 +1886,13 @@ int main(int argc, char *argv[])
 		{
 			_tcscpy(g_szConfigFile, path);
 		}
-		else if (_taccess(PREFIX _T("/etc/nxagentd.conf"), 4) == 0)
+		else if (_taccess(SYSCONFDIR _T("/nxagentd.conf"), 4) == 0)
 		{
-			_tcscpy(g_szConfigFile, PREFIX _T("/etc/nxagentd.conf"));
+			_tcscpy(g_szConfigFile, SYSCONFDIR _T("/nxagentd.conf"));
 		}
 		else if (_taccess(_T("/Database/etc/nxagentd.conf"), 4) == 0)	// for ZeroShell
 		{
 			_tcscpy(g_szConfigFile, _T("/Database/etc/nxagentd.conf"));
-		}
-		else if (_taccess(_T("/usr/etc/nxagentd.conf"), 4) == 0)
-		{
-			_tcscpy(g_szConfigFile, _T("/usr/etc/nxagentd.conf"));
 		}
 		else
 		{
@@ -1915,17 +1911,13 @@ int main(int argc, char *argv[])
 		{
 			_tcscpy(g_szConfigIncludeDir, path);
 		}
-		else if (_taccess(PREFIX _T("/etc/nxagentd.conf.d"), 4) == 0)
+		else if (_taccess(SYSCONFDIR _T("/nxagentd.conf.d"), 4) == 0)
 		{
-			_tcscpy(g_szConfigIncludeDir, PREFIX _T("/etc/nxagentd.conf.d"));
+			_tcscpy(g_szConfigIncludeDir, SYSCONFDIR _T("/nxagentd.conf.d"));
 		}
 		else if (_taccess(_T("/Database/etc/nxagentd.conf.d"), 4) == 0)
 		{
 			_tcscpy(g_szConfigIncludeDir, _T("/Database/etc/nxagentd.conf.d"));
-		}
-		else if (_taccess(_T("/usr/etc/nxagentd.conf.d"), 4) == 0)
-		{
-			_tcscpy(g_szConfigIncludeDir, _T("/usr/etc/nxagentd.conf.d"));
 		}
 		else
 		{
