@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -3048,8 +3048,8 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
    switch(type)
    {
       case nxDirBin:
-#ifdef PREFIX
-         _tcscpy(dir, PREFIX _T("/bin"));
+#ifdef BINDIR
+         _tcscpy(dir, BINDIR);
 #else
          _tcscpy(dir, _T("/usr/bin"));
 #endif
@@ -3062,8 +3062,8 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
 #endif
          break;
       case nxDirEtc:
-#ifdef PREFIX
-         _tcscpy(dir, PREFIX _T("/etc"));
+#ifdef SYSCONFDIR
+         _tcscpy(dir, SYSCONFDIR);
 #else
          _tcscpy(dir, _T("/etc"));
 #endif

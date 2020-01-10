@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -289,13 +289,9 @@ int main(int argc, char *argv[])
             goto stop_search;
 		   }
       }
-		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
+		if (_taccess(SYSCONFDIR _T("/netxmsd.conf"), 4) == 0)
 		{
-			_tcscpy(configFile, PREFIX _T("/etc/netxmsd.conf"));
-		}
-		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
-		{
-			_tcscpy(configFile, _T("/usr/etc/netxmsd.conf"));
+			_tcscpy(configFile, SYSCONFDIR _T("/netxmsd.conf"));
 		}
 		else
 		{

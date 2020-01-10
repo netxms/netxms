@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -146,13 +146,9 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
             goto stop_search;
 		   }
       }
-		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
+		if (_taccess(SYSCONFDIR _T("/netxmsd.conf"), 4) == 0)
 		{
-			_tcscpy(g_szConfigFile, PREFIX _T("/etc/netxmsd.conf"));
-		}
-		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
-		{
-			_tcscpy(g_szConfigFile, _T("/usr/etc/netxmsd.conf"));
+			_tcscpy(g_szConfigFile, SYSCONFDIR _T("/netxmsd.conf"));
 		}
 		else
 		{

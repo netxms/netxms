@@ -4094,10 +4094,11 @@ if test "x$RUNTIME_PREFIX" = "x"; then
 	NETXMS_LIBDIR='${libdir}'
 	NETXMS_PKGLIBDIR='${pkglibdir}'
 	NETXMS_STATEDIR='${localstatedir}/lib/netxms'
+	NETXMS_SYSCONFDIR='${sysconfdir}'
         if test "x${BUILD_UNICODE}" = "xyes"; then
-		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"\${prefix}\\\" -DDATADIR=L\\\"\${pkgdatadir}\\\" -DBINDIR=L\\\"\${bindir}\\\" -DLIBDIR=L\\\"\${libdir}\\\" -DPKGLIBDIR=L\\\"\${pkglibdir}\\\" -DSTATEDIR=L\\\"\${localstatedir}/lib/netxms\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"\${prefix}\\\" -DDATADIR=L\\\"\${pkgdatadir}\\\" -DBINDIR=L\\\"\${bindir}\\\" -DLIBDIR=L\\\"\${libdir}\\\" -DPKGLIBDIR=L\\\"\${pkglibdir}\\\" -DSTATEDIR=L\\\"\${localstatedir}/lib/netxms\\\" -DSYSCONFDIR=L\\\"\${sysconfdir}\\\""
 	else
-		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\" -DSTATEDIR=\\\"\${localstatedir}/lib/netxms\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\" -DSTATEDIR=\\\"\${localstatedir}/lib/netxms\\\" -DSYSCONFDIR=\\\"\${sysconfdir}\\\""
 	fi
 else
 	NETXMS_PREFIX="$RUNTIME_PREFIX"
@@ -4106,10 +4107,11 @@ else
 	NETXMS_LIBDIR="$RUNTIME_PREFIX/lib"
 	NETXMS_PKGLIBDIR="$RUNTIME_PREFIX/lib/netxms"
 	NETXMS_STATEDIR="$RUNTIME_STATE_DIR/lib/netxms"
+	NETXMS_SYSCONFDIR="$RUNTIME_PREFIX/etc"
 	if test "x${BUILD_UNICODE}" = "xyes"; then
-		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"$RUNTIME_PREFIX\\\" -DDATADIR=L\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=L\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=L\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=L\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=L\\\"$RUNTIME_STATE_DIR/lib/netxms\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"$RUNTIME_PREFIX\\\" -DDATADIR=L\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=L\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=L\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=L\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=L\\\"$RUNTIME_STATE_DIR/lib/netxms\\\" -DSYSCONFDIR=L\\\"$RUNTIME_PREFIX/etc\\\""
 	else
-		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"$RUNTIME_PREFIX\\\" -DDATADIR=\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=\\\"$RUNTIME_STATE_DIR/lib/netxms\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"$RUNTIME_PREFIX\\\" -DDATADIR=\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=\\\"$RUNTIME_STATE_DIR/lib/netxms\\\" -DSYSCONFDIR=\\\"$RUNTIME_PREFIX/etc\\\""
 	fi
 	LDFLAGS_SUFFIX="$LDFLAGS_SUFFIX -R $RUNTIME_PREFIX/lib"
 fi
@@ -4234,6 +4236,7 @@ AC_SUBST(NETXMS_LIBDIR)
 AC_SUBST(NETXMS_PKGLIBDIR)
 AC_SUBST(NETXMS_PREFIX)
 AC_SUBST(NETXMS_STATEDIR)
+AC_SUBST(NETXMS_SYSCONFDIR)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(ODBC_CPPFLAGS)
 AC_SUBST(ODBC_LDFLAGS)

@@ -392,11 +392,20 @@ typedef unsigned __int64 uint64_t;
 
 #ifndef PREFIX
 #ifdef UNICODE
-#define PREFIX    L"/usr/local"
+#define PREFIX  L"/usr/local"
 #else
-#define PREFIX		"/usr/local"
+#define PREFIX  "/usr/local"
 #endif
 #warning Installation prefix not defined, defaulting to /usr/local
+#endif
+
+#ifndef SYSCONFDIR
+#ifdef UNICODE
+#define SYSCONFDIR   PREFIX L"/etc"
+#else
+#define SYSCONFDIR   PREFIX "/etc"
+#endif
+#warning SYSCONFDIR not defined, defaulting to $prefix/etc
 #endif
 
 #if HAVE_THREAD_LOCAL_SPECIFIER
