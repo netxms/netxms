@@ -8,7 +8,7 @@ Name: "{app}\var"
 [Tasks]
 Name: fspermissions; Description: "Set hardened file system permissions"
 Name: sessionagent; Description: "Install session agent (will run in every user session)"; Flags: unchecked
-Name: useragent; Description: "Install desktop support application (will run in every user session)"; Flags: unchecked
+Name: useragent; Description: "Install user support application (will run in every user session)"; Flags: unchecked
 
 [Registry]
 Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty
