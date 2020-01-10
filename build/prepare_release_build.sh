@@ -37,4 +37,8 @@ sed -i -e "s,org.netxms:netxms-mobile-agent:3.0-SNAPSHOT,org.netxms:netxms-mobil
 sed -i -e "s,org.netxms:netxms-client:3.0-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/console/app/build.gradle
 sed -i -e "s,org.netxms:netxms-base:3.0-SNAPSHOT,org.netxms:netxms-base:$VERSION,g" android/console/app/build.gradle
 
+if [ -x ./private/branding/build/prepare_release_build_hook.sh ]; then
+	./private/branding/build/prepare_release_build_hook.sh
+fi
+
 ./reconf
