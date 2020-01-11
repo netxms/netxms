@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1831,13 +1831,13 @@ void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
 	if (m_session != NULL && m_response != NULL)
 	{
       size_t len = _tcslen(text);
-      TCHAR *t = (TCHAR *)malloc((len + 2) * sizeof(TCHAR));
+      TCHAR *t = MemAllocString(len + 2);
       memcpy(t, text, len * sizeof(TCHAR));
       t[len] = _T('\n');
       t[len + 1] = 0;
 		m_response->setField(VID_MESSAGE, t);
 		m_session->sendMessage(m_response);
-      free(t);
+      MemFree(t);
 	}
    NXSL_ServerEnv::trace(level, text);
 }

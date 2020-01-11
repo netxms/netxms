@@ -6639,8 +6639,7 @@ public class NXCSession
       MessageHandler handler = null;
       if (listener != null)
       {
-         handler = new MessageHandler()
-         {
+         handler = new MessageHandler() {
             @Override
             public boolean processMessage(NXCPMessage m)
             {
@@ -6652,11 +6651,13 @@ public class NXCSession
                      listener.messageReceived(errorMessage + "\n\n");
                   }
                }
-
-               String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
-               if ((text != null) && (listener != null))
+               else
                {
-                  listener.messageReceived(text);
+                  String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
+                  if ((text != null) && (listener != null))
+                  {
+                     listener.messageReceived(text);
+                  }
                }
 
                if (m.isEndOfSequence())
