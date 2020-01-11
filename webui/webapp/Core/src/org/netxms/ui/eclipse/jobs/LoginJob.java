@@ -33,6 +33,8 @@ import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.Activator;
@@ -170,6 +172,8 @@ public class LoginJob implements IRunnableWithProgress
          monitor.setTaskName(Messages.get(display).LoginJob_init_extensions);
          callLoginListeners(session);
          monitor.worked(5);
+         
+         setupSessionListener(session, display);
 
          Activator.logInfo("Creating keepalive timer");
          new KeepAliveTimer(session).start();
@@ -185,6 +189,32 @@ public class LoginJob implements IRunnableWithProgress
       }
 
       Activator.logInfo("Login job completed");
+   }
+
+   /**
+    * Setup session listener
+    * 
+    * @param session
+    * @param display
+    */
+   private static void setupSessionListener(final NXCSession session, final Display display)
+   {
+      session.addListener(new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.SYSTEM_ACCESS_CHANGED)
+            {
+               display.asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     SourceProvider.getInstance().updateAccessRights(session.getUserSystemRights());
+                  }
+               });
+            }
+         }
+      });
    }
 
    /**

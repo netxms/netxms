@@ -187,7 +187,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    _tcscpy(m_sessionName, _T("<not logged in>"));
 	_tcscpy(m_clientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
-   m_dwSystemAccess = 0;
+   m_systemAccessRights = 0;
    m_openDCIListLock = MutexCreate();
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
@@ -1820,7 +1820,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &m_dwSystemAccess, &changePasswd, &intruderLockout,
+													 &m_systemAccessRights, &changePasswd, &intruderLockout,
 													 &closeOtherSessions, false, &graceLogins);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
@@ -1833,7 +1833,7 @@ void ClientSession::login(NXCPMessage *pRequest)
                if (signature != NULL)
                {
                   dwResult = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR*>(signature), sigLen, 
-                        pCert, m_challenge, &m_dwUserId, &m_dwSystemAccess, &changePasswd, &intruderLockout,
+                        pCert, m_challenge, &m_dwUserId, &m_systemAccessRights, &changePasswd, &intruderLockout,
                         &closeOtherSessions, false, &graceLogins);
                }
                else
@@ -1857,7 +1857,7 @@ void ClientSession::login(NXCPMessage *pRequest)
             {
                debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, szLogin);
 				   dwResult = AuthenticateUser(szLogin, NULL, 0, NULL, NULL, &m_dwUserId,
-													    &m_dwSystemAccess, &changePasswd, &intruderLockout,
+													    &m_systemAccessRights, &changePasswd, &intruderLockout,
 													    &closeOtherSessions, true, &graceLogins);
             }
             else
@@ -1895,7 +1895,7 @@ void ClientSession::login(NXCPMessage *pRequest)
          _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_workstation);
          m_loginTime = time(NULL);
          msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setField(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
+         msg.setField(VID_USER_SYS_RIGHTS, m_systemAccessRights);
          msg.setField(VID_USER_ID, m_dwUserId);
 			msg.setField(VID_SESSION_ID, (UINT32)m_id);
 			msg.setField(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
@@ -1965,6 +1965,27 @@ void ClientSession::login(NXCPMessage *pRequest)
 
    // Send response
    sendMessage(&msg);
+}
+
+/**
+ * Update system access rights for logged in user
+ */
+void ClientSession::updateSystemAccessRights()
+{
+   if (!(m_dwFlags & CSF_AUTHENTICATED))
+      return;
+
+   UINT64 systemAccessRights = GetEffectiveSystemRights(m_dwUserId);
+   if (systemAccessRights != m_systemAccessRights)
+   {
+      debugPrintf(3, _T("System access rights updated (") UINT64X_FMT(_T("016")) _T(" -> ")  UINT64X_FMT(_T("016")) _T(")"), m_systemAccessRights, systemAccessRights);
+      m_systemAccessRights = systemAccessRights;
+
+      NXCPMessage msg;
+      msg.setCode(CMD_UPDATE_SYSTEM_ACCESS_RIGHTS);
+      msg.setField(VID_USER_SYS_RIGHTS, systemAccessRights);
+      postMessage(&msg);
+   }
 }
 
 /**
@@ -2381,7 +2402,7 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
    msg.setId(dwRqId);
 
    // Check user rights
-   if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+   if ((m_dwUserId == 0) || (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -2498,7 +2519,7 @@ void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
    TCHAR name[MAX_OBJECT_NAME];
    pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
-   if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+   if ((m_dwUserId == 0) || (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG))
    {
       TCHAR oldValue[MAX_CONFIG_VALUE], newValue[MAX_CONFIG_VALUE];
       pRequest->getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE);
@@ -2587,7 +2608,7 @@ void ClientSession::deleteConfigurationVariable(NXCPMessage *pRequest)
    TCHAR name[MAX_OBJECT_NAME];
    pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
-   if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+   if ((m_dwUserId == 0) || (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG))
    {
       if (ConfigDelete(name))
 		{
@@ -2618,7 +2639,7 @@ void ClientSession::setConfigCLOB(NXCPMessage *pRequest)
 
    TCHAR name[MAX_OBJECT_NAME];
    pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
 		TCHAR *newValue = pRequest->getFieldAsString(VID_VALUE);
 		if (newValue != NULL)
@@ -2662,7 +2683,7 @@ void ClientSession::getConfigCLOB(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
       pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 		value = ConfigReadCLOB(name, NULL);
@@ -2702,7 +2723,7 @@ void ClientSession::kill()
  */
 void ClientSession::onNewEvent(Event *pEvent)
 {
-   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_EVENTS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_EVENTS) && (m_systemAccessRights & SYSTEM_ACCESS_VIEW_EVENT_LOG))
    {
       NetObj *object = FindObjectById(pEvent->getSourceId());
       // If can't find object - just send to all events, if object found send to thous who have rights
@@ -2976,7 +2997,7 @@ void ClientSession::createUser(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    // Check user rights
-   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
@@ -3025,7 +3046,7 @@ void ClientSession::updateUser(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    // Check user rights
-   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
@@ -3068,7 +3089,7 @@ void ClientSession::detachLdapUser(NXCPMessage *pRequest)
    UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
 
    // Check user rights
-   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
@@ -3107,9 +3128,14 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    // Check user rights
-   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+
+      dwUserId = pRequest->getFieldAsUInt32(VID_USER_ID);
+      TCHAR name[MAX_USER_NAME];
+      ResolveUserId(dwUserId, name, true);
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on delete %s %s [%d]"), (dwUserId & GROUP_FLAG) ? _T("group") : _T("user"), name, dwUserId);
    }
    else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
    {
@@ -3130,10 +3156,9 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
             ResolveUserId(dwUserId, name, true);
             UINT32 rcc =  DeleteUserDatabaseObject(dwUserId);
             msg.setField(VID_RCC, rcc);
-            if(rcc == RCC_SUCCESS)
+            if (rcc == RCC_SUCCESS)
             {
-               writeAuditLog(AUDIT_SECURITY, true, 0,
-                             _T("%s %s [%d] deleted"), (dwUserId & GROUP_FLAG) ? _T("Group") : _T("User"), name, dwUserId);
+               writeAuditLog(AUDIT_SECURITY, true, 0, _T("%s %s [%d] deleted"), (dwUserId & GROUP_FLAG) ? _T("Group") : _T("User"), name, dwUserId);
             }
          }
          else
@@ -3165,7 +3190,7 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
       if (bLock)
       {
@@ -3389,7 +3414,7 @@ void ClientSession::setPassword(NXCPMessage *request)
    msg.setId(request->getId());
 
    UINT32 userId = request->getFieldAsUInt32(VID_USER_ID);
-   if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) || (userId == m_dwUserId))     // User can change password for itself
+   if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS) || (userId == m_dwUserId))     // User can change password for itself
    {
       TCHAR newPassword[1024], oldPassword[1024];
 #ifdef UNICODE
@@ -4958,7 +4983,7 @@ void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
 void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_EPP)
+   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
       if (m_dwFlags & CSF_EPP_LOCKED)
       {
@@ -5003,7 +5028,7 @@ void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_EPP)
+   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
       if (m_dwFlags & CSF_EPP_LOCKED)
       {
@@ -5809,7 +5834,7 @@ void ClientSession::getAlarmEvents(NXCPMessage *request)
    {
       // User should have "view alarm" right to the object and
 		// system-wide "view event log" access
-      if ((m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      if ((m_systemAccessRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
          msg.setField(VID_RCC, GetAlarmEvents(alarmId, m_dwUserId, &msg, this));
       }
@@ -5982,7 +6007,7 @@ void ClientSession::deleteAlarm(NXCPMessage *pRequest)
       // User should have "terminate alarm" right to the object
       // and system right "delete alarms"
       if ((object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
-          (m_dwSystemAccess & SYSTEM_ACCESS_DELETE_ALARMS))
+          (m_systemAccessRights & SYSTEM_ACCESS_DELETE_ALARMS))
       {
          DeleteAlarm(alarmId, false);
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -6305,7 +6330,7 @@ void ClientSession::createAction(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    // Check user rights
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       TCHAR actionName[MAX_OBJECT_NAME];
       pRequest->getFieldAsString(VID_ACTION_NAME, actionName, MAX_OBJECT_NAME);
@@ -6343,7 +6368,7 @@ void ClientSession::updateAction(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    // Check user rights
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       msg.setField(VID_RCC, ModifyActionFromMessage(pRequest));
    }
@@ -6364,7 +6389,7 @@ void ClientSession::deleteAction(NXCPMessage *pRequest)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
    // Check user rights
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       // Get Id of action to be deleted
       UINT32 actionId = pRequest->getFieldAsUInt32(VID_ACTION_ID);
@@ -6426,8 +6451,8 @@ void ClientSession::sendAllActions(UINT32 dwRqId)
    msg.setId(dwRqId);
 
    // Check user rights
-   if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS) ||
-       (m_dwSystemAccess & SYSTEM_ACCESS_EPP))
+   if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ||
+       (m_systemAccessRights & SYSTEM_ACCESS_EPP))
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
       sendMessage(&msg);
@@ -6907,7 +6932,7 @@ void ClientSession::getInstalledPackages(UINT32 requestId)
    BOOL bSuccess = FALSE;
    TCHAR szBuffer[MAX_DB_STRING];
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
@@ -6963,7 +6988,7 @@ void ClientSession::installPackage(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
       TCHAR szPkgName[MAX_PACKAGE_NAME_LEN], szDescription[MAX_DB_STRING];
       TCHAR szPkgVersion[MAX_AGENT_VERSION_LEN], szFileName[MAX_DB_STRING];
@@ -7045,7 +7070,7 @@ void ClientSession::removePackage(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
       UINT32 pkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
       msg.setField(VID_RCC, UninstallPackage(pkgId));
@@ -7118,7 +7143,7 @@ void ClientSession::deployPackage(NXCPMessage *request)
    BOOL bSuccess = TRUE;
    MUTEX hMutex;
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
 		ObjectArray<Node> *nodeList = NULL;
 
@@ -7316,7 +7341,7 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
-   if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -7373,7 +7398,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
-   if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Check variable name
       pRequest->getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
@@ -7447,7 +7472,7 @@ void ClientSession::enumUserVariables(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
-   if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       pRequest->getFieldAsString(VID_SEARCH_PATTERN, szPattern, MAX_USERVAR_NAME_LENGTH);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -7498,7 +7523,7 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
-   if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -7545,7 +7570,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -8125,7 +8150,7 @@ void ClientSession::updateObjectTool(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    // Check user rights
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       msg.setField(VID_RCC, UpdateObjectToolFromMessage(pRequest));
    }
@@ -8151,7 +8176,7 @@ void ClientSession::deleteObjectTool(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    // Check user rights
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       dwToolId = pRequest->getFieldAsUInt32(VID_TOOL_ID);
       msg.setField(VID_RCC, DeleteObjectToolFromDB(dwToolId));
@@ -8178,7 +8203,7 @@ void ClientSession::changeObjectToolStatus(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    // Check user rights
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       toolID = pRequest->getFieldAsUInt32(VID_TOOL_ID);
       enable = pRequest->getFieldAsUInt32(VID_STATE);
@@ -8396,7 +8421,7 @@ void ClientSession::sendScriptList(UINT32 dwRqId)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       GetServerScriptLibrary()->fillMessage(&msg);
       msg.setField(VID_RCC, RCC_SUCCESS);;
@@ -8415,7 +8440,7 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       UINT32 id = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
       NXSL_LibraryScript *script = GetServerScriptLibrary()->findScript(id);
@@ -8439,7 +8464,7 @@ void ClientSession::updateScript(NXCPMessage *pRequest)
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       msg.setField(VID_RCC, UpdateScript(pRequest, &scriptId));
       msg.setField(VID_SCRIPT_ID, scriptId);
@@ -8460,7 +8485,7 @@ void ClientSession::renameScript(NXCPMessage *pRequest)
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       msg.setField(VID_RCC, RenameScript(pRequest));
    }
@@ -8480,7 +8505,7 @@ void ClientSession::deleteScript(NXCPMessage *pRequest)
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       msg.setField(VID_RCC, DeleteScript(pRequest));
    }
@@ -8518,7 +8543,7 @@ void ClientSession::SendSessionList(UINT32 dwRqId)
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SESSIONS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
       msg.setField(VID_NUM_SESSIONS, (UINT32)0);
       EnumerateClientSessions(CopySessionData, &msg);
@@ -8542,7 +8567,7 @@ void ClientSession::KillSession(NXCPMessage *pRequest)
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SESSIONS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
    }
    else
@@ -8557,7 +8582,7 @@ void ClientSession::KillSession(NXCPMessage *pRequest)
  */
 void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
 {
-   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SYSLOG) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_SYSLOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SYSLOG) && (m_systemAccessRights & SYSTEM_ACCESS_VIEW_SYSLOG))
    {
       NetObj *object = FindObjectById(pRec->dwSourceObject);
       // If can't find object - just send to all events, if object found send to thous who have rights
@@ -8575,7 +8600,7 @@ void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
  */
 void ClientSession::onNewSNMPTrap(NXCPMessage *pMsg)
 {
-   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SNMP_TRAPS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SNMP_TRAPS) && (m_systemAccessRights & SYSTEM_ACCESS_VIEW_TRAP_LOG))
    {
       NetObj *object = FindObjectById(pMsg->getFieldAsUInt32(VID_TRAP_LOG_MSG_BASE + 3));
       // If can't find object - just send to all events, if object found send to thous who have rights
@@ -8795,7 +8820,7 @@ void ClientSession::sendAgentCfgList(UINT32 dwRqId)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       hResult = DBSelect(hdb, _T("SELECT config_id,config_name,sequence_number FROM agent_configs"));
@@ -8842,7 +8867,7 @@ void ClientSession::OpenAgentConfig(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
@@ -8899,7 +8924,7 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
@@ -9002,7 +9027,7 @@ void ClientSession::DeleteAgentConfig(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
@@ -9056,7 +9081,7 @@ void ClientSession::SwapAgentConfigs(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -9442,7 +9467,7 @@ void ClientSession::getAddrList(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       ObjectArray<InetAddressListElement> *list = LoadServerAddressList(request->getFieldAsInt32(VID_ADDR_LIST_TYPE));
       if (list != NULL)
@@ -9481,7 +9506,7 @@ void ClientSession::setAddrList(NXCPMessage *request)
    msg.setId(request->getId());
 
    int listType = request->getFieldAsInt32(VID_ADDR_LIST_TYPE);
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       if (UpdateAddressListFromMessage(request))
       {
@@ -9513,7 +9538,7 @@ void ClientSession::resetComponent(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       dwCode = pRequest->getFieldAsUInt32(VID_COMPONENT_ID);
       switch(dwCode)
@@ -10457,7 +10482,7 @@ void ClientSession::sendNotification(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_SEND_NOTIFICATION) && ConfigReadBoolean(_T("AllowDirectNotifications"), false))
+	if ((m_systemAccessRights & SYSTEM_ACCESS_SEND_NOTIFICATION) && ConfigReadBoolean(_T("AllowDirectNotifications"), false))
 	{
 	   pRequest->getFieldAsString(VID_CHANNEL_NAME, channelName, MAX_OBJECT_NAME);
 	   if (IsNotificationChannelExists(channelName))
@@ -10496,7 +10521,7 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 	msg.setId(dwRqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		hResult = DBSelect(hdb, _T("SELECT community,zone FROM snmp_communities ORDER BY zone"));
@@ -10539,7 +10564,7 @@ void ClientSession::UpdateCommunityList(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		if (DBBegin(hdb))
@@ -10592,7 +10617,7 @@ void ClientSession::getPersistantStorage(UINT32 dwRqId)
 	msg.setId(dwRqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_PERSISTENT_STORAGE)
+	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
 		GetPersistentStorageList(&msg);
 	}
@@ -10613,7 +10638,7 @@ void ClientSession::setPstorageValue(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_PERSISTENT_STORAGE)
+	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
       TCHAR key[256], *value;
 		pRequest->getFieldAsString(VID_PSTORAGE_KEY, key, 256);
@@ -10640,7 +10665,7 @@ void ClientSession::deletePstorageValue(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_PERSISTENT_STORAGE)
+	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
       TCHAR key[256];
       //key[0]=0;
@@ -10723,7 +10748,7 @@ void ClientSession::getServerFile(NXCPMessage *pRequest)
       }
    }
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFile)
+	if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFile)
 	{
       _tcscpy(fname, g_netxmsdDataDir);
       _tcscat(fname, DDIR_FILES);
@@ -11505,7 +11530,7 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 	msg.setId(dwRqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone,comments FROM usm_credentials ORDER BY zone"));
@@ -11560,7 +11585,7 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
 	msg.setCode(CMD_REQUEST_COMPLETED);
    UINT32 rcc = RCC_SUCCESS;
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		if (DBBegin(hdb))
@@ -12467,7 +12492,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
       }
    }
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFiles)
+	if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFiles)
 	{
       _tcscpy(path, g_netxmsdDataDir);
       _tcscat(path, DDIR_FILES);
@@ -12547,7 +12572,7 @@ void ClientSession::openConsole(UINT32 rqId)
 	msg.setId(rqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONSOLE)
+	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
       if (!(m_dwFlags & CSF_CONSOLE_OPEN))
       {
@@ -12574,7 +12599,7 @@ void ClientSession::closeConsole(UINT32 rqId)
 	msg.setId(rqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONSOLE)
+	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
 		if (m_dwFlags & CSF_CONSOLE_OPEN)
 		{
@@ -12605,7 +12630,7 @@ void ClientSession::processConsoleCommand(NXCPMessage *request)
 	msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setId(request->getId());
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONSOLE) && (m_dwFlags & CSF_CONSOLE_OPEN))
+	if ((m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE) && (m_dwFlags & CSF_CONSOLE_OPEN))
 	{
 		TCHAR command[256];
 		request->getFieldAsString(VID_COMMAND, command, 256);
@@ -12690,7 +12715,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 		TCHAR fullPath[MAX_PATH];
@@ -12737,7 +12762,7 @@ void ClientSession::deleteFile(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 		TCHAR fullPath[MAX_PATH];
@@ -13011,7 +13036,7 @@ void ClientSession::listMappingTables(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
 		msg.setField(VID_RCC, ListMappingTables(&msg));
 	}
@@ -13051,7 +13076,7 @@ void ClientSession::updateMappingTable(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
 		LONG id;
 		msg.setField(VID_RCC, UpdateMappingTable(request, &id));
@@ -13077,7 +13102,7 @@ void ClientSession::deleteMappingTable(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
 		msg.setField(VID_RCC, DeleteMappingTable((LONG)request->getFieldAsUInt32(VID_MAPPING_TABLE_ID)));
 	}
@@ -13173,7 +13198,7 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
       LONG id = (LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -13241,7 +13266,7 @@ void ClientSession::modifySummaryTable(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
 		LONG id;
 		msg.setField(VID_RCC, ModifySummaryTable(request, &id));
@@ -13263,7 +13288,7 @@ void ClientSession::deleteSummaryTable(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
+	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
 		msg.setField(VID_RCC, DeleteSummaryTable((LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID)));
 	}
@@ -14105,7 +14130,7 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 void ClientSession::getSchedulerTaskHandlers(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   GetSchedulerTaskHandlers(&msg, m_dwSystemAccess);
+   GetSchedulerTaskHandlers(&msg, m_systemAccessRights);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -14116,7 +14141,7 @@ void ClientSession::getSchedulerTaskHandlers(NXCPMessage *request)
 void ClientSession::getScheduledTasks(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   GetScheduledTasks(&msg, m_dwUserId, m_dwSystemAccess);
+   GetScheduledTasks(&msg, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -14127,7 +14152,7 @@ void ClientSession::getScheduledTasks(NXCPMessage *request)
 void ClientSession::addScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 result = CreateScehduledTaskFromMsg(request, m_dwUserId, m_dwSystemAccess);
+   UINT32 result = CreateScehduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
@@ -14138,7 +14163,7 @@ void ClientSession::addScheduledTask(NXCPMessage *request)
 void ClientSession::updateScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 result = UpdateScheduledTaskFromMsg(request, m_dwUserId, m_dwSystemAccess);
+   UINT32 result = UpdateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
@@ -14149,7 +14174,7 @@ void ClientSession::updateScheduledTask(NXCPMessage *request)
 void ClientSession::removeScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 result = DeleteScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_dwSystemAccess);
+   UINT32 result = DeleteScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
@@ -14215,7 +14240,7 @@ void ClientSession::getPredictedData(NXCPMessage *request)
 void ClientSession::getAgentTunnels(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
       GetAgentTunnels(&msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
@@ -14235,7 +14260,7 @@ void ClientSession::getAgentTunnels(NXCPMessage *request)
 void ClientSession::bindAgentTunnel(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
       UINT32 nodeId = request->getFieldAsUInt32(VID_NODE_ID);
       UINT32 tunnelId = request->getFieldAsUInt32(VID_TUNNEL_ID);
@@ -14260,7 +14285,7 @@ void ClientSession::bindAgentTunnel(NXCPMessage *request)
 void ClientSession::unbindAgentTunnel(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
       UINT32 nodeId = request->getFieldAsUInt32(VID_NODE_ID);
       UINT32 rcc = UnbindAgentTunnel(nodeId, m_dwUserId);
@@ -14284,7 +14309,7 @@ void ClientSession::unbindAgentTunnel(NXCPMessage *request)
 void ClientSession::setupTcpProxy(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SETUP_TCP_PROXY)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SETUP_TCP_PROXY)
    {
       Node *node = static_cast<Node*>(FindObjectById(request->getFieldAsUInt32(VID_NODE_ID), OBJECT_NODE));
       if (node != NULL)
@@ -14772,7 +14797,7 @@ void ClientSession::getUserAgentNotification(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_UA_NOTIFICATIONS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
       g_userAgentNotificationListMutex.lock();
       msg.setField(VID_UA_NOTIFICATION_COUNT, g_userAgentNotificationList.size());
@@ -14802,7 +14827,7 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_UA_NOTIFICATIONS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
       IntegerArray<UINT32> objectList(16, 16);
       request->getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, &objectList);
@@ -14854,7 +14879,7 @@ void ClientSession::recallUserAgentNotification(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_UA_NOTIFICATIONS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
       g_userAgentNotificationListMutex.lock();
       int base = VID_UA_NOTIFICATION_BASE;
@@ -14907,7 +14932,7 @@ void ClientSession::getNotificationChannels(UINT32 requestId)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(requestId);
-   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if(m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       GetNotificationChannels(&msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
@@ -14928,7 +14953,7 @@ void ClientSession::addNotificationChannel(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
       TCHAR driverName[MAX_OBJECT_NAME];
@@ -14972,7 +14997,7 @@ void ClientSession::updateNotificationChannel(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
       TCHAR driverName[MAX_OBJECT_NAME];
@@ -15018,7 +15043,7 @@ void ClientSession::removeNotificationChannel(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
@@ -15056,7 +15081,7 @@ void ClientSession::renameNotificationChannel(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR *name = request->getFieldAsString(VID_NAME);
       if (name[0] != 0)
@@ -15106,7 +15131,7 @@ void ClientSession::getNotificationDriverNames(UINT32 requestId)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(requestId);
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       GetNotificationDrivers(&msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
@@ -15128,7 +15153,7 @@ void ClientSession::startActiveDiscovery(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       int count = request->getFieldAsInt32(VID_NUM_RECORDS);
       if (count > 0)

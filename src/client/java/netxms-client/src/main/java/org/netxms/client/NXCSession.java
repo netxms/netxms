@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -642,6 +642,10 @@ public class NXCSession
                   case NXCPCodes.CMD_DELETE_AGENT_POLICY:
                      sendNotification(new SessionNotification(SessionNotification.POLICY_DELETED,
                            msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID), msg.getFieldAsUUID(NXCPCodes.VID_GUID)));
+                     break;
+                  case NXCPCodes.CMD_UPDATE_SYSTEM_ACCESS_RIGHTS:
+                     userSystemRights = msg.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
+                     sendNotification(new SessionNotification(SessionNotification.SYSTEM_ACCESS_CHANGED, userSystemRights));
                      break;
                   default:
                      // Check subscriptions
