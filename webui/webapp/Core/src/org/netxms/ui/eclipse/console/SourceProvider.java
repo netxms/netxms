@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.constants.UserAccessRights;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Source provider
@@ -122,8 +123,6 @@ public class SourceProvider extends AbstractSourceProvider
 	   };
 	private static final Map<String, Object> values = new HashMap<String, Object>(1);
 
-	private static SourceProvider instance = null;
-	
 	/**
 	 * Get source provider instance.
 	 * 
@@ -131,7 +130,7 @@ public class SourceProvider extends AbstractSourceProvider
 	 */
 	public static SourceProvider getInstance()
 	{
-		return instance;
+		return (SourceProvider)ConsoleSharedData.getProperty("CoreSourceProvider");
 	}
 	
 	/* (non-Javadoc)
@@ -141,8 +140,7 @@ public class SourceProvider extends AbstractSourceProvider
 	public void initialize(IServiceLocator locator)
 	{
 		super.initialize(locator);
-		values.put(UA_MANAGE_USERS, true);
-		instance = this;
+		ConsoleSharedData.setProperty("CoreSourceProvider", this);
 	}
 
 	/* (non-Javadoc)

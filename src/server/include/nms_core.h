@@ -482,9 +482,9 @@ private:
    SOCKET m_hSocket;
    session_id_t m_id;
    UINT32 m_dwUserId;
-   UINT64 m_dwSystemAccess;    // User's system access rights
-   UINT32 m_dwFlags;           // Session flags
-	int m_clientType;				// Client system type - desktop, web, mobile, etc.
+   UINT64 m_systemAccessRights; // User's system access rights
+   UINT32 m_dwFlags;            // Session flags
+	int m_clientType;				  // Client system type - desktop, web, mobile, etc.
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
 	MUTEX m_mutexSocketWrite;
@@ -838,7 +838,7 @@ public:
 	const TCHAR *getWorkstation() const { return m_workstation; }
    const TCHAR *getWebServerAddress() const { return m_webServerAddress; }
    UINT32 getUserId() const { return m_dwUserId; }
-	UINT64 getSystemRights() const { return m_dwSystemAccess; }
+	UINT64 getSystemRights() const { return m_systemAccessRights; }
    UINT32 getFlags() const { return m_dwFlags; }
    bool isAuthenticated() const { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
    bool isTerminated() const { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
@@ -853,7 +853,7 @@ public:
 	bool checkSysAccessRights(UINT64 requiredAccess) const
    {
       return (m_dwUserId == 0) ? true :
-         ((requiredAccess & m_dwSystemAccess) == requiredAccess);
+         ((requiredAccess & m_systemAccessRights) == requiredAccess);
    }
 
    void setCustomLock(UINT32 bit, bool value)
@@ -866,6 +866,8 @@ public:
 
    void kill();
    void notify(UINT32 dwCode, UINT32 dwData = 0);
+
+   void updateSystemAccessRights();
 
    void onNewEvent(Event *pEvent);
    void onSyslogMessage(NX_SYSLOG_RECORD *pRec);

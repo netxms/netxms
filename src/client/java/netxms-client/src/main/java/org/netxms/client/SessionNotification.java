@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,16 +33,10 @@ public class SessionNotification
    public static final int NEW_SNMP_TRAP = 8;
    public static final int JOB_CHANGE = 10;
    public static final int IMAGE_LIBRARY_CHANGED = 11;
-   public static final int THRESHOLD_STATE_CHANGED = 11;
+   public static final int THRESHOLD_STATE_CHANGED = 12;
+   public static final int SYSTEM_ACCESS_CHANGED = 13;
    public static final int OBJECT_DELETED = 99;
 
-//   public static final int SITUATION_BASE = 100;
-//   public static final int SITUATION_CREATED = 101;
-//   public static final int SITUATION_DELETED = 102;
-//   public static final int SITUATION_UPDATED = 103;
-//   public static final int SITUATION_INSTANCE_UPDATED = 104;
-//   public static final int SITUATION_INSTANCE_DELETED = 105;
-   
    public static final int IMAGE_UPDATED = 201;
    public static final int IMAGE_DELETED = 202;
    

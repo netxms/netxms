@@ -119,11 +119,13 @@ static UINT64 GetEffectiveSystemRights(User *user)
    while(it->hasNext())
    {
       UserDatabaseObject *object = it->next();
+      if (object->isDeleted() || object->isDisabled())
+         continue;
 
       // The previous search path is checked to avoid performing a deep membership search again
-      if (object->isGroup() && searchPath->contains(((Group *)object)->getId()))
+      if (object->isGroup() && searchPath->contains(static_cast<Group*>(object)->getId()))
       {
-         systemRights |= ((Group *)object)->getSystemRights();
+         systemRights |= static_cast<Group*>(object)->getSystemRights();
          continue;
       }
       else
@@ -131,9 +133,9 @@ static UINT64 GetEffectiveSystemRights(User *user)
          searchPath->clear();
       }
 
-      if (object->isGroup() && (((Group *)object)->isMember(user->getId(), searchPath)))
+      if (object->isGroup() && (static_cast<Group*>(object)->isMember(user->getId(), searchPath)))
       {
-         systemRights |= ((Group *)object)->getSystemRights();
+         systemRights |= static_cast<Group*>(object)->getSystemRights();
       }
       else
       {
@@ -142,6 +144,22 @@ static UINT64 GetEffectiveSystemRights(User *user)
    }
    delete searchPath;
    delete it;
+   return systemRights;
+}
+
+/**
+ * Get effective system rights for user
+ */
+UINT64 NXCORE_EXPORTABLE GetEffectiveSystemRights(UINT32 userId)
+{
+   UINT64 systemRights = 0;
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   UserDatabaseObject *user = s_userDatabase.get(userId);
+   if ((user != NULL) && !user->isGroup())
+   {
+      systemRights = GetEffectiveSystemRights(static_cast<User*>(user));
+   }
+   RWLockUnlock(s_userDatabaseLock);
    return systemRights;
 }
 
@@ -611,11 +629,11 @@ void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
          }
          if (found)
          {
-            ((Group *)object)->addUser(userId);
+            static_cast<Group*>(object)->addUser(userId);
          }
          else
          {
-            ((Group *)object)->deleteUser(userId);
+            static_cast<Group*>(object)->deleteUser(userId);
          }
 		}
    }
@@ -637,6 +655,22 @@ TCHAR NXCORE_EXPORTABLE *ResolveUserId(UINT32 id, TCHAR *buffer, bool noFail)
       _sntprintf(buffer, MAX_USER_NAME, _T("{%u}"), id);
    RWLockUnlock(s_userDatabaseLock);
 	return ((object != NULL) || noFail) ? buffer : NULL;
+}
+
+/**
+ * Update system-wide access rights in user sessions
+ */
+static void UpdateGlobalAccessRights(ClientSession *session, void *context)
+{
+   session->updateSystemAccessRights();
+}
+
+/**
+ * Thread pool wrapper for UpdateGlobalAccessRights
+ */
+static void UpdateGlobalAccessRightsWrapper(void *context)
+{
+   EnumerateClientSessions(UpdateGlobalAccessRights, context);
 }
 
 /**
@@ -682,7 +716,7 @@ static UINT32 DeleteUserDatabaseObjectInternal(UINT32 id, bool alreadyLocked)
             UserDatabaseObject *group = it->next();
             if (group->getId() & GROUP_FLAG)
             {
-               ((Group *)group)->deleteUser(id);
+               static_cast<Group*>(group)->deleteUser(id);
             }
          }
          delete it;
@@ -691,6 +725,11 @@ static UINT32 DeleteUserDatabaseObjectInternal(UINT32 id, bool alreadyLocked)
 
    if (!alreadyLocked)
       RWLockUnlock(s_userDatabaseLock);
+
+   // Update system access rights in all connected sessions
+   // Use separate thread to avoid deadlocks
+   if (id & GROUP_FLAG)
+      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRightsWrapper, NULL);
 
    SendUserDBUpdate(USER_DB_DELETE, id, NULL);
    return RCC_SUCCESS;
@@ -747,7 +786,8 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *
  */
 UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData)
 {
-   UINT32 dwResult = RCC_INVALID_USER_ID;
+   UINT32 rcc = RCC_INVALID_USER_ID;
+   bool updateAccessRights = false;
 
    UINT32 id = msg->getFieldAsUInt32(VID_USER_ID);
 
@@ -768,20 +808,21 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **old
          }
          else
          {
-            dwResult = RCC_INVALID_OBJECT_NAME;
+            rcc = RCC_INVALID_OBJECT_NAME;
          }
       }
 
-      if (dwResult != RCC_INVALID_OBJECT_NAME)
+      if (rcc != RCC_INVALID_OBJECT_NAME)
       {
          *oldData = object->toJson();
          object->modifyFromMessage(msg);
          *newData = object->toJson();
          SendUserDBUpdate(USER_DB_MODIFY, id, object);
-         dwResult = RCC_SUCCESS;
+         rcc = RCC_SUCCESS;
+         updateAccessRights = ((msg->getFieldAsUInt32(VID_FIELDS) & (USER_MODIFY_ACCESS_RIGHTS | USER_MODIFY_GROUP_MEMBERSHIP | USER_MODIFY_MEMBERS)) != 0);
       }
 
-      if ((dwResult == RCC_SUCCESS) && (fields & USER_MODIFY_LOGIN_NAME))
+      if ((rcc == RCC_SUCCESS) && (fields & USER_MODIFY_LOGIN_NAME))
       {
          // update login names hash map if login name was modified
          if (_tcscmp(prevName, object->getName()))
@@ -803,7 +844,12 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **old
    }
 
    RWLockUnlock(s_userDatabaseLock);
-   return dwResult;
+
+   // Use separate thread to avoid deadlocks
+   if (updateAccessRights)
+      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRightsWrapper, NULL);
+
+   return rcc;
 }
 
 /**

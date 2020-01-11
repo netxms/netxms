@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -426,6 +426,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 
 UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login, const TCHAR *password, bool *isValid);
 UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
+UINT64 NXCORE_EXPORTABLE GetEffectiveSystemRights(UINT32 userId);
 bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UINT32> *searchPath);
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
