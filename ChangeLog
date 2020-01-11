@@ -61,6 +61,7 @@
 	NX-1755 (In object tool `command` in file name truncates last char of command output)
 	NX-1758 (Typo in management console)
 	NX-1760 (Use folder specified by --sysconfdir instead of --prefix for configuration file search)
+	NX-1761 (Object script executor prints last output line after error message)
 
 
 *
