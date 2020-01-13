@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2017 Raden Solutions
+** Copyright (C) 2014-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,8 +60,8 @@ class MqttBroker
 private:
    char *m_hostname;
    UINT16 m_port;
-   TCHAR *m_login;
-   TCHAR *m_password;
+   char *m_login;
+   char *m_password;
    ObjectArray<Topic> m_topics;
    struct mosquitto *m_handle;
    THREAD m_loopThread;

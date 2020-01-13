@@ -410,6 +410,14 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src);
 #define TStringFromUTF8String(s) MBStringFromUTF8String(s)
 #endif
 
+/**
+ * NULL-safe convert wide string to UTF-8
+ */
+inline char *UTF8StringFromWideStringEx(const WCHAR *src)
+{
+   return (src != NULL) ? UTF8StringFromWideString(src) : NULL;
+}
+
 #ifdef __cplusplus
 }
 #endif

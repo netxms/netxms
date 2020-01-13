@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017 Raden Solutions
+ ** Copyright (C) 2017-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -100,14 +100,12 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(MQTT)
 {
-   StructArray<NETXMS_SUBAGENT_PARAM> *parameters = new StructArray<NETXMS_SUBAGENT_PARAM>();
+   StructArray<NETXMS_SUBAGENT_PARAM> parameters;
 
-   RegisterBrokers(parameters, config);
+   RegisterBrokers(&parameters, config);
 
-   m_info.numParameters = parameters->size();
-   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
-                     parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
-   delete parameters;
+   m_info.numParameters = parameters.size();
+   m_info.parameters = MemCopyArray(parameters.getBuffer(), parameters.size());
 
 	*ppInfo = &m_info;
 	return true;
