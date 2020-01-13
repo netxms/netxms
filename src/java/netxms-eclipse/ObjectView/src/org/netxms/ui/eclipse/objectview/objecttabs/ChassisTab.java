@@ -92,7 +92,7 @@ public class ChassisTab extends ObjectTab implements ISelectionProvider
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {
-            scroller.setMinSize(content.computeSize(scroller.getSize().x, SWT.DEFAULT));
+            scroller.setMinSize(content.computeSize(scroller.getSize().x, scroller.getSize().y));
          }
       });
 	}
@@ -103,7 +103,8 @@ public class ChassisTab extends ObjectTab implements ISelectionProvider
    protected void updateChassisWidgetsSize()
    {
       int width = content.getSize().x;
-      Point size = chassisFrontWidget.computeSize(width, SWT.DEFAULT, true);
+      int height = content.getSize().y;
+      Point size = chassisFrontWidget.computeSize(width, height, true);
       chassisFrontWidget.setSize(size);
       chassisRearWidget.setSize(size);
       chassisRearWidget.setLocation(0, size.y);

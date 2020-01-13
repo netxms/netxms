@@ -206,13 +206,24 @@ public class ObjectSelectionDialog extends Dialog
 	}
 	
 	/**
-    * Create filter for rack and chassis selection
+    * Create filter for rack selection
     * 
     * @return
     */
    public static Set<Integer> createRackSelectionFilter()
    {
       return ObjectSelectionFilterFactory.getInstance().createRackSelectionFilter();
+   }
+
+   
+   /**
+    * Create filter for rack and chassis selection
+    * 
+    * @return
+    */
+   public static Set<Integer> createRackOrChassisSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createRackOrChassisSelectionFilter();
    }
 	
 	/**

@@ -105,7 +105,8 @@ public class ChassisView extends ViewPart implements ISelectionProvider
                return;
             
             int width = chassisArea.getSize().x;
-            Point size = chassisFrontWidget.computeSize(width, SWT.DEFAULT, true);
+            int height = chassisArea.getSize().y;
+            Point size = chassisFrontWidget.computeSize(width, height, true);
             chassisFrontWidget.setSize(size);
             chassisRearWidget.setSize(size);
             chassisRearWidget.setLocation(0, size.y);

@@ -31,6 +31,7 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -47,7 +48,6 @@ import org.netxms.client.objects.configs.ChassisPlacement;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
-import org.netxms.ui.eclipse.objectview.Activator; 
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -67,8 +67,6 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
    
    private Chassis chassis;
    private Font[] titleFonts;
-   private Image imageDefaultTop;
-   private Image imageDefaultRear;
    private List<ObjectImage> objects = new ArrayList<ObjectImage>();
    private Object selectedObject = null;
    private Set<ElementSelectionListener> selectionListeners = new HashSet<ElementSelectionListener>(0);
@@ -89,9 +87,6 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
       
       titleFonts = FontTools.getFonts(FONT_NAMES, 6, SWT.BOLD, 16);
-      
-      imageDefaultTop = Activator.getImageDescriptor("icons/rack-default-top.png").createImage(); //$NON-NLS-1$
-      imageDefaultRear = Activator.getImageDescriptor("icons/rack-default-rear.png").createImage(); //$NON-NLS-1$
       
       addPaintListener(this);
       addMouseListener(this);
@@ -126,12 +121,15 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       rect.height -= MARGIN_HEIGHT * 2 + TITLE_HEIGHT;
       rect.width -= MARGIN_WIDTH * 2;
       
+      if (rect.height <= 0 || rect.width <= 0)
+         return;
+      
       // Title
       gc.setFont(WidgetHelper.getBestFittingFont(gc, titleFonts, VIEW_LABELS[0], rect.width, TITLE_HEIGHT)); //$NON-NLS-1$
       Point titleSize = gc.textExtent(VIEW_LABELS[view.getValue() - 1]);
       gc.drawText(VIEW_LABELS[view.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2);
       
-      drawChassis(gc, rect, chassis, imageDefaultRear, imageDefaultTop, view, new ObjectRegistration() {
+      drawChassis(gc, rect, chassis, view, new ObjectRegistration() {
          
          @Override
          public void addObject(Object object, Rectangle rect)
@@ -145,18 +143,37 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
     * @param gc
     * @param rect
     */
-   public static void drawChassis(final GC gc, Rectangle rect, Chassis chassis, Image imageDefaultRear, Image imageDefaultTop, RackOrientation view, ObjectRegistration objectRegistration)
-   {
-      Image image = view == RackOrientation.REAR ? imageDefaultRear : imageDefaultTop;
+   public static void drawChassis(final GC gc, Rectangle rect, Chassis chassis, RackOrientation view, ObjectRegistration objectRegistration)
+   {   
+      Image image = (view == RackOrientation.REAR) ? RackWidget.getImageDefaultRear() : RackWidget.getImageDefaultTop();
       UUID imageGuid = (view == RackOrientation.FRONT) ? chassis.getFrontRackImage() : chassis.getRearRackImage();
-      if (imageGuid != NXCommon.EMPTY_GUID)
+      if (!imageGuid.equals(NXCommon.EMPTY_GUID))
          image = ImageProvider.getInstance().getImage(imageGuid);
 
       Rectangle r = image.getBounds();
-      gc.drawImage(image, 0, 0, r.width, r.height, rect.x, rect.y, rect.width, rect.height);
+      if(chassis.getRackHeight() == 1 || !imageGuid.equals(NXCommon.EMPTY_GUID))
+      {
+         gc.drawImage(image, 0, 0, r.width, r.height, rect.x, rect.y, rect.width, rect.height);
+      }
+      else 
+      {
+         Image imageMiddle = (view == RackOrientation.REAR) ? RackWidget.getImageDefaultRear() : RackWidget.getImageDefaultMiddle();
+         Image imageBottom = (view == RackOrientation.REAR) ? RackWidget.getImageDefaultRear() : RackWidget.getImageDefaultBottom();
+         int oneUnitHeight = rect.height/chassis.getRackHeight();
+
+         gc.drawImage(image, 0, 0, r.width, r.height, rect.x, rect.y, rect.width, oneUnitHeight);
+         r = imageMiddle.getBounds();
+         for (int i = 1; i < (chassis.getRackHeight() - 1); i++)
+            gc.drawImage(imageMiddle, 0, 0, r.width, r.height, rect.x, rect.y + oneUnitHeight * i, rect.width, oneUnitHeight); 
+         
+         r = imageBottom.getBounds();
+         gc.drawImage(imageBottom, 0, 0, r.width, r.height, rect.x, rect.y + oneUnitHeight * (chassis.getRackHeight() - 1), rect.width, oneUnitHeight);                 
+      }
 
       //Calculate inch to pixel proportion
       double proportion = rect.height / (double)(FULL_UNIT_HEIGHT * chassis.getRackHeight());
+      final Color gray = gc.getDevice().getSystemColor(SWT.COLOR_GRAY);
+      gc.setBackground(gray);
       
       //draw chassis nodes
       for (AbstractObject object : chassis.getChildrenAsArray())
@@ -178,13 +195,20 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
             if(objectRegistration != null)
                objectRegistration.addObject(object, unitRect);
             
-            image = view == RackOrientation.REAR ? imageDefaultRear : imageDefaultTop;
             imageGuid = placemet.getImage();
-            if (imageGuid != NXCommon.EMPTY_GUID)
+            if (!imageGuid.equals(NXCommon.EMPTY_GUID))
+            {
+               image = null;
                image = ImageProvider.getInstance().getImage(imageGuid);
-            r = image.getBounds();
+               if(image != null)
+               {
+                  r = image.getBounds();
+                  gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);   
+                  continue;
+               }
+            }
             
-            gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);            
+            gc.fillRectangle(unitRect);
          }
       }
    }
@@ -200,15 +224,24 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       if (hHint == SWT.DEFAULT && wHint == SWT.DEFAULT)
          return new Point(10, 10);
 
-      if (hHint == SWT.DEFAULT)
-      {
-         int titleSize = TITLE_HEIGHT + MARGIN_HEIGHT * 2;            
-            
-         int realHeight = FULL_UNIT_HEIGHT * chassis.getRackHeight();
-         return new Point(wHint, (wHint * realHeight/FULL_UNIT_WIDTH) + titleSize); 
-      }
+      int titleSize = TITLE_HEIGHT + MARGIN_HEIGHT * 2; 
+      hHint /= 2;
+      hHint -= titleSize;
+      wHint -= MARGIN_WIDTH * 2;
       
-      return new Point(wHint, hHint/2);
+      int realHeight = FULL_UNIT_HEIGHT * chassis.getRackHeight();
+      if((double)FULL_UNIT_WIDTH/realHeight >= (double)wHint/hHint)
+      {
+         //calculate by width
+         hHint = wHint * realHeight/FULL_UNIT_WIDTH;
+      }
+      else
+      {
+         //clculate by height
+         wHint = hHint * FULL_UNIT_WIDTH/realHeight;
+      } 
+      
+      return new Point(wHint + MARGIN_WIDTH * 2, hHint + titleSize);
    }
 
    /* (non-Javadoc)
@@ -217,9 +250,6 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
    @Override
    public void widgetDisposed(DisposeEvent e)
    {
-      imageDefaultTop.dispose();
-      imageDefaultRear.dispose();
-      
       ImageProvider.getInstance().removeUpdateListener(this);
    }
 

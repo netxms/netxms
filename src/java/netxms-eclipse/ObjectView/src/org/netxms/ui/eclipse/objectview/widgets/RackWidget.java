@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,16 +75,17 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    private static final String[] VIEW_LABELS = { "Front", "Back" };
    
+   private static Image imageDefaultTop = null;
+   private static Image imageDefaultMiddle;
+   private static Image imageDefaultBottom;
+   private static Image imageDefaultRear;
+   private static Image imagePatchPanel;
+   private static Image imageFillerPanel;
+   private static Image imageOrganiserPanel;
+   
    private Rack rack;
    private Font[] labelFonts;
    private Font[] titleFonts;
-   private Image imageDefaultTop;
-   private Image imageDefaultMiddle;
-   private Image imageDefaultBottom;
-   private Image imageDefaultRear;
-   private Image imagePatchPanel;
-   private Image imageFillerPanel;
-   private Image imageOrganiserPanel;
    private List<ObjectImage> objects = new ArrayList<ObjectImage>();
    private Object selectedObject = null;
    private Set<ElementSelectionListener> selectionListeners = new HashSet<ElementSelectionListener>(0);
@@ -107,19 +108,26 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       labelFonts = FontTools.getFonts(FONT_NAMES, 6, SWT.NORMAL, 16);
       titleFonts = FontTools.getFonts(FONT_NAMES, 6, SWT.BOLD, 16);
       
-      imageDefaultTop = Activator.getImageDescriptor("icons/rack-default-top.png").createImage(); //$NON-NLS-1$
-      imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage(); //$NON-NLS-1$
-      imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage(); //$NON-NLS-1$
-      imageDefaultRear = Activator.getImageDescriptor("icons/rack-default-rear.png").createImage(); //$NON-NLS-1$
-      imagePatchPanel = Activator.getImageDescriptor("icons/rack-patch-panel.png").createImage();
-      imageOrganiserPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage(); // FIXME use actual organiser panel image once available!
-      imageFillerPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage();
-      
       addPaintListener(this);
       addMouseListener(this);
       WidgetHelper.attachMouseTrackListener(this, this);
       addDisposeListener(this);
       ImageProvider.getInstance().addUpdateListener(this);
+      initializeImmages();
+   }
+   
+   public static void initializeImmages()
+   {
+      if(imageDefaultTop == null)
+      {
+         imageDefaultTop = Activator.getImageDescriptor("icons/rack-default-top.png").createImage(); //$NON-NLS-1$
+         imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage(); //$NON-NLS-1$
+         imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage(); //$NON-NLS-1$
+         imageDefaultRear = Activator.getImageDescriptor("icons/rack-default-rear.png").createImage(); //$NON-NLS-1$
+         imagePatchPanel = Activator.getImageDescriptor("icons/rack-patch-panel.png").createImage();
+         imageOrganiserPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage(); // FIXME use actual organiser panel image once available!
+         imageFillerPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage();      
+      }
    }
 
    /**
@@ -287,7 +295,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
 
          if(n instanceof Chassis)
          {
-            ChassisWidget.drawChassis(gc, unitRect, (Chassis)n, imageDefaultRear, imageDefaultTop, view, null);
+            ChassisWidget.drawChassis(gc, unitRect, (Chassis)n, view, null);
          }
          else if ((n.getRearRackImage() != null) && !n.getRearRackImage().equals(NXCommon.EMPTY_GUID) && view == RackOrientation.REAR)
          {
@@ -387,15 +395,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    @Override
    public void widgetDisposed(DisposeEvent e)
-   {
-      imageDefaultTop.dispose();
-      imageDefaultMiddle.dispose();
-      imageDefaultBottom.dispose();
-      imageDefaultRear.dispose();
-      imageFillerPanel.dispose();
-      imagePatchPanel.dispose();
-      imageOrganiserPanel.dispose();
-      
+   {      
       ImageProvider.getInstance().removeUpdateListener(this);
    }
 
@@ -597,5 +597,41 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       {
          return object;
       }
+   }
+
+   /**
+    * @return the imageDefaultTop
+    */
+   public static Image getImageDefaultTop()
+   {
+      initializeImmages();
+      return imageDefaultTop;
+   }
+
+   /**
+    * @return the imageDefaultMiddle
+    */
+   public static Image getImageDefaultMiddle()
+   {
+      initializeImmages();
+      return imageDefaultMiddle;
+   }
+
+   /**
+    * @return the imageDefaultBottom
+    */
+   public static Image getImageDefaultBottom()
+   {
+      initializeImmages();
+      return imageDefaultBottom;
+   }
+
+   /**
+    * @return the imageDefaultRear
+    */
+   public static Image getImageDefaultRear()
+   {
+      initializeImmages();
+      return imageDefaultRear;
    }
 }

@@ -44,6 +44,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.ChassisPlacement;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
@@ -101,42 +102,66 @@ public class PhysicalContainerPlacement extends PropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
+      
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector.setLabel("Rack or chassis");      
+      objectSelector.setObjectId(object.getPhysicalContainerId());
 
       Set<Class<? extends AbstractObject>> filter = new HashSet<Class<? extends AbstractObject>>();
       filter.add(Rack.class);
       if (!(object instanceof Chassis))
+      {
          filter.add(Chassis.class);
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      objectSelector.setLabel("Rack or chassis");      
+         objectSelector.setClassFilter(ObjectSelectionDialog.createRackOrChassisSelectionFilter());
+      }
+      else
+      {
+         objectSelector.setClassFilter(ObjectSelectionDialog.createRackSelectionFilter());
+      }
       objectSelector.setObjectClass(filter);
-      objectSelector.setObjectId(object.getPhysicalContainerId());
+
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		objectSelector.setLayoutData(gd);
 		objectSelector.addModifyListener(new ModifyListener() {
-         
          @Override
          public void modifyText(ModifyEvent e)
          {
-            AbstractObject obj = objectSelector.getObject();
-            if (obj != null)
-               if (obj instanceof Rack)
-                  createRackFields();
-               else
-                  createChassisFields();    
-            dialogArea.layout();
+            updateFields();
          }
       });
-		
-		AbstractObject obj = objectSelector.getObject(); 
-		if (obj != null)
-		   if (obj instanceof Rack)
-		      createRackFields();
-		   else
-		      createChassisFields();
+		updateFields();
       
 		return dialogArea;
+	}
+	
+	
+	private void updateFields()
+	{
+      AbstractObject selectedObject = objectSelector.getObject(); 
+      if (selectedObject != null)
+      {
+         if (selectedObject instanceof Rack)
+            createRackFields();
+         else
+            createChassisFields();
+      }
+      else if (object instanceof Chassis)
+      {
+         createRackFields();
+      }
+      else if (rackElements != null)
+      {
+         rackElements.dispose();
+         rackElements = null;
+      }
+      else if (chassisElements != null)
+      {
+         chassisElements.dispose();
+         chassisElements = null;
+      }
+      dialogArea.getParent().layout(true, true);
 	}
 	
 	/**
@@ -144,6 +169,9 @@ public class PhysicalContainerPlacement extends PropertyPage
 	 */
 	private void createChassisFields()
    {
+	   if (chassisElements != null)
+	      return;
+
       if (rackElements != null)
       {
          rackElements.dispose();
@@ -163,6 +191,9 @@ public class PhysicalContainerPlacement extends PropertyPage
       chassisElements.setLayout(layout);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
       chassisElements.setLayoutData(gd);
       
       chassisImageSelector = new ImageSelector(chassisElements, SWT.NONE);
@@ -251,6 +282,9 @@ public class PhysicalContainerPlacement extends PropertyPage
 	 */
    private void createRackFields()
 	{
+      if (rackElements != null)
+         return;
+
       if (chassisElements != null)
       {
          chassisElements.dispose();
@@ -266,6 +300,9 @@ public class PhysicalContainerPlacement extends PropertyPage
       rackElements.setLayout(layout);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
       rackElements.setLayoutData(gd);
 	         
 	   rackImageFrontSelector = new ImageSelector(rackElements, SWT.NONE);
@@ -381,7 +418,12 @@ public class PhysicalContainerPlacement extends PropertyPage
             md.setChassisPlacement(placementConfig);
          }
       }
-      else 
+      else if (object instanceof Chassis)
+      {
+         md.setRackPlacement(rackImageFrontSelector.getImageGuid(), rackImageRearSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection(),
+               RackOrientation.getByValue(rackOrientation.getSelectionIndex()));         
+      }
+      else  
       {
 
          md.setPhysicalContainer(0);
