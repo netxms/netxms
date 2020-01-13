@@ -152,7 +152,7 @@ public class Filter extends PropertyPage
 		if (action instanceof ObjectTool && action.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
 		{
    		checkMatchWorkstationOS = new Button(dialogArea, SWT.CHECK);
-   		checkMatchWorkstationOS.setText("Workstation OS name should match this template(coma separated regular expression list)");
+   		checkMatchWorkstationOS.setText("Workstation OS name should match the following template (comma separated regular expression list)");
    		checkMatchWorkstationOS.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH) != 0);
    		checkMatchWorkstationOS.addSelectionListener(new SelectionListener() {         
             @Override
