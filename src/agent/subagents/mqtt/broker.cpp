@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017-2019 Raden Solutions
+ ** Copyright (C) 2017-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ MqttBroker::MqttBroker() : m_topics(16, 16, true)
    strcpy(clientId, "nxagentd/");
    char *guid = uuid::generate().toString().getUTF8String();
    strcat(clientId, guid);
-   free(guid);
+   MemFree(guid);
    m_handle = mosquitto_new(clientId, true, this);
 }
 
@@ -64,9 +64,9 @@ MqttBroker::~MqttBroker()
       ThreadJoin(m_loopThread);
    if (m_handle != NULL)
       mosquitto_destroy(m_handle);
-   free(m_hostname);
-   free(m_login);
-   free(m_password);
+   MemFree(m_hostname);
+   MemFree(m_login);
+   MemFree(m_password);
 }
 
 /**
@@ -92,11 +92,16 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
 #ifdef UNICODE
    broker->m_hostname = UTF8StringFromWideString(config->getSubEntryValue(L"Hostname", 0, L"127.0.0.1"));
 #else
-   broker->m_hostname = strdup(config->getSubEntryValue("Hostname", 0, "127.0.0.1"));
+   broker->m_hostname = MemCopyStringA(config->getSubEntryValue("Hostname", 0, "127.0.0.1"));
 #endif
    broker->m_port = (UINT16)config->getSubEntryValueAsUInt(_T("Port"), 0, 1883);
-   broker->m_login = MemCopyString(config->getSubEntryValue(_T("Login")));
-   broker->m_password = MemCopyString(config->getSubEntryValue(_T("Password")));
+#ifdef UNICODE
+   broker->m_login = UTF8StringFromWideStringEx(config->getSubEntryValue(_T("Login")));
+   broker->m_password = UTF8StringFromWideStringEx(config->getSubEntryValue(_T("Password")));
+#else
+   broker->m_login = MemCopyStringA(config->getSubEntryValue(_T("Login")));
+   broker->m_password = MemCopyStringA(config->getSubEntryValue(_T("Password")));
+#endif
 
    const ConfigEntry *metricRoot = config->findEntry(_T("Metrics"));
    if (metricRoot != NULL)
@@ -110,7 +115,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
 
          NETXMS_SUBAGENT_PARAM p;
          memset(&p, 0, sizeof(NETXMS_SUBAGENT_PARAM));
-         nx_strncpy(p.name, e->getName(), MAX_PARAM_NAME);
+         _tcslcpy(p.name, e->getName(), MAX_PARAM_NAME);
          p.arg = (const TCHAR *)t;
          p.dataType = DCI_DT_STRING;
          p.handler = H_TopicData;
@@ -141,6 +146,8 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
  */
 void MqttBroker::networkLoop()
 {
+   mosquitto_username_pw_set(m_handle, m_login, m_password);
+
    while(mosquitto_connect(m_handle, m_hostname, m_port, 600) != MOSQ_ERR_SUCCESS)
    {
       nxlog_debug(4, _T("MQTT: unable to connect to broker at %hs:%d, will retry in 60 seconds"), m_hostname, (int)m_port);
