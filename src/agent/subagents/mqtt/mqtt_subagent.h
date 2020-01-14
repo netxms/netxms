@@ -58,6 +58,8 @@ public:
 class MqttBroker
 {
 private:
+   uuid m_guid;
+   bool m_locallyConfigured;
    char *m_hostname;
    UINT16 m_port;
    char *m_login;
@@ -65,10 +67,11 @@ private:
    ObjectArray<Topic> m_topics;
    struct mosquitto *m_handle;
    THREAD m_loopThread;
+   bool m_connected;
    
-   MqttBroker();
+   MqttBroker(const uuid& guid);
 
-   static void messageCallback(struct mosquitto *handle, void *userData, const struct mosquitto_message *msg);
+   static void messageCallback(struct mosquitto *handle, void *context, const struct mosquitto_message *msg);
    void processMessage(const struct mosquitto_message *msg);
 
    void networkLoop();
@@ -80,7 +83,16 @@ public:
    void startNetworkLoop();
    void stopNetworkLoop();
 
+   const uuid& getGuid() const { return m_guid; }
+   bool isLocallyConfigured() const { return m_locallyConfigured; }
+   const char *getHostname() const { return m_hostname; }
+   UINT16 getPort() const { return m_port; }
+   const char *getLogin() const { return m_login; }
+   int getTopicCount() const { return m_topics.size(); }
+   bool isConnected() const { return m_connected; }
+
    static MqttBroker *createFromConfig(const ConfigEntry *e, StructArray<NETXMS_SUBAGENT_PARAM> *parameters);
+   static MqttBroker *createFromMessage(const NXCPMessage *msg);
 };
 
 #endif

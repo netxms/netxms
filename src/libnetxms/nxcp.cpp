@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -438,10 +438,14 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_GET_PHYSICAL_LINKS"),
       _T("CMD_UPDATE_PHYSICAL_LINK"),
       _T("CMD_DELETE_PHYSICAL_LINK"),
-      _T("CMD_GET_FILE_SET_DETAILS")
+      _T("CMD_GET_FILE_SET_DETAILS"),
+      _T("CMD_CONFIGURE_MQTT_BROKER"),
+      _T("CMD_REMOVE_MQTT_BROKER"),
+      _T("CMD_ADD_MQTT_TOPIC"),
+      _T("CMD_REMOVE_MQTT_TOPIC")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_FILE_SET_DETAILS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_REMOVE_MQTT_TOPIC))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

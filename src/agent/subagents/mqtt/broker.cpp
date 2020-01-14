@@ -39,20 +39,30 @@ static LONG H_TopicData(const TCHAR *name, const TCHAR *arg, TCHAR *result, Abst
 /**
  * Broker constructor
  */
-MqttBroker::MqttBroker() : m_topics(16, 16, true)
+MqttBroker::MqttBroker(const uuid& guid) : m_topics(16, 16, true)
 {
+   m_guid = guid;
+   m_locallyConfigured = true;
    m_hostname = NULL;
    m_port = 0;
    m_login = NULL;
    m_password = NULL;
    m_loopThread = INVALID_THREAD_HANDLE;
+   m_connected = false;
 
    char clientId[128];
    strcpy(clientId, "nxagentd/");
-   char *guid = uuid::generate().toString().getUTF8String();
-   strcat(clientId, guid);
-   MemFree(guid);
+   _uuid_to_stringA(m_guid, &clientId[9]);
    m_handle = mosquitto_new(clientId, true, this);
+   if (m_handle != NULL)
+   {
+#if HAVE_MOSQUITTO_THREADED_SET
+      mosquitto_threaded_set(m_handle, true);
+#endif
+
+      mosquitto_log_callback_set(m_handle, LogCallback);
+      mosquitto_message_callback_set(m_handle, MqttBroker::messageCallback);
+   }
 }
 
 /**
@@ -74,20 +84,13 @@ MqttBroker::~MqttBroker()
  */
 MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<NETXMS_SUBAGENT_PARAM> *parameters)
 {
-   MqttBroker *broker = new MqttBroker();
+   MqttBroker *broker = new MqttBroker(uuid::generate());
    if (broker->m_handle == NULL)
    {
       nxlog_debug(3, _T("MQTT: cannot create client instance"));
       delete broker;
       return NULL;
    }
-
-#if HAVE_MOSQUITTO_THREADED_SET
-   mosquitto_threaded_set(broker->m_handle, true);
-#endif
-
-   mosquitto_log_callback_set(broker->m_handle, LogCallback);
-   mosquitto_message_callback_set(broker->m_handle, MqttBroker::messageCallback);
 
 #ifdef UNICODE
    broker->m_hostname = UTF8StringFromWideString(config->getSubEntryValue(L"Hostname", 0, L"127.0.0.1"));
@@ -142,6 +145,37 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
 }
 
 /**
+ * Create broker object from NXCP message
+ */
+MqttBroker *MqttBroker::createFromMessage(const NXCPMessage *msg)
+{
+   uuid guid = msg->getFieldAsGUID(VID_GUID);
+   if (guid.isNull())
+      guid = uuid::generate();
+
+   MqttBroker *broker = new MqttBroker(guid);
+   if (broker->m_handle == NULL)
+   {
+      nxlog_debug(3, _T("MQTT: cannot create client instance"));
+      delete broker;
+      return NULL;
+   }
+
+   broker->m_hostname = msg->getFieldAsUtf8String(VID_HOSTNAME);
+   broker->m_port = msg->getFieldAsUInt16(VID_PORT);
+   broker->m_login = msg->getFieldAsUtf8String(VID_LOGIN_NAME);
+   if ((broker->m_login != NULL) && (broker->m_login[0] != 0))
+   {
+      broker->m_password = msg->getFieldAsUtf8String(VID_PASSWORD);
+   }
+   else
+   {
+      MemFreeAndNull(broker->m_login);
+   }
+   return broker;
+}
+
+/**
  * Broker network loop
  */
 void MqttBroker::networkLoop()
@@ -155,7 +189,8 @@ void MqttBroker::networkLoop()
          return;  // Agent shutdown
    }
 
-   nxlog_debug(3, _T("MQTT: connected to broker %hs:%d"), m_hostname, (int)m_port);
+   nxlog_debug(3, _T("MQTT: connected to broker %hs:%d as %hs"), m_hostname, (int)m_port, (m_login != NULL) ? m_login : "anonymous");
+   m_connected = true;
 
    for(int i = 0; i < m_topics.size(); i++)
    {
@@ -168,6 +203,7 @@ void MqttBroker::networkLoop()
 
    mosquitto_loop_forever(m_handle, -1, 1);
    nxlog_debug(3, _T("MQTT: network loop stopped for broker %hs:%d"), m_hostname, (int)m_port);
+   m_connected = false;
 }
 
 /**
@@ -175,7 +211,7 @@ void MqttBroker::networkLoop()
  */
 THREAD_RESULT THREAD_CALL MqttBroker::networkLoopStarter(void *arg)
 {
-   ((MqttBroker *)arg)->networkLoop();
+   static_cast<MqttBroker*>(arg)->networkLoop();
    return THREAD_OK;
 }
 
@@ -200,9 +236,9 @@ void MqttBroker::stopNetworkLoop()
 /**
  * Message callback
  */
-void MqttBroker::messageCallback(struct mosquitto *handle, void *userData, const struct mosquitto_message *msg)
+void MqttBroker::messageCallback(struct mosquitto *handle, void *context, const struct mosquitto_message *msg)
 {
-   ((MqttBroker *)userData)->processMessage(msg);
+   static_cast<MqttBroker*>(context)->processMessage(msg);
 }
 
 /**
