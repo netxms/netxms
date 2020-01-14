@@ -61,6 +61,8 @@ public:
    char *toStringA(char *buffer) const { return _uuid_to_stringA(m_value, buffer); }
    json_t *toJson() const { char buffer[64]; return json_string(toStringA(buffer)); }
 
+   operator const uuid_t&() const { return m_value; }
+
    /**
     * Generate new UUID
     */
