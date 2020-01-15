@@ -1591,21 +1591,7 @@ static void UpdateEnvironment()
    for(int i = 0; i < entrySet->size(); i++)
    {
       ConfigEntry *e = entrySet->get(i);
-      size_t len = _tcslen(e->getName()) + _tcslen(e->getValue()) + 2;
-      char *env = (char *)malloc(len);
-      if (env != NULL)
-      {
-#ifdef UNICODE
-         char *mbName = MBStringFromWideString(e->getName());
-         char *mbValue = MBStringFromWideString(e->getValue());
-         snprintf(env, len, "%s=%s", mbName, mbValue);
-         MemFree(mbName);
-         MemFree(mbValue);
-#else
-         sprintf(env, "%s=%s", e->getName(), e->getValue());
-#endif
-         _putenv(env);
-      }
+      SetEnvironmentVariable(e->getName(), e->getValue());
    }
    delete entrySet;
 }
@@ -2068,7 +2054,8 @@ int main(int argc, char *argv[])
                   g_dwFlags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
                }
 #ifdef _WIN32
-					if (g_dwFlags & AF_DAEMON)
+               UpdateEnvironment();
+               if (g_dwFlags & AF_DAEMON)
 					{
 						InitService();
 					}
