@@ -230,6 +230,19 @@ stop_search:
       }
       MemFree(list);
    }
+
+   // Update environment from config
+   ObjectArray<ConfigEntry> *environment = g_serverConfig.getSubEntries(_T("/ENV"), _T("*"));
+   if (environment != NULL)
+   {
+      for (int i = 0; i < environment->size(); i++)
+      {
+         ConfigEntry *e = environment->get(i);
+         SetEnvironmentVariable(e->getName(), e->getValue());
+      }
+      delete environment;
+   }
+
    return bSuccess;
 }
 
