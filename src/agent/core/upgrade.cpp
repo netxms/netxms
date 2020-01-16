@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,10 +35,6 @@ UINT32 UpgradeAgent(TCHAR *pszPkgFile)
    // Start installation
    _sntprintf(szCmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES /LOG /FORCECLOSEAPPLICATIONS /NORESTART"), pszPkgFile);
    return ExecuteCommand(szCmdLine, NULL, NULL);
-
-#elif defined(_NETWARE)
-
-   return ERR_NOT_IMPLEMENTED;
 
 #else
 

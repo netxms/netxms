@@ -946,7 +946,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size)
    return buffer;
 }
 
-#if (!HAVE_DAEMON || !HAVE_DECL_DAEMON) && !defined(_NETWARE) && !defined(_WIN32)
+#if (!HAVE_DAEMON || !HAVE_DECL_DAEMON) && !defined(_WIN32)
 
 /**
  * daemon() implementation for systems which doesn't have one
@@ -1536,18 +1536,6 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
       default:
          _sntprintf(pszBuffer, nSize, _T("WinX %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
          break;
-   }
-#elif defined(_NETWARE)
-   struct utsname un;
-
-   uname(&un);
-   _sntprintf(pszBuffer, nSize, _T("NetWare %d.%d"), un.netware_major, un.netware_minor);
-   if (un.servicepack > 0)
-   {
-      int nLen = (int)_tcslen(pszBuffer);
-      nSize -= nLen;
-      if (nSize > 0)
-         _sntprintf(&pszBuffer[nLen], nSize, _T(" sp%d"), un.servicepack);
    }
 #else
    struct utsname un;

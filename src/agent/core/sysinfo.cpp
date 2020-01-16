@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -403,12 +403,6 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
          _tcscpy(value, _T("windows-unknown"));
          break;
    }
-
-#elif defined(_NETWARE)
-
-   // NetWare only exists on Intel x86 CPU,
-   // so there are nothing to detect
-   strcpy(value, "netware-i386");
 
 #elif HAVE_UNAME
 

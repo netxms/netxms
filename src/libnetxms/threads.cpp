@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -169,7 +169,7 @@ Condition& Condition::operator =(const Condition& src)
    return *this;
 }
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#ifndef _WIN32
 
 #include <signal.h>
 #include <sys/wait.h>
@@ -251,7 +251,7 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
    }
 }
 
-#endif   /* _WIN32 && _NETWARE*/
+#endif   /* _WIN32 */
 
 #ifdef _WIN32
 extern HRESULT (WINAPI *imp_SetThreadDescription)(HANDLE, PCWSTR);

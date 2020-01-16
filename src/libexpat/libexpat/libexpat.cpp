@@ -14,22 +14,3 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 }
 
 #endif
-
-
-//
-// NetWare library entry point
-//
-
-#ifdef _NETWARE
-
-extern "C" int _init(void)
-{
-   return 0;
-}
-
-extern "C" int _fini(void)
-{
-   return 0;
-}
-
-#endif

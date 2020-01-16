@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,10 +34,6 @@
 #include <nxdbapi.h>
 #include <nxsnmp.h>
 #include "localdb.h"
-
-#ifdef _NETWARE
-#undef SEVERITY_CRITICAL
-#endif
 
 #ifdef _WIN32
 #include <aclapi.h>
@@ -192,9 +188,6 @@ struct SUBAGENT
    HMODULE hModule;              // Subagent's module handle
    NETXMS_SUBAGENT_INFO *pInfo;  // Information provided by subagent
    TCHAR szName[MAX_PATH];        // Name of the module  // to TCHAR by LWX
-#ifdef _NETWARE
-   char szEntryPoint[256];       // Name of agent's entry point
-#endif
 };
 
 /**

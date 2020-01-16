@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -3770,7 +3770,7 @@ String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s);
 
 StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
 
-#if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
+#if !defined(_WIN32) && defined(NMS_THREADS_H_INCLUDED)
 void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt);
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
 #endif

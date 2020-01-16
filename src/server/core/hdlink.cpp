@@ -42,7 +42,7 @@ void LoadHelpDeskLink()
       return;
    }
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#ifndef _WIN32
    TCHAR fullName[MAX_PATH];
 
    if (_tcschr(name, _T('/')) == NULL)

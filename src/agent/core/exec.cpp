@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ struct PROCESS_START_INFO
 /**
  * Execute external command
  */
-#if !defined(_WIN32) && !defined(_NETWARE) /* unix-only hack */
+#ifndef _WIN32  /* unix-only hack */
 static THREAD_RESULT THREAD_CALL Waiter(void *arg)
 {
 	pid_t pid = *((pid_t *)arg);
@@ -255,11 +255,6 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *args, pid_t *pid)
       CloseHandle(pi.hThread);
       CloseHandle(pi.hProcess);
    }
-#elif defined(_NETWARE)
-   if (system(pszCmdLine) == 0)
-      dwRetCode = ERR_SUCCESS;
-   else
-      dwRetCode = ERR_EXEC_FAILED;
 #else
 	PROCESS_START_INFO pi;
 	pid_t tempPid;

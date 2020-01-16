@@ -40,7 +40,7 @@
 /**
  * Initialization function declaration macro
  */
-#if defined(_STATIC_AGENT) || defined(_NETWARE)
+#if defined(_STATIC_AGENT)
 #define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" bool NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #else
 #define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" __EXPORT bool NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)

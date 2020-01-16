@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -168,7 +168,7 @@ void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len)
    }
 }
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#ifndef _WIN32
 
 /**
  * strupr() implementation for non-windows platforms

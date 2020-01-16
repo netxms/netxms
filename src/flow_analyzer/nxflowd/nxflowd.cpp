@@ -49,7 +49,7 @@ TCHAR g_logFile[MAX_PATH] = _T("/var/log/nxflowd");
 // Static data
 //
 
-#if defined(_WIN32) || defined(_NETWARE)
+#if defined(_WIN32)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 #else
 char s_pidFile[MAX_PATH] = "/var/run/nxflowd.pid";
@@ -186,7 +186,7 @@ void Shutdown()
 #endif
 
    // Remove PID file
-#if !defined(_WIN32) && !defined(_NETWARE)
+#ifndef _WIN32
    remove(s_pidFile);
 #endif
 }
@@ -200,7 +200,7 @@ void Main()
 
    if (g_flags & AF_DAEMON)
    {
-#if defined(_WIN32) || defined(_NETWARE)
+#ifdef _WIN32
       ConditionWait(m_hCondShutdown, INFINITE);
 #else
       StartMainLoop(SignalHandler, NULL);
@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#ifndef _WIN32
 	if (!strcmp(g_configFile, "{search}"))
 	{
 		if (access(PREFIX "/etc/nxflowd.conf", 4) == 0)

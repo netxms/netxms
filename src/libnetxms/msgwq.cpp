@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -283,16 +283,12 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
       else
          Sleep(50);  // Just sleep if there are no waiter slots (highly unlikely during normal operation)
       EnterCriticalSection(&m_mutex);
-#elif HAVE_PTHREAD_COND_RELTIMEDWAIT_NP || defined(_NETWARE)
+#elif HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
 	   struct timespec ts;
 
 	   ts.tv_sec = dwTimeOut / 1000;
 	   ts.tv_nsec = (dwTimeOut % 1000) * 1000000;
-#ifdef _NETWARE
-	   pthread_cond_timedwait(&m_wakeupCondition, &m_mutex, &ts);
-#else
       pthread_cond_reltimedwait_np(&m_wakeupCondition, &m_mutex, &ts);
-#endif
 #elif defined(_USE_GNU_PTH)
       pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
       pth_cond_await(&m_wakeupCondition, &m_mutex, ev);

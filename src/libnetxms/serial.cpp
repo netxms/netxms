@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2005-2019 Raden Solutions
+** Copyright (C) 2005-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -28,21 +28,6 @@
 # else
 #  define CRTSCTS 0
 # endif
-#endif
-
-#ifdef _NETWARE
-#ifndef ECHOKE
-#define ECHOKE   0
-#endif
-#ifndef ECHOCTL
-#define ECHOCTL  0
-#endif
-#ifndef OPOST
-#define OPOST    0
-#endif
-#ifndef ONLCR
-#define ONLCR    0
-#endif
 #endif
 
 /**
@@ -200,13 +185,8 @@ bool Serial::set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 		default:     
          return false;  // wrong/unsupported speed
 	}
-#ifdef _NETWARE
-	cfsetispeed(&newTio, (speed_t)baud);
-	cfsetospeed(&newTio, (speed_t)baud);
-#else
 	cfsetispeed(&newTio, baud);
 	cfsetospeed(&newTio, baud);
-#endif
 		
 	newTio.c_cflag &= ~(CSIZE);
 	switch(nDataBits)
@@ -560,14 +540,8 @@ bool Serial::write(const char *data, int length)
 void Serial::flush()
 {
 #ifdef _WIN32
-	
-	FlushFileBuffers(m_hPort);
-	
-#else // UNIX
-	
-#ifndef _NETWARE
-	tcflush(m_hPort, TCIOFLUSH);
+   FlushFileBuffers(m_hPort);
+#else
+   tcflush(m_hPort, TCIOFLUSH);
 #endif
-	
-#endif // _WIN32
 }

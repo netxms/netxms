@@ -77,7 +77,7 @@ A million repetitions of "a"
 
 #define SHA1HANDSOFF
 
-#if !defined(_WIN32) && !defined(_NETWARE) && !defined(UNDER_CE)
+#ifndef _WIN32
 #include <config.h>
 #endif
 

@@ -51,7 +51,7 @@
   1999-05-03 lpd Original version.
  */
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#ifndef _WIN32
 #include <config.h>
 #endif
 
