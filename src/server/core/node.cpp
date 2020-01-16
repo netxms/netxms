@@ -6172,7 +6172,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
    pMsg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
    pMsg->setField(VID_ICMP_COLLECTION_MODE, (INT16)m_icmpStatCollectionMode);
-   pMsg->setField(VID_CHASSIS_PLACEMENT_CONFIG, m_chassisPlacementConf);
+   pMsg->setField(VID_CHASSIS_PLACEMENT, m_chassisPlacementConf);
    if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != NULL))
    {
       IcmpStatCollector *collector = m_icmpStatCollectors->get(_T("PRI"));
@@ -6445,11 +6445,8 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_rackPosition = pRequest->getFieldAsInt16(VID_RACK_POSITION);
    if (pRequest->isFieldExist(VID_RACK_HEIGHT))
       m_rackHeight = pRequest->getFieldAsInt16(VID_RACK_HEIGHT);
-   if (pRequest->isFieldExist(VID_CHASSIS_PLACEMENT_CONFIG))
-   {
-      MemFree(m_chassisPlacementConf);
-      m_chassisPlacementConf = pRequest->getFieldAsString(VID_CHASSIS_PLACEMENT_CONFIG);
-   }
+   if (pRequest->isFieldExist(VID_CHASSIS_PLACEMENT))
+      pRequest->getFieldAsString(VID_CHASSIS_PLACEMENT, &m_chassisPlacementConf);
 
    if (pRequest->isFieldExist(VID_SSH_PROXY))
       m_sshProxy = pRequest->getFieldAsUInt32(VID_SSH_PROXY);

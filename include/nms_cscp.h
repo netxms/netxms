@@ -1329,7 +1329,8 @@ typedef struct
 #define VID_RCA_SCRIPT_NAME         ((UINT32)670)
 #define VID_SUBORDINATE_ALARMS      ((UINT32)671)
 #define VID_IMPACT                  ((UINT32)672)
-#define VID_CHASSIS_PLACEMENT_CONFIG ((UINT32)673)
+#define VID_CHASSIS_PLACEMENT       ((UINT32)673)
+#define VID_ALLOW_PATH_EXPANSION    ((UINT32)674)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

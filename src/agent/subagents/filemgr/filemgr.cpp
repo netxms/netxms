@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2019 Raden Solutions
+ ** Copyright (C) 2014-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -60,18 +60,25 @@ MonitoredFileList g_monitorFileList;
 #ifdef _WIN32
 
 /**
- * Convert path from UNIX to local format
+ * Convert path from UNIX to local format and do macro expansion
  */
-static void ConvertPathToHost(TCHAR *path)
+static inline void ConvertPathToHost(TCHAR *path, bool allowPathExpansion, bool allowShellCommands)
 {
    for(int i = 0; path[i] != 0; i++)
       if (path[i] == _T('/'))
          path[i] = _T('\\');
+
+   if (allowPathExpansion)
+      ExpandFileName(path, path, MAX_PATH, allowShellCommands);
 }
 
 #else
 
-#define ConvertPathToHost(x)
+static inline void ConvertPathToHost(TCHAR *path, bool allowPathExpansion, bool allowShellCommands)
+{
+   if (allowPathExpansion)
+      ExpandFileName(path, path, MAX_PATH, allowShellCommands);
+}
 
 #endif
 
@@ -635,7 +642,7 @@ static void GetFolderInfo(const TCHAR *folder, UINT64 *fileCount, UINT64 *folder
 /**
  * Handler for "get folder size" command
  */
-static void CH_GetFolderSize(NXCPMessage *request, NXCPMessage *response)
+static void CH_GetFolderSize(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
    TCHAR directory[MAX_PATH];
    request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
@@ -646,7 +653,7 @@ static void CH_GetFolderSize(NXCPMessage *request, NXCPMessage *response)
       return;
    }
 
-   ConvertPathToHost(directory);
+   ConvertPathToHost(directory, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath;
    if (CheckFullPath(directory, &fullPath, false))
@@ -679,7 +686,7 @@ static void CH_GetFolderContent(NXCPMessage *request, NXCPMessage *response, Abs
       return;
    }
 
-   ConvertPathToHost(directory);
+   ConvertPathToHost(directory, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    bool rootFolder = request->getFieldAsUInt16(VID_ROOT) ? 1 : 0;
    TCHAR *fullPath;
@@ -709,7 +716,7 @@ static void CH_CreateFolder(NXCPMessage *request, NXCPMessage *response, Abstrac
       return;
    }
 
-   ConvertPathToHost(directory);
+   ConvertPathToHost(directory, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath = NULL;
    if (CheckFullPath(directory, &fullPath, false, true) && session->isMasterServer())
@@ -749,7 +756,7 @@ static void CH_DeleteFile(NXCPMessage *request, NXCPMessage *response, AbstractC
       return;
    }
 
-   ConvertPathToHost(file);
+   ConvertPathToHost(file, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath = NULL;
    if (CheckFullPath(file, &fullPath, false, true) && session->isMasterServer())
@@ -790,8 +797,9 @@ static void CH_RenameFile(NXCPMessage *request, NXCPMessage *response, AbstractC
       return;
    }
 
-   ConvertPathToHost(oldName);
-   ConvertPathToHost(newName);
+   bool allowPathExpansion = request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION);
+   ConvertPathToHost(oldName, allowPathExpansion, session->isMasterServer());
+   ConvertPathToHost(newName, allowPathExpansion, session->isMasterServer());
 
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
    if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
@@ -834,8 +842,9 @@ static void CH_MoveFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
       return;
    }
 
-   ConvertPathToHost(oldName);
-   ConvertPathToHost(newName);
+   bool allowPathExpansion = request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION);
+   ConvertPathToHost(oldName, allowPathExpansion, session->isMasterServer());
+   ConvertPathToHost(newName, allowPathExpansion, session->isMasterServer());
 
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
    if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
@@ -879,8 +888,10 @@ static void CH_CopyFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
       AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): File names should be set."));
       return;
    }
-   ConvertPathToHost(oldName);
-   ConvertPathToHost(newName);
+
+   bool allowPathExpansion = request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION);
+   ConvertPathToHost(oldName, allowPathExpansion, session->isMasterServer());
+   ConvertPathToHost(newName, allowPathExpansion, session->isMasterServer());
 
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
    if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
@@ -915,7 +926,7 @@ static void CH_Upload(NXCPMessage *request, NXCPMessage *response, AbstractCommS
       return;
    }
 
-   ConvertPathToHost(name);
+   ConvertPathToHost(name, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath = NULL;
    if (CheckFullPath(name, &fullPath, false, true) && session->isMasterServer())
@@ -938,7 +949,7 @@ static void CH_GetFileDetails(NXCPMessage *request, NXCPMessage *response, Abstr
 {
    TCHAR fileName[MAX_PATH];
    request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-   ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
+   ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath;
    if (CheckFullPath(fileName, &fullPath, false))
@@ -966,23 +977,27 @@ static void CH_GetFileDetails(NXCPMessage *request, NXCPMessage *response, Abstr
 /**
  * Handler for "get file set details" command
  */
-static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response)
+static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
    StringList files(request, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < files.size(); i++)
    {
-      TCHAR *file;
-      if (CheckFullPath(files.get(i), &file, false))
+      TCHAR fileName[MAX_PATH];
+      _tcslcpy(fileName, files.get(i), MAX_PATH);
+      ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+
+      TCHAR *fullPath;
+      if (CheckFullPath(fileName, &fullPath, false))
       {
          NX_STAT_STRUCT fs;
-         if (CALL_STAT(file, &fs) == 0)
+         if (CALL_STAT(fullPath, &fs) == 0)
          {
             response->setField(fieldId++, ERR_SUCCESS);
             response->setField(fieldId++, static_cast<UINT64>(fs.st_size));
             response->setField(fieldId++, static_cast<UINT64>(fs.st_mtime));
             BYTE hash[MD5_DIGEST_SIZE];
-            if (!CalculateFileMD5Hash(file, hash))
+            if (!CalculateFileMD5Hash(fullPath, hash))
                memset(hash, 0, MD5_DIGEST_SIZE);
             response->setField(fieldId++, hash, MD5_DIGEST_SIZE);
             fieldId += 6;
@@ -992,7 +1007,7 @@ static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response)
             response->setField(fieldId++, ERR_FILE_STAT_FAILED);
             fieldId += 9;
          }
-         MemFree(file);
+         MemFree(fullPath);
       }
       else
       {
@@ -1011,7 +1026,7 @@ static void CH_GetFile(NXCPMessage *request, NXCPMessage *response, AbstractComm
 {
    TCHAR fileName[MAX_PATH];
    request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-   ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
+   ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath;
    if (CheckFullPath(fileName, &fullPath, false))
@@ -1079,7 +1094,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
    switch(command)
    {
    	case CMD_GET_FOLDER_SIZE:
-   	   CH_GetFolderSize(request, response);
+   	   CH_GetFolderSize(request, response, session);
          break;
       case CMD_GET_FOLDER_CONTENT:
          CH_GetFolderContent(request, response, session);
@@ -1091,7 +1106,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          CH_GetFileDetails(request, response, session);
          break;
       case CMD_GET_FILE_SET_DETAILS:
-         CH_GetFileSetDetails(request, response);
+         CH_GetFileSetDetails(request, response, session);
          break;
       case CMD_FILEMGR_DELETE_FILE:
          CH_DeleteFile(request, response, session);

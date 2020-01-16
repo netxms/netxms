@@ -6,6 +6,7 @@
 - Fixed issues:
 	NX-1523 (Store object creation time)
 	NX-1724 (Implement agent parameters for inode usage)
+	NX-1767 (File manager may be unable to access file with percent sign in name)
 
 
 *
