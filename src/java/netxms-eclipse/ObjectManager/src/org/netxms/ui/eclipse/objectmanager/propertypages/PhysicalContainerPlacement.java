@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.base.Logger;
 import org.netxms.base.NXCommon;
@@ -51,7 +52,6 @@ import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "Rack" property page for NetXMS object
@@ -60,9 +60,9 @@ public class PhysicalContainerPlacement extends PropertyPage
 {
    private final static String[] ORIENTATION = { "Fill", "Front", "Rear" };
    private final static String[] CHASSIS_ORIENTATION = { "Front", "Rear" };
-   private final static String[] VERTICAL_UNITS = { "units", "mm" };
+   private final static String[] VERTICAL_UNITS = { "RU", "mm" };
    private final static String[] HORIZONTAL_UNITS = { "HP", "mm" };
-   
+
    private Composite dialogArea;
 	private ElementForPhysicalPlacment object;
 	
@@ -76,15 +76,15 @@ public class PhysicalContainerPlacement extends PropertyPage
 	
 	private Composite chassisElements;
 	private ImageSelector chassisImageSelector;
-	private LabeledText elementHeight;
-	private Combo elementHeightUnits;
-   private LabeledText elementWidth;
-   private Combo elementWidthUnits;
-   private LabeledText elementPositionHeight;
-   private Combo elementPositionHeightUnits;
-   private LabeledText elementPositionWidth;
-   private Combo elementPositionWidthUnits;
-   private Combo elementOrientation;
+	private LabeledSpinner chassisHeight;
+	private Combo chassisHeightUnits;
+   private LabeledSpinner chassisWidth;
+   private Combo chassisWidthUnits;
+   private LabeledSpinner chassisVerticalPosition;
+   private Combo chassisVerticalPositionUnits;
+   private LabeledSpinner chassisHorizontalPosition;
+   private Combo chassisHorizontalPositionUnits;
+   private Combo chassisOrientation;
 	
 	
 	/* (non-Javadoc)
@@ -128,28 +128,30 @@ public class PhysicalContainerPlacement extends PropertyPage
          @Override
          public void modifyText(ModifyEvent e)
          {
-            updateFields();
+            updateFieldControls();
          }
       });
-		updateFields();
+		updateFieldControls();
       
 		return dialogArea;
 	}
 	
-	
-	private void updateFields()
+	/**
+	 * Update rack or chassis field controls
+	 */
+	private void updateFieldControls()
 	{
       AbstractObject selectedObject = objectSelector.getObject(); 
       if (selectedObject != null)
       {
          if (selectedObject instanceof Rack)
-            createRackFields();
+            createRackFieldControls();
          else
-            createChassisFields();
+            createChassisFieldControls();
       }
       else if (object instanceof Chassis)
       {
-         createRackFields();
+         createRackFieldControls();
       }
       else if (rackElements != null)
       {
@@ -167,7 +169,7 @@ public class PhysicalContainerPlacement extends PropertyPage
 	/**
 	 * Create chassis fields and dispose rack fields
 	 */
-	private void createChassisFields()
+	private void createChassisFieldControls()
    {
 	   if (chassisElements != null)
 	      return;
@@ -188,6 +190,7 @@ public class PhysicalContainerPlacement extends PropertyPage
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
       chassisElements.setLayout(layout);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -205,82 +208,117 @@ public class PhysicalContainerPlacement extends PropertyPage
       gd.horizontalSpan = 2;
       chassisImageSelector.setLayoutData(gd);
       
-      elementHeight = new LabeledText(chassisElements, SWT.NONE);
-      elementHeight.setLabel("Element height");
-      elementHeight.setText(Integer.toString(placement.getHeight()));
+      Group sizeGroup = new Group(chassisElements, SWT.NONE);
+      sizeGroup.setText("Size");
+      layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+      layout.numColumns = 2;
+      sizeGroup.setLayout(layout);
       gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      elementHeight.setLayoutData(gd);
-
-      elementHeightUnits = new Combo(chassisElements, SWT.READ_ONLY);
-      elementHeightUnits.setItems(VERTICAL_UNITS);
-      elementHeightUnits.select(placement.getHeightUnits());
-      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      elementHeightUnits.setLayoutData(gd);
+      sizeGroup.setLayoutData(gd);
       
-      elementWidth = new LabeledText(chassisElements, SWT.NONE);
-      elementWidth.setLabel("Element width");
-      elementWidth.setText(Integer.toString(placement.getWidth()));
+      chassisHeight = new LabeledSpinner(sizeGroup, SWT.NONE);
+      chassisHeight.setRange(0, 10000);
+      chassisHeight.setLabel("Height");
+      chassisHeight.setText(Integer.toString(placement.getHeight()));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      elementWidth.setLayoutData(gd);
+      gd.verticalAlignment = SWT.BOTTOM;
+      chassisHeight.setLayoutData(gd);
 
-      elementWidthUnits = new Combo(chassisElements, SWT.READ_ONLY);
-      elementWidthUnits.setItems(HORIZONTAL_UNITS);
-      elementWidthUnits.select(placement.getWidthUnits());
+      chassisHeightUnits = new Combo(sizeGroup, SWT.READ_ONLY);
+      chassisHeightUnits.setItems(VERTICAL_UNITS);
+      chassisHeightUnits.select(placement.getHeightUnits());
       gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      elementWidthUnits.setLayoutData(gd);
+      gd.verticalAlignment = SWT.BOTTOM;
+      chassisHeightUnits.setLayoutData(gd);
       
-      elementPositionHeight = new LabeledText(chassisElements, SWT.NONE);
-      elementPositionHeight.setLabel("Position height");
-      elementPositionHeight.setText(Integer.toString(placement.getPositionHeight()));
+      chassisWidth = new LabeledSpinner(sizeGroup, SWT.NONE);
+      chassisWidth.setRange(0, 10000);
+      chassisWidth.setLabel("Width");
+      chassisWidth.setText(Integer.toString(placement.getWidth()));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      elementPositionHeight.setLayoutData(gd);
+      gd.verticalAlignment = SWT.BOTTOM;
+      chassisWidth.setLayoutData(gd);
 
-      elementPositionHeightUnits = new Combo(chassisElements, SWT.READ_ONLY);
-      elementPositionHeightUnits.setItems(VERTICAL_UNITS);
-      elementPositionHeightUnits.select(placement.getPositionHeightUnits());
+      chassisWidthUnits = new Combo(sizeGroup, SWT.READ_ONLY);
+      chassisWidthUnits.setItems(HORIZONTAL_UNITS);
+      chassisWidthUnits.select(placement.getWidthUnits());
       gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      elementPositionHeightUnits.setLayoutData(gd);
+      gd.verticalAlignment = SWT.BOTTOM;
+      chassisWidthUnits.setLayoutData(gd);
       
-      elementPositionWidth = new LabeledText(chassisElements, SWT.NONE);
-      elementPositionWidth.setLabel("Position width");
-      elementPositionWidth.setText(Integer.toString(placement.getPositionWidth()));
+      Group positionGroup = new Group(chassisElements, SWT.NONE);
+      positionGroup.setText("Position");
+      layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+      layout.numColumns = 2;
+      positionGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      positionGroup.setLayoutData(gd);
+      
+      chassisVerticalPosition = new LabeledSpinner(positionGroup, SWT.NONE);
+      chassisVerticalPosition.setRange(0, 10000);
+      chassisVerticalPosition.setLabel("Vertical");
+      chassisVerticalPosition.setText(Integer.toString(placement.getPositionHeight()));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      elementPositionWidth.setLayoutData(gd);
+      gd.verticalAlignment = SWT.BOTTOM;
+      chassisVerticalPosition.setLayoutData(gd);
 
-      elementPositionWidthUnits = new Combo(chassisElements, SWT.READ_ONLY);
-      elementPositionWidthUnits.setItems(HORIZONTAL_UNITS);
-      elementPositionWidthUnits.select(placement.getPositionWidthUnits());
+      chassisVerticalPositionUnits = new Combo(positionGroup, SWT.READ_ONLY);
+      chassisVerticalPositionUnits.setItems(VERTICAL_UNITS);
+      chassisVerticalPositionUnits.select(placement.getPositionHeightUnits());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.BOTTOM;
+      chassisVerticalPositionUnits.setLayoutData(gd);
+      
+      chassisHorizontalPosition = new LabeledSpinner(positionGroup, SWT.NONE);
+      chassisHorizontalPosition.setRange(0, 10000);
+      chassisHorizontalPosition.setLabel("Horizontal");
+      chassisHorizontalPosition.setText(Integer.toString(placement.getPositionWidth()));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      elementPositionWidthUnits.setLayoutData(gd);
+      gd.verticalAlignment = SWT.BOTTOM;
+      chassisHorizontalPosition.setLayoutData(gd);
+
+      chassisHorizontalPositionUnits = new Combo(positionGroup, SWT.READ_ONLY);
+      chassisHorizontalPositionUnits.setItems(HORIZONTAL_UNITS);
+      chassisHorizontalPositionUnits.select(placement.getPositionWidthUnits());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.BOTTOM;
+      chassisHorizontalPositionUnits.setLayoutData(gd);
       
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      elementOrientation = WidgetHelper.createLabeledCombo(chassisElements, SWT.READ_ONLY, "Orientation", gd);
-      elementOrientation.setItems(CHASSIS_ORIENTATION);
-      elementOrientation.select(placement.getOritentaiton() - 1);
+      gd.horizontalSpan = 2;
+      chassisOrientation = WidgetHelper.createLabeledCombo(chassisElements, SWT.READ_ONLY, "Orientation", gd);
+      chassisOrientation.setItems(CHASSIS_ORIENTATION);
+      chassisOrientation.select(placement.getOritentaiton() - 1);
    }
 
 	/**
 	 * Create rack fields and dispose chassis elements
 	 */
-   private void createRackFields()
+   private void createRackFieldControls()
 	{
       if (rackElements != null)
          return;
@@ -402,10 +440,10 @@ public class PhysicalContainerPlacement extends PropertyPage
          }
          else
          {
-            ChassisPlacement placement = new ChassisPlacement(chassisImageSelector.getImageGuid(), Integer.parseInt(elementHeight.getText()), 
-                  elementHeightUnits.getSelectionIndex(), Integer.parseInt(elementWidth.getText()), elementWidthUnits.getSelectionIndex(), 
-                  Integer.parseInt(elementPositionHeight.getText()), elementPositionHeightUnits.getSelectionIndex(), 
-                  Integer.parseInt(elementPositionWidth.getText()), elementPositionWidthUnits.getSelectionIndex(), elementOrientation.getSelectionIndex()+1);
+            ChassisPlacement placement = new ChassisPlacement(chassisImageSelector.getImageGuid(), Integer.parseInt(chassisHeight.getText()), 
+                  chassisHeightUnits.getSelectionIndex(), Integer.parseInt(chassisWidth.getText()), chassisWidthUnits.getSelectionIndex(), 
+                  Integer.parseInt(chassisVerticalPosition.getText()), chassisVerticalPositionUnits.getSelectionIndex(), 
+                  Integer.parseInt(chassisHorizontalPosition.getText()), chassisHorizontalPositionUnits.getSelectionIndex(), chassisOrientation.getSelectionIndex()+1);
             String placementConfig = null;
             try
             {
@@ -496,14 +534,14 @@ public class PhysicalContainerPlacement extends PropertyPage
 		rackOrientation.select(0);
 		
 		chassisImageSelector.setImageGuid(NXCommon.EMPTY_GUID, true);      
-      elementHeight.setText("0");
-      elementHeightUnits.setText(VERTICAL_UNITS[0]);
-      elementWidth.setText("0");
-      elementWidthUnits.setText(HORIZONTAL_UNITS[0]);
-      elementPositionHeight.setText("0");
-      elementPositionHeightUnits.setText(VERTICAL_UNITS[0]);
-      elementPositionWidth.setText("0");
-      elementPositionWidthUnits.setText(HORIZONTAL_UNITS[0]);
-      elementOrientation.setText(CHASSIS_ORIENTATION[0]);
+      chassisHeight.setText("0");
+      chassisHeightUnits.setText(VERTICAL_UNITS[0]);
+      chassisWidth.setText("0");
+      chassisWidthUnits.setText(HORIZONTAL_UNITS[0]);
+      chassisVerticalPosition.setText("0");
+      chassisVerticalPositionUnits.setText(VERTICAL_UNITS[0]);
+      chassisHorizontalPosition.setText("0");
+      chassisHorizontalPositionUnits.setText(HORIZONTAL_UNITS[0]);
+      chassisOrientation.setText(CHASSIS_ORIENTATION[0]);
 	}
 }
