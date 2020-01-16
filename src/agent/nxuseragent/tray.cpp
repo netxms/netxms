@@ -164,7 +164,7 @@ void ShowTrayNotification(const TCHAR *text)
    nid.uID = s_trayIcon.uID;
    nid.uFlags = NIF_INFO;
    nid.dwInfoFlags = NIIF_INFO;
-   _tcscpy_s(nid.szInfoTitle, _T("NetXMS User Agent"));
+   _tcscpy_s(nid.szInfoTitle, _T("NetXMS User Support Application"));
    _tcslcpy(nid.szInfo, text, 256);
    Shell_NotifyIcon(NIM_MODIFY, &nid);
 }
