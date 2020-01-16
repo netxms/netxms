@@ -30,32 +30,6 @@
 #define DEBUG_TAG_VSS   DEBUG_TAG _T(".vss")
 
 /**
- * Create file snapshot using VSS (XP version)
- */
-FileSnapshot *CreateSnapshotXP(const TCHAR *path);
-
-/**
- * Destroy backup components (XP version)
- */
-static void DestroyBackupComponentsXP(void *bc)
-{
-   static_cast<IVssBackupComponents*>(bc)->Release();
-}
-
-/**
- * Create file snapshot using VSS (Server 2003 version)
- */
-FileSnapshot *CreateSnapshotSrv2003(const TCHAR *path);
-
-/**
- * Destroy backup components (Server 2003 version)
- */
-static void DestroyBackupComponentsSrv2003(void *bc)
-{
-   static_cast<IVssBackupComponents*>(bc)->Release();
-}
-
-/**
  * Entry point
  */
 HRESULT (STDAPICALLTYPE *__CreateVssBackupComponents)(IVssBackupComponents **) = NULL;
@@ -144,9 +118,9 @@ static FileSnapshot *CreateSnapshotGeneric(const TCHAR *path)
    StringBuffer sname(prop.m_pwszSnapshotDeviceObject);
    sname.append(s);
 
-   FileSnapshot *object = (FileSnapshot *)malloc(sizeof(FileSnapshot));
+   FileSnapshot *object = MemAllocStruct<FileSnapshot>();
    object->handle = bc;
-   object->name = _tcsdup(sname);
+   object->name = MemCopyString(sname);
    return object;
 }
 
@@ -172,8 +146,8 @@ FileSnapshot *CreateFileSnapshot(const TCHAR *path)
 void DestroyFileSnapshot(FileSnapshot *snapshot)
 {
    __DestroyBackupComponents(snapshot->handle);
-   free(snapshot->name);
-   free(snapshot);
+   MemFree(snapshot->name);
+   MemFree(snapshot);
 }
 
 /**
@@ -189,40 +163,9 @@ bool InitVSSWrapper()
       return false;
    }
 
-	OSVERSIONINFOEX ver;
-	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if (!GetVersionEx((OSVERSIONINFO *)&ver))
-   {
-      TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Cannot get Windows version (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
-		return false;
-   }
-
-   if ((ver.dwMajorVersion == 5) && (ver.dwMinorVersion == 1))
-   {
-      // Windows XP
-      __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z");
-      __CreateSnapshot = CreateSnapshotXP;
-      __DestroyBackupComponents = DestroyBackupComponentsXP;
-   }
-   else if ((ver.dwMajorVersion == 5) && (ver.dwMinorVersion == 2))
-   {
-      // Windows Server 2003
-#ifdef _WIN64
-      __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "?CreateVssBackupComponents@@YAJPEAPEAVIVssBackupComponents@@@Z");
-#else
-      __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z");
-#endif
-      __CreateSnapshot = CreateSnapshotSrv2003;
-      __DestroyBackupComponents = DestroyBackupComponentsSrv2003;
-   }
-   else
-   {
-      // Assume Vista or later
-      __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "CreateVssBackupComponentsInternal");
-      __CreateSnapshot = CreateSnapshotGeneric;
-      __DestroyBackupComponents = DestroyBackupComponentsGeneric;
-   }
+   __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "CreateVssBackupComponentsInternal");
+   __CreateSnapshot = CreateSnapshotGeneric;
+   __DestroyBackupComponents = DestroyBackupComponentsGeneric;
 
    if (__CreateVssBackupComponents == NULL)
    {
