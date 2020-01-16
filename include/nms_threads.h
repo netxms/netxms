@@ -355,15 +355,28 @@ inline bool ConditionWait(CONDITION cond, UINT32 timeout)
       if (!cond->broadcast)
          cond->isSet = false;
    }
-   else if (SleepConditionVariableCS(&cond->v, &cond->lock, timeout))
+   else if (timeout == INFINITE)
    {
+      do
+      {
+         SleepConditionVariableCS(&cond->v, &cond->lock, INFINITE);
+      } while (!cond->isSet);
+      success = true;
       if (!cond->broadcast)
          cond->isSet = false;
-      success = true;
    }
    else
    {
-      success = false;
+      do
+      {
+         UINT64 start = GetTickCount64();
+         SleepConditionVariableCS(&cond->v, &cond->lock, INFINITE);
+         UINT32 elapsed = static_cast<UINT32>(GetTickCount64() - start);
+         timeout -= std::min(elapsed, timeout);
+      } while (!cond->isSet && (timeout > 0));
+      success = cond->isSet;
+      if (!cond->broadcast)
+         cond->isSet = false;
    }
 
    LeaveCriticalSection(&cond->lock);
