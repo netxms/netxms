@@ -2,6 +2,7 @@
 * 3.2
 *
 
+- Maximum password length supported by nxencpasswd increased to 64 characters
 - Fixed issues:
 	NX-1523 (Store object creation time)
 	NX-1724 (Implement agent parameters for inode usage)

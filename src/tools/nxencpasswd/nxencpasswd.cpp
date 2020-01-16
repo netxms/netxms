@@ -1,6 +1,6 @@
 /* 
 ** nxencpasswd - command line tool for encrypting passwords using NetXMS server key
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,15 +25,11 @@
 
 NETXMS_EXECUTABLE_HEADER(nxencpasswd)
 
-
-//
-// main
-//
-
+/**
+ * main
+ */
 int main(int argc, char *argv[])
 {
-	int ch;
-
    bool isAgentSecret = false;
    bool decrypt = false;
 
@@ -41,6 +37,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
+   int ch;
    while((ch = getopt(argc, argv, "ahvz")) != -1)
    {
       switch(ch)
@@ -70,53 +67,50 @@ int main(int argc, char *argv[])
       }
    }
 
-	if ((!isAgentSecret && (argc - optind < 2)) || (isAgentSecret && (argc - optind < 1)))
-	{
-		fprintf(stderr, "Required arguments missing. Run nxencpasswd -h for help.\n");
-		return 1;
-	}
+   if ((!isAgentSecret && (argc - optind < 2)) || (isAgentSecret && (argc - optind < 1)))
+   {
+      fprintf(stderr, "Required arguments missing. Run nxencpasswd -h for help.\n");
+      return 1;
+   }
 
    if (decrypt)
    {
-#if UNICODE
-      TCHAR login[128], password[256];
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, login, 128);
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, password, 256);
-
-      TCHAR decrypted[256] = {0};
+#ifdef UNICODE
+      WCHAR *login = WideStringFromMBStringSysLocale(argv[optind]);
+      WCHAR *password = WideStringFromMBStringSysLocale(argv[optind + 1]);
 #else
-      char *login = argv[optind];
-      char *password = argv[optind + 1];
-      char decrypted[256] = {0};
+      const char *login = argv[optind];
+      const char *password = argv[optind + 1];
 #endif
+
+      TCHAR decrypted[256];
       DecryptPassword(login, password, decrypted, 256);
       _tprintf(_T("Decrypted: \"%s\"\n"), decrypted);
+
+#ifdef UNICODE
+      MemFree(login);
+      MemFree(password);
+#endif
       return 0;
    }
 
-	// Encrypt password
-	BYTE plainText[32], encrypted[32], key[16];
-	memset(plainText, 0, 32);
-	memset(encrypted, 0, 32);
-	memset(key, 0, 16);
+   // Encrypt password
+   BYTE plainText[64], encrypted[64], key[16];
+   memset(plainText, 0, sizeof(plainText));
+   memset(encrypted, 0, sizeof(encrypted));
 
-   char *login;
-   if (isAgentSecret)
-   {
-      login = (char *)"netxms";
-   }
-   else
-   {
-      login = argv[optind];
-   }
-	CalculateMD5Hash((BYTE *)login, strlen(login), key);
-	strncpy((char *)plainText, isAgentSecret ? argv[optind] : argv[optind + 1], 31);
-	ICEEncryptData(plainText, 32, encrypted, key);
+   const char *login = isAgentSecret ? "netxms" : argv[optind];
+   CalculateMD5Hash((BYTE *)login, strlen(login), key);
 
-	// Convert encrypted password to base64 encoding and print
-	char textForm[128];
-	base64_encode((char *)encrypted, 32, textForm, 128);
-	puts(textForm);
+   const char *password = isAgentSecret ? argv[optind] : argv[optind + 1];
+   size_t plen = strlen(password);
+   strncpy((char *)plainText, password, 63);
+   ICEEncryptData(plainText, (plen < 32) ? 32 : 64, encrypted, key);
 
-	return 0;
+   // Convert encrypted password to base64 encoding and print
+   char textForm[256];
+   base64_encode((char *)encrypted, (plen < 32) ? 32 : 64, textForm, 256);
+   puts(textForm);
+
+   return 0;
 }

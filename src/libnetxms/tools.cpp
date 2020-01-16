@@ -2180,26 +2180,27 @@ inline bool DecryptPasswordFailW(const WCHAR *encryptedPasswd, WCHAR *decryptedP
 bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght)
 {
    //check that length is correct
-	if (wcslen(encryptedPasswd) != 44)
+   size_t plen = wcslen(encryptedPasswd);
+	if ((plen != 44) && (plen != 88))
       return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
    // check that password contains only allowed symbols
-   int invalidSymbolIndex = (int)wcsspn(encryptedPasswd, L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-   if ((invalidSymbolIndex < 42) || ((invalidSymbolIndex != 44) && ((encryptedPasswd[invalidSymbolIndex] != L'=') || ((invalidSymbolIndex == 42) && (encryptedPasswd[43] != L'=')))))
+   size_t invalidSymbolIndex = wcsspn(encryptedPasswd, L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+   if ((invalidSymbolIndex < plen - 2) || ((invalidSymbolIndex != plen) && ((encryptedPasswd[invalidSymbolIndex] != L'=') || ((invalidSymbolIndex == plen - 2) && (encryptedPasswd[plen - 1] != L'=')))))
       return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
-	char *mbencrypted = MBStringFromWideString(encryptedPasswd);
-	char *mblogin = MBStringFromWideString(login);
+	char *mbencrypted = MBStringFromWideStringSysLocale(encryptedPasswd);
+	char *mblogin = MBStringFromWideStringSysLocale(login);
 
-	BYTE encrypted[32], decrypted[32], key[16];
-	size_t encSize = 32;
+	BYTE encrypted[64], decrypted[64], key[16];
+	size_t encSize = ((plen == 44) ? 32 : 64);
 	base64_decode(mbencrypted, strlen(mbencrypted), (char *)encrypted, &encSize);
-	if (encSize != 32)
+	if (encSize != ((plen == 44) ? 32 : 64))
       return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
 	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
-	ICEDecryptData(encrypted, 32, decrypted, key);
-	decrypted[31] = 0;
+	ICEDecryptData(encrypted, encSize, decrypted, key);
+	decrypted[encSize - 1] = 0;
 
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, (int)bufferLenght);
 	decryptedPasswd[bufferLenght - 1] = 0;
@@ -2227,25 +2228,26 @@ inline bool DecryptPasswordFailA(const char *encryptedPasswd, char *decryptedPas
 bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryptedPasswd, char *decryptedPasswd, size_t bufferLenght)
 {
    //check that lenght is correct
-   if (strlen(encryptedPasswd) != 44)
+   size_t plen = strlen(encryptedPasswd);
+   if ((plen != 44) && (plen != 88))
       return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
 
    // check that password contains only allowed symbols
    int invalidSymbolIndex = (int)strspn(encryptedPasswd, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-   if ((invalidSymbolIndex < 42) || ((invalidSymbolIndex != 44) && ((encryptedPasswd[invalidSymbolIndex] != '=') || ((invalidSymbolIndex == 42) && (encryptedPasswd[43] != '=')))))
+   if ((invalidSymbolIndex < plen - 2) || ((invalidSymbolIndex != plen) && ((encryptedPasswd[invalidSymbolIndex] != '=') || ((invalidSymbolIndex == plen - 2) && (encryptedPasswd[plen - 1] != '=')))))
       return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
 
    BYTE encrypted[32], decrypted[32], key[16];
-   size_t encSize = 32;
+   size_t encSize = ((plen == 44) ? 32 : 64);
    base64_decode(encryptedPasswd, strlen(encryptedPasswd), (char *)encrypted, &encSize);
-   if (encSize != 32)
+   if (encSize != ((plen == 44) ? 32 : 64))
       return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
 
    CalculateMD5Hash((BYTE *)login, strlen(login), key);
-   ICEDecryptData(encrypted, 32, decrypted, key);
-   decrypted[31] = 0;
+   ICEDecryptData(encrypted, encSize, decrypted, key);
+   decrypted[encSize - 1] = 0;
 
-   strncpy(decryptedPasswd, (char *)decrypted, bufferLenght);
+   strlcpy(decryptedPasswd, (char *)decrypted, bufferLenght);
    return true;
 }
 
