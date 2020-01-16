@@ -124,7 +124,7 @@ void UpdateTrayIcon(const TCHAR *file)
 {
    if (s_trayIconImage != NULL)
       DestroyIcon(s_trayIconImage);
-   s_trayIconImage = (HICON)LoadImage(NULL, file, IMAGE_ICON, SM_CXSMICON, SM_CYSMICON, LR_LOADFROMFILE);
+   s_trayIconImage = (HICON)LoadImage(NULL, file, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_LOADFROMFILE);
    if (s_trayIconImage == NULL)
       nxlog_debug(2, _T("Cannot load tray icon from %s"), file);
 
