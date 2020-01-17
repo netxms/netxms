@@ -66,6 +66,7 @@
 	NX-1759 (Setting environment variable from [ENV] section in agent config does not work on Windows)
 	NX-1760 (Use folder specified by --sysconfdir instead of --prefix for configuration file search)
 	NX-1761 (Object script executor prints last output line after error message)
+	NX-1769 (Windows agent may crash if invalid strftime format character used in log parser file name specification)
 
 
 *

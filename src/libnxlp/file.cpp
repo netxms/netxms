@@ -529,7 +529,7 @@ bool LogParser::monitorFile()
          nxlog_debug_tag(DEBUG_TAG, 6, _T("Exclusion period for file \"%s\" ended"), getFileName());
 	   }
 
-		ExpandFileName(getFileName(), fname, MAX_PATH, true);
+      ExpandFileName(getFileName(), fname, MAX_PATH, true);
 		if (CALL_STAT(fname, &st) != 0)
       {
          if (errno == ENOENT)
