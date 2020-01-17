@@ -95,6 +95,28 @@ static void OnProcessExit()
 #endif
 }
 
+#ifdef _WIN32
+
+/**
+ * Invalid parameter handler
+ */
+static void InvalidParameterHandler(const wchar_t *expression, const wchar_t *function, const wchar_t *file, unsigned int line, uintptr_t reserved)
+{
+#ifdef _DEBUG
+   nxlog_write(NXLOG_ERROR, _T("CRT error: function %s in %s:%u (%s)"), function, file, line, expression);
+   if (IsDebuggerPresent())
+      DebugBreak();
+   else
+      FatalExit(99);
+#else
+   nxlog_write(NXLOG_ERROR, _T("CRT error detected"));
+   if (IsDebuggerPresent())
+      DebugBreak();
+#endif
+}
+
+#endif
+
 /**
  * Common initialization for any NetXMS process
  *
@@ -128,6 +150,8 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 #endif
 
 #ifdef _WIN32
+   _set_invalid_parameter_handler(InvalidParameterHandler);
+   _CrtSetReportMode(_CRT_ASSERT, 0);
    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
    imp_SetThreadDescription = reinterpret_cast<HRESULT (WINAPI *)(HANDLE, PCWSTR)>(GetProcAddress(LoadLibrary(_T("kernel32.dll")), "SetThreadDescription"));
 #endif
@@ -676,7 +700,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 #if HAVE_LOCALTIME_R
 	struct tm tmBuff;
 #endif
-	TCHAR temp[8192], command[1024];
+	TCHAR temp[MAX_PATH], command[1024];
 	size_t outpos = 0;
 
 	t = time(NULL);
@@ -685,8 +709,12 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 #else
 	ltm = localtime(&t);
 #endif
-	if (_tcsftime(temp, 8192, name, ltm) <= 0)
-		return NULL;
+   if (_tcsftime(temp, MAX_PATH, name, ltm) <= 0)
+   {
+      if (name != buffer)
+         _tcslcpy(buffer, name, bufSize);
+      return NULL;
+   }
 
 	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)
 	{
