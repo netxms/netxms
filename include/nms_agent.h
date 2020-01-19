@@ -996,7 +996,7 @@ public:
    UINT32 getDecoder() { return m_decoder; }
 
    const char *getDataRate() const { return m_dataRate; }
-   void setDataRate(const char *dataRate) { strncpy(m_dataRate, dataRate, 24); }
+   void setDataRate(const char *dataRate) { strlcpy(m_dataRate, dataRate, 24); }
 
    INT32 getRssi() const { return m_rssi; }
    void setRssi(INT32 rssi) { m_rssi = rssi; }
