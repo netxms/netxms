@@ -357,13 +357,13 @@ void StringList::merge(const StringList *src, bool matchCase)
 TCHAR *StringList::join(const TCHAR *separator)
 {
    if (m_count == 0)
-      return _tcsdup(_T(""));
+      return MemCopyString(_T(""));
 
    int i;
    size_t len = 0;
    for(i = 0; i < m_count; i++)
       len += _tcslen(m_values[i]);
-   TCHAR *result = (TCHAR *)MemAlloc((len + _tcslen(separator) * (m_count - 1) + 1) * sizeof(TCHAR));
+   TCHAR *result = MemAllocString(len + _tcslen(separator) * (m_count - 1) + 1);
    _tcscpy(result, m_values[0]);
    for(i = 1; i < m_count; i++)
    {
