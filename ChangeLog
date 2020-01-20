@@ -17,6 +17,7 @@
 - Can enable usage of ICMP ping on primary IP address during status poll
 - Macro expansion in DCI polling interval and retention time values
 - New attribute "isInMaintenanceMode" in NXSL class "NetObj"
+- New attribute "downSince" in NXSL class "Node"
 - New attributes "dci" and "dciId" in NXSL class "Event"
 - New method "forcePoll" in NXSL class "DCI"
 - New NXSL functions "ExpandString" and "LoadEvent"
