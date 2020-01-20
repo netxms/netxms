@@ -2723,7 +2723,7 @@ public:
    UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
-   time_t getDownTime() const { return m_downSince; }
+   time_t getDownSince() const { return m_downSince; }
 
    void setNewTunnelBindFlag() { lockProperties(); m_runtimeFlags |= NDF_NEW_TUNNEL_BIND; unlockProperties(); }
    void clearNewTunnelBindFlag() { lockProperties(); m_runtimeFlags &= ~NDF_NEW_TUNNEL_BIND; unlockProperties(); }

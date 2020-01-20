@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1109,7 +1109,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (!strcmp(attr, "bootTime"))
    {
-      value = vm->createValue((INT64)node->getBootTime());
+      value = vm->createValue(static_cast<INT64>(node->getBootTime()));
    }
    else if (!strcmp(attr, "bridgeBaseAddress"))
    {
@@ -1145,6 +1145,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "driver"))
    {
       value = vm->createValue(node->getDriverName());
+   }
+   else if (!strcmp(attr, "downSince"))
+   {
+      value = vm->createValue(static_cast<INT64>(node->getDownSince()));
    }
    else if (!strcmp(attr, "flags"))
    {
