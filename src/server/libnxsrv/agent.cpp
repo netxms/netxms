@@ -940,6 +940,60 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 }
 
 /**
+ * Get service parameter value
+ */
+UINT32 AgentConnection::getServiceParameter(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password, long authType, StringList *headers, StringList *parameters, bool verifyCert, StringMap *results)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId = generateRequestId();
+   msg.setCode(CMD_GET_WEB_SERVICE_PARAMS);
+   msg.setId(dwRqId);
+   msg.setField(VID_URL, url);
+   msg.setField(VID_RETENTION_TIME, retentionTime);
+   msg.setField(VID_LOGIN_NAME, login);
+   msg.setField(VID_PASSWORD, password);
+   msg.setField(VID_AUTH_TYPE, (UINT64)authType);
+   msg.setField(VID_VERIFY_CERT, verifyCert);
+   headers->fillMessage(&msg, VID_HEADER_BASE, VID_NUM_HEADERS);
+   parameters->fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
+
+   UINT32 dwRetCode;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (response != NULL)
+      {
+         dwRetCode = response->getFieldAsUInt32(VID_RCC);
+         if (dwRetCode == ERR_SUCCESS)
+         {
+            if (response->isFieldExist(VID_NUM_PARAMETERS))
+            {
+               results->loadMessage(response, VID_NUM_PARAMETERS, VID_PARAM_LIST_BASE);
+            }
+            else
+            {
+               dwRetCode = ERR_MALFORMED_RESPONSE;
+               debugPrintf(3, _T("Malformed response to CMD_GET_PARAMETER"));
+            }
+         }
+         delete response;
+      }
+      else
+      {
+         dwRetCode = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      dwRetCode = ERR_CONNECTION_BROKEN;
+   }
+   return dwRetCode;
+}
+
+/**
  * Get ARP cache
  */
 ArpCache *AgentConnection::getArpCache()

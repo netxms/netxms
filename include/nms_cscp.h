@@ -642,6 +642,7 @@ typedef struct
 #define CMD_REMOVE_MQTT_BROKER            0x018E
 #define CMD_ADD_MQTT_TOPIC                0x018F
 #define CMD_REMOVE_MQTT_TOPIC             0x0190
+#define CMD_GET_WEB_SERVICE_PARAMS        0x0191
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1332,6 +1333,9 @@ typedef struct
 #define VID_CHASSIS_PLACEMENT       ((UINT32)673)
 #define VID_ALLOW_PATH_EXPANSION    ((UINT32)674)
 #define VID_TAG                     ((UINT32)675)
+#define VID_NUM_HEADERS             ((UINT32)676)
+#define VID_REQUEST_TYPE            ((UINT32)677)
+#define VID_VERIFY_CERT             ((UINT32)678)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1554,6 +1558,8 @@ typedef struct
 #define VID_NOTIFICATION_CHANNEL_BASE ((UINT32)0x10000000)
 
 #define VID_NOTIFICATION_DRIVER_BASE ((UINT32)0x10000000)
+
+#define VID_HEADER_BASE             ((UINT32)0x20000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

@@ -856,6 +856,7 @@ public:
    UINT32 getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer);
    UINT32 getList(const TCHAR *param, StringList **list);
    UINT32 getTable(const TCHAR *param, Table **table);
+   UINT32 getServiceParameter(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password, long authType, StringList *headers, StringList *parameters, bool verifyCert, StringMap *results);
    UINT32 nop();
    UINT32 setServerCapabilities();
    UINT32 setServerId(UINT64 serverId);
@@ -985,10 +986,24 @@ public:
 };
 
 
+/**
+ * Additional information for command line parameters processing and execution
+ */
+struct ServerCmdToolParameters
+{
+   char **argv;
+   int argc;
+   const TCHAR *mainHelpText;
+   const char *additionalOptions;
+   bool (* parseAdditionalOptionCb) (const char ch, const char *optarg);
+   bool (* isArgMissingCb) (int currentCount);
+   int (* executeCommandCb) (AgentConnection *conn, int argc, char *argv[], RSA *pServerKey);
+};
+
 //
 // Functions
 //
-
+int LIBNXSRV_EXPORTABLE RunServerCmdTool(ServerCmdToolParameters *opts);
 void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err);

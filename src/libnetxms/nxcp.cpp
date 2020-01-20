@@ -442,10 +442,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_CONFIGURE_MQTT_BROKER"),
       _T("CMD_REMOVE_MQTT_BROKER"),
       _T("CMD_ADD_MQTT_TOPIC"),
-      _T("CMD_REMOVE_MQTT_TOPIC")
+      _T("CMD_REMOVE_MQTT_TOPIC"),
+      _T("CMD_GET_WEB_SERVICE_PARAMS")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_REMOVE_MQTT_TOPIC))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_WEB_SERVICE_PARAMS))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

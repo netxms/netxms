@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = libnxdbmgr nddload nxget nxadm nxaction nxap nxdbmgr nxminfo nxupload scripts
+SUBDIRS = libnxdbmgr nddload nxget nxadm nxaction nxap nxdbmgr nxminfo nxwsget nxupload scripts 
 SUBDIRS += @SERVER_TOOLS@
 
 EXTRA_DIST = Makefile.w32

@@ -1,12 +1,12 @@
 bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = actions.cpp appagent.cpp comm.cpp config.cpp ctrl.cpp \
                    datacoll.cpp dcsnmp.cpp dbupgrade.cpp epp.cpp event.cpp \
-                   exec.cpp extagent.cpp getparam.cpp localdb.cpp master.cpp \
-                   nxagentd.cpp policy.cpp proxy.cpp push.cpp register.cpp sa.cpp \
-                   session.cpp snmpproxy.cpp snmptrapproxy.cpp \
-                   static_subagents.cpp subagent.cpp sysinfo.cpp syslog.cpp \
-                   systemd.cpp tcpproxy.cpp tools.cpp tunnel.cpp \
-                   upgrade.cpp watchdog.cpp
+                   exec.cpp extagent.cpp getparam.cpp getwsparam.cpp \
+                   localdb.cpp master.cpp nxagentd.cpp policy.cpp proxy.cpp \
+                   push.cpp register.cpp sa.cpp session.cpp snmpproxy.cpp \
+                   snmptrapproxy.cpp static_subagents.cpp subagent.cpp \
+                   sysinfo.cpp syslog.cpp systemd.cpp tcpproxy.cpp \
+                   tools.cpp tunnel.cpp upgrade.cpp watchdog.cpp
 
 nxagentd_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 
@@ -23,6 +23,12 @@ if USE_INTERNAL_EXPAT
 nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @top_srcdir@/src/libexpat/libexpat/libnxexpat.la @AGENT_LIBS@ @SUBAGENT_LIBS@ @EXEC_LIBS@
 else
 nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @AGENT_LIBS@ @SUBAGENT_LIBS@ @EXEC_LIBS@
+endif
+
+if USE_INTERNAL_JANSSON
+nxagentd_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+nxagentd_LDADD += -ljansson
 endif
 
 CLEANFILES = static_subagents.cpp
