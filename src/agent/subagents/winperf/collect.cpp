@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ WinPerfCounterSet *m_cntSet[3] =
 WinPerfCounterSet::WinPerfCounterSet(DWORD interval, TCHAR cls)
 {
 	m_mutex = MutexCreate();
-	m_changeCondition = ConditionCreate(TRUE);
+	m_changeCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
 	m_interval = interval;
 	m_class = cls;
 	m_counters = new ObjectArray<WINPERF_COUNTER>(32, 32, true);
@@ -51,7 +51,7 @@ WinPerfCounterSet::WinPerfCounterSet(DWORD interval, TCHAR cls)
 WinPerfCounterSet::~WinPerfCounterSet()
 {
 	MutexDestroy(m_mutex);
-	ConditionDestroy(m_changeCondition);
+	CloseHandle(m_changeCondition);
 	delete m_counters;
 }
 
@@ -63,7 +63,7 @@ void WinPerfCounterSet::addCounter(WINPERF_COUNTER *c)
 	MutexLock(m_mutex);
 	m_counters->add(c);
 	MutexUnlock(m_mutex);
-	ConditionSet(m_changeCondition);
+	SetEvent(m_changeCondition);
 }
 
 /**
@@ -79,12 +79,12 @@ void WinPerfCounterSet::collectorThread()
    szFName[16] = m_class;
 
 	// Outer loop - rebuild query after set changes
-	while(1)
+	while(true)
 	{
 		AgentWriteDebugLog(2, _T("WINPERF: %s waiting for set change"), szFName);
 
 		HANDLE handles[2];
-      handles[0] = GetShutdownConditionObject();
+      handles[0] = g_winperfShutdownCondition;
 		handles[1] = m_changeCondition;
       DWORD waitStatus = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 		if (waitStatus == WAIT_OBJECT_0)
@@ -92,7 +92,7 @@ void WinPerfCounterSet::collectorThread()
 		if (waitStatus != WAIT_OBJECT_0 + 1)
 			continue;	// set not changed, continue waiting
 
-		ConditionReset(m_changeCondition);
+		ResetEvent(m_changeCondition);
 
 		AgentWriteDebugLog(2, _T("WINPERF: %s: set changed"), szFName);
 		if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
@@ -136,7 +136,7 @@ void WinPerfCounterSet::collectorThread()
 		while(1)
 		{
 			HANDLE handles[2];
-         handles[0] = GetShutdownConditionObject();
+         handles[0] = g_winperfShutdownCondition;
 			handles[1] = m_changeCondition;
 			waitStatus = WaitForMultipleObjects(2, handles, FALSE, m_interval);
 			if (waitStatus == WAIT_OBJECT_0)
@@ -203,7 +203,7 @@ stop:
  */
 THREAD_RESULT THREAD_CALL WinPerfCounterSet::collectorThreadStarter(void *arg)
 {
-	((WinPerfCounterSet *)arg)->collectorThread();
+	static_cast<WinPerfCounterSet*>(arg)->collectorThread();
 	return THREAD_OK;
 }
 
@@ -249,14 +249,14 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
 		// Attempt to translate counter name
 		if ((rc == PDH_CSTATUS_NO_COUNTER) || (rc == PDH_CSTATUS_NO_OBJECT))
 		{
-			*ppszNewName = (TCHAR *)malloc(_tcslen(pszName) * sizeof(TCHAR) * 4);
+			*ppszNewName = MemAllocString(_tcslen(pszName) * 4);
 			if (TranslateCounterName(pszName, *ppszNewName))
 			{
 				AgentWriteDebugLog(2, _T("WINPERF: Counter translated: %s ==> %s"), pszName, *ppszNewName);
 				rc = PdhAddCounter(hQuery, *ppszNewName, 0, &hCounter);
 				if (rc != ERROR_SUCCESS)
 				{
-					free(*ppszNewName);
+					MemFree(*ppszNewName);
 					*ppszNewName = NULL;
 				}
 			}

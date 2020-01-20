@@ -75,7 +75,7 @@ private:
 	ObjectArray<WINPERF_COUNTER> *m_counters;
    TCHAR m_class;
 	MUTEX m_mutex;
-	CONDITION m_changeCondition;
+	HANDLE m_changeCondition;
    THREAD m_collectorThread;
 
 	void collectorThread();
@@ -116,5 +116,10 @@ BOOL AddCounterFromConfig(TCHAR *pszStr);
 BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
                   TCHAR *pArg, int iDataType, TCHAR *pszDescription);
 LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+
+/**
+ * Globals
+ */
+extern HANDLE g_winperfShutdownCondition;
 
 #endif

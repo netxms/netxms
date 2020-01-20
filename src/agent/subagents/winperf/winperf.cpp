@@ -28,6 +28,11 @@
 #define WPF_ENABLE_DEFAULT_COUNTERS    0x0001
 
 /**
+ * Subagent shutdown condition
+ */
+HANDLE g_winperfShutdownCondition = NULL;
+
+/**
  * Static variables
  */
 static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
@@ -334,6 +339,7 @@ static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
  */
 static bool SubAgentInit(Config *config)
 {
+   g_winperfShutdownCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
    StartCollectorThreads();
    return true;
 }
@@ -343,7 +349,9 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
+   SetEvent(g_winperfShutdownCondition);
    JoinCollectorThreads();
+   CloseHandle(g_winperfShutdownCondition);
 }
 
 /**
@@ -540,7 +548,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    else
    {
       AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is not supported"));
-      free(newName);
+      MemFree(newName);
    }
 
    // Load configuration
@@ -563,7 +571,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
                                _T("Unable to add counter from configuration file. ")
                                _T("Original configuration record: %s"), pItem);
          }
-         free(m_pszCounterList);
+         MemFree(m_pszCounterList);
       }
 
       if (m_dwFlags & WPF_ENABLE_DEFAULT_COUNTERS)
@@ -571,7 +579,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    }
    else
    {
-      free(m_pszCounterList);
+      MemFree(m_pszCounterList);
    }
    *ppInfo = &m_info;
    return success;
