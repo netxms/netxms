@@ -1321,7 +1321,13 @@ typedef struct
 #define VID_POLLING_SCHEDULE_TYPE   ((UINT32)666)
 #define VID_RETENTION_TYPE          ((UINT32)667)
 #define VID_IS_REFRESH              ((UINT32)668)
-
+#define VID_PARENT_ALARM_ID         ((UINT32)669)
+#define VID_RCA_SCRIPT_NAME         ((UINT32)670)
+#define VID_SUBORDINATE_ALARMS      ((UINT32)671)
+#define VID_IMPACT                  ((UINT32)672)
+#define VID_CHASSIS_PLACEMENT       ((UINT32)673)
+#define VID_ALLOW_PATH_EXPANSION    ((UINT32)674)
+#define VID_TAG                     ((UINT32)675)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

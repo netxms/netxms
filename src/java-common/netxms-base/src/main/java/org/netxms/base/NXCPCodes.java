@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1089,6 +1089,12 @@ public class NXCPCodes
    public static final long VID_POLLING_SCHEDULE_TYPE = 666;
    public static final long VID_RETENTION_TYPE = 667;
    public static final long VID_IS_REFRESH = 668;
+   public static final long VID_PARENT_ALARM_ID = 669;
+   public static final long VID_RCA_SCRIPT_NAME = 670;
+   public static final long VID_SUBORDINATE_ALARMS = 671;
+   public static final long VID_CHASSIS_PLACEMENT_CONFIG = 673;
+   public static final long VID_ALLOW_PATH_EXPANSION = 674;
+   public static final long VID_TAG = 675;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
