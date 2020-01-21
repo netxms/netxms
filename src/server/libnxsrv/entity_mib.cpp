@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -108,6 +108,7 @@ Component::Component(UINT32 index, const TCHAR *name)
 	m_firmware = NULL;
 	m_parentIndex = 0;
 	m_position = -1;
+	m_parent = NULL;
    m_children = new ObjectArray<Component>(0, 16, true);
 }
 
@@ -129,6 +130,7 @@ Component::Component(UINT32 index, UINT32 pclass, UINT32 parentIndex, UINT32 pos
    m_firmware = MemCopyString(firmware);
    m_parentIndex = parentIndex;
    m_position = position;
+   m_parent = NULL;
    m_children = new ObjectArray<Component>(0, 16, true);
 }
 
@@ -236,6 +238,7 @@ void Component::buildTree(ObjectArray<Component> *elements)
 		if (e->m_parentIndex == m_index)
 		{
 		   m_children->add(e);
+		   e->m_parent = this;
 			e->buildTree(elements);
 		}
 	}
@@ -363,7 +366,19 @@ shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport 
 		{
 			root->buildTree(&elements);
 			tree = make_shared<ComponentTree>(root);
-		   nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildComponentTree(%s [%d]): component tree created successfully"), debugInfo);
+		   nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildComponentTree(%s): component tree created successfully"), debugInfo);
+
+		   // Check for components without parent
+		   for(int i = 0; i < elements.size(); i++)
+		   {
+		      Component *c = elements.get(i);
+		      if ((c->getParent() == NULL) && (c != root))
+		      {
+		         nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): found element without parent but it is not root (index:%u, parentIndex:%u, name:%s)"),
+		                  debugInfo, c->getIndex(), c->getParentIndex(), c->getName());
+		         delete c;
+		      }
+		   }
 		}
 		else
 		{
