@@ -1066,6 +1066,7 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
 void QueueRawDciDataDelete(UINT32 dciId);
 INT64 GetIDataWriterQueueSize();
 INT64 GetRawDataWriterQueueSize();
+UINT64 GetRawDataWriterMemoryUsage();
 void StartDBWriter();
 void StopDBWriter();
 

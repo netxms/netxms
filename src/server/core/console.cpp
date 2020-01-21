@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,6 +64,31 @@ bool NXCORE_EXPORTABLE IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int
       if (temp[i] != cmdTemplate[i])
          return false;
    return i >= minChars;
+}
+
+/**
+ * Cache memory usage calculation callback
+ */
+static void GetCacheMemoryUsage(NetObj *object, UINT64 *size)
+{
+   if (object->isDataCollectionTarget())
+      *size += static_cast<DataCollectionTarget*>(object)->getCacheMemoryUsage();
+}
+
+/**
+ * Show memory usage
+ */
+static void ShowMemoryUsage(ServerConsole *console)
+{
+   console->printf(_T("Alarms ...................: %.02f MB\n"), static_cast<double>(GetAlarmMemoryUsage()) / 1048576);
+
+   UINT64 dciCache = 0;
+   g_idxObjectById.forEach(GetCacheMemoryUsage, &dciCache);
+   console->printf(_T("Data collection cache ....: %.02f MB\n"), static_cast<double>(dciCache) / 1048576);
+
+   console->printf(_T("Raw DCI data write cache .: %.02f MB\n"), static_cast<double>(GetRawDataWriterMemoryUsage()) / 1048576);
+
+   console->print(_T("\n"));
 }
 
 /**
@@ -1059,6 +1084,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
+      else if (IsCommand(_T("MEMUSAGE"), szBuffer, 3))
+      {
+         ShowMemoryUsage(pCtx);
+      }
       else if (IsCommand(_T("MODULES"), szBuffer, 3))
       {
          ConsoleWrite(pCtx, _T("Loaded server modules:\n"));
@@ -1174,10 +1203,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          pCtx->printf(_T("   Interface .......: %d\n"), static_cast<int>(sizeof(Interface)));
          pCtx->printf(_T("   Node ............: %d\n"), static_cast<int>(sizeof(Node)));
          pCtx->printf(_T("   Sensor ..........: %d\n"), static_cast<int>(sizeof(Sensor)));
-         pCtx->printf(_T("HardwareComponent . : %d\n"), static_cast<int>(sizeof(HardwareComponent)));
-         pCtx->printf(_T("SoftwarePackage ... : %d\n"), static_cast<int>(sizeof(SoftwarePackage)));
-         pCtx->printf(_T("WinPerfObject ..... : %d\n"), static_cast<int>(sizeof(WinPerfObject)));
+         pCtx->printf(_T("   Template ........: %d\n"), static_cast<int>(sizeof(Template)));
+         pCtx->printf(_T("ComponentTree ......: %d\n"), static_cast<int>(sizeof(ComponentTree)));
+         pCtx->printf(_T("Component ..........: %d\n"), static_cast<int>(sizeof(Component)));
+         pCtx->printf(_T("HardwareComponent ..: %d\n"), static_cast<int>(sizeof(HardwareComponent)));
+         pCtx->printf(_T("SoftwarePackage ....: %d\n"), static_cast<int>(sizeof(SoftwarePackage)));
+         pCtx->printf(_T("WinPerfObject ......: %d\n"), static_cast<int>(sizeof(WinPerfObject)));
          pCtx->printf(_T("WirelessStationInfo : %d\n"), static_cast<int>(sizeof(WirelessStationInfo)));
+         pCtx->printf(_T("Alarm ..............: %d\n"), static_cast<int>(sizeof(Alarm)));
+         pCtx->printf(_T("DCItem .............: %d\n"), static_cast<int>(sizeof(DCItem)));
+         pCtx->printf(_T("DCTable ............: %d\n"), static_cast<int>(sizeof(DCTable)));
+         pCtx->printf(_T("ItemValue ..........: %d\n"), static_cast<int>(sizeof(ItemValue)));
+         pCtx->printf(_T("Threshold ..........: %d\n"), static_cast<int>(sizeof(Threshold)));
       }
       else if (IsCommand(_T("STATS"), szBuffer, 2))
       {

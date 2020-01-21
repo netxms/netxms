@@ -1150,6 +1150,8 @@ public:
 	int size() const { return m_size; }
 	bool isEmpty() const { return m_size == 0; }
 
+	size_t memoryUsage() const { return m_allocated * m_elementSize; }
+
 	void setOwner(bool owner) { m_objectOwner = owner; }
 	bool isOwner() const { return m_objectOwner; }
 
@@ -3662,6 +3664,38 @@ template<typename T> inline void UpdateExpMovingAverage(T& load, int exp, T n)
 template<typename T> inline double GetExpMovingAverageValue(const T load)
 {
    return static_cast<double>(load) / EMA_FP_1;
+}
+
+/**
+ * Get value of given attribute protected by given mutex
+ */
+template<typename T> inline T GetAttributeWithLock(const T& attr, MUTEX mutex)
+{
+   MutexLock(mutex);
+   T value = attr;
+   MutexUnlock(mutex);
+   return value;
+}
+
+/**
+ * Set value of given attribute protected by given mutex
+ */
+template<typename T> inline void SetAttributeWithLock(T& attr, T value, MUTEX mutex)
+{
+   MutexLock(mutex);
+   attr = value;
+   MutexUnlock(mutex);
+}
+
+/**
+ * Get TCHAR[] attribute protected by given mutex as String object
+ */
+inline String GetStringAttributeWithLock(const TCHAR *attr, MUTEX mutex)
+{
+   MutexLock(mutex);
+   String value(attr);
+   MutexUnlock(mutex);
+   return value;
 }
 
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();

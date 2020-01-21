@@ -488,6 +488,8 @@ public:
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 
+	UINT64 getCacheMemoryUsage() const;
+
    virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus) override;
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void updateThresholdsBeforeMaintenanceState() override;

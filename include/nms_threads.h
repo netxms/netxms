@@ -1450,27 +1450,6 @@ template <typename T, typename B, typename R1, typename R2, typename R3> inline 
 }
 
 /**
- * Get value of given attribute protected by given mutex
- */
-template<typename T> inline T GetAttributeWithLock(const T& attr, MUTEX mutex)
-{
-   MutexLock(mutex);
-   T value = attr;
-   MutexUnlock(mutex);
-   return value;
-}
-
-/**
- * Set value of given attribute protected by given mutex
- */
-template<typename T> inline void SetAttributeWithLock(T& attr, T value, MUTEX mutex)
-{
-   MutexLock(mutex);
-   attr = value;
-   MutexUnlock(mutex);
-}
-
-/**
  * Wrappers for mutex
  */
 class LIBNETXMS_EXPORTABLE Mutex

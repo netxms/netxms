@@ -1970,3 +1970,22 @@ NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
 
    return parents;
 }
+
+/**
+ * Get cache memory usage
+ */
+UINT64 DataCollectionTarget::getCacheMemoryUsage()
+{
+   UINT64 cacheSize = 0;
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *object = m_dcObjects->get(i);
+      if (object->getType() == DCO_TYPE_ITEM)
+      {
+         cacheSize += static_cast<DCItem*>(object)->getCacheMemoryUsage();
+      }
+   }
+   unlockDciAccess();
+   return cacheSize;
+}

@@ -1888,6 +1888,8 @@ public:
    void startForcedInstancePoll() { m_instancePollState.manualStart(); }
 
    virtual void resetPollTimers();
+
+   UINT64 getCacheMemoryUsage();
 };
 
 /**
@@ -2473,8 +2475,8 @@ protected:
 	TCHAR *m_agentCertSubject;
    TCHAR m_agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR m_platformName[MAX_PLATFORM_NAME_LEN];
-   TCHAR m_snmpObjectId[MAX_OID_LEN * 4];
-	TCHAR *m_sysDescription;  // Agent's System.Uname or SNMP sysDescr
+   TCHAR *m_snmpObjectId;
+	TCHAR *m_sysDescription;   // Agent's System.Uname or SNMP sysDescr
 	TCHAR *m_sysName;				// SNMP sysName
 	TCHAR *m_sysLocation;      // SNMP sysLocation
 	TCHAR *m_sysContact;       // SNMP sysContact
@@ -2694,7 +2696,7 @@ public:
    INT16 getSNMPVersion() const { return m_snmpVersion; }
    UINT16 getSNMPPort() const { return m_snmpPort; }
    UINT32 getSNMPProxy() const { return m_snmpProxy; }
-   const TCHAR *getSNMPObjectId() const { return m_snmpObjectId; }
+   String getSNMPObjectId() const { return GetStringAttributeWithLock(m_snmpObjectId, m_mutexProperties); }
    const TCHAR *getSysName() const { return CHECK_NULL_EX(m_sysName); }
    const TCHAR *getSysDescription() const { return CHECK_NULL_EX(m_sysDescription); }
    const TCHAR *getSysContact() const { return CHECK_NULL_EX(m_sysContact); }
