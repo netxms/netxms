@@ -514,6 +514,12 @@ protected:
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
 
+   const ObjectArray<NObject> *getChildList() { return m_childList; }
+   const ObjectArray<NObject> *getParentList() { return m_parentList; }
+
+   void clearChildList() { m_childList->clear(); }
+   void clearParentList();
+
    void lockCustomAttributes() const { MutexLock(m_customAttributeLock); }
    void unlockCustomAttributes() const { MutexUnlock(m_customAttributeLock); }
 
@@ -535,7 +541,7 @@ protected:
    void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
    virtual void onChildAdd();
-   virtual void onChildRemove();
+   virtual void onParentRemove();
    virtual void onCustomAttributeChange();
 
 public:
@@ -551,9 +557,6 @@ public:
 
    void deleteChild(NObject *object);  // Delete reference to child object
    void deleteParent(NObject *object); // Delete reference to parent object
-
-   ObjectArray<NObject> *getChildList() { return m_childList; }
-   ObjectArray<NObject> *getParentList() { return m_parentList; }
 
    bool isChild(UINT32 id);
    bool isDirectChild(UINT32 id);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -424,7 +424,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
    if (tableDefinition == NULL)
       return NULL;
 
-   ObjectArray<NetObj> *childObjects = object->getFullChildList(true, true);
+   ObjectArray<NetObj> *childObjects = object->getAllChildren(true, true);
    Table *tableData = tableDefinition->createEmptyResultTable();
    for(int i = 0; i < childObjects->size(); i++)
    {

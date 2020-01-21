@@ -797,7 +797,7 @@ void NetObj::deleteObject(NetObj *initiator)
    lockChildList(true);
    for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *o = static_cast<NetObj *>(getChildList()->get(i));
+      NetObj *o = getChildList()->get(i);
       if (o->getParentCount() == 1)
       {
          // last parent, delete object
@@ -811,7 +811,7 @@ void NetObj::deleteObject(NetObj *initiator)
       }
 		decRefCount();
    }
-   getChildList()->clear();
+   clearChildList();
    unlockChildList();
 
    // Remove references to this object from parent objects
@@ -822,7 +822,7 @@ void NetObj::deleteObject(NetObj *initiator)
    {
       // If parent is deletion initiator then this object already
       // removed from parent's child list
-      NetObj *obj = static_cast<NetObj *>(getParentList()->get(i));
+      NetObj *obj = getParentList()->get(i);
       if (obj != initiator)
       {
          obj->deleteChild(this);
@@ -841,7 +841,7 @@ void NetObj::deleteObject(NetObj *initiator)
       }
 		decRefCount();
    }
-   getParentList()->clear();
+   clearParentList();
    unlockParentList();
 
    // Delete orphaned child objects and empty subnets
@@ -1925,7 +1925,7 @@ void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly)
  *
  * @param eventSourceOnly if true, only objects that can be event source will be included
  */
-ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly, bool updateRefCount)
+ObjectArray<NetObj> *NetObj::getAllChildren(bool eventSourceOnly, bool updateRefCount)
 {
 	ObjectIndex list;
 	getFullChildListInternal(&list, eventSourceOnly);
@@ -1939,7 +1939,7 @@ ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly, bool updateR
  * @param typeFilter Only return objects with class ID equals given value.
  *                   Set to -1 to disable filtering.
  */
-ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
+ObjectArray<NetObj> *NetObj::getChildren(int typeFilter)
 {
 	lockChildList(false);
 	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)getChildList()->size(), 16, false);
@@ -1959,7 +1959,7 @@ ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
  * @param typeFilter Only return objects with class ID equals given value.
  *                   Set to -1 to disable filtering.
  */
-ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
+ObjectArray<NetObj> *NetObj::getParents(int typeFilter)
 {
     lockParentList(false);
     ObjectArray<NetObj> *list = new ObjectArray<NetObj>(getParentList()->size(), 16, false);

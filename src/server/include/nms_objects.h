@@ -767,6 +767,9 @@ protected:
    IntegerArray<UINT32> *m_responsibleUsers;
    RWLOCK m_rwlockResponsibleUsers;
 
+   const ObjectArray<NetObj> *getChildList() { return reinterpret_cast<const ObjectArray<NetObj>*>(super::getChildList()); }
+   const ObjectArray<NetObj> *getParentList() { return reinterpret_cast<const ObjectArray<NetObj>*>(super::getParentList()); }
+
    void lockProperties() const { MutexLock(m_mutexProperties); }
    void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() { MutexLock(m_mutexACL); }
@@ -863,9 +866,6 @@ public:
    void deleteChild(NetObj *object);  // Delete reference to child object
    void deleteParent(NetObj *object); // Delete reference to parent object
 
-   ObjectArray<NetObj> *getChildList() { return reinterpret_cast<ObjectArray<NetObj> *>(super::getChildList()); }
-   ObjectArray<NetObj> *getParentList() { return reinterpret_cast<ObjectArray<NetObj> *>(super::getParentList()); }
-
    void deleteObject(NetObj *initiator = NULL);     // Prepare object for deletion
    void destroy();   // Destroy partially loaded object
 
@@ -921,9 +921,9 @@ public:
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
 
-	ObjectArray<NetObj> *getParentList(int typeFilter);
-	ObjectArray<NetObj> *getChildList(int typeFilter);
-	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly, bool updateRefCount);
+	ObjectArray<NetObj> *getParents(int typeFilter = -1);
+	ObjectArray<NetObj> *getChildren(int typeFilter = -1);
+	ObjectArray<NetObj> *getAllChildren(bool eventSourceOnly, bool updateRefCount);
 
    NetObj *findChildObject(const TCHAR *name, int typeFilter);
    Node *findChildNode(const InetAddress& addr);
