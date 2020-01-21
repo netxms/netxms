@@ -49,6 +49,7 @@ protected:
    TCHAR *m_firmware;
    UINT32 m_parentIndex;   // Index of parent component or 0 for root
    INT32 m_position;       // Component relative position within parent
+   Component *m_parent;
    ObjectArray<Component> *m_children;
 
    NXSL_Array *getChildrenForNXSL(NXSL_VM *vm, NXSL_ComponentHandle *handle) const;
@@ -65,6 +66,7 @@ public:
 
    UINT32 getIndex() const { return m_index; }
    UINT32 getParentIndex() const { return m_parentIndex; }
+   const Component *getParent() const { return m_parent; }
    INT32 getPosition() const { return m_position; }
    const ObjectArray<Component> *getChildren() const { return m_children; }
 
