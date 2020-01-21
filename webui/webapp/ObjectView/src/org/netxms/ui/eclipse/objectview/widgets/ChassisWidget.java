@@ -46,6 +46,7 @@ import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.configs.ChassisPlacement;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
@@ -62,6 +63,10 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
    private static final int MARGIN_HEIGHT = 10;
    private static final int MARGIN_WIDTH = 10;
    private static final int TITLE_HEIGHT = 20;
+   private static final int STATUS_INDECATOR_HEIGHT = 3;
+   private static final int STATUS_INDECATOR_WIDTH = 8;
+   private static final int STATUS_INDECATOR_SHIFT = 2;
+   private static final int STATUS_INDECATOR_BORDER = 1;
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    private static final String[] VIEW_LABELS = { "Front", "Back" };
    
@@ -173,7 +178,7 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       //Calculate inch to pixel proportion
       double proportion = rect.height / (double)(FULL_UNIT_HEIGHT * chassis.getRackHeight());
       final Color gray = gc.getDevice().getSystemColor(SWT.COLOR_GRAY);
-      gc.setBackground(gray);
+      final Color black = gc.getDevice().getSystemColor(SWT.COLOR_BLACK);
       
       //draw chassis nodes
       for (AbstractObject object : chassis.getChildrenAsArray())
@@ -195,6 +200,7 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
             if(objectRegistration != null)
                objectRegistration.addObject(object, unitRect);
             
+            boolean imageMissing = true;
             imageGuid = placemet.getImage();
             if (!imageGuid.equals(NXCommon.EMPTY_GUID))
             {
@@ -204,11 +210,20 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
                {
                   r = image.getBounds();
                   gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);   
-                  continue;
+                  imageMissing = false;
                }
             }
+            if (imageMissing)
+            {
+               gc.setBackground(gray);
+               gc.fillRectangle(unitRect);
+            }
+
+            gc.setBackground(black);
+            gc.fillRectangle(unitRect.x + STATUS_INDECATOR_SHIFT, unitRect.y + STATUS_INDECATOR_SHIFT, (int)(STATUS_INDECATOR_WIDTH * proportion + STATUS_INDECATOR_BORDER * 2), (int)(STATUS_INDECATOR_HEIGHT * proportion + STATUS_INDECATOR_BORDER * 2));      
             
-            gc.fillRectangle(unitRect);
+            gc.setBackground(StatusDisplayInfo.getStatusColor(object.getStatus()));
+            gc.fillRectangle(unitRect.x + STATUS_INDECATOR_SHIFT + STATUS_INDECATOR_BORDER, unitRect.y + STATUS_INDECATOR_SHIFT + STATUS_INDECATOR_BORDER, (int)(STATUS_INDECATOR_WIDTH * proportion), (int)(STATUS_INDECATOR_HEIGHT * proportion));            
          }
       }
    }
