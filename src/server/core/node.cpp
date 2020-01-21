@@ -305,6 +305,7 @@ Node::~Node()
    delete m_agentParameters;
    delete m_agentTables;
    delete m_driverParameters;
+   MemFree(m_snmpObjectId);
    MemFree(m_sysDescription);
    DestroyRoutingTable(m_pRoutingTable);
    if (m_arpCache != NULL)
