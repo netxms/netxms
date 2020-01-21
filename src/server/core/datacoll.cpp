@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include <nxcore_websvc.h>
 #include <gauge_helpers.h>
 
 /**
