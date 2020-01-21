@@ -2201,7 +2201,7 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
                        static_cast<Node*>(object)->isSNMPSupported(),
                        static_cast<Node*>(object)->isNativeAgent(),
                        static_cast<Node*>(object)->isLocalManagement(),
-                       static_cast<Node*>(object)->getSNMPObjectId());
+                       static_cast<Node*>(object)->getSNMPObjectId().cstr());
          PrintObjectInfo(console, object->getAssignedZoneProxyId(false), _T("   Primary zone proxy..:"));
          PrintObjectInfo(console, object->getAssignedZoneProxyId(true), _T("   Backup zone proxy...:"));
          ConsolePrintf(console, _T("   ICMP polling........: %s\n"),

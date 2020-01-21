@@ -746,3 +746,14 @@ INT64 GetRawDataWriterQueueSize()
    s_rawDataWriterLock.unlock();
    return size + s_batchSize;
 }
+
+/**
+ * Get memory consumption by raw DCI data write cache
+ */
+UINT64 GetRawDataWriterMemoryUsage()
+{
+   s_rawDataWriterLock.lock();
+   UINT64 size = (HASH_COUNT(s_rawDataWriterQueue) + s_batchSize) * sizeof(DELAYED_RAW_DATA_UPDATE);
+   s_rawDataWriterLock.unlock();
+   return size;
+}

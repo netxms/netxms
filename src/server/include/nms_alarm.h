@@ -104,6 +104,7 @@ public:
    const TCHAR *getImpact() const { return CHECK_NULL_EX(m_impact); }
    UINT32 getCommentCount() const { return m_commentCount; }
    UINT32 getNotificationCode() const { return m_notificationCode; }
+   UINT64 getMemoryUsage() const;
 
    void fillMessage(NXCPMessage *msg) const;
 
@@ -202,6 +203,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref);
 int GetMostCriticalStatusForObject(UINT32 dwObjectId);
 void GetAlarmStats(NXCPMessage *pMsg);
 int GetAlarmCount();
+UINT64 GetAlarmMemoryUsage();
 Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId);
 
 UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,

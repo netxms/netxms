@@ -1366,6 +1366,17 @@ void DCItem::reloadCache(bool forceReload)
 }
 
 /**
+ * Get cache memory usage
+ */
+UINT64 DCItem::getCacheMemoryUsage() const
+{
+   lock();
+   INT64 size = m_cacheSize * (sizeof(ItemValue) + sizeof(ItemValue*));
+   unlock();
+   return size;
+}
+
+/**
  * Put last value into CSCP message
  */
 void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)

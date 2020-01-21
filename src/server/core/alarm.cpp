@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,6 +67,16 @@ public:
    void unlock() { m_lock.unlock(); }
 
    int size() { return m_list.size(); }
+
+   UINT64 memoryUsage()
+   {
+      UINT64 memUsage = sizeof(AlarmList);
+      lock();
+      for(int i = 0; i < m_list.size(); i++)
+         memUsage += m_list.get(i)->getMemoryUsage();
+      unlock();
+      return memUsage;
+   }
 
    Alarm *get(int index) { return m_list.get(index); }
 
@@ -420,6 +430,23 @@ Alarm::~Alarm()
    delete m_subordinateAlarms;
    MemFree(m_impact);
    MemFree(m_rcaScriptName);
+}
+
+/**
+ * Get approximate memory usage by this alarm
+ */
+UINT64 Alarm::getMemoryUsage() const
+{
+   UINT64 mu = sizeof(Alarm) + m_alarmCategoryList->memoryUsage() + m_subordinateAlarms->memoryUsage() + sizeof(IntegerArray<UINT32>) * 2;
+   if (m_relatedEvents != NULL)
+      mu += m_relatedEvents->memoryUsage() + sizeof(IntegerArray<UINT32>);
+   if (m_rcaScriptName != NULL)
+      mu += (_tcslen(m_rcaScriptName) + 1) * sizeof(TCHAR);
+   if (m_impact != NULL)
+      mu += (_tcslen(m_impact) + 1) * sizeof(TCHAR);
+   if (m_eventTags != NULL)
+      mu += (_tcslen(m_eventTags) + 1) * sizeof(TCHAR);
+   return mu;
 }
 
 /**
@@ -1733,6 +1760,14 @@ int GetAlarmCount()
    int count = s_alarmList.size();
    s_alarmList.unlock();
    return count;
+}
+
+/**
+ * Get alarm memory usage
+ */
+UINT64 GetAlarmMemoryUsage()
+{
+   return s_alarmList.memoryUsage();
 }
 
 /**

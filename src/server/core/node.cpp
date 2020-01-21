@@ -92,7 +92,7 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_snmpVersion = SNMP_VERSION_2C;
    m_snmpPort = SNMP_DEFAULT_PORT;
    m_snmpSecurity = new SNMP_SecurityContext("public");
-   m_snmpObjectId[0] = 0;
+   m_snmpObjectId = NULL;
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
@@ -203,7 +203,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
       _tcslcpy(m_name, newNodeData->name, MAX_OBJECT_NAME);
    else
       newNodeData->ipAddr.toString(m_name);    // Make default name from IP address
-   m_snmpObjectId[0] = 0;
+   m_snmpObjectId = NULL;
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
@@ -395,7 +395,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetField(hResult, 0, 4, m_szSharedSecret, MAX_SECRET_LENGTH);
    m_agentPort = (WORD)DBGetFieldLong(hResult, 0, 5);
    m_iStatusPollType = DBGetFieldLong(hResult, 0, 6);
-   DBGetField(hResult, 0, 7, m_snmpObjectId, MAX_OID_LEN * 4);
+   m_snmpObjectId = DBGetField(hResult, 0, 7, NULL, 0);
+   if ((m_snmpObjectId != NULL) && (*m_snmpObjectId == 0))
+      MemFreeAndNull(m_snmpObjectId);
    DBGetField(hResult, 0, 8, m_agentVersion, MAX_AGENT_VERSION_LEN);
    DBGetField(hResult, 0, 9, m_platformName, MAX_PLATFORM_NAME_LEN);
    m_pollerNode = DBGetFieldULong(hResult, 0, 10);
@@ -1977,7 +1979,7 @@ restart_agent_check:
                {
                   m_capabilities &= ~NC_IS_SNMP;
                   m_state &= ~NSF_SNMP_UNREACHABLE;
-                  m_snmpObjectId[0] = 0;
+                  MemFreeAndNull(m_snmpObjectId);
                   sendPollerMsg(rqId, POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
                }
             }
@@ -3156,7 +3158,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       sendPollerMsg(rqId, POLLER_WARNING _T("Capability reset\r\n"));
       m_capabilities &= NC_IS_LOCAL_MGMT; // reset all except "local management" flag
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PASSED;
-      m_snmpObjectId[0] = 0;
+      MemFreeAndNull(m_snmpObjectId);
       m_platformName[0] = 0;
       m_agentVersion[0] = 0;
       MemFreeAndNull(m_sysDescription);
@@ -3918,9 +3920,10 @@ bool Node::confPollSnmp(UINT32 rqId)
       _tcscpy(szBuffer, _T(".0.0"));
    }
    lockProperties();
-   if (_tcscmp(m_snmpObjectId, szBuffer))
+   if (_tcscmp(CHECK_NULL_EX(m_snmpObjectId), szBuffer))
    {
-      _tcslcpy(m_snmpObjectId, szBuffer, MAX_OID_LEN * 4);
+      MemFree(m_snmpObjectId);
+      m_snmpObjectId = MemCopyString(szBuffer);
       hasChanges = true;
    }
    unlockProperties();
@@ -3954,7 +3957,7 @@ bool Node::confPollSnmp(UINT32 rqId)
    unlockProperties();
 
    // Allow driver to gather additional info
-   m_driver->analyzeDevice(pTransport, m_snmpObjectId, this, &m_driverData);
+   m_driver->analyzeDevice(pTransport, CHECK_NULL_EX(m_snmpObjectId), this, &m_driverData);
    if (m_driverData != NULL)
    {
       m_driverData->attachToNode(m_id, m_guid, m_name);
@@ -3965,7 +3968,7 @@ bool Node::confPollSnmp(UINT32 rqId)
    if (layout.numberingScheme == NDD_PN_UNKNOWN)
    {
       // Try to find port numbering information in database
-      LookupDevicePortLayout(SNMP_ObjectId::parse(m_snmpObjectId), &layout);
+      LookupDevicePortLayout(SNMP_ObjectId::parse(CHECK_NULL_EX(m_snmpObjectId)), &layout);
    }
    m_portRowCount = layout.rows;
    m_portNumberingScheme = layout.numberingScheme;
@@ -4254,9 +4257,10 @@ bool Node::confPollSnmp(UINT32 rqId)
       if (SnmpGet(SNMP_VERSION_1, pTransport, _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          lockProperties();
-         if (_tcscmp(m_snmpObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
+         if (_tcscmp(CHECK_NULL_EX(m_snmpObjectId), _T(".1.3.6.1.4.1.2620.1.1")))
          {
-            _tcslcpy(m_snmpObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
+            MemFree(m_snmpObjectId);
+            m_snmpObjectId = MemCopyString(_T(".1.3.6.1.4.1.2620.1.1"));
             hasChanges = true;
          }
 
@@ -6127,7 +6131,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
    pMsg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
    pMsg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
-   pMsg->setField(VID_SNMP_OID, m_snmpObjectId);
+   pMsg->setField(VID_SNMP_OID, CHECK_NULL_EX(m_snmpObjectId));
    pMsg->setField(VID_SNMP_PORT, m_snmpPort);
    pMsg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
    pMsg->setField(VID_AGENT_VERSION, m_agentVersion);
