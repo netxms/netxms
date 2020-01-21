@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -323,14 +323,14 @@ void Template::createExportRecord(StringBuffer &xml)
 
    // Path in groups
    StringList path;
-   ObjectArray<NetObj> *list = getParentList(OBJECT_TEMPLATEGROUP);
+   ObjectArray<NetObj> *list = getParents(OBJECT_TEMPLATEGROUP);
    TemplateGroup *parent = NULL;
    while(list->size() > 0)
    {
-      parent = (TemplateGroup *)list->get(0);
+      parent = static_cast<TemplateGroup*>(list->get(0));
       path.add(parent->getName());
       delete list;
-      list = parent->getParentList(OBJECT_TEMPLATEGROUP);
+      list = parent->getParents(OBJECT_TEMPLATEGROUP);
    }
    delete list;
 

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2019 Reden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -50,6 +50,15 @@ NObject::~NObject()
    MutexDestroy(m_customAttributeLock);
    RWLockDestroy(m_rwlockParentList);
    RWLockDestroy(m_rwlockChildList);
+}
+
+/**
+ * Clear parent list. Should be called only when parent list is write locked.
+ */
+void NObject::clearParentList()
+{
+   m_parentList->clear();
+   onParentRemove();
 }
 
 /**
@@ -125,7 +134,7 @@ void NObject::deleteParent(NObject *object)
    m_parentList->remove(i);
    unlockParentList();
 
-   onChildRemove();
+   onParentRemove();
 }
 
 /**
@@ -417,9 +426,9 @@ void NObject::setCustomAttribute(const TCHAR *key, UINT64 value)
 }
 
 /**
- * Hook method called on removing child object
+ * Hook method called on removing parent object
  */
-void NObject::onChildRemove()
+void NObject::onParentRemove()
 {
    StringList remove;
    lockCustomAttributes();
@@ -427,7 +436,7 @@ void NObject::onChildRemove()
    while(iterator->hasNext())
    {
       std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
-      if(pair->second->isInheritable() && pair->second->isInherited() && !isParent(pair->second->sourceObject))
+      if (pair->second->isInheritable() && pair->second->isInherited() && !isParent(pair->second->sourceObject))
          remove.add(pair->first);
    }
    delete iterator;

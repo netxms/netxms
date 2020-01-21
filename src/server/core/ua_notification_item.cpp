@@ -184,10 +184,10 @@ static void SendUpdate(NXCPMessage *msg, NetObj *object)
    }
    else
    {
-      ObjectArray<NetObj> *children = object->getChildList();
-      for(int j = 0; j < children->size(); j++)
+      ObjectArray<NetObj> *children = object->getChildren();
+      for(int i = 0; i < children->size(); i++)
       {
-         SendUpdate(msg, children->get(j));
+         SendUpdate(msg, children->get(i));
       }
       delete children;
    }

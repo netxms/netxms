@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019 Raden Solutions
+** Copyright (C) 2019-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -369,7 +369,7 @@ void GetObjectPhysicalLinks(NetObj *obj, UINT32 userId, UINT32 patchPannelId, NX
       {
          if(patchPannelId == 0)
          {
-            ObjectArray<NetObj> *nodes = obj->getChildList(OBJECT_NODE);
+            ObjectArray<NetObj> *nodes = obj->getChildren(OBJECT_NODE);
             for(int i = 0; i < nodes->size(); i++)
             {
                m_filter.add(nodes->get(i)->getId());
