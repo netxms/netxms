@@ -40,6 +40,7 @@
 	NX-1712 (Add support for reading WMI query result as list or table)
 	NX-1713 (Object tool for container should be shown if it can be executed on at least one node)
 	NX-1717 (Alarm pop-ups apear only on console start, afterwards are not shown)
+	NX-1718 (Send user agent notification on container)
 	NX-1719 (File monitoring with rescan is not matching text past 4KB of the monitored file)
 	NX-1725 (LDAP attribute names should be case insensitive)
 	NX-1726 ("Tools" and "Graphs" menu items missing in object context menu on world map)
