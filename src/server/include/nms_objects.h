@@ -3965,6 +3965,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
 StructArray<DependentNode> *GetNodeDependencies(UINT32 nodeId);
 
 BOOL LoadObjects();
+void DestroyAllObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
 
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass);

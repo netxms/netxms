@@ -2097,6 +2097,22 @@ BOOL LoadObjects()
 }
 
 /**
+ * Callback for destroying object
+ */
+static void DestroyObject(NetObj *object, void *context)
+{
+   delete object;
+}
+
+/**
+ * Destroy all objects (called on shutdown)
+ */
+void DestroyAllObjects()
+{
+   g_idxObjectById.forEach(DestroyObject, NULL);
+}
+
+/**
  * Stop object maintenance threads
  */
 void StopObjectMaintenanceThreads()

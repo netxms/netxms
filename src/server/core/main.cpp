@@ -1280,6 +1280,8 @@ void NXCORE_EXPORTABLE Shutdown()
 	DBUnloadDriver(g_dbDriver);
 	nxlog_debug(1, _T("Database driver unloaded"));
 
+	DestroyAllObjects();
+
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();
 
