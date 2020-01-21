@@ -1340,8 +1340,17 @@ BOOL Initialize()
 
          StringBuffer command = _T("\"");
          command.append(binDir);
-         command.append(_T("\\nxuseragent.exe\""));
-         ExecuteInAllSessions(command);
+         command.append(_T("\\"));
+         command.append(g_config->getValue(_T("/CORE/UserAgentExecutable"), _T("nxuseragent.exe")));
+         if (VerifyFileSignature(command.cstr() + 1)) // skip leading "
+         {
+            command.append(_T("\""));
+            ExecuteInAllSessions(command);
+         }
+         else
+         {
+            nxlog_write(NXLOG_WARNING, _T("Signature validation failed for user agent executable \"%s\""), command.cstr() + 1);
+         }
       }
 #endif
 	}
