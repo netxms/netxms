@@ -25,6 +25,7 @@
 - Web UI properties can be set via JNDI
 - Improved LLDP based network topology discovery
 - Fixed issues:
+	NX-1462 (Add "File Policies" to push files/scripts out to agents)
 	NX-1653 (Global user access rights are not updated in sessions)
 	NX-1668 ("Execute server script" appears in context menu in object tools configurator)
 	NX-1674 (Initiate DCI forced poll from NXSL)
