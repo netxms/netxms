@@ -36,6 +36,8 @@
 - Web UI properties can be set via JNDI
 - Improved LLDP based network topology discovery
 - Fixed issues:
+	NX-366 (Generate event if duplicate IP address found)
+	NX-910 (System.IO.DiskQueue(*) doesnt support instances for Windows)
 	NX-1462 (Add "File Policies" to push files/scripts out to agents)
 	NX-1653 (Global user access rights are not updated in sessions)
 	NX-1668 ("Execute server script" appears in context menu in object tools configurator)
@@ -70,6 +72,7 @@
 	NX-1760 (Use folder specified by --sysconfdir instead of --prefix for configuration file search)
 	NX-1761 (Object script executor prints last output line after error message)
 	NX-1769 (Windows agent may crash if invalid strftime format character used in log parser file name specification)
+	NX-1030 (Telegram bot integration)
 
 
 *
@@ -118,9 +121,11 @@
 - Windows installer sets hardened file system permissions
 - Event SYS_SCRIPT_ERROR generated for instance discovery filter script compilation errors
 - Fixed issues:
+	NX-69 (Driver for Cisco Nexus)
 	NX-183 (Implemented responsible users for objects)
 	NX-415 (Oracle db driver drops connection on "password will expire" warning)
 	NX-725 (Add alarm comments from NXSL)
+	NX-782 (Better handling of counter resets and delta calc)
 	NX-900 (Server started during nxdbmgr check forced repair)
 	NX-1021 (Add event SYS_SERVER_STARTED)
 	NX-1102 (Implement event groups)
