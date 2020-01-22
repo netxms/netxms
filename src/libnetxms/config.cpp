@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2019 Raden Solutions
+ ** Copyright (C) 2003-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -1353,7 +1353,22 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 
    if (ps->level == 0)
    {
-      if (!stricmp(name, ps->topLevelTag))
+      if (!stricmp(ps->topLevelTag, "*"))
+      {
+#ifdef UNICODE
+         WCHAR wname[MAX_PATH];
+         MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, MAX_PATH);
+         wname[MAX_PATH - 1] = 0;
+         ConfigEntry *e = new ConfigEntry(wname, ps->config->getEntry(_T("/")), ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), 0);
+#else
+         ConfigEntry *e = new ConfigEntry(name, ps->config->getEntry(_T("/")), ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), 0);
+#endif
+         ps->stack[ps->level] = e;
+         ps->charData[ps->level] = _T("");
+         ps->trimValue[ps->level] = XMLGetAttrBoolean(attrs, "trim", true);
+         ps->level++;
+      }
+      else if (!stricmp(name, ps->topLevelTag))
       {
          ps->stack[ps->level] = ps->config->getEntry(_T("/"));
          ps->charData[ps->level] = _T("");
