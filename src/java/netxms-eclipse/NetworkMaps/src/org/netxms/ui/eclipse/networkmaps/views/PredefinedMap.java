@@ -752,8 +752,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		if (dlg.open() != Window.OK)
 			return;
 		
-		UUID imageGuid = dlg.getLibraryImage().getGuid();
-		Rectangle imageBounds = dlg.getImage().getBounds();
+      UUID imageGuid = dlg.getImageGuid();
+      Rectangle imageBounds = ImageProvider.getInstance().getImage(imageGuid).getBounds();
 
 		NetworkMapDecoration element = new NetworkMapDecoration(mapPage.createElementId(), NetworkMapDecoration.IMAGE);
 		element.setSize(imageBounds.width, imageBounds.height);
@@ -1058,8 +1058,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       if (dlg.open() != Window.OK)
          return;
       
-      UUID imageGuid = dlg.getLibraryImage().getGuid();
-      Rectangle imageBounds = dlg.getImage().getBounds();
+      UUID imageGuid = dlg.getImageGuid();
+      Rectangle imageBounds = ImageProvider.getInstance().getImage(imageGuid).getBounds();
 
       NetworkMapDecoration element = (NetworkMapDecoration)selection.getFirstElement();
       element.setSize(imageBounds.width, imageBounds.height);

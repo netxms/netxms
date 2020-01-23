@@ -172,7 +172,6 @@
       <plugin id="org.netxms.gef4.zest.core"/>
       <plugin id="org.netxms.gef4.zest.jface"/>
       <plugin id="org.netxms.gef4.zest.layouts"/>
-      <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.rap.draw2d"/>
       <plugin id="org.netxms.rap.draw2d.compatibility"/>
       <plugin id="org.netxms.ui.base"/>
@@ -261,7 +260,6 @@
       <plugin id="org.netxms.gef4.zest.core" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.gef4.zest.jface" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.gef4.zest.layouts" autoStart="true" startLevel="0" />
-      <plugin id="org.netxms.nebula.widgets.gallery" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.rap.draw2d" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.rap.draw2d.compatibility" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.base" autoStart="true" startLevel="0" />

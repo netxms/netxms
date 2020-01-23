@@ -1,10 +1,6 @@
 package org.netxms.ui.eclipse.imagelibrary;
 
 import java.util.UUID;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;

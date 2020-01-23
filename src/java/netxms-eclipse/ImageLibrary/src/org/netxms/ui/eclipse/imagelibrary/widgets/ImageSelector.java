@@ -64,12 +64,12 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		ImageSelectionDialog dlg = new ImageSelectionDialog(getShell());
 		if (dlg.open() == Window.OK)
 		{
-			LibraryImage image = dlg.getLibraryImage();
+         LibraryImage image = dlg.getImage();
 			if (image != null)
 			{
 				setText(image.getName());
-				setImage(dlg.getImage());
-				imageGuid = dlg.getGuid();
+            setImage(ImageProvider.getInstance().getImage(image.getGuid()));
+				imageGuid = dlg.getImageGuid();
 			}
 			else
 			{

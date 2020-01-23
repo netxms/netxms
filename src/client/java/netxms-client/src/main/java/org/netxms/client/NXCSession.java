@@ -8593,21 +8593,16 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
-      final int numOfImages = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
+      final int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
 
-      final List<LibraryImage> ret = new ArrayList<LibraryImage>(numOfImages);
-      long varId = NXCPCodes.VID_IMAGE_LIST_BASE;
-      for(int i = 0; i < numOfImages; i++)
+      final List<LibraryImage> images = new ArrayList<LibraryImage>(count);
+      long fieldId = NXCPCodes.VID_IMAGE_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 5)
       {
-         final UUID imageGuid = response.getFieldAsUUID(varId++);
-         final String imageName = response.getFieldAsString(varId++);
-         final String imageCategory = response.getFieldAsString(varId++);
-         final String imageMimeType = response.getFieldAsString(varId++);
-         final boolean imageProtected = response.getFieldAsBoolean(varId++);
-         ret.add(new LibraryImage(imageGuid, imageName, imageCategory, imageMimeType, imageProtected));
+         images.add(new LibraryImage(response, fieldId));
       }
 
-      return ret;
+      return images;
    }
 
    /**

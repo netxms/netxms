@@ -37,9 +37,6 @@ public class SessionNotification
    public static final int SYSTEM_ACCESS_CHANGED = 13;
    public static final int OBJECT_DELETED = 99;
 
-   public static final int IMAGE_UPDATED = 201;
-   public static final int IMAGE_DELETED = 202;
-   
 	public static final int NOTIFY_BASE = 1000;	// Base value for notifications used as subcode for NXC_EVENT_NOTIFICATION in C library
 	public static final int SERVER_SHUTDOWN = 1001;
    public static final int RELOAD_EVENT_DB = 1002;
@@ -98,6 +95,10 @@ public class SessionNotification
 	public static final int USER_DB_OBJECT_CREATED = 0;
 	public static final int USER_DB_OBJECT_DELETED = 1;
 	public static final int USER_DB_OBJECT_MODIFIED = 2;
+
+   // Subcodes for image library changes
+   public static final int IMAGE_UPDATED = 201;
+   public static final int IMAGE_DELETED = 202;
 
    protected static final int UPDATE_LISTENER_LIST = 32766;
    protected static final int STOP_PROCESSING_THREAD = 32767;

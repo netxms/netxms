@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -211,7 +211,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				final UUID objectImageGuid = object.getImage();
 				if (objectImageGuid != null && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
 				{
-					return ImageProvider.getInstance(viewer.getControl().getDisplay()).getImage(objectImageGuid);
+					return ImageProvider.getInstance().getImage(objectImageGuid);
 				}
 				
 				// Try registered network map image providers

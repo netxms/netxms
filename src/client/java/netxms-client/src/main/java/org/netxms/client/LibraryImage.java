@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Alex Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,10 @@ import java.io.InputStream;
 import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
 
 /**
  * This class represents image in image library
- * 
  */
 public class LibraryImage implements Comparable<LibraryImage>
 {
@@ -39,40 +39,55 @@ public class LibraryImage implements Comparable<LibraryImage>
 	private boolean imageProtected;
 	private boolean complete = false;
 
+   /**
+    * Default constructor
+    */
+   public LibraryImage()
+   {
+      guid = NXCommon.EMPTY_GUID;
+      name = "";
+      category = "Default";
+      mimeType = "image/unknown";
+   }
+
 	/**
-	 * 
-	 * @param guid GUID
-	 */
-	public LibraryImage(final UUID guid)
+    * Create new library image
+    * 
+    * @param guid GUID
+    * @param name name
+    * @param category image category name
+    * @param mimeType image MIME type
+    */
+   public LibraryImage(UUID guid, String name, String category, String mimeType)
 	{
 		this.guid = guid;
+      this.name = name;
+      this.category = category;
+      this.mimeType = (mimeType != null) ? mimeType : "image/unknown";
+	}
+
+   /**
+    * Create library image object from NXCP message
+    * 
+    * @param msg
+    * @param baseId
+    */
+   public LibraryImage(NXCPMessage msg, long baseId)
+	{
+      guid = msg.getFieldAsUUID(baseId);
+      name = msg.getFieldAsString(baseId + 1);
+      category = msg.getFieldAsString(baseId + 2);
+      mimeType = msg.getFieldAsString(baseId + 3);
+      imageProtected = msg.getFieldAsBoolean(baseId + 4);
 	}
 
 	/**
-	 * 
-	 * @param guid GUID
-	 * @param name name
-	 * @param category category
-	 * @param mimeType mime type
-	 * @param imageProtected defines if image is protected
-	 */
-	public LibraryImage(final UUID guid, final String name, final String category, final String mimeType,
-			final boolean imageProtected)
-	{
-		this.guid = guid;
-		this.name = name;
-		this.category = category;
-		this.mimeType = mimeType;
-		this.imageProtected = imageProtected;
-	}
-
-	/**
-	 * Create object from NXCP message
-	 * 
-	 * @param msg Message containing object's data
-	 * @param imageFile image file
-	 */
-	public LibraryImage(final NXCPMessage msg, File imageFile)
+    * Create library image object from NXCP message and image file
+    * 
+    * @param msg Message containing object's data
+    * @param imageFile image file
+    */
+   public LibraryImage(NXCPMessage msg, File imageFile)
 	{
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
@@ -110,28 +125,16 @@ public class LibraryImage implements Comparable<LibraryImage>
 	}
 
 	/**
-	 * Default constructor
-	 */
-	public LibraryImage()
-	{
-	}
-
-	/**
-	 * Fill NXCP message with object data
-	 *
-	 * @param msg NXCP message
-	 */
+    * Fill NXCP message with image data (metadata only)
+    *
+    * @param msg NXCP message
+    */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		if (guid != null)
-		{
-			msg.setField(NXCPCodes.VID_GUID, guid);
-		}
+      msg.setField(NXCPCodes.VID_GUID, guid);
 		msg.setField(NXCPCodes.VID_NAME, name);
-		if (category != null)
-		{
-			msg.setField(NXCPCodes.VID_CATEGORY, category);
-		}
+      msg.setField(NXCPCodes.VID_CATEGORY, category);
+      msg.setField(NXCPCodes.VID_IMAGE_MIMETYPE, mimeType);
 	}
 
 	/**
@@ -197,9 +200,10 @@ public class LibraryImage implements Comparable<LibraryImage>
 	 * @param binaryData
 	 *           the binaryData to set
 	 */
-	public void setBinaryData(byte[] binaryData)
+   public void setBinaryData(byte[] binaryData, String mimeType)
 	{
 		this.binaryData = binaryData;
+      this.mimeType = (mimeType != null) ? mimeType : "image/unknown";
 	}
 
 	/**

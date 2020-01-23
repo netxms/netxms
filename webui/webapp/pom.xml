@@ -41,7 +41,6 @@
     <module>SwitchManager</module>
     <module>Topology</module>
     <module>UserManager</module>
-    <module>nebula/org.netxms.nebula.widgets.gallery</module>
     <module>swtchart</module>
   </modules>
 

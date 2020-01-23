@@ -185,7 +185,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    		addDropSupport();
 	   }
 	   
-		ImageProvider.getInstance(display).addUpdateListener(this);
+		ImageProvider.getInstance().addUpdateListener(this);
 		
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 		{
@@ -196,7 +196,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 			}
 		}
 
@@ -756,8 +756,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		if (dlg.open() != Window.OK)
 			return;
 		
-		UUID imageGuid = dlg.getLibraryImage().getGuid();
-		Rectangle imageBounds = dlg.getImage().getBounds();
+      UUID imageGuid = dlg.getImageGuid();
+      Rectangle imageBounds = ImageProvider.getInstance().getImage(imageGuid).getBounds();
 
 		NetworkMapDecoration element = new NetworkMapDecoration(mapPage.createElementId(), NetworkMapDecoration.IMAGE);
 		element.setSize(imageBounds.width, imageBounds.height);
@@ -873,7 +873,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			public void run()
 			{
 				if (guid.equals(mapObject.getBackground()))
-					viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(guid));
+					viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid));
 				
 				final String guidText = guid.toString();
 				for(NetworkMapElement e : mapPage.getElements())
@@ -896,9 +896,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	public void dispose()
 	{
-	   ImageProvider p = ImageProvider.getInstance(display);
-	   if (p != null)
-	      p.removeUpdateListener(this);
+		ImageProvider.getInstance().removeUpdateListener(this);
 		if (defaultLinkColor != null)
 			defaultLinkColor.dispose();
 		super.dispose();
@@ -930,7 +928,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 			}
 		}
 
@@ -1064,8 +1062,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       if (dlg.open() != Window.OK)
          return;
       
-      UUID imageGuid = dlg.getLibraryImage().getGuid();
-      Rectangle imageBounds = dlg.getImage().getBounds();
+      UUID imageGuid = dlg.getImageGuid();
+      Rectangle imageBounds = ImageProvider.getInstance().getImage(imageGuid).getBounds();
 
       NetworkMapDecoration element = (NetworkMapDecoration)selection.getFirstElement();
       element.setSize(imageBounds.width, imageBounds.height);

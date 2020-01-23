@@ -12087,19 +12087,14 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 	request->getFieldAsString(VID_CATEGORY, category, MAX_OBJECT_NAME);
 	request->getFieldAsString(VID_IMAGE_MIMETYPE, mimetype, MAX_DB_STRING);
 
-	//UINT32 imageSize = request->getFieldAsBinary(VID_IMAGE_DATA, NULL, 0);
-	//BYTE *imageData = (BYTE *)malloc(imageSize);
-	//request->getFieldAsBinary(VID_IMAGE_DATA, imageData, imageSize);
-
 	// Set default values for empty fields
 	if (name[0] == 0)
 		_tcscpy(name, guidText);
 	if (category[0] == 0)
 		_tcscpy(category, _T("Default"));
 	if (mimetype[0] == 0)
-		_tcscpy(mimetype, _T("image/png"));
+		_tcscpy(mimetype, _T("image/unknown"));
 
-	//debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guidText, name, category, (int)imageSize);
 	debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s"), guidText, name, category);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -12181,11 +12176,6 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
    DBConnectionPoolReleaseConnection(hdb);
 	msg.setField(VID_RCC, rcc);
 	sendMessage(&msg);
-
-	if (rcc == RCC_SUCCESS)
-	{
-		//EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&guid);
-	}
 }
 
 /**

@@ -1,6 +1,23 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.imagelibrary.dialogs;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,75 +25,70 @@ import java.util.UUID;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.NXCommon;
 import org.netxms.client.LibraryImage;
-import org.netxms.nebula.widgets.gallery.DefaultGalleryGroupRenderer;
-import org.netxms.nebula.widgets.gallery.DefaultGalleryItemRenderer;
-import org.netxms.nebula.widgets.gallery.Gallery;
-import org.netxms.nebula.widgets.gallery.GalleryItem;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
+import org.netxms.ui.eclipse.imagelibrary.views.helpers.ImageCategory;
+import org.netxms.ui.eclipse.imagelibrary.views.helpers.ImageLibraryContentProvider;
+import org.netxms.ui.eclipse.imagelibrary.views.helpers.ImageLibraryLabelProvider;
+import org.netxms.ui.eclipse.imagelibrary.widgets.ImagePreview;
 
-public class ImageSelectionDialog extends Dialog implements SelectionListener, MouseListener, ImageUpdateListener
+/**
+ * Image selection dialog
+ */
+public class ImageSelectionDialog extends Dialog implements ImageUpdateListener
 {
-	/**
-	 * Zero
-	 */
-	public static final int NONE = 0;
-	/**
-	 * Show "Default" button and return null as image is it's pressed
-	 */
-	public static final int ALLOW_DEFAULT = 1;
-
 	private static final String SELECT_IMAGE_CY = "SelectImage.cy"; //$NON-NLS-1$
 	private static final String SELECT_IMAGE_CX = "SelectImage.cx"; //$NON-NLS-1$
 	private static final int DEFAULT_ID = IDialogConstants.CLIENT_ID + 1;
 
-	private Gallery gallery;
-	private LibraryImage libraryImage;
-	private Image imageObject;
-	private int flags;
-	private int maxWidth = Integer.MAX_VALUE;
-	private int maxHeight = Integer.MAX_VALUE;
+   private Map<String, ImageCategory> imageCategories = new HashMap<String, ImageCategory>();
+	private TreeViewer viewer;
+	private ImagePreview imagePreview;
+   private LibraryImage image;
+   private boolean allowDefault;
 
 	/**
 	 * Construct new dialog with default flags: single selection, no "default"
-	 * buttion, no null images on OK button
+	 * button, no null images on OK button
 	 * 
 	 * @param parentShell
 	 */
 	public ImageSelectionDialog(Shell parentShell)
 	{
-		this(parentShell, NONE);
+      this(parentShell, false);
 	}
 
 	/**
-	 * Construct new Image selection dialog with custom flags.
-	 * 
-	 * @param parentShell
-	 * @param flags
-	 *           creation flags
-	 */
-	public ImageSelectionDialog(final Shell parentShell, final int flags)
+    * Construct new Image selection dialog
+    * 
+    * @param parentShell
+    * @param allowDefault control "Default" button appearance (true to enable)
+    */
+   public ImageSelectionDialog(final Shell parentShell, boolean allowDefault)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-		this.flags = flags;
+      this.allowDefault = allowDefault;
 	}
 
 	/* (non-Javadoc)
@@ -94,85 +106,113 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		}
 		catch(NumberFormatException e)
 		{
-			newShell.setSize(400, 350);
+			newShell.setSize(700, 400);
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#close()
-	 */
-	@Override
-	public boolean close()
-	{
-		ImageProvider.getInstance().removeUpdateListener(this);
-		return super.close();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-		final FillLayout layout = new FillLayout();
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 
-		gallery = new Gallery(dialogArea, SWT.V_SCROLL /* | SWT.MULTI */);
+		viewer = new TreeViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
+		viewer.setContentProvider(new ImageLibraryContentProvider());
+		viewer.setLabelProvider(new ImageLibraryLabelProvider());
+      viewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            String n1 = (e1 instanceof LibraryImage) ? ((LibraryImage)e1).getName() : ((ImageCategory)e1).getName();
+            String n2 = (e2 instanceof LibraryImage) ? ((LibraryImage)e2).getName() : ((ImageCategory)e2).getName();
+            return n1.compareToIgnoreCase(n2);
+         }
+      });
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		viewer.getControl().setLayoutData(gd);
+		
+		imagePreview = new ImagePreview(dialogArea, SWT.BORDER);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.widthHint = 300;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		imagePreview.setLayoutData(gd);
+		
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            LibraryImage image = (!selection.isEmpty() && (selection.getFirstElement() instanceof LibraryImage)) ? (LibraryImage)selection.getFirstElement() : null;
+            imagePreview.setImage(image);
+            getButton(IDialogConstants.OK_ID).setEnabled(image != null);
+         }
+      });
 
-		DefaultGalleryGroupRenderer galleryGroupRenderer = new DefaultGalleryGroupRenderer();
-
-		galleryGroupRenderer.setMinMargin(2);
-		galleryGroupRenderer.setItemHeight(48);
-		galleryGroupRenderer.setItemWidth(48);
-		galleryGroupRenderer.setAutoMargin(true);
-		galleryGroupRenderer.setAlwaysExpanded(true);
-		gallery.setGroupRenderer(galleryGroupRenderer);
-
-		DefaultGalleryItemRenderer itemRenderer = new DefaultGalleryItemRenderer();
-		gallery.setItemRenderer(itemRenderer);
-
-		gallery.addSelectionListener(this);
-		gallery.addMouseListener(this);
 		ImageProvider.getInstance().addUpdateListener(this);
+      dialogArea.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            ImageProvider.getInstance().removeUpdateListener(ImageSelectionDialog.this);
+         }
+      });
 
 		refreshImages();
 
-		return dialogArea;
+      return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{
-		saveSettings();
+      saveSettings();
 		super.cancelPressed();
 	}
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
-		final GalleryItem[] selection = gallery.getSelection();
-		if (selection.length > 0)
-		{
-			libraryImage = (LibraryImage)selection[0].getData();
-			imageObject = selection[0].getImage();
-		}
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty() || !(selection.getFirstElement() instanceof LibraryImage))
+         return;
+
+      image = (LibraryImage)selection.getFirstElement();
+
 		saveSettings();
 		super.okPressed();
 	}
 
+   /**
+    * "Default" button handler
+    */
 	private void defaultPressed()
 	{
-		imageObject = null;
-		libraryImage = new LibraryImage();
+      image = new LibraryImage();
 		saveSettings();
 		super.okPressed();
 	}
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#buttonPressed(int)
+    */
 	@Override
 	protected void buttonPressed(int buttonId)
 	{
@@ -183,6 +223,9 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		}
 	}
 
+   /**
+    * Save dialog settings
+    */
 	private void saveSettings()
 	{
 		Point size = getShell().getSize();
@@ -192,10 +235,13 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 		settings.put(SELECT_IMAGE_CY, size.y);
 	}
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
-		if ((flags & ALLOW_DEFAULT) == ALLOW_DEFAULT)
+      if (allowDefault)
 		{
 			createButton(parent, DEFAULT_ID, Messages.get().ImageSelectionDialog_Default, false);
 		}
@@ -204,146 +250,81 @@ public class ImageSelectionDialog extends Dialog implements SelectionListener, M
 	}
 
 	/**
-	 * 
-	 */
+    * Refresh image list
+    */
 	private void refreshImages()
 	{
 		final ImageProvider provider = ImageProvider.getInstance();
 		final List<LibraryImage> imageLibrary = provider.getImageLibrary();
 
-		Map<String, List<LibraryImage>> categories = new HashMap<String, List<LibraryImage>>();
-		for(LibraryImage image : imageLibrary)
-		{
-			final String category = image.getCategory();
-			final Image swtImage = provider.getImage(image.getGuid());
-			final Rectangle bounds = swtImage.getBounds();
-			if (bounds.height <= maxHeight && bounds.width <= maxWidth)
-			{
-				if (!categories.containsKey(category))
-				{
-					categories.put(category, new ArrayList<LibraryImage>());
-				}
-				categories.get(category).add(image);
-			}
-		}
-		// this.knownCategories = categories.keySet();
-		
-		gallery.removeAll();
-		for(String category : categories.keySet())
-		{
-			final GalleryItem categoryItem = new GalleryItem(gallery, SWT.NONE);
-			categoryItem.setText(category);
-			final List<LibraryImage> categoryImages = categories.get(category);
-			for(LibraryImage image : categoryImages)
-			{
-				final GalleryItem imageItem = new GalleryItem(categoryItem, SWT.NONE);
-				imageItem.setText(image.getName());
-				imageItem.setImage(provider.getImage(image.getGuid()));
-				imageItem.setData(image);
-			}
-		}
-
-		gallery.redraw();
+      imageCategories.clear();
+      for(LibraryImage image : imageLibrary)
+      {
+         ImageCategory category = imageCategories.get(image.getCategory());
+         if (category == null)
+         {
+            category = new ImageCategory(image.getCategory());
+            imageCategories.put(category.getName(), category);
+         }
+         category.addImage(image);
+      }
+      viewer.setInput(imageCategories);
 	}
 
-	public Image getImage()
+   /**
+    * Get GUID of selected library image
+    * 
+    * @return GUID of selected library image
+    */
+	public UUID getImageGuid()
 	{
-		return imageObject;
-	}
-
-	public UUID getGuid()
-	{
-		return libraryImage == null ? NXCommon.EMPTY_GUID : libraryImage.getGuid();
+      return (image == null) ? NXCommon.EMPTY_GUID : image.getGuid();
 	}
 
 	/**
-	 * @return the libraryImage
-	 */
-	public LibraryImage getLibraryImage()
+    * Get selected library image
+    * 
+    * @return selected library image
+    */
+   public LibraryImage getImage()
 	{
-		return libraryImage;
+      return image;
 	}
 
+   /**
+    * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
+    */
 	@Override
-	public void widgetSelected(SelectionEvent e)
+   public void imageUpdated(final UUID guid)
 	{
-		final GalleryItem[] selection = gallery.getSelection();
-		if (selection.length > 0)
-		{
-			getButton(IDialogConstants.OK_ID).setEnabled(true);
-		}
-		else
-		{
-			getButton(IDialogConstants.OK_ID).setEnabled(false);
-		}
-	}
+      if (getShell().isDisposed())
+         return;
 
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e)
-	{
-	}
+      final LibraryImage image = ImageProvider.getInstance().getLibraryImageObject(guid);
+      if (image != null)
+      {
+         getShell().getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+               UUID selectedGuid = ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
+                     ? ((LibraryImage)selection.getFirstElement()).getGuid()
+                     : NXCommon.EMPTY_GUID;
 
-	@Override
-	public void mouseDoubleClick(MouseEvent e)
-	{
-		final GalleryItem[] selection = gallery.getSelection();
-		if (selection.length > 0)
-		{
-			okPressed();
-		}
-	}
+               ImageCategory category = imageCategories.get(image.getCategory());
+               if (category == null)
+               {
+                  category = new ImageCategory(image.getCategory());
+                  imageCategories.put(category.getName(), category);
+               }
+               category.addImage(image);
+               viewer.refresh();
 
-	@Override
-	public void mouseDown(MouseEvent e)
-	{
-	}
-
-	@Override
-	public void mouseUp(MouseEvent e)
-	{
-	}
-
-	@Override
-	public void imageUpdated(UUID guid)
-	{
-		final Shell shell = getShell();
-		if (shell != null)
-		{
-			final Display display = shell.getDisplay();
-			display.asyncExec(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					refreshImages();
-				}
-			});
-		}
-	}
-
-	/**
-	 * Set maximum allowed dimentions for images snowh by this instance of
-	 * {@link ImageSelectionDialog}
-	 * 
-	 * @param width
-	 * @param height
-	 */
-	public void setMaxImageDimensions(final int width, final int height)
-	{
-		this.maxWidth = width;
-		this.maxHeight = height;
-		final Shell shell = getShell();
-		if (shell != null)
-		{
-			shell.getDisplay().asyncExec(new Runnable()
-			{
-
-				@Override
-				public void run()
-				{
-					refreshImages();
-				}
-			});
-		}
+               if (selectedGuid.equals(image.getGuid()))
+                  viewer.setSelection(new StructuredSelection(image));
+            }
+         });
+      }
 	}
 }

@@ -595,7 +595,6 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.netxms.gef4.zest.core"/>
       <plugin id="org.netxms.gef4.zest.jface"/>
       <plugin id="org.netxms.gef4.zest.layouts"/>
-      <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.ui.base"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>

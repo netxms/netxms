@@ -26,8 +26,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ImageProvider
 {
-	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
-	private static final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
+	private final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
+	private final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
 
 	/**
 	 * @param display
@@ -72,7 +72,7 @@ public class ImageProvider
 	private boolean initialized = false;
 	private NXCSession session;
 	private Display display;
-	
+
 	/**
 	 * 
 	 */
@@ -128,8 +128,8 @@ public class ImageProvider
 	}
 
 	/**
-	 * 
-	 */
+    * Clear image cache
+    */
 	private void clearCache()
 	{
 		for(Image image : cache.values())
@@ -247,18 +247,21 @@ public class ImageProvider
 		return new ArrayList<LibraryImage>(libraryIndex.values());
 	}
 
+   /**
+    * Invalidate image
+    * 
+    * @param guid
+    * @param removed
+    */
 	public void invalidateImage(UUID guid, boolean removed)
 	{
-		Image image = cache.get(guid);
+      Image image = cache.remove(guid);
 		if (image != null && image != missingImage)
-		{
 			image.dispose();
-		}
-		cache.remove(guid);
+
 		if (removed)
-		{
 			libraryIndex.remove(guid);
-		}
+
 		notifySubscribers(guid);
 	}
 }

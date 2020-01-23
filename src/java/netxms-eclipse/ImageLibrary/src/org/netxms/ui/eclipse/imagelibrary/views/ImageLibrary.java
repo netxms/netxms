@@ -1,12 +1,28 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.imagelibrary.views;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,64 +35,65 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTException;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MenuDetectEvent;
-import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.base.NXCommon;
 import org.netxms.client.LibraryImage;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
-import org.netxms.nebula.widgets.gallery.DefaultGalleryGroupRenderer;
-import org.netxms.nebula.widgets.gallery.DefaultGalleryItemRenderer;
-import org.netxms.nebula.widgets.gallery.Gallery;
-import org.netxms.nebula.widgets.gallery.GalleryItem;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImagePropertiesDialog;
-import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
-import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
+import org.netxms.ui.eclipse.imagelibrary.views.helpers.ImageCategory;
+import org.netxms.ui.eclipse.imagelibrary.views.helpers.ImageLibraryContentProvider;
+import org.netxms.ui.eclipse.imagelibrary.views.helpers.ImageLibraryLabelProvider;
+import org.netxms.ui.eclipse.imagelibrary.widgets.ImagePreview;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Image library configurator
  */
-public class ImageLibrary extends ViewPart implements ImageUpdateListener
+public class ImageLibrary extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary"; //$NON-NLS-1$
+	
+	public static final int COLUMN_NAME = 0;
+   public static final int COLUMN_TYPE = 1;
+   public static final int COLUMN_PROTECTED = 2;
+   public static final int COLUMN_GUID = 3;
 
-	protected static final int MIN_GRID_ICON_SIZE = 48;
-	protected static final int MAX_GRID_ICON_SIZE = 256;
-
-	private Gallery gallery;
-	private Action actionNew;
-	private Action actionEdit;
-	private Action actionDelete;
-
-	private Action actionRefresh;
-	private Action actionZoomIn;
-	private Action actionZoomOut;
-
-	protected MenuDetectEvent menuEvent;
-
-	private NXCSession session;
-
-	private Set<String> knownCategories;
-	private List<LibraryImage> imageLibrary;
-
-	protected int currentIconSize = MIN_GRID_ICON_SIZE;
+   private NXCSession session = ConsoleSharedData.getSession();
+   private SessionListener sessionListener;
+	private Map<String, ImageCategory> imageCategories = new HashMap<String, ImageCategory>();
+	private SashForm splitter;
+	private SortableTreeViewer viewer;
+	private ImagePreview imagePreview;
+   private Action actionNew;
+   private Action actionEdit;
+   private Action actionDelete;
+   private Action actionRefresh;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -84,69 +101,115 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	@Override
 	public void createPartControl(final Composite parent)
 	{
-	   final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-	   
-	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM"); //$NON-NLS-1$
-	   if(currentIconSize == 0)
-	      currentIconSize = MIN_GRID_ICON_SIZE;
-	   
 		final FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
-
-		session = (NXCSession)ConsoleSharedData.getSession();
-
-		gallery = new Gallery(parent, SWT.V_SCROLL | SWT.MULTI);
-
-		DefaultGalleryGroupRenderer galleryGroupRenderer = new DefaultGalleryGroupRenderer();
-
-		galleryGroupRenderer.setMinMargin(2);
-		galleryGroupRenderer.setItemHeight(currentIconSize);
-		galleryGroupRenderer.setItemWidth(currentIconSize);
-		galleryGroupRenderer.setAutoMargin(true);
-		galleryGroupRenderer.setAlwaysExpanded(true);
-		gallery.setGroupRenderer(galleryGroupRenderer);
-
-		DefaultGalleryItemRenderer itemRenderer = new DefaultGalleryItemRenderer();
-		gallery.setItemRenderer(itemRenderer);
+		
+		splitter = new SashForm(parent, SWT.HORIZONTAL);
+		
+      final String[] names = { "Name", "MIME type", "Protected", "GUID" };
+		final int[] widths = { 400, 120, 80, 200 };
+		viewer = new SortableTreeViewer(splitter, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER);
+		viewer.setContentProvider(new ImageLibraryContentProvider());
+		viewer.setLabelProvider(new ImageLibraryLabelProvider());
+      viewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            String n1 = (e1 instanceof LibraryImage) ? ((LibraryImage)e1).getName() : ((ImageCategory)e1).getName();
+            String n2 = (e2 instanceof LibraryImage) ? ((LibraryImage)e2).getName() : ((ImageCategory)e2).getName();
+            return n1.compareToIgnoreCase(n2);
+         }
+      });
+		
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            if (selection.getFirstElement() instanceof ImageCategory)
+            {
+               if (viewer.getExpandedState(selection.getFirstElement()))
+                  viewer.collapseToLevel(selection.getFirstElement(), TreeViewer.ALL_LEVELS);
+               else
+                  viewer.expandToLevel(selection.getFirstElement(), 1);
+            }
+            else if (selection.getFirstElement() instanceof LibraryImage)
+            {
+               editImage();
+            }
+         }
+      });
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            if ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
+            {
+               imagePreview.setImage((LibraryImage)selection.getFirstElement());
+            }
+            else
+            {
+               imagePreview.setImage(null);
+            }
+         }
+      });
+		
+		imagePreview = new ImagePreview(splitter, SWT.BORDER);
+		
+		splitter.setWeights(new int[] { 70, 30 });
 
 		createActions();
 		createPopupMenu();
 		contributeToActionBars();
 
-		gallery.addMenuDetectListener(new MenuDetectListener() {
-			@Override
-			public void menuDetected(MenuDetectEvent e)
-			{
-				menuEvent = e;
-			}
-		});
+		refreshImages();
 
-		try
-		{
-			refreshImages();
-		}
-		catch(Exception e1)
-		{
-			e1.printStackTrace();
-		}
+      sessionListener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() != SessionNotification.IMAGE_LIBRARY_CHANGED)
+               return;
 
-		ImageProvider.getInstance().addUpdateListener(this);
-		parent.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize); //$NON-NLS-1$
-				ImageProvider.getInstance().removeUpdateListener(ImageLibrary.this);
-			}
-		});
+            final UUID guid = (UUID)n.getObject();
+            final boolean update = (n.getSubCode() == SessionNotification.IMAGE_UPDATED);
+            parent.getDisplay().asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (update)
+                  {
+                     updateImageLocalCopy(guid);
+                  }
+                  else
+                  {
+                     removeImageLocalCopy(guid);
+                  }
+               }
+            });
+         }
+      };
+      session.addListener(sessionListener);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(sessionListener);
+      super.dispose();
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
+	   viewer.getControl().setFocus();
 	}
 
 	/**
@@ -158,18 +221,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary, false);
-				final GalleryItem[] selection = gallery.getSelection();
-				if (selection.length > 0)
-				{
-					LibraryImage image = (LibraryImage)selection[0].getData();
-					dialog.setDefaultCategory(image.getCategory());
-				}
-
-				if (dialog.open() == Dialog.OK)
-				{
-					uploadNewImage(dialog.getName(), dialog.getCategory(), dialog.getFileName());
-				}
+			   addImage();
 			}
 		};
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
@@ -178,18 +230,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				final GalleryItem[] selection = gallery.getSelection();
-				if (selection.length == 1)
-				{
-					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary, true);
-					LibraryImage image = (LibraryImage)selection[0].getData();
-					dialog.setName(image.getName());
-					dialog.setDefaultCategory(image.getCategory());
-					if (dialog.open() == Dialog.OK)
-					{
-						editImage(selection[0], dialog.getName(), dialog.getCategory(), dialog.getFileName());
-					}
-				}
+			   editImage();
 			}
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
@@ -198,7 +239,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				deleteImage();
+				deleteImages();
 			}
 
 		};
@@ -208,53 +249,89 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				try
-				{
-					refreshImages();
-				}
-				catch(Exception e)
-				{
-					Activator.logError("ImageLibrary view: Exception in refresh action", e); //$NON-NLS-1$
-				}
+				refreshImages();
 			}
 		};
-
-		actionZoomIn = new Action(Messages.get().ImageLibrary_ActionZoomIn) {
-			@Override
-			public void run()
-			{
-				final DefaultGalleryGroupRenderer groupRenderer = (DefaultGalleryGroupRenderer)gallery.getGroupRenderer();
-				if (currentIconSize < MAX_GRID_ICON_SIZE)
-				{
-					currentIconSize += 16;
-					groupRenderer.setItemHeight(currentIconSize);
-					groupRenderer.setItemWidth(currentIconSize);
-				}
-			}
-		};
-		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
-		actionZoomOut = new Action(Messages.get().ImageLibrary_ActionZoomOut) {
-			@Override
-			public void run()
-			{
-				final DefaultGalleryGroupRenderer groupRenderer = (DefaultGalleryGroupRenderer)gallery.getGroupRenderer();
-				if (currentIconSize > MIN_GRID_ICON_SIZE)
-				{
-					currentIconSize -= 16;
-					groupRenderer.setItemHeight(currentIconSize);
-					groupRenderer.setItemWidth(currentIconSize);
-				}
-			}
-		};
-		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 	}
 
    /**
-    * Verify if image can be created from given file
+    * Verify if image can be created from given file. On success returns image MIME type.
     */
-	protected void verifyImageFile(final String fileName) throws Exception
+   private String verifyImageFile(final String fileName) throws Exception
 	{
-		new Image(getSite().getShell().getDisplay(), fileName).dispose();
+      ImageData image = new ImageData(fileName);
+		String mimeType;
+      switch(image.type)
+      {
+         case SWT.IMAGE_BMP:
+         case SWT.IMAGE_BMP_RLE:
+            mimeType = "image/bmp";
+            break;
+         case SWT.IMAGE_GIF:
+            mimeType = "image/gif";
+            break;
+         case SWT.IMAGE_ICO:
+            mimeType = "image/x-icon";
+            break;
+         case SWT.IMAGE_JPEG:
+            mimeType = "image/jpeg";
+            break;
+         case SWT.IMAGE_PNG:
+            mimeType = "image/png";
+            break;
+         case SWT.IMAGE_TIFF:
+            mimeType = "image/tiff";
+            break;
+         default:
+            mimeType = "image/unknown";
+            break;
+      }
+      return mimeType;
+	}
+	
+	/**
+	 * Add new image
+	 */
+	private void addImage()
+	{
+      final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), imageCategories.keySet());
+
+	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+	   if (!selection.isEmpty())
+      {
+	      Object o = selection.getFirstElement();
+	      if (o instanceof ImageCategory)
+	         dialog.setDefaultCategory(((ImageCategory)o).getName());
+	      else if (o instanceof LibraryImage)
+            dialog.setDefaultCategory(((LibraryImage)o).getCategory());
+      }
+
+      if (dialog.open() == Dialog.OK)
+      {
+         uploadNewImage(dialog.getName(), dialog.getCategory(), dialog.getFileName());
+      }
+	}
+	
+	/**
+	 * Edit existing image
+	 */
+	private void editImage()
+	{
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      if (selection.getFirstElement() instanceof LibraryImage)
+      {
+         LibraryImage image = (LibraryImage)selection.getFirstElement();
+         final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), imageCategories.keySet());
+         dialog.setName(image.getName());
+         dialog.setDefaultCategory(image.getCategory());
+         if (dialog.open() == Dialog.OK)
+         {
+            doImageUpdate(image, dialog.getName(), dialog.getCategory(), dialog.getFileName());
+         }
+      }
 	}
 
 	/**
@@ -263,9 +340,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 * @param category
 	 * @param fileName
 	 */
-	protected void editImage(final GalleryItem galleryItem, final String name, final String category, final String fileName)
+	private void doImageUpdate(final LibraryImage image, final String name, final String category, final String fileName)
 	{
-		final LibraryImage image = (LibraryImage)galleryItem.getData();
+      if (!image.isProtected())
+      {
+         image.setName(name);
+         image.setCategory(category);
+      }
 
 		new ConsoleJob(Messages.get().ImageLibrary_UpdateJob, this, Activator.PLUGIN_ID, null) {
 			@Override
@@ -273,7 +354,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			{
 				if (fileName != null)
 				{
-	            verifyImageFile(fileName);
+               String mimeType = verifyImageFile(fileName);
+
 					FileInputStream stream = null;
 					try
 					{
@@ -281,19 +363,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 						stream = new FileInputStream(fileName);
 						byte imageData[] = new byte[(int)fileSize];
 						stream.read(imageData);
-						image.setBinaryData(imageData);
+                  image.setBinaryData(imageData, mimeType);
 					}
 					finally
 					{
 						if (stream != null)
 							stream.close();
 					}
-				}
-
-				if (!image.isProtected())
-				{
-					image.setName(name);
-					image.setCategory(category);
 				}
 
 				session.modifyImage(image, new ProgressListener() {
@@ -313,10 +389,15 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				ImageProvider.getInstance().syncMetaData();
-				refreshImages(); /* TODO: update single element */
-
 				monitor.done();
+				
+				runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.refresh();
+               }
+            });
 			}
 
 			@Override
@@ -338,9 +419,9 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-				verifyImageFile(fileName);
+            String mimeType = verifyImageFile(fileName);
 
-				final LibraryImage image = new LibraryImage();
+            final LibraryImage image = new LibraryImage(UUID.randomUUID(), name, category, mimeType);
 
 				final long fileSize = new File(fileName).length();
 				FileInputStream stream = null;
@@ -349,10 +430,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					stream = new FileInputStream(fileName);
 					byte imageData[] = new byte[(int)fileSize];
 					stream.read(imageData);
-
-					image.setBinaryData(imageData);
-					image.setName(name);
-					image.setCategory(category);
+               image.setBinaryData(imageData, mimeType);
 				}
 				finally
 				{
@@ -377,11 +455,23 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				// TODO: check
-				ImageProvider.getInstance().syncMetaData();
-				refreshImages(); /* TODO: update local copy */
-
 				monitor.done();
+
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  ImageCategory category = imageCategories.get(image.getCategory());
+                  if (category == null)
+                  {
+                     category = new ImageCategory(image.getCategory());
+                     imageCategories.put(category.getName(), category);
+                  }
+                  category.addImage(image);
+                  viewer.refresh();
+                  viewer.setSelection(new StructuredSelection(image));
+               }
+            });
 			}
 
 			@Override
@@ -393,39 +483,70 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	}
 
 	/**
-	 * 
+	 * Delete selected images
 	 */
-	protected void deleteImage()
+	protected void deleteImages()
 	{
-		final GalleryItem[] selection = gallery.getSelection();
-		for(GalleryItem item : selection)
+	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+	   if (selection.isEmpty())
+	      return;
+	   
+	   if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Library Images", "Do you really want to delete selected images?"))
+	      return;
+
+	   final Set<String> categoryDeleteList = new HashSet<String>();
+	   final Set<LibraryImage> deleteList = new HashSet<LibraryImage>();
+		for(Object o : selection.toList())
 		{
-			try
-			{
-				session.deleteImage((LibraryImage)item.getData());
-				final GalleryItem category = item.getParentItem();
-				gallery.remove(item);
-				if (category != null)
-				{
-					if (category.getItemCount() == 0)
-					{
-						gallery.remove(category);
-					}
-				}
-			}
-			catch(NXCException e)
-			{
-				e.printStackTrace();
-			}
-			catch(IOException e)
-			{
-				e.printStackTrace();
-			}
+		   if (o instanceof LibraryImage)
+		   {
+		      deleteList.add((LibraryImage)o);
+		   }
+		   else if (o instanceof ImageCategory)
+		   {
+		      deleteList.addAll(((ImageCategory)o).getImages());
+		      categoryDeleteList.add(((ImageCategory)o).getName());
+		   }
 		}
+		
+		if (deleteList.isEmpty())
+		   return;
+		
+		new ConsoleJob("Delete library images", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(LibraryImage i : deleteList)
+               session.deleteImage(i);
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  for(LibraryImage i : deleteList)
+                  {
+                     imageCategories.get(i.getCategory()).removeImage(i.getGuid());
+                  }
+                  if (!categoryDeleteList.isEmpty())
+                  {
+                     for(String c : categoryDeleteList)
+                        imageCategories.remove(c);
+                  }
+                  viewer.refresh();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot delete library image";
+         }
+      }.start();
 	}
 
 	/**
-	 * 
+	 * Create viewer popup menu
 	 */
 	private void createPopupMenu()
 	{
@@ -438,8 +559,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			}
 		});
 
-		final Menu menu = menuManager.createContextMenu(gallery);
-		gallery.setMenu(menu);
+		final Menu menu = menuManager.createContextMenu(viewer.getTree());
+		viewer.getTree().setMenu(menu);
 	}
 
 	/**
@@ -448,22 +569,26 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(actionNew);
-		final int selectionCount = gallery.getSelectionCount();
-		if (selectionCount == 1)
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
 		{
 			manager.add(actionEdit);
 		}
-		if (selectionCount > 0)
+		if (!selection.isEmpty())
 		{
-			final GalleryItem[] items = gallery.getSelection();
 			boolean protectedFound = false;
-			for(GalleryItem item : items)
+			for(Object o : selection.toList())
 			{
-				if (((LibraryImage)item.getData()).isProtected())
+				if ((o instanceof LibraryImage) && ((LibraryImage)o).isProtected())
 				{
 					protectedFound = true;
 					break;
 				}
+            if ((o instanceof ImageCategory) && ((ImageCategory)o).hasProtectedImages())
+            {
+               protectedFound = true;
+               break;
+            }
 			}
 			if (!protectedFound)
 			{
@@ -473,7 +598,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	}
 
 	/**
-	 * 
+	 * Contribute to action bars
 	 */
 	private void contributeToActionBars()
 	{
@@ -481,23 +606,20 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		final IToolBarManager toolBarManager = actionBars.getToolBarManager();
 
 		toolBarManager.add(actionNew);
+      toolBarManager.add(new Separator());
 		toolBarManager.add(actionRefresh);
-		toolBarManager.add(new Separator());
-		toolBarManager.add(actionZoomIn);
-		toolBarManager.add(actionZoomOut);
 	}
 
 	/**
-	 * @throws NetXMSClientException
-	 * @throws IOException
+	 * Refresh image list
 	 */
-	private void refreshImages() throws NXCException, IOException
+	private void refreshImages()
 	{
 		new ConsoleJob(Messages.get().ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				imageLibrary = session.getImageLibrary();
+				final List<LibraryImage> imageLibrary = session.getImageLibrary();
 				Collections.sort(imageLibrary);
 				for(int i = 0; i < imageLibrary.size(); i++)
 				{
@@ -538,67 +660,80 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 */
 	private void refreshUI(List<LibraryImage> imageLibrary)
 	{
-		Map<String, List<LibraryImage>> categories = new HashMap<String, List<LibraryImage>>();
+		imageCategories.clear();
 		for(LibraryImage image : imageLibrary)
 		{
-			final String category = image.getCategory();
-			if (!categories.containsKey(category))
+			ImageCategory category = imageCategories.get(image.getCategory());
+			if (category == null)
 			{
-				categories.put(category, new ArrayList<LibraryImage>());
+			   category = new ImageCategory(image.getCategory());
+			   imageCategories.put(category.getName(), category);
 			}
-			categories.get(category).add(image);
+			category.addImage(image);
 		}
-		this.knownCategories = categories.keySet();
-
-		gallery.removeAll();
-		for(String category : categories.keySet())
-		{
-			final GalleryItem categoryItem = new GalleryItem(gallery, SWT.NONE);
-			categoryItem.setText(category);
-			final List<LibraryImage> categoryImages = categories.get(category);
-			for(final LibraryImage image : categoryImages)
-			{
-				final GalleryItem imageItem = new GalleryItem(categoryItem, SWT.NONE);
-				imageItem.setText(image.getName());
-				final byte[] binaryData = image.getBinaryData();
-				if (binaryData != null)
-				{
-					final ByteArrayInputStream stream = new ByteArrayInputStream(binaryData);
-					try
-					{
-						imageItem.setImage(new Image(getSite().getShell().getDisplay(), stream));
-					}
-					catch(SWTException e)
-					{
-						Activator.logError("Exception in ImageLibrary.refreshUI()", e); //$NON-NLS-1$
-						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
-					}
-				}
-				else
-				{
-					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
-				}
-				imageItem.setData(image);
-			}
-		}
-
-		gallery.redraw();
+		viewer.setInput(imageCategories);
 	}
 
-	@Override
-	public void imageUpdated(UUID guid)
-	{
-		try
-		{
-			refreshImages();
-		}
-		catch(NXCException e)
-		{
-			Activator.logError("Exception in ImageLibrary.imageUpdated()", e); //$NON-NLS-1$
-		}
-		catch(IOException e)
-		{
-			Activator.logError("Exception in ImageLibrary.imageUpdated()", e); //$NON-NLS-1$
-		}
-	}
+   /**
+    * Update local copy of library image
+    * 
+    * @param guid
+    */
+   private void updateImageLocalCopy(final UUID guid)
+   {
+      ConsoleJob job = new ConsoleJob("Load library image", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final LibraryImage image = session.getImage(guid);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+                  UUID selectedGuid = ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
+                        ? ((LibraryImage)selection.getFirstElement()).getGuid()
+                        : NXCommon.EMPTY_GUID;
+
+                  ImageCategory category = imageCategories.get(image.getCategory());
+                  if (category == null)
+                  {
+                     category = new ImageCategory(image.getCategory());
+                     imageCategories.put(category.getName(), category);
+                  }
+                  category.addImage(image);
+                  viewer.refresh();
+
+                  if (selectedGuid.equals(image.getGuid()))
+                     viewer.setSelection(new StructuredSelection(image));
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot load library image";
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
+    * Remove local copy of library image
+    * 
+    * @param guid
+    */
+   private void removeImageLocalCopy(UUID guid)
+   {
+      for(ImageCategory c : imageCategories.values())
+      {
+         if (c.removeImage(guid))
+         {
+            viewer.refresh();
+            break;
+         }
+      }
+   }
 }

@@ -45,12 +45,12 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	public ImageSelector(Composite parent, int style)
 	{
 		super(parent, style, SHOW_CLEAR_BUTTON);
-		ImageProvider.getInstance(getDisplay()).addUpdateListener(this);
+		ImageProvider.getInstance().addUpdateListener(this);
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				ImageProvider.getInstance(ImageSelector.this.getDisplay()).removeUpdateListener(ImageSelector.this);
+				ImageProvider.getInstance().removeUpdateListener(ImageSelector.this);
 			}
 		});
 	}
@@ -64,12 +64,12 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		ImageSelectionDialog dlg = new ImageSelectionDialog(getShell());
 		if (dlg.open() == Window.OK)
 		{
-			LibraryImage image = dlg.getLibraryImage();
+         LibraryImage image = dlg.getImage();
 			if (image != null)
 			{
 				setText(image.getName());
-				setImage(dlg.getImage());
-				imageGuid = dlg.getGuid();
+            setImage(ImageProvider.getInstance().getImage(image.getGuid()));
+				imageGuid = dlg.getImageGuid();
 			}
 			else
 			{
@@ -126,11 +126,11 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		}
 		else
 		{
-			LibraryImage image = ImageProvider.getInstance(getDisplay()).getLibraryImageObject(imageGuid);
+			LibraryImage image = ImageProvider.getInstance().getLibraryImageObject(imageGuid);
 			if (image != null)
 			{
 				setText(image.getName());
-				setImage(ImageProvider.getInstance(getDisplay()).getImage(imageGuid));
+				setImage(ImageProvider.getInstance().getImage(imageGuid));
 			}
 			else
 			{
@@ -156,7 +156,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
             @Override
             public void run()
             {
-               setImage(ImageProvider.getInstance(getDisplay()).getImage(imageGuid));
+               setImage(ImageProvider.getInstance().getImage(imageGuid));
                getParent().layout();
             }
          });

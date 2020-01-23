@@ -27,7 +27,7 @@ public class ImageProvider
 {
 	private static ImageProvider instance = null;
 
-	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
+   private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
 	private static final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
 
 	public static void createInstance(Display display, NXCSession session)
@@ -94,8 +94,8 @@ public class ImageProvider
 	}
 
 	/**
-	 * 
-	 */
+    * Clear image cache
+    */
 	private void clearCache()
 	{
 		for(Image image : cache.values())
@@ -205,18 +205,21 @@ public class ImageProvider
 		return new ArrayList<LibraryImage>(libraryIndex.values());
 	}
 
+   /**
+    * Invalidate image
+    * 
+    * @param guid
+    * @param removed
+    */
 	public void invalidateImage(UUID guid, boolean removed)
 	{
-		Image image = cache.get(guid);
+      Image image = cache.remove(guid);
 		if (image != null && image != missingImage)
-		{
 			image.dispose();
-		}
-		cache.remove(guid);
+
 		if (removed)
-		{
 			libraryIndex.remove(guid);
-		}
+
 		notifySubscribers(guid);
 	}
 }
