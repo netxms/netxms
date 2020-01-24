@@ -182,7 +182,7 @@ json_t *InetAddress::toJson() const
    char buffer[64];
    if (m_family == AF_INET)
       json_object_set_new(root, "address", json_string(IpToStrA(m_addr.v4, buffer)));
-   else if (m_family == AF_INET)
+   else if (m_family == AF_INET6)
       json_object_set_new(root, "address", json_string(Ip6ToStrA(m_addr.v6, buffer)));
 
    json_object_set_new(root, "prefixLength", json_integer(m_maskBits));
