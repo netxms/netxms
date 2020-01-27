@@ -63,7 +63,8 @@ public:
 
    void getParams(StringList *params, NXCPMessage *response);
    bool isDataExpired(UINT32 retentionTime) { return (time(NULL) - m_lastRequestTime) >= retentionTime; }
-   UINT32 updateData(const TCHAR *url, const char *userName, const char *password, long authType, struct curl_slist *headers, bool peerVerify, const char *topLevelName);
+   UINT32 updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
+            struct curl_slist *headers, bool peerVerify, const char *topLevelName);
 
    void lock() { m_lock.lock(); }
    void unlock() { m_lock.unlock(); }
@@ -274,9 +275,30 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 }
 
 /**
+ * Get curl auth type from NetXMS internal code
+ */
+static long CurlAuthType(WebServiceAuthType authType)
+{
+   switch(authType)
+   {
+      case WebServiceAuthType::ANYSAFE:
+         return CURLAUTH_ANYSAFE;
+      case WebServiceAuthType::BASIC:
+         return CURLAUTH_BASIC;
+      case WebServiceAuthType::DIGEST:
+         return CURLAUTH_DIGEST;
+      case WebServiceAuthType::NTLM:
+         return CURLAUTH_NTLM;
+      default:
+         return CURLAUTH_ANY;
+   }
+}
+
+/**
  * Update cached data
  */
-UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const char *password, long authType, struct curl_slist *headers, bool peerVerify, const char *topLevelName)
+UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
+         struct curl_slist *headers, bool peerVerify, const char *topLevelName)
 {
    UINT32 rcc = ERR_SUCCESS;
    CURL *curl = curl_easy_init();
@@ -284,15 +306,27 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
    if (curl != NULL)
    {
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-      curl_easy_setopt(curl, CURLOPT_USERNAME, userName);
-      curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
-      curl_easy_setopt(curl, CURLOPT_HTTPAUTH, authType);
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0);
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-      curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS agent/" NETXMS_VERSION_STRING_A);
+      curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peerVerify ? 1 : 0);
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+      if (authType == WebServiceAuthType::NONE)
+      {
+         curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
+      }
+      else if (authType == WebServiceAuthType::BEARER)
+      {
+         curl_easy_setopt(curl, CURLOPT_USERNAME, userName);
+         curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, password);
+      }
+      else
+      {
+         curl_easy_setopt(curl, CURLOPT_USERNAME, userName);
+         curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+         curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CurlAuthType(authType));
+      }
 
       // Receiving buffer
       ByteStream data(32768);
@@ -380,6 +414,15 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
 }
 
 /**
+ * Safely get authentication type from integer value
+ */
+static WebServiceAuthType AuthTypeFromInt(int type)
+{
+   return ((type >= static_cast<int>(WebServiceAuthType::NONE)) &&
+           (type <= static_cast<int>(WebServiceAuthType::ANYSAFE))) ? static_cast<WebServiceAuthType>(type) : WebServiceAuthType::NONE;
+}
+
+/**
  * Get parameters from web service
  */
 void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
@@ -416,7 +459,8 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
       {
          headers = curl_slist_append(headers, request->getFieldAsUtf8String(fieldId++, header, CURL_MAX_HTTP_HEADER));
       }
-      result = cachedEntry->updateData(url, login, password, request->getFieldAsUInt64(VID_AUTH_TYPE), headers, request->getFieldAsBoolean(VID_VERIFY_CERT), topLevelName+1);
+      WebServiceAuthType authType = AuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
+      result = cachedEntry->updateData(url, login, password, authType, headers, request->getFieldAsBoolean(VID_VERIFY_CERT), topLevelName+1);
 
       curl_slist_free_all(headers);
       MemFree(login);

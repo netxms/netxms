@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -153,6 +153,20 @@
 #define USER_SESSION_DISCONNECTED   2
 #define USER_SESSION_IDLE           3
 #define USER_SESSION_OTHER          4
+
+/**
+ * Web service authentication type
+ */
+enum class WebServiceAuthType
+{
+   NONE = 0,
+   BASIC = 1,
+   DIGEST = 2,
+   NTLM = 3,
+   BEARER = 4,
+   ANY = 5,
+   ANYSAFE = 6
+};
 
 /**
  * Policy change notification

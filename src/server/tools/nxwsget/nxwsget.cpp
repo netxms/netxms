@@ -37,7 +37,7 @@ static UINT32 s_interval = 0;
 static UINT32 s_retentionTime = 60;
 static TCHAR s_login[MAX_CRED_LEN] = _T("");
 static TCHAR s_password[MAX_CRED_LEN] = _T("");
-static long s_authType = 0; //fixme
+static WebServiceAuthType s_authType = WebServiceAuthType::NONE;
 static StringList s_headers;
 static bool s_verifyCert = true;
 
@@ -54,10 +54,11 @@ static EnumerationCallbackResult PrintResults(const TCHAR *key, const void *valu
  * Get service parameter
  */
 static int GetServiceParameter(AgentConnection *pConn, const TCHAR *url, UINT32 retentionTime,
-      const TCHAR *login, const TCHAR *password, long authType, StringList *headers, StringList *parameters, bool verifyCert)
+      const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringList *headers,
+      const StringList *parameters, bool verifyCert)
 {
    StringMap results;
-   UINT32 rcc = pConn->getServiceParameter(url, retentionTime, login, password, authType,
+   UINT32 rcc = pConn->getWebServiceParameter(url, retentionTime, login, password, authType,
          headers, parameters, verifyCert, &results);
    if (rcc == ERR_SUCCESS)
    {
@@ -82,7 +83,7 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
 
    switch(ch)
    {
-      case 'c':   // disbale cert check
+      case 'c':   // disable certificate check
          s_verifyCert = false;
          break;
       case 'D':   // debug level
@@ -92,7 +93,7 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          i = strtol(optarg, &eptr, 0);
          if ((*eptr != 0) || (i <= 0))
          {
-            printf("Invalid interval \"%s\"\n", optarg);
+            _tprintf(_T("Invalid interval \"%hs\"\n"), optarg);
             start = false;
          }
          else
@@ -147,23 +148,25 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          }
          break;
       case 't':
-         /*
-         if (!strcmp(optarg, "basic"))
-            s_authType = CURLAUTH_BASIC;
-         else if (!strcmp(optarg, "digest"))
-            s_authType = CURLAUTH_DIGEST;
-         else if (!strcmp(optarg, "ntlm"))
-            s_authType = CURLAUTH_DIGEST;
-         else if (!strcmp(optarg, "any"))
-            s_authType = CURLAUTH_ANY;
+         if (!strcmp(optarg, "any"))
+            s_authType = WebServiceAuthType::ANY;
          else if (!strcmp(optarg, "anysafe"))
-            s_authType = CURLAUTH_ANYSAFE;
+            s_authType = WebServiceAuthType::ANYSAFE;
+         else if (!strcmp(optarg, "basic"))
+            s_authType = WebServiceAuthType::BASIC;
+         else if (!strcmp(optarg, "bearer"))
+            s_authType = WebServiceAuthType::BEARER;
+         else if (!strcmp(optarg, "digest"))
+            s_authType = WebServiceAuthType::DIGEST;
+         else if (!strcmp(optarg, "none"))
+            s_authType = WebServiceAuthType::NONE;
+         else if (!strcmp(optarg, "ntlm"))
+            s_authType = WebServiceAuthType::NTLM;
          else
          {
-            printf("Invalid authentication method \"%s\"\n", optarg);
+            _tprintf(_T("Invalid authentication method \"%hs\"\n"), optarg);
             start = false;
          }
-         */
          break;
       default:
          break;
@@ -182,7 +185,7 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *serverKey)
 {
    int exitCode = 3, pos;
 
@@ -229,8 +232,8 @@ int main(int argc, char *argv[])
                        _T("   -L login     : Service login name.\n")
                        _T("   -P passwod   : Service passwod.\n")
                        _T("   -r seconds   : Casched data retention time.\n")
-                       _T("   -t auth      : Service auth type. Valid methods are \"basic\", digest\",\n")
-                       _T("                  \"ntlm\", \"any\", or \"anysafe\". Default is \"any\".\n");
+                       _T("   -t auth      : Service auth type. Valid methods are \"none\", \"basic\", \"digest\",\n")
+                       _T("                  \"ntlm\", \"bearer\", \"any\", or \"anysafe\". Default is \"none\".\n");
    tool.additionalOptions = "cH:i:L:P:r:t:";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;

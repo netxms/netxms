@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -940,9 +940,10 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 }
 
 /**
- * Get service parameter value
+ * Get web service parameter value
  */
-UINT32 AgentConnection::getServiceParameter(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password, long authType, StringList *headers, StringList *parameters, bool verifyCert, StringMap *results)
+UINT32 AgentConnection::getWebServiceParameter(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
+         WebServiceAuthType authType, const StringList *headers, const StringList *parameters, bool verifyCert, StringMap *results)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -955,7 +956,7 @@ UINT32 AgentConnection::getServiceParameter(const TCHAR *url, UINT32 retentionTi
    msg.setField(VID_RETENTION_TIME, retentionTime);
    msg.setField(VID_LOGIN_NAME, login);
    msg.setField(VID_PASSWORD, password);
-   msg.setField(VID_AUTH_TYPE, (UINT64)authType);
+   msg.setField(VID_AUTH_TYPE, (INT16)authType);
    msg.setField(VID_VERIFY_CERT, verifyCert);
    headers->fillMessage(&msg, VID_HEADER_BASE, VID_NUM_HEADERS);
    parameters->fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);

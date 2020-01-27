@@ -856,7 +856,8 @@ public:
    UINT32 getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer);
    UINT32 getList(const TCHAR *param, StringList **list);
    UINT32 getTable(const TCHAR *param, Table **table);
-   UINT32 getServiceParameter(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password, long authType, StringList *headers, StringList *parameters, bool verifyCert, StringMap *results);
+   UINT32 getWebServiceParameter(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
+            WebServiceAuthType authType, const StringList *headers, const StringList *parameters, bool verifyCert, StringMap *results);
    UINT32 nop();
    UINT32 setServerCapabilities();
    UINT32 setServerId(UINT64 serverId);
