@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: getwsparam.cpp
+** File: websvc.cpp
 **
 **/
 
@@ -29,7 +29,7 @@
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
 #endif
 
-#define DEBUG_TAG _T("webswc")
+#define DEBUG_TAG _T("websvc")
 
 enum class TextType
 {
@@ -239,7 +239,7 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
 }
 
 /**
- * Get parameters from cashed data
+ * Get parameters from cached data
  */
 void ServiceEntry::getParams(StringList *params, NXCPMessage *response)
 {
@@ -272,7 +272,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 }
 
 /**
- * Update casched data
+ * Update cached data
  */
 UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const char *password, long authType, struct curl_slist *headers, bool peerVerify, const char *topLevelName)
 {
@@ -377,24 +377,27 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
    return rcc;
 }
 
+/**
+ * Get parameters from web service
+ */
 void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
 {
    TCHAR *url = request->getFieldAsString(VID_URL);
 
    s_serviceCacheLock.lock();
-   ServiceEntry *cashedEntry = s_sericeCashe.get(url);
-   if(cashedEntry == NULL)
+   ServiceEntry *cachedEntry = s_sericeCashe.get(url);
+   if (cachedEntry == NULL)
    {
-      cashedEntry = new ServiceEntry();
-      s_sericeCashe.set(url, cashedEntry);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetWebServiceParameters(): Create new cashed entry for %s URL"), url);
+      cachedEntry = new ServiceEntry();
+      s_sericeCashe.set(url, cachedEntry);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetWebServiceParameters(): Create new cached entry for %s URL"), url);
    }
    s_serviceCacheLock.unlock();
 
-   cashedEntry->lock();
+   cachedEntry->lock();
    UINT32 retentionTime = request->getFieldAsUInt32(VID_RETENTION_TIME);
    UINT32 result = ERR_SUCCESS;
-   if (cashedEntry->isDataExpired(retentionTime))
+   if (cachedEntry->isDataExpired(retentionTime))
    {
       char *topLevelName = request->getFieldAsUtf8String(VID_PARAM_LIST_BASE);
       char *separator = strchr(topLevelName+1, '/');
@@ -411,7 +414,7 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
       {
          headers = curl_slist_append(headers, request->getFieldAsUtf8String(fieldId++, header, CURL_MAX_HTTP_HEADER));
       }
-      result = cashedEntry->updateData(url, login, password, request->getFieldAsUInt64(VID_AUTH_TYPE), headers, request->getFieldAsBoolean(VID_VERIFY_CERT), topLevelName+1);
+      result = cachedEntry->updateData(url, login, password, request->getFieldAsUInt64(VID_AUTH_TYPE), headers, request->getFieldAsBoolean(VID_VERIFY_CERT), topLevelName+1);
 
       curl_slist_free_all(headers);
       MemFree(login);
@@ -420,12 +423,12 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
       nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWebServiceParameters(): Cashe for %s URL updated"), url);
    }
 
-   if(result == ERR_SUCCESS)
+   if (result == ERR_SUCCESS)
    {
       StringList params(request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
-      cashedEntry->getParams(&params, response);
+      cachedEntry->getParams(&params, response);
    }
-   cashedEntry->unlock();
+   cachedEntry->unlock();
 
    response->setField(VID_RCC, result);
    MemFree(url);

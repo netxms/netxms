@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -20,25 +20,7 @@
 **
 **/
 
-#include <arpa/inet.h>
-#include <bits/getopt_core.h>
-#include <config.h>
-#include <netinet/in.h>
-#include <netxms-build-tag.h>
-#include <nms_agent.h>
-#include <nms_common.h>
-#include <nms_threads.h>
-#include <nms_util.h>
-#include <nxcldefs.h>
-#include <nxcpapi.h>
-#include <nxlog.h>
-#include <nxsrvapi.h>
-#include <openssl/ossl_typ.h>
-#include <unicode.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
+#include "libnxsrv.h"
 
 /**
  * Debug writer
@@ -52,16 +34,17 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 }
 
 /**
- * Function initializes process, parses command line and creates connection
- * validateArgCountCb - is called for unknown attributes
- * validateArgCountCb - is called for parameter count validation
- * executeCommandCb - is called to execute command
+ * Run server-side command line tool.
+ * Function initializes process, parses command line and creates connection.
+ * parseAdditionalOptionCb is called for tool-specific attributes
+ * validateArgCountCb is called for parameter count validation
+ * executeCommandCb is called to execute command
  */
-int RunServerCmdTool(ServerCmdToolParameters *parameters)
+int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
 {
    char *eptr;
    bool start = true, useProxy = false;
-   int i, ch, iPos, iExitCode = 3, iInterval = 0;
+   int i, ch, iExitCode = 3, iInterval = 0;
    int authMethod = AUTH_NONE, proxyAuth = AUTH_NONE;
 #ifdef _WITH_ENCRYPTION
    int iEncryptionPolicy = ENCRYPTION_PREFERRED;
@@ -75,23 +58,20 @@ int RunServerCmdTool(ServerCmdToolParameters *parameters)
    TCHAR szResponse[MAX_DB_STRING] = _T("");
    char szProxy[MAX_OBJECT_NAME] = "";
    TCHAR szProxySecret[MAX_SECRET_LENGTH] = _T("");
-   RSA *pServerKey = NULL;
-#ifdef UNICODE
-   WCHAR *wcValue;
-#endif
+   RSA *serverKey = NULL;
 
    InitNetXMSProcess(true);
    nxlog_set_debug_writer(DebugWriter);
 
    GetNetXMSDirectory(nxDirData, keyFile);
-   _tcscat(keyFile, DFILE_KEYS);
+   _tcslcat(keyFile, DFILE_KEYS, MAX_PATH);
 
    // Parse command line
    opterr = 1;
    char options[128] = "a:A:D:e:hK:O:p:s:S:vw:W:X:";
-   strlcat(options, parameters->additionalOptions, 128);
+   strlcat(options, tool->additionalOptions, 128);
 
-   while((ch = getopt(parameters->argc, parameters->argv, options)) != -1)
+   while((ch = getopt(tool->argc, tool->argv, options)) != -1)
    {
       switch(ch)
       {
@@ -124,7 +104,7 @@ int RunServerCmdTool(ServerCmdToolParameters *parameters)
                      _T("   -W seconds   : Set connection timeout (default is 30 seconds).\n")
                      _T("   -X addr      : Use proxy agent at given address.\n")
                      _T("\n"),
-                     parameters->mainHelpText,
+                     tool->mainHelpText,
 #ifdef _WITH_ENCRYPTION
                      keyFile,
 #endif
@@ -260,7 +240,7 @@ int RunServerCmdTool(ServerCmdToolParameters *parameters)
             start = false;
             break;
          default:
-            start = parameters->parseAdditionalOptionCb(ch, optarg);
+            start = tool->parseAdditionalOptionCb(ch, optarg);
             break;
       }
    }
@@ -268,7 +248,7 @@ int RunServerCmdTool(ServerCmdToolParameters *parameters)
    // Check parameter correctness
    if (start)
    {
-      if (parameters->isArgMissingCb(parameters->argc - optind))
+      if (tool->isArgMissingCb(tool->argc - optind))
       {
          printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
          start = false;
@@ -285,11 +265,11 @@ int RunServerCmdTool(ServerCmdToolParameters *parameters)
       {
          if (InitCryptoLib(0xFFFF))
          {
-            pServerKey = LoadRSAKeys(keyFile);
-            if (pServerKey == NULL)
+            serverKey = LoadRSAKeys(keyFile);
+            if (serverKey == NULL)
             {
-               pServerKey = RSAGenerateKey(2048);
-               if (pServerKey == NULL)
+               serverKey = RSAGenerateKey(2048);
+               if (serverKey == NULL)
                {
                   _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), keyFile);
                   if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
@@ -314,11 +294,11 @@ int RunServerCmdTool(ServerCmdToolParameters *parameters)
          WSADATA wsaData;
          WSAStartup(2, &wsaData);
 #endif
-         InetAddress addr = InetAddress::resolveHostName(parameters->argv[optind]);
+         InetAddress addr = InetAddress::resolveHostName(tool->argv[optind]);
          InetAddress proxyAddr = useProxy ? InetAddress::resolveHostName(szProxy) : InetAddress();
          if (!addr.isValid())
          {
-            fprintf(stderr, "Invalid host name or address \"%s\"\n", parameters->argv[optind]);
+            fprintf(stderr, "Invalid host name or address \"%s\"\n", tool->argv[optind]);
          }
          else if (useProxy && !proxyAddr.isValid())
          {
@@ -334,9 +314,9 @@ int RunServerCmdTool(ServerCmdToolParameters *parameters)
             conn->setEncryptionPolicy(iEncryptionPolicy);
             if (useProxy)
                conn->setProxy(proxyAddr, proxyPort, proxyAuth, szProxySecret);
-            if (conn->connect(pServerKey, &dwError))
+            if (conn->connect(serverKey, &dwError))
             {
-               iExitCode = parameters->executeCommandCb(conn, parameters->argc, parameters->argv, pServerKey);
+               iExitCode = tool->executeCommandCb(conn, tool->argc, tool->argv, serverKey);
             }
             else
             {

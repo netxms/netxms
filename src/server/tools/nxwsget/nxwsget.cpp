@@ -1,7 +1,7 @@
 /*
 ** nxwsget - command line tool used to retrieve web service parameters
 **           from NetXMS agent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,16 +21,9 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
 #include <nms_util.h>
-#include <nxcpapi.h>
+#include <nms_agent.h>
 #include <nxsrvapi.h>
-#include <curl/curl.h>
-
-#ifndef _WIN32
-#include <netdb.h>
-#endif
 
 NETXMS_EXECUTABLE_HEADER(nxwsget)
 
@@ -44,7 +37,7 @@ static UINT32 s_interval = 0;
 static UINT32 s_retentionTime = 60;
 static TCHAR s_login[MAX_CRED_LEN] = _T("");
 static TCHAR s_password[MAX_CRED_LEN] = _T("");
-static long s_authType = CURLAUTH_ANY;
+static long s_authType = 0; //fixme
 static StringList s_headers;
 static bool s_verifyCert = true;
 
@@ -60,22 +53,22 @@ static EnumerationCallbackResult PrintResults(const TCHAR *key, const void *valu
 /**
  * Get service parameter
  */
-static int GetServiceParameter(AgentConnection *pConn, const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password, long authType, StringList *headers, StringList *parameters, bool verifyCert)
+static int GetServiceParameter(AgentConnection *pConn, const TCHAR *url, UINT32 retentionTime,
+      const TCHAR *login, const TCHAR *password, long authType, StringList *headers, StringList *parameters, bool verifyCert)
 {
-   TCHAR szBuffer[1024];
    StringMap results;
-
-   UINT32 dwError = pConn->getServiceParameter(url, retentionTime, login, password, authType, headers, parameters, verifyCert, &results);
-   if (dwError == ERR_SUCCESS)
+   UINT32 rcc = pConn->getServiceParameter(url, retentionTime, login, password, authType,
+         headers, parameters, verifyCert, &results);
+   if (rcc == ERR_SUCCESS)
    {
       results.forEach(PrintResults, NULL);
    }
    else
    {
-      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
    fflush(stdout);
-   return (dwError == ERR_SUCCESS) ? 0 : 1;
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
 /**
@@ -154,12 +147,13 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          }
          break;
       case 't':
+         /*
          if (!strcmp(optarg, "basic"))
             s_authType = CURLAUTH_BASIC;
          else if (!strcmp(optarg, "digest"))
             s_authType = CURLAUTH_DIGEST;
-         else if (!strcmp(optarg, "digest_IE"))
-            s_authType = CURLAUTH_DIGEST_IE;
+         else if (!strcmp(optarg, "ntlm"))
+            s_authType = CURLAUTH_DIGEST;
          else if (!strcmp(optarg, "any"))
             s_authType = CURLAUTH_ANY;
          else if (!strcmp(optarg, "anysafe"))
@@ -169,6 +163,7 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
             printf("Invalid authentication method \"%s\"\n", optarg);
             start = false;
          }
+         */
          break;
       default:
          break;
@@ -209,7 +204,8 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
          parameters.add(argv[iPos++]);
 #endif
       }
-      exitCode = GetServiceParameter(conn, url, s_retentionTime, (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password, s_authType, &s_headers, &parameters, s_verifyCert);
+      exitCode = GetServiceParameter(conn, url, s_retentionTime, (s_login[0] == 0) ? NULL: s_login, 
+            (s_password[0] == 0) ? NULL: s_password, s_authType, &s_headers, &parameters, s_verifyCert);
       ThreadSleep(s_interval);
       MemFree(url);
    }
@@ -222,23 +218,23 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
  */
 int main(int argc, char *argv[])
 {
-   ServerCmdToolParameters parameters;
-   parameters.argc = argc;
-   parameters.argv = argv;
-   parameters.mainHelpText = _T("Usage: Usage: nxget [<options>] <host> <URL> <parameter> [<parameter> ...]\n")
-                           _T("Tool specific options are:\n")
-                           _T("   -c           : Do not verify service certificate.\n")
-                           _T("   -H header    : Service header.\n")
-                           _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
-                           _T("   -L login     : Service login name.\n")
-                           _T("   -P passwod   : Service passwod.\n")
-                           _T("   -r seconds   : Casched data retention time.\n")
-                           _T("   -t auth      : Service auth type. Valid methods are \"basic\", \"digest_IE\",\n")
-                           _T("                  \"digest\", \"bearer\", \"any\", \"anysafe\". Default is \"any\".\n");
-   parameters.additionalOptions = "cH:i:L:P:r:t:";
-   parameters.executeCommandCb = &ExecuteCommandCb;
-   parameters.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
-   parameters.isArgMissingCb = &IsArgMissingCb;
+   ServerCommandLineTool tool;
+   tool.argc = argc;
+   tool.argv = argv;
+   tool.mainHelpText = _T("Usage: Usage: nxget [<options>] <host> <URL> <parameter> [<parameter> ...]\n")
+                       _T("Tool specific options are:\n")
+                       _T("   -c           : Do not verify service certificate.\n")
+                       _T("   -H header    : Service header.\n")
+                       _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
+                       _T("   -L login     : Service login name.\n")
+                       _T("   -P passwod   : Service passwod.\n")
+                       _T("   -r seconds   : Casched data retention time.\n")
+                       _T("   -t auth      : Service auth type. Valid methods are \"basic\", digest\",\n")
+                       _T("                  \"ntlm\", \"any\", or \"anysafe\". Default is \"any\".\n");
+   tool.additionalOptions = "cH:i:L:P:r:t:";
+   tool.executeCommandCb = &ExecuteCommandCb;
+   tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
+   tool.isArgMissingCb = &IsArgMissingCb;
 
-   return RunServerCmdTool(&parameters);
+   return ExecuteServerCommandLineTool(&tool);
 }

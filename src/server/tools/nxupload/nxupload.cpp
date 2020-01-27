@@ -1,6 +1,6 @@
 /* 
 ** nxupload - command line tool used to upload files to NetXMS agent
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -219,20 +219,20 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
  */
 int main(int argc, char *argv[])
 {
-   ServerCmdToolParameters parameters;
-   parameters.argc = argc;
-   parameters.argv = argv;
-   parameters.mainHelpText = _T("Usage: nxupload [<options>] <host> <file>\n")
-                           _T("Tool specific options are:\n")
-                           _T("   -d <file>    : Fully qualified destination file name\n")
-                           _T("   -q           : Quiet mode.\n")
-                           _T("   -u           : Start agent upgrade from uploaded package.\n")
-                           _T("   -z           : Compress data stream with LZ4.\n")
-                           _T("   -Z           : Compress data stream with DEFLATE.\n");
-   parameters.additionalOptions = "d:quzZ";
-   parameters.executeCommandCb = &ExecuteCommandCb;
-   parameters.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
-   parameters.isArgMissingCb = &IsArgMissingCb;
+   ServerCommandLineTool tool;
+   tool.argc = argc;
+   tool.argv = argv;
+   tool.mainHelpText = _T("Usage: nxupload [<options>] <host> <file>\n")
+                       _T("Tool specific options are:\n")
+                       _T("   -d <file>    : Fully qualified destination file name\n")
+                       _T("   -q           : Quiet mode.\n")
+                       _T("   -u           : Start agent upgrade from uploaded package.\n")
+                       _T("   -z           : Compress data stream with LZ4.\n")
+                       _T("   -Z           : Compress data stream with DEFLATE.\n");
+   tool.additionalOptions = "d:quzZ";
+   tool.executeCommandCb = &ExecuteCommandCb;
+   tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
+   tool.isArgMissingCb = &IsArgMissingCb;
 
-   return RunServerCmdTool(&parameters);
+   return ExecuteServerCommandLineTool(&tool);
 }

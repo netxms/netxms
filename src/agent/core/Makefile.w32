@@ -7,11 +7,12 @@ SOURCES = \
 	nxagentd.cpp policy.cpp proxy.cpp push.cpp register.cpp sa.cpp \
 	service.cpp session.cpp snmpproxy.cpp snmptrapproxy.cpp \
 	subagent.cpp sysinfo.cpp syslog.cpp tcpproxy.cpp \
-	tools.cpp tunnel.cpp upgrade.cpp watchdog.cpp
+	tools.cpp tunnel.cpp upgrade.cpp watchdog.cpp websvc.cpp
 RESOURCES = nxagentd.rc
 GENERATED = messages.h MSG00001.bin
 
-LIBS = libnxagent.lib appagent.lib libnxsnmp.lib libnxdb.lib libnetxms.lib libcrypto.lib ws2_32.lib wtsapi32.lib
+LIBS = libnxagent.lib appagent.lib libnxsnmp.lib libnxdb.lib libnetxms.lib \
+       jansson.lib pcre16.lib libcurl.lib libcrypto.lib ws2_32.lib wtsapi32.lib
 	  
 include ..\..\..\Makefile.inc.w32
 

@@ -1,7 +1,7 @@
 /* 
 ** nxaction - command line tool used to execute preconfigured actions 
 **            on NetXMS agent
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -107,16 +107,16 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
  */
 int main(int argc, char *argv[])
 {
-   ServerCmdToolParameters parameters;
-   parameters.argc = argc;
-   parameters.argv = argv;
-   parameters.mainHelpText = _T("Usage: nxaction [<options>] <host> <action> [<action args>]\n")
+   ServerCommandLineTool tool;
+   tool.argc = argc;
+   tool.argv = argv;
+   tool.mainHelpText = _T("Usage: nxaction [<options>] <host> <action> [<action args>]\n")
                            _T("Tool specific options are:\n")
                            _T("   -o           : Show action's output.\n");
-   parameters.additionalOptions = "o";
-   parameters.executeCommandCb = &ExecuteCommandCb;
-   parameters.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
-   parameters.isArgMissingCb = &IsArgMissingCb;
+   tool.additionalOptions = "o";
+   tool.executeCommandCb = &ExecuteCommandCb;
+   tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
+   tool.isArgMissingCb = &IsArgMissingCb;
 
-   return RunServerCmdTool(&parameters);
+   return ExecuteServerCommandLineTool(&tool);
 }

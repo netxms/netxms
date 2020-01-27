@@ -985,25 +985,25 @@ public:
    UINT32 nop();
 };
 
-
 /**
- * Additional information for command line parameters processing and execution
+ * Server command line tool definition
  */
-struct ServerCmdToolParameters
+struct ServerCommandLineTool
 {
    char **argv;
    int argc;
    const TCHAR *mainHelpText;
    const char *additionalOptions;
-   bool (* parseAdditionalOptionCb) (const char ch, const char *optarg);
-   bool (* isArgMissingCb) (int currentCount);
-   int (* executeCommandCb) (AgentConnection *conn, int argc, char *argv[], RSA *pServerKey);
+   bool (*parseAdditionalOptionCb)(const char ch, const char *optarg);
+   bool (*isArgMissingCb)(int currentCount);
+   int (*executeCommandCb)(AgentConnection *conn, int argc, char *argv[], RSA *serverKey);
 };
 
-//
-// Functions
-//
-int LIBNXSRV_EXPORTABLE RunServerCmdTool(ServerCmdToolParameters *opts);
+/**
+ * Execute server command line tool
+ */
+int LIBNXSRV_EXPORTABLE ExecuteServerCommandLineTool(ServerCommandLineTool *tool);
+
 void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err);

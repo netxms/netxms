@@ -342,6 +342,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "msteams", "src\ncdrivers\ms
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nddload", "src\server\tools\nddload\nddload.vcxproj", "{AF5C73BA-2012-4148-B1B7-0B35C0C7ED18}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxwsget", "src\server\tools\nxwsget\nxwsget.vcxproj", "{2AC3C9D1-E311-F327-AE19-014CE97C6812}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1430,6 +1432,14 @@ Global
 		{AF5C73BA-2012-4148-B1B7-0B35C0C7ED18}.Release|Win32.Build.0 = Release|Win32
 		{AF5C73BA-2012-4148-B1B7-0B35C0C7ED18}.Release|x64.ActiveCfg = Release|x64
 		{AF5C73BA-2012-4148-B1B7-0B35C0C7ED18}.Release|x64.Build.0 = Release|x64
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812}.Debug|Win32.Build.0 = Debug|Win32
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812}.Debug|x64.ActiveCfg = Debug|x64
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812}.Debug|x64.Build.0 = Debug|x64
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812}.Release|Win32.ActiveCfg = Release|Win32
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812}.Release|Win32.Build.0 = Release|Win32
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812}.Release|x64.ActiveCfg = Release|x64
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1578,6 +1588,7 @@ Global
 		{AE2488DF-13C5-1143-A767-32782818EC7D} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{5512C191-3113-8D1C-9B59-17DFA508AB90} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{AF5C73BA-2012-4148-B1B7-0B35C0C7ED18} = {64482674-7B36-4A14-A612-247333174315}
+		{2AC3C9D1-E311-F327-AE19-014CE97C6812} = {64482674-7B36-4A14-A612-247333174315}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}

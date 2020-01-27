@@ -1,6 +1,6 @@
 /*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,21 +20,9 @@
 **
 **/
 
-#include <arpa/inet.h>
-#include <bits/getopt_core.h>
-#include <bits/types/FILE.h>
-#include <config.h>
-#include <netinet/in.h>
-#include <nms_agent.h>
-#include <nms_common.h>
-#include <nms_threads.h>
 #include <nms_util.h>
-#include <nxcldefs.h>
+#include <nms_agent.h>
 #include <nxsrvapi.h>
-#include <stddef.h>
-#include <unicode.h>
-#include <cstdio>
-#include <cstdlib>
 
 #ifndef _WIN32
 #include <netdb.h>
@@ -535,32 +523,32 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
  */
 int main(int argc, char *argv[])
 {
-   ServerCmdToolParameters parameters;
-   parameters.argc = argc;
-   parameters.argv = argv;
-   parameters.mainHelpText = _T("Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n")
-                           _T("Tool specific options are:\n")
-                           _T("   -b           : Batch mode - get all parameters listed on command line.\n")
-                           _T("   -C           : Get agent's configuration file\n")
-                           _T("   -d delimiter : Print table content as delimited text.\n")
-                           _T("   -E           : Take screenshot. First parameter is file name, second (optional) is session name.\n")
-                           _T("   -F           : Get information about given file set. Each parameter is separate file name.\n")
-                           _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
-                           _T("   -I           : Get list of supported parameters.\n")
-                           _T("   -l           : Requested parameter is a list.\n")
-                           _T("   -n           : Show parameter's name in result.\n")
-                           _T("   -N addr      : Check state of network service at given address.\n")
-                           _T("   -o proto     : Protocol number to be used for service check.\n")
-                           _T("   -P port      : Network service port (to be used wth -N option).\n")
-                           _T("   -r string    : Service check request string.\n")
-                           _T("   -R string    : Service check expected response string.\n")
-                           _T("   -t type      : Set type of service to be checked.\n")
-                           _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n")
-                           _T("   -T           : Requested parameter is a table.\n");
-   parameters.additionalOptions = "bCd:EFi:IlnN:o:P:r:R:t:T";
-   parameters.executeCommandCb = &ExecuteCommandCb;
-   parameters.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
-   parameters.isArgMissingCb = &IsArgMissingCb;
+   ServerCommandLineTool tool;
+   tool.argc = argc;
+   tool.argv = argv;
+   tool.mainHelpText = _T("Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n")
+                       _T("Tool specific options are:\n")
+                       _T("   -b           : Batch mode - get all parameters listed on command line.\n")
+                       _T("   -C           : Get agent's configuration file\n")
+                       _T("   -d delimiter : Print table content as delimited text.\n")
+                       _T("   -E           : Take screenshot. First parameter is file name, second (optional) is session name.\n")
+                       _T("   -F           : Get information about given file set. Each parameter is separate file name.\n")
+                       _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
+                       _T("   -I           : Get list of supported parameters.\n")
+                       _T("   -l           : Requested parameter is a list.\n")
+                       _T("   -n           : Show parameter's name in result.\n")
+                       _T("   -N addr      : Check state of network service at given address.\n")
+                       _T("   -o proto     : Protocol number to be used for service check.\n")
+                       _T("   -P port      : Network service port (to be used wth -N option).\n")
+                       _T("   -r string    : Service check request string.\n")
+                       _T("   -R string    : Service check expected response string.\n")
+                       _T("   -t type      : Set type of service to be checked.\n")
+                       _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n")
+                       _T("   -T           : Requested parameter is a table.\n");
+   tool.additionalOptions = "bCd:EFi:IlnN:o:P:r:R:t:T";
+   tool.executeCommandCb = &ExecuteCommandCb;
+   tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
+   tool.isArgMissingCb = &IsArgMissingCb;
 
-   return RunServerCmdTool(&parameters);
+   return ExecuteServerCommandLineTool(&tool);
 }

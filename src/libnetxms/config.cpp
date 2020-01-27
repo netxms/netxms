@@ -1486,7 +1486,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 /**
  * Load config from XML in memory
  */
-bool Config::loadConfigFromMemory(const char *xml, int xmlSize, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
+bool Config::loadConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
 {
    bool success;
    int ch;
@@ -1505,7 +1505,7 @@ bool Config::loadConfigFromMemory(const char *xml, int xmlSize, const TCHAR *def
    }
    else
    {
-      success = loadIniConfigFromMemory(const_cast<char *>(xml), xmlSize, _T(":memory:"), defaultIniSection, ignoreErrors);
+      success = loadIniConfigFromMemory(xml, xmlSize, _T(":memory:"), defaultIniSection, ignoreErrors);
    }
 
    return success;
@@ -1514,7 +1514,7 @@ bool Config::loadConfigFromMemory(const char *xml, int xmlSize, const TCHAR *def
 /**
  * Load config from XML in memory
  */
-bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name, const char *topLevelTag, bool merge)
+bool Config::loadXmlConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *name, const char *topLevelTag, bool merge)
 {
    Config_XmlParserState state;
 
@@ -1530,7 +1530,7 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
    state.file = (name != NULL) ? name : _T("<mem>");
    state.merge = merge;
 
-   bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
+   bool success = (XML_Parse(parser, xml, static_cast<int>(xmlSize), TRUE) != XML_STATUS_ERROR);
    if (!success)
    {
       error(_T("%hs at line %d"), XML_ErrorString(XML_GetErrorCode(parser)), XML_GetCurrentLineNumber(parser));
@@ -1551,8 +1551,8 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag, bool merg
    xml = LoadFile(file, &size);
    if (xml != NULL)
    {
-      success = loadXmlConfigFromMemory((char *)xml, (int)size, file, topLevelTag, merge);
-      free(xml);
+      success = loadXmlConfigFromMemory((char *)xml, size, file, topLevelTag, merge);
+      MemFree(xml);
    }
    else
    {
