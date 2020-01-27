@@ -69,12 +69,10 @@ public class ImagePropertiesDialog extends Dialog
 				final Composite composite = new Composite(parent, SWT.NONE);
 				final GridLayout compositeLayout = new GridLayout();
 				compositeLayout.numColumns = 2;
-				// compositeLayout.verticalSpacing = WidgetHelper.INNER_SPACING;
 				composite.setLayout(compositeLayout);
 				fileNameInputField = new Text(composite, SWT.SINGLE | SWT.READ_ONLY | SWT.BORDER);
 				GridData gd = new GridData();
 				gd.widthHint = 300;
-				// gd.heightHint = 300;
 				gd.grabExcessHorizontalSpace = true;
 				gd.grabExcessVerticalSpace = true;
 				gd.horizontalAlignment = SWT.FILL;
