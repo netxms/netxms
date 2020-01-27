@@ -387,7 +387,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, UINT64 max
 {
 	bool isValid = true;
 
-	if ((rotationMode >= 0) || (rotationMode <= 2))
+	if ((rotationMode >= 0) && (rotationMode <= 2))
 	{
 		s_rotationMode = rotationMode;
 		if (rotationMode == NXLOG_ROTATION_BY_SIZE)
