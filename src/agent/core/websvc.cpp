@@ -38,8 +38,10 @@ enum class TextType
    Text = 2
 };
 
+#ifdef HAVE_LIBCURL
+
 /**
- * One cashed service entry
+ * One cached service entry
  */
 class ServiceEntry
 {
@@ -71,7 +73,7 @@ public:
  * Static data
  */
 Mutex s_serviceCacheLock;
-StringObjectMap<ServiceEntry> s_sericeCashe(true);
+StringObjectMap<ServiceEntry> s_sericeCache(true);
 
 /**
  * Destructor
@@ -83,7 +85,7 @@ ServiceEntry::~ServiceEntry()
 }
 
 /**
- * Get parameters from XML cashed data
+ * Get parameters from XML cached data
  */
 void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
 {
@@ -145,7 +147,7 @@ static bool SetValueFromJson(json_t *json, UINT32 fieldId, NXCPMessage *response
 
 
 /**
- * Get parameters from JSON cashed data
+ * Get parameters from JSON cached data
  */
 void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
 {
@@ -193,7 +195,7 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
 }
 
 /**
- * Get parameters from Text cashed data
+ * Get parameters from Text cached data
  */
 void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
 {
@@ -284,7 +286,7 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_USERNAME, userName);
       curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
-      curl_easy_setopt(curl, CURLOPT_HTTPAUTH, authType); //Use CURLAUTH_ANY by default
+      curl_easy_setopt(curl, CURLOPT_HTTPAUTH, authType);
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0);
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
@@ -385,11 +387,11 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
    TCHAR *url = request->getFieldAsString(VID_URL);
 
    s_serviceCacheLock.lock();
-   ServiceEntry *cachedEntry = s_sericeCashe.get(url);
+   ServiceEntry *cachedEntry = s_sericeCache.get(url);
    if (cachedEntry == NULL)
    {
       cachedEntry = new ServiceEntry();
-      s_sericeCashe.set(url, cachedEntry);
+      s_sericeCache.set(url, cachedEntry);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("GetWebServiceParameters(): Create new cached entry for %s URL"), url);
    }
    s_serviceCacheLock.unlock();
@@ -420,7 +422,7 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
       MemFree(login);
       MemFree(password);
       MemFree(topLevelName);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWebServiceParameters(): Cashe for %s URL updated"), url);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWebServiceParameters(): Cache for %s URL updated"), url);
    }
 
    if (result == ERR_SUCCESS)
@@ -433,3 +435,16 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
    response->setField(VID_RCC, result);
    MemFree(url);
 }
+
+#else
+
+/**
+ * Get parameters from web service
+ */
+void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
+{
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("GetWebServiceParameters(): web service does not work without curl"));
+   response->setField(VID_RCC, ERR_NOT_IMPLEMENTED);
+}
+
+#endif
