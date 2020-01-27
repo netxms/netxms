@@ -250,6 +250,7 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
       int v = 1;
       setsockopt(sd, IPPROTO_IP, IP_DONTFRAG, &v, sizeof(v));
 #else
+      close(sd);
       return ICMP_API_ERROR;
 #endif
    }
