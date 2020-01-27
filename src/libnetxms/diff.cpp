@@ -284,11 +284,8 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
          return diffs;
       }
       delete diffs;
-   }
 
-   // Check to see if the problem can be split in two.
-   if (!checklines)
-   {
+      // Check to see if the problem can be split in two.
       const StringList *hm = diff_halfMatch(text1, text2);
       if (hm->size() > 0)
       {

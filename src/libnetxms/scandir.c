@@ -28,7 +28,7 @@ int LIBNETXMS_EXPORTABLE scandir(const char *dir, struct dirent ***namelist,
   *namelist=NULL;
   while ((entry=readdir(d)) != NULL)
   {
-    if (select == NULL || (select != NULL && (*select)(entry)))
+    if (select == NULL || (*select)(entry))
     {
       *namelist=(struct dirent **)realloc((void *)(*namelist),
                  (size_t)((i+1)*sizeof(struct dirent *)));
