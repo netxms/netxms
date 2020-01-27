@@ -55,8 +55,7 @@ DIR LIBNETXMS_EXPORTABLE *opendir(const char *path)
       return NULL;
 
    // create search pattern
-   if (pattern[len] != '\\')
-      pattern[len] = '\\';
+   pattern[len] = '\\';
    pattern[len + 1] = '*';
    pattern[len + 2] = 0;
 

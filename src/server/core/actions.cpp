@@ -870,7 +870,7 @@ void ExecuteScheduledAction(const ScheduledTaskParameters *parameter)
    if (event != NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing scheduled action [%u] for event %s on node [%u]"),
-               actionId, (event != NULL) ? event->getName() : _T("(null)"), parameter->m_objectId);
+               actionId, event->getName(), parameter->m_objectId);
       ExecuteAction(actionId, event, alarm);
    }
    else
