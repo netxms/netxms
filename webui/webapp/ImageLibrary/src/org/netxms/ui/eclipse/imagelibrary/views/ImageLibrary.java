@@ -444,7 +444,7 @@ public class ImageLibrary extends ViewPart
 					@Override
 					public void setTotalWorkAmount(long workTotal)
 					{
-						monitor.beginTask(Messages.get().ImageLibrary_UploadImage, (int)workTotal);
+						monitor.beginTask(Messages.get(getDisplay()).ImageLibrary_UploadImage, (int)workTotal);
 					}
 
 					@Override
