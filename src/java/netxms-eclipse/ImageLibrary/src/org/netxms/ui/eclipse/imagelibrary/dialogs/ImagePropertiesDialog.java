@@ -37,6 +37,9 @@ import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
+/**
+ * Library image properties
+ */
 public class ImagePropertiesDialog extends Dialog
 {
 	private String name;
@@ -167,7 +170,7 @@ public class ImagePropertiesDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().ImagePropertiesDialog_Upload);
+      newShell.setText(Messages.get().ImagePropertiesDialog_Title);
 	}
 
 	public void setDefaultCategory(String category)
