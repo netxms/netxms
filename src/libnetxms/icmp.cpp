@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -46,8 +46,8 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UI
    static char payload[MAX_PING_SIZE] = "NetXMS ICMP probe [01234567890]";
 
    HANDLE hIcmpFile = (addr.getFamily() == AF_INET) ? IcmpCreateFile() : Icmp6CreateFile();
-	if (hIcmpFile == INVALID_HANDLE_VALUE)
-		return ICMP_API_ERROR;
+   if (hIcmpFile == INVALID_HANDLE_VALUE)
+      return ICMP_API_ERROR;
 
    DWORD replySize = packetSize + 16 + ((addr.getFamily() == AF_INET) ? sizeof(ICMP_ECHO_REPLY) : sizeof(ICMPV6_ECHO_REPLY));
 	char *reply = (char *)alloca(replySize);
@@ -130,11 +130,11 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UI
 			rc = (GetLastError() == IP_REQ_TIMED_OUT) ? ICMP_TIMEOUT : ICMP_API_ERROR;
 		}
 		retries--;
-	}
-	while((rc != ICMP_SUCCESS) && (retries > 0));
+   }
+   while((rc != ICMP_SUCCESS) && (retries > 0));
 
-	IcmpCloseHandle(hIcmpFile);
-	return rc;
+   IcmpCloseHandle(hIcmpFile);
+   return rc;
 }
 
 #else	/* not _WIN32 */
@@ -168,33 +168,33 @@ struct ECHOREPLY
  */
 UINT16 LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len)
 {
-	size_t nleft = len;
-	UINT32 sum = 0;
-	const BYTE *curr = static_cast<const BYTE*>(data);
+   size_t nleft = len;
+   UINT32 sum = 0;
+   const BYTE *curr = static_cast<const BYTE*>(data);
 
-	/*
-	 *  Our algorithm is simple, using a 32 bit accumulator (sum),
-	 *  we add sequential 16 bit words to it, and at the end, fold
-	 *  back all the carry bits from the top 16 bits into the lower
-	 *  16 bits.
-	 */
-	while(nleft > 1)
+   /*
+    *  Our algorithm is simple, using a 32 bit accumulator (sum),
+    *  we add sequential 16 bit words to it, and at the end, fold
+    *  back all the carry bits from the top 16 bits into the lower
+    *  16 bits.
+    */
+   while(nleft > 1)
    {
-		sum += ((WORD)(*curr << 8) | (WORD)(*(curr + 1)));
-		curr += 2;
-		nleft -= 2;
-	}
+      sum += ((WORD)(*curr << 8) | (WORD)(*(curr + 1)));
+      curr += 2;
+      nleft -= 2;
+   }
 
-	/* mop up an odd byte, if necessary */
-	if (nleft == 1) 
-		sum += (WORD)(*curr);
+   /* mop up an odd byte, if necessary */
+   if (nleft == 1)
+      sum += (WORD)(*curr);
 
-	/*
-	 * add back carry outs from top 16 bits to low 16 bits
-	 */
-	while(sum >> 16)
-		sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
-	return htons((WORD)(~sum));
+   /*
+    * add back carry outs from top 16 bits to low 16 bits
+    */
+   while(sum >> 16)
+      sum = (sum >> 16) + (sum & 0xffff);   /* add hi 16 to low 16 */
+   return htons((WORD)(~sum));
 }
 
 /**
@@ -291,6 +291,7 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
       int v = 1;
       setsockopt(sock, IPPROTO_IP, IP_DONTFRAG, &v, sizeof(v));
 #else
+      close(sock);
       return ICMP_API_ERROR;
 #endif
    }
