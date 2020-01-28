@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Alex Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,8 +120,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 
 		try
 		{
-			final LibraryImage image1 = new LibraryImage(UUID.fromString("1ddb76a3-a05f-4a42-acda-22021768feaf"));
-			session.deleteImage(image1);
+         session.deleteImage(UUID.fromString("1ddb76a3-a05f-4a42-acda-22021768feaf"));
 			assertTrue(false);
 		}
 		catch(NXCException e)
@@ -148,7 +147,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		final LibraryImage image = new LibraryImage();
 		image.setName("testCreateImage");
 		image.setCategory("category");
-		image.setBinaryData("data".getBytes());
+      image.setBinaryData("data".getBytes(), "image/unknown");
 		final LibraryImage createdImage = session.createImage(image, null);
 
 		assertNotNull(createdImage.getGuid());
@@ -163,10 +162,9 @@ public class ImageLibraryTest extends AbstractSessionTest
 	{
 		final NXCSession session = connect();
 
-		final LibraryImage image = new LibraryImage(UUID.fromString("c263037f-021d-41b8-ac73-b5fd64ee3a85"));
-		image.setName("testModifyImage");
-		image.setCategory("category");
-		image.setBinaryData("new data".getBytes());
+      final LibraryImage image = new LibraryImage(UUID.fromString("c263037f-021d-41b8-ac73-b5fd64ee3a85"), "testModifyImage",
+            "category", "image/unknown");
+      image.setBinaryData("new data".getBytes(), "image/unknown");
 		session.modifyImage(image, null);
 		
 		session.deleteImage(image);

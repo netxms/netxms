@@ -8660,12 +8660,21 @@ public class NXCSession
    public void deleteImage(LibraryImage image) throws IOException, NXCException
    {
       if (image.isProtected())
-      {
          throw new NXCException(RCC.INVALID_REQUEST);
-      }
+      deleteImage(image.getGuid());
+   }
 
+   /**
+    * Delete an image
+    *
+    * @param guid ID of image to delete
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteImage(UUID guid) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_IMAGE);
-      image.fillMessage(msg);
+      msg.setField(NXCPCodes.VID_GUID, guid);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
