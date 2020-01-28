@@ -370,7 +370,7 @@ inline bool ConditionWait(CONDITION cond, UINT32 timeout)
       do
       {
          UINT64 start = GetTickCount64();
-         SleepConditionVariableCS(&cond->v, &cond->lock, INFINITE);
+         SleepConditionVariableCS(&cond->v, &cond->lock, timeout);
          UINT32 elapsed = static_cast<UINT32>(GetTickCount64() - start);
          timeout -= std::min(elapsed, timeout);
       } while (!cond->isSet && (timeout > 0));
