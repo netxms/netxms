@@ -309,24 +309,31 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
 {
    UINT32 rcc = ERR_SUCCESS;
    CURL *curl = curl_easy_init();
-   char errbuf[CURL_ERROR_SIZE];
    if (curl != NULL)
    {
+      char errbuf[CURL_ERROR_SIZE];
+      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0);
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peerVerify ? 1 : 0);
-      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+
       if (authType == WebServiceAuthType::NONE)
       {
          curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
       }
       else if (authType == WebServiceAuthType::BEARER)
       {
+#if HAVE_DECL_CURLOPT_XOAUTH2_BEARER
          curl_easy_setopt(curl, CURLOPT_USERNAME, userName);
          curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, password);
+#else
+         curl_easy_cleanup(curl);
+         return ERR_NOT_IMPLEMENTED;
+#endif
       }
       else
       {
