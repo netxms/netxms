@@ -75,6 +75,7 @@ static UINT32 s_flags = 0;
 static int s_rotationMode = NXLOG_ROTATION_BY_SIZE;
 static UINT64 s_maxLogSize = 4096 * 1024;	// 4 MB
 static int s_logHistorySize = 4;		// Keep up 4 previous log files
+static time_t s_lastRotationAttempt = 0;
 static TCHAR s_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
 static time_t s_currentDayStart = 0;
 #ifdef _WIN32
@@ -361,6 +362,100 @@ static TCHAR *FormatLogTimestamp(TCHAR *buffer)
 }
 
 /**
+ * Format tag for printing
+ */
+static inline TCHAR *FormatTag(const TCHAR *tag, TCHAR *tagf)
+{
+   int i;
+   if (tag != NULL)
+   {
+      for(i = 0; (i < 19) && tag[i] != 0; i++)
+         tagf[i] = tag[i];
+   }
+   else
+   {
+      i = 0;
+   }
+   for(; i < 19; i++)
+      tagf[i] = ' ';
+   tagf[i] = 0;
+   return tagf;
+}
+
+/**
+ * Escape string for JSON. Use local buffer if possible and allocate large buffer on heap if string is too long.
+ */
+static TCHAR *EscapeForJSON(const TCHAR *text, TCHAR *localBuffer, size_t *len)
+{
+   const TCHAR *ch = text;
+   TCHAR *buffer = localBuffer;
+   TCHAR *out = localBuffer;
+   size_t count = 0;
+   while(*ch != 0)
+   {
+      switch(*ch)
+      {
+         case _T('"'):
+         case _T('\\'):
+            *(out++) = _T('\\');
+            *(out++) = *ch;
+            count += 2;
+            break;
+         case 0x08:
+            *(out++) = _T('\\');
+            *(out++) = _T('b');
+            count += 2;
+            break;
+         case 0x09:
+            *(out++) = _T('\\');
+            *(out++) = _T('t');
+            count += 2;
+            break;
+         case 0x0A:
+            *(out++) = _T('\\');
+            *(out++) = _T('n');
+            count += 2;
+            break;
+         case 0x0C:
+            *(out++) = _T('\\');
+            *(out++) = _T('f');
+            count += 2;
+            break;
+         case 0x0D:
+            *(out++) = _T('\\');
+            *(out++) = _T('r');
+            count += 2;
+            break;
+         default:
+            if (*ch < 0x20)
+            {
+               TCHAR chcode[8];
+               _sntprintf(chcode, 8, _T("\\u%04X"), *ch);
+               memcpy(out, chcode, 6 * sizeof(TCHAR));
+               out += 6;
+               count += 6;
+            }
+            else
+            {
+               *(out++) = *ch;
+               count++;
+            }
+            break;
+      }
+      if ((count > LOCAL_MSG_BUFFER_SIZE - 8) && (buffer == localBuffer))
+      {
+         buffer = MemAllocString(_tcslen(text) * 6 + 1);
+         memcpy(buffer, localBuffer, count * sizeof(TCHAR));
+         out = buffer + count;
+      }
+      ch++;
+   }
+   *out = 0;
+   *len = count;
+   return buffer;
+}
+
+/**
  * Set timestamp of start of the current day
  */
 static void SetDayStart()
@@ -444,11 +539,15 @@ void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer)
  */
 static bool RotateLog(bool needLock)
 {
-	int i;
-	TCHAR oldName[MAX_PATH], newName[MAX_PATH];
-
 	if (needLock)
 		MutexLock(s_mutexLogAccess);
+
+	if ((s_flags & NXLOG_ROTATION_ERROR) && (s_lastRotationAttempt > time(NULL) - 3600))
+	{
+	   if (needLock)
+	      MutexUnlock(s_mutexLogAccess);
+	   return (s_flags & NXLOG_IS_OPEN) ? true : false;
+	}
 
 	if ((s_logFileHandle != -1) && (s_flags & NXLOG_IS_OPEN))
 	{
@@ -456,13 +555,25 @@ static bool RotateLog(bool needLock)
 		s_flags &= ~NXLOG_IS_OPEN;
 	}
 
+	StringList rotationErrors;
 	if (s_rotationMode == NXLOG_ROTATION_BY_SIZE)
 	{
+	   TCHAR oldName[MAX_PATH], newName[MAX_PATH];
+
 		// Delete old files
+	   int i;
 		for(i = MAX_LOG_HISTORY_SIZE; i >= s_logHistorySize; i--)
 		{
 			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), s_logFileName, i);
-			_tunlink(oldName);
+			if (_taccess(oldName, 0) == 0)
+			{
+            if (_tunlink(oldName) != 0)
+            {
+               TCHAR buffer[1024];
+               _sntprintf(buffer, 1024, _T("Rotation error: cannot delete file \"%s\" (%s)"), oldName, _tcserror(errno));
+               rotationErrors.add(buffer);
+            }
+			}
 		}
 
 		// Shift file names
@@ -470,12 +581,22 @@ static bool RotateLog(bool needLock)
 		{
 			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), s_logFileName, i);
 			_sntprintf(newName, MAX_PATH, _T("%s.%d"), s_logFileName, i + 1);
-			_trename(oldName, newName);
+			if (_trename(oldName, newName) != 0)
+         {
+            TCHAR buffer[1024];
+            _sntprintf(buffer, 1024, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), oldName, newName, _tcserror(errno));
+            rotationErrors.add(buffer);
+         }
 		}
 
 		// Rename current log to name.0
 		_sntprintf(newName, MAX_PATH, _T("%s.0"), s_logFileName);
-		_trename(s_logFileName, newName);
+		if (_trename(s_logFileName, newName) != 0)
+		{
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), s_logFileName, newName, _tcserror(errno));
+         rotationErrors.add(buffer);
+		}
 	}
 	else if (s_rotationMode == NXLOG_ROTATION_DAILY)
 	{
@@ -489,8 +610,14 @@ static bool RotateLog(bool needLock)
       _tcsftime(buffer, 64, s_dailyLogSuffixTemplate, loc);
 
 		// Rename current log to name.suffix
+      TCHAR newName[MAX_PATH];
 		_sntprintf(newName, MAX_PATH, _T("%s.%s"), s_logFileName, buffer);
-		_trename(s_logFileName, newName);
+		if (_trename(s_logFileName, newName) != 0)
+		{
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), s_logFileName, newName, _tcserror(errno));
+         rotationErrors.add(buffer);
+		}
 
 		SetDayStart();
 	}
@@ -500,12 +627,68 @@ static bool RotateLog(bool needLock)
    if (s_logFileHandle != -1)
    {
       s_flags |= NXLOG_IS_OPEN;
-      TCHAR buffer[32];
-      FileFormattedWrite(s_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
+
+      TCHAR timestamp[32];
+      if (s_flags & NXLOG_JSON_FORMAT)
+      {
+         char message[1024];
+#ifdef UNICODE
+#define TIMESTAMP_FORMAT_SPECIFIER  "%ls"
+#else
+#define TIMESTAMP_FORMAT_SPECIFIER  "%s"
+#endif
+         if (rotationErrors.isEmpty())
+         {
+            snprintf(message, 1024, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"info\",\"tag\":\"logger\",\"message\":\"Log file truncated\"}\n",
+                   FormatLogTimestamp(timestamp));
+            _write(s_logFileHandle, message, strlen(message));
+         }
+         else
+         {
+            snprintf(message, 1024, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"Log file cannot be rotated (detailed error list is following)\"}\n",
+                   FormatLogTimestamp(timestamp));
+            _write(s_logFileHandle, message, strlen(message));
+            for(int i = 0; i < rotationErrors.size(); i++)
+            {
+               TCHAR escapedTextBuffer[LOCAL_MSG_BUFFER_SIZE];
+               size_t textLen;
+               TCHAR *escapedText = EscapeForJSON(rotationErrors.get(i), escapedTextBuffer, &textLen);
+               snprintf(message, 1024, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"" TIMESTAMP_FORMAT_SPECIFIER "\"}\n",
+                      timestamp, escapedText);
+               FreeStringBuffer(escapedText, escapedTextBuffer);
+               _write(s_logFileHandle, message, strlen(message));
+            }
+         }
+#undef TIMESTAMP_FORMAT_SPECIFIER
+      }
+      else
+      {
+         TCHAR tagf[20];
+         FormatTag(_T("logger"), tagf);
+         if (rotationErrors.isEmpty())
+         {
+            FileFormattedWrite(s_logFileHandle, _T("%s *I* [%s] Log file truncated\n"), FormatLogTimestamp(timestamp), tagf);
+         }
+         else
+         {
+            FileFormattedWrite(s_logFileHandle, _T("%s *E* [%s] Log file cannot be rotated (detailed error list is following)\n"), FormatLogTimestamp(timestamp), tagf);
+            for(int i = 0; i < rotationErrors.size(); i++)
+            {
+               FileFormattedWrite(s_logFileHandle, _T("%s *E* [%s] %s\n"), FormatLogTimestamp(timestamp), tagf, rotationErrors.get(i));
+            }
+         }
+      }
+
 #ifndef _WIN32
       fcntl(s_logFileHandle, F_SETFD, fcntl(s_logFileHandle, F_GETFD) | FD_CLOEXEC);
 #endif
    }
+
+   if (rotationErrors.isEmpty())
+      s_flags &= ~NXLOG_ROTATION_ERROR;
+   else
+      s_flags |= NXLOG_ROTATION_ERROR;
+   s_lastRotationAttempt = time(NULL);
 
 	if (needLock)
 		MutexUnlock(s_mutexLogAccess);
@@ -664,13 +847,15 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
 #endif
          if (s_flags & NXLOG_JSON_FORMAT)
          {
-            snprintf(message, 1024, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"info\",\"tag\":\"\",\"message\":\"Log file opened (rotation policy %d, max size " INT64_FMTA ")\"}\n",
+            snprintf(message, 1024, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"info\",\"tag\":\"logger\",\"message\":\"Log file opened (rotation policy %d, max size " INT64_FMTA ")\"}\n",
                    FormatLogTimestamp(timestamp), s_rotationMode, s_maxLogSize);
          }
          else
          {
-            snprintf(message, 1024, "\n" TIMESTAMP_FORMAT_SPECIFIER " Log file opened (rotation policy %d, max size " UINT64_FMTA ")\n",
-                   FormatLogTimestamp(timestamp), s_rotationMode, s_maxLogSize);
+            TCHAR tagf[20];
+            FormatTag(_T("logger"), tagf);
+            snprintf(message, 1024, "\n" TIMESTAMP_FORMAT_SPECIFIER " *I* [" TIMESTAMP_FORMAT_SPECIFIER "] Log file opened (rotation policy %d, max size " UINT64_FMTA ")\n",
+                   FormatLogTimestamp(timestamp), tagf, s_rotationMode, s_maxLogSize);
          }
 #undef TIMESTAMP_FORMAT_SPECIFIER
          _write(s_logFileHandle, message, strlen(message));
@@ -747,27 +932,6 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
       MutexDestroy(s_mutexLogAccess);
       s_mutexLogAccess = INVALID_MUTEX_HANDLE;
    }
-}
-
-/**
- * Format tag for printing
- */
-static inline TCHAR *FormatTag(const TCHAR *tag, TCHAR *tagf)
-{
-   int i;
-   if (tag != NULL)
-   {
-      for(i = 0; (i < 19) && tag[i] != 0; i++)
-         tagf[i] = tag[i];
-   }
-   else
-   {
-      i = 0;
-   }
-   for(; i < 19; i++)
-      tagf[i] = ' ';
-   tagf[i] = 0;
-   return tagf;
 }
 
 /**
@@ -870,79 +1034,6 @@ static void WriteLogToFileAsText(INT16 severity, const TCHAR *tag, const TCHAR *
       WriteLogToConsole(severity, timestamp, tag, message);
 
    MutexUnlock(s_mutexLogAccess);
-}
-
-/**
- * Escape string for JSON. Use local buffer if possible and allocate large buffer on heap if string is too long.
- */
-static TCHAR *EscapeForJSON(const TCHAR *text, TCHAR *localBuffer, size_t *len)
-{
-   const TCHAR *ch = text;
-   TCHAR *buffer = localBuffer;
-   TCHAR *out = localBuffer;
-   size_t count = 0;
-   while(*ch != 0)
-   {
-      switch(*ch)
-      {
-         case _T('"'):
-         case _T('\\'):
-            *(out++) = _T('\\');
-            *(out++) = *ch;
-            count += 2;
-            break;
-         case 0x08:
-            *(out++) = _T('\\');
-            *(out++) = _T('b');
-            count += 2;
-            break;
-         case 0x09:
-            *(out++) = _T('\\');
-            *(out++) = _T('t');
-            count += 2;
-            break;
-         case 0x0A:
-            *(out++) = _T('\\');
-            *(out++) = _T('n');
-            count += 2;
-            break;
-         case 0x0C:
-            *(out++) = _T('\\');
-            *(out++) = _T('f');
-            count += 2;
-            break;
-         case 0x0D:
-            *(out++) = _T('\\');
-            *(out++) = _T('r');
-            count += 2;
-            break;
-         default:
-            if (*ch < 0x20)
-            {
-               TCHAR chcode[8];
-               _sntprintf(chcode, 8, _T("\\u%04X"), *ch);
-               memcpy(out, chcode, 6 * sizeof(TCHAR));
-               out += 6;
-               count += 6;
-            }
-            else
-            {
-               *(out++) = *ch;
-               count++;
-            }
-            break;
-      }
-      if ((count > LOCAL_MSG_BUFFER_SIZE - 8) && (buffer == localBuffer))
-      {
-         buffer = MemAllocString(_tcslen(text) * 6 + 1);
-         memcpy(buffer, localBuffer, count * sizeof(TCHAR));
-         out = buffer + count;
-      }
-      ch++;
-   }
-   *out = 0;
-   *len = count;
-   return buffer;
 }
 
 /**

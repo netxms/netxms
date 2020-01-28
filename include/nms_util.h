@@ -236,6 +236,7 @@ inline WCHAR towupper(WCHAR c)
 #define NXLOG_USE_SYSTEMD       ((UINT32)0x00000010)  /* use stderr as log device and systemd output format */
 #define NXLOG_JSON_FORMAT       ((UINT32)0x00000020)  /* write log in JSON format */
 #define NXLOG_USE_STDOUT        ((UINT32)0x00000040)  /* use stdout as log device */
+#define NXLOG_ROTATION_ERROR    ((UINT32)0x40000000)  /* internal flag, should not be set by caller */
 #define NXLOG_IS_OPEN           ((UINT32)0x80000000)  /* internal flag, should not be set by caller */
 
 /**
