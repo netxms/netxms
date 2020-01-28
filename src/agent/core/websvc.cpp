@@ -22,6 +22,8 @@
 
 #include "nxagentd.h"
 
+#define DEBUG_TAG _T("websvc")
+
 #if HAVE_LIBCURL
 
 #include <curl/curl.h>
@@ -31,8 +33,6 @@
 // workaround for older cURL versions
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
 #endif
-
-#define DEBUG_TAG _T("websvc")
 
 enum class TextType
 {
