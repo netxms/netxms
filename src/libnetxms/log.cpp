@@ -521,7 +521,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, UINT64 max
 	}
 
 	if (isValid)
-	   nxlog_debug(0, _T("Log rotation policy set to %d (size=") UINT64_FMT _T(", count=%d)"), rotationMode, maxLogSize, historySize);
+	   nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Log rotation policy set to %d (size=") UINT64_FMT _T(", count=%d)"), rotationMode, maxLogSize, historySize);
 
 	return isValid;
 }

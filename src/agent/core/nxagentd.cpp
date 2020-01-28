@@ -890,7 +890,7 @@ BOOL Initialize()
    }
 	nxlog_write(NXLOG_INFO, _T("Core agent version ") NETXMS_BUILD_TAG);
 	nxlog_write(NXLOG_INFO, _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
-	nxlog_write(NXLOG_INFO, _T("Debug level set to %d"), s_debugLevel);
+	nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
 
    if (s_debugTags != NULL)
    {
