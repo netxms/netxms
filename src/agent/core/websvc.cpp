@@ -201,45 +201,51 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
  */
 void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
 {
-   StringList *list = m_responseData.split(_T("\n"));
+   StringList *dataLines = m_responseData.split(_T("\n"));
    UINT32 fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
    for (int i = 0; i < params->size(); i++)
    {
+      const TCHAR *pattern = params->get(i);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): using pattern \"%s\""), pattern);
+
       const char *eptr;
       int eoffset;
-      PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(params->get(i)), PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
+      PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
       if (compiledPattern == NULL)
-      {
          continue;
-      }
+
       TCHAR *matchedString = NULL;
-      for (int j = 0; j < list->size(); j++)
+      for (int j = 0; j < dataLines->size(); j++)
       {
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): try to find string: %s"), list->get(j));
+         const TCHAR *dataLine = dataLines->get(j);
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): checking data line \"%s\""), dataLine);
          int fields[30];
-         if (_pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(list->get(j)), static_cast<int>(wcslen(list->get(j))), 0, 0, fields, 30) >= 0)
+         if (_pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30) >= 0)
          {
             if (fields[2] != -1)
             {
                matchedString = MemAllocString(fields[3] + 1 - fields[2]);
-               memcpy(matchedString, &list->get(j)[fields[2]], (fields[3] - fields[2]) * sizeof(TCHAR));
+               memcpy(matchedString, &dataLine[fields[2]], (fields[3] - fields[2]) * sizeof(TCHAR));
                matchedString[fields[3] - fields[2]] = 0;
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): found string: %s"), matchedString);
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): data match: \"%s\""), matchedString);
             }
             break;
          }
       }
 
+      _pcre_free_t(compiledPattern);
+
       if (matchedString != NULL)
       {
-         response->setField(fieldId++, params->get(i));
+         response->setField(fieldId++, pattern);
          response->setField(fieldId++, matchedString);
          resultCount++;
       }
    }
+
    response->setField(VID_NUM_PARAMETERS, resultCount);
-   delete list;
+   delete dataLines;
 }
 
 /**
@@ -247,20 +253,20 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
  */
 void ServiceEntry::getParams(StringList *params, NXCPMessage *response)
 {
-   if(m_type == TextType::XML)
+   switch(m_type)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ServiceEntry::getParams(): get parameter from XML"));
-      getParamsFromXML(params, response);
-   }
-   else if(m_type == TextType::JSON)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ServiceEntry::getParams(): get parameter from JSON"));
-      getParamsFromJSON(params, response);
-   }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ServiceEntry::getParams(): get parameter from Text"));
-      getParamsFromText(params, response);
+      case TextType::XML:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from XML"));
+         getParamsFromXML(params, response);
+         break;
+      case TextType::JSON:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from JSON"));
+         getParamsFromJSON(params, response);
+         break;
+      default:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from Text"));
+         getParamsFromText(params, response);
+         break;
    }
 }
 
