@@ -197,14 +197,14 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
 #ifdef UNICODE
       url = WideStringFromMBStringSysLocale(argv[pos++]);
 #else
-      url = MemCopyStringA,(argv[iPos++]);
+      url = MemCopyStringA(argv[pos++]);
 #endif
       while (pos < argc)
       {
 #ifdef UNICODE
          parameters.addPreallocated(WideStringFromMBStringSysLocale(argv[pos++]));
 #else
-         parameters.add(argv[iPos++]);
+         parameters.add(argv[pos++]);
 #endif
       }
       exitCode = GetServiceParameter(conn, url, s_retentionTime, (s_login[0] == 0) ? NULL: s_login, 

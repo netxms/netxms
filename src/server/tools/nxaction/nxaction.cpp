@@ -85,14 +85,14 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
    StringList list;
    int count = std::min(argc - optind - 2, 256);
    for(i = 0, k = optind + 2; i < count; i++, k++)
-      list.addPreallocated(WideStringFromMBString(argv[k]));
+      list.addPreallocated(WideStringFromMBStringSysLocale(argv[k]));
    dwError = conn->execAction(action, list, s_showOutput, OutputCallback);
 #else
    StringList list;
    int count = std::min(argc - optind - 2, 256);
    for(i = 0, k = optind + 2; i < count; i++, k++)
-      list.addPreallocated(argv[k]);
-   dwError = conn->execAction(argv[optind + 1], list, showOutput, OutputCallback);
+      list.add(argv[k]);
+   dwError = conn->execAction(argv[optind + 1], list, s_showOutput, OutputCallback);
 #endif
    if (dwError == ERR_SUCCESS)
       _tprintf(_T("Action executed successfully\n"));

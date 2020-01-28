@@ -450,7 +450,7 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *serverKey)
 {
    int exitCode = 3, pos;
 #ifdef UNICODE
@@ -470,7 +470,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
                exitCode = Get(conn, wcValue, s_showNames);
                MemFree(wcValue);
 #else
-               exitCode = Get(conn, argv[pos++], showNames);
+               exitCode = Get(conn, argv[pos++], s_showNames);
 #endif
             } while((exitCode == 0) && (s_batchMode) && (pos < argc));
             break;

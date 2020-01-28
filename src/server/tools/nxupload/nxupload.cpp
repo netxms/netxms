@@ -41,7 +41,7 @@ static NXCPStreamCompressionMethod s_compression = NXCP_STREAM_COMPRESSION_NONE;
 /**
  * Do agent upgrade
  */
-static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose, RSA *pServerKey)
+static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose, RSA *serverKey)
 {
    UINT32 dwError;
    int i;
@@ -64,7 +64,7 @@ static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose,
             fflush(stdout);
             if ((i % 20 == 0) && (i > 30))
             {
-               if (conn->connect(pServerKey, FALSE))
+               if (conn->connect(serverKey, FALSE))
                {
                   bConnected = TRUE;
                   break;   // Connected successfully
@@ -79,7 +79,7 @@ static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose,
          for(i = 20; i < 120; i += 20)
          {
             ThreadSleep(20);
-            if (conn->connect(pServerKey, FALSE))
+            if (conn->connect(serverKey, FALSE))
             {
                bConnected = TRUE;
                break;   // Connected successfully
@@ -89,7 +89,7 @@ static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose,
 
       // Last attempt to reconnect
       if (!bConnected)
-         bConnected = conn->connect(pServerKey, FALSE);
+         bConnected = conn->connect(serverKey, FALSE);
 
       if (bConnected && bVerbose)
       {
@@ -133,7 +133,7 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, s_destinationFile, MAX_PATH);
         s_destinationFile[MAX_PATH - 1] = 0;
 #else
-        nx_strncpy(szDestinationFile, optarg, MAX_PATH);
+        strlcpy(s_destinationFile, optarg, MAX_PATH);
 #endif
         break;
       case 'q':   // Quiet mode
