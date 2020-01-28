@@ -21,6 +21,9 @@
 **/
 
 #include "nxagentd.h"
+
+#if HAVE_LIBCURL
+
 #include <curl/curl.h>
 #include <netxms-regex.h>
 
@@ -37,8 +40,6 @@ enum class TextType
    JSON = 1,
    Text = 2
 };
-
-#ifdef HAVE_LIBCURL
 
 /**
  * One cached service entry
@@ -480,14 +481,14 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
    MemFree(url);
 }
 
-#else
+#else /* HAVE_LIBCURL */
 
 /**
  * Get parameters from web service
  */
 void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
 {
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("GetWebServiceParameters(): web service does not work without curl"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWebServiceParameters(): agent was compiled without libcurl"));
    response->setField(VID_RCC, ERR_NOT_IMPLEMENTED);
 }
 
