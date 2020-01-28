@@ -149,16 +149,14 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
 LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
-   FILE *hFile;
-   int nFd;
 
-   nFd = socket(AF_INET, SOCK_DGRAM, 0);
-   if (nFd <= 0)
+   int nFd = socket(AF_INET, SOCK_DGRAM, 0);
+   if (nFd == INVALID_SOCKET)
    {
       return SYSINFO_RC_ERROR;
    }
 
-   hFile = fopen("/proc/net/route", "r");
+   FILE *hFile = fopen("/proc/net/route", "r");
    if (hFile == NULL)
    {
       close(nFd);
@@ -401,23 +399,23 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
 static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
 {
    int netlinkSocket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
-   if (netlinkSocket == -1)
+   if (netlinkSocket == INVALID_SOCKET)
    {
-      AgentWriteDebugLog(4, _T("GetInterfaces: failed to opens socket"));
-      return NULL;
+      AgentWriteDebugLog(4, _T("GetInterfaces: failed to open socket"));
+      goto failure_0;
    }
 
-   setsockopt(netlinkSocket, SOL_SOCKET, SO_REUSEADDR, NULL, 0);
+   int nOne = 1;
+   setsockopt(netlinkSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
 
    sockaddr_nl local = {};
    local.nl_family = AF_NETLINK;
    local.nl_pid = getpid();
-   local.nl_groups = 0;
 
    bool done;
    ObjectArray<LinuxInterfaceInfo> *ifList = NULL;
 
-   if (bind(netlinkSocket, (struct sockaddr *)&local, sizeof(local)) < 0)
+   if (bind(netlinkSocket, (struct sockaddr *)&local, sizeof(local)) == -1)
    {
       AgentWriteDebugLog(4, _T("GetInterfaces: failed to bind socket"));
       goto failure_1;
@@ -497,6 +495,8 @@ failure_2:
 
 failure_1:
    close(netlinkSocket);
+
+failure_0:
    return NULL;
 }
 
@@ -561,7 +561,6 @@ LONG H_NetIfNames(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, 
       return SYSINFO_RC_ERROR;
    }
 
-   TCHAR infoString[1024], macAddr[32], ipAddr[64];
    for(int i = 0; i < ifList->size(); i++)
    {
 #ifdef UNICODE
