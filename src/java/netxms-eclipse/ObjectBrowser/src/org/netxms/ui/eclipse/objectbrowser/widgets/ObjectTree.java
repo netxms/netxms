@@ -88,7 +88,6 @@ public class ObjectTree extends Composite
 
 	private boolean filterEnabled = true;
 	private boolean statusIndicatorEnabled = false;
-	private boolean hideNodeComponents = false;
 	private ObjectTreeViewer objectTree;
 	private FilterText filterText;
 	private String tooltip = null;
@@ -108,12 +107,11 @@ public class ObjectTree extends Composite
 	 * @param style
 	 * @param hideNodeComponents 
 	 */
-	public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton, boolean hideNodeComponents)
+	public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton)
 	{
 		super(parent, style);
 		
 		session = ConsoleSharedData.getSession();
-		this.hideNodeComponents = hideNodeComponents;
       refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), this, new Runnable() {
          @Override
          public void run()
@@ -154,7 +152,7 @@ public class ObjectTree extends Composite
 		// Create object tree control
 		objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE) | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectTree.setUseHashlookup(true);
-		contentProvider = new ObjectTreeContentProvider(rootObjects, hideNodeComponents);
+		contentProvider = new ObjectTreeContentProvider(rootObjects);
 		objectTree.setContentProvider(contentProvider);
 		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
@@ -666,28 +664,6 @@ public class ObjectTree extends Composite
 	{
 		statusIndicator.refresh(objectTree);
 	}
-   
-   /**
-    * Returns if hide node components is enabled
-    * 
-    * @return if hide node components is enabled
-    */
-   public boolean isHideNodeComponents()
-   {
-      return hideNodeComponents;
-   }
-
-   /**
-    * Enabled / disables hide node component flag
-    * 
-    * @param enabled new flag value
-    */
-   public void setHideNodeComponent(boolean enabled)
-   {
-      hideNodeComponents = enabled;
-      contentProvider.setHideNodeComponents(enabled);
-      onFilterModify();
-   }
 	
 	/**
 	 * @param rootObjects

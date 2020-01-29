@@ -469,8 +469,8 @@ public class Interface extends GenericObject implements ZoneMember
 		for(int i = 0; i < count; i++)
 		   ipAddressList.add(msg.getFieldAsInetAddressEx(fieldId++));
 	}
-	
-	/**
+
+   /**
 	 * Get parent node object.
 	 * 
 	 * @return parent node object or null if it is not exist or inaccessible

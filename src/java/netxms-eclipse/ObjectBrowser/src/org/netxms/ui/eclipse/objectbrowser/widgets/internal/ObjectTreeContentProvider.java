@@ -23,7 +23,9 @@ import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.LoadingObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Content provider for object tree.
@@ -32,13 +34,13 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 {
 	private NXCSession session = null;
 	private long[] rootObjects = null;
-	private boolean hideNodeComponents = false;
+	private AbstractObject loadingObject;
 	
 	/**
 	 * @param rootObjects
 	 * @param hideNodeComponents 
 	 */
-	public ObjectTreeContentProvider(long[] rootObjects, boolean hideNodeComponents)
+	public ObjectTreeContentProvider(long[] rootObjects)
 	{
 		super();
 		if (rootObjects != null)
@@ -46,7 +48,8 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 			this.rootObjects = new long[rootObjects.length];
 			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
 		}
-		this.hideNodeComponents = hideNodeComponents;
+		loadingObject = new LoadingObject(-1, session);
+		
 	}
 
 	/* (non-Javadoc)
@@ -54,7 +57,15 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	 */
 	@Override
 	public Object[] getChildren(Object parentElement)
-	{
+	{	         
+      if(!ConsoleSharedData.isFullSync())
+      {
+         AbstractObject object = (AbstractObject)parentElement;
+         if(object instanceof Node && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
+         {            
+            return new AbstractObject[] { loadingObject };
+         }
+      }
 		return ((AbstractObject)parentElement).getChildrenAsArray();
 	}
 
@@ -90,9 +101,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public boolean hasChildren(Object element)
 	{
-	   if(hideNodeComponents && element instanceof Node)
-	         return false;
-		return ((AbstractObject)element).hasAccessibleChildren();
+		return (element instanceof Node) ? ((AbstractObject)element).hasChildren() : ((AbstractObject)element).hasAccessibleChildren();
 	}
 
 	/* (non-Javadoc)
@@ -118,13 +127,5 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		{
 			this.rootObjects = null;
 		}
-	}
-	
-	/**
-	 * Sets flag is node components should be displayed
-	 */
-	public void setHideNodeComponents(boolean hide)
-	{
-	   hideNodeComponents = hide;
 	}
 }

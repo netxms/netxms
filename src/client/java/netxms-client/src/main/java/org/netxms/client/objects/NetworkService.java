@@ -63,7 +63,7 @@ public class NetworkService extends GenericObject
 		pollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
 	}
 
-	/* (non-Javadoc)
+   /* (non-Javadoc)
 	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
 	 */
 	@Override

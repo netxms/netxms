@@ -1336,6 +1336,7 @@ typedef struct
 #define VID_NUM_HEADERS             ((UINT32)676)
 #define VID_REQUEST_TYPE            ((UINT32)677)
 #define VID_VERIFY_CERT             ((UINT32)678)
+#define VID_SYNC_NODE_COMPONENTS    ((UINT32)679)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

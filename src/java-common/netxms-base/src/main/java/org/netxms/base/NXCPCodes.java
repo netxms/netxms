@@ -1095,6 +1095,10 @@ public class NXCPCodes
    public static final long VID_CHASSIS_PLACEMENT_CONFIG = 673;
    public static final long VID_ALLOW_PATH_EXPANSION = 674;
    public static final long VID_TAG = 675;
+   public static final long VID_NUM_HEADERS = 676;
+   public static final long VID_REQUEST_TYPE = 677;
+   public static final long VID_VERIFY_CERT = 678;
+   public static final long VID_SYNC_NODE_COMPONENTS = 679;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

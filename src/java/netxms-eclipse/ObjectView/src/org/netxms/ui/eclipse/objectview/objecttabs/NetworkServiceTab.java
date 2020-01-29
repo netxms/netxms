@@ -74,7 +74,7 @@ public class NetworkServiceTab extends NodeComponentTab
 	public void refresh()
 	{
 		if (getObject() != null)
-			viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_NETWORKSERVICE).toArray());
+         viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_NETWORKSERVICE).toArray());
 		else
 			viewer.setInput(new NetworkService[0]);
 	}

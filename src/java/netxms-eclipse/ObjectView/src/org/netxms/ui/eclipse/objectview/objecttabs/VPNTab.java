@@ -70,7 +70,7 @@ public class VPNTab extends NodeComponentTab
 	public void refresh()
 	{
 		if (getObject() != null)
-			viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_VPNCONNECTOR).toArray());
+         viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_VPNCONNECTOR).toArray());
 		else
 			viewer.setInput(new VPNConnector[0]);
 	}

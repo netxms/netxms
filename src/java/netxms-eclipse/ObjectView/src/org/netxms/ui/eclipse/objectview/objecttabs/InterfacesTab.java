@@ -184,7 +184,7 @@ public class InterfacesTab extends NodeComponentTab
 	public void refresh()
 	{
 		if (getObject() != null)
-			viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
+	      viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
 		else
 			viewer.setInput(new Interface[0]);
 	}
@@ -266,7 +266,7 @@ public class InterfacesTab extends NodeComponentTab
   public void objectChanged(final AbstractObject object)
   {
      labelProvider.setNode((AbstractNode)object);
-     refresh();
+     super.objectChanged(object);
   }
 
    /**

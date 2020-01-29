@@ -364,6 +364,10 @@ public class NXCSession
 
    // TCP proxies
    private Map<Integer, TcpProxy> tcpProxies = new HashMap<Integer, TcpProxy>();
+   
+   //Children synchronization
+   private Set<Long> synchronizedObjectSet = new HashSet<Long>();
+   
 
    /**
     * Message subscription class
@@ -2707,9 +2711,23 @@ public class NXCSession
     */
    public synchronized void syncObjects() throws IOException, NXCException
    {
+      syncObjects(true);
+   }
+
+   /**
+    * Synchronizes NetXMS objects between server and client. After successful
+    * sync, subscribe client to object change notifications.
+    *
+    * @param syncNodeComponents defines if node components should be synced
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public synchronized void syncObjects(boolean syncNodeComponents) throws IOException, NXCException
+   {
       syncObjects.acquireUninterruptibly();
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
-      msg.setFieldInt16(NXCPCodes.VID_SYNC_COMMENTS, 1);
+      msg.setField(NXCPCodes.VID_SYNC_COMMENTS, true);
+      msg.setField(NXCPCodes.VID_SYNC_NODE_COMPONENTS, syncNodeComponents);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       waitForSync(syncObjects, commandTimeout * 10);
@@ -2745,7 +2763,7 @@ public class NXCSession
    public void syncObjectSet(long[] objects, boolean syncComments, int options) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_OBJECTS);
-      msg.setFieldInt16(NXCPCodes.VID_SYNC_COMMENTS, syncComments ? 1 : 0);
+      msg.setField(NXCPCodes.VID_SYNC_COMMENTS, syncComments);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, options);
       msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, objects.length);
       msg.setField(NXCPCodes.VID_OBJECT_LIST, objects);
@@ -11442,5 +11460,46 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_LINK_ID, (int)linkId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
+   }
+   
+   /**
+    * Sync object children 
+    * Is used to lazy sync node components
+    * 
+    * @param object parent object
+    */
+   public void syncChildren(AbstractObject object) throws NXCException, IOException
+   {
+      boolean syncRequired;
+      synchronized(synchronizedObjectSet)
+      {
+         syncRequired = !synchronizedObjectSet.contains(object.getObjectId());
+      }
+      
+      if(syncRequired)
+      {
+         syncObjectSet(object.getChildIdList(), true, NXCSession.OBJECT_SYNC_WAIT);
+      
+         synchronized(synchronizedObjectSet)
+         {
+            synchronizedObjectSet.add(object.getObjectId());
+         }
+      }
+   }
+
+   /**
+    * Returns true if children are already synchronized for this object 
+    * 
+    * @param id object id
+    * @return true if children are synchronized
+    */
+   public boolean areChildrenSynchronized(Long id)
+   {
+      boolean isSynchronized;
+      synchronized(synchronizedObjectSet)
+      {
+         isSynchronized = synchronizedObjectSet.contains(id);        
+      }
+      return isSynchronized;
    }
 }

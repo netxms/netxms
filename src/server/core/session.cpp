@@ -2216,10 +2216,15 @@ void ClientSession::getObjects(NXCPMessage *request)
    msg.deleteAllFields();
 
    // Change "sync comments" flag
-   if (request->getFieldAsUInt16(VID_SYNC_COMMENTS))
+   if (request->getFieldAsBoolean(VID_SYNC_COMMENTS))
       m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
    else
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
+
+   // Set sync components flag
+   bool syncNodeComponents = false;
+   if (request->getFieldAsBoolean(VID_SYNC_NODE_COMPONENTS))
+      syncNodeComponents = true;
 
    // Prepare message
    msg.setCode(CMD_OBJECT);
@@ -2231,7 +2236,12 @@ void ClientSession::getObjects(NXCPMessage *request)
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, SessionObjectFilter, &data);
 	for(int i = 0; i < objects->size(); i++)
 	{
-		NetObj *object = objects->get(i);
+      NetObj *object = objects->get(i);
+	   if (!syncNodeComponents && (object->getObjectClass() == OBJECT_INTERFACE ||
+	         object->getObjectClass() == OBJECT_ACCESSPOINT || object->getObjectClass() == OBJECT_VPNCONNECTOR ||
+	         object->getObjectClass() == OBJECT_NETWORKSERVICE))
+         continue;
+
       object->fillMessage(&msg, m_dwUserId);
       if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
          object->commentsToMessage(&msg);

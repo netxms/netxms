@@ -21,8 +21,10 @@ package org.netxms.ui.eclipse.shared;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.Activator;
 
 /**
  * Shared data for NXMC extensions
@@ -34,6 +36,7 @@ public class ConsoleSharedData
 	private static TimeZone timeZone = null;
 	private static TrayItem trayIcon = null;
 	private static Map<String, Object> consoleProperties = new HashMap<String, Object>(0);
+	private static boolean fullSync;
 	
 	/**
 	 * Get current NetXMS client library session
@@ -135,4 +138,22 @@ public class ConsoleSharedData
 	{
 		ConsoleSharedData.trayIcon = trayIcon;
 	}
+
+   /**
+    * @param trayIcon the trayIcon to set
+    */
+   public static IDialogSettings getSettings()
+   {
+      return Activator.getDefault().getDialogSettings();
+   }
+   
+   public static void setFullSync(boolean fullSync)
+   {
+      ConsoleSharedData.fullSync = fullSync;
+   }
+
+   public static boolean isFullSync()
+   {
+      return fullSync;
+   }
 }

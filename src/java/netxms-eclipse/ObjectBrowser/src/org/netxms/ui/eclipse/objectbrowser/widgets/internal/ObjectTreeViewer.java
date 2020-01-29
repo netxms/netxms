@@ -18,18 +18,27 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerRow;
+import org.eclipse.swt.events.TreeEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TreeItem;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Custom extension of tree viewer for object tree
  */
 public class ObjectTreeViewer extends TreeViewer
 {
+   private NXCSession session;
+   
 	/**
 	 * @param parent
 	 * @param style
@@ -37,6 +46,7 @@ public class ObjectTreeViewer extends TreeViewer
 	public ObjectTreeViewer(Composite parent, int style)
 	{
 		super(parent, style);
+		session = ConsoleSharedData.getSession();
 		setComparer(new IElementComparer() {
          @Override
          public int hashCode(Object element)
@@ -76,8 +86,65 @@ public class ObjectTreeViewer extends TreeViewer
 		}
 		else
 		{
+	      checkAndSyncChildren((AbstractObject)item.getData());
+	      
 			createChildren(item);
 			item.setExpanded(true);
 		}
 	}
+	
+
+   @Override
+   protected void handleTreeExpand(TreeEvent event) 
+   {
+      checkAndSyncChildren((AbstractObject)event.item.getData());
+      super.handleTreeExpand(event);
+   }
+   
+   /**
+    * Check is child objects are synchronized and synchronize if needed
+    * 
+    * @param object current object
+    */
+   private void checkAndSyncChildren(AbstractObject object)
+   {
+      if(!ConsoleSharedData.isFullSync())
+      {
+         if(object instanceof Node && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
+         {
+            syncChildren(object);
+         }
+      }      
+   }
+	
+   /**
+    * Sync object children form server
+    * 
+    * @param object 
+    */
+   private void syncChildren(AbstractObject object)
+   {
+      ConsoleJob job = new ConsoleJob("Synchronize node components", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.syncChildren(object);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {       
+                  refresh(object);
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize node components";
+         }
+      };
+      job.setUser(false);
+      job.start();  
+   }
 }

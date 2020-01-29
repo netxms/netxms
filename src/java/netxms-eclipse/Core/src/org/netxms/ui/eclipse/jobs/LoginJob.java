@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.VersionInfo;
@@ -122,9 +123,12 @@ public class LoginJob implements IRunnableWithProgress
 
          session.login(authMethod, loginName, password, certificate, signature);
          monitor.worked(1);
-
+         
          monitor.setTaskName(Messages.get().LoginJob_sync_objects);
-         session.syncObjects();
+         IDialogSettings settings = ConsoleSharedData.getSettings();
+         boolean fullySync = (settings.get("ObjectBrowser.hideNodeComponents") != null) ? !settings.getBoolean("ObjectBrowser.hideNodeComponents") : false;
+         ConsoleSharedData.setFullSync(fullySync);
+         session.syncObjects(fullySync);
          monitor.worked(1);
 
          monitor.setTaskName(Messages.get().LoginJob_sync_users);
