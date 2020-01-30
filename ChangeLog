@@ -26,6 +26,7 @@
 - Improved LLDP based network topology discovery
 - Fixed issues:
 	NX-366 (Generate event if duplicate IP address found)
+	NX-848 (API for modules to register new console commands)
 	NX-910 (System.IO.DiskQueue(*) doesnt support instances for Windows)
 	NX-1030 (Telegram bot integration)
 	NX-1462 (Add "File Policies" to push files/scripts out to agents)
