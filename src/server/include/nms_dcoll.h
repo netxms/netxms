@@ -855,6 +855,8 @@ void CalculateItemValueMax(ItemValue &result, int nDataType, const ItemValue *co
 
 DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
 
+UINT64 GetDCICacheMemoryUsage();
+
 /**
  * DCI cache loader queue
  */

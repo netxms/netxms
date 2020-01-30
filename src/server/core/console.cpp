@@ -67,27 +67,13 @@ bool NXCORE_EXPORTABLE IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int
 }
 
 /**
- * Cache memory usage calculation callback
- */
-static void GetCacheMemoryUsage(NetObj *object, UINT64 *size)
-{
-   if (object->isDataCollectionTarget())
-      *size += static_cast<DataCollectionTarget*>(object)->getCacheMemoryUsage();
-}
-
-/**
  * Show memory usage
  */
 static void ShowMemoryUsage(ServerConsole *console)
 {
    console->printf(_T("Alarms ...................: %.02f MB\n"), static_cast<double>(GetAlarmMemoryUsage()) / 1048576);
-
-   UINT64 dciCache = 0;
-   g_idxObjectById.forEach(GetCacheMemoryUsage, &dciCache);
-   console->printf(_T("Data collection cache ....: %.02f MB\n"), static_cast<double>(dciCache) / 1048576);
-
+   console->printf(_T("Data collection cache ....: %.02f MB\n"), static_cast<double>(GetDCICacheMemoryUsage()) / 1048576);
    console->printf(_T("Raw DCI data write cache .: %.02f MB\n"), static_cast<double>(GetRawDataWriterMemoryUsage()) / 1048576);
-
    console->print(_T("\n"));
 }
 

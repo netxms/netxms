@@ -5960,6 +5960,18 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
          else
             rc = DCE_NOT_SUPPORTED;
       }
+      else if (!_tcsicmp(param, _T("Server.MemoryUsage.Alarms")))
+      {
+         ret_uint64(buffer, GetAlarmMemoryUsage());
+      }
+      else if (!_tcsicmp(param, _T("Server.MemoryUsage.DataCollectionCache")))
+      {
+         ret_uint64(buffer, GetAlarmMemoryUsage());
+      }
+      else if (!_tcsicmp(param, _T("Server.MemoryUsage.RawDataWriter")))
+      {
+         ret_uint64(buffer, GetRawDataWriterMemoryUsage());
+      }
       else if (MatchString(_T("Server.QueueSize.Average(*)"), param, false))
       {
          rc = GetQueueStatistic(param, StatisticType::AVERAGE, buffer);

@@ -186,3 +186,22 @@ DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type
    s_queuesLock.unlock();
    return DCE_SUCCESS;
 }
+
+/**
+ * DCI cache memory usage calculation callback
+ */
+static void GetCacheMemoryUsage(NetObj *object, UINT64 *size)
+{
+   if (object->isDataCollectionTarget())
+      *size += static_cast<DataCollectionTarget*>(object)->getCacheMemoryUsage();
+}
+
+/**
+ * Get amount of memory used by DCI cache
+ */
+UINT64 GetDCICacheMemoryUsage()
+{
+   UINT64 dciCache = 0;
+   g_idxObjectById.forEach(GetCacheMemoryUsage, &dciCache);
+   return dciCache;
+}
