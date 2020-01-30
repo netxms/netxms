@@ -1725,6 +1725,7 @@ if test "x$CXX" = "xCC" ; then
 	CPPFLAGS="$CPPFLAGS -mt"
 	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit"
 
+	TEST_XARCH="no"
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
 		AC_MSG_CHECKING(whether C compiler accepts -m32)
 		count=`$CC -flags | grep '^\-m32 ' | wc -l`
@@ -1736,7 +1737,6 @@ if test "x$CXX" = "xCC" ; then
 			AC_MSG_RESULT(no)
 		fi
 	else
-		TEST_XARCH="no"
 		AC_MSG_CHECKING(whether C compiler accepts -m64)
 		count=`$CC -flags | grep '^\-m64 ' | wc -l`
 		if test $count -eq 1; then
@@ -1766,6 +1766,22 @@ if test "x$CXX" = "xCC" ; then
 					AC_MSG_RESULT(no)
 				])
 		fi
+	fi
+
+	# Check for -xarch=sparc if -xarch was not set already
+	if test "x$TEST_XARCH" = "xno" -a "x$CPUTYPE" = "xsparc"; then
+		AC_MSG_CHECKING(whether C compiler accepts -xarch=sparc)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -xarch=sparc"
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			[ 
+				LDFLAGS="-xarch=sparc $LDFLAGS"
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
 	fi
 
 	AC_CXX_CHECK_OPTION(-std=c++11)
