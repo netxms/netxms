@@ -2,12 +2,14 @@
 * 3.2
 *
 
+- Nodes within chassis and chassis view
 - Image library configurator completely rewritten
 - Maximum password length supported by nxencpasswd increased to 64 characters
 - Fixed issues:
 	NX-58 (Refactor Image Library)
 	NX-1523 (Store object creation time)
 	NX-1724 (Implement agent parameters for inode usage)
+	NX-1741 (Node placement within chassis)
 	NX-1767 (File manager may be unable to access file with percent sign in name)
 
 
