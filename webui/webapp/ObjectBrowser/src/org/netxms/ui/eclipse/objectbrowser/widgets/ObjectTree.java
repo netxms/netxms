@@ -107,7 +107,6 @@ public class ObjectTree extends Composite
    /**
     * @param parent
     * @param style
-    * @param hideNodeComponents
     */
    public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter,
          boolean showFilterToolTip, boolean showFilterCloseButton)

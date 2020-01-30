@@ -38,7 +38,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	
 	/**
 	 * @param rootObjects
-	 * @param hideNodeComponents 
+	 * @param objectFullSync 
 	 */
 	public ObjectTreeContentProvider(long[] rootObjects, boolean objectFullSync)
 	{

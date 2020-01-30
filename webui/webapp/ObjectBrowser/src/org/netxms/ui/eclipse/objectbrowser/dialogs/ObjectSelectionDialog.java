@@ -28,7 +28,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -49,7 +48,6 @@ public class ObjectSelectionDialog extends Dialog
 {
 	private NXCSession session;
 	private ObjectTree objectTree;
-	private Button checkHideNodeComponents;
 	private long[] rootObjects;
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
@@ -377,7 +375,6 @@ public class ObjectSelectionDialog extends Dialog
 		settings.put("SelectObject.cx", size.x); //$NON-NLS-1$
 		settings.put("SelectObject.cy", size.y); //$NON-NLS-1$
 		settings.put("SelectObject.Filter", objectTree.getFilter()); //$NON-NLS-1$
-      settings.put("SelectObject.hideNodeComponents", checkHideNodeComponents.getSelection()); //$NON-NLS-1$
 	}
 
 	/**
