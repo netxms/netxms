@@ -7,6 +7,7 @@
 - Maximum password length supported by nxencpasswd increased to 64 characters
 - Fixed issues:
 	NX-58 (Refactor Image Library)
+	NX-896 (Display blade chassis and servers in rack)
 	NX-1476 (NetXMS Server crashes when sending alarm summary email)
 	NX-1523 (Store object creation time)
 	NX-1724 (Implement agent parameters for inode usage)
@@ -42,6 +43,7 @@
 - Improved LLDP based network topology discovery
 - Fixed issues:
 	NX-366 (Generate event if duplicate IP address found)
+	NX-848 (API for modules to register new console commands)
 	NX-910 (System.IO.DiskQueue(*) doesnt support instances for Windows)
 	NX-1030 (Telegram bot integration)
 	NX-1462 (Add "File Policies" to push files/scripts out to agents)
