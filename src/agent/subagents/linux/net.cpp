@@ -402,13 +402,14 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
    if (netlinkSocket == INVALID_SOCKET)
    {
       AgentWriteDebugLog(4, _T("GetInterfaces: failed to open socket"));
-      goto failure_0;
+      return NULL;
    }
 
    int nOne = 1;
    setsockopt(netlinkSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
 
-   sockaddr_nl local = {};
+   sockaddr_nl local;
+   memset(&local, 0, sizeof(local));
    local.nl_family = AF_NETLINK;
    local.nl_pid = getpid();
 
@@ -495,8 +496,6 @@ failure_2:
 
 failure_1:
    close(netlinkSocket);
-
-failure_0:
    return NULL;
 }
 
