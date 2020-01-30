@@ -11478,7 +11478,7 @@ public class NXCSession
       
       if(syncRequired)
       {
-         syncObjectSet(object.getChildIdList(), true, NXCSession.OBJECT_SYNC_WAIT);
+    	  syncMissingObjects(object.getChildIdList(), true, NXCSession.OBJECT_SYNC_WAIT);
       
          synchronized(synchronizedObjectSet)
          {

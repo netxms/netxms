@@ -35,14 +35,16 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	private NXCSession session = null;
 	private long[] rootObjects = null;
 	private AbstractObject loadingObject;
+	private boolean objectFullSync = false;
 	
 	/**
 	 * @param rootObjects
 	 * @param hideNodeComponents 
 	 */
-	public ObjectTreeContentProvider(long[] rootObjects)
+	public ObjectTreeContentProvider(long[] rootObjects, boolean objectFullSync)
 	{
 		super();
+		this.objectFullSync = objectFullSync;
 		if (rootObjects != null)
 		{
 			this.rootObjects = new long[rootObjects.length];
@@ -58,7 +60,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object[] getChildren(Object parentElement)
 	{	         
-      if(!ConsoleSharedData.isFullSync())
+      if(!objectFullSync)
       {
          AbstractObject object = (AbstractObject)parentElement;
          if(object instanceof Node && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))

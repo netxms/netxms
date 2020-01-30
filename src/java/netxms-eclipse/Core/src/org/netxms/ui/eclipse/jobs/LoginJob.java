@@ -126,8 +126,7 @@ public class LoginJob implements IRunnableWithProgress
          
          monitor.setTaskName(Messages.get().LoginJob_sync_objects);
          IDialogSettings settings = ConsoleSharedData.getSettings();
-         boolean fullySync = (settings.get("ObjectBrowser.hideNodeComponents") != null) ? !settings.getBoolean("ObjectBrowser.hideNodeComponents") : false;
-         ConsoleSharedData.setFullSync(fullySync);
+         boolean fullySync = settings.getBoolean("ObjectsFullSync");
          session.syncObjects(fullySync);
          monitor.worked(1);
 

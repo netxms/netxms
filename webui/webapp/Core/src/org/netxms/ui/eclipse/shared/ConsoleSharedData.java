@@ -19,10 +19,13 @@
 package org.netxms.ui.eclipse.shared;
 
 import java.util.TimeZone;
+
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.ClientInfo;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.console.Activator;
 
 /**
  * Compatibility class for RCP plugins
@@ -150,5 +153,13 @@ public class ConsoleSharedData
    public static void setProperty(Display display, final String name, final Object value)
    {
       RWT.getUISession(display).setAttribute("netxms." + name, value);
+   }
+
+   /**
+    * @param trayIcon the trayIcon to set
+    */
+   public static IDialogSettings getSettings()
+   {
+      return Activator.getDefault().getDialogSettings();
    }
 }

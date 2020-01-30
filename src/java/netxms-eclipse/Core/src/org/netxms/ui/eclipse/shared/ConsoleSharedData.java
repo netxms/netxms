@@ -36,7 +36,6 @@ public class ConsoleSharedData
 	private static TimeZone timeZone = null;
 	private static TrayItem trayIcon = null;
 	private static Map<String, Object> consoleProperties = new HashMap<String, Object>(0);
-	private static boolean fullSync;
 	
 	/**
 	 * Get current NetXMS client library session
@@ -145,15 +144,5 @@ public class ConsoleSharedData
    public static IDialogSettings getSettings()
    {
       return Activator.getDefault().getDialogSettings();
-   }
-   
-   public static void setFullSync(boolean fullSync)
-   {
-      ConsoleSharedData.fullSync = fullSync;
-   }
-
-   public static boolean isFullSync()
-   {
-      return fullSync;
    }
 }

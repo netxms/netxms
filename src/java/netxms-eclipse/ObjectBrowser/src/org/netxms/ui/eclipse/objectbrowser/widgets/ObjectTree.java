@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.LocalSelectionTransfer;
@@ -81,44 +82,49 @@ import org.netxms.ui.eclipse.widgets.FilterText;
  */
 public class ObjectTree extends Composite
 {
-	// Options
-	public static final int NONE = 0;
-	public static final int CHECKBOXES = 0x01;
-	public static final int MULTI = 0x02;
+   // Options
+   public static final int NONE = 0;
+   public static final int CHECKBOXES = 0x01;
+   public static final int MULTI = 0x02;
 
-	private boolean filterEnabled = true;
-	private boolean statusIndicatorEnabled = false;
-	private ObjectTreeViewer objectTree;
-	private FilterText filterText;
-	private String tooltip = null;
-	private ObjectFilter filter;
-	private Set<Long> checkedObjects = new HashSet<Long>(0);
-	private SessionListener sessionListener = null;
-	private NXCSession session = null;
-	private RefreshTimer refreshTimer;
-	private ObjectStatusIndicator statusIndicator = null;
-	private SelectionListener statusIndicatorSelectionListener = null;
-	private TreeListener statusIndicatorTreeListener;
-	private Set<ObjectOpenListener> openListeners = new HashSet<ObjectOpenListener>(0);
-	private ObjectTreeContentProvider contentProvider;
-	
-	/**
-	 * @param parent
-	 * @param style
-	 * @param hideNodeComponents 
-	 */
-	public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton)
-	{
-		super(parent, style);
-		
-		session = ConsoleSharedData.getSession();
+   private boolean filterEnabled = true;
+   private boolean statusIndicatorEnabled = false;
+   private ObjectTreeViewer objectTree;
+   private FilterText filterText;
+   private String tooltip = null;
+   private ObjectFilter filter;
+   private Set<Long> checkedObjects = new HashSet<Long>(0);
+   private SessionListener sessionListener = null;
+   private NXCSession session = null;
+   private RefreshTimer refreshTimer;
+   private ObjectStatusIndicator statusIndicator = null;
+   private SelectionListener statusIndicatorSelectionListener = null;
+   private TreeListener statusIndicatorTreeListener;
+   private Set<ObjectOpenListener> openListeners = new HashSet<ObjectOpenListener>(0);
+   private ObjectTreeContentProvider contentProvider;
+   private boolean objectsFullySync;
+
+   /**
+    * @param parent
+    * @param style
+    * @param hideNodeComponents
+    */
+   public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter,
+         boolean showFilterToolTip, boolean showFilterCloseButton)
+   {
+      super(parent, style);
+
+      IDialogSettings settings = ConsoleSharedData.getSettings();
+      objectsFullySync = settings.getBoolean("ObjectsFullSync");
+
+      session = ConsoleSharedData.getSession();
       refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), this, new Runnable() {
          @Override
          public void run()
          {
             if (isDisposed() || objectTree.getControl().isDisposed())
                return;
-            
+
             objectTree.getTree().setRedraw(false);
             objectTree.refresh();
             if (statusIndicatorEnabled)
@@ -127,430 +133,433 @@ public class ObjectTree extends Composite
          }
       });
 
-		FormLayout formLayout = new FormLayout();
-		setLayout(formLayout);
-		if (showFilterToolTip)
-		   tooltip = " > - Search by IP \n # - Search by ID \n / - Search by comment \n @ - Search by Zone ID";
-		// Create filter area
-		filterText = new FilterText(this, SWT.NONE, tooltip, showFilterCloseButton);
-		setupFilterText(true);
-		filterText.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				onFilterModify();
-			}
-		});
-		filterText.setCloseAction(new Action() {
-			@Override
-			public void run()
-			{
-				enableFilter(false);
-			}
-		});
-		
-		// Create object tree control
-		objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE) | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
-		objectTree.setUseHashlookup(true);
-		contentProvider = new ObjectTreeContentProvider(rootObjects);
-		objectTree.setContentProvider(contentProvider);
-		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
-		objectTree.setComparator(new ObjectTreeComparator());
-		filter = new ObjectFilter(rootObjects, null, classFilter);
-		objectTree.addFilter(filter);
-		objectTree.setInput(session);
-		
-		objectTree.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				TreeItem[] items = objectTree.getTree().getSelection();
-				if (items.length == 1)
-				{
-					// Call open handlers. If open event processed by handler, openObject will return true
-					if (!openObject((AbstractObject)items[0].getData()))
-					{
-						objectTree.toggleItemExpandState(items[0]);
-					}
-				}
-			}
-		});
-		
-		objectTree.getControl().addListener(SWT.Selection, new Listener() {
-			void checkItems(TreeItem item, boolean isChecked)
-			{
-				if (item.getData() == null)
-					return;	// filtered out item
-				
-				item.setGrayed(false);
-				item.setChecked(isChecked);
-				Long id = ((AbstractObject)item.getData()).getObjectId();
-				if (isChecked)
-					checkedObjects.add(id);
-				else
-					checkedObjects.remove(id);
-				TreeItem[] items = item.getItems();
-				for(int i = 0; i < items.length; i++)
-					checkItems(items[i], isChecked);
-			}
+      FormLayout formLayout = new FormLayout();
+      setLayout(formLayout);
+      if (showFilterToolTip)
+         tooltip = " > - Search by IP \n # - Search by ID \n / - Search by comment \n @ - Search by Zone ID";
+      // Create filter area
+      filterText = new FilterText(this, SWT.NONE, tooltip, showFilterCloseButton);
+      setupFilterText(true);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
 
-			void checkPath(TreeItem item, boolean checked, boolean grayed)
-			{
-				if (item == null)
-					return;
-				if (grayed)
-				{
-					checked = true;
-				}
-				else
-				{
-					int index = 0;
-					TreeItem[] items = item.getItems();
-					while(index < items.length)
-					{
-						TreeItem child = items[index];
-						if (child.getGrayed() || checked != child.getChecked())
-						{
-							checked = grayed = true;
-							break;
-						}
-						index++;
-					}
-				}
-				item.setChecked(checked);
-				item.setGrayed(grayed);
-				checkPath(item.getParentItem(), checked, grayed);
-			}
+      // Create object tree control
+      objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE)
+            | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0), objectsFullySync);
+      objectTree.setUseHashlookup(true);
+      contentProvider = new ObjectTreeContentProvider(rootObjects, objectsFullySync);
+      objectTree.setContentProvider(contentProvider);
+      objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
+      objectTree.setComparator(new ObjectTreeComparator());
+      filter = new ObjectFilter(rootObjects, null, classFilter);
+      objectTree.addFilter(filter);
+      objectTree.setInput(session);
 
-			@Override
-			public void handleEvent(Event event)
-			{
-				if (event.detail != SWT.CHECK)
-					return;
-				
-				TreeItem item = (TreeItem)event.item;
-				final AbstractObject object = (AbstractObject)item.getData();
-				if (object == null)
-					return;
-				
-				boolean isChecked = item.getChecked();
-				if (isChecked)
-				{
-					objectTree.expandToLevel(object, TreeViewer.ALL_LEVELS);
-				}
-				checkItems(item, isChecked);
-				checkPath(item.getParentItem(), isChecked, false);
-				final Long id = object.getObjectId();
-				if (isChecked)
-					checkedObjects.add(id);
-				else
-					checkedObjects.remove(id);
-			}
-		});
-		
-		// Setup layout
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(filterText);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		objectTree.getTree().setLayoutData(fd);
-		
-		fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		filterText.setLayoutData(fd);
-		
-		// Add client library listener
-		sessionListener = new SessionListener() {
-			@Override
-			public void notificationHandler(SessionNotification n)
-			{
-				if ((n.getCode() == SessionNotification.OBJECT_CHANGED) || (n.getCode() == SessionNotification.OBJECT_DELETED))
-				{
-				   refreshTimer.execute();
-				}
-			}
-		};
-		session.addListener(sessionListener);
-		
-		// Set dispose listener
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				if ((session != null) && (sessionListener != null))
-					session.removeListener(sessionListener);
-			}
-		});
-		
-		// Set initial focus to filter input line
-		if (filterEnabled)
-			filterText.setFocus();
-		else
-			enableFilter(false);	// Will hide filter area correctly
-		
-		enableStatusIndicator(statusIndicatorEnabled);
-	}
-	
-	/**
-	 * Enable drag support in object tree
-	 */
-	public void enableDragSupport()
-	{
-		Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-		objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
-			@Override
-			public void dragStart(DragSourceEvent event)
-			{
-				LocalSelectionTransfer.getTransfer().setSelection(objectTree.getSelection());
-				event.doit = true;
-			}
+      objectTree.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            TreeItem[] items = objectTree.getTree().getSelection();
+            if (items.length == 1)
+            {
+               // Call open handlers. If open event processed by handler, openObject will return true
+               if (!openObject((AbstractObject)items[0].getData()))
+               {
+                  objectTree.toggleItemExpandState(items[0]);
+               }
+            }
+         }
+      });
 
-			@Override
-			public void dragSetData(DragSourceEvent event)
-			{
-				event.data = LocalSelectionTransfer.getTransfer().getSelection();
-			}
-		});
-	}
-	
-	/**
-	 * Setup filter text control
-	 */
-	private void setupFilterText(boolean addListener)
-	{
-	   IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-	   if (ps.getBoolean("ObjectBrowser.useServerFilterSettings"))
-	   {
+      objectTree.getControl().addListener(SWT.Selection, new Listener() {
+         void checkItems(TreeItem item, boolean isChecked)
+         {
+            if (item.getData() == null)
+               return; // filtered out item
+
+            item.setGrayed(false);
+            item.setChecked(isChecked);
+            Long id = ((AbstractObject)item.getData()).getObjectId();
+            if (isChecked)
+               checkedObjects.add(id);
+            else
+               checkedObjects.remove(id);
+            TreeItem[] items = item.getItems();
+            for(int i = 0; i < items.length; i++)
+               checkItems(items[i], isChecked);
+         }
+
+         void checkPath(TreeItem item, boolean checked, boolean grayed)
+         {
+            if (item == null)
+               return;
+            if (grayed)
+            {
+               checked = true;
+            }
+            else
+            {
+               int index = 0;
+               TreeItem[] items = item.getItems();
+               while(index < items.length)
+               {
+                  TreeItem child = items[index];
+                  if (child.getGrayed() || checked != child.getChecked())
+                  {
+                     checked = grayed = true;
+                     break;
+                  }
+                  index++;
+               }
+            }
+            item.setChecked(checked);
+            item.setGrayed(grayed);
+            checkPath(item.getParentItem(), checked, grayed);
+         }
+
+         @Override
+         public void handleEvent(Event event)
+         {
+            if (event.detail != SWT.CHECK)
+               return;
+
+            TreeItem item = (TreeItem)event.item;
+            final AbstractObject object = (AbstractObject)item.getData();
+            if (object == null)
+               return;
+
+            boolean isChecked = item.getChecked();
+            if (isChecked)
+            {
+               objectTree.expandToLevel(object, TreeViewer.ALL_LEVELS);
+            }
+            checkItems(item, isChecked);
+            checkPath(item.getParentItem(), isChecked, false);
+            final Long id = object.getObjectId();
+            if (isChecked)
+               checkedObjects.add(id);
+            else
+               checkedObjects.remove(id);
+         }
+      });
+
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      objectTree.getTree().setLayoutData(fd);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+
+      // Add client library listener
+      sessionListener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if ((n.getCode() == SessionNotification.OBJECT_CHANGED) || (n.getCode() == SessionNotification.OBJECT_DELETED))
+            {
+               refreshTimer.execute();
+            }
+         }
+      };
+      session.addListener(sessionListener);
+
+      // Set dispose listener
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if ((session != null) && (sessionListener != null))
+               session.removeListener(sessionListener);
+         }
+      });
+
+      // Set initial focus to filter input line
+      if (filterEnabled)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
+
+      enableStatusIndicator(statusIndicatorEnabled);
+   }
+
+   /**
+    * Enable drag support in object tree
+    */
+   public void enableDragSupport()
+   {
+      Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+      objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
+         @Override
+         public void dragStart(DragSourceEvent event)
+         {
+            LocalSelectionTransfer.getTransfer().setSelection(objectTree.getSelection());
+            event.doit = true;
+         }
+
+         @Override
+         public void dragSetData(DragSourceEvent event)
+         {
+            event.data = LocalSelectionTransfer.getTransfer().getSelection();
+         }
+      });
+   }
+
+   /**
+    * Setup filter text control
+    */
+   private void setupFilterText(boolean addListener)
+   {
+      IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+      if (ps.getBoolean("ObjectBrowser.useServerFilterSettings"))
+      {
          filterText.setAutoApply(session.getClientConfigurationHintAsBoolean("ObjectBrowser.AutoApplyFilter", true));
          filterText.setDelay(session.getClientConfigurationHintAsInt("ObjectBrowser.FilterDelay", 300));
          filterText.setMinLength(session.getClientConfigurationHintAsInt("ObjectBrowser.MinFilterStringLength", 1));
-	   }
-	   else
-	   {
+      }
+      else
+      {
          filterText.setAutoApply(ps.getBoolean("ObjectBrowser.filterAutoApply"));
          filterText.setDelay(ps.getInt("ObjectBrowser.filterDelay"));
          filterText.setMinLength(ps.getInt("ObjectBrowser.filterMinLength"));
-	   }
-	   if (addListener)
-	   {
-   	   ps.addPropertyChangeListener(new IPropertyChangeListener() {
+      }
+      if (addListener)
+      {
+         ps.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent event)
             {
-               if (event.getProperty().equals("ObjectBrowser.useServerFilterSettings") ||
-                   event.getProperty().equals("ObjectBrowser.filterAutoApply") ||
-                   event.getProperty().equals("ObjectBrowser.filterDelay") ||
-                   event.getProperty().equals("ObjectBrowser.filterMinLength"))
+               if (event.getProperty().equals("ObjectBrowser.useServerFilterSettings")
+                     || event.getProperty().equals("ObjectBrowser.filterAutoApply")
+                     || event.getProperty().equals("ObjectBrowser.filterDelay")
+                     || event.getProperty().equals("ObjectBrowser.filterMinLength"))
                {
                   setupFilterText(false);
                }
             }
          });
-	   }
-	}
-	
-	/**
-	 * Get underlying tree control
-	 * 
-	 * @return Underlying tree control
-	 */
-	public Tree getTreeControl()
-	{
-		return objectTree.getTree();
-	}
-		
-	/**
-	 * Get underlying tree viewer
-	 *
-	 * @return Underlying tree viewer
-	 */
-	public TreeViewer getTreeViewer()
-	{
-		return objectTree;
-	}
-	
-	/**
-	 * Enable or disable filter
-	 * 
-	 * @param enable New filter state
-	 */
-	public void enableFilter(boolean enable)
-	{
-		filterEnabled = enable;
-		filterText.setVisible(filterEnabled);
-		FormData fd = (FormData)objectTree.getTree().getLayoutData();
-		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-		if (statusIndicatorEnabled)
-		{
-			fd = (FormData)statusIndicator.getLayoutData();
-			fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-		}
-		layout();
-		if (enable)
-			filterText.setFocus();
-		else
-			setFilter(""); //$NON-NLS-1$
-	}
+      }
+   }
 
-	/**
-	 * @return the filterEnabled
-	 */
-	public boolean isFilterEnabled()
-	{
-		return filterEnabled;
-	}
-	
-	/**
-	 * Set filter text
-	 * 
-	 * @param text New filter text
-	 */
-	public void setFilter(final String text)
-	{
-		filterText.setText(text);
-		onFilterModify();
-	}
+   /**
+    * Get underlying tree control
+    * 
+    * @return Underlying tree control
+    */
+   public Tree getTreeControl()
+   {
+      return objectTree.getTree();
+   }
 
-	/**
-	 * Get filter text
-	 * 
-	 * @return Current filter text
-	 */
-	public String getFilter()
-	{
-		return filterText.getText();
-	}
+   /**
+    * Get underlying tree viewer
+    *
+    * @return Underlying tree viewer
+    */
+   public TreeViewer getTreeViewer()
+   {
+      return objectTree;
+   }
 
-	/**
-	 * @return IDs of objects checked in the tree
-	 */
-	public Long[] getCheckedObjects()
-	{
-		return checkedObjects.toArray(new Long[checkedObjects.size()]);
-	}
-	
-	/**
-	 * Get selected object
-	 * 
-	 * @return ID of selected object or 0 if no objects selected
-	 */
-	public long getFirstSelectedObject()
-	{
-		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
-		if (selection.isEmpty())
-			return 0;
-		return ((AbstractObject)selection.getFirstElement()).getObjectId();
-	}
-	
-	/**
-	 * Get all selected objects
-	 * 
-	 * @return ID of selected object or 0 if no objects selected
-	 */
-	public Long[] getSelectedObjects()
-	{
-		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
-		Set<Long> objects = new HashSet<Long>(selection.size());
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)objectTree.getTree().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      if (statusIndicatorEnabled)
+      {
+         fd = (FormData)statusIndicator.getLayoutData();
+         fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      }
+      layout();
+      if (enable)
+         filterText.setFocus();
+      else
+         setFilter(""); //$NON-NLS-1$
+   }
+
+   /**
+    * @return the filterEnabled
+    */
+   public boolean isFilterEnabled()
+   {
+      return filterEnabled;
+   }
+
+   /**
+    * Set filter text
+    * 
+    * @param text New filter text
+    */
+   public void setFilter(final String text)
+   {
+      filterText.setText(text);
+      onFilterModify();
+   }
+
+   /**
+    * Get filter text
+    * 
+    * @return Current filter text
+    */
+   public String getFilter()
+   {
+      return filterText.getText();
+   }
+
+   /**
+    * @return IDs of objects checked in the tree
+    */
+   public Long[] getCheckedObjects()
+   {
+      return checkedObjects.toArray(new Long[checkedObjects.size()]);
+   }
+
+   /**
+    * Get selected object
+    * 
+    * @return ID of selected object or 0 if no objects selected
+    */
+   public long getFirstSelectedObject()
+   {
+      IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+      if (selection.isEmpty())
+         return 0;
+      return ((AbstractObject)selection.getFirstElement()).getObjectId();
+   }
+
+   /**
+    * Get all selected objects
+    * 
+    * @return ID of selected object or 0 if no objects selected
+    */
+   public Long[] getSelectedObjects()
+   {
+      IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+      Set<Long> objects = new HashSet<Long>(selection.size());
       Iterator<?> it = selection.iterator();
-		while(it.hasNext())
-		{
-			objects.add(((AbstractObject)it.next()).getObjectId());
-		}
-		return objects.toArray(new Long[objects.size()]);
-	}
-	
-	/**
-	 * Get selected object as object
-	 * 
-	 * @return
-	 */
-	public AbstractObject getFirstSelectedObject2()
-	{
-		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
-		return (AbstractObject)selection.getFirstElement();
-	}
-	
-	/**
-	 * Refresh object tree
-	 */
-	public void refresh()
-	{
-		objectTree.setInput(session);
-	}
+      while(it.hasNext())
+      {
+         objects.add(((AbstractObject)it.next()).getObjectId());
+      }
+      return objects.toArray(new Long[objects.size()]);
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
-	 */
-	@Override
-	public void setEnabled(boolean enabled)
-	{
-		super.setEnabled(enabled);
-		objectTree.getControl().setEnabled(enabled);
-		filterText.setEnabled(enabled);
-	}
+   /**
+    * Get selected object as object
+    * 
+    * @return
+    */
+   public AbstractObject getFirstSelectedObject2()
+   {
+      IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+      return (AbstractObject)selection.getFirstElement();
+   }
 
-	/**
-	 * Handler for filter modification
-	 */
-	private void onFilterModify()
-	{
-		final String text = filterText.getText();
-		filter.setFilterString(text);
-		AbstractObject obj = filter.getLastMatch();
-		if (obj != null)
-		{
-			objectTree.setSelection(new StructuredSelection(obj), true);
-			AbstractObject parent = filter.getParent(obj);
-			if (parent != null)
-				objectTree.expandToLevel(parent, 1);
-			objectTree.reveal(obj);
-			if (statusIndicatorEnabled)
-				updateStatusIndicator();
-		}
-		objectTree.refresh(false);
-	}
+   /**
+    * Refresh object tree
+    */
+   public void refresh()
+   {
+      objectTree.setInput(session);
+   }
 
-	/**
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+    */
+   @Override
+   public void setEnabled(boolean enabled)
+   {
+      super.setEnabled(enabled);
+      objectTree.getControl().setEnabled(enabled);
+      filterText.setEnabled(enabled);
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      AbstractObject obj = filter.getLastMatch();
+      if (obj != null)
+      {
+         objectTree.setSelection(new StructuredSelection(obj), true);
+         AbstractObject parent = filter.getParent(obj);
+         if (parent != null)
+            objectTree.expandToLevel(parent, 1);
+         objectTree.reveal(obj);
+         if (statusIndicatorEnabled)
+            updateStatusIndicator();
+      }
+      objectTree.refresh(false);
+   }
+
+   /**
     * @return true if unmanaged objects are hidden
-	 */
-	public boolean isHideUnmanaged()
-	{
-		return filter.isHideUnmanaged();
-	}
+    */
+   public boolean isHideUnmanaged()
+   {
+      return filter.isHideUnmanaged();
+   }
 
-	/**
-	 * Show/hide unmanaged objects
-	 * 
-	 * @param hide true to hide unmanaged objects
-	 */
-	public void setHideUnmanaged(boolean hide)
-	{
-		filter.setHideUnmanaged(hide);
-		onFilterModify();
-	}
+   /**
+    * Show/hide unmanaged objects
+    * 
+    * @param hide true to hide unmanaged objects
+    */
+   public void setHideUnmanaged(boolean hide)
+   {
+      filter.setHideUnmanaged(hide);
+      onFilterModify();
+   }
 
-	/**
+   /**
     * @return true if template checks are hidden
-	 */
-	public boolean isHideTemplateChecks()
-	{
-		return filter.isHideTemplateChecks();
-	}
+    */
+   public boolean isHideTemplateChecks()
+   {
+      return filter.isHideTemplateChecks();
+   }
 
-	/**
+   /**
     * Show/hide service check template objects
     * 
     * @param hide true to hide service check template objects
-	 */
-	public void setHideTemplateChecks(boolean hide)
-	{
-		filter.setHideTemplateChecks(hide);
-		onFilterModify();
-	}
-	
+    */
+   public void setHideTemplateChecks(boolean hide)
+   {
+      filter.setHideTemplateChecks(hide);
+      onFilterModify();
+   }
+
    /**
     * @return true if sub-interfaces are hidden
     */
@@ -569,185 +578,186 @@ public class ObjectTree extends Composite
       filter.setHideSubInterfaces(hide);
       onFilterModify();
    }
-   
-	/**
-	 * Set action to be executed when user press "Close" button in object filter.
-	 * Default implementation will hide filter area without notifying parent.
-	 * 
-	 * @param action
-	 */
-	public void setFilterCloseAction(Action action)
-	{
-		filterText.setCloseAction(action);
-	}
-	
-	/**
-	 * @param enabled
-	 */
-	public void enableStatusIndicator(boolean enabled)
-	{
-		if (statusIndicatorEnabled == enabled)
-			return;
-		
-		statusIndicatorEnabled = enabled;
-		if (enabled)
-		{
-			statusIndicator = new ObjectStatusIndicator(this, SWT.NONE);
-			FormData fd = new FormData();
-			fd.left = new FormAttachment(0, 0);
-			fd.top = filterEnabled ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-			fd.bottom = new FormAttachment(100, 0);
-			statusIndicator.setLayoutData(fd);
-			
-			fd = (FormData)objectTree.getTree().getLayoutData();
-			fd.left = new FormAttachment(statusIndicator);
-			
-			statusIndicatorSelectionListener = new SelectionListener() {
-				@Override
-				public void widgetSelected(SelectionEvent e)
-				{
-					updateStatusIndicator();
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					updateStatusIndicator();
-				}
-			};
-			objectTree.getTree().getVerticalBar().addSelectionListener(statusIndicatorSelectionListener);
-			
-			statusIndicatorTreeListener = new TreeListener() {
-				@Override
-				public void treeCollapsed(TreeEvent e)
-				{
-					updateStatusIndicator();
-				}
 
-				@Override
-				public void treeExpanded(TreeEvent e)
-				{
-					updateStatusIndicator();
-				}
-			};
-			objectTree.getTree().addTreeListener(statusIndicatorTreeListener);
-			
-			updateStatusIndicator();
-		}
-		else
-		{
-			objectTree.getTree().getVerticalBar().removeSelectionListener(statusIndicatorSelectionListener);
-			objectTree.getTree().removeTreeListener(statusIndicatorTreeListener);
-			statusIndicator.dispose();
-			statusIndicator = null;
-			statusIndicatorSelectionListener = null;
-			statusIndicatorTreeListener = null;
+   /**
+    * Set action to be executed when user press "Close" button in object filter. Default implementation will hide filter area
+    * without notifying parent.
+    * 
+    * @param action
+    */
+   public void setFilterCloseAction(Action action)
+   {
+      filterText.setCloseAction(action);
+   }
 
-			FormData fd = (FormData)objectTree.getTree().getLayoutData();
-			fd.left = new FormAttachment(0, 0);
-		}
-		layout(true, true);
-	}
-	
-	/**
-	 * @return
-	 */
-	public boolean isStatusIndicatorEnabled()
-	{
-		return statusIndicatorEnabled;
-	}
+   /**
+    * @param enabled
+    */
+   public void enableStatusIndicator(boolean enabled)
+   {
+      if (statusIndicatorEnabled == enabled)
+         return;
 
-	/**
-	 * Update status indicator
-	 */
-	private void updateStatusIndicator()
-	{
-		statusIndicator.refresh(objectTree);
-	}
-	
-	/**
-	 * @param rootObjects
-	 */
-	public void setRootObjects(long[] rootObjects)
-	{
-		((ObjectTreeContentProvider)objectTree.getContentProvider()).setRootObjects(rootObjects);
-		filter.setRootObjects(rootObjects);
-		refresh();
-	}
-	
-	/**
-	 * @param listener
-	 */
-	public void addOpenListener(ObjectOpenListener listener)
-	{
-		openListeners.add(listener);
-	}
-	
-	/**
-	 * @param listener
-	 */
-	public void removeOpenListener(ObjectOpenListener listener)
-	{
-		openListeners.remove(listener);
-	}
-	
-	/**
-	 * Open selected object
-	 * 
-	 * @param object
-	 * @return
-	 */
-	private boolean openObject(AbstractObject object)
-	{
-		for(ObjectOpenListener l : openListeners)
-			if (l.openObject(object))
-				return true;
-		return false;
-	}
-	
-	/**
+      statusIndicatorEnabled = enabled;
+      if (enabled)
+      {
+         statusIndicator = new ObjectStatusIndicator(this, SWT.NONE);
+         FormData fd = new FormData();
+         fd.left = new FormAttachment(0, 0);
+         fd.top = filterEnabled ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+         fd.bottom = new FormAttachment(100, 0);
+         statusIndicator.setLayoutData(fd);
+
+         fd = (FormData)objectTree.getTree().getLayoutData();
+         fd.left = new FormAttachment(statusIndicator);
+
+         statusIndicatorSelectionListener = new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               updateStatusIndicator();
+            }
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               updateStatusIndicator();
+            }
+         };
+         objectTree.getTree().getVerticalBar().addSelectionListener(statusIndicatorSelectionListener);
+
+         statusIndicatorTreeListener = new TreeListener() {
+            @Override
+            public void treeCollapsed(TreeEvent e)
+            {
+               updateStatusIndicator();
+            }
+
+            @Override
+            public void treeExpanded(TreeEvent e)
+            {
+               updateStatusIndicator();
+            }
+         };
+         objectTree.getTree().addTreeListener(statusIndicatorTreeListener);
+
+         updateStatusIndicator();
+      }
+      else
+      {
+         objectTree.getTree().getVerticalBar().removeSelectionListener(statusIndicatorSelectionListener);
+         objectTree.getTree().removeTreeListener(statusIndicatorTreeListener);
+         statusIndicator.dispose();
+         statusIndicator = null;
+         statusIndicatorSelectionListener = null;
+         statusIndicatorTreeListener = null;
+
+         FormData fd = (FormData)objectTree.getTree().getLayoutData();
+         fd.left = new FormAttachment(0, 0);
+      }
+      layout(true, true);
+   }
+
+   /**
+    * @return
+    */
+   public boolean isStatusIndicatorEnabled()
+   {
+      return statusIndicatorEnabled;
+   }
+
+   /**
+    * Update status indicator
+    */
+   private void updateStatusIndicator()
+   {
+      statusIndicator.refresh(objectTree);
+   }
+
+   /**
+    * @param rootObjects
+    */
+   public void setRootObjects(long[] rootObjects)
+   {
+      ((ObjectTreeContentProvider)objectTree.getContentProvider()).setRootObjects(rootObjects);
+      filter.setRootObjects(rootObjects);
+      refresh();
+   }
+
+   /**
+    * @param listener
+    */
+   public void addOpenListener(ObjectOpenListener listener)
+   {
+      openListeners.add(listener);
+   }
+
+   /**
+    * @param listener
+    */
+   public void removeOpenListener(ObjectOpenListener listener)
+   {
+      openListeners.remove(listener);
+   }
+
+   /**
+    * Open selected object
+    * 
+    * @param object
+    * @return
+    */
+   private boolean openObject(AbstractObject object)
+   {
+      for(ObjectOpenListener l : openListeners)
+         if (l.openObject(object))
+            return true;
+      return false;
+   }
+
+   /**
     * Enable drop support in object tree
     */
-   public void enableDropSupport(final ObjectBrowser obj)//SubtreeType infrastructure
-   {      
+   public void enableDropSupport(final ObjectBrowser obj)// SubtreeType infrastructure
+   {
       final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
       objectTree.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(objectTree) {
-         
+
          int operation = 0;
-         
+
          @Override
-         public boolean performDrop(Object data) 
+         public boolean performDrop(Object data)
          {
             TreeSelection selection = (TreeSelection)data;
             List<?> movableSelection = selection.toList();
-            for (int i = 0; i < movableSelection.size(); i++)
+            for(int i = 0; i < movableSelection.size(); i++)
             {
                AbstractObject movableObject = (AbstractObject)movableSelection.get(i);
                TreePath path = selection.getPaths()[0];
                AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
-               obj.performObjectMove((AbstractObject)getCurrentTarget(), parent, movableObject, operation == DND.DROP_MOVE ? true : false);
+               obj.performObjectMove((AbstractObject)getCurrentTarget(), parent, movableObject,
+                     operation == DND.DROP_MOVE ? true : false);
             }
             return true;
          }
 
-			@Override
+         @Override
          public boolean validateDrop(Object target, int operation, TransferData transferType)
          {
-			   this.operation = operation;
+            this.operation = operation;
             if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
                return false;
 
             IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
             if (selection.isEmpty())
                return false;
-            
+
             for(final Object object : selection.toList())
             {
                SubtreeType subtree = null;
-               if ((object instanceof AbstractObject)) 
+               if ((object instanceof AbstractObject))
                {
                   if (obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
-                    subtree = SubtreeType.INFRASTRUCTURE;
+                     subtree = SubtreeType.INFRASTRUCTURE;
                   else if (obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
                      subtree = SubtreeType.TEMPLATES;
                   else if (obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
@@ -759,10 +769,10 @@ public class ObjectTree extends Composite
                   else if (obj.isValidSelectionForMove(SubtreeType.POLICIES))
                      subtree = SubtreeType.POLICIES;
                }
-               
+
                if (subtree == null)
-               	return false;
-               
+                  return false;
+
                Set<Integer> filter;
                switch(subtree)
                {
@@ -776,7 +786,7 @@ public class ObjectTree extends Composite
                      filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
                      break;
                   case DASHBOARDS:
-                     if(object instanceof DashboardGroup)
+                     if (object instanceof DashboardGroup)
                         filter = ObjectSelectionDialog.createDashboardGroupSelectionFilter();
                      else
                         filter = ObjectSelectionDialog.createDashboardSelectionFilter();
@@ -793,16 +803,15 @@ public class ObjectTree extends Composite
                }
 
                if ((filter == null) || !filter.contains(((AbstractObject)target).getObjectClass()) || target.equals(object))
-                  return false;   
+                  return false;
             }
             return true;
          }
       });
    }
-   
+
    /**
-    * Disables refresh option in RefreshTimer class.
-    * Is used for object name edit.  
+    * Disables refresh option in RefreshTimer class. Is used for object name edit.
     */
    public void disableRefresh()
    {
@@ -810,8 +819,7 @@ public class ObjectTree extends Composite
    }
 
    /**
-    * Enables refresh option in RefreshTimer class.  
-    * Is used for object name edit. 
+    * Enables refresh option in RefreshTimer class. Is used for object name edit.
     */
    public void enableRefresh()
    {

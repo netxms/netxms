@@ -206,7 +206,7 @@ public class InterfacesTab extends NodeComponentTab
   public void objectChanged(final AbstractObject object)
   {
      labelProvider.setNode((AbstractNode)object);
-     refresh();
+     super.objectChanged(object);
   }
 
    /**

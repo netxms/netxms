@@ -25,8 +25,6 @@ import java.util.Set;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -301,9 +299,8 @@ public class ObjectSelectionDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 
-		boolean checked = (settings.get("SelectObject.hideNodeComponents") != null) ? settings.getBoolean("SelectObject.hideNodeComponents") : true; //$NON-NLS-1$  
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton, false);
-		objectTree.setHideNodeComponent(checked);
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton);
+
 		
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
@@ -315,29 +312,6 @@ public class ObjectSelectionDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.grabExcessVerticalSpace = true;
 		objectTree.setLayoutData(gd); 
-		    
-		checkHideNodeComponents = new Button(dialogArea, SWT.CHECK);
-		checkHideNodeComponents.setText("Hide node components");
-		checkHideNodeComponents.setSelection(checked);
-		checkHideNodeComponents.addSelectionListener(new SelectionListener() {
-         
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            objectTree.setHideNodeComponent(checkHideNodeComponents.getSelection());           
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);            
-         }
-      });		
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.CENTER;
-      gd.grabExcessHorizontalSpace = true;
-		checkHideNodeComponents.setLayoutData(gd);
 
 		return dialogArea;
 	}

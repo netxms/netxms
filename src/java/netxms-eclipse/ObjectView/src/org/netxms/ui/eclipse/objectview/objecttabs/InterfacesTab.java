@@ -184,7 +184,7 @@ public class InterfacesTab extends NodeComponentTab
 	public void refresh()
 	{
 		if (getObject() != null)
-	      viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
+			viewer.setInput(getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE).toArray());
 		else
 			viewer.setInput(new Interface[0]);
 	}

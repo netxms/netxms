@@ -38,15 +38,18 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ObjectTreeViewer extends TreeViewer
 {
    private NXCSession session;
+   private boolean objectsFullySync;
    
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectTreeViewer(Composite parent, int style)
+	public ObjectTreeViewer(Composite parent, int style, boolean objectsFullySync)
 	{
 		super(parent, style);
 		session = ConsoleSharedData.getSession();
+		this.objectsFullySync = objectsFullySync;
+      		
 		setComparer(new IElementComparer() {
          @Override
          public int hashCode(Object element)
@@ -108,7 +111,7 @@ public class ObjectTreeViewer extends TreeViewer
     */
    private void checkAndSyncChildren(AbstractObject object)
    {
-      if(!ConsoleSharedData.isFullSync())
+      if(!objectsFullySync)
       {
          if(object instanceof Node && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
          {
@@ -122,7 +125,7 @@ public class ObjectTreeViewer extends TreeViewer
     * 
     * @param object 
     */
-   private void syncChildren(AbstractObject object)
+   private void syncChildren(final AbstractObject object)
    {
       ConsoleJob job = new ConsoleJob("Synchronize node components", null, Activator.PLUGIN_ID, null) {
          @Override

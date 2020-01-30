@@ -33,12 +33,12 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
@@ -82,6 +82,7 @@ public abstract class NodeComponentTab extends ObjectTab
    protected NodeComponentTabFilter filter;
    protected Composite mainArea;
    private NXCSession session;
+   private boolean objectsFullySync;
 
    /*
     * (non-Javadoc)
@@ -94,8 +95,10 @@ public abstract class NodeComponentTab extends ObjectTab
       session = ConsoleSharedData.getSession();
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       showFilter = safeCast(settings.get(getFilterSettingName()), settings.getBoolean(getFilterSettingName()), showFilter); // $NON-NLS-1$
-                                                                                                                            // //$NON-NLS-2$
 
+      IDialogSettings coreSettings = ConsoleSharedData.getSettings();
+      objectsFullySync = coreSettings.getBoolean("ObjectsFullSync");    
+      
       // Create VPN area
       mainArea = new Composite(parent, SWT.BORDER);
       FormLayout formLayout = new FormLayout();
@@ -420,7 +423,7 @@ public abstract class NodeComponentTab extends ObjectTab
     */
    private void checkAndSyncChildren(AbstractObject object)
    {
-      if (!ConsoleSharedData.isFullSync() && isActive())
+      if (!objectsFullySync && isActive())
       {
          if (object instanceof Node && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
          {
@@ -436,13 +439,19 @@ public abstract class NodeComponentTab extends ObjectTab
     */
    private void syncChildren(AbstractObject object)
    {
-      final Label label = new Label(mainArea, SWT.CENTER);
-      label.setText("Loading...");
+      final Composite label = new Composite(mainArea, SWT.NONE);
+      label.setLayout(new GridLayout());
+      label.setBackground(label.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+      
+      Label labelText = new Label(label, SWT.CENTER);
+      labelText.setText("Loading...");
+      labelText.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));      
+      labelText.setBackground(label.getBackground());
+      
       label.moveAbove(null);
-      label.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top =  showFilter ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
+      fd.top =  new FormAttachment(0, 0);
       fd.bottom = new FormAttachment(100, 0);
       fd.right = new FormAttachment(100, 0);
       label.setLayoutData(fd);
@@ -452,7 +461,6 @@ public abstract class NodeComponentTab extends ObjectTab
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            Thread.sleep(5000);
             session.syncChildren(object);
             runInUIThread(new Runnable() {
                @Override

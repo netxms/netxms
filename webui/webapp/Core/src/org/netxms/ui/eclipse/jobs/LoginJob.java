@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
@@ -127,7 +128,9 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(40);
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_objects);
-         session.syncObjects();
+         IDialogSettings settings = ConsoleSharedData.getSettings();
+         boolean fullySync = settings.getBoolean("ObjectsFullSync");
+         session.syncObjects(fullySync);
          monitor.worked(25);
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_users);

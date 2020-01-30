@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.objectview.objecttabs.helpers;
 
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.State;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -34,18 +36,27 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
+import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -54,30 +65,38 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public abstract class NodeComponentTab extends ObjectTab
 {
-	public static final int COLUMN_ID = 0;
-	public static final int COLUMN_NAME = 1;
+   public static final int COLUMN_ID = 0;
+   public static final int COLUMN_NAME = 1;
    public static final int COLUMN_STATUS = 2;
-	public static final int COLUMN_PEER_GATEWAY = 3;
-	public static final int COLUMN_LOCAL_SUBNETS = 4;
-	public static final int COLUMN_REMOTE_SUBNETS = 5;
+   public static final int COLUMN_PEER_GATEWAY = 3;
+   public static final int COLUMN_LOCAL_SUBNETS = 4;
+   public static final int COLUMN_REMOTE_SUBNETS = 5;
 
-	protected SortableTableViewer viewer;
-	protected SessionListener sessionListener = null;
-	protected Action actionExportToCsv;
-	
-	protected boolean showFilter = true;
-	protected FilterText filterText;
-	protected NodeComponentTabFilter filter;
-	protected Composite mainArea;
+   protected SortableTableViewer viewer;
+   protected SessionListener sessionListener = null;
+   protected Action actionExportToCsv;
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	protected void createTabContent(Composite parent)
-	{
-	   final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      showFilter = safeCast(settings.get(getFilterSettingName()), settings.getBoolean(getFilterSettingName()), showFilter); //$NON-NLS-1$ //$NON-NLS-2$
+   protected boolean showFilter = true;
+   protected FilterText filterText;
+   protected NodeComponentTabFilter filter;
+   protected Composite mainArea;
+   private NXCSession session;
+   private boolean objectsFullySync;
+
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createTabContent(Composite parent)
+   {
+      session = ConsoleSharedData.getSession();
+      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      showFilter = safeCast(settings.get(getFilterSettingName()), settings.getBoolean(getFilterSettingName()), showFilter); // $NON-NLS-1$
+
+      IDialogSettings coreSettings = ConsoleSharedData.getSettings();
+      objectsFullySync = coreSettings.getBoolean("ObjectsFullSync");    
       
       // Create VPN area
       mainArea = new Composite(parent, SWT.BORDER);
@@ -97,10 +116,10 @@ public abstract class NodeComponentTab extends ObjectTab
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            settings.put(getFilterSettingName(), showFilter); //$NON-NLS-1$
+            settings.put(getFilterSettingName(), showFilter); // $NON-NLS-1$
          }
       });
-      
+
       Action action = new Action() {
          @Override
          public void run()
@@ -115,7 +134,6 @@ public abstract class NodeComponentTab extends ObjectTab
       };
       setFilterCloseAction(action);
 
-      
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -123,7 +141,7 @@ public abstract class NodeComponentTab extends ObjectTab
       fd.right = new FormAttachment(100, 0);
       filterText.setLayoutData(fd);
 
-      createViewer();      
+      createViewer();
       createActions();
       createPopupMenu();
 
@@ -132,7 +150,7 @@ public abstract class NodeComponentTab extends ObjectTab
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
-      
+
       sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -140,7 +158,8 @@ public abstract class NodeComponentTab extends ObjectTab
             if (n.getCode() == SessionNotification.OBJECT_CHANGED)
             {
                AbstractObject object = (AbstractObject)n.getObject();
-               if ((object != null) && needRefreshOnObjectChange(object) && (getObject() != null) && object.isDirectChildOf(getObject().getObjectId()))
+               if ((object != null) && needRefreshOnObjectChange(object) && (getObject() != null)
+                     && object.isDirectChildOf(getObject().getObjectId()))
                {
                   viewer.getControl().getDisplay().asyncExec(new Runnable() {
                      @Override
@@ -155,31 +174,31 @@ public abstract class NodeComponentTab extends ObjectTab
       };
       ConsoleSharedData.getSession().addListener(sessionListener);
    }
-	
-	/**
-	 * Create filter control
-	 * 
-	 * @return filter control
-	 */
-	protected FilterText createFilterText()
-	{
-	   return new FilterText(mainArea, SWT.NONE);
-	}
-	
-	/**
-	 * Returns created viewer
-	 * 
-	 * @return viewer
-	 */
-	protected abstract void createViewer();
 
    /**
-	 * Return filter setting name
-	 * 
-	 * @return filter setting name
-	 */
-	public abstract String getFilterSettingName();
-   
+    * Create filter control
+    * 
+    * @return filter control
+    */
+   protected FilterText createFilterText()
+   {
+      return new FilterText(mainArea, SWT.NONE);
+   }
+
+   /**
+    * Returns created viewer
+    * 
+    * @return viewer
+    */
+   protected abstract void createViewer();
+
+   /**
+    * Return filter setting name
+    * 
+    * @return filter setting name
+    */
+   public abstract String getFilterSettingName();
+
    /**
     * Returns if view should be updated depending on provided object
     * 
@@ -187,8 +206,10 @@ public abstract class NodeComponentTab extends ObjectTab
     * @return if tab should be refreshed
     */
    public abstract boolean needRefreshOnObjectChange(AbstractObject object);
-	
-	/* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#dispose()
     */
    @Override
@@ -251,65 +272,71 @@ public abstract class NodeComponentTab extends ObjectTab
       filter.setFilterString(text);
       viewer.refresh(false);
    }
-	
-	/**
-	 * Create actions
-	 */
-	protected void createActions()
-	{		
-		actionExportToCsv = new ExportToCsvAction(getViewPart(), viewer, true);
-	}
-	
-	/**
-	 * Create pop-up menu
-	 */
-	protected void createPopupMenu()
-	{
-		// Create menu manager.
-		MenuManager menuMgr = new MenuManager();
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager)
-			{
-				fillContextMenu(manager);
-			}
-		});
 
-		// Create menu.
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+   /**
+    * Create actions
+    */
+   protected void createActions()
+   {
+      actionExportToCsv = new ExportToCsvAction(getViewPart(), viewer, true);
+   }
 
-		// Register menu for extension.
-		if (getViewPart() != null)
-			getViewPart().getSite().registerContextMenu(menuMgr, viewer);
-	}
-	
+   /**
+    * Create pop-up menu
+    */
+   protected void createPopupMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager manager)
+         {
+            fillContextMenu(manager);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
+
+      // Register menu for extension.
+      if (getViewPart() != null)
+         getViewPart().getSite().registerContextMenu(menuMgr, viewer);
+   }
 
    /**
     * Fill context menu
+    * 
     * @param mgr Menu manager
     */
    protected abstract void fillContextMenu(IMenuManager manager);
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#currentObjectUpdated(org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	public void currentObjectUpdated(AbstractObject object)
-	{
-		objectChanged(object);
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#currentObjectUpdated(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   public void currentObjectUpdated(AbstractObject object)
+   {
+      objectChanged(object);
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	public boolean showForObject(AbstractObject object)
-	{
-		return (object instanceof AbstractNode);
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   public boolean showForObject(AbstractObject object)
+   {
+      return (object instanceof AbstractNode);
+   }
 
-	/* (non-Javadoc)
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#getSelectionProvider()
     */
    @Override
@@ -317,8 +344,10 @@ public abstract class NodeComponentTab extends ObjectTab
    {
       return viewer;
    }
-	
-	/* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
     */
    @Override
@@ -332,6 +361,7 @@ public abstract class NodeComponentTab extends ObjectTab
       state.setValue(showFilter);
       service.refreshElements(command.getId(), null);
       
+      checkAndSyncChildren(getObject());
       super.selected();
       refresh();
    }
@@ -339,6 +369,74 @@ public abstract class NodeComponentTab extends ObjectTab
    @Override
    public void objectChanged(AbstractObject object)
    {
+      checkAndSyncChildren(object);
       refresh();
+   }
+   
+   /**
+    * Check is child objects are synchronized and synchronize if needed
+    * 
+    * @param object current object
+    */
+   private void checkAndSyncChildren(AbstractObject object)
+   {
+      if (!objectsFullySync && isActive())
+      {
+         if (object instanceof Node && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
+         {
+            syncChildren(object);
+         }
+      }      
+   }
+
+   /**
+    * Sync object children form server
+    * 
+    * @param object current object
+    */
+   private void syncChildren(AbstractObject object)
+   {
+      final Composite label = new Composite(mainArea, SWT.NONE);
+      label.setLayout(new GridLayout());
+      label.setBackground(label.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+      
+      Label labelText = new Label(label, SWT.CENTER);
+      labelText.setText("Loading...");
+      labelText.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));      
+      labelText.setBackground(label.getBackground());
+      
+      label.moveAbove(null);
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top =  new FormAttachment(0, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      label.setLayoutData(fd);
+      mainArea.layout();
+      
+      ConsoleJob job = new ConsoleJob("Synchronize node components", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.syncChildren(object);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  refresh();
+                  label.dispose();
+                  mainArea.layout();                  
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize node components";
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 }
