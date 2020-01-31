@@ -254,7 +254,7 @@ static int GetFileSetInfo(AgentConnection *conn, int argc, char **argv)
    }
 
    ObjectArray<RemoteFileInfo> *info;
-   UINT32 rcc = conn->getFileSetInfo(fileSet, &info);
+   UINT32 rcc = conn->getFileSetInfo(fileSet, true, &info);
    if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < info->size(); i++)

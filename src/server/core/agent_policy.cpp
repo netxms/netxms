@@ -362,7 +362,7 @@ UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSup
       fileRequest.add(files.get(i)->path);
    }
    ObjectArray<RemoteFileInfo> *remoteFiles;
-   UINT32 rcc = conn->getFileSetInfo(&fileRequest, &remoteFiles);
+   UINT32 rcc = conn->getFileSetInfo(&fileRequest, true, &remoteFiles);
    if (rcc != RCC_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): call to AgentConnection::getFileSetInfo failed (%s)"), debugId, AgentErrorCodeToText(rcc));
@@ -383,7 +383,7 @@ UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSup
       if (CalculateFileMD5Hash(localFile, localHash) && ((remoteFile->status() == ERR_FILE_STAT_FAILED) || memcmp(localHash, remoteFile->hash(), MD5_DIGEST_SIZE)))
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): uploading %s"), debugId, files.get(i)->path);
-         rcc = conn->uploadFile(localFile, remoteFile->name());
+         rcc = conn->uploadFile(localFile, remoteFile->name(), true);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed (%s)"), debugId, AgentErrorCodeToText(rcc));
       }
    }

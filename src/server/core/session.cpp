@@ -13697,6 +13697,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
             AgentConnection *conn = node->createAgentConnection();
             if (conn != NULL)
             {
+               request->setField(VID_ALLOW_PATH_EXPANSION, false);   // explicitly disable path expansion
                conn->sendMessage(request);
                response = conn->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 10000);
                if (response != NULL)
@@ -13750,12 +13751,14 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	if(rcc == RCC_ACCESS_DENIED)
+	if (rcc == RCC_ACCESS_DENIED)
+	{
       WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
-         _T("Access denied for direct upload of file \"%s\" to agent"), fileName);
+            _T("Access denied for direct upload of file \"%s\" to agent"), fileName);
+	}
 
    sendMessage(responseMessage);
-   if(response != NULL)
+   if (response != NULL)
       delete response;
 }
 

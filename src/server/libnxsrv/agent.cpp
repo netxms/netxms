@@ -1546,7 +1546,8 @@ UINT32 AgentConnection::execAction(const TCHAR *action, const StringList &list,
 /**
  * Upload file to agent
  */
-UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, void (* progressCallback)(INT64, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
+UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
+         void (* progressCallback)(INT64, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
 {
    UINT32 dwRqId, dwResult;
    NXCPMessage msg(m_nProtocolVersion);
@@ -1582,6 +1583,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
       msg.setCode(CMD_FILEMGR_UPLOAD);
       msg.setField(VID_OVERWRITE, true);
 		msg.setField(VID_FILE_NAME, destinationFile);
+		msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
    }
    msg.setFieldFromTime(VID_MODIFICATION_TIME, lastModTime);
 
@@ -2502,11 +2504,12 @@ void AgentConnection::processTcpProxyData(UINT32 channelId, const void *data, si
 /**
  * Get file set information
  */
-UINT32 AgentConnection::getFileSetInfo(const StringList &fileSet, ObjectArray<RemoteFileInfo> **fileSetInfo)
+UINT32 AgentConnection::getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **fileSetInfo)
 {
    *fileSetInfo = NULL;
    UINT32 requestId = generateRequestId();
    NXCPMessage msg(CMD_GET_FILE_SET_DETAILS, requestId, m_nProtocolVersion);
+   msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
    fileSet.fillMessage(&msg, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
    UINT32 rcc;
    if (sendMessage(&msg))

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,12 +73,12 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 	_sntprintf(buffer, 1024, _T("Upload file %s"), GetCleanFileName(localFile));
 	setDescription(buffer);
 
-	m_localFile = _tcsdup(localFile);
+	m_localFile = MemCopyString(localFile);
 	setLocalFileFullPath();
-	m_remoteFile = (remoteFile != NULL) ? _tcsdup(remoteFile) : NULL;
+	m_remoteFile = MemCopyString(remoteFile);
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, CHECK_NULL(m_remoteFile));
-	m_info = _tcsdup(buffer);
+	m_info = MemCopyString(buffer);
 
 	m_fileSize = 0;
 }
@@ -115,12 +115,12 @@ FileUploadJob::FileUploadJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
 	_sntprintf(buffer, 1024, _T("Upload file %s"), GetCleanFileName(fileList.get(0)));
 	setDescription(buffer);
 
-	m_localFile = _tcsdup(fileList.get(0));
+	m_localFile = MemCopyString(fileList.get(0));
 	setLocalFileFullPath();
-	m_remoteFile = fileList.get(1)[0] != 0 ? _tcsdup(fileList.get(1)) : NULL;
+	m_remoteFile = fileList.get(1)[0] != 0 ? MemCopyString(fileList.get(1)) : NULL;
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, CHECK_NULL(fileList.get(1)));
-	m_info = _tcsdup(buffer);
+	m_info = MemCopyString(buffer);
 
 	m_fileSize = 0;
 }
@@ -130,10 +130,10 @@ FileUploadJob::FileUploadJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
  */
 FileUploadJob::~FileUploadJob()
 {
-	free(m_localFile);
-	free(m_localFileFullPath);
-	free(m_remoteFile);
-	free(m_info);
+	MemFree(m_localFile);
+	MemFree(m_localFileFullPath);
+	MemFree(m_remoteFile);
+	MemFree(m_info);
 }
 
 /**
@@ -149,7 +149,7 @@ void FileUploadJob::setLocalFileFullPath()
    _tcscat(fullPath, DDIR_FILES);
    _tcscat(fullPath, FS_PATH_SEPARATOR);
    nLen = (int)_tcslen(fullPath);
-   nx_strncpy(&fullPath[nLen], GetCleanFileName(m_localFile), MAX_PATH - nLen);
+   _tcslcpy(&fullPath[nLen], GetCleanFileName(m_localFile), MAX_PATH - nLen);
    m_localFileFullPath = _tcsdup(fullPath);
 }
 
@@ -177,7 +177,7 @@ ServerJobResult FileUploadJob::run()
 	if (conn != NULL)
 	{
 		m_fileSize = (INT64)FileSize(m_localFileFullPath);
-		UINT32 rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, uploadCallback, this, NXCP_STREAM_COMPRESSION_DEFLATE);
+		UINT32 rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, false, uploadCallback, this, NXCP_STREAM_COMPRESSION_DEFLATE);
 		if (rcc == ERR_SUCCESS)
 		{
 			success = JOB_RESULT_SUCCESS;

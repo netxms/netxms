@@ -181,7 +181,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
    nElapsedTime = GetCurrentTimeMs();
    if (s_verbose)
       _tprintf(_T("Upload:                 "));
-   dwError = conn->uploadFile(fname, s_destinationFile[0] != 0 ? s_destinationFile : NULL, s_verbose ? ProgressCallback : NULL, NULL, s_compression);
+   dwError = conn->uploadFile(fname, s_destinationFile[0] != 0 ? s_destinationFile : NULL, false, s_verbose ? ProgressCallback : NULL, NULL, s_compression);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
    nElapsedTime = GetCurrentTimeMs() - nElapsedTime;

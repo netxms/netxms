@@ -863,10 +863,10 @@ public:
    UINT32 setServerId(UINT64 serverId);
    UINT32 execAction(const TCHAR *action, const StringList &list, bool withOutput = false,
             void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
-   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL,
+   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, bool allowPathExpansion = false,
             void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
-   UINT32 getFileSetInfo(const StringList &fileSet, ObjectArray<RemoteFileInfo> **info);
+   UINT32 getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
