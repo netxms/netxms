@@ -2539,6 +2539,32 @@ AC_CHECK_TYPES([struct stat64],,,[
 #endif
 ])
 
+AC_MSG_CHECKING(whether va_list is a pointer)
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <stdio.h>
+#if HAVE_STDARG_H
+#include <stdarg.h>
+#endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+int __test(va_list v)
+{
+	return (v != NULL) ? 1 : 0;
+}
+]],[[
+	return __test(NULL);
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(VA_LIST_IS_POINTER,1,Define to 1 if va_list type is a pointer)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(VA_LIST_IS_POINTER,0,Define to 1 if va_list type is a pointer)
+])
+AC_LANG_POP([C++])
+
 
 #--------------------------------------------------------------------
 # Checks for functions
