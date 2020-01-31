@@ -3,7 +3,7 @@ javalib_DATA = nxshell.jar
 
 nxshell.jar: pom.xml
 	mvn clean
-	MAVEN_OPTS=-Xmx512m mvn package -Pnxshell-launcher
+	mvn package -Pnxshell-launcher
 	mv target/nxshell.jar .
 
 EXTRA_DIST = pom.xml nxshell.jar Makefile.w32
