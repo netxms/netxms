@@ -979,13 +979,14 @@ static void CH_GetFileDetails(NXCPMessage *request, NXCPMessage *response, Abstr
  */
 static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
+   bool allowPathExpansion = request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION);
    StringList files(request, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < files.size(); i++)
    {
       TCHAR fileName[MAX_PATH];
       _tcslcpy(fileName, files.get(i), MAX_PATH);
-      ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+      ConvertPathToHost(fileName, allowPathExpansion, session->isMasterServer());
 
       TCHAR *fullPath;
       if (CheckFullPath(fileName, &fullPath, false))
