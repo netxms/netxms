@@ -41,6 +41,7 @@
 #define _WITH_ENCRYPTION   1
 #define WITH_OPENSSL       1
 #define WITH_LDAP          1
+#define VA_LIST_IS_POINTER 1
 
 #if !defined(WINDOWS_ONLY) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
