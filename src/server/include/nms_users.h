@@ -26,12 +26,16 @@
 #define LDAP_DEPRECATED 1
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #include <winldap.h>
 #include <winber.h>
 
-#else /* _WIN32 */
+#elif SUNOS_OPENLDAP
+
+#include <openldap/ldap.h>
+
+#else /* !SUNOS_OPENLDAP && !_WIN32 */
 
 #include <ldap.h>
 #if HAVE_LDAP_SSL_H
@@ -42,7 +46,7 @@
 typedef int ber_int_t;
 #endif
 
-#endif /* _WIN32 */
+#endif /* SUNOS_OPENLDAP || _WIN32 */
 
 #endif /* WITH_LDAP */
 

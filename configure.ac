@@ -2441,42 +2441,81 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$LDAP_SUPPORT" = "xyes" -a "x$DIST_BUILD" != "xyes"; then
-	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
-	if test "x$HAVE_LDAP" = "xyes"; then
-		AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
-		if test "x$HAVE_LDAP" = "xyes"; then
-			AC_CHECK_LIB(lber, ber_init, [ SERVER_LIBS="-llber $SERVER_LIBS" ])
+	if test "$PLATFORM" = "SunOS" -a -d /usr/include/openldap; then
+		# Check for OpenLDAP in Solaris 11
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -I/usr/include/openldap"
+		AC_CHECK_HEADER(openldap/ldap.h,HAVE_SUNOS_OPENLDAP=yes,HAVE_SUNOS_OPENLDAP=no)
+		if test "x$HAVE_SUNOS_OPENLDAP" = "xyes"; then
+			AC_CHECK_LIB(ldap_r-2.4, ldap_init, [ HAVE_SUNOS_OPENLDAP=yes ], [ HAVE_SUNOS_OPENLDAP=no ])
+			if test "x$HAVE_SUNOS_OPENLDAP" = "xyes"; then
+				AC_CHECK_LIB(lber-2.4, ber_init, [ SERVER_LIBS="-llber-2.4 $SERVER_LIBS" ])
+			fi
+		fi
+		if test "x$HAVE_SUNOS_OPENLDAP" = "xyes"; then
+			HAVE_LDAP="yes"
+			SERVER_LIBS="-lldap_r-2.4 $SERVER_LIBS"   
+			AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
+			AC_DEFINE(SUNOS_OPENLDAP, 1, Define to 1 if you are using OpenLDAP libraries and headers on SunOS)
+			AC_CHECK_TYPES([ber_int_t],,,
+				[
+#include <openldap/ldap.h>
+				])
+
+			OLD_LIBS="$LIBS"
+			LIBS="$LIBS -lldap_r-2.4"
+			AC_CHECK_FUNCS([ldap_initialize ldapssl_init])
+			AC_CHECK_FUNCS([ldap_control_create ldap_create_control nsldapi_build_control])
+			AC_CHECK_FUNCS([ldap_create_page_control ldap_parse_page_control])
+			LIBS="$OLD_LIBS"
+
+			AC_CHECK_DECLS([nsldapi_build_control],,,
+				[
+#include <openldap/ldap.h>
+				])
+		else
+			CPPFLAGS="$OLD_CPPFLAGS"
 		fi
 	fi
-	if test "x$HAVE_LDAP" = "xyes"; then
-		SERVER_LIBS="-lldap $SERVER_LIBS"   
-		AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
-		AC_CHECK_HEADERS([ldap_ssl.h],,,
-			[
+
+	if test "x$HAVE_SUNOS_OPENLDAP" != "xyes"; then
+		AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
+		if test "x$HAVE_LDAP" = "xyes"; then
+			AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
+			if test "x$HAVE_LDAP" = "xyes"; then
+				AC_CHECK_LIB(lber, ber_init, [ SERVER_LIBS="-llber $SERVER_LIBS" ])
+			fi
+		fi
+		if test "x$HAVE_LDAP" = "xyes"; then
+			SERVER_LIBS="-lldap $SERVER_LIBS"   
+			AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
+			AC_CHECK_HEADERS([ldap_ssl.h],,,
+				[
 #include <ldap.h>
-			])
-		AC_CHECK_TYPES([ber_int_t],,,
-			[
+				])
+			AC_CHECK_TYPES([ber_int_t],,,
+				[
 #include <ldap.h>
 #if HAVE_LDAP_SSL_H
 #include <ldap_ssl.h>
 #endif
-			])
+				])
 
-		OLD_LIBS="$LIBS"
-		LIBS="$LIBS -lldap"
-		AC_CHECK_FUNCS([ldap_initialize ldapssl_init])
-		AC_CHECK_FUNCS([ldap_control_create ldap_create_control nsldapi_build_control])
-		AC_CHECK_FUNCS([ldap_create_page_control ldap_parse_page_control])
-		LIBS="$OLD_LIBS"
+			OLD_LIBS="$LIBS"
+			LIBS="$LIBS -lldap"
+			AC_CHECK_FUNCS([ldap_initialize ldapssl_init])
+			AC_CHECK_FUNCS([ldap_control_create ldap_create_control nsldapi_build_control])
+			AC_CHECK_FUNCS([ldap_create_page_control ldap_parse_page_control])
+			LIBS="$OLD_LIBS"
 
-		AC_CHECK_DECLS([nsldapi_build_control],,,
-			[
+			AC_CHECK_DECLS([nsldapi_build_control],,,
+				[
 #include <ldap.h>
 #if HAVE_LDAP_SSL_H
 #include <ldap_ssl.h>
 #endif
-			])
+				])
+		fi
 	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi
