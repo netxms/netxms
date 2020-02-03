@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,27 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+/**
+ * Upgrade from 32.4 to 32.5
+ */
+static bool H_UpgradeFromV5()
+{
+   static const TCHAR *batch =
+            _T("DELETE FROM config WHERE var_name='EnableCheckPointSNMP'\n")
+            _T("ALTER TABLE items ADD snmp_version integer\n")
+            _T("ALTER TABLE dc_tables ADD snmp_version integer\n")
+            _T("UPDATE items SET snmp_version=127\n")
+            _T("UPDATE dc_tables SET snmp_version=127\n")
+            _T("UPDATE items SET source=2,snmp_version=0,snmp_port=260 WHERE source=3\n")
+            _T("UPDATE dc_tables SET source=2,snmp_version=0,snmp_port=260 WHERE source=3\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("snmp_version")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("snmp_version")));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
 
 /**
  * Upgrade from 32.3 to 32.4
@@ -112,6 +133,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 5,  31, 6, H_UpgradeFromV5 },
    { 4,  31, 5, H_UpgradeFromV4 },
    { 3,  32, 4, H_UpgradeFromV3 },
    { 2,  32, 3, H_UpgradeFromV2 },

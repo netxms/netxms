@@ -1,6 +1,6 @@
 /* 
 ** nddload - command line tool for network device driver testing
-** Copyright (C) 2013-2019 Raden Solutions
+** Copyright (C) 2013-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
 /**
  * Load driver and execute probes
  */
-static void LoadDriver(const char *driver, const char *host, int snmpVersion, int snmpPort, const char *community)
+static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVersion, int snmpPort, const char *community)
 {
    TCHAR errorText[1024];
 #ifdef UNICODE
@@ -162,8 +162,8 @@ static void LoadDriver(const char *driver, const char *host, int snmpVersion, in
       return;
    }
    
-   SNMP_Transport *transport = new SNMP_UDPTransport;
-   ((SNMP_UDPTransport *)transport)->createUDPTransport(InetAddress::resolveHostName(host), snmpPort);
+   auto transport = new SNMP_UDPTransport;
+   transport->createUDPTransport(InetAddress::resolveHostName(host), snmpPort);
    transport->setSnmpVersion(snmpVersion);
    transport->setSecurityContext(new SNMP_SecurityContext(community));
 
@@ -230,7 +230,7 @@ static void LoadDriver(const char *driver, const char *host, int snmpVersion, in
  */
 int main(int argc, char *argv[])
 {
-   int snmpVersion = SNMP_VERSION_2C;
+   SNMP_Version snmpVersion = SNMP_VERSION_2C;
    int snmpPort = 161;
    const char *community = "public";
 

@@ -981,7 +981,7 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 	{
 	   UINT16 port = (argc > 1) ? (UINT16)argv[1]->getValueAsInt32() : 0;
 	   const TCHAR *context = (argc > 2) ? argv[2]->getValueAsCString() : NULL;
-		SNMP_Transport *t = node->createSnmpTransport(port, context);
+		SNMP_Transport *t = node->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context);
       *ppResult = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, t)) : vm->createValue();
 	}
 	else

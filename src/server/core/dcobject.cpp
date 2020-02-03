@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -89,6 +89,7 @@ DCObject::DCObject()
 	m_sourceNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = 0;	// use default
+	m_snmpVersion = SNMP_VERSION_DEFAULT;
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
    m_lastScriptErrorReport = 0;
@@ -136,6 +137,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 	m_sourceNode = src->m_sourceNode;
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 	m_snmpPort = src->m_snmpPort;
+   m_snmpVersion = src->m_snmpVersion;
 	m_comments = MemCopyString(src->m_comments);
 	m_doForcePoll = false;
 	m_pollingSession = NULL;
@@ -190,6 +192,7 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source,
 	m_sourceNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = 0;	// use default
+   m_snmpVersion = SNMP_VERSION_DEFAULT;
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
    m_lastScriptErrorReport = 0;
@@ -258,7 +261,8 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
 	m_sourceNode = 0;
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_pszPerfTabSettings = MemCopyString(perfTabSettings);
-	m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
+	m_snmpPort = static_cast<UINT16>(config->getSubEntryValueAsInt(_T("snmpPort")));
+   m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
    m_schedules = NULL;
 
 	m_transformationScriptSource = NULL;
@@ -788,6 +792,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_RESOURCE_ID, m_dwResourceId);
 	pMsg->setField(VID_AGENT_PROXY, m_sourceNode);
 	pMsg->setField(VID_SNMP_PORT, m_snmpPort);
+   pMsg->setField(VID_SNMP_VERSION, static_cast<INT16>(m_snmpVersion));
    pMsg->setField(VID_COMMENTS, m_comments);
    pMsg->setField(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
 	if (m_schedules != NULL)
@@ -827,6 +832,7 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
 	m_dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
 	m_sourceNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
    m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
+   m_snmpVersion = pMsg->isFieldExist(VID_SNMP_VERSION) ? static_cast<SNMP_Version>(pMsg->getFieldAsInt16(VID_SNMP_VERSION)) : SNMP_VERSION_DEFAULT;
 	pMsg->getFieldAsString(VID_PERFTAB_SETTINGS, &m_pszPerfTabSettings);
    pMsg->getFieldAsString(VID_COMMENTS, &m_comments);
 
@@ -1018,6 +1024,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 	m_sourceNode = src->m_sourceNode;
 	m_dwResourceId = src->m_dwResourceId;
 	m_snmpPort = src->m_snmpPort;
+   m_snmpVersion = src->m_snmpVersion;
 
 	MemFree(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
@@ -1192,7 +1199,8 @@ void DCObject::updateFromImport(ConfigEntry *config)
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    MemFree(m_pszPerfTabSettings);
    m_pszPerfTabSettings = MemCopyString(perfTabSettings);
-   m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
+   m_snmpPort = static_cast<UINT16>(config->getSubEntryValueAsInt(_T("snmpPort")));
+   m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
 
    MemFree(m_pollingIntervalSrc);
    MemFree(m_retentionTimeSrc);
@@ -1584,6 +1592,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "resourceId", json_integer(m_dwResourceId));
    json_object_set_new(root, "sourceNode", json_integer(m_sourceNode));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
+   json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
    json_object_set_new(root, "perfTabSettings", json_string_t(m_pszPerfTabSettings));
    json_object_set_new(root, "transformationScript", json_string_t(m_transformationScriptSource));
    json_object_set_new(root, "comments", json_string_t(m_comments));

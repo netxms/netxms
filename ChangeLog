@@ -5,6 +5,7 @@
 - Nodes within chassis and chassis view
 - Image library configurator completely rewritten
 - Maximum password length supported by nxencpasswd increased to 64 characters
+- Removed support for ancient custom CheckPoint SNMP agent on port 260
 - Fixed issues:
 	NX-58 (Refactor Image Library)
 	NX-896 (Display blade chassis and servers in rack)

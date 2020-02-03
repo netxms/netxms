@@ -845,7 +845,7 @@ NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
 
    UINT16 port = (argc > 0) ? static_cast<UINT16>(argv[0]->getValueAsInt32()) : 0;
    const TCHAR *context = (argc > 1) ? argv[1]->getValueAsCString() : NULL;
-   SNMP_Transport *t = static_cast<Node*>(object->getData())->createSnmpTransport(port, context);
+   SNMP_Transport *t = static_cast<Node*>(object->getData())->createSnmpTransport(port, SNMP_VERSION_DEFAULT, context);
    *result = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, t)) : vm->createValue();
    return 0;
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingI
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance,instance_retention_time,grace_period_start,
  *    related_object,polling_schedule_type,retention_type,polling_interval_src,
- *    retention_time_src
+ *    retention_time_src,snmp_version
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay) : DCObject()
 {
@@ -167,7 +167,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner 
    m_description = DBGetField(hResult, row, 4, readBuffer, 4096);
    m_flags = (WORD)DBGetFieldLong(hResult, row, 5);
    m_source = (BYTE)DBGetFieldLong(hResult, row, 6);
-	m_snmpPort = (WORD)DBGetFieldLong(hResult, row, 7);
+	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 7));
    m_pollingInterval = DBGetFieldLong(hResult, row, 8);
    m_retentionTime = DBGetFieldLong(hResult, row, 9);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 10);
@@ -195,6 +195,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner 
    m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 26));
    m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 27, NULL, 0) : NULL;
    m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 28, NULL, 0) : NULL;
+   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 29));
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
@@ -589,7 +590,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       _T("proxy_node"), _T("perftab_settings"), _T("transformation_script"), _T("comments"), _T("guid"),
       _T("instd_method"), _T("instd_data"), _T("instd_filter"), _T("instance"), _T("instance_retention_time"),
       _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
-      _T("polling_schedule_type"), _T("retention_type"),
+      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"),
       NULL
    };
 
@@ -633,7 +634,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    rt[1] = 0;
    DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
    DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
-   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_snmpVersion);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1107,6 +1109,7 @@ void DCTable::createExportRecord(StringBuffer &xml)
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
+                          _T("\t\t\t\t\t<snmpVersion>%d</snmpVersion>\n")
                           _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n")
                           _T("\t\t\t\t\t<instance>%s</instance>\n")
                           _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n")
@@ -1119,7 +1122,7 @@ void DCTable::createExportRecord(StringBuffer &xml)
                           m_retentionType,
                           (const TCHAR *)EscapeStringForXML2(m_retentionTimeSrc),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (int)m_flags, (int)m_snmpPort, (int)m_instanceDiscoveryMethod,
+								  (int)m_flags, (int)m_snmpPort, (int)m_snmpVersion, (int)m_instanceDiscoveryMethod,
 								  (const TCHAR *)EscapeStringForXML2(m_instance), m_instanceRetentionTime,
 								  (const TCHAR *)EscapeStringForXML2(m_comments));
 

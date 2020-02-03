@@ -267,10 +267,11 @@ protected:
    MUTEX m_hMutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
-   UINT32 m_dwErrorCount;         // Consequtive collection error count
+   UINT32 m_dwErrorCount;        // Consequtive collection error count
 	UINT32 m_dwResourceId;	   	// Associated cluster resource ID
 	UINT32 m_sourceNode;          // Source node ID or 0 to disable
-	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
+	UINT16 m_snmpPort;            // Custom SNMP port or 0 for node default
+	SNMP_Version m_snmpVersion;   // Custom SNMP version or SNMP_VERSION_DEFAULT for node default
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
    NXSL_Program *m_transformationScript;  // Compiled transformation script
@@ -352,7 +353,8 @@ public:
 	UINT32 getSourceNode() const { return m_sourceNode; }
 	time_t getLastPollTime() const { return m_lastPoll; }
 	UINT32 getErrorCount() const { return m_dwErrorCount; }
-	WORD getSnmpPort() const { return m_snmpPort; }
+	UINT16 getSnmpPort() const { return m_snmpPort; }
+   SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    bool isShowOnObjectTooltip() const { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
    bool isShowInObjectOverview() const { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
    bool isAggregateOnCluster() const { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }

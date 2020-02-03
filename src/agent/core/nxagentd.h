@@ -554,8 +554,8 @@ private:
    uuid m_guid;
    UINT64 m_serverId;
    InetAddress m_ipAddress;
+   SNMP_Version m_snmpVersion;
    UINT16 m_port;
-   BYTE m_snmpVersion;
    BYTE m_authType;
    BYTE m_encType;
    char *m_authName;

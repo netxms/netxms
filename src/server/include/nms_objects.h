@@ -2435,7 +2435,7 @@ protected:
    INT16 m_agentCompressionMode;  // agent compression mode (enabled/disabled/default)
    TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
    INT16 m_iStatusPollType;
-   INT16 m_snmpVersion;
+   SNMP_Version m_snmpVersion;
    UINT16 m_snmpPort;
 	UINT16 m_nUseIfXTable;
 	SNMP_SecurityContext *m_snmpSecurity;
@@ -2661,7 +2661,7 @@ public:
    const uuid& getAgentId() const { return m_agentId; }
    const TCHAR *getAgentVersion() const { return m_agentVersion; }
    const TCHAR *getPlatformName() const { return m_platformName; }
-   INT16 getSNMPVersion() const { return m_snmpVersion; }
+   SNMP_Version getSNMPVersion() const { return m_snmpVersion; }
    UINT16 getSNMPPort() const { return m_snmpPort; }
    UINT32 getSNMPProxy() const { return m_snmpProxy; }
    String getSNMPObjectId() const { return GetStringAttributeWithLock(m_snmpObjectId, m_mutexProperties); }
@@ -2767,11 +2767,10 @@ public:
 
    virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
 
-   DataCollectionError getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
-   DataCollectionError getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
-   DataCollectionError getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
-   DataCollectionError getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **values);
-   DataCollectionError getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   DataCollectionError getItemFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
+   DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
+   DataCollectionError getListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringList **list);
+   DataCollectionError getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringMap **values);
    DataCollectionError getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
    DataCollectionError getTableFromAgent(const TCHAR *name, Table **table);
    DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
@@ -2799,7 +2798,7 @@ public:
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
    AgentConnectionEx *getAgentConnection(bool forcePrimary = false);
    AgentConnectionEx *acquireProxyConnection(ProxyType type, bool validate = false);
-	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
+	SNMP_Transport *createSnmpTransport(UINT16 port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
 
 	UINT32 getEffectiveSnmpProxy(bool backup = false);

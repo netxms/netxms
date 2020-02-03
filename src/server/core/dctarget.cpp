@@ -1337,7 +1337,7 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
    info->msg->setField(info->fieldId++, m_guid);
    info->msg->setField(info->fieldId++, dco->getSnmpPort());
    if (dco->getType() == DCO_TYPE_ITEM)
-      info->msg->setField(info->fieldId++, ((DCItem *)dco)->getSnmpRawValueType());
+      info->msg->setField(info->fieldId++, static_cast<const DCItem*>(dco)->getSnmpRawValueType());
    else
       info->msg->setField(info->fieldId++, (INT16)0);
    info->msg->setField(info->fieldId++, primaryProxyId);

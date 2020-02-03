@@ -190,7 +190,6 @@
 #define NC_IS_LOCAL_MGMT          0x00000010
 #define NC_IS_PRINTER             0x00000020
 #define NC_IS_OSPF                0x00000040
-#define NC_IS_CPSNMP              0x00000080  /* CheckPoint SNMP agent on port 260 */
 #define NC_IS_CDP                 0x00000100
 #define NC_IS_NDP                 0x00000200  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */ /* SONMP is an old name for NDP */
 #define NC_IS_LLDP                0x00000400  /* Supports Link Layer Discovery Protocol */
@@ -264,7 +263,6 @@
  */
 #define NSF_AGENT_UNREACHABLE          0x00010000
 #define NSF_SNMP_UNREACHABLE           0x00020000
-#define NSF_CPSNMP_UNREACHABLE         0x00040000
 #define NSF_CACHE_MODE_NOT_SUPPORTED   0x00080000
 
 /**
@@ -903,7 +901,7 @@ enum HistoricalDataType
 #define DS_INTERNAL           0
 #define DS_NATIVE_AGENT       1
 #define DS_SNMP_AGENT         2
-#define DS_CHECKPOINT_AGENT   3
+#define DS_WEB_SERVICE        3
 #define DS_PUSH_AGENT         4
 #define DS_WINPERF            5
 #define DS_SMCLP              6

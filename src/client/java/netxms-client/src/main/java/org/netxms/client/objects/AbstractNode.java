@@ -61,7 +61,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	public static final int NC_IS_LOCAL_MGMT          = 0x00000010;
 	public static final int NC_IS_PRINTER             = 0x00000020;
 	public static final int NC_IS_OSPF                = 0x00000040;
-	public static final int NC_IS_CPSNMP              = 0x00000080;
 	public static final int NC_IS_CDP                 = 0x00000100;
 	public static final int NC_IS_NDP                 = 0x00000200;
 	public static final int NC_IS_LLDP                = 0x00000400;

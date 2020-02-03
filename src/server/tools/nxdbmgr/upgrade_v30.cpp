@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -3323,7 +3323,7 @@ static void MoveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities, bool with
    MoveFlag(oldFlag, capabilities, 0x00000010, NC_IS_LOCAL_MGMT);
    MoveFlag(oldFlag, capabilities, 0x00000020, NC_IS_PRINTER);
    MoveFlag(oldFlag, capabilities, 0x00000040, NC_IS_OSPF);
-   MoveFlag(oldFlag, capabilities, 0x00000100, NC_IS_CPSNMP);
+   MoveFlag(oldFlag, capabilities, 0x00000100, 0x80);  // NC_IS_CPSNMP
    MoveFlag(oldFlag, capabilities, 0x00000200, NC_IS_CDP);
    MoveFlag(oldFlag, capabilities, 0x00000400, NC_IS_NDP);
    MoveFlag(oldFlag, capabilities, 0x00000800, NC_IS_LLDP);
@@ -3350,7 +3350,7 @@ static void MoveNodeState(UINT32 oldRuntime, UINT32 *state)
    MoveFlag(oldRuntime, state, 0x000004, DCSF_UNREACHABLE);
    MoveFlag(oldRuntime, state, 0x000008, NSF_AGENT_UNREACHABLE);
    MoveFlag(oldRuntime, state, 0x000010, NSF_SNMP_UNREACHABLE);
-   MoveFlag(oldRuntime, state, 0x000200, NSF_CPSNMP_UNREACHABLE);
+   MoveFlag(oldRuntime, state, 0x000200, 0x00020000);  // NSF_CPSNMP_UNREACHABLE
    MoveFlag(oldRuntime, state, 0x008000, DCSF_NETWORK_PATH_PROBLEM);
    MoveFlag(oldRuntime, state, 0x020000, NSF_CACHE_MODE_NOT_SUPPORTED);
 }

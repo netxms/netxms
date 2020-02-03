@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,10 +36,10 @@ SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId)
    m_guid = msg->getFieldAsGUID(baseId);
    m_serverId = serverId;
    m_ipAddress = msg->getFieldAsInetAddress(baseId + 1);
-   m_snmpVersion = (BYTE)msg->getFieldAsInt16(baseId + 2);
+   m_snmpVersion = static_cast<SNMP_Version>(msg->getFieldAsInt16(baseId + 2));
    m_port = msg->getFieldAsUInt16(baseId + 3);
-   m_authType = (BYTE)msg->getFieldAsInt16(baseId + 4);
-   m_encType = (BYTE)msg->getFieldAsInt16(baseId + 5);
+   m_authType = static_cast<BYTE>(msg->getFieldAsInt16(baseId + 4));
+   m_encType = static_cast<BYTE>(msg->getFieldAsInt16(baseId + 5));
    m_authName = msg->getFieldAsUtf8String(baseId + 6);
    m_authPassword = msg->getFieldAsUtf8String(baseId + 7);
    m_encPassword = msg->getFieldAsUtf8String(baseId + 8);
@@ -56,10 +56,10 @@ SNMPTarget::SNMPTarget(DB_RESULT hResult, int row)
    m_guid = DBGetFieldGUID(hResult, row, 0);
    m_serverId = DBGetFieldUInt64(hResult, row, 1);
    m_ipAddress = DBGetFieldInetAddr(hResult, row, 2);
-   m_snmpVersion = (BYTE)DBGetFieldLong(hResult, row, 3);
-   m_port = (UINT16)DBGetFieldLong(hResult, row, 4);
-   m_authType = (BYTE)DBGetFieldLong(hResult, row, 5);
-   m_encType = (BYTE)DBGetFieldLong(hResult, row, 6);
+   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 3));
+   m_port = static_cast<UINT16>(DBGetFieldLong(hResult, row, 4));
+   m_authType = static_cast<BYTE>(DBGetFieldLong(hResult, row, 5));
+   m_encType = static_cast<BYTE>(DBGetFieldLong(hResult, row, 6));
    m_authName = DBGetFieldUTF8(hResult, row, 7, NULL, 0);
    m_authPassword = DBGetFieldUTF8(hResult, row, 8, NULL, 0);
    m_encPassword = DBGetFieldUTF8(hResult, row, 9, NULL, 0);

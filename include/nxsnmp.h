@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -102,24 +102,23 @@
 //
 // MIB parser error codes
 //
-
 #define SNMP_MPE_SUCCESS      0
 #define SNMP_MPE_PARSE_ERROR  1
 
-
-//
-// SNMP versions
-//
-
-#define SNMP_VERSION_1     0
-#define SNMP_VERSION_2C    1
-#define SNMP_VERSION_3     3
-
+/**
+ * SNMP versions
+ */
+enum SNMP_Version
+{
+   SNMP_VERSION_1       = 0,
+   SNMP_VERSION_2C      = 1,
+   SNMP_VERSION_3       = 3,
+   SNMP_VERSION_DEFAULT = 127
+};
 
 //
 // PDU types
 //
-
 #define SNMP_INVALID_PDU         255
 #define SNMP_GET_REQUEST         0
 #define SNMP_GET_NEXT_REQUEST    1
@@ -130,11 +129,9 @@
 #define SNMP_INFORM_REQUEST      6
 #define SNMP_REPORT              8
 
-
 //
 // PDU error codes
 //
-
 #define SNMP_PDU_ERR_SUCCESS        0
 #define SNMP_PDU_ERR_TOO_BIG        1
 #define SNMP_PDU_ERR_NO_SUCH_NAME   2
@@ -142,11 +139,9 @@
 #define SNMP_PDU_ERR_READ_ONLY      4
 #define SNMP_PDU_ERR_GENERIC        5
 
-
 //
 // ASN.1 identifier types
 //
-
 #define ASN_INTEGER                 0x02
 #define ASN_BIT_STRING              0x03
 #define ASN_OCTET_STRING            0x04
@@ -174,11 +169,9 @@
 #define ASN_TRAP_V2_PDU             0xA7
 #define ASN_REPORT_PDU              0xA8
 
-
 //
 // Security models
 //
-
 #define SNMP_SECURITY_MODEL_V1      1
 #define SNMP_SECURITY_MODEL_V2C     2
 #define SNMP_SECURITY_MODEL_USM     3
@@ -187,7 +180,6 @@
 //
 // SNMP V3 header flags
 //
-
 #define SNMP_AUTH_FLAG           0x01
 #define SNMP_PRIV_FLAG           0x02
 #define SNMP_REPORTABLE_FLAG     0x04
@@ -633,7 +625,7 @@ protected:
 	bool m_enableEngineIdAutoupdate;
 	bool m_updatePeerOnRecv;
 	bool m_reliable;
-	int m_snmpVersion;
+	SNMP_Version m_snmpVersion;
 
 public:
    SNMP_Transport();
@@ -655,13 +647,13 @@ public:
    const SNMP_Engine *getAuthoritativeEngine() { return m_authoritativeEngine; }
 
 	void enableEngineIdAutoupdate(bool enabled) { m_enableEngineIdAutoupdate = enabled; }
-	bool isEngineIdAutoupdateEnabled() { return m_enableEngineIdAutoupdate; }
+	bool isEngineIdAutoupdateEnabled() const { return m_enableEngineIdAutoupdate; }
 
 	void setPeerUpdatedOnRecv(bool enabled) { m_updatePeerOnRecv = enabled; }
-	bool isPeerUpdatedOnRecv() { return m_updatePeerOnRecv; }
+	bool isPeerUpdatedOnRecv() const { return m_updatePeerOnRecv; }
 
-	void setSnmpVersion(int version) { m_snmpVersion = version; }
-	int getSnmpVersion() { return m_snmpVersion; }
+	void setSnmpVersion(SNMP_Version version) { m_snmpVersion = version; }
+	SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
 };
 
 /**
@@ -770,7 +762,7 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(UINT32 type, TCHAR *buffer, size_t 
 UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId();
 void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(UINT32 timeout);
 UINT32 LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
-UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
+UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport,
                                     const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
                                     size_t bufferSize, UINT32 dwFlags);
 UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,

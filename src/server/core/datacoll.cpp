@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_websvc.h>
 #include <gauge_helpers.h>
 
 /**
@@ -68,22 +69,20 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             break;
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
-				   *error = ((Node *)dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE,
+			   {
+				   *error = static_cast<Node*>(dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getSnmpVersion(), pItem->getName(), MAX_LINE_SIZE,
 					   pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
+			   }
 			   else
+			   {
 				   *error = DCE_NOT_SUPPORTED;
+			   }
             break;
          case DS_DEVICE_DRIVER:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
                *error = ((Node *)dcTarget)->getItemFromDeviceDriver(pItem->getName(), pBuffer, MAX_LINE_SIZE);
             else
                *error = DCE_NOT_SUPPORTED;
-            break;
-         case DS_CHECKPOINT_AGENT:
-			   if (dcTarget->getObjectClass() == OBJECT_NODE)
-	            *error = ((Node *)dcTarget)->getItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
-			   else
-				   *error = DCE_NOT_SUPPORTED;
             break;
          case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
@@ -186,7 +185,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               *error = ((Node *)dcTarget)->getTableFromSNMP(table->getSnmpPort(), table->getName(), table->getColumns(), &result);
+               *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table->getSnmpPort(), table->getSnmpVersion(), table->getName(), table->getColumns(), &result);
                if ((*error == DCE_SUCCESS) && (result != NULL))
                   table->updateResultColumns(result);
             }

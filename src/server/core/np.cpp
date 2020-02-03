@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -371,7 +371,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 		return true;
 
 	// *** SNMP ***
-   INT16 version;
+   SNMP_Version version;
    StringList oids;
    oids.add(_T(".1.3.6.1.2.1.1.2.0"));
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
@@ -404,7 +404,7 @@ public:
    InterfaceList *ifList;
    UINT32 zoneUIN;
    UINT32 flags;
-   int snmpVersion;
+   SNMP_Version snmpVersion;
    bool dnsNameResolved;
    TCHAR dnsName[MAX_DNS_NAME];
    TCHAR snmpObjectId[MAX_OID_LEN * 4];    // SNMP OID
@@ -418,7 +418,7 @@ public:
       ifList = NULL;
       zoneUIN = _zoneUIN;
       flags = 0;
-      snmpVersion = 0;
+      snmpVersion = SNMP_VERSION_1;
       dnsNameResolved = false;
       memset(dnsName, 0, sizeof(dnsName));
       memset(snmpObjectId, 0, sizeof(snmpObjectId));

@@ -391,7 +391,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    DBGetField(hResult, 0, 0, m_primaryName, MAX_DNS_NAME);
    m_ipAddress = DBGetFieldInetAddr(hResult, 0, 1);
-   m_snmpVersion = DBGetFieldLong(hResult, 0, 2);
+   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, 0, 2));
    m_agentAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 3);
    DBGetField(hResult, 0, 4, m_szSharedSecret, MAX_SECRET_LENGTH);
    m_agentPort = (WORD)DBGetFieldLong(hResult, 0, 5);
@@ -2316,7 +2316,7 @@ restart_agent_check:
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0);
          DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
       }
-      else if (getItemFromSNMP(m_snmpPort, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+      else if (getItemFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0) / 100;   // sysUpTime is in hundredths of a second
          DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
@@ -3191,27 +3191,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          modified |= MODIFY_NODE_PROPERTIES;
 
       POLL_CANCELLATION_CHECKPOINT();
-
-      // Check for CheckPoint SNMP agent on port 260
-      if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
-      {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_name);
-         if (!((m_capabilities & NC_IS_CPSNMP) && (m_state & NSF_CPSNMP_UNREACHABLE)) && m_ipAddress.isValidUnicast())
-         {
-            SNMP_Transport *pTransport = new SNMP_UDPTransport;
-            ((SNMP_UDPTransport *)pTransport)->createUDPTransport(m_ipAddress, CHECKPOINT_SNMP_PORT);
-            if (SnmpGet(SNMP_VERSION_1, pTransport,
-                        _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
-            {
-               lockProperties();
-               m_capabilities |= NC_IS_CPSNMP | NC_IS_ROUTER;
-               m_state &= ~NSF_CPSNMP_UNREACHABLE;
-               unlockProperties();
-               sendPollerMsg(rqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
-            }
-            delete pTransport;
-         }
-      }
 
       // Generate event if node flags has been changed
       if (oldCapabilities != m_capabilities)
@@ -4814,10 +4793,10 @@ StringMap *Node::getInstanceList(DCObject *dco)
          node->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
          break;
       case IDM_SNMP_WALK_VALUES:
-         node->getListFromSNMP(dco->getSnmpPort(), dco->getInstanceDiscoveryData(), &instances);
+         node->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances);
          break;
       case IDM_SNMP_WALK_OIDS:
-         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getInstanceDiscoveryData(), &instanceMap);
+         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap);
          break;
       default:
          instances = NULL;
@@ -4986,7 +4965,7 @@ inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
 /**
  * Get DCI value via SNMP
  */
-DataCollectionError Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
+DataCollectionError Node::getItemFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
 {
    UINT32 dwResult;
 
@@ -4998,20 +4977,18 @@ DataCollectionError Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t 
    }
    else
    {
-      SNMP_Transport *pTransport;
-
-      pTransport = createSnmpTransport(port);
-      if (pTransport != NULL)
+      SNMP_Transport *snmp = createSnmpTransport(port, version);
+      if (snmp != NULL)
       {
          if (interpretRawValue == SNMP_RAWTYPE_NONE)
          {
-            dwResult = SnmpGet(m_snmpVersion, pTransport, param, NULL, 0, buffer, bufSize * sizeof(TCHAR), SG_PSTRING_RESULT);
+            dwResult = SnmpGetEx(snmp, param, NULL, 0, buffer, bufSize * sizeof(TCHAR), SG_PSTRING_RESULT, NULL);
          }
          else
          {
             BYTE rawValue[1024];
             memset(rawValue, 0, 1024);
-            dwResult = SnmpGet(m_snmpVersion, pTransport, param, NULL, 0, rawValue, 1024, SG_RAW_RESULT);
+            dwResult = SnmpGetEx(snmp, param, NULL, 0, rawValue, 1024, SG_RAW_RESULT, NULL);
             if (dwResult == SNMP_ERR_SUCCESS)
             {
                switch(interpretRawValue)
@@ -5043,7 +5020,7 @@ DataCollectionError Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t 
                }
             }
          }
-         delete pTransport;
+         delete snmp;
       }
       else
       {
@@ -5130,11 +5107,11 @@ static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp,
 /**
  * Get table from SNMP
  */
-DataCollectionError Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table)
+DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table)
 {
    *table = NULL;
 
-   SNMP_Transport *snmp = createSnmpTransport(port);
+   SNMP_Transport *snmp = createSnmpTransport(port, version);
    if (snmp == NULL)
       return DCE_COMM_ERROR;
 
@@ -5179,10 +5156,10 @@ static UINT32 SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, 
 /**
  * Get list of values from SNMP
  */
-DataCollectionError Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
+DataCollectionError Node::getListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringList **list)
 {
    *list = NULL;
-   SNMP_Transport *snmp = createSnmpTransport(port);
+   SNMP_Transport *snmp = createSnmpTransport(port, version);
    if (snmp == NULL)
       return DCE_COMM_ERROR;
 
@@ -5230,10 +5207,10 @@ static UINT32 SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport *
 /**
  * Get list of OID suffixes from SNMP
  */
-DataCollectionError Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **values)
+DataCollectionError Node::getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringMap **values)
 {
    *values = NULL;
-   SNMP_Transport *snmp = createSnmpTransport(port);
+   SNMP_Transport *snmp = createSnmpTransport(port, version);
    if (snmp == NULL)
       return DCE_COMM_ERROR;
 
@@ -5258,31 +5235,6 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, 
       delete data.values;
    }
    return DCErrorFromSNMPError(rc);
-}
-
-/**
- * Get item's value via SNMP from CheckPoint's agent
- */
-DataCollectionError Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
-{
-   UINT32 dwResult;
-
-   if ((m_state & NSF_CPSNMP_UNREACHABLE) ||
-       (m_state & DCSF_UNREACHABLE))
-   {
-      dwResult = SNMP_ERR_COMM;
-   }
-   else
-   {
-      SNMP_Transport *pTransport;
-
-      pTransport = new SNMP_UDPTransport;
-      ((SNMP_UDPTransport *)pTransport)->createUDPTransport(m_ipAddress, CHECKPOINT_SNMP_PORT);
-      dwResult = SnmpGet(SNMP_VERSION_1, pTransport, szParam, NULL, 0, szBuffer, dwBufSize * sizeof(TCHAR), SG_STRING_RESULT);
-      delete pTransport;
-   }
-   DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_name, szParam, dwResult);
-   return DCErrorFromSNMPError(dwResult);
 }
 
 /**
@@ -6097,11 +6049,7 @@ UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam,
          break;
       case DS_SNMP_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            rc = getItemFromSNMP(0, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
-         break;
-      case DS_CHECKPOINT_AGENT:
-         if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            rc = getItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
+            rc = getItemFromSNMP(0, SNMP_VERSION_DEFAULT, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
          break;
       case DS_DEVICE_DRIVER:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
@@ -6394,7 +6342,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change SNMP protocol version
    if (pRequest->isFieldExist(VID_SNMP_VERSION))
    {
-      m_snmpVersion = pRequest->getFieldAsUInt16(VID_SNMP_VERSION);
+      m_snmpVersion = static_cast<SNMP_Version>(pRequest->getFieldAsUInt16(VID_SNMP_VERSION));
       m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
    }
 
@@ -7336,7 +7284,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
        (!(m_state & DCSF_UNREACHABLE)))
    {
       UINT32 dwResult;
-      SNMP_Transport *pTransport = createSnmpTransport(0, context);
+      SNMP_Transport *pTransport = createSnmpTransport(0, SNMP_VERSION_DEFAULT, context);
       if (pTransport != NULL)
       {
          dwResult = SnmpWalk(pTransport, pszRootOid, pHandler, pArg, false, failOnShutdown);
@@ -7534,7 +7482,7 @@ UINT32 Node::getEffectiveAgentProxy()
 /**
  * Create SNMP transport
  */
-SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
+SNMP_Transport *Node::createSnmpTransport(UINT16 port, SNMP_Version version, const TCHAR *context)
 {
    if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return NULL;
@@ -7564,14 +7512,15 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
    if (pTransport != NULL)
    {
       lockProperties();
-      pTransport->setSnmpVersion(m_snmpVersion);
+      SNMP_Version effectiveVersion = (version != SNMP_VERSION_DEFAULT) ? version : m_snmpVersion;
+      pTransport->setSnmpVersion(effectiveVersion);
       if (context == NULL)
       {
          pTransport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
       }
       else
       {
-         if (m_snmpVersion < SNMP_VERSION_3)
+         if (effectiveVersion < SNMP_VERSION_3)
          {
             char community[128];
 #ifdef UNICODE
@@ -7693,7 +7642,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
       if (!(bSuccess || useOnlyDNS))
       {
          DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP"), m_id, m_name);
-         if (getItemFromSNMP(0, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+         if (getItemFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
             StrStrip(szBuffer);
             if (szBuffer[0] != 0)

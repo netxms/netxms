@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpwalk - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ static char m_encryptionPassword[256] = "";
 static char m_contextName[256] = "";
 static int m_authMethod = SNMP_AUTH_NONE;
 static int m_encryptionMethod = SNMP_ENCRYPT_NONE;
-static WORD m_port = 161;
-static UINT32 m_snmpVersion = SNMP_VERSION_2C;
+static UINT16 m_port = 161;
+static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
 static UINT32 m_timeout = 3000;
 
 /**

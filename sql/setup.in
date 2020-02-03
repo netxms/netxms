@@ -71,7 +71,6 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DiscoveryFilterFlags','0','0',1,0,'I','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableAgentRegistration','1','1',1,0,'B','Enable/disable agent self-registration','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableAuditLog','1','1',1,1,'B','Enable/disable audit log.','');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableCheckPointSNMP','0','0',1,0,'B','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableReportingServer','0','0',1,1,'B','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableEventStormDetection','0','0',1,1,'B','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableISCListener','0','0',1,1,'B','Enable/disable Inter-Server Communications Listener.','');

@@ -275,38 +275,38 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    const char *ds = ""; // Data sources
    switch (dci->getDataSource())
    {
+      case DS_DEVICE_DRIVER:
+         ds = "device";
+         break;
       case DS_INTERNAL:
          ds = "internal";
-         break;
-      case DS_NATIVE_AGENT:
-         ds = "agent";
-         break;
-      case DS_SNMP_AGENT:
-         ds = "snmp";
-         break;
-      case DS_CHECKPOINT_AGENT:
-         ds = "check_point_snmp";
-         break;
-      case DS_PUSH_AGENT:
-         ds = "push";
-         break;
-      case DS_WINPERF:
-         ds = "wmi";
-         break;
-      case DS_SMCLP:
-         ds = "smclp";
-         break;
-      case DS_SCRIPT:
-         ds = "script";
-         break;
-      case DS_SSH:
-         ds = "ssh";
          break;
       case DS_MQTT:
          ds = "mqtt";
          break;
-      case DS_DEVICE_DRIVER:
-         ds = "device";
+      case DS_NATIVE_AGENT:
+         ds = "agent";
+         break;
+      case DS_PUSH_AGENT:
+         ds = "push";
+         break;
+      case DS_SCRIPT:
+         ds = "script";
+         break;
+      case DS_SMCLP:
+         ds = "smclp";
+         break;
+      case DS_SNMP_AGENT:
+         ds = "snmp";
+         break;
+      case DS_SSH:
+         ds = "ssh";
+         break;
+      case DS_WEB_SERVICE:
+         ds = "websvc";
+         break;
+      case DS_WINPERF:
+         ds = "wmi";
          break;
       default:
          ds = "unknown";

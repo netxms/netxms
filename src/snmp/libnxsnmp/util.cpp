@@ -62,13 +62,13 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout()
  * binary representation from oidBinary and dwOidLen
  * Note: buffer size is in bytes
  */
-UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
+UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport,
                                     const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
                                     size_t bufferSize, UINT32 dwFlags)
 {
    if (version != transport->getSnmpVersion())
    {
-      int v = transport->getSnmpVersion();
+      SNMP_Version v = transport->getSnmpVersion();
       transport->setSnmpVersion(version);
       UINT32 rc = SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, bufferSize, dwFlags, NULL);
       transport->setSnmpVersion(v);
