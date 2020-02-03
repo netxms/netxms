@@ -183,10 +183,10 @@ LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue
 	{
 		if (s_devices[i].id != -1)
 		{
-			_sntprintf(szBuffer, 1024, _T("/dev/drbd%d %hs %hs/%hs %hs/%hs %hc"),
+                        _sntprintf(szBuffer, 1024, _T("/dev/drbd%d %hs %hs/%hs %hs/%hs %c"),
 			           i, s_devices[i].connState, s_devices[i].localDeviceState,
 			           s_devices[i].remoteDeviceState, s_devices[i].localDataState,
-			           s_devices[i].remoteDataState, s_devices[i].protocol);
+			           s_devices[i].remoteDataState, (TCHAR)s_devices[i].protocol);
 			pValue->add(szBuffer);
 		}
 	}
@@ -223,17 +223,16 @@ LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Abstra
  */
 LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	int nDev;
 	TCHAR szDev[256], *eptr;
-	LONG nRet = SYSINFO_RC_ERROR;
 
 	if (!AgentGetParameterArg(pszCmd, 1, szDev, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	nDev = _tcstol(szDev, &eptr, 0);
-	if ((nDev < 0) || (nDev > MAX_DEVICE_COUNT) || (*eptr != 0))
+        int nDev = _tcstol(szDev, &eptr, 0);
+        if ((nDev < 0) || (nDev >= MAX_DEVICE_COUNT) || (*eptr != 0))
 		return SYSINFO_RC_UNSUPPORTED;
 
+        LONG nRet = SYSINFO_RC_ERROR;
 	MutexLock(s_deviceAccess);
 	if (s_devices[nDev].id != -1)
 	{
