@@ -68,7 +68,6 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		statusImages[DataCollectionItem.NOT_SUPPORTED] = Activator.getImageDescriptor("icons/unsupported.gif").createImage(); //$NON-NLS-1$
 		
 		originTexts.put(DataCollectionItem.AGENT, Messages.get().DciLabelProvider_SourceAgent);
-		originTexts.put(DataCollectionItem.CHECKPOINT_SNMP, Messages.get().DciLabelProvider_SourceCPSNMP);
       originTexts.put(DataCollectionItem.DEVICE_DRIVER, Messages.get().DciLabelProvider_SourceDeviceDriver);
 		originTexts.put(DataCollectionItem.INTERNAL, Messages.get().DciLabelProvider_SourceInternal);
       originTexts.put(DataCollectionItem.MQTT, Messages.get().DciLabelProvider_SourceMQTT);
@@ -77,6 +76,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
       originTexts.put(DataCollectionItem.SMCLP, Messages.get().DciLabelProvider_SourceILO);
       originTexts.put(DataCollectionItem.SNMP, Messages.get().DciLabelProvider_SourceSNMP);
       originTexts.put(DataCollectionItem.SSH, Messages.get().DciLabelProvider_SourceSSH);
+      originTexts.put(DataCollectionItem.WEB_SERVICE, Messages.get().DciLabelProvider_SourceWebService);
 		originTexts.put(DataCollectionItem.WINPERF, Messages.get().DciLabelProvider_SourceWinPerf);
 		
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.get().DciLabelProvider_Active);

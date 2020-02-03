@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
+import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
@@ -87,6 +88,8 @@ public class General extends DCIPropertyPageDialog
 	private Combo snmpRawType;
 	private Button checkUseCustomSnmpPort;
 	private Spinner customSnmpPort;
+   private Button checkUseCustomSnmpVersion;
+   private Combo customSnmpVersion;
 	private ObjectSelector sourceNode;
 	private Combo agentCacheMode;
 	private Combo schedulingMode;
@@ -181,17 +184,17 @@ public class General extends DCIPropertyPageDialog
       fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
       origin = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().General_Origin, fd);
-      origin.add(Messages.get().General_SourceInternal);
-      origin.add(Messages.get().General_SourceAgent);
-      origin.add(Messages.get().General_SourceSNMP);
-      origin.add(Messages.get().General_SourceCPSNMP);
-      origin.add(Messages.get().General_SourcePush);
-      origin.add(Messages.get().General_WinPerf);
-      origin.add(Messages.get().General_SMCLP);
-      origin.add(Messages.get().General_Script);
-      origin.add(Messages.get().General_SourceSSH);
-      origin.add(Messages.get().General_SourceMQTT);
-      origin.add(Messages.get().General_SourceDeviceDriver);
+      origin.add(Messages.get().DciLabelProvider_SourceInternal);
+      origin.add(Messages.get().DciLabelProvider_SourceAgent);
+      origin.add(Messages.get().DciLabelProvider_SourceSNMP);
+      origin.add(Messages.get().DciLabelProvider_SourceWebService);
+      origin.add(Messages.get().DciLabelProvider_SourcePush);
+      origin.add(Messages.get().DciLabelProvider_SourceWinPerf);
+      origin.add(Messages.get().DciLabelProvider_SourceILO);
+      origin.add(Messages.get().DciLabelProvider_SourceScript);
+      origin.add(Messages.get().DciLabelProvider_SourceSSH);
+      origin.add(Messages.get().DciLabelProvider_SourceMQTT);
+      origin.add(Messages.get().DciLabelProvider_SourceDeviceDriver);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
@@ -273,7 +276,6 @@ public class General extends DCIPropertyPageDialog
 		});
       fd = new FormData();
       fd.left = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
-      fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(dataType.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       checkUseCustomSnmpPort.setLayoutData(fd);
       checkUseCustomSnmpPort.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
@@ -292,10 +294,45 @@ public class General extends DCIPropertyPageDialog
       }
       fd = new FormData();
       fd.left = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
-      fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.right = new FormAttachment(checkUseCustomSnmpPort, 0, SWT.RIGHT);
       customSnmpPort.setLayoutData(fd);
-      
+
+      checkUseCustomSnmpVersion = new Button(groupData, SWT.CHECK);
+      checkUseCustomSnmpVersion.setText("Use custom SNMP version:");
+      checkUseCustomSnmpVersion.setSelection(dci.getSnmpVersion() != SnmpVersion.DEFAULT);
+      checkUseCustomSnmpVersion.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            customSnmpVersion.setEnabled(checkUseCustomSnmpVersion.getSelection());
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      fd = new FormData();
+      fd.left = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
+      fd.top = new FormAttachment(dataType.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.right = new FormAttachment(100, 0);
+      checkUseCustomSnmpVersion.setLayoutData(fd);
+      checkUseCustomSnmpVersion.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
+
+      customSnmpVersion = new Combo(groupData, SWT.BORDER | SWT.READ_ONLY);
+      customSnmpVersion.add("1");
+      customSnmpVersion.add("2c");
+      customSnmpVersion.add("3");
+      customSnmpVersion.select(indexFromSnmpVersion(dci.getSnmpVersion()));
+      customSnmpVersion.setEnabled(dci.getSnmpVersion() != SnmpVersion.DEFAULT);
+      fd = new FormData();
+      fd.left = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
+      fd.top = new FormAttachment(checkUseCustomSnmpVersion, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.right = new FormAttachment(100, 0);
+      customSnmpVersion.setLayoutData(fd);
+
       sampleCount = new LabeledSpinner(groupData, SWT.NONE);
       sampleCount.setLabel(Messages.get().General_SampleCountForAvg);
       sampleCount.setRange(0, 65535);
@@ -448,6 +485,48 @@ public class General extends DCIPropertyPageDialog
       return dialogArea;
 	}
 
+   /**
+    * Calculate selection index from SNMP version
+    * 
+    * @param version
+    * @return
+    */
+   private static int indexFromSnmpVersion(SnmpVersion version)
+	{
+	   switch(version)
+	   {
+	      case V1:
+	         return 0;
+         case V2C:
+            return 1;
+         case V3:
+            return 2;
+         default:
+            return -1;
+	   }
+	}
+
+   /**
+    * Get SNMP version value from selection index
+    * 
+    * @param index
+    * @return
+    */
+   private static SnmpVersion indexToSnmpVersion(int index)
+   {
+      switch(index)
+      {
+         case 0:
+            return SnmpVersion.V1;
+         case 1:
+            return SnmpVersion.V2C;
+         case 2:
+            return SnmpVersion.V3;
+         default:
+            return SnmpVersion.DEFAULT;
+      }
+   }
+
 	/**
 	 * Handler for changing item origin
 	 */
@@ -461,6 +540,8 @@ public class General extends DCIPropertyPageDialog
 		snmpRawType.setEnabled((index == DataCollectionItem.SNMP) && checkInterpretRawSnmpValue.getSelection());
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionItem.SNMP);
 		customSnmpPort.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpPort.getSelection());
+      checkUseCustomSnmpVersion.setEnabled(index == DataCollectionItem.SNMP);
+      customSnmpVersion.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpVersion.getSelection());
 		sampleCount.setEnabled(index == DataCollectionItem.WINPERF);
 		agentCacheMode.setEnabled((index == DataCollectionItem.AGENT) || (index == DataCollectionItem.SNMP));
 		selectButton.setEnabled(
@@ -468,7 +549,7 @@ public class General extends DCIPropertyPageDialog
 		      (index == DataCollectionItem.SNMP) || 
 		      (index == DataCollectionItem.INTERNAL) || 
 		      (index == DataCollectionItem.WINPERF) || 
-		      (index == DataCollectionItem.CHECKPOINT_SNMP) || 
+		      (index == DataCollectionItem.WEB_SERVICE) || 
             (index == DataCollectionItem.DEVICE_DRIVER) || 
 		      (index == DataCollectionItem.SCRIPT));
 	}
@@ -495,7 +576,7 @@ public class General extends DCIPropertyPageDialog
 			      dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), origin.getSelectionIndex(), false);
 				break;
 			case DataCollectionItem.SNMP:
-			case DataCollectionItem.CHECKPOINT_SNMP:
+			case DataCollectionItem.WEB_SERVICE:
 				SnmpObjectId oid;
 				try
 				{
@@ -562,6 +643,14 @@ public class General extends DCIPropertyPageDialog
 		{
 			dci.setSnmpPort(0);
 		}
+      if (checkUseCustomSnmpVersion.getSelection())
+      {
+         dci.setSnmpVersion(indexToSnmpVersion(customSnmpVersion.getSelectionIndex()));
+      }
+      else
+      {
+         dci.setSnmpVersion(SnmpVersion.DEFAULT);
+      }
 		
 		if (statusActive.getSelection())
 			dci.setStatus(DataCollectionItem.ACTIVE);

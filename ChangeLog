@@ -7,6 +7,7 @@
 - Maximum password length supported by nxencpasswd increased to 64 characters
 - Removed support for ancient custom CheckPoint SNMP agent on port 260
 - Fixed issues:
+	NX-50 (Allow per-DCI SNMP version settings)
 	NX-58 (Refactor Image Library)
 	NX-896 (Display blade chassis and servers in rack)
 	NX-1476 (NetXMS Server crashes when sending alarm summary email)

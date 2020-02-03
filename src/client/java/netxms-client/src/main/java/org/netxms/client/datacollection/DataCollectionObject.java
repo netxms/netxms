@@ -41,7 +41,7 @@ public abstract class DataCollectionObject
 	public static final int INTERNAL = 0;
 	public static final int AGENT = 1;
 	public static final int SNMP = 2;
-	public static final int CHECKPOINT_SNMP = 3;
+	public static final int WEB_SERVICE = 3;
 	public static final int PUSH = 4;
 	public static final int WINPERF = 5;
 	public static final int SMCLP = 6;

@@ -150,7 +150,6 @@ public class Messages extends NLS
    public String DciLabelProvider_None;
    public String DciLabelProvider_NotSupported;
    public String DciLabelProvider_SourceAgent;
-   public String DciLabelProvider_SourceCPSNMP;
    public String DciLabelProvider_SourceDeviceDriver;
    public String DciLabelProvider_SourceILO;
    public String DciLabelProvider_SourceInternal;
@@ -159,6 +158,7 @@ public class Messages extends NLS
    public String DciLabelProvider_SourceScript;
    public String DciLabelProvider_SourceSNMP;
    public String DciLabelProvider_SourceSSH;
+   public String DciLabelProvider_SourceWebService;
    public String DciLabelProvider_SourceWinPerf;
    public String DciLabelProvider_Table;
    public String DciLabelProvider_Unknown;
@@ -253,9 +253,7 @@ public class Messages extends NLS
    public String General_RetentionMode;
    public String General_RetentionTime;
    public String General_SampleCountForAvg;
-   public String General_Script;
    public String General_Select;
-   public String General_SMCLP;
    public String General_SNMP_DT_float;
    public String General_SNMP_DT_int32;
    public String General_SNMP_DT_int64;
@@ -264,14 +262,6 @@ public class Messages extends NLS
    public String General_SNMP_DT_None;
    public String General_SNMP_DT_uint32;
    public String General_SNMP_DT_uint64;
-   public String General_SourceAgent;
-   public String General_SourceCPSNMP;
-   public String General_SourceDeviceDriver;
-   public String General_SourceInternal;
-   public String General_SourceMQTT;
-   public String General_SourcePush;
-   public String General_SourceSNMP;
-   public String General_SourceSSH;
    public String General_Status;
    public String General_Storage;
    public String GeneralTable_Active;
@@ -299,13 +289,6 @@ public class Messages extends NLS
    public String GeneralTable_RetentionMode;
    public String GeneralTable_RetentionTime;
    public String GeneralTable_Select;
-   public String GeneralTable_SourceAgent;
-   public String GeneralTable_SourceCPSNMP;
-   public String GeneralTable_SourceDeviceDriver;
-   public String GeneralTable_SourceInternal;
-   public String GeneralTable_SourcePush;
-   public String GeneralTable_SourceSNMP;
-   public String GeneralTable_SourceSSH;
    public String GeneralTable_Status;
    public String GeneralTable_Storage;
    public String GeneralTable_UseCustomRetention;
@@ -314,7 +297,6 @@ public class Messages extends NLS
    public String General_UseCustomPort;
    public String General_UseCustomRetention;
    public String General_UseDefaultRetention;
-   public String General_WinPerf;
    public String InstanceDiscovery_AgentList;
    public String InstanceDiscovery_AgentTable;
    public String InstanceDiscovery_BaseOid;
