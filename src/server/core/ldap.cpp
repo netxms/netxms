@@ -242,6 +242,7 @@ void LDAPConnection::initLDAP()
    int version = LDAP_VERSION3;
    ldap_set_option(m_ldapConn, LDAP_OPT_PROTOCOL_VERSION, &version); //default verion 2, it's recomended to use version 3
    ldap_set_option(m_ldapConn, LDAP_OPT_REFERRALS, LDAP_OPT_OFF);
+   nxlog_debug_tag(LDAP_DEBUG_TAG, 6, _T("LDAPConnection::initLDAP(): LDAP session initialized"));
 }
 
 /**
@@ -294,9 +295,10 @@ void LDAPConnection::syncUsers()
 {
    getAllSyncParameters();
    initLDAP();
-   if (loginLDAP() != RCC_SUCCESS)
+   UINT32 rcc = loginLDAP();
+   if (rcc != RCC_SUCCESS)
    {
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 6, _T("LDAPConnection::syncUsers(): Could not login."));
+      nxlog_debug_tag(LDAP_DEBUG_TAG, 6, _T("LDAPConnection::syncUsers(): login failed (error %u)"), rcc);
       return;
    }
 
@@ -419,7 +421,7 @@ int LDAPConnection::readInPages(LDAP_CHAR *base)
 
    LDAPControl *pageControl = NULL, *controls[2] = { NULL, NULL };
 	LDAPControl **returnedControls = NULL;
-#if defined(__sun)
+#if defined(__sun) && !SUNOS_OPENLDAP
    unsigned int pageSize = m_pageSize;
    unsigned int totalCount = 0;
 #elif defined(_WIN32)
