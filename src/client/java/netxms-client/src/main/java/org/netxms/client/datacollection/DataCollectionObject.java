@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.snmp.SnmpVersion;
 
 /**
  * Abstract data collection object
@@ -97,16 +98,17 @@ public abstract class DataCollectionObject
 	protected String systemTag;
 	protected String perfTabSettings;
 	protected int snmpPort;
+   protected SnmpVersion snmpVersion;
 	protected ArrayList<String> schedules;
 	protected Object userData;
-	private String comments;
-   private String instance;
-   private int instanceDiscoveryMethod;
-   private String instanceDiscoveryData;
-   private String instanceDiscoveryFilter;
-   private List<Long> accessList;
-   private int instanceRetentionTime;
-   private long relatedObject;
+   protected String comments;
+   protected String instance;
+   protected int instanceDiscoveryMethod;
+   protected String instanceDiscoveryData;
+   protected String instanceDiscoveryFilter;
+   protected List<Long> accessList;
+   protected int instanceRetentionTime;
+   protected long relatedObject;
 
 	/**
 	 * Create data collection object from NXCP message
@@ -134,6 +136,9 @@ public abstract class DataCollectionObject
 		systemTag = msg.getFieldAsString(NXCPCodes.VID_SYSTEM_TAG);
 		perfTabSettings = msg.getFieldAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
 		snmpPort = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_PORT);
+      snmpVersion = msg.isFieldPresent(NXCPCodes.VID_SNMP_VERSION)
+            ? SnmpVersion.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION))
+            : SnmpVersion.DEFAULT;
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		instanceRetentionTime = msg.getFieldAsInt32(NXCPCodes.VID_INSTANCE_RETENTION);
 		
@@ -151,11 +156,11 @@ public abstract class DataCollectionObject
       instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);      
       relatedObject = msg.getFieldAsInt64(NXCPCodes.VID_RELATED_OBJECT);      
 
-      Long arr[] = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
-      if(arr == null)
+      Long acl[] = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
+      if (acl == null)
          accessList = new ArrayList<Long>(0);
       else
-         accessList = new ArrayList<Long>(Arrays.asList(arr));
+         accessList = new ArrayList<Long>(Arrays.asList(acl));
 	}
 
 	/**
@@ -184,6 +189,7 @@ public abstract class DataCollectionObject
 		description = "";
 		systemTag = "";
 		snmpPort = 0;
+      snmpVersion = SnmpVersion.DEFAULT;
 		schedules = new ArrayList<String>(0);
 		comments = "";
       instance = "";
@@ -218,6 +224,7 @@ public abstract class DataCollectionObject
 	   systemTag = dco.systemTag;
 	   perfTabSettings = dco.perfTabSettings;
 	   snmpPort = dco.snmpPort;
+      snmpVersion = dco.snmpVersion;
 	   schedules = new ArrayList<String>(dco.schedules);
 	   userData = dco.userData;
 	   comments = dco.comments;
@@ -254,6 +261,7 @@ public abstract class DataCollectionObject
 		if (perfTabSettings != null)
 			msg.setField(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
+      msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, snmpVersion.getValue());
 		msg.setField(NXCPCodes.VID_COMMENTS, comments);
 		msg.setFieldInt32(NXCPCodes.VID_INSTANCE_RETENTION, instanceRetentionTime);
 		
@@ -609,8 +617,24 @@ public abstract class DataCollectionObject
 	}
 
 	/**
-	 * @return the flags
-	 */
+    * @return the snmpVersion
+    */
+   public SnmpVersion getSnmpVersion()
+   {
+      return snmpVersion;
+   }
+
+   /**
+    * @param snmpVersion the snmpVersion to set
+    */
+   public void setSnmpVersion(SnmpVersion snmpVersion)
+   {
+      this.snmpVersion = snmpVersion;
+   }
+
+   /**
+    * @return the flags
+    */
 	public int getFlags()
 	{
 		return flags;

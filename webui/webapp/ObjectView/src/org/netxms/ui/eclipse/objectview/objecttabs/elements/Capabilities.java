@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
@@ -97,15 +98,15 @@ public class Capabilities extends TableElement
 	 * @param version
 	 * @return
 	 */
-	private String getSnmpVersionName(int version)
+   private String getSnmpVersionName(SnmpVersion version)
 	{
 		switch(version)
 		{
-			case AbstractNode.SNMP_VERSION_1:
+         case V1:
 				return "1"; //$NON-NLS-1$
-			case AbstractNode.SNMP_VERSION_2C:
+         case V2C:
 				return "2c"; //$NON-NLS-1$
-			case AbstractNode.SNMP_VERSION_3:
+         case V3:
 				return "3"; //$NON-NLS-1$
 			default:
 				return "???"; //$NON-NLS-1$

@@ -48,6 +48,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.snmp.SnmpVersion;
 
 /**
  * This class is used to hold data for NXCSession.modifyObject()
@@ -155,7 +156,7 @@ public class NXCObjectModificationData
    private String agentSecret;
    private long agentProxy;
    private int snmpPort;
-   private int snmpVersion;
+   private SnmpVersion snmpVersion;
    private int snmpAuthMethod;
    private int snmpPrivMethod;
    private String snmpAuthName;
@@ -473,7 +474,7 @@ public class NXCObjectModificationData
    /**
     * @return the snmpVersion
     */
-   public int getSnmpVersion()
+   public SnmpVersion getSnmpVersion()
    {
       return snmpVersion;
    }
@@ -481,7 +482,7 @@ public class NXCObjectModificationData
    /**
     * @param snmpVersion the snmpVersion to set
     */
-   public void setSnmpVersion(int snmpVersion)
+   public void setSnmpVersion(SnmpVersion snmpVersion)
    {
       this.snmpVersion = snmpVersion;
       fieldSet.add(SNMP_VERSION);

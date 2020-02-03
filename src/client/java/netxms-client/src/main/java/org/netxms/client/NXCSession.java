@@ -5228,7 +5228,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.SNMP_VERSION))
       {
-         msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, data.getSnmpVersion());
+         msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, data.getSnmpVersion().getValue());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.SNMP_AUTH))

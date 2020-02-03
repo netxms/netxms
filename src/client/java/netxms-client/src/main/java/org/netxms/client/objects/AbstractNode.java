@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,17 +36,13 @@ import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.NodeType;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.configs.ChassisPlacement;
+import org.netxms.client.snmp.SnmpVersion;
 
 /**
  * Abstract base class for node objects.
  */
 public abstract class AbstractNode extends DataCollectionTarget implements ElementForPhysicalPlacment, ZoneMember, PollingTarget
 {
-	// SNMP versions
-	public static final int SNMP_VERSION_1 = 0;
-	public static final int SNMP_VERSION_2C = 1;
-	public static final int SNMP_VERSION_3 = 3;
-	
 	// Agent authentication methods
 	public static final int AGENT_AUTH_NONE = 0;
 	public static final int AGENT_AUTH_PLAINTEXT = 1;
@@ -126,7 +122,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	protected int snmpAuthMethod;
 	protected int snmpPrivMethod;
 	protected String snmpOID;
-	protected int snmpVersion;
+   protected SnmpVersion snmpVersion;
 	protected int snmpPort;
 	protected String snmpSysName;
    protected String snmpSysContact;
@@ -213,7 +209,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 		snmpPrivMethod = methods >> 8;
 		snmpOID = msg.getFieldAsString(NXCPCodes.VID_SNMP_OID);
 		snmpPort = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_PORT);
-		snmpVersion = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION);
+      snmpVersion = SnmpVersion.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION));
 		systemDescription = msg.getFieldAsString(NXCPCodes.VID_SYS_DESCRIPTION);
 		snmpSysName = msg.getFieldAsString(NXCPCodes.VID_SYS_NAME);
       snmpSysContact = msg.getFieldAsString(NXCPCodes.VID_SYS_CONTACT);
@@ -469,7 +465,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	/**
 	 * @return the snmpVersion
 	 */
-	public int getSnmpVersion()
+   public SnmpVersion getSnmpVersion()
 	{
 		return snmpVersion;
 	}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -107,7 +108,7 @@ public class SNMP extends PropertyPage
       snmpAuth.add(Messages.get().Communication_AuthMD5);
       snmpAuth.add(Messages.get().Communication_AuthSHA1);
       snmpAuth.select(node.getSnmpAuthMethod());
-      snmpAuth.setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
+      snmpAuth.setEnabled(node.getSnmpVersion() == SnmpVersion.V3);
       
       fd = new FormData();
       fd.left = new FormAttachment(snmpAuth.getParent(), 0, SWT.RIGHT);
@@ -117,7 +118,7 @@ public class SNMP extends PropertyPage
       snmpPriv.add(Messages.get().Communication_EncDES);
       snmpPriv.add(Messages.get().Communication_EncAES);
       snmpPriv.select(node.getSnmpPrivMethod());
-      snmpPriv.setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
+      snmpPriv.setEnabled(node.getSnmpVersion() == SnmpVersion.V3);
       
       snmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       snmpProxy.setLabel(Messages.get().Communication_Proxy);
@@ -129,7 +130,8 @@ public class SNMP extends PropertyPage
       snmpProxy.setLayoutData(fd);
       
       snmpAuthName = new LabeledText(dialogArea, SWT.NONE);
-      snmpAuthName.setLabel(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3 ? Messages.get().Communication_UserName : Messages.get().Communication_Community);
+      snmpAuthName.setLabel(node.getSnmpVersion() == SnmpVersion.V3 ? Messages.get().Communication_UserName
+            : Messages.get().Communication_Community);
       snmpAuthName.setText(node.getSnmpAuthName());
       fd = new FormData();
       fd.left = new FormAttachment(snmpProxy, 0, SWT.RIGHT);
@@ -145,7 +147,7 @@ public class SNMP extends PropertyPage
       fd.top = new FormAttachment(snmpAuth.getParent(), 0, SWT.TOP);
       fd.right = new FormAttachment(100, 0);
       snmpAuthPassword.setLayoutData(fd);
-      snmpAuthPassword.getTextControl().setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
+      snmpAuthPassword.getTextControl().setEnabled(node.getSnmpVersion() == SnmpVersion.V3);
       
       snmpPrivPassword = new LabeledText(dialogArea, SWT.NONE);
       snmpPrivPassword.setLabel(Messages.get().Communication_EncPassword);
@@ -155,7 +157,7 @@ public class SNMP extends PropertyPage
       fd.top = new FormAttachment(snmpProxy, 0, SWT.TOP);
       fd.right = new FormAttachment(100, 0);
       snmpPrivPassword.setLayoutData(fd);
-      snmpPrivPassword.getTextControl().setEnabled(node.getSnmpVersion() == AbstractNode.SNMP_VERSION_3);
+      snmpPrivPassword.getTextControl().setEnabled(node.getSnmpVersion() == SnmpVersion.V3);
 
       fd = new FormData();
       fd.left = new FormAttachment(snmpVersion.getParent(), 0, SWT.RIGHT);
@@ -181,26 +183,27 @@ public class SNMP extends PropertyPage
     * @param version SNMP version
     * @return index in combo box
     */
-   private int snmpVersionToIndex(int version)
+   private int snmpVersionToIndex(SnmpVersion version)
    {
       switch(version)
       {
-         case AbstractNode.SNMP_VERSION_1:
+         case V1:
             return 0;
-         case AbstractNode.SNMP_VERSION_2C:
+         case V2C:
             return 1;
-         case AbstractNode.SNMP_VERSION_3:
+         case V3:
             return 2;
+         default:
+            return 0;
       }
-      return 0;
    }
    
    /**
     * Convert selection index in SNMP version combo box to SNMP version
     */
-   private int snmpIndexToVersion(int index)
+   private SnmpVersion snmpIndexToVersion(int index)
    {
-      final int[] versions = { AbstractNode.SNMP_VERSION_1, AbstractNode.SNMP_VERSION_2C, AbstractNode.SNMP_VERSION_3 };
+      final SnmpVersion[] versions = { SnmpVersion.V1, SnmpVersion.V2C, SnmpVersion.V3 };
       return versions[index];
    }
    
