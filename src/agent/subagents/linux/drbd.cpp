@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2006-2013 Victor Kirhenshtein
+** Copyright (C) 2006-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,13 +32,13 @@
  */
 typedef struct
 {
-	int id;
-	int protocol;
-	char connState[STATUS_FIELD_LEN];
-	char localDeviceState[STATUS_FIELD_LEN];
-	char remoteDeviceState[STATUS_FIELD_LEN];
-	char localDataState[STATUS_FIELD_LEN];
-	char remoteDataState[STATUS_FIELD_LEN];
+   int id;
+   int protocol;
+   char connState[STATUS_FIELD_LEN];
+   char localDeviceState[STATUS_FIELD_LEN];
+   char remoteDeviceState[STATUS_FIELD_LEN];
+   char localDataState[STATUS_FIELD_LEN];
+   char remoteDataState[STATUS_FIELD_LEN];
 } DRBD_DEVICE;
 
 /**
@@ -176,22 +176,21 @@ void StopDrbdCollector()
  */
 LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
-	TCHAR szBuffer[1024];
-
-	MutexLock(s_deviceAccess);
-	for(int i = 0; i < MAX_DEVICE_COUNT; i++)
-	{
-		if (s_devices[i].id != -1)
-		{
-                        _sntprintf(szBuffer, 1024, _T("/dev/drbd%d %hs %hs/%hs %hs/%hs %c"),
-			           i, s_devices[i].connState, s_devices[i].localDeviceState,
-			           s_devices[i].remoteDeviceState, s_devices[i].localDataState,
-			           s_devices[i].remoteDataState, (TCHAR)s_devices[i].protocol);
-			pValue->add(szBuffer);
-		}
-	}
-	MutexUnlock(s_deviceAccess);
-	return SYSINFO_RC_SUCCESS;
+   MutexLock(s_deviceAccess);
+   for(int i = 0; i < MAX_DEVICE_COUNT; i++)
+   {
+      if (s_devices[i].id != -1)
+      {
+         TCHAR szBuffer[1024];
+         _sntprintf(szBuffer, 1024, _T("/dev/drbd%d %hs %hs/%hs %hs/%hs %c"),
+               i, s_devices[i].connState, s_devices[i].localDeviceState,
+               s_devices[i].remoteDeviceState, s_devices[i].localDataState,
+               s_devices[i].remoteDataState, (TCHAR)s_devices[i].protocol);
+         pValue->add(szBuffer);
+      }
+   }
+   MutexUnlock(s_deviceAccess);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -228,18 +227,18 @@ LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Abs
 	if (!AgentGetParameterArg(pszCmd, 1, szDev, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
-        int nDev = _tcstol(szDev, &eptr, 0);
-        if ((nDev < 0) || (nDev >= MAX_DEVICE_COUNT) || (*eptr != 0))
-		return SYSINFO_RC_UNSUPPORTED;
+   int nDev = _tcstol(szDev, &eptr, 0);
+   if ((nDev < 0) || (nDev >= MAX_DEVICE_COUNT) || (*eptr != 0))
+      return SYSINFO_RC_UNSUPPORTED;
 
-        LONG nRet = SYSINFO_RC_ERROR;
-	MutexLock(s_deviceAccess);
-	if (s_devices[nDev].id != -1)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
-		switch(*pArg)
-		{
-			case 'c':	// Connection state as text
+   LONG nRet = SYSINFO_RC_ERROR;
+   MutexLock(s_deviceAccess);
+   if (s_devices[nDev].id != -1)
+   {
+      nRet = SYSINFO_RC_SUCCESS;
+      switch(*pArg)
+      {
+         case 'c':   // Connection state as text
 				ret_mbstring(pValue, s_devices[nDev].connState);
 				break;
 			case 's':	// State as text
@@ -262,8 +261,8 @@ LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Abs
 				nRet = SYSINFO_RC_UNSUPPORTED;
 				break;
 		}
-	}
-	MutexUnlock(s_deviceAccess);
+   }
+   MutexUnlock(s_deviceAccess);
 
-	return nRet;
+   return nRet;
 }
