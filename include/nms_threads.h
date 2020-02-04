@@ -1539,7 +1539,7 @@ private:
    VolatileCounter *m_refCount;
 
 public:
-   Mutex();
+   Mutex(bool fast = false);
    Mutex(const Mutex& src);
    ~Mutex();
 

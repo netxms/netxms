@@ -1337,6 +1337,7 @@ typedef struct
 #define VID_REQUEST_TYPE            ((UINT32)677)
 #define VID_VERIFY_CERT             ((UINT32)678)
 #define VID_SYNC_NODE_COMPONENTS    ((UINT32)679)
+#define VID_WEBSVC_ID               ((UINT32)680)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1560,7 +1561,7 @@ typedef struct
 
 #define VID_NOTIFICATION_DRIVER_BASE ((UINT32)0x10000000)
 
-#define VID_HEADER_BASE             ((UINT32)0x20000000)
+#define VID_HEADERS_BASE             ((UINT32)0x20000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

@@ -428,15 +428,6 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
 }
 
 /**
- * Safely get authentication type from integer value
- */
-static WebServiceAuthType AuthTypeFromInt(int type)
-{
-   return ((type >= static_cast<int>(WebServiceAuthType::NONE)) &&
-           (type <= static_cast<int>(WebServiceAuthType::ANYSAFE))) ? static_cast<WebServiceAuthType>(type) : WebServiceAuthType::NONE;
-}
-
-/**
  * Get parameters from web service
  */
 void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
@@ -467,13 +458,13 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
       char *password = request->getFieldAsUtf8String(VID_PASSWORD);
       struct curl_slist *headers = NULL;
       UINT32 headerSize = request->getFieldAsUInt32(VID_NUM_HEADERS);
-      UINT32 fieldId = VID_HEADER_BASE;
+      UINT32 fieldId = VID_HEADERS_BASE;
       char header[CURL_MAX_HTTP_HEADER];
       for(int i = 0; i < headerSize; i++)
       {
          headers = curl_slist_append(headers, request->getFieldAsUtf8String(fieldId++, header, CURL_MAX_HTTP_HEADER));
       }
-      WebServiceAuthType authType = AuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
+      WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
       result = cachedEntry->updateData(url, login, password, authType, headers, request->getFieldAsBoolean(VID_VERIFY_CERT), topLevelName+1);
 
       curl_slist_free_all(headers);

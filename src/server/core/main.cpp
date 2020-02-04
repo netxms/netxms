@@ -25,6 +25,7 @@
 #include <netxms_mt.h>
 #include <hdlink.h>
 #include <agent_tunnel.h>
+#include <nxcore_websvc.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -1019,10 +1020,6 @@ retry_db_lock:
    SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
    LoadHelpDeskLink();
 
-   // Initialize data collection subsystem
-   LoadPerfDataStorageDrivers();
-   InitDataCollector();
-
    InitLogAccess();
    FileUploadJob::init();
    InitMappingTables();
@@ -1035,10 +1032,16 @@ retry_db_lock:
       return FALSE;
    }
 
-   InitClientListeners();
+   // Initialize data collection subsystem
+   LoadPerfDataStorageDrivers();
+   LoadWebServiceDefinitions();
+   InitDataCollector();
+
    int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);
    if (importMode > 0)
       ImportLocalConfiguration(importMode == 2);
+
+   InitClientListeners();
 
    // Check if management node object presented in database
    CheckForMgmtNode();

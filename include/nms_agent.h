@@ -169,6 +169,15 @@ enum class WebServiceAuthType
 };
 
 /**
+ * Safely get authentication type from integer value
+ */
+inline WebServiceAuthType WebServiceAuthTypeFromInt(int type)
+{
+   return ((type >= static_cast<int>(WebServiceAuthType::NONE)) &&
+           (type <= static_cast<int>(WebServiceAuthType::ANYSAFE))) ? static_cast<WebServiceAuthType>(type) : WebServiceAuthType::NONE;
+}
+
+/**
  * Policy change notification
  */
 struct PolicyChangeNotification

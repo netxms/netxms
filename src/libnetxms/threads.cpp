@@ -25,9 +25,9 @@
 /**
  * Mutex class constructor
  */
-Mutex::Mutex()
+Mutex::Mutex(bool fast)
 {
-   m_mutex = MutexCreate();
+   m_mutex = fast ? MutexCreateFast() : MutexCreate();
    m_refCount = new VolatileCounter(1);
 }
 

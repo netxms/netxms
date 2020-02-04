@@ -2361,13 +2361,8 @@ bool InitAlarmManager()
    }
 
    int count = DBGetNumRows(hResult);
-   if (count > 0)
-   {
-      for(int i = 0; i < count; i++)
-      {
-         s_alarmList.add(new Alarm((cachedb != NULL) ? cachedb : hdb, hResult, i));
-      }
-   }
+   for(int i = 0; i < count; i++)
+      s_alarmList.add(new Alarm((cachedb != NULL) ? cachedb : hdb, hResult, i));
 
    DBFreeResult(hResult);
    DBConnectionPoolReleaseConnection(hdb);

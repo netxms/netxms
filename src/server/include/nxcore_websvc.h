@@ -30,6 +30,8 @@ class WebServiceDefinition
 {
 private:
    UINT32 m_id;
+   uuid m_guid;
+   TCHAR *m_name;
    TCHAR *m_url;
    WebServiceAuthType m_authType;
    TCHAR *m_login;   // Or token for "bearer" auth
@@ -40,11 +42,14 @@ private:
 
 public:
    WebServiceDefinition(const NXCPMessage *msg);
-   WebServiceDefinition(DB_RESULT hResult, int row);
+   WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~WebServiceDefinition();
 
-   void prepareRequest(const TCHAR *path, const StringList *args, NXCPMessage *msg) const;
+   void prepareRequest(DataCollectionTarget *object, const TCHAR *path, const StringList *args, NXCPMessage *msg) const;
    void fillMessage(NXCPMessage *msg) const;
 };
+
+void LoadWebServiceDefinitions();
+shared_ptr<WebServiceDefinition> GetWebServiceDefinition(const TCHAR *name);
 
 #endif

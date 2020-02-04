@@ -24,7 +24,34 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 32.4 to 32.5
+ * Upgrade from 32.6 to 32.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE websvc_definitions (")
+         _T("id integer not null,")
+         _T("guid varchar(36) not null,")
+         _T("name varchar(63) not null,")
+         _T("url varchar(4000) null,")
+         _T("auth_type integer not null,")
+         _T("login varchar(255) null,")
+         _T("password varchar(255) null,")
+         _T("cache_retention_time integer not null,")
+         _T("request_timeout integer not null,")
+         _T("PRIMARY KEY(id))")));
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE websvc_headers (")
+         _T("websvc_id integer not null,")
+         _T("name varchar(63) not null,")
+         _T("value varchar(2000) null,")
+         _T("PRIMARY KEY(websvc_id))")));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
+ * Upgrade from 32.5 to 32.6
  */
 static bool H_UpgradeFromV5()
 {
@@ -45,7 +72,7 @@ static bool H_UpgradeFromV5()
 }
 
 /**
- * Upgrade from 32.3 to 32.4
+ * Upgrade from 32.4 to 32.5
  */
 static bool H_UpgradeFromV4()
 {
@@ -133,6 +160,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 6,  31, 7, H_UpgradeFromV6 },
    { 5,  31, 6, H_UpgradeFromV5 },
    { 4,  31, 5, H_UpgradeFromV4 },
    { 3,  32, 4, H_UpgradeFromV3 },

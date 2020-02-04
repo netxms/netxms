@@ -958,7 +958,7 @@ UINT32 AgentConnection::getWebServiceParameter(const TCHAR *url, UINT32 retentio
    msg.setField(VID_PASSWORD, password);
    msg.setField(VID_AUTH_TYPE, (INT16)authType);
    msg.setField(VID_VERIFY_CERT, verifyCert);
-   headers->fillMessage(&msg, VID_HEADER_BASE, VID_NUM_HEADERS);
+   headers->fillMessage(&msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    parameters->fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
 
    UINT32 dwRetCode;

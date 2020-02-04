@@ -2203,3 +2203,31 @@ CREATE TABLE nc_persistent_storage
    entry_value varchar(2000) null,
    PRIMARY KEY(channel_name, entry_name)
 ) TABLE_TYPE;
+
+/**
+ * Web service definitions
+ */
+CREATE TABLE websvc_definitions
+(
+   id integer not null,
+   guid varchar(36) not null,
+   name varchar(63) not null,
+   url varchar(4000) null,
+   auth_type integer not null,
+   login varchar(255) null,
+   password varchar(255) null,
+   cache_retention_time integer not null,
+   request_timeout integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Additional headers for web services
+ */
+CREATE TABLE websvc_headers
+(
+   websvc_id integer not null,
+   name varchar(63) not null,
+   value varchar(2000) null,
+   PRIMARY KEY(websvc_id,name)
+) TABLE_TYPE;
