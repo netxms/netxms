@@ -980,12 +980,12 @@ BOOL Initialize()
 #else /* not _WITH_ENCRYPTION */
    if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && !(g_dwFlags & AF_SUBAGENT_LOADER))
    {
-      nxlog_write(MSG_CANNOT_FORCE_ENCRYPTION, NXLOG_ERROR, NULL);
+      nxlog_write(NXLOG_ERROR, _T("Encryption set as required in configuration but agent was build without encryption support"));
       return false;
    }
 #endif
 
-	DBInit();
+   DBInit();
    if (!OpenLocalDatabase())
    {
       nxlog_write(NXLOG_ERROR, _T("Unable to open local database"));
