@@ -54,7 +54,10 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    int erroffset;
    pcre *preg = pcre_compile("[[:blank:]]*([\\w]+):[[:blank:]]*(.*)", PCRE_COMMON_FLAGS_A | PCRE_CASELESS, &errptr, &erroffset, NULL);
    if (preg == NULL)
+   {
+      pclose(pipe);
       return SYSINFO_RC_ERROR;
+   }
 
    value->addColumn(_T("NAME"));
    value->addColumn(_T("VERSION"));
