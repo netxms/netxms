@@ -81,7 +81,7 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 
 void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList);
 
-void GetObjectPhysicalLinks(NetObj *obj, UINT32 userId, UINT32 patchPannelId, NXCPMessage *msg);
+void GetObjectPhysicalLinks(NetObj *obj, UINT32 userId, UINT32 patchPanelId, NXCPMessage *msg);
 UINT32 AddLink(NXCPMessage *msg, UINT32 userId);
 bool DeleteLink(UINT32 id, UINT32 userId);
 
@@ -134,9 +134,9 @@ typedef struct
 /**
  * Callback to delete agent connections for loading files in destructor
  */
-static void DeleteCallback(NetObj* obj, void *data)
+static void DeleteAgentConnection(AgentConnection *conn, void *context)
 {
-   ((AgentConnection *)obj)->decRefCount();
+   conn->decRefCount();
 }
 
 /**
@@ -166,7 +166,7 @@ THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *arg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
+ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_agentConnections(false)
 {
    m_hSocket = hSocket;
    m_id = -1;
@@ -245,10 +245,7 @@ ClientSession::~ClientSession()
 	delete m_console;
 
    m_musicTypeList.clear();
-   if (m_agentConn.size() > 0)
-   {
-      m_agentConn.forEach(&DeleteCallback, NULL);
-   }
+   m_agentConnections.forEach(DeleteAgentConnection, NULL);
 
    delete m_serverCommands;
    delete m_downloadFileMap;
@@ -426,7 +423,7 @@ void ClientSession::readThread()
             }
             else
             {
-               AgentConnection *conn = (AgentConnection *)m_agentConn.get(msg->getId());
+               AgentConnection *conn = m_agentConnections.get(msg->getId());
                if (conn != NULL)
                {
                   if (msg->getCode() == CMD_FILE_DATA)
@@ -437,7 +434,7 @@ void ClientSession::readThread()
                         {
                            debugPrintf(6, _T("Got end of file marker"));
                            //get response with specific ID if ok< then send ok, else send error
-                           m_agentConn.remove(msg->getId());
+                           m_agentConnections.remove(msg->getId());
                            conn->decRefCount();
 
                            NXCPMessage response;
@@ -451,7 +448,7 @@ void ClientSession::readThread()
                      {
                         debugPrintf(6, _T("Error while sending to agent"));
                         // I/O error
-                        m_agentConn.remove(msg->getId());
+                        m_agentConnections.remove(msg->getId());
                         conn->decRefCount();
 
                         NXCPMessage response;
@@ -465,7 +462,7 @@ void ClientSession::readThread()
                   {
                      // Resend abort message
                      conn->sendMessage(msg);
-                     m_agentConn.remove(msg->getId());
+                     m_agentConnections.remove(msg->getId());
                      conn->decRefCount();
                   }
                }
@@ -13748,7 +13745,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                      WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                         _T("Started direct upload of file \"%s\" to agent"), fileName);
                      //Set all required for file download
-                     m_agentConn.put((QWORD)request->getId(), (NetObj *)conn);
+                     m_agentConnections.put(request->getId(), conn);
                   }
                   else
                   {

@@ -272,7 +272,7 @@ protected:
    void swapAndWait();
 
 	static ssize_t findElement(INDEX_HEAD *index, UINT64 key);
-   void findObjects(Array *resultSet, bool (*comparator)(void *, void *), void *data);
+   void findAll(Array *resultSet, bool (*comparator)(void *, void *), void *data);
 
 public:
 	AbstractIndexBase(bool owner);
@@ -302,22 +302,101 @@ public:
 };
 
 /**
+ * Index that keeps shared pointers
+ */
+template<typename T> class SharedPointerIndex : public AbstractIndexBase
+{
+   DISABLE_COPY_CTOR(SharedPointerIndex)
+
+private:
+   static void destructor(void *object)
+   {
+      delete static_cast<shared_ptr<T>*>(object);
+   }
+
+   static bool comparatorWrapper(shared_ptr<T> *element, std::pair<bool (*)(T*, void*), void*> *context)
+   {
+      return context->first(element->get(), context->second);
+   }
+
+   static void enumeratorWrapper(shared_ptr<T> *element, std::pair<void (*)(T*, void*), void*> *context)
+   {
+      context->first(element->get(), context->second);
+   }
+
+public:
+   SharedPointerIndex<T>() : AbstractIndexBase(true)
+   {
+      this->m_objectDestructor = destructor;
+   }
+
+   bool put(UINT64 key, T *object)
+   {
+      return AbstractIndexBase::put(key, new shared_ptr<T>(object));
+   }
+
+   bool put(UINT64 key, shared_ptr<T> object)
+   {
+      return AbstractIndexBase::put(key, new shared_ptr<T>(object));
+   }
+
+   shared_ptr<T> get(UINT64 key)
+   {
+      auto v = static_cast<shared_ptr<T>*>(AbstractIndexBase::get(key));
+      return (v != NULL) ? shared_ptr<T>(*v) : shared_ptr<T>();
+   }
+
+   shared_ptr<T> find(bool (*comparator)(T *, void *), void *context)
+   {
+      std::pair<bool (*)(T*, void*), void*> wrapperData(comparator, context);
+      auto v = static_cast<shared_ptr<T>*>(AbstractIndexBase::find(reinterpret_cast<bool (*)(void*, void*)>(comparatorWrapper), &wrapperData));
+      return (v != NULL) ? shared_ptr<T>(*v) : shared_ptr<T>();
+   }
+
+   template<typename P> shared_ptr<T> find(bool (*comparator)(T *, P *), P *context)
+   {
+      return find(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
+   }
+
+   SharedObjectArray<T> *findAll(bool (*comparator)(T *, void *), void *context)
+   {
+      std::pair<bool (*)(T*, void*), void*> wrapperData(comparator, context);
+      ObjectArray<shared_ptr<T>> tempResultSet;
+      AbstractIndexBase::findAll(&tempResultSet, reinterpret_cast<bool (*)(void*, void*)>(comparatorWrapper), &wrapperData);
+      auto resultSet = new SharedObjectArray<T>(tempResultSet.size());
+      for(int i = 0; i < tempResultSet.size(); i++)
+         resultSet->add(*tempResultSet.get(i));
+      return resultSet;
+   }
+
+   template<typename P> SharedObjectArray<T> *findAll(bool (*comparator)(T *, P *), P *context)
+   {
+      return findAll(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
+   }
+
+   void forEach(void (*callback)(T *, void *), void *context)
+   {
+      std::pair<void (*)(T*, void*), void*> wrapperData(callback, context);
+      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
+   }
+
+   template<typename P> void forEach(void (*callback)(T *, P *), P *context)
+   {
+      std::pair<void (*)(T*, void*), void*> wrapperData(reinterpret_cast<void (*)(T*, void*)>(callback), context);
+      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
+   }
+};
+
+/**
  * Abstract index template
  */
 template<typename T> class AbstractIndex : public AbstractIndexBase
 {
    DISABLE_COPY_CTOR(AbstractIndex)
 
-private:
-   static void destructor(void *object)
-   {
-      delete static_cast<T*>(object);
-   }
-
 public:
    AbstractIndex<T>(bool owner) : AbstractIndexBase(owner)
    {
-      m_objectDestructor = destructor;
    }
 
    bool put(UINT64 key, T *object)
@@ -330,26 +409,56 @@ public:
       return static_cast<T*>(AbstractIndexBase::get(key));
    }
 
-   T *find(bool (*comparator)(T *, void *), void *data)
+   T *find(bool (*comparator)(T *, void *), void *context)
    {
-      return static_cast<T*>(AbstractIndexBase::find(reinterpret_cast<bool (*)(void*, void*)>(comparator), data));
+      return static_cast<T*>(AbstractIndexBase::find(reinterpret_cast<bool (*)(void*, void*)>(comparator), context));
    }
 
-   ObjectArray<T> *findObjects(bool (*comparator)(T *, void *), void *data)
+   template<typename P> T *find(bool (*comparator)(T *, P *), P *context)
+   {
+      return static_cast<T*>(AbstractIndexBase::find(reinterpret_cast<bool (*)(void*, void*)>(comparator), (void *)context));
+   }
+
+   ObjectArray<T> *findAll(bool (*comparator)(T *, void *), void *context)
    {
       ObjectArray<T> *resultSet = new ObjectArray<T>(64, 64, false);
-      AbstractIndexBase::findObjects(resultSet, reinterpret_cast<bool (*)(void*, void*)>(comparator), data);
+      AbstractIndexBase::findAll(resultSet, reinterpret_cast<bool (*)(void*, void*)>(comparator), context);
       return resultSet;
    }
 
-   void forEach(void (*callback)(T *, void *), void *data)
+   template<typename P> ObjectArray<T> *findAll(bool (*comparator)(T *, P *), P *context)
    {
-      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), data);
+      return findAll(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
    }
 
-   template<typename P> void forEach(void (*callback)(T *, P *), P *data)
+   void forEach(void (*callback)(T *, void *), void *context)
    {
-      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), data);
+      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), context);
+   }
+
+   template<typename P> void forEach(void (*callback)(T *, P *), P *context)
+   {
+      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), context);
+   }
+};
+
+/**
+ * Abstract index template
+ */
+template<typename T> class AbstractIndexWithDestructor : public AbstractIndex<T>
+{
+   DISABLE_COPY_CTOR(AbstractIndexWithDestructor)
+
+private:
+   static void destructor(void *object)
+   {
+      delete static_cast<T*>(object);
+   }
+
+public:
+   AbstractIndexWithDestructor<T>(bool owner) : AbstractIndex<T>(owner)
+   {
+      this->m_objectDestructor = destructor;
    }
 };
 
@@ -3986,7 +4095,7 @@ void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
 UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool onStartup);
 
 void DeleteObjectFromPhysicalLinks(UINT32 id);
-void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPannelId);
+void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId);
 
 /**
  * Global variables

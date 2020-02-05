@@ -513,7 +513,7 @@ private:
    CONDITION m_condEncryptionSetup;
 	ClientSessionConsole *m_console;			// Server console context
 	StringList m_musicTypeList;
-	ObjectIndex m_agentConn;
+	AbstractIndex<AgentConnection> m_agentConnections;
 	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
 	HashMap<UINT32, ProcessExecutor> *m_serverCommands;

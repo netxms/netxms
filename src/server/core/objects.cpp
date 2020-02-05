@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -845,7 +845,7 @@ ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneUIN)
    data.hostname = hostname;
    data.zoneUIN = zoneUIN;
 
-   ObjectArray<NetObj> *nodes = g_idxNodeById.findObjects(HostnameComparator, &data);
+   ObjectArray<NetObj> *nodes = g_idxNodeById.findAll(HostnameComparator, &data);
    return nodes;
 }
 
@@ -889,10 +889,10 @@ Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 /**
  * SNMP sysName comparator
  */
-static bool SysNameComparator(NetObj *object, void *sysName)
+static bool SysNameComparator(NetObj *object, const TCHAR *sysName)
 {
-   const TCHAR *n = ((Node *)object)->getSysName();
-   return (n != NULL) && !_tcscmp(n, (const TCHAR *)sysName);
+   const TCHAR *n = static_cast<Node*>(object)->getSysName();
+   return (n != NULL) && !_tcscmp(n, sysName);
 }
 
 /**
@@ -904,7 +904,7 @@ Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName)
       return NULL;
 
    // return NULL if multiple nodes with same sysName found
-   ObjectArray<NetObj> *objects = g_idxNodeById.findObjects(SysNameComparator, (void *)sysName);
+   ObjectArray<NetObj> *objects = g_idxNodeById.findAll(SysNameComparator, sysName);
    Node *node = (objects->size() == 1) ? (Node *)objects->get(0) : NULL;
    delete objects;
    return node;

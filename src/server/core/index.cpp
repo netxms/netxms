@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -422,12 +422,12 @@ void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data)
 }
 
 /**
- * Find objects by comparing it with given data using external comparator
+ * Find all matching elements by comparing it with given data using external comparator
  *
  * @param comparator comparing function (must return true for object to be found)
  * @param data user data passed to comparator
  */
-void AbstractIndexBase::findObjects(Array *resultSet, bool (*comparator)(void *, void *), void *data)
+void AbstractIndexBase::findAll(Array *resultSet, bool (*comparator)(void *, void *), void *data)
 {
    INDEX_HEAD *index = acquireIndex();
    for(size_t i = 0; i < index->size; i++)
