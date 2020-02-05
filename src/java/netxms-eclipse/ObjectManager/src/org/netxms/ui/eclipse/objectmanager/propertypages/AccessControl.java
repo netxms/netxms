@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -65,6 +66,7 @@ public class AccessControl extends PropertyPage
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
 	private HashMap<Long, AccessListElement> acl;
 	private Button checkInherit;
+	private NXCSession session;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -73,6 +75,7 @@ public class AccessControl extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
+      session = (NXCSession)ConsoleSharedData.getSession();
 		
 		AccessListElement[] origAcl = object.getAccessList();
 		acl = new HashMap<Long, AccessListElement>(origAcl.length);
@@ -244,8 +247,47 @@ public class AccessControl extends PropertyPage
          checkInherit.setEnabled(false);
       }
       
+      syncUsersAndRefresh();
+      
 		return dialogArea;
 	}
+   
+   /**
+    * Get user info and refresh view
+    */
+   private void syncUsersAndRefresh()
+   {
+      if (session.isUserDatabaseSynchronized())
+      {
+         return;
+      }
+      
+      ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            Set<Long> aclIdSet = acl.keySet();
+            if (session.syncMissingUsers(aclIdSet.toArray(new Long[aclIdSet.size()])))
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {    
+                     userList.refresh();
+                  }
+               });
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize users";
+         }
+      };
+      job.setUser(false);
+      job.start();  
+   }
 	
 	/**
 	 * Create access control check box.
@@ -307,7 +349,6 @@ public class AccessControl extends PropertyPage
 			setValid(false);
 		
 		final boolean inheritAccessRights = checkInherit.getSelection();
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setACL(acl.values().toArray(new AccessListElement[acl.size()]));
 		md.setInheritAccessRights(inheritAccessRights);

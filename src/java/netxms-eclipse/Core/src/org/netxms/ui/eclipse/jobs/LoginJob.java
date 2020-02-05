@@ -131,7 +131,7 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(1);
 
          monitor.setTaskName(Messages.get().LoginJob_sync_users);
-         session.syncUserDatabase();
+         session.subscribeToUserDBUpdates();
          monitor.worked(1);
 
          monitor.setTaskName(Messages.get().LoginJob_sync_event_db);

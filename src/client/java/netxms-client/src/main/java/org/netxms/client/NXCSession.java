@@ -3952,6 +3952,65 @@ public class NXCSession
    }
 
    /**
+    * Subscribe to user change notifications
+    *
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void subscribeToUserDBUpdates() throws IOException, NXCException
+   {
+      subscribe(CHANNEL_USERDB);
+   }
+
+   /**
+    * Synchronize users by id if does not exist
+    *
+    * @param userList list of user id's to synchronize
+    * @return 
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void syncUserSet(Long[] userList) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_USERS);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, userList.length);
+      msg.setField(NXCPCodes.VID_OBJECT_LIST, userList);
+      sendMessage(msg);   
+      waitForRCC(msg.getMessageId());
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Synchronize only objects that were not yet synchronized
+    * 
+    * @param userList
+    * @throws IOException
+    * @throws NXCException
+    */
+   public boolean syncMissingUsers(Long[] userList) throws IOException, NXCException
+   {
+      final Long[] syncList = Arrays.copyOf(userList, userList.length);
+      int count = syncList.length;
+      synchronized(userDatabase)
+      {
+         for(int i = 0; i < syncList.length; i++)
+         {
+            if (userDatabase.containsKey(syncList[i]))
+            {
+               syncList[i] = 0L;
+               count--;
+            }
+         }
+      }
+
+      if (count > 0)
+      {
+         syncUserSet(syncList);
+      }
+      return count > 0;
+   }   
+
+   /**
     * Check if user database is synchronized with client
     *
     * @return true if user database is synchronized with client

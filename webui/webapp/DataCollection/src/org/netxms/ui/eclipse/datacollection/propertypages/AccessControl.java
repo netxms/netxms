@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -43,8 +44,10 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
+import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AccessListLabelProvider;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -61,6 +64,7 @@ public class AccessControl extends DCIPropertyPageDialog
 	private Button buttonAdd;
 	private Button buttonRemove;
 	private static final String info[] = {"Inherited from object access rights"};
+	private NXCSession session;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -75,7 +79,7 @@ public class AccessControl extends DCIPropertyPageDialog
       Platform.getAdapterManager().loadAdapter(new User(""), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		// Build internal copy of access list
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		for(Long uid : dco.getAccessList())
 		{
 			AbstractUserObject o = session.findUserDBObjectById(uid);
@@ -154,11 +158,53 @@ public class AccessControl extends DCIPropertyPageDialog
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonRemove.setLayoutData(rd);
+      
+      getUsersAndRefresh();
 		
 		return dialogArea;
 	}
 	
 	/**
+	 * Get user info and refresh view
+	 */
+	private void getUsersAndRefresh()
+   {
+	   
+      ConsoleJob job = new ConsoleJob("Synchronize node components", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            List<Long> aclList = dco.getAccessList();
+            if(session.syncMissingUsers(aclList.toArray(new Long[aclList.size()])))
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {       
+                     for(Long uid : dco.getAccessList())
+                     {
+                        AbstractUserObject o = session.findUserDBObjectById(uid);
+                        if (o != null)
+                           acl.add(o);
+                     }
+                     
+                     setViewerInput();
+                  }
+               });
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize node components";
+         }
+      };
+      job.setUser(false);
+      job.start();  
+   }
+
+   /**
 	 * Set viewer input
 	 */
 	private void setViewerInput()

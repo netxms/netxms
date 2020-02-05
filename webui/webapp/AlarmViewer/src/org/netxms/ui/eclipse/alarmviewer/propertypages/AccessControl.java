@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.alarmviewer.propertypages;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -39,7 +40,9 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.editors.AlarmCategoryEditor;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
@@ -163,7 +166,53 @@ public class AccessControl extends PropertyPage
       }
       userList.setInput(accessMap.values().toArray());
       
+      getUsersAndRefresh();
+      
       return dialogArea;
+   }
+   
+   /**
+    * Get user info and refresh view
+    */
+   private void getUsersAndRefresh()
+   {
+      if (session.isUserDatabaseSynchronized())
+      {
+         return;
+      }
+      
+      ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            if(session.syncMissingUsers(category.getAccessControl()))
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {    
+                     for(long userId : category.getAccessControl())
+                     {
+                        final AbstractUserObject user = session.findUserDBObjectById(userId);
+                        if (user != null)
+                        {
+                           accessMap.put(user.getId(), user);
+                        }
+                     }
+                     userList.setInput(accessMap.values().toArray());
+                  }
+               });
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize users";
+         }
+      };
+      job.setUser(false);
+      job.start();  
    }
    
    /**

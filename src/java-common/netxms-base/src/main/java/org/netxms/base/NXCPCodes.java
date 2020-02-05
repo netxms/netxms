@@ -410,6 +410,13 @@ public class NXCPCodes
    public static final int CMD_GET_PHYSICAL_LINKS = 0x0189;
    public static final int CMD_UPDATE_PHYSICAL_LINK = 0x018A;
    public static final int CMD_DELETE_PHYSICAL_LINK = 0x018B;
+   public static final int CMD_GET_FILE_SET_DETAILS = 0x018C;
+   public static final int CMD_CONFIGURE_MQTT_BROKER = 0x018D;
+   public static final int CMD_REMOVE_MQTT_BROKER = 0x018E;
+   public static final int CMD_ADD_MQTT_TOPIC = 0x018F;
+   public static final int CMD_REMOVE_MQTT_TOPIC = 0x0190;
+   public static final int CMD_GET_WEB_SERVICE_PARAMS = 0x0191;
+   public static final int CMD_GET_SELECTED_USERS = 0x0192;
    
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

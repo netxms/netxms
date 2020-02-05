@@ -61,6 +61,7 @@ public class ResponsibleUsers extends PropertyPage
    private AbstractObject object;
    private SortableTableViewer userTable;
    private List<AbstractUserObject> userList;
+   private NXCSession session;
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -68,7 +69,7 @@ public class ResponsibleUsers extends PropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      final NXCSession session = ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       object = (AbstractObject)getElement().getAdapter(AbstractObject.class);      
       userList = session.findUserDBObjectsByIds(object.getResponsibleUsers());
       
@@ -160,7 +161,43 @@ public class ResponsibleUsers extends PropertyPage
          }
       });
       
+      syncUsersAndRefresh();
+      
       return dialogArea;
+   }
+   
+   void syncUsersAndRefresh()
+   {
+      if (session.isUserDatabaseSynchronized())
+      {
+         return;
+      }
+      
+      ConsoleJob syncUsersJob = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            if(session.syncMissingUsers(object.getResponsibleUsers().toArray(new Long[object.getResponsibleUsers().size()])))
+            {
+               runInUIThread(new Runnable() {               
+                  @Override
+                  public void run()
+                  {
+                     userList = session.findUserDBObjectsByIds(object.getResponsibleUsers());
+                     userTable.refresh();                  
+                  }
+               });
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize users";
+         }
+      };
+      syncUsersJob.setUser(false);
+      syncUsersJob.start();
    }
 
    /**

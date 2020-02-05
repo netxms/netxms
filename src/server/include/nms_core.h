@@ -552,6 +552,7 @@ private:
    void setConfigurationVariable(NXCPMessage *pRequest);
    void deleteConfigurationVariable(NXCPMessage *pRequest);
    void sendUserDB(UINT32 dwRqId);
+   void getSelectedUsers(NXCPMessage *request);
    void createUser(NXCPMessage *pRequest);
    void updateUser(NXCPMessage *pRequest);
    void detachLdapUser(NXCPMessage *pRequest);

@@ -36,7 +36,13 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
@@ -94,6 +100,7 @@ public class UserManagementView extends ViewPart
 	private Action actionDisable;
 	private Action actionDetachUserFromLDAP;
 	private RefreshAction actionRefresh;
+	private Composite mainArea;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -102,6 +109,8 @@ public class UserManagementView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		session = ConsoleSharedData.getSession();
+		mainArea = parent;
+		mainArea.setLayout(new FormLayout());
 
 		final String[] names = { 
 		      Messages.get().UserManagementView_Name, 
@@ -140,6 +149,13 @@ public class UserManagementView extends ViewPart
 				actionEditUser.run();
 			}
 		});
+		
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top =  new FormAttachment(0, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      viewer.getTable().setLayoutData(fd);		
 
 		makeActions();
 		contributeToActionBars();
@@ -204,7 +220,63 @@ public class UserManagementView extends ViewPart
 				return Messages.get().UserManagementView_OpenJobError;
 			}
 		}.start();
+		
+		getUsersAndRefresh();
 	}
+	   
+   /**
+    * Get user info and refresh view
+    */
+   private void getUsersAndRefresh()
+   {
+      if (session.isUserDatabaseSynchronized())
+      {
+         return;
+      }
+      
+      final Composite label = new Composite(mainArea, SWT.NONE);
+      label.setLayout(new GridLayout());
+      label.setBackground(label.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+      
+      Label labelText = new Label(label, SWT.CENTER);
+      labelText.setText("Loading...");
+      labelText.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));      
+      labelText.setBackground(label.getBackground());
+      
+      label.moveAbove(null);
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top =  new FormAttachment(0, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      label.setLayoutData(fd);
+      mainArea.layout();
+      
+      ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.syncUserDatabase();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {                      
+                  viewer.setInput(session.getUserDatabaseObjects());
+                  label.dispose();
+                  mainArea.layout();   
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize users";
+         }
+      };
+      job.setUser(false);
+      job.start();  
+   }
 
 	/**
 	 * Contribute actions to action bar

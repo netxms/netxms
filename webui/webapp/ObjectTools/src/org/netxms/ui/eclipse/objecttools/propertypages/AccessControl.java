@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -43,6 +44,8 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
@@ -59,6 +62,7 @@ public class AccessControl extends PropertyPage
 	private TableViewer viewer;
 	private Button buttonAdd;
 	private Button buttonRemove;
+	private NXCSession session;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
@@ -79,7 +83,7 @@ public class AccessControl extends PropertyPage
 		objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);
 		
 		// Build internal copy of access list
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		for(Long uid : objectTool.getAccessList())
 		{
 			AbstractUserObject o = session.findUserDBObjectById(uid);
@@ -161,8 +165,55 @@ public class AccessControl extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonRemove.setLayoutData(rd);
 		
+      syncUsersAndRefresh();
+      
 		return dialogArea;
 	}
+	
+
+   
+   /**
+    * Get user info and refresh view
+    */
+   private void syncUsersAndRefresh()
+   {
+      if (session.isUserDatabaseSynchronized())
+      {
+         return;
+      }
+      
+      ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            List<Long> aclIdList = objectTool.getAccessList();
+            if(session.syncMissingUsers(aclIdList.toArray(new Long[aclIdList.size()])))
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {    
+                     for(Long uid : objectTool.getAccessList())
+                     {
+                        AbstractUserObject o = session.findUserDBObjectById(uid);
+                        if (o != null)
+                           acl.add(o);
+                     }
+                     viewer.setInput(acl.toArray());
+                  }
+               });
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize users";
+         }
+      };
+      job.setUser(false);
+      job.start();  
+   }
 	
 	/**
 	 * Add users to ACL

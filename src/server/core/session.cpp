@@ -696,6 +696,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_LOAD_USER_DB:
          sendUserDB(request->getId());
          break;
+      case CMD_GET_SELECTED_USERS:
+         getSelectedUsers(request);
+         break;
       case CMD_CREATE_USER:
          createUser(request);
          break;
@@ -2992,6 +2995,38 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
 
    // Send end-of-database notification
    msg.setCode(CMD_USER_DB_EOF);
+   sendMessage(&msg);
+}
+
+void ClientSession::getSelectedUsers(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+   msg.deleteAllFields();
+
+   IntegerArray<UINT32> userIds;
+   request->getFieldAsInt32Array(VID_OBJECT_LIST, &userIds);
+
+
+   // Prepare message
+   msg.setCode(CMD_USER_DATA);
+
+   // Send user database
+   ObjectArray<UserDatabaseObject> *users = FindUserDBObjects(&userIds);
+   for (int i = 0; i < users->size(); i++)
+   {
+      UserDatabaseObject *object = users->get(i);
+      msg.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
+      object->fillMessage(&msg);
+      sendMessage(&msg);
+      msg.deleteAllFields();
+   }
+
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,16 @@
 package org.netxms.ui.eclipse.usermanager.dialogs;
 
 import java.util.Iterator;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -34,15 +37,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
-import org.netxms.ui.eclipse.usermanager.views.helpers.UserComparator;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.usermanager.dialogs.helpers.UserListLabelProvider;
 
 /**
  * User selection dialog
@@ -95,29 +98,35 @@ public class SelectUserDialog extends Dialog
 		GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      dialogArea.setLayout(layout);
+      dialogArea.setLayout(layout);  
 		
 		new Label(dialogArea, SWT.NONE).setText(Messages.get().SelectUserDialog_AvailableUsers);
 		
-      final String[] columnNames = { Messages.get().SelectUserDialog_LoginName };
-      final int[] columnWidths = { 250 };
-      userList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                         SWT.BORDER | (multiSelection ? SWT.MULTI : 0) | SWT.FULL_SELECTION);
+      userList = new TableViewer(dialogArea, SWT.BORDER | (multiSelection ? SWT.MULTI : 0) | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
-      userList.setLabelProvider(new WorkbenchLabelProvider());
-      userList.setComparator(new UserComparator());
+      userList.setLabelProvider(new UserListLabelProvider());
+      userList.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            String s1 = (e1 instanceof AbstractUserObject) ? ((AbstractUserObject)e1).getName() : e1.toString();
+            String s2 = (e2 instanceof AbstractUserObject) ? ((AbstractUserObject)e2).getName() : e2.toString();
+            return s1.compareToIgnoreCase(s2);
+         }
+      });
       userList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{
-				SelectUserDialog.this.okPressed();
+			   if (getButton(IDialogConstants.OK_ID).isEnabled())
+			      SelectUserDialog.this.okPressed();
 			}
       });
       userList.addFilter(new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element)
 			{
-				return classFilter.isInstance(element);
+				return classFilter.isInstance(element) || (element instanceof String);
 			}
       });
       userList.setInput(session.getUserDatabaseObjects());
@@ -128,10 +137,59 @@ public class SelectUserDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 300;
+      gd.widthHint = 600;
       userList.getControl().setLayoutData(gd);
       
       return dialogArea;
 	}
+   
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.dialogs.Dialog#createContents(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Control createContents(Composite parent)
+   {
+      Control content = super.createContents(parent);
+      // must be called from createContents to make sure that buttons already created
+      getUsersAndRefresh();
+      return content;
+   }
+
+   /**
+    * Get user info and refresh view
+    */
+   private void getUsersAndRefresh()
+   {   
+      if (session.isUserDatabaseSynchronized())
+         return;
+
+      userList.setInput(new String[] { "Loading..." });
+      getButton(IDialogConstants.OK_ID).setEnabled(false);
+      
+      ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.syncUserDatabase();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {                      
+                  userList.setInput(session.getUserDatabaseObjects());
+                  getButton(IDialogConstants.OK_ID).setEnabled(true);
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot synchronize users";
+         }
+      };
+      job.setUser(false);
+      job.start();  
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
