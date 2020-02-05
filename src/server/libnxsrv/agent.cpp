@@ -943,7 +943,7 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
  * Get web service parameter value
  */
 UINT32 AgentConnection::getWebServiceParameter(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringList *headers, const StringList *parameters, bool verifyCert, StringMap *results)
+         WebServiceAuthType authType, const StringMap& headers, const StringList& parameters, bool verifyCert, StringMap *results)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -958,8 +958,8 @@ UINT32 AgentConnection::getWebServiceParameter(const TCHAR *url, UINT32 retentio
    msg.setField(VID_PASSWORD, password);
    msg.setField(VID_AUTH_TYPE, (INT16)authType);
    msg.setField(VID_VERIFY_CERT, verifyCert);
-   headers->fillMessage(&msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
-   parameters->fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
+   headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   parameters.fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
 
    UINT32 dwRetCode;
    if (sendMessage(&msg))

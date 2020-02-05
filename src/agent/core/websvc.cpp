@@ -457,12 +457,17 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
       char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
       char *password = request->getFieldAsUtf8String(VID_PASSWORD);
       struct curl_slist *headers = NULL;
-      UINT32 headerSize = request->getFieldAsUInt32(VID_NUM_HEADERS);
+      UINT32 headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
       UINT32 fieldId = VID_HEADERS_BASE;
       char header[CURL_MAX_HTTP_HEADER];
-      for(int i = 0; i < headerSize; i++)
+      for(UINT32 i = 0; i < headerCount; i++)
       {
-         headers = curl_slist_append(headers, request->getFieldAsUtf8String(fieldId++, header, CURL_MAX_HTTP_HEADER));
+         request->getFieldAsUtf8String(fieldId++, header, 256);
+         size_t len = strlen(header);
+         header[len++] = ':';
+         header[len++] = ' ';
+         request->getFieldAsUtf8String(fieldId++, &header[len], CURL_MAX_HTTP_HEADER - len);
+         headers = curl_slist_append(headers, header);
       }
       WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
       result = cachedEntry->updateData(url, login, password, authType, headers, request->getFieldAsBoolean(VID_VERIFY_CERT), topLevelName+1);

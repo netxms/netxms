@@ -38,7 +38,7 @@ static UINT32 s_retentionTime = 60;
 static TCHAR s_login[MAX_CRED_LEN] = _T("");
 static TCHAR s_password[MAX_CRED_LEN] = _T("");
 static WebServiceAuthType s_authType = WebServiceAuthType::NONE;
-static StringList s_headers;
+static StringMap s_headers;
 static bool s_verifyCert = true;
 
 /**
@@ -53,13 +53,12 @@ static EnumerationCallbackResult PrintResults(const TCHAR *key, const void *valu
 /**
  * Get service parameter
  */
-static int GetServiceParameter(AgentConnection *pConn, const TCHAR *url, UINT32 retentionTime,
-      const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringList *headers,
-      const StringList *parameters, bool verifyCert)
+static int GetServiceParameter(AgentConnection *pConn, const TCHAR *url, const StringList& parameters, bool verifyCert)
 {
    StringMap results;
-   UINT32 rcc = pConn->getWebServiceParameter(url, retentionTime, login, password, authType,
-         headers, parameters, verifyCert, &results);
+   UINT32 rcc = pConn->getWebServiceParameter(url, s_retentionTime,
+            (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
+            s_authType, s_headers, parameters, verifyCert, &results);
    if (rcc == ERR_SUCCESS)
    {
       results.forEach(PrintResults, NULL);
@@ -80,6 +79,8 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
    int i;
    bool start = true;
    char *eptr;
+   TCHAR header[1024];
+   TCHAR *s;
 
    switch(ch)
    {
@@ -101,19 +102,29 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
             s_interval = i;
          }
          break;
-      case 'H':   // Password
-         TCHAR header[512];
+      case 'H':   // Header
 #ifdef UNICODE
 #if HAVE_MBSTOWCS
-         mbstowcs(header, optarg, 512);
+         mbstowcs(header, optarg, 1024);
 #else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, header, 512);
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, header, 1024);
 #endif
-         header[MAX_SECRET_LENGTH - 1] = 0;
+         header[1023] = 0;
 #else
-         strlcpy(header, optarg, 512);
+         strlcpy(header, optarg, 1024);
 #endif
-         s_headers.add(header);
+         s = _tcschr(header, _T(':'));
+         if (s != NULL)
+         {
+            *s++ = 0;
+            while(_istspace(*s))
+               s++;
+            s_headers.set(header, s);
+         }
+         else
+         {
+            s_headers.set(header, _T(""));
+         }
          break;
       case 'L':   // Login
 #ifdef UNICODE
@@ -207,8 +218,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
          parameters.add(argv[pos++]);
 #endif
       }
-      exitCode = GetServiceParameter(conn, url, s_retentionTime, (s_login[0] == 0) ? NULL: s_login, 
-            (s_password[0] == 0) ? NULL: s_password, s_authType, &s_headers, &parameters, s_verifyCert);
+      exitCode = GetServiceParameter(conn, url, parameters, s_verifyCert);
       ThreadSleep(s_interval);
       MemFree(url);
    }

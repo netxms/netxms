@@ -204,7 +204,7 @@ void StringMap::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFie
    HASH_ITER(hh, m_data, entry, tmp)
    {
       msg->setField(id++, m_ignoreCase ? entry->originalKey : entry->key);
-      msg->setField(id++, (TCHAR *)entry->value);
+      msg->setField(id++, static_cast<TCHAR*>(entry->value));
    }
 }
 
