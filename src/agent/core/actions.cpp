@@ -277,41 +277,6 @@ BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec) //to be TCHAR
 }
 
 /**
- * Execute action
- */
-UINT32 ExecAction(const TCHAR *action, const StringList *args, AbstractCommSession *session)
-{
-   UINT32 rcc = ERR_UNKNOWN_PARAMETER;
-
-   for(UINT32 i = 0; i < m_dwNumActions; i++)
-      if (!_tcsicmp(m_pActionList[i].szName, action))
-      {
-         DebugPrintf(4, _T("Executing action %s of type %d"), action, m_pActionList[i].iType);
-         switch(m_pActionList[i].iType)
-         {
-            case AGENT_ACTION_EXEC:
-               rcc = ExecuteCommand(m_pActionList[i].handler.pszCmdLine, args, NULL);
-               break;
-            case AGENT_ACTION_SHELLEXEC:
-               rcc = ExecuteShellCommand(m_pActionList[i].handler.pszCmdLine, args);
-               break;
-            case AGENT_ACTION_SUBAGENT:
-               rcc = m_pActionList[i].handler.sa.fpHandler(action, args, m_pActionList[i].handler.sa.pArg, session);
-               break;
-            default:
-               rcc = ERR_NOT_IMPLEMENTED;
-               break;
-         }
-         break;
-      }
-
-   if (rcc == ERR_UNKNOWN_PARAMETER)
-      rcc = ExecuteActionByExtSubagent(action, args, session, 0, false);
-
-   return rcc;
-}
-
-/**
  * Action executor data
  */
 class ActionExecutorData
@@ -422,49 +387,6 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
 
    delete data;
    return THREAD_OK;
-}
-
-/**
- * Execute action and send output to server
- */
-UINT32 ExecActionWithOutput(AbstractCommSession *session, UINT32 requestId, const TCHAR *action, StringList *args)
-{
-   UINT32 rcc = ERR_UNKNOWN_PARAMETER;
-
-   for(UINT32 i = 0; i < m_dwNumActions; i++)
-   {
-      if (!_tcsicmp(m_pActionList[i].szName, action))
-      {
-         session->debugPrintf(4, _T("Executing action %s of type %d with output"), action, m_pActionList[i].iType);
-         switch(m_pActionList[i].iType)
-         {
-            case AGENT_ACTION_EXEC:
-            case AGENT_ACTION_SHELLEXEC:
-               session->incRefCount();
-               ThreadCreate(ActionExecutionThread, 0, new ActionExecutorData(m_pActionList[i].handler.pszCmdLine, args, session, requestId));
-               rcc = ERR_SUCCESS;
-               break;
-            case AGENT_ACTION_SUBAGENT:
-               rcc = ERR_INTERNAL_ERROR;
-               break;
-            default:
-               rcc = ERR_NOT_IMPLEMENTED;
-               break;
-         }
-         break;
-      }
-   }
-
-   if (rcc == ERR_UNKNOWN_PARAMETER)
-   {
-      rcc = ExecuteActionByExtSubagent(action, args, session, requestId, true);
-      delete args;
-   }
-   else if (rcc != ERR_SUCCESS)
-   {
-      delete args;
-   }
-   return rcc;
 }
 
 /**

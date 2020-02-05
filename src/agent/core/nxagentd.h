@@ -715,8 +715,6 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *session),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
 BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
-UINT32 ExecAction(const TCHAR *action, const StringList *args, AbstractCommSession *session);
-UINT32 ExecActionWithOutput(AbstractCommSession *session, UINT32 requestId, const TCHAR *action, StringList *args);
 UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *pArgs, pid_t *pid);
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *pArgs);
 
