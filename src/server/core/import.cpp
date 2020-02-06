@@ -448,6 +448,30 @@ static ObjectArray<uuid> *GetRuleOrdering(ConfigEntry *ruleOrdering)
 }
 
 /**
+ *
+ */
+static void DeleteTemplateParentIfNoChildren(NetObj *object)
+{
+   if (object->getChildCount() == 0)
+   {
+      ObjectArray<NetObj> *parents = object->getParents(OBJECT_TEMPLATEGROUP);
+      NetObj *parent = NULL;
+      if(parents->size() > 0)
+      {
+         parent = parents->get(0);
+      }
+      delete parents;
+      ObjectTransactionStart();
+      object->deleteObject();
+      ObjectTransactionEnd();
+      if(parent != NULL)
+         DeleteTemplateParentIfNoChildren(parent);
+
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template group %s [%d] with GUID %s deleted as there was empty"), object->getName(), object->getId());
+   }
+}
+
+/**
  * Import configuration
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
@@ -518,9 +542,39 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		      {
 	            nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): existing template %s [%d] with GUID %s skipped"), object->getName(), object->getId(), (const TCHAR *)guid.toString());
 		      }
+
+            if (flags & CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): existing template %s [%d] with GUID %s renamed to %s"), object->getName(), object->getId(), (const TCHAR *)guid.toString(), tc->getSubEntryValue(_T("name")));
+
+               object->setName(tc->getSubEntryValue(_T("name")));
+               NetObj *parent = FindTemplateRoot(tc);
+               if(!parent->isChild(object->getId()))
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): existing template %s [%d] with GUID %s moved to %s template group"), object->getName(), object->getId(), (const TCHAR *)guid.toString(), parent->getName());
+                  ObjectTransactionStart();
+                  ObjectArray<NetObj> *parents = object->getParents(OBJECT_TEMPLATEGROUP);
+                  if (parents->size() > 0)
+                  {
+                     NetObj *parent = parents->get(0);
+                     parent->deleteChild(object);
+                     object->deleteParent(parent);
+
+                     if (flags & CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS)
+                     {
+                        DeleteTemplateParentIfNoChildren(parent);
+                     }
+                  }
+                  delete parents;
+                  object->addParent(parent);
+                  parent->addChild(object);
+                  ObjectTransactionEnd();
+               }
+            }
 		   }
 		   else
 		   {
+            ObjectTransactionStart();
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
             NetObj *parent = FindTemplateRoot(tc);
             object = new Template(tc);
@@ -528,6 +582,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
             object->addParent(parent);
             parent->addChild(object);
             object->unhide();
+            ObjectTransactionEnd();
 		   }
 		}
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): templates imported"));

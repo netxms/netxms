@@ -1026,6 +1026,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
    lockProperties();
    m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, m_flags);
    unlockProperties();
+   setComments(MemCopyString(config->getSubEntryValue(_T("comments"), 0, _T(""))));
 
    // Data collection
    ObjectArray<uuid> guidList(32, 32, true);

@@ -224,14 +224,16 @@ public class NXCSession
    public static final int OBJECT_SYNC_WAIT = 0x0002;
 
    // Configuration import options
-   public static final int CFG_IMPORT_REPLACE_EVENTS         = 0x0001;
-   public static final int CFG_IMPORT_REPLACE_ACTIONS        = 0x0002;
-   public static final int CFG_IMPORT_REPLACE_TEMPLATES      = 0x0004;
-   public static final int CFG_IMPORT_REPLACE_TRAPS          = 0x0008;
-   public static final int CFG_IMPORT_REPLACE_SCRIPTS        = 0x0010;
-   public static final int CFG_IMPORT_REPLACE_SUMMARY_TABLES = 0x0020;
-   public static final int CFG_IMPORT_REPLACE_OBJECT_TOOLS   = 0x0040;
-   public static final int CFG_IMPORT_REPLACE_EPP_RULES      = 0x0080;
+   public static final int CFG_IMPORT_REPLACE_EVENTS                    = 0x0001;
+   public static final int CFG_IMPORT_REPLACE_ACTIONS                   = 0x0002;
+   public static final int CFG_IMPORT_REPLACE_TEMPLATES                 = 0x0004;
+   public static final int CFG_IMPORT_REPLACE_TRAPS                     = 0x0008;
+   public static final int CFG_IMPORT_REPLACE_SCRIPTS                   = 0x0010;
+   public static final int CFG_IMPORT_REPLACE_SUMMARY_TABLES            = 0x0020;
+   public static final int CFG_IMPORT_REPLACE_OBJECT_TOOLS              = 0x0040;
+   public static final int CFG_IMPORT_REPLACE_EPP_RULES                 = 0x0080;
+   public static final int CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS  = 0x0100;
+   public static final int CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS      = 0x0200;
 
    // Address list IDs
    public static final int ADDRESS_LIST_DISCOVERY_TARGETS = 1;

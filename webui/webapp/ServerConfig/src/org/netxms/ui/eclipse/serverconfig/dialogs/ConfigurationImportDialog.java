@@ -47,6 +47,8 @@ public class ConfigurationImportDialog extends Dialog
 	private Button replaceEvents;
 	private Button replaceActions;
    private Button replaceTemplates;
+   private Button replaceTemplateNamesAndLocations;
+   private Button removeEmptyTemplateGroups;
    private Button replaceTraps;
    private Button replaceScripts;
    private Button replaceSummaryTables;
@@ -137,6 +139,12 @@ public class ConfigurationImportDialog extends Dialog
       replaceTemplates = new Button(options, SWT.CHECK);
       replaceTemplates.setText("Replace existing &templates");
       
+      replaceTemplateNamesAndLocations = new Button(options, SWT.CHECK);
+      replaceTemplateNamesAndLocations.setText("Replace existing &template &names and &locations");
+      
+      removeEmptyTemplateGroups = new Button(options, SWT.CHECK);
+      removeEmptyTemplateGroups.setText("Remove empty template groups after import");
+      
       return dialogArea;
 	}
 
@@ -163,6 +171,10 @@ public class ConfigurationImportDialog extends Dialog
          flags |= NXCSession.CFG_IMPORT_REPLACE_SUMMARY_TABLES;
       if (replaceTemplates.getSelection())
          flags |= NXCSession.CFG_IMPORT_REPLACE_TEMPLATES;
+      if (replaceTemplateNamesAndLocations.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS;
+      if (removeEmptyTemplateGroups.getSelection())
+         flags |= NXCSession.CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS;
       if (replaceTraps.getSelection())
          flags |= NXCSession.CFG_IMPORT_REPLACE_TRAPS;
 		

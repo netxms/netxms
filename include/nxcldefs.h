@@ -1086,15 +1086,17 @@ enum AggregationFunction
 /**
  * Configuration import flags
  */
-#define CFG_IMPORT_REPLACE_EVENTS            0x0001
-#define CFG_IMPORT_REPLACE_ACTIONS           0x0002
-#define CFG_IMPORT_REPLACE_TEMPLATES         0x0004
-#define CFG_IMPORT_REPLACE_TRAPS             0x0008
-#define CFG_IMPORT_REPLACE_SCRIPTS           0x0010
-#define CFG_IMPORT_REPLACE_SUMMARY_TABLES    0x0020
-#define CFG_IMPORT_REPLACE_OBJECT_TOOLS      0x0040
-#define CFG_IMPORT_REPLACE_EPP_RULES         0x0080
-#define CFG_IMPORT_REPLACE_EVERYTHING        0x00FF
+#define CFG_IMPORT_REPLACE_EVENTS                     0x0001
+#define CFG_IMPORT_REPLACE_ACTIONS                    0x0002
+#define CFG_IMPORT_REPLACE_TEMPLATES                  0x0004
+#define CFG_IMPORT_REPLACE_TRAPS                      0x0008
+#define CFG_IMPORT_REPLACE_SCRIPTS                    0x0010
+#define CFG_IMPORT_REPLACE_SUMMARY_TABLES             0x0020
+#define CFG_IMPORT_REPLACE_OBJECT_TOOLS               0x0040
+#define CFG_IMPORT_REPLACE_EPP_RULES                  0x0080
+#define CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS   0x0100
+#define CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS       0x0200
+#define CFG_IMPORT_REPLACE_EVERYTHING                 0x02FF
 
 /**
 * Alarm category flags
