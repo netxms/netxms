@@ -90,18 +90,14 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
             while(fgets(szBuff, sizeof(szBuff), hFile) != NULL)
             {
                int nIP1, nIP2, nIP3, nIP4;
-               int nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6;
-               char szTmp1[256];
-               char szTmp2[256];
-               char szTmp3[256];
+               UINT32 nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6;
                char szIf[256];
 
                if (sscanf(szBuff,
-                          "%d.%d.%d.%d %s %s %02X:%02X:%02X:%02X:%02X:%02X %s %s",
+                          "%d.%d.%d.%d %*s %*s %02X:%02X:%02X:%02X:%02X:%02X %*s %255s",
                           &nIP1, &nIP2, &nIP3, &nIP4,
-                          szTmp1, szTmp2,
                           &nMAC1, &nMAC2, &nMAC3, &nMAC4, &nMAC5, &nMAC6,
-                          szTmp3, szIf) == 14)
+                          szIf) == 14)
                {
                   int nIndex;
                   struct ifreq irq;
@@ -182,7 +178,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
             unsigned int nDestination, nGateway, nMask;
 
             if (sscanf(szLine,
-               "%s\t%08X\t%08X\t%d\t%d\t%d\t%d\t%08X",
+               "%63s\t%08X\t%08X\t%d\t%d\t%d\t%d\t%08X",
                szIF,
                &nDestination,
                &nGateway,
@@ -249,7 +245,7 @@ static int SendMessage(int socket, unsigned short type)
    message.msg_name = &kernel;
    message.msg_namelen = sizeof(kernel);
 
-   return sendmsg(socket, (msghdr*) &message, 0);
+   return sendmsg(socket, &message, 0);
 }
 
 /**
