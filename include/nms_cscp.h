@@ -358,7 +358,7 @@ typedef struct
 #define CMD_REMOVE_PACKAGE                0x006E
 #define CMD_INSTALL_PACKAGE               0x006F
 #define CMD_THRESHOLD_UPDATE              0x0070
-/*UNUSED:#define CMD_UNLOCK_PACKAGE_DB             0x0071*/
+#define CMD_GET_SELECTED_USERS            0x0071
 #define CMD_ABORT_FILE_TRANSFER           0x0072
 #define CMD_CHECK_NETWORK_SERVICE         0x0073
 #define CMD_GET_AGENT_CONFIG              0x0074
@@ -642,8 +642,10 @@ typedef struct
 #define CMD_REMOVE_MQTT_BROKER            0x018E
 #define CMD_ADD_MQTT_TOPIC                0x018F
 #define CMD_REMOVE_MQTT_TOPIC             0x0190
-#define CMD_GET_WEB_SERVICE_PARAMS        0x0191
-#define CMD_GET_SELECTED_USERS            0x0192
+#define CMD_QUERY_WEB_SERVICE             0x0191
+#define CMD_GET_WEB_SERVICES              0x0192
+#define CMD_MODIFY_WEB_SERVICE            0x0193
+#define CMD_DELETE_WEB_SERVICE            0x0194
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

@@ -940,9 +940,9 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 }
 
 /**
- * Get web service parameter value
+ * Query web service
  */
-UINT32 AgentConnection::getWebServiceParameter(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
+UINT32 AgentConnection::queryWebService(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
          WebServiceAuthType authType, const StringMap& headers, const StringList& parameters, bool verifyCert, StringMap *results)
 {
    if (!m_isConnected)
@@ -950,7 +950,7 @@ UINT32 AgentConnection::getWebServiceParameter(const TCHAR *url, UINT32 retentio
 
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId = generateRequestId();
-   msg.setCode(CMD_GET_WEB_SERVICE_PARAMS);
+   msg.setCode(CMD_QUERY_WEB_SERVICE);
    msg.setId(dwRqId);
    msg.setField(VID_URL, url);
    msg.setField(VID_RETENTION_TIME, retentionTime);

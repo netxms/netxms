@@ -155,7 +155,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_REMOVE_PACKAGE"),
       _T("CMD_INSTALL_PACKAGE"),
       _T("CMD_THRESHOLD_UPDATE"),
-      _T("0x0071"),
+      _T("CMD_GET_SELECTED_USERS"),
       _T("CMD_ABORT_FILE_TRANSFER"),
       _T("CMD_CHECK_NETWORK_SERVICE"),
       _T("CMD_GET_AGENT_CONFIG"),
@@ -201,7 +201,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_RENAME_SCRIPT"),
       _T("CMD_GET_SESSION_LIST"),
       _T("CMD_KILL_SESSION"),
-      _T("<unused>0x009F"),
+      _T("CMD_SET_DB_PASSWORD"),
       _T("CMD_TRAP_LOG_RECORDS"),
       _T("CMD_START_SNMP_WALK"),
       _T("CMD_SNMP_WALK_DATA"),
@@ -443,10 +443,13 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_REMOVE_MQTT_BROKER"),
       _T("CMD_ADD_MQTT_TOPIC"),
       _T("CMD_REMOVE_MQTT_TOPIC"),
-      _T("CMD_GET_WEB_SERVICE_PARAMS")
+      _T("CMD_QUERY_WEB_SERVICE"),
+      _T("CMD_GET_WEB_SERVICES"),
+      _T("CMD_MODIFY_WEB_SERVICE"),
+      _T("CMD_DELETE_WEB_SERVICE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_WEB_SERVICE_PARAMS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_DELETE_WEB_SERVICE))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

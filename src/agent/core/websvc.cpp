@@ -428,9 +428,9 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
 }
 
 /**
- * Get parameters from web service
+ * Query web service
  */
-void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
+void QueryWebService(NXCPMessage *request, NXCPMessage *response)
 {
    TCHAR *url = request->getFieldAsString(VID_URL);
 
@@ -440,7 +440,7 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
    {
       cachedEntry = new ServiceEntry();
       s_sericeCache.set(url, cachedEntry);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetWebServiceParameters(): Create new cached entry for %s URL"), url);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("QueryWebService(): Create new cached entry for %s URL"), url);
    }
    s_serviceCacheLock.unlock();
 
@@ -476,7 +476,7 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
       MemFree(login);
       MemFree(password);
       MemFree(topLevelName);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWebServiceParameters(): Cache for %s URL updated"), url);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Cache for %s URL updated"), url);
    }
 
    if (result == ERR_SUCCESS)
@@ -497,7 +497,7 @@ void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
  */
 void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWebServiceParameters(): agent was compiled without libcurl"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): agent was compiled without libcurl"));
    response->setField(VID_RCC, ERR_NOT_IMPLEMENTED);
 }
 

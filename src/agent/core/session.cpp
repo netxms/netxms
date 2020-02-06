@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -578,8 +578,8 @@ void CommSession::processingThread()
             case CMD_GET_TABLE:
                getTable(request, &response);
                break;
-            case CMD_GET_WEB_SERVICE_PARAMS:
-               GetWebServiceParameters(request, &response);
+            case CMD_QUERY_WEB_SERVICE:
+               QueryWebService(request, &response);
                break;
             case CMD_KEEPALIVE:
                response.setField(VID_RCC, ERR_SUCCESS);

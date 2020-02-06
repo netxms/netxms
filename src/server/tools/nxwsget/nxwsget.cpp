@@ -53,10 +53,10 @@ static EnumerationCallbackResult PrintResults(const TCHAR *key, const void *valu
 /**
  * Get service parameter
  */
-static int GetServiceParameter(AgentConnection *pConn, const TCHAR *url, const StringList& parameters, bool verifyCert)
+static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const StringList& parameters, bool verifyCert)
 {
    StringMap results;
-   UINT32 rcc = pConn->getWebServiceParameter(url, s_retentionTime,
+   UINT32 rcc = pConn->queryWebService(url, s_retentionTime,
             (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
             s_authType, s_headers, parameters, verifyCert, &results);
    if (rcc == ERR_SUCCESS)
@@ -218,7 +218,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
          parameters.add(argv[pos++]);
 #endif
       }
-      exitCode = GetServiceParameter(conn, url, parameters, s_verifyCert);
+      exitCode = QueryWebService(conn, url, parameters, s_verifyCert);
       ThreadSleep(s_interval);
       MemFree(url);
    }

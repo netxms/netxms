@@ -95,11 +95,11 @@ WebServiceDefinition::~WebServiceDefinition()
 }
 
 /**
- * Prepare request to agent
+ * Query web service using this definition. Returns client RCC.
  */
-void WebServiceDefinition::prepareRequest(DataCollectionTarget *object, const TCHAR *path, const StringList *args, NXCPMessage *msg) const
+UINT32 WebServiceDefinition::query(DataCollectionTarget *object, const TCHAR *path, const StringList *args, AgentConnection *conn) const
 {
-
+   return RCC_NOT_IMPLEMENTED;
 }
 
 /**

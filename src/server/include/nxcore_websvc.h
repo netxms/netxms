@@ -45,7 +45,7 @@ public:
    WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~WebServiceDefinition();
 
-   void prepareRequest(DataCollectionTarget *object, const TCHAR *path, const StringList *args, NXCPMessage *msg) const;
+   UINT32 query(DataCollectionTarget *object, const TCHAR *path, const StringList *args, AgentConnection *conn) const;
    void fillMessage(NXCPMessage *msg) const;
 };
 
