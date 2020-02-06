@@ -495,7 +495,7 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
 /**
  * Get parameters from web service
  */
-void GetWebServiceParameters(NXCPMessage *request, NXCPMessage *response)
+void QueryWebService(NXCPMessage *request, NXCPMessage *response)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): agent was compiled without libcurl"));
    response->setField(VID_RCC, ERR_NOT_IMPLEMENTED);
