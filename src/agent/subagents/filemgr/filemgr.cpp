@@ -243,7 +243,7 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
 
    for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
    {
-      if (!_tcsncmp(g_rootFileManagerFolders->get(i)->getFolder(), path, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
+      if (!_tcsncmp(g_rootFileManagerFolders->get(i)->getFolder(), fullPathT, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
       {
          if (!isModify || !g_rootFileManagerFolders->get(i)->isReadOnly())
          {

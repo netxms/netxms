@@ -373,7 +373,10 @@ UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSup
    {
       RemoteFileInfo *remoteFile = remoteFiles->get(i);
       if ((remoteFile->status() != ERR_SUCCESS) && (remoteFile->status() != ERR_FILE_STAT_FAILED))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): file %s with status %d skipped"), debugId, remoteFile->name(), remoteFile->status());
          continue;
+      }
 
       StringBuffer localFile = g_netxmsdDataDir;
       localFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
