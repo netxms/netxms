@@ -95,11 +95,53 @@ WebServiceDefinition::~WebServiceDefinition()
 }
 
 /**
- * Query web service using this definition. Returns client RCC.
+ * Context for ExpandHeaders function
  */
-UINT32 WebServiceDefinition::query(DataCollectionTarget *object, const TCHAR *path, const StringList *args, AgentConnection *conn) const
+struct ExpandHeadersContext
 {
-   return RCC_NOT_IMPLEMENTED;
+   StringMap *headers;
+   DataCollectionTarget *object;
+   const StringList *args;
+};
+
+/**
+ * Expand headers
+ */
+static EnumerationCallbackResult ExpandHeaders(const TCHAR *key, const TCHAR *value, ExpandHeadersContext *context)
+{
+   context->headers->set(key, context->object->expandText(value, NULL, NULL, NULL, NULL, NULL, context->args));
+   return _CONTINUE;
+}
+
+/**
+ * Query web service using this definition. Returns agent RCC.
+ */
+UINT32 WebServiceDefinition::query(DataCollectionTarget *object, const TCHAR *path,
+         const StringList *args, AgentConnection *conn, TCHAR *result) const
+{
+   StringBuffer url = object->expandText(m_url, NULL, NULL, NULL, NULL, NULL, args);
+
+   StringMap headers;
+   ExpandHeadersContext context;
+   context.headers = &headers;
+   context.object = object;
+   context.args = args;
+   m_headers.forEach(ExpandHeaders, &context);
+
+   StringList attributes;
+   attributes.add(path);
+
+   StringMap resultSet;
+   UINT32 rcc = conn->queryWebService(url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, attributes, false, &resultSet);
+   if (rcc == ERR_SUCCESS)
+   {
+      const TCHAR *value = resultSet.get(path);
+      if (value != NULL)
+         ret_string(result, value);
+      else
+         rcc = ERR_UNKNOWN_PARAMETER;
+   }
+   return rcc;
 }
 
 /**

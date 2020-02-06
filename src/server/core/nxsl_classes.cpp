@@ -169,7 +169,7 @@ NXSL_METHOD_DEFINITION(NetObj, expandString)
       return NXSL_ERR_NOT_STRING;
 
    NetObj *n = static_cast<NetObj*>(object->getData());
-   *result = vm->createValue(n->expandText(argv[0]->getValueAsCString(), NULL, NULL, NULL, NULL, NULL));
+   *result = vm->createValue(n->expandText(argv[0]->getValueAsCString(), NULL, NULL, NULL, NULL, NULL, NULL));
    return 0;
 }
 

@@ -470,7 +470,8 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
          headers = curl_slist_append(headers, header);
       }
       WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
-      result = cachedEntry->updateData(url, login, password, authType, headers, request->getFieldAsBoolean(VID_VERIFY_CERT), topLevelName+1);
+      result = cachedEntry->updateData(url, login, password, authType,
+               headers, request->getFieldAsBoolean(VID_VERIFY_CERT), topLevelName + 1);
 
       curl_slist_free_all(headers);
       MemFree(login);

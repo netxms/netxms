@@ -2440,7 +2440,8 @@ json_t *NetObj::toJson()
 /**
  * Expand text
  */
-StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields)
+StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName,
+         const TCHAR *objectName, const StringMap *inputFields, const StringList *args)
 {
    if (textTemplate == NULL)
       return StringBuffer();
@@ -2575,26 +2576,21 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                case '7':
                case '8':
                case '9':
-                  if (event != NULL)
+                  buffer[0] = *curr;
+                  if (isdigit(*(curr + 1)))
                   {
-                     buffer[0] = *curr;
-                     if (isdigit(*(curr + 1)))
-                     {
-                        curr++;
-                        buffer[1] = *curr;
-                        buffer[2] = 0;
-                     }
-                     else
-                     {
-                        buffer[1] = 0;
-                     }
-                     int index = _tcstol(buffer, NULL, 10);
-                     const Array *params = event->getParameterList();
-                     if ((index > 0) && (index <= params->size()))
-                     {
-                        output.append(static_cast<TCHAR*>(params->get(index - 1)));
-                     }
+                     curr++;
+                     buffer[1] = *curr;
+                     buffer[2] = 0;
                   }
+                  else
+                  {
+                     buffer[1] = 0;
+                  }
+                  if (event != NULL)
+                     output.append(static_cast<TCHAR*>(event->getParameterList()->get(_tcstol(buffer, NULL, 10) - 1)));
+                  else if (args != NULL)
+                     output.append(args->get(_tcstol(buffer, NULL, 10) - 1));
                   break;
                case '[':   // Script
                   for(i = 0, curr++; (*curr != ']') && (*curr != 0) && (i < 255); curr++)

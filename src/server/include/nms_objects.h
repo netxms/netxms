@@ -1051,7 +1051,8 @@ public:
 
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
 
-   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields);
+   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName,
+            const TCHAR *objectName, const StringMap *inputFields, const StringList *args);
 
    IntegerArray<UINT32> *getAllResponsibleUsers();
 

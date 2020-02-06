@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1612,7 +1612,7 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
          inputFields = NULL;
 
       TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
-      m_cmd = MemCopyString(object->expandText(cmd, NULL, NULL, session->getLoginName(), NULL, inputFields));
+      m_cmd = MemCopyString(object->expandText(cmd, NULL, NULL, session->getLoginName(), NULL, inputFields, NULL));
       free(cmd);
       delete inputFields;
    }

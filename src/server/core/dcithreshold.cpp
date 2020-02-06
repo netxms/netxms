@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -371,7 +371,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    else
    {
       tvalue = m_expandValue ?
-               ItemValue(target->expandText(m_value.getString(), NULL, NULL, NULL, NULL, NULL), m_value.getTimeStamp()) :
+               ItemValue(target->expandText(m_value.getString(), NULL, NULL, NULL, NULL, NULL, NULL), m_value.getTimeStamp()) :
                m_value;
       switch(m_operation)
       {

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1385,7 +1385,7 @@ void Interface::expandName(const TCHAR *originalName, TCHAR *expandedName)
       return;
    }
 
-   StringBuffer e = expandText(namePattern, NULL, NULL, NULL, originalName, NULL);
+   StringBuffer e = expandText(namePattern, NULL, NULL, NULL, originalName, NULL, NULL);
    _tcslcpy(expandedName, e.cstr(), MAX_OBJECT_NAME);
    Trim(expandedName);
    if (expandedName[0] == 0)
