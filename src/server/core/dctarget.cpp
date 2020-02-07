@@ -1216,6 +1216,14 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
 }
 
 /**
+ * Set object's management status
+ */
+bool DataCollectionTarget::setMgmtStatus(BOOL isManaged)
+{
+   return super::setMgmtStatus(isManaged);
+}
+
+/**
  * Calculate compound status
  */
 void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
@@ -1371,6 +1379,9 @@ void DataCollectionTarget::addProxySnmpTarget(ProxyInfo *info, const Node *node)
  */
 void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
 {
+   if(m_status == STATUS_UNMANAGED)
+      return;
+
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
    {

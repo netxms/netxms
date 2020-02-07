@@ -1560,7 +1560,7 @@ void NetObj::dropUserAccess(UINT32 dwUserId)
 /**
  * Set object's management status
  */
-void NetObj::setMgmtStatus(BOOL bIsManaged)
+bool NetObj::setMgmtStatus(BOOL bIsManaged)
 {
    int oldStatus;
 
@@ -1570,7 +1570,7 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
        ((!bIsManaged) && (m_status == STATUS_UNMANAGED)))
    {
       unlockProperties();
-      return;  // Status is already correct
+      return false;  // Status is already correct
    }
 
    oldStatus = m_status;
@@ -1594,6 +1594,7 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
    for(int i = 0; i < getParentList()->size(); i++)
       static_cast<NetObj *>(getParentList()->get(i))->calculateCompoundStatus();
    unlockParentList();
+   return true;
 }
 
 /**

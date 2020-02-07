@@ -1840,6 +1840,29 @@ void Node::deleteInterface(Interface *iface)
 }
 
 /**
+ * Set object's management status
+ */
+bool Node::setMgmtStatus(BOOL isManaged)
+{
+   if (!super::setMgmtStatus(isManaged))
+      return false;
+
+   if (IsZoningEnabled())
+   {
+      Zone *zone = FindZoneByProxyId(m_id);
+      if (zone != NULL)
+      {
+         zone->updateProxyStatus(this, true);
+      }
+   }
+
+   // call to onDataCollectionChange will force data collection
+   // configuration upload to this node or relevant proxy nodes
+   onDataCollectionChange();
+   return true;
+}
+
+/**
  * Calculate node status based on child objects status
  */
 void Node::calculateCompoundStatus(BOOL bForcedRecalc)
@@ -8957,43 +8980,51 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       }
    }
 
-   UINT32 count = 0;
-   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
-   lockDciAccess(false);
-   for(int i = 0; i < m_dcObjects->size(); i++)
+   if (m_status != STATUS_UNMANAGED )
    {
-      DCObject *dco = m_dcObjects->get(i);
-      if ((dco->getStatus() != ITEM_STATUS_DISABLED) &&
-          dco->hasValue() &&
-          (dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
-          (dco->getSourceNode() == 0))
+      UINT32 count = 0;
+      UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+      lockDciAccess(false);
+      for(int i = 0; i < m_dcObjects->size(); i++)
       {
-         msg.setField(fieldId++, dco->getId());
-         msg.setField(fieldId++, (INT16)dco->getType());
-         msg.setField(fieldId++, (INT16)dco->getDataSource());
-         msg.setField(fieldId++, dco->getName());
-         msg.setField(fieldId++, (INT32)dco->getEffectivePollingInterval());
-         msg.setFieldFromTime(fieldId++, dco->getLastPollTime());
-         fieldId += 4;
-         count++;
+         DCObject *dco = m_dcObjects->get(i);
+         if ((dco->getStatus() != ITEM_STATUS_DISABLED) &&
+             dco->hasValue() &&
+             (dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
+             (dco->getSourceNode() == 0))
+         {
+            msg.setField(fieldId++, dco->getId());
+            msg.setField(fieldId++, (INT16)dco->getType());
+            msg.setField(fieldId++, (INT16)dco->getDataSource());
+            msg.setField(fieldId++, dco->getName());
+            msg.setField(fieldId++, (INT32)dco->getEffectivePollingInterval());
+            msg.setFieldFromTime(fieldId++, dco->getLastPollTime());
+            fieldId += 4;
+            count++;
+         }
       }
+      unlockDciAccess();
+
+      ProxyInfo data;
+      data.proxyId = m_id;
+      data.count = count;
+      data.msg = &msg;
+      data.fieldId = fieldId;
+      data.nodeInfoCount = 0;
+      data.nodeInfoFieldId = VID_NODE_INFO_LIST_BASE;
+
+      g_idxAccessPointById.forEach(super::collectProxyInfoCallback, &data);
+      g_idxChassisById.forEach(super::collectProxyInfoCallback, &data);
+      g_idxNodeById.forEach(super::collectProxyInfoCallback, &data);
+
+      msg.setField(VID_NUM_ELEMENTS, data.count);
+      msg.setField(VID_NUM_NODES, data.nodeInfoCount);
    }
-   unlockDciAccess();
-
-   ProxyInfo data;
-   data.proxyId = m_id;
-   data.count = count;
-   data.msg = &msg;
-   data.fieldId = fieldId;
-   data.nodeInfoCount = 0;
-   data.nodeInfoFieldId = VID_NODE_INFO_LIST_BASE;
-
-   g_idxAccessPointById.forEach(super::collectProxyInfoCallback, &data);
-   g_idxChassisById.forEach(super::collectProxyInfoCallback, &data);
-   g_idxNodeById.forEach(super::collectProxyInfoCallback, &data);
-
-   msg.setField(VID_NUM_ELEMENTS, data.count);
-   msg.setField(VID_NUM_NODES, data.nodeInfoCount);
+   else
+   {
+      msg.setField(VID_NUM_ELEMENTS, 0);
+      msg.setField(VID_NUM_NODES, 0);
+   }
 
    UINT32 rcc;
    NXCPMessage *response = conn->customRequest(&msg);
