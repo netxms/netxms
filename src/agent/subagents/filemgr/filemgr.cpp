@@ -28,23 +28,6 @@
 #include <grp.h>
 #endif
 
-/*
- * Create new RootFolder
- */
-RootFolder::RootFolder(const TCHAR *folder)
-{
-   m_folder = _tcsdup(folder);
-   m_readOnly = false;
-
-   TCHAR *ptr = _tcschr(m_folder, _T(';'));
-   if (ptr == NULL)
-      return;
-
-   *ptr = 0;
-   if (_tcscmp(ptr+1, _T("ro")) == 0)
-      m_readOnly = true;
-}
-
 /**
  * Root folders
  */
@@ -99,6 +82,24 @@ static void ConvertPathToNetwork(TCHAR *path)
 #define ConvertPathToNetwork(x)
 
 #endif
+
+/*
+ * Create new RootFolder
+ */
+RootFolder::RootFolder(const TCHAR *folder)
+{
+   m_folder = _tcsdup(folder);
+   m_readOnly = false;
+
+   TCHAR *ptr = _tcschr(m_folder, _T(';'));
+   if (ptr == NULL)
+      return;
+   ConvertPathToHost(m_folder, false, false);
+
+   *ptr = 0;
+   if (_tcscmp(ptr+1, _T("ro")) == 0)
+      m_readOnly = true;
+}
 
 /**
  * Subagent initialization
