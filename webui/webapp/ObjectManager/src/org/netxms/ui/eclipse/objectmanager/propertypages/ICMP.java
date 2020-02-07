@@ -117,7 +117,7 @@ public class ICMP extends PropertyPage
       radioIcmpStatCollectionOff.setSelection(node.getIcmpStatCollectionMode() == IcmpStatCollectionMode.OFF);
       
       Group icmpTargetGroup = new Group(dialogArea, SWT.NONE);
-      icmpTargetGroup.setText("Additional ICMP poll targets");
+      icmpTargetGroup.setText("Additional targets for ICMP response statistic collection");
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;

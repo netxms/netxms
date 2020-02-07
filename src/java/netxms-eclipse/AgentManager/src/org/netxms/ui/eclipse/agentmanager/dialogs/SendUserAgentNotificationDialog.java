@@ -79,7 +79,7 @@ public class SendUserAgentNotificationDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Send user agent notification");
+		newShell.setText("Send user support application notification");
 	}
 
 	/* (non-Javadoc)

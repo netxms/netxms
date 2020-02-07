@@ -91,7 +91,7 @@ public class InterfacePolling extends PropertyPage
       checkExcludeFromTopology.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
       
       checkIncludeInIcmpPoll = new Button(dialogArea, SWT.CHECK);
-      checkIncludeInIcmpPoll.setText("Include this interface in node ICMP polls");
+      checkIncludeInIcmpPoll.setText("Collect ICMP response statistic for this interface");
       checkIncludeInIcmpPoll.setSelection(object.isIncludedInIcmpPoll());
       checkIncludeInIcmpPoll.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
       
