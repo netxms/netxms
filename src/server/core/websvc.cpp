@@ -163,3 +163,144 @@ void LoadWebServiceDefinitions()
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("%d web service definitions loaded"), count);
 }
+
+/**
+ * Parse list of service call arguments
+ */
+static bool ParseCallArgumensList(TCHAR *input, StringList *args)
+{
+   TCHAR *p = input;
+
+   TCHAR *s = p;
+   int state = 1; // normal text
+/*
+   for(; state > 0; p++)
+   {
+      switch(*p)
+      {
+         case '"':
+            if (state == 1)
+            {
+               state = 2;
+               s = p + 1;
+            }
+            else
+            {
+               state = 3;
+               *p = 0;
+               args->add(vm->createValue(s));
+            }
+            break;
+         case ',':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args.add(vm->createValue(s));
+               s = p + 1;
+            }
+            else if (state == 3)
+            {
+               state = 1;
+               s = p + 1;
+            }
+            break;
+         case 0:
+            if (state == 1)
+            {
+               Trim(s);
+               args.add(vm->createValue(s));
+               state = 0;
+            }
+            else if (state == 3)
+            {
+               state = 0;
+            }
+            else
+            {
+               state = -1; // error
+            }
+            break;
+         case ' ':
+            break;
+         case ')':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args.add(vm->createValue(s));
+               state = 0;
+            }
+            else if (state == 3)
+            {
+               state = 0;
+            }
+            break;
+         case '\\':
+            if (state == 2)
+            {
+               memmove(p, p + 1, _tcslen(p) * sizeof(TCHAR));
+               switch(*p)
+               {
+                  case 'r':
+                     *p = '\r';
+                     break;
+                  case 'n':
+                     *p = '\n';
+                     break;
+                  case 't':
+                     *p = '\t';
+                     break;
+                  default:
+                     break;
+               }
+            }
+            else if (state == 3)
+            {
+               state = -1;
+            }
+            break;
+         default:
+            if (state == 3)
+               state = -1;
+            break;
+      }
+   }
+*/
+   return (state != -1);
+}
+
+
+/**
+ * Read data collection item value from web service.
+ * Request is expected in form service:path or service(arguments):path
+ */
+DataCollectionError ReadWebServiceData(const TCHAR *request, TCHAR *buffer, size_t bsize)
+{
+   TCHAR name[1024];
+   _tcslcpy(name, request, 1024);
+   Trim(name);
+
+   TCHAR *path = _tcsrchr(name, _T(':'));
+   if (path == NULL)
+      return DCE_NOT_SUPPORTED;
+   *path = 0;
+   path++;
+
+   // Can be in form service(arg1, arg2, ... argN)
+   StringList args;
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != NULL)
+   {
+      size_t l = _tcslen(name) - 1;
+      if (name[l] != _T(')'))
+         return DCE_NOT_SUPPORTED;
+      name[l] = 0;
+      *p = 0;
+      p++;
+      if (!ParseCallArgumensList(p, &args))
+         return DCE_NOT_SUPPORTED;
+   }
+
+   return DCE_SUCCESS;
+}

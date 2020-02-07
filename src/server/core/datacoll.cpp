@@ -107,7 +107,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_SSH:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               Node *proxy = (Node *)FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveSshProxy(), OBJECT_NODE);
+               Node *proxy = static_cast<Node*>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveSshProxy(), OBJECT_NODE));
                if (proxy != NULL)
                {
                   TCHAR name[MAX_PARAM_NAME], ipAddr[64];
@@ -131,7 +131,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_SMCLP:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-	            *error = ((Node *)dcTarget)->getItemFromSMCLP(pItem->getName(), pBuffer, MAX_LINE_SIZE);
+	            *error = static_cast<Node*>(dcTarget)->getItemFromSMCLP(pItem->getName(), pBuffer, MAX_LINE_SIZE);
             }
             else
             {

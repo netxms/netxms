@@ -820,9 +820,10 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
    TCHAR *p = _tcschr(name, _T('('));
    if (p != NULL)
    {
-      if (name[_tcslen(name) - 1] != _T(')'))
+      size_t l = _tcslen(name) - 1;
+      if (name[l] != _T(')'))
          return NULL;
-      name[_tcslen(name) - 1] = 0;
+      name[l] = 0;
       *p = 0;
    }
 
