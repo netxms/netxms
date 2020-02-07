@@ -473,6 +473,11 @@ public:
  */
 typedef int session_id_t;
 
+// Explicit instantiation of AbstractIndex<AgentConnection> template class
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE AbstractIndex<AgentConnection>;
+#endif
+
 /**
  * Client (user) session
  */

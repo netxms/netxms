@@ -152,7 +152,7 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          break;
       case 'r':   // Retention time
          s_retentionTime = strtol(optarg, &eptr, 0);
-         if ((*eptr != 0) || (i < 0) || (i > 65535))
+         if ((*eptr != 0) || (s_retentionTime < 1))
          {
             printf("Invalid retention time \"%s\"\n", optarg);
             start = false;

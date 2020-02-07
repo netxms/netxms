@@ -118,11 +118,10 @@ protected:
    virtual bool processCustomMessage(NXCPMessage *msg) override;
    virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size) override;
 
-   virtual ~AgentConnectionEx();
-
 public:
    AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
    AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
+   virtual ~AgentConnectionEx();
 
    UINT32 deployPolicy(GenericAgentPolicy *policy, bool newTypeFormatSupported);
    UINT32 uninstallPolicy(uuid guid, TCHAR *type, bool newTypeFormatSupported);
