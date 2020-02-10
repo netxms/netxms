@@ -271,7 +271,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       final List<PathElement> uploadList = new ArrayList<PathElement>();
       for(String name : dlg.getFileNames())
       {
-         File f = new File(name);
+         File f = new File(dlg.getFilterPath(), name);
          if (f.exists())
          {
             PathElement e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID());
