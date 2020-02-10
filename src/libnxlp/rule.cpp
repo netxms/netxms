@@ -28,9 +28,9 @@
 /**
  * Constructor
  */
-LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, UINT32 eventCode,
-         const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
-         bool resetRepeat, const TCHAR *source, UINT32 level, UINT32 idStart, UINT32 idEnd)
+LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, bool ignoreCase,
+      UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
+      bool resetRepeat, const TCHAR *source, UINT32 level, UINT32 idStart, UINT32 idEnd)
 {
 	StringBuffer expandedRegexp;
 
@@ -49,8 +49,9 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_context = NULL;
 	m_contextAction = 0;
 	m_contextToChange = NULL;
-	m_isInverted = FALSE;
-	m_breakOnMatch = FALSE;
+   m_ignoreCase = ignoreCase;
+	m_isInverted = false;
+	m_breakOnMatch = false;
 	m_description = NULL;
    m_repeatInterval = repeatInterval;
 	m_repeatCount = repeatCount;
@@ -64,7 +65,8 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 
    const char *eptr;
    int eoffset;
-   m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp), 
+         m_ignoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
    if (m_preg == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Regexp \"%s\" compilation error: %hs at offset %d"), m_regexp, eptr, eoffset);
@@ -90,6 +92,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 	m_context = MemCopyString(src->m_context);
 	m_contextAction = src->m_contextAction;
 	m_contextToChange = MemCopyString(src->m_contextToChange);
+   m_ignoreCase = src->m_ignoreCase;
 	m_isInverted = src->m_isInverted;
 	m_breakOnMatch = src->m_breakOnMatch;
 	m_description = MemCopyString(src->m_description);
@@ -113,7 +116,8 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 
    const char *eptr;
    int eoffset;
-   m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp),
+         m_ignoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
    if (m_preg == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Regexp \"%s\" compilation error: %hs at offset %d"), m_regexp, eptr, eoffset);

@@ -88,6 +88,7 @@ struct LogParser_XmlParserState
 	StringBuffer macroName;
 	StringBuffer macro;
 	StringBuffer schedule;
+   bool ignoreCase;
 	bool invertedRule;
 	bool breakFlag;
 	int repeatCount;
@@ -498,6 +499,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	else if (!strcmp(name, "rule"))
 	{
 		ps->regexp = NULL;
+      ps->ignoreCase = true;
 		ps->invertedRule = false;
 		ps->event = NULL;
 		ps->context = NULL;
@@ -539,7 +541,8 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	else if (!strcmp(name, "match"))
 	{
 		ps->state = XML_STATE_MATCH;
-		ps->invertedRule = XMLGetAttrBoolean(attrs, "invert", false);
+      ps->ignoreCase = XMLGetAttrBoolean(attrs, "ignoreCase", true);
+      ps->invertedRule = XMLGetAttrBoolean(attrs, "invert", false);
 		ps->resetRepeat = XMLGetAttrBoolean(attrs, "reset", true);
 		ps->repeatCount = XMLGetAttrInt(attrs, "repeatCount", 0);
 		ps->repeatInterval = XMLGetAttrInt(attrs, "repeatInterval", 0);
@@ -681,7 +684,7 @@ static void EndElement(void *userData, const char *name)
 
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
-		LogParserRule *rule = new LogParserRule(ps->parser, ps->ruleName, ps->regexp,
+		LogParserRule *rule = new LogParserRule(ps->parser, ps->ruleName, ps->regexp, ps->ignoreCase,
 		         eventCode, eventName, ps->eventTag, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
 		if (!ps->agentAction.isEmpty())
 		   rule->setAgentAction(ps->agentAction);

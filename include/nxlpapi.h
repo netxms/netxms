@@ -135,6 +135,7 @@ private:
 	TCHAR *m_context;
 	int m_contextAction;
 	TCHAR *m_contextToChange;
+   bool m_ignoreCase;
 	bool m_isInverted;
 	bool m_breakOnMatch;
 	TCHAR *m_description;
@@ -158,7 +159,7 @@ private:
 
 public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
-	              const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
+	              const TCHAR *regexp, bool ignoreCase = true, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
 					  const TCHAR *eventTag = NULL, int repeatInterval = 0, int repeatCount = 0,
 					  bool resetRepeat = true, const TCHAR *source = NULL, UINT32 level = 0xFFFFFFFF,
 					  UINT32 idStart = 0, UINT32 idEnd = 0xFFFFFFFF);
