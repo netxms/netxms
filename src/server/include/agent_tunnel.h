@@ -140,13 +140,13 @@ public:
 
    UINT32 getId() const { return m_id; }
    const InetAddress& getAddress() const { return m_address; }
-   const TCHAR *getSystemName() const { return m_systemName; }
+   const TCHAR *getSystemName() const { return CHECK_NULL_EX(m_systemName); }
    const TCHAR *getHostname() const { return m_hostname; }
-   const TCHAR *getDisplayName() const { return m_hostname[0] != 0 ? m_hostname : m_systemName; }
-   const TCHAR *getSystemInfo() const { return m_systemInfo; }
-   const TCHAR *getPlatformName() const { return m_platformName; }
-   const TCHAR *getAgentVersion() const { return m_agentVersion; }
-   const TCHAR *getAgentBuildTag() const { return m_agentBuildTag; }
+   const TCHAR *getDisplayName() const { return (m_hostname[0] != 0) ? m_hostname : CHECK_NULL_EX(m_systemName); }
+   const TCHAR *getSystemInfo() const { return CHECK_NULL_EX(m_systemInfo); }
+   const TCHAR *getPlatformName() const { return CHECK_NULL_EX(m_platformName); }
+   const TCHAR *getAgentVersion() const { return CHECK_NULL_EX(m_agentVersion); }
+   const TCHAR *getAgentBuildTag() const { return CHECK_NULL_EX(m_agentBuildTag); }
    const uuid& getAgentId() const { return m_agentId; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    bool isBound() const { return m_nodeId != 0; }
