@@ -918,9 +918,8 @@ static void CH_CopyFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
  */
 static TCHAR *GetPathToFile(const TCHAR *fullPath)
 {
-   TCHAR* pathToFile = MemCopyString(fullPath);
+   TCHAR *pathToFile = MemCopyString(fullPath);
    TCHAR *ptr = _tcsrchr(pathToFile, FS_PATH_SEPARATOR_CHAR);
-   String result;
    if (ptr != NULL)
    {
       *ptr = 0;
@@ -930,7 +929,6 @@ static TCHAR *GetPathToFile(const TCHAR *fullPath)
       MemFree(pathToFile);
       pathToFile = NULL;
    }
-
    return pathToFile;
 }
 
