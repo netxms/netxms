@@ -1095,33 +1095,39 @@ void DCTable::createExportRecord(StringBuffer &xml)
 {
    lock();
 
-   xml.appendFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
-                          _T("\t\t\t\t\t<guid>%s</guid>\n")
-                          _T("\t\t\t\t\t<name>%s</name>\n")
-                          _T("\t\t\t\t\t<description>%s</description>\n")
-                          _T("\t\t\t\t\t<origin>%d</origin>\n")
-                          _T("\t\t\t\t\t<scheduleType>%d</scheduleType>\n")
-                          _T("\t\t\t\t\t<interval>%s</interval>\n")
-                          _T("\t\t\t\t\t<retentionType>%d</retentionType>\n")
-                          _T("\t\t\t\t\t<retention>%s</retention>\n")
-                          _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
-                          _T("\t\t\t\t\t<flags>%d</flags>\n")
-                          _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
-                          _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n")
-                          _T("\t\t\t\t\t<instance>%s</instance>\n")
-                          _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n")
-                          _T("\t\t\t\t\t<comments>%s</comments>\n"),
-								  (int)m_id, (const TCHAR *)m_guid.toString(),
-								  (const TCHAR *)EscapeStringForXML2(m_name),
-                          (const TCHAR *)EscapeStringForXML2(m_description),
-                          m_pollingScheduleType,
-                          (const TCHAR *)EscapeStringForXML2(m_pollingIntervalSrc),
-                          m_retentionType,
-                          (const TCHAR *)EscapeStringForXML2(m_retentionTimeSrc),
-                          (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (int)m_flags, (int)m_snmpPort, (int)m_instanceDiscoveryMethod,
-								  (const TCHAR *)EscapeStringForXML2(m_instance), m_instanceRetentionTime,
-								  (const TCHAR *)EscapeStringForXML2(m_comments));
+   xml.append(_T("\t\t\t\t<dctable id=\""));
+   xml.append(m_id);
+   xml.append(_T("\">\n\t\t\t\t\t<guid>"));
+   xml.append(m_guid);
+   xml.append(_T("</guid>\n\t\t\t\t\t<name>"));
+   xml.append(EscapeStringForXML2(m_name));
+   xml.append(_T("</name>\n\t\t\t\t\t<description>"));
+   xml.append(EscapeStringForXML2(m_description));
+   xml.append(_T("</description>\n\t\t\t\t\t<origin>"));
+   xml.append(static_cast<INT32>(m_source));
+   xml.append(_T("</origin>\n\t\t\t\t\t<scheduleType>"));
+   xml.append(static_cast<INT32>(m_pollingScheduleType));
+   xml.append(_T("</scheduleType>\n\t\t\t\t\t<interval>"));
+   xml.append(EscapeStringForXML2(m_pollingIntervalSrc));
+   xml.append(_T("</interval>\n\t\t\t\t\t<retentionType>"));
+   xml.append(static_cast<INT32>(m_retentionType));
+   xml.append(_T("</retentionType>\n\t\t\t\t\t<retention>"));
+   xml.append(EscapeStringForXML2(m_retentionTimeSrc));
+   xml.append(_T("</retention>\n\t\t\t\t\t<systemTag>"));
+   xml.append(EscapeStringForXML2(m_systemTag));
+   xml.append(_T("</systemTag>\n\t\t\t\t\t<flags>"));
+   xml.append(m_flags);
+   xml.append(_T("</flags>\n\t\t\t\t\t<snmpPort>"));
+   xml.append(m_snmpPort);
+   xml.append(_T("</snmpPort>\n\t\t\t\t\t<instanceDiscoveryMethod>"));
+   xml.append(m_instanceDiscoveryMethod);
+   xml.append(_T("</instanceDiscoveryMethod>\n\t\t\t\t\t<instance>"));
+   xml.append(EscapeStringForXML2(m_instance));
+   xml.append(_T("</instance>\n\t\t\t\t\t<instanceRetentionTime>"));
+   xml.append(m_instanceRetentionTime);
+   xml.append(_T("</instanceRetentionTime>\n\t\t\t\t\t<comments>"));
+   xml.append(EscapeStringForXML2(m_comments));
+   xml.append(_T("</comments>\n"));
 
 	if (m_transformationScriptSource != NULL)
 	{
