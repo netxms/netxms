@@ -166,7 +166,7 @@ LogParser::LogParser(const LogParser *src)
 	{
 		int count;
 		for(count = 0; src->m_eventNameList[count].text != NULL; count++);
-		m_eventNameList = (count > 0) ? (CODE_TO_TEXT *)nx_memdup(src->m_eventNameList, sizeof(CODE_TO_TEXT) * (count + 1)) : NULL;
+		m_eventNameList = (count > 0) ? nx_memdup(src->m_eventNameList, sizeof(CODE_TO_TEXT) * (count + 1)) : NULL;
 	}
 	else
 	{

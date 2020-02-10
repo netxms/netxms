@@ -213,11 +213,11 @@ DECLARE_SUBAGENT_ENTRY_POINT(DBQUERY)
    AddParameters(parameters, parametersTable, config);
 
    m_info.numParameters = parameters->size();
-   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
+   m_info.parameters = nx_memdup(parameters->getBuffer(),
                      parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
 
    m_info.numTables = parametersTable->size();
-   m_info.tables = (NETXMS_SUBAGENT_TABLE *)nx_memdup(parametersTable->getBuffer(),
+   m_info.tables = nx_memdup(parametersTable->getBuffer(),
                      parametersTable->size() * sizeof(NETXMS_SUBAGENT_TABLE));
 
    delete parameters;

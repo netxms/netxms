@@ -328,37 +328,37 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 	switch (source)
 	{
 		case CPU_USAGE_OVERAL:
-			table = (float *)m_cpuUsage;
+			table = m_cpuUsage;
 			break;
 		case CPU_USAGE_USER:
-			table = (float *)m_cpuUsageUser;
+			table = m_cpuUsageUser;
 			break;
 		case CPU_USAGE_NICE:
-			table = (float *)m_cpuUsageNice;
+			table = m_cpuUsageNice;
 			break;
 		case CPU_USAGE_SYSTEM:
-			table = (float *)m_cpuUsageSystem;
+			table = m_cpuUsageSystem;
 			break;
 		case CPU_USAGE_IDLE:
-			table = (float *)m_cpuUsageIdle;
+			table = m_cpuUsageIdle;
 			break;
 		case CPU_USAGE_IOWAIT:
-			table = (float *)m_cpuUsageIoWait;
+			table = m_cpuUsageIoWait;
 			break;
 		case CPU_USAGE_IRQ:
-			table = (float *)m_cpuUsageIrq;
+			table = m_cpuUsageIrq;
 			break;
 		case CPU_USAGE_SOFTIRQ:
-			table = (float *)m_cpuUsageSoftIrq;
+			table = m_cpuUsageSoftIrq;
 			break;
 		case CPU_USAGE_STEAL:
-			table = (float *)m_cpuUsageSteal;
+			table = m_cpuUsageSteal;
 			break;
 		case CPU_USAGE_GUEST:
-			table = (float *)m_cpuUsageGuest;
+			table = m_cpuUsageGuest;
 			break;
 		default:
-			table = (float *)m_cpuUsage;
+			table = m_cpuUsage;
 	}
 
    table += cpu * CPU_USAGE_SLOTS;
