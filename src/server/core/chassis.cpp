@@ -336,6 +336,9 @@ void Chassis::onDataCollectionChange()
  */
 void Chassis::collectProxyInfo(ProxyInfo *info)
 {
+   if(m_status == STATUS_UNMANAGED)
+      return;
+
    Node *controller = (Node *)FindObjectById(m_controllerId, OBJECT_NODE);
    if (controller == NULL)
    {

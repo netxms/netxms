@@ -9234,6 +9234,9 @@ void Node::incSnmpTrapCount()
  */
 void Node::collectProxyInfo(ProxyInfo *info)
 {
+   if(m_status == STATUS_UNMANAGED)
+      return;
+
    UINT32 primarySnmpProxy = getEffectiveSnmpProxy(false);
    bool snmpProxy = (primarySnmpProxy == info->proxyId);
    bool backupSnmpProxy = (getEffectiveSnmpProxy(true) == info->proxyId);
