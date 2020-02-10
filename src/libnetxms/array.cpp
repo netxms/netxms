@@ -90,7 +90,7 @@ Array::Array(const Array *src)
    m_grow = src->m_grow;
    m_allocated = src->m_allocated;
    m_elementSize = src->m_elementSize;
-   m_data = (src->m_data != NULL) ? (void **)MemCopyBlock(src->m_data, m_elementSize * m_allocated) : NULL;
+   m_data = (src->m_data != NULL) ? MemCopyBlock(src->m_data, m_elementSize * m_allocated) : NULL;
    m_objectOwner = src->m_objectOwner;
    m_objectDestructor = src->m_objectDestructor;
    m_storePointers = src->m_storePointers;

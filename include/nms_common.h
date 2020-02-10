@@ -1209,12 +1209,12 @@ template<typename T> T *MemCopyArray(const T *data, size_t count)
 
 inline char *MemCopyStringA(const char *src)
 {
-   return (src != NULL) ? static_cast<char*>(MemCopyBlock(src, strlen(src) + 1)) : NULL;
+   return (src != NULL) ? MemCopyBlock(src, strlen(src) + 1) : NULL;
 }
 
 inline WCHAR *MemCopyStringW(const WCHAR *src)
 {
-   return (src != NULL) ? static_cast<WCHAR*>(MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR))) : NULL;
+   return (src != NULL) ? MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR)) : NULL;
 }
 
 #else

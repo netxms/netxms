@@ -179,7 +179,7 @@ static bool LoadConfiguration(bool initial)
       if (initial)
       {
          m_info.numParameters = parameters->size();
-         m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
+         m_info.parameters = nx_memdup(parameters->getBuffer(),
                            parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
          delete parameters;
       }
@@ -257,7 +257,7 @@ static bool LoadConfiguration(bool initial)
    if (initial)
    {
       m_info.numParameters = parameters->size();
-      m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
+      m_info.parameters = nx_memdup(parameters->getBuffer(),
                           parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
       delete parameters;
    }
