@@ -913,6 +913,28 @@ static void CH_CopyFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
 }
 
 /**
+ * Get path to file without file name
+ * Will return null if there is only file name
+ */
+static TCHAR *GetPathToFile(const TCHAR *fullPath)
+{
+   TCHAR* pathToFile = MemCopyString(fullPath);
+   TCHAR *ptr = _tcsrchr(pathToFile, FS_PATH_SEPARATOR_CHAR);
+   String result;
+   if (ptr != NULL)
+   {
+      *ptr = 0;
+   }
+   else
+   {
+      MemFree(pathToFile);
+      pathToFile = NULL;
+   }
+
+   return pathToFile;
+}
+
+/**
  * Handler for "upload" command
  */
 static void CH_Upload(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
@@ -932,6 +954,13 @@ static void CH_Upload(NXCPMessage *request, NXCPMessage *response, AbstractCommS
    TCHAR *fullPath = NULL;
    if (CheckFullPath(name, &fullPath, false, true) && session->isMasterServer())
    {
+      TCHAR *pathToFile = GetPathToFile(fullPath);
+      if (pathToFile != NULL)
+      {
+         CreateFolder(pathToFile);
+         MemFree(pathToFile);
+      }
+
       if (VerifyFileOperation(fullPath, allowOverwirite, response))
          response->setField(VID_RCC, session->openFile(fullPath, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
    }
