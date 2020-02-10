@@ -172,15 +172,14 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
          while(fgets(szLine, sizeof(szLine), hFile) != NULL)
          {
             char szIF[64];
-            int nTmp, nType = 0;
+            int nType = 0;
             unsigned int nDestination, nGateway, nMask;
 
             if (sscanf(szLine,
-               "%63s\t%08X\t%08X\t%d\t%d\t%d\t%d\t%08X",
+               "%63s\t%08X\t%08X\t%*d\t%*d\t%*d\t%*d\t%08X",
                szIF,
                &nDestination,
                &nGateway,
-               &nTmp, &nTmp, &nTmp, &nTmp,
                &nMask) == 8)
             {
                int nIndex;
@@ -189,7 +188,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
                strncpy(irq.ifr_name, szIF, IFNAMSIZ);
                if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
                {
-                  perror("ioctl()");
+                  AgentWriteDebugLog(4, _T("H_NetRoutingTable: ioctl() failed (%s)"), _tcserror(errno));
                   nIndex = 0;
                }
                else
