@@ -2299,7 +2299,7 @@ void NetObj::enterMaintenanceMode(const TCHAR *comments)
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *object = static_cast<NetObj *>(getChildList()->get(i));
+      NetObj *object = getChildList()->get(i);
       if (object->getStatus() != STATUS_UNMANAGED)
          object->enterMaintenanceMode(comments);
    }
