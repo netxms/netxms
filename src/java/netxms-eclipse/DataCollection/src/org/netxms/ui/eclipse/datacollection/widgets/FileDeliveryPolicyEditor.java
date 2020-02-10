@@ -277,6 +277,10 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             PathElement e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID());
             uploadList.add(e);
          }
+         else
+         {
+            Activator.logInfo("File does not exist: " + name);            
+         }
       }
 
       if (!uploadList.isEmpty())
