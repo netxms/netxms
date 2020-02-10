@@ -1,4 +1,5 @@
 #include "nxuseragent.h"
+#include <shlwapi.h>
 
 /**
  * Top level menu items
@@ -157,11 +158,60 @@ void MenuItem::execute()
    }
    else
    {
-      TCHAR command[8192];
+      TCHAR command[8192], fbuffer[8192];
       ExpandEnvironmentStrings(m_command, command, 8192);
       nxlog_debug(3, _T("Executing command \"%s\""), command);
       nxlog_debug(4, _T("Command was expanded from \"%s\""), m_command);
-      ShellExecute(GetParent(m_hWnd), _T("open"), command, NULL, NULL, SW_SHOWDEFAULT);
+
+      const TCHAR *verb;
+      const TCHAR *file;
+      const TCHAR *parameters = NULL;
+
+      // First, attempt to parse command as URL
+      PARSEDURL pu;
+      pu.cbSize = sizeof(pu);
+      if (ParseURL(command, &pu) == S_OK)
+      {
+         // Can be parsed as URL, use "open" verb
+         verb = _T("open");
+         file = command;
+
+         TCHAR protocol[32];
+         size_t l = MIN(pu.cchProtocol, 31);
+         memcpy(protocol, pu.pszProtocol, l * sizeof(TCHAR));
+         protocol[l] = 0;
+         nxlog_debug(4, _T("URL format detected (%s)"), protocol);
+      }
+      else
+      {
+         verb = NULL;
+         file = fbuffer;
+
+         bool quotes = false;
+         TCHAR *out = fbuffer;
+         for (TCHAR *p = command; *p != 0; p++)
+         {
+            if (*p == _T('"'))
+            {
+               quotes = !quotes;
+            }
+            else if (_istspace(*p) && !quotes)
+            {
+               *p++ = 0;
+               while ((*p != 0) && _istspace(*p))
+                  p++;
+               if (*p != 0)
+                  parameters = p;
+               break;
+            }
+            else
+            {
+               *out++ = *p;
+            }
+         }
+         *out = 0;
+      }
+      ShellExecute(GetParent(m_hWnd), verb, file, parameters, NULL, SW_SHOWDEFAULT);
       CloseApplicationWindow();
    }
    m_selected = false;
