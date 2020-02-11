@@ -149,4 +149,18 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    {
       return viewPart;
    }
+   
+   /**
+    * Callback that will be called on policy save
+    */
+   public void onSave()
+   {      
+   }
+   
+   /**
+    * Callback that will be called on save discard
+    */
+   public void onDiscard()
+   {
+   }
 }

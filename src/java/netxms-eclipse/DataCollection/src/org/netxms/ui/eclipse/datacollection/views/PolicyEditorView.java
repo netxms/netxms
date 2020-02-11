@@ -332,6 +332,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       modifiedByOtherUser = false;      
       throwExceptionOnSave = true;
       policy = editor.updatePolicyFromControl();
+      editor.onSave();
       new ConsoleJob("Save agent policy", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -425,12 +426,14 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                return CANCEL;
          }      
          policy = editor.updatePolicyFromControl();
+         editor.onSave();
          return YES;
       }
       if (rc == SavePolicyDialog.CANCEL)
       {
          return CANCEL;
       }
+      editor.onDiscard();
       return NO;
    }
 

@@ -122,6 +122,19 @@ public class PathElement
    }
    
    /**
+    * Find child by by name
+    */
+   public PathElement findChild(String name)
+   {
+      for (PathElement element : children)
+      {
+         if(element.getName().equals(name))
+            return element;
+      }
+      return null;
+   }
+   
+   /**
     * Check if this element has children
     * 
     * @return true if this element has children
@@ -196,5 +209,15 @@ public class PathElement
       else if (!name.equals(other.name))
          return false;
       return true;
+   }
+
+   /**
+    * Update local file
+    * 
+    * @param f file
+    */
+   public void setFile(File f)
+   {
+      localFile = f;
    }
 }

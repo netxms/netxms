@@ -71,6 +71,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private Action actionDelete;
    private Action actionRename;
    private Action actionUpdate;
+   private Set<String> filesForDeletion = new HashSet<String>();
+   private Set<String> notSavedFiles = new HashSet<String>();
 
    /**
     * @param parent
@@ -274,7 +276,18 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          File f = new File(dlg.getFilterPath(), name);
          if (f.exists())
          {
-            PathElement e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID());
+            PathElement e = ((PathElement)selection.getFirstElement()).findChild(f.getName());
+            if (e != null)
+            {
+               if (!MessageDialogHelper.openQuestion(getShell(), "File overwrite configuration", "File with " + f.getName() + " already exist. Do you want to overwrite it?"))
+                  continue;
+               e.setFile(f);
+            }
+            else
+            {
+               e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID());  
+               notSavedFiles.add(e.getGuid().toString());             
+            }
             uploadList.add(e);
          }
          else
@@ -310,6 +323,28 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             }
          }.start();
       }
+   }
+
+   /**
+    * Delete selected file
+    */
+   private void deleteFile(final String name)
+   {
+      final NXCSession session = ConsoleSharedData.getSession();
+
+      new ConsoleJob("Delete file", getViewPart(), Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.deleteServerFile("FileDelivery-" + name);
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot delete file";
+         }
+      }.start();
    }
 
    /**
@@ -443,14 +478,19 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       boolean inputChanged = false;
       for(Object o : selection.toList())
       {
-         if (((PathElement)o).getParent() == null)
+         PathElement element = (PathElement)o;
+         
+         if (element.isFile())
+            filesForDeletion.add(element.getGuid().toString());
+         
+         if (element.getParent() == null)
          {
             rootElements.remove(o);
             inputChanged = true;
          }
          else
          {
-            ((PathElement)o).remove();
+            element.remove();
          }
       }
 
@@ -539,5 +579,30 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    public boolean isFindAndReplaceRequired()
    {
       return false;
+   }   
+
+   /**
+    * Callback that will be called on policy save
+    */
+   public void onSave()
+   {
+      notSavedFiles.clear();
+      for (String name : filesForDeletion)
+      {
+         deleteFile(name);
+      }
+   }
+   
+   /**
+    * Callback that will be called on save discard
+    */
+   public void onDiscard()
+   {
+      for (String name : notSavedFiles)
+      {
+         System.out.println("Delete not saved file");
+         deleteFile(name);
+      }
+      super.dispose();
    }
 }
