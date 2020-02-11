@@ -508,7 +508,7 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
    if (dd != NULL)
    {
       Config config;
-      if (config.loadConfigFromMemory(configuration, (int)strlen(configuration), driverName, NULL, true, false))
+      if (config.loadConfigFromMemory(configuration, strlen(configuration), driverName, NULL, true, false))
       {
          driver = dd->instanceFactory(&config, storageManager);
          if (driver != NULL)
