@@ -646,6 +646,7 @@ typedef struct
 #define CMD_GET_WEB_SERVICES              0x0192
 #define CMD_MODIFY_WEB_SERVICE            0x0193
 #define CMD_DELETE_WEB_SERVICE            0x0194
+#define CMD_WEB_SERVICE_DEFINITION        0x0195
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

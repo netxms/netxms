@@ -1364,6 +1364,14 @@ public:
    void remove(int index) { m_data.remove(index); }
    void clear() { m_data.clear(); }
 
+   SharedObjectArray<T> *clone() const
+   {
+      auto a = new SharedObjectArray<T>(m_data.size());
+      for(int i = 0; i < m_data.size(); i++)
+         a->add(*static_cast<shared_ptr<T>*>(m_data.get(i)));
+      return a;
+   }
+
    int size() const { return m_data.size(); }
    bool isEmpty() const { return m_data.isEmpty(); }
 };

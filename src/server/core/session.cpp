@@ -25,6 +25,7 @@
 #include <nxtools.h>
 #include <nxstat.h>
 #include <entity_mib.h>
+#include <nxcore_websvc.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -1395,6 +1396,15 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_DELETE_PHYSICAL_LINK:
          deletePhysicalLink(request);
+         break;
+      case CMD_GET_WEB_SERVICES:
+         getWebServices(request);
+         break;
+      case CMD_MODIFY_WEB_SERVICE:
+         modifyWebService(request);
+         break;
+      case CMD_DELETE_WEB_SERVICE:
+         deleteWebService(request);
          break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
@@ -15183,9 +15193,7 @@ void ClientSession::getNotificationDriverNames(UINT32 requestId)
  */
 void ClientSession::startActiveDiscovery(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
@@ -15222,30 +15230,24 @@ void ClientSession::startActiveDiscovery(NXCPMessage *request)
  */
 void ClientSession::getPhysicalLinks(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    bool success = true;
-   NetObj *obj = NULL;
-   if(request->isFieldExist(VID_OBJECT_ID))
+   NetObj *object = FindObjectById(request->getFieldAsInt32(VID_OBJECT_ID));
+   if (object == NULL)
    {
-      obj = FindObjectById(request->getFieldAsInt32(VID_OBJECT_ID));
-      if(obj == NULL)
-      {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-         success = false;
-      }
-      else if(!obj->checkAccessRights(getUserId(), OBJECT_ACCESS_READ))
-      {
-         WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, obj->getId(), _T("Access denied on object read"));
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-         success = false;
-      }
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      success = false;
+   }
+   else if (!object->checkAccessRights(getUserId(), OBJECT_ACCESS_READ))
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on object read"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      success = false;
    }
 
    if (success)
    {
-      GetObjectPhysicalLinks(obj, getUserId(), request->getFieldAsInt32(VID_PATCH_PANNEL_ID), &msg);
+      GetObjectPhysicalLinks(object, getUserId(), request->getFieldAsInt32(VID_PATCH_PANNEL_ID), &msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
 
@@ -15257,20 +15259,18 @@ void ClientSession::getPhysicalLinks(NXCPMessage *request)
  */
 void ClientSession::updatePhysicalLink(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    UINT32 rcc = AddLink(request, getUserId());
 
    if (rcc == RCC_SUCCESS)
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
-      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("%d physical link updated"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
+      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Physical link [%u] updated"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
    }
    else if (rcc == RCC_ACCESS_DENIED)
    {
-      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on %d physical link update"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on physical link [%u] update"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    else
@@ -15286,22 +15286,69 @@ void ClientSession::updatePhysicalLink(NXCPMessage *request)
  */
 void ClientSession::deletePhysicalLink(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   if(DeleteLink(request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID), getUserId()))
+   if (DeleteLink(request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID), getUserId()))
    {
-      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("%d physical link deleted"), request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
+      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Physical link [%u] deleted"), request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on %d physical link dalete"), request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on physical link [%u] delete"), request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    sendMessage(&msg);
+}
+
+/**
+ * Get configured web service definitions
+ */
+void ClientSession::getWebServices(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
+   {
+      SharedObjectArray<WebServiceDefinition> *definitions = GetWebServiceDefinitions();
+
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_NUM_ELEMENTS, definitions->size());
+      sendMessage(&response);
+
+      response.setCode(CMD_WEB_SERVICE_DEFINITION);
+      for(int i = 0; i < definitions->size(); i++)
+      {
+         response.deleteAllFields();
+         definitions->get(i)->fillMessage(&response);
+         sendMessage(&response);
+      }
+
+      delete definitions;
+   }
+   else
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on reading configured web services"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(&response);
+   }
+}
+
+/**
+ * Modify web service definition
+ */
+void ClientSession::modifyWebService(NXCPMessage *request)
+{
+
+}
+
+/**
+ * Delete web service definition
+ */
+void ClientSession::deleteWebService(NXCPMessage *request)
+{
+
 }
 
 #ifdef WITH_ZMQ

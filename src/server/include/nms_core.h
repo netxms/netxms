@@ -805,10 +805,14 @@ private:
    void getPhysicalLinks(NXCPMessage *request);
    void updatePhysicalLink(NXCPMessage *request);
    void deletePhysicalLink(NXCPMessage *request);
+   void getWebServices(NXCPMessage *request);
+   void modifyWebService(NXCPMessage *request);
+   void deleteWebService(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
 #endif
+
    void registerServerCommand(ProcessExecutor *command) { m_serverCommands->set(command->getStreamId(), command); }
 
    void alarmUpdateWorker(Alarm *alarm);

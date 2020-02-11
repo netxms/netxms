@@ -29,15 +29,16 @@
 class WebServiceDefinition
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    uuid m_guid;
    TCHAR *m_name;
+   TCHAR *m_description;
    TCHAR *m_url;
    WebServiceAuthType m_authType;
    TCHAR *m_login;   // Or token for "bearer" auth
    TCHAR *m_password;
-   UINT32 m_cacheRetentionTime;  // milliseconds
-   UINT32 m_requestTimeout;      // milliseconds
+   uint32_t m_cacheRetentionTime;  // milliseconds
+   uint32_t m_requestTimeout;      // milliseconds
    StringMap m_headers;
 
 public:
@@ -45,12 +46,21 @@ public:
    WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~WebServiceDefinition();
 
-   UINT32 query(DataCollectionTarget *object, const TCHAR *path, const StringList *args,
+   uint32_t query(DataCollectionTarget *object, const TCHAR *path, const StringList *args,
             AgentConnection *conn, TCHAR *result) const;
    void fillMessage(NXCPMessage *msg) const;
+   void createExportRecord(StringBuffer &xml) const;
+   json_t *toJson() const;
+
+   uint32_t getId() const { return m_id; }
+   const uuid& getGuid() const { return m_guid; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getUrl() const { return m_url; }
+   const TCHAR *getDescription() const { return m_description; }
 };
 
 void LoadWebServiceDefinitions();
-shared_ptr<WebServiceDefinition> GetWebServiceDefinition(const TCHAR *name);
+SharedObjectArray<WebServiceDefinition> *GetWebServiceDefinitions();
+shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name);
 
 #endif
