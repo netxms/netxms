@@ -126,6 +126,9 @@ public class PathElement
     */
    public PathElement findChild(String name)
    {
+      if (children == null)
+         return null;
+      
       for (PathElement element : children)
       {
          if(element.getName().equals(name))
