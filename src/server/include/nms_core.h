@@ -149,6 +149,7 @@
 #define IDG_UA_MESSAGE        23
 #define IDG_RACK_ELEMENT      24
 #define IDG_PHYSICAL_LINK     25
+#define IDG_WEBSVC_DEFINITION 26
 
 /**
  * Exit codes for console commands
@@ -1151,9 +1152,9 @@ BOOL ExecCommand(TCHAR *pszCommand);
 bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
 StringList *SplitCommandLine(const TCHAR *command);
 
-BOOL InitIdTable();
-UINT32 CreateUniqueId(int iGroup);
-QWORD CreateUniqueEventId();
+bool InitIdTable();
+uint32_t CreateUniqueId(int group);
+uint64_t CreateUniqueEventId();
 void SaveCurrentFreeId();
 
 void InitMailer();

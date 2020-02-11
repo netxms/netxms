@@ -15332,7 +15332,7 @@ void ClientSession::getWebServices(NXCPMessage *request)
    }
    else
    {
-      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on reading configured web services"));
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on reading configured web service definitions"));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
       sendMessage(&response);
    }
@@ -15343,7 +15343,26 @@ void ClientSession::getWebServices(NXCPMessage *request)
  */
 void ClientSession::modifyWebService(NXCPMessage *request)
 {
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
+   if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
+   {
+      auto definition = make_shared<WebServiceDefinition>(request);
+      uint32_t rcc = ModifyWebServiceDefinition(definition);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Web service definition \"%s\" [%u] modified"),
+                  definition->getName(), definition->getId());
+      }
+   }
+   else
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on changing web service definition"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&response);
 }
 
 /**
@@ -15351,7 +15370,23 @@ void ClientSession::modifyWebService(NXCPMessage *request)
  */
 void ClientSession::deleteWebService(NXCPMessage *request)
 {
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
+   if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
+   {
+      uint32_t id = request->getFieldAsUInt32(VID_WEBSVC_ID);
+      uint32_t rcc = DeleteWebServiceDefinition(id);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Web service definition [%u] deleted"), id);
+   }
+   else
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on deleting web service definition"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&response);
 }
 
 #ifdef WITH_ZMQ

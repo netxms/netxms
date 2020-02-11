@@ -31,7 +31,11 @@
 WebServiceDefinition::WebServiceDefinition(const NXCPMessage *msg)
 {
    m_id = msg->getFieldAsUInt32(VID_WEBSVC_ID);
+   if (m_id == 0)
+      m_id = CreateUniqueId(IDG_WEBSVC_DEFINITION);
    m_guid = msg->getFieldAsGUID(VID_GUID);
+   if (m_guid.isNull())
+      m_guid = uuid::generate();
    m_name = msg->getFieldAsString(VID_NAME);
    m_description = msg->getFieldAsString(VID_DESCRIPTION);
    m_url = msg->getFieldAsString(VID_URL);
@@ -459,4 +463,142 @@ SharedObjectArray<WebServiceDefinition> *GetWebServiceDefinitions()
    auto definitions = s_webServiceDefinitions.clone();
    s_webServiceDefinitionLock.unlock();
    return definitions;
+}
+
+/**
+ * Save single header to database
+ */
+static EnumerationCallbackResult SaveHeader(const TCHAR *key, const TCHAR *value, DB_STATEMENT hStmt)
+{
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+   return DBExecute(hStmt) ? _CONTINUE : _STOP;
+}
+
+/**
+ * Modify web service definition. Returns client RCC.
+ */
+uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
+{
+   uint32_t rcc;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (DBBegin(hdb))
+   {
+      bool success = false;
+
+      static const TCHAR *columns[] = { _T("id"), _T("guid"), _T("name"), _T("description"), _T("url"),
+               _T("auth_type"), _T("login"), _T("password"), _T("cache_retention_time"), _T("request_timeout"), nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("websvc_definitions"), _T("id"), definition->getId(), columns);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, definition->getId());
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, definition->getGuid());
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, definition->getName(), DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, definition->getDescription(), DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, definition->getUrl(), DB_BIND_STATIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(definition->getAuthType()));
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, definition->getLogin(), DB_BIND_STATIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, definition->getPassword(), DB_BIND_STATIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, definition->getCacheRetentionTime());
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, definition->getRequestTimeout());
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+
+      if (success)
+         success = ExecuteQueryOnObject(hdb, definition->getId(), _T("DELETE FROM websvc_headers WHERE websvc_id=?"));
+
+      const StringMap& headers = definition->getHeaders();
+      if (success && !headers.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO websvc_headers (websvc_id,name,value) VALUES (?,?,?)"), headers.size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, definition->getId());
+            success = (headers.forEach(SaveHeader, hStmt) == _CONTINUE);
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+
+      if (success)
+      {
+         DBCommit(hdb);
+         rcc = RCC_SUCCESS;
+
+         s_webServiceDefinitionLock.lock();
+         s_webServiceDefinitions.add(definition);
+         s_webServiceDefinitionLock.unlock();
+      }
+      else
+      {
+         DBRollback(hdb);
+         rcc = RCC_DB_FAILURE;
+      }
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   return rcc;
+}
+
+/**
+ * Delete web service definition. Returns client RCC.
+ */
+uint32_t DeleteWebServiceDefinition(uint32_t id)
+{
+   uint32_t rcc = RCC_INVALID_OBJECT_ID;
+   shared_ptr<WebServiceDefinition> definition;
+   s_webServiceDefinitionLock.lock();
+   for(int i = 0; i < s_webServiceDefinitions.size(); i++)
+   {
+      auto d = s_webServiceDefinitions.getShared(i);
+      if (d->getId() == id)
+      {
+         definition = d;
+         s_webServiceDefinitions.remove(i);
+         rcc = RCC_SUCCESS;
+         break;
+      }
+   }
+   s_webServiceDefinitionLock.unlock();
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      if (DBBegin(hdb))
+      {
+         bool success = ExecuteQueryOnObject(hdb, id, _T("DELETE FROM websvc_definitions WHERE id=?"));
+         if (success)
+            success = ExecuteQueryOnObject(hdb, id, _T("DELETE FROM websvc_headers WHERE websvc_id=?"));
+         if (success)
+         {
+            DBCommit(hdb);
+         }
+         else
+         {
+            DBRollback(hdb);
+            rcc = RCC_DB_FAILURE;
+
+            // Re-insert web service definition into list
+            s_webServiceDefinitionLock.lock();
+            s_webServiceDefinitions.add(definition);
+            s_webServiceDefinitionLock.unlock();
+         }
+      }
+      else
+      {
+         rcc = RCC_DB_FAILURE;
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+
+   return rcc;
 }

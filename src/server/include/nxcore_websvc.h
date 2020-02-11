@@ -57,10 +57,18 @@ public:
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getUrl() const { return m_url; }
    const TCHAR *getDescription() const { return m_description; }
+   WebServiceAuthType getAuthType() const { return m_authType; }
+   const TCHAR *getLogin() const { return m_login; }
+   const TCHAR *getPassword() const { return m_password; }
+   uint32_t getCacheRetentionTime() const { return m_cacheRetentionTime; }
+   uint32_t getRequestTimeout() const { return m_requestTimeout; }
+   const StringMap& getHeaders() const { return m_headers; }
 };
 
 void LoadWebServiceDefinitions();
 SharedObjectArray<WebServiceDefinition> *GetWebServiceDefinitions();
 shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name);
+uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition);
+uint32_t DeleteWebServiceDefinition(uint32_t id);
 
 #endif

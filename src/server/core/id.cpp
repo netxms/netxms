@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,13 +25,13 @@
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   26
+#define NUMBER_OF_GROUPS   27
 
 /**
  * Static data
  */
 static MUTEX s_mutexTableAccess;
-static UINT32 s_freeIdTable[NUMBER_OF_GROUPS] =
+static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
          {
             100, FIRST_USER_EVENT_ID, 1, 1,
             1, 1, 1, 1,
@@ -39,9 +39,9 @@ static UINT32 s_freeIdTable[NUMBER_OF_GROUPS] =
             1, 10000, 10000, 1,
             1, 1, 1, 1,
             1, 1, 1, 1,
-            1, 1
+            1, 1, 1
          };
-static UINT32 s_idLimits[NUMBER_OF_GROUPS] =
+static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
          {
             0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
             0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
@@ -49,9 +49,9 @@ static UINT32 s_idLimits[NUMBER_OF_GROUPS] =
             0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
             0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE,
             0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-            0xFFFFFFFE, 0xFFFFFFFE
+            0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
          };
-static UINT64 m_freeEventId = 1;
+static uint64_t m_freeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
    _T("Network Objects"),
@@ -79,13 +79,14 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Alarm categories"),
    _T("User Agent Messages"),
    _T("Passive Rack Elements"),
-   _T("Physical Links")
+   _T("Physical Links"),
+   _T("Web Service Definitions")
 };
 
 /**
  * Initialize ID table
  */
-BOOL InitIdTable()
+bool InitIdTable()
 {
    DB_RESULT hResult;
 
@@ -94,7 +95,7 @@ BOOL InitIdTable()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Get first available network object ID
-	UINT32 id = ConfigReadULong(_T("FirstFreeObjectId"), s_freeIdTable[IDG_NETWORK_OBJECT]);
+	uint32_t id = ConfigReadULong(_T("FirstFreeObjectId"), s_freeIdTable[IDG_NETWORK_OBJECT]);
 	if (id > s_freeIdTable[IDG_NETWORK_OBJECT])
 		s_freeIdTable[IDG_NETWORK_OBJECT] = id;
    hResult = DBSelect(hdb, _T("SELECT max(id) FROM nodes"));
@@ -487,43 +488,50 @@ BOOL InitIdTable()
       DBFreeResult(hResult);
    }
 
+   // Get first available web service definition id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM websvc_definitions"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_WEBSVC_DEFINITION] = std::max(s_freeIdTable[IDG_WEBSVC_DEFINITION],
+                                                      DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
    DBConnectionPoolReleaseConnection(hdb);
-   return TRUE;
+   return true;
 }
 
 /**
  * Create unique ID
  */
-UINT32 CreateUniqueId(int iGroup)
+uint32_t CreateUniqueId(int iGroup)
 {
-   UINT32 dwId;
-
+   uint32_t id;
    MutexLock(s_mutexTableAccess);
    if (s_freeIdTable[iGroup] == s_idLimits[iGroup])
    {
-      dwId = 0;   // ID zero means _T("no unique ID available")
+      id = 0;   // ID zero means _T("no unique ID available")
       nxlog_write(NXLOG_ERROR, _T("Unable to assign unique ID to object in group \"%s\". You should perform database optimization to fix that."), m_pszGroupNames[iGroup]);
    }
    else
    {
-      dwId = s_freeIdTable[iGroup];
+      id = s_freeIdTable[iGroup];
       s_freeIdTable[iGroup]++;
    }
    MutexUnlock(s_mutexTableAccess);
-   return dwId;
+   return id;
 }
 
 /**
  * Create unique ID for event log record
  */
-QWORD CreateUniqueEventId()
+uint64_t CreateUniqueEventId()
 {
-   QWORD qwId;
-
    MutexLock(s_mutexTableAccess);
-   qwId = m_freeEventId++;
+   uint64_t id = m_freeEventId++;
    MutexUnlock(s_mutexTableAccess);
-   return qwId;
+   return id;
 }
 
 /**
@@ -532,7 +540,7 @@ QWORD CreateUniqueEventId()
 void SaveCurrentFreeId()
 {
    MutexLock(s_mutexTableAccess);
-   UINT32 id = s_freeIdTable[IDG_NETWORK_OBJECT];
+   uint32_t id = s_freeIdTable[IDG_NETWORK_OBJECT];
    MutexUnlock(s_mutexTableAccess);
 	ConfigWriteULong(_T("FirstFreeObjectId"), id, TRUE, FALSE, TRUE);
 }
