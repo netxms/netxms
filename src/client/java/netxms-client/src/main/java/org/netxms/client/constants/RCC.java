@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,7 +126,9 @@ public final class RCC extends CommonRCC
    public static final int CHANNEL_ALREADY_EXIST = 130;
    public static final int NO_CHANNEL_NAME = 131;
    public static final int CHANNEL_IN_USE = 132;
-   public static final int INVALID_CHANNEL_NAME_OR_DRIVER = 133;
+   public static final int INVALID_CHANNEL_NAME = 133;
+   public static final int ENDPOINT_ALREADY_IN_USE = 134;
+   public static final int INVALID_DRIVER_NAME = 135;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

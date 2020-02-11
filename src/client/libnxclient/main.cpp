@@ -208,9 +208,19 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
       _T("Category is used in event processing policy"),
       _T("Category name is empty"),
       _T("Unable to download file from agent"),
-      _T("Invalid tunnel ID")
+      _T("Invalid tunnel ID"),
+      _T("File already exists"),
+      _T("Folder already exists"),
+      _T("No such policy"),
+      _T("No hardware data"),
+      _T("Notification channel name already exists"),
+      _T("No such notification channel name"),
+      _T("Object is in use and cannot be deleted"),
+      _T("Invalid notification channel name"),
+      _T("Endpoint is already in use"),
+      _T("Invalid driver name")
    };
-	return (error <= RCC_INVALID_TUNNEL_ID) ? errorText[error] : _T("No text message for this error");
+	return (error <= RCC_INVALID_DRIVER_NAME) ? errorText[error] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)
