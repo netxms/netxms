@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -52,7 +52,7 @@ static const InetAddress IPV6_LINK_LOCAL = InetAddress((const BYTE *)"\xfe\x80\x
 /**
  * Create IPv4 address object
  */
-InetAddress::InetAddress(UINT32 addr)
+InetAddress::InetAddress(uint32_t addr)
 {
    m_family = AF_INET;
    memset(&m_addr, 0, sizeof(m_addr));
@@ -63,7 +63,7 @@ InetAddress::InetAddress(UINT32 addr)
 /**
  * Create IPv4 address object
  */
-InetAddress::InetAddress(UINT32 addr, UINT32 mask)
+InetAddress::InetAddress(uint32_t addr, uint32_t mask)
 {
    m_family = AF_INET;
    memset(&m_addr, 0, sizeof(m_addr));
@@ -415,7 +415,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
    struct hostent *hs = NULL;
    if (m_family == AF_INET)
    {
-      UINT32 addr = htonl(m_addr.v4);
+      uint32_t addr = htonl(m_addr.v4);
 		hs = gethostbyaddr((const char *)&addr, 4, AF_INET);
    }
    else
@@ -516,7 +516,7 @@ InetAddress InetAddress::parse(const char *str)
    // Check for IPv4 address
 #ifdef _WIN32
    char strCopy[256];
-   strncpy(strCopy, str, 255);
+   strlcpy(strCopy, str, 255);
 
    struct sockaddr_in addr4;
    addr4.sin_family = AF_INET;
@@ -696,7 +696,7 @@ bool InetAddressList::isLoopbackOnly() const
 void InetAddressList::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const
 {
    msg->setField(sizeFieldId, m_list->size());
-   UINT32 fieldId = baseFieldId;
+   uint32_t fieldId = baseFieldId;
    for(int i = 0; i < m_list->size(); i++)
    {
       msg->setField(fieldId++, *m_list->get(i));

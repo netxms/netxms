@@ -2436,26 +2436,26 @@ public:
    void deleteRow(int row);
    void deleteColumn(int col);
 
-   void setAt(int nRow, int nCol, INT32 nData);
-   void setAt(int nRow, int nCol, UINT32 dwData);
-   void setAt(int nRow, int nCol, double dData);
-   void setAt(int nRow, int nCol, INT64 nData);
-   void setAt(int nRow, int nCol, UINT64 qwData);
-   void setAt(int nRow, int nCol, const TCHAR *pszData);
-   void setPreallocatedAt(int nRow, int nCol, TCHAR *pszData);
+   void setAt(int row, int col, int32_t value);
+   void setAt(int row, int col, uint32_t value);
+   void setAt(int row, int col, double value);
+   void setAt(int row, int col, int64_t value);
+   void setAt(int row, int col, uint64_t value);
+   void setAt(int row, int col, const TCHAR *value);
+   void setPreallocatedAt(int row, int col, TCHAR *value);
 
-   void set(int nCol, INT32 nData) { setAt(getNumRows() - 1, nCol, nData); }
-   void set(int nCol, UINT32 dwData) { setAt(getNumRows() - 1, nCol, dwData); }
-   void set(int nCol, double dData) { setAt(getNumRows() - 1, nCol, dData); }
-   void set(int nCol, INT64 nData) { setAt(getNumRows() - 1, nCol, nData); }
-   void set(int nCol, UINT64 qwData) { setAt(getNumRows() - 1, nCol, qwData); }
-   void set(int nCol, const TCHAR *data) { setAt(getNumRows() - 1, nCol, data); }
+   void set(int col, int32_t value) { setAt(getNumRows() - 1, col, value); }
+   void set(int col, uint32_t value) { setAt(getNumRows() - 1, col, value); }
+   void set(int col, double value) { setAt(getNumRows() - 1, col, value); }
+   void set(int col, int64_t value) { setAt(getNumRows() - 1, col, value); }
+   void set(int col, uint64_t value) { setAt(getNumRows() - 1, col, value); }
+   void set(int col, const TCHAR *value) { setAt(getNumRows() - 1, col, value); }
 #ifdef UNICODE
-   void set(int nCol, const char *data) { setPreallocatedAt(getNumRows() - 1, nCol, WideStringFromMBString(data)); }
+   void set(int col, const char *value) { setPreallocatedAt(getNumRows() - 1, col, WideStringFromMBString(value)); }
 #else
-   void set(int nCol, const WCHAR *data) { setPreallocatedAt(getNumRows() - 1, nCol, MBStringFromWideString(data)); }
+   void set(int col, const WCHAR *value) { setPreallocatedAt(getNumRows() - 1, col, MBStringFromWideString(value)); }
 #endif
-   void setPreallocated(int nCol, TCHAR *data) { setPreallocatedAt(getNumRows() - 1, nCol, data); }
+   void setPreallocated(int col, TCHAR *value) { setPreallocatedAt(getNumRows() - 1, col, value); }
 
    void setStatusAt(int row, int col, int status);
    void setStatus(int col, int status) { setStatusAt(getNumRows() - 1, col, status); }
@@ -2719,14 +2719,14 @@ private:
    short m_family;
    union
    {
-      UINT32 v4;
+      uint32_t v4;
       BYTE v6[16];
    } m_addr;
 
 public:
    InetAddress();
-   InetAddress(UINT32 addr);
-   InetAddress(UINT32 addr, UINT32 mask);
+   InetAddress(uint32_t addr);
+   InetAddress(uint32_t addr, uint32_t mask);
    InetAddress(const BYTE *addr, int maskBits = 128);
 
    bool isAnyLocal() const;
@@ -2738,7 +2738,7 @@ public:
    bool isValidUnicast() const { return isValid() && !isAnyLocal() && !isLoopback() && !isMulticast() && !isBroadcast() && !isLinkLocal(); }
 
    int getFamily() const { return m_family; }
-   UINT32 getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }
+   uint32_t getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }
    const BYTE *getAddressV6() const { return (m_family == AF_INET6) ? m_addr.v6 : (const BYTE *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"; }
 
    bool contain(const InetAddress &a) const;
@@ -2769,7 +2769,7 @@ public:
 
    TCHAR *getHostByAddr(TCHAR *buffer, size_t buflen) const;
 
-   struct sockaddr *fillSockAddr(SockAddrBuffer *buffer, UINT16 port = 0) const;
+   struct sockaddr *fillSockAddr(SockAddrBuffer *buffer, uint16_t port = 0) const;
 
    static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_UNSPEC);
    static InetAddress resolveHostName(const char *hostname, int af = AF_UNSPEC);
@@ -3162,7 +3162,7 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in);
 void LIBNETXMS_EXPORTABLE qsort_s(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
 #endif
 
-INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs();
+int64_t LIBNETXMS_EXPORTABLE GetCurrentTimeMs();
 
 UINT64 LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
 UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);

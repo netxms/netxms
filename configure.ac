@@ -2546,25 +2546,22 @@ AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(void*)
 
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_TYPE_INT32_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT8_T
-AC_TYPE_LONG_LONG_INT
 AC_STRUCT_TIMEZONE
 
-AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, uuid_t, bool],,,[
+AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, int32_t, uint32_t, int16_t, uint16_t, int8_t, uint8_t, intptr_t, uintptr_t, bool],,,[
 #ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
 #endif
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
 ])
-AC_CHECK_TYPES([mode_t, off_t, socklen_t],,,[
+AC_CHECK_TYPES([mode_t, size_t, ssize_t, off_t, socklen_t, uuid_t],,,[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -2577,6 +2574,26 @@ AC_CHECK_TYPES([struct stat64],,,[
 #include <sys/stat.h>
 #endif
 ])
+
+AC_MSG_CHECKING(for nullptr)
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <stdio.h>
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+]],[[
+	void *v = nullptr;
+	return v == nullptr;
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_NULLPTR,1,Define to 1 if compiler has nullptr)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(HAVE_NULLPTR,0,Define to 1 if compiler has nullptr)
+])
+AC_LANG_POP([C++])
 
 AC_MSG_CHECKING(whether va_list is a pointer)
 AC_LANG_PUSH([C++])

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -624,84 +624,79 @@ void Table::deleteColumn(int col)
 /**
  * Set data at position
  */
-void Table::setAt(int nRow, int nCol, const TCHAR *pszData)
+void Table::setAt(int nRow, int nCol, const TCHAR *value)
 {
    TableRow *r = m_data->get(nRow);
    if (r != NULL)
    {
-      r->setValue(nCol, pszData);
+      r->setValue(nCol, value);
    }
 }
 
 /**
  * Set pre-allocated data at position
  */
-void Table::setPreallocatedAt(int nRow, int nCol, TCHAR *data)
+void Table::setPreallocatedAt(int nRow, int nCol, TCHAR *value)
 {
    TableRow *r = m_data->get(nRow);
    if (r != NULL)
    {
-      r->setPreallocatedValue(nCol, data);
+      r->setPreallocatedValue(nCol, value);
    }
    else
    {
-      free(data);
+      MemFree(value);
    }
 }
 
 /**
  * Set integer data at position
  */
-void Table::setAt(int nRow, int nCol, INT32 nData)
+void Table::setAt(int nRow, int nCol, int32_t value)
 {
-   TCHAR szBuffer[32];
-
-   _sntprintf(szBuffer, 32, _T("%d"), (int)nData);
-   setAt(nRow, nCol, szBuffer);
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, _T("%d"), value);
+   setAt(nRow, nCol, buffer);
 }
 
 /**
  * Set unsigned integer data at position
  */
-void Table::setAt(int nRow, int nCol, UINT32 dwData)
+void Table::setAt(int nRow, int nCol, uint32_t value)
 {
-   TCHAR szBuffer[32];
-
-   _sntprintf(szBuffer, 32, _T("%u"), (unsigned int)dwData);
-   setAt(nRow, nCol, szBuffer);
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, _T("%u"), value);
+   setAt(nRow, nCol, buffer);
 }
 
 /**
  * Set 64 bit integer data at position
  */
-void Table::setAt(int nRow, int nCol, INT64 nData)
+void Table::setAt(int nRow, int nCol, int64_t value)
 {
-   TCHAR szBuffer[32];
-
-   _sntprintf(szBuffer, 32, INT64_FMT, nData);
-   setAt(nRow, nCol, szBuffer);
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, INT64_FMT, value);
+   setAt(nRow, nCol, buffer);
 }
 
 /**
  * Set unsigned 64 bit integer data at position
  */
-void Table::setAt(int nRow, int nCol, UINT64 qwData)
+void Table::setAt(int nRow, int nCol, uint64_t value)
 {
-   TCHAR szBuffer[32];
-
-   _sntprintf(szBuffer, 32, UINT64_FMT, qwData);
-   setAt(nRow, nCol, szBuffer);
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, UINT64_FMT, value);
+   setAt(nRow, nCol, buffer);
 }
 
 /**
  * Set floating point data at position
  */
-void Table::setAt(int nRow, int nCol, double dData)
+void Table::setAt(int nRow, int nCol, double value)
 {
-   TCHAR szBuffer[32];
-
-   _sntprintf(szBuffer, 32, _T("%f"), dData);
-   setAt(nRow, nCol, szBuffer);
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, _T("%f"), value);
+   setAt(nRow, nCol, buffer);
 }
 
 /**

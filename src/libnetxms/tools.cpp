@@ -862,25 +862,22 @@ bool SetLastModificationTime(TCHAR *fileName, time_t lastModDate)
  * Get current time in milliseconds
  * Based on timeval.h by Wu Yongwei
  */
-INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
+int64_t LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
 {
 #ifdef _WIN32
    FILETIME ft;
-   LARGE_INTEGER li;
-   __int64 t;
-
    GetSystemTimeAsFileTime(&ft);
+
+   LARGE_INTEGER li;
    li.LowPart  = ft.dwLowDateTime;
    li.HighPart = ft.dwHighDateTime;
-   t = li.QuadPart;       // In 100-nanosecond intervals
+   int64_t t = li.QuadPart;       // In 100-nanosecond intervals
    t -= EPOCHFILETIME;    // Offset to the Epoch time
    t /= 10000;            // Convert to milliseconds
 #else
    struct timeval tv;
-   INT64 t;
-
    gettimeofday(&tv, NULL);
-   t = (INT64)tv.tv_sec * 1000 + (INT64)(tv.tv_usec / 1000);
+   int64_t t = (int64_t)tv.tv_sec * 1000 + (int64_t)(tv.tv_usec / 1000);
 #endif
 
    return t;

@@ -108,20 +108,6 @@
 #endif
 
 /**
- * Wrappers for 64-bit integer constants
- */
-#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#define _LL(x) (x ## LL)
-#define _ULL(x) (x ## ULL)
-#elif defined(_MSC_VER)
-#define _LL(x) (x ## i64)
-#define _ULL(x) (x ## ui64)
-#else
-#define _LL(x) (x)
-#define _ULL(x) (x)
-#endif
-
-/**
  * Common constants
  */
 #define MAX_SECRET_LENGTH        64
@@ -138,18 +124,6 @@
 
 #define NETXMS_MAX_CIPHERS       6
 #define NETXMS_RSA_KEYLEN        2048
-
-#ifndef LLONG_MAX
-#define LLONG_MAX    _LL(9223372036854775807)
-#endif
-
-#ifndef LLONG_MIN
-#define LLONG_MIN    (-LLONG_MAX - 1)
-#endif
-
-#ifndef ULLONG_MAX
-#define ULLONG_MAX   _ULL(18446744073709551615)
-#endif
 
 #ifndef EVENTLOG_DEBUG_TYPE
 #define EVENTLOG_DEBUG_TYPE		0x0080
@@ -470,6 +444,14 @@ using std::wcsncasecmp;
 #include <sys/types.h>
 #endif
 
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+
+#if HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #if HAVE_UTIME_H
 #include <utime.h>
 #endif
@@ -534,35 +516,7 @@ using std::wcsncasecmp;
 #include <sys/socket.h>
 #include <sys/un.h>
 
-typedef int BOOL;
-#if (SIZEOF_LONG == 4)
-#if (SIZEOF_INT == 4)
-typedef int INT32;
-typedef unsigned int UINT32;
-#else
-typedef long INT32;
-typedef unsigned long UINT32;
-#endif
-#undef __64BIT__
-#else
-typedef int INT32;
-typedef unsigned int UINT32;
-#ifndef __64BIT__
-#define __64BIT__
-#endif
-#endif
-typedef unsigned short UINT16;
-typedef short INT16;
-typedef unsigned char BYTE;
-typedef INT32 LONG;  // for compatibility
-typedef UINT32 DWORD;  // for compatibility
-typedef UINT16 WORD;  // for compatibility
-typedef void * HANDLE;
-typedef void * HMODULE;
-
-#if !HAVE_MODE_T
-typedef int mode_t;
-#endif
+#if !HAVE_INT64_T || !HAVE_UINT64_T
 
 // We have to use long as INT64 on HP-UX - otherwise
 // there will be compilation errors because of type redefinition in
@@ -570,48 +524,158 @@ typedef int mode_t;
 #ifdef _HPUX
 
 #ifdef __LP64__
-typedef long INT64;
-typedef unsigned long UINT64;
+#if !HAVE_INT64_T
+typedef long int64_t;
+#endif
+#if !HAVE_UINT64_T
+typedef unsigned long uint64_t;
+#endif
 #else
-typedef long long INT64;
-typedef unsigned long long UINT64;
+#if !HAVE_INT64_T
+typedef long long int64_t;
+#endif
+#if !HAVE_UINT64_T
+typedef unsigned long long uint64_t;
+#endif
 #endif
 
 #else    /* _HPUX */
 
+#if !HAVE_INT64_T
 #if HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
-typedef long long INT64;
-#elif HAVE_INT64_T
-typedef int64_t INT64;
+typedef long long int64_t;
 #elif SIZEOF_LONG == 8
-typedef long INT64;
+typedef long int64_t;
 #else
 #error Target system does not have signed 64bit integer type
 #endif
+#endif
 
+#if !HAVE_UINT64_T
 #if HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
-typedef unsigned long long UINT64;
-#elif HAVE_UINT64_T
-typedef uint64_t UINT64;
+typedef unsigned long long uint64_t;
 #elif HAVE_U_INT64_T
-typedef u_int64_t UINT64;
+typedef u_int64_t uint64_t;
 #elif SIZEOF_LONG == 8
-typedef unsigned long UINT64;
+typedef unsigned long uint64_t;
 #else
 #error Target system does not have unsigned 64bit integer type
+#endif
 #endif
 
 #endif   /* _HPUX */
 
-typedef UINT64 QWORD;   // for compatibility
+#endif
 
+#if (SIZEOF_LONG == 4)
+#if (SIZEOF_INT == 4)
+#if !HAVE_INT32_T
+typedef int int32_t;
+#endif
+#if !HAVE_UINT32_T
+typedef unsigned int uint32_t;
+#endif
+#else
+#if !HAVE_INT32_T
+typedef long int32_t;
+#endif
+#if !HAVE_UINT32_T
+typedef unsigned long uint32_t;
+#endif
+#endif
+#undef __64BIT__
+#else
+#if !HAVE_INT32_T
+typedef int int32_t;
+#endif
+#if !HAVE_UINT32_T
+typedef unsigned int uint32_t;
+#endif
+#ifndef __64BIT__
+#define __64BIT__
+#endif
+#endif
+
+#if !HAVE_INT16_T
+typedef short int16_t;
+#endif
+#if !HAVE_UINT16_T
+typedef unsigend short uint16_t;
+#endif
+
+#if !HAVE_INT8_T
+typedef char int8_t;
+#endif
+#if !HAVE_UINT8_T
+typedef unsigend char uint8_t;
+#endif
+
+#if !HAVE_INTPTR_T
+#if SIZEOF_VOIDP == 8
+typedef int64_t intptr_t;
+#else
+typedef int32_t intptr_t;
+#endif
+#endif
+
+#if !HAVE_UINTPTR_T
+#if SIZEOF_VOIDP == 8
+typedef uint64_t uintptr_t;
+#else
+typedef uint32_t uintptr_t;
+#endif
+#endif
+
+#if !HAVE_NULLPTR
+#define nullptr NULL
+#endif
+
+/* Deprectaed compatibility types - to be removed */
+typedef uint8_t BYTE;
+typedef int16_t INT16;
+typedef uint16_t UINT16;
+typedef uint16_t WORD;
+typedef int32_t INT32;
+typedef int32_t LONG;
+typedef uint32_t UINT32;
+typedef uint32_t DWORD;
+typedef int64_t INT64;
+typedef uint64_t UINT64;
+typedef uint64_t QWORD;
+
+typedef void * HANDLE;
+typedef void * HMODULE;
+
+#if !HAVE_MODE_T
+typedef int mode_t;
+#endif
+
+#ifdef PRId64
+#define INT64_FMT       _T("%") PRId64
+#define INT64_FMTW      L"%" PRId64
+#define INT64_FMTA      "%" PRId64
+#else
 #define INT64_FMT			_T("%lld")
 #define INT64_FMTW		L"%lld"
 #define INT64_FMTA		"%lld"
+#endif
+
+#ifdef PRIu64
+#define UINT64_FMT       _T("%") PRIu64
+#define UINT64_FMTW      L"%" PRIu64
+#define UINT64_FMTA      "%" PRIu64
+#else
 #define UINT64_FMT		_T("%llu")
 #define UINT64_FMTW		L"%llu"
 #define UINT64_FMTA		"%llu"
+#endif
+
+#ifdef PRIX64
+#define UINT64X_FMT(m)  _T("%") m PRIX64
+#else
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
+#endif
+
 #ifdef __64BIT__
 #define TIME_T_FMT		_T("%llu")
 #define TIME_T_FCAST(x)         ((UINT64)(x))
@@ -619,6 +683,8 @@ typedef UINT64 QWORD;   // for compatibility
 #define TIME_T_FMT		_T("%u")
 #define TIME_T_FCAST(x)         ((UINT32)(x))
 #endif
+
+typedef int BOOL;
 
 #ifndef TRUE
 #define TRUE   1
@@ -709,6 +775,40 @@ typedef struct hostent HOSTENT;
 #endif   /* _WIN32 */
 
 /**
+ * Wrappers for 64-bit integer constants
+ */
+#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#ifdef INT64_C
+#define _LL(x) INT64_C(x)
+#else
+#define _LL(x) (x ## LL)
+#endif
+#ifdef UINT64_C
+#define _ULL(x) UINT64_C(x)
+#else
+#define _ULL(x) (x ## ULL)
+#endif
+#elif defined(_MSC_VER)
+#define _LL(x) (x ## i64)
+#define _ULL(x) (x ## ui64)
+#else
+#define _LL(x) (x)
+#define _ULL(x) (x)
+#endif
+
+#ifndef LLONG_MAX
+#define LLONG_MAX    _LL(9223372036854775807)
+#endif
+
+#ifndef LLONG_MIN
+#define LLONG_MIN    (-LLONG_MAX - 1)
+#endif
+
+#ifndef ULLONG_MAX
+#define ULLONG_MAX   _ULL(18446744073709551615)
+#endif
+
+/**
  * Value used to indicate invalid pointer where NULL is not appropriate
  */
 #ifdef __64BIT__
@@ -718,15 +818,10 @@ typedef struct hostent HOSTENT;
 #endif
 
 /**
- * Casting between pointer and 32-bit integer
+ * Casting between pointer and integer
  */
-#ifdef __64BIT__
-#define CAST_FROM_POINTER(p, t) ((t)((UINT64)(p)))
-#define CAST_TO_POINTER(v, t) ((t)((UINT64)(v)))
-#else
-#define CAST_FROM_POINTER(p, t) ((t)((UINT32)(p)))
-#define CAST_TO_POINTER(v, t) ((t)((UINT32)(v)))
-#endif
+#define CAST_FROM_POINTER(p, t) ((t)((uintptr_t)(p)))
+#define CAST_TO_POINTER(v, t) ((t)((uintptr_t)(v)))
 
 /**
  * open() flags compatibility

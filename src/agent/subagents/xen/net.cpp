@@ -1,6 +1,6 @@
 /*
 ** NetXMS XEN hypervisor subagent
-** Copyright (C) 2017 Raden Solutions
+** Copyright (C) 2017-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,10 +30,10 @@ struct NetDevice
    char name[64];
    uint32_t domId;
    uint32_t netId;
-   UINT64 rxBytes;
-   UINT64 txBytes;
-   UINT64 rxPackets;
-   UINT64 txPackets;
+   uint64_t rxBytes;
+   uint64_t txBytes;
+   uint64_t rxPackets;
+   uint64_t txPackets;
 };
 
 /**
@@ -84,7 +84,7 @@ ObjectArray<NetDevice> *ScanNetworkDevices()
    {
       if (fgets(line, 1024, f) == NULL)
          break;
-      if (sscanf(line, " %[^:]: %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu %*u %*u %*u %*u %*u %*u",
+      if (sscanf(line, " %[^:]: " UINT64_FMTA " " UINT64_FMTA " %*u %*u %*u %*u %*u %*u " UINT64_FMTA " " UINT64_FMTA " %*u %*u %*u %*u %*u %*u",
                dev.name, &dev.rxBytes, &dev.rxPackets, &dev.txBytes, &dev.txPackets) == 5)
       {
          if (NetDeviceToDomId(dev.name, &dev.domId, &dev.netId))

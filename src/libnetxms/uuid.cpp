@@ -44,11 +44,11 @@ const uuid __EXPORT uuid::NULL_UUID = uuid();
  */
 struct __uuid
 {
-	DWORD	time_low;
-	WORD	time_mid;
-	WORD	time_hi_and_version;
-	WORD	clock_seq;
-	BYTE	node[6];
+	uint32_t	time_low;
+	uint16_t time_mid;
+	uint16_t time_hi_and_version;
+	uint16_t clock_seq;
+	uint8_t node[6];
 };
 
 /**
@@ -56,34 +56,34 @@ struct __uuid
  */
 static void uuid_pack(struct __uuid *uu, uuid_t ptr)
 {
-	unsigned int	tmp;
-	unsigned char	*out = ptr;
+	uint32_t tmp;
+	uint8_t *out = ptr;
 
 	tmp = uu->time_low;
-	out[3] = (unsigned char) tmp;
+	out[3] = (uint8_t)tmp;
 	tmp >>= 8;
-	out[2] = (unsigned char) tmp;
+	out[2] = (uint8_t)tmp;
 	tmp >>= 8;
-	out[1] = (unsigned char) tmp;
+	out[1] = (uint8_t)tmp;
 	tmp >>= 8;
-	out[0] = (unsigned char) tmp;
+	out[0] = (uint8_t)tmp;
 	
 	tmp = uu->time_mid;
-	out[5] = (unsigned char) tmp;
+	out[5] = (uint8_t)tmp;
 	tmp >>= 8;
-	out[4] = (unsigned char) tmp;
+	out[4] = (uint8_t)tmp;
 
 	tmp = uu->time_hi_and_version;
-	out[7] = (unsigned char) tmp;
+	out[7] = (uint8_t)tmp;
 	tmp >>= 8;
-	out[6] = (unsigned char) tmp;
+	out[6] = (uint8_t)tmp;
 
 	tmp = uu->clock_seq;
-	out[9] = (unsigned char) tmp;
+	out[9] = (uint8_t)tmp;
 	tmp >>= 8;
-	out[8] = (unsigned char) tmp;
+	out[8] = (uint8_t)tmp;
 
-	memcpy(out+10, uu->node, 6);
+	memcpy(out + 10, uu->node, 6);
 }
 
 /**
@@ -91,8 +91,8 @@ static void uuid_pack(struct __uuid *uu, uuid_t ptr)
  */
 static void uuid_unpack(const uuid_t in, struct __uuid *uu)
 {
-	const unsigned char *ptr = in;
-	unsigned int tmp;
+	const uint8_t *ptr = in;
+	uint32_t tmp;
 
 	tmp = *ptr++;
 	tmp = (tmp << 8) | *ptr++;
@@ -150,10 +150,8 @@ int LIBNETXMS_EXPORTABLE _uuid_compare(const uuid_t uu1, const uuid_t uu2)
  */
 bool LIBNETXMS_EXPORTABLE _uuid_is_null(const uuid_t uu)
 {
-	const unsigned char *cp;
-	int i;
-
-	for (i=0, cp = uu; i < 16; i++)
+	const uint8_t *cp = uu;
+	for (int i = 0; i < 16; i++)
 		if (*cp++)
 			return false;
 	return true;

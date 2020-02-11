@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004 - 2007 Alex Kirhenshtein
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,17 +26,17 @@
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool volatile m_stopCollectorThread = false;
-static UINT64 *m_user;
-static UINT64 *m_nice;
-static UINT64 *m_system;
-static UINT64 *m_idle;
-static UINT64 *m_iowait;
-static UINT64 *m_irq;
-static UINT64 *m_softirq;
-static UINT64 *m_steal;
-static UINT64 *m_guest;
-static UINT64 m_cpuInterrupts;
-static UINT64 m_cpuContextSwitches;
+static uint64_t *m_user;
+static uint64_t *m_nice;
+static uint64_t *m_system;
+static uint64_t *m_idle;
+static uint64_t *m_iowait;
+static uint64_t *m_irq;
+static uint64_t *m_softirq;
+static uint64_t *m_steal;
+static uint64_t *m_guest;
+static uint64_t m_cpuInterrupts;
+static uint64_t m_cpuContextSwitches;
 static float *m_cpuUsage;
 static float *m_cpuUsageUser;
 static float *m_cpuUsageNice;
@@ -63,12 +63,12 @@ static void CpuUsageCollector()
 		return;
 	}
 
-	UINT64 user, nice, system, idle;
-	UINT64 iowait = 0, irq = 0, softirq = 0; // 2.6
-	UINT64 steal = 0; // 2.6.11
-	UINT64 guest = 0; // 2.6.24
-	unsigned int cpu = 0;
-	unsigned int maxCpu = 0;
+	uint64_t user, nice, system, idle;
+	uint64_t iowait = 0, irq = 0, softirq = 0; // 2.6
+	uint64_t steal = 0; // 2.6.11
+	uint64_t guest = 0; // 2.6.24
+	uint32_t cpu = 0;
+	uint32_t maxCpu = 0;
 	char buffer[1024];
 
 	MutexLock(m_cpuUsageMutex);
@@ -90,35 +90,37 @@ static void CpuUsageCollector()
          {
             // "cpu ..." - Overal
             cpu = 0;
-            ret = sscanf(buffer, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+            ret = sscanf(buffer, "cpu " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA,
                   &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
          }
          else
          {
-            ret = sscanf(buffer, "cpu%u %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+            ret = sscanf(buffer, "cpu%u " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA " " UINT64_FMTA,
                   &cpu, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
             cpu++;
          }
 		}
 		else if (buffer[0] == 'i' && buffer[1] == 'n' && buffer[2] == 't' && buffer[3] == 'r')
 		{
-         ret = sscanf(buffer, "intr %llu", &m_cpuInterrupts);
+         ret = sscanf(buffer, "intr " UINT64_FMTA, &m_cpuInterrupts);
 		}
 		else if (buffer[0] == 'c' && buffer[1] == 't' && buffer[2] == 'x' && buffer[3] == 't')
       {
-         ret = sscanf(buffer, "ctxt %llu", &m_cpuContextSwitches);
+         ret = sscanf(buffer, "ctxt " UINT64_FMTA, &m_cpuContextSwitches);
       }
 		else
+		{
 		   continue;
+		}
 
 		if (ret < 4)
 			continue;
 
 		maxCpu = std::max(cpu, maxCpu);
 
-		UINT64 userDelta, niceDelta, systemDelta, idleDelta;
-		UINT64 iowaitDelta, irqDelta, softirqDelta, stealDelta;
-		UINT64 guestDelta;
+		uint64_t userDelta, niceDelta, systemDelta, idleDelta;
+		uint64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
+		uint64_t guestDelta;
 
 #define DELTA(x, y) (((x) > (y)) ? ((x) - (y)) : 0)
 		userDelta = DELTA(user, m_user[cpu]);
@@ -132,7 +134,7 @@ static void CpuUsageCollector()
 		guestDelta = DELTA(guest, m_guest[cpu]); //
 #undef DELTA
 
-		UINT64 totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
+		uint64_t totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
 		float onePercent = (float)totalDelta / 100.0; // 1% of total
 		if (onePercent == 0)
 		{
@@ -240,26 +242,26 @@ void StartCpuUsageCollector()
    UINT32 cpuCount2 = GetCpuCountFromStat();
    cpuCount = std::max(cpuCount, cpuCount2);
 
-   m_cpuUsage = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageUser = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageNice = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageSystem = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageIdle = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageIoWait = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageIrq = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageSoftIrq = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageSteal = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
-   m_cpuUsageGuest = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsage = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageUser = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageNice = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageSystem = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageIdle = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageIoWait = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageIrq = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageSoftIrq = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageSteal = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_cpuUsageGuest = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
 
-   m_user = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
-   m_nice = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
-   m_system = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
-   m_idle = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
-   m_iowait = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
-   m_irq = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
-   m_softirq = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
-   m_steal = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
-   m_guest = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_user = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_nice = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_system = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_idle = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_iowait = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_irq = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_softirq = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_steal = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
+   m_guest = MemAllocArray<uint64_t>(CPU_USAGE_SLOTS * (cpuCount + 1));
 
 	// get initial count of user/system/idle time
 	m_currentSlot = 0;

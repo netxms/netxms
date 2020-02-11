@@ -734,7 +734,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
             if (s_flags & NXLOG_DEBUG_MODE)
             {
                char buffer[256];
-               snprintf(buffer, 256, "##(" INT64_FMTA ")" INT64_FMTA " @" INT64_FMTA "\n", (INT64)buflen, (INT64)strlen(data), GetCurrentTimeMs());
+               snprintf(buffer, 256, "##(" INT64_FMTA ")" INT64_FMTA " @" INT64_FMTA "\n", (int64_t)buflen, (int64_t)strlen(data), GetCurrentTimeMs());
                _write(s_logFileHandle, buffer, strlen(buffer));
             }
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS XEN hypervisor subagent
-** Copyright (C) 2017 Raden Solutions
+** Copyright (C) 2017-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -123,7 +123,7 @@ LONG H_XenDomainTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstra
          value->set(7, d->max_memkb * _LL(1024));
 
          value->set(8, d->vcpu_online);
-         value->set(9, (UINT64)d->cpu_time);
+         value->set(9, d->cpu_time);
 
          INT32 curr, avg;
          if (XenQueryDomainCpuUsage(d->domid, &curr, &avg))
