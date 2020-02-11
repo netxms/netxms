@@ -2250,7 +2250,10 @@ void ClientSession::getObjects(NXCPMessage *request)
 	   if (!syncNodeComponents && (object->getObjectClass() == OBJECT_INTERFACE ||
 	         object->getObjectClass() == OBJECT_ACCESSPOINT || object->getObjectClass() == OBJECT_VPNCONNECTOR ||
 	         object->getObjectClass() == OBJECT_NETWORKSERVICE))
+	   {
+	      object->decRefCount();
          continue;
+	   }
 
       object->fillMessage(&msg, m_dwUserId);
       if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)

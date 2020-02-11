@@ -9456,13 +9456,17 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
       if (obj != NULL && !obj->isDeleted())
       {
          if (obj->getId() == m_id)
+         {
+            obj->decRefCount();
             continue;
+         }
 
          if (obj->getObjectClass() == OBJECT_NODE)
             static_cast<Node *>(obj)->buildInternalConnectionTopologyInternal(topology, m_id, false, true);
          else if (obj->getObjectClass() == OBJECT_SENSOR)
             static_cast<Sensor *>(obj)->buildInternalConnectionTopologyInternal(topology, true);
       }
+      obj->decRefCount();
    }
 }
 
