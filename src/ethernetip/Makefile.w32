@@ -1,0 +1,3 @@
+SUBDIRS = libethernetip
+
+include ..\..\Makefile.inc.w32

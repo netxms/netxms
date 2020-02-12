@@ -256,7 +256,7 @@ AC_ARG_WITH(clang,
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	COMPONENTS="$COMPONENTS sqlite snmp server agent sqlite_drv"
+	COMPONENTS="$COMPONENTS sqlite ethernetip snmp server agent sqlite_drv"
 ])
 
 AC_ARG_WITH(snmp,
@@ -280,7 +280,7 @@ AC_ARG_WITH(client-proxy,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite snmp agent sqlite_drv"
+	COMPONENTS="$COMPONENTS sqlite ethernetip snmp agent sqlite_drv"
 ])
 
 AC_ARG_WITH(static-agent,
@@ -849,7 +849,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
+	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
@@ -907,6 +907,11 @@ fi
 check_substr "$COMPONENTS" "snmp"
 if test $? = 0; then
 	MODULES="$MODULES snmp"
+fi
+
+check_substr "$COMPONENTS" "ethernetip"
+if test $? = 0; then
+	MODULES="$MODULES ethernetip"
 fi
 
 check_substr "$COMPONENTS" "java"
@@ -4490,6 +4495,8 @@ AC_CONFIG_FILES([
 	src/db/dbdrv/pgsql/Makefile
 	src/db/dbdrv/sqlite/Makefile
 	src/db/libnxdb/Makefile
+	src/ethernetip/Makefile
+	src/ethernetip/libethernetip/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/jansson/Makefile

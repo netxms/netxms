@@ -13,6 +13,7 @@ include_HEADERS = \
 	ata.h \
 	base64.h \
 	dbdrv.h \
+	ethernet_ip.h \
 	gauge_helpers.h \
 	geolocation.h \
 	ieee8021x.h \
