@@ -50,6 +50,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
@@ -158,6 +159,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			automaticLayoutEnabled = true;
 			layoutAlgorithm = mapObject.getLayout();
 		}
+		syncObjects();
 	}
 
 	/* (non-Javadoc)
@@ -286,6 +288,40 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
 		mapPage = mapObject.createMapPage();
       addDciToRequestList();
+	}
+	
+	/**
+	 * Synchronize objects, required when interface objects are placed on the map
+	 */
+	private void syncObjects()
+	{
+      mapPage = mapObject.createMapPage();
+	   final List<Long> mapObjectIds = mapPage.getObjectIds();	   
+
+	   ConsoleJob job = new ConsoleJob(String.format(Messages.get().PredefinedMap_SaveJobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID)
+      {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.syncMissingObjects(mapObjectIds, true, NXCSession.OBJECT_SYNC_WAIT);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (!viewer.getControl().isDisposed())
+                     refreshMap();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().PredefinedMap_SaveJobError;
+         }
+      };
+      job.setUser(false);
+      job.start();
 	}
 
 	/*

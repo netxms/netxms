@@ -2733,7 +2733,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       waitForSync(syncObjects, commandTimeout * 10);
-      objectsSynchronized = true;
+      objectsSynchronized = objectsSynchronized || syncNodeComponents;
       sendNotification(new SessionNotification(SessionNotification.OBJECT_SYNC_COMPLETED));
       subscribe(CHANNEL_OBJECTS);
    }
@@ -2802,6 +2802,41 @@ public class NXCSession
    public void syncMissingObjects(long[] objects, boolean syncComments, int options) throws IOException, NXCException
    {
       final long[] syncList = Arrays.copyOf(objects, objects.length);
+      int count = syncList.length;
+      synchronized(objectList)
+      {
+         for(int i = 0; i < syncList.length; i++)
+         {
+            if (objectList.containsKey(syncList[i]))
+            {
+               syncList[i] = 0;
+               count--;
+            }
+         }
+      }
+
+      if (count > 0)
+      {
+         syncObjectSet(syncList, syncComments, options);
+      }
+   }
+
+   /**
+    * Synchronize only those objects from given set which are not synchronized yet.
+    * Accepts all options which are valid for syncObjectSet.
+    *
+    * @param relatedOpbjects      identifiers of objects need to be synchronized
+    * @param syncComments if true, comments for objects will be synchronized as well
+    * @param options      sync options (see comments for syncObjectSet)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void syncMissingObjects(List<Long> relatedOpbjects, boolean syncComments, int options) throws IOException, NXCException
+   {
+      final long[] syncList = new long[relatedOpbjects.size()];
+      for (int i = 0; i < relatedOpbjects.size(); i++)
+         syncList[i] = relatedOpbjects.get(i);
+      
       int count = syncList.length;
       synchronized(objectList)
       {
@@ -11531,6 +11566,9 @@ public class NXCSession
     */
    public void syncChildren(AbstractObject object) throws NXCException, IOException
    {
+      if (objectsSynchronized)
+         return;
+      
       boolean syncRequired;
       synchronized(synchronizedObjectSet)
       {

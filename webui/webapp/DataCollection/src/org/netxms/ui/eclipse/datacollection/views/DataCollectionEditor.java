@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.datacollection.views;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -309,6 +311,21 @@ public class DataCollectionEditor extends ViewPart
 			{
 				dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), changeListener);
 				dciConfig.setUserData(viewer);
+				//load all related objects
+				if (!session.isObjectsSynchronized())
+				{
+   				List<Long> relatedOpbjects = new ArrayList<Long>();
+   				for(DataCollectionObject dco : dciConfig.getItems())
+   				{
+   				   if(dco.getRelatedObject() != 0)
+   				      relatedOpbjects.add(dco.getRelatedObject());
+   				}
+   				if (relatedOpbjects.size() > 0) 
+   				{
+   				   session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
+   				}
+				}
+				
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
