@@ -1226,6 +1226,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_CDP) ? 1 : 0));
    }
+   else if (!strcmp(attr, "isEthernetIP"))
+   {
+      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_ETHERNET_IP) ? 1 : 0));
+   }
    else if (!strcmp(attr, "isInMaintenanceMode"))
    {
       value = vm->createValue((LONG)(node->isInMaintenanceMode() ? 1 : 0));
@@ -1238,6 +1242,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
 	{
 		value = vm->createValue((LONG)((node->isLocalManagement()) ? 1 : 0));
 	}
+   else if (!strcmp(attr, "isModbusTCP"))
+   {
+      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_MODBUS_TCP) ? 1 : 0));
+   }
    else if (!strcmp(attr, "isOSPF"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_OSPF) ? 1 : 0));
@@ -1249,6 +1257,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "isPrinter"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_PRINTER) ? 1 : 0));
+   }
+   else if (!strcmp(attr, "isProfiNet"))
+   {
+      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_PROFINET) ? 1 : 0));
    }
    else if (!strcmp(attr, "isRouter"))
    {
@@ -1310,6 +1322,18 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(node->getPlatformName());
    }
+   else if (!strcmp(attr, "productCode"))
+   {
+      value = vm->createValue(node->getProductCode());
+   }
+   else if (!strcmp(attr, "productName"))
+   {
+      value = vm->createValue(node->getProductName());
+   }
+   else if (!strcmp(attr, "productVersion"))
+   {
+      value = vm->createValue(node->getProductVersion());
+   }
    else if (!strcmp(attr, "rack"))
    {
       Rack *rack = (Rack *)FindObjectById(node->getPhysicalContainerId(), OBJECT_RACK);
@@ -1344,6 +1368,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(node->getRuntimeFlags());
    }
+   else if (!strcmp(attr, "serialNumber"))
+   {
+      value = vm->createValue(node->getSerialNumber());
+   }
    else if (!strcmp(attr, "snmpOID"))
    {
       value = vm->createValue(node->getSNMPObjectId());
@@ -1367,6 +1395,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "sysDescription"))
    {
       value = vm->createValue(node->getSysDescription());
+   }
+   else if (!strcmp(attr, "vendor"))
+   {
+      value = vm->createValue(node->getVendor());
    }
    else if (!strcmp(attr, "vlans"))
    {

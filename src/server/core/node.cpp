@@ -81,7 +81,6 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
    m_hypervisorType[0] = 0;
-   m_hypervisorInfo = NULL;
    m_capabilities = 0;
    m_zoneUIN = 0;
    m_agentPort = AGENT_LISTEN_PORT;
@@ -169,6 +168,9 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
    m_icmpStatCollectors = NULL;
    m_chassisPlacementConf = NULL;
+   m_cipDeviceType = 0;
+   m_cipState = 0;
+   m_cipStatus = 0;
 }
 
 /**
@@ -183,7 +185,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
    m_hypervisorType[0] = 0;
-   m_hypervisorInfo = NULL;
    m_ipAddress = newNodeData->ipAddr;
    m_capabilities = 0;
    m_flags = flags;
@@ -283,6 +284,9 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_icmpStatCollectors = NULL;
    setCreationTime();
    m_chassisPlacementConf = NULL;
+   m_cipDeviceType = 0;
+   m_cipState = 0;
+   m_cipStatus = 0;
 }
 
 /**
@@ -329,7 +333,6 @@ Node::~Node()
    MemFree(m_sysLocation);
    delete m_routingLoopEvents;
    MemFree(m_agentCertSubject);
-   MemFree(m_hypervisorInfo);
    delete m_icmpStatCollectors;
    MemFree(m_chassisPlacementConf);
 }
@@ -368,7 +371,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
       _T("tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,")
       _T("rack_orientation,rack_image_rear,agent_id,agent_cert_subject,")
-      _T("hypervisor_type,hypervisor_info,icmp_poll_mode,chassis_placement_config")
+      _T("hypervisor_type,hypervisor_info,icmp_poll_mode,chassis_placement_config,")
+      _T("vendor,product_code,product_name,product_version,serial_number,")
+      _T("cip_device_type,cip_status,cip_state")
       _T(" FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
@@ -486,7 +491,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if ((m_agentCertSubject != NULL) && (m_agentCertSubject[0] == 0))
       MemFreeAndNull(m_agentCertSubject);
    DBGetField(hResult, 0, 55, m_hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
-   m_hypervisorInfo = DBGetField(hResult, 0, 56, NULL, 0);
+   m_hypervisorInfo = DBGetFieldAsSharedString(hResult, 0, 56);
 
    switch(DBGetFieldLong(hResult, 0, 57))
    {
@@ -501,6 +506,15 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          break;
    }
    m_chassisPlacementConf = DBGetField(hResult, 0, 58, NULL, 0);
+
+   m_vendor = DBGetFieldAsSharedString(hResult, 0, 59);
+   m_productCode = DBGetFieldAsSharedString(hResult, 0, 60);
+   m_productName = DBGetFieldAsSharedString(hResult, 0, 61);
+   m_productVersion = DBGetFieldAsSharedString(hResult, 0, 62);
+   m_serialNumber = DBGetFieldAsSharedString(hResult, 0, 63);
+   m_cipDeviceType = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 64));
+   m_cipStatus = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 65));
+   m_cipState = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 66));
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -833,6 +847,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
          _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
+         _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
+         _T("cip_status"), _T("cip_state"),
          NULL
       };
 
@@ -924,7 +940,15 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
          DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
          DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, m_chassisPlacementConf, DB_BIND_STATIC);
-         DBBind(hStmt, 60, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 60, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 127);
+         DBBind(hStmt, 61, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 15);
+         DBBind(hStmt, 62, DB_SQLTYPE_VARCHAR, m_productName, DB_BIND_STATIC, 127);
+         DBBind(hStmt, 63, DB_SQLTYPE_VARCHAR, m_productVersion, DB_BIND_STATIC, 15);
+         DBBind(hStmt, 64, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 31);
+         DBBind(hStmt, 65, DB_SQLTYPE_INTEGER, m_cipDeviceType);
+         DBBind(hStmt, 66, DB_SQLTYPE_INTEGER, m_cipStatus);
+         DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_cipState);
+         DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -3362,8 +3386,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
          if (*hypervisorInfo != 0)
             sendPollerMsg(rqId, _T("   Hypervisor information set to %s\r\n"), hypervisorInfo);
-         MemFree(m_hypervisorInfo);
-         m_hypervisorInfo = MemCopyString(hypervisorInfo);
+         m_hypervisorInfo = hypervisorInfo;
       }
       unlockProperties();
 
@@ -6104,7 +6127,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_NODE_TYPE, (INT16)m_type);
    pMsg->setField(VID_NODE_SUBTYPE, m_subType);
    pMsg->setField(VID_HYPERVISOR_TYPE, m_hypervisorType);
-   pMsg->setField(VID_HYPERVISOR_INFO, CHECK_NULL_EX(m_hypervisorInfo));
+   pMsg->setField(VID_HYPERVISOR_INFO, m_hypervisorInfo);
    pMsg->setField(VID_STATE_FLAGS, m_state);
    pMsg->setField(VID_CAPABILITIES, m_capabilities);
    pMsg->setField(VID_AGENT_PORT, m_agentPort);

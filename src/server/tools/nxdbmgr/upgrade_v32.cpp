@@ -44,7 +44,7 @@ static bool H_UpgradeFromV7()
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_device_type")));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_status")));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_state")));
-   CHK_EXEC(SetMinorSchemaVersion(7));
+   CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
 }
 

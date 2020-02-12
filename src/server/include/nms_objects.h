@@ -2751,11 +2751,12 @@ public:
    bool isVirtual() const { return (m_type == NODE_TYPE_VIRTUAL) || (m_type == NODE_TYPE_CONTAINER); }
    const TCHAR *getSubType() { return m_subType; }
    const TCHAR *getHypervisorType() const { return m_hypervisorType; }
-   const TCHAR *getHypervisorInfo() const { return CHECK_NULL_EX(m_hypervisorInfo); }
+   SharedString getHypervisorInfo() const { return GetAttributeWithLock(m_hypervisorInfo, m_mutexProperties); }
    SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }
    SharedString getProductName() const { return GetAttributeWithLock(m_productName, m_mutexProperties); }
    SharedString getProductVersion() const { return GetAttributeWithLock(m_productVersion, m_mutexProperties); }
    SharedString getProductCode() const { return GetAttributeWithLock(m_productCode, m_mutexProperties); }
+   SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
 
    UINT32 getCapabilities() { return m_capabilities; }
    void setCapabilities(UINT32 flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }

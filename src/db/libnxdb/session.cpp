@@ -504,6 +504,14 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
 }
 
 /**
+ * Get field as shared string
+ */
+SharedString LIBNXDB_EXPORTABLE DBGetFieldAsSharedString(DB_RESULT hResult, int row, int col)
+{
+   return SharedString(DBGetField(hResult, row, col, NULL, 0), true);
+}
+
+/**
  * Get field's value as UTF8 string. If buffer is NULL, dynamically allocated string will be returned.
  * Caller is responsible for destroying it by calling free().
  */

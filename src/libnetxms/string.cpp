@@ -76,18 +76,25 @@ String::String(const TCHAR *init)
 /**
  * Create string with given initial content
  */
-String::String(const TCHAR *init, size_t len)
+String::String(const TCHAR *init, ssize_t len, bool takeOwnership)
 {
-   m_length = len;
+   m_length = (init == NULL) ? 0 : ((len >= 0) ? len : _tcslen(init));
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
       m_buffer = m_internalBuffer;
+      memcpy(m_buffer, init, m_length * sizeof(TCHAR));
+      if (takeOwnership)
+         MemFree(const_cast<TCHAR*>(init));
+   }
+   else if (takeOwnership)
+   {
+      m_buffer = const_cast<TCHAR*>(init);
    }
    else
    {
       m_buffer = MemAllocString(m_length + 1);
+      memcpy(m_buffer, init, m_length * sizeof(TCHAR));
    }
-   memcpy(m_buffer, init, m_length * sizeof(TCHAR));
    m_buffer[m_length] = 0;
 }
 

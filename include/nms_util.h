@@ -879,7 +879,7 @@ public:
 
    String();
    String(const TCHAR *init);
-   String(const TCHAR *init, size_t len);
+   String(const TCHAR *init, ssize_t len, bool takeOwnership = false);
 	String(const String &src);
    virtual ~String();
 
@@ -949,19 +949,48 @@ public:
    SharedString() { }
    SharedString(const SharedString &str) : m_string(str.m_string) { }
    SharedString(const String &str) { m_string = make_shared<String>(str); }
-   SharedString(const TCHAR *str) { m_string = make_shared<String>(str); }
+   SharedString(const TCHAR *str) { if (str != NULL) m_string = make_shared<String>(str); }
+   SharedString(TCHAR *str, bool takeOwnership) { if (str != NULL) m_string = make_shared<String>(str, -1, takeOwnership); }
 
-   SharedString& operator=(const SharedString &str) { if (&str != this) m_string = str.m_string; return *this; }
-   SharedString& operator=(const String &str) { m_string = make_shared<String>(str); return *this; }
-   SharedString& operator=(const TCHAR *str) { m_string = make_shared<String>(str); return *this; }
+   SharedString& operator=(const SharedString &str)
+   {
+      if (&str != this)
+         m_string = str.m_string;
+      return *this;
+   }
+   SharedString& operator=(const String &str)
+   {
+      m_string = make_shared<String>(str);
+      return *this;
+   }
+   SharedString& operator=(const TCHAR *str)
+   {
+      m_string = make_shared<String>(str);
+      return *this;
+   }
 
-   const String &str() const { const String *s = m_string.get(); return (s != NULL) ? *s : String::empty; }
-   const TCHAR *cstr() const { const String *s = m_string.get(); return (s != NULL) ? s->cstr() : _T(""); }
+   const String &str() const
+   {
+      const String *s = m_string.get();
+      return (s != NULL) ? *s : String::empty;
+   }
+   const TCHAR *cstr() const
+   {
+      const String *s = m_string.get();
+      return (s != NULL) ? s->cstr() : _T("");
+   }
    operator const TCHAR*() const { return cstr(); }
    operator const String&() const { return str(); }
 
-   bool isNull() const { return m_string == NULL; }
-   bool isEmpty() const { const String *s = m_string.get(); return (s != NULL) ? s->isEmpty() : true; }
+   bool isNull() const
+   {
+      return m_string == NULL;
+   }
+   bool isEmpty() const
+   {
+      const String *s = m_string.get();
+      return (s != NULL) ? s->isEmpty() : true;
+   }
 };
 
 /**
