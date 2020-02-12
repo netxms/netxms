@@ -114,6 +114,8 @@ public:
       m_period = period;
    }
 
+   virtual ~Gauge() {};
+
    const TCHAR *getName() const { return m_name; }
    T getCurrent() const { return m_data.getCurrent(); }
    T getMin() const { return m_data.getMin(); }
@@ -228,6 +230,7 @@ protected:
 
 public:
    ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64(name, interval, period) { }
+   virtual ~ManualGauge64() override {};
 };
 
 #endif
