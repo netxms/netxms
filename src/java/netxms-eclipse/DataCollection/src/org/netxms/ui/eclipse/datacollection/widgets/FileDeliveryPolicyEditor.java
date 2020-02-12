@@ -480,8 +480,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       {
          PathElement element = (PathElement)o;
          
-         if (element.isFile())
-            filesForDeletion.add(element.getGuid().toString());
+         deleteFiles(element);
          
          if (element.getParent() == null)
          {
@@ -499,6 +498,22 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       else
          fileTree.refresh();
       fireModifyListeners();
+   }
+   
+   /**
+    * Delete files under folder
+    */
+   private void deleteFiles(PathElement element)
+   {
+      if (element.isFile())
+         filesForDeletion.add(element.getGuid().toString());
+      else
+      {
+         for(PathElement el : element.getChildren())
+         {
+            deleteFiles(el);
+         }
+      }
    }
 
    /**
