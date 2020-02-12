@@ -109,6 +109,7 @@ public class PersistentStorageView extends ViewPart
       viewerSetValue.getControl().setMenu(menu);
 
       // Register menu for extension.
+      getSite().setSelectionProvider(viewerSetValue);
       getSite().registerContextMenu(menuMgr, viewerSetValue);      
    }
 

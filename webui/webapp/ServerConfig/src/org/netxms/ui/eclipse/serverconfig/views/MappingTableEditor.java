@@ -253,6 +253,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		viewer.getControl().setMenu(menu);
 
 		// Register menu for extension.
+		getSite().setSelectionProvider(viewer);
 		getSite().registerContextMenu(menuMgr, viewer);
 	}
 

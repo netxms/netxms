@@ -187,6 +187,7 @@ public abstract class AbstractTraceWidget extends Composite
 		// Register menu for extension.
 		if (viewPart != null)
 		{
+		   viewPart.getSite().setSelectionProvider(viewer);
 			viewPart.getSite().registerContextMenu(menuMgr, viewer);
 		}
 	}

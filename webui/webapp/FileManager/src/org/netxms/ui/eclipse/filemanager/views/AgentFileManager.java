@@ -610,6 +610,7 @@ public class AgentFileManager extends ViewPart
       viewer.getControl().setMenu(menu);
 
       // Register menu for extension.
+      getSite().setSelectionProvider(viewer);
       getSite().registerContextMenu(menuMgr, viewer);
    }
 

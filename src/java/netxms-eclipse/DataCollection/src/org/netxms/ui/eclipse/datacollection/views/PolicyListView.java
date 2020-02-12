@@ -561,6 +561,7 @@ public class PolicyListView extends ViewPart implements SessionListener
       policyList.getControl().setMenu(menu);
 
       // Register menu for extension.
+      getSite().setSelectionProvider(policyList);
       getSite().registerContextMenu(menuMgr, policyList);
    }
 

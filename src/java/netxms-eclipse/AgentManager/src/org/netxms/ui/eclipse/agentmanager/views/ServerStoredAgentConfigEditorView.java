@@ -350,6 +350,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       configList.getControl().setMenu(menu);
 
       // Register menu for extension.
+      getSite().setSelectionProvider(configList);
       getSite().registerContextMenu(menuMgr, configList);
    }
 

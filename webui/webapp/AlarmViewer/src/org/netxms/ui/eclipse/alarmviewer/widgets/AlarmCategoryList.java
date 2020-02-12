@@ -267,7 +267,10 @@ public class AlarmCategoryList extends Composite implements SessionListener
 
       // Register menu for extension.
       if (viewPart != null)
+      {
+         viewPart.getSite().setSelectionProvider(viewer);
          viewPart.getSite().registerContextMenu(menuMgr, viewer);
+      }
    }
 
    /**

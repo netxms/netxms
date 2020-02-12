@@ -185,6 +185,7 @@ public abstract class AbstractTraceView extends ViewPart
       traceWidget.getViewer().getControl().setMenu(menu);
 
       // Register menu for extension.
+      getSite().setSelectionProvider(traceWidget.getViewer());
       getSite().registerContextMenu(menuMgr, traceWidget.getViewer());
    }
 

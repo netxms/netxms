@@ -370,7 +370,10 @@ public class LastValuesWidget extends CompositeWithMessageBar
 
 		// Register menu for extension.
 		if (viewPart != null)
+		{
+	      viewPart.getSite().setSelectionProvider(dataViewer);
 			viewPart.getSite().registerContextMenu(menuMgr, dataViewer);
+		}
 	}
 	
 	/**

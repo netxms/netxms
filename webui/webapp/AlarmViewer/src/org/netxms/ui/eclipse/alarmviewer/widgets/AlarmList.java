@@ -623,7 +623,10 @@ public class AlarmList extends CompositeWithMessageBar
 
 		// Register menu for extension.
 		if (viewPart != null)
+		{
+		   viewPart.getSite().setSelectionProvider(alarmViewer);
 			viewPart.getSite().registerContextMenu(menuMgr, alarmViewer);
+		}
 	}
 	
 	/**

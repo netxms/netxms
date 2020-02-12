@@ -107,6 +107,7 @@ public class SoftwareInventory extends Composite
 		{
 			Menu menu = menuManager.createContextMenu(viewer.getControl());
 			viewer.getControl().setMenu(menu);
+			viewPart.getSite().setSelectionProvider(viewer);
 			viewPart.getSite().registerContextMenu(menuManager, viewer);
 		}
 	}
@@ -133,6 +134,7 @@ public class SoftwareInventory extends Composite
 		{
 			Menu menu = menuManager.createContextMenu(viewer.getControl());
 			viewer.getControl().setMenu(menu);
+         viewPart.getSite().setSelectionProvider(viewer);
 			viewPart.getSite().registerContextMenu(menuManager, viewer);
 		}
 	}
@@ -244,6 +246,7 @@ public class SoftwareInventory extends Composite
 		{
 			Menu menu = menuManager.createContextMenu(viewer.getControl());
 			viewer.getControl().setMenu(menu);
+         viewPart.getSite().setSelectionProvider(viewer);
 			viewPart.getSite().registerContextMenu(menuManager, viewer);
 		}
 	}

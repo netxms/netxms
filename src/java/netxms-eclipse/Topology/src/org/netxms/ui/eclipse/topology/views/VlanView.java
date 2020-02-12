@@ -297,6 +297,7 @@ public class VlanView extends ViewPart
 		vlanList.getControl().setMenu(menu);
 
 		// Register menu for extension.
+      getSite().setSelectionProvider(vlanList);
 		getSite().registerContextMenu(menuMgr, vlanList);
 	}
 
