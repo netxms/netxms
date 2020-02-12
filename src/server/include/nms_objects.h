@@ -3457,10 +3457,12 @@ public:
    void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
    void addToIndex(const InetAddress& addr, Interface *iface) { m_idxInterfaceByAddr->put(addr, iface); }
 	void addToIndex(Node *node) { m_idxNodeByAddr->put(node->getIpAddress(), node); }
+   void addToIndex(const InetAddress& addr, Node *node) { m_idxNodeByAddr->put(addr, node); }
 	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->getIpAddress()); }
 	void removeFromIndex(Interface *iface);
    void removeFromInterfaceIndex(const InetAddress& addr) { m_idxInterfaceByAddr->remove(addr); }
 	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->getIpAddress()); }
+   void removeFromNodeIndex(const InetAddress& addr) { m_idxNodeByAddr->remove(addr); }
 	void updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, Interface *iface);
    void updateNodeIndex(const InetAddress& oldIp, const InetAddress& newIp, Node *node);
 	Subnet *getSubnetByAddr(const InetAddress& ipAddr) { return (Subnet *)m_idxSubnetByAddr->get(ipAddr); }

@@ -6234,7 +6234,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
             Zone *zone = FindZoneByUIN(m_zoneUIN);
             if (zone != NULL)
             {
-               zone->addToIndex(this);
+               zone->addToIndex(m_ipAddress, this);
             }
             else
             {
@@ -6253,7 +6253,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
             Zone *zone = FindZoneByUIN(m_zoneUIN);
             if (zone != NULL)
             {
-               zone->removeFromIndex(this);
+               zone->removeFromNodeIndex(m_ipAddress);
             }
             else
             {
