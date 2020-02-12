@@ -24,6 +24,31 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.7 to 32.8
+ */
+static bool H_UpgradeFromV7()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE websvc_definitions ADD description varchar(2000)\n")
+            _T("ALTER TABLE nodes ADD vendor varchar(127)\n")
+            _T("ALTER TABLE nodes ADD product_name varchar(127)\n")
+            _T("ALTER TABLE nodes ADD product_version varchar(15)\n")
+            _T("ALTER TABLE nodes ADD product_code varchar(15)\n")
+            _T("ALTER TABLE nodes ADD serial_number varchar(31)\n")
+            _T("ALTER TABLE nodes ADD cip_device_type integer\n")
+            _T("ALTER TABLE nodes ADD cip_status integer\n")
+            _T("ALTER TABLE nodes ADD cip_state integer\n")
+            _T("UPDATE nodes SET cip_device_type=0,cip_status=0,cip_state=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_device_type")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_status")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_state")));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 32.6 to 32.7
  */
 static bool H_UpgradeFromV6()
@@ -160,6 +185,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 7,  31, 8, H_UpgradeFromV7 },
    { 6,  31, 7, H_UpgradeFromV6 },
    { 5,  31, 6, H_UpgradeFromV5 },
    { 4,  31, 5, H_UpgradeFromV4 },

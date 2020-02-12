@@ -2532,7 +2532,12 @@ protected:
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
    TCHAR m_hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH];
-   TCHAR *m_hypervisorInfo;
+   SharedString m_hypervisorInfo;
+   SharedString m_vendor;
+   SharedString m_productName;
+   SharedString m_productVersion;
+   SharedString m_productCode;
+   SharedString m_serialNumber;
 	int m_pendingState;
 	UINT32 m_pollCountAgent;
 	UINT32 m_pollCountSNMP;
@@ -2629,6 +2634,9 @@ protected:
    StringObjectMap<IcmpStatCollector> *m_icmpStatCollectors;
    InetAddressList m_icmpTargets;
    TCHAR *m_chassisPlacementConf;
+   uint16_t m_cipDeviceType;
+   uint16_t m_cipStatus;
+   uint16_t m_cipState;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
@@ -2744,6 +2752,10 @@ public:
    const TCHAR *getSubType() { return m_subType; }
    const TCHAR *getHypervisorType() const { return m_hypervisorType; }
    const TCHAR *getHypervisorInfo() const { return CHECK_NULL_EX(m_hypervisorInfo); }
+   SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }
+   SharedString getProductName() const { return GetAttributeWithLock(m_productName, m_mutexProperties); }
+   SharedString getProductVersion() const { return GetAttributeWithLock(m_productVersion, m_mutexProperties); }
+   SharedString getProductCode() const { return GetAttributeWithLock(m_productCode, m_mutexProperties); }
 
    UINT32 getCapabilities() { return m_capabilities; }
    void setCapabilities(UINT32 flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
@@ -2755,6 +2767,9 @@ public:
 
    bool isSNMPSupported() const { return m_capabilities & NC_IS_SNMP ? true : false; }
    bool isNativeAgent() const { return m_capabilities & NC_IS_NATIVE_AGENT ? true : false; }
+   bool isEthernetIPSupported() const { return m_capabilities & NC_IS_ETHERNET_IP ? true : false; }
+   bool isModbusTCPSupported() const { return m_capabilities & NC_IS_MODBUS_TCP ? true : false; }
+   bool isProfiNetSupported() const { return m_capabilities & NC_IS_PROFINET ? true : false; }
    bool isBridge() const { return m_capabilities & NC_IS_BRIDGE ? true : false; }
    bool isRouter() const { return m_capabilities & NC_IS_ROUTER ? true : false; }
    bool isLocalManagement() const { return m_capabilities & NC_IS_LOCAL_MGMT ? true : false; }
@@ -2801,6 +2816,9 @@ public:
    const uuid& getTunnelId() const { return m_tunnelId; }
    const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
    UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
+   uint16_t getCipDeviceType() const { return m_cipDeviceType; }
+   uint16_t getCipStatus() const { return m_cipStatus; }
+   uint16_t getCipState() const { return m_cipState; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
    time_t getDownSince() const { return m_downSince; }

@@ -204,7 +204,10 @@
 #define NC_IS_WIFI_CONTROLLER     0x00080000  /* Node is wireless network controller */
 #define NC_IS_SMCLP               0x00100000  /* Node supports SMCLP protocol */
 #define NC_IS_NEW_POLICY_TYPES    0x00200000  /* Defines if agent is already upgraded to new policy type */
-#define NC_HAS_USER_AGENT         0x00400000  /* User agent (desktop support app) is installed */  
+#define NC_HAS_USER_AGENT         0x00400000  /* User agent (desktop support app) is installed */
+#define NC_IS_ETHERNET_IP         0x00800000
+#define NC_IS_MODBUS_TCP          0x01000000
+#define NC_IS_PROFINET            0x02000000
 
 /**
  * Flag separator

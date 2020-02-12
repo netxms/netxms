@@ -387,6 +387,14 @@ CREATE TABLE nodes
   fail_time_agent integer not null,
   icmp_poll_mode char(1) not null,
   chassis_placement_config varchar(2000) null,
+  vendor varchar(127) null,
+  product_name varchar(127) null,
+  product_version varchar(15) null,
+  product_code varchar(15) null,
+  serial_number varchar(31) null,
+  cip_device_type integer not null,
+  cip_status integer not null,
+  cip_state integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -2212,6 +2220,7 @@ CREATE TABLE websvc_definitions
    id integer not null,
    guid varchar(36) not null,
    name varchar(63) not null,
+   description varchar(2000) null,
    url varchar(4000) null,
    auth_type integer not null,
    login varchar(255) null,
