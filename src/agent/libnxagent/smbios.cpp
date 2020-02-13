@@ -219,6 +219,7 @@ static char s_biosVendor[128] = "";
 static char s_biosVersion[64] = "";
 static char s_hardwareManufacturer[128] = "";
 static char s_hardwareProduct[128] = "";
+static char s_hardwareProductCode[128] = "";
 static char s_hardwareSerialNumber[128] = "";
 static char s_hardwareVersion[64] = "";
 static char s_systemWakeUpEvent[32] = "Unknown";
@@ -457,6 +458,9 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR
       case 'H':   // hardware
          switch(arg[1])
          {
+            case 'C':
+               RETURN_BIOS_DATA(s_hardwareProductCode);
+               break;
             case 'M':
                RETURN_BIOS_DATA(s_hardwareManufacturer);
                break;
@@ -686,6 +690,7 @@ static void ParseSystemInformation(TableHeader *t)
    GetStringByIndex(t, BYTE_AT(t, 0x05), s_hardwareProduct, sizeof(s_hardwareProduct));
    GetStringByIndex(t, BYTE_AT(t, 0x06), s_hardwareVersion, sizeof(s_hardwareVersion));
    GetStringByIndex(t, BYTE_AT(t, 0x07), s_hardwareSerialNumber, sizeof(s_hardwareSerialNumber));
+   GetStringByIndex(t, BYTE_AT(t, 0x19), s_hardwareProductCode, sizeof(s_hardwareProductCode));
    
    switch(BYTE_AT(t, 0x18))
    {

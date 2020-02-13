@@ -326,6 +326,7 @@ struct PolicyChangeNotification
 #define DCIDESC_HARDWARE_STORAGEDEVICE_TYPEDESCR     _T("Hardware: storage device {instance} type description")
 #define DCIDESC_HARDWARE_SYSTEM_MANUFACTURER         _T("Hardware: system manufacturer")
 #define DCIDESC_HARDWARE_SYSTEM_PRODUCT              _T("Hardware: product name")
+#define DCIDESC_HARDWARE_SYSTEM_PRODUCTCODE          _T("Hardware: product code")
 #define DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER         _T("Hardware: system serial number")
 #define DCIDESC_HARDWARE_SYSTEM_VERSION              _T("Hardware: version")
 #define DCIDESC_HARDWARE_WAKEUPEVENT                 _T("Hardware: wakeup event")
