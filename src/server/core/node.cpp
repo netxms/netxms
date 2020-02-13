@@ -73,8 +73,8 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
 /**
  * Node class default constructor
  */
-Node::Node() : super(), m_topologyPollState(_T("topology")),
-         m_discoveryPollState(_T("discovery")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
+Node::Node() : super(), m_discoveryPollState(_T("discovery")),
+         m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
 {
    m_primaryName[0] = 0;
    m_status = STATUS_UNKNOWN;
@@ -176,8 +176,8 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
 /**
  * Create new node from new node data
  */
-Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyPollState(_T("topology")),
-         m_discoveryPollState(_T("discovery")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
+Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discoveryPollState(_T("discovery")),
+         m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    newNodeData->ipAddr.toString(m_primaryName);
@@ -3266,7 +3266,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
-   TCHAR szBuffer[4096];
    UINT32 modified = 0;
 
    poller->setStatus(_T("wait for lock"));
