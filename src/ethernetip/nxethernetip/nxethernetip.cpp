@@ -76,9 +76,9 @@ static bool ListIdentity()
       return false;
    }
 
-   TCHAR *buffer = MemAllocString(response->getSize() * 2 + 1);
-   _tprintf(_T("Raw message: %s\n"), BinToStr(response->getBytes(), response->getSize(), buffer));
-   MemFree(buffer);
+   TCHAR *messageDump = MemAllocString(response->getSize() * 2 + 1);
+   _tprintf(_T("Raw message:\n%s\n\n"), BinToStr(response->getBytes(), response->getSize(), messageDump));
+   MemFree(messageDump);
 
    if (response->getCommand() != CIP_LIST_IDENTITY)
    {
@@ -87,7 +87,7 @@ static bool ListIdentity()
       return false;
    }
 
-   _tprintf(_T("%d items in response message\n\n"), response->getItemCount());
+   _tprintf(_T("%d item%s in response message\n\n"), response->getItemCount(), response->getItemCount() == 1 ? _T("") : _T("s"));
 
    CPF_Item item;
    while(response->nextItem(&item))
@@ -95,17 +95,21 @@ static bool ListIdentity()
       if (item.type != 0x0C)
          continue;
 
-      _tprintf(_T("Supported protocol version: %u"), response->readDataAsUInt16(item.offset));
-      _tprintf(_T("Device IP address: %s"), InetAddress(response->readDataAsUInt32(item.offset + 6)).toString().cstr());
-      _tprintf(_T("Vendor ID: %u"), response->readDataAsUInt16(item.offset + 18));
-      _tprintf(_T("Device type: %u"), response->readDataAsUInt16(item.offset + 20));
-      _tprintf(_T("Product code: %u"), response->readDataAsUInt16(item.offset + 22));
+      _tprintf(_T("Protocol version.....: %u\n"), response->readDataAsUInt16(item.offset));
+      _tprintf(_T("Device IP address....: %s\n"), response->readDataAsInetAddress(item.offset + 6).toString().cstr());
+      _tprintf(_T("Vendor ID............: %u\n"), response->readDataAsUInt16(item.offset + 18));
+      _tprintf(_T("Device type..........: %u\n"), response->readDataAsUInt16(item.offset + 20));
 
       TCHAR productName[256];
-      if (response->readDataAsLengthPrefixString(item.offset + 32, buffer, 256))
+      if (response->readDataAsLengthPrefixString(item.offset + 32, productName, 256))
       {
-         _tprintf(_T("Product name: %s"), productName);
+         _tprintf(_T("Product name.........: %s\n"), productName);
       }
+      _tprintf(_T("Product code.........: %u\n"), response->readDataAsUInt16(item.offset + 22));
+      _tprintf(_T("Product revision.....: %u.%u\n"), response->readDataAsUInt8(item.offset + 24), response->readDataAsUInt8(item.offset + 25));
+      _tprintf(_T("Serial number........: %08X\n"), response->readDataAsUInt32(item.offset + 28));
+
+      _tprintf(_T("Status...............: %u\n"), response->readDataAsUInt8(item.offset + 26));
    }
 
    delete response;

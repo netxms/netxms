@@ -148,6 +148,7 @@ public:
    uint8_t readDataAsUInt8(size_t offset) const { return (offset < m_dataSize) ? m_data[offset] : 0; }
    uint16_t readDataAsUInt16(size_t offset) const { return (offset < m_dataSize - 1) ? CIP_UInt16Swap(*reinterpret_cast<uint16_t*>(&m_data[offset])) : 0; }
    uint32_t readDataAsUInt32(size_t offset) const { return (offset < m_dataSize - 3) ? CIP_UInt32Swap(*reinterpret_cast<uint32_t*>(&m_data[offset])) : 0; }
+   InetAddress readDataAsInetAddress(size_t offset) const { return (offset < m_dataSize - 3) ? InetAddress(ntohl(*reinterpret_cast<uint32_t*>(&m_data[offset]))) : InetAddress(); }
    bool readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, size_t bufferSize) const;
 };
 
