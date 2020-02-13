@@ -390,7 +390,7 @@ CREATE TABLE nodes
   vendor varchar(127) null,
   product_name varchar(127) null,
   product_version varchar(15) null,
-  product_code varchar(15) null,
+  product_code varchar(31) null,
   serial_number varchar(31) null,
   cip_device_type integer not null,
   cip_status integer not null,

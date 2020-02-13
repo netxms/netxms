@@ -941,7 +941,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
          DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, m_chassisPlacementConf, DB_BIND_STATIC);
          DBBind(hStmt, 60, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 127);
-         DBBind(hStmt, 61, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 15);
+         DBBind(hStmt, 61, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 31);
          DBBind(hStmt, 62, DB_SQLTYPE_VARCHAR, m_productName, DB_BIND_STATIC, 127);
          DBBind(hStmt, 63, DB_SQLTYPE_VARCHAR, m_productVersion, DB_BIND_STATIC, 15);
          DBBind(hStmt, 64, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 31);
