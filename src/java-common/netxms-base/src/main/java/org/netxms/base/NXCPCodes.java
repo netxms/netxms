@@ -1112,6 +1112,12 @@ public class NXCPCodes
    public static final long VID_VERIFY_CERT = 678;
    public static final long VID_SYNC_NODE_COMPONENTS = 679;
    public static final long VID_WEBSVC_ID = 680;
+   public static final long VID_PRODUCT_CODE = 681;
+   public static final long VID_PRODUCT_NAME = 682;
+   public static final long VID_PRODUCT_VERSION = 683;
+   public static final long VID_CIP_DEVICE_TYPE = 684;
+   public static final long VID_CIP_STATUS = 685;
+   public static final long VID_CIP_STATE = 686;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

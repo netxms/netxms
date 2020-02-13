@@ -103,6 +103,11 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	protected String nodeSubType;
 	protected String hypervisorType;
 	protected String hypervisorInformation;
+   protected String hardwareProductName;
+   protected String hardwareProductCode;
+   protected String hardwareProductVersion;
+   protected String hardwareSerialNumber;
+   protected String hardwareVendor;
 	protected int requredPollCount;
 	protected long pollerNodeId;
 	protected long agentProxyId;
@@ -157,6 +162,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    protected int icmpAverageResponseTime;
    protected int icmpPacketLoss;
    protected ChassisPlacement chassisPlacement;
+   protected int cipDeviceType;
+   protected int cipStatus;
+   protected int cipState;
 	
 	/**
 	 * Create new node object.
@@ -188,6 +196,11 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 		nodeSubType = msg.getFieldAsString(NXCPCodes.VID_NODE_SUBTYPE);
       hypervisorType = msg.getFieldAsString(NXCPCodes.VID_HYPERVISOR_TYPE);
       hypervisorInformation = msg.getFieldAsString(NXCPCodes.VID_HYPERVISOR_INFO);
+      hardwareProductCode = msg.getFieldAsString(NXCPCodes.VID_PRODUCT_CODE);
+      hardwareProductName = msg.getFieldAsString(NXCPCodes.VID_PRODUCT_NAME);
+      hardwareProductVersion = msg.getFieldAsString(NXCPCodes.VID_PRODUCT_VERSION);
+      hardwareSerialNumber = msg.getFieldAsString(NXCPCodes.VID_SERIAL_NUMBER);
+      hardwareVendor = msg.getFieldAsString(NXCPCodes.VID_VENDOR);
 		requredPollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
 		pollerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
 		agentProxyId = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
@@ -239,6 +252,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       icmpMaxResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_MAX_RESPONSE_TIME);
       icmpMinResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_MIN_RESPONSE_TIME);
       icmpPacketLoss = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_PACKET_LOSS);
+      cipDeviceType = msg.getFieldAsInt32(NXCPCodes.VID_CIP_DEVICE_TYPE);
+      cipStatus = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATUS);
+      cipState = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATE);
       
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -858,7 +874,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    {
       return portRowCount;
    }
-   
+
    /**
     * Get physical port numbering scheme
     * 
@@ -868,7 +884,71 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    {
       return portNumberingScheme;
    }
-   
+
+   /**
+    * @return the hardwareProductName
+    */
+   public String getHardwareProductName()
+   {
+      return hardwareProductName;
+   }
+
+   /**
+    * @return the hardwareProductCode
+    */
+   public String getHardwareProductCode()
+   {
+      return hardwareProductCode;
+   }
+
+   /**
+    * @return the hardwareProductVersion
+    */
+   public String getHardwareProductVersion()
+   {
+      return hardwareProductVersion;
+   }
+
+   /**
+    * @return the hardwareSerialNumber
+    */
+   public String getHardwareSerialNumber()
+   {
+      return hardwareSerialNumber;
+   }
+
+   /**
+    * @return the hardwareVendor
+    */
+   public String getHardwareVendor()
+   {
+      return hardwareVendor;
+   }
+
+   /**
+    * @return the cipDeviceType
+    */
+   public int getCipDeviceType()
+   {
+      return cipDeviceType;
+   }
+
+   /**
+    * @return the cipStatus
+    */
+   public int getCipStatus()
+   {
+      return cipStatus;
+   }
+
+   /**
+    * @return the cipState
+    */
+   public int getCipState()
+   {
+      return cipState;
+   }
+
    /**
     * @return the icmpStatCollectionMode
     */
@@ -951,7 +1031,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override
@@ -972,7 +1052,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       return strings;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.RackElement#getRackOrientation()
     */
    public RackOrientation getRackOrientation()
@@ -1020,6 +1100,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       return (flags & NF_PING_PRIMARY_IP) != 0;      
    }
 
+   /**
+    * @see org.netxms.client.objects.ElementForPhysicalPlacment#getChassisPlacement()
+    */
    @Override
    public ChassisPlacement getChassisPlacement()
    {

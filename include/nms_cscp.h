@@ -1342,6 +1342,12 @@ typedef struct
 #define VID_VERIFY_CERT             ((UINT32)678)
 #define VID_SYNC_NODE_COMPONENTS    ((UINT32)679)
 #define VID_WEBSVC_ID               ((UINT32)680)
+#define VID_PRODUCT_CODE            ((UINT32)681)
+#define VID_PRODUCT_NAME            ((UINT32)682)
+#define VID_PRODUCT_VERSION         ((UINT32)683)
+#define VID_CIP_DEVICE_TYPE         ((UINT32)684)
+#define VID_CIP_STATUS              ((UINT32)685)
+#define VID_CIP_STATE               ((UINT32)686)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

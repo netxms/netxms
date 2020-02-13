@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -164,6 +164,7 @@ int NetworkDeviceDriver::isPotentialDevice(const TCHAR *oid)
  *
  * @param snmp SNMP transport
  * @param oid Device OID
+ * @return true if device is supported
  */
 bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
@@ -184,6 +185,20 @@ bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
  */
 void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
+}
+
+/**
+ * Get hardware information from device.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool NetworkDeviceDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   return false;
 }
 
 /**
@@ -367,6 +382,7 @@ static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *sn
  *
  * @param snmp SNMP transport
  * @param node Node
+ * @param driverData driver data
  * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */

@@ -2522,6 +2522,8 @@ private:
 
 	void onSnmpProxyChange(UINT32 oldProxy);
 
+	bool updateSystemHardwareProperty(SharedString &property, const TCHAR *value, const TCHAR *displayName, UINT32 requestId);
+
    static void onDataCollectionChangeAsyncCallback(void *arg);
 
 protected:
@@ -2686,8 +2688,9 @@ protected:
    bool confPollAgent(UINT32 dwRqId);
    bool confPollSnmp(UINT32 dwRqId);
    NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
-   bool updateSoftwarePackages(PollerInfo *poller, UINT32 requestId);
+   bool updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId);
    bool updateHardwareComponents(PollerInfo *poller, UINT32 requestId);
+   bool updateSoftwarePackages(PollerInfo *poller, UINT32 requestId);
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
    void checkBridgeMib(SNMP_Transport *pTransport);
    void checkIfXTable(SNMP_Transport *pTransport);

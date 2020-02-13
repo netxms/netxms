@@ -136,6 +136,18 @@ struct NDD_MODULE_LAYOUT
 };
 
 /**
+ * Device hardware information
+ */
+struct DeviceHardwareInfo
+{
+   TCHAR vendor[128];
+   TCHAR productCode[32];
+   TCHAR productName[128];
+   TCHAR productVersion[16];
+   TCHAR serialNumber[32];
+};
+
+/**
  * Radio interface information
  */
 struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
@@ -312,6 +324,7 @@ public:
    virtual int isPotentialDevice(const TCHAR *oid);
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
    virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
+   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo);
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
                                   int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);

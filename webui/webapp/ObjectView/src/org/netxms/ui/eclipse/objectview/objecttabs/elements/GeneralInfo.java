@@ -145,6 +145,14 @@ public class GeneralInfo extends TableElement
 					addPair(Messages.get().GeneralInfo_ZoneId, getZoneName(node.getZoneId()));
 				addPair(Messages.get().GeneralInfo_PrimaryHostName, node.getPrimaryName());
 				addPair(Messages.get().GeneralInfo_PrimaryIP, node.getPrimaryIP().getHostAddress());
+            addPair(Messages.get().GeneralInfo_NodeType, node.getNodeType().toString(), false);
+            addPair(Messages.get().GeneralInfo_HypervisorType, node.getHypervisorType(), false);
+            addPair(Messages.get().GeneralInfo_HypervisorInformation, node.getHypervisorInformation(), false);
+            addPair(Messages.get().SensorStatus_Vendor, node.getHardwareVendor(), false);
+            addPair("Product name", node.getHardwareProductName(), false);
+            addPair("Product code", node.getHardwareProductCode(), false);
+            addPair("Product version", node.getHardwareProductVersion(), false);
+            addPair(Messages.get().SensorStatus_SerialNumber, node.getHardwareSerialNumber(), false);
 				if (node.hasAgent())
 				{
 					addPair(Messages.get().GeneralInfo_AgentVersion, node.getAgentVersion());
@@ -160,9 +168,6 @@ public class GeneralInfo extends TableElement
 				if ((node.getCapabilities() & AbstractNode.NC_IS_BRIDGE) != 0)
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
-            addPair(Messages.get().GeneralInfo_NodeType, node.getNodeType().toString(), false);
-            addPair(Messages.get().GeneralInfo_HypervisorType, node.getHypervisorType(), false);
-            addPair(Messages.get().GeneralInfo_HypervisorInformation, node.getHypervisorInformation(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
             if (node.hasAgent())

@@ -72,6 +72,66 @@ bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 }
 
 /**
+ * Get hardware information from device.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   _tcscpy(hwInfo->vendor, _T("MikroTik"));
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14988.1.1.7.8.0")));  // Product name
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14988.1.1.7.4.0")));  // Firmware version
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14988.1.1.7.3.0")));  // Serial number
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   {
+      TCHAR buffer[256];
+
+      const SNMP_Variable *v = response->getVariable(0);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         v->getValueAsString(buffer, 256);
+         TCHAR *p = !_tcsnicmp(buffer, _T("RouterOS "), 9) ? &buffer[9] : buffer;
+         _tcslcpy(hwInfo->productCode, p, 32);
+      }
+
+      v = response->getVariable(1);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
+      }
+      else
+      {
+         // Use product code as product name if product name OID is not supported
+         _tcscpy(hwInfo->productName, hwInfo->productCode);
+      }
+
+      v = response->getVariable(2);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+      }
+
+      v = response->getVariable(3);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 32);
+      }
+
+      delete response;
+   }
+   return true;
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
@@ -139,25 +199,23 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
    memcpy(oid, name.value(), nameLen * sizeof(UINT32));
    UINT32 apIndex = oid[nameLen - 1];
 
-   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    
    oid[nameLen - 2] = 5;   // mtxrWlApBssid
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
 
    oid[nameLen - 2] = 7;   // mtxrWlApFreq
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMPParseOID(_T(".1.3.6.1.2.1.2.2.1.2"), oid, MAX_OID_LEN); // ifDescr
    oid[10] = apIndex;
-   request->bindVariable(new SNMP_Variable(oid, 11));
+   request.bindVariable(new SNMP_Variable(oid, 11));
 
    oid[9] = 6; // ifPhysAddress
-   request->bindVariable(new SNMP_Variable(oid, 11));
+   request.bindVariable(new SNMP_Variable(oid, 11));
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
-	delete request;
-   if (rcc == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() == 4)
       {

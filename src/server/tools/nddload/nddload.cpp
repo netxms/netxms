@@ -43,28 +43,29 @@ void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
    ObjectArray<AccessPointInfo> *apInfo = driver->getAccessPoints(transport, NULL, NULL);
    if (apInfo != NULL)
    {
-      _tprintf(_T("AccessPoints:\n"));
+      _tprintf(_T("\nAccessPoints:\n"));
       for (int i = 0; i < apInfo->size(); i++)
       {
          AccessPointInfo *info = apInfo->get(i);
 
          TCHAR buff[64];
-         _tprintf(_T("\t%s - %9s - %s - %s\n"),
+         _tprintf(_T("   %s - %9s - %s - %s\n"),
                MACToStr(info->getMacAddr(), buff),
                info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
                info->getModel(),
                info->getSerial());
          const ObjectArray<RadioInterfaceInfo> *interfaces = info->getRadioInterfaces();
-         _tprintf(_T("\t\tRadio Interfaces:\n"));
+         _tprintf(_T("      Radio Interfaces:\n"));
          for (int j = 0; j < interfaces->size(); j++)
          {
             RadioInterfaceInfo *rif = interfaces->get(j);
-            _tprintf(_T("\t\t\t%2d - %s - %s\n"),
+            _tprintf(_T("         %2d - %s - %s\n"),
                   rif->index,
                   MACToStr(rif->macAddr, buff),
                   rif->name);
          }
       }
+      delete apInfo;
    }
 }
 
@@ -76,14 +77,14 @@ void PrintMobileUnits(NetworkDeviceDriver *driver, SNMP_Transport *transport)
    ObjectArray<WirelessStationInfo> *wsInfo = driver->getWirelessStations(transport, NULL, NULL);
    if (wsInfo != NULL)
    {
-      _tprintf(_T("Wireless Stations:\n"));
+      _tprintf(_T("\nWireless Stations:\n"));
       for (int i = 0; i < wsInfo->size(); i++)
       {
          WirelessStationInfo *info = wsInfo->get(i);
 
          TCHAR macBuff[64];
          TCHAR ipBuff[64];
-         _tprintf(_T("\t%s - %-15s - vlan %-3d - rf %-2d - %s\n"),
+         _tprintf(_T("   %s - %-15s - vlan %-3d - rf %-2d - %s\n"),
                MACToStr(info->macAddr, macBuff),
                IpToStr(info->ipAddr, ipBuff),
                info->vlan,
@@ -91,6 +92,7 @@ void PrintMobileUnits(NetworkDeviceDriver *driver, SNMP_Transport *transport)
                info->ssid
                );
       }
+      delete wsInfo;
    }
 }
 
@@ -202,6 +204,23 @@ static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVe
                else
                {
                   _tprintf(_T("Device is not a wireless controller\n"));
+               }
+
+               DeviceHardwareInfo hwInfo;
+               memset(&hwInfo, 0, sizeof(hwInfo));
+               if (driver->getHardwareInformation(transport, &s_object, s_driverData, &hwInfo))
+               {
+                  _tprintf(_T("\nDevice hardware information:\n")
+                           _T("   Vendor ...........: %s\n")
+                           _T("   Product name .....: %s\n")
+                           _T("   Product code .....: %s\n")
+                           _T("   Product version ..: %s\n")
+                           _T("   Serial number ....: %s\n"),
+                           hwInfo.vendor, hwInfo.productName, hwInfo.productCode, hwInfo.productVersion, hwInfo.serialNumber);
+               }
+               else
+               {
+                  _tprintf(_T("\nDevice hardware information is not available\n"));
                }
             }
          }

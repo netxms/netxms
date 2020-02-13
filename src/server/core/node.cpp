@@ -2985,6 +2985,84 @@ static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *c
 }
 
 /**
+ * Update hardware property
+ */
+bool Node::updateSystemHardwareProperty(SharedString &property, const TCHAR *value, const TCHAR *displayName, UINT32 requestId)
+{
+   bool modified = false;
+   if (_tcscmp(property, value))
+   {
+      if (*value != 0)
+         sendPollerMsg(requestId, _T("   System hardware %s set to %s\r\n"), displayName, value);
+      property = value;
+      modified = true;
+   }
+   return modified;
+}
+
+/**
+ * Update general system hardware information
+ */
+bool Node::updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId)
+{
+   poller->setStatus(_T("hardware check"));
+   sendPollerMsg(requestId, _T("Updating general system hardware information\r\n"));
+
+   DeviceHardwareInfo hwInfo;
+   memset(&hwInfo, 0, sizeof(hwInfo));
+
+   bool success = false;
+   if (m_capabilities & NC_IS_NATIVE_AGENT)
+   {
+      if (getItemFromAgent(_T("Hardware.System.Manufacturer"), 128, hwInfo.vendor) == DCE_SUCCESS)
+         success = true;
+      if (getItemFromAgent(_T("Hardware.System.Product"), 128, hwInfo.productName) == DCE_SUCCESS)
+         success = true;
+      if (getItemFromAgent(_T("Hardware.System.ProductCode"), 32, hwInfo.productCode) == DCE_SUCCESS)
+         success = true;
+      if (getItemFromAgent(_T("Hardware.System.Version"), 16, hwInfo.productVersion) == DCE_SUCCESS)
+         success = true;
+      if (getItemFromAgent(_T("Hardware.System.SerialNumber"), 32, hwInfo.serialNumber) == DCE_SUCCESS)
+         success = true;
+   }
+
+   if (!success && (m_capabilities & NC_IS_SNMP))
+   {
+      SNMP_Transport *snmp = createSnmpTransport();
+      if (snmp != nullptr)
+      {
+         success = m_driver->getHardwareInformation(snmp, this, m_driverData, &hwInfo);
+         delete snmp;
+      }
+   }
+
+   bool modified = false;
+   if (success)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): system hardware information: vendor=%s product=%s pcode=%s version=%s serial=%s"),
+               m_name, hwInfo.vendor, hwInfo.productName, hwInfo.productCode, hwInfo.productVersion, hwInfo.serialNumber);
+
+      lockProperties();
+      if (updateSystemHardwareProperty(m_vendor, hwInfo.vendor, _T("vendor"), requestId))
+         modified = true;
+      if (updateSystemHardwareProperty(m_productName, hwInfo.productName, _T("product name"), requestId))
+         modified = true;
+      if (updateSystemHardwareProperty(m_productCode, hwInfo.productCode, _T("product code"), requestId))
+         modified = true;
+      if (updateSystemHardwareProperty(m_productVersion, hwInfo.productVersion, _T("product version"), requestId))
+         modified = true;
+      if (updateSystemHardwareProperty(m_serialNumber, hwInfo.serialNumber, _T("serial number"), requestId))
+         modified = true;
+      unlockProperties();
+
+      if (modified)
+         markAsModified(MODIFY_NODE_PROPERTIES);
+   }
+
+   return modified;
+}
+
+/**
  * Update list of hardware components for node
  */
 bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
@@ -3204,6 +3282,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    if (m_runtimeFlags & NDF_RECHECK_CAPABILITIES)
    {
       sendPollerMsg(rqId, POLLER_WARNING _T("Capability reset\r\n"));
+      lockProperties();
       m_capabilities &= NC_IS_LOCAL_MGMT; // reset all except "local management" flag
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PASSED;
       MemFreeAndNull(m_snmpObjectId);
@@ -3214,6 +3293,14 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       MemFreeAndNull(m_sysContact);
       MemFreeAndNull(m_sysLocation);
       MemFreeAndNull(m_lldpNodeId);
+      m_hypervisorType[0] = 0;
+      m_hypervisorInfo = nullptr;
+      m_vendor = nullptr;
+      m_productCode = nullptr;
+      m_productName = nullptr;
+      m_productVersion = nullptr;
+      m_serialNumber = nullptr;
+      unlockProperties();
    }
 
    // Check if node is marked as unreachable
@@ -3332,8 +3419,9 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       POLL_CANCELLATION_CHECKPOINT();
 
-      updateSoftwarePackages(poller, rqId);
+      updateSystemHardwareInformation(poller, rqId);
       updateHardwareComponents(poller, rqId);
+      updateSoftwarePackages(poller, rqId);
 
       POLL_CANCELLATION_CHECKPOINT();
 
@@ -6128,6 +6216,11 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_NODE_SUBTYPE, m_subType);
    pMsg->setField(VID_HYPERVISOR_TYPE, m_hypervisorType);
    pMsg->setField(VID_HYPERVISOR_INFO, m_hypervisorInfo);
+   pMsg->setField(VID_VENDOR, m_vendor);
+   pMsg->setField(VID_PRODUCT_CODE, m_productCode);
+   pMsg->setField(VID_PRODUCT_NAME, m_productName);
+   pMsg->setField(VID_PRODUCT_VERSION, m_productVersion);
+   pMsg->setField(VID_SERIAL_NUMBER, m_serialNumber);
    pMsg->setField(VID_STATE_FLAGS, m_state);
    pMsg->setField(VID_CAPABILITIES, m_capabilities);
    pMsg->setField(VID_AGENT_PORT, m_agentPort);
@@ -6206,6 +6299,10 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    UINT32 fieldId = VID_ICMP_TARGET_LIST_BASE;
    for(int i = 0; i < m_icmpTargets.size(); i++)
       pMsg->setField(fieldId++, m_icmpTargets.get(i));
+
+   pMsg->setField(VID_CIP_DEVICE_TYPE, m_cipDeviceType);
+   pMsg->setField(VID_CIP_STATUS, m_cipStatus);
+   pMsg->setField(VID_CIP_STATE, m_cipState);
 }
 
 /**
