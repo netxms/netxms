@@ -108,6 +108,7 @@ static bool ListIdentity()
       }
    }
 
+   delete response;
    return true;
 }
 
