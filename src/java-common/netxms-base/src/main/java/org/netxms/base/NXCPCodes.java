@@ -136,7 +136,7 @@ public class NXCPCodes
 	public static final int CMD_REMOVE_PACKAGE = 0x006E;
 	public static final int CMD_INSTALL_PACKAGE = 0x006F;
 	public static final int CMD_THRESHOLD_UPDATE = 0x0070;
-//	public static final int CMD_UNLOCK_PACKAGE_DB = 0x0071;
+   public static final int CMD_GET_SELECTED_USERS = 0x0071;
 	public static final int CMD_ABORT_FILE_TRANSFER = 0x0072;
 	public static final int CMD_CHECK_NETWORK_SERVICE = 0x0073;
 	public static final int CMD_GET_AGENT_CONFIG = 0x0074;
@@ -415,8 +415,11 @@ public class NXCPCodes
    public static final int CMD_REMOVE_MQTT_BROKER = 0x018E;
    public static final int CMD_ADD_MQTT_TOPIC = 0x018F;
    public static final int CMD_REMOVE_MQTT_TOPIC = 0x0190;
-   public static final int CMD_GET_WEB_SERVICE_PARAMS = 0x0191;
-   public static final int CMD_GET_SELECTED_USERS = 0x0192;
+   public static final int CMD_QUERY_WEB_SERVICE = 0x0191;
+   public static final int CMD_GET_WEB_SERVICES = 0x0192;
+   public static final int CMD_MODIFY_WEB_SERVICE = 0x0193;
+   public static final int CMD_DELETE_WEB_SERVICE = 0x0194;
+   public static final int CMD_WEB_SERVICE_DEFINITION = 0x0195;
    
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1057,6 +1060,8 @@ public class NXCPCodes
    public static final long VID_TIMER_COUNT = 624;
    public static final long VID_AUTOBIND_FLAG = 625;
    public static final long VID_AUTOUNBIND_FLAG = 626;
+   public static final long VID_TIMEOUT = 627;
+   public static final long VID_PROGRESS = 628;
    public static final long VID_POLICY_COUNT = 629;
    public static final long VID_NEW_POLICY_TYPE = 630;
    public static final long VID_USERAGENT = 631;
@@ -1106,6 +1111,7 @@ public class NXCPCodes
    public static final long VID_REQUEST_TYPE = 677;
    public static final long VID_VERIFY_CERT = 678;
    public static final long VID_SYNC_NODE_COMPONENTS = 679;
+   public static final long VID_WEBSVC_ID = 680;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1212,4 +1218,5 @@ public class NXCPCodes
    public static final long VID_UA_NOTIFICATION_BASE = 0x10000000L;
    public static final long VID_NOTIFICATION_CHANNEL_BASE = 0x10000000L;
    public static final long VID_NOTIFICATION_DRIVER_BASE = 0x10000000L;
+   public static final long VID_HEADERS_BASE = 0x20000000L;
 }

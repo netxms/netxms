@@ -15366,6 +15366,7 @@ void ClientSession::modifyWebService(NXCPMessage *request)
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
       {
+         response.setField(VID_WEBSVC_ID, definition->getId());
          WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Web service definition \"%s\" [%u] modified"),
                   definition->getName(), definition->getId());
       }

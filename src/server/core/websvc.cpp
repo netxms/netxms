@@ -554,7 +554,7 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
  */
 uint32_t DeleteWebServiceDefinition(uint32_t id)
 {
-   uint32_t rcc = RCC_INVALID_OBJECT_ID;
+   uint32_t rcc = RCC_INVALID_WEB_SERVICE_ID;
    shared_ptr<WebServiceDefinition> definition;
    s_webServiceDefinitionLock.lock();
    for(int i = 0; i < s_webServiceDefinitions.size(); i++)

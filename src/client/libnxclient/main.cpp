@@ -218,9 +218,10 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
       _T("Object is in use and cannot be deleted"),
       _T("Invalid notification channel name"),
       _T("Endpoint is already in use"),
-      _T("Invalid driver name")
+      _T("Invalid driver name"),
+      _T("Invalid web service definition ID")
    };
-	return (error <= RCC_INVALID_DRIVER_NAME) ? errorText[error] : _T("No text message for this error");
+	return (error <= RCC_INVALID_WEB_SERVICE_ID) ? errorText[error] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

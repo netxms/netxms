@@ -129,7 +129,8 @@ public final class RCC extends CommonRCC
    public static final int INVALID_CHANNEL_NAME = 133;
    public static final int ENDPOINT_ALREADY_IN_USE = 134;
    public static final int INVALID_DRIVER_NAME = 135;
-	
+   public static final int INVALID_WEB_SERVICE_ID = 136;
+
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;
 	public static final int BAD_MIB_FILE_DATA = 1002;

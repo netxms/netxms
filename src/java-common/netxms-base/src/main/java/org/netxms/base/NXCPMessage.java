@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.zip.CRC32;
 import com.jcraft.jzlib.Deflater;
@@ -959,6 +960,24 @@ public class NXCPMessage
    }
    
    /**
+    * Set fields in message from string map
+    * 
+    * @param strings string map
+    * @param baseId base (first element) field ID
+    * @param countId ID of field containing number of elements
+    */
+   public void setFieldsFromStringMap(Map<String, String> strings, long baseId, long countId)
+   {
+      setFieldInt32(countId, strings.size());
+      long fieldId = baseId;
+      for(Entry<String, String> e : strings.entrySet())
+      {
+         setField(fieldId++, e.getKey());
+         setField(fieldId++, e.getValue());
+      }
+   }
+
+   /**
     * Get string list from fields
     * 
     * @param baseId base (first element) field ID
@@ -974,6 +993,27 @@ public class NXCPMessage
       return list;
    }
    
+   /**
+    * Get string map from fields
+    * 
+    * @param baseId base (first element) field ID
+    * @param countId ID of field containing number of elements
+    * @return map of strings
+    */
+   public Map<String, String> getStringMapFromFields(long baseId, long countId)
+   {
+      int count = getFieldAsInt32(countId);
+      Map<String, String> map = new HashMap<String, String>(count);
+      long fieldId = baseId;
+      for(int i = 0; i < count; i++)
+      {
+         String key = getFieldAsString(fieldId++);
+         String value = getFieldAsString(fieldId++);
+         map.put(key, value);
+      }
+      return map;
+   }
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

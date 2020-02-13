@@ -101,6 +101,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdStateChange;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.datacollection.TransformationTestResult;
+import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmCategory;
@@ -2856,6 +2857,49 @@ public class NXCSession
       }
    }
    
+   /**
+    * Sync children of given object.
+    * 
+    * @param object parent object
+    */
+   public void syncChildren(AbstractObject object) throws NXCException, IOException
+   {
+      if (objectsSynchronized)
+         return;
+
+      boolean syncRequired;
+      synchronized(synchronizedObjectSet)
+      {
+         syncRequired = !synchronizedObjectSet.contains(object.getObjectId());
+      }
+
+      if (syncRequired)
+      {
+         syncMissingObjects(object.getChildIdList(), true, NXCSession.OBJECT_SYNC_WAIT);
+
+         synchronized(synchronizedObjectSet)
+         {
+            synchronizedObjectSet.add(object.getObjectId());
+         }
+      }
+   }
+
+   /**
+    * Returns true if children are already synchronized for given object.
+    * 
+    * @param id object id
+    * @return true if children are synchronized
+    */
+   public boolean areChildrenSynchronized(long id)
+   {
+      boolean isSynchronized;
+      synchronized(synchronizedObjectSet)
+      {
+         isSynchronized = synchronizedObjectSet.contains(id);
+      }
+      return isSynchronized;
+   }
+
    /**
     * Find object by regex
     * 
@@ -11531,8 +11575,8 @@ public class NXCSession
    /**
     * Create new or update existing physical link
     * 
-    * @param link link to be created with id 0 or link to be updated with correct id
-    * @throws IOException  if socket I/O error occurs
+    * @param link link to be created with ID 0 or link to be updated with correct ID
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void updatePhysicalLink(PhysicalLink link) throws NXCException, IOException
@@ -11544,10 +11588,10 @@ public class NXCSession
    }
    
    /**
-    * Delete physical link
+    * Delete physical link.
     * 
-    * @param linkId
-    * @throws IOException  if socket I/O error occurs
+    * @param linkId physical link ID
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deletePhysicalLink(long linkId) throws NXCException, IOException
@@ -11557,48 +11601,57 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }
-   
+
    /**
-    * Sync object children 
-    * Is used to lazy sync node components
+    * Get configured web service definitions.
     * 
-    * @param object parent object
+    * @return list of configured web service definitions
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncChildren(AbstractObject object) throws NXCException, IOException
+   public List<WebServiceDefinition> getWebServiceDefinitions() throws NXCException, IOException
    {
-      if (objectsSynchronized)
-         return;
-      
-      boolean syncRequired;
-      synchronized(synchronizedObjectSet)
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_WEB_SERVICES);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<WebServiceDefinition> definitions = new ArrayList<WebServiceDefinition>(count);
+      for(int i = 0; i < count; i++)
       {
-         syncRequired = !synchronizedObjectSet.contains(object.getObjectId());
+         response = waitForMessage(NXCPCodes.CMD_WEB_SERVICE_DEFINITION, msg.getMessageId());
+         definitions.add(new WebServiceDefinition(response));
       }
-      
-      if(syncRequired)
-      {
-    	  syncMissingObjects(object.getChildIdList(), true, NXCSession.OBJECT_SYNC_WAIT);
-      
-         synchronized(synchronizedObjectSet)
-         {
-            synchronizedObjectSet.add(object.getObjectId());
-         }
-      }
+      return definitions;
    }
 
    /**
-    * Returns true if children are already synchronized for this object 
+    * Modify (or create new) web service definition. New definition will be created if ID of provided definition object set to 0.
     * 
-    * @param id object id
-    * @return true if children are synchronized
+    * @param definition web service definition to create or modify
+    * @return assigned ID of web service definition (same as provided if modifying existing definition)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public boolean areChildrenSynchronized(Long id)
+   public int modifyWebServiceDefinition(WebServiceDefinition definition) throws NXCException, IOException
    {
-      boolean isSynchronized;
-      synchronized(synchronizedObjectSet)
-      {
-         isSynchronized = synchronizedObjectSet.contains(id);        
-      }
-      return isSynchronized;
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_WEB_SERVICE);
+      definition.fillMessage(msg);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsInt32(NXCPCodes.VID_WEBSVC_ID);
+   }
+
+   /**
+    * Delete web service definition.
+    * 
+    * @param id web service definition ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteWebServiceDefinition(int id) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_WEB_SERVICE);
+      msg.setFieldInt32(NXCPCodes.VID_WEBSVC_ID, id);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 }

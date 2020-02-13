@@ -629,6 +629,7 @@ enum SessionState
 #define RCC_INVALID_CHANNEL_NAME      ((UINT32)133)
 #define RCC_ENDPOINT_ALREADY_IN_USE   ((UINT32)134)
 #define RCC_INVALID_DRIVER_NAME       ((UINT32)135)
+#define RCC_INVALID_WEB_SERVICE_ID    ((UINT32)136)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
