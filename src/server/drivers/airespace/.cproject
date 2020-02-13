@@ -21,12 +21,13 @@
 							<builder id="cdt.managedbuild.target.gnu.builder.base.1585682318" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.334875734" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.438435065" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1493883856" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1493883856" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/server/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/build&quot;"/>
 								</option>
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.948112695" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.948112695" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_THREAD_SAFE"/>
 									<listOptionValue builtIn="false" value="TRE_WCHAR=1"/>
 									<listOptionValue builtIn="false" value="UNICODE"/>
@@ -35,12 +36,13 @@
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.249865156" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.365891986" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1766377803" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1766377803" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/server/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/build&quot;"/>
 								</option>
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1534570488" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1534570488" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_THREAD_SAFE"/>
 									<listOptionValue builtIn="false" value="TRE_WCHAR=1"/>
 									<listOptionValue builtIn="false" value="UNICODE"/>
@@ -56,10 +58,11 @@
 								</inputType>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.base.2083124943" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1997030042" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1997030042" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/server/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/build&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.253127622" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -84,4 +87,10 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/airespace"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
