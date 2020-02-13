@@ -30,7 +30,7 @@ NETXMS_EXECUTABLE_HEADER(nxethernetip)
  * Static data
  */
 static uint16_t s_port = ETHERNET_IP_DEFAULT_PORT;
-static uint32_t s_timeout = 3;
+static uint32_t s_timeout = 5000;
 static SOCKET s_socket = INVALID_SOCKET;
 static EthernetIP_MessageReceiver *s_receiver = nullptr;
 
@@ -46,9 +46,13 @@ static bool Connect(const char *hostname)
       return false;
    }
 
-   s_socket = ConnectToHost(addr, s_port, s_timeout * 1000);
+   s_socket = ConnectToHost(addr, s_port, s_timeout);
    if (s_socket == INVALID_SOCKET)
+   {
+      TCHAR buffer[64];
+      _tprintf(_T("Cannot connected to %s:%u\n"), addr.toString(buffer), s_port);
       return false;
+   }
 
    TCHAR buffer[64];
    _tprintf(_T("Connected to %s:%u\n"), addr.toString(buffer), s_port);
@@ -137,9 +141,9 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxethernetip [<options>] <host> <command>\n")
                      _T("Valid options are:\n")
-                     _T("   -h           : Display help and exit\n")
-                     _T("   -p <port>    : TCP port (default is 44818)\n")
-                     _T("   -w <seconds> : Request timeout (default is 3 seconds)\n")
+                     _T("   -h                : Display help and exit\n")
+                     _T("   -p <port>         : TCP port (default is 44818)\n")
+                     _T("   -w <milliseconds> : Request timeout (default is 5000 milliseconds)\n")
                      _T("\n"));
             start = false;
             break;
@@ -158,7 +162,7 @@ int main(int argc, char *argv[])
             break;
          case 'w':   // Timeout
             value = strtoul(optarg, &eptr, 0);
-            if ((*eptr != 0) || (value > 60) || (value == 0))
+            if ((*eptr != 0) || (value > 60000) || (value == 0))
             {
                _tprintf(_T("Invalid timeout value %hs\n"), optarg);
                start = false;
