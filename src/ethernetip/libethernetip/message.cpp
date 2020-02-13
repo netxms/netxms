@@ -55,7 +55,7 @@ CIP_Message::CIP_Message(CIP_Command command, size_t dataSize)
  */
 CIP_Message::~CIP_Message()
 {
-   MemFree(m_data);
+   MemFree(m_bytes);
 }
 
 /**
