@@ -171,6 +171,7 @@ target
 /src/client/nxtcpproxy/.classpath
 /src/client/nxtcpproxy/.project
 /src/client/nxtcpproxy/.settings
+/src/ethernetip/nxethernetip/nxethernetip
 /src/flow_analyzer/nxflowd/MSG00001.bin
 /src/flow_analyzer/nxflowd/messages.h
 /src/install/files

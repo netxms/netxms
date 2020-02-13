@@ -4497,6 +4497,7 @@ AC_CONFIG_FILES([
 	src/db/libnxdb/Makefile
 	src/ethernetip/Makefile
 	src/ethernetip/libethernetip/Makefile
+	src/ethernetip/nxethernetip/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/jansson/Makefile

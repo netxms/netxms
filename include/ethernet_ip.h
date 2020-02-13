@@ -33,6 +33,11 @@
 #endif
 
 /**
+ * Default TCP port
+ */
+#define ETHERNET_IP_DEFAULT_PORT    44818
+
+/**
  * Convert UInt16 to CIP network byte order
  */
 inline uint16_t CIP_UInt16Swap(uint16_t value)
@@ -90,7 +95,7 @@ enum CIP_Command
 {
    CIP_NOOP = 0x0000,
    CIP_LIST_SERVICES = 0x0004,
-   CIP_LIST_IDENTITY= 0x0063,
+   CIP_LIST_IDENTITY = 0x0063,
    CIP_LIST_INTERFACES = 0x0064,
    CIP_REGISTER_SESSION = 0x0065,
    CIP_UNREGISTER_SESSION = 0x0066,
@@ -99,29 +104,51 @@ enum CIP_Command
 };
 
 /**
+ * Common Packet Format item
+ */
+struct CPF_Item
+{
+   uint16_t type;
+   uint16_t length;
+   uint32_t offset;  // Item's data offset within message data
+   const uint8_t *data;
+};
+
+/**
  * CIP message
  */
 class LIBETHERNETIP_EXPORTABLE CIP_Message
 {
 private:
-   CIP_EncapsulationHeader m_header;
+   uint8_t *m_bytes;
+   CIP_EncapsulationHeader *m_header;
    size_t m_dataSize;
    uint8_t *m_data;
+   int m_itemCount;
+   size_t m_readOffset;
 
 public:
    CIP_Message(const uint8_t *networkData, size_t size);
    CIP_Message(CIP_Command command, size_t dataSize);
    ~CIP_Message();
 
-   CIP_Command getCommand() const { return static_cast<CIP_Command>(CIP_UInt16Swap(m_header.command)); }
-   uint32_t getSessionHandle() const { return CIP_UInt32Swap(m_header.sessionHandle); }
-   uint32_t getStatus() const { return CIP_UInt32Swap(m_header.status); }
-   size_t getDataSize() const { return m_dataSize; }
-   const uint8_t *getData() const { return m_data; }
+   CIP_Command getCommand() const { return static_cast<CIP_Command>(CIP_UInt16Swap(m_header->command)); }
+   uint32_t getSessionHandle() const { return CIP_UInt32Swap(m_header->sessionHandle); }
+   uint32_t getStatus() const { return CIP_UInt32Swap(m_header->status); }
+   size_t getSize() const { return m_dataSize + sizeof(CIP_EncapsulationHeader); }
+   const uint8_t *getBytes() const { return m_bytes; }
+
+   size_t getRawDataSize() const { return m_dataSize; }
+   const uint8_t *getRawData() const { return m_data; }
+   int getItemCount() const { return m_itemCount; }
+
+   bool nextItem(CPF_Item *item);
+   void resetItemReader() { m_readOffset = 0; }
 
    uint8_t readDataAsUInt8(size_t offset) const { return (offset < m_dataSize) ? m_data[offset] : 0; }
    uint16_t readDataAsUInt16(size_t offset) const { return (offset < m_dataSize - 1) ? CIP_UInt16Swap(*reinterpret_cast<uint16_t*>(&m_data[offset])) : 0; }
    uint32_t readDataAsUInt32(size_t offset) const { return (offset < m_dataSize - 3) ? CIP_UInt32Swap(*reinterpret_cast<uint32_t*>(&m_data[offset])) : 0; }
+   bool readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, size_t bufferSize) const;
 };
 
 /**
@@ -133,7 +160,10 @@ private:
    SOCKET m_socket;
    uint8_t *m_buffer;
    size_t m_allocated;
-   size_t m_writePos;
+   size_t m_dataSize;
+   size_t m_readPos;
+
+   CIP_Message *readMessageFromBuffer();
 
 public:
    EthernetIP_MessageReceiver(SOCKET s);

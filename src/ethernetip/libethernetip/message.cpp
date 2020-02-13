@@ -28,10 +28,12 @@
  */
 CIP_Message::CIP_Message(const uint8_t *networkData, size_t size)
 {
-   memcpy(&m_header, networkData, sizeof(CIP_EncapsulationHeader));
-   m_dataSize = CIP_UInt16Swap(m_header.length);
-   m_data = MemAllocArrayNoInit<uint8_t>(m_dataSize);
-   memcpy(m_data, networkData + sizeof(CIP_EncapsulationHeader), std::min(size - sizeof(CIP_EncapsulationHeader), m_dataSize));
+   m_bytes = MemCopyBlock(networkData, size);
+   m_header = reinterpret_cast<CIP_EncapsulationHeader*>(m_bytes);
+   m_data = m_bytes + sizeof(CIP_EncapsulationHeader);
+   m_dataSize = CIP_UInt16Swap(m_header->length);
+   m_itemCount = (m_dataSize > 1) ? readDataAsUInt16(0) : 0;
+   m_readOffset = 0;
 }
 
 /**
@@ -39,10 +41,13 @@ CIP_Message::CIP_Message(const uint8_t *networkData, size_t size)
  */
 CIP_Message::CIP_Message(CIP_Command command, size_t dataSize)
 {
-   memset(&m_header, 0, sizeof(CIP_EncapsulationHeader));
-   m_header.command = CIP_UInt16Swap(command);
+   m_bytes = MemAllocArray<uint8_t>(dataSize + sizeof(CIP_EncapsulationHeader));
+   m_header = reinterpret_cast<CIP_EncapsulationHeader*>(m_bytes);
+   m_header->command = CIP_UInt16Swap(command);
+   m_data = m_bytes + sizeof(CIP_EncapsulationHeader);
    m_dataSize = dataSize;
-   m_data = MemAllocArray<uint8_t>(m_dataSize);
+   m_itemCount = 0;
+   m_readOffset = 0;
 }
 
 /**
@@ -54,13 +59,59 @@ CIP_Message::~CIP_Message()
 }
 
 /**
+ * Read next CPF item
+ */
+bool CIP_Message::nextItem(CPF_Item *item)
+{
+   if (m_readOffset + 4 >= m_dataSize)
+      return false;
+
+   if (m_readOffset == 0)
+   {
+      m_readOffset = 2;
+   }
+   else
+   {
+      m_readOffset += readDataAsUInt16(m_readOffset + 2);
+   }
+   if (m_readOffset + 4 >= m_dataSize)
+      return false;
+
+   item->type = readDataAsUInt16(m_readOffset);
+   item->length = readDataAsUInt16(m_readOffset + 2);
+   item->offset = static_cast<uint32_t>(m_readOffset + 4);
+   item->data = &m_data[m_readOffset + 4];
+   return m_readOffset + item->length + 4 < m_dataSize;
+}
+
+/**
+ * Read data at given offset as length prefixed string
+ */
+bool CIP_Message::readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, size_t bufferSize) const
+{
+   size_t len = readDataAsUInt8(offset);
+   if (offset + len + 1 > m_dataSize)
+      return false;  // invalid string length
+   if (len >= bufferSize)
+      len = bufferSize - 1;
+#ifdef UNICODE
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, reinterpret_cast<char*>(&m_data[offset + 1]), len, buffer, bufferSize);
+#else
+   memcpy(buffer, &m_data[offset + 1], len);
+#endif
+   buffer[len] = 0;
+   return true;
+}
+
+/**
  * Create message receiver for Ethernet/IP
  */
 EthernetIP_MessageReceiver::EthernetIP_MessageReceiver(SOCKET s)
 {
    m_socket = s;
    m_allocated = 8192;
-   m_writePos = 0;
+   m_dataSize = 0;
+   m_readPos = 0;
    m_buffer = MemAllocArrayNoInit<uint8_t>(m_allocated);
 }
 
@@ -73,9 +124,48 @@ EthernetIP_MessageReceiver::~EthernetIP_MessageReceiver()
 }
 
 /**
+ * Read message from already received data in buffer
+ */
+CIP_Message *EthernetIP_MessageReceiver::readMessageFromBuffer()
+{
+   if (m_dataSize < sizeof(CIP_EncapsulationHeader))
+      return nullptr;
+
+   size_t msgSize = CIP_UInt16Swap(reinterpret_cast<CIP_EncapsulationHeader*>(&m_buffer[m_readPos])->length) + sizeof(CIP_EncapsulationHeader);
+   if (m_dataSize < msgSize)
+      return nullptr;
+
+   CIP_Message *msg = new CIP_Message(&m_buffer[m_readPos], msgSize);
+   m_dataSize -= msgSize;
+   if (m_dataSize > 0)
+      m_readPos += msgSize;
+   else
+      m_readPos = 0;
+   return msg;
+}
+
+/**
  * Read message from network
  */
 CIP_Message *EthernetIP_MessageReceiver::readMessage(uint32_t timeout)
 {
-   return NULL;
+   while(true)
+   {
+      CIP_Message *msg = readMessageFromBuffer();
+      if (msg != nullptr)
+         return msg;
+
+      size_t writePos = m_readPos + m_dataSize;
+      if ((m_readPos > 0) && (writePos > m_allocated - 2048))
+      {
+         memmove(m_buffer, &m_buffer[m_readPos], m_dataSize);
+         m_readPos = 0;
+         writePos = m_dataSize;
+      }
+      int bytes = RecvEx(m_socket, &m_buffer[writePos], m_allocated - writePos, 0, timeout);
+      if (bytes <= 0)
+         break;
+      m_dataSize += bytes;
+   }
+   return nullptr;
 }
