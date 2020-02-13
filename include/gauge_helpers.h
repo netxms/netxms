@@ -113,6 +113,7 @@ public:
       m_interval = interval;
       m_period = period;
    }
+   virtual ~Gauge() = default;
 
    const TCHAR *getName() const { return m_name; }
    T getCurrent() const { return m_data.getCurrent(); }
@@ -142,6 +143,7 @@ class Gauge64 : public Gauge<INT64>
 {
 public:
    Gauge64(const TCHAR *name, int interval, int period) : Gauge<INT64>(name, interval, period) { }
+   virtual ~Gauge64() = default;
 };
 
 /**
@@ -151,6 +153,7 @@ class Gauge32 : public Gauge<INT32>
 {
 public:
    Gauge32(const TCHAR *name, int interval, int period) : Gauge<INT32>(name, interval, period) { }
+   virtual ~Gauge32() = default;
 };
 
 /**
@@ -172,6 +175,7 @@ public:
    {
       m_queue = queue;
    }
+   virtual ~GaugeQueueLength() = default;
 };
 
 /**
@@ -195,6 +199,7 @@ public:
    {
       m_pool = pool;
    }
+   virtual ~GaugeThreadPoolRequests() = default;
 };
 
 /**
@@ -216,6 +221,7 @@ public:
    {
       m_function = function;
    }
+   virtual ~GaugeFunction() = default;
 };
 
 /**
@@ -227,7 +233,8 @@ protected:
    virtual INT64 readCurrentValue() override { return 0; }
 
 public:
-   ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64(name, interval, period) { }
+   ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64(name, interval, period) {}
+   virtual ~ManualGauge64() = default;
 };
 
 #endif
