@@ -81,7 +81,7 @@ bool CIP_Message::nextItem(CPF_Item *item)
    item->length = readDataAsUInt16(m_readOffset + 2);
    item->offset = static_cast<uint32_t>(m_readOffset + 4);
    item->data = &m_data[m_readOffset + 4];
-   return m_readOffset + item->length + 4 < m_dataSize;
+   return m_readOffset + item->length + 4 <= m_dataSize;
 }
 
 /**

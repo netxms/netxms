@@ -96,7 +96,7 @@ static bool ListIdentity()
          continue;
 
       _tprintf(_T("Supported protocol version: %u"), response->readDataAsUInt16(item.offset));
-      _tprintf(_T("Device IP adsress: %s"), InetAddress(response->readDataAsUInt32(item.offset + 6)).toString().cstr());
+      _tprintf(_T("Device IP address: %s"), InetAddress(response->readDataAsUInt32(item.offset + 6)).toString().cstr());
       _tprintf(_T("Vendor ID: %u"), response->readDataAsUInt16(item.offset + 18));
       _tprintf(_T("Device type: %u"), response->readDataAsUInt16(item.offset + 20));
       _tprintf(_T("Product code: %u"), response->readDataAsUInt16(item.offset + 22));
