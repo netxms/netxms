@@ -71,7 +71,7 @@ SocketCommChannel::~SocketCommChannel()
 /**
  * Send data
  */
-int SocketCommChannel::send(const void *data, size_t size, MUTEX mutex)
+ssize_t SocketCommChannel::send(const void *data, size_t size, MUTEX mutex)
 {
    return SendEx(m_socket, data, size, 0, mutex);
 }
@@ -79,7 +79,7 @@ int SocketCommChannel::send(const void *data, size_t size, MUTEX mutex)
 /**
  * Receive data
  */
-int SocketCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
+ssize_t SocketCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 {
 #ifdef _WIN32
    return RecvEx(m_socket, buffer, size, 0, timeout);

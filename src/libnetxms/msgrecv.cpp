@@ -135,7 +135,7 @@ NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceive
          *result = MSGRECV_PROTOCOL_ERROR;
          break;
       }
-      int bytes = readBytes(&m_buffer[m_dataSize], m_size - m_dataSize, timeout);
+      ssize_t bytes = readBytes(&m_buffer[m_dataSize], m_size - m_dataSize, timeout);
       if (bytes <= 0)
       {
          *result = (bytes == 0) ? MSGRECV_CLOSED : ((bytes == -2) ? MSGRECV_TIMEOUT : MSGRECV_COMM_FAILURE);
@@ -143,20 +143,20 @@ NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceive
       }
       if (m_bytesToSkip > 0)
       {
-         if ((size_t)bytes <= m_bytesToSkip)
+         if (bytes <= m_bytesToSkip)
          {
-            m_bytesToSkip -= (size_t)bytes;
+            m_bytesToSkip -= bytes;
          }
          else
          {
-            m_dataSize = (size_t)bytes - m_bytesToSkip;
+            m_dataSize = bytes - m_bytesToSkip;
             memmove(m_buffer, &m_buffer[m_bytesToSkip], m_dataSize);
             m_bytesToSkip = 0;
          }
       }
       else
       {
-         m_dataSize += (size_t)bytes;
+         m_dataSize += bytes;
       }
    }
    return msg;
@@ -209,7 +209,7 @@ SocketMessageReceiver::~SocketMessageReceiver()
 /**
  * Read bytes from socket
  */
-int SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+ssize_t SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 {
 #ifdef _WIN32
    return RecvEx(m_socket, buffer, size, 0, timeout);
@@ -253,7 +253,7 @@ CommChannelMessageReceiver::~CommChannelMessageReceiver()
 /**
  * Read bytes from communication channel
  */
-int CommChannelMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+ssize_t CommChannelMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 {
    return m_channel->recv(buffer, size, timeout);
 }
@@ -301,7 +301,7 @@ TlsMessageReceiver::~TlsMessageReceiver()
 /**
  * Read bytes from TLS connection
  */
-int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+ssize_t TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 {
    bool doRead = true;
    bool needWrite = false;
@@ -408,16 +408,16 @@ PipeMessageReceiver::~PipeMessageReceiver()
 /**
  * Read bytes from socket
  */
-int PipeMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+ssize_t PipeMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 {
 #ifdef _WIN32
 	OVERLAPPED ov;
 	memset(&ov, 0, sizeof(OVERLAPPED));
 	ov.hEvent = m_readEvent;
    DWORD bytes;
-	if (ReadFile(m_pipe, buffer, (DWORD)size, &bytes, &ov))
+	if (ReadFile(m_pipe, buffer, static_cast<DWORD>(size), &bytes, &ov))
    {
-      return (int)bytes;   // completed immediately
+      return bytes;   // completed immediately
    }
 
 	if (GetLastError() != ERROR_IO_PENDING)
@@ -436,7 +436,7 @@ int PipeMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
       if (GetLastError() != ERROR_MORE_DATA)
 		   return -1;
 	}
-   return (int)bytes;
+   return bytes;
 #else
    return RecvEx(m_pipe, buffer, size, 0, timeout, m_controlPipe[0]);
 #endif

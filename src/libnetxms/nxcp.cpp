@@ -513,14 +513,12 @@ void LIBNETXMS_EXPORTABLE NXCPInitBuffer(NXCP_BUFFER *nxcpBuffer)
  *   2 Message decryption failed
  *   3 Receive timeout
  */
-int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_MESSAGE **msgBuffer,
-                                           NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
-                                           NXCPEncryptionContext **ppCtx,
-                                           BYTE **decryptionBuffer, UINT32 dwTimeout,
-														 UINT32 maxMsgSize)
+ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_MESSAGE **msgBuffer,
+      NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize, NXCPEncryptionContext **ppCtx, BYTE **decryptionBuffer,
+      UINT32 dwTimeout, UINT32 maxMsgSize)
 {
    UINT32 dwMsgSize = 0, dwBytesRead = 0, dwBytesToCopy;
-   int iErr;
+   ssize_t iErr;
    BOOL bSkipMsg = FALSE;
 
    // Initialize buffer if requested
@@ -570,7 +568,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_ME
 					*decryptionBuffer = (BYTE *)realloc(*decryptionBuffer, *bufferSize);
 			}
       }
-      dwBytesRead = std::min(dwMsgSize, nxcpBuffer->bufferSize);
+      dwBytesRead = std::min(dwMsgSize, (UINT32)nxcpBuffer->bufferSize);
       if (!bSkipMsg)
          memcpy(*msgBuffer, &nxcpBuffer->buffer[nxcpBuffer->bufferPos], dwBytesRead);
       nxcpBuffer->bufferSize -= dwBytesRead;
@@ -658,22 +656,17 @@ decrypt_message:
    return bSkipMsg ? 1 : (int)dwMsgSize;
 }
 
-int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer,
-                                           NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
-                                           NXCPEncryptionContext **ppCtx,
-                                           BYTE **decryptionBuffer, UINT32 dwTimeout,
-                                           UINT32 maxMsgSize)
+ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer, NXCP_BUFFER *nxcpBuffer,
+      UINT32 *bufferSize, NXCPEncryptionContext **ppCtx, BYTE **decryptionBuffer, UINT32 dwTimeout, UINT32 maxMsgSize)
 {
    SocketCommChannel *channel = new SocketCommChannel(hSocket, false);
-   int result = RecvNXCPMessageEx(channel, msgBuffer, nxcpBuffer, bufferSize, ppCtx, decryptionBuffer, dwTimeout, maxMsgSize);
+   ssize_t result = RecvNXCPMessageEx(channel, msgBuffer, nxcpBuffer, bufferSize, ppCtx, decryptionBuffer, dwTimeout, maxMsgSize);
    channel->decRefCount();
    return result;
 }
 
-int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *msgBuffer,
-                                         NXCP_BUFFER *nxcpBuffer, UINT32 bufferSize,
-                                         NXCPEncryptionContext **ppCtx,
-                                         BYTE *decryptionBuffer, UINT32 dwTimeout)
+ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *msgBuffer, NXCP_BUFFER *nxcpBuffer,
+      UINT32 bufferSize, NXCPEncryptionContext **ppCtx, BYTE *decryptionBuffer, UINT32 dwTimeout)
 {
 	NXCP_MESSAGE *mb = msgBuffer;
 	UINT32 bs = bufferSize;
@@ -682,10 +675,8 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *msgBuffer
 	                         (decryptionBuffer != NULL) ? &db : NULL, dwTimeout, bufferSize);
 }
 
-int LIBNETXMS_EXPORTABLE RecvNXCPMessage(AbstractCommChannel *channel, NXCP_MESSAGE *msgBuffer,
-                                         NXCP_BUFFER *nxcpBuffer, UINT32 bufferSize,
-                                         NXCPEncryptionContext **ppCtx,
-                                         BYTE *decryptionBuffer, UINT32 dwTimeout)
+ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessage(AbstractCommChannel *channel, NXCP_MESSAGE *msgBuffer, NXCP_BUFFER *nxcpBuffer,
+      UINT32 bufferSize, NXCPEncryptionContext **ppCtx, BYTE *decryptionBuffer, UINT32 dwTimeout)
 {
    NXCP_MESSAGE *mb = msgBuffer;
    UINT32 bs = bufferSize;
@@ -956,7 +947,7 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
       NXCPInitBuffer(pBuffer);
 
       NXCPEncryptionContext *pDummyCtx = NULL;
-      int nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
+      ssize_t nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
       if ((nSize == NXCP_HEADER_SIZE) &&
           (ntohs(msg.code) == CMD_NXCP_CAPS) &&
           (ntohs(msg.flags) & MF_CONTROL))

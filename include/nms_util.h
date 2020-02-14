@@ -2876,10 +2876,10 @@ public:
 	void disconnect();
 
 	bool canRead(UINT32 timeout);
-	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE);
+	virtual ssize_t read(char *pBuff, size_t nSize, uint32_t timeout = INFINITE);
 	bool waitForText(const char *text, int timeout);
 
-	int write(const char *pBuff, int nSize);
+   ssize_t write(const char *pBuff, size_t nSize);
 	bool writeLine(const char *line);
 
 	static SocketConnection *createTCPConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
@@ -2905,8 +2905,8 @@ public:
 	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
    static TelnetConnection *createConnection(const InetAddress& ip, WORD port, UINT32 timeout);
 
-	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE) override;
-	int readLine(char *buffer, int size, UINT32 timeout = INFINITE);
+	virtual ssize_t read(char *pBuff, size_t nSize, UINT32 timeout = INFINITE) override;
+   ssize_t readLine(char *buffer, size_t size, UINT32 timeout = INFINITE);
 };
 
 /**
@@ -2987,8 +2987,8 @@ protected:
 public:
    AbstractCommChannel();
 
-   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) = 0;
-   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE) = 0;
+   virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) = 0;
+   virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) = 0;
    virtual int poll(UINT32 timeout, bool write = false) = 0;
    virtual int shutdown() = 0;
    virtual void close() = 0;
@@ -3014,8 +3014,8 @@ protected:
 public:
    SocketCommChannel(SOCKET socket, bool owner = true);
 
-   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
-   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
+   virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
+   virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
    virtual int poll(UINT32 timeout, bool write = false) override;
    virtual int shutdown() override;
    virtual void close() override;
@@ -3140,8 +3140,8 @@ typedef struct _dir_struc_w
 #ifdef __cplusplus
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout, bool *isTimeout = NULL);
-int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
-int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket = INVALID_SOCKET);
+ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
+ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket = INVALID_SOCKET);
 bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout);
 
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout);
@@ -3333,8 +3333,8 @@ void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size);
 
 void LIBNETXMS_EXPORTABLE LogOpenSSLErrorStack(int level);
 
-void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
-void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
+void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, size_t inLen, BYTE *out, const BYTE *key);
+void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, size_t inLen, BYTE *out, const BYTE *key);
 
 bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght);
 bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryptedPasswd, char *decryptedPasswd, size_t bufferLenght);

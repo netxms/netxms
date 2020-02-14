@@ -95,7 +95,8 @@ bool CIP_Message::readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, siz
    if (len >= bufferSize)
       len = bufferSize - 1;
 #ifdef UNICODE
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, reinterpret_cast<char*>(&m_data[offset + 1]), len, buffer, bufferSize);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, reinterpret_cast<char*>(&m_data[offset + 1]),
+         static_cast<int>(len), buffer, static_cast<int>(bufferSize));
 #else
    memcpy(buffer, &m_data[offset + 1], len);
 #endif
@@ -162,7 +163,7 @@ CIP_Message *EthernetIP_MessageReceiver::readMessage(uint32_t timeout)
          m_readPos = 0;
          writePos = m_dataSize;
       }
-      int bytes = RecvEx(m_socket, &m_buffer[writePos], m_allocated - writePos, 0, timeout);
+      ssize_t bytes = RecvEx(m_socket, &m_buffer[writePos], m_allocated - writePos, 0, timeout);
       if (bytes <= 0)
          break;
       m_dataSize += bytes;

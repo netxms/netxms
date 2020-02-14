@@ -1237,9 +1237,9 @@ int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
  * Extended send() - send all data even if single call to send()
  * cannot handle them all
  */
-int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex)
+ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex)
 {
-	int nLeft = (int)len;
+   ssize_t nLeft = len;
 	int nRet;
 
 	if (mutex != INVALID_MUTEX_HANDLE)
@@ -1249,9 +1249,9 @@ int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, in
 	{
 retry:
 #ifdef MSG_NOSIGNAL
-		nRet = send(hSocket, ((char *)data) + (len - nLeft), nLeft, flags | MSG_NOSIGNAL);
+		nRet = send(hSocket, ((char *)data) + (len - nLeft), static_cast<int>(nLeft), flags | MSG_NOSIGNAL);
 #else
-		nRet = send(hSocket, ((char *)data) + (len - nLeft), nLeft, flags);
+		nRet = send(hSocket, ((char *)data) + (len - nLeft), static_cast<int>(nLeft), flags);
 #endif
 		if (nRet <= 0)
 		{
@@ -1280,7 +1280,7 @@ retry:
 	if (mutex != INVALID_MUTEX_HANDLE)
 		MutexUnlock(mutex);
 
-	return nLeft == 0 ? (int)len : nRet;
+	return nLeft == 0 ? len : nRet;
 }
 
 /**
@@ -1293,7 +1293,7 @@ retry:
  * @param timeout waiting timeout in milliseconds
  * @return number of bytes read on success, 0 if socket was closed, -1 on error, -2 on timeout
  */
-int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket)
+ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket)
 {
 	if (hSocket == INVALID_SOCKET)
 		return -1;
@@ -1357,7 +1357,7 @@ bool RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout)
    char *pos = (char *)buffer;
    while(bytes < size)
    {
-      int b = RecvEx(s, pos, size - bytes, 0, timeout);
+      ssize_t b = RecvEx(s, pos, size - bytes, 0, timeout);
       if (b <= 0)
          return false;
       bytes += b;

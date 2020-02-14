@@ -65,7 +65,7 @@ static bool Connect(const char *hostname)
 static bool ListIdentity()
 {
    CIP_Message request(CIP_LIST_IDENTITY, 0);
-   int bytes = request.getSize();
+   size_t bytes = request.getSize();
    if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
    {
       TCHAR buffer[1024];

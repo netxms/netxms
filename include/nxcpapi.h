@@ -42,9 +42,9 @@
  */
 typedef struct
 {
-   UINT32 bufferSize;
-   UINT32 bufferPos;
-   char buffer[NXCP_TEMP_BUF_SIZE];
+   size_t bufferSize;
+   size_t bufferPos;
+   uint8_t buffer[NXCP_TEMP_BUF_SIZE];
 } NXCP_BUFFER;
 
 
@@ -329,12 +329,12 @@ private:
    size_t m_size;
    size_t m_maxSize;
    size_t m_dataSize;
-   size_t m_bytesToSkip;
+   ssize_t m_bytesToSkip;
 
    NXCPMessage *getMessageFromBuffer(bool *protocolError);
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) = 0;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) = 0;
 
 public:
    AbstractMessageReceiver(size_t initialSize, size_t maxSize);
@@ -362,7 +362,7 @@ private:
 #endif
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
    SocketMessageReceiver(SOCKET socket, size_t initialSize, size_t maxSize);
@@ -380,7 +380,7 @@ private:
    AbstractCommChannel *m_channel;
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
    CommChannelMessageReceiver(AbstractCommChannel *channel, size_t initialSize, size_t maxSize);
@@ -405,7 +405,7 @@ private:
 #endif
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
    TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, size_t initialSize, size_t maxSize);
@@ -431,7 +431,7 @@ private:
 #endif
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
    PipeMessageReceiver(HPIPE hpipe, size_t initialSize, size_t maxSize);
@@ -580,27 +580,16 @@ typedef bool (*NXCPMessageNameResolver)(UINT16 code, TCHAR *buffer);
 #ifdef __cplusplus
 
 void LIBNETXMS_EXPORTABLE NXCPInitBuffer(NXCP_BUFFER *nxcpBuffer);
-int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *pMsg,
-                                         NXCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
-                                         NXCPEncryptionContext **ppCtx,
-                                         BYTE *pDecryptionBuffer, UINT32 dwTimeout);
-int LIBNETXMS_EXPORTABLE RecvNXCPMessage(AbstractCommChannel *channel, NXCP_MESSAGE *pMsg,
-                                         NXCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
-                                         NXCPEncryptionContext **ppCtx,
-                                         BYTE *pDecryptionBuffer, UINT32 dwTimeout);
-int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer,
-                                           NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
-                                           NXCPEncryptionContext **ppCtx,
-                                           BYTE **decryptionBuffer, UINT32 dwTimeout,
-														 UINT32 maxMsgSize);
-int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_MESSAGE **msgBuffer,
-                                           NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
-                                           NXCPEncryptionContext **ppCtx,
-                                           BYTE **decryptionBuffer, UINT32 dwTimeout,
-                                           UINT32 maxMsgSize);
-NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags,
-                                                        const void *data, size_t dataSize,
-                                                        NXCP_MESSAGE *buffer, bool allowCompression);
+ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *pMsg, NXCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
+      NXCPEncryptionContext **ppCtx, BYTE *pDecryptionBuffer, UINT32 dwTimeout);
+ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessage(AbstractCommChannel *channel, NXCP_MESSAGE *pMsg, NXCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
+      NXCPEncryptionContext **ppCtx, BYTE *pDecryptionBuffer, UINT32 dwTimeout);
+ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer, NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
+      NXCPEncryptionContext **ppCtx, BYTE **decryptionBuffer, UINT32 dwTimeout, UINT32 maxMsgSize);
+ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_MESSAGE **msgBuffer, NXCP_BUFFER *nxcpBuffer,
+      UINT32 *bufferSize, NXCPEncryptionContext **ppCtx, BYTE **decryptionBuffer, UINT32 dwTimeout, UINT32 maxMsgSize);
+NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags, const void *data, size_t dataSize,
+      NXCP_MESSAGE *buffer, bool allowCompression);
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,

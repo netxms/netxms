@@ -517,12 +517,12 @@ BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *msg, UINT32 dwMsgLen, const 
 /**
  * Encrypt data block with ICE
  */
-void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key)
+void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, size_t inLen, BYTE *out, const BYTE *key)
 {
 	ICE_KEY *ice = ice_key_create(1);
 	ice_key_set(ice, key);
 
-	int stopPos = inLen - (inLen % 8);
+	size_t stopPos = inLen - (inLen % 8);
 	for(int pos = 0; pos < stopPos; pos += 8)
 		ice_key_encrypt(ice, &in[pos], &out[pos]);
 
@@ -541,12 +541,12 @@ void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, c
 /**
  * Decrypt data block with ICE
  */
-void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key)
+void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, size_t inLen, BYTE *out, const BYTE *key)
 {
 	ICE_KEY *ice = ice_key_create(1);
 	ice_key_set(ice, key);
 
-	int stopPos = inLen - (inLen % 8);
+	size_t stopPos = inLen - (inLen % 8);
 	for(int pos = 0; pos < stopPos; pos += 8)
 		ice_key_decrypt(ice, &in[pos], &out[pos]);
 

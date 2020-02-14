@@ -110,7 +110,7 @@ bool SocketConnection::canRead(UINT32 timeout)
 /**
  * Read data from socket
  */
-int SocketConnection::read(char *pBuff, int nSize, UINT32 timeout)
+ssize_t SocketConnection::read(char *pBuff, size_t nSize, UINT32 timeout)
 {
 	return RecvEx(m_socket, pBuff, nSize, 0, timeout);
 }
@@ -118,7 +118,7 @@ int SocketConnection::read(char *pBuff, int nSize, UINT32 timeout)
 /**
  * Write data to socket
  */
-int SocketConnection::write(const char *pBuff, int nSize)
+ssize_t SocketConnection::write(const char *pBuff, size_t nSize)
 {
 	return SendEx(m_socket, pBuff, nSize, 0, NULL);
 }
@@ -170,7 +170,7 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 			return false;
 		}
 
-		int size = read(&m_data[m_dataPos], 4095 - m_dataPos);
+      ssize_t size = read(&m_data[m_dataPos], 4095 - m_dataPos);
       if ((size <= 0) && (WSAGetLastError() != WSAEWOULDBLOCK) && (WSAGetLastError() != WSAEINPROGRESS))
       {
          return false;
@@ -237,14 +237,14 @@ bool TelnetConnection::connect(const InetAddress& ip, WORD port, UINT32 timeout)
 /**
  * Read data from socket
  */
-int TelnetConnection::read(char *pBuff, int nSize, UINT32 timeout)
+ssize_t TelnetConnection::read(char *pBuff, size_t nSize, UINT32 timeout)
 {
 retry:
-	int bytesRead = RecvEx(m_socket, pBuff, nSize, 0, timeout);
+   ssize_t bytesRead = RecvEx(m_socket, pBuff, nSize, 0, timeout);
    if (bytesRead > 0)
    {
       // process telnet control sequences
-      for (int i = 0; i < bytesRead - 1; i++)
+      for (ssize_t i = 0; i < bytesRead - 1; i++)
       {
          int skip = 0;
          switch ((unsigned char)pBuff[i])
@@ -307,10 +307,10 @@ retry:
 /**
  * Read line from socket
  */
-int TelnetConnection::readLine(char *buffer, int size, UINT32 timeout)
+ssize_t TelnetConnection::readLine(char *buffer, size_t size, UINT32 timeout)
 {
-   int numOfChars = 0;
-	int bytesRead = 0;
+   ssize_t numOfChars = 0;
+   ssize_t bytesRead = 0;
    while (true) {
       bytesRead = read(buffer + numOfChars, 1, timeout);
       if (bytesRead <= 0) {
