@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Core
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,11 +54,11 @@ protected:
 public:
    AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id);
 
-   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE);
-   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE);
-   virtual int poll(UINT32 timeout, bool write = false);
-   virtual int shutdown();
-   virtual void close();
+   virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
+   virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
+   virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual int shutdown() override;
+   virtual void close() override;
 
    UINT32 getId() const { return m_id; }
 
@@ -135,7 +135,7 @@ public:
    UINT32 bind(UINT32 nodeId, UINT32 userId);
    AgentTunnelCommChannel *createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);
-   int sendChannelData(UINT32 id, const void *data, size_t len);
+   ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
    void resetStartTime() { m_startTime = time(NULL); }
 
    UINT32 getId() const { return m_id; }

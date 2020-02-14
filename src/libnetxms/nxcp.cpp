@@ -694,7 +694,7 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
                                                         const void *data, size_t dataSize,
                                                         NXCP_MESSAGE *buffer, bool allowCompression)
 {
-   NXCP_MESSAGE *msg = (buffer == NULL) ? (NXCP_MESSAGE *)malloc(dataSize + NXCP_HEADER_SIZE + 8) : buffer;
+   NXCP_MESSAGE *msg = (buffer == NULL) ? static_cast<NXCP_MESSAGE*>(MemAlloc(dataSize + NXCP_HEADER_SIZE + 8)) : buffer;
 
    // Message should be aligned to 8 bytes boundary
    size_t padding = (8 - ((dataSize + NXCP_HEADER_SIZE) % 8)) & 7;

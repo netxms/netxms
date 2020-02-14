@@ -756,13 +756,13 @@ void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
 /**
  * Send channel data
  */
-int AgentTunnel::sendChannelData(UINT32 id, const void *data, size_t len)
+ssize_t AgentTunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 {
    NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
-   int rc = sslWrite(msg, ntohl(msg->size));
-   if (rc == static_cast<int>(ntohl(msg->size)))
-      rc = (int)len;  // adjust number of bytes to exclude tunnel overhead
-   free(msg);
+   ssize_t rc = sslWrite(msg, ntohl(msg->size));
+   if (rc == static_cast<ssize_t>(ntohl(msg->size)))
+      rc = len;  // adjust number of bytes to exclude tunnel overhead
+   MemFree(msg);
    return rc;
 }
 
@@ -827,7 +827,7 @@ AgentTunnelCommChannel::~AgentTunnelCommChannel()
 /**
  * Send data
  */
-int AgentTunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
+ssize_t AgentTunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
 {
    return m_active ? m_tunnel->sendChannelData(m_id, data, size) : -1;
 }
@@ -835,7 +835,7 @@ int AgentTunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
 /**
  * Receive data
  */
-int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
+ssize_t AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 {
    if (!m_active)
       return 0;

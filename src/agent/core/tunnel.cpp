@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -71,11 +71,11 @@ protected:
 public:
    TunnelCommChannel(Tunnel *tunnel);
 
-   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE);
-   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE);
-   virtual int poll(UINT32 timeout, bool write = false);
-   virtual int shutdown();
-   virtual void close();
+   virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
+   virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
+   virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual int shutdown() override;
+   virtual void close() override;
 
    UINT32 getId() const { return m_id; }
 
@@ -134,7 +134,7 @@ public:
 
    TunnelCommChannel *createChannel();
    void closeChannel(TunnelCommChannel *channel);
-   int sendChannelData(UINT32 id, const void *data, size_t len);
+   ssize_t sendChannelData(UINT32 id, const void *data, size_t len);
 
    const TCHAR *getHostname() const { return m_hostname; }
 
@@ -1074,13 +1074,13 @@ void Tunnel::closeChannel(TunnelCommChannel *channel)
 /**
  * Send channel data
  */
-int Tunnel::sendChannelData(UINT32 id, const void *data, size_t len)
+ssize_t Tunnel::sendChannelData(UINT32 id, const void *data, size_t len)
 {
    NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
    int rc = sslWrite(msg, ntohl(msg->size));
    if (rc == ntohl(msg->size))
       rc = (int)len;  // adjust number of bytes to exclude tunnel overhead
-   free(msg);
+   MemFree(msg);
    return rc;
 }
 
@@ -1139,7 +1139,7 @@ TunnelCommChannel::~TunnelCommChannel()
 /**
  * Send data
  */
-int TunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
+ssize_t TunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
 {
    return m_active ? m_tunnel->sendChannelData(m_id, data, size) : -1;
 }
@@ -1147,7 +1147,7 @@ int TunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
 /**
  * Receive data
  */
-int TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
+ssize_t TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 {
    if (!m_active)
       return 0;
@@ -1204,7 +1204,7 @@ retry_wait:
    }
 #endif
 
-   size_t bytes = m_buffer.read((BYTE *)buffer, size);
+   ssize_t bytes = m_buffer.read((BYTE *)buffer, size);
 #ifdef _WIN32
    if (m_buffer.isEmpty())
       ResetEvent(m_dataCondition);
@@ -1212,7 +1212,7 @@ retry_wait:
 #else
    pthread_mutex_unlock(&m_bufferLock);
 #endif
-   return (int)bytes;
+   return bytes;
 }
 
 /**
