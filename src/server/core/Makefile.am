@@ -43,6 +43,7 @@ libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @Z
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
+	../../ethernetip/libethernetip/libethernetip.la \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \
 	../../libnxsl/libnxsl.la \

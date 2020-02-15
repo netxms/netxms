@@ -104,6 +104,19 @@ enum CIP_Command : uint16_t
 };
 
 /**
+ * CIP device state
+ */
+enum CIP_DeviceState
+{
+   CIP_DEVICE_STATE_NON_EXISTENT = 0,
+   CIP_DEVICE_STATE_SELF_TESTING = 1,
+   CIP_DEVICE_STATE_STANDBY = 2,
+   CIP_DEVICE_STATE_OPERATIONAL = 3,
+   CIP_DEVICE_STATE_MAJOR_RECOVERABLE_FAULT = 4,
+   CIP_DEVICE_STATE_MAJOR_UNRECOVERABLE_FAULT = 5
+};
+
+/**
  * Ethernet/IP status codes
  */
 enum EthernetIP_Status : uint32_t
@@ -115,6 +128,19 @@ enum EthernetIP_Status : uint32_t
    EIP_STATUS_INVALID_SESSION_HANDLE =0x64,
    EIP_STATUS_INVALID_LENGTH = 0x65,
    EIP_STATUS_UNSUPPORTED_PROTOCOL_VERSION = 0x69
+};
+
+/**
+ * Ethernet/IP helper call status
+ */
+enum EthernetIP_CallStatus
+{
+   EIP_CALL_SUCCESS = 0,
+   EIP_CALL_CONNECT_FAILED = 1,
+   EIP_CALL_COMM_ERROR = 2,
+   EIP_CALL_TIMEOUT = 3,
+   EIP_CALL_BAD_RESPONSE = 4,
+   EIP_CALL_DEVICE_ERROR = 5
 };
 
 /**
@@ -201,9 +227,34 @@ public:
    CIP_Message *readMessage(uint32_t timeout);
 };
 
+/**
+ * CIP identity data
+ */
+struct CIP_Identity
+{
+   uint16_t vendor;
+   uint16_t deviceType;
+   uint16_t productCode;
+   uint8_t productRevisionMajor;
+   uint8_t productRevisionMinor;
+   uint32_t serialNumber;
+   TCHAR *productName;
+   InetAddress ipAddress;
+   uint16_t tcpPort;
+   uint16_t protocolVersion;
+   uint16_t status;
+   uint8_t state;
+};
+
+/**
+ * Helper function for reading device identity via Ethernet/IP
+ */
+CIP_Identity LIBETHERNETIP_EXPORTABLE *EthernetIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EthernetIP_CallStatus *callStatus, EthernetIP_Status *eipStatus);
+
 /**** Utility functions ****/
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceTypeNameFromCode(int32_t code);
+const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state);
 const TCHAR LIBETHERNETIP_EXPORTABLE *EthernetIP_StatusTextFromCode(EthernetIP_Status status);
 
 #endif   /* _ethernet_ip_h_ */

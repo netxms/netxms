@@ -1,4 +1,4 @@
-SOURCES = main.cpp message.cpp
+SOURCES = helpers.cpp main.cpp message.cpp
 
 lib_LTLIBRARIES = libethernetip.la
 

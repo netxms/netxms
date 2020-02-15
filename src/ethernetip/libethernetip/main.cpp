@@ -1402,6 +1402,20 @@ static CodeLookupElement s_deviceTypeLookupTable[] =
 /**
  * Status codes
  */
+static CodeLookupElement s_deviceStateLookupTable[] =
+{
+   { 0, _T("Non Existent") },
+   { 1, _T("Self-Testing") },
+   { 2, _T("Standby") },
+   { 3, _T("Operational") },
+   { 4, _T("Major Recoverable Fault") },
+   { 5, _T("Major Unrecoverable Fault") },
+   { 0, nullptr }
+};
+
+/**
+ * Device state codes
+ */
 static CodeLookupElement s_statusLookupTable[] =
 {
    { 0x00, _T("SUCCESS") },
@@ -1428,6 +1442,14 @@ const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code)
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceTypeNameFromCode(int32_t code)
 {
    return CodeToText(code, s_deviceTypeLookupTable, _T("Unknown"));
+}
+
+/**
+ * Get device state text from code
+ */
+const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state)
+{
+   return CodeToText(static_cast<int32_t>(state), s_deviceStateLookupTable, _T("Unknown"));
 }
 
 /**

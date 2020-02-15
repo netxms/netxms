@@ -82,45 +82,56 @@ static bool Connect(const char *hostname)
 }
 
 /**
- * List identity
+ * Generic function for sending list type command
  */
-static bool ListIdentity()
+static CIP_Message *SendListCommand(CIP_Command command)
 {
-   CIP_Message request(CIP_LIST_IDENTITY, 0);
+   CIP_Message request(command, 0);
    size_t bytes = request.getSize();
    if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
    {
       TCHAR buffer[1024];
       _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
-      return false;
+      return nullptr;
    }
 
    CIP_Message *response = s_receiver->readMessage(s_timeout);
    if (response == nullptr)
    {
       _tprintf(_T("Request timeout\n"));
-      return false;
+      return nullptr;
    }
 
    _tprintf(_T("Raw message:\n"));
    DumpBytes(response->getBytes(), response->getSize());
    _tprintf(_T("\n"));
 
-   if (response->getCommand() != CIP_LIST_IDENTITY)
+   if (response->getCommand() != command)
    {
       _tprintf(_T("Invalid response (command code 0x%04X)\n"), response->getCommand());
       delete response;
-      return false;
+      return nullptr;
    }
 
    _tprintf(_T("Status: %02X (%s)\n"), response->getStatus(), EthernetIP_StatusTextFromCode(response->getStatus()));
    if (response->getStatus() != EIP_STATUS_SUCCESS)
    {
       delete response;
-      return false;
+      return nullptr;
    }
 
    _tprintf(_T("%d item%s in response message\n\n"), response->getItemCount(), response->getItemCount() == 1 ? _T("") : _T("s"));
+   return response;
+}
+
+/**
+ * List identity
+ */
+static bool ListIdentity()
+{
+   CIP_Message *response = SendListCommand(CIP_LIST_IDENTITY);
+   if (response == nullptr)
+      return false;
 
    CPF_Item item;
    while(response->nextItem(&item))
@@ -133,7 +144,7 @@ static bool ListIdentity()
       _tprintf(_T("Vendor...............: %u (%s)\n"), response->readDataAsUInt16(item.offset + 18), CIP_VendorNameFromCode(response->readDataAsUInt16(item.offset + 18)));
       _tprintf(_T("Device type..........: %u (%s)\n"), response->readDataAsUInt16(item.offset + 20), CIP_DeviceTypeNameFromCode(response->readDataAsUInt16(item.offset + 20)));
 
-      TCHAR productName[256];
+      TCHAR productName[256] = _T("");
       if (response->readDataAsLengthPrefixString(item.offset + 32, productName, 256))
       {
          _tprintf(_T("Product name.........: %s\n"), productName);
@@ -142,7 +153,9 @@ static bool ListIdentity()
       _tprintf(_T("Product revision.....: %u.%u\n"), response->readDataAsUInt8(item.offset + 24), response->readDataAsUInt8(item.offset + 25));
       _tprintf(_T("Serial number........: %08X\n"), response->readDataAsUInt32(item.offset + 28));
 
-      _tprintf(_T("Status...............: %u\n"), response->readDataAsUInt8(item.offset + 26));
+      _tprintf(_T("Status...............: %04X\n"), response->readDataAsUInt16(item.offset + 26));
+      uint8_t state = response->readDataAsUInt8(item.offset + 33 + _tcslen(productName));
+      _tprintf(_T("State................: %u (%s)\n"), state, CIP_DeviceStateTextFromCode(state));
    }
 
    delete response;
@@ -150,38 +163,26 @@ static bool ListIdentity()
 }
 
 /**
- * List identity
+ * List interfaces
  */
 static bool ListInterfaces()
 {
-   CIP_Message request(CIP_LIST_INTERFACES, 0);
-   size_t bytes = request.getSize();
-   if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
-   {
-      TCHAR buffer[1024];
-      _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
-      return false;
-   }
-
-   CIP_Message *response = s_receiver->readMessage(s_timeout);
+   CIP_Message *response = SendListCommand(CIP_LIST_INTERFACES);
    if (response == nullptr)
-   {
-      _tprintf(_T("Request timeout\n"));
       return false;
-   }
 
-   _tprintf(_T("Raw message:\n"));
-   DumpBytes(response->getBytes(), response->getSize());
-   _tprintf(_T("\n"));
+   delete response;
+   return true;
+}
 
-   if (response->getCommand() != CIP_LIST_INTERFACES)
-   {
-      _tprintf(_T("Invalid response (command code 0x%04X)\n"), response->getCommand());
-      delete response;
+/**
+ * List services
+ */
+static bool ListServices()
+{
+   CIP_Message *response = SendListCommand(CIP_LIST_SERVICES);
+   if (response == nullptr)
       return false;
-   }
-
-   _tprintf(_T("%d item%s in response message\n\n"), response->getItemCount(), response->getItemCount() == 1 ? _T("") : _T("s"));
 
    delete response;
    return true;
@@ -277,6 +278,11 @@ int main(int argc, char *argv[])
    else if (!stricmp(command, "ListInterfaces"))
    {
       if (!ListInterfaces())
+         exitCode = 4;
+   }
+   else if (!stricmp(command, "ListServices"))
+   {
+      if (!ListServices())
          exitCode = 4;
    }
    else

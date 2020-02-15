@@ -3144,8 +3144,8 @@ ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len
 ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket = INVALID_SOCKET);
 bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout);
 
-SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout);
-SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, UINT16 port);
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, uint16_t port, uint32_t timeout);
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, uint16_t port);
 
 int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 mask);
 int LIBNETXMS_EXPORTABLE BitsInMask(const BYTE *mask, size_t size);

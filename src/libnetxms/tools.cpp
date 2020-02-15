@@ -1509,7 +1509,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
  *
  * @return connected socket on success or INVALID_SOCKET on error
  */
-SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout)
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, uint16_t port, uint32_t timeout)
 {
    SOCKET s = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (s == INVALID_SOCKET)
@@ -1530,7 +1530,7 @@ SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, 
  *
  * @return configured socket on success or INVALID_SOCKET on error
  */
-SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, UINT16 port)
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, uint16_t port)
 {
    SOCKET s = CreateSocket(addr.getFamily(), SOCK_DGRAM, 0);
    if (s == INVALID_SOCKET)
