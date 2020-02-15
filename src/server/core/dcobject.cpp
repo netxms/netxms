@@ -245,7 +245,7 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
    }
    else
    {
-      m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) || !_tcscmp(m_retentionTimeSrc, _T("")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) || !_tcscmp(m_retentionTimeSrc, _T("0")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
       if (m_flags & 0x200) // for compatibility with old format
          m_retentionType = DC_RETENTION_NONE;
    }
@@ -1222,7 +1222,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    }
    else
    {
-      m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) || !_tcscmp(m_retentionTimeSrc, _T("")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) || !_tcscmp(m_retentionTimeSrc, _T("0")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
       if (m_flags & 0x200) // for compatibility with old format
          m_retentionType = DC_RETENTION_NONE;
    }
