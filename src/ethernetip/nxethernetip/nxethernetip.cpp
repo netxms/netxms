@@ -35,6 +35,28 @@ static SOCKET s_socket = INVALID_SOCKET;
 static EthernetIP_MessageReceiver *s_receiver = nullptr;
 
 /**
+ * Dump raw bytes
+ */
+static void DumpBytes(const uint8_t *data, size_t length)
+{
+   TCHAR textForm[32], buffer[64];
+   for(size_t i = 0; i < length; i += 16)
+   {
+      const uint8_t *block = data + i;
+      size_t blockSize = MIN(16, length - i);
+      BinToStrEx(block, blockSize, buffer, _T(' '), 16 - blockSize);
+      size_t j;
+      for(j = 0; j < blockSize; j++)
+      {
+         uint8_t b = block[j];
+         textForm[j] = ((b >= ' ') && (b < 127)) ? (TCHAR)b : _T('.');
+      }
+      textForm[j] = 0;
+      _tprintf(_T("   %04X | %s | %s\n"), i, buffer, textForm);
+   }
+}
+
+/**
  * Connect to device
  */
 static bool Connect(const char *hostname)
@@ -49,8 +71,8 @@ static bool Connect(const char *hostname)
    s_socket = ConnectToHost(addr, s_port, s_timeout);
    if (s_socket == INVALID_SOCKET)
    {
-      TCHAR buffer[64];
-      _tprintf(_T("Cannot connected to %s:%u\n"), addr.toString(buffer), s_port);
+      TCHAR ipAddrText[64], errorText[256];
+      _tprintf(_T("Cannot connected to %s:%u (%s)\n"), addr.toString(ipAddrText), s_port, GetLastSocketErrorText(errorText, 256));
       return false;
    }
 
@@ -80,9 +102,9 @@ static bool ListIdentity()
       return false;
    }
 
-   TCHAR *messageDump = MemAllocString(response->getSize() * 2 + 1);
-   _tprintf(_T("Raw message:\n%s\n\n"), BinToStr(response->getBytes(), response->getSize(), messageDump));
-   MemFree(messageDump);
+   _tprintf(_T("Raw message:\n"));
+   DumpBytes(response->getBytes(), response->getSize());
+   _tprintf(_T("\n"));
 
    if (response->getCommand() != CIP_LIST_IDENTITY)
    {
@@ -101,8 +123,8 @@ static bool ListIdentity()
 
       _tprintf(_T("Protocol version.....: %u\n"), response->readDataAsUInt16(item.offset));
       _tprintf(_T("Device IP address....: %s\n"), response->readDataAsInetAddress(item.offset + 6).toString().cstr());
-      _tprintf(_T("Vendor ID............: %u\n"), response->readDataAsUInt16(item.offset + 18));
-      _tprintf(_T("Device type..........: %u\n"), response->readDataAsUInt16(item.offset + 20));
+      _tprintf(_T("Vendor...............: %u (%s)\n"), response->readDataAsUInt16(item.offset + 18), CIP_VendorNameFromCode(response->readDataAsUInt16(item.offset + 18)));
+      _tprintf(_T("Device type..........: %u (%s)\n"), response->readDataAsUInt16(item.offset + 20), CIP_DeviceTypeNameFromCode(response->readDataAsUInt16(item.offset + 20)));
 
       TCHAR productName[256];
       if (response->readDataAsLengthPrefixString(item.offset + 32, productName, 256))
@@ -115,6 +137,44 @@ static bool ListIdentity()
 
       _tprintf(_T("Status...............: %u\n"), response->readDataAsUInt8(item.offset + 26));
    }
+
+   delete response;
+   return true;
+}
+
+/**
+ * List identity
+ */
+static bool ListInterfaces()
+{
+   CIP_Message request(CIP_LIST_INTERFACES, 0);
+   size_t bytes = request.getSize();
+   if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+      return false;
+   }
+
+   CIP_Message *response = s_receiver->readMessage(s_timeout);
+   if (response == nullptr)
+   {
+      _tprintf(_T("Request timeout\n"));
+      return false;
+   }
+
+   _tprintf(_T("Raw message:\n"));
+   DumpBytes(response->getBytes(), response->getSize());
+   _tprintf(_T("\n"));
+
+   if (response->getCommand() != CIP_LIST_INTERFACES)
+   {
+      _tprintf(_T("Invalid response (command code 0x%04X)\n"), response->getCommand());
+      delete response;
+      return false;
+   }
+
+   _tprintf(_T("%d item%s in response message\n\n"), response->getItemCount(), response->getItemCount() == 1 ? _T("") : _T("s"));
 
    delete response;
    return true;
@@ -205,6 +265,11 @@ int main(int argc, char *argv[])
    if (!stricmp(command, "ListIdentity"))
    {
       if (!ListIdentity())
+         exitCode = 4;
+   }
+   else if (!stricmp(command, "ListInterfaces"))
+   {
+      if (!ListInterfaces())
          exitCode = 4;
    }
    else

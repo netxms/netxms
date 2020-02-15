@@ -1433,7 +1433,7 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    {
       const BYTE *block = reinterpret_cast<const BYTE*>(msg) + i;
       size_t blockSize = MIN(16, size - i);
-      BinToStr(block, blockSize, buffer);
+      BinToStrEx(block, blockSize, buffer, _T(' '), 16 - blockSize);
       size_t j;
       for(j = 0; j < blockSize; j++)
       {
@@ -1441,7 +1441,7 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
          textForm[j] = ((b >= ' ') && (b < 127)) ? (TCHAR)b : _T('.');
       }
       textForm[j] = 0;
-      out.appendFormattedString(_T("  ** %06X: %s %s\n"), i, buffer, textForm);
+      out.appendFormattedString(_T("  ** %06X | %s | %s\n"), i, buffer, textForm);
    }
 
    // header

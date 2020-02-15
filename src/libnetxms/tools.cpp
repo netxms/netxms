@@ -1030,19 +1030,9 @@ BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName)
 /**
  * Convert 6-byte MAC address to text representation
  */
-TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
+TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const uint8_t *data, TCHAR *str)
 {
-   UINT32 i;
-   TCHAR *pCurr;
-
-   for(i = 0, pCurr = pStr; i < 6; i++)
-   {
-      *pCurr++ = bin2hex(pData[i] >> 4);
-      *pCurr++ = bin2hex(pData[i] & 15);
-      *pCurr++ = _T(':');
-   }
-   *(pCurr - 1) = 0;
-	return pStr;
+   return BinToStrEx(data, MAC_ADDR_LENGTH, str, _T(':'), 0);
 }
 
 /**
@@ -1050,13 +1040,32 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
  */
 WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const void *data, size_t size, WCHAR *str)
 {
+   return BinToStrExW(data, size, str, 0, 0);
+}
+
+/**
+ * Convert byte array to text representation (wide character version)
+ */
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding)
+{
    const BYTE *in = (const BYTE *)data;
    WCHAR *out = str;
    for(size_t i = 0; i < size; i++, in++)
    {
       *out++ = bin2hex(*in >> 4);
       *out++ = bin2hex(*in & 15);
+      if (separator != 0)
+         *out++ = separator;
    }
+   for(size_t i = 0; i < padding; i++)
+   {
+      *out++ = L' ';
+      *out++ = L' ';
+      if (separator != 0)
+         *out++ = separator;
+   }
+   if (separator != 0)
+      out--;
    *out = 0;
    return str;
 }
@@ -1066,13 +1075,32 @@ WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const void *data, size_t size, WCHAR *str)
  */
 char LIBNETXMS_EXPORTABLE *BinToStrA(const void *data, size_t size, char *str)
 {
+   return BinToStrExA(data, size, str, 0, 0);
+}
+
+/**
+ * Convert byte array to text representation (multibyte character version)
+ */
+char LIBNETXMS_EXPORTABLE *BinToStrExA(const void *data, size_t size, char *str, char separator, size_t padding)
+{
    const BYTE *in = (const BYTE *)data;
    char *out = str;
    for(size_t i = 0; i < size; i++, in++)
    {
       *out++ = bin2hex(*in >> 4);
       *out++ = bin2hex(*in & 15);
+      if (separator != 0)
+         *out++ = separator;
    }
+   for(size_t i = 0; i < padding; i++)
+   {
+      *out++ = ' ';
+      *out++ = ' ';
+      if (separator != 0)
+         *out++ = separator;
+   }
+   if (separator != 0)
+      out--;
    *out = 0;
    return str;
 }
@@ -1738,22 +1766,22 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool m
 /**
  * Translate given code to text
  */
-const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int code, CODE_TO_TEXT *translator, const TCHAR *defaultText)
+const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int32_t code, CodeLookupElement *lookupTable, const TCHAR *defaultText)
 {
-   for(int i = 0; translator[i].text != NULL; i++)
-      if (translator[i].code == code)
-         return translator[i].text;
+   for(int i = 0; lookupTable[i].text != NULL; i++)
+      if (lookupTable[i].code == code)
+         return lookupTable[i].text;
    return defaultText;
 }
 
 /**
  * Translate code to text
  */
-int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CODE_TO_TEXT *translator, int defaultCode)
+int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CodeLookupElement *lookupTable, int32_t defaultCode)
 {
-   for(int i = 0; translator[i].text != NULL; i++)
-      if (!_tcsicmp(text, translator[i].text))
-         return translator[i].code;
+   for(int i = 0; lookupTable[i].text != NULL; i++)
+      if (!_tcsicmp(text, lookupTable[i].text))
+         return lookupTable[i].code;
    return defaultCode;
 }
 

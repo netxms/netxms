@@ -3021,12 +3021,21 @@ public:
    virtual void close() override;
 };
 
+/**
+ * Code translation structure
+ */
+struct CodeLookupElement
+{
+   int32_t code;
+   const TCHAR *text;
+};
+
 #endif   /* __cplusplus */
 
 /**
  * Configuration item template for configuration loader
  */
-typedef struct
+struct NX_CFG_TEMPLATE
 {
    TCHAR token[64];
    BYTE type;
@@ -3036,16 +3045,7 @@ typedef struct
    UINT32 bufferPos;   // Should be set to 0
    void *buffer;
    void *overrideIndicator;
-} NX_CFG_TEMPLATE;
-
-/**
- * Code translation structure
- */
-typedef struct __CODE_TO_TEXT
-{
-   int code;
-   const TCHAR *text;
-} CODE_TO_TEXT;
+};
 
 /**
  * getopt() prototype if needed
@@ -3171,6 +3171,9 @@ bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(UINT32 milliseconds);
 bool LIBNETXMS_EXPORTABLE IsShutdownInProgress();
 CONDITION LIBNETXMS_EXPORTABLE GetShutdownConditionObject();
 
+const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int32_t code, CodeLookupElement *lookupTable, const TCHAR *defaultText = _T("Unknown"));
+int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CodeLookupElement *lookupTable, int32_t defaultCode = -1);
+
 #endif   /* __cplusplus */
 
 #ifdef __cplusplus
@@ -3211,6 +3214,14 @@ char LIBNETXMS_EXPORTABLE *BinToStrA(const void *data, size_t size, char *str);
 #define BinToStr BinToStrA
 #endif
 
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrExW(const void *data, size_t size, WCHAR *str, WCHAR separator, size_t padding);
+char LIBNETXMS_EXPORTABLE *BinToStrExA(const void *data, size_t size, char *str, char separator, size_t padding);
+#ifdef UNICODE
+#define BinToStrEx BinToStrExW
+#else
+#define BinToStrEx BinToStrExA
+#endif
+
 size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *data, size_t size);
 size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, size_t size);
 #ifdef UNICODE
@@ -3219,7 +3230,7 @@ size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, size_t size)
 #define StrToBin StrToBinA
 #endif
 
-TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *data, TCHAR *pStr);
+TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const uint8_t *data, TCHAR *str);
 
 void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
 void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *pszStr);
@@ -3375,17 +3386,6 @@ UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optStri
 #define ExtractNamedOptionValueAsInt ExtractNamedOptionValueAsIntA
 #define ExtractNamedOptionValueAsUInt ExtractNamedOptionValueAsUIntA
 #define ExtractNamedOptionValueAsUInt64 ExtractNamedOptionValueAsUInt64A
-#endif
-
-#ifdef __cplusplus
-const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int code, CODE_TO_TEXT *translator, const TCHAR *defaultText = _T("Unknown"));
-#else
-const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int code, CODE_TO_TEXT *translator, const TCHAR *defaultText);
-#endif
-#ifdef __cplusplus
-int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CODE_TO_TEXT *translator, int defaultCode = -1);
-#else
-int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CODE_TO_TEXT *translator, int defaultCode);
 #endif
 
 #ifdef _WIN32

@@ -146,8 +146,22 @@ public:
    void resetItemReader() { m_readOffset = 0; }
 
    uint8_t readDataAsUInt8(size_t offset) const { return (offset < m_dataSize) ? m_data[offset] : 0; }
-   uint16_t readDataAsUInt16(size_t offset) const { return (offset < m_dataSize - 1) ? CIP_UInt16Swap(*reinterpret_cast<uint16_t*>(&m_data[offset])) : 0; }
-   uint32_t readDataAsUInt32(size_t offset) const { return (offset < m_dataSize - 3) ? CIP_UInt32Swap(*reinterpret_cast<uint32_t*>(&m_data[offset])) : 0; }
+   uint16_t readDataAsUInt16(size_t offset) const
+   {
+      if (offset >= m_dataSize - 1)
+         return 0;
+      uint16_t v;
+      memcpy(&v, &m_data[offset], 2);
+      return CIP_UInt16Swap(v);
+   }
+   uint32_t readDataAsUInt32(size_t offset) const
+   {
+      if (offset >= m_dataSize - 3)
+         return 0;
+      uint32_t v;
+      memcpy(&v, &m_data[offset], 4);
+      return CIP_UInt32Swap(v);
+   }
    InetAddress readDataAsInetAddress(size_t offset) const { return (offset < m_dataSize - 3) ? InetAddress(ntohl(*reinterpret_cast<uint32_t*>(&m_data[offset]))) : InetAddress(); }
    bool readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, size_t bufferSize) const;
 };
@@ -172,5 +186,9 @@ public:
 
    CIP_Message *readMessage(uint32_t timeout);
 };
+
+/**** Utility functions ****/
+const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code);
+const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceTypeNameFromCode(int32_t code);
 
 #endif   /* _ethernet_ip_h_ */

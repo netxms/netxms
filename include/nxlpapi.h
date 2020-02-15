@@ -234,7 +234,7 @@ private:
 	int m_fileEncoding;
 	StringList m_exclusionSchedules;
 	TCHAR *m_name;
-	CODE_TO_TEXT *m_eventNameList;
+	CodeLookupElement *m_eventNameList;
 	bool (*m_eventResolver)(const TCHAR *, UINT32 *);
 	THREAD m_thread;	// Associated thread
    CONDITION m_stopCondition;
@@ -321,7 +321,7 @@ public:
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
 	void setUserArg(void *arg) { m_userArg = arg; }
-	void setEventNameList(CODE_TO_TEXT *ctt) { m_eventNameList = ctt; }
+	void setEventNameList(CodeLookupElement *lookupTable) { m_eventNameList = lookupTable; }
 	void setEventNameResolver(bool (*cb)(const TCHAR *, UINT32 *)) { m_eventResolver = cb; }
 	UINT32 resolveEventName(const TCHAR *name, UINT32 defVal = 0);
 

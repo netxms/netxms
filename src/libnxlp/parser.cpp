@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -99,6 +99,7 @@ struct LogParser_XmlParserState
 	{
       state = XML_STATE_INIT;
       parser = NULL;
+      ignoreCase = true;
 	   invertedRule = false;
 	   breakFlag = false;
 	   contextAction = CONTEXT_SET_AUTOMATIC;
@@ -166,7 +167,7 @@ LogParser::LogParser(const LogParser *src)
 	{
 		int count;
 		for(count = 0; src->m_eventNameList[count].text != NULL; count++);
-		m_eventNameList = (count > 0) ? nx_memdup(src->m_eventNameList, sizeof(CODE_TO_TEXT) * (count + 1)) : NULL;
+		m_eventNameList = (count > 0) ? MemCopyBlock(src->m_eventNameList, sizeof(CodeLookupElement) * (count + 1)) : NULL;
 	}
 	else
 	{
@@ -891,9 +892,7 @@ UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
 {
 	if (m_eventNameList != NULL)
 	{
-		int i;
-
-		for(i = 0; m_eventNameList[i].text != NULL; i++)
+		for(int i = 0; m_eventNameList[i].text != NULL; i++)
 			if (!_tcsicmp(name, m_eventNameList[i].text))
 				return m_eventNameList[i].code;
 	}
@@ -901,7 +900,6 @@ UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
 	if (m_eventResolver != NULL)
 	{
 		UINT32 val;
-
 		if (m_eventResolver(name, &val))
 			return val;
 	}
