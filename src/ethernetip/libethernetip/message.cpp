@@ -107,7 +107,7 @@ bool CIP_Message::readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, siz
 /**
  * Create message receiver for Ethernet/IP
  */
-EthernetIP_MessageReceiver::EthernetIP_MessageReceiver(SOCKET s)
+EtherNetIP_MessageReceiver::EtherNetIP_MessageReceiver(SOCKET s)
 {
    m_socket = s;
    m_allocated = 8192;
@@ -119,7 +119,7 @@ EthernetIP_MessageReceiver::EthernetIP_MessageReceiver(SOCKET s)
 /**
  * Message receiver destructor
  */
-EthernetIP_MessageReceiver::~EthernetIP_MessageReceiver()
+EtherNetIP_MessageReceiver::~EtherNetIP_MessageReceiver()
 {
    MemFree(m_buffer);
 }
@@ -127,7 +127,7 @@ EthernetIP_MessageReceiver::~EthernetIP_MessageReceiver()
 /**
  * Read message from already received data in buffer
  */
-CIP_Message *EthernetIP_MessageReceiver::readMessageFromBuffer()
+CIP_Message *EtherNetIP_MessageReceiver::readMessageFromBuffer()
 {
    if (m_dataSize < sizeof(CIP_EncapsulationHeader))
       return nullptr;
@@ -148,7 +148,7 @@ CIP_Message *EthernetIP_MessageReceiver::readMessageFromBuffer()
 /**
  * Read message from network
  */
-CIP_Message *EthernetIP_MessageReceiver::readMessage(uint32_t timeout)
+CIP_Message *EtherNetIP_MessageReceiver::readMessage(uint32_t timeout)
 {
    while(true)
    {

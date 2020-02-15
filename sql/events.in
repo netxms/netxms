@@ -1245,6 +1245,24 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   8) Discovery source node name' CONCAT CRLF CONCAT
 		'   9) Discovery data source'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_ETHERNET_IP_UNREACHABLE, 'SYS_ETHERNET_IP_UNREACHABLE', '3fbbe8da-70cf-449d-9c6c-64333c6ff60',
+		EVENT_SEVERITY_MAJOR, 1,
+		'EtherNet/IP connectivity failed',
+		'Generated when node is not responding to EtherNet/IP requests.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_ETHERNET_IP_OK, 'SYS_ETHERNET_IP_OK', '25c7104e-168b-4845-8c96-28edf715785f',
+		EVENT_SEVERITY_NORMAL, 1,
+		'EtherNet/IP connectivity restored',
+		'Generated when EtherNet/IP connectivity with the node is restored.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   No message-specific parameters'
+	);
 
 /*
 ** SNMP traps

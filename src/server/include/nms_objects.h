@@ -672,18 +672,20 @@ enum NodeOrigin
 struct NXCORE_EXPORTABLE NewNodeData
 {
    InetAddress ipAddr;
-   UINT32 creationFlags;
-   UINT32 agentPort;
-   UINT32 snmpPort;
+   uint32_t creationFlags;
+   uint16_t agentPort;
+   uint16_t snmpPort;
+   uint16_t eipPort;
    TCHAR name[MAX_OBJECT_NAME];
-   UINT32 agentProxyId;
-   UINT32 snmpProxyId;
-   UINT32 icmpProxyId;
-   UINT32 sshProxyId;
+   uint32_t agentProxyId;
+   uint32_t snmpProxyId;
+   uint32_t eipProxyId;
+   uint32_t icmpProxyId;
+   uint32_t sshProxyId;
    TCHAR sshLogin[MAX_SSH_LOGIN_LEN];
    TCHAR sshPassword[MAX_SSH_PASSWORD_LEN];
    Cluster *cluster;
-   UINT32 zoneUIN;
+   uint32_t zoneUIN;
    bool doConfPoll;
    NodeOrigin origin;
    SNMP_SecurityContext *snmpSecurity;
@@ -2598,6 +2600,7 @@ protected:
    UINT32 m_pollerNode;      // Node used for network service polling
    UINT32 m_agentProxy;      // Node used as proxy for agent connection
 	UINT32 m_snmpProxy;       // Node used as proxy for SNMP requests
+   UINT32 m_eipProxy;        // Node used as proxy for EtherNet/IP requests
    UINT32 m_icmpProxy;       // Node used as proxy for ICMP ping
    UINT64 m_lastEvents[MAX_LAST_EVENTS];
    ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
@@ -2636,6 +2639,7 @@ protected:
    StringObjectMap<IcmpStatCollector> *m_icmpStatCollectors;
    InetAddressList m_icmpTargets;
    TCHAR *m_chassisPlacementConf;
+   uint16_t m_eipPort;  // EtherNet/IP port
    uint16_t m_cipDeviceType;
    uint16_t m_cipStatus;
    uint16_t m_cipState;
@@ -2685,8 +2689,9 @@ protected:
    Subnet *createSubnet(InetAddress& baseAddr, bool syntheticMask);
    void checkAgentPolicyBinding(AgentConnection *conn);
    void updatePrimaryIpAddr();
-   bool confPollAgent(UINT32 dwRqId);
-   bool confPollSnmp(UINT32 dwRqId);
+   bool confPollAgent(uint32_t requestId);
+   bool confPollSnmp(uint32_t requestId);
+   bool confPollEthernetIP(uint32_t requestId);
    NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
    bool updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId);
    bool updateHardwareComponents(PollerInfo *poller, UINT32 requestId);
@@ -2934,10 +2939,11 @@ public:
 	SNMP_Transport *createSnmpTransport(UINT16 port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
 
-	UINT32 getEffectiveSnmpProxy(bool backup = false);
-   UINT32 getEffectiveSshProxy();
-   UINT32 getEffectiveIcmpProxy();
-   UINT32 getEffectiveAgentProxy();
+	uint32_t getEffectiveSnmpProxy(bool backup = false);
+	uint32_t getEffectiveEtherNetIPProxy(bool backup = false);
+	uint32_t getEffectiveSshProxy();
+	uint32_t getEffectiveIcmpProxy();
+	uint32_t getEffectiveAgentProxy();
 
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);

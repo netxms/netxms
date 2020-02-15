@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <ethernet_ip.h>
 
 #define DEBUG_TAG _T("obj.poll.node")
 
@@ -73,9 +74,11 @@ NewNodeData::NewNodeData(const InetAddress& ipAddr)
    creationFlags = 0;
    agentPort = AGENT_LISTEN_PORT;
    snmpPort = SNMP_DEFAULT_PORT;
+   eipPort = ETHERNET_IP_DEFAULT_PORT;
    name[0] = 0;
    agentProxyId = 0;
    snmpProxyId = 0;
+   eipProxyId = 0;
    icmpProxyId = 0;
    sshProxyId = 0;
    sshLogin[0] = 0;
@@ -97,9 +100,11 @@ NewNodeData::NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr)
    creationFlags = msg->getFieldAsUInt32(VID_CREATION_FLAGS);
    agentPort = msg->getFieldAsUInt16(VID_AGENT_PORT);
    snmpPort = msg->getFieldAsUInt16(VID_SNMP_PORT);
+   eipPort = msg->getFieldAsUInt16(VID_ETHERNET_IP_PORT);
    msg->getFieldAsString(VID_OBJECT_NAME, name, MAX_OBJECT_NAME);
    agentProxyId = msg->getFieldAsUInt32(VID_AGENT_PROXY);
    snmpProxyId = msg->getFieldAsUInt32(VID_SNMP_PROXY);
+   eipProxyId = msg->getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
    icmpProxyId = msg->getFieldAsUInt32(VID_ICMP_PROXY);
    sshProxyId = msg->getFieldAsUInt32(VID_SSH_PROXY);
    msg->getFieldAsString(VID_SSH_LOGIN, sshLogin, MAX_SSH_LOGIN_LEN);
@@ -145,6 +150,8 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
       flags |= NF_DISABLE_ICMP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_SNMP)
       flags |= NF_DISABLE_SNMP;
+   if (newNodeData->creationFlags & NXC_NCF_DISABLE_ETHERNET_IP)
+      flags |= NF_DISABLE_ETHERNET_IP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_NXCP)
       flags |= NF_DISABLE_NXCP;
    Node *node = new Node(newNodeData, flags);

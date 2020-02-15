@@ -1226,7 +1226,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_CDP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isEthernetIP"))
+   else if (!strcmp(attr, "isEtherNetIP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_ETHERNET_IP) ? 1 : 0));
    }

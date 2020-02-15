@@ -40,6 +40,7 @@ public class NXCObjectCreationData
 	public static int CF_CREATE_UNMANAGED    = 0x0008;
    public static int CF_ENTER_MAINTENANCE   = 0x0010;
    public static int CF_AS_ZONE_PROXY       = 0x0020;
+   public static int CF_DISABLE_ETHERNET_IP = 0x0040;
 	
 	private int objectClass;
 	private String name;
@@ -49,9 +50,11 @@ public class NXCObjectCreationData
 	private String primaryName;
 	private int agentPort;
 	private int snmpPort;
+   private int etherNetIpPort;
 	private InetAddressEx ipAddress;
 	private long agentProxyId;
 	private long snmpProxyId;
+   private long etherNetIpProxyId;
    private long icmpProxyId;
    private long sshProxyId;
 	private int mapType;
@@ -115,12 +118,14 @@ public class NXCObjectCreationData
 		}
 		
 		primaryName = null;
-		agentPort = 0;
-		snmpPort = 0;
+      agentPort = 4700;
+      snmpPort = 161;
+      etherNetIpPort = 44818;
 		comments = null;
 		creationFlags = 0;
 		agentProxyId = 0;
 		snmpProxyId = 0;
+      etherNetIpProxyId = 0;
 		icmpProxyId = 0;
 		sshProxyId = 0;
 		mapType = 0;
@@ -961,5 +966,37 @@ public class NXCObjectCreationData
    public void setSensorProxy(long sensorProxy)
    {
       this.sensorProxy = sensorProxy;
+   }
+
+   /**
+    * @return the etherNetIpPort
+    */
+   public int getEtherNetIpPort()
+   {
+      return etherNetIpPort;
+   }
+
+   /**
+    * @param etherNetIpPort the etherNetIpPort to set
+    */
+   public void setEtherNetIpPort(int etherNetIpPort)
+   {
+      this.etherNetIpPort = etherNetIpPort;
+   }
+
+   /**
+    * @return the etherNetIpProxyId
+    */
+   public long getEtherNetIpProxyId()
+   {
+      return etherNetIpProxyId;
+   }
+
+   /**
+    * @param etherNetIpProxyId the etherNetIpProxyId to set
+    */
+   public void setEtherNetIpProxyId(long etherNetIpProxyId)
+   {
+      this.etherNetIpProxyId = etherNetIpProxyId;
    }
 }

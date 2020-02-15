@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ public class CreateNodeDialog extends Dialog
 	private LabeledText hostNameField;
 	private Spinner agentPortField;
 	private Spinner snmpPortField;
+   private Spinner etherNetIpPortField;
 	private LabeledText sshLoginField;
    private LabeledText sshPasswordField;
 	private Button checkUnmanaged;
@@ -61,10 +62,12 @@ public class CreateNodeDialog extends Dialog
    private Button checkAsZoneProxy;
 	private Button checkDisableAgent;
 	private Button checkDisableSNMP;
+   private Button checkDisableEtherNetIP;
 	private Button checkDisablePing;
 	private Button checkCreateAnother;
 	private ObjectSelector agentProxySelector;
 	private ObjectSelector snmpProxySelector;
+   private ObjectSelector etherNetIpProxySelector;
    private ObjectSelector icmpProxySelector;
    private ObjectSelector sshProxySelector;
 	private ZoneSelector zoneSelector;
@@ -74,11 +77,13 @@ public class CreateNodeDialog extends Dialog
 	private int creationFlags = 0;
 	private long agentProxy = 0;
 	private long snmpProxy = 0;
+   private long etherNetIpProxy = 0;
    private long icmpProxy = 0;
    private long sshProxy = 0;
 	private long zoneUIN = 0;
 	private int agentPort = 4700;
 	private int snmpPort = 161;
+   private int etherNetIpPort = 44181;
 	private String sshLogin = "";
 	private String sshPassword; 
 	private boolean showAgain = false;
@@ -172,6 +177,11 @@ public class CreateNodeDialog extends Dialog
 		snmpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_SNMPPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		snmpPortField.setSelection(snmpPort);
 		
+      etherNetIpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "EtherNet/IP Port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      etherNetIpPortField.setSelection(etherNetIpPort);
+
+      new Composite(dialogArea, SWT.NONE); // placeholder for alignment
+
 		sshLoginField = new LabeledText(dialogArea, SWT.NONE);
 		sshLoginField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		sshLoginField.setLabel("SSH Login");
@@ -235,6 +245,10 @@ public class CreateNodeDialog extends Dialog
 		checkDisableSNMP.setText(Messages.get().CreateNodeDialog_DisableSNMP);
 		checkDisableSNMP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_SNMP) != 0);
 		
+      checkDisableEtherNetIP = new Button(optionsGroup, SWT.CHECK);
+      checkDisableEtherNetIP.setText("Disable EtherNet/IP");
+      checkDisableEtherNetIP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ETHERNET_IP) != 0);
+
 		checkDisablePing = new Button(optionsGroup, SWT.CHECK);
 		checkDisablePing.setText(Messages.get().CreateNodeDialog_DisableICMP);
 		checkDisablePing.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ICMP) != 0);
@@ -257,6 +271,15 @@ public class CreateNodeDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		snmpProxySelector.setLayoutData(gd);
 		
+      etherNetIpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      etherNetIpProxySelector.setLabel("Proxy for EtherNet/IP");
+      etherNetIpProxySelector.setObjectClass(Node.class);
+      etherNetIpProxySelector.setObjectId(etherNetIpProxy);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      etherNetIpProxySelector.setLayoutData(gd);
+
       icmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       icmpProxySelector.setLabel("Proxy for ICMP");
       icmpProxySelector.setObjectClass(Node.class);
@@ -332,16 +355,21 @@ public class CreateNodeDialog extends Dialog
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_ICMP;
 		if (checkDisableSNMP.getSelection())
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_SNMP;
+      if (checkDisableEtherNetIP.getSelection())
+         creationFlags |= NXCObjectCreationData.CF_DISABLE_ETHERNET_IP;
 		
 		agentPort = agentPortField.getSelection();
 		snmpPort = snmpPortField.getSelection();
+      etherNetIpPort = etherNetIpPortField.getSelection();
 		
 		sshLogin = sshLoginField.getText().trim();
 		sshPassword = sshPasswordField.getText();
 		
 		agentProxy = agentProxySelector.getObjectId();
 		snmpProxy = snmpProxySelector.getObjectId();
-		if (session.isZoningEnabled())
+      etherNetIpProxy = etherNetIpProxySelector.getObjectId();
+
+      if (session.isZoningEnabled())
 		{
 		   zoneUIN = zoneSelector.getZoneUIN();
 		}
@@ -399,6 +427,14 @@ public class CreateNodeDialog extends Dialog
 	}
 
 	/**
+    * @return the etherNetIpProxy
+    */
+   public long getEtherNetIpProxy()
+   {
+      return etherNetIpProxy;
+   }
+
+   /**
     * @return the icmpProxy
     */
    public long getIcmpProxy()
@@ -447,6 +483,14 @@ public class CreateNodeDialog extends Dialog
 	{
 		return snmpPort;
 	}
+
+   /**
+    * @return the etherNetIpPort
+    */
+   public int getEtherNetIpPort()
+   {
+      return etherNetIpPort;
+   }
 
    /**
     * @return the sshLogin

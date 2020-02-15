@@ -6,6 +6,7 @@ netxmsd_LDADD = \
 	../core/libnxcore.la \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
+	../../ethernetip/libethernetip/libethernetip.la \
 	../../libnxsl/libnxsl.la \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \

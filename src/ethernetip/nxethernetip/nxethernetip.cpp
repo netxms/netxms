@@ -32,7 +32,7 @@ NETXMS_EXECUTABLE_HEADER(nxethernetip)
 static uint16_t s_port = ETHERNET_IP_DEFAULT_PORT;
 static uint32_t s_timeout = 5000;
 static SOCKET s_socket = INVALID_SOCKET;
-static EthernetIP_MessageReceiver *s_receiver = nullptr;
+static EtherNetIP_MessageReceiver *s_receiver = nullptr;
 
 /**
  * Dump raw bytes
@@ -113,7 +113,7 @@ static CIP_Message *SendListCommand(CIP_Command command)
       return nullptr;
    }
 
-   _tprintf(_T("Status: %02X (%s)\n"), response->getStatus(), EthernetIP_StatusTextFromCode(response->getStatus()));
+   _tprintf(_T("Status: %02X (%s)\n"), response->getStatus(), EtherNetIP_StatusTextFromCode(response->getStatus()));
    if (response->getStatus() != EIP_STATUS_SUCCESS)
    {
       delete response;
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
    if (!Connect(argv[optind]))
       return 2;
 
-   s_receiver = new EthernetIP_MessageReceiver(s_socket);
+   s_receiver = new EtherNetIP_MessageReceiver(s_socket);
 
    const char *command = argv[optind + 1];
    if (!stricmp(command, "ListIdentity"))

@@ -1393,8 +1393,11 @@ static CodeLookupElement s_deviceTypeLookupTable[] =
    { 49, _T("CIP Motion I/O") },
    { 50, _T("ControlNet Physical Layer Component") },
    { 100, _T("In-Sight 2000 Series") },
-   { 200, _T("Embedded Component") },
+   { 123, _T("PowerFlex 755") },
+   { 127, _T("22-COMM-E EtherNet/IP Adapter") },
+   { 142, _T("PowerFlex 750") },
    { 150, _T("PowerFlex 525") },
+   { 200, _T("Embedded Component") },
    { 773, _T("DataMan Series Reader") },
    { 0, nullptr }
 };
@@ -1455,7 +1458,7 @@ const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state)
 /**
  * Get status text from code
  */
-const TCHAR LIBETHERNETIP_EXPORTABLE *EthernetIP_StatusTextFromCode(EthernetIP_Status status)
+const TCHAR LIBETHERNETIP_EXPORTABLE *EtherNetIP_StatusTextFromCode(EtherNetIP_Status status)
 {
    return CodeToText(static_cast<int32_t>(status), s_statusLookupTable, _T("UNKNOWN"));
 }

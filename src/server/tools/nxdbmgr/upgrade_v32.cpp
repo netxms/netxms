@@ -24,6 +24,39 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.8 to 32.9
+ */
+static bool H_UpgradeFromV8()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE nodes ADD eip_port integer\n")
+            _T("ALTER TABLE nodes ADD eip_proxy integer\n")
+            _T("UPDATE nodes SET eip_port=44818,eip_proxy=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("eip_port")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("eip_proxy")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_ETHERNET_IP_UNREACHABLE, _T("SYS_ETHERNET_IP_UNREACHABLE"),
+            SEVERITY_MAJOR, EF_LOG, _T("3fbbe8da-70cf-449d-9c6c-64333c6ff60"),
+            _T("EtherNet/IP connectivity failed"),
+            _T("Generated when node is not responding to EtherNet/IP requests.\r\n")
+            _T("Parameters:\r\n")
+            _T("   No message-specific parameters")
+            ));
+   CHK_EXEC(CreateEventTemplate(EVENT_ETHERNET_IP_OK, _T("SYS_ETHERNET_IP_OK"),
+            SEVERITY_NORMAL, EF_LOG, _T("25c7104e-168b-4845-8c96-28edf715785f"),
+            _T("EtherNet/IP connectivity restored"),
+            _T("Generated when EtherNet/IP connectivity with the node is restored.\r\n")
+            _T("Parameters:\r\n")
+            _T("   No message-specific parameters")
+            ));
+
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 32.7 to 32.8
  */
 static bool H_UpgradeFromV7()
@@ -185,6 +218,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 8,  31, 9, H_UpgradeFromV8 },
    { 7,  31, 8, H_UpgradeFromV7 },
    { 6,  31, 7, H_UpgradeFromV6 },
    { 5,  31, 6, H_UpgradeFromV5 },

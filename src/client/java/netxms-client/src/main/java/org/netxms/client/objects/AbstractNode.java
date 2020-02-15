@@ -70,7 +70,10 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	public static final int NC_HAS_WINPDH             = 0x00040000;
 	public static final int NC_IS_WIFI_CONTROLLER     = 0x00080000;
 	public static final int NC_IS_SMCLP               = 0x00100000;
-	public static final int NC_IS_USER_AGENT_INSTALLED = 0x00400000;
+	public static final int NC_HAS_USER_AGENT         = 0x00400000;
+   public static final int NC_IS_ETHERNET_IP         = 0x00800000;
+   public static final int NC_IS_MODBUS_TCP          = 0x01000000;
+   public static final int NC_IS_PROFINET            = 0x02000000;
 
 	// Node flags
    public static final int NF_REMOTE_AGENT           = 0x00010000;
@@ -112,6 +115,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	protected long pollerNodeId;
 	protected long agentProxyId;
 	protected long snmpProxyId;
+   protected long etherNetIpProxyId;
    protected long icmpProxyId;
 	protected int agentPort;
 	protected int agentAuthMethod;
@@ -162,7 +166,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    protected int icmpAverageResponseTime;
    protected int icmpPacketLoss;
    protected ChassisPlacement chassisPlacement;
+   protected int etherNetIpPort;
    protected int cipDeviceType;
+   protected String cipDeviceTypeName;
    protected int cipStatus;
    protected int cipState;
 	
@@ -205,6 +211,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 		pollerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
 		agentProxyId = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
 		snmpProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SNMP_PROXY);
+      etherNetIpProxyId = msg.getFieldAsInt64(NXCPCodes.VID_ETHERNET_IP_PROXY);
       icmpProxyId = msg.getFieldAsInt64(NXCPCodes.VID_ICMP_PROXY);
 		agentPort = msg.getFieldAsInt32(NXCPCodes.VID_AGENT_PORT);
 		agentAuthMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
@@ -252,7 +259,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       icmpMaxResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_MAX_RESPONSE_TIME);
       icmpMinResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_MIN_RESPONSE_TIME);
       icmpPacketLoss = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_PACKET_LOSS);
+      etherNetIpPort = msg.getFieldAsInt32(NXCPCodes.VID_ETHERNET_IP_PORT);
       cipDeviceType = msg.getFieldAsInt32(NXCPCodes.VID_CIP_DEVICE_TYPE);
+      cipDeviceTypeName = msg.getFieldAsString(NXCPCodes.VID_CIP_DEVICE_TYPE_NAME);
       cipStatus = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATUS);
       cipState = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATE);
       
@@ -387,6 +396,14 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	{
 		return snmpProxyId;
 	}
+
+   /**
+    * @return the etherNetIpProxyId
+    */
+   public long getEtherNetIpProxyId()
+   {
+      return etherNetIpProxyId;
+   }
 
    /**
     * @return the icmpProxyId
@@ -926,11 +943,29 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    }
 
    /**
+    * @return the etherNetIpPort
+    */
+   public int getEtherNetIpPort()
+   {
+      return etherNetIpPort;
+   }
+
+   /**
     * @return the cipDeviceType
     */
    public int getCipDeviceType()
    {
       return cipDeviceType;
+   }
+
+   /**
+    * Get symbolic name for node's CIP device type.
+    * 
+    * @return symbolic name for node's CIP device type or null if not available
+    */
+   public String getCipDeviceTypeName()
+   {
+      return cipDeviceTypeName;
    }
 
    /**

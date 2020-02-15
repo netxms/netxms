@@ -117,9 +117,9 @@ enum CIP_DeviceState
 };
 
 /**
- * Ethernet/IP status codes
+ * EtherNet/IP status codes
  */
-enum EthernetIP_Status : uint32_t
+enum EtherNetIP_Status : uint32_t
 {
    EIP_STATUS_SUCCESS = 0x00,
    EIP_STATUS_INVALID_UNSUPPORTED = 0x01,
@@ -131,9 +131,9 @@ enum EthernetIP_Status : uint32_t
 };
 
 /**
- * Ethernet/IP helper call status
+ * EtherNet/IP helper call status
  */
-enum EthernetIP_CallStatus
+enum EtherNetIP_CallStatus
 {
    EIP_CALL_SUCCESS = 0,
    EIP_CALL_CONNECT_FAILED = 1,
@@ -174,7 +174,7 @@ public:
 
    CIP_Command getCommand() const { return static_cast<CIP_Command>(CIP_UInt16Swap(m_header->command)); }
    uint32_t getSessionHandle() const { return CIP_UInt32Swap(m_header->sessionHandle); }
-   EthernetIP_Status getStatus() const { return static_cast<EthernetIP_Status>(CIP_UInt32Swap(m_header->status)); }
+   EtherNetIP_Status getStatus() const { return static_cast<EtherNetIP_Status>(CIP_UInt32Swap(m_header->status)); }
    size_t getSize() const { return m_dataSize + sizeof(CIP_EncapsulationHeader); }
    const uint8_t *getBytes() const { return m_bytes; }
 
@@ -207,9 +207,9 @@ public:
 };
 
 /**
- * EthernetIP message receiver
+ * EtherNet/IP message receiver
  */
-class LIBETHERNETIP_EXPORTABLE EthernetIP_MessageReceiver
+class LIBETHERNETIP_EXPORTABLE EtherNetIP_MessageReceiver
 {
 private:
    SOCKET m_socket;
@@ -221,8 +221,8 @@ private:
    CIP_Message *readMessageFromBuffer();
 
 public:
-   EthernetIP_MessageReceiver(SOCKET s);
-   ~EthernetIP_MessageReceiver();
+   EtherNetIP_MessageReceiver(SOCKET s);
+   ~EtherNetIP_MessageReceiver();
 
    CIP_Message *readMessage(uint32_t timeout);
 };
@@ -249,12 +249,12 @@ struct CIP_Identity
 /**
  * Helper function for reading device identity via Ethernet/IP
  */
-CIP_Identity LIBETHERNETIP_EXPORTABLE *EthernetIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EthernetIP_CallStatus *callStatus, EthernetIP_Status *eipStatus);
+CIP_Identity LIBETHERNETIP_EXPORTABLE *EtherNetIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EtherNetIP_CallStatus *callStatus, EtherNetIP_Status *eipStatus);
 
 /**** Utility functions ****/
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceTypeNameFromCode(int32_t code);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state);
-const TCHAR LIBETHERNETIP_EXPORTABLE *EthernetIP_StatusTextFromCode(EthernetIP_Status status);
+const TCHAR LIBETHERNETIP_EXPORTABLE *EtherNetIP_StatusTextFromCode(EtherNetIP_Status status);
 
 #endif   /* _ethernet_ip_h_ */

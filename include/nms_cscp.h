@@ -1348,6 +1348,9 @@ typedef struct
 #define VID_CIP_DEVICE_TYPE         ((UINT32)684)
 #define VID_CIP_STATUS              ((UINT32)685)
 #define VID_CIP_STATE               ((UINT32)686)
+#define VID_ETHERNET_IP_PROXY       ((UINT32)687)
+#define VID_ETHERNET_IP_PORT        ((UINT32)688)
+#define VID_CIP_DEVICE_TYPE_NAME    ((UINT32)689)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

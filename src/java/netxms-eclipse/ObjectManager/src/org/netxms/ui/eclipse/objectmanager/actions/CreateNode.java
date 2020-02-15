@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,15 +75,17 @@ public class CreateNode implements IObjectActionDelegate
          cd.setPrimaryName(dlg.getHostName());
          cd.setAgentPort(dlg.getAgentPort());
          cd.setSnmpPort(dlg.getSnmpPort());
+         cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
          cd.setAgentProxyId(dlg.getAgentProxy());
          cd.setSnmpProxyId(dlg.getSnmpProxy());
+         cd.setEtherNetIpProxyId(dlg.getEtherNetIpProxy());
          cd.setIcmpProxyId(dlg.getIcmpProxy());
          cd.setSshProxyId(dlg.getSshProxy());
          cd.setZoneUIN(dlg.getZoneUIN());
          cd.setSshLogin(dlg.getSshLogin());
          cd.setSshPassword(dlg.getSshPassword());
    		
-   		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
    		new ConsoleJob(Messages.get().CreateNode_JobTitle, part, Activator.PLUGIN_ID, null) {
    			@Override
    			protected void runInternal(IProgressMonitor monitor) throws Exception

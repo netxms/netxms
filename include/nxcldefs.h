@@ -228,6 +228,7 @@
 #define NF_AGENT_OVER_TUNNEL_ONLY 0x01000000
 #define NF_SNMP_SETTINGS_LOCKED   0x02000000
 #define NF_PING_PRIMARY_IP        0x04000000
+#define NF_DISABLE_ETHERNET_IP    0x08000000
 
 /**
  * Data Collection flags first half of int
@@ -266,6 +267,7 @@
  */
 #define NSF_AGENT_UNREACHABLE          0x00010000
 #define NSF_SNMP_UNREACHABLE           0x00020000
+#define NSF_ETHERNET_IP_UNREACHABLE    0x00040000
 #define NSF_CACHE_MODE_NOT_SUPPORTED   0x00080000
 
 /**
@@ -1070,12 +1072,13 @@ enum AggregationFunction
 /**
  * Node creation flags
  */
-#define NXC_NCF_DISABLE_ICMP      0x0001
-#define NXC_NCF_DISABLE_NXCP      0x0002
-#define NXC_NCF_DISABLE_SNMP      0x0004
-#define NXC_NCF_CREATE_UNMANAGED  0x0008
-#define NXC_NCF_ENTER_MAINTENANCE 0x0010
-#define NXC_NCF_AS_ZONE_PROXY     0x0020
+#define NXC_NCF_DISABLE_ICMP        0x0001
+#define NXC_NCF_DISABLE_NXCP        0x0002
+#define NXC_NCF_DISABLE_SNMP        0x0004
+#define NXC_NCF_CREATE_UNMANAGED    0x0008
+#define NXC_NCF_ENTER_MAINTENANCE   0x0010
+#define NXC_NCF_AS_ZONE_PROXY       0x0020
+#define NXC_NCF_DISABLE_ETHERNET_IP 0x0040
 
 /**
  * Agent data cache modes

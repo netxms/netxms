@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <agent_tunnel.h>
 #include <entity_mib.h>
+#include <ethernet_ip.h>
 
 #define DEBUG_TAG_CONF_POLL   _T("poll.conf")
 #define DEBUG_TAG_AGENT       _T("node.agent")
@@ -122,6 +123,7 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_pollerNode = 0;
    m_agentProxy = 0;
    m_snmpProxy = 0;
+   m_eipProxy = 0;
    m_icmpProxy = 0;
    memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
@@ -168,6 +170,7 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
    m_icmpStatCollectors = NULL;
    m_chassisPlacementConf = NULL;
+   m_eipPort = ETHERNET_IP_DEFAULT_PORT;
    m_cipDeviceType = 0;
    m_cipState = 0;
    m_cipStatus = 0;
@@ -235,6 +238,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_pollerNode = 0;
    m_agentProxy = newNodeData->agentProxyId;
    m_snmpProxy = newNodeData->snmpProxyId;
+   m_eipProxy = newNodeData->eipProxyId;
    m_icmpProxy = newNodeData->icmpProxyId;
    memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
@@ -284,6 +288,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_icmpStatCollectors = NULL;
    setCreationTime();
    m_chassisPlacementConf = NULL;
+   m_eipPort = newNodeData->eipPort;
    m_cipDeviceType = 0;
    m_cipState = 0;
    m_cipStatus = 0;
@@ -373,7 +378,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("rack_orientation,rack_image_rear,agent_id,agent_cert_subject,")
       _T("hypervisor_type,hypervisor_info,icmp_poll_mode,chassis_placement_config,")
       _T("vendor,product_code,product_name,product_version,serial_number,")
-      _T("cip_device_type,cip_status,cip_state")
+      _T("cip_device_type,cip_status,cip_state,eip_proxy,eip_port")
       _T(" FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
@@ -515,6 +520,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_cipDeviceType = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 64));
    m_cipStatus = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 65));
    m_cipState = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 66));
+   m_eipProxy = DBGetFieldULong(hResult, 0, 67);
+   m_eipPort = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 68));
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -848,7 +855,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
-         _T("cip_status"), _T("cip_state"),
+         _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"),
          NULL
       };
 
@@ -948,7 +955,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 65, DB_SQLTYPE_INTEGER, m_cipDeviceType);
          DBBind(hStmt, 66, DB_SQLTYPE_INTEGER, m_cipStatus);
          DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_cipState);
-         DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_eipProxy);
+         DBBind(hStmt, 69, DB_SQLTYPE_INTEGER, m_eipPort);
+         DBBind(hStmt, 70, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -3326,6 +3335,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       POLL_CANCELLATION_CHECKPOINT();
 
+      if (confPollEthernetIP(rqId))
+         modified |= MODIFY_NODE_PROPERTIES;
+
+      POLL_CANCELLATION_CHECKPOINT();
+
       // Generate event if node flags has been changed
       if (oldCapabilities != m_capabilities)
       {
@@ -3961,18 +3975,130 @@ bool Node::confPollAgent(UINT32 rqId)
 }
 
 /**
+ * Configuration poll: check for Ethernet/IP
+ */
+bool Node::confPollEthernetIP(uint32_t requestId)
+{
+   if (((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE)) ||
+       !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_ETHERNET_IP))
+      return false;
+
+   bool hasChanges = false;
+
+   sendPollerMsg(requestId, _T("   Checking EtherNet/IP...\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking EtherNet/IP"), m_name);
+
+   CIP_Identity *identity = nullptr;
+   EtherNetIP_CallStatus callStatus;
+   EtherNetIP_Status eipStatus = EIP_STATUS_SUCCESS;
+
+   uint32_t eipProxy = getEffectiveEtherNetIPProxy();
+   if (eipProxy != 0)
+   {
+      // TODO: implement proxy request
+   }
+   else
+   {
+      identity = EtherNetIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &callStatus, &eipStatus);
+   }
+
+   if (identity != nullptr)
+   {
+      const TCHAR *vendorName = CIP_VendorNameFromCode(identity->vendor);
+
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): EtherNet/IP device - %s by %s"), m_name,
+               CIP_DeviceTypeNameFromCode(identity->deviceType), vendorName);
+      sendPollerMsg(requestId, _T("   EtherNet/IP connection established\r\n"));
+      sendPollerMsg(requestId, _T("      Device type: %s\r\n"), CIP_DeviceTypeNameFromCode(identity->deviceType));
+      sendPollerMsg(requestId, _T("      Vendor: %s\r\n"), vendorName);
+      sendPollerMsg(requestId, _T("      Product: %s\r\n"), identity->productName);
+
+      lockProperties();
+      m_capabilities |= NC_IS_ETHERNET_IP;
+      if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
+      {
+         m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
+         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, NULL);
+         sendPollerMsg(requestId, POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
+      }
+
+      if (_tcscmp(m_vendor, vendorName))
+      {
+         m_vendor = vendorName;
+         hasChanges = true;
+      }
+
+      if (_tcscmp(m_productName, identity->productName))
+      {
+         m_productName = identity->productName;
+         hasChanges = true;
+      }
+
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, _T("%u.%u"), identity->productRevisionMajor, identity->productRevisionMinor);
+      if (_tcscmp(m_productVersion, buffer))
+      {
+         m_productVersion = buffer;
+         hasChanges = true;
+      }
+
+      _sntprintf(buffer, 64, _T("%04X"), identity->productCode);
+      if (_tcscmp(m_productCode, buffer))
+      {
+         m_productCode = buffer;
+         hasChanges = true;
+      }
+
+      _sntprintf(buffer, 64, _T("%08X"), identity->serialNumber);
+      if (_tcscmp(m_serialNumber, buffer))
+      {
+         m_serialNumber = buffer;
+         hasChanges = true;
+      }
+
+      if (m_cipDeviceType != identity->deviceType)
+      {
+         m_cipDeviceType = identity->deviceType;
+         hasChanges = true;
+      }
+
+      if (m_cipStatus != identity->status)
+      {
+         m_cipStatus = identity->status;
+         hasChanges = true;
+      }
+
+      if (m_cipState != identity->state)
+      {
+         m_cipState = identity->state;
+         hasChanges = true;
+      }
+
+      unlockProperties();
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for EtherNet/IP - failed to get device identity (status %d/%d)"), m_name, callStatus, eipStatus);
+      sendPollerMsg(requestId, POLLER_ERROR _T("   Cannot get device identity via EtherNet/IP\r\n"));
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): check for EtherNet/IP completed"), m_name);
+   return hasChanges;
+}
+
+/**
  * SNMP walker callback which sets indicator to true after first varbind and aborts walk
  */
 static UINT32 IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-   (*((bool *)arg)) = true;
+   *static_cast<bool*>(arg) = true;
    return SNMP_ERR_COMM;
 }
 
 /**
  * Configuration poll: check for SNMP
  */
-bool Node::confPollSnmp(UINT32 rqId)
+bool Node::confPollSnmp(uint32_t rqId)
 {
    if (((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_SNMP))
@@ -6241,6 +6367,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
    pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
    pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
+   pMsg->setField(VID_ETHERNET_IP_PROXY, m_eipProxy);
    pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
    pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
    pMsg->setField(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
@@ -6300,7 +6427,10 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    for(int i = 0; i < m_icmpTargets.size(); i++)
       pMsg->setField(fieldId++, m_icmpTargets.get(i));
 
+   pMsg->setField(VID_ETHERNET_IP_PORT, m_eipPort);
    pMsg->setField(VID_CIP_DEVICE_TYPE, m_cipDeviceType);
+   if (m_capabilities & NC_IS_ETHERNET_IP)
+      pMsg->setField(VID_CIP_DEVICE_TYPE_NAME, CIP_DeviceTypeNameFromCode(m_cipDeviceType));
    pMsg->setField(VID_CIP_STATUS, m_cipStatus);
    pMsg->setField(VID_CIP_STATE, m_cipState);
 }
@@ -7553,9 +7683,9 @@ Cluster *Node::getMyCluster()
 /**
  * Get effective SNMP proxy for this node
  */
-UINT32 Node::getEffectiveSnmpProxy(bool backup)
+uint32_t Node::getEffectiveSnmpProxy(bool backup)
 {
-   UINT32 snmpProxy = backup ? 0 : m_snmpProxy;
+   uint32_t snmpProxy = backup ? 0 : m_snmpProxy;
    if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneUIN != 0))
    {
       // Use zone default proxy if set
@@ -7569,11 +7699,29 @@ UINT32 Node::getEffectiveSnmpProxy(bool backup)
 }
 
 /**
+ * Get effective EtherNet/IP proxy for this node
+ */
+uint32_t Node::getEffectiveEtherNetIPProxy(bool backup)
+{
+   uint32_t eipProxy = backup ? 0 : m_eipProxy;
+   if (IsZoningEnabled() && (eipProxy == 0) && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         eipProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this, backup);
+      }
+   }
+   return eipProxy;
+}
+
+/**
  * Get effective SSH proxy for this node
  */
-UINT32 Node::getEffectiveSshProxy()
+uint32_t Node::getEffectiveSshProxy()
 {
-   UINT32 sshProxy = m_sshProxy;
+   uint32_t sshProxy = m_sshProxy;
    if (IsZoningEnabled() && (sshProxy == 0) && (m_zoneUIN != 0))
    {
       // Use zone default proxy if set
@@ -7589,9 +7737,9 @@ UINT32 Node::getEffectiveSshProxy()
 /**
  * Get effective ICMP proxy for this node
  */
-UINT32 Node::getEffectiveIcmpProxy()
+uint32_t Node::getEffectiveIcmpProxy()
 {
-   UINT32 icmpProxy = m_icmpProxy;
+   uint32_t icmpProxy = m_icmpProxy;
    if (IsZoningEnabled() && (icmpProxy == 0) && (m_zoneUIN != 0))
    {
       // Use zone default proxy if set
@@ -7607,9 +7755,9 @@ UINT32 Node::getEffectiveIcmpProxy()
 /**
  * Get effective Agent proxy for this node
  */
-UINT32 Node::getEffectiveAgentProxy()
+uint32_t Node::getEffectiveAgentProxy()
 {
-   UINT32 agentProxy = m_agentProxy;
+   uint32_t agentProxy = m_agentProxy;
    if (IsZoningEnabled() && (agentProxy == 0) && (m_zoneUIN != 0))
    {
       // Use zone default proxy if set

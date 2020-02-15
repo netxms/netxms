@@ -26,7 +26,7 @@
 /**
  * Send request to device and wait for response
  */
-static CIP_Message *DoRequest(SOCKET s, const CIP_Message &request, uint32_t timeout, EthernetIP_CallStatus *callStatus, EthernetIP_Status *eipStatus)
+static CIP_Message *DoRequest(SOCKET s, const CIP_Message &request, uint32_t timeout, EtherNetIP_CallStatus *callStatus, EtherNetIP_Status *eipStatus)
 {
    size_t bytes = request.getSize();
    if (SendEx(s, request.getBytes(), bytes, 0, nullptr) != bytes)
@@ -35,7 +35,7 @@ static CIP_Message *DoRequest(SOCKET s, const CIP_Message &request, uint32_t tim
       return nullptr;
    }
 
-   EthernetIP_MessageReceiver receiver(s);
+   EtherNetIP_MessageReceiver receiver(s);
    CIP_Message *response = receiver.readMessage(timeout);
    if (response == nullptr)
    {
@@ -64,7 +64,7 @@ static CIP_Message *DoRequest(SOCKET s, const CIP_Message &request, uint32_t tim
 /**
  * Helper function for reading device identity via Ethernet/IP
  */
-CIP_Identity LIBETHERNETIP_EXPORTABLE *EthernetIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EthernetIP_CallStatus *callStatus, EthernetIP_Status *eipStatus)
+CIP_Identity LIBETHERNETIP_EXPORTABLE *EtherNetIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EtherNetIP_CallStatus *callStatus, EtherNetIP_Status *eipStatus)
 {
    SOCKET s = ConnectToHost(addr, port, timeout);
    if (s == INVALID_SOCKET)

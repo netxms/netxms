@@ -149,6 +149,8 @@ public class GeneralInfo extends TableElement
             addPair(Messages.get().GeneralInfo_HypervisorType, node.getHypervisorType(), false);
             addPair(Messages.get().GeneralInfo_HypervisorInformation, node.getHypervisorInformation(), false);
             addPair(Messages.get().SensorStatus_Vendor, node.getHardwareVendor(), false);
+            if ((node.getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0)
+               addPair("Device type", node.getCipDeviceTypeName(), false);
             addPair("Product name", node.getHardwareProductName(), false);
             addPair("Product code", node.getHardwareProductCode(), false);
             addPair("Product version", node.getHardwareProductVersion(), false);
