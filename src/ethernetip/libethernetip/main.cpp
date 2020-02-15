@@ -1400,6 +1400,21 @@ static CodeLookupElement s_deviceTypeLookupTable[] =
 };
 
 /**
+ * Status codes
+ */
+static CodeLookupElement s_statusLookupTable[] =
+{
+   { 0x00, _T("SUCCESS") },
+   { 0x01, _T("INVALID UNSUPPORTED") },
+   { 0x02, _T("INSUFFICIENT MEMORY") },
+   { 0x03, _T("MALFORMED DATA") },
+   { 0x64, _T("INVALID SESSION HANDLE") },
+   { 0x65, _T("INVALID LENGTH") },
+   { 0x69, _T("UNSUPPORTED PROTOCOL VERSION") },
+   { 0, nullptr }
+};
+
+/**
  * Get vendor name from CIP code
  */
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code)
@@ -1413,6 +1428,14 @@ const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code)
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceTypeNameFromCode(int32_t code)
 {
    return CodeToText(code, s_deviceTypeLookupTable, _T("Unknown"));
+}
+
+/**
+ * Get status text from code
+ */
+const TCHAR LIBETHERNETIP_EXPORTABLE *EthernetIP_StatusTextFromCode(EthernetIP_Status status)
+{
+   return CodeToText(static_cast<int32_t>(status), s_statusLookupTable, _T("UNKNOWN"));
 }
 
 #ifdef _WIN32

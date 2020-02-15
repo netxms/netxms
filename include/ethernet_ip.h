@@ -76,7 +76,7 @@ struct CIP_EncapsulationHeader
    uint16_t length;
    uint32_t sessionHandle;
    uint32_t status;
-   uint8_t context[8];
+   uint64_t context;
    uint32_t options;
 };
 
@@ -91,7 +91,7 @@ struct CIP_EncapsulationHeader
 /**
  * CIP commands
  */
-enum CIP_Command
+enum CIP_Command : uint16_t
 {
    CIP_NOOP = 0x0000,
    CIP_LIST_SERVICES = 0x0004,
@@ -101,6 +101,20 @@ enum CIP_Command
    CIP_UNREGISTER_SESSION = 0x0066,
    CIP_SEND_RR_DATA = 0x006F,
    CIP_SEND_UNIT_DATA = 0x0070
+};
+
+/**
+ * Ethernet/IP status codes
+ */
+enum EthernetIP_Status : uint32_t
+{
+   EIP_STATUS_SUCCESS = 0x00,
+   EIP_STATUS_INVALID_UNSUPPORTED = 0x01,
+   EIP_STATUS_INSUFFICIENT_MEMORY = 0x02,
+   EIP_STATUS_MALFORMED_DATA = 0x03,
+   EIP_STATUS_INVALID_SESSION_HANDLE =0x64,
+   EIP_STATUS_INVALID_LENGTH = 0x65,
+   EIP_STATUS_UNSUPPORTED_PROTOCOL_VERSION = 0x69
 };
 
 /**
@@ -134,7 +148,7 @@ public:
 
    CIP_Command getCommand() const { return static_cast<CIP_Command>(CIP_UInt16Swap(m_header->command)); }
    uint32_t getSessionHandle() const { return CIP_UInt32Swap(m_header->sessionHandle); }
-   uint32_t getStatus() const { return CIP_UInt32Swap(m_header->status); }
+   EthernetIP_Status getStatus() const { return static_cast<EthernetIP_Status>(CIP_UInt32Swap(m_header->status)); }
    size_t getSize() const { return m_dataSize + sizeof(CIP_EncapsulationHeader); }
    const uint8_t *getBytes() const { return m_bytes; }
 
@@ -190,5 +204,6 @@ public:
 /**** Utility functions ****/
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceTypeNameFromCode(int32_t code);
+const TCHAR LIBETHERNETIP_EXPORTABLE *EthernetIP_StatusTextFromCode(EthernetIP_Status status);
 
 #endif   /* _ethernet_ip_h_ */

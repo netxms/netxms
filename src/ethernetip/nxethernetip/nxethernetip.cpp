@@ -113,6 +113,13 @@ static bool ListIdentity()
       return false;
    }
 
+   _tprintf(_T("Status: %02X (%s)\n"), response->getStatus(), EthernetIP_StatusTextFromCode(response->getStatus()));
+   if (response->getStatus() != EIP_STATUS_SUCCESS)
+   {
+      delete response;
+      return false;
+   }
+
    _tprintf(_T("%d item%s in response message\n\n"), response->getItemCount(), response->getItemCount() == 1 ? _T("") : _T("s"));
 
    CPF_Item item;
