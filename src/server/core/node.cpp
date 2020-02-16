@@ -2196,7 +2196,7 @@ restart_agent_check:
          m_cipState = identity->state;
          m_cipStatus = identity->status;
 
-         delete identity;
+         MemFree(identity);
       }
       else
       {
@@ -4182,6 +4182,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
       }
 
       unlockProperties();
+      MemFree(identity);
    }
    else
    {
