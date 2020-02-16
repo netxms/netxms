@@ -404,6 +404,9 @@
       <Project>{f3e29541-3a0e-45ec-8bec-e193f2401622}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\ethernetip\libethernetip\libethernetip.vcxproj">
+      <Project>{11a90214-e31c-5f19-8f0e-81f10e1091fb}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\jansson\jansson.vcxproj">
       <Project>{12d6e037-84d8-406a-8a9b-3e00d3e0d426}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
