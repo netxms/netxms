@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -70,7 +70,7 @@ SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name) : m_name(name)
 SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
 {
    m_valueLength = src->m_valueLength;
-   m_value = (src->m_value != NULL) ? (BYTE *)nx_memdup(src->m_value, src->m_valueLength) : NULL;
+   m_value = (src->m_value != NULL) ? MemCopyBlock(src->m_value, src->m_valueLength) : NULL;
    m_type = src->m_type;
    m_name = src->m_name;
 }
@@ -150,7 +150,7 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
                break;
             default:
                m_valueLength = length;
-               m_value = (BYTE *)nx_memdup(pbCurrPos, length);
+               m_value = MemCopyBlock(pbCurrPos, length);
                bResult = TRUE;
                break;
          }
@@ -530,19 +530,19 @@ void SNMP_Variable::setValueFromString(UINT32 type, const TCHAR *value)
          *((UINT32 *)m_value) = _t_inet_addr(value);
          break;
       case ASN_OBJECT_ID:
-         pdwBuffer = (UINT32 *)malloc(sizeof(UINT32) * 256);
+         pdwBuffer = MemAllocArrayNoInit<UINT32>(256);
          length = SNMPParseOID(value, pdwBuffer, 256);
          if (length > 0)
          {
             m_valueLength = length * sizeof(UINT32);
             MemFree(m_value);
-            m_value = (BYTE *)nx_memdup(pdwBuffer, m_valueLength);
+            m_value = reinterpret_cast<BYTE*>(MemCopyBlock(pdwBuffer, m_valueLength));
          }
          else
          {
             // OID parse error, set to .ccitt.zeroDotZero (.0.0)
             m_valueLength = sizeof(UINT32) * 2;
-            m_value = (BYTE *)realloc(m_value, m_valueLength);
+            m_value = (BYTE *)MemRealloc(m_value, m_valueLength);
             memset(m_value, 0, m_valueLength);
          }
          break;

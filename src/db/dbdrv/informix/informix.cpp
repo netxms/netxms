@@ -404,7 +404,7 @@ extern "C" void __EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sql
          }
          else
          {
-            sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+            sqlBuffer = MemCopyBlock(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
          }
 			statement->buffers->add(sqlBuffer);
 			break;

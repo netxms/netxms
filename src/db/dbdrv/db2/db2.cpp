@@ -440,7 +440,7 @@ extern "C" void __EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlTy
          }
          else
          {
-            sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+            sqlBuffer = MemCopyBlock(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
          }
 #else
 			if (cType == DB_CTYPE_STRING)
@@ -454,7 +454,7 @@ extern "C" void __EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlTy
          }
 			else
 			{
-				sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+				sqlBuffer = MemCopyBlock(buffer, bufferSize[cType]);
 			}
 #endif
 			statement->buffers->add(sqlBuffer);

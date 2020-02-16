@@ -463,7 +463,7 @@ extern "C" void __EXPORT DrvBind(MARIADB_STATEMENT *hStmt, int pos, int sqlType,
 				hStmt->buffers->add(buffer);
 				break;
 			case DB_BIND_TRANSIENT:
-				b->buffer = nx_memdup(buffer, bufferSize[cType]);
+				b->buffer = MemCopyBlock(buffer, bufferSize[cType]);
 				hStmt->buffers->add(b->buffer);
 				break;
 			default:

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -213,11 +213,11 @@ DECLARE_SUBAGENT_ENTRY_POINT(DBQUERY)
    AddParameters(parameters, parametersTable, config);
 
    m_info.numParameters = parameters->size();
-   m_info.parameters = nx_memdup(parameters->getBuffer(),
+   m_info.parameters = MemCopyBlock(parameters->getBuffer(),
                      parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
 
    m_info.numTables = parametersTable->size();
-   m_info.tables = nx_memdup(parametersTable->getBuffer(),
+   m_info.tables = MemCopyBlock(parametersTable->getBuffer(),
                      parametersTable->size() * sizeof(NETXMS_SUBAGENT_TABLE));
 
    delete parameters;

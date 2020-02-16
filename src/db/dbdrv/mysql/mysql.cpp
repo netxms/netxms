@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -388,7 +388,7 @@ extern "C" void __EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, i
 				hStmt->buffers->add(buffer);
 				break;
 			case DB_BIND_TRANSIENT:
-				b->buffer = nx_memdup(buffer, bufferSize[cType]);
+				b->buffer = MemCopyBlock(buffer, bufferSize[cType]);
 				hStmt->buffers->add(b->buffer);
 				break;
 			default:

@@ -610,7 +610,7 @@ static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, 
 				   stmt->buffers->set(pos - 1, buffer);
 				   break;
 			   case DB_BIND_TRANSIENT:
-				   sqlBuffer = nx_memdup(buffer, s_bufferSize[cType]);
+				   sqlBuffer = MemCopyBlock(buffer, s_bufferSize[cType]);
 				   stmt->buffers->set(pos - 1, sqlBuffer);
 				   break;
 			   default:
@@ -1102,7 +1102,7 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 				{
 					if (pBuffers[i].isNull)
 					{
-						pResult->pData[nPos] = (WCHAR *)nx_memdup("\0\0\0", sizeof(WCHAR));
+						pResult->pData[nPos] = (WCHAR *)MemCopyBlock("\0\0\0", sizeof(WCHAR));
 					}
                else if (pBuffers[i].lobLocator != NULL)
                {

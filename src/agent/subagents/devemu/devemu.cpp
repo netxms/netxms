@@ -1,6 +1,6 @@
 /**
  ** Device Emulation subagent
- ** Copyright (C) 2014-2018 Raden Solutions
+ ** Copyright (C) 2014-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -179,7 +179,7 @@ static bool LoadConfiguration(bool initial)
       if (initial)
       {
          m_info.numParameters = parameters->size();
-         m_info.parameters = nx_memdup(parameters->getBuffer(),
+         m_info.parameters = MemCopyBlock(parameters->getBuffer(),
                            parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
          delete parameters;
       }
@@ -257,7 +257,7 @@ static bool LoadConfiguration(bool initial)
    if (initial)
    {
       m_info.numParameters = parameters->size();
-      m_info.parameters = nx_memdup(parameters->getBuffer(),
+      m_info.parameters = MemCopyBlock(parameters->getBuffer(),
                           parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
       delete parameters;
    }

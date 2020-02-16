@@ -1,6 +1,6 @@
 /* 
 ** MS SQL Database Driver
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -381,14 +381,14 @@ extern "C" void __EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, in
          }
          else
          {
-            sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+            sqlBuffer = MemCopyBlock(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
          }
-			stmt->buffers->add(sqlBuffer);
-			break;
-		default:
-			return;	// Invalid call
-	}
-	SQLBindParameter(stmt->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType], length, 0, sqlBuffer, 0, NULL);
+         stmt->buffers->add(sqlBuffer);
+         break;
+      default:
+         return;	// Invalid call
+   }
+   SQLBindParameter(stmt->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType], length, 0, sqlBuffer, 0, NULL);
 }
 
 /**

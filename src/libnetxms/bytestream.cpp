@@ -44,7 +44,7 @@ ByteStream::ByteStream(const void *data, size_t size)
    m_size = size;
    m_pos = 0;
    m_allocationStep = 4096;
-   m_data = (m_allocated > 0) ? (BYTE *)nx_memdup(data, size) : NULL;
+   m_data = (m_allocated > 0) ? static_cast<BYTE*>(MemCopyBlock(data, size)) : NULL;
 }
 
 /**

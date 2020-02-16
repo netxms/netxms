@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -519,7 +519,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 
    // Init parameters list
    m_info.numParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
-   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(m_parameters, sizeof(m_parameters));
+   m_info.parameters = MemCopyBlock(m_parameters, sizeof(m_parameters));
 
 	// Check counter names for H_CounterAlias
    TCHAR *newName;

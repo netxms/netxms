@@ -103,7 +103,7 @@ void HashSetBase::_put(const void *key)
    if (m_keylen <= 16)
       memcpy(entry->key.d, key, m_keylen);
    else
-      entry->key.p = nx_memdup(key, m_keylen);
+      entry->key.p = MemCopyBlock(key, m_keylen);
    HASH_ADD_KEYPTR(hh, m_data, GET_KEY(entry), m_keylen, entry);
 }
 

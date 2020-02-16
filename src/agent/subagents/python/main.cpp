@@ -1,6 +1,6 @@
 /*
  ** Python integration subagent
- ** Copyright (C) 2006-2018 Raden Solutions
+ ** Copyright (C) 2006-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -99,15 +99,15 @@ DECLARE_SUBAGENT_ENTRY_POINT(PYTHON)
    RegisterPlugins(parameters, lists, config);
 
    m_info.numParameters = parameters->size();
-   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(), parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+   m_info.parameters = MemCopyArray(parameters->getBuffer(), parameters->size());
    m_info.numLists = lists->size();
-   m_info.lists = (NETXMS_SUBAGENT_LIST *)nx_memdup(lists->getBuffer(), lists->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+   m_info.lists = MemCopyArray(lists->getBuffer(), lists->size());
 
    delete parameters;
    delete lists;
 
-	*ppInfo = &m_info;
-	return true;
+   *ppInfo = &m_info;
+   return true;
 }
 
 #ifdef _WIN32

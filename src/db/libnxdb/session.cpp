@@ -1375,7 +1375,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const T
          }
          else
          {
-            TCHAR *temp = (TCHAR *)nx_memdup(value, sizeof(TCHAR) * (maxLen + 1));
+            TCHAR *temp = MemCopyBlock(value, sizeof(TCHAR) * (maxLen + 1));
             temp[maxLen] = 0;
    		   DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, temp, DB_BIND_DYNAMIC);
          }

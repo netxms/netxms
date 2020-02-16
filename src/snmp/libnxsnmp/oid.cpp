@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -38,7 +38,7 @@ SNMP_ObjectId::SNMP_ObjectId()
 SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &src)
 {
    m_length = src.m_length;
-   m_value = (UINT32 *)nx_memdup(src.m_value, sizeof(UINT32) * m_length);
+   m_value = MemCopyArray(src.m_value, m_length);
 }
 
 /**
@@ -47,7 +47,7 @@ SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &src)
 SNMP_ObjectId::SNMP_ObjectId(const UINT32 *value, size_t length)
 {
    m_length = (UINT32)length;
-   m_value = (UINT32 *)nx_memdup(value, sizeof(UINT32) * length);
+   m_value = MemCopyArray(value, length);
 }
 
 /**
@@ -67,7 +67,7 @@ SNMP_ObjectId& SNMP_ObjectId::operator =(const SNMP_ObjectId &src)
       return *this;
    free(m_value);
    m_length = src.m_length;
-   m_value = (UINT32 *)nx_memdup(src.m_value, sizeof(UINT32) * m_length);
+   m_value = MemCopyArray(src.m_value, m_length);
    return *this;
 }
 
@@ -140,7 +140,7 @@ void SNMP_ObjectId::setValue(const UINT32 *value, size_t length)
 {
    free(m_value);
    m_length = (UINT32)length;
-   m_value = (UINT32 *)nx_memdup(value, sizeof(UINT32) * length);
+   m_value = MemCopyArray(value, length);
 }
 
 /**

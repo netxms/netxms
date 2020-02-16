@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public:
 
    QueuedSyslogMessage(const InetAddress& addr, const char *msg, int msgLen) : sourceAddr(addr)
    {
-      message = (char *)nx_memdup(msg, msgLen + 1);
+      message = MemCopyBlock(msg, msgLen + 1);
       messageLength = msgLen;
       timestamp = time(NULL);
       zoneUIN = 0;
@@ -55,7 +55,7 @@ public:
 
    QueuedSyslogMessage(const InetAddress& addr, time_t t, UINT32 zuin, UINT32 nid, const char *msg, int msgLen) : sourceAddr(addr)
    {
-      message = (char *)nx_memdup(msg, msgLen + 1);
+      message = MemCopyBlock(msg, msgLen + 1);
       messageLength = msgLen;
       timestamp = t;
       zoneUIN = zuin;
@@ -464,7 +464,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
       record.qwMsgId = s_msgId++;
       Node *node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneUIN, msg->nodeId);
 
-      g_syslogWriteQueue.put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
+      g_syslogWriteQueue.put(MemCopyBlock(&record, sizeof(NX_SYSLOG_RECORD)));
 
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);

@@ -215,7 +215,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          if (l > 0)
          {
             m_ifTableSuffixLen = (int)l;
-            m_ifTableSuffix = (UINT32 *)nx_memdup(suffix, l * sizeof(UINT32));
+            m_ifTableSuffix = MemCopyArray(suffix, l);
          }
       }
 

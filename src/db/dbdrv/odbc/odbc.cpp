@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -461,7 +461,7 @@ extern "C" void __EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, 
             }
             else
             {
-               sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+               sqlBuffer = MemCopyBlock(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
             }
 #else
 				if (cType == DB_CTYPE_STRING)
@@ -475,7 +475,7 @@ extern "C" void __EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, 
             }
 				else
 				{
-					sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+					sqlBuffer = MemCopyBlock(buffer, bufferSize[cType]);
 				}
 #endif
 			}
@@ -492,7 +492,7 @@ extern "C" void __EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, 
             }
 				else
 				{
-					sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+					sqlBuffer = MemCopyBlock(buffer, bufferSize[cType]);
 				}
 			}
 			stmt->buffers->add(sqlBuffer);

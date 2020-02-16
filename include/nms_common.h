@@ -1296,8 +1296,6 @@ template<typename T> T *MemCopyArray(const T *data, size_t count)
 
 #endif
 
-#define nx_memdup MemCopyBlock
-
 /******* C string copy functions *******/
 
 #ifdef __cplusplus

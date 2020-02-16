@@ -359,7 +359,7 @@ void AgentConnection::receiverThread()
             debugPrintf(6, _T("Received control message %s from agent at %s"),
                NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)m_addr.toString());
          }
-         m_pMsgWaitQueue->put((NXCP_MESSAGE *)nx_memdup(rawMsg, ntohl(rawMsg->size)));
+         m_pMsgWaitQueue->put(MemCopyBlock(rawMsg, ntohl(rawMsg->size)));
       }
       else
       {

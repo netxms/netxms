@@ -502,7 +502,7 @@ bool CommSession::sendMessage(const NXCPMessage *msg)
  */
 bool CommSession::sendRawMessage(const NXCP_MESSAGE *msg)
 {
-   return sendRawMessage(nx_memdup(msg, ntohl(msg->size)), m_pCtx);
+   return sendRawMessage(MemCopyBlock(msg, ntohl(msg->size)), m_pCtx);
 }
 
 /**
@@ -524,7 +524,7 @@ void CommSession::postRawMessage(const NXCP_MESSAGE *msg)
    if (m_disconnected)
       return;
    incRefCount();
-   ThreadPoolExecuteSerialized(g_commThreadPool, m_key, this, &CommSession::sendMessageInBackground, nx_memdup(msg, ntohl(msg->size)));
+   ThreadPoolExecuteSerialized(g_commThreadPool, m_key, this, &CommSession::sendMessageInBackground, MemCopyBlock(msg, ntohl(msg->size)));
 }
 
 /**
