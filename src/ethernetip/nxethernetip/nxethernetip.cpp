@@ -184,6 +184,19 @@ static bool ListServices()
    if (response == nullptr)
       return false;
 
+   CPF_Item item;
+   while(response->nextItem(&item))
+   {
+      if (item.length < 20)
+         continue;   // Invalid length
+
+      char svcName[17];
+      memcpy(svcName, &item.data[4], 16);
+      svcName[16] = 0;
+
+      _tprintf(_T("Type %04X Flags %04X - %hs\n"), item.type, response->readDataAsUInt16(item.offset + 2), svcName);
+   }
+
    delete response;
    return true;
 }
