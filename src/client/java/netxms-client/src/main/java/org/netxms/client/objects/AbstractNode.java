@@ -171,8 +171,11 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    protected int cipDeviceType;
    protected String cipDeviceTypeName;
    protected int cipStatus;
+   protected String cipStatusText;
+   protected String cipExtendedStatusText;
    protected int cipState;
-	
+   protected String cipStateText;
+
 	/**
 	 * Create new node object.
 	 * 
@@ -264,7 +267,10 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       cipDeviceType = msg.getFieldAsInt32(NXCPCodes.VID_CIP_DEVICE_TYPE);
       cipDeviceTypeName = msg.getFieldAsString(NXCPCodes.VID_CIP_DEVICE_TYPE_NAME);
       cipStatus = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATUS);
+      cipStatusText = msg.getFieldAsString(NXCPCodes.VID_CIP_STATUS_TEXT);
+      cipExtendedStatusText = msg.getFieldAsString(NXCPCodes.VID_CIP_EXT_STATUS_TEXT);
       cipState = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATE);
+      cipStateText = msg.getFieldAsString(NXCPCodes.VID_CIP_STATE_TEXT);
       
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -978,11 +984,35 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    }
 
    /**
+    * @return the cipStatusText
+    */
+   public String getCipStatusText()
+   {
+      return cipStatusText;
+   }
+
+   /**
+    * @return the cipExtendedStatusText
+    */
+   public String getCipExtendedStatusText()
+   {
+      return cipExtendedStatusText;
+   }
+
+   /**
     * @return the cipState
     */
    public int getCipState()
    {
       return cipState;
+   }
+
+   /**
+    * @return the cipStateText
+    */
+   public String getCipStateText()
+   {
+      return cipStateText;
    }
 
    /**

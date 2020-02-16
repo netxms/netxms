@@ -153,7 +153,13 @@ static bool ListIdentity()
       _tprintf(_T("Product revision.....: %u.%u\n"), response->readDataAsUInt8(item.offset + 24), response->readDataAsUInt8(item.offset + 25));
       _tprintf(_T("Serial number........: %08X\n"), response->readDataAsUInt32(item.offset + 28));
 
-      _tprintf(_T("Status...............: %04X\n"), response->readDataAsUInt16(item.offset + 26));
+      uint16_t status = response->readDataAsUInt16(item.offset + 26);
+      _tprintf(_T("Status...............: %04X (%s)\n"), status, CIP_DecodeDeviceStatus(status).cstr());
+      if ((status & CIP_DEVICE_STATUS_EXTENDED_STATUS_MASK) != 0)
+      {
+         _tprintf(_T("Extended status......: %s\n"), CIP_DecodeExtendedDeviceStatus(status));
+      }
+
       uint8_t state = response->readDataAsUInt8(item.offset + 33 + _tcslen(productName));
       _tprintf(_T("State................: %u (%s)\n"), state, CIP_DeviceStateTextFromCode(state));
    }

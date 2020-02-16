@@ -89,7 +89,7 @@ struct CIP_EncapsulationHeader
 #endif
 
 /**
- * CIP commands
+ * CIP encapsulation commands
  */
 enum CIP_Command : uint16_t
 {
@@ -116,6 +116,35 @@ enum CIP_DeviceState
    CIP_DEVICE_STATE_OPERATIONAL = 3,
    CIP_DEVICE_STATE_MAJOR_RECOVERABLE_FAULT = 4,
    CIP_DEVICE_STATE_MAJOR_UNRECOVERABLE_FAULT = 5
+};
+
+/**
+ * CIP device status
+ */
+enum CIP_DeviceStatus : uint16_t
+{
+   CIP_DEVICE_STATUS_OWNED = 0x0001,
+   CIP_DEVICE_STATUS_CONFIGURED = 0x0004,
+   CIP_DEVICE_STATUS_MINOR_RECOVERABLE_FAULT = 0x0100,
+   CIP_DEVICE_STATUS_MINOR_UNRECOVERABLE_FAULT = 0x0200,
+   CIP_DEVICE_STATUS_MAJOR_RECOVERABLE_FAULT = 0x0400,
+   CIP_DEVICE_STATUS_MAJOR_UNRECOVERABLE_FAULT = 0x0800,
+   CIP_DEVICE_STATUS_EXTENDED_STATUS_MASK = 0x00F0
+};
+
+/**
+ * CIP extended device status
+ */
+enum CIP_ExtendedDeviceStatus
+{
+   CIP_EXT_DEVICE_STATUS_UNKNOWN = 0,
+   CIP_EXT_DEVICE_STATUS_FIRMWARE_UPDATE = 1,
+   CIP_EXT_DEVICE_STATUS_IO_FAULT = 2,
+   CIP_EXT_DEVICE_STATUS_NO_IO_CONNECTION = 3,
+   CIP_EXT_DEVICE_STATUS_BAD_NVRAM = 4,
+   CIP_EXT_DEVICE_STATUS_MAJOR_FAULT = 5,
+   CIP_EXT_DEVICE_STATUS_IO_RUN = 6,
+   CIP_EXT_DEVICE_STATUS_IO_IDLE = 7
 };
 
 /**
@@ -258,5 +287,7 @@ const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceTypeNameFromCode(int32_t code);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state);
 const TCHAR LIBETHERNETIP_EXPORTABLE *EtherNetIP_StatusTextFromCode(EtherNetIP_Status status);
+String LIBETHERNETIP_EXPORTABLE CIP_DecodeDeviceStatus(uint16_t status);
+const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DecodeExtendedDeviceStatus(uint16_t status);
 
 #endif   /* _ethernet_ip_h_ */

@@ -1121,6 +1121,9 @@ public class NXCPCodes
    public static final long VID_ETHERNET_IP_PROXY = 687;
    public static final long VID_ETHERNET_IP_PORT = 688;
    public static final long VID_CIP_DEVICE_TYPE_NAME = 689;
+   public static final long VID_CIP_STATUS_TEXT = 690;
+   public static final long VID_CIP_EXT_STATUS_TEXT = 691;
+   public static final long VID_CIP_STATE_TEXT = 692;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

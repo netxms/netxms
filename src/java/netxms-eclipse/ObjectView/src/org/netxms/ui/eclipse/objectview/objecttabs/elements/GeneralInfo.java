@@ -77,6 +77,13 @@ public class GeneralInfo extends TableElement
          addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()) + Messages.get().GeneralInfo_Maintenance);
 		else
 		   addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
+      if ((object instanceof AbstractNode) && ((((AbstractNode)object).getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0))
+      {
+         addPair("Device state", ((AbstractNode)object).getCipStateText(), false);
+         addPair("Device status", ((AbstractNode)object).getCipStatusText(), false);
+         if (((((AbstractNode)object).getCipStatus() >> 4) & 0x0F) != 0)
+            addPair("Extended device status", ((AbstractNode)object).getCipExtendedStatusText(), false);
+      }
       if (object.getCreationTime() != null && object.getCreationTime().getTime() != 0)
          addPair("Creation time", RegionalSettings.getDateTimeFormat().format(object.getCreationTime()), false);
 		switch(object.getObjectClass())

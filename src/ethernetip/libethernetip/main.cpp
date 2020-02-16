@@ -1413,7 +1413,7 @@ static CodeLookupElement s_deviceTypeLookupTable[] =
 };
 
 /**
- * Status codes
+ * Device state codes
  */
 static CodeLookupElement s_deviceStateLookupTable[] =
 {
@@ -1427,7 +1427,23 @@ static CodeLookupElement s_deviceStateLookupTable[] =
 };
 
 /**
- * Device state codes
+ * Extended device status codes
+ */
+static CodeLookupElement s_extDeviceStatusLookupTable[] =
+{
+   { 0, _T("Self-testing or Unknown") },
+   { 1, _T("Firmware Update in Progress") },
+   { 2, _T("At least one faulted I/O connection") },
+   { 3, _T("No I/O connections established") },
+   { 4, _T("Non-Volatile Configuration bad") },
+   { 5, _T("Major Fault") },
+   { 6, _T("At least one I/O connection in run mode") },
+   { 7, _T("At least one I/O connection established, all in idle mode") },
+   { 0, nullptr }
+};
+
+/**
+ * EIP request status codes
  */
 static CodeLookupElement s_statusLookupTable[] =
 {
@@ -1471,6 +1487,57 @@ const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state)
 const TCHAR LIBETHERNETIP_EXPORTABLE *EtherNetIP_StatusTextFromCode(EtherNetIP_Status status)
 {
    return CodeToText(static_cast<int32_t>(status), s_statusLookupTable, _T("UNKNOWN"));
+}
+
+/**
+ * Decode CIP device status
+ */
+String LIBETHERNETIP_EXPORTABLE CIP_DecodeDeviceStatus(uint16_t status)
+{
+   StringBuffer decode;
+   if (status & CIP_DEVICE_STATUS_OWNED)
+   {
+      decode.append(_T("Owned"));
+   }
+   if (status & CIP_DEVICE_STATUS_CONFIGURED)
+   {
+      if (!decode.isEmpty())
+         decode.append(_T(", "));
+      decode.append(_T("Configured"));
+   }
+   if (status & CIP_DEVICE_STATUS_MINOR_RECOVERABLE_FAULT)
+   {
+      if (!decode.isEmpty())
+         decode.append(_T(", "));
+      decode.append(_T("Minor Recoverable Fault"));
+   }
+   if (status & CIP_DEVICE_STATUS_MINOR_UNRECOVERABLE_FAULT)
+   {
+      if (!decode.isEmpty())
+         decode.append(_T(", "));
+      decode.append(_T("Minor Unrecoverable Fault"));
+   }
+   if (status & CIP_DEVICE_STATUS_MAJOR_RECOVERABLE_FAULT)
+   {
+      if (!decode.isEmpty())
+         decode.append(_T(", "));
+      decode.append(_T("Major Recoverable Fault"));
+   }
+   if (status & CIP_DEVICE_STATUS_MAJOR_UNRECOVERABLE_FAULT)
+   {
+      if (!decode.isEmpty())
+         decode.append(_T(", "));
+      decode.append(_T("Major Unrecoverable Fault"));
+   }
+   return decode;
+}
+
+/**
+ * Decode extended device status from status field
+ */
+const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DecodeExtendedDeviceStatus(uint16_t status)
+{
+   return CodeToText(static_cast<int32_t>((status & CIP_DEVICE_STATUS_EXTENDED_STATUS_MASK) >> 4), s_extDeviceStatusLookupTable, _T("Unknown"));
 }
 
 #ifdef _WIN32
