@@ -115,6 +115,7 @@ public class Messages extends NLS
    public String Communication_Version;
    public String Communication_Warning;
    public String Communication_WarningInvalidAgentPort;
+   public String Communication_WarningInvalidEtherNetIPPort;
    public String Communication_WarningInvalidHostname;
    public String Communication_WarningInvalidSNMPPort;
    public String ConditionData_Add;
@@ -343,6 +344,7 @@ public class Messages extends NLS
    public String NodePolling_OptDisableConfigPoll;
    public String NodePolling_OptDisableDataCollection;
    public String NodePolling_OptDisableDiscoveryPoll;
+   public String NodePolling_OptDisableEtherNetIP;
    public String NodePolling_OptDisableICMP;
    public String NodePolling_OptDisableRTPoll;
    public String NodePolling_OptDisableSNMP;

@@ -129,8 +129,9 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
    m_pRoutingTable = NULL;
    m_arpCache = NULL;
-   m_failTimeSNMP = 0;
-   m_failTimeAgent = 0;
+   m_failTimeAgent = NEVER;
+   m_failTimeSNMP = NEVER;
+   m_failTimeEtherNetIP = NEVER;
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
    m_linkLayerNeighbors = NULL;
@@ -140,6 +141,7 @@ Node::Node() : super(), m_topologyPollState(_T("topology")),
    m_pendingState = -1;
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
+   m_pollCountEtherNetIP = 0;
    m_pollCountAllDown = 0;
    m_requiredPollCount = 0; // Use system default
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
@@ -245,8 +247,9 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_isHidden = true;
    m_pRoutingTable = NULL;
    m_arpCache = NULL;
-   m_failTimeSNMP = 0;
-   m_failTimeAgent = 0;
+   m_failTimeAgent = NEVER;
+   m_failTimeSNMP = NEVER;
+   m_failTimeEtherNetIP = NEVER;
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
    m_linkLayerNeighbors = NULL;
@@ -256,6 +259,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyP
    m_pendingState = -1;
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
+   m_pollCountEtherNetIP = 0;
    m_pollCountAllDown = 0;
    m_requiredPollCount = 0; // Use system default
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
@@ -2147,6 +2151,83 @@ restart_agent_check:
       }
    }
 
+   POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
+
+   // Check EtherNet/IP connectivity
+   if ((m_capabilities & NC_IS_ETHERNET_IP) && (!(m_flags & NF_DISABLE_ETHERNET_IP)))
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): checking EtherNet/IP"), m_name);
+      poller->setStatus(_T("check EtherNet/IP"));
+      sendPollerMsg(rqId, _T("Checking EtherNet/IP connectivity\r\n"));
+
+      CIP_Identity *identity = nullptr;
+      EtherNetIP_CallStatus callStatus;
+      EtherNetIP_Status eipStatus = EIP_STATUS_SUCCESS;
+
+      uint32_t eipProxy = getEffectiveEtherNetIPProxy();
+      if (eipProxy != 0)
+      {
+         // TODO: implement proxy request
+      }
+      else
+      {
+         identity = EtherNetIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &callStatus, &eipStatus);
+      }
+
+      if (identity != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): connected to device via EtherNet/IP"), m_name);
+         if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
+         {
+            m_pollCountEtherNetIP++;
+            if (m_pollCountEtherNetIP >= requiredPolls)
+            {
+               m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
+               PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_OK, m_id, NULL);
+               sendPollerMsg(rqId, POLLER_INFO _T("EtherNet/IP connectivity restored\r\n"));
+               m_pollCountEtherNetIP = 0;
+            }
+         }
+         else
+         {
+            m_pollCountAgent = 0;
+         }
+
+         m_cipState = identity->state;
+         m_cipStatus = identity->status;
+
+         delete identity;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP unreachable, callStatus=%d, eipStatus=%d, poll count %d of %d"),
+                  m_name, (int)callStatus, (int)eipStatus, m_pollCountEtherNetIP, m_requiredPollCount);
+         sendPollerMsg(rqId, POLLER_ERROR _T("Cannot connect to device via EtherNet/IP\r\n"));
+         if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
+         {
+            if ((tNow > m_failTimeEtherNetIP + tExpire) && !(m_state & DCSF_UNREACHABLE))
+            {
+               m_capabilities &= ~NC_IS_ETHERNET_IP;
+               m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
+               sendPollerMsg(rqId, POLLER_WARNING _T("Attribute isEtherNetIP set to FALSE\r\n"));
+            }
+         }
+         else
+         {
+            m_pollCountEtherNetIP++;
+            if (m_pollCountEtherNetIP >= requiredPolls)
+            {
+               m_state |= NSF_ETHERNET_IP_UNREACHABLE;
+               PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_UNREACHABLE, m_id, NULL);
+               m_failTimeEtherNetIP = tNow;
+               m_pollCountEtherNetIP = 0;
+            }
+         }
+      }
+
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): EtherNet/IP check finished"), m_name);
+   }
+
    poller->setStatus(_T("prepare polling list"));
 
    POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
@@ -2261,7 +2342,7 @@ restart_agent_check:
                TcpPingResult r = TcpPing(m_ipAddress, m_agentPort, 1000);
                if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
                {
-                  nxlog_debug(6, _T("StatusPoll(%s): agent us unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
+                  nxlog_debug(6, _T("StatusPoll(%s): agent is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
                   sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
                   allDown = false;
                }
@@ -2280,6 +2361,33 @@ restart_agent_check:
           !(m_flags & NF_DISABLE_SNMP) && !(m_state & NSF_SNMP_UNREACHABLE))
       {
          allDown = false;
+      }
+      if (allDown && (m_capabilities & NC_IS_ETHERNET_IP) && !(m_flags & NF_DISABLE_ETHERNET_IP))
+      {
+         if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
+         {
+            // Use TCP ping to check if node actually unreachable if possible
+            if (m_ipAddress.isValidUnicast())
+            {
+               nxlog_debug(6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
+               sendPollerMsg(rqId, _T("Checking primary IP address with TCP ping on EtherNet/IP port\r\n"));
+               TcpPingResult r = TcpPing(m_ipAddress, m_eipPort, 1000);
+               if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
+               {
+                  nxlog_debug(6, _T("StatusPoll(%s): EtherNet/IP is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
+                  sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
+                  allDown = false;
+               }
+               else
+               {
+                  sendPollerMsg(rqId, POLLER_ERROR _T("   Primary IP address is not responding to TCP ping\r\n"));
+               }
+            }
+         }
+         else
+         {
+            allDown = false;
+         }
       }
       if (allDown && (m_flags & NF_PING_PRIMARY_IP) && m_ipAddress.isValidUnicast())
       {
@@ -6642,6 +6750,10 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_snmpSecurity->setPrivMethod((int)(methods >> 8));
    }
 
+   // Change EtherNet/IP port
+   if (pRequest->isFieldExist(VID_ETHERNET_IP_PORT))
+      m_eipPort = pRequest->getFieldAsUInt16(VID_ETHERNET_IP_PORT);
+
    // Change proxy node
    if (pRequest->isFieldExist(VID_AGENT_PROXY))
       m_agentProxy = pRequest->getFieldAsUInt32(VID_AGENT_PROXY);
@@ -6660,6 +6772,10 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change ICMP proxy node
    if (pRequest->isFieldExist(VID_ICMP_PROXY))
       m_icmpProxy = pRequest->getFieldAsUInt32(VID_ICMP_PROXY);
+
+   // Change EtherNet/IP proxy node
+   if (pRequest->isFieldExist(VID_ETHERNET_IP_PROXY))
+      m_eipProxy = pRequest->getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
 
    // Number of required polls
    if (pRequest->isFieldExist(VID_REQUIRED_POLLS))

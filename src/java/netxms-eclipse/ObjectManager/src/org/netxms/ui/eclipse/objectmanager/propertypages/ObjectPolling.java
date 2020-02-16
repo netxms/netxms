@@ -78,7 +78,7 @@ public class ObjectPolling extends PropertyPage
       GridData gd = new GridData();
       
       /* poller node */
-      if (object.containPollerNode())
+      if (object.canHavePollerNode())
       {
          Group servicePollGroup = new Group(dialogArea, SWT.NONE);
          servicePollGroup.setText(Messages.get().NodePolling_GroupNetSrv);
@@ -126,26 +126,28 @@ public class ObjectPolling extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		optionsGroup.setLayoutData(gd);
-		
-		if(object.containAgent())   
+
+      if (object.canHaveAgent())
 		   addFlag(optionsGroup, AbstractNode.NF_DISABLE_NXCP, Messages.get().NodePolling_OptDisableAgent);
-		if(object.containInterfaces())
+      if (object.canHaveInterfaces())
 		{
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, Messages.get().NodePolling_OptDisableSNMP);
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, Messages.get().NodePolling_OptDisableICMP);
 		}
+      if (object.canUseEtherNetIP())
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_ETHERNET_IP, Messages.get().NodePolling_OptDisableEtherNetIP);
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_STATUS_POLL, Messages.get().NodePolling_OptDisableStatusPoll);
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_CONF_POLL, Messages.get().NodePolling_OptDisableConfigPoll);
-      if(object.containInterfaces())
+      if (object.canHaveInterfaces())
       {
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ROUTE_POLL, Messages.get().NodePolling_OptDisableRTPoll);
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, Messages.get().NodePolling_OptDisableTopoPoll);
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, Messages.get().NodePolling_OptDisableDiscoveryPoll);
       }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, Messages.get().NodePolling_OptDisableDataCollection);
-		
+
 		/* use ifXTable */
-		if(object.containInterfaces())
+		if(object.canHaveInterfaces())
 		{
    		Group ifXTableGroup = new Group(dialogArea, SWT.NONE);
    		ifXTableGroup.setText(Messages.get().NodePolling_GroupIfXTable);
@@ -173,7 +175,7 @@ public class ObjectPolling extends PropertyPage
 		}
 
       /* agent cache */      
-      if(object.containAgent())      
+      if(object.canHaveAgent())      
       {
          Group agentCacheGroup = new Group(dialogArea, SWT.NONE);
          agentCacheGroup.setText(Messages.get().NodePolling_AgentCacheMode);
@@ -291,12 +293,12 @@ public class ObjectPolling extends PropertyPage
 	protected boolean applyChanges(final boolean isApply)
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		if(object.containPollerNode())
+		if(object.canHavePollerNode())
 		   md.setPollerNode(pollerNode.getObjectId());
 		md.setObjectFlags(collectNodeFlags(), collectNodeFlagsMask());
-		if(object.containInterfaces())
+		if(object.canHaveInterfaces())
 		   md.setIfXTablePolicy(collectIfXTablePolicy());
-		if(object.containAgent())
+		if(object.canHaveAgent())
 		   md.setAgentCacheMode(collectAgentCacheMode());
       if (object instanceof AbstractNode)
          md.setRequiredPolls(pollCount.getSelection());

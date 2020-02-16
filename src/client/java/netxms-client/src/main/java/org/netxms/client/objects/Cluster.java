@@ -106,16 +106,16 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 		return resources;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
-	 */
+   /**
+    * @see org.netxms.client.NXCObject#getObjectClassName()
+    */
 	@Override
 	public String getObjectClassName()
 	{
 		return "Cluster";
 	}
 
-	/* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.ZoneMember#getZoneId()
     */
    @Override
@@ -124,7 +124,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
       return zoneId;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.ZoneMember#getZoneName()
     */
    @Override
@@ -134,44 +134,74 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
       return (zone != null) ? zone.getObjectName() : Long.toString(zoneId);
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#getIfXTablePolicy()
+    */
    @Override
    public int getIfXTablePolicy()
    {
       return 0;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#getAgentCacheMode()
+    */
    @Override
    public AgentCacheMode getAgentCacheMode()
    {
       return null;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#getFlags()
+    */
    @Override
    public int getFlags()
    {
       return flags;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#getPollerNodeId()
+    */
    @Override
    public long getPollerNodeId()
    {
       return 0;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHaveAgent()
+    */
    @Override
-   public boolean containAgent()
+   public boolean canHaveAgent()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHaveInterfaces()
+    */
    @Override
-   public boolean containInterfaces()
+   public boolean canHaveInterfaces()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHavePollerNode()
+    */
    @Override
-   public boolean containPollerNode()
+   public boolean canHavePollerNode()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canUseEtherNetIP()
+    */
+   @Override
+   public boolean canUseEtherNetIP()
    {
       return false;
    }

@@ -66,7 +66,7 @@ public class Node extends AbstractNode
 		return true;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override
@@ -75,20 +75,38 @@ public class Node extends AbstractNode
       return true;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHaveAgent()
+    */
    @Override
-   public boolean containAgent()
+   public boolean canHaveAgent()
    {
       return true;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHaveInterfaces()
+    */
    @Override
-   public boolean containInterfaces()
+   public boolean canHaveInterfaces()
    {
       return true;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHavePollerNode()
+    */
    @Override
-   public boolean containPollerNode()
+   public boolean canHavePollerNode()
+   {
+      return true;
+   }
+
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canUseEtherNetIP()
+    */
+   @Override
+   public boolean canUseEtherNetIP()
    {
       return true;
    }

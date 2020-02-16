@@ -92,8 +92,17 @@ CIP_Identity LIBETHERNETIP_EXPORTABLE *EtherNetIP_ListIdentity(const InetAddress
       *callStatus = EIP_CALL_SUCCESS;
 
       TCHAR productName[128];
-      if (!response->readDataAsLengthPrefixString(item.offset + 32, productName, 128))
+      size_t stateFieldOffset;
+      if (response->readDataAsLengthPrefixString(item.offset + 32, productName, 128))
+      {
+         stateFieldOffset = 33 + _tcslen(productName);
+         Trim(productName);
+      }
+      else
+      {
+         stateFieldOffset = 33;
          productName[0] = 0;
+      }
 
       identity = static_cast<CIP_Identity*>(MemAlloc(sizeof(CIP_Identity) + (_tcslen(productName) + 1) * sizeof(TCHAR)));
       identity->productName = reinterpret_cast<TCHAR*>(reinterpret_cast<uint8_t*>(identity) + sizeof(CIP_Identity));
@@ -106,7 +115,7 @@ CIP_Identity LIBETHERNETIP_EXPORTABLE *EtherNetIP_ListIdentity(const InetAddress
       identity->productRevisionMinor = response->readDataAsUInt8(item.offset + 25);
       identity->protocolVersion = response->readDataAsUInt16(item.offset);
       identity->serialNumber = response->readDataAsUInt16(item.offset + 28);
-      identity->state = response->readDataAsUInt8(item.offset + 33 + _tcslen(productName));
+      identity->state = response->readDataAsUInt8(item.offset + stateFieldOffset);
       identity->status = response->readDataAsUInt16(item.offset + 26);
       identity->tcpPort = response->readDataAsUInt16(item.offset + 4);
       identity->vendor = response->readDataAsUInt16(item.offset + 18);

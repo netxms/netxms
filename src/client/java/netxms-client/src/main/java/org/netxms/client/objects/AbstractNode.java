@@ -87,6 +87,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    public static final int NF_AGENT_OVER_TUNNEL_ONLY = 0x01000000;
    public static final int NF_SNMP_SETTINGS_LOCKED   = 0x02000000;
    public static final int NF_PING_PRIMARY_IP        = 0x04000000;
+   public static final int NF_DISABLE_ETHERNET_IP    = 0x08000000;
 	
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;

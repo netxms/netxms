@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -216,7 +216,7 @@ public class Agent extends PropertyPage
                (agentTunnelOnly.getSelection() ? AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY : 0), 
             AbstractNode.NF_FORCE_ENCRYPTION | AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY);
 
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob(String.format("Updating agent communication settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -227,7 +227,7 @@ public class Agent extends PropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot update communication settings for node %s", node.getObjectName());
+            return String.format("Cannot update agent communication settings for node %s", node.getObjectName());
          }
 
          @Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,6 +140,8 @@ public class NXCObjectModificationData
    public static final int ICMP_POLL_MODE         = 82;
    public static final int ICMP_POLL_TARGETS      = 83;
    public static final int CHASSIS_PLACEMENT      = 84;
+   public static final int ETHERNET_IP_PORT       = 85;
+   public static final int ETHERNET_IP_PROXY      = 86;
 
    private Set<Integer> fieldSet;
    private long objectId;
@@ -251,6 +253,8 @@ public class NXCObjectModificationData
    private IcmpStatCollectionMode icmpStatCollectionMode;
    private List<InetAddress> icmpTargets;
    private String chassisPlacement;
+   private int etherNetIPPort;
+   private long etherNetIPProxy;
 
    /**
     * Constructor for creating modification data for given object
@@ -2118,5 +2122,39 @@ public class NXCObjectModificationData
    public String getChassisPlacement()
    {
       return chassisPlacement;
+   }
+
+   /**
+    * @return the etherNetIPPort
+    */
+   public int getEtherNetIPPort()
+   {
+      return etherNetIPPort;
+   }
+
+   /**
+    * @param etherNetIPPort the etherNetIPPort to set
+    */
+   public void setEtherNetIPPort(int etherNetIPPort)
+   {
+      this.etherNetIPPort = etherNetIPPort;
+      fieldSet.add(ETHERNET_IP_PORT);
+   }
+
+   /**
+    * @return the etherNetIPProxy
+    */
+   public long getEtherNetIPProxy()
+   {
+      return etherNetIPProxy;
+   }
+
+   /**
+    * @param etherNetIPProxy the etherNetIPProxy to set
+    */
+   public void setEtherNetIPProxy(long etherNetIPProxy)
+   {
+      this.etherNetIPProxy = etherNetIPProxy;
+      fieldSet.add(ETHERNET_IP_PROXY);
    }
 }

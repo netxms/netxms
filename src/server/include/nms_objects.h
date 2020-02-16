@@ -2451,7 +2451,8 @@ enum ProxyType
    SNMP_PROXY = 0,
    SENSOR_PROXY = 1,
    ZONE_PROXY = 2,
-   MAX_PROXY_TYPE = 3
+   ETHERNET_IP_PROXY = 3,
+   MAX_PROXY_TYPE = 4
 };
 
 /**
@@ -2532,7 +2533,7 @@ protected:
    InetAddress m_ipAddress;
 	TCHAR m_primaryName[MAX_DNS_NAME];
 	uuid m_tunnelId;
-   UINT32 m_capabilities;
+	uint32_t m_capabilities;
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
    TCHAR m_hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH];
@@ -2543,12 +2544,13 @@ protected:
    SharedString m_productCode;
    SharedString m_serialNumber;
 	int m_pendingState;
-	UINT32 m_pollCountAgent;
-	UINT32 m_pollCountSNMP;
-   UINT32 m_pollCountAllDown;
-	UINT32 m_requiredPollCount;
-   UINT32 m_zoneUIN;
-   UINT16 m_agentPort;
+	uint32_t m_pollCountAgent;
+	uint32_t m_pollCountSNMP;
+	uint32_t m_pollCountEtherNetIP;
+	uint32_t m_pollCountAllDown;
+	uint32_t m_requiredPollCount;
+	uint32_t m_zoneUIN;
+   uint16_t m_agentPort;
    INT16 m_agentAuthMethod;
    INT16 m_agentCacheMode;
    INT16 m_agentCompressionMode;  // agent compression mode (enabled/disabled/default)
@@ -2578,8 +2580,9 @@ protected:
    PollState m_topologyPollState;
    PollState m_routingPollState;
    PollState m_icmpPollState;
-   time_t m_failTimeSNMP;
    time_t m_failTimeAgent;
+   time_t m_failTimeSNMP;
+   time_t m_failTimeEtherNetIP;
 	time_t m_downSince;
    time_t m_bootTime;
    time_t m_agentUpTime;
@@ -2766,9 +2769,9 @@ public:
    SharedString getProductCode() const { return GetAttributeWithLock(m_productCode, m_mutexProperties); }
    SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
 
-   UINT32 getCapabilities() { return m_capabilities; }
-   void setCapabilities(UINT32 flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
-   void clearCapabilities(UINT32 flag) { lockProperties(); m_capabilities &= ~flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
+   uint32_t getCapabilities() { return m_capabilities; }
+   void setCapabilities(uint32_t flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
+   void clearCapabilities(uint32_t flag) { lockProperties(); m_capabilities &= ~flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
    void setLocalMgmtFlag() { setCapabilities(NC_IS_LOCAL_MGMT); }
    void clearLocalMgmtFlag() { clearCapabilities(NC_IS_LOCAL_MGMT); }
 

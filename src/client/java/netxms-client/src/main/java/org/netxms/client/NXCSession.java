@@ -5832,6 +5832,16 @@ public class NXCSession
             msg.setField(fieldId++, a);
       }
       
+      if (data.isFieldSet(NXCObjectModificationData.ETHERNET_IP_PORT))
+      {
+         msg.setFieldInt16(NXCPCodes.VID_ETHERNET_IP_PORT, data.getEtherNetIPPort());
+      }
+
+      if (data.isFieldSet(NXCObjectModificationData.ETHERNET_IP_PROXY))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_ETHERNET_IP_PROXY, (int)data.getEtherNetIPProxy());
+      }
+
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

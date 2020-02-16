@@ -355,32 +355,56 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
       return 0;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#getAgentCacheMode()
+    */
    @Override
    public AgentCacheMode getAgentCacheMode()
    {
       return null;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#getPollerNodeId()
+    */
    @Override
    public long getPollerNodeId()
    {
       return 0;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHaveAgent()
+    */
    @Override
-   public boolean containAgent()
+   public boolean canHaveAgent()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHaveInterfaces()
+    */
    @Override
-   public boolean containInterfaces()
+   public boolean canHaveInterfaces()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canHavePollerNode()
+    */
    @Override
-   public boolean containPollerNode()
+   public boolean canHavePollerNode()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.PollingTarget#canUseEtherNetIP()
+    */
+   @Override
+   public boolean canUseEtherNetIP()
    {
       return false;
    }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Container;
@@ -75,6 +76,22 @@ public class ObjectTooltip extends Figure
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.RIGHT;
 		setConstraint(status, gd);
+
+      if (object instanceof Node)
+      {
+         if ((((Node)object).getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0)
+         {
+            if ((((Node)object).getHardwareProductName() != null) && !((Node)object).getHardwareProductName().isEmpty())
+               addInformationBlock(((Node)object).getHardwareProductName() + " (" + ((Node)object).getCipDeviceTypeName() + ")", null);
+            else
+               addInformationBlock(((Node)object).getCipDeviceTypeName(), null);
+         }
+         else
+         {
+            addInformationBlock(((Node)object).getHardwareProductName(), null);
+         }
+         addInformationBlock(((Node)object).getHardwareVendor(), "Vendor: ");
+      }
 
 		if ((object instanceof Node) && ((Node)object).getPrimaryIP().isValidAddress() && !((Node)object).getPrimaryIP().getAddress().isAnyLocalAddress())
 		{
@@ -159,6 +176,25 @@ public class ObjectTooltip extends Figure
 			page.add(text);
 		}
 	}
+
+   /**
+    * Add additional information block
+    * 
+    * @param text
+    */
+   private void addInformationBlock(String text, String prefix)
+   {
+      if ((text == null) || text.isEmpty())
+         return;
+
+      Label info = new Label();
+      info.setText((prefix != null) ? (prefix + text) : text);
+      add(info);
+
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      setConstraint(info, gd);
+   }
 
 	/**
 	 * Status chart
