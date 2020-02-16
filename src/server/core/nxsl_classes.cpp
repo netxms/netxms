@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <entity_mib.h>
+#include <ethernet_ip.h>
 
 /**
  * Get ICMP statistic for node sub-object
@@ -1128,13 +1129,33 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(node->getCipDeviceType());
    }
+   else if (!strcmp(attr, "cipDeviceTypeAsText"))
+   {
+      value = vm->createValue(CIP_DeviceTypeNameFromCode(node->getCipDeviceType()));
+   }
+   else if (!strcmp(attr, "cipExtendedStatus"))
+   {
+      value = vm->createValue((node->getCipStatus() & CIP_DEVICE_STATUS_EXTENDED_STATUS_MASK) >> 4);
+   }
+   else if (!strcmp(attr, "cipExtendedStatusAsText"))
+   {
+      value = vm->createValue(CIP_DecodeExtendedDeviceStatus(node->getCipStatus()));
+   }
    else if (!strcmp(attr, "cipStatus"))
    {
       value = vm->createValue(node->getCipStatus());
    }
+   else if (!strcmp(attr, "cipStatusAsText"))
+   {
+      value = vm->createValue(CIP_DecodeDeviceStatus(node->getCipStatus()));
+   }
    else if (!strcmp(attr, "cipState"))
    {
       value = vm->createValue(node->getCipState());
+   }
+   else if (!strcmp(attr, "cipStateAsText"))
+   {
+      value = vm->createValue(CIP_DeviceStateTextFromCode(node->getCipState()));
    }
    else if (!strcmp(attr, "components"))
    {
