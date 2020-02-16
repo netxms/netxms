@@ -6544,7 +6544,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       pMsg->setField(VID_CIP_STATUS_TEXT, CIP_DecodeDeviceStatus(m_cipStatus));
       pMsg->setField(VID_CIP_EXT_STATUS_TEXT, CIP_DecodeExtendedDeviceStatus(m_cipStatus));
       pMsg->setField(VID_CIP_STATE, m_cipState);
-      pMsg->setField(VID_CIP_STATE, CIP_DeviceStateTextFromCode(m_cipState));
+      pMsg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(m_cipState));
    }
 }
 
