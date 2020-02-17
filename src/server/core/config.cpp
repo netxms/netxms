@@ -90,7 +90,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("FullCrashDumps"), CT_BOOLEAN64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
-   { _T("LogFailedSQLQueries"), CT_BOOLEAN64, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags, NULL },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, NULL },
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &g_logHistorySize, NULL },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_logRotationMode, NULL },
