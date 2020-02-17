@@ -32,6 +32,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -64,27 +65,35 @@ public class FilterText extends Composite
 	
 	public FilterText(Composite parent, int style)
    {
-      this(parent, style, null, true);
+      this(parent, style, null, true, true);
    }
-	
+
+   public FilterText(Composite parent, int style, String tooltip, boolean showFilterCloseButton)
+   {
+      this(parent, style, tooltip, showFilterCloseButton, true);
+   }
+
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public FilterText(Composite parent, int style, String tooltip, boolean showFilterCloseButton)
+   public FilterText(Composite parent, int style, String tooltip, boolean showFilterCloseButton, boolean showFilterLabel)
 	{
 		super(parent, style);		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 5;
+      layout.numColumns = showFilterLabel ? 5 : 4;
          
 		setLayout(layout);
 		
-		final Label label = new Label(this, SWT.NONE);
-		label.setText(Messages.get().FilterText_Filter);
-		GridData gd = new GridData();
-		gd.verticalAlignment = SWT.CENTER;
-		label.setLayoutData(gd);
-		
+      if (showFilterLabel)
+      {
+         final Label label = new Label(this, SWT.NONE);
+         label.setText(Messages.get().FilterText_Filter);
+         GridData gd = new GridData();
+         gd.verticalAlignment = SWT.CENTER;
+         label.setLayoutData(gd);
+      }
+
 		textArea = new Composite(this, SWT.BORDER);
 		GridLayout textLayout = new GridLayout();
 		textLayout.numColumns = 2;
@@ -93,7 +102,7 @@ public class FilterText extends Composite
 		textLayout.marginLeft = 0;
       textLayout.marginRight = 0;
       textArea.setLayout(textLayout);
-      gd = new GridData();
+      GridData gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -440,5 +449,18 @@ public class FilterText extends Composite
    public void setMinLength(int minLength)
    {
       this.minLength = minLength;
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setBackground(Color color)
+   {
+      super.setBackground(color);
+      if (closeButton != null)
+         closeButton.setBackground(color);
+      if (clearButton != null)
+         clearButton.setBackground(color);
    }
 }

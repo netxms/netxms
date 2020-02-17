@@ -53,6 +53,13 @@
             name="Policy editor"
             restorable="false">
       </view>
+      <view
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.datacollection.views.WebServiceManager"
+            id="org.netxms.ui.eclipse.datacollection.views.WebServiceManager"
+            name="Web Service Definitions"
+            restorable="true">
+      </view>
    </extension>
    
    <extension
@@ -477,6 +484,12 @@
             id="org.netxms.ui.eclipse.datacollection.commands.open_dcisumtbl_manager"
             name="%command.name.SummaryTablesConfig">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open web service manager"
+            id="org.netxms.ui.eclipse.datacollection.commands.open_websvc_manager"
+            name="Open web service manager">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -510,6 +523,15 @@
                menubarPath="config/additions"
                style="push"
                tooltip="%action.tooltip.SummaryTablesConfig">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenWebServiceManager"
+               definitionId="org.netxms.ui.eclipse.datacollection.commands.open_websvc_manager"
+               id="org.netxms.ui.eclipse.datacollection.actions.open_dcisumtbl_manager"
+               label="%action.label.WebServiceDefinitions"
+               menubarPath="config/additions"
+               style="push"
+               tooltip="%action.tooltip.WebServiceDefinitions">
          </action>
       </actionSet>
    </extension>
