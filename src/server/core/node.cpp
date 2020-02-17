@@ -2944,9 +2944,9 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
          lockParentList(false);
          for(int i = 0; i < getParentList()->size(); i++)
          {
-            if (static_cast<NetObj *>(getParentList()->get(i))->getObjectClass() == OBJECT_TEMPLATE)
+            if (getParentList()->get(i)->getObjectClass() == OBJECT_TEMPLATE)
             {
-                if(((Template*)static_cast<NetObj *>(getParentList()->get(i)))->hasPolicy(guid))
+                if (static_cast<Template*>(getParentList()->get(i))->hasPolicy(guid))
                 {
                    found = true;
                    break;
@@ -2954,10 +2954,10 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
             }
          }
 
-         if(!found)
+         if (!found)
          {
             ServerJob *job = new PolicyUninstallJob(this, ap->getType(i), guid, 0);
-            if(!AddJob(job))
+            if (!AddJob(job))
                delete job;
          }
 
@@ -2965,26 +2965,25 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
       }
 
       // Check for bound but not installed policies and schedule it's installation again
-      //Job will be unbound if it was not possible to add job
+      // Job will be unbound if it was not possible to add job
+      ObjectArray<NetObj> unbindList(64, 64, false);
       lockParentList(false);
-      NetObj **unbindList = (NetObj **)malloc(sizeof(NetObj *) * getParentList()->size());
-      int unbindListSize = 0;
       for(int i = 0; i < getParentList()->size(); i++)
       {
-         if (static_cast<NetObj *>(getParentList()->get(i))->getObjectClass() == OBJECT_TEMPLATE)
+         if (getParentList()->get(i)->getObjectClass() == OBJECT_TEMPLATE)
          {
-            ((Template *)static_cast<NetObj *>(getParentList()->get(i)))->checkPolicyBind(this, ap, unbindList, &unbindListSize);
+            static_cast<Template*>(getParentList()->get(i))->checkPolicyBind(this, ap, &unbindList);
          }
       }
       unlockParentList();
 
-      for(int i = 0; i < unbindListSize; i++)
+      for(int i = 0; i < unbindList.size(); i++)
       {
-         unbindList[i]->deleteChild(this);
-         deleteParent(unbindList[i]);
-         DbgPrintf(5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_name, unbindList[i]->getName(), unbindList[i]->getId());
+         NetObj *object = unbindList.get(i);
+         object->deleteChild(this);
+         deleteParent(object);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_name, object->getName(), object->getId());
       }
-      MemFree(unbindList);
 
       m_capabilities |= ap->isNewPolicyType() ? NC_IS_NEW_POLICY_TYPES : 0;
       delete ap;
