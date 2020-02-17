@@ -25,7 +25,7 @@
 /**
  * Constructor for download job
  */
-FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId)
+FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId, bool allowExpoansion)
                 : ServerJob(_T("DOWNLOAD_FILE"), _T("Download file"), node->getId(), session->getUserId(), false)
 {
 	m_session = session;
@@ -55,6 +55,7 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 	m_maxFileSize = maxFileSize;
 	m_follow = follow;
 	m_currentSize = 0;
+	m_allowExpansion = allowExpoansion;
 
    DbgPrintf(5, _T("FileDownloadJob: job created for file %s at node %s, follow = %s"), m_remoteFile, m_node->getName(), m_follow ? _T("true") : _T("false"));
 }
@@ -155,6 +156,7 @@ ServerJobResult FileDownloadJob::run()
 				msg.setCode(CMD_GET_AGENT_FILE);
 				msg.setId(m_agentConnection->generateRequestId());
 				msg.setField(VID_FILE_NAME, m_remoteFile);
+				msg.setField(VID_ALLOW_PATH_EXPANSION, m_allowExpansion);
 
             // default - get parameters
             if (m_maxFileSize > 0)

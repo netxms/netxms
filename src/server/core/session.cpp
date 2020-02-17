@@ -10871,7 +10871,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
 				FileDownloadJob *job = new FileDownloadJob((Node *)object,
 				         expand ? object->expandText(remoteFile, alarm, NULL, m_loginName, NULL, &inputFields, NULL) : remoteFile,
-				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
+				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId(), expand);
 				delete alarm;
 				if (AddJob(job))
 				{

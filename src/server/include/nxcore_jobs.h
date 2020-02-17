@@ -230,6 +230,7 @@ private:
 	INT64 m_currentSize;
 	UINT32 m_maxFileSize;
 	bool m_follow;
+	bool m_allowExpansion;
 
 protected:
 	virtual ServerJobResult run();
@@ -241,7 +242,7 @@ protected:
 	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
 
 public:
-	FileDownloadJob(Node *node, const TCHAR *remoteName, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId);
+	FileDownloadJob(Node *node, const TCHAR *remoteName, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId, bool allowExpansion);
 	virtual ~FileDownloadJob();
 
 	const TCHAR *getLocalFileName();
