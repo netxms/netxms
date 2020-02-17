@@ -31,6 +31,7 @@ NETXMS_EXECUTABLE_HEADER(nxethernetip)
  */
 static uint16_t s_port = ETHERNET_IP_DEFAULT_PORT;
 static uint32_t s_timeout = 5000;
+static bool s_useUDP = false;
 static SOCKET s_socket = INVALID_SOCKET;
 static EtherNetIP_MessageReceiver *s_receiver = nullptr;
 
@@ -68,16 +69,29 @@ static bool Connect(const char *hostname)
       return false;
    }
 
-   s_socket = ConnectToHost(addr, s_port, s_timeout);
-   if (s_socket == INVALID_SOCKET)
+   if (s_useUDP)
    {
-      TCHAR ipAddrText[64], errorText[256];
-      _tprintf(_T("Cannot connected to %s:%u (%s)\n"), addr.toString(ipAddrText), s_port, GetLastSocketErrorText(errorText, 256));
-      return false;
+      s_socket = ConnectToHostUDP(addr, s_port);
+      if (s_socket == INVALID_SOCKET)
+      {
+         TCHAR ipAddrText[64], errorText[256];
+         _tprintf(_T("Cannot setup UDP socket for communication with %s:%u (%s)\n"), addr.toString(ipAddrText), s_port, GetLastSocketErrorText(errorText, 256));
+         return false;
+      }
    }
+   else
+   {
+      s_socket = ConnectToHost(addr, s_port, s_timeout);
+      if (s_socket == INVALID_SOCKET)
+      {
+         TCHAR ipAddrText[64], errorText[256];
+         _tprintf(_T("Cannot connected to %s:%u (%s)\n"), addr.toString(ipAddrText), s_port, GetLastSocketErrorText(errorText, 256));
+         return false;
+      }
 
-   TCHAR buffer[64];
-   _tprintf(_T("Connected to %s:%u\n"), addr.toString(buffer), s_port);
+      TCHAR buffer[64];
+      _tprintf(_T("Connected to %s:%u\n"), addr.toString(buffer), s_port);
+   }
    return true;
 }
 
@@ -221,7 +235,7 @@ int main(int argc, char *argv[])
    uint32_t value;
    char *eptr;
    int ch;
-	while((ch = getopt(argc, argv, "hp:w:")) != -1)
+	while((ch = getopt(argc, argv, "hp:uw:")) != -1)
    {
       switch(ch)
       {
@@ -229,7 +243,8 @@ int main(int argc, char *argv[])
             _tprintf(_T("Usage: nxethernetip [<options>] <host> <command>\n")
                      _T("Valid options are:\n")
                      _T("   -h                : Display help and exit\n")
-                     _T("   -p <port>         : TCP port (default is 44818)\n")
+                     _T("   -p <port>         : Port number (default is 44818)\n")
+                     _T("   -u                : Use UDP for communication\n")
                      _T("   -w <milliseconds> : Request timeout (default is 5000 milliseconds)\n")
                      _T("\n"));
             start = false;
@@ -246,6 +261,9 @@ int main(int argc, char *argv[])
             {
                s_port = static_cast<uint16_t>(value);
             }
+            break;
+         case 'u':   // UDP
+            s_useUDP = true;
             break;
          case 'w':   // Timeout
             value = strtoul(optarg, &eptr, 0);
