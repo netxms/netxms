@@ -1,6 +1,6 @@
 /*
 ** Windows platform subagent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,8 @@
 /**
  * Externlals
  */
-LONG H_ActiveUserSessions(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ActiveUserSessionsList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -487,7 +488,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("Net.InterfaceList"), H_InterfaceList, NULL },
    { _T("Net.InterfaceNames"), H_InterfaceNames, NULL },
    { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
-	{ _T("System.ActiveUserSessions"), H_ActiveUserSessions, NULL },
+	{ _T("System.ActiveUserSessions"), H_ActiveUserSessionsList, NULL },
 	{ _T("System.Desktops(*)"), H_Desktops, NULL },
    { _T("System.IO.Devices"), H_IoDeviceList, NULL },
    { _T("System.ProcessList"), H_ProcessList, NULL },
@@ -505,6 +506,7 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
    { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES },
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
    { _T("Hardware.StorageDevices"), H_StorageDeviceTable, NULL, _T("NUMBER"), DCTDESC_HARDWARE_STORAGE_DEVICES },
+   { _T("System.ActiveUserSessions"), H_ActiveUserSessionsTable, NULL, _T("ID"), DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS },
    { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
 	{ _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
 	{ _T("System.Services"), H_ServiceTable, NULL, _T("Name"), _T("Services") }

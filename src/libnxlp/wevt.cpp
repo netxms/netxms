@@ -253,17 +253,13 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
    time_t timestamp;
    if (values[5].Type == EvtVarTypeFileTime)
    {
-      timestamp = static_cast<time_t>((values[5].FileTimeVal - EPOCHFILETIME) / 10000000);
+      timestamp = FileTimeToUnixTime(values[5].FileTimeVal);
    }
    else if (values[5].Type == EvtVarTypeSysTime)
    {
       FILETIME ft;
       SystemTimeToFileTime(values[5].SysTimeVal, &ft);
-
-      LARGE_INTEGER li;
-      li.LowPart = ft.dwLowDateTime;
-      li.HighPart = ft.dwHighDateTime;
-      timestamp = static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000);
+      timestamp = FileTimeToUnixTime(ft);
    }
    else
    {

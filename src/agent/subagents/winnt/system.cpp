@@ -262,46 +262,121 @@ LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Abs
 }
 
 /**
- * Handler for System.ActiveUserSessions enum
+ * Handler for System.ActiveUserSessions list
  */
-LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+LONG H_ActiveUserSessionsList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG nRet;
-   WTS_SESSION_INFO *pSessionList;
-   DWORD i, dwNumSessions, dwBytes;
-   TCHAR *pszClientName, *pszUserName, szBuffer[1024];
-
-   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &pSessionList, &dwNumSessions))
+   WTS_SESSION_INFO *sessions;
+   DWORD count;
+   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &count))
    {
-      for(i = 0; i < dwNumSessions; i++)
+      for(DWORD i = 0; i < count; i++)
 		{
-         if ((pSessionList[i].State == WTSActive) ||
-             (pSessionList[i].State == WTSConnected))
+         if ((sessions[i].State == WTSActive) || (sessions[i].State == WTSConnected))
          {
-            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
-                                            WTSClientName, &pszClientName, &dwBytes))
+            TCHAR *clientName, *userName;
+            DWORD bytes;
+            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId,
+                                            WTSClientName, &clientName, &bytes))
             {
-               pszClientName = NULL;
+               clientName = NULL;
             }
-            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
-                                            WTSUserName, &pszUserName, &dwBytes))
+            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId,
+                                            WTSUserName, &userName, &bytes))
             {
-               pszUserName = NULL;
+               userName = NULL;
             }
 
-            _sntprintf(szBuffer, 1024, _T("\"%s\" \"%s\" \"%s\""),
-                       pszUserName == NULL ? _T("UNKNOWN") : pszUserName,
-                       pSessionList[i].pWinStationName,
-                       pszClientName == NULL ? _T("UNKNOWN") : pszClientName);
-            value->add(szBuffer);
+            TCHAR buffer[1024];
+            _sntprintf(buffer, 1024, _T("\"%s\" \"%s\" \"%s\""),
+                  userName == NULL ? _T("UNKNOWN") : userName, sessions[i].pWinStationName,
+                  clientName == NULL ? _T("UNKNOWN") : clientName);
+            value->add(buffer);
 
-            if (pszUserName != NULL)
-               WTSFreeMemory(pszUserName);
-            if (pszClientName != NULL)
-               WTSFreeMemory(pszClientName);
+            if (userName != NULL)
+               WTSFreeMemory(userName);
+            if (clientName != NULL)
+               WTSFreeMemory(clientName);
          }
 		}
-      WTSFreeMemory(pSessionList);
+      WTSFreeMemory(sessions);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
+   return nRet;
+}
+
+/**
+ * Handler for System.ActiveUserSessions table
+ */
+LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   LONG nRet;
+   WTS_SESSION_INFO *sessions;
+   DWORD count;
+   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &count))
+   {
+      value->addColumn(_T("ID"), DCI_DT_UINT, _T("ID"), true);
+      value->addColumn(_T("USER_NAME"), DCI_DT_STRING, _T("User name"));
+      value->addColumn(_T("TERMINAL"), DCI_DT_STRING, _T("Terminal"));
+      value->addColumn(_T("STATE"), DCI_DT_STRING, _T("State"));
+      value->addColumn(_T("CLIENT_NAME"), DCI_DT_STRING, _T("Client name"));
+      value->addColumn(_T("CLIENT_ADDRESS"), DCI_DT_STRING, _T("Client address"));
+      value->addColumn(_T("CLIENT_DISPLAY"), DCI_DT_STRING, _T("Client display"));
+      value->addColumn(_T("CONNECT_TIMESTAMP"), DCI_DT_UINT64, _T("Connect time"));
+      value->addColumn(_T("LOGON_TIMESTAMP"), DCI_DT_UINT64, _T("Logon time"));
+      value->addColumn(_T("IDLE_TIME"), DCI_DT_UINT, _T("Idle time"));
+
+      for (DWORD i = 0; i < count; i++)
+      {
+         if ((sessions[i].State == WTSActive) || (sessions[i].State == WTSConnected))
+         {
+            value->addRow();
+            value->set(0, static_cast<uint32_t>(sessions[i].SessionId));
+            value->set(3, (sessions[i].State == WTSActive) ? _T("Active") : _T("Connected"));
+
+            WTSINFO *info;
+            DWORD bytes;
+            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId,
+                     WTSSessionInfo, reinterpret_cast<LPTSTR*>(&info), &bytes))
+            {
+               TCHAR userName[256];
+               _sntprintf(userName, 256, _T("%s\\%s"), info->Domain, info->UserName);
+               value->set(1, userName);
+               value->set(2, info->WinStationName);
+               value->set(7, FileTimeToUnixTime(info->ConnectTime));
+               value->set(8, FileTimeToUnixTime(info->LogonTime));
+               value->set(9, FileTimeToUnixTime(info->CurrentTime) - FileTimeToUnixTime(info->LastInputTime));
+               WTSFreeMemory(info);
+            }
+
+            WTSCLIENT *client;
+            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId,
+               WTSClientInfo, reinterpret_cast<LPTSTR*>(&client), &bytes))
+            {
+               value->set(4, client->ClientName);
+
+               if (client->ClientAddressFamily == AF_INET)
+                  value->set(5, InetAddress(ntohl(*reinterpret_cast<uint32_t*>(&client->ClientAddress))).toString());
+               else if (client->ClientAddressFamily == AF_INET6)
+                  value->set(5, InetAddress(reinterpret_cast<uint8_t*>(client->ClientAddress)).toString());
+
+               if ((client->HRes > 0) && (client->VRes > 0) && (client->ColorDepth > 0))
+               {
+                  TCHAR clientScreen[256];
+                  _sntprintf(clientScreen, 256, _T("%ux%ux%u"), client->HRes, client->VRes, client->ColorDepth);
+                  value->set(6, clientScreen);
+               }
+
+               WTSFreeMemory(client);
+            }
+         }
+      }
+      WTSFreeMemory(sessions);
       nRet = SYSINFO_RC_SUCCESS;
    }
    else
@@ -486,11 +561,7 @@ static bool ReadSystemUpdateTimeFromCOM(const TCHAR *type, TCHAR *value)
                FILETIME ft;
                SystemTimeToFileTime(&st, &ft);
 
-               LARGE_INTEGER li;
-               li.LowPart = ft.dwLowDateTime;
-               li.HighPart = ft.dwHighDateTime;
-               li.QuadPart -= EPOCHFILETIME;
-               ret_int64(value, li.QuadPart / 10000000); // Convert to seconds
+               ret_int64(value, FileTimeToUnixTime(ft)); // Convert to seconds
                success = true;
             }
             else if (v.vt == VT_EMPTY)

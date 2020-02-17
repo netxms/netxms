@@ -362,6 +362,37 @@ typedef unsigned __int64 uint64_t;
 #define HAVE_LOCALE_H  1
 #define HAVE_SETLOCALE 1
 
+#ifdef __cplusplus
+
+/**
+ * Get UNIX time from Windows file time represented as 64 bit integer
+ */
+inline time_t FileTimeToUnixTime(uint64_t ft)
+{
+   return static_cast<time_t>((ft - EPOCHFILETIME) / 10000000);
+}
+
+/**
+ * Get UNIX time from Windows file time represented as LARGE_INTEGER structure
+ */
+inline time_t FileTimeToUnixTime(LARGE_INTEGER li)
+{
+   return static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000);
+}
+
+/**
+ * Get UNIX time from Windows file time represented as FILETIME structure
+ */
+inline time_t FileTimeToUnixTime(const FILETIME &ft)
+{
+   LARGE_INTEGER li;
+   li.LowPart = ft.dwLowDateTime;
+   li.HighPart = ft.dwHighDateTime;
+   return static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000);
+}
+
+#endif
+
 #else    /* not _WIN32 */
 
 /*********** UNIX *********************/

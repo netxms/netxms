@@ -3477,20 +3477,6 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
 #ifdef _WIN32
 
 /**
- * Convert FILETIME structure to time_t
- */
-static time_t FileTimeToUnixTime(FILETIME *ft)
-{
-   LARGE_INTEGER li;
-   li.LowPart = ft->dwLowDateTime;
-   li.HighPart = ft->dwHighDateTime;
-   INT64 t = li.QuadPart; // In 100-nanosecond intervals
-   t -= EPOCHFILETIME;    // Offset to the Epoch time
-   t /= 10000000;         // Convert to seconds
-   return static_cast<time_t>(t);
-}
-
-/**
  * stat() implementaion for Windows
  */
 int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st)
@@ -3545,9 +3531,9 @@ int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st)
       st->st_mode |= _S_IFREG;
 
    st->st_size = (static_cast<INT64>(fd.nFileSizeHigh) << 32) + fd.nFileSizeLow;
-   st->st_atime = FileTimeToUnixTime(&fd.ftLastAccessTime);
-   st->st_ctime = FileTimeToUnixTime(&fd.ftCreationTime);
-   st->st_mtime = FileTimeToUnixTime(&fd.ftLastWriteTime);
+   st->st_atime = FileTimeToUnixTime(fd.ftLastAccessTime);
+   st->st_ctime = FileTimeToUnixTime(fd.ftCreationTime);
+   st->st_mtime = FileTimeToUnixTime(fd.ftLastWriteTime);
 
    FindClose(h);
    return 0;
