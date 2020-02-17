@@ -329,7 +329,7 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
       value->addColumn(_T("CLIENT_DISPLAY"), DCI_DT_STRING, _T("Client display"));
       value->addColumn(_T("CONNECT_TIMESTAMP"), DCI_DT_UINT64, _T("Connect time"));
       value->addColumn(_T("LOGON_TIMESTAMP"), DCI_DT_UINT64, _T("Logon time"));
-      value->addColumn(_T("IDLE_TIME"), DCI_DT_UINT, _T("Idle time"));
+      value->addColumn(_T("IDLE_TIME"), DCI_DT_UINT, _T("Idle for"));
 
       for (DWORD i = 0; i < count; i++)
       {
