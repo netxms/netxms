@@ -904,6 +904,127 @@ public:
 };
 
 /**
+ * LoraWAN device payload
+ */
+typedef BYTE lorawan_payload_t[36];
+
+/**
+ * Lora device data
+ */
+class LIBNXAGENT_EXPORTABLE LoraDeviceData
+{
+private:
+   uuid m_guid;
+   MacAddress m_devAddr;
+   MacAddress m_devEui;
+   lorawan_payload_t m_payload;
+   INT32 m_decoder;
+   char m_dataRate[24];
+   INT32 m_rssi;
+   double m_snr;
+   double m_freq;
+   UINT32 m_fcnt;
+   UINT32 m_port;
+   time_t m_lastContact;
+
+public:
+   LoraDeviceData(NXCPMessage *request);
+   LoraDeviceData(DB_RESULT result, int row);
+
+   UINT32 saveToDB(bool isNew = false) const;
+   UINT32 deleteFromDB() const;
+
+   bool isOtaa() const { return (m_devEui.length() > 0) ? true : false; }
+
+   const uuid& getGuid() const { return m_guid; }
+
+   const MacAddress& getDevAddr() const { return m_devAddr; }
+   void setDevAddr(MacAddress devAddr) { m_devAddr = devAddr; saveToDB(); }
+   const MacAddress& getDevEui() const { return m_devEui; }
+
+   const BYTE *getPayload() const { return m_payload; }
+   void setPayload(const char *payload) { StrToBinA(payload, m_payload, 36); }
+
+   UINT32 getDecoder() { return m_decoder; }
+
+   const char *getDataRate() const { return m_dataRate; }
+   void setDataRate(const char *dataRate) { strlcpy(m_dataRate, dataRate, 24); }
+
+   INT32 getRssi() const { return m_rssi; }
+   void setRssi(INT32 rssi) { m_rssi = rssi; }
+
+   double getSnr() const { return m_snr; }
+   void setSnr(double snr) { m_snr = snr; }
+
+   double getFreq() const { return m_freq; }
+   void setFreq(double freq) { m_freq = freq; }
+
+   UINT32 getFcnt() const { return m_fcnt; }
+   void setFcnt(UINT32 fcnt) { m_fcnt = fcnt; }
+
+   UINT32 getPort() const { return m_port; }
+   void setPort(UINT32 port) { m_port = port; }
+
+   INT32 getLastContact() const { return (INT32)m_lastContact; }
+   void updateLastContact() { m_lastContact = time(NULL); }
+};
+
+/**
+ * Notification displayed by user agent
+ */
+class LIBNXAGENT_EXPORTABLE UserAgentNotification
+{
+private:
+   ServerObjectKey m_id;
+   TCHAR *m_message;
+   time_t m_startTime;
+   time_t m_endTime;
+   bool m_onStartup;
+   bool m_read;
+
+public:
+   UserAgentNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
+   UserAgentNotification(const NXCPMessage *msg, UINT32 baseId);
+   UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end, bool onStartup);
+   UserAgentNotification(const UserAgentNotification *src);
+   ~UserAgentNotification();
+
+   const ServerObjectKey& getId() const { return m_id; }
+   const TCHAR *getMessage() const { return m_message; }
+   time_t getStartTime() const { return m_startTime; }
+   time_t getEndTime() const { return m_endTime; }
+   bool isRead() const { return m_read; }
+
+   void setRead() { m_read = true; }
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   void saveToDatabase(DB_HANDLE hdb);
+};
+
+#ifdef _WIN32
+
+/**
+ * Process information for GetProcessListForUserSession
+ */
+struct LIBNXAGENT_EXPORTABLE ProcessInformation
+{
+   DWORD pid;
+   TCHAR *name;
+
+   ProcessInformation(DWORD _pid, const TCHAR *_name)
+   {
+      pid = _pid;
+      name = MemCopyString(_name);
+   }
+   ~ProcessInformation()
+   {
+      MemFree(name);
+   }
+};
+
+#endif
+
+/**
  * API for subagents
  */
 bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize, bool inBrackets = true);
@@ -968,6 +1089,11 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, co
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
+#ifdef _WIN32
+ObjectArray<ProcessInformation> LIBNXAGENT_EXPORTABLE *GetProcessListForUserSession(DWORD sessionId);
+bool LIBNXAGENT_EXPORTABLE CheckProcessPresenseInSession(DWORD sessionId, const TCHAR *processName);
+#endif
+
 /**
  * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)
  */
@@ -975,103 +1101,5 @@ inline bool AgentSleepAndCheckForShutdown(UINT32 milliseconds)
 {
    return SleepAndCheckForShutdownEx(milliseconds);
 }
-
-/**
- * LoraWAN device payload
- */
-typedef BYTE lorawan_payload_t[36];
-
-/**
- * Lora device data
- */
-class LIBNXAGENT_EXPORTABLE LoraDeviceData
-{
-private:
-   uuid m_guid;
-   MacAddress m_devAddr;
-   MacAddress m_devEui;
-   lorawan_payload_t m_payload;
-   INT32 m_decoder;
-   char m_dataRate[24];
-   INT32 m_rssi;
-   double m_snr;
-   double m_freq;
-   UINT32 m_fcnt;
-   UINT32 m_port;
-   time_t m_lastContact;
-
-public:
-   LoraDeviceData(NXCPMessage *request);
-   LoraDeviceData(DB_RESULT result, int row);
-
-   UINT32 saveToDB (bool isNew = false) const;
-   UINT32 deleteFromDB () const;
-
-   bool isOtaa() const { return (m_devEui.length() > 0) ? true : false; }
-
-   const uuid& getGuid() const { return m_guid; }
-
-   const MacAddress& getDevAddr() const { return m_devAddr; }
-   void setDevAddr(MacAddress devAddr) { m_devAddr = devAddr; saveToDB(); }
-   const MacAddress& getDevEui() const { return m_devEui; }
-
-   const BYTE *getPayload() const { return m_payload; }
-   void setPayload(const char *payload) {  StrToBinA(payload, m_payload, 36); }
-
-   UINT32 getDecoder() { return m_decoder; }
-
-   const char *getDataRate() const { return m_dataRate; }
-   void setDataRate(const char *dataRate) { strlcpy(m_dataRate, dataRate, 24); }
-
-   INT32 getRssi() const { return m_rssi; }
-   void setRssi(INT32 rssi) { m_rssi = rssi; }
-
-   double getSnr() const { return m_snr; }
-   void setSnr(double snr) { m_snr = snr; }
-
-   double getFreq() const { return m_freq; }
-   void setFreq(double freq) { m_freq = freq; }
-
-   UINT32 getFcnt() const { return m_fcnt; }
-   void setFcnt(UINT32 fcnt) { m_fcnt = fcnt; }
-
-   UINT32 getPort() const { return m_port; }
-   void setPort(UINT32 port) { m_port = port; }
-
-   INT32 getLastContact() const { return (INT32)m_lastContact; }
-   void updateLastContact() { m_lastContact = time(NULL); }
-};
-
-/**
- * Notification displayed by user agent
- */
-class LIBNXAGENT_EXPORTABLE UserAgentNotification
-{
-private:
-   ServerObjectKey m_id;
-   TCHAR *m_message;
-   time_t m_startTime;
-   time_t m_endTime;
-   bool m_onStartup;
-   bool m_read;
-
-public:
-   UserAgentNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
-   UserAgentNotification(const NXCPMessage *msg, UINT32 baseId);
-   UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end, bool onStartup);
-   UserAgentNotification(const UserAgentNotification *src);
-   ~UserAgentNotification();
-
-   const ServerObjectKey& getId() const { return m_id; }
-   const TCHAR *getMessage() const { return m_message;  }
-   time_t getStartTime() const { return m_startTime; }
-   time_t getEndTime() const { return m_endTime; }
-   bool isRead() const { return m_read; }
-
-   void setRead() { m_read = true; }
-
-   void fillMessage(NXCPMessage *msg, UINT32 baseId);
-   void saveToDatabase(DB_HANDLE hdb);
-};
 
 #endif   /* _nms_agent_h_ */

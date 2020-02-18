@@ -73,6 +73,10 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *);
 THREAD_RESULT THREAD_CALL SyslogSender(void *);
 THREAD_RESULT THREAD_CALL TunnelManager(void *);
 
+#ifdef _WIN32
+THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *);
+#endif
+
 void ShutdownEventSender();
 void ShutdownSNMPTrapSender();
 
@@ -1350,6 +1354,10 @@ BOOL Initialize()
          {
             nxlog_write(NXLOG_WARNING, _T("Signature validation failed for user agent executable \"%s\""), command.cstr() + 1);
          }
+      }
+      if (g_config->getValueAsBoolean(_T("/CORE/UserAgentWatchdog"), false))
+      {
+         ThreadCreate(UserAgentWatchdog, 0, MemCopyString(g_config->getValue(_T("/CORE/UserAgentExecutable"), _T("nxuseragent.exe"))));
       }
 #endif
 	}

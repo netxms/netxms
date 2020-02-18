@@ -12,7 +12,7 @@ void DrawTextOnDesktop(const TCHAR *text)
    rect.top = 10;
    rect.right = 200;
    rect.bottom = 200;
-   DrawText(hdc, text, _tcslen(text), &rect, DT_LEFT | DT_NOPREFIX);
+   DrawText(hdc, text, static_cast<int>(_tcslen(text)), &rect, DT_LEFT | DT_NOPREFIX);
 
    ReleaseDC(NULL, hdc);
 }

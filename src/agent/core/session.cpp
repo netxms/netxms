@@ -407,10 +407,10 @@ void CommSession::readThread()
             m_ts = time(NULL);
 
             char buffer[32768];
-            rc = m_channel->recv(buffer, 32768);
-            if (rc <= 0)
+            ssize_t bytes = m_channel->recv(buffer, 32768);
+            if (bytes <= 0)
                break;
-            SendEx(m_hProxySocket, buffer, rc, 0, NULL);
+            SendEx(m_hProxySocket, buffer, bytes, 0, NULL);
          }
       }
    }

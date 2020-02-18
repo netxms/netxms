@@ -92,7 +92,7 @@ LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
  */
 int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
 {
-	int nBytes, nRet = 0;
+	int nRet = 0;
 	SOCKET nSd;
 
 	if (szMatch[0] == 0)
@@ -128,12 +128,12 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 #define READ_TIMEOUT 5000
 #define CHUNK_SIZE 10240
 			char *buff = (char *)malloc(CHUNK_SIZE);
-			int offset = 0;
-			int buffSize = CHUNK_SIZE;
+			ssize_t offset = 0;
+			ssize_t buffSize = CHUNK_SIZE;
 
 			while(NetCanRead(nSd, READ_TIMEOUT))
 			{
-				nBytes = NetRead(nSd, buff + offset, buffSize - offset);
+				ssize_t nBytes = NetRead(nSd, buff + offset, buffSize - offset);
 				if (nBytes > 0) 
             {
 					offset += nBytes;

@@ -688,11 +688,59 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *args)
 /**
  * Log error for ExecuteInAllSessions
  */
-static inline void ExecuteInAllSessionsLogError(const TCHAR *message)
+static inline void ExecuteInAllSessionsLogError(const TCHAR *function, const TCHAR *message)
 {
    TCHAR buffer[1024];
-   nxlog_debug_tag(WTS_DEBUG_TAG, 4, _T("ExecuteInAllSessions: %s (%s)"),
-         message, GetSystemErrorText(GetLastError(), buffer, 1024));
+   nxlog_debug_tag(WTS_DEBUG_TAG, 4, _T("%s: %s (%s)"),
+         function, message, GetSystemErrorText(GetLastError(), buffer, 1024));
+}
+
+/**
+ * Execute given command in specific session
+ */
+bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions)
+{
+   const TCHAR *function = allSessions ? _T("ExecuteInAllSessions") : _T("ExecuteInSession");
+   nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: attepting to execute command in session #%u (%s)"),
+         function, session->SessionId, session->pWinStationName);
+ 
+   bool success = false;
+   HANDLE sessionToken;
+   if (WTSQueryUserToken(session->SessionId, &sessionToken))
+   {
+      HANDLE primaryToken;
+      if (DuplicateTokenEx(sessionToken, TOKEN_ALL_ACCESS, NULL, SecurityDelegation, TokenPrimary, &primaryToken))
+      {
+         STARTUPINFO si;
+         memset(&si, 0, sizeof(si));
+         si.cb = sizeof(si);
+         si.lpDesktop = _T("winsta0\\default");
+         PROCESS_INFORMATION pi;
+         if (CreateProcessAsUser(primaryToken, NULL, command, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, _T("C:\\"), &si, &pi))
+         {
+            nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: process created in session #%u (%s)"),
+                  function, session->SessionId, session->pWinStationName);
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+            success = true;
+         }
+         else
+         {
+            ExecuteInAllSessionsLogError(function, _T("call to CreateProcessAsUser failed"));
+         }
+         CloseHandle(primaryToken);
+      }
+      else
+      {
+         ExecuteInAllSessionsLogError(function, _T("call to DuplicateTokenEx failed"));
+      }
+      CloseHandle(sessionToken);
+   }
+   else
+   {
+      ExecuteInAllSessionsLogError(function, _T("call to WTSQueryUserToken failed"));
+   }
+   return success;
 }
 
 /**
@@ -704,7 +752,7 @@ bool ExecuteInAllSessions(const TCHAR *command)
    DWORD sessionCount;
    if (!WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &sessionCount))
    {
-      ExecuteInAllSessionsLogError(_T("call to WTSEnumerateSessions failed"));
+      ExecuteInAllSessionsLogError(_T("ExecuteInAllSessions"), _T("call to WTSEnumerateSessions failed"));
       return false;
    }
 
@@ -716,42 +764,7 @@ bool ExecuteInAllSessions(const TCHAR *command)
    {
       if (sessions[i].SessionId == 0)
          continue;
-
-      nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("ExecuteInAllSessions: attepting to execute command in session %u (%s)"), sessions[i].SessionId, sessions[i].pWinStationName);
-      
-      HANDLE sessionToken;
-      if (WTSQueryUserToken(sessions[i].SessionId, &sessionToken))
-      {
-         HANDLE primaryToken;
-         if (DuplicateTokenEx(sessionToken, TOKEN_ALL_ACCESS, NULL, SecurityDelegation, TokenPrimary, &primaryToken))
-         {
-            STARTUPINFO si;
-            memset(&si, 0, sizeof(si));
-            si.cb = sizeof(si);
-            si.lpDesktop = _T("winsta0\\default");
-            PROCESS_INFORMATION pi;
-            if (CreateProcessAsUser(primaryToken, NULL, cmdLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, _T("C:\\"), &si, &pi))
-            {
-               nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("ExecuteInAllSessions: process created in session %u (%s)"), sessions[i].SessionId, sessions[i].pWinStationName);
-               CloseHandle(pi.hThread);
-               CloseHandle(pi.hProcess);
-            }
-            else
-            {
-               ExecuteInAllSessionsLogError(_T("call to CreateProcessAsUser failed"));
-            }
-            CloseHandle(primaryToken);
-         }
-         else
-         {
-            ExecuteInAllSessionsLogError(_T("call to DuplicateTokenEx failed"));
-         }
-         CloseHandle(sessionToken);
-      }
-      else
-      {
-         ExecuteInAllSessionsLogError(_T("call to WTSQueryUserToken failed"));
-      }
+      ExecuteInSession(&sessions[i], cmdLine, true);
    }
 
    WTSFreeMemory(sessions);

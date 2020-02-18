@@ -228,9 +228,9 @@ void DataCollectionProxy::checkConnection()
    for(int retryCount = 5; retryCount > 0; retryCount--)
    {
 #ifdef MSG_NOSIGNAL
-      int bytes = send(sd, reinterpret_cast<char*>(&request), sizeof(request), MSG_NOSIGNAL);
+      ssize_t bytes = send(sd, reinterpret_cast<char*>(&request), sizeof(request), MSG_NOSIGNAL);
 #else
-      int bytes = send(sd, reinterpret_cast<char*>(&request), sizeof(request), 0);
+      ssize_t bytes = send(sd, reinterpret_cast<char*>(&request), sizeof(request), 0);
 #endif
       if (bytes <= 0)
          continue;

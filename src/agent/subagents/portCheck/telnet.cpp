@@ -66,11 +66,11 @@ int CheckTelnet(char *szAddr, const InetAddress& addr, short nPort, char *szUser
 		nRet = PC_ERR_HANDSHAKE;
 		while(NetCanRead(nSd, 1000) && nRet == PC_ERR_HANDSHAKE) // 1sec
 		{
-			int size = NetRead(nSd, (char *)szBuff, sizeof(szBuff));
+			ssize_t size = NetRead(nSd, (char *)szBuff, sizeof(szBuff));
 			unsigned char out[4];
 
 			memset(out, 0, sizeof(out));
-			for (int i = 0; i < size; i++)
+			for (ssize_t i = 0; i < size; i++)
 			{
 				if (szBuff[i] == 0xFF) // IAC
 				{

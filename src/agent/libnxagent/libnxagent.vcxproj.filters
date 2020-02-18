@@ -42,6 +42,9 @@
     <ClCompile Include="ua_notification.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wtsproc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libnxagent.h">

@@ -48,12 +48,12 @@ bool NetCanWrite(SOCKET nSocket, int nTimeout /* ms */)
    return sp.poll(nTimeout) > 0;
 }
 
-int NetRead(SOCKET nSocket, char *pBuff, int nSize)
+ssize_t NetRead(SOCKET nSocket, char *pBuff, size_t nSize)
 {
 	return RecvEx(nSocket, pBuff, nSize, 0, INFINITE);
 }
 
-int NetWrite(SOCKET nSocket, const char *pBuff, int nSize)
+ssize_t NetWrite(SOCKET nSocket, const char *pBuff, size_t nSize)
 {
 	return SendEx(nSocket, pBuff, nSize, 0, NULL);
 }

@@ -168,18 +168,18 @@ static BOOL GetProcessCommandLine(DWORD pid, TCHAR *pszCmdLine, DWORD dwLen)
 			if (ReadProcessMemory(hProcess, peb.ProcessParameters, &pp, sizeof(RTL_USER_PROCESS_PARAMETERS), &dummy))
 			{
 				size_t bufSize = (pp.CommandLine.Length + 1) * sizeof(WCHAR);
-				buffer = (WCHAR *)malloc(bufSize);
+				buffer = (WCHAR *)MemAlloc(bufSize);
 				if (ReadProcessMemory(hProcess, pp.CommandLine.Buffer, buffer, bufSize, &dummy))
 				{
 #ifdef UNICODE
-					nx_strncpy(pszCmdLine, buffer, dwLen);
+					wcslcpy(pszCmdLine, buffer, dwLen);
 #else
 					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, pp.CommandLine.Length, pszCmdLine, dwLen, NULL, NULL);
 					pszCmdLine[dwLen - 1] = 0;
 #endif
 					bRet = TRUE;
 				}
-				free(buffer);
+				MemFree(buffer);
 			}
 		}
 	}

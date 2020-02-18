@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,10 +21,14 @@
 **/
 
 #include "nxagentd.h"
-#ifndef _WIN32
+#ifdef _WIN32
+#include <WtsApi32.h>
+#else
 #include <signal.h>
 #include <syslog.h>
 #endif
+
+#define DEBUG_TAG _T("watchdog")
 
 /**
  * Static data
@@ -81,7 +85,7 @@ void StartWatchdog()
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
 				  nxlog_get_debug_level(), szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
-	DebugPrintf(1, _T("Starting agent watchdog with command line '%s'"), szCmdLine);
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Starting agent watchdog with command line '%s'"), szCmdLine);
 
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
@@ -93,7 +97,7 @@ void StartWatchdog()
                       NULL, NULL, &si, &pi))
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create process \"%s\" (%s)"),
             szCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
    }
    else
@@ -101,7 +105,7 @@ void StartWatchdog()
       // Close main thread handle
       CloseHandle(pi.hThread);
       m_hWatchdogProcess = pi.hProcess;
-      nxlog_write(NXLOG_INFO, _T("Watchdog process started"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Watchdog process started"));
    }
 #else
    _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-D %d %s-W %lu"), szExecName,
@@ -114,11 +118,11 @@ void StartWatchdog()
               (unsigned long)getpid());
    if (ExecuteCommand(szCmdLine, NULL, &m_pidWatchdogProcess) == ERR_SUCCESS)
 	{
-	   nxlog_write(NXLOG_INFO, _T("Watchdog process started"));
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Watchdog process started"));
 	}
 	else
 	{
-      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\""), szCmdLine);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create process \"%s\""), szCmdLine);
 	}
 #endif
 }
@@ -134,7 +138,7 @@ void StopWatchdog()
 #else
 	kill(m_pidWatchdogProcess, SIGKILL);
 #endif
-   nxlog_write(NXLOG_INFO, _T("Watchdog process stopped"));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Watchdog process stopped"));
 }
 
 /**
@@ -218,3 +222,79 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection)
 	return 1;
 }
 
+#ifdef _WIN32
+
+bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions);
+
+/**
+ * Watchdog for user agents
+ */
+THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *arg)
+{
+   TCHAR *executableName = static_cast<TCHAR*>(arg);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("User agent watchdog started (executable name %s)"), executableName);
+
+   while (!AgentSleepAndCheckForShutdown(60000))
+   {
+      WTS_SESSION_INFO *sessions;
+      DWORD sessionCount;
+      if (!WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &sessionCount))
+         continue;
+
+      WTS_PROCESS_INFO *processes;
+      DWORD processCount;
+      if (!WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &processes, &processCount))
+      {
+         WTSFreeMemory(sessions);
+         continue;
+      }
+
+      for (DWORD i = 0; i < sessionCount; i++)
+      {
+         if ((sessions[i].State != WTSActive) && (sessions[i].State != WTSConnected))
+            continue;
+
+         DWORD sessionId = sessions[i].SessionId;
+         bool found = false;
+         for (DWORD j = 0; j < processCount; j++)
+         {
+            if ((processes[j].SessionId == sessionId) && !_tcscmp(processes[j].pProcessName, executableName))
+            {
+               found = true;
+               break;
+            }
+         }
+
+         if (!found)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("User agent process not found in session #%u (%s)"),
+                  sessionId, sessions[i].pWinStationName);
+            TCHAR binDir[MAX_PATH];
+            GetNetXMSDirectory(nxDirBin, binDir);
+
+            StringBuffer command = _T("\"");
+            command.append(binDir);
+            command.append(_T("\\"));
+            command.append(executableName);
+            if (VerifyFileSignature(command.cstr() + 1)) // skip leading "
+            {
+               command.append(_T("\""));
+               ExecuteInSession(&sessions[i], command.getBuffer(), false);
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Signature validation failed for user agent executable \"%s\""), command.cstr() + 1);
+            }
+         }
+      }
+
+      WTSFreeMemory(sessions);
+      WTSFreeMemory(processes);
+   }
+
+   MemFree(executableName);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("User agent watchdog stopped"));
+   return THREAD_OK;
+}
+
+#endif

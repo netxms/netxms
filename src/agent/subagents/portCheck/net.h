@@ -35,8 +35,8 @@ enum
 SOCKET NetConnectTCP(const char *, const InetAddress&, unsigned short, UINT32);
 bool NetCanRead(SOCKET, int);
 bool NetCanWrite(SOCKET, int);
-int NetRead(SOCKET, char *, int);
-int NetWrite(SOCKET, const char *, int);
+ssize_t NetRead(SOCKET, char *, size_t);
+ssize_t NetWrite(SOCKET, const char *, size_t);
 void NetClose(SOCKET);
 
 #endif // __NET__H__

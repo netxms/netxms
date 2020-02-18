@@ -151,7 +151,7 @@ void SessionAgentConnector::readThread()
    NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
    while(1)
    {
-      int err = RecvNXCPMessageEx(m_socket, &rawMsg, &m_msgBuffer, &rawMsgSize, &dummyCtx, NULL, 300000, 4 * 1024 * 1024);
+      ssize_t err = RecvNXCPMessageEx(m_socket, &rawMsg, &m_msgBuffer, &rawMsgSize, &dummyCtx, NULL, 300000, 4 * 1024 * 1024);
       if (err <= 0)
          break;
 

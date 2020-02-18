@@ -43,7 +43,7 @@ BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
    NXCP_MESSAGE *pRawMsg;
    NXCP_BUFFER *pBuffer;
    NXCPEncryptionContext *pDummyCtx = NULL;
-   int nLen;
+   ssize_t nLen;
 
    InetAddress addr = InetAddress::resolveHostName(pszServer);
    if (!addr.isValidUnicast())
