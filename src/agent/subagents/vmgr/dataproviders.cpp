@@ -373,7 +373,7 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
       value->set(7, (UINT64)info->maxMem * 1024);
       value->set(8, (UINT32)(info->memory/(float)info->maxMem)*100);
       value->set(9, info->nrVirtCpu);
-      value->set(10, info->cpuTime);
+      value->set(10, static_cast<uint64_t>(info->cpuTime));
    }
    else
    {
@@ -399,7 +399,7 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    {
       value->set(11, cInfo.state > 4 ? _T("Unknown") : vmOpStateMapping[cInfo.state]);
       value->set(12, cInfo.details > 4 ? _T("Unknown") : vmOpStateDescMapping[cInfo.details]);
-      value->set(13, cInfo.stateTime);
+      value->set(13, static_cast<uint64_t>(cInfo.stateTime));
    }
    else
    {
@@ -409,10 +409,10 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    }
 
 #if HAVE_VIRDOMAINGETTIME
-   INT64 seconds;
+   long long int seconds;
    UINT32 nsec;
    if(virDomainGetTime(*vm, &seconds, &nsec, 0) == 0)
-      value->set(14, seconds);
+      value->set(14, static_cast<int64_t>(seconds));
    else
 #endif
       value->set(14, 0);
@@ -830,9 +830,9 @@ EnumerationCallbackResult FillStorageData(const TCHAR *key, const void *obj, voi
    value->addRow();
    value->set(0, key);
    value->set(1, storagePoolState[info->state < 5 && info->state >= 0 ? info->state : 5]);
-   value->set(2, info->capacity);
-   value->set(3, info->allocation);
-   value->set(4, info->available);
+   value->set(2, static_cast<uint64_t>(info->capacity));
+   value->set(3, static_cast<uint64_t>(info->allocation));
+   value->set(4, static_cast<uint64_t>(info->available));
 
    conn->unlockStorageInfo();
    return _CONTINUE;
