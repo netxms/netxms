@@ -187,7 +187,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    private void refresh()
    {
-      if(modifiedByOtherUser && modified)
+      if(modified)
       {
          if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
                                         "Do you really want to refresh the policy?\n You will loose all your changes."))
@@ -446,7 +446,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       switch(n.getCode())
       {
          case SessionNotification.POLICY_MODIFIED: 
-            if (n.getSubCode() != templateId && !((AgentPolicy)n.getObject()).getGuid().equals(policyGUID))
+            if (n.getSubCode() != templateId || !((AgentPolicy)n.getObject()).getGuid().equals(policyGUID))
                return;
 
             display.asyncExec(new Runnable() {
@@ -469,7 +469,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             });
             break;
          case SessionNotification.POLICY_DELETED:
-            if (n.getSubCode() != templateId && !((AgentPolicy)n.getObject()).getGuid().equals(policyGUID))
+            if (n.getSubCode() != templateId || !((AgentPolicy)n.getObject()).getGuid().equals(policyGUID))
                return;
 
             display.asyncExec(new Runnable() {
