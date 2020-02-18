@@ -41,7 +41,7 @@ WinPerfCounterSet::WinPerfCounterSet(DWORD interval, TCHAR cls)
 	m_changeCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
 	m_interval = interval;
 	m_class = cls;
-	m_counters = new ObjectArray<WINPERF_COUNTER>(32, 32, true);
+	m_counters = new ObjectArray<WINPERF_COUNTER>(32, 32, Ownership::True);
    m_collectorThread = INVALID_THREAD_HANDLE;
 }
 

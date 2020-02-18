@@ -154,7 +154,7 @@ struct DiskPerfStats
 /**
  * Collected disk performance data
  */
-static HashMap<UINT32, DiskPerfStats> s_diskPerfStats(true);
+static HashMap<UINT32, DiskPerfStats> s_diskPerfStats(Ownership::True);
 static DiskPerfStats s_globalDiskPerfStats(0xFFFFFFFF);
 static win_mutex_t s_diskPerfStatsLock;
 

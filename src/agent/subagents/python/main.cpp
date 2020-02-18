@@ -23,7 +23,7 @@
 /**
  * Plugin registry
  */
-static ObjectArray<PythonPlugin> s_plugins(16, 16, false);
+static ObjectArray<PythonPlugin> s_plugins(16, 16, Ownership::False);
 
 /**
  * Register plugins

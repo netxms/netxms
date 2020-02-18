@@ -335,7 +335,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(DB2DRV_CONN *pConn, NETXMS_WCHAR 
 		{
 			result = (DB2DRV_STATEMENT *)malloc(sizeof(DB2DRV_STATEMENT));
 			result->handle = statement;
-			result->buffers = new Array(0, 16, true);
+			result->buffers = new Array(0, 16, Ownership::True);
 			result->connection = pConn;
 			*pdwError = DBERR_SUCCESS;
 		}

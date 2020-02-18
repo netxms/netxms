@@ -82,7 +82,7 @@ void TuxedoResetServices()
  */
 void TuxedoQueryServices()
 {
-   StringObjectMap<TuxedoService> *services = new StringObjectMap<TuxedoService>(true);
+   StringObjectMap<TuxedoService> *services = new StringObjectMap<TuxedoService>(Ownership::True);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);

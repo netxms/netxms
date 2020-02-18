@@ -336,7 +336,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwsz
 		{
 			result = (INFORMIX_STATEMENT *)malloc(sizeof(INFORMIX_STATEMENT));
 			result->handle = statement;
-			result->buffers = new Array(0, 16, true);
+			result->buffers = new Array(0, 16, Ownership::True);
 			result->connection = pConn;
 			*pdwError = DBERR_SUCCESS;
 		}

@@ -37,7 +37,7 @@ HANDLE g_winperfShutdownCondition = NULL;
  */
 static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
 static MUTEX s_autoCountersLock = MutexCreate();
-static StringObjectMap<WINPERF_COUNTER> *s_autoCounters = new StringObjectMap<WINPERF_COUNTER>(false);
+static StringObjectMap<WINPERF_COUNTER> *s_autoCounters = new StringObjectMap<WINPERF_COUNTER>(Ownership::False);
 
 /**
  * List of predefined performance counters

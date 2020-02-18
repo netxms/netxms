@@ -56,7 +56,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 {
 	ISCSession *session = (ISCSession *)arg;
    SOCKET sock = session->GetSocket();
-   int i, err, serviceIndex, state = ISC_STATE_INIT;
+   int i, serviceIndex, state = ISC_STATE_INIT;
    NXCP_MESSAGE *pRawMsg, *pRawMsgOut;
    NXCP_BUFFER *pRecvBuffer;
    NXCPMessage *pRequest, response;
@@ -73,7 +73,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 
    while(1)
    {
-      err = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
+      ssize_t err = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
       if (err <= 0)
 		{
 			if (err == -1)

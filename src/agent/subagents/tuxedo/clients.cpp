@@ -132,7 +132,7 @@ void TuxedoResetClients()
  */
 void TuxedoQueryClients()
 {
-   StringObjectMap<TuxedoClient> *clients = new StringObjectMap<TuxedoClient>(true);
+   StringObjectMap<TuxedoClient> *clients = new StringObjectMap<TuxedoClient>(Ownership::True);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);

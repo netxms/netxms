@@ -193,7 +193,7 @@ public:
 /**
  * Create new Tuxedo server object
  */
-TuxedoServer::TuxedoServer(TuxedoServerInstance *base) : m_summary(base), m_instances(64, 64, true)
+TuxedoServer::TuxedoServer(TuxedoServerInstance *base) : m_summary(base), m_instances(64, 64, Ownership::True)
 {
    m_uniqueId = (base->m_groupId << 16) | base->m_baseId;
    m_running = !strncmp(base->m_state, "ACT", 3) ? 1 : 0;
@@ -244,8 +244,8 @@ void TuxedoResetServers()
  */
 void TuxedoQueryServers()
 {
-   HashMap<UINT32, TuxedoServer> *servers = new HashMap<UINT32, TuxedoServer>(true);
-   HashMap<UINT32, TuxedoServerInstance> *serverInstances = new HashMap<UINT32, TuxedoServerInstance>(false);
+   HashMap<UINT32, TuxedoServer> *servers = new HashMap<UINT32, TuxedoServer>(Ownership::True);
+   HashMap<UINT32, TuxedoServerInstance> *serverInstances = new HashMap<UINT32, TuxedoServerInstance>(Ownership::True);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);

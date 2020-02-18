@@ -26,7 +26,7 @@ MenuItem::MenuItem()
    m_path = _tcsdup(_T(""));
    m_command = NULL;
    m_parent = NULL;
-   m_subItems = new ObjectArray<MenuItem>(16, 16, true);
+   m_subItems = new ObjectArray<MenuItem>(16, 16, Ownership::True);
    m_hWnd = NULL;
    m_selected = false;
    m_highlighted = false;
@@ -88,7 +88,7 @@ MenuItem::MenuItem(MenuItem *parent, ConfigEntry *config, const TCHAR *rootPath)
    if (subItems != NULL)
    {
       m_command = NULL;
-      m_subItems = new ObjectArray<MenuItem>(16, 16, true);
+      m_subItems = new ObjectArray<MenuItem>(16, 16, Ownership::True);
       loadSubItems(subItems);
    }
    else

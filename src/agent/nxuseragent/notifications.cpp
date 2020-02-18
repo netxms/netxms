@@ -3,7 +3,7 @@
 /**
  * List of active user agent messages
  */
-static HashMap<ServerObjectKey, UserAgentNotification> s_notifications(true);
+static HashMap<ServerObjectKey, UserAgentNotification> s_notifications(Ownership::True);
 static Mutex s_notificationLock;
 
 /**
@@ -141,7 +141,7 @@ static EnumerationCallbackResult NotificationSelector(const void *key, const voi
  */
 ObjectArray<UserAgentNotification> *GetNotificationsForDisplay()
 {
-   ObjectArray<UserAgentNotification> *list = new ObjectArray<UserAgentNotification>(64, 64, true);
+   ObjectArray<UserAgentNotification> *list = new ObjectArray<UserAgentNotification>(64, 64, Ownership::True);
    time_t now = time(NULL);
    s_notificationLock.lock();
    s_notifications.forEach(NotificationSelector, list);

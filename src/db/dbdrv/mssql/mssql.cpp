@@ -313,7 +313,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQue
 		{
 			result = (MSSQL_STATEMENT *)malloc(sizeof(MSSQL_STATEMENT));
 			result->handle = stmt;
-			result->buffers = new Array(0, 16, true);
+			result->buffers = new Array(0, 16, Ownership::True);
 			result->connection = pConn;
 			*pdwError = DBERR_SUCCESS;
 		}

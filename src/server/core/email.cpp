@@ -87,17 +87,15 @@ static char *FindEOL(char *pszBuffer, int nLen)
 static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, int *pnBufPos, char *pszLine)
 {
    char *ptr;
-   int nRet;
-
    do
    {
       ptr = FindEOL(pszBuffer, *pnBufPos);
       if (ptr == NULL)
       {
-         nRet = RecvEx(hSocket, &pszBuffer[*pnBufPos], SMTP_BUFFER_SIZE - *pnBufPos, 0, 30000);
-         if (nRet <= 0)
+         ssize_t bytes = RecvEx(hSocket, &pszBuffer[*pnBufPos], SMTP_BUFFER_SIZE - *pnBufPos, 0, 30000);
+         if (bytes <= 0)
             return FALSE;
-         *pnBufPos += nRet;
+         *pnBufPos += bytes;
       }
    } while(ptr == NULL);
    *ptr = 0;

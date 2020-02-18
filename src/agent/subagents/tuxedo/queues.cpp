@@ -129,8 +129,8 @@ void TuxedoResetQueues()
  */
 void TuxedoQueryQueues()
 {
-   StringObjectMap<TuxedoQueue> *queues = new StringObjectMap<TuxedoQueue>(true);
-   StringObjectMap<TuxedoQueue> *queuesByServer = new StringObjectMap<TuxedoQueue>(true);
+   StringObjectMap<TuxedoQueue> *queues = new StringObjectMap<TuxedoQueue>(Ownership::True);
+   StringObjectMap<TuxedoQueue> *queuesByServer = new StringObjectMap<TuxedoQueue>(Ownership::True);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
