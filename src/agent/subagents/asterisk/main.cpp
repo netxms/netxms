@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,8 +49,8 @@ ThreadPool *g_asteriskThreadPool = NULL;
 /**
  * Configured systems
  */
-static ObjectArray<AsteriskSystem> s_systems(16, 16, true);
-static StringObjectMap<AsteriskSystem> s_indexByName(false);
+static ObjectArray<AsteriskSystem> s_systems(16, 16, Ownership::True);
+static StringObjectMap<AsteriskSystem> s_indexByName(Ownership::False);
 
 /**
  * Get asterisk system by name

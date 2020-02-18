@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ static ObjectArray<TaskProcessor> *ReadTaskProcessorList(AsteriskSystem *sys)
    if (rawData == NULL)
       return NULL;
 
-   ObjectArray<TaskProcessor> *list = new ObjectArray<TaskProcessor>(128, 128, true);
+   ObjectArray<TaskProcessor> *list = new ObjectArray<TaskProcessor>(128, 128, Ownership::True);
    for(int i = 0; i < rawData->size(); i++)
    {
       TCHAR name[128];
@@ -134,7 +134,7 @@ struct TaskProcessorCacheEntry
       delete data;
    }
 };
-static StringObjectMap<TaskProcessorCacheEntry> s_cache(true);
+static StringObjectMap<TaskProcessorCacheEntry> s_cache(Ownership::True);
 static Mutex s_cacheLock;
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,9 +72,10 @@ AsteriskSystem *AsteriskSystem::createFromConfig(ConfigEntry *config, bool defau
  * Constructor
  */
 AsteriskSystem::AsteriskSystem(const TCHAR *name) :
-         m_eventListeners(0, 16, false), m_peerEventCounters(true), m_peerRTCPStatistic(true), m_rtcpData(true), m_registrationTests(true)
+         m_eventListeners(0, 16, Ownership::False), m_peerEventCounters(Ownership::True), m_peerRTCPStatistic(Ownership::True),
+         m_rtcpData(Ownership::True), m_registrationTests(Ownership::True)
 {
-   m_name = _tcsdup(name);
+   m_name = MemCopyString(name);
    m_port = 5038;
    m_login = NULL;
    m_password = NULL;
