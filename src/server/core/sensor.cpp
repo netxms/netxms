@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -479,25 +479,25 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
    if (dco->getInstanceDiscoveryData() == NULL)
       return NULL;
 
-   DataCollectionTarget *obj;
+   DataCollectionTarget *object;
    if (dco->getSourceNode() != 0)
    {
-      obj = (DataCollectionTarget *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
-      if (obj == NULL)
+      object = static_cast<DataCollectionTarget*>(FindObjectById(dco->getSourceNode(), OBJECT_NODE));
+      if (object == NULL)
       {
          DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
          return NULL;
       }
-      if (!obj->isTrustedNode(m_id))
+      if (!object->isTrustedNode(m_id))
       {
          DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source sensor %s [%d]"),
-                  dco->getName().cstr(), dco->getId(), m_name, m_id, obj->getName(), obj->getId());
+                  dco->getName().cstr(), dco->getId(), m_name, m_id, object->getName(), object->getId());
          return NULL;
       }
    }
    else
    {
-      obj = this;
+      object = this;
    }
 
    StringList *instances = NULL;
@@ -505,13 +505,13 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
    switch(dco->getInstanceDiscoveryMethod())
    {
       case IDM_AGENT_LIST:
-         if (obj->getObjectClass() == OBJECT_NODE)
-            ((Node *)obj)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
-         else if (obj->getObjectClass() == OBJECT_SENSOR)
-            ((Sensor *)obj)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         if (object->getObjectClass() == OBJECT_NODE)
+            static_cast<Node*>(object)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         else if (object->getObjectClass() == OBJECT_SENSOR)
+            static_cast<Sensor*>(object)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
          break;
       case IDM_SCRIPT:
-         obj->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
+         object->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
          break;
       default:
          instances = NULL;

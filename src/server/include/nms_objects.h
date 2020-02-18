@@ -1925,8 +1925,8 @@ public:
 
    NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
 
-   UINT32 getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
-   UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
+   DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
+   DataCollectionError getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
    UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);

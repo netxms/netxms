@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -894,9 +894,9 @@ DataCollectionError DataCollectionTarget::getScriptItem(const TCHAR *param, size
 /**
  * Get list from library script
  */
-UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject)
 {
-   UINT32 rc = DCE_NOT_SUPPORTED;
+   DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
    if (vm != NULL)
    {
@@ -954,86 +954,46 @@ DataCollectionError DataCollectionTarget::getScriptTable(const TCHAR *param, Tab
 /**
  * Get string map from library script
  */
-UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject)
 {
-   TCHAR name[256];
-   nx_strncpy(name, param, 256);
-   Trim(name);
-
-   UINT32 rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = CreateServerScriptVM(name, this);
+   DataCollectionError rc = DCE_NOT_SUPPORTED;
+   NXSL_VM *vm = runDataCollectionScript(param, targetObject);
    if (vm != NULL)
    {
-      ObjectRefArray<NXSL_Value> args(16, 16);
-
-      // Can be in form parameter(arg1, arg2, ... argN)
-      TCHAR *p = _tcschr(name, _T('('));
-      if (p != NULL)
+      rc = DCE_SUCCESS;
+      NXSL_Value *value = vm->getResult();
+      if (value->isHashMap())
       {
-         if (name[_tcslen(name) - 1] != _T(')'))
-            return DCE_NOT_SUPPORTED;
-         name[_tcslen(name) - 1] = 0;
-
-         if (!ParseValueList(vm, &p, args))
-         {
-            // argument parsing error
-            delete vm;
-            return DCE_NOT_SUPPORTED;
-         }
+         *map = value->getValueAsHashMap()->toStringMap();
       }
-
-      if (targetObject != NULL)
+      else if (value->isArray())
       {
-         vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject(vm));
-      }
-      if (vm->run(args))
-      {
-         rc = DCE_SUCCESS;
-         NXSL_Value *value = vm->getResult();
-         if (value->isHashMap())
+         *map = new StringMap();
+         NXSL_Array *a = value->getValueAsArray();
+         for(int i = 0; i < a->size(); i++)
          {
-            *map = value->getValueAsHashMap()->toStringMap();
-         }
-         else if (value->isArray())
-         {
-            *map = new StringMap();
-            NXSL_Array *a = value->getValueAsArray();
-            for(int i = 0; i < a->size(); i++)
+            NXSL_Value *v = a->getByPosition(i);
+            if (v->isString())
             {
-               NXSL_Value *v = a->getByPosition(i);
-               if (v->isString())
-               {
-                  (*map)->set(v->getValueAsCString(), v->getValueAsCString());
-               }
+               (*map)->set(v->getValueAsCString(), v->getValueAsCString());
             }
          }
-         else if (value->isString())
-         {
-            *map = new StringMap();
-            (*map)->set(value->getValueAsCString(), value->getValueAsCString());
-         }
-         else if (value->isNull())
-         {
-            rc = DCE_COLLECTION_ERROR;
-         }
-         else
-         {
-            *map = new StringMap();
-         }
+      }
+      else if (value->isString())
+      {
+         *map = new StringMap();
+         (*map)->set(value->getValueAsCString(), value->getValueAsCString());
+      }
+      else if (value->isNull())
+      {
+         rc = DCE_COLLECTION_ERROR;
       }
       else
       {
-         DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
-         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
-         rc = DCE_COLLECTION_ERROR;
+         *map = new StringMap();
       }
-      delete vm;
    }
-   else
-   {
-      DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): script \"%s\" not found"), m_name, param, name);
-   }
-   DbgPrintf(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
+   nxlog_debug(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
    return rc;
 }
 
