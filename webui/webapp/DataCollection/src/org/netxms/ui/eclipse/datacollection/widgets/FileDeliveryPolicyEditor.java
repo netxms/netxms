@@ -278,7 +278,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             PathElement e = ((PathElement)selection.getFirstElement()).findChild(f.getName());
             if (e != null)
             {
-               if (!MessageDialogHelper.openQuestion(getShell(), "File overwrite configuration", "File with " + f.getName() + " already exist. Do you want to overwrite it?"))
+               if (!MessageDialogHelper.openQuestion(getShell(), "File overwrite confirmation", "File with " + f.getName() + " already exist. Do you want to overwrite it?"))
                   continue;
                e.setFile(f);
             }
@@ -405,6 +405,12 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          {
             if (newText.isEmpty())
                return "Name cannot be empty";
+            if (parent != null)
+               for (PathElement el : parent.getChildren())
+               {
+                  if(newText.equalsIgnoreCase(el.getName()))
+                     return "Object with this name already exists";
+               }
             return null;
          }
       });
@@ -441,6 +447,12 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          {
             if (newText.isEmpty())
                return "Name cannot be empty";
+            if (element.getParent() != null)
+               for (PathElement el : element.getParent().getChildren())
+               {
+                  if(!el.equals(element) && newText.equalsIgnoreCase(el.getName()))
+                     return "Object with this name already exists";
+               }
             return null;
          }
       });

@@ -1304,8 +1304,11 @@ protected:
 public:
    FileDeliveryPolicy(const uuid& guid, UINT32 ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
    FileDeliveryPolicy(const TCHAR *name, UINT32 ownerId) : GenericAgentPolicy(name, _T("FileDelivery"), ownerId) { }
+   virtual ~FileDeliveryPolicy() { }
 
    virtual GenericAgentPolicy *clone() const override;
+   virtual UINT32 modifyFromMessage(NXCPMessage *request) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported, const TCHAR *debugId) override;
 };

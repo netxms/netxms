@@ -244,7 +244,11 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
 
    for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
    {
+#if defined(_WIN32) || defined(__APPLE__)
+      if (!_tcsnicmp(g_rootFileManagerFolders->get(i)->getFolder(), fullPathT, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
+#else
       if (!_tcsncmp(g_rootFileManagerFolders->get(i)->getFolder(), fullPathT, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
+#endif
       {
          if (!isModify || !g_rootFileManagerFolders->get(i)->isReadOnly())
          {
@@ -255,6 +259,7 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
       }
    }
 
+   AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: Access denied to %s"), fullPathT);
    MemFree(fullPathT);
    return false;
 }

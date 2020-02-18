@@ -403,7 +403,8 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(actionDelete);
 		manager.add(actionCopy);
 		manager.add(actionMove);
-		manager.add(actionConvert);
+		if(!(object instanceof Template))
+		   manager.add(actionConvert);
 		manager.add(actionDuplicate);
 		manager.add(new Separator());
 		manager.add(actionActivate);
@@ -444,7 +445,8 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(actionDelete);
 		manager.add(actionCopy);
 		manager.add(actionMove);
-		manager.add(actionConvert);
+      if(!(object instanceof Template))
+         manager.add(actionConvert);
 		manager.add(actionDuplicate);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());

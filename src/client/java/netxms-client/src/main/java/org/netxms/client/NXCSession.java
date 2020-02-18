@@ -11305,10 +11305,11 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public UUID savePolicy(long templateId, AgentPolicy currentlySelectedElement) throws NXCException, IOException
+   public UUID savePolicy(long templateId, AgentPolicy currentlySelectedElement, boolean duplicate) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_POLICY);
       msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
+      msg.setField(NXCPCodes.VID_DUPLUICATE, duplicate);
       currentlySelectedElement.fillMessage(msg);
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getFieldAsUUID(NXCPCodes.VID_GUID);

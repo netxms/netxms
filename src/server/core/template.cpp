@@ -61,7 +61,7 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UI
 Template::Template() : super(), AutoBindTarget(this), VersionableObject(this)
 {
    m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
-   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(true);
+   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, true);
 }
 
 /**
@@ -80,7 +80,7 @@ Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, co
    }
 
    m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
-   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(true);
+   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, true);
    ObjectArray<ConfigEntry> *dcis = config->getSubEntries(_T("agentPolicy#*"));
    for(int i = 0; i < dcis->size(); i++)
    {
@@ -101,7 +101,7 @@ Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, co
 Template::Template(const TCHAR *pszName) : super(pszName), AutoBindTarget(this), VersionableObject(this)
 {
    m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
-   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(true);
+   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, true);
 }
 
 /**
@@ -178,6 +178,9 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
 
       for(int i = 0; (i < m_deletedPolicyList->size()) && success; i++)
          success = m_deletedPolicyList->get(i)->deleteFromDatabase(hdb);
+
+      if (success)
+         m_deletedPolicyList->clear();
 
       Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
       while(it->hasNext() && success)

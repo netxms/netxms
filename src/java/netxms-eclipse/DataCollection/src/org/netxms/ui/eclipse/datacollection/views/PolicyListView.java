@@ -317,7 +317,7 @@ public class PolicyListView extends ViewPart implements SessionListener
       };
       actionMove.setEnabled(false);
 
-      actionDuplicate = new Action("Duplicate to another template(s)...") {
+      actionDuplicate = new Action("Duplicate") {
          @Override
          public void run()
          {
@@ -370,7 +370,7 @@ public class PolicyListView extends ViewPart implements SessionListener
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.savePolicy(templateId, newPolicy);
+            session.savePolicy(templateId, newPolicy, false);
          }
          
          @Override
@@ -401,7 +401,7 @@ public class PolicyListView extends ViewPart implements SessionListener
             for(AbstractObject o : dlg.getSelectedObjects(Template.class))
             {
                for(AgentPolicy p : policyList)
-                  session.savePolicy(o.getObjectId(), new AgentPolicy(p));
+                  session.savePolicy(o.getObjectId(), new AgentPolicy(p), true);
             }
             if (doMove)
             {
@@ -431,7 +431,7 @@ public class PolicyListView extends ViewPart implements SessionListener
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             for(AgentPolicy p : policyList)
-               session.savePolicy(templateId, p);
+               session.savePolicy(templateId, p, true);
          }
 
          @Override
@@ -507,7 +507,7 @@ public class PolicyListView extends ViewPart implements SessionListener
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final UUID newObjectGuid = session.savePolicy(templateId, newPolicy);
+            final UUID newObjectGuid = session.savePolicy(templateId, newPolicy, false);
             runInUIThread(new Runnable() {
                
                @Override

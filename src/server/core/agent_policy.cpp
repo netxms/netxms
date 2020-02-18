@@ -265,19 +265,12 @@ void GenericAgentPolicy::createExportRecord(StringBuffer &str)
 }
 
 /**
- * Clone file delivery policy
- */
-GenericAgentPolicy *FileDeliveryPolicy::clone() const
-{
-   return new FileDeliveryPolicy(this);
-}
-
-/**
  * File information
  */
 struct FileInfo
 {
    uuid guid;
+   uuid newGuid;
    TCHAR *path;
 
    ~FileInfo()
@@ -289,7 +282,7 @@ struct FileInfo
 /**
  * Build file list from path element
  */
-static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, ObjectArray<FileInfo> *files)
+static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, ObjectArray<FileInfo> *files, bool updateGuid)
 {
    ConfigEntry *children = currEntry->findEntry(_T("children"));
    if (children == NULL)
@@ -315,16 +308,111 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
             f->path = MemCopyString(currPath->cstr());
             files->add(f);
             currPath->shrink(currPath->length() - pos);
+            if (updateGuid)
+            {
+               f->newGuid = uuid::generate();
+               ObjectArray<ConfigEntry> *values = e->getSubEntries(_T("guid"));
+               values->get(0)->setValue(f->newGuid.toString());
+               delete values;
+            }
          }
          else
          {
-            BuildFileList(e, currPath, files);
+            BuildFileList(e, currPath, files, updateGuid);
          }
       }
       delete elements;
    }
 
    currPath->shrink(currPath->length() - pathPos);
+}
+
+/**
+ * Clone file delivery policy
+ */
+GenericAgentPolicy *FileDeliveryPolicy::clone() const
+{
+   return new FileDeliveryPolicy(this);
+}
+
+/**
+ * Modify from message and in case of duplicate - duplicate all physical files and update GUID
+ */
+UINT32 FileDeliveryPolicy::modifyFromMessage(NXCPMessage *request)
+{
+   UINT32 result = GenericAgentPolicy::modifyFromMessage(request);
+   if (result != RCC_SUCCESS)
+      return result;
+
+   if(request->getFieldAsBoolean(VID_DUPLUICATE))
+   {
+      ObjectArray<FileInfo> files(64, 64, true);
+      Config data;
+      data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
+      ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
+      if (rootElements != NULL)
+      {
+         for(int i = 0; i < rootElements->size(); i++)
+         {
+            StringBuffer path;
+            BuildFileList(rootElements->get(i), &path, &files, true);
+         }
+         delete rootElements;
+      }
+      MemFree(m_content);
+      data.setTopLevelTag(_T("FileDeliveryPolicy"));
+      m_content = data.createXml().getUTF8String();
+
+      for(int i = 0; i < files.size(); i++)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::modifyFromMessage(): copy file and update guid from %s to %s"), (const TCHAR *)files.get(i)->guid.toString(), (const TCHAR *)files.get(i)->newGuid.toString());
+
+         StringBuffer sourceFile = g_netxmsdDataDir;
+         sourceFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
+         sourceFile.append(files.get(i)->guid.toString());
+
+         StringBuffer destinationFile = g_netxmsdDataDir;
+         destinationFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
+         destinationFile.append(files.get(i)->newGuid.toString());
+
+         CopyFileOrDirectory(sourceFile, destinationFile);
+      }
+   }
+   return result;
+}
+
+/**
+ * File delivery policy destructor
+ * deletes all files on policy deletion
+ */
+bool FileDeliveryPolicy::deleteFromDatabase(DB_HANDLE hdb)
+{
+   ObjectArray<FileInfo> files(64, 64, true);
+   Config data;
+   data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
+   ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
+   if (rootElements != NULL)
+   {
+      for(int i = 0; i < rootElements->size(); i++)
+      {
+         StringBuffer path;
+         BuildFileList(rootElements->get(i), &path, &files, true);
+      }
+      delete rootElements;
+   }
+
+   for(int i = 0; i < files.size(); i++)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::modifyFromMessage(%s): copy file %s and update guid"), files.get(i)->guid.toString());
+
+      StringBuffer sourceFile = g_netxmsdDataDir;
+      sourceFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
+      sourceFile.append(files.get(i)->guid.toString());
+
+      _tremove(sourceFile);
+   }
+
+   return GenericAgentPolicy::deleteFromDatabase(hdb);
 }
 
 /**
@@ -350,7 +438,7 @@ UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSup
       for(int i = 0; i < rootElements->size(); i++)
       {
          StringBuffer path;
-         BuildFileList(rootElements->get(i), &path, &files);
+         BuildFileList(rootElements->get(i), &path, &files, false);
       }
       delete rootElements;
    }

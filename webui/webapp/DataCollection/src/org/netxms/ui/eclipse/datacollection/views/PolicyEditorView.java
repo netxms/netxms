@@ -290,7 +290,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    {
       try
       {
-         session.savePolicy(templateId, policy);
+         session.savePolicy(templateId, policy, false);
       }
       catch(Exception e)
       {
@@ -457,7 +457,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                   }
                   else if (!saveInProgress)
                   { 
-                     contentWrapper.showMessage(0, "Policy is modified by other user");
+                     contentWrapper.showMessage(0, "Policy is modified by other user. Clicking \"refresh\" will discard local changes. Clicking \"save\" will save local changes and discard other user changes.");
                      modifiedByOtherUser = true;
                   }
                }
