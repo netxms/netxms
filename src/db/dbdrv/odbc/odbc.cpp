@@ -311,7 +311,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR
 		{
 			result = (ODBCDRV_STATEMENT *)malloc(sizeof(ODBCDRV_STATEMENT));
 			result->handle = stmt;
-			result->buffers = new Array(0, 16, true);
+			result->buffers = new Array(0, 16, Ownership::True);
 			result->connection = pConn;
 			*pdwError = DBERR_SUCCESS;
 		}
