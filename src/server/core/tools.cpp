@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -489,7 +489,7 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDis
    }
 
    ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, filter, sortData);
-   ObjectArray<ObjectsDistance> *result = new ObjectArray<ObjectsDistance>(16, 16, true);
+   ObjectArray<ObjectsDistance> *result = new ObjectArray<ObjectsDistance>(16, 16, Ownership::True);
 	for(int i = 0; i < objects->size(); i++)
 	{
 	   NetObj *object = objects->get(i);

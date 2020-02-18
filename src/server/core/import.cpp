@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -435,7 +435,7 @@ static ObjectArray<uuid> *GetRuleOrdering(ConfigEntry *ruleOrdering)
       ObjectArray<ConfigEntry> *rules = ruleOrdering->getOrderedSubEntries(_T("rule#*"));
       if (rules->size() > 0)
       {
-         ordering = new ObjectArray<uuid>(0, 16, true);
+         ordering = new ObjectArray<uuid>(0, 16, Ownership::True);
          for(int i = 0; i < rules->size(); i++)
          {
             ordering->add(new uuid(uuid::parse(rules->get(i)->getValue())));

@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 /**
  * Session pool
  */
-static ObjectArray<SSHSession> s_sessions(16, 16, true);
+static ObjectArray<SSHSession> s_sessions(16, 16, Ownership::True);
 static MUTEX s_lock = MutexCreate();
 static VolatileCounter s_sessionId = 0;
 static CONDITION s_shutdownCondition = ConditionCreate(TRUE);
@@ -84,7 +84,7 @@ void ReleaseSession(SSHSession *session)
  */
 static THREAD_RESULT THREAD_CALL HousekeeperThread(void *arg)
 {
-   ObjectArray<SSHSession> deleteList(16, 16, true);
+   ObjectArray<SSHSession> deleteList(16, 16, Ownership::True);
    while(!ConditionWait(s_shutdownCondition, 30000))
    {
       MutexLock(s_lock);

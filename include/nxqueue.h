@@ -80,7 +80,7 @@ protected:
 
 public:
    Queue();
-   Queue(size_t blockSize, bool owner);
+   Queue(size_t blockSize, Ownership owner);
    virtual ~Queue();
 
    void put(void *object);
@@ -109,7 +109,7 @@ private:
 
 public:
    ObjectQueue() : Queue() { m_destructor = destructor; }
-   ObjectQueue(size_t blockSize, bool owner) : Queue(blockSize, owner) { m_destructor = destructor; }
+   ObjectQueue(size_t blockSize, Ownership owner) : Queue(blockSize, owner) { m_destructor = destructor; }
    virtual ~ObjectQueue() { }
 
    T *get() { return (T*)Queue::get(); }

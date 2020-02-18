@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -61,7 +61,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_matchCount = 0;
 	m_agentAction = NULL;
 	m_agentActionArgs = new StringList();
-   m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(true);
+   m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(Ownership::True);
 
    const char *eptr;
    int eoffset;
@@ -111,7 +111,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    }
    m_agentAction = MemCopyString(src->m_agentAction);
    m_agentActionArgs = new StringList(src->m_agentActionArgs);
-   m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(true);
+   m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(Ownership::True);
    restoreCounters(src);
 
    const char *eptr;

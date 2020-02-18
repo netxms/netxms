@@ -209,7 +209,7 @@ Event::Event()
    m_timestamp = 0;
    m_originTimestamp = 0;
 	m_customMessage = NULL;
-	m_parameters.setOwner(true);
+	m_parameters.setOwner(Ownership::True);
 }
 
 /**
@@ -233,7 +233,7 @@ Event::Event(const Event *src)
    m_originTimestamp = src->m_originTimestamp;
    m_tags.addAll(src->m_tags);
 	m_customMessage = MemCopyString(src->m_customMessage);
-	m_parameters.setOwner(true);
+	m_parameters.setOwner(Ownership::True);
    for(int i = 0; i < src->m_parameters.size(); i++)
    {
       m_parameters.add(MemCopyString((TCHAR *)src->m_parameters.get(i)));
@@ -489,7 +489,7 @@ void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t 
       m_tags.add(tag);
 
    m_customMessage = NULL;
-   m_parameters.setOwner(true);
+   m_parameters.setOwner(Ownership::True);
 
    // Zone UIN
    NetObj *source = FindObjectById(sourceId);

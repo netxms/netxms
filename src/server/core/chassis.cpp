@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ bool Chassis::showThresholdSummary()
 void Chassis::updateRackBinding()
 {
    bool rackFound = false;
-   ObjectArray<NetObj> deleteList(16, 16, false);
+   ObjectArray<NetObj> deleteList;
 
    lockParentList(true);
    for(int i = 0; i < getParentList()->size(); i++)

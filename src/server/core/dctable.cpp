@@ -123,10 +123,10 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
  */
 DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy)
 {
-	m_columns = new ObjectArray<DCTableColumn>(src->m_columns->size(), 8, true);
+	m_columns = new ObjectArray<DCTableColumn>(src->m_columns->size(), 8, Ownership::True);
 	for(int i = 0; i < src->m_columns->size(); i++)
 		m_columns->add(new DCTableColumn(src->m_columns->get(i)));
-   m_thresholds = new ObjectArray<DCTableThreshold>(src->m_thresholds->size(), 4, true);
+   m_thresholds = new ObjectArray<DCTableThreshold>(src->m_thresholds->size(), 4, Ownership::True);
 	for(int i = 0; i < src->m_thresholds->size(); i++)
 		m_thresholds->add(new DCTableThreshold(src->m_thresholds->get(i), shadowCopy));
 	m_lastValue = (shadowCopy && (src->m_lastValue != NULL)) ? new Table(src->m_lastValue) : NULL;
@@ -139,8 +139,8 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingI
                  DataCollectionOwner *owner, const TCHAR *description, const TCHAR *systemTag)
         : DCObject(id, name, source, pollingInterval, retentionTime, owner, description, systemTag)
 {
-	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
-   m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
+	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
+   m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
 	m_lastValue = NULL;
 }
 
@@ -200,7 +200,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
 
-	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
 	m_lastValue = NULL;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
@@ -221,7 +221,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner 
    loadAccessList(hdb);
    loadCustomSchedules(hdb);
 
-   m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
+   m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
    loadThresholds(hdb);
 
    updateTimeIntervalsInternal();
@@ -236,7 +236,7 @@ DCTable::DCTable(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(con
 	if (columnsRoot != NULL)
 	{
 		ObjectArray<ConfigEntry> *columns = columnsRoot->getSubEntries(_T("column#*"));
-		m_columns = new ObjectArray<DCTableColumn>(columns->size(), 8, true);
+		m_columns = new ObjectArray<DCTableColumn>(columns->size(), 8, Ownership::True);
 		for(int i = 0; i < columns->size(); i++)
 		{
 			m_columns->add(new DCTableColumn(columns->get(i)));
@@ -245,14 +245,14 @@ DCTable::DCTable(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(con
 	}
 	else
 	{
-   	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
+   	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
 	}
 
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
 	if (thresholdsRoot != NULL)
 	{
 		ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-		m_thresholds = new ObjectArray<DCTableThreshold>(thresholds->size(), 8, true);
+		m_thresholds = new ObjectArray<DCTableThreshold>(thresholds->size(), 8, Ownership::True);
 		for(int i = 0; i < thresholds->size(); i++)
 		{
 			m_thresholds->add(new DCTableThreshold(thresholds->get(i)));
@@ -261,7 +261,7 @@ DCTable::DCTable(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(con
 	}
 	else
 	{
-      m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
+      m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
 	}
 
    m_lastValue = NULL;
@@ -833,7 +833,7 @@ void DCTable::updateFromMessage(NXCPMessage *pMsg)
 	}
 
 	count = (int)pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
-   ObjectArray<DCTableThreshold> *newThresholds = new ObjectArray<DCTableThreshold>(count, 8, true);
+   ObjectArray<DCTableThreshold> *newThresholds = new ObjectArray<DCTableThreshold>(count, 8, Ownership::True);
 	varId = VID_DCI_THRESHOLD_BASE;
 	for(int i = 0; i < count; i++)
 	{

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -41,14 +41,14 @@ static void DefaultObjectDestructor(void *element, Array *array)
  * @param owner if set to true, array is an owner of added objects and will destroy them on removed from array
  * @param objectDestructor custom object destructor or NULL
  */
-Array::Array(int initial, int grow, bool owner, void (*objectDestructor)(void *, Array *))
+Array::Array(int initial, int grow, Ownership owner, void (*objectDestructor)(void *, Array *))
 {
    m_size = 0;
    m_grow = (grow > 0) ? grow : 16;
    m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = sizeof(void *);
    m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : NULL;
-   m_objectOwner = owner;
+   m_objectOwner = static_cast<bool>(owner);
    m_objectDestructor = (objectDestructor != NULL) ? objectDestructor : DefaultObjectDestructor;
    m_storePointers = true;
    m_context = NULL;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ Zone::Zone() : super()
    m_id = 0;
    m_uin = 0;
    _tcscpy(m_name, _T("Default"));
-   m_proxyNodes = new ObjectArray<ZoneProxy>(0, 16, true);
+   m_proxyNodes = new ObjectArray<ZoneProxy>(0, 16, Ownership::True);
    GenerateRandomBytes(m_proxyAuthKey, ZONE_PROXY_KEY_LENGTH);
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
@@ -54,7 +54,7 @@ Zone::Zone(UINT32 uin, const TCHAR *name) : super()
    m_id = 0;
    m_uin = uin;
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-   m_proxyNodes = new ObjectArray<ZoneProxy>(0, 16, true);
+   m_proxyNodes = new ObjectArray<ZoneProxy>(0, 16, Ownership::True);
    GenerateRandomBytes(m_proxyAuthKey, ZONE_PROXY_KEY_LENGTH);
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
@@ -750,8 +750,8 @@ void Zone::healthCheck(PollerInfo *poller)
                m_name, m_uin, count, dataSenderLoad, dataCollectorLoad, cpuLoad);
 
       time_t now = time(NULL);
-      ObjectArray<ZoneProxy> sources(count, 16, false);  // potential sources for removing load
-      ObjectArray<ZoneProxy> targets(count, 16, false);  // potential sources for adding load
+      ObjectArray<ZoneProxy> sources(count);  // potential sources for removing load
+      ObjectArray<ZoneProxy> targets(count);  // potential sources for adding load
       for(int i = 0; i < m_proxyNodes->size(); i++)
       {
          ZoneProxy *p = m_proxyNodes->get(i);

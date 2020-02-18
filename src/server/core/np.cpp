@@ -43,7 +43,7 @@ ThreadPool *g_discoveryThreadPool = NULL;
 /**
  * IP addresses being processed by node poller
  */
-static ObjectArray<DiscoveredAddress> s_processingList(64, 64, false);
+static ObjectArray<DiscoveredAddress> s_processingList(64, 64, Ownership::False);
 static Mutex s_processingListLock;
 
 /**

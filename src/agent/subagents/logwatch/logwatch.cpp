@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2019 Victor Kirhenshtein
+** Copyright (C) 2008-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 /**
  * Configured parsers
  */
-static ObjectArray<LogParser> s_parsers(16, 16, true);
+static ObjectArray<LogParser> s_parsers(16, 16, Ownership::True);
 static Mutex s_parserLock;
 
 /**

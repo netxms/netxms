@@ -1,6 +1,6 @@
 /*
 ** NetXMS XEN hypervisor subagent
-** Copyright (C) 2017 Raden Solutions
+** Copyright (C) 2017-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ public:
 /**
  * Collected data
  */
-static HashMap<uint32_t, CpuUsageData> s_vmCpuUsage(true);
+static HashMap<uint32_t, CpuUsageData> s_vmCpuUsage(Ownership::True);
 static CpuUsageData s_hostCpuUsage;
 static Mutex s_dataLock;
 

@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for MySQL monitoring
- ** Copyright (C) 2016 Raden Solutions
+ ** Copyright (C) 2016-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -119,7 +119,7 @@ static bool SubAgentInit(Config *config)
 		return false;
 	}
 
-   s_instances = new ObjectArray<DatabaseInstance>(8, 8, true);
+   s_instances = new ObjectArray<DatabaseInstance>(8, 8, Ownership::True);
 
 	// Load configuration from "mysql" section to allow simple configuration
 	// of one database without XML includes

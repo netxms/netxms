@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 /**
  * Default event policy rule constructor
  */
-EPRule::EPRule(UINT32 id) : m_actions(0, 16, true)
+EPRule::EPRule(UINT32 id) : m_actions(0, 16, Ownership::True)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -47,7 +47,7 @@ EPRule::EPRule(UINT32 id) : m_actions(0, 16, true)
 /**
  * Create rule from config entry
  */
-EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
+EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
 {
    m_id = 0;
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
@@ -192,7 +192,7 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
  * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact
  */
-EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, true)
+EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_guid = DBGetFieldGUID(hResult, row, 1);
@@ -229,7 +229,7 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, true)
 /**
  * Construct event policy rule from NXCP message
  */
-EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, true)
+EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, Ownership::True)
 {
    m_flags = msg->getFieldAsUInt32(VID_FLAGS);
    m_id = msg->getFieldAsUInt32(VID_RULE_ID);
@@ -1076,7 +1076,7 @@ bool EPRule::isActionInUse(UINT32 actionId) const
 /**
  * Event processing policy constructor
  */
-EventPolicy::EventPolicy() : m_rules(128, 128, true)
+EventPolicy::EventPolicy() : m_rules(128, 128, Ownership::True)
 {
    m_rwlock = RWLockCreate();
 }

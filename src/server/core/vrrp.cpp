@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 VrrpInfo::VrrpInfo(int version)
 {
 	m_version = version;
-	m_routers = new ObjectArray<VrrpRouter>(16, 16, true);
+	m_routers = new ObjectArray<VrrpRouter>(16, 16, Ownership::True);
 }
 
 /**

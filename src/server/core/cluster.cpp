@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 Cluster::Cluster() : super()
 {
 	m_dwClusterType = 0;
-   m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
+   m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
 	m_zoneUIN = 0;
@@ -40,7 +40,7 @@ Cluster::Cluster() : super()
 Cluster::Cluster(const TCHAR *pszName, UINT32 zoneUIN) : super(pszName)
 {
 	m_dwClusterType = 0;
-   m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
+   m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
 	m_zoneUIN = zoneUIN;
@@ -576,7 +576,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
    UINT32 modified = 0;
 
    // Create polling list
-	ObjectArray<DataCollectionTarget> pollList(getChildList()->size(), 16, false);
+	ObjectArray<DataCollectionTarget> pollList(getChildList()->size(), 16);
    lockChildList(false);
    int i;
    for(i = 0; i < getChildList()->size(); i++)
@@ -783,7 +783,7 @@ UINT32 Cluster::getResourceOwnerInternal(UINT32 id, const TCHAR *name)
 UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
    lockChildList(false);
-   ObjectArray<ItemValue> values(getChildList()->size(), 32, true);
+   ObjectArray<ItemValue> values(getChildList()->size(), 32, Ownership::True);
    for(int i = 0; i < getChildList()->size(); i++)
    {
       if (getChildList()->get(i)->getObjectClass() != OBJECT_NODE)

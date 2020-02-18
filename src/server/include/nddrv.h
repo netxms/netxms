@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,7 +35,7 @@
  * Begin driver list
  */
 #define NDD_BEGIN_DRIVER_LIST static ObjectArray<NetworkDeviceDriver> *s_createInstances() { \
-   ObjectArray<NetworkDeviceDriver> *drivers = new ObjectArray<NetworkDeviceDriver>(4, 4, false);
+   ObjectArray<NetworkDeviceDriver> *drivers = new ObjectArray<NetworkDeviceDriver>(4, 4, Ownership::False);
 
 /**
  * Declare driver within list
@@ -65,7 +65,7 @@ extern "C" __EXPORT ObjectArray<NetworkDeviceDriver> *nddCreateInstances() { ret
 extern "C" __EXPORT_VAR(int nddAPIVersion); \
 __EXPORT_VAR(int nddAPIVersion) = NDDRV_API_VERSION; \
 extern "C" __EXPORT ObjectArray<NetworkDeviceDriver> *nddCreateInstances() { \
-   ObjectArray<NetworkDeviceDriver> *drivers = new ObjectArray<NetworkDeviceDriver>(4, 4, false); \
+   ObjectArray<NetworkDeviceDriver> *drivers = new ObjectArray<NetworkDeviceDriver>(4, 4, Ownership::False); \
    drivers->add(new implClass); \
    return drivers; \
 }

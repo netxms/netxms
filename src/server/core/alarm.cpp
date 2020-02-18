@@ -60,7 +60,7 @@ private:
    StringObjectMap<Alarm> m_keyIndex;
 
 public:
-   AlarmList() : m_list(256, 256, true), m_keyIndex(false) { }
+   AlarmList() : m_list(256, 256, Ownership::True), m_keyIndex(Ownership::False) { }
    ~AlarmList() { }
 
    void lock() { m_lock.lock(); }
@@ -2040,7 +2040,7 @@ UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
 ObjectArray<AlarmComment> *GetAlarmComments(UINT32 alarmId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   ObjectArray<AlarmComment> *comments = new ObjectArray<AlarmComment>(7, 7, false);
+   ObjectArray<AlarmComment> *comments = new ObjectArray<AlarmComment>(16, 16, Ownership::False);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT note_id,change_time,user_id,note_text FROM alarm_notes WHERE alarm_id=?"));
    if (hStmt != NULL)
@@ -2130,7 +2130,7 @@ UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg)
 ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId, bool recursive)
 {
    s_alarmList.lock();
-   ObjectArray<Alarm> *result = new ObjectArray<Alarm>(s_alarmList.size(), 16, true);
+   ObjectArray<Alarm> *result = new ObjectArray<Alarm>(s_alarmList.size(), 16, Ownership::True);
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -2276,7 +2276,7 @@ static THREAD_RESULT THREAD_CALL RootCauseUpdateThread(void *arg)
       s_rootCauseUpdatePossible = false;
       s_rootCauseUpdateNeeded = false;
 
-      ObjectArray<Alarm> updateList(0, 32, true);
+      ObjectArray<Alarm> updateList(0, 32, Ownership::True);
       s_alarmList.lock();
       for(int i = 0; i < s_alarmList.size(); i++)
       {

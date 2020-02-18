@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2016 RadenSolutions
+** Copyright (C) 2016-2020 RadenSolutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -182,7 +182,7 @@ bool AlarmCategory::checkAccess(UINT32 userId)
 /**
  * Alarm categories
  */
-static HashMap<UINT32, AlarmCategory> s_categories(true);
+static HashMap<UINT32, AlarmCategory> s_categories(Ownership::True);
 static RWLock s_lock;
 
 /**

@@ -46,7 +46,7 @@ static int PackageNameComparator(const SoftwarePackage **p1, const SoftwarePacka
  */
 ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackage> *oldSet, ObjectArray<SoftwarePackage> *newSet)
 {
-   ObjectArray<SoftwarePackage> *changes = new ObjectArray<SoftwarePackage>(32, 32, false);
+   ObjectArray<SoftwarePackage> *changes = new ObjectArray<SoftwarePackage>(32, 32);
    for(int i = 0; i < oldSet->size(); i++)
    {
       SoftwarePackage *p = oldSet->get(i);

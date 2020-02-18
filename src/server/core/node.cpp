@@ -126,7 +126,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_eipProxy = 0;
    m_icmpProxy = 0;
    memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
-   m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
+   m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
    m_pRoutingTable = NULL;
    m_arpCache = NULL;
    m_failTimeAgent = NEVER;
@@ -243,7 +243,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_eipProxy = newNodeData->eipProxyId;
    m_icmpProxy = newNodeData->icmpProxyId;
    memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
-   m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
+   m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
    m_isHidden = true;
    m_pRoutingTable = NULL;
    m_arpCache = NULL;
@@ -637,7 +637,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
                else
                {
                   nxlog_debug(6, _T("Node::loadFromDatabase(%s [%u]): root element for component tree not found"), m_name, m_id);
-                  elements.setOwner(true);   // cause element destruction on exit
+                  elements.setOwner(Ownership::True);   // cause element destruction on exit
                }
             }
             DBFreeResult(hResult);
@@ -670,7 +670,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             int count = DBGetNumRows(hResult);
             if (count > 0)
             {
-               m_softwarePackages = new ObjectArray<SoftwarePackage>(count, 64, true);
+               m_softwarePackages = new ObjectArray<SoftwarePackage>(count, 64, Ownership::True);
                for(int i = 0; i < count; i++)
                   m_softwarePackages->add(new SoftwarePackage(hResult, i));
                m_softwarePackages->sort(PackageNameVersionComparator);
@@ -705,7 +705,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             int count = DBGetNumRows(hResult);
             if (count > 0)
             {
-               m_hardwareComponents = new ObjectArray<HardwareComponent>(count, 16, true);
+               m_hardwareComponents = new ObjectArray<HardwareComponent>(count, 16, Ownership::True);
                for(int i = 0; i < count; i++)
                   m_hardwareComponents->add(new HardwareComponent(hResult, i));
                m_hardwareComponents->sort(HardwareComponentComparator);
@@ -729,7 +729,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    if (bResult && isIcmpStatCollectionEnabled())
    {
-      m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(true);
+      m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(Ownership::True);
       hStmt = DBPrepare(hdb, _T("SELECT poll_target FROM icmp_statistics WHERE object_id=?"));
       if (hStmt != NULL)
       {
@@ -1741,7 +1741,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
       nxlog_debug(5, _T("Node::createNewInterface(%s): IP address %s/%d"), info->name, addr.toString(buffer), addr.getMaskBits());
    }
 
-   ObjectArray<Subnet> bindList(16, 16, false);
+   ObjectArray<Subnet> bindList;
    InetAddressList createList;
 
    // Find subnet(s) to place this node to
@@ -1932,7 +1932,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    UINT32 oldCapabilities = m_capabilities;
    UINT32 oldState = m_state;
 
-   ObjectQueue<Event> *eventQueue = new ObjectQueue<Event>(64, true);     // Delayed event queue
+   ObjectQueue<Event> *eventQueue = new ObjectQueue<Event>(64, Ownership::True);     // Delayed event queue
    poller->setStatus(_T("wait for lock"));
    pollerLock(status);
 
@@ -2259,7 +2259,7 @@ restart_agent_check:
    }
 
    // Create polling list
-   ObjectArray<NetObj> pollList(32, 32, false);
+   ObjectArray<NetObj> pollList(32, 32, Ownership::False);
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {
@@ -2966,7 +2966,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 
       // Check for bound but not installed policies and schedule it's installation again
       // Job will be unbound if it was not possible to add job
-      ObjectArray<NetObj> unbindList(64, 64, false);
+      ObjectArray<NetObj> unbindList(64, 64, Ownership::False);
       lockParentList(false);
       for(int i = 0; i < getParentList()->size(); i++)
       {
@@ -3189,7 +3189,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
    poller->setStatus(_T("hardware check"));
    sendPollerMsg(requestId, _T("Reading list of installed hardware components\r\n"));
 
-   ObjectArray<HardwareComponent> *components = new ObjectArray<HardwareComponent>(16, 16, true);
+   ObjectArray<HardwareComponent> *components = new ObjectArray<HardwareComponent>(16, 16, Ownership::True);
    int readCount = ReadBaseboardInformation(this, components);
    readCount += ReadHardwareInformation(this, components, HWC_PROCESSOR, _T("Hardware.Processors"));
    readCount += ReadHardwareInformation(this, components, HWC_MEMORY, _T("Hardware.MemoryDevices"));
@@ -3275,7 +3275,7 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
       return false;
    }
 
-   ObjectArray<SoftwarePackage> *packages = new ObjectArray<SoftwarePackage>(table->getNumRows(), 16, true);
+   ObjectArray<SoftwarePackage> *packages = new ObjectArray<SoftwarePackage>(table->getNumRows(), 16, Ownership::True);
    for(int i = 0; i < table->getNumRows(); i++)
    {
       SoftwarePackage *pkg = SoftwarePackage::createFromTableRow(table, i);
@@ -3320,7 +3320,9 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
       setModified(MODIFY_SOFTWARE_INVENTORY);
    }
    else if (packages != NULL)
+   {
       setModified(MODIFY_SOFTWARE_INVENTORY);
+   }
 
    m_softwarePackages = packages;
    unlockProperties();
@@ -4728,7 +4730,7 @@ void Node::executeInterfaceUpdateHook(Interface *iface)
  */
 bool Node::deleteDuplicateInterfaces(UINT32 rqid)
 {
-   ObjectArray<Interface> deleteList(16, 16, false);
+   ObjectArray<Interface> deleteList;
 
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
@@ -4783,7 +4785,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 
       // Find non-existing interfaces
       lockChildList(false);
-      ObjectArray<Interface> deleteList(getChildList()->size(), 8, false);
+      ObjectArray<Interface> deleteList(getChildList()->size());
       for(int i = 0; i < getChildList()->size(); i++)
       {
          if (static_cast<NetObj *>(getChildList()->get(i))->getObjectClass() == OBJECT_INTERFACE)
@@ -5482,7 +5484,7 @@ DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, co
    if (snmp == NULL)
       return DCE_COMM_ERROR;
 
-   ObjectArray<SNMP_ObjectId> oidList(64, 64, true);
+   ObjectArray<SNMP_ObjectId> oidList(64, 64, Ownership::True);
    UINT32 rc = SnmpWalk(snmp, oid, SNMPGetTableCallback, &oidList, FALSE);
    if (rc == SNMP_ERR_SUCCESS)
    {
@@ -6838,7 +6840,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       if (isIcmpStatCollectionEnabled())
       {
          if (m_icmpStatCollectors == NULL)
-            m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(true);
+            m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(Ownership::True);
          if (!m_icmpStatCollectors->contains(_T("PRI")))
             m_icmpStatCollectors->set(_T("PRI"), new IcmpStatCollector(ConfigReadInt(_T("ICMP.StatisticPeriod"), 60)));
       }
@@ -8175,7 +8177,7 @@ void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, U
    if (nDepth > 0)
    {
       ObjectArray<Subnet> subnets;
-      ObjectArray<PeerInfo> peers(0, 64, true);
+      ObjectArray<PeerInfo> peers(0, 64, Ownership::True);
 
       lockParentList(false);
       for(int i = 0; i < getParentList()->size(); i++)
@@ -8909,7 +8911,7 @@ void Node::checkSubnetBinding()
    // Check for incorrect parent subnets
    lockParentList(false);
    lockChildList(false);
-   ObjectArray<NetObj> unlinkList(getParentList()->size(), 8, false);
+   ObjectArray<NetObj> unlinkList(getParentList()->size());
    for(int i = 0; i < getParentList()->size(); i++)
    {
       if (static_cast<NetObj *>(getParentList()->get(i))->getObjectClass() == OBJECT_SUBNET)
@@ -9327,7 +9329,7 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations()
    lockProperties();
    if ((m_wirelessStations != NULL) && (m_wirelessStations->size() > 0))
    {
-      ws = new ObjectArray<WirelessStationInfo>(m_wirelessStations->size(), 16, true);
+      ws = new ObjectArray<WirelessStationInfo>(m_wirelessStations->size(), 16, Ownership::True);
       for(int i = 0; i < m_wirelessStations->size(); i++)
       {
          WirelessStationInfo *wsi = new WirelessStationInfo;
@@ -9537,7 +9539,7 @@ void Node::forceSyncDataCollectionConfig()
 void Node::updatePhysicalContainerBinding(UINT32 containerId)
 {
    bool containerFound = false;
-   ObjectArray<NetObj> deleteList(16, 16, false);
+   ObjectArray<NetObj> deleteList;
 
    lockParentList(true);
    for(int i = 0; i < getParentList()->size(); i++)
@@ -10096,7 +10098,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
       lockProperties();
 
       if (m_icmpStatCollectors == NULL)
-         m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(true);
+         m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(Ownership::True);
 
       IcmpStatCollector *collector = m_icmpStatCollectors->get(target);
       if (collector == NULL)

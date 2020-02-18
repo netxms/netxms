@@ -39,7 +39,7 @@ static LONG H_TopicData(const TCHAR *name, const TCHAR *arg, TCHAR *result, Abst
 /**
  * Broker constructor
  */
-MqttBroker::MqttBroker(const uuid& guid) : m_topics(16, 16, true)
+MqttBroker::MqttBroker(const uuid& guid) : m_topics(16, 16, Ownership::True)
 {
    m_guid = guid;
    m_locallyConfigured = true;

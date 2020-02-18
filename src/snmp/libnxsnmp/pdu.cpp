@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -66,7 +66,7 @@ SNMP_PDU::SNMP_PDU()
 {
    m_version = SNMP_VERSION_1;
    m_command = SNMP_INVALID_PDU;
-   m_variables = new ObjectArray<SNMP_Variable>(0, 16, true);
+   m_variables = new ObjectArray<SNMP_Variable>(0, 16, Ownership::True);
    m_pEnterprise = NULL;
    m_dwErrorCode = 0;
    m_dwErrorIndex = 0;
@@ -93,7 +93,7 @@ SNMP_PDU::SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion)
 {
    m_version = dwVersion;
    m_command = dwCommand;
-   m_variables = new ObjectArray<SNMP_Variable>(0, 16, true);
+   m_variables = new ObjectArray<SNMP_Variable>(0, 16, Ownership::True);
    m_pEnterprise = NULL;
    m_dwErrorCode = 0;
    m_dwErrorIndex = 0;
@@ -120,7 +120,7 @@ SNMP_PDU::SNMP_PDU(SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeE
 {
    m_version = src->m_version;
    m_command = src->m_command;
-   m_variables = new ObjectArray<SNMP_Variable>(src->m_variables->size(), 16, true);
+   m_variables = new ObjectArray<SNMP_Variable>(src->m_variables->size(), 16, Ownership::True);
    for(int i = 0; i < src->m_variables->size(); i++)
       m_variables->add(new SNMP_Variable(src->m_variables->get(i)));
    m_pEnterprise = (src->m_pEnterprise != NULL) ? new SNMP_ObjectId(*src->m_pEnterprise) : NULL;
@@ -150,7 +150,7 @@ SNMP_PDU::~SNMP_PDU()
 {
    delete m_pEnterprise;
    delete m_variables;
-	free(m_authObject);
+	MemFree(m_authObject);
 }
 
 /**
@@ -547,7 +547,7 @@ bool SNMP_PDU::parseV3SecurityUsm(const BYTE *data, size_t dataLength, const BYT
       return false;
    if (type != ASN_OCTET_STRING)
       return false;
-	m_authObject = (char *)malloc(length + 1);
+	m_authObject = MemAllocStringA(length + 1);
 	if (!BER_DecodeContent(type, currPos, length, (BYTE *)m_authObject))
 	{
 		free(m_authObject);
@@ -919,11 +919,10 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 			return false;
 		if (dwType != ASN_OCTET_STRING)
 			return false;   // Community field should be of string type
-		m_authObject = (char *)malloc(dwLength + 1);
+		m_authObject = MemAllocStringA(dwLength + 1);
 		if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)m_authObject))
 		{
-			free(m_authObject);
-			m_authObject = NULL;
+			MemFreeAndNull(m_authObject);
 			return false;   // Error parsing content of version field
 		}
 		m_authObject[dwLength] = 0;

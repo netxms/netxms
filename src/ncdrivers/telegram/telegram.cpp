@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Telegram messenger
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -143,7 +143,7 @@ private:
    INT64 m_nextUpdateId;
    NCDriverStorageManager *m_storageManager;
 
-   TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(true)
+   TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(Ownership::True)
    {
       m_updateHandlerThread = INVALID_THREAD_HANDLE;
       memset(m_authToken, 0, sizeof(m_authToken));

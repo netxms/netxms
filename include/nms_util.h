@@ -879,7 +879,7 @@ public:
 
    String();
    String(const TCHAR *init);
-   String(const TCHAR *init, ssize_t len, bool takeOwnership = false);
+   String(const TCHAR *init, ssize_t len, Ownership takeOwnership = Ownership::False);
 	String(const String &src);
    virtual ~String();
 
@@ -950,7 +950,7 @@ public:
    SharedString(const SharedString &str) : m_string(str.m_string) { }
    SharedString(const String &str) { m_string = make_shared<String>(str); }
    SharedString(const TCHAR *str) { if (str != NULL) m_string = make_shared<String>(str); }
-   SharedString(TCHAR *str, bool takeOwnership) { if (str != NULL) m_string = make_shared<String>(str, -1, takeOwnership); }
+   SharedString(TCHAR *str, Ownership takeOwnership) { if (str != NULL) m_string = make_shared<String>(str, -1, takeOwnership); }
 
    SharedString& operator=(const SharedString &str)
    {
@@ -1151,7 +1151,7 @@ protected:
    void *__getBuffer() const { return m_data; }
 
 public:
-	Array(int initial = 0, int grow = 16, bool owner = false, void (*objectDestructor)(void *, Array *) = NULL);
+	Array(int initial = 0, int grow = 16, Ownership owner = Ownership::False, void (*objectDestructor)(void *, Array *) = NULL);
 	virtual ~Array();
 
    void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
@@ -1182,7 +1182,7 @@ public:
 
 	size_t memoryUsage() const { return m_allocated * m_elementSize; }
 
-	void setOwner(bool owner) { m_objectOwner = owner; }
+	void setOwner(Ownership owner) { m_objectOwner = static_cast<bool>(owner); }
 	bool isOwner() const { return m_objectOwner; }
 
 	void setContext(void *context) { m_context = context; }
@@ -1220,7 +1220,7 @@ private:
 	static void destructor(void *object, Array *array) { delete static_cast<T*>(object); }
 
 public:
-	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
+	ObjectArray(int initial = 0, int grow = 16, Ownership owner = Ownership::False) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
 	virtual ~ObjectArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
@@ -1261,7 +1261,7 @@ private:
 	static void destructor(void *object, Array *array) { }
 
 public:
-	ObjectRefArray(int initial = 0, int grow = 16) : Array(initial, grow, false) { m_objectDestructor = destructor; }
+	ObjectRefArray(int initial = 0, int grow = 16) : Array(initial, grow, Ownership::False) { m_objectDestructor = destructor; }
 	virtual ~ObjectRefArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
@@ -1363,7 +1363,7 @@ private:
 
 public:
    SharedObjectArray(int initial = 0, int grow = 16) :
-      m_pool(std::max(grow, 64)), m_data(initial, grow, true, SharedObjectArray<T>::destructor) { m_data.setContext(this); }
+      m_pool(std::max(grow, 64)), m_data(initial, grow, Ownership::True, SharedObjectArray<T>::destructor) { m_data.setContext(this); }
    virtual ~SharedObjectArray() { }
 
    int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
@@ -1474,10 +1474,10 @@ protected:
    void *unlink(const TCHAR *key);
 
 public:
-   StringMapBase(bool objectOwner, void (*destructor)(void *, StringMapBase *) = NULL);
+   StringMapBase(Ownership objectOwner, void (*destructor)(void *, StringMapBase *) = NULL);
    virtual ~StringMapBase();
 
-   void setOwner(bool owner) { m_objectOwner = owner; }
+   void setOwner(Ownership owner) { m_objectOwner = static_cast<bool>(owner); }
    void setIgnoreCase(bool ignore);
 
    void remove(const TCHAR *key);
@@ -1510,7 +1510,7 @@ class NXCPMessage;
 class LIBNETXMS_EXPORTABLE StringMap : public StringMapBase
 {
 public:
-	StringMap() : StringMapBase(true) { }
+	StringMap() : StringMapBase(Ownership::True) { }
 	StringMap(const StringMap &src);
 	virtual ~StringMap();
 
@@ -1577,7 +1577,7 @@ private:
 	static void destructor(void *object, StringMapBase *map) { delete (T*)object; }
 
 public:
-	StringObjectMap(bool objectOwner, void (*_destructor)(void *, StringMapBase *) = destructor) : StringMapBase(objectOwner, _destructor) { }
+	StringObjectMap(Ownership objectOwner, void (*_destructor)(void *, StringMapBase *) = destructor) : StringMapBase(objectOwner, _destructor) { }
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	void setPreallocated(TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, true); }
@@ -1626,7 +1626,7 @@ private:
    }
 
 public:
-   SharedStringObjectMap() : m_pool(64), m_data(true, SharedStringObjectMap<T>::destructor) { m_data.setContext(this); }
+   SharedStringObjectMap() : m_pool(64), m_data(Ownership::True, SharedStringObjectMap<T>::destructor) { m_data.setContext(this); }
 
    void set(const TCHAR *key, shared_ptr<T> object) { m_data.set(key, new(m_pool.allocate()) shared_ptr<T>(object)); }
    void set(const TCHAR *key, T *object) { m_data.set(key, new(m_pool.allocate()) shared_ptr<T>(object)); }
@@ -1918,7 +1918,7 @@ private:
 protected:
 	void (*m_objectDestructor)(void *, HashMapBase *);
 
-   HashMapBase(bool objectOwner, unsigned int keylen, void (*destructor)(void *, HashMapBase *) = NULL);
+   HashMapBase(Ownership objectOwner, unsigned int keylen, void (*destructor)(void *, HashMapBase *) = NULL);
 
 	void *_get(const void *key) const;
 	void _set(const void *key, void *value);
@@ -1929,7 +1929,7 @@ protected:
 public:
    virtual ~HashMapBase();
 
-   void setOwner(bool owner) { m_objectOwner = owner; }
+   void setOwner(Ownership owner) { m_objectOwner = static_cast<bool>(owner); }
 	void clear();
 
 	int size() const;
@@ -1971,7 +1971,7 @@ private:
 	static void destructor(void *object, HashMapBase *map) { delete (V*)object; }
 
 public:
-	HashMap(bool objectOwner = false, void (*_destructor)(void *, HashMapBase *) = destructor) : HashMapBase(objectOwner, sizeof(K), _destructor) { }
+	HashMap(Ownership objectOwner = Ownership::False, void (*_destructor)(void *, HashMapBase *) = destructor) : HashMapBase(objectOwner, sizeof(K), _destructor) { }
 
 	V *get(const K& key) const { return (V*)_get(&key); }
 	void set(const K& key, V *value) { _set(&key, (void *)value); }
@@ -1991,7 +1991,7 @@ private:
    static void destructor(void *object, HashMapBase *map) { if (object != NULL) ((V*)object)->decRefCount(); }
 
 public:
-   RefCountHashMap(bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
+   RefCountHashMap(Ownership objectOwner = Ownership::False) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
 
    V *get(const K& key) { V *v = (V*)_get(&key); if (v != NULL) v->incRefCount(); return v; }
    V *peek(const K& key) { return (V*)_get(&key); }
@@ -2023,7 +2023,7 @@ private:
    }
 
 public:
-   SharedHashMap() : m_pool(64), m_data(true, SharedHashMap<K, V>::destructor) { m_data.setContext(this); }
+   SharedHashMap() : m_pool(64), m_data(Ownership::True, SharedHashMap<K, V>::destructor) { m_data.setContext(this); }
    virtual ~SharedHashMap() { }
 
    void set(const K& key, shared_ptr<V> element) { m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element)); }
@@ -2091,8 +2091,7 @@ private:
    }
 
 public:
-   SynchronizedSharedHashMap(bool objectOwner = false, int grow = 16) :
-      m_pool(std::max(grow, 64)), m_data(true, SynchronizedSharedHashMap<K, V>::destructor)
+   SynchronizedSharedHashMap() : m_pool(64), m_data(Ownership::True, SynchronizedSharedHashMap<K, V>::destructor)
    {
       m_data.setContext(this);
       m_mutex = MutexCreate();
@@ -3012,7 +3011,7 @@ protected:
    virtual ~SocketCommChannel();
 
 public:
-   SocketCommChannel(SOCKET socket, bool owner = true);
+   SocketCommChannel(SOCKET socket, Ownership owner = Ownership::True);
 
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
    virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;

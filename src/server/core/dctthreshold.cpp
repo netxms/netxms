@@ -270,7 +270,7 @@ bool DCTableCondition::equals(DCTableCondition *c) const
  */
 DCTableConditionGroup::DCTableConditionGroup()
 {
-   m_conditions = new ObjectArray<DCTableCondition>(8, 8, true);
+   m_conditions = new ObjectArray<DCTableCondition>(8, 8, Ownership::True);
 }
 
 /**
@@ -278,7 +278,7 @@ DCTableConditionGroup::DCTableConditionGroup()
  */
 DCTableConditionGroup::DCTableConditionGroup(DCTableConditionGroup *src)
 {
-   m_conditions = new ObjectArray<DCTableCondition>(src->m_conditions->size(), 8, true);
+   m_conditions = new ObjectArray<DCTableCondition>(src->m_conditions->size(), 8, Ownership::True);
    for(int i = 0; i < src->m_conditions->size(); i++)
       m_conditions->add(new DCTableCondition(src->m_conditions->get(i)));
 }
@@ -290,7 +290,7 @@ DCTableConditionGroup::DCTableConditionGroup(NXCPMessage *msg, UINT32 *baseId)
 {
    UINT32 varId = *baseId;
    int count = msg->getFieldAsUInt32(varId++);
-   m_conditions = new ObjectArray<DCTableCondition>(count, 8, true);
+   m_conditions = new ObjectArray<DCTableCondition>(count, 8, Ownership::True);
    for(int i = 0; i < count; i++)
    {
       TCHAR column[MAX_COLUMN_NAME], value[MAX_RESULT_LENGTH];
@@ -311,7 +311,7 @@ DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
 	if (root != NULL)
 	{
 		ObjectArray<ConfigEntry> *conditions = root->getSubEntries(_T("condition#*"));
-      m_conditions = new ObjectArray<DCTableCondition>(conditions->size(), 4, true);
+      m_conditions = new ObjectArray<DCTableCondition>(conditions->size(), 4, Ownership::True);
 		for(int i = 0; i < conditions->size(); i++)
 		{
          ConfigEntry *c = conditions->get(i);
@@ -324,7 +324,7 @@ DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
 	}
 	else
 	{
-   	m_conditions = new ObjectArray<DCTableCondition>(8, 8, true);
+   	m_conditions = new ObjectArray<DCTableCondition>(8, 8, Ownership::True);
 	}
 }
 
@@ -393,12 +393,12 @@ bool DCTableConditionGroup::check(Table *value, int row)
 DCTableThreshold::DCTableThreshold()
 {
    m_id = CreateUniqueId(IDG_THRESHOLD);
-   m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
+   m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, Ownership::True);
    m_activationEvent = EVENT_TABLE_THRESHOLD_ACTIVATED;
    m_deactivationEvent = EVENT_TABLE_THRESHOLD_DEACTIVATED;
    m_sampleCount = 1;
-   m_instances = new StringObjectMap<DCTableThresholdInstance>(true);
-   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(true);
+   m_instances = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
+   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
 }
 
 /**
@@ -407,13 +407,13 @@ DCTableThreshold::DCTableThreshold()
 DCTableThreshold::DCTableThreshold(DCTableThreshold *src, bool shadowCopy)
 {
    m_id = CreateUniqueId(IDG_THRESHOLD);
-   m_groups = new ObjectArray<DCTableConditionGroup>(src->m_groups->size(), 4, true);
+   m_groups = new ObjectArray<DCTableConditionGroup>(src->m_groups->size(), 4, Ownership::True);
    for(int i = 0; i < src->m_groups->size(); i++)
       m_groups->add(new DCTableConditionGroup(src->m_groups->get(i)));
    m_activationEvent = src->m_activationEvent;
    m_deactivationEvent = src->m_deactivationEvent;
    m_sampleCount = src->m_sampleCount;
-   m_instances = new StringObjectMap<DCTableThresholdInstance>(true);
+   m_instances = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
    if (shadowCopy)
    {
       StringList *keys = src->m_instances->keys();
@@ -423,7 +423,7 @@ DCTableThreshold::DCTableThreshold(DCTableThreshold *src, bool shadowCopy)
          m_instances->set(k, new DCTableThresholdInstance(src->m_instances->get(k)));
       }
    }
-   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(true);
+   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
    if (shadowCopy)
    {
       StringList *keys = src->m_instancesBeforeMaint->keys();
@@ -445,10 +445,10 @@ DCTableThreshold::DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row)
    m_id = DBGetFieldLong(hResult, row, 0);
    m_activationEvent = DBGetFieldULong(hResult, row, 1);
    m_deactivationEvent = DBGetFieldULong(hResult, row, 2);
-   m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
+   m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, Ownership::True);
    m_sampleCount = DBGetFieldLong(hResult, row, 3);
-   m_instances = new StringObjectMap<DCTableThresholdInstance>(true);
-   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(true);
+   m_instances = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
+   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
    loadConditions(hdb);
    loadInstances(hdb);
 }
@@ -466,12 +466,12 @@ DCTableThreshold::DCTableThreshold(NXCPMessage *msg, UINT32 *baseId)
    m_deactivationEvent = msg->getFieldAsUInt32(fieldId++);
    m_sampleCount = msg->getFieldAsUInt32(fieldId++);
    int count = (int)msg->getFieldAsUInt32(fieldId++);
-   m_groups = new ObjectArray<DCTableConditionGroup>(count, 4, true);
+   m_groups = new ObjectArray<DCTableConditionGroup>(count, 4, Ownership::True);
    *baseId = fieldId;
    for(int i = 0; i < count; i++)
       m_groups->add(new DCTableConditionGroup(msg, baseId));
-   m_instances = new StringObjectMap<DCTableThresholdInstance>(true);
-   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(true);
+   m_instances = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
+   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
 }
 
 /**
@@ -488,7 +488,7 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e)
 	if (groupsRoot != NULL)
 	{
 		ObjectArray<ConfigEntry> *groups = groupsRoot->getSubEntries(_T("group#*"));
-      m_groups = new ObjectArray<DCTableConditionGroup>(groups->size(), 4, true);
+      m_groups = new ObjectArray<DCTableConditionGroup>(groups->size(), 4, Ownership::True);
 		for(int i = 0; i < groups->size(); i++)
 		{
 			m_groups->add(new DCTableConditionGroup(groups->get(i)));
@@ -497,10 +497,10 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e)
 	}
 	else
 	{
-   	m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
+   	m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, Ownership::True);
 	}
-   m_instances = new StringObjectMap<DCTableThresholdInstance>(true);
-   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(true);
+   m_instances = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
+   m_instancesBeforeMaint = new StringObjectMap<DCTableThresholdInstance>(Ownership::True);
 }
 
 /**

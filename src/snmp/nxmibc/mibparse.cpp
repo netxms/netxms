@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005-2013 Victor Kirhenshtein
+** Copyright (C) 2005-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
          }
          if (pParent != NULL)
          {
-            ObjectArray<MP_SUBID> *pOID = new ObjectArray<MP_SUBID>(pParent->pOID->size() + pObject->pOID->size() - iLen, 16, true);
+            ObjectArray<MP_SUBID> *pOID = new ObjectArray<MP_SUBID>(pParent->pOID->size() + pObject->pOID->size() - iLen, 16, Ownership::True);
             for(int i = 0; i < pParent->pOID->size(); i++)
             {
                pOID->add(new MP_SUBID(pParent->pOID->get(i)));
@@ -390,7 +390,7 @@ int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **ppRoot)
    SNMP_MIBObject *pRoot;
 
    _tprintf(_T("Parsing source files:\n"));
-   ObjectArray<MP_MODULE> *pModuleList = new ObjectArray<MP_MODULE>(16, 16, true);
+   ObjectArray<MP_MODULE> *pModuleList = new ObjectArray<MP_MODULE>(16, 16, Ownership::True);
    for(i = 0; i < fileList->size(); i++)
    {
       const TCHAR *file = fileList->get(i);
@@ -421,7 +421,7 @@ int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **ppRoot)
    }
 
    _tprintf(_T("Creating MIB tree:\n"));
-   pModuleList->setOwner(false);
+   pModuleList->setOwner(Ownership::False);
    pRoot = new SNMP_MIBObject;
    for(i = 0; i < pModuleList->size(); i++)
    {

@@ -63,7 +63,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    // Copy thresholds
 	if (src->getThresholdCount() > 0)
 	{
-		m_thresholds = new ObjectArray<Threshold>(src->m_thresholds->size(), 8, true);
+		m_thresholds = new ObjectArray<Threshold>(src->m_thresholds->size(), 8, Ownership::True);
 		for(int i = 0; i < src->m_thresholds->size(); i++)
 		{
 			Threshold *t = new Threshold(src->m_thresholds->get(i), shadowCopy);
@@ -223,7 +223,7 @@ DCItem::DCItem(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(confi
 	if (thresholdsRoot != NULL)
 	{
 		ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-		m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, true);
+		m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, Ownership::True);
 		for(int i = 0; i < thresholds->size(); i++)
 		{
 			m_thresholds->add(new Threshold(thresholds->get(i), this));
@@ -293,7 +293,7 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
 			int count = DBGetNumRows(hResult);
 			if (count > 0)
 			{
-				m_thresholds = new ObjectArray<Threshold>(count, 8, true);
+				m_thresholds = new ObjectArray<Threshold>(count, 8, Ownership::True);
 				for(int i = 0; i < count; i++)
 					m_thresholds->add(new Threshold(hResult, i, this));
 			}
@@ -621,13 +621,13 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 	{
 		if (m_thresholds != NULL)
 		{
-			m_thresholds->setOwner(false);
+			m_thresholds->setOwner(Ownership::False);
 			m_thresholds->clear();
-			m_thresholds->setOwner(true);
+			m_thresholds->setOwner(Ownership::True);
 		}
 		else
 		{
-			m_thresholds = new ObjectArray<Threshold>((int)dwNum, 8, true);
+			m_thresholds = new ObjectArray<Threshold>((int)dwNum, 8, Ownership::True);
 		}
 		for(UINT32 i = 0; i < dwNum; i++)
       {
@@ -1759,7 +1759,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 
    // (Re)create thresholds starting from first unmatched
 	if ((m_thresholds == NULL) && (item->getThresholdCount() > 0))
-		m_thresholds = new ObjectArray<Threshold>(item->getThresholdCount(), 8, true);
+		m_thresholds = new ObjectArray<Threshold>(item->getThresholdCount(), 8, Ownership::True);
 	for(i = count; i < item->getThresholdCount(); i++)
    {
       Threshold *t = new Threshold(item->m_thresholds->get(i), false);
@@ -1895,7 +1895,7 @@ void DCItem::createExportRecord(StringBuffer &xml)
 void DCItem::addThreshold(Threshold *pThreshold)
 {
 	if (m_thresholds == NULL)
-		m_thresholds = new ObjectArray<Threshold>(8, 8, true);
+		m_thresholds = new ObjectArray<Threshold>(8, 8, Ownership::True);
 	m_thresholds->add(pThreshold);
 }
 
@@ -2079,7 +2079,7 @@ void DCItem::updateFromImport(ConfigEntry *config)
       if (m_thresholds != NULL)
          m_thresholds->clear();
       else
-         m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, true);
+         m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, Ownership::True);
       for(int i = 0; i < thresholds->size(); i++)
       {
          m_thresholds->add(new Threshold(thresholds->get(i), this));

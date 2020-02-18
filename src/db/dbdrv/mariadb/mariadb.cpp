@@ -1,6 +1,6 @@
 /* 
 ** MariaDB Database Driver
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -392,7 +392,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQ
 			result->paramCount = (int)mysql_stmt_param_count(stmt);
 			result->bindings = MemAllocArray<MYSQL_BIND>(result->paramCount);
 			result->lengthFields = MemAllocArray<unsigned long>(result->paramCount);
-			result->buffers = new Array(result->paramCount, 16, true);
+			result->buffers = new Array(result->paramCount, 16, Ownership::True);
 			*pdwError = DBERR_SUCCESS;
 		}
 		else

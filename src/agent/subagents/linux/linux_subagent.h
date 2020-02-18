@@ -73,7 +73,7 @@ public:
    char name[16];
    ObjectArray<InetAddress> addrList;
 
-   LinuxInterfaceInfo() : addrList(16, 16, true)
+   LinuxInterfaceInfo() : addrList(16, 16, Ownership::True)
    {
       index = 0;
       type = IFTYPE_OTHER;

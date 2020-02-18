@@ -40,10 +40,10 @@ AbstractCommChannel::~AbstractCommChannel()
 /**
  * Socket communication channel constructor
  */
-SocketCommChannel::SocketCommChannel(SOCKET socket, bool owner) : AbstractCommChannel()
+SocketCommChannel::SocketCommChannel(SOCKET socket, Ownership owner) : AbstractCommChannel()
 {
    m_socket = socket;
-   m_owner = owner;
+   m_owner = static_cast<bool>(owner);
 #ifndef _WIN32
    if (pipe(m_controlPipe) != 0)
    {

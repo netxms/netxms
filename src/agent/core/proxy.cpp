@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,8 +31,8 @@
  */
 extern ThreadPool *g_dataCollectorPool;
 
-HashMap<ServerObjectKey, DataCollectionProxy> g_proxyList(true);
-HashMap<UINT64, ZoneConfiguration> *g_proxyserverConfList = new HashMap<UINT64, ZoneConfiguration>(true);
+HashMap<ServerObjectKey, DataCollectionProxy> g_proxyList(Ownership::True);
+HashMap<UINT64, ZoneConfiguration> *g_proxyserverConfList = new HashMap<UINT64, ZoneConfiguration>(Ownership::True);
 Mutex g_proxyListMutex;
 
 /**

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 	StringList *data;
 	if (conn->getList(_T("PDH.Objects"), &data) == ERR_SUCCESS)
 	{
-		objects = new ObjectArray<WinPerfObject>(data->size(), 16, true);
+		objects = new ObjectArray<WinPerfObject>(data->size(), 16, Ownership::True);
 		for(int i = 0; i < data->size(); i++)
 			objects->add(new WinPerfObject(data->get(i)));
 		delete data;

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,7 @@
  */
 NXSL_Library::NXSL_Library()
 {
-   m_scriptList = new ObjectArray<NXSL_LibraryScript>(16, 16, true);
+   m_scriptList = new ObjectArray<NXSL_LibraryScript>(16, 16, Ownership::True);
    m_mutex = MutexCreate();
 }
 

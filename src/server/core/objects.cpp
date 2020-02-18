@@ -2827,7 +2827,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
    vm->addConstant("ZONE", vm->createValue(OBJECT_ZONE));
 
    ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, FilterAccessibleObjects);
-   ObjectArray<ObjectQueryResult> *resultSet = new ObjectArray<ObjectQueryResult>(64, 64, true);
+   ObjectArray<ObjectQueryResult> *resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
    for(int i = 0; i < objects->size(); i++)
    {
       NetObj *curr = objects->get(i);

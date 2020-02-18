@@ -25,9 +25,9 @@
 /**
  * Static fields
  */
-static StringObjectMap<SchedulerCallback> s_callbacks(true);
-static ObjectArray<ScheduledTask> s_cronSchedules(5, 5, true);
-static ObjectArray<ScheduledTask> s_oneTimeSchedules(5, 5, true);
+static StringObjectMap<SchedulerCallback> s_callbacks(Ownership::True);
+static ObjectArray<ScheduledTask> s_cronSchedules(5, 5, Ownership::True);
+static ObjectArray<ScheduledTask> s_oneTimeSchedules(5, 5, Ownership::True);
 static Condition s_wakeupCondition(false);
 static Mutex s_cronScheduleLock;
 static Mutex s_oneTimeScheduleLock;

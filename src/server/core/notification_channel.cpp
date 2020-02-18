@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019 Raden Solutions
+** Copyright (C) 2019-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -239,8 +239,8 @@ struct NCDriverDescriptor
    TCHAR name[MAX_OBJECT_NAME];
 };
 
-static StringObjectMap<NCDriverDescriptor> s_driverList(true);
-static StringObjectMap<NotificationChannel> s_channelList(true);
+static StringObjectMap<NCDriverDescriptor> s_driverList(Ownership::True);
+static StringObjectMap<NotificationChannel> s_channelList(Ownership::True);
 static Mutex s_channelListLock;
 
 /**
@@ -268,7 +268,7 @@ NotificationMessage::~NotificationMessage()
  */
 NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
          const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage) :
-                  m_notificationQueue(64, true)
+                  m_notificationQueue(64, Ownership::True)
 {
    m_driver = driver;
    m_storageManager = storageManager;

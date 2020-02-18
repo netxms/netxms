@@ -1440,7 +1440,7 @@ static EnumerationCallbackResult CopyElements(const TCHAR *key, const TCHAR *val
  */
 StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *instances)
 {
-   auto filteredInstances = new StringObjectMap<InstanceDiscoveryData>(true);
+   auto filteredInstances = new StringObjectMap<InstanceDiscoveryData>(Ownership::True);
 
    lock();
    if (m_instanceFilter == NULL)

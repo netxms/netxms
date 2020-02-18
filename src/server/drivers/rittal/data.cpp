@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Rittal CMC and LCP devices
- * Copyright (C) 2017 Raden Solutions
+ * Copyright (C) 2017-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Constructor
  */
-RittalDriverData::RittalDriverData() : HostMibDriverData(), m_devices(32, 32, true)
+RittalDriverData::RittalDriverData() : HostMibDriverData(), m_devices(32, 32, Ownership::True)
 {
    m_cacheTimestamp = 0;
    m_cacheLock = MutexCreate();

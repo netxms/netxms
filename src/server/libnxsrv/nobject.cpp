@@ -31,9 +31,9 @@ NObject::NObject()
 {
    m_id = 0;
    m_name[0] = 0;
-   m_customAttributes = new StringObjectMap<CustomAttribute>(true);
-   m_childList = new ObjectArray<NObject>(0, 16, false);
-   m_parentList = new ObjectArray<NObject>(4, 4, false);
+   m_customAttributes = new StringObjectMap<CustomAttribute>(Ownership::True);
+   m_childList = new ObjectArray<NObject>(0, 16, Ownership::False);
+   m_parentList = new ObjectArray<NObject>(4, 4, Ownership::False);
    m_customAttributeLock = MutexCreateFast();
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();
@@ -451,7 +451,7 @@ void NObject::onParentRemove()
  */
 void NObject::onChildAdd()
 {
-   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, true);
+   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
    lockCustomAttributes();
    Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
    while(iterator->hasNext())
@@ -543,7 +543,7 @@ void NObject::setCustomAttributesFromMessage(NXCPMessage *msg)
 {
    StringList existingAttibutes;
    StringList deletionList;
-   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, true);
+   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
 
    int count = msg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
    UINT32 fieldId = VID_CUSTOM_ATTRIBUTES_BASE;

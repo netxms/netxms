@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ struct SNMPPacket
 /**
  * Sender queue
  */
-static ObjectQueue<SNMPPacket> s_snmpTrapQueue(256, true);
+static ObjectQueue<SNMPPacket> s_snmpTrapQueue(256, Ownership::True);
 
 /**
  * Shutdown trap sender

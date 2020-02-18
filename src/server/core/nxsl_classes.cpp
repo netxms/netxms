@@ -506,7 +506,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    if (!strcmp(attr, "alarms"))
    {
       ObjectArray<Alarm> *alarms = GetAlarms(object->getId(), true);
-      alarms->setOwner(false);
+      alarms->setOwner(Ownership::False);
       NXSL_Array *array = new NXSL_Array(vm);
       for(int i = 0; i < alarms->size(); i++)
          array->append(vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarms->get(i))));
@@ -616,7 +616,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
       NXSL_Array *array = new NXSL_Array(vm);
       IntegerArray<UINT32> *responsibleUsers = object->getAllResponsibleUsers();
       ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(responsibleUsers);
-      userDB->setOwner(false);
+      userDB->setOwner(Ownership::False);
       for(int i = 0; i < userDB->size(); i++)
       {
          array->append(userDB->get(i)->createNXSLObject(vm));
@@ -3412,7 +3412,7 @@ NXSL_Value *NXSL_UserGroupClass::getAttr(NXSL_Object *object, const char *attr)
 
       NXSL_Array *array = new NXSL_Array(vm);
       ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(&memberArray);
-      userDB->setOwner(false);
+      userDB->setOwner(Ownership::False);
       for(int i = 0; i < userDB->size(); i++)
       {
          if (userDB->get(i)->isGroup())

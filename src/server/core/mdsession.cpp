@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -708,7 +708,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
       int count = (int)request->getFieldAsUInt32(VID_NUM_ITEMS);
       if (count > 0)
       {
-         ObjectArray<MobileDataPushElement> values(count, 16, true);
+         ObjectArray<MobileDataPushElement> values(count, 16, Ownership::True);
 
          int i;
          UINT32 varId = VID_PUSH_DCI_DATA_BASE;

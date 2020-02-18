@@ -92,7 +92,7 @@ NetObj::NetObj()
    m_moduleData = NULL;
    m_postalAddress = new PostalAddress();
    m_dashboards = new IntegerArray<UINT32>();
-   m_urls = new ObjectArray<ObjectUrl>(4, 4, true);
+   m_urls = new ObjectArray<ObjectUrl>(4, 4, Ownership::True);
    m_primaryZoneProxyId = 0;
    m_backupZoneProxyId = 0;
    m_state = 0;
@@ -803,7 +803,7 @@ void NetObj::deleteObject(NetObj *initiator)
       {
          // last parent, delete object
          if (deleteList == NULL)
-            deleteList = new ObjectArray<NetObj>(16, 16, false);
+            deleteList = new ObjectArray<NetObj>();
 			deleteList->add(o);
       }
       else
@@ -830,13 +830,13 @@ void NetObj::deleteObject(NetObj *initiator)
          if ((obj->getObjectClass() == OBJECT_SUBNET) && (g_flags & AF_DELETE_EMPTY_SUBNETS) && (obj->getChildCount() == 0))
          {
             if (deleteList == NULL)
-               deleteList = new ObjectArray<NetObj>(16, 16, false);
+               deleteList = new ObjectArray<NetObj>();
             deleteList->add(obj);
          }
          else
          {
             if (recalcList == NULL)
-               recalcList = new ObjectArray<NetObj>(16, 16, false);
+               recalcList = new ObjectArray<NetObj>();
             recalcList->add(obj);
          }
       }
@@ -1945,7 +1945,7 @@ ObjectArray<NetObj> *NetObj::getAllChildren(bool eventSourceOnly, bool updateRef
 ObjectArray<NetObj> *NetObj::getChildren(int typeFilter)
 {
 	lockChildList(false);
-	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)getChildList()->size(), 16, false);
+	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)getChildList()->size());
 	for(int i = 0; i < getChildList()->size(); i++)
 	{
 		if ((typeFilter == -1) || (typeFilter == static_cast<NetObj *>(getChildList()->get(i))->getObjectClass()))
@@ -1965,7 +1965,7 @@ ObjectArray<NetObj> *NetObj::getChildren(int typeFilter)
 ObjectArray<NetObj> *NetObj::getParents(int typeFilter)
 {
     lockParentList(false);
-    ObjectArray<NetObj> *list = new ObjectArray<NetObj>(getParentList()->size(), 16, false);
+    ObjectArray<NetObj> *list = new ObjectArray<NetObj>(getParentList()->size(), 16);
     for(int i = 0; i < getParentList()->size(); i++)
     {
         if ((typeFilter == -1) || (typeFilter == static_cast<NetObj *>(getParentList()->get(i))->getObjectClass()))
@@ -2080,7 +2080,7 @@ void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
 {
    lockProperties();
    if (m_moduleData == NULL)
-      m_moduleData = new StringObjectMap<ModuleData>(true);
+      m_moduleData = new StringObjectMap<ModuleData>(Ownership::True);
    m_moduleData->set(module, data);
    unlockProperties();
 }

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Helpdesk link module for Jira
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -548,7 +548,7 @@ ObjectArray<ProjectComponent> *JiraLink::getProjectComponents(const char *projec
             {
                DbgPrintf(4, _T("Jira: got components list for project %hs"), project);
                int size = (int)json_array_size(root);
-               components = new ObjectArray<ProjectComponent>(size, 8, true);
+               components = new ObjectArray<ProjectComponent>(size, 8, Ownership::True);
                for(int i = 0; i < size; i++)
                {
                   json_t *e = json_array_get(root, i);

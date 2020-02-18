@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -35,10 +35,10 @@ static void ObjectDestructor(void *object, StringMapBase *map)
 /**
  * Constructors
  */
-StringMapBase::StringMapBase(bool objectOwner, void (*destructor)(void *, StringMapBase *))
+StringMapBase::StringMapBase(Ownership objectOwner, void (*destructor)(void *, StringMapBase *))
 {
 	m_data = NULL;
-	m_objectOwner = objectOwner;
+	m_objectOwner = static_cast<bool>(objectOwner);
    m_ignoreCase = true;
    m_context = NULL;
 	m_objectDestructor = (destructor != NULL) ? destructor : ObjectDestructor;

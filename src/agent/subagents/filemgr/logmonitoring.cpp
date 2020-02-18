@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2019 Raden Solutions
+ ** Copyright (C) 2014-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 /**
  * File list constructor
  */
-MonitoredFileList::MonitoredFileList() : m_files(16, 16, true)
+MonitoredFileList::MonitoredFileList() : m_files(16, 16, Ownership::True)
 {
    m_mutex = MutexCreate();
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ Rack::Rack() : super()
 {
 	m_height = 42;
 	m_topBottomNumbering = false;
-	m_passiveElements = new ObjectArray<RackPassiveElement>(0, 16, true);
+	m_passiveElements = new ObjectArray<RackPassiveElement>(0, 16, Ownership::True);
 }
 
 /**
@@ -39,7 +39,7 @@ Rack::Rack(const TCHAR *name, int height) : super(name, 0)
 {
 	m_height = height;
    m_topBottomNumbering = false;
-   m_passiveElements = new ObjectArray<RackPassiveElement>(0, 16, true);
+   m_passiveElements = new ObjectArray<RackPassiveElement>(0, 16, Ownership::True);
 }
 
 /**
@@ -185,7 +185,7 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *request)
    if (request->isFieldExist(VID_NUM_ELEMENTS))
    {
       int count = request->getFieldAsInt32(VID_NUM_ELEMENTS);
-      ObjectArray<RackPassiveElement> newElements(count, 16, false);
+      ObjectArray<RackPassiveElement> newElements(count);
       UINT32 fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Ubiquity Networks access points
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -191,7 +191,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
  */
 ObjectArray<AccessPointInfo> *UbiquityNetworksDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
+   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
    if (SnmpWalk(snmp, _T(".1.2.840.10036.1.1.1.1"),   // dot11StationID
                 HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
    {
@@ -241,7 +241,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
  */
 ObjectArray<WirelessStationInfo> *UbiquityNetworksDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
+   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.3"), // mtxrWlRtabStrength
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {

@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Rittal CMC and LCP devices
- * Copyright (C) 2017 Raden Solutions
+ * Copyright (C) 2017-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -130,7 +130,7 @@ DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, NObject *node,
  */
 ObjectArray<AgentParameterDefinition> *RittalDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, true);
+   ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, Ownership::True);
    registerHostMibMetrics(metrics);
    static_cast<RittalDriverData*>(driverData)->registerMetrics(metrics);
    return metrics;

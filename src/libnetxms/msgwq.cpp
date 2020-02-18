@@ -38,7 +38,7 @@
  * Housekeeper data
  */
 MUTEX __EXPORT MsgWaitQueue::m_housekeeperLock = MutexCreate();
-HashMap<UINT64, MsgWaitQueue> __EXPORT *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(false);
+HashMap<UINT64, MsgWaitQueue> __EXPORT *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(Ownership::False);
 CONDITION __EXPORT MsgWaitQueue::m_shutdownCondition = ConditionCreate(true);
 THREAD __EXPORT MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
 

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -43,7 +43,7 @@ NXSL_Storage::~NXSL_Storage()
 NXSL_LocalStorage::NXSL_LocalStorage(NXSL_VM *vm) : NXSL_Storage()
 {
    m_vm = vm;
-   m_values = new NXSL_StringValueMap(vm, true);
+   m_values = new NXSL_StringValueMap(vm, Ownership::True);
 }
 
 /**

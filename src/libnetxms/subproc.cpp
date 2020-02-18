@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,7 +203,7 @@ SubProcessExecutor::SubProcessExecutor(const TCHAR *name, const TCHAR *command) 
 
    MutexLock(m_registryLock);
    if (m_registry == NULL)
-      m_registry = new ObjectArray<SubProcessExecutor>(16, 16, false);
+      m_registry = new ObjectArray<SubProcessExecutor>(16, 16, Ownership::False);
    if (m_stopCondition == INVALID_CONDITION_HANDLE)
       m_stopCondition = ConditionCreate(true);
    if (m_monitorThread == INVALID_THREAD_HANDLE)

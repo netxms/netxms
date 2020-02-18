@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -36,7 +36,7 @@ void NXSL_StringValueMap::destructor(void *object, StringMapBase *map)
  */
 NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
 {
-   m_values = new NXSL_StringValueMap(vm, true);
+   m_values = new NXSL_StringValueMap(vm, Ownership::True);
 }
 
 /**
@@ -44,7 +44,7 @@ NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
  */
 NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src) : NXSL_HandleCountObject(src->m_vm)
 {
-   m_values = new NXSL_StringValueMap(src->m_vm, true);
+   m_values = new NXSL_StringValueMap(src->m_vm, Ownership::True);
    StructArray<KeyValuePair<void>> *values = src->m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {

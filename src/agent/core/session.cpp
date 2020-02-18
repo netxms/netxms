@@ -121,12 +121,13 @@ THREAD_RESULT THREAD_CALL CommSession::tcpProxyReadThreadStarter(void *arg)
 /**
  * Client session class constructor
  */
-CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer) : m_downloadFileMap(true), m_tcpProxies(0, 16, true)
+CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr,
+         bool masterServer, bool controlServer) : m_downloadFileMap(Ownership::True), m_tcpProxies(0, 16, Ownership::True)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
    _sntprintf(m_key, 32, _T("CommSession-%u"), m_id);
-   m_processingQueue = new ObjectQueue<NXCPMessage>(64, true);
+   m_processingQueue = new ObjectQueue<NXCPMessage>(64, Ownership::True);
    m_channel = channel;
    m_channel->incRefCount();
    m_protocolVersion = NXCP_VERSION;

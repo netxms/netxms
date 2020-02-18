@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -32,7 +32,7 @@ DebugTagTreeNode::DebugTagTreeNode()
    m_directLevel = 0;
    m_wildcard = true;
    m_wildcardLevel = 0;
-   m_children = new StringObjectMap<DebugTagTreeNode>(true);
+   m_children = new StringObjectMap<DebugTagTreeNode>(Ownership::True);
 }
 
 /**
@@ -47,7 +47,7 @@ DebugTagTreeNode::DebugTagTreeNode(const TCHAR *value, size_t len)
    m_directLevel = 0;
    m_wildcard = false;
    m_wildcardLevel = 0;
-   m_children = new StringObjectMap<DebugTagTreeNode>(true);
+   m_children = new StringObjectMap<DebugTagTreeNode>(Ownership::True);
 }
 
 /**
@@ -201,7 +201,7 @@ int DebugTagTree::getDebugLevel(const TCHAR *tags)
  */
 ObjectArray<DebugTagInfo> *DebugTagTree::getAllTags()
 {
-   ObjectArray<DebugTagInfo> *tags = new ObjectArray<DebugTagInfo>(64, 64, true);
+   ObjectArray<DebugTagInfo> *tags = new ObjectArray<DebugTagInfo>(64, 64, Ownership::True);
    m_root->getAllTags(_T(""), tags);
    return tags;
 }

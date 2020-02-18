@@ -75,7 +75,7 @@ public:
  * Static data
  */
 Mutex s_serviceCacheLock;
-StringObjectMap<ServiceEntry> s_sericeCache(true);
+StringObjectMap<ServiceEntry> s_sericeCache(Ownership::True);
 
 /**
  * Destructor

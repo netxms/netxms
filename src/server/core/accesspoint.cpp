@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -278,7 +278,7 @@ void AccessPoint::updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *r
 {
 	lockProperties();
 	if (m_radioInterfaces == NULL)
-		m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(ri->size(), 4, true);
+		m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(ri->size(), 4, Ownership::True);
 	m_radioInterfaces->clear();
 	for(int i = 0; i < ri->size(); i++)
 	{

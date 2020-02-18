@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -178,7 +178,7 @@ void ParameterProvider::listParameters(StringList *list)
 /**
  * Static data
  */
-static ObjectArray<ParameterProvider> s_providers(0, 8, true);
+static ObjectArray<ParameterProvider> s_providers(0, 8, Ownership::True);
 
 /**
  * Poller thread

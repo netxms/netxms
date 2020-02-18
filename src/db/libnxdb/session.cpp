@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -94,7 +94,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
 			hConn->m_connection = hDrvConn;
          hConn->m_mutexTransLock = MutexCreateRecursive();
          hConn->m_transactionLevel = 0;
-         hConn->m_preparedStatements = new ObjectArray<db_statement_t>(4, 4, false);
+         hConn->m_preparedStatements = new ObjectArray<db_statement_t>(4, 4, Ownership::False);
          hConn->m_preparedStatementsLock = MutexCreateFast();
 #ifdef UNICODE
          hConn->m_dbName = mbDatabase;
@@ -508,7 +508,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
  */
 SharedString LIBNXDB_EXPORTABLE DBGetFieldAsSharedString(DB_RESULT hResult, int row, int col)
 {
-   return SharedString(DBGetField(hResult, row, col, NULL, 0), true);
+   return SharedString(DBGetField(hResult, row, col, NULL, 0), Ownership::True);
 }
 
 /**

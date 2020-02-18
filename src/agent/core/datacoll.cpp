@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -541,7 +541,7 @@ struct ServerSyncStatus
 /**
  * Server sync status information
  */
-static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(true);
+static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(Ownership::True);
 static Mutex s_serverSyncStatusLock;
 
 /**
@@ -601,7 +601,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
 /**
  * List of all data collection items
  */
-static HashMap<ServerObjectKey, DataCollectionItem> s_items(true);
+static HashMap<ServerObjectKey, DataCollectionItem> s_items(Ownership::True);
 static Mutex s_itemLock;
 
 /**
@@ -683,8 +683,8 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       int count = DBGetNumRows(hResult);
       if (count > 0)
       {
-         ObjectArray<DataElement> bulkSendList(count, 10, true);
-         ObjectArray<DataElement> deleteList(count, 10, true);
+         ObjectArray<DataElement> bulkSendList(count, 10, Ownership::True);
+         ObjectArray<DataElement> deleteList(count, 10, Ownership::True);
          for(int i = 0; i < count; i++)
          {
             DataElement *e = new DataElement(hResult, i);
@@ -752,7 +752,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                         BYTE status[MAX_BULK_DATA_BLOCK_SIZE];
                         memset(status, 0, MAX_BULK_DATA_BLOCK_SIZE);
                         response->getFieldAsBinary(VID_STATUS, status, MAX_BULK_DATA_BLOCK_SIZE);
-                        bulkSendList.setOwner(false);
+                        bulkSendList.setOwner(Ownership::False);
                         for(int i = 0; i < bulkSendList.size(); i++)
                         {
                            DataElement *e = bulkSendList.get(i);
@@ -1078,7 +1078,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    DebugPrintf(4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    // Read proxy list
-   HashMap<ServerObjectKey, DataCollectionProxy> *proxyList = new HashMap<ServerObjectKey, DataCollectionProxy>(true);
+   HashMap<ServerObjectKey, DataCollectionProxy> *proxyList = new HashMap<ServerObjectKey, DataCollectionProxy>(Ownership::True);
    count = msg->getFieldAsInt32(VID_ZONE_PROXY_COUNT);
    if (count > 0)
    {
@@ -1094,7 +1094,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    DebugPrintf(4, _T("%d proxies received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    // Read data collection items
-   HashMap<ServerObjectKey, DataCollectionItem> config(true);
+   HashMap<ServerObjectKey, DataCollectionItem> config(Ownership::True);
    count = msg->getFieldAsInt32(VID_NUM_ELEMENTS);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < count; i++)

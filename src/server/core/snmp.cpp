@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -140,7 +140,7 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
       if (hResult != NULL)
       {
          int count = DBGetNumRows(hResult);
-         ObjectArray<SNMP_SecurityContext> contexts(count, 16, false);
+         ObjectArray<SNMP_SecurityContext> contexts(count);
          for(int i = 0; i < count; i++)
          {
             char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];

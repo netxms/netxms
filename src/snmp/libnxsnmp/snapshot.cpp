@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -39,7 +39,7 @@ struct SNMP_SnapshotIndexEntry
  */
 SNMP_Snapshot::SNMP_Snapshot()
 {
-   m_values = new ObjectArray<SNMP_Variable>(64, 64, true);
+   m_values = new ObjectArray<SNMP_Variable>(64, 64, Ownership::True);
    m_index = NULL;
 }
 
@@ -54,7 +54,7 @@ SNMP_Snapshot::~SNMP_Snapshot()
    HASH_ITER(hh, m_index, entry, tmp)
    {
       HASH_DEL(m_index, entry);
-      free(entry);
+      MemFree(entry);
    }
 }
 
@@ -66,7 +66,7 @@ void SNMP_Snapshot::buildIndex()
    for(int i = 0; i < m_values->size(); i++)
    {
       SNMP_Variable *v = m_values->get(i);
-      SNMP_SnapshotIndexEntry *entry = (SNMP_SnapshotIndexEntry *)malloc(sizeof(SNMP_SnapshotIndexEntry));
+      SNMP_SnapshotIndexEntry *entry = MemAllocStruct<SNMP_SnapshotIndexEntry>();
       entry->var = v;
       entry->pos = i;
       HASH_ADD_KEYPTR(hh, m_index, entry->var->getName().value(), (unsigned int)(entry->var->getName().length() * sizeof(UINT32)), entry);

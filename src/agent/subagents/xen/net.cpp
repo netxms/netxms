@@ -79,7 +79,7 @@ ObjectArray<NetDevice> *ScanNetworkDevices()
    char line[1024];
    NetDevice dev;
 
-   ObjectArray<NetDevice> *devices = new ObjectArray<NetDevice>(32, 32, true);
+   ObjectArray<NetDevice> *devices = new ObjectArray<NetDevice>(32, 32, Ownership::True);
    while(!feof(f))
    {
       if (fgets(line, 1024, f) == NULL)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ struct PushDataEntry
  * Local cache
  */
 static ObjectMemoryPool<PushDataEntry> s_localCachePool;
-static StringObjectMap<PushDataEntry> s_localCache(false);
+static StringObjectMap<PushDataEntry> s_localCache(Ownership::False);
 static Mutex s_localCacheLock;
 
 /**

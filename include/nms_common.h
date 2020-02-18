@@ -1468,6 +1468,24 @@ enum VirtualizationType
 };
 
 /**
+ * Generic boolean flag
+ */
+enum class BooleanFlag : bool
+{
+   False = false,
+   True = true
+};
+
+/**
+ * Ownership indicator
+ */
+enum class Ownership : bool
+{
+   False = false,
+   True = true
+};
+
+/**
  * Disable copy constructor if compiler supports it
  */
 #if CAN_DELETE_COPY_CTOR

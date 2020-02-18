@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco 4400 (former Airespace) wireless switches
-** Copyright (C) 2013-2016 Raden Solutions
+** Copyright (C) 2013-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -194,7 +194,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
  */
 ObjectArray<AccessPointInfo> *AirespaceDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
+   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14179.2.2.1.1.33"),  // bsnAPEthernetMacAddress
                 HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
@@ -270,7 +270,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
  */
 ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
+   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14179.2.1.4.1.1"), // bsnMobileStationMacAddress
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)

@@ -1,6 +1,6 @@
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007-2019 Victor Kirhenshtein
+** Copyright (C) 2007-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -459,12 +459,12 @@ extern "C" ORACLE_STATEMENT __EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwsz
 	if (IsSuccess(OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
 	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
 	{
-		stmt = (ORACLE_STATEMENT *)malloc(sizeof(ORACLE_STATEMENT));
+		stmt = MemAllocStruct<ORACLE_STATEMENT>();
 		stmt->connection = pConn;
 		stmt->handleStmt = handleStmt;
-		stmt->bindings = new Array(8, 8, false);
+		stmt->bindings = new Array(8, 8, Ownership::False);
       stmt->batchBindings = NULL;
-		stmt->buffers = new Array(8, 8, true);
+		stmt->buffers = new Array(8, 8, Ownership::True);
       stmt->batchMode = false;
       stmt->batchSize = 0;
 		OCIHandleAlloc(s_handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
@@ -501,7 +501,7 @@ extern "C" bool __EXPORT DrvOpenBatch(ORACLE_STATEMENT *stmt)
    if (stmt->batchBindings != NULL)
       stmt->batchBindings->clear();
    else
-      stmt->batchBindings = new ObjectArray<OracleBatchBind>(16, 16, true);
+      stmt->batchBindings = new ObjectArray<OracleBatchBind>(16, 16, Ownership::True);
    stmt->batchMode = true;
    stmt->batchSize = 0;
    return true;

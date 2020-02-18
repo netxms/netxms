@@ -31,7 +31,7 @@ private:
    static void destructor(void *object, StringMapBase *) { }
 
 public:
-   StringIntMap() : StringMapBase(false) { m_objectDestructor = destructor; }
+   StringIntMap() : StringMapBase(Ownership::False) { m_objectDestructor = destructor; }
 
    void set(const TCHAR *key, T value) { setObject((TCHAR *)key, CAST_TO_POINTER(value, void*), false); }
    T get(const TCHAR *key) const { return CAST_FROM_POINTER(getObject(key), T); }

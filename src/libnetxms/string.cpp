@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -76,17 +76,17 @@ String::String(const TCHAR *init)
 /**
  * Create string with given initial content
  */
-String::String(const TCHAR *init, ssize_t len, bool takeOwnership)
+String::String(const TCHAR *init, ssize_t len, Ownership takeOwnership)
 {
    m_length = (init == NULL) ? 0 : ((len >= 0) ? len : _tcslen(init));
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
       m_buffer = m_internalBuffer;
       memcpy(m_buffer, init, m_length * sizeof(TCHAR));
-      if (takeOwnership)
+      if (static_cast<bool>(takeOwnership))
          MemFree(const_cast<TCHAR*>(init));
    }
-   else if (takeOwnership)
+   else if (static_cast<bool>(takeOwnership))
    {
       m_buffer = const_cast<TCHAR*>(init);
    }

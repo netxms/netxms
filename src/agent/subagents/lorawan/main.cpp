@@ -33,7 +33,7 @@ static LoraWanServerLink *s_link = NULL;
 /**
  * LoraWAN device map
  */
-HashMap<uuid, LoraDeviceData> g_deviceMap(true);
+HashMap<uuid, LoraDeviceData> g_deviceMap(Ownership::True);
 
 /**
  * Device map mutex

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Nortel WLAN Security Switch series
-** Copyright (C) 2013-2018 Raden Solutions
+** Copyright (C) 2013-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -224,7 +224,7 @@ static UINT32 HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, vo
  */
 ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
+   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
 
    // Adopted
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.45.6.1.4.5.1.1.2.1.2"),
@@ -335,7 +335,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *tra
  */
 ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
+   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.12.3.1.1"), // wsCcRfMuMac
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)

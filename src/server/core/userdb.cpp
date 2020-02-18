@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,12 +46,12 @@ bool RadiusAuth(const TCHAR *pszLogin, const TCHAR *pszPasswd);
 /**
  * Static data
  */
-static HashMap<UINT32, UserDatabaseObject> s_userDatabase(true);
-static StringObjectMap<UserDatabaseObject> s_ldapNames(false);
-static StringObjectMap<User> s_ldapUserId(false);
-static StringObjectMap<Group> s_ldapGroupId(false);
-static StringObjectMap<User> s_users(false);
-static StringObjectMap<Group> s_groups(false);
+static HashMap<UINT32, UserDatabaseObject> s_userDatabase(Ownership::True);
+static StringObjectMap<UserDatabaseObject> s_ldapNames(Ownership::False);
+static StringObjectMap<User> s_ldapUserId(Ownership::False);
+static StringObjectMap<Group> s_ldapGroupId(Ownership::False);
+static StringObjectMap<User> s_users(Ownership::False);
+static StringObjectMap<Group> s_groups(Ownership::False);
 static RWLOCK s_userDatabaseLock = RWLockCreate();
 static THREAD s_statusUpdateThread = INVALID_THREAD_HANDLE;
 
@@ -1564,7 +1564,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it)
  */
 ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids)
 {
-   ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(16, 16, true);
+   ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(16, 16, Ownership::True);
    RWLockReadLock(s_userDatabaseLock, INFINITE);
    for(int i = 0; i < ids->size(); i++)
    {

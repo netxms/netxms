@@ -38,10 +38,10 @@ struct QueueBuffer
 /**
  * Queue constructor
  */
-Queue::Queue(size_t blockSize, bool owner)
+Queue::Queue(size_t blockSize, Ownership owner)
 {
    m_blockSize = blockSize;
-   m_owner = owner;
+   m_owner = static_cast<bool>(owner);
 	commonInit();
 }
 

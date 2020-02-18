@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,8 +27,8 @@
  */
 ArpCache::ArpCache()
 {
-   m_entries = new ObjectArray<ArpEntry>(64, 64, true);
-   m_ipIndex = new HashMap<InetAddress, ArpEntry>(false);
+   m_entries = new ObjectArray<ArpEntry>(64, 64, Ownership::True);
+   m_ipIndex = new HashMap<InetAddress, ArpEntry>(Ownership::False);
    m_timestamp = time(NULL);
 }
 

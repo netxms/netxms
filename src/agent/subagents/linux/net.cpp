@@ -1,6 +1,6 @@
 /* 
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2004-2015 Raden Solutions
+ ** Copyright (C) 2004-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -424,7 +424,7 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
       goto failure_1;
    }
 
-   ifList = new ObjectArray<LinuxInterfaceInfo>(16, 16, true);
+   ifList = new ObjectArray<LinuxInterfaceInfo>(16, 16, Ownership::True);
 
    // Read and parse interface list
    done = false;

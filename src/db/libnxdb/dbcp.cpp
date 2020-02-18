@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2008-2018 Raden Solutions
+** Copyright (C) 2008-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -147,7 +147,7 @@ static void ResetExpiredConnections()
    MutexLock(m_poolAccessMutex);
 
 	int i, availCount = 0;
-   ObjectArray<PoolConnectionInfo> reconnList(m_connections.size(), 16, false);
+   ObjectArray<PoolConnectionInfo> reconnList(m_connections.size(), 16, Ownership::False);
 	for(i = 0; i < m_connections.size(); i++)
 	{
 		PoolConnectionInfo *conn = m_connections.get(i);
@@ -236,7 +236,7 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
    m_connectionTTL = connTTL;
 
 	m_poolAccessMutex = MutexCreate();
-   m_connections.setOwner(true);
+   m_connections.setOwner(Ownership::True);
    m_condShutdown = ConditionCreate(TRUE);
    m_condRelease = ConditionCreate(FALSE);
 
@@ -463,7 +463,7 @@ int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount()
  */
 ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList()
 {
-   ObjectArray<PoolConnectionInfo> *list = new ObjectArray<PoolConnectionInfo>(32, 32, true);
+   ObjectArray<PoolConnectionInfo> *list = new ObjectArray<PoolConnectionInfo>(32, 32, Ownership::True);
    MutexLock(m_poolAccessMutex);
    for(int i = 0; i < m_connections.size(); i++)
    {

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ VolatileCounter64 g_snmpTrapsReceived = 0;
  * Static data
  */
 static Mutex s_trapCfgLock;
-static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, true);
+static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, Ownership::True);
 static bool s_logAllTraps = false;
 static VolatileCounter64 s_trapId = 0; // Next free trap ID
 static bool s_allowVarbindConversion = true;
@@ -50,7 +50,7 @@ static UINT16 m_wTrapPort = 162;
 /**
  * Create new SNMP trap configuration object
  */
-SNMPTrapConfiguration::SNMPTrapConfiguration() : m_objectId(), m_mappings(8, 8, true)
+SNMPTrapConfiguration::SNMPTrapConfiguration() : m_objectId(), m_mappings(8, 8, Ownership::True)
 {
    m_guid = uuid::generate();
    m_id = CreateUniqueId(IDG_SNMP_TRAP);
@@ -64,7 +64,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration() : m_objectId(), m_mappings(8, 8, 
 /**
  * Create SNMP trap configuration object from database
  */
-SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row) : m_mappings(8, 8, true)
+SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row) : m_mappings(8, 8, Ownership::True)
 {
    m_id = DBGetFieldULong(trapResult, row, 0);
    TCHAR buffer[MAX_OID_LENGTH];
@@ -107,7 +107,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb
 /**
  * Create SNMP trap configuration object from config entry
  */
-SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT32 eventCode) : m_mappings(8, 8, true)
+SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT32 eventCode) : m_mappings(8, 8, Ownership::True)
 {
    if (id == 0)
       m_id = CreateUniqueId(IDG_SNMP_TRAP);
@@ -145,7 +145,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& gui
 /**
  * Create SNMP trap configuration object from NXCPMessage
  */
-SNMPTrapConfiguration::SNMPTrapConfiguration(NXCPMessage *msg) : m_mappings(8, 8, true)
+SNMPTrapConfiguration::SNMPTrapConfiguration(NXCPMessage *msg) : m_mappings(8, 8, Ownership::True)
 {
    UINT32 buffer[MAX_OID_LENGTH];
 

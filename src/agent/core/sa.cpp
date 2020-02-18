@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Session agent list
  */
-static ObjectArray<SessionAgentConnector> s_agents(8, 8, false);
+static ObjectArray<SessionAgentConnector> s_agents(8, 8, Ownership::False);
 static RWLOCK s_lock = RWLockCreate();
 static int s_sessionAgentCount = 0;
 static int s_userAgentCount = 0;
@@ -33,7 +33,7 @@ static int s_userAgentCount = 0;
 /**
  * List of active user agent notifications
  */
-static HashMap<ServerObjectKey, UserAgentNotification> s_userAgentNotifications(true);
+static HashMap<ServerObjectKey, UserAgentNotification> s_userAgentNotifications(Ownership::True);
 static Mutex s_userAgentNotificationsLock;
 
 /**

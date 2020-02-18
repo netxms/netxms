@@ -37,7 +37,7 @@ ThreadPool *g_dataCollectorThreadPool = NULL;
 /**
  * DCI cache loader queue
  */
-ObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue(256, true);
+ObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue(256, Ownership::True);
 
 /**
  * Average time to queue DCI
@@ -536,7 +536,7 @@ void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
    // Gather full parameter list
 	if (flags & 0x01)
 	{
-		ObjectArray<AgentParameterDefinition> fullList(64, 64, true);
+		ObjectArray<AgentParameterDefinition> fullList(64, 64, Ownership::True);
 		WriteFullParamListToMessage_CallbackData data;
 		data.origin = origin;
 		data.parameters = &fullList;
@@ -554,7 +554,7 @@ void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
    // Gather full table list
 	if (flags & 0x02)
 	{
-		ObjectArray<AgentTableDefinition> fullList(64, 64, true);
+		ObjectArray<AgentTableDefinition> fullList(64, 64, Ownership::True);
 		g_idxNodeById.forEach(UpdateTableList, &fullList);
 
 		// Put list into the message

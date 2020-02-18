@@ -33,7 +33,7 @@
  */
 TableRow::TableRow(int columnCount)
 {
-   m_cells = new ObjectArray<TableCell>(columnCount, 8, true);
+   m_cells = new ObjectArray<TableCell>(columnCount, 8, Ownership::True);
    for(int i = 0; i < columnCount; i++)
       m_cells->add(new TableCell());
    m_objectId = 0;
@@ -45,7 +45,7 @@ TableRow::TableRow(int columnCount)
  */
 TableRow::TableRow(TableRow *src)
 {
-   m_cells = new ObjectArray<TableCell>(src->m_cells->size(), 8, true);
+   m_cells = new ObjectArray<TableCell>(src->m_cells->size(), 8, Ownership::True);
    for(int i = 0; i < src->m_cells->size(); i++)
       m_cells->add(new TableCell(src->m_cells->get(i)));
    m_objectId = src->m_objectId;
@@ -57,10 +57,10 @@ TableRow::TableRow(TableRow *src)
  */
 Table::Table() : RefCountObject()
 {
-   m_data = new ObjectArray<TableRow>(32, 32, true);
+   m_data = new ObjectArray<TableRow>(32, 32, Ownership::True);
 	m_title = NULL;
    m_source = DS_INTERNAL;
-   m_columns = new ObjectArray<TableColumnDefinition>(8, 8, true);
+   m_columns = new ObjectArray<TableColumnDefinition>(8, 8, Ownership::True);
    m_extendedFormat = false;
 }
 
@@ -69,7 +69,7 @@ Table::Table() : RefCountObject()
  */
 Table::Table(NXCPMessage *msg) : RefCountObject()
 {
-   m_columns = new ObjectArray<TableColumnDefinition>(8, 8, true);
+   m_columns = new ObjectArray<TableColumnDefinition>(8, 8, Ownership::True);
 	createFromMessage(msg);
 }
 
@@ -79,13 +79,13 @@ Table::Table(NXCPMessage *msg) : RefCountObject()
 Table::Table(Table *src) : RefCountObject()
 {
    m_extendedFormat = src->m_extendedFormat;
-   m_data = new ObjectArray<TableRow>(src->m_data->size(), 32, true);
+   m_data = new ObjectArray<TableRow>(src->m_data->size(), 32, Ownership::True);
 	int i;
    for(i = 0; i < src->m_data->size(); i++)
       m_data->add(new TableRow(src->m_data->get(i)));
    m_title = (src->m_title != NULL) ? _tcsdup(src->m_title) : NULL;
    m_source = src->m_source;
-   m_columns = new ObjectArray<TableColumnDefinition>(src->m_columns->size(), 8, true);
+   m_columns = new ObjectArray<TableColumnDefinition>(src->m_columns->size(), 8, Ownership::True);
 	for(i = 0; i < src->m_columns->size(); i++)
       m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
 }
@@ -464,7 +464,7 @@ void Table::createFromMessage(NXCPMessage *msg)
       }
    }
 
-	m_data = new ObjectArray<TableRow>(rows, 32, true);
+	m_data = new ObjectArray<TableRow>(rows, 32, Ownership::True);
 	for(i = 0, dwId = VID_TABLE_DATA_BASE; i < rows; i++)
    {
       TableRow *row = new TableRow(columns);

@@ -274,7 +274,7 @@ protected:
    void findAll(Array *resultSet, bool (*comparator)(void *, void *), void *data);
 
 public:
-	AbstractIndexBase(bool owner);
+	AbstractIndexBase(Ownership owner);
 	~AbstractIndexBase();
 
    size_t size();
@@ -292,9 +292,9 @@ public:
       return m_owner;
    }
 
-   void setOwner(bool owner)
+   void setOwner(Ownership owner)
    {
-      m_owner = owner;
+      m_owner = static_cast<bool>(owner);
    }
 
    void setStartupMode(bool startupMode);
@@ -324,7 +324,7 @@ private:
    }
 
 public:
-   SharedPointerIndex<T>() : AbstractIndexBase(true)
+   SharedPointerIndex<T>() : AbstractIndexBase(Ownership::True)
    {
       this->m_objectDestructor = destructor;
    }
@@ -394,7 +394,7 @@ template<typename T> class AbstractIndex : public AbstractIndexBase
    DISABLE_COPY_CTOR(AbstractIndex)
 
 public:
-   AbstractIndex<T>(bool owner) : AbstractIndexBase(owner)
+   AbstractIndex<T>(Ownership owner) : AbstractIndexBase(owner)
    {
    }
 
@@ -420,7 +420,7 @@ public:
 
    ObjectArray<T> *findAll(bool (*comparator)(T *, void *), void *context)
    {
-      ObjectArray<T> *resultSet = new ObjectArray<T>(64, 64, false);
+      ObjectArray<T> *resultSet = new ObjectArray<T>(64, 64, Ownership::False);
       AbstractIndexBase::findAll(resultSet, reinterpret_cast<bool (*)(void*, void*)>(comparator), context);
       return resultSet;
    }
@@ -455,7 +455,7 @@ private:
    }
 
 public:
-   AbstractIndexWithDestructor<T>(bool owner) : AbstractIndex<T>(owner)
+   AbstractIndexWithDestructor<T>(Ownership owner) : AbstractIndex<T>(owner)
    {
       this->m_objectDestructor = destructor;
    }
@@ -469,7 +469,7 @@ class NXCORE_EXPORTABLE ObjectIndex : public AbstractIndex<NetObj>
    DISABLE_COPY_CTOR(ObjectIndex)
 
 public:
-   ObjectIndex() : AbstractIndex<NetObj>(false) { }
+   ObjectIndex() : AbstractIndex<NetObj>(Ownership::False) { }
 
    ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *context = NULL);
 

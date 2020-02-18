@@ -47,12 +47,12 @@ struct INDEX_HEAD
 /**
  * Constructor for object index
  */
-AbstractIndexBase::AbstractIndexBase(bool owner)
+AbstractIndexBase::AbstractIndexBase(Ownership owner)
 {
 	m_primary = MemAllocStruct<INDEX_HEAD>();
    m_secondary = MemAllocStruct<INDEX_HEAD>();
 	m_writerLock = MutexCreate();
-	m_owner = owner;
+	m_owner = static_cast<bool>(owner);
 	m_startupMode = false;
 	m_dirty = false;
 	m_objectDestructor = free;

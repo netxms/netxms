@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@
 VPNConnector::VPNConnector() : super()
 {
    m_dwPeerGateway = 0;
-   m_localNetworks = new ObjectArray<InetAddress>(8, 8, true);
-   m_remoteNetworks = new ObjectArray<InetAddress>(8, 8, true);
+   m_localNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
+   m_remoteNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
 }
 
 /**
@@ -38,8 +38,8 @@ VPNConnector::VPNConnector() : super()
 VPNConnector::VPNConnector(bool hidden) : super()
 {
    m_dwPeerGateway = 0;
-   m_localNetworks = new ObjectArray<InetAddress>(8, 8, true);
-   m_remoteNetworks = new ObjectArray<InetAddress>(8, 8, true);
+   m_localNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
+   m_remoteNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
    m_isHidden = hidden;
    setCreationTime();
 }

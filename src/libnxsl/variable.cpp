@@ -79,10 +79,10 @@ struct NXSL_VariablePtr
 /**
  * Create new variable system
  */
-NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, bool constant) : NXSL_RuntimeObject(vm)
+NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, BooleanFlag constant) : NXSL_RuntimeObject(vm)
 {
    m_variables = NULL;
-	m_isConstant = constant;
+	m_isConstant = static_cast<bool>(constant);
 	m_restorePointCount = 0;
 }
 

@@ -60,8 +60,8 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UI
 
 Template::Template() : super(), AutoBindTarget(this), VersionableObject(this)
 {
-   m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
-   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, true);
+   m_policyList = new HashMap<uuid, GenericAgentPolicy>(Ownership::True);
+   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, Ownership::True);
 }
 
 /**
@@ -79,8 +79,8 @@ Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, co
       m_flags &= !(AAF_AUTO_APPLY | AAF_AUTO_REMOVE);
    }
 
-   m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
-   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, true);
+   m_policyList = new HashMap<uuid, GenericAgentPolicy>(Ownership::True);
+   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, Ownership::True);
    ObjectArray<ConfigEntry> *dcis = config->getSubEntries(_T("agentPolicy#*"));
    for(int i = 0; i < dcis->size(); i++)
    {
@@ -100,8 +100,8 @@ Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, co
  */
 Template::Template(const TCHAR *pszName) : super(pszName), AutoBindTarget(this), VersionableObject(this)
 {
-   m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
-   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, true);
+   m_policyList = new HashMap<uuid, GenericAgentPolicy>(Ownership::True);
+   m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(0, 16, Ownership::True);
 }
 
 /**
@@ -704,7 +704,7 @@ void Template::applyPolicyChanges()
  */
 void Template::forceApplyPolicyChanges()
 {
-   ObjectArray<Node> nodes(64, 64, false);
+   ObjectArray<Node> nodes(64, 64);
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {

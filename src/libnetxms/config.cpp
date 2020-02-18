@@ -278,7 +278,7 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
  */
 ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask) const
 {
-   ObjectArray<ConfigEntry> *list = new ObjectArray<ConfigEntry>(16, 16, false);
+   ObjectArray<ConfigEntry> *list = new ObjectArray<ConfigEntry>(16, 16, Ownership::False);
    for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
       if ((mask == NULL) || MatchString(mask, e->getName(), FALSE))
       {

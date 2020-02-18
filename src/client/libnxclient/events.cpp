@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -46,7 +46,7 @@ EventController::~EventController()
  */
 UINT32 EventController::syncEventTemplates()
 {
-   ObjectArray<EventTemplate> *list = new ObjectArray<EventTemplate>(256, 256, true);
+   ObjectArray<EventTemplate> *list = new ObjectArray<EventTemplate>(256, 256, Ownership::True);
    UINT32 rcc = getEventTemplates(list);
    if (rcc != RCC_SUCCESS)
    {

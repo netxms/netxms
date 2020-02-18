@@ -1029,7 +1029,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
    setComments(MemCopyString(config->getSubEntryValue(_T("comments"), 0, _T(""))));
 
    // Data collection
-   ObjectArray<uuid> guidList(32, 32, true);
+   ObjectArray<uuid> guidList(32, 32, Ownership::True);
 
    lockDciAccess(true);
    ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));

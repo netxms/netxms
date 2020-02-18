@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -207,7 +207,7 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: searching for IP address %s"), m_name, ipAddr.toString(buffer));
 
-   ObjectArray<Node> nodes(256, 256, false);
+   ObjectArray<Node> nodes(256, 256);
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {

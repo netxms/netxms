@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -321,7 +321,7 @@ private:
    static void destructor(void *object, StringMapBase *map);
 
 public:
-   NXSL_StringValueMap(NXSL_ValueManager *vm, bool objectOwner) : StringMapBase(objectOwner) { m_vm = vm; m_objectDestructor = destructor; }
+   NXSL_StringValueMap(NXSL_ValueManager *vm, Ownership objectOwner) : StringMapBase(objectOwner) { m_vm = vm; m_objectDestructor = destructor; }
 
    void set(const TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, false); }
    void setPreallocated(TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, true); }
@@ -605,7 +605,7 @@ private:
    static void destructor(void *object, HashMapBase *map) { static_cast<NXSL_ValueHashMap*>(map)->m_vm->destroyValue((NXSL_Value*)object); }
 
 public:
-   NXSL_ValueHashMap(NXSL_ValueManager *vm, bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_vm = vm; m_objectDestructor = destructor; }
+   NXSL_ValueHashMap(NXSL_ValueManager *vm, Ownership objectOwner = Ownership::False) : HashMapBase(objectOwner, sizeof(K)) { m_vm = vm; m_objectDestructor = destructor; }
 
    NXSL_Value *get(const K& key) { return (NXSL_Value*)_get(&key); }
    void set(const K& key, NXSL_Value *value) { _set(&key, (void *)value); }
@@ -836,7 +836,7 @@ protected:
    VREF_RESTORE_POINT m_restorePoints[MAX_VREF_RESTORE_POINTS];
 
 public:
-   NXSL_VariableSystem(NXSL_VM *vm, bool constant = false);
+   NXSL_VariableSystem(NXSL_VM *vm, BooleanFlag constant = BooleanFlag::False);
    NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystem *src);
    ~NXSL_VariableSystem();
 

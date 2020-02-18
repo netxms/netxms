@@ -22,7 +22,7 @@
 /**
  * Registered brokers
  */
-static ObjectArray<MqttBroker> s_brokers(8, 8, true);
+static ObjectArray<MqttBroker> s_brokers(8, 8, Ownership::True);
 static Mutex s_brokersLock;
 
 /**

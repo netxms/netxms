@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,8 +58,8 @@ NetworkMap::NetworkMap() : super()
    m_defaultLinkRouting = 1;  // default routing type "direct"
    m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
-	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
-	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
+	m_elements = new ObjectArray<NetworkMapElement>(0, 32, Ownership::True);
+	m_links = new ObjectArray<NetworkMapLink>(0, 32, Ownership::True);
    m_filterSource = NULL;
    m_filter = NULL;
    m_seedObjects = new IntegerArray<UINT32>();
@@ -90,8 +90,8 @@ NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : super()
    m_defaultLinkRouting = 1;  // default routing type "direct"
    m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
-	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
-	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
+	m_elements = new ObjectArray<NetworkMapElement>(0, 32, Ownership::True);
+	m_links = new ObjectArray<NetworkMapLink>(0, 32, Ownership::True);
    m_filterSource = NULL;
    m_filter = NULL;
 	m_isHidden = true;
@@ -108,7 +108,7 @@ NetworkMap::~NetworkMap()
 	delete m_links;
    delete m_filter;
    delete m_seedObjects;
-   free(m_filterSource);
+   MemFree(m_filterSource);
 }
 
 /**
@@ -984,7 +984,7 @@ void NetworkMap::setFilter(const TCHAR *filter)
 	{
 		TCHAR error[256];
 
-		m_filterSource = _tcsdup(filter);
+		m_filterSource = MemCopyString(filter);
 		m_filter = NXSLCompileAndCreateVM(m_filterSource, error, 256, new NXSL_ServerEnv);
 		if (m_filter == NULL)
 			nxlog_write(NXLOG_WARNING, _T("Failed to compile filter script for network map object %s [%u] (%s)"), m_name, m_id, error);

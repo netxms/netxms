@@ -1742,7 +1742,7 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
          if (dwResult == ERR_SUCCESS)
          {
             UINT32 count = pResponse->getFieldAsUInt32(VID_NUM_PARAMETERS);
-            ObjectArray<AgentParameterDefinition> *plist = new ObjectArray<AgentParameterDefinition>(count, 16, true);
+            ObjectArray<AgentParameterDefinition> *plist = new ObjectArray<AgentParameterDefinition>(count, 16, Ownership::True);
             for(UINT32 i = 0, id = VID_PARAM_LIST_BASE; i < count; i++)
             {
                plist->add(new AgentParameterDefinition(pResponse, id));
@@ -1752,7 +1752,7 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
 				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d parameters received from agent"), count);
 
             count = pResponse->getFieldAsUInt32(VID_NUM_TABLES);
-            ObjectArray<AgentTableDefinition> *tlist = new ObjectArray<AgentTableDefinition>(count, 16, true);
+            ObjectArray<AgentTableDefinition> *tlist = new ObjectArray<AgentTableDefinition>(count, 16, Ownership::True);
             for(UINT32 i = 0, id = VID_TABLE_LIST_BASE; i < count; i++)
             {
                tlist->add(new AgentTableDefinition(pResponse, id));
@@ -2523,7 +2523,7 @@ UINT32 AgentConnection::getFileSetInfo(const StringList &fileSet, bool allowPath
             int count = response->getFieldAsInt32(VID_NUM_ELEMENTS);
             if (count == fileSet.size())
             {
-               auto info = new ObjectArray<RemoteFileInfo>(count, 16, true);
+               auto info = new ObjectArray<RemoteFileInfo>(count, 16, Ownership::True);
                UINT32 fieldId = VID_ELEMENT_LIST_BASE;
                for(int i = 0; i < count; i++)
                {
@@ -2620,7 +2620,7 @@ AgentTableDefinition::AgentTableDefinition(NXCPMessage *msg, UINT32 baseId)
       m_instanceColumns = new StringList;
    }
 
-   m_columns = new ObjectArray<AgentTableColumnDefinition>(16, 16, true);
+   m_columns = new ObjectArray<AgentTableColumnDefinition>(16, 16, Ownership::True);
 }
 
 /**
@@ -2631,7 +2631,7 @@ AgentTableDefinition::AgentTableDefinition(AgentTableDefinition *src)
    m_name = MemCopyString(src->m_name);
    m_description = MemCopyString(src->m_description);
    m_instanceColumns = new StringList(src->m_instanceColumns);
-   m_columns = new ObjectArray<AgentTableColumnDefinition>(16, 16, true);
+   m_columns = new ObjectArray<AgentTableColumnDefinition>(16, 16, Ownership::True);
    for(int i = 0; i < src->m_columns->size(); i++)
    {
       m_columns->add(new AgentTableColumnDefinition(src->m_columns->get(i)));

@@ -109,7 +109,7 @@ Component::Component(UINT32 index, const TCHAR *name)
 	m_parentIndex = 0;
 	m_position = -1;
 	m_parent = NULL;
-   m_children = new ObjectArray<Component>(0, 16, true);
+   m_children = new ObjectArray<Component>(0, 16, Ownership::True);
 }
 
 /**
@@ -131,7 +131,7 @@ Component::Component(UINT32 index, UINT32 pclass, UINT32 parentIndex, UINT32 pos
    m_parentIndex = parentIndex;
    m_position = position;
    m_parent = NULL;
-   m_children = new ObjectArray<Component>(0, 16, true);
+   m_children = new ObjectArray<Component>(0, 16, Ownership::True);
 }
 
 /**
@@ -383,13 +383,13 @@ shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport 
 		else
 		{
 		   nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): root element not found"), debugInfo);
-			elements.setOwner(true);	// cause element destruction on exit
+			elements.setOwner(Ownership::True);	// cause element destruction on exit
 		}
 	}
 	else
 	{
 	   nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): SNMP WALK failed"), debugInfo);
-		elements.setOwner(true);	// cause element destruction on exit
+		elements.setOwner(Ownership::True);	// cause element destruction on exit
 	}
 	return tree;
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,8 +27,7 @@
  */
 Dashboard::Dashboard() : super()
 {
-	m_elements = new ObjectArray<DashboardElement>();
-	m_elements->setOwner(true);
+	m_elements = new ObjectArray<DashboardElement>(0, 16, Ownership::True);
 	m_numColumns = 1;
 	m_options = 0;
 	m_status = STATUS_NORMAL;
@@ -39,8 +38,7 @@ Dashboard::Dashboard() : super()
  */
 Dashboard::Dashboard(const TCHAR *name) : super(name, 0)
 {
-	m_elements = new ObjectArray<DashboardElement>();
-	m_elements->setOwner(true);
+   m_elements = new ObjectArray<DashboardElement>(0, 16, Ownership::True);
 	m_numColumns = 1;
 	m_options = 0;
 	m_status = STATUS_NORMAL;

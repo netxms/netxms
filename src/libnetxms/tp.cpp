@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -73,7 +73,7 @@ private:
 
 public:
    SerializationQueue() : Queue() { m_maxWaitTime = 0; }
-   SerializationQueue(size_t blockSize) : Queue(blockSize, false) { m_maxWaitTime = 0; }
+   SerializationQueue(size_t blockSize) : Queue(blockSize, Ownership::False) { m_maxWaitTime = 0; }
 
    UINT32 getMaxWaitTime() { return m_maxWaitTime; }
    void updateMaxWaitTime(UINT32 waitTime) { m_maxWaitTime = std::max(waitTime, m_maxWaitTime); }
@@ -110,7 +110,7 @@ struct ThreadPool
 /**
  * Thread pool registry
  */
-static StringObjectMap<ThreadPool> s_registry(false);
+static StringObjectMap<ThreadPool> s_registry(Ownership::False);
 static Mutex s_registryLock;
 
 /**
@@ -326,13 +326,13 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThre
    p->workerIdleTimeout = MIN_WORKER_IDLE_TIMEOUT;
    p->activeRequests = 0;
    p->threads = new HashMap<UINT64, WorkerThreadInfo>();
-   p->queue = new Queue(64, false);
+   p->queue = new Queue(64, Ownership::False);
    p->mutex = MutexCreate();
    p->maintThreadWakeup = ConditionCreate(false);
-   p->serializationQueues = new StringObjectMap<SerializationQueue>(true);
+   p->serializationQueues = new StringObjectMap<SerializationQueue>(Ownership::True);
    p->serializationQueues->setIgnoreCase(false);
    p->serializationLock = MutexCreate();
-   p->schedulerQueue = new ObjectArray<WorkRequest>(16, 16, false);
+   p->schedulerQueue = new ObjectArray<WorkRequest>(16, 16, Ownership::False);
    p->schedulerLock = MutexCreate();
    p->name = (name != NULL) ? MemCopyString(name) : MemCopyString(_T("NONAME"));
    p->shutdownMode = false;
@@ -403,7 +403,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    p->threads->forEach(ThreadPoolDestroyCallback, NULL);
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Thread pool %s destroyed"), p->name);
-   p->threads->setOwner(true);
+   p->threads->setOwner(Ownership::True);
    delete p->threads;
    delete p->queue;
    delete p->serializationQueues;

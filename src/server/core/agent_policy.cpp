@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -346,7 +346,7 @@ UINT32 FileDeliveryPolicy::modifyFromMessage(NXCPMessage *request)
 
    if(request->getFieldAsBoolean(VID_DUPLUICATE))
    {
-      ObjectArray<FileInfo> files(64, 64, true);
+      ObjectArray<FileInfo> files(64, 64, Ownership::True);
       Config data;
       data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
       ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
@@ -387,7 +387,7 @@ UINT32 FileDeliveryPolicy::modifyFromMessage(NXCPMessage *request)
  */
 bool FileDeliveryPolicy::deleteFromDatabase(DB_HANDLE hdb)
 {
-   ObjectArray<FileInfo> files(64, 64, true);
+   ObjectArray<FileInfo> files(64, 64, Ownership::True);
    Config data;
    data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
    ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
@@ -429,7 +429,7 @@ UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSup
       return ERR_BAD_ARGUMENTS;
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::deploy(%s): preparing file list"), debugId);
-   ObjectArray<FileInfo> files(64, 64, true);
+   ObjectArray<FileInfo> files(64, 64, Ownership::True);
    Config data;
    data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
    ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));

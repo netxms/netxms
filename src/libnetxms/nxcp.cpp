@@ -33,7 +33,7 @@
 /**
  * Additional message name resolvers
  */
-static Array s_resolvers(4, 4, false);
+static Array s_resolvers(4, 4, Ownership::False);
 static Mutex s_resolversLock;
 
 /**
@@ -659,7 +659,7 @@ decrypt_message:
 ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer, NXCP_BUFFER *nxcpBuffer,
       UINT32 *bufferSize, NXCPEncryptionContext **ppCtx, BYTE **decryptionBuffer, UINT32 dwTimeout, UINT32 maxMsgSize)
 {
-   SocketCommChannel *channel = new SocketCommChannel(hSocket, false);
+   SocketCommChannel *channel = new SocketCommChannel(hSocket, Ownership::False);
    ssize_t result = RecvNXCPMessageEx(channel, msgBuffer, nxcpBuffer, bufferSize, ppCtx, decryptionBuffer, dwTimeout, maxMsgSize);
    channel->decRefCount();
    return result;
@@ -761,7 +761,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
                                            MUTEX mutex, NXCPStreamCompressionMethod compressionMethod,
                                            VolatileCounter *cancellationFlag)
 {
-   SocketCommChannel *ch = new SocketCommChannel(hSocket, false);
+   SocketCommChannel *ch = new SocketCommChannel(hSocket, Ownership::False);
    bool result = SendFileOverNXCP(ch, id, pszFile, pCtx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
    ch->decRefCount();
    return result;
@@ -973,7 +973,7 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
  */
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex)
 {
-   SocketCommChannel *channel = new SocketCommChannel(s, false);
+   SocketCommChannel *channel = new SocketCommChannel(s, Ownership::False);
    bool success = NXCPGetPeerProtocolVersion(channel, pnVersion, mutex);
    channel->decRefCount();
    return success;

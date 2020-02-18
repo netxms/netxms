@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -89,7 +89,7 @@ bool HostMibStorageEntry::getMetric(const TCHAR *name, TCHAR *buffer, size_t len
  */
 HostMibDriverData::HostMibDriverData() : DriverData()
 {
-   m_storage = new ObjectArray<HostMibStorageEntry>(16, 16, true);
+   m_storage = new ObjectArray<HostMibStorageEntry>(16, 16, Ownership::True);
    m_storageCacheTimestamp = 0;
    m_storageCacheMutex = MutexCreate();
 }

@@ -73,7 +73,7 @@ private:
    Array m_data;
 
 public:
-   Stack() : m_data(16, 16, false) { }
+   Stack() : m_data(16, 16, Ownership::False) { }
 
    void push(T *v) { m_data.add((void *)v); }
    T *pop() { int p = m_data.size(); T *v = (T *)m_data.get(p - 1); m_data.remove(p - 1); return v; }
@@ -196,7 +196,7 @@ ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text
    // Check for equality (speedup).
    if (text1 == text2)
    {
-      ObjectArray<Diff> *diffs = new ObjectArray<Diff>(16, 16, true);
+      ObjectArray<Diff> *diffs = new ObjectArray<Diff>(16, 16, Ownership::True);
       if (!text1.isEmpty())
       {
          diffs->add(new Diff(DIFF_EQUAL, text1));
@@ -246,7 +246,7 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
    if (text1.isEmpty())
    {
       // Just add some text (speedup).
-      ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, true);
+      ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, Ownership::True);
       diffs->add(new Diff(DIFF_INSERT, text2));
       return diffs;
    }
@@ -254,14 +254,14 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
    if (text2.isEmpty())
    {
       // Just delete some text (speedup).
-      ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, true);
+      ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, Ownership::True);
       diffs->add(new Diff(DIFF_DELETE, text1));
       return diffs;
    }
 
    if (!checklines)
    {
-      ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, true);
+      ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, Ownership::True);
       const String longtext = text1.length() > text2.length() ? text1 : text2;
       const String shorttext = text1.length() > text2.length() ? text2 : text1;
       const ssize_t i = longtext.find(shorttext);
@@ -297,7 +297,7 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
          diffs_a->add(new Diff(DIFF_EQUAL, hm->get(4)));
          for(int i = 0; i < diffs_b->size(); i++)
             diffs_a->add(diffs_b->get(i));
-         diffs_b->setOwner(false);
+         diffs_b->setOwner(Ownership::False);
          delete diffs_b;
          delete hm;
          return diffs_a;
@@ -474,7 +474,7 @@ ObjectArray<Diff> *DiffEngine::diff_bisect(const String &text1, const String &te
    delete[] v2;
    // Diff took too long and hit the deadline or
    // number of diffs equals number of characters, no commonality at all.
-   ObjectArray<Diff> *diffs = new ObjectArray<Diff>(16, 16, true);
+   ObjectArray<Diff> *diffs = new ObjectArray<Diff>(16, 16, Ownership::True);
    diffs->add(new Diff(DIFF_DELETE, text1));
    diffs->add(new Diff(DIFF_INSERT, text2));
    return diffs;
@@ -492,7 +492,7 @@ ObjectArray<Diff> *DiffEngine::diff_bisectSplit(const String &text1, const Strin
    ObjectArray<Diff> *diffsb = diff_main(text1b, text2b, false, deadline);
    for(int i = 0; i < diffsb->size(); i++)
       diffs->add(diffsb->get(i));
-   diffsb->setOwner(false);
+   diffsb->setOwner(Ownership::False);
    delete diffsb;
 
    return diffs;
@@ -512,7 +512,7 @@ Array *DiffEngine::diff_linesToChars(const String &text1, const String &text2)
    const String chars1 = diff_linesToCharsMunge(text1, *lineArray, lineHash);
    const String chars2 = diff_linesToCharsMunge(text2, *lineArray, lineHash);
 
-   Array *listRet = new Array(3, 3, false);
+   Array *listRet = new Array(3, 3, Ownership::False);
    listRet->add(new String(chars1));
    listRet->add(new String(chars2));
    listRet->add(lineArray);
@@ -1520,7 +1520,7 @@ String DiffEngine::diff_toDelta(const ObjectArray<Diff> &diffs)
 
 ObjectArray<Diff> *DiffEngine::diff_fromDelta(const String &text1, const String &delta)
 {
-   ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, true);
+   ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, Ownership::True);
    int pointer = 0;  // Cursor in text1
    StringList *tokens = delta.split(_T("\t"));
    for(int i = 0; i < tokens->size(); i++)

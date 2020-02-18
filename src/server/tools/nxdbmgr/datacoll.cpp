@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ struct DCObjectInfo
 /**
  * Data collection objects
  */
-static HashMap<UINT32, DCObjectInfo> s_dcObjects(true);
+static HashMap<UINT32, DCObjectInfo> s_dcObjects(Ownership::True);
 
 /**
  * Load data collection objects

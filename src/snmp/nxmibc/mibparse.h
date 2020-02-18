@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ public:
       pszDescription = NULL;
       pszTextualConvention = NULL;
       pszDataType = NULL;
-      pOID = new ObjectArray<MP_SUBID>(0, 16, true);
+      pOID = new ObjectArray<MP_SUBID>(0, 16, Ownership::True);
    }
 
    ~MP_OBJECT()
@@ -164,8 +164,8 @@ public:
    {
       pszName = NULL;
       pModule = NULL;
-      pSymbols = new Array(0, 16, true);
-      pObjects = new ObjectArray<MP_OBJECT>(0, 16, false);
+      pSymbols = new Array(0, 16, Ownership::True);
+      pObjects = new ObjectArray<MP_OBJECT>(0, 16, Ownership::False);
    }
 
    ~MP_IMPORT_MODULE()
@@ -189,8 +189,8 @@ public:
    MP_MODULE()
    {
       pszName = NULL;
-      pImportList = new ObjectArray<MP_IMPORT_MODULE>(0, 8, true);
-      pObjectList = new ObjectArray<MP_OBJECT>(0, 16, true);
+      pImportList = new ObjectArray<MP_IMPORT_MODULE>(0, 8, Ownership::True);
+      pObjectList = new ObjectArray<MP_OBJECT>(0, 16, Ownership::True);
    }
 
    ~MP_MODULE()

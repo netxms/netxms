@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -270,7 +270,7 @@ static bool MigrateDataTables()
 /**
  * DCI storage classes
  */
-static HashMap<UINT32, int> s_dciStorageClasses(false);
+static HashMap<UINT32, int> s_dciStorageClasses(Ownership::False);
 static int s_storageClassNumbers[6] = { 0, 1, 2, 3, 4, 5 };
 
 /**

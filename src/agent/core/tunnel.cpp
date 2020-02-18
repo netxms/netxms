@@ -146,7 +146,7 @@ public:
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(true)
+Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(Ownership::True)
 {
    m_hostname = MemCopyString(hostname);
    m_port = port;
@@ -213,7 +213,7 @@ void Tunnel::disconnect()
    delete_and_null(m_queue);
    MutexUnlock(m_stateLock);
 
-   Array channels(g_dwMaxSessions, 16, false);
+   Array channels(g_dwMaxSessions, 16, Ownership::False);
    MutexLock(m_channelLock);
    Iterator<TunnelCommChannel> *it = m_channels.iterator();
    while(it->hasNext())
@@ -1324,7 +1324,7 @@ void TunnelCommChannel::putData(const BYTE *data, size_t size)
 /**
  * Configured tunnels
  */
-static ObjectArray<Tunnel> s_tunnels(0, 8, true);
+static ObjectArray<Tunnel> s_tunnels(0, 8, Ownership::True);
 
 #endif	/* _WITH_ENCRYPTION */
 

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -187,7 +187,7 @@ UINT32 AlarmController::getComments(UINT32 alarmId, ObjectArray<AlarmComment> **
       if (rcc == RCC_SUCCESS)
       {
          int count = response->getFieldAsInt32(VID_NUM_ELEMENTS);
-         ObjectArray<AlarmComment> *list = new ObjectArray<AlarmComment>(count, 16, true);
+         ObjectArray<AlarmComment> *list = new ObjectArray<AlarmComment>(count, 16, Ownership::True);
          UINT32 fieldId = VID_ELEMENT_LIST_BASE;
          for(int i = 0; i < count; i++)
          {
@@ -218,7 +218,7 @@ UINT32 AlarmController::getAll(ObjectArray<NXC_ALARM> **alarms)
    if (!m_session->sendMessage(&msg))
       return RCC_COMM_FAILURE;
 
-   ObjectArray<NXC_ALARM> *list = new ObjectArray<NXC_ALARM>(256, 256, true);
+   ObjectArray<NXC_ALARM> *list = new ObjectArray<NXC_ALARM>(256, 256, Ownership::True);
    UINT32 alarmId;
    UINT32 rcc = RCC_SUCCESS;
    do

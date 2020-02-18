@@ -193,7 +193,7 @@ SummaryTable::SummaryTable(NXCPMessage *msg)
    m_periodEnd = msg->getFieldAsTime(VID_TIME_TO);
 
    int count = msg->getFieldAsInt32(VID_NUM_COLUMNS);
-   m_columns = new ObjectArray<SummaryTableColumn>(count, 16, true);
+   m_columns = new ObjectArray<SummaryTableColumn>(count, 16, Ownership::True);
 
    UINT32 id = VID_COLUMN_INFO_BASE;
    for(int i = 0; i < count; i++)
@@ -245,7 +245,7 @@ SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
    }
 
    // Columns
-   m_columns = new ObjectArray<SummaryTableColumn>(16, 16, true);
+   m_columns = new ObjectArray<SummaryTableColumn>(16, 16, Ownership::True);
    TCHAR *config = DBGetField(hResult, 0, 5, NULL, 0);
    if ((config != NULL) && (*config != 0))
    {

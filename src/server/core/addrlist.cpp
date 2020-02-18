@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -248,7 +248,7 @@ ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType)
    }
 
    int count = DBGetNumRows(hResult);
-   ObjectArray<InetAddressListElement> *list = new ObjectArray<InetAddressListElement>(count, 16, true);
+   ObjectArray<InetAddressListElement> *list = new ObjectArray<InetAddressListElement>(count, 16, Ownership::True);
 
    for(int i = 0; i < count; i++)
    {

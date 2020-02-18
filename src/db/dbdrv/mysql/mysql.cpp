@@ -317,7 +317,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQue
 			result->paramCount = (int)mysql_stmt_param_count(stmt);
 			result->bindings = MemAllocArray<MYSQL_BIND>(result->paramCount);
 			result->lengthFields = MemAllocArray<unsigned long>(result->paramCount);
-			result->buffers = new Array(result->paramCount, 16, true);
+			result->buffers = new Array(result->paramCount, 16, Ownership::True);
 			*pdwError = DBERR_SUCCESS;
 		}
 		else

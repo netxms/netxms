@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Message Bus API
-** Copyright (C) 2009-2015 Victor Kirhenshtein
+** Copyright (C) 2009-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ typedef bool (* NXMBCallHandler)(const TCHAR *, const void *, void *);
 class CallHandlerMap : public StringMapBase
 {
 public:
-	CallHandlerMap() : StringMapBase(false) { }
+	CallHandlerMap() : StringMapBase(Ownership::False) { }
 
 	void set(const TCHAR *name, NXMBCallHandler handler) { setObject((TCHAR *)name, (void *)handler, false); }
 	NXMBCallHandler get(const TCHAR *name) { return (NXMBCallHandler)getObject(name); }

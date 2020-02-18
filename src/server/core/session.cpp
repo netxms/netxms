@@ -167,7 +167,7 @@ THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *arg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_agentConnections(false)
+ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_agentConnections(Ownership::False)
 {
    m_hSocket = hSocket;
    m_id = -1;
@@ -178,7 +178,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_agentC
    m_mutexSendAuditLog = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_subscriptionLock = MutexCreate();
-   m_subscriptions = new StringObjectMap<UINT32>(true);
+   m_subscriptions = new StringObjectMap<UINT32>(Ownership::True);
    m_dwFlags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = addr;
@@ -203,9 +203,9 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_agentC
    m_loginTime = time(NULL);
    m_musicTypeList.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
-   m_serverCommands = new HashMap<UINT32, ProcessExecutor>(true);
-   m_downloadFileMap = new HashMap<UINT32, ServerDownloadFileInfo>(true);
-   m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, true);
+   m_serverCommands = new HashMap<UINT32, ProcessExecutor>(Ownership::True);
+   m_downloadFileMap = new HashMap<UINT32, ServerDownloadFileInfo>(Ownership::True);
+   m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, Ownership::True);
    m_tcpProxyLock = MutexCreate();
    m_tcpProxyChannelId = 0;
    m_pendingObjectNotifications = new HashSet<UINT32>();
@@ -9395,7 +9395,7 @@ void ClientSession::pushDCIData(NXCPMessage *pRequest)
    int count = pRequest->getFieldAsInt32(VID_NUM_ITEMS);
    if (count > 0)
    {
-      ObjectArray<ClientDataPushElement> values(count, 16, true);
+      ObjectArray<ClientDataPushElement> values(count, 16, Ownership::True);
 
       UINT32 fieldId = VID_PUSH_DCI_DATA_BASE;
       bool bOK = true;
@@ -15218,7 +15218,7 @@ void ClientSession::startActiveDiscovery(NXCPMessage *request)
       if (count > 0)
       {
          UINT32 fieldId = VID_ADDR_LIST_BASE;
-         ObjectArray<InetAddressListElement> *addressList = new ObjectArray<InetAddressListElement>(0, 16, true);
+         ObjectArray<InetAddressListElement> *addressList = new ObjectArray<InetAddressListElement>(0, 16, Ownership::True);
          StringBuffer ranges;
          for (int i = 0; i < count; i++, fieldId += 10)
          {

@@ -976,7 +976,7 @@ static bool TestQueueComparator(const void *key, const void *value)
  */
 static void TestQueue()
 {
-   Queue *q = new Queue(16, false);
+   Queue *q = new Queue(16, Ownership::False);
 
    StartTest(_T("Queue: put/get"));
    for(int i = 0; i < 40; i++)
@@ -1072,7 +1072,7 @@ typedef char LONG_HASH_KEY[32];
 static void TestHashMap()
 {
    StartTest(_T("HashMap - create"));
-   HashMap<HASH_KEY, String> *hashMap = new HashMap<HASH_KEY, String>(true);
+   HashMap<HASH_KEY, String> *hashMap = new HashMap<HASH_KEY, String>(Ownership::True);
    AssertEquals(hashMap->size(), 0);
    EndTest();
 
@@ -1160,7 +1160,7 @@ static void TestHashMap()
    InetAddress addr3 = InetAddress::parse("172.17.11.2");
    InetAddress addr4 = InetAddress::parse("fe80::250:56ff:fec0:8");
 
-   HashMap<InetAddress, String> *ipAddrMap = new HashMap<InetAddress, String>(true);
+   HashMap<InetAddress, String> *ipAddrMap = new HashMap<InetAddress, String>(Ownership::True);
    ipAddrMap->set(addr1, new String(_T("addr1")));
    ipAddrMap->set(addr2, new String(_T("addr2")));
    ipAddrMap->set(addr3, new String(_T("addr3")));
@@ -1195,7 +1195,7 @@ static void TestHashMap()
    LONG_HASH_KEY lk3 = "some long key";
    LONG_HASH_KEY lk4 = "other key";
 
-   HashMap<LONG_HASH_KEY, String> *longKeyMap = new HashMap<LONG_HASH_KEY, String>(true);
+   HashMap<LONG_HASH_KEY, String> *longKeyMap = new HashMap<LONG_HASH_KEY, String>(Ownership::True);
    longKeyMap->set(lk1, new String(_T("key1")));
    longKeyMap->set(lk2, new String(_T("key2")));
    longKeyMap->set(lk3, new String(_T("key3")));
@@ -1285,7 +1285,7 @@ static void TestSharedHashMap()
 static void TestSynchronizedSharedHashMap()
 {
    StartTest(_T("SynchronizedSharedHashMap: create"));
-   SynchronizedSharedHashMap<HASH_KEY, String> *hashMap = new SynchronizedSharedHashMap<HASH_KEY, String>(true);
+   SynchronizedSharedHashMap<HASH_KEY, String> *hashMap = new SynchronizedSharedHashMap<HASH_KEY, String>();
    AssertEquals(hashMap->size(), 0);
    EndTest();
 
@@ -1417,7 +1417,7 @@ static void TestHashSet()
 static void TestObjectArray()
 {
    StartTest(_T("ObjectArray: create"));
-   ObjectArray<String> *array = new ObjectArray<String>(16, 16, true);
+   ObjectArray<String> *array = new ObjectArray<String>(16, 16, Ownership::True);
    AssertEquals(array->size(), 0);
    EndTest();
 

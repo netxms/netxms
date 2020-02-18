@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -63,7 +63,7 @@ ObjLink::ObjLink(const ObjLink *src) : name(src->name)
 NetworkMapObjectList::NetworkMapObjectList()
 {
    m_objectList = new IntegerArray<UINT32>(16, 16);
-   m_linkList = new ObjectArray<ObjLink>(16, 16, true);
+   m_linkList = new ObjectArray<ObjLink>(16, 16, Ownership::True);
    m_allowDuplicateLinks = false;
 }
 
@@ -78,7 +78,7 @@ NetworkMapObjectList::NetworkMapObjectList(NetworkMapObjectList *src)
    for(int i = 0; i < src->m_objectList->size(); i++)
       m_objectList->add(src->m_objectList->get(i));
 
-   m_linkList = new ObjectArray<ObjLink>(src->m_linkList->size(), 16, true);
+   m_linkList = new ObjectArray<ObjLink>(src->m_linkList->size(), 16, Ownership::True);
 	for(int i = 0; i < src->m_linkList->size(); i++)
       m_linkList->add(new ObjLink(src->m_linkList->get(i)));
 }

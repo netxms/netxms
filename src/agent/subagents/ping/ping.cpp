@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * Static data
  */
 static ThreadPool *s_pollers = NULL;
-static ObjectArray<PING_TARGET> s_targets(16, 16, true);
+static ObjectArray<PING_TARGET> s_targets(16, 16, Ownership::True);
 static Mutex s_targetLock;
 static UINT32 s_timeout = 3000;    // Default timeout is 3 seconds
 static UINT32 s_defaultPacketSize = 46;

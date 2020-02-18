@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ static const TCHAR *s_eventParamNamesAgentIdMismatch[] =
 /**
  * Tunnel registration
  */
-static RefCountHashMap<UINT32, AgentTunnel> s_boundTunnels(true);
+static RefCountHashMap<UINT32, AgentTunnel> s_boundTunnels(Ownership::True);
 static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
 
@@ -250,7 +250,8 @@ static VolatileCounter s_nextTunnelId = 0;
 /**
  * Agent tunnel constructor
  */
-AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId, UINT32 zoneUIN) : RefCountObject(), m_channels(true)
+AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
+         UINT32 nodeId, UINT32 zoneUIN) : RefCountObject(), m_channels(Ownership::True)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;

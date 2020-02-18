@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -162,7 +162,7 @@ StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciI
 /**
  * Prediction engine registry
  */
-static StringObjectMap<PredictionEngine> s_engines(true);
+static StringObjectMap<PredictionEngine> s_engines(Ownership::True);
 
 /**
  * Prediction engine thread pool
@@ -178,7 +178,7 @@ void RegisterPredictionEngines()
    ENUMERATE_MODULES(pfGetPredictionEngines)
    {
       ObjectArray<PredictionEngine> *engines = g_pModuleList[__i].pfGetPredictionEngines();
-      engines->setOwner(false);
+      engines->setOwner(Ownership::False);
       for(int i = 0; i < engines->size(); i++)
       {
          PredictionEngine *e = engines->get(i);

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -155,15 +155,15 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_errorCode = 0;
    m_errorLine = 0;
    m_errorText = NULL;
-   m_constants = new NXSL_VariableSystem(this, true);
-   m_globalVariables = new NXSL_VariableSystem(this, false);
+   m_constants = new NXSL_VariableSystem(this, BooleanFlag::True);
+   m_globalVariables = new NXSL_VariableSystem(this, BooleanFlag::False);
    m_localVariables = NULL;
    m_expressionVariables = NULL;
    m_exportedExpressionVariables = NULL;
    m_context = NULL;
    m_securityContext = NULL;
    m_functions = NULL;
-   m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
+   m_modules = new ObjectArray<NXSL_Module>(4, 4, Ownership::True);
    m_dwSubLevel = 0;    // Level of current subroutine
    m_env = (env != NULL) ? env : new NXSL_Environment;
    m_pRetValue = NULL;
@@ -234,12 +234,12 @@ bool NXSL_VM::load(const NXSL_Program *program)
    int i;
 
    // Copy instructions
-   m_instructionSet = new ObjectArray<NXSL_Instruction>(program->m_instructionSet->size(), 32, true);
+   m_instructionSet = new ObjectArray<NXSL_Instruction>(program->m_instructionSet->size(), 32, Ownership::True);
    for(i = 0; i < program->m_instructionSet->size(); i++)
       m_instructionSet->add(new NXSL_Instruction(this, program->m_instructionSet->get(i)));
 
    // Copy function information
-   m_functions = new ObjectArray<NXSL_Function>(program->m_functions->size(), 8, true);
+   m_functions = new ObjectArray<NXSL_Function>(program->m_functions->size(), 8, Ownership::True);
    for(i = 0; i < program->m_functions->size(); i++)
       m_functions->add(new NXSL_Function(program->m_functions->get(i)));
 
@@ -250,7 +250,7 @@ bool NXSL_VM::load(const NXSL_Program *program)
    m_constants->create("NXSL::version", createValue(NETXMS_VERSION_STRING));
 
    // Load modules
-   m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
+   m_modules = new ObjectArray<NXSL_Module>(4, 4, Ownership::True);
    for(i = 0; i < program->m_requiredModules->size(); i++)
    {
       const NXSL_ModuleImport *importInfo = program->m_requiredModules->get(i);

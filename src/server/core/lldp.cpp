@@ -71,7 +71,7 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Reading LLDP local port information"));
-	ObjectArray<LLDP_LOCAL_PORT_INFO> *ports = new ObjectArray<LLDP_LOCAL_PORT_INFO>(64, 64, true);
+	ObjectArray<LLDP_LOCAL_PORT_INFO> *ports = new ObjectArray<LLDP_LOCAL_PORT_INFO>(64, 64, Ownership::True);
 	if (SnmpWalk(snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports) != SNMP_ERR_SUCCESS)
 	{
 		delete ports;
@@ -297,7 +297,7 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 
 	// Entire table should be cached before processing because some devices (D-Link for example)
 	// do not allow GET requests for table elements
-	StringObjectMap<SNMP_Variable> connections(true);
+	StringObjectMap<SNMP_Variable> connections(Ownership::True);
    node->callSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1"), LLDPTopoHandler, &connections);
    if (connections.size() > 0)
    {

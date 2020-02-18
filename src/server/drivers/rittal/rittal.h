@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Rittal CMC and LCP devices
- * Copyright (C) 2017 Raden Solutions
+ * Copyright (C) 2017-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -58,7 +58,7 @@ struct RittalDevice
       position = _position;
       _name->getValueAsString(name, MAX_OBJECT_NAME);
       _alias->getValueAsString(alias, MAX_OBJECT_NAME);
-      metrics = new ObjectArray<RittalMetric>(32, 32, true);
+      metrics = new ObjectArray<RittalMetric>(32, 32, Ownership::True);
    }
 
    ~RittalDevice()

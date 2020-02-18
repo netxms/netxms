@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
 NXSL_Class::NXSL_Class()
 {
    setName(_T("Object"));
-   m_methods = new HashMap<NXSL_Identifier, NXSL_ExtMethod>(true);
+   m_methods = new HashMap<NXSL_Identifier, NXSL_ExtMethod>(Ownership::True);
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019 Raden Solutions
+** Copyright (C) 2019-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 
 
 Mutex g_userAgentNotificationListMutex;
-ObjectArray<UserAgentNotificationItem> g_userAgentNotificationList(0, 16, true);
+ObjectArray<UserAgentNotificationItem> g_userAgentNotificationList(0, 16, Ownership::True);
 
 /**
  * Init user agent messages

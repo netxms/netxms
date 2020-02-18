@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -118,7 +118,7 @@ MappingTable::MappingTable(LONG id, TCHAR *name, UINT32 flags, TCHAR *descriptio
 	m_name = name;
 	m_flags = flags;
 	m_description = description;
-	m_data = new StringObjectMap<MappingTableElement>(true);
+	m_data = new StringObjectMap<MappingTableElement>(Ownership::True);
 }
 
 /**
@@ -291,7 +291,7 @@ const TCHAR *MappingTable::get(const TCHAR *key)
 /**
  * Defined mapping tables
  */
-static ObjectArray<MappingTable> s_mappingTables(0, 16, true);
+static ObjectArray<MappingTable> s_mappingTables(0, 16, Ownership::True);
 static RWLOCK s_mappingTablesLock;
 
 /**

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -63,10 +63,10 @@ static const char *s_nxslCommandMnemonic[] =
  */
 NXSL_Program::NXSL_Program() : NXSL_ValueManager()
 {
-   m_instructionSet = new ObjectArray<NXSL_Instruction>(256, 256, true);
-   m_constants = new NXSL_ValueHashMap<NXSL_Identifier>(this, true);
-   m_functions = new ObjectArray<NXSL_Function>(16, 16, true);
-   m_requiredModules = new ObjectArray<NXSL_ModuleImport>(4, 4, true);
+   m_instructionSet = new ObjectArray<NXSL_Instruction>(256, 256, Ownership::True);
+   m_constants = new NXSL_ValueHashMap<NXSL_Identifier>(this, Ownership::True);
+   m_functions = new ObjectArray<NXSL_Function>(16, 16, Ownership::True);
+   m_requiredModules = new ObjectArray<NXSL_ModuleImport>(4, 4, Ownership::True);
    m_expressionVariables = NULL;
 }
 
@@ -102,7 +102,7 @@ bool NXSL_Program::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
  */
 void NXSL_Program::enableExpressionVariables()
 {
-   m_expressionVariables = new ObjectArray<NXSL_IdentifierLocation>(16, 16, true);
+   m_expressionVariables = new ObjectArray<NXSL_IdentifierLocation>(16, 16, Ownership::True);
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -307,10 +307,10 @@ void LDAPConnection::syncUsers()
    delete_and_null(m_userIdEntryList);
    delete_and_null(m_groupDnEntryList);
    delete_and_null(m_groupIdEntryList);
-   m_userDnEntryList = new StringObjectMap<Entry>(true); //as unique string ID is used DN
-   m_userIdEntryList = new StringObjectMap<Entry>(false); //as unique string ID is used id
-   m_groupDnEntryList= new StringObjectMap<Entry>(true); //as unique string ID is used DN
-   m_groupIdEntryList= new StringObjectMap<Entry>(false); //as unique string ID is used id
+   m_userDnEntryList = new StringObjectMap<Entry>(Ownership::True); //as unique string ID is used DN
+   m_userIdEntryList = new StringObjectMap<Entry>(Ownership::False); //as unique string ID is used id
+   m_groupDnEntryList= new StringObjectMap<Entry>(Ownership::True); //as unique string ID is used DN
+   m_groupIdEntryList= new StringObjectMap<Entry>(Ownership::False); //as unique string ID is used id
 
    //Parse search base string. As separater is used ';' if this symbol is not escaped
    LDAP_CHAR *tmp  = ldap_strdup(m_searchBase);

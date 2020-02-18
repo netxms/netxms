@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2018 Raden Solutions
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@ static ObjectArray<FileDescriptor> *ReadProcessHandles(UINT32 pid)
    if (count < 0)
       return NULL;
       
-   ObjectArray<FileDescriptor> *fd = new ObjectArray<FileDescriptor>(count, 16, true);
+   ObjectArray<FileDescriptor> *fd = new ObjectArray<FileDescriptor>(count, 16, Ownership::True);
    while(count-- > 0)
    {
       fd->add(new FileDescriptor(handles[count], path));
@@ -411,7 +411,7 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
-	ObjectArray<Process> procList(128, 128, true);
+	ObjectArray<Process> procList(128, 128, Ownership::True);
 
 	count = ProcRead(&procList, NULL, NULL, NULL, false);
 	if (count >= 0)
@@ -431,7 +431,7 @@ LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
-	ObjectArray<Process> procList(128, 128, true);
+	ObjectArray<Process> procList(128, 128, Ownership::True);
 
 	count = ProcRead(&procList, NULL, NULL, NULL, true);
 	if (count >= 0)
@@ -520,7 +520,7 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
    AgentGetParameterArgA(param, 4, userFilter, sizeof(userFilter));
 	StrStripA(cmdLineFilter);
 
-	ObjectArray<Process> procList(128, 128, true);
+	ObjectArray<Process> procList(128, 128, Ownership::True);
 	count = ProcRead(&procList, procNameFilter, (cmdLineFilter[0] != 0) ? cmdLineFilter : NULL,
 	         (userFilter[0] != 0) ? userFilter : NULL, CAST_FROM_POINTER(arg, int) == PROCINFO_HANDLES);
 	AgentWriteDebugLog(5, _T("H_ProcessDetails(\"%hs\"): ProcRead() returns %d"), param, count);
@@ -597,7 +597,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, 
 {
    int nRet = SYSINFO_RC_ERROR;
 
-	ObjectArray<Process> procList(128, 128, true);
+	ObjectArray<Process> procList(128, 128, Ownership::True);
    int nCount = ProcRead(&procList, NULL, NULL, NULL, false);
    if (nCount >= 0)
    {    
@@ -632,7 +632,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 
    int rc = SYSINFO_RC_ERROR;
 
-	ObjectArray<Process> procList(128, 128, true);
+	ObjectArray<Process> procList(128, 128, Ownership::True);
    int nCount = ProcRead(&procList, NULL, NULL, NULL, true);
    if (nCount >= 0)
    {    
@@ -674,7 +674,7 @@ LONG H_OpenFilesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
 
    int rc = SYSINFO_RC_ERROR;
 
-	ObjectArray<Process> procList(128, 128, true);
+	ObjectArray<Process> procList(128, 128, Ownership::True);
    int nCount = ProcRead(&procList, NULL, NULL, NULL, true);
    if (nCount >= 0)
    {    

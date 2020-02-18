@@ -129,7 +129,7 @@ void Action::saveToDatabase() const
 /**
  * Static data
  */
-static SynchronizedSharedHashMap<UINT32, Action> s_actions(true);
+static SynchronizedSharedHashMap<UINT32, Action> s_actions;
 static UINT32 m_dwUpdateCode;
 
 /**

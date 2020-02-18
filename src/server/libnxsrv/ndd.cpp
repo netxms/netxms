@@ -53,7 +53,7 @@ AccessPointInfo::AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAd
 	m_vendor = (vendor != NULL) ? _tcsdup(vendor) : NULL;
 	m_model = (model != NULL) ? _tcsdup(model) : NULL;
 	m_serial = (serial != NULL) ? _tcsdup(serial) : NULL;
-	m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(4, 4, true);
+	m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(4, 4, Ownership::True);
 }
 
 /**

@@ -362,7 +362,7 @@ AssignedIdentifier:
    subid->dwValue = $2.value.nInt32;
    subid->pszName = NULL;
    subid->bResolved = TRUE;
-   $$ = new ObjectArray<MP_SUBID>(16, 16, true);
+   $$ = new ObjectArray<MP_SUBID>(16, 16, Ownership::True);
    $$->add(subid);
 }
 ;
@@ -381,7 +381,7 @@ ObjectIdentifierList:
 }
 |   ObjectIdentifier
 {
-   $$ = new ObjectArray<MP_SUBID>(16, 16, true);
+   $$ = new ObjectArray<MP_SUBID>(16, 16, Ownership::True);
    $$->add($1);
 }
 ;
@@ -957,7 +957,7 @@ SnmpNotificationTypeAssignment:
 
    for(int i = 0; i < $8->size(); i++)
       $$->pOID->add($8->get(i));
-   $8->setOwner(false);
+   $8->setOwner(Ownership::False);
    delete $8;
 }
 ;
@@ -1300,7 +1300,7 @@ SymbolsFromModuleList:
 }
 |   SymbolsFromModule
 {
-   $$ = new ObjectArray<MP_IMPORT_MODULE>(16, 16, true);
+   $$ = new ObjectArray<MP_IMPORT_MODULE>(16, 16, Ownership::True);
    $$->add($1);
 }
 ;
@@ -1322,7 +1322,7 @@ SymbolList:
 }
 |   Symbol
 {
-   $$ = new Array(16, 16, true);
+   $$ = new Array(16, 16, Ownership::True);
    $$->add($1);
 }
 ;

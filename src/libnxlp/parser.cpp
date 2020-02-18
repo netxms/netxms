@@ -115,7 +115,7 @@ struct LogParser_XmlParserState
  */
 LogParser::LogParser()
 {
-   m_rules = new ObjectArray<LogParserRule>(16, 16, true);
+   m_rules = new ObjectArray<LogParserRule>(16, 16, Ownership::True);
 	m_cb = NULL;
 	m_userArg = NULL;
 	m_name = NULL;
@@ -147,7 +147,7 @@ LogParser::LogParser()
 LogParser::LogParser(const LogParser *src)
 {
    int count = src->m_rules->size();
-   m_rules = new ObjectArray<LogParserRule>(count, 16, true);
+   m_rules = new ObjectArray<LogParserRule>(count, 16, Ownership::True);
 	for(int i = 0; i < count; i++)
 		m_rules->add(new LogParserRule(src->m_rules->get(i), this));
 

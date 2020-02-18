@@ -571,7 +571,7 @@ InetAddress InetAddress::createFromSockaddr(struct sockaddr *s)
  */
 InetAddressList::InetAddressList()
 {
-   m_list = new ObjectArray<InetAddress>(8, 8, true);
+   m_list = new ObjectArray<InetAddress>(8, 8, Ownership::True);
 }
 
 /**

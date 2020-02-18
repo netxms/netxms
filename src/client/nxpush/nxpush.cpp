@@ -1,6 +1,6 @@
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
-** Copyright (C) 2006-2015 Alex Kirhenshtein
+** Copyright (C) 2006-2020 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ static NXCSession *s_session = NULL;
 /**
  * Data to send
  */
-static ObjectArray<NXCPushData> s_data(16, 16, true);
+static ObjectArray<NXCPushData> s_data(16, 16, Ownership::True);
 
 /**
  * options
