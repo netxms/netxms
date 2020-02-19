@@ -1,4 +1,5 @@
 #include "nxuseragent.h"
+#include <Psapi.h>
 
 NETXMS_EXECUTABLE_HEADER(nxuseragent)
 
@@ -64,7 +65,18 @@ static void LoadFileStoreLocation()
  */
 static void CheckIfRunning()
 {
-   // ToDO: implement this check
+   DWORD sessionId;
+   if (!ProcessIdToSessionId(GetCurrentProcessId(), &sessionId))
+      return;
+
+   TCHAR name[256];
+   if (GetModuleBaseName(GetCurrentProcess(), NULL, name, 256) == 0)
+      return;
+
+   if (!CheckProcessPresenseInSession(sessionId, name))
+      return;  // Not running
+
+   ExitProcess(0);
 }
 
 /**

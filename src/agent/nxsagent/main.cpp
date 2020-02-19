@@ -1,6 +1,6 @@
 /*
 ** NetXMS Session Agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,10 @@
 **/
 
 #include "nxsagent.h"
+
+#ifdef _WIN32
+#include <Psapi.h>
+#endif
 
 #if HAVE_GETOPT_H
 #include <getopt.h>
@@ -389,6 +393,26 @@ static HWND GetConsoleHWND()
 	return hWnd;
 }
 
+/**
+ * Check if user agent already running in this session
+ */
+static void CheckIfRunning()
+{
+   DWORD sessionId;
+   if (!ProcessIdToSessionId(GetCurrentProcessId(), &sessionId))
+      return;
+
+   TCHAR name[256];
+   if (GetModuleBaseName(GetCurrentProcess(), NULL, name, 256) == 0)
+      return;
+
+   if (!CheckProcessPresenseInSession(sessionId, name))
+      return;  // Not running
+
+   _tprintf(_T("Another instance already running, exiting\n"));
+   ExitProcess(0);
+}
+
 #endif
 
 /**
@@ -418,6 +442,8 @@ int main(int argc, char *argv[])
    }
 
 #ifdef _WIN32
+   CheckIfRunning();
+
    WSADATA wsaData;
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
    if (wrc != 0)

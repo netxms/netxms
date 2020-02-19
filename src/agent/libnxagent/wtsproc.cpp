@@ -44,7 +44,7 @@ ObjectArray<ProcessInformation> LIBNXAGENT_EXPORTABLE *GetProcessListForUserSess
 }
 
 /**
- * Check if given process is running in given session
+ * Check if given process is running in given session (current process is not checked)
  */
 bool LIBNXAGENT_EXPORTABLE CheckProcessPresenseInSession(DWORD sessionId, const TCHAR *processName)
 {
@@ -55,7 +55,7 @@ bool LIBNXAGENT_EXPORTABLE CheckProcessPresenseInSession(DWORD sessionId, const 
    bool found = false;
    for (int i = 0; i < processList->size(); i++)
    {
-      if (!_tcscmp(processList->get(i)->name, processName))
+      if (!_tcscmp(processList->get(i)->name, processName) && (processList->get(i)->pid != GetCurrentProcessId()))
       {
          found = true;
          break;
