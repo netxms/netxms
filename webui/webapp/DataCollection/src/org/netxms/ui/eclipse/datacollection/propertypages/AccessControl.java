@@ -82,7 +82,7 @@ public class AccessControl extends DCIPropertyPageDialog
 		session = (NXCSession)ConsoleSharedData.getSession();
 		for(Long uid : dco.getAccessList())
 		{
-			AbstractUserObject o = session.findUserDBObjectById(uid);
+			AbstractUserObject o = session.findUserDBObjectById(uid, null);
 			if (o != null)
 				acl.add(o);
 		}
@@ -183,7 +183,7 @@ public class AccessControl extends DCIPropertyPageDialog
                   {       
                      for(Long uid : dco.getAccessList())
                      {
-                        AbstractUserObject o = session.findUserDBObjectById(uid);
+                        AbstractUserObject o = session.findUserDBObjectById(uid, null);
                         if (o != null)
                            acl.add(o);
                      }

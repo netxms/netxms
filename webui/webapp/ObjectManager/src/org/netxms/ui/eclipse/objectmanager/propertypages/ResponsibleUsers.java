@@ -184,7 +184,7 @@ public class ResponsibleUsers extends PropertyPage
                   public void run()
                   {
                      userList = session.findUserDBObjectsByIds(object.getResponsibleUsers());
-                     userTable.refresh();                  
+                     userTable.refresh(true);                  
                   }
                });
             }

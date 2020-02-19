@@ -6,6 +6,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -74,12 +75,18 @@ public class ScheduleTableEntryComparator extends ViewerComparator
             if((task1.getFlags() & ScheduledTask.SYSTEM)>0)
                user1= "Internal";
             else
-               user1 = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task1.getOwner()).getName();
+            {
+               AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task1.getOwner(), null);
+               user1 = user != null ? user.getName() : ("[" + Long.toString(task1.getOwner()) + "]");
+            }
             
             if((task2.getFlags() & ScheduledTask.SYSTEM)>0)
                user2= "Internal";
             else
-               user2 = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task2.getOwner()).getName();
+            {
+               AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task2.getOwner(), null);
+               user2 = user != null ? user.getName() : ("[" + Long.toString(task1.getOwner()) + "]");
+            }
             
             result = user1.compareTo(user2);
             break;

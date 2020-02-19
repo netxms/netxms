@@ -21,10 +21,12 @@ package org.netxms.ui.eclipse.reporter.widgets.helpers;
 import java.text.SimpleDateFormat;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.reporting.ReportingJob;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.ui.eclipse.console.UserRefreshRunnable;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
@@ -36,7 +38,16 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ScheduleLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private String[] dayOfWeek = { "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-
+   private TableViewer viewer;
+   
+   /**
+    * Constructor
+    */
+   public ScheduleLabelProvider(TableViewer viewer)
+   {
+      this.viewer = viewer;
+   }
+   
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -99,7 +110,7 @@ public class ScheduleLabelProvider extends LabelProvider implements ITableLabelP
                   return Messages.get().ScheduleLabelProvider_Error;
             }
          case ReportExecutionForm.SCHEDULE_OWNER:
-            AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(job.getUserId());
+            AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(job.getUserId(), new UserRefreshRunnable(viewer, element));
             return (user != null) ? user.getName() : ("[" + job.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          case ReportExecutionForm.SCHEDULE_COMMENTS:
             return job.getComments();

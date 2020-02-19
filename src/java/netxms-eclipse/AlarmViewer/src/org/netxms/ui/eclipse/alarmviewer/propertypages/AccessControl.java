@@ -158,7 +158,7 @@ public class AccessControl extends PropertyPage
       // Initial data
       for(long userId : category.getAccessControl())
       {
-         final AbstractUserObject user = session.findUserDBObjectById(userId);
+         final AbstractUserObject user = session.findUserDBObjectById(userId, null);
          if (user != null)
          {
             accessMap.put(user.getId(), user);
@@ -193,7 +193,7 @@ public class AccessControl extends PropertyPage
                   {    
                      for(long userId : category.getAccessControl())
                      {
-                        final AbstractUserObject user = session.findUserDBObjectById(userId);
+                        final AbstractUserObject user = session.findUserDBObjectById(userId, null);
                         if (user != null)
                         {
                            accessMap.put(user.getId(), user);

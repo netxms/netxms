@@ -119,7 +119,7 @@ public class ScheduledTaskView extends ViewPart
       final String[] names = { "Id", "Schedule Type", "Object", "Parameters", "Execution time", "Last execution time", "Execution status", "Administrative status", "Owner", "Comments" };
       viewer = new SortableTableViewer(parent, names, widths, SCHEDULE_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new ScheduleTableEntryLabelProvider());
+      viewer.setLabelProvider(new ScheduleTableEntryLabelProvider(viewer));
       viewer.setComparator(new ScheduleTableEntryComparator());
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override

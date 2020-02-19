@@ -163,7 +163,7 @@ public class AlarmListFilter extends ViewerFilter
     */
    private boolean checkResolvedBy(Object element)
    {
-      AbstractUserObject user = session.findUserDBObjectById(((Alarm)element).getAcknowledgedByUser());
+      AbstractUserObject user = session.findUserDBObjectById(((Alarm)element).getAcknowledgedByUser(), null);
       return user != null ? user.getName().toLowerCase().contains(filterString) : 
                             false;
    }

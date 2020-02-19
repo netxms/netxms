@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
@@ -33,6 +34,7 @@ import org.netxms.client.log.LogColumn;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.ui.eclipse.console.UserRefreshRunnable;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.logviewer.Activator;
@@ -52,15 +54,17 @@ public class LogLabelProvider implements ITableLabelProvider
 	private NXCSession session;
 	private Image[] alarmStateImages;
 	private WorkbenchLabelProvider wbLabelProvider;
+   private TableViewer viewer;
 	
 	/**
 	 * @param logHandle
 	 */
-	public LogLabelProvider(Log logHandle)
+	public LogLabelProvider(Log logHandle, TableViewer viewer)
 	{
+	   this.viewer = viewer;
 		Collection<LogColumn> c = logHandle.getColumns();
 		columns = c.toArray(new LogColumn[c.size()]);
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		
 		alarmStateImages = new Image[4];
 		alarmStateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
@@ -115,7 +119,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					long id = Long.parseLong(value);
-					AbstractUserObject user = session.findUserDBObjectById(id);
+					AbstractUserObject user = session.findUserDBObjectById(id, new UserRefreshRunnable(viewer, element));
 					return (user != null) ? wbLabelProvider.getImage(user) : null;
 				}
 				catch(NumberFormatException e)
@@ -215,7 +219,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					long id = Long.parseLong(value);
-					AbstractUserObject user = session.findUserDBObjectById(id);
+					AbstractUserObject user = session.findUserDBObjectById(id, new UserRefreshRunnable(viewer, element));
 					return (user != null) ? wbLabelProvider.getText(user) : null;
 				}
 				catch(NumberFormatException e)

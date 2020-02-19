@@ -27,10 +27,12 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.server.ServerJob;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.ui.eclipse.console.UserRefreshRunnable;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
 import org.netxms.ui.eclipse.serverjobmanager.Messages;
 import org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Label provider for server job list
@@ -41,13 +43,16 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 	private NXCSession session;
 	private Map<Integer, String> statusTexts = new HashMap<Integer, String>(5);
 	private Map<Integer, Image> statusImages = new HashMap<Integer, Image>(5);
+	private SortableTableViewer viewer;
 	
 	/**
 	 * The constructor.
+	 * @param viewer 
 	 */
-	public ServerJobLabelProvider()
+	public ServerJobLabelProvider(SortableTableViewer viewer)
 	{
 		super();
+		this.viewer = viewer;
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
@@ -81,7 +86,7 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 				case ServerJobManager.COLUMN_STATUS:
 					return statusTexts.get(((ServerJob)obj).getStatus());
 				case ServerJobManager.COLUMN_USER:
-					AbstractUserObject user = session.findUserDBObjectById(((ServerJob)obj).getUserId());
+					AbstractUserObject user = session.findUserDBObjectById(((ServerJob)obj).getUserId(), new UserRefreshRunnable(viewer, obj));
 					return (user != null) ? user.getName() : Messages.get().ServerJobLabelProvider_Unknown;
 				case ServerJobManager.COLUMN_NODE:
 					AbstractObject object = session.findObjectById(((ServerJob)obj).getNodeId());

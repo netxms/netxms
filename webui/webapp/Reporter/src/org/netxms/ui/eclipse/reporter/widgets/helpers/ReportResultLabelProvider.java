@@ -25,10 +25,12 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.ui.eclipse.console.UserRefreshRunnable;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Label provider for report result list
@@ -36,6 +38,15 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ReportResultLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private DateFormat dateFormat = RegionalSettings.getDateTimeFormat();
+	private SortableTableViewer viewer;
+	
+	/**
+	 * Constructor
+	 */
+	public ReportResultLabelProvider(SortableTableViewer viewer)
+	{
+	   this.viewer = viewer;
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -58,7 +69,7 @@ public class ReportResultLabelProvider extends LabelProvider implements ITableLa
 			case ReportExecutionForm.RESULT_EXEC_TIME:
 				return dateFormat.format(reportResult.getExecutionTime());
 			case ReportExecutionForm.RESULT_STARTED_BY:
-            AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(reportResult.getUserId());
+            AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(reportResult.getUserId(), new UserRefreshRunnable(viewer, element));
             return (user != null) ? user.getName() : ("[" + reportResult.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case ReportExecutionForm.RESULT_STATUS:
 			   return Messages.get().ReportResultLabelProvider_Success; // TODO: get actual job status

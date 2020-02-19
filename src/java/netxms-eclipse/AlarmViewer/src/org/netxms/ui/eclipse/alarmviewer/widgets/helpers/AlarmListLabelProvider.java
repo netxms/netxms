@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -34,6 +36,7 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
+import org.netxms.ui.eclipse.console.UserRefreshRunnable;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -58,6 +61,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    private boolean showColor = true;
 	private WorkbenchLabelProvider wbLabelProvider;
 	private TreeViewer viewer;
+	private Set<Long> unresolvedUserId = new HashSet<Long>();
 	
 	/**
 	 * Default constructor 
@@ -136,7 +140,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
 					return null;
 				long userId = (((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) ? ((Alarm)element).getAcknowledgedByUser() : ((Alarm)element).getResolvedByUser();
-				AbstractUserObject user = session.findUserDBObjectById(userId);
+				AbstractUserObject user = session.findUserDBObjectById(userId, new UserRefreshRunnable(viewer, element)); 
+				if(user == null)
+				   unresolvedUserId.add(userId);
 				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAcknowledgedByUser()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmList.COLUMN_CREATED:
 				return RegionalSettings.getDateTimeFormat().format(((Alarm)element).getCreationTime());

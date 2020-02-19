@@ -59,7 +59,7 @@ public class AlarmCommentsEditor extends Composite
 		setLayout(layout);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final AbstractUserObject userObject = session.findUserDBObjectById(comment.getUserId());
+		final AbstractUserObject userObject = session.findUserDBObjectById(comment.getUserId(), null);
 		
 		final CLabel user = new CLabel(this, SWT.NONE);
 		toolkit.adapt(user);

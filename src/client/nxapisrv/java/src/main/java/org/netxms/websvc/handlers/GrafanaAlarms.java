@@ -46,6 +46,9 @@ public class GrafanaAlarms extends AbstractHandler
       if (!getSession().isObjectsSynchronized())
          getSession().syncObjects();
       
+      if (!getSession().isUserDatabaseSynchronized())
+         getSession().syncUserDatabase();
+      
       if (query.isEmpty())
       {
          Set<Integer> classFilter = new HashSet<Integer>(5);
@@ -119,7 +122,7 @@ public class GrafanaAlarms extends AbstractHandler
                r.add(a.getRepeatCount());
                r.add(a.getHelpdeskReference());
                
-               user = getSession().findUserDBObjectById(a.getAcknowledgedByUser());
+               user = getSession().findUserDBObjectById(a.getAcknowledgedByUser(), null);
                if (user == null)
                   r.add("");
                else

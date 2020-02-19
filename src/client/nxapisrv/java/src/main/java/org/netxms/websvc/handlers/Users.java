@@ -91,14 +91,14 @@ public class Users extends AbstractHandler
       AbstractUserObject object;
       if (id.equals("self"))
       {
-         object = session.findUserDBObjectById(session.getUserId());
+         object = session.findUserDBObjectById(session.getUserId(), null);
       }
       else
       {
          try
          {
             long objectId = Long.parseLong(id);
-            object = session.findUserDBObjectById(objectId);
+            object = session.findUserDBObjectById(objectId, null);
          }
          catch(NumberFormatException e)
          {

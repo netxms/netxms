@@ -274,7 +274,7 @@ public class ReportExecutionForm extends Composite
 		gd.grabExcessVerticalSpace = true;
 		scheduleList.getControl().setLayoutData(gd);
 		scheduleList.setContentProvider(new ArrayContentProvider());
-		scheduleList.setLabelProvider(new ScheduleLabelProvider());
+		scheduleList.setLabelProvider(new ScheduleLabelProvider(scheduleList));
 		
 		WidgetHelper.restoreTableViewerSettings(scheduleList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ScheduleList");
 		scheduleList.getControl().addDisposeListener(new DisposeListener() {
@@ -357,7 +357,7 @@ public class ReportExecutionForm extends Composite
 		gd.grabExcessVerticalSpace = true;
 		resultList.getControl().setLayoutData(gd);
 		resultList.setContentProvider(new ArrayContentProvider());
-		resultList.setLabelProvider(new ReportResultLabelProvider());
+		resultList.setLabelProvider(new ReportResultLabelProvider(resultList));
 
       WidgetHelper.restoreTableViewerSettings(resultList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ResultList");
       resultList.getControl().addDisposeListener(new DisposeListener() {

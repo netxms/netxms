@@ -279,7 +279,7 @@ public class LogViewer extends ViewPart
 	 */
 	protected ITableLabelProvider createLabelProvider(Log logHandle)
 	{
-	   return new LogLabelProvider(logHandle);
+	   return new LogLabelProvider(logHandle, viewer);
 	}
 
 	/**

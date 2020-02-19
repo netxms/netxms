@@ -99,7 +99,7 @@ public class UserAdapterFactory implements IAdapterFactory
 						long[] members = ((UserGroup)o).getMembers();
 						AbstractUserObject[] childrens = new User[members.length];
 						for(int i = 0; i < members.length; i++)
-							childrens[i] = ConsoleSharedData.getSession().findUserDBObjectById(members[i]);
+							childrens[i] = ConsoleSharedData.getSession().findUserDBObjectById(members[i], null);
 						return childrens;
 					}
 
@@ -145,7 +145,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					{
 						long userId = ((AbstractAccessListElement)object).getUserId();
 						NXCSession session = ConsoleSharedData.getSession();
-						AbstractUserObject dbo = session.findUserDBObjectById(userId);
+						AbstractUserObject dbo = session.findUserDBObjectById(userId, null);
 						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 

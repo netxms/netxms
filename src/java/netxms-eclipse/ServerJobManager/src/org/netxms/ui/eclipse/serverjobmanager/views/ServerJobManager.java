@@ -103,7 +103,7 @@ public class ServerJobManager extends ViewPart
 		final int[] widths = { 80, 100, 150, 250, 100, 300 };
 		viewer = new SortableTableViewer(content.getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new ServerJobLabelProvider());
+		viewer.setLabelProvider(new ServerJobLabelProvider(viewer));
 		viewer.setComparator(new ServerJobComparator());
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		

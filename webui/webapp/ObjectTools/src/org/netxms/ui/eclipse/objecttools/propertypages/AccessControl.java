@@ -86,7 +86,7 @@ public class AccessControl extends PropertyPage
 		session = (NXCSession)ConsoleSharedData.getSession();
 		for(Long uid : objectTool.getAccessList())
 		{
-			AbstractUserObject o = session.findUserDBObjectById(uid);
+			AbstractUserObject o = session.findUserDBObjectById(uid, null);
 			if (o != null)
 				acl.add(o);
 		}
@@ -195,7 +195,7 @@ public class AccessControl extends PropertyPage
                   {    
                      for(Long uid : objectTool.getAccessList())
                      {
-                        AbstractUserObject o = session.findUserDBObjectById(uid);
+                        AbstractUserObject o = session.findUserDBObjectById(uid, null);
                         if (o != null)
                            acl.add(o);
                      }

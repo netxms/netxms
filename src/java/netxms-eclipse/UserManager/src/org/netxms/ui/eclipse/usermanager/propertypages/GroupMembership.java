@@ -159,7 +159,7 @@ public class GroupMembership extends PropertyPage
       // Initial data
 		for(long groupId : object.getGroups())
 		{
-			final AbstractUserObject group = session.findUserDBObjectById(groupId);
+			final AbstractUserObject group = session.findUserDBObjectById(groupId, null);
 			if (group != null)
 			{
 				groups.put(group.getId(), group);

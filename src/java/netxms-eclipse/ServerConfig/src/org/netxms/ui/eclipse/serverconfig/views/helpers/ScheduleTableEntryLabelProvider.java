@@ -12,10 +12,12 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.ui.eclipse.console.UserRefreshRunnable;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 public class ScheduleTableEntryLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
@@ -30,14 +32,17 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
    private NXCSession session;
    private WorkbenchLabelProvider wbLabelProvider;
    private Image statusImages[];
+   private SortableTableViewer viewer;
    
    /**
     * Default constructor 
+    * @param viewer 
     */
-   public ScheduleTableEntryLabelProvider()
+   public ScheduleTableEntryLabelProvider(SortableTableViewer viewer)
    {
       session = (NXCSession)ConsoleSharedData.getSession();
       wbLabelProvider = new WorkbenchLabelProvider();
+      this.viewer = viewer;
             
       statusImages = new Image[3];
       statusImages[EXECUTED] = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
@@ -102,7 +107,7 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
          case ScheduledTaskView.OWNER:
             if ((task.getFlags() & ScheduledTask.SYSTEM) != 0)
                return "system";
-            AbstractUserObject user = session.findUserDBObjectById(task.getOwner());
+            AbstractUserObject user = session.findUserDBObjectById(task.getOwner(), new UserRefreshRunnable(viewer, element));
             return (user != null) ? user.getName() : ("[" + Long.toString(task.getOwner()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          case ScheduledTaskView.COMMENTS:
             return task.getComments();

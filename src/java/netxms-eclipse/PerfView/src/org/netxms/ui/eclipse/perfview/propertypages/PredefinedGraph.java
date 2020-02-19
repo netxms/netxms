@@ -77,6 +77,33 @@ public class PredefinedGraph extends PropertyPage
 		for(AccessListElement e : settings.getAccessList())
 			acl.put(e.getUserId(), new AccessListElement(e));
 		
+		NXCSession session = ConsoleSharedData.getSession();
+		
+		ConsoleJob job = new ConsoleJob("Synchronize missing users", null, Activator.PLUGIN_ID) {         
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            if(session.syncMissingUsers(acl.keySet().toArray(new Long[acl.size()])))
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {    
+                     userList.refresh(true);
+                  }
+               });
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot sunchronize users";
+         }
+      };
+      job.setUser(false);
+      job.start();
+		
 		// Initiate loading of user manager plugin if it was not loaded before
 		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 		

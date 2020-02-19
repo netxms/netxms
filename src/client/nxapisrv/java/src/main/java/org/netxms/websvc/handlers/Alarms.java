@@ -224,7 +224,7 @@ public class Alarms extends AbstractHandler
       if (userId == 0)
          return;
 
-      AbstractUserObject user = session.findUserDBObjectById(userId);
+      AbstractUserObject user = session.findUserDBObjectById(userId, null);
       if (user != null)
       {
          json.addProperty(property, user.getName());

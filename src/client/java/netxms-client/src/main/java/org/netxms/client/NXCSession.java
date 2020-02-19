@@ -350,6 +350,8 @@ public class NXCSession
    private Map<Long, AbstractUserObject> userDatabase = new HashMap<Long, AbstractUserObject>();
    private Map<UUID, AbstractUserObject> userDatabaseGUID = new HashMap<UUID, AbstractUserObject>();
    private boolean userDatabaseSynchronized = false;
+   private Set<Long> userSyncList = new HashSet<Long>();
+   private List<Runnable> callbackList = new ArrayList<Runnable>();
 
    // Event objects
    private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
@@ -1205,6 +1207,73 @@ public class NXCSession
          cachedListenerList = null;
       }
    }
+   
+   /**
+    * User synchronization thread
+    */
+   class UserSync extends Thread
+   {
+      public UserSync()
+      {
+         setName("SyncUsers");
+         setDaemon(true);
+         start();
+      }
+
+      /* (non-Javadoc)
+       * @see java.lang.Thread#run()
+       */
+      @Override
+      public void run()
+      {
+         while(true)
+         {
+            synchronized(userSyncList)
+            {
+               try
+               {
+                  userSyncList.wait();
+               }
+               catch(InterruptedException e)
+               {
+               }
+            }
+            
+            try
+            {
+               sleep(5);
+            }
+            catch(InterruptedException e)
+            {
+            }
+            
+            Set<Long> userSyncListCopy;
+            List<Runnable> callbackListCopy;
+            synchronized(userSyncList)
+            {
+               userSyncListCopy = userSyncList;
+               userSyncList = new HashSet<Long>();
+               callbackListCopy = callbackList;
+               callbackList = new ArrayList<Runnable>();
+            }
+            
+            try
+            {
+               syncMissingUsers(userSyncListCopy.toArray(new Long[userSyncListCopy.size()]));
+            }
+            catch(Exception e)
+            {
+               continue;
+            }
+
+            for(Runnable cb : callbackListCopy)
+            {
+               cb.run();
+            }
+         }         
+      }
+      
+   }
 
    public NXCSession(String connAddress)
    {
@@ -1947,6 +2016,7 @@ public class NXCSession
          recvThread = new ReceiverThread();
          housekeeperThread = new HousekeeperThread();
          new NotificationProcessor();
+         new UserSync();
 
          // get server information
          Logger.debug("NXCSession.connect", "connection established, retrieving server info");
@@ -4070,6 +4140,9 @@ public class NXCSession
     */
    public boolean syncMissingUsers(Long[] userList) throws IOException, NXCException
    {
+      if (userDatabaseSynchronized)
+         return false;
+      
       final Long[] syncList = Arrays.copyOf(userList, userList.length);
       int count = syncList.length;
       synchronized(userDatabase)
@@ -4128,12 +4201,24 @@ public class NXCSession
     * @param id The user DBObject Id
     * @return User object with given ID or null if such user does not exist
     */
-   public AbstractUserObject findUserDBObjectById(final long id)
+   public AbstractUserObject findUserDBObjectById(final long id, Runnable callback)
    {
+      AbstractUserObject object = null;
       synchronized(userDatabase)
       {
-         return userDatabase.get(id);
+         object = userDatabase.get(id);
       }
+      if(object == null)
+      {
+         synchronized(userSyncList)
+         {
+            userSyncList.add(id);
+            if (callback != null)
+               callbackList.add(callback);
+            userSyncList.notifyAll();
+         }
+      }
+      return object;      
    }
 
    /**

@@ -158,7 +158,7 @@ public class Members extends PropertyPage
       // Initial data
 		for(long userId : object.getMembers())
 		{
-			final AbstractUserObject user = session.findUserDBObjectById(userId);
+			final AbstractUserObject user = session.findUserDBObjectById(userId, null);
 			if (user != null)
 			{
 				members.put(user.getId(), user);
