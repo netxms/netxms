@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2015-2018 Raden Solutions
+** Copyright (C) 2015-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ using namespace zmq;
 static void *m_context = NULL;
 static void *m_socket = NULL;
 static MUTEX m_socketLock = MutexCreate();
-static HashMap<UINT32, Subscription> m_eventSubscription(true);
-static HashMap<UINT32, Subscription> m_dataSubscription(true);
+static HashMap<UINT32, Subscription> m_eventSubscription(Ownership::True);
+static HashMap<UINT32, Subscription> m_dataSubscription(Ownership::True);
 static MUTEX m_eventSubscriptionLock = MutexCreate();
 static MUTEX m_dataSubscriptionLock = MutexCreate();
 
