@@ -490,6 +490,11 @@
             id="org.netxms.ui.eclipse.datacollection.commands.open_websvc_manager"
             name="Open web service manager">
       </command>
+      <command
+            description="Toggle web service filter"
+            id="org.netxms.ui.eclipse.datacollection.commands.show_websvc_filter"
+            name="Toggle web service filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -499,12 +504,23 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.datacollection.commands.show_websvc_filter"
+            contextId="org.netxms.ui.eclipse.datacollection.context.WebServiceManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
       <context
             id="org.netxms.ui.eclipse.datacollection.context.LastValues"
             name="Last Values List"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.datacollection.context.WebServiceManager"
+            name="Web Service Manager"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
