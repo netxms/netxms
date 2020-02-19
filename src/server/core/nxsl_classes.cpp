@@ -876,6 +876,14 @@ NXSL_METHOD_DEFINITION(Node, enableDiscoveryPolling)
 }
 
 /**
+ * enableEtherNetIP(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableEtherNetIP)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ETHERNET_IP, true);
+}
+
+/**
  * enableIcmp(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableIcmp)
@@ -1055,6 +1063,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableAgent, 1);
    NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
+   NXSL_REGISTER_METHOD(Node, enableEtherNetIP, 1);
    NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
    NXSL_REGISTER_METHOD(Node, enablePrimaryIPPing, 1);
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
