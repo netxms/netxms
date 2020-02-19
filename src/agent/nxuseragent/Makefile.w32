@@ -8,6 +8,7 @@ RESOURCES = nxuseragent.rc
 
 CPPFLAGS = /I$(NETXMS_BASE)\src\libpng
 LIBS = libnxagent.lib libnetxms.lib libpng.lib ws2_32.lib gdi32.lib \
-       comctl32.lib shell32.lib shlwapi.lib secur32.lib iphlpapi.lib wtsapi32.lib
+       comctl32.lib shell32.lib shlwapi.lib secur32.lib iphlpapi.lib \
+       wtsapi32.lib psapi.lib
 	  
 include ..\..\..\Makefile.inc.w32
