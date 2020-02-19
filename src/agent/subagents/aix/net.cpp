@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2014 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -183,29 +183,86 @@ LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
  */
 static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
 {
-	struct kinfo_ndd *nddp;
-	int i, size, nrec;
-
-	size = getkerninfo(KINFO_NDD, 0, 0, 0);
-	if (size <= 0)
-		return;  // getkerninfo() error
+   int size = getkerninfo(KINFO_NDD, 0, 0, 0);
+   if (size <= 0)
+      return;  // getkerninfo() error
 	
-	nddp = (struct kinfo_ndd *)malloc(size);
-	if (getkerninfo(KINFO_NDD, nddp, &size, 0) >= 0)
-	{
-		nrec = size / sizeof(struct kinfo_ndd);
-		for(i = 0; i < nrec; i++)
-		{
-			if ((!strcmp(pszDevice, nddp[i].ndd_name)) ||
-			    (!strcmp(pszDevice, nddp[i].ndd_alias)))
-			{
-				memcpy(pMacAddr, nddp[i].ndd_addr, 6);
-				*pdwType = nddp[i].ndd_type;
-				break;
-			}
-		}
-	}
-	free(nddp);
+   struct kinfo_ndd *nddp = (struct kinfo_ndd *)MemAlloc(size);
+   if (getkerninfo(KINFO_NDD, nddp, &size, 0) >= 0)
+   {
+      int nrec = size / sizeof(struct kinfo_ndd);
+      for(int i = 0; i < nrec; i++)
+      {
+         if (!strcmp(pszDevice, nddp[i].ndd_name) ||
+             !strcmp(pszDevice, nddp[i].ndd_alias))
+         {
+            memcpy(pMacAddr, nddp[i].ndd_addr, 6);
+            *pdwType = nddp[i].ndd_type;
+            break;
+         }
+      }
+   }
+   MemFree(nddp);
+}
+
+/**
+ * Handler for Net.InterfaceNames enum
+ */
+LONG H_NetInterfaceNames(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+{
+   int sock = socket(AF_INET, SOCK_DGRAM, 0);
+   if (sock <= 0)
+      return SYSINFO_RC_ERROR;
+
+   LONG nRet;
+   int nrecs = 32;
+   struct ifconf ifc;
+
+retry_ifconf:
+   ifc.ifc_len = nrecs * sizeof(struct ifreq);
+   ifc.ifc_buf = (caddr_t)MemAlloc(ifc.ifc_len);
+#ifdef OSIOCGIFCONF
+   if (ioctl(sock, OSIOCGIFCONF, &ifc) == 0)
+#else
+   if (ioctl(sock, SIOCGIFCONF, &ifc) == 0)
+#endif
+   {
+      if (ifc.ifc_len == nrecs * sizeof(struct ifconf))
+      {
+         // Assume overlolad, so increase buffer and retry
+         MemFree(ifc.ifc_buf);
+         nrecs += 32;
+         goto retry_ifconf;
+      }
+
+      StringSet ifnames;
+      nrecs = ifc.ifc_len / sizeof(struct ifreq);
+      for(int i = 0; i < nrecs; i++)
+      {
+#ifdef UNICODE
+         ifnames.addPreallocated(WideStringFromMBString(ifc.ifc_req[i].ifr_name));
+#else
+         ifnames.add(ifc.ifc_req[i].ifr_name);
+#endif
+      }
+
+      auto it = ifnames.iterator();
+      while(it->hasNext())
+      {
+         value->add(it->next());
+      }
+      delete it;
+
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
+
+   MemFree(ifc.ifc_buf);
+   close(sock);
+   return nRet;
 }
 
 /**
@@ -213,40 +270,38 @@ static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
  */
 LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
-	LONG nRet;
-	struct ifconf ifc;
-	struct ifreq ifr;
-	IF_INFO *ifl;
-	char szBuffer[256], szIpAddr[16], szMacAddr[32];
-	int i, j, sock, nifs = 0, nrecs = 10;
+   int sock = socket(AF_INET, SOCK_DGRAM, 0);
+   if (sock <= 0)
+      return SYSINFO_RC_ERROR;
 
-	sock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock <= 0)
-		return SYSINFO_RC_ERROR;
+   LONG nRet;
+   int nrecs = 32;
+   struct ifconf ifc;
 
 retry_ifconf:
-	ifc.ifc_len = nrecs * sizeof(struct ifreq);
-	ifc.ifc_buf = (caddr_t)malloc(ifc.ifc_len);
+   ifc.ifc_len = nrecs * sizeof(struct ifreq);
+   ifc.ifc_buf = (caddr_t)MemAlloc(ifc.ifc_len);
 #ifdef OSIOCGIFCONF
-	if (ioctl(sock, OSIOCGIFCONF, &ifc) == 0)
+   if (ioctl(sock, OSIOCGIFCONF, &ifc) == 0)
 #else
-	if (ioctl(sock, SIOCGIFCONF, &ifc) == 0)
+   if (ioctl(sock, SIOCGIFCONF, &ifc) == 0)
 #endif
-	{
-		if (ifc.ifc_len == nrecs * sizeof(struct ifconf))
-		{
-			// Assume overlolad, so increase buffer and retry
-			free(ifc.ifc_buf);
-			nrecs += 10;
-			goto retry_ifconf;
-		}
+   {
+      if (ifc.ifc_len == nrecs * sizeof(struct ifconf))
+      {
+         // Assume overlolad, so increase buffer and retry
+         MemFree(ifc.ifc_buf);
+         nrecs += 32;
+         goto retry_ifconf;
+      }
 
-		nrecs = ifc.ifc_len / sizeof(struct ifreq);
-		ifl = (IF_INFO *)malloc(sizeof(IF_INFO) * nrecs);
-		memset(ifl, 0, sizeof(IF_INFO) * nrecs);
-		for(i = 0, nifs = 0; i < nrecs; i++)
-		{
-			// Check if interface already in internal table
+      nrecs = ifc.ifc_len / sizeof(struct ifreq);
+      IF_INFO *ifl = MemAllocArray<IF_INFO>(nrecs);
+      int nifs = 0;
+      for(int i = 0; i < nrecs; i++)
+      {
+         // Check if interface already in internal table
+         int j;
 			for(j = 0; j < nifs; j++)
 				if (!strcmp(ifl[j].name, ifc.ifc_req[i].ifr_name) &&
 				    (((ifc.ifc_req[i].ifr_addr.sa_family == AF_INET) && 
@@ -265,6 +320,8 @@ retry_ifconf:
 			if (ifc.ifc_req[i].ifr_addr.sa_family == AF_INET)
 			{
 				ifl[j].ip = ((struct sockaddr_in *)&ifc.ifc_req[i].ifr_addr)->sin_addr.s_addr;
+	         
+            struct ifreq ifr;
 				strcpy(ifr.ifr_name, ifc.ifc_req[i].ifr_name);
 				ifr.ifr_addr.sa_family = AF_INET;
 				if (ioctl(sock, SIOCGIFNETMASK, &ifr) == 0)
@@ -275,8 +332,9 @@ retry_ifconf:
 		}
 
 		// Create result list
-		for(i = 0; i < nifs; i++)
+		for(int i = 0; i < nifs; i++)
 		{
+	      char szBuffer[256], szIpAddr[16], szMacAddr[32];
 			sprintf(szBuffer, "%d %s/%d %d %s %s",
 			        if_nametoindex(ifl[i].name),
 			        IpToStrA(ntohl(ifl[i].ip), szIpAddr),
@@ -288,7 +346,7 @@ retry_ifconf:
 			value->add(szBuffer);
 #endif
 		}
-		free(ifl);
+		MemFree(ifl);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 	else
@@ -296,7 +354,7 @@ retry_ifconf:
 		nRet = SYSINFO_RC_ERROR;
 	}
 
-	free(ifc.ifc_buf);
+	MemFree(ifc.ifc_buf);
 	close(sock);
 	return nRet;
 }
