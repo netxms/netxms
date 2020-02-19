@@ -51,6 +51,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
 LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
+LONG H_NetInterfaceNames(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
 LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
@@ -308,6 +309,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumes, NULL },
    { _T("LVM.VolumeGroups"), H_LvmVolumeGroups, NULL },
    { _T("Net.InterfaceList"), H_NetInterfaceList, NULL },
+   { _T("Net.InterfaceNames"), H_NetInterfaceNames, NULL },
    { _T("System.ProcessList"), H_ProcessList, NULL }
 };
 
