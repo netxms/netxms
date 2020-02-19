@@ -214,8 +214,8 @@ private:
       strlcpy(m_name, name, LVM_NAMESIZ);
       m_name[LVM_NAMESIZ - 1] = 0;
       memcpy(&m_id, id, sizeof(struct unique_id));
-      m_logicalVolumes = new ObjectArray<LogicalVolume>(16, 16, true);
-      m_physicalVolumes = new ObjectArray<PhysicalVolume>(16, 16, true);
+      m_logicalVolumes = new ObjectArray<LogicalVolume>(16, 16, Ownership::True);
+      m_physicalVolumes = new ObjectArray<PhysicalVolume>(16, 16, Ownership::True);
    }
 
 public:
@@ -373,7 +373,7 @@ int VolumeGroup::getActivePhysicalVolumes()
  */
 static ObjectArray<VolumeGroup> *ReadVolumeGroups()
 {
-   ObjectArray<VolumeGroup> *vgs = new ObjectArray<VolumeGroup>(16, 16, true);
+   ObjectArray<VolumeGroup> *vgs = new ObjectArray<VolumeGroup>(16, 16, Ownership::True);
    struct CuAt object;
    long rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, "attribute='vgserial_id'", &object, ODM_FIRST), long);
    while((rc != 0) && (rc != -1))
