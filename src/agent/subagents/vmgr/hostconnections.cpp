@@ -24,7 +24,7 @@
  * Host connection constructor
  */
 HostConnections::HostConnections(const TCHAR *name, const char *url, const char *login, const char *password)
-                                 : m_vmInfo(true),m_vmXMLs(true),m_networkXMLs(true),m_storageInfo(true),m_domains(false),m_iface(false),
+                                 : m_vmInfo(Ownership::True),m_vmXMLs(Ownership::True),m_networkXMLs(Ownership::True),m_storageInfo(Ownership::True),m_domains(false),m_iface(false),
                                  m_networks(false),m_storages(false)
 {
    m_name = _tcsdup(name);
@@ -234,7 +234,7 @@ const StringObjectMap<NXvirDomain> *HostConnections::getDomainListAndLock()
       numActiveDomains = virConnectListDomains(m_connection, activeDomains, numActiveDomains);
       numInactiveDomains = virConnectListDefinedDomains(m_connection, inactiveDomains, numInactiveDomains);
 
-      StringObjectMap<NXvirDomain> *allDomains = new StringObjectMap<NXvirDomain>(true);
+      StringObjectMap<NXvirDomain> *allDomains = new StringObjectMap<NXvirDomain>(Ownership::True);
 
       for (int i = 0 ; i < numActiveDomains ; i++)
       {
@@ -453,7 +453,7 @@ const StringObjectMap<NXvirNetwork> *HostConnections::getNetworkListAndLock()
       numActiveNetworks = virConnectListNetworks(m_connection, activeNetworks, numActiveNetworks);
       numInactiveNetworks = virConnectListDefinedNetworks(m_connection, inactiveNetworks, numInactiveNetworks);
 
-      StringObjectMap<NXvirNetwork> *allNetworks = new StringObjectMap<NXvirNetwork>(true);
+      StringObjectMap<NXvirNetwork> *allNetworks = new StringObjectMap<NXvirNetwork>(Ownership::True);
 
       for (int i = 0 ; i < numActiveNetworks ; i++)
       {
@@ -561,7 +561,7 @@ const StringObjectMap<NXvirStoragePool> *HostConnections::getStorageListAndLock(
       numActive = virConnectListStoragePools(m_connection, active, numActive);
       numInactive = virConnectListDefinedStoragePools(m_connection, inactive, numInactive);
 
-      StringObjectMap<NXvirStoragePool> *allStorage = new StringObjectMap<NXvirStoragePool>(true);
+      StringObjectMap<NXvirStoragePool> *allStorage = new StringObjectMap<NXvirStoragePool>(Ownership::True);
 
       for (int i = 0 ; i < numActive; i++)
       {

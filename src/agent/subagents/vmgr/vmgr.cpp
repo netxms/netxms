@@ -23,7 +23,7 @@
 /**
  * General VM connection list
  */
-StringObjectMap<HostConnections> g_connectionList(true);
+StringObjectMap<HostConnections> g_connectionList(Ownership::True);
 
 /**
  * Configuration file template for host list

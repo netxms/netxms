@@ -126,7 +126,7 @@ static void SubAgentShutdown()
  */
 static BOOL LoadConfiguration(Config *config)
 {
-   g_instances = new ObjectArray<DatabaseInstance>(8, 8, true);
+   g_instances = new ObjectArray<DatabaseInstance>(8, 8, Ownership::True);
    mongoc_init();
    mongoc_log_set_handler(MongoLogging, NULL);
 

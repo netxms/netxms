@@ -120,7 +120,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
    m_dataLock = MutexCreate();
    m_connLock = MutexCreate();
    m_databaseList = NULL;
-   m_data = new StringObjectMap<StringObjectMap<MongoDBCommand> >(true);
+   m_data = new StringObjectMap<StringObjectMap<MongoDBCommand> >(Ownership::True);
 }
 
 /**
@@ -453,7 +453,7 @@ LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const
       MutexLock(m_connLock);
       result = commandData->getData(m_dbConn, dbName, command) ?  SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
       MutexUnlock(m_connLock);
-      list = new StringObjectMap<MongoDBCommand>(true);
+      list = new StringObjectMap<MongoDBCommand>(Ownership::True);
       list->set(command,commandData);
       m_data->set(dbName,list);
    }
