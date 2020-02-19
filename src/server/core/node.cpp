@@ -5930,6 +5930,15 @@ DataCollectionError Node::getItemFromDeviceDriver(const TCHAR *param, TCHAR *buf
 }
 
 /**
+ * Callback for counting DCIs
+ */
+static void DciCountCallback(NetObj *object, void *data)
+{
+   if (object->isDataCollectionTarget())
+      *static_cast<int*>(data) += static_cast<DataCollectionTarget*>(object)->getItemCount();
+}
+
+/**
  * Get value for server's internal parameter
  */
 DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
@@ -6167,7 +6176,11 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
    }
    else if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
+      if (!_tcsicmp(param, _T("Server.ActiveAlarms")))
+      {
+         ret_int(buffer, GetAlarmCount());
+      }
+      else if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
       {
          _sntprintf(buffer, bufSize, _T("%u"), g_averageDCIQueuingTime);
       }
@@ -6214,6 +6227,12 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
          TCHAR loginName[256];
          AgentGetParameterArg(param, 1, loginName, 256);
          _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_WEB, loginName));
+      }
+      else if (!_tcsicmp(param, _T("Server.DataCollectionItems")))
+      {
+         int dciCount = 0;
+         g_idxObjectById.forEach(DciCountCallback, &dciCount);
+         ret_int(buffer, dciCount);
       }
       else if (!_tcsicmp(param, _T("Server.DB.Queries.Failed")))
       {
@@ -6293,6 +6312,22 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       {
          ret_uint64(buffer, GetRawDataWriterMemoryUsage());
       }
+      else if (!_tcsicmp(param, _T("Server.ObjectCount.Clusters")))
+      {
+         ret_uint(buffer, static_cast<uint32_t>(g_idxClusterById.size()));
+      }
+      else if (!_tcsicmp(param, _T("Server.ObjectCount.Nodes")))
+      {
+         ret_uint(buffer, static_cast<uint32_t>(g_idxNodeById.size()));
+      }
+      else if (!_tcsicmp(param, _T("Server.ObjectCount.Sensors")))
+      {
+         ret_uint(buffer, static_cast<uint32_t>(g_idxSensorById.size()));
+      }
+      else if (!_tcsicmp(param, _T("Server.ObjectCount.Total")))
+      {
+         ret_uint(buffer, static_cast<uint32_t>(g_idxObjectById.size()));
+      }
       else if (MatchString(_T("Server.QueueSize.Average(*)"), param, false))
       {
          rc = GetQueueStatistic(param, StatisticType::AVERAGE, buffer);
@@ -6360,6 +6395,10 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       else if (!_tcsicmp(param, _T("Server.TotalEventsProcessed")))
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_totalEventsProcessed);
+      }
+      else if (!_tcsicmp(param, _T("Server.Uptime")))
+      {
+         _sntprintf(buffer, bufSize, INT64_FMT, static_cast<int64_t>(time(NULL) - g_serverStartTime));
       }
       else
       {

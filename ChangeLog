@@ -3,10 +3,12 @@
 *
 
 - Nodes within chassis and chassis view
+- EtherNet/IP device discovery
 - Image library configurator completely rewritten
 - Maximum password length supported by nxencpasswd increased to 64 characters
 - Removed support for ancient custom CheckPoint SNMP agent on port 260
 - Added option to control case sensitive matching in log parser rules
+- New internal parameters for server stats (object count, alarm count, etc.)
 - Fixed issues:
 	NX-50 (Allow per-DCI SNMP version settings)
 	NX-58 (Refactor Image Library)
@@ -501,7 +503,7 @@
 	NX-890 (Passive elements in rack)
 	NX-1169 (Encryption is not set by default between agent and server)
 	NX-1297 (Copying Files inside File Manager using CTRL and Drag&Drop is not working)
-   NX-1299 (Add username filter to CountEx(*) and Process.XXX(*) parameters in Linux subagent)
+	NX-1299 (Add username filter to CountEx(*) and Process.XXX(*) parameters in Linux subagent)
 	NX-1306 (Show system FQDN in tunnel manager)
 	NX-1350 (Invert Values option for performance tab DCIs; Performance tab graph configuration is maintained on double-click)
 	NX-1366 (Edit option for "group box" decorations on network maps)
