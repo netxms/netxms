@@ -519,7 +519,7 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 		pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
 		UINT32 dwId = VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < m_thresholds->size(); i++, dwId += 20)
-			m_thresholds->get(i)->createMessage(pMsg, dwId);
+			m_thresholds->get(i)->fillMessage(pMsg, dwId);
 	}
 	else
 	{
@@ -1435,7 +1435,7 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
       if (mostCritical != -1)
       {
          pMsg->setField(dwId++, (WORD)1);
-         m_thresholds->get(mostCritical)->createMessage(pMsg, dwId);
+         m_thresholds->get(mostCritical)->fillMessage(pMsg, dwId);
       }
       else
       {
@@ -2001,10 +2001,8 @@ void DCItem::fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly)
 	for(int i = 0; i < getThresholdCount(); i++, id += 20)
 	{
 	   Threshold *threshold = m_thresholds->get(i);
-	   if (activeOnly && threshold->isReached())
-         threshold->createMessage(msg, id);
-	   else
-	      threshold->createMessage(msg, id);
+	   if (!activeOnly || threshold->isReached())
+         threshold->fillMessage(msg, id);
 	}
 
 	unlock();

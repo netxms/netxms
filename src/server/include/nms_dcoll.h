@@ -183,7 +183,7 @@ public:
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, NetObj *target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
-   void createMessage(NXCPMessage *msg, UINT32 baseId) const;
+   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
    void updateFromMessage(NXCPMessage *msg, UINT32 baseId);
 
    void createId();
