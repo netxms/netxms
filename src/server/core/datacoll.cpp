@@ -141,6 +141,9 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_SCRIPT:
             *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer, static_cast<DataCollectionTarget*>(pItem->getOwner()));
             break;
+         case DS_WEB_SERVICE:
+            *error = dcTarget->getWebServiceItem(pItem->getName(), pBuffer, MAX_LINE_SIZE);
+            break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
 			   break;

@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_websvc.h>
 
 /**
  * Data collector thread pool
@@ -862,6 +863,212 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): %s"), m_name, param, (vm != NULL) ? _T("success") : _T("failure"));
    return vm;
+}
+
+/**
+ * Parse list of service call arguments
+ */
+static bool ParseCallArgumensList(TCHAR *input, StringList *args)
+{
+   TCHAR *p = input;
+
+   TCHAR *s = p;
+   int state = 1; // normal text
+   for(; state > 0; p++)
+   {
+      switch(*p)
+      {
+         case '"':
+            if (state == 1)
+            {
+               state = 2;
+               s = p + 1;
+            }
+            else
+            {
+               state = 3;
+               *p = 0;
+               args->add(s);
+            }
+            break;
+         case ',':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args->add(s);
+               s = p + 1;
+            }
+            else if (state == 3)
+            {
+               state = 1;
+               s = p + 1;
+            }
+            break;
+         case 0:
+            if (state == 1)
+            {
+               Trim(s);
+               args->add(s);
+               state = 0;
+            }
+            else if (state == 3)
+            {
+               state = 0;
+            }
+            else
+            {
+               state = -1; // error
+            }
+            break;
+         case ' ':
+            break;
+         case ')':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args->add(s);
+               state = 0;
+            }
+            else if (state == 3)
+            {
+               state = 0;
+            }
+            break;
+         case '\\':
+            if (state == 2)
+            {
+               memmove(p, p + 1, _tcslen(p) * sizeof(TCHAR));
+               switch(*p)
+               {
+                  case 'r':
+                     *p = '\r';
+                     break;
+                  case 'n':
+                     *p = '\n';
+                     break;
+                  case 't':
+                     *p = '\t';
+                     break;
+                  default:
+                     break;
+               }
+            }
+            else if (state == 3)
+            {
+               state = -1;
+            }
+            break;
+         default:
+            if (state == 3)
+               state = -1;
+            break;
+      }
+   }
+   return (state != -1);
+}
+
+/**
+ * Get item from web service
+ * Parameter is expected in form service:path or service(arguments):path
+ */
+DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize)
+{
+   uint32_t proxyId = g_dwMgmtNode; // TODO: correct proxy selection
+   Node *proxyNode = static_cast<Node*>(FindObjectById(proxyId, OBJECT_NODE));
+   if (proxyNode == nullptr)
+   {
+      nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): cannot find proxy node [%u]"), m_name, param, proxyId);
+      return DCE_COMM_ERROR;
+   }
+
+   TCHAR name[1024];
+   _tcslcpy(name, param, 1024);
+   Trim(name);
+
+   TCHAR *path = _tcsrchr(name, _T(':'));
+   if (path == NULL)
+   {
+      nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): missing parameter path"), m_name, param);
+      return DCE_NOT_SUPPORTED;
+   }
+   *path = 0;
+   path++;
+
+   // Can be in form service(arg1, arg2, ... argN)
+   StringList args;
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != NULL)
+   {
+      size_t l = _tcslen(name) - 1;
+      if (name[l] != _T(')'))
+      {
+         nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): error parsing argument list"), m_name, param);
+         return DCE_NOT_SUPPORTED;
+      }
+      name[l] = 0;
+      *p = 0;
+      p++;
+      if (!ParseCallArgumensList(p, &args))
+      {
+         nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): error parsing argument list"), m_name, param);
+         return DCE_NOT_SUPPORTED;
+      }
+      Trim(name);
+   }
+
+   shared_ptr<WebServiceDefinition> d = FindWebServiceDefinition(name);
+   if (d == nullptr)
+   {
+      nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): cannot find web service definition"), m_name, param);
+      return DCE_NOT_SUPPORTED;
+   }
+
+   AgentConnectionEx *conn = proxyNode->acquireProxyConnection(WEB_SERVICE_PROXY);
+   if (conn == nullptr)
+   {
+      nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): cannot acquire proxy connection"), m_name, param);
+      return DCE_COMM_ERROR;
+   }
+
+   StringBuffer url = expandText(d->getUrl(), nullptr, nullptr, nullptr, nullptr, nullptr, &args);
+
+   StringMap headers;
+   auto it = d->getHeaders().constIterator();
+   while(it->hasNext())
+   {
+      auto h = it->next();
+      StringBuffer value = expandText(h->second, nullptr, nullptr, nullptr, nullptr, nullptr, &args);
+      headers.set(h->first, value);
+   }
+
+   StringList parameters;
+   parameters.add(path);
+   StringMap results;
+   uint32_t agentStatus = conn->queryWebService(url, d->getCacheRetentionTime(), d->getLogin(), d->getPassword(), d->getAuthType(), headers, parameters, false, &results);
+   conn->decRefCount();
+
+   DataCollectionError rc;
+   if (agentStatus == ERR_SUCCESS)
+   {
+      const TCHAR *value = results.get(parameters.get(0));
+      if (value != nullptr)
+      {
+         _tcslcpy(buffer, value, bufSize);
+         rc = DCE_SUCCESS;
+      }
+      else
+      {
+         rc = DCE_NO_SUCH_INSTANCE;
+      }
+   }
+   else
+   {
+      rc = DCE_COMM_ERROR;
+   }
+   nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): rc=%d"), m_name, param, rc);
+   return rc;
 }
 
 /**

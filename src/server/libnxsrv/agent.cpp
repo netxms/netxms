@@ -977,7 +977,7 @@ UINT32 AgentConnection::queryWebService(const TCHAR *url, UINT32 retentionTime, 
             else
             {
                dwRetCode = ERR_MALFORMED_RESPONSE;
-               debugPrintf(3, _T("Malformed response to CMD_GET_PARAMETER"));
+               debugPrintf(3, _T("Malformed response to CMD_QUERY_WEB_SERVICE"));
             }
          }
          delete response;

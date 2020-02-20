@@ -1918,6 +1918,7 @@ public:
    virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
    virtual DataCollectionError getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);
    virtual DataCollectionError getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
+   virtual DataCollectionError getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize);
 
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
@@ -2455,7 +2456,8 @@ enum ProxyType
    SENSOR_PROXY = 1,
    ZONE_PROXY = 2,
    ETHERNET_IP_PROXY = 3,
-   MAX_PROXY_TYPE = 4
+   WEB_SERVICE_PROXY = 4,
+   MAX_PROXY_TYPE = 5
 };
 
 /**
