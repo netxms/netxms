@@ -539,7 +539,7 @@ protected:
    }
    void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
-   virtual void onChildAdd();
+   virtual void onChildAdd(NObject *object);
    virtual void onParentRemove();
    virtual void onCustomAttributeChange();
 
@@ -586,7 +586,8 @@ public:
 
    void setCustomAttributesFromMessage(NXCPMessage *msg);
    void setCustomAttributesFromDatabase(DB_RESULT hResult);
-   void deleteCustomAttribute(const TCHAR *name, bool force = false);
+   void deleteCustomAttribute(const TCHAR *name);
+   void updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name);
    NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
    NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
    int getCustomAttributeSize() const { return m_customAttributes->size(); }

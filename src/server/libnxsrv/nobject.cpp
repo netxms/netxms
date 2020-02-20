@@ -75,7 +75,7 @@ void NObject::addChild(NObject *object)
    m_childList->add(object);
    unlockChildList();
 
-   onChildAdd();
+   onChildAdd(object);
 }
 
 /**
@@ -300,7 +300,7 @@ static UINT32 GetResultingFlag(UINT32 flags, StateChange change, UINT32 flag)
    if (change == StateChange::IGNORE)
       return flags;
    else if (change == StateChange::CLEAR)
-      return flags &= !flag;
+      return flags &= ~flag;
    else
       return flags |= flag;
 }
@@ -326,7 +326,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
       remove = (curr->flags != GetResultingFlag(curr->flags, inheritable, CAF_INHERITABLE));
       curr->value = value;
       if (curr->isInherited())
-         curr->flags |= CAF_INHERITABLE | CAF_REDEFINED;
+         curr->flags = CAF_INHERITABLE | CAF_REDEFINED;
       else
          curr->flags = GetResultingFlag(curr->flags, inheritable, CAF_INHERITABLE);
       onCustomAttributeChange();
@@ -360,7 +360,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, UINT32 p
    }
    else if (_tcscmp(curr->value, value) || (curr->sourceObject == 0))
    {
-      callPopulate = curr->isInheritable() && !curr->isRedefined();
+      callPopulate = (curr->isInheritable() && !curr->isRedefined()) || !curr->isInherited();
       curr->flags |= CAF_INHERITABLE;
       if (curr->sourceObject == 0) //If already defined, but not by inheritance
          curr->flags |= CAF_REDEFINED;
@@ -443,13 +443,13 @@ void NObject::onParentRemove()
    unlockCustomAttributes();
 
    for(int i = 0; i < remove.size(); i++)
-      deleteCustomAttribute(remove.get(i), true);
+      updateOrDeleteCustomAttributeOnParentRemove(remove.get(i));
 }
 
 /**
  * Hook method called on adding child object
  */
-void NObject::onChildAdd()
+void NObject::onChildAdd(NObject *object)
 {
    ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
    lockCustomAttributes();
@@ -464,7 +464,7 @@ void NObject::onChildAdd()
    unlockCustomAttributes();
 
    for(int i = 0; i < updateList.size(); i++)
-      setCustomAttribute(updateList.get(i)->first, getCustomAttribute(updateList.get(i)->first), updateList.get(i)->second);
+      object->setCustomAttribute(updateList.get(i)->first, getCustomAttribute(updateList.get(i)->first), updateList.get(i)->second);
 }
 
 /**
@@ -584,21 +584,22 @@ void NObject::setCustomAttributesFromMessage(NXCPMessage *msg)
 /**
  * Delete custom attribute
  */
-void NObject::deleteCustomAttribute(const TCHAR *name, bool force)
+void NObject::deleteCustomAttribute(const TCHAR *name)
 {
    lockCustomAttributes();
    CustomAttribute *ca = m_customAttributes->get(name);
    bool populate = false;
    bool redefined = false;
    UINT32 parent;
-   if (ca != NULL && (!ca->isInherited() || ca->isRedefined() || force))
+   if (ca != NULL && (!ca->isInherited() || ca->isRedefined()))
    {
-      populate = ca->isInheritable();
+      populate = ca->isInheritable() && !ca->isRedefined();
       redefined = ca->isRedefined();
       parent = ca->sourceObject;
 
       if(ca->isRedefined())
       {
+         ca->flags &= ~CAF_REDEFINED;
          ca->value = getCustomAttributeFromParent(name);
       }
       else
@@ -612,6 +613,34 @@ void NObject::deleteCustomAttribute(const TCHAR *name, bool force)
       populateRemove(name);
    else if (redefined)
       setCustomAttribute(name, getCustomAttributeFromParent(name), parent);
+}
+
+/**
+ * Delete custom attribute
+ */
+void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name)
+{
+   lockCustomAttributes();
+   CustomAttribute *ca = m_customAttributes->get(name);
+   bool populate = false;
+   if (ca != NULL)
+   {
+      populate = ca->isInheritable() && !ca->isRedefined();
+
+      if(ca->isRedefined())
+      {
+         ca->sourceObject = 0;
+         ca->flags &= ~CAF_REDEFINED;
+      }
+      else
+         m_customAttributes->remove(name);
+
+      onCustomAttributeChange();
+   }
+   unlockCustomAttributes();
+
+   if (populate)
+      populateRemove(name);
 }
 
 /**
