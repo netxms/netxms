@@ -1541,6 +1541,7 @@ public:
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
    Iterator<std::pair<const TCHAR*, const TCHAR*>> *iterator() { return new Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(this)); }
+   ConstIterator<std::pair<const TCHAR*, const TCHAR*>> *constIterator() const { return new ConstIterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(const_cast<StringMap*>(this))); }
 
    template <typename C>
    StructArray<KeyValuePair<TCHAR>> *toArray(bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context = NULL) const
