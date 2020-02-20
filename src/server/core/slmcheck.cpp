@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -267,7 +267,7 @@ void SlmCheck::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 	pMsg->setField(VID_TEMPLATE_ID, m_templateId);
 	pMsg->setField(VID_IS_TEMPLATE, (WORD)(m_isTemplate ? 1 : 0));
 	if (m_threshold != NULL)
-		m_threshold->createMessage(pMsg, VID_THRESHOLD_BASE);
+		m_threshold->fillMessage(pMsg, VID_THRESHOLD_BASE);
 }
 
 /**
