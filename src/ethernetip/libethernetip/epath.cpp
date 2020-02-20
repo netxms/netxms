@@ -44,10 +44,14 @@ static inline size_t EncodeLogicalSegment(uint8_t logicalType, uint32_t value, u
    }
    *buffer = 0x22 | (logicalType << 2);   // Logical segment, 32 bit address
    *(buffer + 1) = 0;   // Padding
+#if WORDS_BIGENDIAN
    *(buffer + 2) = static_cast<uint8_t>(value & 0xFF);         // Bits 0..7
    *(buffer + 3) = static_cast<uint8_t>((value >> 8) & 0xFF);  // Bits 8..15
    *(buffer + 4) = static_cast<uint8_t>((value >> 16) & 0xFF); // Bits 16..23
    *(buffer + 5) = static_cast<uint8_t>(value >> 24);          // Bits 24..31
+#else
+   memcpy(buffer + 2, &value, 4);
+#endif
    return 6;
 }
 
@@ -81,17 +85,46 @@ static bool ParsePathElement(char **curr, uint32_t *value)
 }
 
 /**
+ * Internal implementation for CIP_ParseSymbolicPathA and CIP_ParseSymbolicPathW
+ */
+static bool ParseSymbolicAttributePathInternal(char *symbolicPath, uint32_t *classId, uint32_t *instance, uint32_t *attributeId)
+{
+   char *curr = symbolicPath;
+   bool success = ParsePathElement(&curr, classId);
+   if (success)
+      success = ParsePathElement(&curr, instance);
+   if (success)
+      success = ParsePathElement(&curr, attributeId);
+   return success;
+}
+
+/**
+ * Parse symbolic attribute path
+ */
+bool LIBETHERNETIP_EXPORTABLE CIP_ParseSymbolicPathA(const char *symbolicPath, uint32_t *classId, uint32_t *instance, uint32_t *attributeId)
+{
+   char buffer[256];
+   strlcpy(buffer, symbolicPath, 256);
+   return ParseSymbolicAttributePathInternal(buffer, classId, instance, attributeId);
+}
+
+/**
+ * Parse symbolic attribute path
+ */
+bool LIBETHERNETIP_EXPORTABLE CIP_ParseSymbolicPathW(const WCHAR *symbolicPath, uint32_t *classId, uint32_t *instance, uint32_t *attributeId)
+{
+   char buffer[256];
+   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, symbolicPath, -1, buffer, 256, NULL, NULL);
+   return ParseSymbolicAttributePathInternal(buffer, classId, instance, attributeId);
+}
+
+/**
  * Internal implementation for CIP_EncodeAttributePathA and CIP_EncodeAttributePathW
  */
 static bool EncodeSymbolicAttributePathInternal(char *symbolicPath, CIP_EPATH *path)
 {
    uint32_t classId, instance, attributeId;
-   char *curr = symbolicPath;
-   bool success = ParsePathElement(&curr, &classId);
-   if (success)
-      success = ParsePathElement(&curr, &instance);
-   if (success)
-      success = ParsePathElement(&curr, &attributeId);
+   bool success = ParseSymbolicAttributePathInternal(symbolicPath, &classId, &instance, &attributeId);
    if (success)
       CIP_EncodeAttributePath(classId, instance, attributeId, path);
    return success;

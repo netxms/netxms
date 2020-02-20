@@ -2161,17 +2161,17 @@ restart_agent_check:
       sendPollerMsg(rqId, _T("Checking EtherNet/IP connectivity\r\n"));
 
       CIP_Identity *identity = nullptr;
-      EIP_CallStatus callStatus;
-      EIP_Status eipStatus = EIP_STATUS_SUCCESS;
+      EIP_Status status;
 
       uint32_t eipProxy = getEffectiveEtherNetIPProxy();
       if (eipProxy != 0)
       {
          // TODO: implement proxy request
+         status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
       }
       else
       {
-         identity = EIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &callStatus, &eipStatus);
+         identity = EIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &status);
       }
 
       if (identity != nullptr)
@@ -2200,9 +2200,10 @@ restart_agent_check:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP unreachable, callStatus=%d, eipStatus=%d, poll count %d of %d"),
-                  m_name, (int)callStatus, (int)eipStatus, m_pollCountEtherNetIP, m_requiredPollCount);
-         sendPollerMsg(rqId, POLLER_ERROR _T("Cannot connect to device via EtherNet/IP\r\n"));
+         String reason = status.failureReason();
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP unreachable (%s), poll count %d of %d"),
+                  m_name, reason.cstr(), m_pollCountEtherNetIP, m_requiredPollCount);
+         sendPollerMsg(rqId, POLLER_ERROR _T("Cannot connect to device via EtherNet/IP (%s)\r\n"), reason.cstr());
          if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
          {
             if ((tNow > m_failTimeEtherNetIP + tExpire) && !(m_state & DCSF_UNREACHABLE))
@@ -4097,17 +4098,17 @@ bool Node::confPollEthernetIP(uint32_t requestId)
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking EtherNet/IP"), m_name);
 
    CIP_Identity *identity = nullptr;
-   EIP_CallStatus callStatus;
-   EIP_Status eipStatus = EIP_STATUS_SUCCESS;
+   EIP_Status status;
 
    uint32_t eipProxy = getEffectiveEtherNetIPProxy();
    if (eipProxy != 0)
    {
       // TODO: implement proxy request
+      status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
    }
    else
    {
-      identity = EIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &callStatus, &eipStatus);
+      identity = EIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &status);
    }
 
    if (identity != nullptr)
@@ -4187,8 +4188,9 @@ bool Node::confPollEthernetIP(uint32_t requestId)
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for EtherNet/IP - failed to get device identity (status %d/%d)"), m_name, callStatus, eipStatus);
-      sendPollerMsg(requestId, POLLER_ERROR _T("   Cannot get device identity via EtherNet/IP\r\n"));
+      String reason = status.failureReason();
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for EtherNet/IP - failed to get device identity (%s)"), m_name, reason.cstr());
+      sendPollerMsg(requestId, POLLER_ERROR _T("   Cannot get device identity via EtherNet/IP (%s)\r\n"), reason.cstr());
    }
 
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): check for EtherNet/IP completed"), m_name);

@@ -26,12 +26,12 @@
 /**
  * Send request to device and wait for response
  */
-static EIP_Message *DoRequest(SOCKET s, const EIP_Message &request, uint32_t timeout, EIP_CallStatus *callStatus, EIP_Status *eipStatus)
+EIP_Message *EIP_DoRequest(SOCKET s, const EIP_Message &request, uint32_t timeout, EIP_Status *status)
 {
    size_t bytes = request.getSize();
    if (SendEx(s, request.getBytes(), bytes, 0, nullptr) != bytes)
    {
-      *callStatus = EIP_CALL_COMM_ERROR;
+      *status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
       return nullptr;
    }
 
@@ -39,50 +39,50 @@ static EIP_Message *DoRequest(SOCKET s, const EIP_Message &request, uint32_t tim
    EIP_Message *response = receiver.readMessage(timeout);
    if (response == nullptr)
    {
-      *callStatus = EIP_CALL_TIMEOUT;
+      *status = EIP_Status::callFailure(EIP_CALL_TIMEOUT);
       return nullptr;
    }
 
    if (response->getCommand() != request.getCommand())
    {
-      *callStatus = EIP_CALL_BAD_RESPONSE;
+      *status = EIP_Status::callFailure(EIP_CALL_BAD_RESPONSE);
       delete response;
       return nullptr;
    }
 
    if (response->getStatus() != EIP_STATUS_SUCCESS)
    {
-      *callStatus = EIP_CALL_DEVICE_ERROR;
-      *eipStatus = response->getStatus();
+      *status = EIP_Status::protocolFailure(response->getStatus());
       delete response;
       return nullptr;
    }
 
+   *status = EIP_Status::success();
    return response;
 }
 
 /**
  * Helper function for reading device identity via Ethernet/IP
  */
-CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr, uint16_t port,
-         uint32_t timeout, EIP_CallStatus *callStatus, EIP_Status *eipStatus)
+CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EIP_Status *status)
 {
    SOCKET s = ConnectToHost(addr, port, timeout);
    if (s == INVALID_SOCKET)
    {
-      *callStatus = EIP_CALL_CONNECT_FAILED;
+      *status = EIP_Status::callFailure(EIP_CALL_CONNECT_FAILED);
       return nullptr;
    }
 
    EIP_Message request(EIP_LIST_IDENTITY, 0);
-   EIP_Message *response = DoRequest(s, request, timeout, callStatus, eipStatus);
+   EIP_Message *response = EIP_DoRequest(s, request, timeout, status);
    shutdown(s, SHUT_RDWR);
    closesocket(s);
    if (response == nullptr)
       return nullptr;
 
    CIP_Identity *identity = nullptr;
-   *callStatus = EIP_CALL_BAD_RESPONSE;   // Default value for missing identity item
+
+   response->prepareCPFRead(0);
 
    CPF_Item item;
    while(response->nextItem(&item))
@@ -90,7 +90,7 @@ CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr,
       if (item.type != 0x0C)
          continue;
 
-      *callStatus = EIP_CALL_SUCCESS;
+      *status = EIP_Status::success();
 
       TCHAR productName[128];
       size_t stateFieldOffset;
@@ -123,6 +123,9 @@ CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr,
 
       break;
    }
+
+   if (identity == nullptr)
+      *status = EIP_Status::callFailure(EIP_CALL_BAD_RESPONSE);
 
    delete response;
    return identity;

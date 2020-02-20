@@ -30,4 +30,6 @@
 
 #define LIBETHERIP_DEBUG_TAG   _T("etherip.lib")
 
+EIP_Message *EIP_DoRequest(SOCKET s, const EIP_Message &request, uint32_t timeout, EIP_Status *status);
+
 #endif   /* _libetherip_h_ */

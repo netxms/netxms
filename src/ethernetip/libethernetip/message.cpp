@@ -32,22 +32,28 @@ EIP_Message::EIP_Message(const uint8_t *networkData, size_t size)
    m_header = reinterpret_cast<EIP_EncapsulationHeader*>(m_bytes);
    m_data = m_bytes + sizeof(EIP_EncapsulationHeader);
    m_dataSize = CIP_UInt16Swap(m_header->length);
-   m_itemCount = (m_dataSize > 1) ? readDataAsUInt16(0) : 0;
+   m_itemCount = 0;
+   m_cpfStartOffset = 2;
    m_readOffset = 0;
+   m_writeOffset = 0;
 }
 
 /**
  * Create new message and allocate requested space for data
  */
-EIP_Message::EIP_Message(EIP_Command command, size_t dataSize)
+EIP_Message::EIP_Message(EIP_Command command, size_t dataSize, EIP_SessionHandle handle)
 {
    m_bytes = MemAllocArray<uint8_t>(dataSize + sizeof(EIP_EncapsulationHeader));
    m_header = reinterpret_cast<EIP_EncapsulationHeader*>(m_bytes);
    m_header->command = CIP_UInt16Swap(command);
+   m_header->context = GetCurrentTimeMs();
+   m_header->sessionHandle = handle;
    m_data = m_bytes + sizeof(EIP_EncapsulationHeader);
    m_dataSize = dataSize;
    m_itemCount = 0;
+   m_cpfStartOffset = 2;
    m_readOffset = 0;
+   m_writeOffset = 0;
 }
 
 /**
@@ -56,6 +62,15 @@ EIP_Message::EIP_Message(EIP_Command command, size_t dataSize)
 EIP_Message::~EIP_Message()
 {
    MemFree(m_bytes);
+}
+
+/**
+ * Prepare for reading CPF items starting with given offset
+ */
+void EIP_Message::prepareCPFRead(size_t startOffset)
+{
+   m_cpfStartOffset = startOffset;
+   m_itemCount = readDataAsUInt16(startOffset);
 }
 
 /**
@@ -68,11 +83,11 @@ bool EIP_Message::nextItem(CPF_Item *item)
 
    if (m_readOffset == 0)
    {
-      m_readOffset = 2;
+      m_readOffset = m_cpfStartOffset + 2;
    }
    else
    {
-      m_readOffset += readDataAsUInt16(m_readOffset + 2);
+      m_readOffset += readDataAsUInt16(m_readOffset + 2) + 4;
    }
    if (m_readOffset + 4 >= m_dataSize)
       return false;
@@ -82,6 +97,20 @@ bool EIP_Message::nextItem(CPF_Item *item)
    item->offset = static_cast<uint32_t>(m_readOffset + 4);
    item->data = &m_data[m_readOffset + 4];
    return m_readOffset + item->length + 4 <= m_dataSize;
+}
+
+/**
+ * Find CPF item with given code
+ */
+bool EIP_Message::findItem(uint16_t type, CPF_Item *item)
+{
+   m_readOffset = 0;
+   while(nextItem(item))
+   {
+      if (item->type == type)
+         return true;
+   }
+   return false;
 }
 
 /**

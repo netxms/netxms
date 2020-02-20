@@ -1443,9 +1443,58 @@ static CodeLookupElement s_extDeviceStatusLookupTable[] =
 };
 
 /**
+ * CIP general status codes
+ */
+static CodeLookupElement s_cipGeneralStatusLookupTable[] =
+{
+   { 0x00, _T("Success") },
+   { 0x01, _T("Connection failure") },
+   { 0x02, _T("Resource unavailable") },
+   { 0x03, _T("Invalid parameter value") },
+   { 0x04, _T("Path segment error") },
+   { 0x05, _T("Path destination unknown") },
+   { 0x06, _T("Partial transfer") },
+   { 0x07, _T("Connection lost") },
+   { 0x08, _T("Service not supported") },
+   { 0x09, _T("Invalid attribute value") },
+   { 0x0A, _T("Attribute list error") },
+   { 0x0B, _T("Already in requested mode/state") },
+   { 0x0C, _T("Object state conflict") },
+   { 0x0D, _T("Object already exists") },
+   { 0x0E, _T("Attribute not settable") },
+   { 0x0F, _T("Privilege violation") },
+   { 0x10, _T("Device state conflict") },
+   { 0x11, _T("Reply data too large") },
+   { 0x12, _T("Fragmentation of a primitive value") },
+   { 0x13, _T("Not enough data") },
+   { 0x14, _T("Attribute not supported") },
+   { 0x15, _T("Too much data") },
+   { 0x16, _T("Object does not exist") },
+   { 0x17, _T("Service fragmentation sequence not in progress") },
+   { 0x18, _T("No stored attribute data") },
+   { 0x19, _T("Store operation failure") },
+   { 0x1A, _T("Routing failure, request packet too large") },
+   { 0x1B, _T("Routing failure, response packet too large") },
+   { 0x1C, _T("Missing attribute list entry data") },
+   { 0x1D, _T("Invalid attribute value list") },
+   { 0x1E, _T("Embedded service error") },
+   { 0x1F, _T("Vendor specific error") },
+   { 0x20, _T("Invalid parameter") },
+   { 0x21, _T("Write-once value or medium already written") },
+   { 0x22, _T("Invalid Reply Received") },
+   { 0x25, _T("Key failure in path") },
+   { 0x26, _T("Path size invalid") },
+   { 0x27, _T("Unexpected attribute in list") },
+   { 0x28, _T("Invalid member ID") },
+   { 0x29, _T("Member not settable") },
+   { 0x2A, _T("General failure") },
+   { 0, nullptr }
+};
+
+/**
  * EIP request status codes
  */
-static CodeLookupElement s_statusLookupTable[] =
+static CodeLookupElement s_protocolStatusLookupTable[] =
 {
    { 0x00, _T("SUCCESS") },
    { 0x01, _T("INVALID UNSUPPORTED") },
@@ -1454,6 +1503,22 @@ static CodeLookupElement s_statusLookupTable[] =
    { 0x64, _T("INVALID SESSION HANDLE") },
    { 0x65, _T("INVALID LENGTH") },
    { 0x69, _T("UNSUPPORTED PROTOCOL VERSION") },
+   { 0, nullptr }
+};
+
+/**
+ * EIP call status codes
+ */
+static CodeLookupElement s_callStatusLookupTable[] =
+{
+   { EIP_CALL_SUCCESS, _T("SUCCESS") },
+   { EIP_CALL_CONNECT_FAILED, _T("CONNECT FAILED") },
+   { EIP_CALL_COMM_ERROR, _T("COMMUNICATION ERROR") },
+   { EIP_CALL_TIMEOUT, _T("REQUEST TIMEOUT") },
+   { EIP_CALL_BAD_RESPONSE, _T("BAD RESPONSE") },
+   { EIP_INVALID_EPATH, _T("INVALID EPATH") },
+   { EIP_CALL_EIP_ERROR, _T("EIP ERROR") },
+   { EIP_CALL_CIP_ERROR, _T("CIP ERROR") },
    { 0, nullptr }
 };
 
@@ -1482,11 +1547,27 @@ const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state)
 }
 
 /**
+ * Get CIP general status text from code
+ */
+const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_GeneralStatusTextFromCode(CIP_GeneralStatus status)
+{
+   return CodeToText(static_cast<int32_t>(status), s_cipGeneralStatusLookupTable, _T("Unknown"));
+}
+
+/**
  * Get status text from code
  */
-const TCHAR LIBETHERNETIP_EXPORTABLE *EIP_StatusTextFromCode(EIP_Status status)
+const TCHAR LIBETHERNETIP_EXPORTABLE *EIP_ProtocolStatusTextFromCode(EIP_ProtocolStatus status)
 {
-   return CodeToText(static_cast<int32_t>(status), s_statusLookupTable, _T("UNKNOWN"));
+   return CodeToText(static_cast<int32_t>(status), s_protocolStatusLookupTable, _T("UNKNOWN"));
+}
+
+/**
+ * Get call status text from code
+ */
+const TCHAR LIBETHERNETIP_EXPORTABLE *EIP_CallStatusTextFromCode(EIP_CallStatus status)
+{
+   return CodeToText(static_cast<int32_t>(status), s_callStatusLookupTable, _T("UNKNOWN"));
 }
 
 /**
@@ -1538,6 +1619,25 @@ String LIBETHERNETIP_EXPORTABLE CIP_DecodeDeviceStatus(uint16_t status)
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DecodeExtendedDeviceStatus(uint16_t status)
 {
    return CodeToText(static_cast<int32_t>((status & CIP_DEVICE_STATUS_EXTENDED_STATUS_MASK) >> 4), s_extDeviceStatusLookupTable, _T("Unknown"));
+}
+
+/**
+ * Get call failure reason
+ */
+String EIP_Status::failureReason() const
+{
+   StringBuffer reason(CodeToText(static_cast<int32_t>(callStatus), s_callStatusLookupTable, _T("UNKNOWN")));
+   if (callStatus == EIP_CALL_CIP_ERROR)
+   {
+      reason.append(_T(" - "));
+      reason.append(CodeToText(static_cast<int32_t>(cipGeneralStatus), s_cipGeneralStatusLookupTable, _T("UNKNOWN")));
+   }
+   else if (callStatus == EIP_CALL_EIP_ERROR)
+   {
+      reason.append(_T(" - "));
+      reason.append(CodeToText(static_cast<int32_t>(protocolStatus), s_protocolStatusLookupTable, _T("UNKNOWN")));
+   }
+   return reason;
 }
 
 #ifdef _WIN32

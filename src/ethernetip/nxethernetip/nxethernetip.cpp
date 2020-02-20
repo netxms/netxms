@@ -96,19 +96,10 @@ static bool Connect(const char *hostname)
 }
 
 /**
- * Generic function for sending list type command
+ * Read command response
  */
-static EIP_Message *SendListCommand(EIP_Command command)
+static EIP_Message *ReadResponse(EIP_Command command, size_t cpfStartOffset)
 {
-   EIP_Message request(command, 0);
-   size_t bytes = request.getSize();
-   if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
-   {
-      TCHAR buffer[1024];
-      _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
-      return nullptr;
-   }
-
    EIP_Message *response = s_receiver->readMessage(s_timeout);
    if (response == nullptr)
    {
@@ -127,15 +118,33 @@ static EIP_Message *SendListCommand(EIP_Command command)
       return nullptr;
    }
 
-   _tprintf(_T("Status: %02X (%s)\n"), response->getStatus(), EIP_StatusTextFromCode(response->getStatus()));
+   _tprintf(_T("Status: %02X (%s)\n"), response->getStatus(), EIP_ProtocolStatusTextFromCode(response->getStatus()));
    if (response->getStatus() != EIP_STATUS_SUCCESS)
    {
       delete response;
       return nullptr;
    }
 
+   response->prepareCPFRead(cpfStartOffset);
    _tprintf(_T("%d item%s in response message\n\n"), response->getItemCount(), response->getItemCount() == 1 ? _T("") : _T("s"));
    return response;
+}
+
+/**
+ * Generic function for sending list type command
+ */
+static EIP_Message *SendListCommand(EIP_Command command)
+{
+   EIP_Message request(command, 0);
+   size_t bytes = request.getSize();
+   if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+      return nullptr;
+   }
+
+   return ReadResponse(command, 0);
 }
 
 /**
@@ -148,11 +157,8 @@ static bool ListIdentity()
       return false;
 
    CPF_Item item;
-   while(response->nextItem(&item))
+   if (response->findItem(0x0C, &item))
    {
-      if (item.type != 0x0C)
-         continue;
-
       _tprintf(_T("Protocol version.....: %u\n"), response->readDataAsUInt16(item.offset));
       _tprintf(_T("Device IP address....: %s\n"), response->readDataAsInetAddress(item.offset + 6).toString().cstr());
       _tprintf(_T("Vendor...............: %u (%s)\n"), response->readDataAsUInt16(item.offset + 18), CIP_VendorNameFromCode(response->readDataAsUInt16(item.offset + 18)));
@@ -176,6 +182,10 @@ static bool ListIdentity()
 
       uint8_t state = response->readDataAsUInt8(item.offset + 33 + _tcslen(productName));
       _tprintf(_T("State................: %u (%s)\n"), state, CIP_DeviceStateTextFromCode(state));
+   }
+   else
+   {
+      _tprintf(_T("Missing identity data in response message\n"));
    }
 
    delete response;
@@ -226,15 +236,75 @@ static bool ListServices()
  */
 static bool GetAttribute(const char *symbolicPath)
 {
-   CIP_EPATH path;
-   if (!CIP_EncodeAttributePathA(symbolicPath, &path))
+   uint32_t classId, instance, attributeId;
+   if (!CIP_ParseSymbolicPathA(symbolicPath, &classId, &instance, &attributeId))
    {
       _tprintf(_T("Attribute path is invalid\n"));
       return false;
    }
+
+   CIP_EPATH path;
+   CIP_EncodeAttributePath(classId, instance, attributeId, &path);
    TCHAR pathText[256];
    _tprintf(_T("Encoded EPATH: %s\n"), BinToStrEx(path.value, path.size, pathText, _T(' '), 0));
 
+   EIP_Status status;
+   EIP_Session *session = EIP_Session::connect(s_socket, s_timeout, &status);
+   if (session == nullptr)
+   {
+      _tprintf(_T("Session registration failed (%s)\n"), status.failureReason().cstr());
+      return false;
+   }
+   _tprintf(_T("Session registered (handle = %08X)\n"), session->getHandle());
+
+   EIP_Message request(EIP_SEND_RR_DATA, 1024, session->getHandle());
+   request.advanceWritePosition(6); // Interface ID and timeout left as 0
+   request.writeDataAsUInt16(2);    // Item count
+   request.advanceWritePosition(4); // Item type 0 followed by length 0 - NULL address
+   request.writeDataAsUInt16(0xB2); // Type B2 - UCMM message
+   request.writeDataAsUInt16(path.size + 2);
+   request.writeDataAsUInt8(CIP_Get_Attribute_Single);
+   request.writeDataAsUInt8(path.size / 2);
+   request.writeData(path.value, path.size);
+   request.completeDataWrite();
+
+   size_t bytes = request.getSize();
+   if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+      delete session;
+      return false;
+   }
+
+   EIP_Message *response = ReadResponse(EIP_SEND_RR_DATA, 6);
+   if (response == nullptr)
+   {
+      delete session;
+      return false;
+   }
+
+   CPF_Item item;
+   if (response->findItem(0xB2, &item))
+   {
+      CIP_GeneralStatus generalStatus = response->readDataAsUInt8(item.offset + 2);
+      _tprintf(_T("CIP General Status: %02X (%s)\n\n"), generalStatus, CIP_GeneralStatusTextFromCode(generalStatus));
+      if (generalStatus == 0)
+      {
+         uint16_t additionalStatusSize = response->readDataAsUInt8(item.offset + 3) * 2;
+
+         TCHAR buffer[1024];
+         _tprintf(_T("Value: %s\n"),
+                  CIP_DecodeAttribute(response->getRawData() + item.offset + additionalStatusSize + 4,
+                           item.length - additionalStatusSize - 4, classId, attributeId, buffer, 1024));
+      }
+   }
+   else
+   {
+      _tprintf(_T("Missing UCMM message data\n"));
+   }
+
+   delete session;
    return true;
 }
 
