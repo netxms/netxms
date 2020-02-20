@@ -600,9 +600,9 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
 }
 
 /**
- * Fill DCI_THRESHOLD with object's data ready to send over the network
+ * Fill NXCP message with threshold data
  */
-void Threshold::createMessage(NXCPMessage *msg, UINT32 baseId) const
+void Threshold::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
 	UINT32 varId = baseId;
 	msg->setField(varId++, m_id);
