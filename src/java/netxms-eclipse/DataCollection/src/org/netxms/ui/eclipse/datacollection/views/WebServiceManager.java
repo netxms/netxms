@@ -23,14 +23,20 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -41,24 +47,24 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.WebServiceDefinition;
-import org.netxms.client.objects.Template;
-import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.dialogs.pages.WebServiceGeneral;
+import org.netxms.ui.eclipse.datacollection.dialogs.pages.WebServiceHeaders;
+import org.netxms.ui.eclipse.datacollection.views.helpers.WebServiceDefinitionFilter;
 import org.netxms.ui.eclipse.datacollection.views.helpers.WebServiceDefinitionLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -79,8 +85,10 @@ public class WebServiceManager extends ViewPart
    public static final int COLUMN_DESCRIPTION = 6;
 
    private Map<Integer, WebServiceDefinition> webServiceDefinitions = new HashMap<Integer, WebServiceDefinition>();
+   private int nameCounter = 1;
    private Composite content;
    private FilterText filterText;
+   private WebServiceDefinitionFilter filter;
    private SortableTableViewer viewer;
    private Action actionCreate;
    private Action actionEdit;
@@ -120,7 +128,18 @@ public class WebServiceManager extends ViewPart
       viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new WebServiceDefinitionLabelProvider());
+      filter = new WebServiceDefinitionFilter();
+      viewer.addFilter(filter);
       WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WebServiceManager"); //$NON-NLS-1$
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            actionEdit.setEnabled(selection.size() == 1);
+            actionDelete.setEnabled(!selection.isEmpty());
+         }
+      });
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -261,7 +280,7 @@ public class WebServiceManager extends ViewPart
          }
       };
 
-      actionCreate = new Action("&New...", Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
+      actionCreate = new Action("&New...", SharedIcons.ADD_OBJECT) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -280,7 +299,7 @@ public class WebServiceManager extends ViewPart
       actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
       actionEdit.setEnabled(false);
 
-      actionDelete = new Action(Messages.get().DataCollectionEditor_Delete, Activator.getImageDescriptor("icons/delete.png")) { //$NON-NLS-1$
+      actionDelete = new Action(Messages.get().DataCollectionEditor_Delete, SharedIcons.DELETE_OBJECT) { // $NON-NLS-1$
          @Override
          public void run()
          {
@@ -353,6 +372,32 @@ public class WebServiceManager extends ViewPart
     */
    private void createDefinition()
    {
+      final WebServiceDefinition definition = new WebServiceDefinition("Web Service " + Integer.toString(nameCounter++));
+      if (showDefinitionEditDialog(definition))
+      {
+         final NXCSession session = ConsoleSharedData.getSession();
+         new ConsoleJob("Create web service definition", this, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               definition.setId(session.modifyWebServiceDefinition(definition));
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     webServiceDefinitions.put(definition.getId(), definition);
+                     viewer.refresh();
+                  }
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot create web service definition";
+            }
+         }.start();
+      }
    }
 
    /**
@@ -360,6 +405,59 @@ public class WebServiceManager extends ViewPart
     */
    private void editDefinition()
    {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+
+      final WebServiceDefinition definition = (WebServiceDefinition)selection.getFirstElement();
+      if (showDefinitionEditDialog(definition))
+      {
+         final NXCSession session = ConsoleSharedData.getSession();
+         new ConsoleJob("Modify web service definition", this, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               session.modifyWebServiceDefinition(definition);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.refresh();
+                  }
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot update web service definition";
+            }
+         }.start();
+      }
+   }
+
+   /**
+    * Show web service definitoin configuration dialog
+    * 
+    * @param definition web service defninition object
+    * @return true if OK was pressed
+    */
+   private boolean showDefinitionEditDialog(WebServiceDefinition definition)
+   {
+      PreferenceManager pm = new PreferenceManager();
+      pm.addToRoot(new PreferenceNode("general", new WebServiceGeneral(definition)));
+      pm.addToRoot(new PreferenceNode("headers", new WebServiceHeaders(definition)));
+
+      PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
+         @Override
+         protected void configureShell(Shell newShell)
+         {
+            super.configureShell(newShell);
+            newShell.setText("Edit Web Service Definition");
+         }
+      };
+      dlg.setBlockOnOpen(true);
+      return dlg.open() == Window.OK;
    }
 
    /**
@@ -367,6 +465,43 @@ public class WebServiceManager extends ViewPart
     */
    private void deleteDefinitions()
    {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Web Service Definitions",
+            "Selected web service definitions will be permanently deleted. Are you sure?"))
+         return;
+
+      final int[] deleteList = new int[selection.size()];
+      int index = 0;
+      for(Object o : selection.toList())
+         deleteList[index++] = ((WebServiceDefinition)o).getId();
+
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Delete web service definitions", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(int id : deleteList)
+               session.deleteWebServiceDefinition(id);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  for(int id : deleteList)
+                     webServiceDefinitions.remove(id);
+                  viewer.refresh();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot delete web service definition";
+         }
+      }.start();
    }
 
    /**
@@ -398,7 +533,7 @@ public class WebServiceManager extends ViewPart
    private void onFilterModify()
    {
       final String text = filterText.getText();
-      // FIXME:filter.setFilterString(text);
+      filter.setFilterString(text);
       viewer.refresh(false);
    }
 }

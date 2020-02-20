@@ -487,21 +487,21 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
    {
       bool success = false;
 
-      static const TCHAR *columns[] = { _T("id"), _T("guid"), _T("name"), _T("description"), _T("url"),
+      static const TCHAR *columns[] = { _T("guid"), _T("name"), _T("description"), _T("url"),
                _T("auth_type"), _T("login"), _T("password"), _T("cache_retention_time"), _T("request_timeout"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("websvc_definitions"), _T("id"), definition->getId(), columns);
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, definition->getId());
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, definition->getGuid());
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, definition->getName(), DB_BIND_STATIC);
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, definition->getDescription(), DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, definition->getUrl(), DB_BIND_STATIC);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(definition->getAuthType()));
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, definition->getLogin(), DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, definition->getPassword(), DB_BIND_STATIC);
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, definition->getCacheRetentionTime());
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, definition->getRequestTimeout());
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, definition->getGuid());
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, definition->getName(), DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, definition->getDescription(), DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, definition->getUrl(), DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(definition->getAuthType()));
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, definition->getLogin(), DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, definition->getPassword(), DB_BIND_STATIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, definition->getCacheRetentionTime());
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, definition->getRequestTimeout());
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, definition->getId());
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
