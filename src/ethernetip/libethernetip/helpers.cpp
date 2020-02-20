@@ -64,7 +64,7 @@ static EIP_Message *DoRequest(SOCKET s, const EIP_Message &request, uint32_t tim
 /**
  * Helper function for reading device identity via Ethernet/IP
  */
-CIP_Identity LIBETHERNETIP_EXPORTABLE *EtherNetIP_ListIdentity(const InetAddress& addr, uint16_t port,
+CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr, uint16_t port,
          uint32_t timeout, EIP_CallStatus *callStatus, EIP_Status *eipStatus)
 {
    SOCKET s = ConnectToHost(addr, port, timeout);
