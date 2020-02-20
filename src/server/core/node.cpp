@@ -2161,8 +2161,8 @@ restart_agent_check:
       sendPollerMsg(rqId, _T("Checking EtherNet/IP connectivity\r\n"));
 
       CIP_Identity *identity = nullptr;
-      EtherNetIP_CallStatus callStatus;
-      EtherNetIP_Status eipStatus = EIP_STATUS_SUCCESS;
+      EIP_CallStatus callStatus;
+      EIP_Status eipStatus = EIP_STATUS_SUCCESS;
 
       uint32_t eipProxy = getEffectiveEtherNetIPProxy();
       if (eipProxy != 0)
@@ -2171,7 +2171,7 @@ restart_agent_check:
       }
       else
       {
-         identity = EtherNetIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &callStatus, &eipStatus);
+         identity = EIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &callStatus, &eipStatus);
       }
 
       if (identity != nullptr)
@@ -4097,8 +4097,8 @@ bool Node::confPollEthernetIP(uint32_t requestId)
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking EtherNet/IP"), m_name);
 
    CIP_Identity *identity = nullptr;
-   EtherNetIP_CallStatus callStatus;
-   EtherNetIP_Status eipStatus = EIP_STATUS_SUCCESS;
+   EIP_CallStatus callStatus;
+   EIP_Status eipStatus = EIP_STATUS_SUCCESS;
 
    uint32_t eipProxy = getEffectiveEtherNetIPProxy();
    if (eipProxy != 0)
@@ -4107,7 +4107,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
    }
    else
    {
-      identity = EtherNetIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &callStatus, &eipStatus);
+      identity = EIP_ListIdentity(m_ipAddress, m_eipPort, 5000, &callStatus, &eipStatus);
    }
 
    if (identity != nullptr)

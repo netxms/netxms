@@ -68,9 +68,9 @@ inline uint32_t CIP_UInt32Swap(uint32_t value)
 #endif
 
 /**
- * CIP encapsulation header
+ * EIP encapsulation header
  */
-struct CIP_EncapsulationHeader
+struct EIP_EncapsulationHeader
 {
    uint16_t command;
    uint16_t length;
@@ -89,20 +89,20 @@ struct CIP_EncapsulationHeader
 #endif
 
 /**
- * CIP encapsulation commands
+ * EtherNet/IP encapsulation commands
  */
-enum CIP_Command : uint16_t
+enum EIP_Command : uint16_t
 {
-   CIP_NOOP = 0x0000,
-   CIP_LIST_SERVICES = 0x0004,
-   CIP_LIST_IDENTITY = 0x0063,
-   CIP_LIST_INTERFACES = 0x0064,
-   CIP_REGISTER_SESSION = 0x0065,
-   CIP_UNREGISTER_SESSION = 0x0066,
-   CIP_SEND_RR_DATA = 0x006F,
-   CIP_SEND_UNIT_DATA = 0x0070,
-   CIP_INDICATE_STATUS = 0x0072,
-   CIP_CANCEL = 0x0073
+   EIP_NOOP = 0x0000,
+   EIP_LIST_SERVICES = 0x0004,
+   EIP_LIST_IDENTITY = 0x0063,
+   EIP_LIST_INTERFACES = 0x0064,
+   EIP_REGISTER_SESSION = 0x0065,
+   EIP_UNREGISTER_SESSION = 0x0066,
+   EIP_SEND_RR_DATA = 0x006F,
+   EIP_SEND_UNIT_DATA = 0x0070,
+   EIP_INDICATE_STATUS = 0x0072,
+   EIP_CANCEL = 0x0073
 };
 
 /**
@@ -150,7 +150,7 @@ enum CIP_ExtendedDeviceStatus
 /**
  * EtherNet/IP status codes
  */
-enum EtherNetIP_Status : uint32_t
+enum EIP_Status : uint32_t
 {
    EIP_STATUS_SUCCESS = 0x00,
    EIP_STATUS_INVALID_UNSUPPORTED = 0x01,
@@ -164,7 +164,7 @@ enum EtherNetIP_Status : uint32_t
 /**
  * EtherNet/IP helper call status
  */
-enum EtherNetIP_CallStatus
+enum EIP_CallStatus
 {
    EIP_CALL_SUCCESS = 0,
    EIP_CALL_CONNECT_FAILED = 1,
@@ -172,6 +172,15 @@ enum EtherNetIP_CallStatus
    EIP_CALL_TIMEOUT = 3,
    EIP_CALL_BAD_RESPONSE = 4,
    EIP_CALL_DEVICE_ERROR = 5
+};
+
+/**
+ * EPATH
+ */
+struct CIP_EPATH
+{
+   size_t size;         // Actual path size in bytes
+   uint8_t value[24];   // Max 4 32 bit segments
 };
 
 /**
@@ -186,27 +195,27 @@ struct CPF_Item
 };
 
 /**
- * CIP message
+ * EtherNet/IP message
  */
-class LIBETHERNETIP_EXPORTABLE CIP_Message
+class LIBETHERNETIP_EXPORTABLE EIP_Message
 {
 private:
    uint8_t *m_bytes;
-   CIP_EncapsulationHeader *m_header;
+   EIP_EncapsulationHeader *m_header;
    size_t m_dataSize;
    uint8_t *m_data;
    int m_itemCount;
    size_t m_readOffset;
 
 public:
-   CIP_Message(const uint8_t *networkData, size_t size);
-   CIP_Message(CIP_Command command, size_t dataSize);
-   ~CIP_Message();
+   EIP_Message(const uint8_t *networkData, size_t size);
+   EIP_Message(EIP_Command command, size_t dataSize);
+   ~EIP_Message();
 
-   CIP_Command getCommand() const { return static_cast<CIP_Command>(CIP_UInt16Swap(m_header->command)); }
+   EIP_Command getCommand() const { return static_cast<EIP_Command>(CIP_UInt16Swap(m_header->command)); }
    uint32_t getSessionHandle() const { return CIP_UInt32Swap(m_header->sessionHandle); }
-   EtherNetIP_Status getStatus() const { return static_cast<EtherNetIP_Status>(CIP_UInt32Swap(m_header->status)); }
-   size_t getSize() const { return m_dataSize + sizeof(CIP_EncapsulationHeader); }
+   EIP_Status getStatus() const { return static_cast<EIP_Status>(CIP_UInt32Swap(m_header->status)); }
+   size_t getSize() const { return m_dataSize + sizeof(EIP_EncapsulationHeader); }
    const uint8_t *getBytes() const { return m_bytes; }
 
    size_t getRawDataSize() const { return m_dataSize; }
@@ -240,7 +249,7 @@ public:
 /**
  * EtherNet/IP message receiver
  */
-class LIBETHERNETIP_EXPORTABLE EtherNetIP_MessageReceiver
+class LIBETHERNETIP_EXPORTABLE EIP_MessageReceiver
 {
 private:
    SOCKET m_socket;
@@ -249,13 +258,13 @@ private:
    size_t m_dataSize;
    size_t m_readPos;
 
-   CIP_Message *readMessageFromBuffer();
+   EIP_Message *readMessageFromBuffer();
 
 public:
-   EtherNetIP_MessageReceiver(SOCKET s);
-   ~EtherNetIP_MessageReceiver();
+   EIP_MessageReceiver(SOCKET s);
+   ~EIP_MessageReceiver();
 
-   CIP_Message *readMessage(uint32_t timeout);
+   EIP_Message *readMessage(uint32_t timeout);
 };
 
 /**
@@ -280,13 +289,23 @@ struct CIP_Identity
 /**
  * Helper function for reading device identity via Ethernet/IP
  */
-CIP_Identity LIBETHERNETIP_EXPORTABLE *EtherNetIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EtherNetIP_CallStatus *callStatus, EtherNetIP_Status *eipStatus);
+CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EIP_CallStatus *callStatus, EIP_Status *eipStatus);
+
+/**** Path functions ****/
+void LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePath(uint32_t classId, uint32_t instance, uint32_t attributeId, CIP_EPATH *path);
+bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathA(const char *symbolicPath, CIP_EPATH *path);
+bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathW(const WCHAR *symbolicPath, CIP_EPATH *path);
+#ifdef UNICODE
+#define CIP_EncodeAttributePath CIP_EncodeAttributePathW
+#else
+#define CIP_EncodeAttributePath CIP_EncodeAttributePathA
+#endif
 
 /**** Utility functions ****/
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_VendorNameFromCode(int32_t code);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceTypeNameFromCode(int32_t code);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state);
-const TCHAR LIBETHERNETIP_EXPORTABLE *EtherNetIP_StatusTextFromCode(EtherNetIP_Status status);
+const TCHAR LIBETHERNETIP_EXPORTABLE *EIP_StatusTextFromCode(EIP_Status status);
 String LIBETHERNETIP_EXPORTABLE CIP_DecodeDeviceStatus(uint16_t status);
 const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DecodeExtendedDeviceStatus(uint16_t status);
 

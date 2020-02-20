@@ -33,7 +33,7 @@ static uint16_t s_port = ETHERNET_IP_DEFAULT_PORT;
 static uint32_t s_timeout = 5000;
 static bool s_useUDP = false;
 static SOCKET s_socket = INVALID_SOCKET;
-static EtherNetIP_MessageReceiver *s_receiver = nullptr;
+static EIP_MessageReceiver *s_receiver = nullptr;
 
 /**
  * Dump raw bytes
@@ -98,9 +98,9 @@ static bool Connect(const char *hostname)
 /**
  * Generic function for sending list type command
  */
-static CIP_Message *SendListCommand(CIP_Command command)
+static EIP_Message *SendListCommand(EIP_Command command)
 {
-   CIP_Message request(command, 0);
+   EIP_Message request(command, 0);
    size_t bytes = request.getSize();
    if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
    {
@@ -109,7 +109,7 @@ static CIP_Message *SendListCommand(CIP_Command command)
       return nullptr;
    }
 
-   CIP_Message *response = s_receiver->readMessage(s_timeout);
+   EIP_Message *response = s_receiver->readMessage(s_timeout);
    if (response == nullptr)
    {
       _tprintf(_T("Request timeout\n"));
@@ -127,7 +127,7 @@ static CIP_Message *SendListCommand(CIP_Command command)
       return nullptr;
    }
 
-   _tprintf(_T("Status: %02X (%s)\n"), response->getStatus(), EtherNetIP_StatusTextFromCode(response->getStatus()));
+   _tprintf(_T("Status: %02X (%s)\n"), response->getStatus(), EIP_StatusTextFromCode(response->getStatus()));
    if (response->getStatus() != EIP_STATUS_SUCCESS)
    {
       delete response;
@@ -143,7 +143,7 @@ static CIP_Message *SendListCommand(CIP_Command command)
  */
 static bool ListIdentity()
 {
-   CIP_Message *response = SendListCommand(CIP_LIST_IDENTITY);
+   EIP_Message *response = SendListCommand(EIP_LIST_IDENTITY);
    if (response == nullptr)
       return false;
 
@@ -187,7 +187,7 @@ static bool ListIdentity()
  */
 static bool ListInterfaces()
 {
-   CIP_Message *response = SendListCommand(CIP_LIST_INTERFACES);
+   EIP_Message *response = SendListCommand(EIP_LIST_INTERFACES);
    if (response == nullptr)
       return false;
 
@@ -200,7 +200,7 @@ static bool ListInterfaces()
  */
 static bool ListServices()
 {
-   CIP_Message *response = SendListCommand(CIP_LIST_SERVICES);
+   EIP_Message *response = SendListCommand(EIP_LIST_SERVICES);
    if (response == nullptr)
       return false;
 
@@ -222,11 +222,31 @@ static bool ListServices()
 }
 
 /**
+ * Get attribute from device
+ */
+static bool GetAttribute(const char *symbolicPath)
+{
+   CIP_EPATH path;
+   if (!CIP_EncodeAttributePathA(symbolicPath, &path))
+   {
+      _tprintf(_T("Attribute path is invalid\n"));
+      return false;
+   }
+   TCHAR pathText[256];
+   _tprintf(_T("Encoded EPATH: %s\n"), BinToStrEx(path.value, path.size, pathText, _T(' '), 0));
+
+   return true;
+}
+
+/**
  * Startup
  */
 int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
+
+   _tprintf(_T("NetXMS EtherNet/IP Diagnostic Tool Version ") NETXMS_VERSION_STRING _T("\n")
+            _T("Copyright (c) 2020 Raden Solutions\n\n"));
 
    // Parse command line
    opterr = 1;
@@ -240,8 +260,13 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            _tprintf(_T("Usage: nxethernetip [<options>] <host> <command>\n")
-                     _T("Valid options are:\n")
+            _tprintf(_T("Usage: nxethernetip [<options>] <host> <command> [<arguments>]\n")
+                     _T("\nValid commands are:\n")
+                     _T("   GetAttribute <path> : read value of specific attribute (path is class.instance.attribute)\n")
+                     _T("   ListIdentity        : read device identity\n")
+                     _T("   ListInterfaces      : read list of supported interfaces\n")
+                     _T("   ListServices        : read list of supported services\n")
+                     _T("\nValid options are:\n")
                      _T("   -h                : Display help and exit\n")
                      _T("   -p <port>         : Port number (default is 44818)\n")
                      _T("   -u                : Use UDP for communication\n")
@@ -304,7 +329,7 @@ int main(int argc, char *argv[])
    if (!Connect(argv[optind]))
       return 2;
 
-   s_receiver = new EtherNetIP_MessageReceiver(s_socket);
+   s_receiver = new EIP_MessageReceiver(s_socket);
 
    const char *command = argv[optind + 1];
    if (!stricmp(command, "ListIdentity"))
@@ -320,6 +345,16 @@ int main(int argc, char *argv[])
    else if (!stricmp(command, "ListServices"))
    {
       if (!ListServices())
+         exitCode = 4;
+   }
+   else if (!stricmp(command, "GetAttribute"))
+   {
+      if (argc - optind < 3)
+      {
+         _tprintf(_T("Required argument(s) missing.\nUse nxethernetip -h to get complete command line syntax.\n"));
+         return 1;
+      }
+      if (!GetAttribute(argv[optind + 2]))
          exitCode = 4;
    }
    else

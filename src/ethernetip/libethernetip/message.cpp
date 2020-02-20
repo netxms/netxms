@@ -26,11 +26,11 @@
 /**
  * Create message from network data
  */
-CIP_Message::CIP_Message(const uint8_t *networkData, size_t size)
+EIP_Message::EIP_Message(const uint8_t *networkData, size_t size)
 {
    m_bytes = MemCopyBlock(networkData, size);
-   m_header = reinterpret_cast<CIP_EncapsulationHeader*>(m_bytes);
-   m_data = m_bytes + sizeof(CIP_EncapsulationHeader);
+   m_header = reinterpret_cast<EIP_EncapsulationHeader*>(m_bytes);
+   m_data = m_bytes + sizeof(EIP_EncapsulationHeader);
    m_dataSize = CIP_UInt16Swap(m_header->length);
    m_itemCount = (m_dataSize > 1) ? readDataAsUInt16(0) : 0;
    m_readOffset = 0;
@@ -39,12 +39,12 @@ CIP_Message::CIP_Message(const uint8_t *networkData, size_t size)
 /**
  * Create new message and allocate requested space for data
  */
-CIP_Message::CIP_Message(CIP_Command command, size_t dataSize)
+EIP_Message::EIP_Message(EIP_Command command, size_t dataSize)
 {
-   m_bytes = MemAllocArray<uint8_t>(dataSize + sizeof(CIP_EncapsulationHeader));
-   m_header = reinterpret_cast<CIP_EncapsulationHeader*>(m_bytes);
+   m_bytes = MemAllocArray<uint8_t>(dataSize + sizeof(EIP_EncapsulationHeader));
+   m_header = reinterpret_cast<EIP_EncapsulationHeader*>(m_bytes);
    m_header->command = CIP_UInt16Swap(command);
-   m_data = m_bytes + sizeof(CIP_EncapsulationHeader);
+   m_data = m_bytes + sizeof(EIP_EncapsulationHeader);
    m_dataSize = dataSize;
    m_itemCount = 0;
    m_readOffset = 0;
@@ -53,7 +53,7 @@ CIP_Message::CIP_Message(CIP_Command command, size_t dataSize)
 /**
  * Message destructor
  */
-CIP_Message::~CIP_Message()
+EIP_Message::~EIP_Message()
 {
    MemFree(m_bytes);
 }
@@ -61,7 +61,7 @@ CIP_Message::~CIP_Message()
 /**
  * Read next CPF item
  */
-bool CIP_Message::nextItem(CPF_Item *item)
+bool EIP_Message::nextItem(CPF_Item *item)
 {
    if (m_readOffset + 4 >= m_dataSize)
       return false;
@@ -87,7 +87,7 @@ bool CIP_Message::nextItem(CPF_Item *item)
 /**
  * Read data at given offset as length prefixed string
  */
-bool CIP_Message::readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, size_t bufferSize) const
+bool EIP_Message::readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, size_t bufferSize) const
 {
    size_t len = readDataAsUInt8(offset);
    if (offset + len + 1 > m_dataSize)
@@ -107,7 +107,7 @@ bool CIP_Message::readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, siz
 /**
  * Create message receiver for Ethernet/IP
  */
-EtherNetIP_MessageReceiver::EtherNetIP_MessageReceiver(SOCKET s)
+EIP_MessageReceiver::EIP_MessageReceiver(SOCKET s)
 {
    m_socket = s;
    m_allocated = 8192;
@@ -119,7 +119,7 @@ EtherNetIP_MessageReceiver::EtherNetIP_MessageReceiver(SOCKET s)
 /**
  * Message receiver destructor
  */
-EtherNetIP_MessageReceiver::~EtherNetIP_MessageReceiver()
+EIP_MessageReceiver::~EIP_MessageReceiver()
 {
    MemFree(m_buffer);
 }
@@ -127,16 +127,16 @@ EtherNetIP_MessageReceiver::~EtherNetIP_MessageReceiver()
 /**
  * Read message from already received data in buffer
  */
-CIP_Message *EtherNetIP_MessageReceiver::readMessageFromBuffer()
+EIP_Message *EIP_MessageReceiver::readMessageFromBuffer()
 {
-   if (m_dataSize < sizeof(CIP_EncapsulationHeader))
+   if (m_dataSize < sizeof(EIP_EncapsulationHeader))
       return nullptr;
 
-   size_t msgSize = CIP_UInt16Swap(reinterpret_cast<CIP_EncapsulationHeader*>(&m_buffer[m_readPos])->length) + sizeof(CIP_EncapsulationHeader);
+   size_t msgSize = CIP_UInt16Swap(reinterpret_cast<EIP_EncapsulationHeader*>(&m_buffer[m_readPos])->length) + sizeof(EIP_EncapsulationHeader);
    if (m_dataSize < msgSize)
       return nullptr;
 
-   CIP_Message *msg = new CIP_Message(&m_buffer[m_readPos], msgSize);
+   EIP_Message *msg = new EIP_Message(&m_buffer[m_readPos], msgSize);
    m_dataSize -= msgSize;
    if (m_dataSize > 0)
       m_readPos += msgSize;
@@ -148,11 +148,11 @@ CIP_Message *EtherNetIP_MessageReceiver::readMessageFromBuffer()
 /**
  * Read message from network
  */
-CIP_Message *EtherNetIP_MessageReceiver::readMessage(uint32_t timeout)
+EIP_Message *EIP_MessageReceiver::readMessage(uint32_t timeout)
 {
    while(true)
    {
-      CIP_Message *msg = readMessageFromBuffer();
+      EIP_Message *msg = readMessageFromBuffer();
       if (msg != nullptr)
          return msg;
 

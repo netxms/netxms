@@ -1484,7 +1484,7 @@ const TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DeviceStateTextFromCode(uint8_t state)
 /**
  * Get status text from code
  */
-const TCHAR LIBETHERNETIP_EXPORTABLE *EtherNetIP_StatusTextFromCode(EtherNetIP_Status status)
+const TCHAR LIBETHERNETIP_EXPORTABLE *EIP_StatusTextFromCode(EIP_Status status)
 {
    return CodeToText(static_cast<int32_t>(status), s_statusLookupTable, _T("UNKNOWN"));
 }
