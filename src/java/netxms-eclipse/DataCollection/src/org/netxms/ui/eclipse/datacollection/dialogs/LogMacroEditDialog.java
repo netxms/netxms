@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Create/edit macro in log parser
- *
  */
 public class LogMacroEditDialog extends Dialog
 {
@@ -51,9 +50,19 @@ public class LogMacroEditDialog extends Dialog
 		this.value = value;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText((name == null) ? Messages.get().LogMacroEditDialog_TitleCreate : Messages.get().LogMacroEditDialog_TitleEdit);
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -95,16 +104,6 @@ public class LogMacroEditDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-		newShell.setText((name == null) ? Messages.get().LogMacroEditDialog_TitleCreate : Messages.get().LogMacroEditDialog_TitleEdit);
-	}
-	
 	/**
 	 * Get variable name
 	 * 

@@ -33,6 +33,8 @@ import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -138,6 +140,13 @@ public class WebServiceManager extends ViewPart
             IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
             actionEdit.setEnabled(selection.size() == 1);
             actionDelete.setEnabled(!selection.isEmpty());
+         }
+      });
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editDefinition();
          }
       });
       viewer.getTable().addDisposeListener(new DisposeListener() {

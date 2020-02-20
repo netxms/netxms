@@ -25,7 +25,9 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
@@ -150,6 +152,7 @@ public class SnmpTrapParameters extends PreferencePage
             widgetSelected(e);
          }
       });
+      buttonEdit.setEnabled(false);
       
       buttonDelete = new Button(buttonArea, SWT.PUSH);
       buttonDelete.setText(Messages.get().TrapConfigurationDialog_Delete);
@@ -166,6 +169,7 @@ public class SnmpTrapParameters extends PreferencePage
             deleteParameters();
          }
       });
+      buttonDelete.setEnabled(false);
       
       buttonUp = new Button(buttonArea, SWT.PUSH);
       buttonUp.setText(Messages.get().TrapConfigurationDialog_MoveUp);
@@ -254,6 +258,16 @@ public class SnmpTrapParameters extends PreferencePage
          public void doubleClick(DoubleClickEvent event)
          {
             editParameter();
+         }
+      });
+
+      paramList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = paramList.getStructuredSelection();
+            buttonEdit.setEnabled(selection.size() == 1);
+            buttonDelete.setEnabled(!selection.isEmpty());
          }
       });
    }

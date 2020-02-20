@@ -103,7 +103,7 @@ static bool H_UpgradeFromV6()
          _T("websvc_id integer not null,")
          _T("name varchar(63) not null,")
          _T("value varchar(2000) null,")
-         _T("PRIMARY KEY(websvc_id))")));
+         _T("PRIMARY KEY(websvc_id,name))")));
    CHK_EXEC(SetMinorSchemaVersion(7));
    return true;
 }

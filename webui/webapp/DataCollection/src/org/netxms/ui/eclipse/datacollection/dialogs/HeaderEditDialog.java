@@ -29,11 +29,10 @@ import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
-
 /**
- * Create/edit macro in log parser
+ * Add/edit header
  */
-public class LogMacroEditDialog extends Dialog
+public class HeaderEditDialog extends Dialog
 {
 	private LabeledText textName;
 	private LabeledText textValue;
@@ -43,7 +42,7 @@ public class LogMacroEditDialog extends Dialog
 	/**
 	 * @param parentShell
 	 */
-	public LogMacroEditDialog(Shell parentShell, String name, String value)
+	public HeaderEditDialog(Shell parentShell, String name, String value)
 	{
 		super(parentShell);
 		this.name = name;
@@ -57,7 +56,7 @@ public class LogMacroEditDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText((name == null) ? Messages.get().LogMacroEditDialog_TitleCreate : Messages.get().LogMacroEditDialog_TitleEdit);
+      newShell.setText((name == null) ? "Add Header" : "Edit Header");
    }
 
    /**
