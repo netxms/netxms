@@ -390,7 +390,18 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
          rcc = RCC_SUCCESS;
 
          s_webServiceDefinitionLock.lock();
-         s_webServiceDefinitions.add(definition);
+         bool found = false;
+         for(int i = 0; i < s_webServiceDefinitions.size(); i++)
+         {
+            if (s_webServiceDefinitions.get(i)->getId() == definition->getId())
+            {
+               s_webServiceDefinitions.replace(i, definition);
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+            s_webServiceDefinitions.add(definition);
          s_webServiceDefinitionLock.unlock();
       }
       else

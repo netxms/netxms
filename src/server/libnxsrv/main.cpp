@@ -73,6 +73,10 @@ static struct
    { ERR_NO_SUCH_INSTANCE, _T("No such instance") },
    { ERR_OUT_OF_STATE_REQUEST, _T("Request is out of state") },
    { ERR_ENCRYPTION_ERROR, _T("Encryption error") },
+   { ERR_MALFORMED_RESPONSE, _T("Malformed response") },
+   { ERR_INVALID_OBJECT, _T("Invalid object") },
+   { ERR_FILE_ALREADY_EXISTS, _T("File already exist") },
+   { ERR_FOLDER_ALREADY_EXISTS, _T("Folder already exist") },
    { -1, NULL }
 };
 

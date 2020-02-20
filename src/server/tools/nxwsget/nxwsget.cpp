@@ -53,12 +53,12 @@ static EnumerationCallbackResult PrintResults(const TCHAR *key, const void *valu
 /**
  * Get service parameter
  */
-static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const StringList& parameters, bool verifyCert)
+static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const StringList& parameters)
 {
    StringMap results;
    UINT32 rcc = pConn->queryWebService(url, s_retentionTime,
             (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
-            s_authType, s_headers, parameters, verifyCert, &results);
+            s_authType, s_headers, parameters, s_verifyCert, &results);
    if (rcc == ERR_SUCCESS)
    {
       results.forEach(PrintResults, NULL);
@@ -218,7 +218,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
          parameters.add(argv[pos++]);
 #endif
       }
-      exitCode = QueryWebService(conn, url, parameters, s_verifyCert);
+      exitCode = QueryWebService(conn, url, parameters);
       ThreadSleep(s_interval);
       MemFree(url);
    }
@@ -234,15 +234,15 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
-   tool.mainHelpText = _T("Usage: Usage: nxget [<options>] <host> <URL> <parameter> [<parameter> ...]\n")
-                       _T("Tool specific options are:\n")
+   tool.mainHelpText = _T("Usage: Usage: nxwsget [<options>] <host> <URL> <path> [<path> ...]\n\n")
+                       _T("Tool specific options:\n")
                        _T("   -c           : Do not verify service certificate.\n")
-                       _T("   -H header    : Service header.\n")
-                       _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
-                       _T("   -L login     : Service login name.\n")
-                       _T("   -P passwod   : Service passwod.\n")
-                       _T("   -r seconds   : Casched data retention time.\n")
-                       _T("   -t auth      : Service auth type. Valid methods are \"none\", \"basic\", \"digest\",\n")
+                       _T("   -H header    : HTTP header (can be used multiple times).\n")
+                       _T("   -i seconds   : Query service continuously with given interval.\n")
+                       _T("   -L login     : Web service login name.\n")
+                       _T("   -P passwod   : Web service password.\n")
+                       _T("   -r seconds   : Cache retention time.\n")
+                       _T("   -t auth      : HTTP authentication type. Valid methods are \"none\", \"basic\", \"digest\",\n")
                        _T("                  \"ntlm\", \"bearer\", \"any\", or \"anysafe\". Default is \"none\".\n");
    tool.additionalOptions = "cH:i:L:P:r:t:";
    tool.executeCommandCb = &ExecuteCommandCb;
