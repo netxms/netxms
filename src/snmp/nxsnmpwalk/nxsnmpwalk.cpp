@@ -72,6 +72,7 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
    if (dwResult != SNMP_ERR_SUCCESS)
    {
       _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(dwResult));
+      delete transport;
       return 2;
    }
 
