@@ -331,22 +331,25 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
    // Initialize persistent storage
    bool registryExists = false;
    Config *registry = new Config;
-	registry->setTopLevelTag(_T("registry"));
-	TCHAR regPath[MAX_PATH];
-	nx_strncpy(regPath, g_szDataDirectory, MAX_PATH - _tcslen(_T("registry.dat")) - 1);
-	if (regPath[_tcslen(regPath) - 1] != FS_PATH_SEPARATOR_CHAR)
-		_tcscat(regPath, FS_PATH_SEPARATOR);
-	_tcscat(regPath, _T("registry.dat"));
-	registryExists = registry->loadXmlConfig(regPath, "registry");
-	if (!registryExists)
+   registry->setTopLevelTag(_T("registry"));
+   TCHAR regPath[MAX_PATH];
+   nx_strncpy(regPath, g_szDataDirectory, MAX_PATH - _tcslen(_T("registry.dat")) - 1);
+   if (regPath[_tcslen(regPath) - 1] != FS_PATH_SEPARATOR_CHAR)
+   {
+     _tcscat(regPath, FS_PATH_SEPARATOR);
+   }
+   _tcscat(regPath, _T("registry.dat"));
+   registryExists = registry->loadXmlConfig(regPath, "registry");
+   if (!registryExists)
    {
       DebugPrintf(1, _T("Registry file doesn't exist. No data will be moved from registry to database\n"));
       CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 2));
+      delete registry;
       return TRUE;
    }
 
    //Move policy data form registry file to agent database
-	ObjectArray<ConfigEntry> *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
+   ObjectArray<ConfigEntry> *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
    DB_STATEMENT hStmt = DBPrepare(s_db,
                  _T("INSERT INTO agent_policy (guid,type,server_info,server_id,version)")
                  _T(" VALUES (?,?,?,0,0)"));

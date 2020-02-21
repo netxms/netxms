@@ -89,6 +89,7 @@ bool RestartService(UINT32 pid)
       if (i == 30)
          kill(pid, SIGKILL);
 
+      free(serviceName);
       return true;
    }
 
