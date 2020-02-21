@@ -221,9 +221,10 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
          const TCHAR *dataLine = dataLines->get(j);
          nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): checking data line \"%s\""), dataLine);
          int fields[30];
-         if (_pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30) >= 0)
+         int result = _pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
+         if (result >= 0)
          {
-            if (fields[2] != -1)
+            if ((result >=2 || result == 0) && fields[2] != -1)
             {
                matchedString = MemAllocString(fields[3] + 1 - fields[2]);
                memcpy(matchedString, &dataLine[fields[2]], (fields[3] - fields[2]) * sizeof(TCHAR));
