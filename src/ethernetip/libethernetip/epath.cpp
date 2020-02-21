@@ -56,6 +56,16 @@ static inline size_t EncodeLogicalSegment(uint8_t logicalType, uint32_t value, u
 }
 
 /**
+ * Encode object path (without attribute) into byte array ready to be sent over the network
+ */
+void LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePath(uint32_t classId, uint32_t instance, CIP_EPATH *path)
+{
+   memset(path, 0, sizeof(CIP_EPATH));
+   path->size += EncodeLogicalSegment(0, classId, path->value);
+   path->size += EncodeLogicalSegment(1, instance, &path->value[path->size]);
+}
+
+/**
  * Encode attribute path into byte array ready to be sent over the network
  */
 void LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePath(uint32_t classId, uint32_t instance, uint32_t attributeId, CIP_EPATH *path)

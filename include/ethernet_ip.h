@@ -373,7 +373,7 @@ public:
       return CIP_UInt32Swap(v);
    }
    InetAddress readDataAsInetAddress(size_t offset) const { return (offset < m_dataSize - 3) ? InetAddress(ntohl(*reinterpret_cast<uint32_t*>(&m_data[offset]))) : InetAddress(); }
-   bool readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, size_t bufferSize) const;
+   bool readDataAsLengthPrefixString(size_t offset, int prefixSize, TCHAR *buffer, size_t bufferSize) const;
 
    void resetWritePosition() { m_writeOffset = 0; }
    void writeData(const uint8_t *value, size_t size)
@@ -502,6 +502,7 @@ struct CIP_Identity
 CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr, uint16_t port, uint32_t timeout, EIP_Status *status);
 
 /**** Path functions ****/
+void LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePath(uint32_t classId, uint32_t instance, CIP_EPATH *path);
 void LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePath(uint32_t classId, uint32_t instance, uint32_t attributeId, CIP_EPATH *path);
 bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathA(const char *symbolicPath, CIP_EPATH *path);
 bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathW(const WCHAR *symbolicPath, CIP_EPATH *path);

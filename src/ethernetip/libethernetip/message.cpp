@@ -116,18 +116,18 @@ bool EIP_Message::findItem(uint16_t type, CPF_Item *item)
 /**
  * Read data at given offset as length prefixed string
  */
-bool EIP_Message::readDataAsLengthPrefixString(size_t offset, TCHAR *buffer, size_t bufferSize) const
+bool EIP_Message::readDataAsLengthPrefixString(size_t offset, int prefixSize, TCHAR *buffer, size_t bufferSize) const
 {
-   size_t len = readDataAsUInt8(offset);
-   if (offset + len + 1 > m_dataSize)
+   size_t len = (prefixSize == 2) ? readDataAsUInt16(offset) : readDataAsUInt8(offset);
+   if (offset + len + prefixSize > m_dataSize)
       return false;  // invalid string length
    if (len >= bufferSize)
       len = bufferSize - 1;
 #ifdef UNICODE
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, reinterpret_cast<char*>(&m_data[offset + 1]),
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, reinterpret_cast<char*>(&m_data[offset + prefixSize]),
          static_cast<int>(len), buffer, static_cast<int>(bufferSize));
 #else
-   memcpy(buffer, &m_data[offset + 1], len);
+   memcpy(buffer, &m_data[offset + prefixSize], len);
 #endif
    buffer[len] = 0;
    return true;

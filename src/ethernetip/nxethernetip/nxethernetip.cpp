@@ -165,7 +165,7 @@ static bool ListIdentity()
       _tprintf(_T("Device type..........: %u (%s)\n"), response->readDataAsUInt16(item.offset + 20), CIP_DeviceTypeNameFromCode(response->readDataAsUInt16(item.offset + 20)));
 
       TCHAR productName[256] = _T("");
-      if (response->readDataAsLengthPrefixString(item.offset + 32, productName, 256))
+      if (response->readDataAsLengthPrefixString(item.offset + 32, 1, productName, 256))
       {
          _tprintf(_T("Product name.........: %s\n"), productName);
       }
@@ -309,6 +309,269 @@ static bool GetAttribute(const char *symbolicPath)
 }
 
 /**
+ * Get all attributes of given class from device
+ */
+static bool GetAllAttributes(const char *symbolicPath)
+{
+   uint32_t classId, instance;
+   const char *symbolicInstance = strchr(symbolicPath, '.');
+   if (symbolicInstance != nullptr)
+   {
+      char *eptr;
+      classId = strtoul(symbolicPath, &eptr, 0);
+      if ((classId == 0) || (eptr != symbolicInstance))
+      {
+         _tprintf(_T("Invalid class ID\n"));
+         return false;
+      }
+      symbolicInstance++;
+      instance = strtoul(symbolicInstance, &eptr, 0);
+      if ((instance == 0) || (*eptr != 0))
+      {
+         _tprintf(_T("Invalid instance\n"));
+         return false;
+      }
+   }
+   else
+   {
+      char *eptr;
+      classId = strtoul(symbolicPath, &eptr, 0);
+      if ((classId == 0) || (*eptr != 0))
+      {
+         _tprintf(_T("Invalid class ID\n"));
+         return false;
+      }
+      instance = 1;
+   }
+
+   CIP_EPATH path;
+   CIP_EncodeAttributePath(classId, instance, &path);
+   TCHAR pathText[256];
+   _tprintf(_T("Encoded EPATH: %s\n"), BinToStrEx(path.value, path.size, pathText, _T(' '), 0));
+
+   EIP_Status status;
+   EIP_Session *session = EIP_Session::connect(s_socket, s_timeout, &status);
+   if (session == nullptr)
+   {
+      _tprintf(_T("Session registration failed (%s)\n"), status.failureReason().cstr());
+      return false;
+   }
+   _tprintf(_T("Session registered (handle = %08X)\n"), session->getHandle());
+
+   EIP_Message request(EIP_SEND_RR_DATA, 1024, session->getHandle());
+   request.advanceWritePosition(6); // Interface ID and timeout left as 0
+   request.writeDataAsUInt16(2);    // Item count
+   request.advanceWritePosition(4); // Item type 0 followed by length 0 - NULL address
+   request.writeDataAsUInt16(0xB2); // Type B2 - UCMM message
+   request.writeDataAsUInt16(path.size + 2);
+   request.writeDataAsUInt8(CIP_Get_Attributes_All);
+   request.writeDataAsUInt8(path.size / 2);
+   request.writeData(path.value, path.size);
+   request.completeDataWrite();
+
+   size_t bytes = request.getSize();
+   if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+      delete session;
+      return false;
+   }
+
+   EIP_Message *response = ReadResponse(EIP_SEND_RR_DATA, 6);
+   if (response == nullptr)
+   {
+      delete session;
+      return false;
+   }
+
+   CPF_Item item;
+   if (response->findItem(0xB2, &item))
+   {
+      CIP_GeneralStatus generalStatus = response->readDataAsUInt8(item.offset + 2);
+      _tprintf(_T("CIP General Status: %02X (%s)\n\n"), generalStatus, CIP_GeneralStatusTextFromCode(generalStatus));
+      if (generalStatus == 0)
+      {
+         uint16_t additionalStatusSize = response->readDataAsUInt8(item.offset + 3) * 2;
+
+         _tprintf(_T("Object data:\n"));
+         DumpBytes(response->getRawData() + item.offset + additionalStatusSize + 4, item.length - additionalStatusSize - 4);
+      }
+   }
+   else
+   {
+      _tprintf(_T("Missing UCMM message data\n"));
+   }
+
+   delete session;
+   return true;
+}
+
+/**
+ * Parse TCP/IP object
+ */
+static void ParseTCPIPObject(EIP_Message *msg, size_t startOffset, size_t size)
+{
+   uint16_t phyObjectPathSize = msg->readDataAsUInt16(startOffset + 12) * 2;
+   size_t addrDataOffset = startOffset + 14 + phyObjectPathSize;
+   uint16_t domainNameLength = msg->readDataAsUInt16(addrDataOffset + 20);
+
+   _tprintf(_T("Status ..................: %08X\n"), msg->readDataAsUInt32(startOffset));
+   _tprintf(_T("Address .................: %s\n"), InetAddress(msg->readDataAsUInt32(addrDataOffset)).toString().cstr());
+   _tprintf(_T("Network mask ............: %s\n"), InetAddress(msg->readDataAsUInt32(addrDataOffset + 4)).toString().cstr());
+   _tprintf(_T("Gateway .................: %s\n"), InetAddress(msg->readDataAsUInt32(addrDataOffset + 8)).toString().cstr());
+   _tprintf(_T("Primary name server .....: %s\n"), InetAddress(msg->readDataAsUInt32(addrDataOffset + 12)).toString().cstr());
+   _tprintf(_T("Secondary name server ...: %s\n"), InetAddress(msg->readDataAsUInt32(addrDataOffset + 16)).toString().cstr());
+
+   TCHAR hostName[256] = _T("");
+   msg->readDataAsLengthPrefixString(addrDataOffset + domainNameLength + domainNameLength % 2 + 22, 2, hostName, 256);
+   _tprintf(_T("Host name ...............: %s\n"), hostName);
+}
+
+/**
+ * Get all attributes of given class from device
+ */
+static bool GetTCPIPObject()
+{
+   CIP_EPATH path;
+   CIP_EncodeAttributePath(0xF5, 1, &path);
+   TCHAR pathText[256];
+   _tprintf(_T("Encoded EPATH: %s\n"), BinToStrEx(path.value, path.size, pathText, _T(' '), 0));
+
+   EIP_Status status;
+   EIP_Session *session = EIP_Session::connect(s_socket, s_timeout, &status);
+   if (session == nullptr)
+   {
+      _tprintf(_T("Session registration failed (%s)\n"), status.failureReason().cstr());
+      return false;
+   }
+   _tprintf(_T("Session registered (handle = %08X)\n"), session->getHandle());
+
+   EIP_Message request(EIP_SEND_RR_DATA, 1024, session->getHandle());
+   request.advanceWritePosition(6); // Interface ID and timeout left as 0
+   request.writeDataAsUInt16(2);    // Item count
+   request.advanceWritePosition(4); // Item type 0 followed by length 0 - NULL address
+   request.writeDataAsUInt16(0xB2); // Type B2 - UCMM message
+   request.writeDataAsUInt16(path.size + 2);
+   request.writeDataAsUInt8(CIP_Get_Attributes_All);
+   request.writeDataAsUInt8(path.size / 2);
+   request.writeData(path.value, path.size);
+   request.completeDataWrite();
+
+   size_t bytes = request.getSize();
+   if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+      delete session;
+      return false;
+   }
+
+   EIP_Message *response = ReadResponse(EIP_SEND_RR_DATA, 6);
+   if (response == nullptr)
+   {
+      delete session;
+      return false;
+   }
+
+   CPF_Item item;
+   if (response->findItem(0xB2, &item))
+   {
+      CIP_GeneralStatus generalStatus = response->readDataAsUInt8(item.offset + 2);
+      _tprintf(_T("CIP General Status: %02X (%s)\n\n"), generalStatus, CIP_GeneralStatusTextFromCode(generalStatus));
+      if (generalStatus == 0)
+      {
+         uint16_t additionalStatusSize = response->readDataAsUInt8(item.offset + 3) * 2;
+         ParseTCPIPObject(response, item.offset + additionalStatusSize + 4, item.length - additionalStatusSize - 4);
+      }
+   }
+   else
+   {
+      _tprintf(_T("Missing UCMM message data\n"));
+   }
+
+   delete session;
+   return true;
+}
+
+/**
+ * Find all instances of given class
+ */
+static bool FindClassInstances(const char *symbolicClassId)
+{
+   char *eptr;
+   uint32_t classId = strtoul(symbolicClassId, &eptr, 0);
+   if ((classId == 0) || (*eptr != 0))
+   {
+      _tprintf(_T("Invalid class ID\n"));
+      return false;
+   }
+
+   EIP_Status status;
+   EIP_Session *session = EIP_Session::connect(s_socket, s_timeout, &status);
+   if (session == nullptr)
+   {
+      _tprintf(_T("Session registration failed (%s)\n"), status.failureReason().cstr());
+      return false;
+   }
+   _tprintf(_T("Session registered (handle = %08X)\n"), session->getHandle());
+
+   uint32_t instance = 0;
+   CIP_EPATH path;
+   CIP_EncodeAttributePath(classId, instance, &path);
+   TCHAR pathText[256];
+   _tprintf(_T("Encoded EPATH: %s\n"), BinToStrEx(path.value, path.size, pathText, _T(' '), 0));
+
+   EIP_Message request(EIP_SEND_RR_DATA, 1024, session->getHandle());
+   request.advanceWritePosition(6); // Interface ID and timeout left as 0
+   request.writeDataAsUInt16(2);    // Item count
+   request.advanceWritePosition(4); // Item type 0 followed by length 0 - NULL address
+   request.writeDataAsUInt16(0xB2); // Type B2 - UCMM message
+   request.writeDataAsUInt16(path.size + 3);
+   request.writeDataAsUInt8(CIP_Find_Next_Object_Instance);
+   request.writeDataAsUInt8(path.size / 2);
+   request.writeData(path.value, path.size);
+   request.writeDataAsUInt8(127);   // Max number of instances
+   request.completeDataWrite();
+
+   size_t bytes = request.getSize();
+   if (SendEx(s_socket, request.getBytes(), bytes, 0, nullptr) != bytes)
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("Request sending failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+      delete session;
+      return false;
+   }
+
+   EIP_Message *response = ReadResponse(EIP_SEND_RR_DATA, 6);
+   if (response == nullptr)
+   {
+      delete session;
+      return false;
+   }
+
+   CPF_Item item;
+   if (response->findItem(0xB2, &item))
+   {
+      CIP_GeneralStatus generalStatus = response->readDataAsUInt8(item.offset + 2);
+      _tprintf(_T("CIP General Status: %02X (%s)\n\n"), generalStatus, CIP_GeneralStatusTextFromCode(generalStatus));
+      if (generalStatus == 0)
+      {
+         uint16_t additionalStatusSize = response->readDataAsUInt8(item.offset + 3) * 2;
+         int instanceCount = response->readDataAsUInt8(item.offset + additionalStatusSize + 4);
+         _tprintf(_T("Instance count: %d\n"), instanceCount);
+      }
+   }
+   else
+   {
+      _tprintf(_T("Missing UCMM message data\n"));
+   }
+
+   delete session;
+   return true;
+}
+
+/**
  * Startup
  */
 int main(int argc, char *argv[])
@@ -332,10 +595,13 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxethernetip [<options>] <host> <command> [<arguments>]\n")
                      _T("\nValid commands are:\n")
-                     _T("   GetAttribute <path> : read value of specific attribute (path is class.instance.attribute)\n")
-                     _T("   ListIdentity        : read device identity\n")
-                     _T("   ListInterfaces      : read list of supported interfaces\n")
-                     _T("   ListServices        : read list of supported services\n")
+                     _T("   FindClassInstances <class> : find all instances of given class\n")
+                     _T("   GetAllAttributes <path>    : read all object attributes (path is class.instance)\n")
+                     _T("   GetAttribute <path>        : read value of specific attribute (path is class.instance.attribute)\n")
+                     _T("   GetTCPIPObject             : read TCP/IP object from device\n")
+                     _T("   ListIdentity               : read device identity\n")
+                     _T("   ListInterfaces             : read list of supported interfaces\n")
+                     _T("   ListServices               : read list of supported services\n")
                      _T("\nValid options are:\n")
                      _T("   -h                : Display help and exit\n")
                      _T("   -p <port>         : Port number (default is 44818)\n")
@@ -425,6 +691,31 @@ int main(int argc, char *argv[])
          return 1;
       }
       if (!GetAttribute(argv[optind + 2]))
+         exitCode = 4;
+   }
+   else if (!stricmp(command, "GetAllAttributes"))
+   {
+      if (argc - optind < 3)
+      {
+         _tprintf(_T("Required argument(s) missing.\nUse nxethernetip -h to get complete command line syntax.\n"));
+         return 1;
+      }
+      if (!GetAllAttributes(argv[optind + 2]))
+         exitCode = 4;
+   }
+   else if (!stricmp(command, "GetTCPIPObject"))
+   {
+      if (!GetTCPIPObject())
+         exitCode = 4;
+   }
+   else if (!stricmp(command, "FindClassInstances"))
+   {
+      if (argc - optind < 3)
+      {
+         _tprintf(_T("Required argument(s) missing.\nUse nxethernetip -h to get complete command line syntax.\n"));
+         return 1;
+      }
+      if (!FindClassInstances(argv[optind + 2]))
          exitCode = 4;
    }
    else

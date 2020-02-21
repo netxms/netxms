@@ -94,7 +94,7 @@ CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr,
 
       TCHAR productName[128];
       size_t stateFieldOffset;
-      if (response->readDataAsLengthPrefixString(item.offset + 32, productName, 128))
+      if (response->readDataAsLengthPrefixString(item.offset + 32, 1, productName, 128))
       {
          stateFieldOffset = 33 + _tcslen(productName);
          Trim(productName);
