@@ -33,6 +33,9 @@
 
 #define DEBUG_TAG _T("ncd.telegram")
 
+#define DISBALE_IP_V4 1
+#define DISBALE_IP_V6 2
+
 /**
  * Request data for cURL call
  */
@@ -128,6 +131,18 @@ struct Chat
 };
 
 /**
+ * Proxy info structure
+ */
+struct ProxyInfo
+{
+   char proxy[MAX_PATH];
+   UINT32 proxyPort;
+   UINT32 proxyType;
+   char proxyUser[128];
+   char proxyPassword[256];
+};
+
+/**
  * Telegram driver class
  */
 class TelegramDriver : public NCDriver
@@ -135,18 +150,22 @@ class TelegramDriver : public NCDriver
 private:
    THREAD m_updateHandlerThread;
    char m_authToken[64];
+   UINT32 m_ipVersion;
+   ProxyInfo *m_proxy;
    TCHAR *m_botName;
    StringObjectMap<Chat> m_chats;
    MUTEX m_chatsLock;
    CONDITION m_shutdownCondition;
    bool m_shutdownFlag;
    INT64 m_nextUpdateId;
-   NCDriverStorageManager *m_storageManager;
+   NCDriverStorageManager *m_storageManager;   
 
    TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(Ownership::True)
    {
       m_updateHandlerThread = INVALID_THREAD_HANDLE;
       memset(m_authToken, 0, sizeof(m_authToken));
+      m_ipVersion = CURL_IPRESOLVE_WHATEVER;
+      m_proxy = NULL;
       m_botName = NULL;
       m_chatsLock = MutexCreateFast();
       m_shutdownCondition = ConditionCreate(true);
@@ -179,6 +198,7 @@ TelegramDriver::~TelegramDriver()
    MemFree(m_botName);
    ConditionDestroy(m_shutdownCondition);
    MutexDestroy(m_chatsLock);
+   delete m_proxy;
 }
 
 /**
@@ -204,10 +224,25 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
    return size * nmemb;
 }
 
+UINT32 GetIPVersion(UINT32 option)
+{
+   UINT32 result = CURL_IPRESOLVE_WHATEVER;
+   switch(option)
+   {
+      case DISBALE_IP_V4:
+         result = CURL_IPRESOLVE_V6;
+         break;
+      case DISBALE_IP_V6:
+         result = CURL_IPRESOLVE_V4;
+         break;                 
+   }
+   return result;
+}
+
 /**
  * Send request to Telegram API
  */
-static json_t *SendTelegramRequest(const char *token, const char *method, json_t *data)
+static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, UINT32 ipVersion, const char *method, json_t *data)
 {
    CURL *curl = curl_easy_init();
    if (curl == NULL)
@@ -228,6 +263,33 @@ static json_t *SendTelegramRequest(const char *token, const char *method, json_t
 
    ResponseData *responseData = MemAllocStruct<ResponseData>();
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, responseData);
+   curl_easy_setopt(curl, CURLOPT_IPRESOLVE, ipVersion);
+
+   if(proxy != NULL)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy enabled %hs"), proxy->proxy);
+      curl_easy_setopt(curl, CURLOPT_PROXY, proxy->proxy);
+      if(proxy->proxyPort != 0)
+      {
+         curl_easy_setopt(curl, CURLOPT_PROXYPORT, proxy->proxyPort);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy port %d"), proxy->proxyPort);
+      }
+      if(proxy->proxyType != 0)
+      {
+         curl_easy_setopt(curl, CURLOPT_PROXYTYPE, proxy->proxyType);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy type %d"), proxy->proxyType);
+      }
+      if(proxy->proxyUser[0] != 0)
+      {
+         curl_easy_setopt(curl, CURLOPT_PROXYUSERNAME, proxy->proxyUser);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy login %hs"), proxy->proxyUser);
+      }
+      if(proxy->proxyPassword[0] != 0)
+      {
+         curl_easy_setopt(curl, CURLOPT_PROXYPASSWORD, proxy->proxyPassword);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy passord set"));
+      }
+   }
 
    struct curl_slist *headers = NULL;
    char *json;
@@ -299,6 +361,24 @@ static EnumerationCallbackResult RestoreChats(const TCHAR *key, const TCHAR *val
    return _CONTINUE;
 }
 
+UINT32 GetProxyType(char *type)
+{
+   UINT32 result = 0;
+   if (!stricmp(type, "http"))
+      result = CURLPROXY_HTTP;
+   else if (!stricmp(type, "https"))
+      result = CURLPROXY_HTTPS;
+   else if (!stricmp(type, "socks4"))
+      result = CURLPROXY_SOCKS4;
+   else if (!stricmp(type, "socks4a"))
+      result = CURLPROXY_SOCKS4A;
+   else if (!stricmp(type, "socks5"))
+      result = CURLPROXY_SOCKS5;
+   else if (!stricmp(type, "socks5h"))
+      result = CURLPROXY_SOCKS5_HOSTNAME;
+   return result;
+}
+
 /**
  * Create driver instance
  */
@@ -307,20 +387,45 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
 
    char authToken[64];
+   ProxyInfo *proxy = new ProxyInfo();
+   char type[8];
+   int connType = 0;
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken, NULL },
+		{ _T("DisableIPv4"), CT_BOOLEAN, 0, 0, DISBALE_IP_V4, 0, &connType, NULL },
+		{ _T("DisableIPv6"), CT_BOOLEAN, 0, 0, DISBALE_IP_V6, 0, &connType, NULL },
+		{ _T("Proxy"), CT_MB_STRING, 0, 0, sizeof(proxy->proxy), 0, proxy->proxy, NULL },
+		{ _T("ProxyPort"), CT_LONG, 0, 0, 0, 0, &proxy->proxyPort, NULL },
+		{ _T("ProxyType"), CT_MB_STRING, 0, 0, sizeof(type), 0, type, NULL },
+		{ _T("ProxyUser"), CT_MB_STRING, 0, 0, sizeof(proxy->proxyUser), 0, proxy->proxyUser, NULL },
+		{ _T("ProxyPassword"), CT_MB_STRING, 0, 0, sizeof(proxy->proxyPassword), 0, proxy->proxyPassword, NULL },
+		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 	};
 
 	if (!config->parseTemplate(_T("Telegram"), configTemplate))
 	{
 	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
+      delete proxy;
 	   return NULL;
 	}
 
+   if (connType == (DISBALE_IP_V4 | DISBALE_IP_V6))
+   {
+	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error. Both IPv4 and IPv6 are diabled"));
+      delete proxy;
+	   return NULL;
+   }
+
+   proxy->proxyType = GetProxyType(type);
+   if(proxy->proxy[0] == 0)
+   {
+      delete proxy;
+      proxy = NULL;
+   }
+
    TelegramDriver *driver = NULL;
-	json_t *info = SendTelegramRequest(authToken, "getMe", NULL);
+	json_t *info = SendTelegramRequest(authToken, proxy, GetIPVersion(connType), "getMe", NULL);
 	if (info != NULL)
 	{
 	   json_t *ok = json_object_get(info, "ok");
@@ -335,6 +440,8 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 	         {
 	            driver = new TelegramDriver(storageManager);
 	            strcpy(driver->m_authToken, authToken);
+	            driver->m_proxy = proxy;
+               driver->m_ipVersion = GetIPVersion(connType);
 #ifdef UNICODE
 	            driver->m_botName = WideStringFromUTF8String(json_string_value(name));
 #else
@@ -370,6 +477,8 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 	{
 	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Telegram API call failed, driver configuration could be incorrect"));
 	}
+   if(driver == NULL)
+      delete proxy;
 
 	return driver;
 }
@@ -434,6 +543,21 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
       curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
       curl_easy_setopt(curl, CURLOPT_XFERINFODATA, driver);
 #endif
+      curl_easy_setopt(curl, CURLOPT_IPRESOLVE, driver->m_ipVersion);
+
+      if(driver->m_proxy != NULL)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): proxy enabled"), driver->m_botName);
+         curl_easy_setopt(curl, CURLOPT_PROXY, driver->m_proxy->proxy);
+         if(driver->m_proxy->proxyPort != 0)
+            curl_easy_setopt(curl, CURLOPT_PROXYPORT, driver->m_proxy->proxyPort);
+         if(driver->m_proxy->proxyType != 0)
+            curl_easy_setopt(curl, CURLOPT_PROXYTYPE, driver->m_proxy->proxyType);
+         if(driver->m_proxy->proxyUser[0] != 0)
+            curl_easy_setopt(curl, CURLOPT_PROXYUSERNAME, driver->m_proxy->proxyUser);
+         if(driver->m_proxy->proxyPassword[0] != 0)
+            curl_easy_setopt(curl, CURLOPT_PROXYPASSWORD, driver->m_proxy->proxyPassword);
+      }
 
       // Inner loop while connection is active
       while(!driver->m_shutdownFlag)
@@ -574,7 +698,7 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
       json_object_set_new(request, "chat_id", (recipient[0] == _T('@')) ? json_string_t(recipient) : json_integer(chatId));
       json_object_set_new(request, "text", json_string_t(body));
 
-      json_t *response = SendTelegramRequest(m_authToken, "sendMessage", request);
+      json_t *response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "sendMessage", request);
       json_decref(request);
 
       if (json_is_object(response))
