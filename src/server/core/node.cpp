@@ -9884,7 +9884,7 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
    for(int i = 0; i < objects->size(); i++)
    {
       NetObj *obj = objects->get(i);
-      if (obj != NULL && !obj->isDeleted())
+      if (!obj->isDeleted())
       {
          if (obj->getId() == m_id)
          {
