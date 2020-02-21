@@ -2409,7 +2409,7 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 			HAVE_LIBCURL=yes
 			LIBS="$LIBS -lcurl"
 		], [ HAVE_LIBCURL=no ])
-		AC_CHECK_DECLS([CURLOPT_NOSIGNAL, CURLOPT_XOAUTH2_BEARER, curl_version_info],,,[
+		AC_CHECK_DECLS([CURLOPT_NOSIGNAL, CURLOPT_XOAUTH2_BEARER, CURLPROXY_HTTPS, curl_version_info],,,[
 #include <curl/curl.h>
 		])
 	fi
