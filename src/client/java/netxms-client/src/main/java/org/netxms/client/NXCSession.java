@@ -11394,7 +11394,7 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_POLICY);
       msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
-      msg.setField(NXCPCodes.VID_DUPLUICATE, duplicate);
+      msg.setField(NXCPCodes.VID_DUPLICATE, duplicate);
       currentlySelectedElement.fillMessage(msg);
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getFieldAsUUID(NXCPCodes.VID_GUID);

@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("scheduler")
+
 /**
  * Static fields
  */
@@ -40,7 +42,7 @@ ThreadPool *g_schedulerThreadPool = NULL;
 /**
  * Task handler replacement for missing handlers
  */
-static void MissingTaskHandler(const ScheduledTaskParameters *params)
+static void MissingTaskHandler(shared_ptr<ScheduledTaskParameters> parameters)
 {
 }
 
@@ -66,31 +68,33 @@ ScheduledTaskTransientData::~ScheduledTaskTransientData()
 /**
  * Create recurrent task object
  */
-ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, const TCHAR *schedule,
-         ScheduledTaskParameters *parameters, UINT32 flags)
+ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHAR *schedule,
+         shared_ptr<ScheduledTaskParameters> parameters, bool systemTask) :
+         m_taskHandlerId(taskHandlerId), m_schedule(schedule)
 {
    m_id = id;
-   m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
-   m_schedule = MemCopyString(CHECK_NULL_EX(schedule));
    m_parameters = parameters;
-   m_executionTime = NEVER;
-   m_lastExecution = NEVER;
-   m_flags = flags;
+   m_scheduledExecutionTime = NEVER;
+   m_lastExecutionTime = NEVER;
+   m_recurrent = true;
+   m_flags = systemTask ? SCHEDULED_TASK_SYSTEM : 0;
+   m_mutex = MutexCreate();
 }
 
 /**
  * Create one-time execution task object
  */
-ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executionTime,
-         ScheduledTaskParameters *parameters, UINT32 flags)
+ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t executionTime,
+         shared_ptr<ScheduledTaskParameters> parameters, bool systemTask) :
+         m_taskHandlerId(taskHandlerId)
 {
    m_id = id;
-   m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
-   m_schedule = MemCopyString(_T(""));
    m_parameters = parameters;
-   m_executionTime = executionTime;
-   m_lastExecution = NEVER;
-   m_flags = flags;
+   m_scheduledExecutionTime = executionTime;
+   m_lastExecutionTime = NEVER;
+   m_recurrent = false;
+   m_flags = systemTask ? SCHEDULED_TASK_SYSTEM : 0;
+   m_mutex = MutexCreate();
 }
 
 /**
@@ -100,20 +104,22 @@ ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executio
 ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
-   m_taskHandlerId = DBGetField(hResult, row, 1, NULL, 0);
-   m_schedule = DBGetField(hResult, row, 2, NULL, 0);
-   m_executionTime = DBGetFieldULong(hResult, row, 4);
-   m_lastExecution = DBGetFieldULong(hResult, row, 5);
+   m_taskHandlerId = DBGetFieldAsSharedString(hResult, row, 1);
+   m_schedule = DBGetFieldAsSharedString(hResult, row, 2);
+   m_scheduledExecutionTime = DBGetFieldULong(hResult, row, 4);
+   m_lastExecutionTime = DBGetFieldULong(hResult, row, 5);
    m_flags = DBGetFieldULong(hResult, row, 6);
+   m_recurrent = !m_schedule.isEmpty();
+   m_mutex = MutexCreate();
 
    TCHAR persistentData[1024];
    DBGetField(hResult, row, 3, persistentData, 1024);
-   UINT32 userId = DBGetFieldULong(hResult, row, 7);
-   UINT32 objectId = DBGetFieldULong(hResult, row, 8);
+   uint32_t userId = DBGetFieldULong(hResult, row, 7);
+   uint32_t objectId = DBGetFieldULong(hResult, row, 8);
    TCHAR key[256], comments[256];
    DBGetField(hResult, row, 9, comments, 256);
    DBGetField(hResult, row, 10, key, 256);
-   m_parameters = new ScheduledTaskParameters(key, userId, objectId, persistentData, NULL, comments);
+   m_parameters = make_shared<ScheduledTaskParameters>(key, userId, objectId, persistentData, nullptr, comments);
 }
 
 /**
@@ -121,38 +127,52 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
  */
 ScheduledTask::~ScheduledTask()
 {
-   MemFree(m_taskHandlerId);
-   MemFree(m_schedule);
-   delete m_parameters;
+   MutexDestroy(m_mutex);
 }
 
 /**
  * Update task
  */
-void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, ScheduledTaskParameters *parameters, UINT32 flags)
+void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule,
+         shared_ptr<ScheduledTaskParameters> parameters, bool systemTask, bool disabled)
 {
-   MemFree(m_taskHandlerId);
-   m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
-   MemFree(m_schedule);
-   m_schedule = MemCopyString(CHECK_NULL_EX(schedule));
-   delete m_parameters;
+   m_taskHandlerId = CHECK_NULL_EX(taskHandlerId);
+   m_schedule = CHECK_NULL_EX(schedule);
    m_parameters = parameters;
-   m_flags = flags;
+   m_recurrent = true;
+
+   if (systemTask)
+      m_flags |= SCHEDULED_TASK_SYSTEM;
+   else
+      m_flags &= ~SCHEDULED_TASK_SYSTEM;
+
+   if (disabled)
+      m_flags |= SCHEDULED_TASK_DISABLED;
+   else
+      m_flags &= ~SCHEDULED_TASK_DISABLED;
 }
 
 /**
  * Update task
  */
-void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, ScheduledTaskParameters *parameters, UINT32 flags)
+void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution,
+         shared_ptr<ScheduledTaskParameters> parameters, bool systemTask, bool disabled)
 {
-   MemFree(m_taskHandlerId);
-   m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
-   MemFree(m_schedule);
-   m_schedule = MemCopyString(_T(""));
-   delete m_parameters;
+   m_taskHandlerId = CHECK_NULL_EX(taskHandlerId);
+   m_schedule = _T("");
    m_parameters = parameters;
-   m_executionTime = nextExecution;
-   m_flags = flags;
+   m_scheduledExecutionTime = nextExecution;
+   m_recurrent = false;
+
+   if (systemTask)
+      m_flags |= SCHEDULED_TASK_SYSTEM;
+   else
+      m_flags &= ~SCHEDULED_TASK_SYSTEM;
+
+   if (disabled)
+      m_flags |= SCHEDULED_TASK_DISABLED;
+   else
+      m_flags &= ~SCHEDULED_TASK_DISABLED;
 }
 
 /**
@@ -182,14 +202,14 @@ void ScheduledTask::saveToDatabase(bool newObject) const
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_taskHandlerId, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_schedule, DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_parameters->m_persistentData, DB_BIND_STATIC, 1023);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_executionTime);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_lastExecution);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_flags);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_scheduledExecutionTime);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_lastExecutionTime);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_flags);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_parameters->m_userId);
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_parameters->m_objectId);
       DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_parameters->m_comments, DB_BIND_STATIC, 255);
       DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_parameters->m_taskKey, DB_BIND_STATIC, 255);
-      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_id);
+      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_id);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -213,12 +233,32 @@ static int ScheduledTaskComparator(const ScheduledTask **e1, const ScheduledTask
    }
 
    // Schedules with execution time 0 should go down, others should be compared
-   if (s1->getExecutionTime() == s2->getExecutionTime())
+   if (s1->getScheduledExecutionTime() == s2->getScheduledExecutionTime())
    {
       return 0;
    }
 
-   return (((s1->getExecutionTime() < s2->getExecutionTime()) && (s1->getExecutionTime() != 0)) || (s2->getExecutionTime() == 0)) ? -1 : 1;
+   return (((s1->getScheduledExecutionTime() < s2->getScheduledExecutionTime()) && (s1->getScheduledExecutionTime() != 0)) || (s2->getScheduledExecutionTime() == 0)) ? -1 : 1;
+}
+
+/**
+ * Start task execution
+ */
+void ScheduledTask::startExecution(SchedulerCallback *callback)
+{
+   lock();
+   if (!(m_flags & SCHEDULED_TASK_RUNNING))
+   {
+      m_flags |= SCHEDULED_TASK_RUNNING;
+      ThreadPoolExecute(g_schedulerThreadPool, this, &ScheduledTask::run, callback);
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
+               _T("Internal error - attempt to start execution of already running scheduled task %s [%u]"),
+               m_taskHandlerId.cstr(), m_id);
+   }
+   unlock();
 }
 
 /**
@@ -226,28 +266,26 @@ static int ScheduledTaskComparator(const ScheduledTask **e1, const ScheduledTask
  */
 void ScheduledTask::run(SchedulerCallback *callback)
 {
-   bool oneTimeSchedule = !_tcscmp(m_schedule, _T(""));
-
 	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE, 0);
-   callback->m_func(m_parameters);
-   setLastExecutionTime(time(NULL));
 
-   if (oneTimeSchedule)
+   callback->m_handler(m_parameters);
+
+   lock();
+   m_lastExecutionTime = time(NULL);
+   m_flags &= ~SCHEDULED_TASK_RUNNING;
+   m_flags |= SCHEDULED_TASK_COMPLETED;
+   saveToDatabase(false);
+   unlock();
+
+   if (!m_recurrent)
    {
       s_oneTimeScheduleLock.lock();
-   }
-
-   removeFlag(SCHEDULED_TASK_RUNNING);
-   setFlag(SCHEDULED_TASK_COMPLETED);
-   saveToDatabase(false);
-   if (oneTimeSchedule)
-   {
       s_oneTimeSchedules.sort(ScheduledTaskComparator);
       s_oneTimeScheduleLock.unlock();
-   }
 
-   if (oneTimeSchedule && checkFlag(SCHEDULED_TASK_SYSTEM))
-      DeleteScheduledTask(m_id, 0, SYSTEM_ACCESS_FULL);
+      if (isSystem())
+         DeleteScheduledTask(m_id, 0, SYSTEM_ACCESS_FULL);
+   }
 }
 
 /**
@@ -255,41 +293,45 @@ void ScheduledTask::run(SchedulerCallback *callback)
  */
 void ScheduledTask::fillMessage(NXCPMessage *msg) const
 {
+   lock();
    msg->setField(VID_SCHEDULED_TASK_ID, m_id);
    msg->setField(VID_TASK_HANDLER, m_taskHandlerId);
    msg->setField(VID_SCHEDULE, m_schedule);
    msg->setField(VID_PARAMETER, m_parameters->m_persistentData);
-   msg->setFieldFromTime(VID_EXECUTION_TIME, m_executionTime);
-   msg->setFieldFromTime(VID_LAST_EXECUTION_TIME, m_lastExecution);
-   msg->setField(VID_FLAGS, (UINT32)m_flags);
+   msg->setFieldFromTime(VID_EXECUTION_TIME, m_scheduledExecutionTime);
+   msg->setFieldFromTime(VID_LAST_EXECUTION_TIME, m_lastExecutionTime);
+   msg->setField(VID_FLAGS, m_flags);
    msg->setField(VID_OWNER, m_parameters->m_userId);
    msg->setField(VID_OBJECT_ID, m_parameters->m_objectId);
    msg->setField(VID_COMMENTS, m_parameters->m_comments);
    msg->setField(VID_TASK_KEY, m_parameters->m_taskKey);
+   unlock();
 }
 
 /**
  * Fill NXCP message with task data
  */
-void ScheduledTask::fillMessage(NXCPMessage *msg, UINT32 base) const
+void ScheduledTask::fillMessage(NXCPMessage *msg, uint32_t base) const
 {
+   lock();
    msg->setField(base, m_id);
    msg->setField(base + 1, m_taskHandlerId);
    msg->setField(base + 2, m_schedule);
    msg->setField(base + 3, m_parameters->m_persistentData);
-   msg->setFieldFromTime(base + 4, m_executionTime);
-   msg->setFieldFromTime(base + 5, m_lastExecution);
+   msg->setFieldFromTime(base + 4, m_scheduledExecutionTime);
+   msg->setFieldFromTime(base + 5, m_lastExecutionTime);
    msg->setField(base + 6, m_flags);
    msg->setField(base + 7, m_parameters->m_userId);
    msg->setField(base + 8, m_parameters->m_objectId);
    msg->setField(base + 9, m_parameters->m_comments);
    msg->setField(base + 10, m_parameters->m_taskKey);
+   unlock();
 }
 
 /**
  * Check if user can access this scheduled task
  */
-bool ScheduledTask::canAccess(UINT32 userId, UINT64 systemAccess) const
+bool ScheduledTask::canAccess(uint32_t userId, uint64_t systemAccess) const
 {
    if (userId == 0)
       return true;
@@ -297,11 +339,17 @@ bool ScheduledTask::canAccess(UINT32 userId, UINT64 systemAccess) const
    if (systemAccess & SYSTEM_ACCESS_ALL_SCHEDULED_TASKS)
       return true;
 
-   if(systemAccess & SYSTEM_ACCESS_USER_SCHEDULED_TASKS)
-      return !checkFlag(SCHEDULED_TASK_SYSTEM);
-
-   if (systemAccess & SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)
-      return userId == m_parameters->m_userId;
+   bool result = false;
+   if (systemAccess & SYSTEM_ACCESS_USER_SCHEDULED_TASKS)
+   {
+      result = !isSystem();
+   }
+   else if (systemAccess & SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)
+   {
+      lock();
+      result = (userId == m_parameters->m_userId);
+      unlock();
+   }
 
    return false;
 }
@@ -309,87 +357,97 @@ bool ScheduledTask::canAccess(UINT32 userId, UINT64 systemAccess) const
 /**
  * Function that adds to list task handler function
  */
-void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec, UINT64 accessRight)
+void RegisterSchedulerTaskHandler(const TCHAR *id, ScheduledTaskHandler handler, uint64_t accessRight)
 {
-   s_callbacks.set(id, new SchedulerCallback(exec, accessRight));
-   DbgPrintf(6, _T("Registered scheduler task %s"), id);
+   s_callbacks.set(id, new SchedulerCallback(handler, accessRight));
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Registered scheduler task %s"), id);
 }
 
 /**
  * Scheduled task creation function
  */
-UINT32 NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
-         const TCHAR *comments, UINT32 flags, const TCHAR *key)
+uint32_t NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
+         const TCHAR *comments, const TCHAR *key, bool systemTask)
 {
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
-   DbgPrintf(7, _T("AddSchedule: Add cron schedule %s, %s, %s"), task, schedule, persistentData);
+
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("AddSchedule: Add recurrent task %s, %s, %s"), taskHandlerId, schedule, persistentData);
+   auto task = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), taskHandlerId, schedule,
+            make_shared<ScheduledTaskParameters>(key, owner, objectId, persistentData, transientData, comments), systemTask);
+
    s_cronScheduleLock.lock();
-   ScheduledTask *sh = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), task, schedule,
-            new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
-   sh->saveToDatabase(true);
-   s_cronSchedules.add(sh);
+   task->saveToDatabase(true);
+   s_cronSchedules.add(task);
    s_cronScheduleLock.unlock();
+
    return RCC_SUCCESS;
 }
 
 /**
  * Create scheduled task only if task with same task ID does not exist
  */
-UINT32 NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
-         const TCHAR *comments, UINT32 flags, const TCHAR *key)
+uint32_t NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
+         const TCHAR *comments, const TCHAR *key, bool systemTask)
 {
-   if (FindScheduledTaskByHandlerId(task) != NULL)
+   if (FindScheduledTaskByHandlerId(taskHandlerId) != NULL)
       return RCC_SUCCESS;
-   return AddRecurrentScheduledTask(task, schedule, persistentData, transientData, owner, objectId, systemRights, comments, flags, key);
+   return AddRecurrentScheduledTask(taskHandlerId, schedule, persistentData, transientData, owner, objectId, systemRights, comments, key, systemTask);
 }
 
 /**
  * One time schedule creation function
  */
-UINT32 NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
-         const TCHAR *comments, UINT32 flags, const TCHAR *key)
+uint32_t NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *taskHandlerId, time_t nextExecutionTime, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
+         const TCHAR *comments, const TCHAR *key, bool systemTask)
 {
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
-   DbgPrintf(5, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, persistentData);
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), taskHandlerId, nextExecutionTime, persistentData);
+   auto task = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), taskHandlerId, nextExecutionTime,
+            make_shared<ScheduledTaskParameters>(key, owner, objectId, persistentData, transientData, comments), systemTask);
+
    s_oneTimeScheduleLock.lock();
-   ScheduledTask *sh = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), task, nextExecutionTime,
-            new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
-   sh->saveToDatabase(true);
-   s_oneTimeSchedules.add(sh);
+   task->saveToDatabase(true);
+   s_oneTimeSchedules.add(task);
    s_oneTimeSchedules.sort(ScheduledTaskComparator);
    s_oneTimeScheduleLock.unlock();
    s_wakeupCondition.set();
+
    return RCC_SUCCESS;
 }
 
 /**
  * Recurrent scheduled task update
  */
-UINT32 NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, const TCHAR *comments, UINT32 owner, UINT32 objectId,
-         UINT64 systemAccessRights, UINT32 flags, const TCHAR *key)
+uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
+         uint64_t systemAccessRights, bool disabled)
 {
-   DbgPrintf(5, _T("UpdateSchedule: update cron schedule %d, %s, %s, %s"), id, task, schedule, persistentData);
-   s_cronScheduleLock.lock();
-   UINT32 rcc = RCC_SUCCESS;
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("UpdateRecurrentScheduledTask: task [%u]: handler=%s, schedule=%s, data=%s"), id, taskHandlerId, schedule, persistentData);
+
+   uint32_t rcc = RCC_SUCCESS;
+
    bool found = false;
+   s_cronScheduleLock.lock();
    for (int i = 0; i < s_cronSchedules.size(); i++)
    {
-      if (s_cronSchedules.get(i)->getId() == id)
+      ScheduledTask *task = s_cronSchedules.get(i);
+      if (task->getId() == id)
       {
-         if (!s_cronSchedules.get(i)->canAccess(owner, systemAccessRights))
+         if (!task->canAccess(owner, systemAccessRights))
          {
             rcc = RCC_ACCESS_DENIED;
             break;
          }
-         s_cronSchedules.get(i)->update(task, schedule,
-                  new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
-         s_cronSchedules.get(i)->saveToDatabase(false);
+         task->update(taskHandlerId, schedule,
+                  make_shared<ScheduledTaskParameters>(task->getTaskKey(), owner, objectId, persistentData, transientData, comments),
+                  task->isSystem(), disabled);
+         task->saveToDatabase(false);
          found = true;
          break;
       }
@@ -398,8 +456,8 @@ UINT32 NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(int id, const TCHAR *task,
 
    if (!found)
    {
-      //check in different queue and if exists - remove from one and add to another
-      ScheduledTask *st = NULL;
+      // check in different queue and if exists - remove from one and add to another
+      ScheduledTask *task = nullptr;
       s_oneTimeScheduleLock.lock();
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
@@ -410,20 +468,22 @@ UINT32 NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(int id, const TCHAR *task,
                rcc = RCC_ACCESS_DENIED;
                break;
             }
-            st = s_oneTimeSchedules.get(i);
+            task = s_oneTimeSchedules.get(i);
             s_oneTimeSchedules.unlink(i);
-            s_oneTimeSchedules.sort(ScheduledTaskComparator);
-            st->update(task, schedule, new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
-            st->saveToDatabase(false);
+            task->update(taskHandlerId, schedule,
+                     make_shared<ScheduledTaskParameters>(task->getTaskKey(), owner, objectId, persistentData, transientData, comments),
+                     task->isSystem(), disabled);
+            task->saveToDatabase(false);
             found = true;
             break;
          }
       }
       s_oneTimeScheduleLock.unlock();
-      if(found && st != NULL)
+
+      if (found && (task != nullptr))
       {
          s_cronScheduleLock.lock();
-         s_cronSchedules.add(st);
+         s_cronSchedules.add(task);
          s_cronScheduleLock.unlock();
       }
    }
@@ -434,26 +494,31 @@ UINT32 NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(int id, const TCHAR *task,
 /**
  * One time action update
  */
-UINT32 NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, const TCHAR *comments, UINT32 owner, UINT32 objectId,
-         UINT64 systemAccessRights, UINT32 flags, const TCHAR *key)
+uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t nextExecutionTime, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
+         uint64_t systemAccessRights, bool disabled)
 {
-   DbgPrintf(7, _T("UpdateOneTimeAction: update one time schedule %d, %s, %d, %s"), id, task, nextExecutionTime, persistentData);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("UpdateOneTimeScheduledTask: task [%u]: handler=%s, time=") INT64_FMT _T(", data=%s"),
+            id, taskHandlerId, static_cast<int64_t>(nextExecutionTime), persistentData);
+
+   uint32_t rcc = RCC_SUCCESS;
+
    bool found = false;
    s_oneTimeScheduleLock.lock();
-   UINT32 rcc = RCC_SUCCESS;
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
-      if (s_oneTimeSchedules.get(i)->getId() == id)
+      ScheduledTask *task = s_oneTimeSchedules.get(i);
+      if (task->getId() == id)
       {
-         if(!s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+         if (!task->canAccess(owner, systemAccessRights))
          {
             rcc = RCC_ACCESS_DENIED;
             break;
          }
-         s_oneTimeSchedules.get(i)->update(task, nextExecutionTime,
-                  new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
-         s_oneTimeSchedules.get(i)->saveToDatabase(false);
+         task->update(taskHandlerId, nextExecutionTime,
+                  make_shared<ScheduledTaskParameters>(task->getTaskKey(), owner, objectId, persistentData, transientData, comments),
+                  task->isSystem(), disabled);
+         task->saveToDatabase(false);
          s_oneTimeSchedules.sort(ScheduledTaskComparator);
          found = true;
          break;
@@ -463,8 +528,8 @@ UINT32 NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(int id, const TCHAR *task, t
 
    if (!found && (rcc == RCC_SUCCESS))
    {
-      //check in different queue and if exists - remove from one and add to another
-      ScheduledTask *st = NULL;
+      // check in different queue and if exists - remove from one and add to another
+      ScheduledTask *task = nullptr;
       s_cronScheduleLock.lock();
       for (int i = 0; i < s_cronSchedules.size(); i++)
       {
@@ -475,20 +540,22 @@ UINT32 NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(int id, const TCHAR *task, t
                rcc = RCC_ACCESS_DENIED;
                break;
             }
-            st = s_cronSchedules.get(i);
+            task = s_cronSchedules.get(i);
             s_cronSchedules.unlink(i);
-            st->update(task, nextExecutionTime, new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
-            st->saveToDatabase(false);
+            task->update(taskHandlerId, nextExecutionTime,
+                     make_shared<ScheduledTaskParameters>(task->getTaskKey(), owner, objectId, persistentData, transientData, comments),
+                     task->isSystem(), disabled);
+            task->saveToDatabase(false);
             found = true;
             break;
          }
       }
       s_cronScheduleLock.unlock();
 
-      if (found && st != NULL)
+      if (found && (task != nullptr))
       {
          s_oneTimeScheduleLock.lock();
-         s_oneTimeSchedules.add(st);
+         s_oneTimeSchedules.add(task);
          s_oneTimeSchedules.sort(ScheduledTaskComparator);
          s_oneTimeScheduleLock.unlock();
       }
@@ -502,23 +569,20 @@ UINT32 NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(int id, const TCHAR *task, t
 /**
  * Removes scheduled task from database by id
  */
-static void DeleteScheduledTaskFromDB(UINT32 id)
+static void DeleteScheduledTaskFromDB(uint32_t id)
 {
-   DB_HANDLE db = DBConnectionPoolAcquireConnection();
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("DELETE FROM scheduled_tasks WHERE id = %d"), id);
-   DBQuery(db, query);
-	DBConnectionPoolReleaseConnection(db);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ExecuteQueryOnObject(hdb, id, _T("DELETE FROM scheduled_tasks WHERE id=?"));
+	DBConnectionPoolReleaseConnection(hdb);
 	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
 }
 
 /**
  * Removes scheduled task by id
  */
-UINT32 NXCORE_EXPORTABLE DeleteScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
+uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint32_t id, uint32_t user, uint64_t systemRights)
 {
-   DbgPrintf(7, _T("RemoveSchedule: schedule(%d) removed"), id);
-   UINT32 rcc = RCC_INVALID_OBJECT_ID;
+   uint32_t rcc = RCC_INVALID_OBJECT_ID;
 
    s_cronScheduleLock.lock();
    for(int i = 0; i < s_cronSchedules.size(); i++)
@@ -537,28 +601,32 @@ UINT32 NXCORE_EXPORTABLE DeleteScheduledTask(UINT32 id, UINT32 user, UINT64 syst
    }
    s_cronScheduleLock.unlock();
 
-   s_oneTimeScheduleLock.lock();
-   for(int i = 0; i < s_oneTimeSchedules.size() && rcc == RCC_INVALID_OBJECT_ID; i++)
+   if (rcc == RCC_INVALID_OBJECT_ID)
    {
-      if (s_oneTimeSchedules.get(i)->getId() == id)
+      s_oneTimeScheduleLock.lock();
+      for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
-         if (!s_cronSchedules.get(i)->canAccess(user, systemRights))
+         if (s_oneTimeSchedules.get(i)->getId() == id)
          {
-            rcc = RCC_ACCESS_DENIED;
+            if (!s_cronSchedules.get(i)->canAccess(user, systemRights))
+            {
+               rcc = RCC_ACCESS_DENIED;
+               break;
+            }
+            s_oneTimeSchedules.remove(i);
+            s_oneTimeSchedules.sort(ScheduledTaskComparator);
+            s_wakeupCondition.set();
+            rcc = RCC_SUCCESS;
             break;
          }
-         s_oneTimeSchedules.remove(i);
-         s_oneTimeSchedules.sort(ScheduledTaskComparator);
-         s_wakeupCondition.set();
-         rcc = RCC_SUCCESS;
-         break;
       }
+      s_oneTimeScheduleLock.unlock();
    }
-   s_oneTimeScheduleLock.unlock();
 
    if (rcc == RCC_SUCCESS)
    {
       DeleteScheduledTaskFromDB(id);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("RemoveSchedule: scheduled task [%u] removed"), id);
    }
 
    return rcc;
@@ -610,7 +678,7 @@ ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
  */
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
 {
-   IntegerArray<UINT32> deleteList;
+   IntegerArray<uint32_t> deleteList;
 
    s_oneTimeScheduleLock.lock();
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
@@ -651,13 +719,13 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId
  */
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
 {
-   IntegerArray<UINT32> deleteList;
+   IntegerArray<uint32_t> deleteList;
 
    s_oneTimeScheduleLock.lock();
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
-      const TCHAR *k = s_oneTimeSchedules.get(i)->getTaskKey();
-      if ((k != NULL) && !_tcscmp(k, taskKey))
+      String k = s_oneTimeSchedules.get(i)->getTaskKey();
+      if (!_tcscmp(k, taskKey))
       {
          deleteList.add(s_oneTimeSchedules.get(i)->getId());
          s_oneTimeSchedules.remove(i);
@@ -671,8 +739,8 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
    s_cronScheduleLock.lock();
    for (int i = 0; i < s_cronSchedules.size(); i++)
    {
-      const TCHAR *k = s_cronSchedules.get(i)->getTaskKey();
-      if ((k != NULL) && !_tcscmp(k, taskKey))
+      String k = s_cronSchedules.get(i)->getTaskKey();
+      if (!_tcscmp(k, taskKey))
       {
          deleteList.add(s_cronSchedules.get(i)->getId());
          s_cronSchedules.remove(i);
@@ -724,7 +792,7 @@ int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey)
 /**
  * Fills message with scheduled tasks list
  */
-void GetScheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)
+void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights)
 {
    int scheduleCount = 0;
    int base = VID_SCHEDULE_LIST_BASE;
@@ -759,9 +827,9 @@ void GetScheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)
 /**
  * Fills message with task handlers list
  */
-void GetSchedulerTaskHandlers(NXCPMessage *msg, UINT64 accessRights)
+void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights)
 {
-   UINT32 base = VID_CALLBACK_BASE;
+   uint32_t base = VID_CALLBACK_BASE;
    int count = 0;
 
    StringList *keyList = s_callbacks.keys();
@@ -775,64 +843,61 @@ void GetSchedulerTaskHandlers(NXCPMessage *msg, UINT64 accessRights)
       }
    }
    delete keyList;
-   msg->setField(VID_CALLBACK_COUNT, (UINT32)count);
+   msg->setField(VID_CALLBACK_COUNT, (uint32_t)count);
 }
 
 /**
  * Creates scheduled task from message
  */
-UINT32 CreateScehduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights)
+uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64_t systemAccessRights)
 {
-   TCHAR *taskId = request->getFieldAsString(VID_TASK_HANDLER);
-   TCHAR *schedule = NULL;
-   time_t nextExecutionTime = 0;
+   TCHAR *taskHandler = request->getFieldAsString(VID_TASK_HANDLER);
    TCHAR *persistentData = request->getFieldAsString(VID_PARAMETER);
    TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
-   int flags = request->getFieldAsInt32(VID_FLAGS);
-   int objectId = request->getFieldAsInt32(VID_OBJECT_ID);
-   UINT32 result;
+   uint32_t objectId = request->getFieldAsInt32(VID_OBJECT_ID);
+   uint32_t rcc;
    if (request->isFieldExist(VID_SCHEDULE))
    {
-      schedule = request->getFieldAsString(VID_SCHEDULE);
-      result = AddRecurrentScheduledTask(taskId, schedule, persistentData, NULL, owner, objectId, systemAccessRights, comments, flags);
+      TCHAR *schedule = request->getFieldAsString(VID_SCHEDULE);
+      rcc = AddRecurrentScheduledTask(taskHandler, schedule, persistentData, NULL, owner, objectId, systemAccessRights, comments);
+      MemFree(schedule);
    }
    else
    {
-      nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
-      result = AddOneTimeScheduledTask(taskId, nextExecutionTime, persistentData, NULL, owner, objectId, systemAccessRights, comments, flags);
+      rcc = AddOneTimeScheduledTask(taskHandler, request->getFieldAsTime(VID_EXECUTION_TIME),
+               persistentData, NULL, owner, objectId, systemAccessRights, comments);
    }
-   MemFree(taskId);
-   MemFree(schedule);
+   MemFree(taskHandler);
    MemFree(persistentData);
-   return result;
+   MemFree(comments);
+   return rcc;
 }
 
 /**
  * Update scheduled task from message
  */
-UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 systemAccessRights)
+uint32_t UpdateScheduledTaskFromMsg(NXCPMessage *request,  uint32_t owner, uint64_t systemAccessRights)
 {
-   UINT32 id = request->getFieldAsInt32(VID_SCHEDULED_TASK_ID);
-   TCHAR *taskId = request->getFieldAsString(VID_TASK_HANDLER);
-   TCHAR *schedule = NULL;
-   time_t nextExecutionTime = 0;
+   uint32_t taskId = request->getFieldAsInt32(VID_SCHEDULED_TASK_ID);
+   TCHAR *taskHandler = request->getFieldAsString(VID_TASK_HANDLER);
    TCHAR *persistentData = request->getFieldAsString(VID_PARAMETER);
    TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
-   UINT32 flags = request->getFieldAsInt32(VID_FLAGS);
-   UINT32 objectId = request->getFieldAsInt32(VID_OBJECT_ID);
-   UINT32 rcc;
-   if(request->isFieldExist(VID_SCHEDULE))
+   uint32_t objectId = request->getFieldAsInt32(VID_OBJECT_ID);
+   bool disabled = request->getFieldAsBoolean(VID_TASK_IS_DISABLED);
+   uint32_t rcc;
+   if (request->isFieldExist(VID_SCHEDULE))
    {
-      schedule = request->getFieldAsString(VID_SCHEDULE);
-      rcc = UpdateRecurrentScheduledTask(id, taskId, schedule, persistentData, NULL, comments, owner, objectId, systemAccessRights, flags);
+      TCHAR *schedule = request->getFieldAsString(VID_SCHEDULE);
+      rcc = UpdateRecurrentScheduledTask(taskId, taskHandler, schedule, persistentData, nullptr,
+               comments, owner, objectId, systemAccessRights, disabled);
+      MemFree(schedule);
    }
    else
    {
-      nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
-      rcc = UpdateOneTimeScheduledTask(id, taskId, nextExecutionTime, persistentData, NULL, comments, owner, objectId, systemAccessRights, flags);
+      rcc = UpdateOneTimeScheduledTask(taskId, taskHandler, request->getFieldAsTime(VID_EXECUTION_TIME),
+               persistentData, nullptr, comments, owner, objectId, systemAccessRights, disabled);
    }
-   MemFree(taskId);
-   MemFree(schedule);
+   MemFree(taskHandler);
    MemFree(persistentData);
    MemFree(comments);
    return rcc;
@@ -844,9 +909,9 @@ UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 sy
 static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
 {
    ThreadSetName("Scheduler/A");
-   UINT32 sleepTime = 1;
-   UINT32 watchdogId = WatchdogAddThread(_T("Ad hoc scheduler"), 5);
-   nxlog_debug(3, _T("Ad hoc scheduler started"));
+   uint32_t sleepTime = 1;
+   uint32_t watchdogId = WatchdogAddThread(_T("Ad hoc scheduler"), 5);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Ad hoc scheduler started"));
    while(true)
    {
       WatchdogStartSleep(watchdogId);
@@ -862,40 +927,40 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
       time_t now = time(NULL);
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
-         ScheduledTask *sh = s_oneTimeSchedules.get(i);
-         if (sh->isDisabled() || sh->isRunning() || sh->isCompleted())
+         ScheduledTask *task = s_oneTimeSchedules.get(i);
+         if (task->isDisabled() || task->isRunning() || task->isCompleted())
             continue;
 
-         if (sh->getExecutionTime() == NEVER)
+         if (task->getScheduledExecutionTime() == NEVER)
             break;   // there won't be any more schedulable tasks
 
          // execute all tasks that is expected to execute now
-         if (now >= sh->getExecutionTime())
+         if (now >= task->getScheduledExecutionTime())
          {
-            sh->setFlag(SCHEDULED_TASK_RUNNING);
-            nxlog_debug(6, _T("AdHocScheduler: run scheduled task with id = %d, execution time = %d"), sh->getId(), sh->getExecutionTime());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("AdHocScheduler: run scheduled task with id = %d, execution time = ") INT64_FMT,
+                     task->getId(), static_cast<int64_t>(task->getScheduledExecutionTime()));
 
-            SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
+            SchedulerCallback *callback = s_callbacks.get(task->getTaskHandlerId());
             if (callback == NULL)
             {
-               DbgPrintf(3, _T("AdHocScheduler: One time execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("AdHocScheduler: task handler \"%s\" not registered"), task->getTaskHandlerId().cstr());
                callback = &s_missingTaskHandler;
             }
 
-            ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
+            task->startExecution(callback);
          }
          else
          {
-            time_t diff = sh->getExecutionTime() - now;
+            time_t diff = task->getScheduledExecutionTime() - now;
             if (diff < (time_t)3600)
-               sleepTime = (UINT32)diff;
+               sleepTime = (uint32_t)diff;
             break;
          }
       }
       s_oneTimeScheduleLock.unlock();
-      nxlog_debug(6, _T("AdHocScheduler: sleeping for %d seconds"), sleepTime);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("AdHocScheduler: sleeping for %d seconds"), sleepTime);
    }
-   nxlog_debug(3, _T("Ad hoc scheduler stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Ad hoc scheduler stopped"));
    return THREAD_OK;
 }
 
@@ -905,8 +970,8 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
 static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
 {
    ThreadSetName("Scheduler/R");
-   UINT32 watchdogId = WatchdogAddThread(_T("Recurrent scheduler"), 5);
-   nxlog_debug(3, _T("Recurrent scheduler started"));
+   uint32_t watchdogId = WatchdogAddThread(_T("Recurrent scheduler"), 5);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Recurrent scheduler started"));
    do
    {
       WatchdogNotify(watchdogId);
@@ -921,28 +986,29 @@ static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
       s_cronScheduleLock.lock();
       for(int i = 0; i < s_cronSchedules.size(); i++)
       {
-         ScheduledTask *sh = s_cronSchedules.get(i);
-         if (sh->isDisabled() || sh->isRunning())
+         ScheduledTask *task = s_cronSchedules.get(i);
+         if (task->isDisabled() || task->isRunning())
             continue;
 
-         if (MatchSchedule(sh->getSchedule(), &currLocal, now))
+         if (MatchSchedule(task->getSchedule(), &currLocal, now))
          {
-            SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("RecurrentScheduler: starting scheduled task [%u] with handler \"%s\" (schedule \"%s\")"),
+                     task->getId(), task->getTaskHandlerId().cstr(), task->getSchedule().cstr());
+
+            SchedulerCallback *callback = s_callbacks.get(task->getTaskHandlerId());
             if (callback == NULL)
             {
-               DbgPrintf(3, _T("RecurrentScheduler: Cron execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("RecurrentScheduler: task handler \"%s\" not registered"), task->getTaskHandlerId().cstr());
                callback = &s_missingTaskHandler;
             }
 
-            DbgPrintf(7, _T("RecurrentScheduler: run schedule id=\'%d\', schedule=\'%s\'"), sh->getId(), sh->getSchedule());
-            sh->setFlag(SCHEDULED_TASK_RUNNING);
-            ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
+            task->startExecution(callback);
          }
       }
       s_cronScheduleLock.unlock();
       WatchdogStartSleep(watchdogId);
    } while(!SleepAndCheckForShutdown(60)); //sleep 1 minute
-   nxlog_debug(3, _T("Recurrent scheduler stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Recurrent scheduler stopped"));
    return THREAD_OK;
 }
 
@@ -968,16 +1034,18 @@ void InitializeTaskScheduler()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         ScheduledTask *sh = new ScheduledTask(hResult, i);
-         if(!_tcscmp(sh->getSchedule(), _T("")))
+         ScheduledTask *task = new ScheduledTask(hResult, i);
+         if (!_tcscmp(task->getSchedule(), _T("")))
          {
-            DbgPrintf(7, _T("InitializeTaskScheduler: Add one time schedule %d, %d"), sh->getId(), sh->getExecutionTime());
-            s_oneTimeSchedules.add(sh);
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("InitializeTaskScheduler: added one time task [%u] at ") INT64_FMT,
+                     task->getId(), static_cast<int64_t>(task->getScheduledExecutionTime()));
+            s_oneTimeSchedules.add(task);
          }
          else
          {
-            DbgPrintf(7, _T("InitializeTaskScheduler: Add cron schedule %d, %s"), sh->getId(), sh->getSchedule());
-            s_cronSchedules.add(sh);
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("InitializeTaskScheduler: added recurrent task %u at %s"),
+                     task->getId(), task->getSchedule().cstr());
+            s_cronSchedules.add(task);
          }
       }
       DBFreeResult(hResult);

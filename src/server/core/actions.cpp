@@ -835,27 +835,27 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
 /**
  * Task handler for scheduled action execution
  */
-void ExecuteScheduledAction(const ScheduledTaskParameters *parameter)
+void ExecuteScheduledAction(shared_ptr<ScheduledTaskParameters> parameters)
 {
-   UINT32 actionId = ExtractNamedOptionValueAsUInt(parameter->m_persistentData, _T("action"), 0);
+   UINT32 actionId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("action"), 0);
    Event *restoredEvent = NULL;
    Alarm *restoredAlarm = NULL;
    const Event *event;
    const Alarm *alarm;
-   if (parameter->m_transientData != NULL)
+   if (parameters->m_transientData != nullptr)
    {
-      event = static_cast<ActionExecutionTransientData*>(parameter->m_transientData)->getEvent();
-      alarm = static_cast<ActionExecutionTransientData*>(parameter->m_transientData)->getAlarm();
+      event = static_cast<ActionExecutionTransientData*>(parameters->m_transientData)->getEvent();
+      alarm = static_cast<ActionExecutionTransientData*>(parameters->m_transientData)->getAlarm();
    }
    else
    {
-      UINT64 eventId = ExtractNamedOptionValueAsUInt64(parameter->m_persistentData, _T("event"), 0);
+      UINT64 eventId = ExtractNamedOptionValueAsUInt64(parameters->m_persistentData, _T("event"), 0);
       if (eventId != 0)
       {
          restoredEvent = LoadEventFromDatabase(eventId);
       }
 
-      UINT32 alarmId = ExtractNamedOptionValueAsUInt(parameter->m_persistentData, _T("alarm"), 0);
+      UINT32 alarmId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("alarm"), 0);
       if (alarmId != 0)
       {
          restoredAlarm = FindAlarmById(alarmId);
@@ -870,13 +870,13 @@ void ExecuteScheduledAction(const ScheduledTaskParameters *parameter)
    if (event != NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing scheduled action [%u] for event %s on node [%u]"),
-               actionId, event->getName(), parameter->m_objectId);
+               actionId, event->getName(), parameters->m_objectId);
       ExecuteAction(actionId, event, alarm);
    }
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot execute scheduled action [%u] on node [%u]: original event is unavailable"),
-               actionId, parameter->m_objectId);
+               actionId, parameters->m_objectId);
    }
    delete restoredEvent;
    delete restoredAlarm;

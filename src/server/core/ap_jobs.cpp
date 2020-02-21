@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Scheduled file upload
  */
-void ScheduleDeployPolicy(const ScheduledTaskParameters *parameters)
+void ScheduleDeployPolicy(shared_ptr<ScheduledTaskParameters> parameters)
 {
    Node *object = static_cast<Node*>(FindObjectById(parameters->m_objectId, OBJECT_NODE));
    if (object != NULL)
@@ -196,7 +196,7 @@ const String PolicyInstallJob::serializeParameters()
 /**
  * Scheduled policy uninstall
  */
-void ScheduleUninstallPolicy(const ScheduledTaskParameters *parameters)
+void ScheduleUninstallPolicy(shared_ptr<ScheduledTaskParameters> parameters)
 {
    Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
    if (object != NULL)

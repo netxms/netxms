@@ -476,7 +476,7 @@ void ImportScript(ConfigEntry *config, bool overwrite)
 /**
  * Execute library script from scheduler
  */
-void ExecuteScheduledScript(const ScheduledTaskParameters *parameters)
+void ExecuteScheduledScript(shared_ptr<ScheduledTaskParameters> parameters)
 {
    TCHAR name[256];
    _tcslcpy(name, parameters->m_persistentData, 256);

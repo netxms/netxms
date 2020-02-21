@@ -81,13 +81,13 @@ void StopDataCollection();
 void StopObjectMaintenanceThreads();
 bool LoadPhysicalLinks();
 
-void ExecuteScheduledAction(const ScheduledTaskParameters *parameters);
-void ExecuteScheduledScript(const ScheduledTaskParameters *parameters);
-void MaintenanceModeEnter(const ScheduledTaskParameters *parameters);
-void MaintenanceModeLeave(const ScheduledTaskParameters *parameters);
-void ProcessUnboundTunnels(const ScheduledTaskParameters *parameters);
-void ScheduleDeployPolicy(const ScheduledTaskParameters *parameters);
-void ScheduleUninstallPolicy(const ScheduledTaskParameters *parameters);
+void ExecuteScheduledAction(shared_ptr<ScheduledTaskParameters> parameters);
+void ExecuteScheduledScript(shared_ptr<ScheduledTaskParameters> parameters);
+void MaintenanceModeEnter(shared_ptr<ScheduledTaskParameters> parameters);
+void MaintenanceModeLeave(shared_ptr<ScheduledTaskParameters> parameters);
+void ProcessUnboundTunnels(shared_ptr<ScheduledTaskParameters> parameters);
+void ScheduleDeployPolicy(shared_ptr<ScheduledTaskParameters> parameters);
+void ScheduleUninstallPolicy(shared_ptr<ScheduledTaskParameters> parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1125,13 +1125,13 @@ retry_db_lock:
       // Make sure task is marked as system
       if (!task->isSystem())
       {
-         task->setFlag(SCHEDULED_TASK_SYSTEM);
+         task->setSystem();
          task->saveToDatabase(false);
       }
    }
    else
    {
-      AddRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
+      AddRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
    }
 
    // Send summary emails
@@ -1141,7 +1141,7 @@ retry_db_lock:
       DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
 
    // Schedule poll timers reset
-   AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
+   AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
 
    // Start listeners
    s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread, 0, NULL);

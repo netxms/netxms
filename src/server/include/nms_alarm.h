@@ -253,7 +253,7 @@ UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *descript
 /**
  * Alarm summary emails
  */
-void SendAlarmSummaryEmail(const ScheduledTaskParameters *params);
+void SendAlarmSummaryEmail(shared_ptr<ScheduledTaskParameters> parameters);
 void EnableAlarmSummaryEmails();
 
 #endif

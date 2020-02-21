@@ -26,27 +26,30 @@
 
 #define NEVER 0
 
-#define SCHEDULED_TASK_DISABLED           1
-#define SCHEDULED_TASK_COMPLETED          2
-#define SCHEDULED_TASK_RUNNING            4
-#define SCHEDULED_TASK_SYSTEM             8
+#define SCHEDULED_TASK_DISABLED           0x01
+#define SCHEDULED_TASK_COMPLETED          0x02
+#define SCHEDULED_TASK_RUNNING            0x04
+#define SCHEDULED_TASK_SYSTEM             0x08
 
 class ScheduledTask;
 class SchedulerCallback;
 class ScheduledTaskParameters;
 
-typedef void (*scheduled_action_executor)(const ScheduledTaskParameters *params);
+typedef void (*ScheduledTaskHandler)(shared_ptr<ScheduledTaskParameters> parameters);
 
 /**
  * Scheduler callback
  */
-class SchedulerCallback
+struct SchedulerCallback
 {
-public:
-   scheduled_action_executor m_func;
-   UINT64 m_accessRight;
+   ScheduledTaskHandler m_handler;
+   uint64_t m_accessRight;
 
-   SchedulerCallback(scheduled_action_executor func, UINT64 accessRight) { m_func = func; m_accessRight = accessRight; }
+   SchedulerCallback(ScheduledTaskHandler handler, uint64_t accessRight)
+   {
+      m_handler = handler;
+      m_accessRight = accessRight;
+   }
 };
 
 /**
@@ -67,13 +70,14 @@ class ScheduledTaskParameters
 {
 public:
    TCHAR *m_taskKey;
-   UINT32 m_userId;
-   UINT32 m_objectId;
+   uint32_t m_userId;
+   uint32_t m_objectId;
    TCHAR *m_persistentData;
    TCHAR *m_comments;
    ScheduledTaskTransientData *m_transientData;
 
-   ScheduledTaskParameters(const TCHAR *taskKey, UINT32 userId, UINT32 objectId, const TCHAR *persistentData = NULL, ScheduledTaskTransientData *transientData = NULL, const TCHAR *comments = NULL)
+   ScheduledTaskParameters(const TCHAR *taskKey, uint32_t userId, uint32_t objectId, const TCHAR *persistentData = nullptr,
+            ScheduledTaskTransientData *transientData = nullptr, const TCHAR *comments = nullptr)
    {
       m_taskKey = MemCopyString(taskKey);
       m_userId = userId;
@@ -83,9 +87,10 @@ public:
       m_comments = MemCopyString(comments);
    }
 
-   ScheduledTaskParameters(UINT32 userId, UINT32 objectId, const TCHAR *persistentData = NULL, ScheduledTaskTransientData *transientData = NULL, const TCHAR *comments = NULL)
+   ScheduledTaskParameters(uint32_t userId, uint32_t objectId, const TCHAR *persistentData = nullptr,
+            ScheduledTaskTransientData *transientData = nullptr, const TCHAR *comments = nullptr)
    {
-      m_taskKey = NULL;
+      m_taskKey = nullptr;
       m_userId = userId;
       m_objectId = objectId;
       m_persistentData = MemCopyString(persistentData);
@@ -95,12 +100,12 @@ public:
 
    ScheduledTaskParameters()
    {
-      m_taskKey = NULL;
+      m_taskKey = nullptr;
       m_userId = 0;
       m_objectId = 0;
-      m_persistentData = NULL;
-      m_transientData = NULL;
-      m_comments = NULL;
+      m_persistentData = nullptr;
+      m_transientData = nullptr;
+      m_comments = nullptr;
    }
 
    ~ScheduledTaskParameters()
@@ -118,53 +123,82 @@ public:
 class ScheduledTask
 {
 private:
-   UINT32 m_id;
-   TCHAR *m_taskHandlerId;
-   TCHAR *m_schedule;
-   ScheduledTaskParameters *m_parameters;
-   time_t m_executionTime;
-   time_t m_lastExecution;
-   UINT32 m_flags;
+   uint32_t m_id;
+   uint32_t m_flags;
+   SharedString m_taskHandlerId;
+   SharedString m_schedule;
+   time_t m_scheduledExecutionTime;
+   bool m_recurrent;
+   time_t m_lastExecutionTime;
+   shared_ptr<ScheduledTaskParameters> m_parameters;
+   MUTEX m_mutex;
 
-public:
-   ScheduledTask(int id, const TCHAR *taskHandlerId, const TCHAR *schedule,
-            ScheduledTaskParameters *params, UINT32 flags = 0);
-   ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executionTime,
-            ScheduledTaskParameters *params, UINT32 flags = 0);
-   ScheduledTask(DB_RESULT hResult, int row);
-   ~ScheduledTask();
-
-   UINT32 getId() const { return m_id; }
-   const TCHAR *getTaskHandlerId() const { return m_taskHandlerId; }
-   const TCHAR *getTaskKey() const { return m_parameters->m_taskKey; }
-   const TCHAR *getSchedule() const { return m_schedule; }
-   const TCHAR *getPersistentData() const { return m_parameters->m_persistentData; }
-   const ScheduledTaskTransientData *getTransientData() const { return m_parameters->m_transientData; }
-   time_t getExecutionTime() const { return m_executionTime; }
-   UINT32 getOwner() const { return m_parameters->m_userId; }
-   UINT32 getObjectId() const { return m_parameters->m_objectId; }
-   UINT32 getFlags() const { return m_flags; }
-
-   void setLastExecutionTime(time_t time) { m_lastExecution = time; };
-   void setExecutionTime(time_t time) { m_executionTime = time; }
-   void setFlag(UINT32 flag) { m_flags |= flag; }
-   void removeFlag(UINT32 flag) { m_flags &= ~flag; }
+   void lock() const { MutexLock(m_mutex); }
+   void unlock() const { MutexUnlock(m_mutex); }
 
    void run(SchedulerCallback *callback);
 
-   void update(const TCHAR *taskHandlerId, const TCHAR *schedule, ScheduledTaskParameters *params, UINT32 flags);
-   void update(const TCHAR *taskHandlerId, time_t nextExecution, ScheduledTaskParameters *params, UINT32 flags);
+public:
+   ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHAR *schedule, shared_ptr<ScheduledTaskParameters> parameters, bool systemTask);
+   ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t executionTime, shared_ptr<ScheduledTaskParameters> parameters, bool systemTask);
+   ScheduledTask(DB_RESULT hResult, int row);
+   ~ScheduledTask();
+
+   uint32_t getId() const { return m_id; }
+   SharedString getTaskHandlerId() const { return GetAttributeWithLock(m_taskHandlerId, m_mutex); }
+   SharedString getSchedule() const { return GetAttributeWithLock(m_schedule, m_mutex); }
+   String getTaskKey() const
+   {
+      lock();
+      String key = m_parameters->m_taskKey;
+      unlock();
+      return key;
+   }
+   time_t getScheduledExecutionTime() const { return m_scheduledExecutionTime; }
+   uint32_t getOwner() const
+   {
+      lock();
+      uint32_t userId = m_parameters->m_userId;
+      unlock();
+      return userId;
+   }
+   uint32_t getObjectId() const
+   {
+      lock();
+      uint32_t objectId = m_parameters->m_objectId;
+      unlock();
+      return objectId;
+   }
+
+   void setSystem()
+   {
+      lock();
+      m_flags |= SCHEDULED_TASK_SYSTEM;
+      unlock();
+   }
+
+   void startExecution(SchedulerCallback *callback);
+
+   void update(const TCHAR *taskHandlerId, const TCHAR *schedule, shared_ptr<ScheduledTaskParameters> parameters, bool systemTask, bool disabled);
+   void update(const TCHAR *taskHandlerId, time_t executionTime, shared_ptr<ScheduledTaskParameters> parameters, bool systemTask, bool disabled);
 
    void saveToDatabase(bool newObject) const;
    void fillMessage(NXCPMessage *msg) const;
-   void fillMessage(NXCPMessage *msg, UINT32 base) const;
+   void fillMessage(NXCPMessage *msg, uint32_t base) const;
 
-   bool checkFlag(UINT32 flag) const { return (m_flags & flag) != 0; }
-   bool isRunning() const { return (m_flags & SCHEDULED_TASK_RUNNING) != 0; }
-   bool isCompleted() const { return (m_flags & SCHEDULED_TASK_COMPLETED) != 0; }
-   bool isDisabled() const { return (m_flags & SCHEDULED_TASK_DISABLED) != 0; }
-   bool isSystem() const { return (m_flags & SCHEDULED_TASK_SYSTEM) != 0; }
-   bool canAccess(UINT32 userId, UINT64 systemAccess) const;
+   bool canAccess(uint32_t userId, uint64_t systemAccess) const;
+
+   bool checkFlag(uint32_t flag) const
+   {
+      lock();
+      bool result = ((m_flags & flag) != 0);
+      unlock();
+      return result;
+   }
+   bool isRunning() const { return checkFlag(SCHEDULED_TASK_RUNNING); }
+   bool isCompleted() const { return checkFlag(SCHEDULED_TASK_COMPLETED); }
+   bool isDisabled() const { return checkFlag(SCHEDULED_TASK_DISABLED); }
+   bool isSystem() const { return checkFlag(SCHEDULED_TASK_SYSTEM); }
 };
 
 /**
@@ -172,30 +206,30 @@ public:
  */
 void InitializeTaskScheduler();
 void ShutdownTaskScheduler();
-void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec, UINT64 accessRight);
-UINT32 NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
-         const TCHAR *comments = NULL, UINT32 flags = 0, const TCHAR *key = NULL);
-UINT32 NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
-         const TCHAR *comments = NULL, UINT32 flags = 0, const TCHAR *key = NULL);
-UINT32 NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
-         const TCHAR *comments = NULL, UINT32 flags = 0, const TCHAR *key = NULL);
-UINT32 NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, const TCHAR *comments, UINT32 owner, UINT32 objectId,
-         UINT64 systemAccessRights, UINT32 flags, const TCHAR *key = NULL);
-UINT32 NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *persistentData,
-         ScheduledTaskTransientData *transientData, const TCHAR *comments, UINT32 owner, UINT32 objectId,
-         UINT64 systemAccessRights, UINT32 flags, const TCHAR *key = NULL);
-UINT32 NXCORE_EXPORTABLE DeleteScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights);
+void RegisterSchedulerTaskHandler(const TCHAR *id, ScheduledTaskHandler executor, uint64_t accessRight);
+uint32_t NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
+         const TCHAR *comments = nullptr, const TCHAR *key = nullptr, bool systemTask = false);
+uint32_t NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
+         const TCHAR *comments = nullptr, const TCHAR *key = nullptr, bool systemTask = false);
+uint32_t NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *taskHandlerId, time_t nextExecutionTime, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
+         const TCHAR *comments = nullptr, const TCHAR *key = nullptr, bool systemTask = false);
+uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
+         uint64_t systemAccessRights, bool disabled = false);
+uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t nextExecutionTime, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
+         uint64_t systemAccessRights, bool disabled = false);
+uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint32_t taskId, uint32_t userId, uint64_t systemRights);
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey);
 int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey);
 ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
-void GetSchedulerTaskHandlers(NXCPMessage *msg, UINT64 accessRights);
-void GetScheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights);
-UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights);
-UINT32 CreateScehduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights);
+void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights);
+void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights);
+uint32_t UpdateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64_t systemAccessRights);
+uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64_t systemAccessRights);
 
 #endif

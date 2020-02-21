@@ -1354,7 +1354,8 @@ typedef struct
 #define VID_CIP_STATUS_TEXT         ((UINT32)690)
 #define VID_CIP_EXT_STATUS_TEXT     ((UINT32)691)
 #define VID_CIP_STATE_TEXT          ((UINT32)692)
-#define VID_DUPLUICATE              ((UINT32)693)
+#define VID_DUPLICATE               ((UINT32)693)
+#define VID_TASK_IS_DISABLED        ((UINT32)694)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

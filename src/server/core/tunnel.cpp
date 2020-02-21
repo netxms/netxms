@@ -1385,7 +1385,7 @@ enum TimeoutAction
 /**
  * Scheduled task for automatic binding of unbound tunnels
  */
-void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
+void ProcessUnboundTunnels(shared_ptr<ScheduledTaskParameters> parameters)
 {
    int timeout = ConfigReadInt(_T("AgentTunnels.UnboundTunnelTimeout"), 3600);
    if (timeout < 0)

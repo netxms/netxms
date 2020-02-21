@@ -619,7 +619,7 @@ bool EPRule::processEvent(Event *event)
             String key = ((a->timerKey != NULL) && (*a->timerKey != 0)) ? event->expandText(a->timerKey, alarm) : String();
             AddOneTimeScheduledTask(_T("Execute.Action"), time(NULL) + a->timerDelay, parameters,
                      new ActionExecutionTransientData(event, alarm), 0, event->getSourceId(), SYSTEM_ACCESS_FULL,
-                     comments, SCHEDULED_TASK_SYSTEM, key.isEmpty() ? NULL : (const TCHAR *)key);
+                     comments, key.isEmpty() ? nullptr : key.cstr(), true);
          }
       }
       delete alarm;

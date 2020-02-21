@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2015-2019 Raden Solutions
+** Copyright (C) 2015-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,22 +25,22 @@
 /**
  * Execute scheduled maintenance task
  */
-static void ScheduledMaintenance(const ScheduledTaskParameters *params, bool enter)
+static void ScheduledMaintenance(shared_ptr<ScheduledTaskParameters> parameters, bool enter)
 {
-   if (params->m_objectId == 0)
+   if (parameters->m_objectId == 0)
    {
       DbgPrintf(4, _T("MaintenanceJob: object ID is 0"));
       return;
    }
 
-   NetObj *object = FindObjectById(params->m_objectId);
+   NetObj *object = FindObjectById(parameters->m_objectId);
    if (object != NULL)
    {
-      if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
+      if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
       {
          if (enter)
          {
-            object->enterMaintenanceMode(params->m_comments);
+            object->enterMaintenanceMode(parameters->m_comments);
          }
          else
          {
@@ -54,22 +54,22 @@ static void ScheduledMaintenance(const ScheduledTaskParameters *params, bool ent
    }
    else
    {
-      DbgPrintf(4, _T("MaintenanceJob: object %d not found"), params->m_objectId);
+      DbgPrintf(4, _T("MaintenanceJob: object %d not found"), parameters->m_objectId);
    }
 }
 
 /**
  * Scheduled task handler - enter maintenance mode
  */
-void MaintenanceModeEnter(const ScheduledTaskParameters *params)
+void MaintenanceModeEnter(shared_ptr<ScheduledTaskParameters> parameters)
 {
-   ScheduledMaintenance(params, true);
+   ScheduledMaintenance(parameters, true);
 }
 
 /**
  * Scheduled task handler - leave maintenance mode
  */
-void MaintenanceModeLeave(const ScheduledTaskParameters *params)
+void MaintenanceModeLeave(shared_ptr<ScheduledTaskParameters> parameters)
 {
-   ScheduledMaintenance(params, false);
+   ScheduledMaintenance(parameters, false);
 }

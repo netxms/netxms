@@ -32,7 +32,7 @@ MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
 /**
  * Scheduled file upload
  */
-void ScheduledFileUpload(const ScheduledTaskParameters *parameters)
+static void ScheduledFileUpload(shared_ptr<ScheduledTaskParameters> parameters)
 {
    Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
    if (object != NULL)
@@ -246,5 +246,6 @@ const String FileUploadJob::serializeParameters()
  */
 void FileUploadJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), NULL, 0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), nullptr,
+            0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), nullptr, true);//TODO: change to correct user
 }

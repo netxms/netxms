@@ -344,7 +344,7 @@ UINT32 FileDeliveryPolicy::modifyFromMessage(NXCPMessage *request)
    if (result != RCC_SUCCESS)
       return result;
 
-   if(request->getFieldAsBoolean(VID_DUPLUICATE))
+   if (request->getFieldAsBoolean(VID_DUPLICATE))
    {
       ObjectArray<FileInfo> files(64, 64, Ownership::True);
       Config data;

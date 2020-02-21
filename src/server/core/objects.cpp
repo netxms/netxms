@@ -2973,7 +2973,7 @@ static void ResetPollTimers(NetObj *object, void *data)
 /**
  * Reset poll timers for all nodes
  */
-void ResetObjectPollTimers(const ScheduledTaskParameters *params)
+void ResetObjectPollTimers(shared_ptr<ScheduledTaskParameters> parameters)
 {
    nxlog_debug_tag(_T("poll.system"), 2, _T("Resetting object poll timers"));
    g_idxNodeById.forEach(ResetPollTimers, NULL);

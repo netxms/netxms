@@ -1124,7 +1124,8 @@ public class NXCPCodes
    public static final long VID_CIP_STATUS_TEXT = 690;
    public static final long VID_CIP_EXT_STATUS_TEXT = 691;
    public static final long VID_CIP_STATE_TEXT = 692;
-   public static final long VID_DUPLUICATE = 693;
+   public static final long VID_DUPLICATE = 693;
+   public static final long VID_TASK_IS_DISABLED = 694;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

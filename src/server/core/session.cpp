@@ -14199,7 +14199,7 @@ void ClientSession::getScheduledTasks(NXCPMessage *request)
 void ClientSession::addScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 result = CreateScehduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
+   UINT32 result = CreateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }

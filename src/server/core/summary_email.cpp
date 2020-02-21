@@ -128,18 +128,18 @@ void EnableAlarmSummaryEmails()
    if (task != NULL)
    {
       if (_tcscmp(task->getSchedule(), schedule))
-         UpdateRecurrentScheduledTask(task->getId(), ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), NULL, _T(""), 0, 0, SYSTEM_ACCESS_FULL, task->getFlags());
+         UpdateRecurrentScheduledTask(task->getId(), ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), nullptr, _T(""), 0, 0, SYSTEM_ACCESS_FULL);
    }
    else
    {
-      AddRecurrentScheduledTask(ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
+      AddRecurrentScheduledTask(ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
    }
 }
 
 /**
  * Scheduled task handler - send summary email
  */
-void SendAlarmSummaryEmail(const ScheduledTaskParameters *params)
+void SendAlarmSummaryEmail(shared_ptr<ScheduledTaskParameters> parameters)
 {
    StringBuffer summary = CreateAlarmSummary();
    time_t currTime;
@@ -156,10 +156,10 @@ void SendAlarmSummaryEmail(const ScheduledTaskParameters *params)
    do
    {
       next = _tcschr(curr, _T(';'));
-      if (next != NULL)
+      if (next != nullptr)
          *next = 0;
       StrStrip(curr);
       PostMail(curr, subject, summary, true);
       curr = next + 1;
-   } while(next != NULL);
+   } while(next != nullptr);
 }

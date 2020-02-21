@@ -106,6 +106,7 @@ public class ScheduledTask
       msg.setField(NXCPCodes.VID_PARAMETER, parameters);
       msg.setField(NXCPCodes.VID_LAST_EXECUTION_TIME, lastExecutionTime);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+      msg.setField(NXCPCodes.VID_TASK_IS_DISABLED, isDisabled());
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);  
       msg.setField(NXCPCodes.VID_COMMENTS, comments);
       msg.setField(NXCPCodes.VID_TASK_KEY, key);
@@ -366,7 +367,7 @@ public class ScheduledTask
     */
    public void setEnabed(boolean enabled)
    {
-      if(enabled)
+      if (enabled)
          flags &= ~DISABLED;
       else
          flags |= DISABLED;   

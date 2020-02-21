@@ -1684,7 +1684,7 @@ public:
 /**
  * Reset poll timers for all objects
  */
-void ResetObjectPollTimers(const ScheduledTaskParameters *params);
+void ResetObjectPollTimers(shared_ptr<ScheduledTaskParameters> parameters);
 
 /**
  * Poll timers reset task
