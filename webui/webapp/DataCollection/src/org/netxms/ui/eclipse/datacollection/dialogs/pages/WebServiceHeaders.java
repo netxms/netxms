@@ -270,6 +270,16 @@ public class WebServiceHeaders extends PreferencePage
          {
             return ((Set<?>)inputElement).toArray();
          }
+
+         @Override
+         public void dispose()
+         {
+         }
+
+         @Override
+         public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
+         {
+         }
       });
       viewer.setLabelProvider(new HeaderLabelProvider());
       viewer.setComparator(new ViewerComparator() {
