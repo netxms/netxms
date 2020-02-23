@@ -1572,9 +1572,9 @@ ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids)
       if (object != NULL)
       {
          if (object->isGroup())
-            userDB->add(new Group(static_cast<Group *>(object)));
+            userDB->add(new Group(static_cast<Group*>(object)));
          else
-            userDB->add(new User(static_cast<User *>(object)));
+            userDB->add(new User(static_cast<User*>(object)));
       }
    }
    RWLockUnlock(s_userDatabaseLock);

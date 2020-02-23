@@ -3034,6 +3034,7 @@ void ClientSession::getSelectedUsers(NXCPMessage *request)
       sendMessage(&msg);
       msg.deleteAllFields();
    }
+   delete users;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setField(VID_RCC, RCC_SUCCESS);
