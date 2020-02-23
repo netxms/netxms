@@ -697,6 +697,13 @@ static void TestString()
    AssertTrue(!_tcscmp(list->get(2), _T("delta")));
    delete list;
    EndTest();
+
+   StartTest(_T("String - take ownership"));
+   String os(MemCopyString(_T("preallocated string")), -1, Ownership::True);
+   AssertTrue(!_tcscmp(os, _T("preallocated string")));
+   String os2(MemCopyString(_T("long preallocated string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")), -1, Ownership::True);
+   AssertTrue(!_tcscmp(os2, _T("long preallocated string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")));
+   EndTest();
 }
 
 /**

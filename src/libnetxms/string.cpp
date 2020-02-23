@@ -78,15 +78,15 @@ String::String(const TCHAR *init)
  */
 String::String(const TCHAR *init, ssize_t len, Ownership takeOwnership)
 {
-   m_length = (init == NULL) ? 0 : ((len >= 0) ? len : _tcslen(init));
+   m_length = (init == nullptr) ? 0 : ((len >= 0) ? len : _tcslen(init));
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
       m_buffer = m_internalBuffer;
       memcpy(m_buffer, init, m_length * sizeof(TCHAR));
-      if (static_cast<bool>(takeOwnership))
+      if (takeOwnership == Ownership::True)
          MemFree(const_cast<TCHAR*>(init));
    }
-   else if (static_cast<bool>(takeOwnership))
+   else if (takeOwnership == Ownership::True)
    {
       m_buffer = const_cast<TCHAR*>(init);
    }

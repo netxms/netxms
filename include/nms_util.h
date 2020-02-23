@@ -874,13 +874,13 @@ protected:
    bool isInternalBuffer() { return m_buffer == m_internalBuffer; }
 
 public:
-	static const ssize_t npos;
-	static const String empty;
+   static const ssize_t npos;
+   static const String empty;
 
    String();
    String(const TCHAR *init);
    String(const TCHAR *init, ssize_t len, Ownership takeOwnership = Ownership::False);
-	String(const String &src);
+   String(const String &src);
    virtual ~String();
 
    operator const TCHAR*() const { return m_buffer; }
