@@ -975,7 +975,7 @@ static bool ParseCallArgumensList(TCHAR *input, StringList *args)
  */
 DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize)
 {
-   uint32_t proxyId = g_dwMgmtNode; // TODO: correct proxy selection
+   uint32_t proxyId = getEffectiveWebServiceProxy();
    Node *proxyNode = static_cast<Node*>(FindObjectById(proxyId, OBJECT_NODE));
    if (proxyNode == nullptr)
    {
@@ -2167,4 +2167,23 @@ UINT64 DataCollectionTarget::getCacheMemoryUsage()
    }
    unlockDciAccess();
    return cacheSize;
+}
+
+/**
+ * Get effective web service proxy for this node
+ */
+uint32_t DataCollectionTarget::getEffectiveWebServiceProxy()
+{
+   uint32_t webServiceProxy = 0;
+   uint32_t zoneUIN = getZoneUIN();
+   if (IsZoningEnabled() && (webServiceProxy == 0) && (zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(zoneUIN);
+      if (zone != NULL)
+      {
+         webServiceProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
+      }
+   }
+   return (webServiceProxy != 0) ? webServiceProxy : g_dwMgmtNode;
 }

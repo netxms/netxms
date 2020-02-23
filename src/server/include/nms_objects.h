@@ -931,6 +931,8 @@ public:
    const char *getObjectClassName() const { return getObjectClassNameA(); }
 #endif
 
+   virtual uint32_t getZoneUIN() const { return 0; }
+
    virtual InetAddress getPrimaryIpAddress() const { return InetAddress::INVALID; }
 
    int getStatus() const { return m_status; }
@@ -1431,6 +1433,8 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
+   virtual uint32_t getZoneUIN() const override { return m_zoneUIN; }
+
    virtual json_t *toJson() override;
 
    Node *getParentNode();
@@ -1440,7 +1444,6 @@ public:
 
    const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
    InetAddress getFirstIpAddress() const;
-   UINT32 getZoneUIN() const { return m_zoneUIN; }
    UINT32 getIfIndex() const { return m_index; }
    UINT32 getIfType() const { return m_type; }
    UINT32 getMTU() const { return m_mtu; }
@@ -1953,6 +1956,8 @@ public:
 
    virtual bool isEventSource() override;
 
+   uint32_t getEffectiveWebServiceProxy();
+
    int getMostCriticalDCIStatus();
 
    void statusPollWorkerEntry(PollerInfo *poller);
@@ -2141,6 +2146,8 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
+   virtual uint32_t getZoneUIN() const override;
+
    virtual json_t *toJson() override;
 
    void statusPollFromController(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
@@ -2152,7 +2159,7 @@ public:
 	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getApState() const { return m_apState; }
-   Node *getParentNode();
+   Node *getParentNode() const;
    bool isIncludedInIcmpPoll() const { return (m_flags & APF_INCLUDE_IN_ICMP_POLL) ? true : false; }
    const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); }
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
@@ -2211,6 +2218,8 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
+   virtual uint32_t getZoneUIN() const override { return m_zoneUIN; }
+
    virtual json_t *toJson() override;
 
 	bool isSyncAddr(const InetAddress& addr);
@@ -2218,7 +2227,6 @@ public:
 	bool isResourceOnNode(UINT32 dwResource, UINT32 dwNode);
 	UINT32 getResourceOwner(UINT32 resourceId) { return getResourceOwnerInternal(resourceId, NULL); }
    UINT32 getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
-   UINT32 getZoneUIN() const { return m_zoneUIN; }
 
    UINT32 collectAggregatedData(DCItem *item, TCHAR *buffer);
    UINT32 collectAggregatedData(DCTable *table, Table **result);
@@ -2245,10 +2253,10 @@ private:
    typedef DataCollectionTarget super;
 
 protected:
-   UINT32 m_controllerId;
-   INT16 m_rackHeight;
-   INT16 m_rackPosition;
-   UINT32 m_rackId;
+   uint32_t m_controllerId;
+   int16_t m_rackHeight;
+   int16_t m_rackPosition;
+   uint32_t m_rackId;
    uuid m_rackImageFront;
    uuid m_rackImageRear;
    RackOrientation m_rackOrientation;
@@ -2283,10 +2291,10 @@ public:
 
    virtual json_t *toJson() override;
 
-   UINT32 getControllerId() const { return m_controllerId; }
-   UINT32 getRackId() const { return m_rackId; }
-   INT16 getRackHeight() const { return m_rackHeight; }
-   INT16 getRackPosition() const { return m_rackPosition; }
+   uint32_t getControllerId() const { return m_controllerId; }
+   uint32_t getRackId() const { return m_rackId; }
+   int16_t getRackHeight() const { return m_rackHeight; }
+   int16_t getRackPosition() const { return m_rackPosition; }
    bool bindUnderController() { return (m_flags & CHF_BIND_UNDER_CONTROLLER) ? true : false; }
 
    void setBindUnderController(bool doBind);
@@ -2757,12 +2765,13 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
+   virtual uint32_t getZoneUIN() const override { return m_zoneUIN; }
+
    virtual json_t *toJson() override;
 
    Cluster *getMyCluster();
 
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
-   UINT32 getZoneUIN() const { return m_zoneUIN; }
    NodeType getType() const { return m_type; }
    bool isVirtual() const { return (m_type == NODE_TYPE_VIRTUAL) || (m_type == NODE_TYPE_CONTAINER); }
    const TCHAR *getSubType() { return m_subType; }
@@ -3126,6 +3135,8 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
+   virtual uint32_t getZoneUIN() const override { return m_zoneUIN; }
+
    virtual json_t *toJson() override;
 
    void addNode(Node *node) { addChild(node); node->addParent(this); calculateCompoundStatus(TRUE); }
@@ -3134,7 +3145,6 @@ public:
    virtual bool showThresholdSummary() override;
 
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
-   UINT32 getZoneUIN() const { return m_zoneUIN; }
 	bool isSyntheticMask() const { return m_bSyntheticMask; }
 	bool isPointToPoint() const;
 

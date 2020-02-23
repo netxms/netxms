@@ -357,7 +357,7 @@ void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
 /**
  * Get access point's parent node
  */
-Node *AccessPoint::getParentNode()
+Node *AccessPoint::getParentNode() const
 {
    return static_cast<Node*>(FindObjectById(m_nodeId, OBJECT_NODE));
 }
@@ -536,6 +536,15 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslAccessPointClass, this));
+}
+
+/**
+ * Get access point's zone UIN
+ */
+uint32_t AccessPoint::getZoneUIN() const
+{
+   Node *node = getParentNode();
+   return (node != nullptr) ? node->getZoneUIN() : 0;
 }
 
 /**
