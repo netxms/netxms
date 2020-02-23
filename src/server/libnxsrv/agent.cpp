@@ -206,9 +206,8 @@ void AgentConnection::receiverThread()
       }
 
       // Receive raw message
-      int rc = RecvNXCPMessageEx(channel, &rawMsg, msgBuffer, &msgBufferSize,
-                                 &m_pCtx, (decryptionBuffer != NULL) ? &decryptionBuffer : NULL,
-                                 m_dwRecvTimeout, MAX_MSG_SIZE);
+      ssize_t rc = RecvNXCPMessageEx(channel, &rawMsg, msgBuffer, &msgBufferSize, &m_pCtx,
+            (decryptionBuffer != NULL) ? &decryptionBuffer : NULL, m_dwRecvTimeout, MAX_MSG_SIZE);
       if (rc <= 0)
       {
          if ((rc != 0) && (WSAGetLastError() != WSAESHUTDOWN))

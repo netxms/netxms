@@ -125,9 +125,9 @@ EIP_Status EIP_Session::getAttribute(const CIP_EPATH *path, void *buffer, size_t
    request.writeDataAsUInt16(2);    // Item count
    request.advanceWritePosition(4); // Item type 0 followed by length 0 - NULL address
    request.writeDataAsUInt16(0xB2); // Type B2 - UCMM message
-   request.writeDataAsUInt16(path->size + 2); // Second item size: service + path length + path
+   request.writeDataAsUInt16(static_cast<uint16_t>(path->size + 2)); // Second item size: service + path length + path
    request.writeDataAsUInt8(CIP_Get_Attribute_Single);
-   request.writeDataAsUInt8(path->size / 2); // Path length in 2 byte words
+   request.writeDataAsUInt8(static_cast<uint8_t>(path->size / 2)); // Path length in 2 byte words
    request.writeData(path->value, path->size);
    request.completeDataWrite();
 

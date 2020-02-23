@@ -160,7 +160,7 @@ void ISC::receiverThread()
    NXCP_MESSAGE *pRawMsg;
    NXCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
-   int err;
+   ssize_t err;
    TCHAR szBuffer[128], szIpAddr[16];
 	SOCKET nSocket;
 

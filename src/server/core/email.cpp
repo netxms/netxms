@@ -84,7 +84,7 @@ static char *FindEOL(char *pszBuffer, int nLen)
 /**
  * Read line from socket
  */
-static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, int *pnBufPos, char *pszLine)
+static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, size_t *pnBufPos, char *pszLine)
 {
    char *ptr;
    do
@@ -108,7 +108,7 @@ static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, int *pnBufPos, c
 /**
  * Read SMTP response code from socket
  */
-static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
+static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, size_t *pnBufPos)
 {
    char szLine[SMTP_BUFFER_SIZE];
 
@@ -157,7 +157,7 @@ static char *EncodeHeader(const char *header, const char *encoding, const char *
          if (header != NULL)
             snprintf(buffer, bufferSize, "%s: %s\r\n", header, data);
          else
-            strncpy(buffer, data, bufferSize);
+            strlcpy(buffer, data, bufferSize);
       }
    }
    else
@@ -165,7 +165,7 @@ static char *EncodeHeader(const char *header, const char *encoding, const char *
       if (header != NULL)
          snprintf(buffer, bufferSize, "%s: %s\r\n", header, data);
       else
-         strncpy(buffer, data, bufferSize);
+         strlcpy(buffer, data, bufferSize);
    }
    return buffer;
 }
@@ -200,7 +200,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
       return SMTP_ERR_COMM_FAILURE;
 
    char szBuffer[SMTP_BUFFER_SIZE];
-   int nBufPos = 0;
+   size_t nBufPos = 0;
    int iState = STATE_INITIAL;
    while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
    {
