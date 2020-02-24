@@ -221,6 +221,7 @@ DIST_BUILD="no"
 FORCE_NULL_SAFE_FREE="no"
 JEMALLOC_REQUIRED="no"
 MARIADB_MYSQL_CONFLICT="no"
+FORCE_INTERNAL_RWLOCK="no"
 
 
 #--------------------------------------------------------------------
@@ -369,6 +370,12 @@ AC_ARG_WITH(internal-getopt,
 [AS_HELP_STRING(--with-internal-getopt,force use of bundled getopt)],
 [
 	FORCE_INTERNAL_GETOPT="yes"
+])
+
+AC_ARG_WITH(internal-rwlock,
+[AS_HELP_STRING(--with-internal-rwlock,force use of bundled read/write lock implementation)],
+[
+	FORCE_INTERNAL_RWLOCK="yes"
 ])
 
 AC_ARG_WITH(all-static,
@@ -2002,32 +2009,34 @@ else
 	])
 
 	# Check for read/write locks
-	# On Linux, rwlock functions declared always, but pthread_rwlock_t may need
-	# additional defines
-	AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
-	if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
-		AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
-			[AC_COMPILE_IFELSE([
-				AC_LANG_PROGRAM([
-#include <sys/types.h>
-#include <pthread.h>
-				],
-				[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
-			ac_cv_struct_pthread_rw=yes, [
-				AC_COMPILE_IFELSE([
+	if test "x$FORCE_INTERNAL_RWLOCK" != "xyes"; then
+		# On Linux, rwlock functions declared always, but pthread_rwlock_t may need
+		# additional defines
+		AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
+		if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
+			AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
+				[AC_COMPILE_IFELSE([
 					AC_LANG_PROGRAM([
-#define _XOPEN_SOURCE 500
 #include <sys/types.h>
 #include <pthread.h>
 					],
 					[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
-				ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
-				if test "$ac_cv_struct_pthread_rw" = "yes"; then
-					CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
-				fi
-				])])
-		if test "$ac_cv_struct_pthread_rw" = "yes"; then
-			AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
+				ac_cv_struct_pthread_rw=yes, [
+					AC_COMPILE_IFELSE([
+						AC_LANG_PROGRAM([
+#define _XOPEN_SOURCE 500
+#include <sys/types.h>
+#include <pthread.h>
+						],
+						[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
+					ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
+					if test "$ac_cv_struct_pthread_rw" = "yes"; then
+						CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
+					fi
+					])])
+			if test "$ac_cv_struct_pthread_rw" = "yes"; then
+				AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
+			fi
 		fi
 	fi
 fi
