@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, NetObj *object)
       return;
 
    object->incRefCount();
-   RWLockWriteLock(s_lock, INFINITE);
+   RWLockWriteLock(s_lock);
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr.value(), MAC_ADDR_LENGTH, entry);
    if (entry == NULL)
@@ -106,7 +106,7 @@ void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr)
    if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
       return;
 
-   RWLockWriteLock(s_lock, INFINITE);
+   RWLockWriteLock(s_lock);
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr, MAC_ADDR_LENGTH, entry);
    if (entry != NULL)
@@ -133,7 +133,7 @@ void NXCORE_EXPORTABLE MacDbRemove(const MacAddress& macAddr)
  */
 NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr, bool updateRefCount)
 {
-   RWLockReadLock(s_lock, INFINITE);
+   RWLockReadLock(s_lock);
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr, MAC_ADDR_LENGTH, entry);
    NetObj *object = (entry != NULL) ? entry->object : NULL;

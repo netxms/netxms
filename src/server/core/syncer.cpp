@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ static RWLOCK s_objectTxnLock = RWLockCreate();
 void NXCORE_EXPORTABLE ObjectTransactionStart()
 {
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
-      RWLockReadLock(s_objectTxnLock, INFINITE);
+      RWLockReadLock(s_objectTxnLock);
 }
 
 /**
@@ -91,7 +91,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
    s_outstandingSaveRequests = 0;
 
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
-      RWLockWriteLock(s_objectTxnLock, INFINITE);
+      RWLockWriteLock(s_objectTxnLock);
 
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(false);
    nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("%d objects to process"), objects->size());

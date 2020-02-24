@@ -525,17 +525,17 @@ protected:
    void lockParentList(bool writeLock)
    {
       if (writeLock)
-         RWLockWriteLock(m_rwlockParentList, INFINITE);
+         RWLockWriteLock(m_rwlockParentList);
       else
-         RWLockReadLock(m_rwlockParentList, INFINITE);
+         RWLockReadLock(m_rwlockParentList);
    }
    void unlockParentList() { RWLockUnlock(m_rwlockParentList); }
    void lockChildList(bool writeLock)
    {
       if (writeLock)
-         RWLockWriteLock(m_rwlockChildList, INFINITE);
+         RWLockWriteLock(m_rwlockChildList);
       else
-         RWLockReadLock(m_rwlockChildList, INFINITE);
+         RWLockReadLock(m_rwlockChildList);
    }
    void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
 

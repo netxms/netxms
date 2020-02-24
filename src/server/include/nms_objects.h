@@ -887,9 +887,9 @@ protected:
    void lockResponsibleUsersList(bool writeLock)
    {
       if (writeLock)
-         RWLockWriteLock(m_rwlockResponsibleUsers, INFINITE);
+         RWLockWriteLock(m_rwlockResponsibleUsers);
       else
-         RWLockReadLock(m_rwlockResponsibleUsers, INFINITE);
+         RWLockReadLock(m_rwlockResponsibleUsers);
    }
    void unlockResponsibleUsersList() { RWLockUnlock(m_rwlockResponsibleUsers); }
 
@@ -1204,7 +1204,7 @@ protected:
    void destroyItems();
    void updateInstanceDiscoveryItems(DCObject *dci);
 
-   void lockDciAccess(bool writeLock) { if (writeLock) { RWLockWriteLock(m_dciAccessLock, INFINITE); } else { RWLockReadLock(m_dciAccessLock, INFINITE); } }
+   void lockDciAccess(bool writeLock) { if (writeLock) { RWLockWriteLock(m_dciAccessLock); } else { RWLockReadLock(m_dciAccessLock); } }
 	void unlockDciAccess() { RWLockUnlock(m_dciAccessLock); }
 
    void deleteChildDCIs(UINT32 dcObjectId);

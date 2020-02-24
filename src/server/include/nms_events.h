@@ -290,8 +290,8 @@ private:
    ObjectArray<EPRule> m_rules;
    RWLOCK m_rwlock;
 
-   void readLock() const { RWLockReadLock(m_rwlock, INFINITE); }
-   void writeLock() { RWLockWriteLock(m_rwlock, INFINITE); }
+   void readLock() const { RWLockReadLock(m_rwlock); }
+   void writeLock() { RWLockWriteLock(m_rwlock); }
    void unlock() const { RWLockUnlock(m_rwlock); }
    int findRuleIndexByGuid(const uuid& guid, int shift = 0) const;
 

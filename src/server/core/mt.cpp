@@ -340,7 +340,7 @@ UINT32 UpdateMappingTable(NXCPMessage *msg, LONG *newId)
 {
 	UINT32 rcc;
 	MappingTable *mt = MappingTable::createFromMessage(msg);
-	RWLockWriteLock(s_mappingTablesLock, INFINITE);
+	RWLockWriteLock(s_mappingTablesLock);
 	if (mt->getId() != 0)
 	{
 		rcc = RCC_INVALID_MAPPING_TABLE_ID;
@@ -404,7 +404,7 @@ UINT32 UpdateMappingTable(NXCPMessage *msg, LONG *newId)
 UINT32 DeleteMappingTable(LONG id)
 {
 	UINT32 rcc = RCC_INVALID_MAPPING_TABLE_ID;
-	RWLockWriteLock(s_mappingTablesLock, INFINITE);
+	RWLockWriteLock(s_mappingTablesLock);
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		MappingTable *mt = s_mappingTables.get(i);
@@ -442,7 +442,7 @@ UINT32 DeleteMappingTable(LONG id)
 UINT32 GetMappingTable(LONG id, NXCPMessage *msg)
 {
 	UINT32 rcc = RCC_INVALID_MAPPING_TABLE_ID;
-	RWLockReadLock(s_mappingTablesLock, INFINITE);
+	RWLockReadLock(s_mappingTablesLock);
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		if (s_mappingTables.get(i)->getId() == id)
@@ -465,7 +465,7 @@ UINT32 GetMappingTable(LONG id, NXCPMessage *msg)
 UINT32 ListMappingTables(NXCPMessage *msg)
 {
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
-	RWLockReadLock(s_mappingTablesLock, INFINITE);
+	RWLockReadLock(s_mappingTablesLock);
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)s_mappingTables.size());
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
@@ -496,7 +496,7 @@ int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
 	LONG tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
 	const TCHAR *value = NULL;
-	RWLockReadLock(s_mappingTablesLock, INFINITE);
+	RWLockReadLock(s_mappingTablesLock);
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		MappingTable *mt = s_mappingTables.get(i);
@@ -534,7 +534,7 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
    LONG tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
    MappingTable *mt = NULL;
-   RWLockReadLock(s_mappingTablesLock, INFINITE);
+   RWLockReadLock(s_mappingTablesLock);
    for(int i = 0; i < s_mappingTables.size(); i++)
    {
       MappingTable *t = s_mappingTables.get(i);

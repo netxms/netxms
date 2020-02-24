@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ static RWLOCK s_sessionListLock;
  */
 static BOOL RegisterClientSession(ClientSession *pSession)
 {
-   RWLockWriteLock(s_sessionListLock, INFINITE);
+   RWLockWriteLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (s_sessionList[i] == NULL)
       {
@@ -61,7 +61,7 @@ static BOOL RegisterClientSession(ClientSession *pSession)
  */
 void UnregisterClientSession(session_id_t id)
 {
-   RWLockWriteLock(s_sessionListLock, INFINITE);
+   RWLockWriteLock(s_sessionListLock);
    s_sessionList[id] = NULL;
    RWLockUnlock(s_sessionListLock);
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Client session with ID %d unregistered"), id);
@@ -88,7 +88,7 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
          break;
 
       msg.setField(VID_TIMESTAMP, (UINT32)time(NULL));
-      RWLockReadLock(s_sessionListLock, INFINITE);
+      RWLockReadLock(s_sessionListLock);
       for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
          if (s_sessionList[i] != NULL)
             if (s_sessionList[i]->isAuthenticated())
@@ -189,7 +189,7 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
 	static const TCHAR *pszClientType[] = { _T("DESKTOP"), _T("WEB"), _T("MOBILE"), _T("TABLET"), _T("APP") };
 
    ConsolePrintf(pCtx, _T("ID  CIPHER   CLTYPE  USER [CLIENT]\n"));
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (s_sessionList[i] != NULL)
       {
@@ -215,7 +215,7 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
 bool NXCORE_EXPORTABLE KillClientSession(session_id_t id)
 {
    bool success = false;
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       if ((s_sessionList[i] != NULL) && (s_sessionList[i]->getId() == id))
@@ -234,7 +234,7 @@ bool NXCORE_EXPORTABLE KillClientSession(session_id_t id)
  */
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
 {
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       if ((s_sessionList[i] != NULL) && !s_sessionList[i]->isTerminated())
@@ -265,7 +265,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
          break;
    }
 
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if ((s_sessionList[i] != NULL) &&
           s_sessionList[i]->isAuthenticated() &&
@@ -280,7 +280,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
  */
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 graphId)
 {
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if ((s_sessionList[i] != NULL) &&
           s_sessionList[i]->isAuthenticated() &&
@@ -295,7 +295,7 @@ void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 gr
  */
 void NotifyClientsOnPolicyUpdate(NXCPMessage *msg, Template *object)
 {
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if ((s_sessionList[i] != NULL) &&
           s_sessionList[i]->isAuthenticated() &&
@@ -360,7 +360,7 @@ void NotifyClientsOnDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, i
  */
 void NotifyClientsOnDCIUpdate(NXCPMessage *update, NetObj *object)
 {
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       ClientSession *session = s_sessionList[i];
@@ -393,7 +393,7 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
       msg.setField(VID_INSTANCE, instance);
    msg.setField(VID_STATE, change == ThresholdCheckResult::ACTIVATED);
 
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       ClientSession *session = s_sessionList[i];
@@ -414,7 +414,7 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
  */
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 {
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       if ((s_sessionList[i] != NULL) &&
@@ -432,7 +432,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
  */
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, UINT32 dwCode, UINT32 dwData)
 {
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if ((s_sessionList[i] != NULL) && (s_sessionList[i]->getId() == sessionId))
          s_sessionList[i]->notify(dwCode, dwData);
@@ -446,7 +446,7 @@ int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int
 {
    int i, nCount;
 
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(i = 0, nCount = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       ClientSession *s = s_sessionList[i];
@@ -469,7 +469,7 @@ int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int
 bool IsLoggedIn(UINT32 dwUserId)
 {
    bool result = false;
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (s_sessionList[i] != NULL && s_sessionList[i]->getUserId() == dwUserId)
       {
@@ -485,7 +485,7 @@ bool IsLoggedIn(UINT32 dwUserId)
  */
 void CloseOtherSessions(UINT32 userId, session_id_t thisSession)
 {
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       if ((s_sessionList[i] != NULL) &&

@@ -41,7 +41,7 @@ static Mutex s_userAgentNotificationsLock;
  */
 static void RegisterSessionAgent(SessionAgentConnector *c)
 {
-   RWLockWriteLock(s_lock, INFINITE);
+   RWLockWriteLock(s_lock);
    s_agents.add(c);
    s_sessionAgentCount++;
    if (c->isUserAgent())
@@ -54,7 +54,7 @@ static void RegisterSessionAgent(SessionAgentConnector *c)
  */
 static void UnregisterSessionAgent(UINT32 id)
 {
-   RWLockWriteLock(s_lock, INFINITE);
+   RWLockWriteLock(s_lock);
    for(int i = 0; i < s_agents.size(); i++)
    {
       if (s_agents.get(i)->getId() == id)
@@ -513,7 +513,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentWatchdog(void *arg)
 {
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      RWLockReadLock(s_lock, INFINITE);
+      RWLockReadLock(s_lock);
 
       for(int i = 0; i < s_agents.size(); i++)
       {
@@ -555,7 +555,7 @@ SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName)
 {
    SessionAgentConnector *c = NULL;
 
-   RWLockReadLock(s_lock, INFINITE);
+   RWLockReadLock(s_lock);
    for(int i = 0; i < s_agents.size(); i++)
    {
       if (!_tcsicmp(s_agents.get(i)->getSessionName(), sessionName))
@@ -582,7 +582,7 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    value->addColumn(_T("STATE"), DCI_DT_INT, _T("State"));
    value->addColumn(_T("AGENT_TYPE"), DCI_DT_INT, _T("Agent type"));
 
-   RWLockReadLock(s_lock, INFINITE);
+   RWLockReadLock(s_lock);
    for(int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
@@ -613,7 +613,7 @@ LONG H_SessionAgentCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
  */
 void UpdateUserAgentsConfiguration()
 {
-   RWLockReadLock(s_lock, INFINITE);
+   RWLockReadLock(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
@@ -628,7 +628,7 @@ void UpdateUserAgentsConfiguration()
  */
 void ShutdownSessionAgents(bool restart)
 {
-   RWLockReadLock(s_lock, INFINITE);
+   RWLockReadLock(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       s_agents.get(i)->shutdown(restart);
@@ -672,7 +672,7 @@ UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request)
       n->saveToDatabase(db);
    }
 
-   RWLockReadLock(s_lock, INFINITE);
+   RWLockReadLock(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
@@ -705,7 +705,7 @@ UINT32 RemoveUserAgentNotification(UINT64 serverId, NXCPMessage *request)
    DB_HANDLE db = GetLocalDatabaseHandle();
    DBQuery(db, query);
 
-   RWLockReadLock(s_lock, INFINITE);
+   RWLockReadLock(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
@@ -742,7 +742,7 @@ UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request)
       n->saveToDatabase(db);
    }
 
-   RWLockReadLock(s_lock, INFINITE);
+   RWLockReadLock(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);

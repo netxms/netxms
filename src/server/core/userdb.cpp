@@ -153,7 +153,7 @@ static UINT64 GetEffectiveSystemRights(User *user)
 UINT64 NXCORE_EXPORTABLE GetEffectiveSystemRights(UINT32 userId)
 {
    UINT64 systemRights = 0;
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
    UserDatabaseObject *user = s_userDatabase.get(userId);
    if ((user != NULL) && !user->isGroup())
    {
@@ -176,7 +176,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 
 		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
 
-		RWLockWriteLock(s_userDatabaseLock, INFINITE);
+		RWLockWriteLock(s_userDatabaseLock);
 		time_t now = time(NULL);
 		Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
 		while(it->hasNext())
@@ -319,7 +319,7 @@ BOOL LoadUsers()
 void SaveUsers(DB_HANDLE hdb, UINT32 watchdogId)
 {
    // Save users
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
    while(it->hasNext())
    {
@@ -354,7 +354,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions,
 							   bool ssoAuth, UINT32 *graceLogins)
 {
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
    User *user = s_users.get(login);
    if ((user == NULL) || user->isDeleted())
    {
@@ -458,7 +458,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen
 
 result:
    delete user;   // delete copy
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
    user = s_users.get(login);
    if ((user == NULL) || user->isDeleted() || (user->getId() != *pdwId))
    {
@@ -576,7 +576,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId)
    bool result = false;
    IntegerArray<UINT32> searchPath(16, 16);
 
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
 
    result = CheckUserMembershipInternal(userId, groupId, &searchPath);
 
@@ -647,7 +647,7 @@ void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
  */
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(UINT32 id, TCHAR *buffer, bool noFail)
 {
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
       _tcslcpy(buffer, object->getName(), MAX_USER_NAME);
@@ -702,7 +702,7 @@ static UINT32 DeleteUserDatabaseObjectInternal(UINT32 id, bool alreadyLocked)
    }
 
    if (!alreadyLocked)
-      RWLockWriteLock(s_userDatabaseLock, INFINITE);
+      RWLockWriteLock(s_userDatabaseLock);
 
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
@@ -753,7 +753,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *
 {
    UINT32 dwResult = RCC_SUCCESS;
 
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
 
    // Check for duplicate name
    UserDatabaseObject *object = isGroup ? (UserDatabaseObject *)s_groups.get(name) : (UserDatabaseObject *)s_users.get(name);
@@ -791,7 +791,7 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **old
 
    UINT32 id = msg->getFieldAsUInt32(VID_USER_ID);
 
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
 
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
@@ -887,7 +887,7 @@ static TCHAR *GenerateUniqueName(const TCHAR *oldName, UINT32 id)
  */
 void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
 {
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
 
    bool userModified = false;
    bool conflict = false;
@@ -1003,7 +1003,7 @@ void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
  */
 void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectMap<Entry> *entryListId, UINT32 m_action, bool isUser)
 {
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
    while(it->hasNext())
    {
@@ -1041,7 +1041,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
 {
    // Check existing user/group with same DN
    UserDatabaseObject *object = NULL;
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
 
    if (ldapObject->m_id != NULL)
       object = s_ldapGroupId.get(ldapObject->m_id);
@@ -1116,7 +1116,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
  */
 void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, add users inside group, and delete removed from the group
 {
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
 
    bool groupModified = false;
    bool conflict = false;
@@ -1232,7 +1232,7 @@ void DumpUsers(CONSOLE_CTX pCtx)
    ConsolePrintf(pCtx, _T("Login name           GUID                                 System rights\n")
                        _T("-----------------------------------------------------------------------\n"));
 
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
    while(it->hasNext())
    {
@@ -1256,7 +1256,7 @@ UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id)
 {
    UINT32 dwResult = RCC_INVALID_USER_ID;
 
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
 
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
@@ -1363,7 +1363,7 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 	if (id & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
 
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
 
    // Find user
    User *user = (User *)s_userDatabase.get(id);
@@ -1490,7 +1490,7 @@ UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login,
 		return RCC_INVALID_USER_ID;
 
    UINT32 rcc = RCC_INVALID_USER_ID;
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
 
    // Find user
    User *user = (User *)s_userDatabase.get(userId);
@@ -1546,7 +1546,7 @@ UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login,
  */
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE *OpenUserDatabase()
 {
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
 	return s_userDatabase.iterator();
 }
 
@@ -1565,7 +1565,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it)
 ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids)
 {
    ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(16, 16, Ownership::True);
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
    for(int i = 0; i < ids->size(); i++)
    {
       UserDatabaseObject *object = s_userDatabase.get(ids->get(i));
@@ -1588,7 +1588,7 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 {
 	const TCHAR *value = NULL;
 
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
 
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
@@ -1612,7 +1612,7 @@ UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name
  */
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value)
 {
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   RWLockWriteLock(s_userDatabaseLock);
 
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
@@ -1644,7 +1644,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
    if (sep != NULL)
       *sep = 0;
 
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
    while(it->hasNext())
    {
@@ -1692,7 +1692,7 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
    if (sep != NULL)
       *sep = 0;
 
-   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   RWLockReadLock(s_userDatabaseLock);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
    while(it->hasNext())
    {

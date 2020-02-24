@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -22,19 +22,16 @@
 **/
 
 #include "libnetxms.h"
-#include <assert.h>
 
 #if !HAVE_PTHREAD_RWLOCK && !defined(_USE_GNU_PTH)
 
 /**
  * Create read/write lock
  */
-RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate(void)
+RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate()
 {
-   RWLOCK hLock;
-
-   hLock = (RWLOCK)MemAlloc(sizeof(struct __rwlock_data));
-   if (hLock != NULL)
+   RWLOCK hLock = MemAllocStruct<__rwlock_data>();
+   if (hLock == nullptr)
    {
 #ifdef _WIN32
       hLock->m_mutex = CreateMutex(NULL, FALSE, NULL);
@@ -45,12 +42,7 @@ RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate(void)
       pthread_cond_init(&hLock->m_condRead, NULL);
       pthread_cond_init(&hLock->m_condWrite, NULL);
 #endif
-      hLock->m_dwWaitReaders = 0;
-      hLock->m_dwWaitWriters = 0;
-      hLock->m_iRefCount = 0;
-      hLock->m_writerThreadId = 0;
    }
-
    return hLock;
 }
 
@@ -59,35 +51,28 @@ RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate(void)
  */
 void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock)
 {
-   if (hLock != NULL)
+   if ((hLock != nullptr) && (hLock->m_refCount == 0))
    {
-      if (hLock->m_iRefCount == 0)
-      {
 #ifdef _WIN32
-         CloseHandle(hLock->m_mutex);
-         CloseHandle(hLock->m_condRead);
-         CloseHandle(hLock->m_condWrite);
+      CloseHandle(hLock->m_mutex);
+      CloseHandle(hLock->m_condRead);
+      CloseHandle(hLock->m_condWrite);
 #else
-         pthread_mutex_destroy(&hLock->m_mutex);
-         pthread_cond_destroy(&hLock->m_condRead);
-         pthread_cond_destroy(&hLock->m_condWrite);
+      pthread_mutex_destroy(&hLock->m_mutex);
+      pthread_cond_destroy(&hLock->m_condRead);
+      pthread_cond_destroy(&hLock->m_condWrite);
 #endif
-         MemFree(hLock);
-      }
+      MemFree(hLock);
    }
 }
 
 /**
  * Lock read/write lock for reading
  */
-BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
+bool LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock)
 {
-   BOOL bResult = FALSE;
-   int retcode;
-
-   // Check if handle is valid
-   if (hLock == NULL)
-      return FALSE;
+   if (hLock == nullptr)
+      return false;
 
 #ifdef _WIN32
    UINT32 dwStart, dwElapsed;
@@ -98,16 +83,16 @@ BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
 
    do
    {
-      if ((hLock->m_iRefCount == -1) || (hLock->m_dwWaitWriters > 0))
+      if ((hLock->m_refCount == -1) || (hLock->m_waitWriters > 0))
       {
          // Object is locked for writing or somebody wish to lock it for writing
-         hLock->m_dwWaitReaders++;
+         hLock->m_waitReaders++;
          ReleaseMutex(hLock->m_mutex);
          dwStart = GetTickCount();
          retcode = WaitForSingleObject(hLock->m_condRead, dwTimeOut);
          dwElapsed = GetTickCount() - dwStart;
          WaitForSingleObject(hLock->m_mutex, INFINITE);   // Re-acquire mutex
-         hLock->m_dwWaitReaders--;
+         hLock->m_waitReaders--;
          if (retcode == WAIT_TIMEOUT)
          {
             bTimeOut = TRUE;
@@ -122,76 +107,38 @@ BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
       }
       else
       {
-         hLock->m_iRefCount++;
+         hLock->m_refCount++;
          bResult = TRUE;
       }
    } while((!bResult) && (!bTimeOut));
 
    ReleaseMutex(hLock->m_mutex);
 #else
-   // Acquire access to handle
    if (pthread_mutex_lock(&hLock->m_mutex) != 0)
-      return FALSE;     // Problem with mutex
+      return false;     // Problem with mutex
 
-   if ((hLock->m_iRefCount == -1) || (hLock->m_dwWaitWriters > 0))
+   while ((hLock->m_refCount == -1) || (hLock->m_waitWriters > 0))
    {
       // Object is locked for writing or somebody wish to lock it for writing
-      hLock->m_dwWaitReaders++;
-
-      if (dwTimeOut == INFINITE)
-      {
-         retcode = pthread_cond_wait(&hLock->m_condRead, &hLock->m_mutex);
-      }
-      else
-      {
-#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
-		   struct timespec timeout;
-
-		   timeout.tv_sec = dwTimeOut / 1000;
-		   timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
-		   retcode = pthread_cond_reltimedwait_np(&hLock->m_condRead, &hLock->m_mutex, &timeout);
-#else
-		   struct timeval now;
-		   struct timespec timeout;
-
-		   gettimeofday(&now, NULL);
-		   timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
-		   timeout.tv_nsec = ( now.tv_usec + ( dwTimeOut % 1000 ) * 1000) * 1000;
-		   retcode = pthread_cond_timedwait(&hLock->m_condRead, &hLock->m_mutex, &timeout);
-#endif
-      }
-
-      hLock->m_dwWaitReaders--;
-      if (retcode == 0)
-      {
-         assert(hLock->m_iRefCount != -1);
-         hLock->m_iRefCount++;
-         bResult = TRUE;
-      }
-   }
-   else
-   {
-      hLock->m_iRefCount++;
-      bResult = TRUE;
+      hLock->m_waitReaders++;
+      pthread_cond_wait(&hLock->m_condRead, &hLock->m_mutex);
+      hLock->m_waitReaders--;
    }
 
+   hLock->m_refCount++;
    pthread_mutex_unlock(&hLock->m_mutex);
 #endif
 
-   return bResult;
+   return true;
 }
 
 /**
  * Lock read/write lock for writing
  */
-BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
+bool LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock)
 {
-   BOOL bResult = FALSE;
-   int retcode;
-
-   // Check if handle is valid
-   if (hLock == NULL)
-      return FALSE;
+   if (hLock == nullptr)
+      return false;
 
 #ifdef _WIN32
    UINT32 dwStart, dwElapsed;
@@ -203,15 +150,15 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
 
    do
    {
-      if (hLock->m_iRefCount != 0)
+      if (hLock->m_refCount != 0)
       {
-         hLock->m_dwWaitWriters++;
+         hLock->m_waitWriters++;
          ReleaseMutex(hLock->m_mutex);
          dwStart = GetTickCount();
          retcode = WaitForSingleObject(hLock->m_condWrite, dwTimeOut);
          dwElapsed = GetTickCount() - dwStart;
          WaitForSingleObject(hLock->m_mutex, INFINITE);   // Re-acquire mutex
-         hLock->m_dwWaitWriters--;
+         hLock->m_waitWriters--;
          if (retcode == WAIT_TIMEOUT)
          {
             bTimeOut = TRUE;
@@ -226,7 +173,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
       }
       else
       {
-         hLock->m_iRefCount--;
+         hLock->m_refCount--;
          bResult = TRUE;
       }
    } while((!bResult) && (!bTimeOut));
@@ -237,57 +184,23 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
    ReleaseMutex(hLock->m_mutex);
 #else
    if (pthread_mutex_lock(&hLock->m_mutex) != 0)
-      return FALSE;     // Problem with mutex
+      return false;     // Problem with mutex
 
-   if (hLock->m_iRefCount != 0)
+   while (hLock->m_refCount != 0)
    {
       // Object is locked, wait for unlock
-      hLock->m_dwWaitWriters++;
-
-      if (dwTimeOut == INFINITE)
-      {
-         retcode = pthread_cond_wait(&hLock->m_condWrite, &hLock->m_mutex);
-      }
-      else
-      {
-#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
-		   struct timespec timeout;
-
-		   timeout.tv_sec = dwTimeOut / 1000;
-		   timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
-		   retcode = pthread_cond_reltimedwait_np(&hLock->m_condWrite, &hLock->m_mutex, &timeout);
-#else
-		   struct timeval now;
-		   struct timespec timeout;
-
-		   gettimeofday(&now, NULL);
-		   timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
-		   timeout.tv_nsec = ( now.tv_usec + ( dwTimeOut % 1000 ) * 1000) * 1000;
-		   retcode = pthread_cond_timedwait(&hLock->m_condWrite, &hLock->m_mutex, &timeout);
-#endif
-      }
-
-      hLock->m_dwWaitWriters--;
-      if (retcode == 0)
-      {
-         assert(hLock->m_iRefCount == 0);
-         hLock->m_iRefCount--;
-         bResult = TRUE;
-      }
-   }
-   else
-   {
-      hLock->m_iRefCount--;
-      bResult = TRUE;
+      hLock->m_waitWriters++;
+      pthread_cond_wait(&hLock->m_condWrite, &hLock->m_mutex);
+      hLock->m_waitWriters--;
    }
 
-   if (bResult)
-      hLock->m_writerThreadId = GetCurrentThreadId();
+   hLock->m_refCount--;
+   hLock->m_writerThreadId = GetCurrentThreadId();
 
    pthread_mutex_unlock(&hLock->m_mutex);
 #endif
 
-   return bResult;
+   return true;
 }
 
 /**
@@ -295,8 +208,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
  */
 void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock)
 {
-   // Check if handle is valid
-   if (hLock == NULL)
+   if (hLock == nullptr)
       return;
 
    // Acquire access to handle
@@ -308,27 +220,27 @@ void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock)
 #endif
 
    // Remove lock
-   if (hLock->m_iRefCount > 0)
+   if (hLock->m_refCount > 0)
    {
-      hLock->m_iRefCount--;
+      hLock->m_refCount--;
    }
-   else if (hLock->m_iRefCount == -1)
+   else if (hLock->m_refCount == -1)
    {
-      hLock->m_iRefCount = 0;
+      hLock->m_refCount = 0;
       hLock->m_writerThreadId = 0;
    }
 
    // Notify waiting threads
-   if (hLock->m_dwWaitWriters > 0)
+   if (hLock->m_waitWriters > 0)
    {
-      if (hLock->m_iRefCount == 0)
+      if (hLock->m_refCount == 0)
 #ifdef _WIN32
          SetEvent(hLock->m_condWrite);
 #else
          pthread_cond_signal(&hLock->m_condWrite);
 #endif
    }
-   else if (hLock->m_dwWaitReaders > 0)
+   else if (hLock->m_waitReaders > 0)
    {
 #ifdef _WIN32
       SetEvent(hLock->m_condRead);

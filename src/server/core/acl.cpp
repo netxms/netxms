@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ AccessList::AccessList()
 {
    m_size = 0;
    m_allocated = 0;
-   m_elements = NULL;
+   m_elements = nullptr;
 }
 
 /**
@@ -37,7 +37,7 @@ AccessList::AccessList()
  */
 AccessList::~AccessList()
 {
-   free(m_elements);
+   MemFree(m_elements);
 }
 
 /**
@@ -59,7 +59,7 @@ void AccessList::addElement(UINT32 dwUserId, UINT32 dwAccessRights)
       if (m_size == m_allocated)
       {
          m_allocated += 16;
-         m_elements = (ACL_ELEMENT *)realloc(m_elements, sizeof(ACL_ELEMENT) * m_allocated);
+         m_elements = MemReallocArray(m_elements, m_allocated);
       }
       m_elements[m_size].dwUserId = dwUserId;
       m_elements[m_size].dwAccessRights = dwAccessRights;
@@ -168,6 +168,5 @@ void AccessList::deleteAll()
 {
    m_size = 0;
    m_allocated = 0;
-   free(m_elements);
-   m_elements = NULL;
+   MemFreeAndNull(m_elements);
 }

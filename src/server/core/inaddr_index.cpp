@@ -74,7 +74,7 @@ bool InetAddressIndex::put(const InetAddress& addr, NetObj *object)
    BYTE key[18];
    addr.buildHashKey(key);
 
-   RWLockWriteLock(m_lock, INFINITE);
+   RWLockWriteLock(m_lock);
 
    InetAddressIndexEntry *entry;
    HASH_FIND(hh, m_root, key, sizeof(key), entry);
@@ -121,7 +121,7 @@ void InetAddressIndex::remove(const InetAddress& addr)
    BYTE key[18];
    addr.buildHashKey(key);
 
-   RWLockWriteLock(m_lock, INFINITE);
+   RWLockWriteLock(m_lock);
 
    InetAddressIndexEntry *entry;
    HASH_FIND(hh, m_root, key, sizeof(key), entry);
@@ -146,7 +146,7 @@ NetObj *InetAddressIndex::get(const InetAddress& addr)
    BYTE key[18];
    addr.buildHashKey(key);
 
-   RWLockReadLock(m_lock, INFINITE);
+   RWLockReadLock(m_lock);
 
    InetAddressIndexEntry *entry;
    HASH_FIND(hh, m_root, key, sizeof(key), entry);
@@ -165,7 +165,7 @@ NetObj *InetAddressIndex::find(bool (*comparator)(NetObj *, void *), void *data)
 {
    NetObj *object = NULL;
 
-   RWLockReadLock(m_lock, INFINITE);
+   RWLockReadLock(m_lock);
 
    InetAddressIndexEntry *entry, *tmp;
    HASH_ITER(hh, m_root, entry, tmp)
@@ -186,7 +186,7 @@ NetObj *InetAddressIndex::find(bool (*comparator)(NetObj *, void *), void *data)
  */
 int InetAddressIndex::size()
 {
-   RWLockReadLock(m_lock, INFINITE);
+   RWLockReadLock(m_lock);
    int s = HASH_COUNT(m_root);
    RWLockUnlock(m_lock);
    return s;
@@ -199,7 +199,7 @@ ObjectArray<NetObj> *InetAddressIndex::getObjects(bool updateRefCount, bool (*fi
 {
    ObjectArray<NetObj> *objects = new ObjectArray<NetObj>();
 
-   RWLockReadLock(m_lock, INFINITE);
+   RWLockReadLock(m_lock);
    InetAddressIndexEntry *entry, *tmp;
    HASH_ITER(hh, m_root, entry, tmp)
    {
@@ -219,7 +219,7 @@ ObjectArray<NetObj> *InetAddressIndex::getObjects(bool updateRefCount, bool (*fi
  */
 void InetAddressIndex::forEach(void (*callback)(const InetAddress& addr, NetObj *, void *), void *data)
 {
-   RWLockReadLock(m_lock, INFINITE);
+   RWLockReadLock(m_lock);
    InetAddressIndexEntry *entry, *tmp;
    HASH_ITER(hh, m_root, entry, tmp)
    {

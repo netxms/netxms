@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ static RWLOCK s_sessionListLock;
  */
 static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
 {
-   RWLockWriteLock(s_sessionListLock, INFINITE);
+   RWLockWriteLock(s_sessionListLock);
    for(int i = 0; i < MAX_DEVICE_SESSIONS; i++)
       if (s_sessionList[i] == NULL)
       {
@@ -54,7 +54,7 @@ static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
  */
 void UnregisterMobileDeviceSession(int id)
 {
-   RWLockWriteLock(s_sessionListLock, INFINITE);
+   RWLockWriteLock(s_sessionListLock);
    s_sessionList[id - MAX_CLIENT_SESSIONS] = NULL;
    RWLockUnlock(s_sessionListLock);
 }
@@ -135,7 +135,7 @@ void DumpMobileDeviceSessions(CONSOLE_CTX pCtx)
    static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES"), _T("AES-128") };
 
    ConsolePrintf(pCtx, _T("ID  STATE                    CIPHER   USER [CLIENT]\n"));
-   RWLockReadLock(s_sessionListLock, INFINITE);
+   RWLockReadLock(s_sessionListLock);
    for(i = 0, iCount = 0; i < MAX_DEVICE_SESSIONS; i++)
       if (s_sessionList[i] != NULL)
       {

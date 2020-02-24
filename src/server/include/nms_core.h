@@ -1243,7 +1243,6 @@ void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 #endif   /* not _WIN32 */
 
-void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX console);
 void DumpClientSessions(CONSOLE_CTX console);
 void DumpMobileDeviceSessions(CONSOLE_CTX console);
 void ShowServerStats(CONSOLE_CTX console);

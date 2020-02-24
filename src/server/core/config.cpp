@@ -260,7 +260,7 @@ void MetaDataPreLoad()
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value FROM metadata"));
    if (hResult != NULL)
    {
-      RWLockWriteLock(s_metadataCacheLock, INFINITE);
+      RWLockWriteLock(s_metadataCacheLock);
       s_metadataCache.clear();
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -284,7 +284,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
    if (_tcslen(name) > 127)
       return false;
 
-   RWLockReadLock(s_metadataCacheLock, INFINITE);
+   RWLockReadLock(s_metadataCacheLock);
    const TCHAR *value = s_metadataCache.get(name);
    if (value != NULL)
    {
@@ -306,7 +306,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
             if (DBGetNumRows(hResult) > 0)
             {
                DBGetField(hResult, 0, 0, buffer, bufSize);
-               RWLockWriteLock(s_metadataCacheLock, INFINITE);
+               RWLockWriteLock(s_metadataCacheLock);
                s_metadataCache.setPreallocated(_tcsdup(name), DBGetField(hResult, 0, 0, NULL, 0));
                RWLockUnlock(s_metadataCacheLock);
                bSuccess = true;
@@ -346,7 +346,7 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *valu
    if (_tcslen(variable) > 63)
       return false;
 
-   RWLockWriteLock(s_metadataCacheLock, INFINITE);
+   RWLockWriteLock(s_metadataCacheLock);
    s_metadataCache.set(variable, value);
    RWLockUnlock(s_metadataCacheLock);
 
@@ -424,7 +424,7 @@ void ConfigPreLoad()
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value FROM config"));
    if (hResult != NULL)
    {
-      RWLockWriteLock(s_configCacheLock, INFINITE);
+      RWLockWriteLock(s_configCacheLock);
       s_configCache.clear();
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -442,7 +442,7 @@ void ConfigPreLoad()
  */
 static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *value)
 {
-   RWLockWriteLock(s_configCacheLock, INFINITE);
+   RWLockWriteLock(s_configCacheLock);
    s_configCache.set(name, value);
    RWLockUnlock(s_configCacheLock);
 
@@ -535,7 +535,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
    if (_tcslen(variable) > 127)
       return false;
 
-   RWLockReadLock(s_configCacheLock, INFINITE);
+   RWLockReadLock(s_configCacheLock);
    const TCHAR *value = s_configCache.get(variable);
    RWLockUnlock(s_configCacheLock);
    if (value != NULL)
@@ -569,7 +569,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
 
    if (success)
    {
-      RWLockWriteLock(s_configCacheLock, INFINITE);
+      RWLockWriteLock(s_configCacheLock);
       s_configCache.set(variable, buffer);
       RWLockUnlock(s_configCacheLock);
    }
@@ -832,7 +832,7 @@ bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *variable)
 
    if (success)
    {
-      RWLockWriteLock(s_configCacheLock, INFINITE);
+      RWLockWriteLock(s_configCacheLock);
       s_configCache.remove(variable);
       RWLockUnlock(s_configCacheLock);
    }
@@ -976,7 +976,7 @@ void GetClientConfigurationHints(NXCPMessage *msg)
    data.fieldId = VID_CONFIG_HINT_LIST_BASE;
    data.msg = msg;
 
-   RWLockReadLock(s_configCacheLock, INFINITE);
+   RWLockReadLock(s_configCacheLock);
    s_configCache.forEach(GetClientConfigurationHints_Callback, &data);
    RWLockUnlock(s_configCacheLock);
 

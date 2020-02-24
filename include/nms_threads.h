@@ -1566,8 +1566,8 @@ public:
 
    RWLock& operator =(const RWLock &src);
 
-   void readLock(UINT32 timeout = INFINITE) { RWLockReadLock(m_rwlock, timeout); }
-   void writeLock(UINT32 timeout = INFINITE) { RWLockWriteLock(m_rwlock, timeout); }
+   void readLock() { RWLockReadLock(m_rwlock); }
+   void writeLock() { RWLockWriteLock(m_rwlock); }
    void unlock() { RWLockUnlock(m_rwlock); }
 };
 

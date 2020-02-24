@@ -47,92 +47,14 @@ inline void RWLockDestroy(RWLOCK hLock)
    }
 }
 
-inline BOOL RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
+inline bool RWLockReadLock(RWLOCK hLock)
 {
-	BOOL ret = FALSE;
-
-   if (hLock != NULL) 
-   {
-		if (dwTimeOut == INFINITE)
-		{
-			if (pthread_rwlock_rdlock(hLock) == 0) 
-         {
-				ret = TRUE;
-			}
-		}
-		else
-		{
-#if HAVE_PTHREAD_RWLOCK_TIMEDRDLOCK
-			struct timeval now;
-			struct timespec timeout;
-
-			// FIXME: there should be more accurate way
-			gettimeofday(&now, NULL);
-			timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
-
-			now.tv_usec += (dwTimeOut % 1000) * 1000;
-			timeout.tv_sec += now.tv_usec / 1000000;
-			timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
-
-			ret = (pthread_rwlock_timedrdlock(hLock, &timeout) == 0);
-#else
-			for(int i = (dwTimeOut / 50) + 1; i > 0; i--) 
-         {
-				if (pthread_rwlock_tryrdlock(hLock) == 0) 
-            {
-					ret = TRUE;
-					break;
-				}
-				ThreadSleepMs(50);
-			}
-#endif
-		}
-	}
-   return ret;
+   return (hLock != nullptr) ? (pthread_rwlock_rdlock(hLock) == 0) : false;
 }
 
-inline BOOL RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
+inline bool RWLockWriteLock(RWLOCK hLock)
 {
-	BOOL ret = FALSE;
-
-   if (hLock != NULL) 
-   {
-		if (dwTimeOut == INFINITE)
-		{
-			if (pthread_rwlock_wrlock(hLock) == 0) 
-         {
-				ret = TRUE;
-			}
-		}
-		else
-		{
-#if HAVE_PTHREAD_RWLOCK_TIMEDWRLOCK
-			struct timeval now;
-			struct timespec timeout;
-
-			// FIXME: there should be more accurate way
-			gettimeofday(&now, NULL);
-			timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
-
-			now.tv_usec += (dwTimeOut % 1000) * 1000;
-			timeout.tv_sec += now.tv_usec / 1000000;
-			timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
-
-			ret = (pthread_rwlock_timedwrlock(hLock, &timeout) == 0);
-#else
-			for(int i = (dwTimeOut / 50) + 1; i > 0; i--) 
-         {
-				if (pthread_rwlock_trywrlock(hLock) == 0) 
-            {
-					ret = TRUE;
-					break;
-				}
-				ThreadSleepMs(50);
-			}
-#endif
-		}
-	}
-   return ret;
+   return (hLock != nullptr) ? (pthread_rwlock_wrlock(hLock) == 0) : false;
 }
 
 inline void RWLockUnlock(RWLOCK hLock)
@@ -147,79 +69,27 @@ typedef pth_rwlock_t * RWLOCK;
 
 inline RWLOCK RWLockCreate(void)
 {
-   RWLOCK hLock;
-
-   hLock = (RWLOCK)MemAlloc(sizeof(pth_rwlock_t));
+   RWLOCK hLock = MemAllocStruct<pth_rwlock_t>();
    if (!pth_rwlock_init(hLock))
    {
-      MemFree(hLock);
-      hLock = NULL;
+      MemFreeAndNull(hLock);
    }
    return hLock;
 }
 
 inline void RWLockDestroy(RWLOCK hLock)
 {
-   if (hLock != NULL)
-   {
-      MemFree(hLock);
-   }
+   MemFree(hLock);
 }
 
-inline BOOL RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
+inline bool RWLockReadLock(RWLOCK hLock)
 {
-	BOOL ret = FALSE;
-
-   if (hLock != NULL) 
-   {
-		if (dwTimeOut == INFINITE)
-		{
-			if (pth_rwlock_acquire(hLock, PTH_RWLOCK_RD, FALSE, NULL)) 
-         {
-				ret = TRUE;
-			}
-		}
-		else
-		{
-         pth_event_t ev;
-
-         ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
-			if (pth_rwlock_acquire(hLock, PTH_RWLOCK_RD, FALSE, ev)) 
-         {
-				ret = TRUE;
-			}
-         pth_event_free(ev, PTH_FREE_ALL);
-		}
-	}
-   return ret;
+   return (hLock != nullptr) ? (pth_rwlock_acquire(hLock, PTH_RWLOCK_RD, FALSE, NULL) != 0) : false;
 }
 
-inline BOOL RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
+inline BOOL RWLockWriteLock(RWLOCK hLock)
 {
-	BOOL ret = FALSE;
-
-   if (hLock != NULL) 
-   {
-		if (dwTimeOut == INFINITE)
-		{
-			if (pth_rwlock_acquire(hLock, PTH_RWLOCK_RW, FALSE, NULL)) 
-         {
-				ret = TRUE;
-			}
-		}
-		else
-		{
-         pth_event_t ev;
-
-         ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
-			if (pth_rwlock_acquire(hLock, PTH_RWLOCK_RW, FALSE, ev)) 
-         {
-				ret = TRUE;
-			}
-         pth_event_free(ev, PTH_FREE_ALL);
-		}
-	}
-   return ret;
+   return (hLock != nullptr) ? (pth_rwlock_acquire(hLock, PTH_RWLOCK_RW, FALSE, NULL) != 0) : false;
 }
 
 inline void RWLockUnlock(RWLOCK hLock)
@@ -241,26 +111,20 @@ struct __rwlock_data
    pthread_cond_t m_condRead;
    pthread_cond_t m_condWrite;
 #endif
-   UINT32 m_dwWaitReaders;
-   UINT32 m_dwWaitWriters;
-   int m_iRefCount;  // -1 for write lock, otherwise number of read locks
-   UINT32 m_writerThreadId;
+   uint32_t m_waitReaders;
+   uint32_t m_waitWriters;
+   int m_refCount;  // -1 for write lock, otherwise number of read locks
+   uint32_t m_writerThreadId;
 };
 
 typedef struct __rwlock_data * RWLOCK;
 
 RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate();
 void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock);
-BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut);
-BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut);
+bool LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock);
+bool LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock);
 void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock);
 
 #endif
-
-inline void RWLockPreemptiveWriteLock(RWLOCK hLock, UINT32 dwTimeout, UINT32 dwSleep)
-{
-	while(!RWLockWriteLock(hLock, dwTimeout))
-		ThreadSleepMs(dwSleep);
-}
 
 #endif

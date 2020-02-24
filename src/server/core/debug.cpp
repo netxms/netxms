@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,31 +25,6 @@
 #ifdef _WIN32
 #include <dbghelp.h>
 #endif
-
-/**
- * Test read/write lock state and print to stdout
- */
-void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX console)
-{
-   ConsolePrintf(console, _T("  %s: "), szName);
-   if (RWLockWriteLock(hLock, 100))
-   {
-      ConsolePrintf(console, _T("unlocked\n"));
-      RWLockUnlock(hLock);
-   }
-   else
-   {
-      if (RWLockReadLock(hLock, 100))
-      {
-         ConsolePrintf(console, _T("locked for reading\n"));
-         RWLockUnlock(hLock);
-      }
-      else
-      {
-         ConsolePrintf(console, _T("locked for writing\n"));
-      }
-   }
-}
 
 /**
  * Callback for counting DCIs

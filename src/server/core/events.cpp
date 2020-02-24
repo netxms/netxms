@@ -826,7 +826,7 @@ void ShutdownEventSubsystem()
  */
 void ReloadEvents()
 {
-   RWLockWriteLock(s_eventTemplatesLock, INFINITE);
+   RWLockWriteLock(s_eventTemplatesLock);
    s_eventTemplates.clear();
    s_eventNameIndex.clear();
    LoadEventConfiguration();
@@ -863,7 +863,7 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
          time_t originTimestamp, UINT32 sourceId, UINT32 dciId, const TCHAR *eventTag, StringMap *namedArgs,
          const char *format, const TCHAR **names, va_list args, NXSL_VM *vm)
 {
-   RWLockReadLock(s_eventTemplatesLock, INFINITE);
+   RWLockReadLock(s_eventTemplatesLock);
    shared_ptr<EventTemplate> eventTemplate = s_eventTemplates.getShared(eventCode);
    RWLockUnlock(s_eventTemplatesLock);
 
@@ -1440,7 +1440,7 @@ void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode)
 {
    String strText, strDescr;
 
-   RWLockReadLock(s_eventTemplatesLock, INFINITE);
+   RWLockReadLock(s_eventTemplatesLock);
 
    // Find event template
    EventTemplate *e = s_eventTemplates.get(eventCode);
@@ -1477,7 +1477,7 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
 {
    bool bRet = false;
 
-   RWLockReadLock(s_eventTemplatesLock, INFINITE);
+   RWLockReadLock(s_eventTemplatesLock);
 
    EventTemplate *e = s_eventTemplates.get(eventCode);
    if (e != NULL)
@@ -1499,7 +1499,7 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
  */
 shared_ptr<EventTemplate> FindEventTemplateByCode(UINT32 code)
 {
-   RWLockReadLock(s_eventTemplatesLock, INFINITE);
+   RWLockReadLock(s_eventTemplatesLock);
    shared_ptr<EventTemplate> e = s_eventTemplates.getShared(code);
    RWLockUnlock(s_eventTemplatesLock);
    return e;
@@ -1510,7 +1510,7 @@ shared_ptr<EventTemplate> FindEventTemplateByCode(UINT32 code)
  */
 shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name)
 {
-   RWLockReadLock(s_eventTemplatesLock, INFINITE);
+   RWLockReadLock(s_eventTemplatesLock);
    shared_ptr<EventTemplate> e = s_eventNameIndex.getShared(name);
    RWLockUnlock(s_eventTemplatesLock);
    return e;
@@ -1568,7 +1568,7 @@ UINT32 UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t *
 
    shared_ptr<EventTemplate> e;
    UINT32 eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
-   RWLockWriteLock(s_eventTemplatesLock, INFINITE);
+   RWLockWriteLock(s_eventTemplatesLock);
 
    if (eventCode == 0)
    {
@@ -1628,7 +1628,7 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
    UINT32 rcc = RCC_SUCCESS;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   RWLockWriteLock(s_eventTemplatesLock, INFINITE);
+   RWLockWriteLock(s_eventTemplatesLock);
    auto e = s_eventTemplates.get(eventCode);
    if (e != NULL)
    {
@@ -1660,7 +1660,7 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
  */
 void GetEventConfiguration(NXCPMessage *msg)
 {
-   RWLockWriteLock(s_eventTemplatesLock, INFINITE);
+   RWLockWriteLock(s_eventTemplatesLock);
    UINT32 base = VID_ELEMENT_LIST_BASE;
    msg->setField(VID_NUM_EVENTS, s_eventTemplates.size());
    auto it = s_eventTemplates.iterator();
