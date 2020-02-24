@@ -49,7 +49,6 @@ import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
-import org.netxms.ui.eclipse.widgets.MessageBar;
 
 /**
  * Script editor view

@@ -53,7 +53,6 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -66,6 +65,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppPolicy;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
@@ -90,7 +90,8 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private ColorSelector menuHighligtColor;
    private ColorSelector menuSelectionColor;
    private ColorSelector menuTextColor;
-   private Text welcomeMessageText;
+   private LabeledText desktopWallpaperFile;
+   private LabeledText welcomeMessageText;
    private Button customColorSchemaCheckbox;
    private Button closeOnDeactivateCheckbox;
    private Combo windowPositioning;
@@ -179,12 +180,9 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
       menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
       
-      welcomeMessageText = WidgetHelper.createLabeledText(topArea, SWT.MULTI | SWT.BORDER, SWT.DEFAULT,
-            "Welcome message", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      gd = new GridData(SWT.FILL, SWT.TOP, true, false);
-      gd.heightHint = 100;
-      gd.horizontalSpan = 2;
-      welcomeMessageText.setLayoutData(gd);
+      welcomeMessageText = new LabeledText(topArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
+      welcomeMessageText.setLabel("Welcome message");
+      welcomeMessageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       
       Group windowBehaviorGroup = new Group(topArea, SWT.NONE);
       windowBehaviorGroup.setText("Window behavior");
@@ -208,6 +206,14 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       windowPositioning.add("Bottom - Right");
       windowPositioning.select(0);
       
+      desktopWallpaperFile = new LabeledText(topArea, SWT.NONE);
+      desktopWallpaperFile.setLabel("Desktop wallpaper file name");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      desktopWallpaperFile.setLayoutData(gd);
+
       final String[] columnNames = { "Name", "Display name", "Command", "Icon" };
       final int[] columnWidths = { 300, 300, 300, 300 };         
       viewer = new SortableTreeViewer(this, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
@@ -243,13 +249,15 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuHighligtColor.addListener(colorChangeListener); 
       menuSelectionColor.addListener(colorChangeListener);
 
-      welcomeMessageText.addModifyListener(new ModifyListener() {
+      ModifyListener textModifyListener = new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
             fireModifyListeners();
          }
-      });  
+      };
+      welcomeMessageText.getTextControl().addModifyListener(textModifyListener);
+      desktopWallpaperFile.getTextControl().addModifyListener(textModifyListener);
 
       customColorSchemaCheckbox.addSelectionListener(new SelectionListener() {
          @Override
@@ -630,6 +638,8 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
 
       welcomeMessageText.setText(policyData.welcomeMessage != null ? policyData.welcomeMessage : "");
       
+      desktopWallpaperFile.setText(policyData.desktopWallpaper);
+
       closeOnDeactivateCheckbox.setSelection(policyData.closeOnDeactivate);
       windowPositioning.select(windowPositionIndexFromValue(policyData.mainWindowPosition));
 
@@ -644,6 +654,8 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    {
       policyData.setIcon((iconFile != null) && (iconFile.length > 0) ? iconFile : null);
       policyData.welcomeMessage = welcomeMessageText.getText();
+
+      policyData.desktopWallpaper = desktopWallpaperFile.getText();
 
       policyData.customColorSchema = customColorSchemaCheckbox.getSelection();
       policyData.backgroundColor = ColorConverter.rgbToInt(backgroundColor.getColorValue());

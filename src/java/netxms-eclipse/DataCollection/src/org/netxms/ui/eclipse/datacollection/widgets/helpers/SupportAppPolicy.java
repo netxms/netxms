@@ -35,25 +35,28 @@ public class SupportAppPolicy
    
    @Element(required=false)
    public Integer menuBackgroundColor = 0x303030;
-   
+
    @Element(required=false)
    public Integer menuHighligtColor = 0x505050;
-   
+
    @Element(required=false)
    public Integer menuSelectionColor = 0x0069D2;
-   
+
    @Element(required=false)
    public Integer menuTextColor = 0xF0F0F0;
-   
+
    @Element(required=false)
    public String icon;
-   
+
    @Element(required=false)
    public String welcomeMessage;
 
    @Element(required=false)
+   public String desktopWallpaper;
+
+   @Element(required=false)
    public AppMenuItem menu = new AppMenuItem("[root]", "", null);
-   
+
    /**
     * Create support application policy from XML
     * 

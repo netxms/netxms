@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.networkmaps.views;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -43,7 +42,6 @@ import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -101,7 +99,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    private Action actionImageProperties;
 	private Color defaultLinkColor = null;
 	private boolean readOnly;
-	private Display display;
 
 	/**
 	 * Create predefined map view
@@ -168,8 +165,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	public void setupMapControl()
 	{
- 		display = viewer.getControl().getDisplay();
-
 	   if (readOnly)
 	   {
 	      viewer.setDraggingEnabled(false);
