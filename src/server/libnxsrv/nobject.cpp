@@ -98,19 +98,8 @@ void NObject::addParent(NObject *object)
  */
 void NObject::deleteChild(NObject *object)
 {
-   int i;
-
    lockChildList(true);
-   for(i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i) == object)
-         break;
-
-   if (i == m_childList->size())   // No such object
-   {
-      unlockChildList();
-      return;
-   }
-   m_childList->remove(i);
+   m_childList->remove(object);
    unlockChildList();
 }
 
@@ -119,22 +108,11 @@ void NObject::deleteChild(NObject *object)
  */
 void NObject::deleteParent(NObject *object)
 {
-   int i;
-
    lockParentList(true);
-   for(i = 0; i < m_parentList->size(); i++)
-      if (m_parentList->get(i) == object)
-         break;
-   if (i == m_parentList->size())   // No such object
-   {
-      unlockParentList();
-      return;
-   }
-
-   m_parentList->remove(i);
+   bool success = m_parentList->remove(object);
    unlockParentList();
-
-   onParentRemove();
+   if (success)
+      onParentRemove();
 }
 
 /**
@@ -245,7 +223,7 @@ bool NObject::isDirectParent(UINT32 id)
 SharedString NObject::getCustomAttributeFromParent(const TCHAR *name)
 {
    SharedString value;
-   lockParentList(true);
+   lockParentList(false);
    for(int i = 0; i < m_parentList->size(); i++)
    {
       value = m_parentList->get(i)->getCustomAttribute(name);
@@ -254,9 +232,8 @@ SharedString NObject::getCustomAttributeFromParent(const TCHAR *name)
    return value;
 }
 
-
 /**
- * Get childs IDs in printable form
+ * Get children IDs in printable form
  */
 const TCHAR *NObject::dbgGetChildList(TCHAR *szBuffer)
 {

@@ -270,15 +270,16 @@ void Array::insert(int index, void *element)
 /**
  * Remove element at given index
  */
-void Array::internalRemove(int index, bool allowDestruction)
+bool Array::internalRemove(int index, bool allowDestruction)
 {
 	if ((index < 0) || (index >= m_size))
-		return;
+		return false;
 
 	if (m_objectOwner && allowDestruction)
 		destroyObject(m_data[index]);
 	m_size--;
 	memmove(ADDR(index), ADDR(index + 1), m_elementSize * (m_size - index));
+	return true;
 }
 
 /**
