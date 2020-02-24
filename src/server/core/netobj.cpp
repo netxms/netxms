@@ -793,7 +793,7 @@ void NetObj::deleteObject(NetObj *initiator)
 
    // Delete references to this object from child objects
    DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_id);
-   ObjectArray<NetObj> *deleteList = NULL;
+   ObjectArray<NetObj> *deleteList = nullptr;
    lockChildList(true);
    for(int i = 0; i < getChildList()->size(); i++)
    {
@@ -801,9 +801,8 @@ void NetObj::deleteObject(NetObj *initiator)
       if (o->getParentCount() == 1)
       {
          // last parent, delete object
-         if (deleteList == NULL)
-            deleteList = new ObjectArray<NetObj>(16, 16, false);
-			deleteList->add(o);
+         if (deleteList == nullptr)
+            deleteList = new ObjectArray<NetObj>();
       }
       else
       {
@@ -815,8 +814,8 @@ void NetObj::deleteObject(NetObj *initiator)
    unlockChildList();
 
    // Remove references to this object from parent objects
-   DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_id);
-   ObjectArray<NetObj> *recalcList = NULL;
+   DbgPrintf(5, _T("NetObj::deleteObject(): clearing parent list for object %d"), m_id);
+   ObjectArray<NetObj> *recalcList = nullptr;
    lockParentList(true);
    for(int i = 0; i < getParentList()->size(); i++)
    {
@@ -828,14 +827,14 @@ void NetObj::deleteObject(NetObj *initiator)
          obj->deleteChild(this);
          if ((obj->getObjectClass() == OBJECT_SUBNET) && (g_flags & AF_DELETE_EMPTY_SUBNETS) && (obj->getChildCount() == 0))
          {
-            if (deleteList == NULL)
-               deleteList = new ObjectArray<NetObj>(16, 16, false);
+            if (deleteList == nullptr)
+               deleteList = new ObjectArray<NetObj>();
             deleteList->add(obj);
          }
          else
          {
-            if (recalcList == NULL)
-               recalcList = new ObjectArray<NetObj>(16, 16, false);
+            if (recalcList == nullptr)
+               recalcList = new ObjectArray<NetObj>();
             recalcList->add(obj);
          }
       }
@@ -845,7 +844,7 @@ void NetObj::deleteObject(NetObj *initiator)
    unlockParentList();
 
    // Delete orphaned child objects and empty subnets
-   if (deleteList != NULL)
+   if (deleteList != nullptr)
    {
       for(int i = 0; i < deleteList->size(); i++)
       {
@@ -857,7 +856,7 @@ void NetObj::deleteObject(NetObj *initiator)
    }
 
    // Recalculate statuses of parent objects
-   if (recalcList != NULL)
+   if (recalcList != nullptr)
    {
       for(int i = 0; i < recalcList->size(); i++)
       {

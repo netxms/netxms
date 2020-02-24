@@ -1108,7 +1108,7 @@ private:
 	bool m_objectOwner;
 	void *m_context;
 
-	void internalRemove(int index, bool allowDestruction);
+	bool internalRemove(int index, bool allowDestruction);
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
 
 protected:
@@ -1134,10 +1134,10 @@ public:
 	void set(int index, void *element);
 	void replace(int index, void *element);
    void insert(int index, void *element);
-	void remove(int index) { internalRemove(index, true); }
-   void remove(void *element) { internalRemove(indexOf(element), true); }
-	void unlink(int index) { internalRemove(index, false); }
-	void unlink(void *element) { internalRemove(indexOf(element), false); }
+	bool remove(int index) { return internalRemove(index, true); }
+   bool remove(void *element) { return internalRemove(indexOf(element), true); }
+	bool unlink(int index) { return internalRemove(index, false); }
+	bool unlink(void *element) { return internalRemove(indexOf(element), false); }
    void clear();
 	void shrinkTo(int size);
 	void shrinkBy(int count) { if (count >= m_size) clear(); else shrinkTo(m_size - count); }
@@ -1202,10 +1202,10 @@ public:
 	void set(int index, T *object) { Array::set(index, (void *)object); }
 	void replace(int index, T *object) { Array::replace(index, (void *)object); }
    void insert(int index, T *object) { Array::insert(index, (void *)object); }
-	void remove(int index) { Array::remove(index); }
-   void remove(T *object) { Array::remove((void *)object); }
-	void unlink(int index) { Array::unlink(index); }
-   void unlink(T *object) { Array::unlink((void *)object); }
+	bool remove(int index) { return Array::remove(index); }
+   bool remove(T *object) { return Array::remove((void *)object); }
+	bool unlink(int index) { return Array::unlink(index); }
+   bool unlink(T *object) { return Array::unlink((void *)object); }
 
    void sort(int (*cb)(const T **, const T **)) { Array::sort((int (*)(const void *, const void *))cb); }
    template<typename C> void sort(int (*cb)(C *, const T **, const T **), C *context) { Array::sort((int (*)(void *, const void *, const void *))cb, (void *)context); }

@@ -4385,23 +4385,22 @@ bool Node::deleteDuplicateInterfaces(UINT32 rqid)
    lockChildList(false);
    for(int i = 0; i < getChildList()->size(); i++)
    {
-      NetObj *curr = static_cast<NetObj *>(getChildList()->get(i));
+      NetObj *curr = getChildList()->get(i);
 
-      if ((curr->getObjectClass() != OBJECT_INTERFACE) ||
-          ((Interface *)curr)->isManuallyCreated())
+      if ((curr->getObjectClass() != OBJECT_INTERFACE) || static_cast<Interface*>(curr)->isManuallyCreated())
          continue;
-      Interface *iface = (Interface *)curr;
+      Interface *iface = static_cast<Interface*>(curr);
       for(int j = i + 1; j < getChildList()->size(); j++)
       {
          NetObj *next = getChildList()->get(j);
 
          if ((next->getObjectClass() != OBJECT_INTERFACE) ||
-             ((Interface *)next)->isManuallyCreated() ||
-             (deleteList.contains((Interface *)next)))
+             static_cast<Interface*>(next)->isManuallyCreated() ||
+             deleteList.contains(static_cast<Interface*>(next)))
             continue;
-         if (iface->getIfIndex() == ((Interface *)next)->getIfIndex())
+         if (iface->getIfIndex() == static_cast<Interface*>(next)->getIfIndex())
          {
-            deleteList.add((Interface *)next);
+            deleteList.add(static_cast<Interface*>(next));
             DbgPrintf(6, _T("Node::deleteDuplicateInterfaces(%s [%d]): found duplicate interface %s [%d], original %s [%d], ifIndex=%d"),
                m_name, m_id, next->getName(), next->getId(), iface->getName(), iface->getId(), iface->getIfIndex());
          }
