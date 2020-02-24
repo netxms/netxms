@@ -103,9 +103,9 @@ inline void RWLockUnlock(RWLOCK hLock)
 struct __rwlock_data
 {
 #ifdef _WIN32
-   HANDLE m_mutex;
-   HANDLE m_condRead;
-   HANDLE m_condWrite;
+   CRITICAL_SECTION m_mutex;
+   CONDITION_VARIABLE m_condRead;
+   CONDITION_VARIABLE m_condWrite;
 #else
    pthread_mutex_t m_mutex;
    pthread_cond_t m_condRead;
@@ -117,7 +117,7 @@ struct __rwlock_data
    uint32_t m_writerThreadId;
 };
 
-typedef struct __rwlock_data * RWLOCK;
+typedef __rwlock_data * RWLOCK;
 
 RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate();
 void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock);

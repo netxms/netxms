@@ -31,12 +31,12 @@
 RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate()
 {
    RWLOCK hLock = MemAllocStruct<__rwlock_data>();
-   if (hLock == nullptr)
+   if (hLock != nullptr)
    {
 #ifdef _WIN32
-      hLock->m_mutex = CreateMutex(NULL, FALSE, NULL);
-      hLock->m_condRead = CreateEvent(NULL, TRUE, FALSE, NULL);
-      hLock->m_condWrite = CreateEvent(NULL, FALSE, FALSE, NULL);
+      InitializeCriticalSectionAndSpinCount(&hLock->m_mutex, 4000);
+      InitializeConditionVariable(&hLock->m_condRead);
+      InitializeConditionVariable(&hLock->m_condWrite);
 #else
       pthread_mutex_init(&hLock->m_mutex, NULL);
       pthread_cond_init(&hLock->m_condRead, NULL);
@@ -54,9 +54,7 @@ void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock)
    if ((hLock != nullptr) && (hLock->m_refCount == 0))
    {
 #ifdef _WIN32
-      CloseHandle(hLock->m_mutex);
-      CloseHandle(hLock->m_condRead);
-      CloseHandle(hLock->m_condWrite);
+      DeleteCriticalSection(&hLock->m_mutex);
 #else
       pthread_mutex_destroy(&hLock->m_mutex);
       pthread_cond_destroy(&hLock->m_condRead);
@@ -75,44 +73,18 @@ bool LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock)
       return false;
 
 #ifdef _WIN32
-   UINT32 dwStart, dwElapsed;
-   BOOL bTimeOut = FALSE;
+   EnterCriticalSection(&hLock->m_mutex);
 
-   // Acquire access to handle
-   WaitForSingleObject(hLock->m_mutex, INFINITE);
-
-   do
+   while ((hLock->m_refCount == -1) || (hLock->m_waitWriters > 0))
    {
-      if ((hLock->m_refCount == -1) || (hLock->m_waitWriters > 0))
-      {
-         // Object is locked for writing or somebody wish to lock it for writing
-         hLock->m_waitReaders++;
-         ReleaseMutex(hLock->m_mutex);
-         dwStart = GetTickCount();
-         retcode = WaitForSingleObject(hLock->m_condRead, dwTimeOut);
-         dwElapsed = GetTickCount() - dwStart;
-         WaitForSingleObject(hLock->m_mutex, INFINITE);   // Re-acquire mutex
-         hLock->m_waitReaders--;
-         if (retcode == WAIT_TIMEOUT)
-         {
-            bTimeOut = TRUE;
-         }
-         else
-         {
-            if (dwTimeOut != INFINITE)
-            {
-               dwTimeOut -= std::min(dwElapsed, dwTimeOut);
-            }
-         }
-      }
-      else
-      {
-         hLock->m_refCount++;
-         bResult = TRUE;
-      }
-   } while((!bResult) && (!bTimeOut));
+      // Object is locked for writing or somebody wish to lock it for writing
+      hLock->m_waitReaders++;
+      SleepConditionVariableCS(&hLock->m_condRead, &hLock->m_mutex, INFINITE);
+      hLock->m_waitReaders--;
+   }
 
-   ReleaseMutex(hLock->m_mutex);
+   hLock->m_refCount++;
+   LeaveCriticalSection(&hLock->m_mutex);
 #else
    if (pthread_mutex_lock(&hLock->m_mutex) != 0)
       return false;     // Problem with mutex
@@ -141,47 +113,20 @@ bool LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock)
       return false;
 
 #ifdef _WIN32
-   UINT32 dwStart, dwElapsed;
-   BOOL bTimeOut = FALSE;
+   EnterCriticalSection(&hLock->m_mutex);
 
-   WaitForSingleObject(hLock->m_mutex, INFINITE);
-   // Reset reader event because it can be set by previous Unlock() call
-   ResetEvent(hLock->m_condRead);
-
-   do
+   while (hLock->m_refCount != 0)
    {
-      if (hLock->m_refCount != 0)
-      {
-         hLock->m_waitWriters++;
-         ReleaseMutex(hLock->m_mutex);
-         dwStart = GetTickCount();
-         retcode = WaitForSingleObject(hLock->m_condWrite, dwTimeOut);
-         dwElapsed = GetTickCount() - dwStart;
-         WaitForSingleObject(hLock->m_mutex, INFINITE);   // Re-acquire mutex
-         hLock->m_waitWriters--;
-         if (retcode == WAIT_TIMEOUT)
-         {
-            bTimeOut = TRUE;
-         }
-         else
-         {
-            if (dwTimeOut != INFINITE)
-            {
-               dwTimeOut -= std::min(dwElapsed, dwTimeOut);
-            }
-         }
-      }
-      else
-      {
-         hLock->m_refCount--;
-         bResult = TRUE;
-      }
-   } while((!bResult) && (!bTimeOut));
+      // Object is locked, wait for unlock
+      hLock->m_waitWriters++;
+      SleepConditionVariableCS(&hLock->m_condWrite, &hLock->m_mutex, INFINITE);
+      hLock->m_waitWriters--;
+   }
 
-   if (bResult)
-      hLock->m_writerThreadId = GetCurrentThreadId();
+   hLock->m_refCount--;
+   hLock->m_writerThreadId = GetCurrentThreadId();
 
-   ReleaseMutex(hLock->m_mutex);
+   LeaveCriticalSection(&hLock->m_mutex);
 #else
    if (pthread_mutex_lock(&hLock->m_mutex) != 0)
       return false;     // Problem with mutex
@@ -213,7 +158,7 @@ void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock)
 
    // Acquire access to handle
 #ifdef _WIN32
-   WaitForSingleObject(hLock->m_mutex, INFINITE);
+   EnterCriticalSection(&hLock->m_mutex);
 #else
    if (pthread_mutex_lock(&hLock->m_mutex) != 0)
       return;     // Problem with mutex
@@ -235,7 +180,7 @@ void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock)
    {
       if (hLock->m_refCount == 0)
 #ifdef _WIN32
-         SetEvent(hLock->m_condWrite);
+         WakeConditionVariable(&hLock->m_condWrite);
 #else
          pthread_cond_signal(&hLock->m_condWrite);
 #endif
@@ -243,14 +188,14 @@ void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock)
    else if (hLock->m_waitReaders > 0)
    {
 #ifdef _WIN32
-      SetEvent(hLock->m_condRead);
+      WakeConditionVariable(&hLock->m_condRead);
 #else
       pthread_cond_broadcast(&hLock->m_condRead);
 #endif
    }
 
 #ifdef _WIN32
-   ReleaseMutex(hLock->m_mutex);
+   LeaveCriticalSection(&hLock->m_mutex);
 #else
    pthread_mutex_unlock(&hLock->m_mutex);
 #endif

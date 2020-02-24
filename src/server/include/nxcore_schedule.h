@@ -32,8 +32,8 @@
 #define SCHEDULED_TASK_SYSTEM             0x08
 
 class ScheduledTask;
-class SchedulerCallback;
 class ScheduledTaskParameters;
+struct SchedulerCallback;
 
 typedef void (*ScheduledTaskHandler)(shared_ptr<ScheduledTaskParameters> parameters);
 
