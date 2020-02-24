@@ -18,6 +18,8 @@
 	NX-1523 (Store object creation time)
 	NX-1724 (Implement agent parameters for inode usage)
 	NX-1741 (Node placement within chassis)
+	NX-1748 (User agent should check on startup if it is already running in same session)
+	NX-1750 (Configurable retention time for node hardware and software components)
 	NX-1754 (HTTPS and SOCKS proxy options in Telegram channel configuration)
 	NX-1767 (File manager may be unable to access file with percent sign in name)
 	NX-1782 (Windows installer offers generic.sms SMS driver, while the server is now reworked to have notification channels)
