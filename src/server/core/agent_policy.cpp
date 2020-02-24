@@ -478,6 +478,9 @@ UINT32 FileDeliveryPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSup
          rcc = conn->uploadFile(localFile, remoteFile->name(), true);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed (%s)"), debugId, AgentErrorCodeToText(rcc));
       }
+      else
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): remote file %s and local file %s are the same, synchronization skipped"), debugId, remoteFile->name(), localFile.cstr());
+
    }
    delete remoteFiles;
 
