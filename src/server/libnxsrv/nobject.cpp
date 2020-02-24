@@ -227,6 +227,8 @@ SharedString NObject::getCustomAttributeFromParent(const TCHAR *name)
    for(int i = 0; i < m_parentList->size(); i++)
    {
       value = m_parentList->get(i)->getCustomAttribute(name);
+      if (!value.isNull())
+         break;
    }
    unlockParentList();
    return value;
