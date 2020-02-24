@@ -139,7 +139,19 @@ EIP_Status EIP_Session::getAttribute(const CIP_EPATH *path, void *buffer, size_t
    CPF_Item item;
    if (response->findItem(0xB2, &item))
    {
-      status = EIP_Status::success();
+      CIP_GeneralStatus generalStatus = response->readDataAsUInt8(item.offset + 2);
+      if (generalStatus == 0)
+      {
+         uint16_t additionalStatusSize = response->readDataAsUInt8(item.offset + 3) * 2;
+         size_t recvSize = item.length - additionalStatusSize - 4;
+         memcpy(buffer, response->getRawData() + item.offset + additionalStatusSize + 4, std::min(*size, recvSize));
+         *size = recvSize;
+         status = EIP_Status::success();
+      }
+      else
+      {
+         status = EIP_Status::deviceFailure(generalStatus);
+      }
    }
    else
    {
