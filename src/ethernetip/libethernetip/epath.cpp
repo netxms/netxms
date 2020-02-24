@@ -163,3 +163,59 @@ bool LIBETHERNETIP_EXPORTABLE CIP_EncodeAttributePathW(const WCHAR *symbolicPath
    WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, symbolicPath, -1, buffer, 256, NULL, NULL);
    return EncodeSymbolicAttributePathInternal(buffer, path);
 }
+
+/**
+ * Decode EPATH
+ */
+String LIBETHERNETIP_EXPORTABLE CIP_DecodePath(const CIP_EPATH *path)
+{
+   StringBuffer sb;
+   const uint8_t *curr = path->value;
+   size_t size = path->size;
+   while(size > 1)
+   {
+      size_t slen;
+      switch(*curr & 0x03)
+      {
+         case 0:  // 8 bit
+            curr++;
+            if (!sb.isEmpty())
+               sb.append(_T('.'));
+            sb.append(static_cast<uint32_t>(*curr++));
+            size -= 2;
+            break;
+         case 1:  // 16 bit
+            if (size >= 4)
+            {
+               curr += 2;
+               sb.append(CIP_UInt16Swap(*reinterpret_cast<const uint16_t*>(curr)));
+               curr += 2;
+               size -= 4;
+            }
+            else
+            {
+               size = 0;
+            }
+            break;
+         case 2:  // 32 bit
+            if (size >= 6)
+            {
+               curr += 2;
+               uint32_t v;
+               memcpy(&v, curr, 4);
+               sb.append(CIP_UInt32Swap(v));
+               curr += 4;
+               size -= 6;
+            }
+            else
+            {
+               size = 0;
+            }
+            break;
+         default:
+            size = 0;   // stop parsing
+            break;
+      }
+   }
+   return sb;
+}

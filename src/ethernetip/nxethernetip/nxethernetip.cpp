@@ -304,6 +304,7 @@ static bool GetAttribute(const char *symbolicPath)
       _tprintf(_T("Missing UCMM message data\n"));
    }
 
+   delete response;
    delete session;
    return true;
 }
@@ -403,6 +404,7 @@ static bool GetAllAttributes(const char *symbolicPath)
       _tprintf(_T("Missing UCMM message data\n"));
    }
 
+   delete response;
    delete session;
    return true;
 }
@@ -412,8 +414,11 @@ static bool GetAllAttributes(const char *symbolicPath)
  */
 static void ParseTCPIPObject(EIP_Message *msg, size_t startOffset, size_t size)
 {
-   uint16_t phyObjectPathSize = msg->readDataAsUInt16(startOffset + 12) * 2;
-   size_t addrDataOffset = startOffset + 14 + phyObjectPathSize;
+   CIP_EPATH phyObjectPath;
+   phyObjectPath.size = msg->readDataAsUInt16(startOffset + 12) * 2;
+   memcpy(phyObjectPath.value, msg->getRawData() + startOffset + 14, phyObjectPath.size);
+
+   size_t addrDataOffset = startOffset + 14 + phyObjectPath.size;
    uint16_t domainNameLength = msg->readDataAsUInt16(addrDataOffset + 20);
 
    _tprintf(_T("Status ..................: %08X\n"), msg->readDataAsUInt32(startOffset));
@@ -426,15 +431,33 @@ static void ParseTCPIPObject(EIP_Message *msg, size_t startOffset, size_t size)
    TCHAR hostName[256] = _T("");
    msg->readDataAsLengthPrefixString(addrDataOffset + domainNameLength + domainNameLength % 2 + 22, 2, hostName, 256);
    _tprintf(_T("Host name ...............: %s\n"), hostName);
+
+   _tprintf(_T("Physical link object ....: %s\n"), CIP_DecodePath(&phyObjectPath).cstr());
 }
 
 /**
  * Get all attributes of given class from device
  */
-static bool GetTCPIPObject()
+static bool GetTCPIPObject(const char *instance)
 {
+   uint32_t instanceNumber;
+   if (instance != nullptr)
+   {
+      char *eptr;
+      instanceNumber = strtol(instance, &eptr, 0);
+      if ((instanceNumber == 0) || (*eptr != 0))
+      {
+         _tprintf(_T("Invalid instance\n"));
+         return false;
+      }
+   }
+   else
+   {
+      instanceNumber = 1;
+   }
+
    CIP_EPATH path;
-   CIP_EncodeAttributePath(0xF5, 1, &path);
+   CIP_EncodeAttributePath(0xF5, instanceNumber, &path);
    TCHAR pathText[256];
    _tprintf(_T("Encoded EPATH: %s\n"), BinToStrEx(path.value, path.size, pathText, _T(' '), 0));
 
@@ -490,6 +513,7 @@ static bool GetTCPIPObject()
       _tprintf(_T("Missing UCMM message data\n"));
    }
 
+   delete response;
    delete session;
    return true;
 }
@@ -567,6 +591,7 @@ static bool FindClassInstances(const char *symbolicClassId)
       _tprintf(_T("Missing UCMM message data\n"));
    }
 
+   delete response;
    delete session;
    return true;
 }
@@ -595,13 +620,13 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxethernetip [<options>] <host> <command> [<arguments>]\n")
                      _T("\nValid commands are:\n")
-                     _T("   FindClassInstances <class> : find all instances of given class\n")
-                     _T("   GetAllAttributes <path>    : read all object attributes (path is class.instance)\n")
-                     _T("   GetAttribute <path>        : read value of specific attribute (path is class.instance.attribute)\n")
-                     _T("   GetTCPIPObject             : read TCP/IP object from device\n")
-                     _T("   ListIdentity               : read device identity\n")
-                     _T("   ListInterfaces             : read list of supported interfaces\n")
-                     _T("   ListServices               : read list of supported services\n")
+                     _T("   FindClassInstances <class>  : find all instances of given class\n")
+                     _T("   GetAllAttributes <path>     : read all object attributes (path is class.instance)\n")
+                     _T("   GetAttribute <path>         : read value of specific attribute (path is class.instance.attribute)\n")
+                     _T("   GetTCPIPObject [<instance>] : read TCP/IP object from device\n")
+                     _T("   ListIdentity                : read device identity\n")
+                     _T("   ListInterfaces              : read list of supported interfaces\n")
+                     _T("   ListServices                : read list of supported services\n")
                      _T("\nValid options are:\n")
                      _T("   -h                : Display help and exit\n")
                      _T("   -p <port>         : Port number (default is 44818)\n")
@@ -705,7 +730,7 @@ int main(int argc, char *argv[])
    }
    else if (!stricmp(command, "GetTCPIPObject"))
    {
-      if (!GetTCPIPObject())
+      if (!GetTCPIPObject((argc - optind >= 3) ? argv[optind + 2] : nullptr))
          exitCode = 4;
    }
    else if (!stricmp(command, "FindClassInstances"))

@@ -526,6 +526,8 @@ inline bool CIP_ParseSymbolicPath(const TCHAR *symbolicPath, uint32_t *classId, 
 #endif
 }
 
+String LIBETHERNETIP_EXPORTABLE CIP_DecodePath(const CIP_EPATH *path);
+
 /**** Attribute function ****/
 TCHAR LIBETHERNETIP_EXPORTABLE *CIP_DecodeAttribute(const uint8_t *data, size_t dataSize, uint32_t classId, uint32_t attributeId, TCHAR *buffer, size_t bufferSize);
 
