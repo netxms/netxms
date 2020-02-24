@@ -62,8 +62,6 @@ void CConfigWizard::DefaultConfig(const TCHAR *installDir)
    m_cfg.m_pollerPoolBaseSize = 10;
    m_cfg.m_pollerPoolMaxSize = 250;
    m_cfg.m_bLogToSyslog = FALSE;
-   _tcscpy(m_cfg.m_szSMSDriver, _T("<none>"));
-   _tcscpy(m_cfg.m_szSMSDrvParam, _T("COM1:"));
 
    // Read installation info from registry
    HKEY hKey;
