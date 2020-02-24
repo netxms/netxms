@@ -516,7 +516,7 @@ protected:
    const ObjectArray<NObject> *getChildList() { return m_childList; }
    const ObjectArray<NObject> *getParentList() { return m_parentList; }
 
-   void clearChildList() { m_childList->clear(); }
+   void clearChildList();
    void clearParentList();
 
    void lockCustomAttributes() const { MutexLock(m_customAttributeLock); }
@@ -539,8 +539,6 @@ protected:
    }
    void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
-   virtual void onChildAdd(NObject *object);
-   virtual void onParentRemove();
    virtual void onCustomAttributeChange();
 
 public:

@@ -54,11 +54,19 @@ NObject::~NObject()
 
 /**
  * Clear parent list. Should be called only when parent list is write locked.
+ * This method will not check for custom attribute inheritance changes.
  */
 void NObject::clearParentList()
 {
    m_parentList->clear();
-   onParentRemove();
+}
+
+/**
+ * Clear children list. Should be called only when children list is write locked.
+ */
+void NObject::clearChildList()
+{
+   m_childList->clear();
 }
 
 /**
@@ -75,7 +83,21 @@ void NObject::addChild(NObject *object)
    m_childList->add(object);
    unlockChildList();
 
-   onChildAdd(object);
+   // Update custom attribute inheritance
+   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
+   lockCustomAttributes();
+   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
+   while(iterator->hasNext())
+   {
+      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
+      if(pair->second->isInheritable())
+         updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->isRedefined() ? m_id : pair->second->sourceObject));
+   }
+   delete iterator;
+   unlockCustomAttributes();
+
+   for(int i = 0; i < updateList.size(); i++)
+      object->setCustomAttribute(updateList.get(i)->first, getCustomAttribute(updateList.get(i)->first), updateList.get(i)->second);
 }
 
 /**
@@ -111,8 +133,25 @@ void NObject::deleteParent(NObject *object)
    lockParentList(true);
    bool success = m_parentList->remove(object);
    unlockParentList();
+
    if (success)
-      onParentRemove();
+   {
+      StringList removeList;
+
+      lockCustomAttributes();
+      Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
+      while(iterator->hasNext())
+      {
+         std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
+         if (pair->second->isInherited() && !isParent(pair->second->sourceObject))
+            removeList.add(pair->first);
+      }
+      delete iterator;
+      unlockCustomAttributes();
+
+      for(int i = 0; i < removeList.size(); i++)
+         updateOrDeleteCustomAttributeOnParentRemove(removeList.get(i));
+   }
 }
 
 /**
@@ -294,7 +333,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
    UINT32 source = 0;
    bool remove = false;
 
-   if (curr == NULL)
+   if (curr == nullptr)
    {
       curr = new CustomAttribute(value, GetResultingFlag(0, inheritable, CAF_INHERITABLE));
       m_customAttributes->set(name, curr);
@@ -328,10 +367,10 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
 void NObject::setCustomAttribute(const TCHAR *name, SharedString value, UINT32 parent)
 {
    lockCustomAttributes();
+
    CustomAttribute *curr = m_customAttributes->get(name);
-   UINT32 source = parent;
    bool callPopulate = true;
-   if (curr == NULL)
+   if (curr == nullptr)
    {
       curr = new CustomAttribute(value, CAF_INHERITABLE, parent);
       m_customAttributes->set(name, curr);
@@ -351,6 +390,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, UINT32 p
       onCustomAttributeChange();
    }
 
+   uint32_t source = parent;
    if (curr->isRedefined())
    {
       source = m_id;
@@ -405,48 +445,6 @@ void NObject::setCustomAttribute(const TCHAR *key, UINT64 value)
 }
 
 /**
- * Hook method called on removing parent object
- */
-void NObject::onParentRemove()
-{
-   StringList remove;
-   lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
-   while(iterator->hasNext())
-   {
-      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
-      if (pair->second->isInheritable() && pair->second->isInherited() && !isParent(pair->second->sourceObject))
-         remove.add(pair->first);
-   }
-   delete iterator;
-   unlockCustomAttributes();
-
-   for(int i = 0; i < remove.size(); i++)
-      updateOrDeleteCustomAttributeOnParentRemove(remove.get(i));
-}
-
-/**
- * Hook method called on adding child object
- */
-void NObject::onChildAdd(NObject *object)
-{
-   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
-   lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
-   while(iterator->hasNext())
-   {
-      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
-      if(pair->second->isInheritable())
-         updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->isRedefined() ? m_id : pair->second->sourceObject));
-   }
-   delete iterator;
-   unlockCustomAttributes();
-
-   for(int i = 0; i < updateList.size(); i++)
-      object->setCustomAttribute(updateList.get(i)->first, getCustomAttribute(updateList.get(i)->first), updateList.get(i)->second);
-}
-
-/**
  * Update inherited custom attribute for child node
  */
 void NObject::populate(const TCHAR *name, SharedString value, UINT32 source)
@@ -480,18 +478,20 @@ void NObject::setCustomAttributesFromDatabase(DB_RESULT hResult)
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
    {
-      TCHAR *name = DBGetField(hResult, i, 0, NULL, 0);
-      if (name != NULL)
+      TCHAR *name = DBGetField(hResult, i, 0, nullptr, 0);
+      if (name != nullptr)
       {
-         TCHAR *value = DBGetField(hResult, i, 1, NULL, 0);
-         if (value != NULL)
+         TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
+         if (value != nullptr)
          {
             CustomAttribute *curr = new CustomAttribute(value, DBGetFieldULong(hResult, i, 2));
             m_customAttributes->setPreallocated(name, curr);
             MemFree(value);
          }
          else
+         {
             MemFree(name);
+         }
       }
    }
 }
@@ -505,7 +505,7 @@ bool NObject::setCustomAttributeFromMessage(NXCPMessage *msg, UINT32 base)
    TCHAR *name = msg->getFieldAsString(base++);
    TCHAR *value = msg->getFieldAsString(base++);
    UINT32 flags = msg->getFieldAsUInt32(base++);
-   if ((name != NULL) && (value != NULL))
+   if ((name != nullptr) && (value != nullptr))
    {
       setCustomAttribute(name, value, (flags & CAF_INHERITABLE) > 0 ? StateChange::SET : StateChange::CLEAR);
       success = true;
@@ -569,20 +569,22 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
    CustomAttribute *ca = m_customAttributes->get(name);
    bool populate = false;
    bool redefined = false;
-   UINT32 parent;
-   if (ca != NULL && (!ca->isInherited() || ca->isRedefined()))
+   uint32_t parent;
+   if ((ca != nullptr) && (!ca->isInherited() || ca->isRedefined()))
    {
       populate = ca->isInheritable() && !ca->isRedefined();
       redefined = ca->isRedefined();
       parent = ca->sourceObject;
 
-      if(ca->isRedefined())
+      if (ca->isRedefined())
       {
          ca->flags &= ~CAF_REDEFINED;
          ca->value = getCustomAttributeFromParent(name);
       }
       else
+      {
          m_customAttributes->remove(name);
+      }
 
       onCustomAttributeChange();
    }
@@ -602,17 +604,19 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name)
    lockCustomAttributes();
    CustomAttribute *ca = m_customAttributes->get(name);
    bool populate = false;
-   if (ca != NULL)
+   if (ca != nullptr)
    {
       populate = ca->isInheritable() && !ca->isRedefined();
 
-      if(ca->isRedefined())
+      if (ca->isRedefined())
       {
          ca->sourceObject = 0;
          ca->flags &= ~CAF_REDEFINED;
       }
       else
+      {
          m_customAttributes->remove(name);
+      }
 
       onCustomAttributeChange();
    }
@@ -630,7 +634,7 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
    lockCustomAttributes();
    CustomAttribute *ca = m_customAttributes->get(name);
    bool populate = false;
-   if (ca != NULL)
+   if (ca != nullptr)
    {
       if (!ca->isRedefined())
       {
@@ -638,7 +642,10 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
          populate = true;
       }
       else
+      {
          ca->sourceObject = 0;
+      }
+
       onCustomAttributeChange();
    }
    unlockCustomAttributes();
@@ -654,14 +661,14 @@ TCHAR *NObject::getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size
    TCHAR *result;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
-   if (attr != NULL)
+   if (attr != nullptr)
    {
       _tcslcpy(buffer, attr->value, size);
       result = buffer;
    }
    else
    {
-      result = NULL;
+      result = nullptr;
    }
    unlockCustomAttributes();
    return result;
@@ -674,7 +681,7 @@ SharedString NObject::getCustomAttribute(const TCHAR *name) const
 {
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
-   SharedString result = (attr != NULL) ? attr->value : SharedString();
+   SharedString result = (attr != nullptr) ? attr->value : SharedString();
    unlockCustomAttributes();
    return result;
 }
@@ -686,7 +693,7 @@ TCHAR *NObject::getCustomAttributeCopy(const TCHAR *name) const
 {
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
-   TCHAR *result = (attr != NULL) ? MemCopyString(attr->value) : NULL;
+   TCHAR *result = (attr != nullptr) ? MemCopyString(attr->value) : nullptr;
    unlockCustomAttributes();
    return result;
 }
@@ -699,8 +706,8 @@ INT32 NObject::getCustomAttributeAsInt32(const TCHAR *key, INT32 defaultValue) c
    INT32 result = defaultValue;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(key);
-   if (attr != NULL)
-      result = _tcstol(attr->value, NULL, 0);
+   if (attr != nullptr)
+      result = _tcstol(attr->value, nullptr, 0);
    unlockCustomAttributes();
    return result;
 }
@@ -713,8 +720,8 @@ UINT32 NObject::getCustomAttributeAsUInt32(const TCHAR *key, UINT32 defaultValue
    UINT32 result = defaultValue;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(key);
-   if (attr != NULL)
-      result = _tcstoul(attr->value, NULL, 0);
+   if (attr != nullptr)
+      result = _tcstoul(attr->value, nullptr, 0);
    unlockCustomAttributes();
    return result;
 }
@@ -727,8 +734,8 @@ INT64 NObject::getCustomAttributeAsInt64(const TCHAR *key, INT64 defaultValue) c
    INT64 result = defaultValue;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(key);
-   if (attr != NULL)
-      result = _tcstoll(attr->value, NULL, 0);
+   if (attr != nullptr)
+      result = _tcstoll(attr->value, nullptr, 0);
    unlockCustomAttributes();
    return result;
 
@@ -742,8 +749,8 @@ UINT64 NObject::getCustomAttributeAsUInt64(const TCHAR *key, UINT64 defaultValue
    UINT64 result = defaultValue;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(key);
-   if (attr != NULL)
-      result = _tcstoull(attr->value, NULL, 0);
+   if (attr != nullptr)
+      result = _tcstoull(attr->value, nullptr, 0);
    unlockCustomAttributes();
    return result;
 }
@@ -756,8 +763,8 @@ double NObject::getCustomAttributeAsDouble(const TCHAR *key, double defaultValue
    double result = defaultValue;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(key);
-   if (attr != NULL)
-      result = _tcstod(attr->value, NULL);
+   if (attr != nullptr)
+      result = _tcstod(attr->value, nullptr);
    unlockCustomAttributes();
    return result;
 
@@ -771,14 +778,14 @@ bool NObject::getCustomAttributeAsBoolean(const TCHAR *key, bool defaultValue) c
    bool result = defaultValue;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(key);
-   if (attr != NULL)
+   if (attr != nullptr)
    {
       if (!_tcsicmp(attr->value, _T("false")))
          result = false;
       else if (!_tcsicmp(attr->value, _T("true")))
          result = true;
       else
-         result = (_tcstoul(attr->value, NULL, 0) != 0) ? true : false;
+         result = (_tcstoul(attr->value, nullptr, 0) != 0) ? true : false;
    }
    unlockCustomAttributes();
    return result;
@@ -806,7 +813,7 @@ StringMap *NObject::getCustomAttributes(bool (*filter)(const TCHAR *, const Cust
 static bool RegExpAttrFilter(const TCHAR *name, const CustomAttribute *value, PCRE *preg)
 {
    int ovector[30];
-   return _pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(name), static_cast<int>(_tcslen(name)), 0, 0, ovector, 30) >= 0;
+   return _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(name), static_cast<int>(_tcslen(name)), 0, 0, ovector, 30) >= 0;
 }
 
 /**
@@ -815,13 +822,13 @@ static bool RegExpAttrFilter(const TCHAR *name, const CustomAttribute *value, PC
  */
 StringMap *NObject::getCustomAttributes(const TCHAR *regexp) const
 {
-   if (regexp == NULL)
-      return getCustomAttributes(NULL, NULL);
+   if (regexp == nullptr)
+      return getCustomAttributes(nullptr, nullptr);
 
    const char *eptr;
    int eoffset;
-   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regexp), PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
-   if (preg == NULL)
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regexp), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
+   if (preg == nullptr)
       return new StringMap();
 
    StringMap *attributes = new StringMap();
@@ -835,17 +842,15 @@ StringMap *NObject::getCustomAttributes(const TCHAR *regexp) const
    return attributes;
 }
 
-
-
 /**
  * Get custom attribute as NXSL value
  */
 NXSL_Value *NObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const
 {
-   NXSL_Value *value = NULL;
+   NXSL_Value *value = nullptr;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
-   if (attr != NULL)
+   if (attr != nullptr)
       value = vm->createValue(attr->value);
    unlockCustomAttributes();
    return value;
