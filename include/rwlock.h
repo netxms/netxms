@@ -30,13 +30,10 @@ typedef pthread_rwlock_t * RWLOCK;
 
 inline RWLOCK RWLockCreate(void)
 {
-   RWLOCK hLock;
-
-   hLock = (RWLOCK)MemAlloc(sizeof(pthread_rwlock_t));
+   RWLOCK hLock = MemAllocStruct<pthread_rwlock_t>();
    if (pthread_rwlock_init(hLock, NULL) != 0)
    {
-      MemFree(hLock);
-      hLock = NULL;
+      MemFreeAndNull(hLock);
    }
    return hLock;
 }
