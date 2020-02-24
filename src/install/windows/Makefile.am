@@ -9,11 +9,6 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-	common.iss \
-	icons.iss \
-	icons-minimal.iss \
-	netxms-x64.iss \
-	netxms-x64-minimal.iss \
-	setup.iss \
-	setup-webui.iss \
-	webui-x64.iss
+	firewall.iss \
+	netxms-server-x64.iss \
+	netxms-webui-x64.iss
