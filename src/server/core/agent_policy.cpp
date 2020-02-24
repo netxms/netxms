@@ -404,7 +404,7 @@ bool FileDeliveryPolicy::deleteFromDatabase(DB_HANDLE hdb)
    for(int i = 0; i < files.size(); i++)
    {
       String guid = files.get(i)->guid.toString();
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::modifyFromMessage(%s): copy file %s and update guid"), guid.cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::modifyFromMessage(): copy file %s and update guid"), guid.cstr());
 
       StringBuffer sourceFile = g_netxmsdDataDir;
       sourceFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
