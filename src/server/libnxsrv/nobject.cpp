@@ -54,11 +54,19 @@ NObject::~NObject()
 
 /**
  * Clear parent list. Should be called only when parent list is write locked.
+ * This method will not check for custom attribute inheritance changes.
  */
 void NObject::clearParentList()
 {
    m_parentList->clear();
-   onParentRemove();
+}
+
+/**
+ * Clear children list. Should be called only when children list is write locked.
+ */
+void NObject::clearChildList()
+{
+   m_childList->clear();
 }
 
 /**
@@ -75,7 +83,20 @@ void NObject::addChild(NObject *object)
    m_childList->add(object);
    unlockChildList();
 
-   onChildAdd();
+   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, true);
+   lockCustomAttributes();
+   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
+   while(iterator->hasNext())
+   {
+      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
+      if(pair->second->isInheritable())
+         updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->isRedefined() ? m_id : pair->second->sourceObject));
+   }
+   delete iterator;
+   unlockCustomAttributes();
+
+   for(int i = 0; i < updateList.size(); i++)
+      setCustomAttribute(updateList.get(i)->first, getCustomAttribute(updateList.get(i)->first), updateList.get(i)->second);
 }
 
 /**
@@ -112,7 +133,22 @@ void NObject::deleteParent(NObject *object)
    bool success = m_parentList->remove(object);
    unlockParentList();
    if (success)
-      onParentRemove();
+   {
+      StringList removeList;
+      lockCustomAttributes();
+      Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
+      while(iterator->hasNext())
+      {
+         std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
+         if (pair->second->isInheritable() && pair->second->isInherited() && !isParent(pair->second->sourceObject))
+            removeList.add(pair->first);
+      }
+      delete iterator;
+      unlockCustomAttributes();
+
+      for(int i = 0; i < removeList.size(); i++)
+         deleteCustomAttribute(removeList.get(i), true);
+   }
 }
 
 /**
@@ -402,48 +438,6 @@ void NObject::setCustomAttribute(const TCHAR *key, UINT64 value)
    TCHAR buffer[64];
    _sntprintf(buffer, 64, UINT64_FMT, value);
    setCustomAttribute(key, buffer, StateChange::IGNORE);
-}
-
-/**
- * Hook method called on removing parent object
- */
-void NObject::onParentRemove()
-{
-   StringList remove;
-   lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
-   while(iterator->hasNext())
-   {
-      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
-      if (pair->second->isInheritable() && pair->second->isInherited() && !isParent(pair->second->sourceObject))
-         remove.add(pair->first);
-   }
-   delete iterator;
-   unlockCustomAttributes();
-
-   for(int i = 0; i < remove.size(); i++)
-      deleteCustomAttribute(remove.get(i), true);
-}
-
-/**
- * Hook method called on adding child object
- */
-void NObject::onChildAdd()
-{
-   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, true);
-   lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
-   while(iterator->hasNext())
-   {
-      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
-      if(pair->second->isInheritable())
-         updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->isRedefined() ? m_id : pair->second->sourceObject));
-   }
-   delete iterator;
-   unlockCustomAttributes();
-
-   for(int i = 0; i < updateList.size(); i++)
-      setCustomAttribute(updateList.get(i)->first, getCustomAttribute(updateList.get(i)->first), updateList.get(i)->second);
 }
 
 /**
