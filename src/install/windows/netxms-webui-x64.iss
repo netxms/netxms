@@ -1,3 +1,40 @@
+; Installation script for NetXMS WebUI / Windows x64
+
+#include "..\..\..\include\netxms-build-tag.iss"
+
+[Setup]
+AppName=NetXMS WebUI
+AppVerName=NetXMS WebUI {#VersionString}
+AppVersion={#VersionString}
+AppPublisher=Raden Solutions
+AppPublisherURL=http://www.radensolutions.com
+AppSupportURL=http://www.netxms.org
+AppUpdatesURL=http://www.netxms.org
+DefaultDirName=C:\NetXMS
+DefaultGroupName=NetXMS
+DisableDirPage=auto
+DisableProgramGroupPage=auto
+AllowNoIcons=yes
+LicenseFile=..\..\..\GPL.txt
+Compression=lzma
+SolidCompression=yes
+LanguageDetectionMethod=none
+CloseApplications=no
+SignTool=signtool
+OutputBaseFilename=netxms-webui-{#VersionString}-x64
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
+
+[Files]
+Source: ..\files\windows\x64\prunsrv.exe; DestDir: "{app}\WebUI"; BeforeInstall: StopAllServices; Flags: ignoreversion; Components: webui
+Source: ..\files\java\jetty\jetty-runner.jar; DestDir: "{app}\WebUI"; Flags: ignoreversion; Components: webui
+Source: ..\files\java\jetty\start.jar; DestDir: "{app}\WebUI"; Flags: ignoreversion; Components: webui
+Source: nxmc\jetty.xml; DestDir: "{app}\WebUI\nxmc"; Flags: ignoreversion; Components: webui
+Source: nxmc\jetty-web.xml; DestDir: "{app}\WebUI\nxmc"; Flags: ignoreversion; Components: webui
+Source: nxmc\nxmc.war; DestDir: "{app}\WebUI\nxmc"; Flags: ignoreversion; Components: webui
+Source: nxmc\nxmc.properties.sample; DestDir: "{app}\WebUI\nxmc\lib"; Flags: ignoreversion; Components: webui
+Source: ..\files\windows\x64\jre\*; DestDir: "{app}\bin\jre"; Flags: ignoreversion recursesubdirs; Components: jre
+
 [Dirs]
 Name: "{app}\WebUI\base"
 Name: "{app}\WebUI\logs"
