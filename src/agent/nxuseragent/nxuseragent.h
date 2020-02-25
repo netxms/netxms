@@ -107,6 +107,7 @@ protected:
    bool m_symbol;
 
    void loadSubItems(ConfigEntry *config);
+   void merge(MenuItem *item);
    void draw(HDC hdc) const;
    void trackMouseEvent();
 
@@ -126,6 +127,7 @@ public:
    bool isTopLevelMenu() const { return m_parent == NULL; }
    bool isSubMenu() const { return m_subItems != NULL; }
    bool isEmptySubMenu() const { return isSubMenu() && (m_subItems->size() <= 1);  }
+   bool isBackMenu() const { return (m_command != nullptr) && (_tcscmp(m_command, _T("\x21A9")) == 0); }
 
    int getItemCount() const { return (m_subItems != NULL) ? m_subItems->size() : 0; }
    MenuItem *getItemAtPos(int pos) { return (m_subItems != NULL) ? m_subItems->get(pos) : NULL; }

@@ -21,9 +21,9 @@ int s_cursorPos = -1;
  */
 MenuItem::MenuItem()
 {
-   m_name = _tcsdup(_T("[ROOT]"));
-   m_displayName = _tcsdup(m_name);
-   m_path = _tcsdup(_T(""));
+   m_name = MemCopyString(_T("[ROOT]"));
+   m_displayName = MemCopyString(m_name);
+   m_path = MemCopyString(_T(""));
    m_command = NULL;
    m_parent = NULL;
    m_subItems = new ObjectArray<MenuItem>(16, 16, Ownership::True);
@@ -39,9 +39,9 @@ MenuItem::MenuItem()
  */
 MenuItem::MenuItem(const TCHAR *text, bool symbol)
 {
-   m_name = _tcsdup(text);
-   m_displayName = _tcsdup(m_name);
-   m_path = _tcsdup(_T(""));
+   m_name = MemCopyString(text);
+   m_displayName = MemCopyString(m_name);
+   m_path = MemCopyString(_T(""));
    m_command = NULL;
    m_parent = NULL;
    m_subItems = NULL;
@@ -118,6 +118,18 @@ MenuItem::~MenuItem()
 }
 
 /**
+ * Menu item comparator
+ */
+static int MenuItemComparator(const MenuItem **m1, const MenuItem **m2)
+{
+   if ((*m1)->isBackMenu())
+      return (*m2)->isBackMenu() ? 0 : -1;
+   if ((*m2)->isBackMenu())
+      return 1;
+   return _tcsicmp((*m1)->getDisplayName(), (*m2)->getDisplayName());
+}
+
+/**
  * Load sub-items
  */
 void MenuItem::loadSubItems(ConfigEntry *config)
@@ -131,8 +143,27 @@ void MenuItem::loadSubItems(ConfigEntry *config)
       MenuItem *item = new MenuItem(this, items->get(i), m_path);
       if (!item->isEmptySubMenu())
       {
-         nxlog_debug(2, _T("Added menu item %s"), item->getPath());
-         m_subItems->add(item);
+         bool merged = false;
+         if (item->isSubMenu())
+         {
+            for (int j = 0; j < m_subItems->size(); j++)
+            {
+               MenuItem *curr = m_subItems->get(j);
+               if (curr->isSubMenu() && !_tcscmp(curr->getPath(), item->getPath()))
+               {
+                  nxlog_debug(2, _T("Merging menu item %s"), item->getPath());
+                  m_subItems->get(j)->merge(item);
+                  delete item;
+                  merged = true;
+                  break;
+               }
+            }
+         }
+         if (!merged)
+         {
+            nxlog_debug(2, _T("Added menu item %s"), item->getPath());
+            m_subItems->add(item);
+         }
       }
       else
       {
@@ -141,6 +172,25 @@ void MenuItem::loadSubItems(ConfigEntry *config)
       }
    }
    delete items;
+
+   m_subItems->sort(MenuItemComparator);
+}
+
+/**
+ * Merge menu items
+ */
+void MenuItem::merge(MenuItem *item)
+{
+   for (int i = 0; i < item->m_subItems->size(); i++)
+   {
+      MenuItem *curr = item->m_subItems->get(i);
+      if (!curr->isBackMenu())
+         m_subItems->add(curr);
+      else
+         delete curr;
+   }
+   item->m_subItems->setOwner(Ownership::False);
+   item->m_subItems->clear();
 }
 
 /**
