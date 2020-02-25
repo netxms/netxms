@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -136,6 +136,19 @@ public class AppPropertiesLoader
       {
          return defaultValue;
       }
+   }
+
+   /**
+    * Get property as boolean
+    *
+    * @param name property name
+    * @param defaultValue default value if property is not set
+    * @return property value or default value
+    */
+   public boolean getPropertyAsBoolean(String name, boolean defaultValue)
+   {
+      String value = getProperty(name, null);
+      return (value != null) ? Boolean.parseBoolean(value) : defaultValue;
    }
 
    /**

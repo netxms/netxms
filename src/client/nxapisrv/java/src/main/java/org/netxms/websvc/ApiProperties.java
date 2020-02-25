@@ -30,6 +30,7 @@ public class ApiProperties
    private Properties properties;
    private String host = "127.0.0.1";
    private int port = 4701;
+   private boolean encryptedSession;
    
    /**
     * Class for reading API properties file
@@ -46,6 +47,7 @@ public class ApiProperties
             properties.load(in);
             host = properties.getProperty("netxms.server.address", "127.0.0.1");
             port = getIntProperty("netxms.server.port", 4701);
+            encryptedSession = getBooleanProperty("netxms.server.useEncryption", true);
          }
       }
       catch(Exception e)
@@ -90,6 +92,21 @@ public class ApiProperties
    }
    
    /**
+    * Get property value as boolean
+    * 
+    * @param name
+    * @param defaultValue
+    * @return
+    */
+   private boolean getBooleanProperty(String name, boolean defaultValue)
+   {
+      String v = properties.getProperty(name);
+      if (v == null)
+         return defaultValue;
+      return Boolean.parseBoolean(v);
+   }
+
+   /**
     * @return the address of the NetXMS server
     */
    public String getServerAddress()
@@ -105,5 +122,15 @@ public class ApiProperties
    public int getServerPort()
    {
       return port;
+   }
+
+   /**
+    * Get session encryption flag
+    * 
+    * @return session encryption flag
+    */
+   public boolean isEncryptedSession()
+   {
+      return encryptedSession;
    }
 }

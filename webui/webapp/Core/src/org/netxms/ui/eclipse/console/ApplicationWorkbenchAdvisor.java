@@ -108,12 +108,12 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	 * @param password
 	 * @return
 	 */
-	private boolean connectToServer(String server, String login, String password)
+	private boolean connectToServer(String server, String login, String password, boolean encryptSession)
 	{
 		boolean success = false;
 		try
 		{
-			LoginJob job = new LoginJob(Display.getCurrent(), server, login, false, false);
+			LoginJob job = new LoginJob(Display.getCurrent(), server, login, encryptSession, false);
 			job.setPassword(password);
 			ProgressMonitorWindow progressMonitor = new ProgressMonitorWindow(Display.getCurrent().getActiveShell());
 			progressMonitor.run(job);
@@ -151,7 +151,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			String server = Application.getParameter("server"); //$NON-NLS-1$
 			if (server == null)
 				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
-			success = connectToServer(server, null, ssoTicket);
+			success = connectToServer(server, null, ssoTicket, properties.getPropertyAsBoolean("useEncryption", true));
 		}
 		else if (autoLogin) 
 		{
@@ -164,7 +164,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			password = Application.getParameter("password"); //$NON-NLS-1$
 			if (password == null)
 				password = "";
-			success = connectToServer(server, login, password);
+			success = connectToServer(server, login, password, properties.getPropertyAsBoolean("useEncryption", true));
 		}
 		
 		if (!autoLogin || !success)
@@ -179,7 +179,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 				
 				success = connectToServer(properties.getProperty("server", "127.0.0.1"),  //$NON-NLS-1$ //$NON-NLS-2$ 
 				                          ((LoginForm)loginDialog).getLogin(),
-				                          password);
+				                          password, properties.getPropertyAsBoolean("useEncryption", true));
 			} while(!success);
 		}
 

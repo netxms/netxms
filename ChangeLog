@@ -22,6 +22,7 @@
 	NX-1767 (File manager may be unable to access file with percent sign in name)
 	NX-1782 (Windows installer offers generic.sms SMS driver, while the server is now reworked to have notification channels)
 	NX-1792 (Unable to use script with parameters for instance discovery)
+	NX-1796 (WebUI and REST API not connected securely to the NetXMS server)
 
 
 *
