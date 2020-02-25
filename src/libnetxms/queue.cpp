@@ -41,7 +41,7 @@ struct QueueBuffer
 Queue::Queue(size_t blockSize, Ownership owner)
 {
    m_blockSize = blockSize;
-   m_owner = static_cast<bool>(owner);
+   m_owner = (owner == Ownership::True);
 	commonInit();
 }
 

@@ -43,7 +43,7 @@ AbstractCommChannel::~AbstractCommChannel()
 SocketCommChannel::SocketCommChannel(SOCKET socket, Ownership owner) : AbstractCommChannel()
 {
    m_socket = socket;
-   m_owner = static_cast<bool>(owner);
+   m_owner = (owner == Ownership::True);
 #ifndef _WIN32
    if (pipe(m_controlPipe) != 0)
    {

@@ -38,7 +38,7 @@ static void ObjectDestructor(void *object, StringMapBase *map)
 StringMapBase::StringMapBase(Ownership objectOwner, void (*destructor)(void *, StringMapBase *))
 {
 	m_data = NULL;
-	m_objectOwner = static_cast<bool>(objectOwner);
+	m_objectOwner = (objectOwner == Ownership::True);
    m_ignoreCase = true;
    m_context = NULL;
 	m_objectDestructor = (destructor != NULL) ? destructor : ObjectDestructor;
