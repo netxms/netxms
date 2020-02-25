@@ -198,7 +198,7 @@ TelegramDriver::~TelegramDriver()
    MemFree(m_botName);
    ConditionDestroy(m_shutdownCondition);
    MutexDestroy(m_chatsLock);
-   delete m_proxy;
+   MemFree(m_proxy);
 }
 
 /**
