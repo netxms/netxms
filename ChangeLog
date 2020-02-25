@@ -2,6 +2,7 @@
 * 3.2
 *
 
+- Data collection from web services
 - Nodes within chassis and chassis view
 - EtherNet/IP device discovery
 - Image library configurator completely rewritten
@@ -16,6 +17,7 @@
 	NX-896 (Display blade chassis and servers in rack)
 	NX-1476 (NetXMS Server crashes when sending alarm summary email)
 	NX-1523 (Store object creation time)
+	NX-1525 (Use HTTP response data as DCI value)
 	NX-1724 (Implement agent parameters for inode usage)
 	NX-1741 (Node placement within chassis)
 	NX-1748 (User agent should check on startup if it is already running in same session)
