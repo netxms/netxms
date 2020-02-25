@@ -76,14 +76,99 @@ static void CheckIfRunning()
    if (!ProcessIdToSessionId(GetCurrentProcessId(), &sessionId))
       return;
 
-   TCHAR name[256];
-   if (GetModuleBaseName(GetCurrentProcess(), NULL, name, 256) == 0)
+   TCHAR pipeName[128];
+   _sntprintf(pipeName, 128, _T("\\\\.\\pipe\\nxuseragent.%u"), sessionId);
+
+   DWORD response, bytes;
+   if (!CallNamedPipe(pipeName, &sessionId, 4, &response, 4, &bytes, 1000))
       return;
 
-   if (!CheckProcessPresenseInSession(sessionId, name))
-      return;  // Not running
+   if ((bytes != 4) || (response != sessionId))
+      return;
 
    ExitProcess(0);
+}
+
+/**
+ * Echo listener
+ */
+static NamedPipeListener *s_echoListener = nullptr;
+
+/**
+ * Echo request handler
+ */
+static void EchoRequestHandler(NamedPipe *pipe, void *userArg)
+{
+   BYTE buffer[128];
+
+   OVERLAPPED ov;
+   memset(&ov, 0, sizeof(OVERLAPPED));
+   ov.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+   DWORD bytes;
+   if (ReadFile(pipe->handle(), buffer, 128, &bytes, &ov))
+   {
+      // completed immediately
+      nxlog_debug(6, _T("EchoRequestHandler: echo request for %u bytes"), bytes);
+      WriteFile(pipe->handle(), buffer, bytes, &bytes, NULL);
+      CloseHandle(ov.hEvent);
+      return;
+   }
+
+   if (GetLastError() != ERROR_IO_PENDING)
+   {
+      TCHAR errorText[1024];
+      nxlog_debug(6, _T("EchoRequestHandler: ReadFile failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+      CloseHandle(ov.hEvent);
+      return;
+   }
+
+   if (WaitForSingleObject(ov.hEvent, 1000) != WAIT_OBJECT_0)
+   {
+      CancelIo(pipe->handle());
+      CloseHandle(ov.hEvent);
+      return;
+   }
+
+   if (!GetOverlappedResult(pipe->handle(), &ov, &bytes, TRUE))
+   {
+      if (GetLastError() != ERROR_MORE_DATA)
+      {
+         CloseHandle(ov.hEvent);
+         return;
+      }
+   }
+
+   nxlog_debug(6, _T("EchoRequestHandler: echo request for %u bytes"), bytes);
+   WriteFile(pipe->handle(), buffer, bytes, &bytes, NULL);
+   CloseHandle(ov.hEvent);
+}
+
+/**
+ * Start echo listener
+ */
+static bool StartEchoListener()
+{
+   DWORD sessionId;
+   if (!ProcessIdToSessionId(GetCurrentProcessId(), &sessionId))
+   {
+      TCHAR errorText[1024];
+      nxlog_write(NXLOG_ERROR, _T("StartEchoListener: ProcessIdToSessionId failed (%s)"),
+            GetSystemErrorText(GetLastError(), errorText, 1024));
+      return false;
+   }
+
+   TCHAR pipeName[128];
+   _sntprintf(pipeName, 128, _T("nxuseragent.%u"), sessionId);
+   s_echoListener = NamedPipeListener::create(pipeName, EchoRequestHandler, nullptr);
+   if (s_echoListener == nullptr)
+   {
+      nxlog_write(NXLOG_ERROR, _T("StartEchoListener: cannot create named pipe"));
+      return false;
+   }
+
+   s_echoListener->start();
+   nxlog_write(NXLOG_INFO, _T("Echo listener started"));
+   return true;
 }
 
 /**
@@ -115,7 +200,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
 
    if ((wrc != 0) || !InitCommonControlsEx(&icc) || !InitMenu() || !SetupTrayIcon() ||
        !PrepareApplicationWindow() || !PrepareMessageWindow() || !SetupSessionEventHandler() ||
-       !InitButtons())
+       !InitButtons() || !StartEchoListener())
    {
       nxlog_write(NXLOG_ERROR, _T("NetXMS User Agent initialization failed"));
       MessageBox(NULL, _T("NetXMS User Agent initialization failed"), _T("NetXMS User Agent"), MB_OK | MB_ICONSTOP);
@@ -153,6 +238,13 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
          TranslateMessage(&msg);
          DispatchMessage(&msg);
       }
+   }
+
+   if (s_echoListener != nullptr)
+   {
+      nxlog_debug(2, _T("Stopping echo listener"));
+      s_echoListener->stop();
+      delete s_echoListener;
    }
 
    StopAgentConnector();

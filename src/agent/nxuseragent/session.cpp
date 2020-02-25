@@ -136,6 +136,10 @@ bool SetupSessionEventHandler()
 {
    UpdateSessionInformation();
 
+   UserSession session;
+   GetSessionInformation(&session);
+   nxlog_write(NXLOG_INFO, _T("Running in session %s as %s"), session.name, session.user);
+
    WNDCLASS wc;
    memset(&wc, 0, sizeof(WNDCLASS));
    wc.lpfnWndProc = EventHandlerWndProc;
