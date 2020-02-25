@@ -1182,7 +1182,7 @@ public:
 
 	size_t memoryUsage() const { return m_allocated * m_elementSize; }
 
-	void setOwner(Ownership owner) { m_objectOwner = static_cast<bool>(owner); }
+	void setOwner(Ownership owner) { m_objectOwner = (owner == Ownership::True); }
 	bool isOwner() const { return m_objectOwner; }
 
 	void setContext(void *context) { m_context = context; }
@@ -1477,7 +1477,7 @@ public:
    StringMapBase(Ownership objectOwner, void (*destructor)(void *, StringMapBase *) = NULL);
    virtual ~StringMapBase();
 
-   void setOwner(Ownership owner) { m_objectOwner = static_cast<bool>(owner); }
+   void setOwner(Ownership owner) { m_objectOwner = (owner == Ownership::True); }
    void setIgnoreCase(bool ignore);
 
    void remove(const TCHAR *key);
@@ -1930,7 +1930,7 @@ protected:
 public:
    virtual ~HashMapBase();
 
-   void setOwner(Ownership owner) { m_objectOwner = static_cast<bool>(owner); }
+   void setOwner(Ownership owner) { m_objectOwner = (owner == Ownership::True); }
 	void clear();
 
 	int size() const;

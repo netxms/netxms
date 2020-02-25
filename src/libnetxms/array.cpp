@@ -48,7 +48,7 @@ Array::Array(int initial, int grow, Ownership owner, void (*objectDestructor)(vo
    m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = sizeof(void *);
    m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : NULL;
-   m_objectOwner = static_cast<bool>(owner);
+   m_objectOwner = (owner == Ownership::True);
    m_objectDestructor = (objectDestructor != NULL) ? objectDestructor : DefaultObjectDestructor;
    m_storePointers = true;
    m_context = NULL;
