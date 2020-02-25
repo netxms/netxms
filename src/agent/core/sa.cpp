@@ -42,40 +42,52 @@ static Mutex s_userAgentNotificationsLock;
 static void RegisterSessionAgent(SessionAgentConnector *newConnector)
 {
    RWLockWriteLock(s_lock);
-   s_agents.add(newConnector);
-   s_sessionAgentCount++;
-   if (newConnector->isUserAgent())
+   bool idFound = false;
+   for (int i = 0; i < s_agents.size(); i++)
    {
-      s_userAgentCount++;
-
-      // Stop session agent if it is running in same session as user agent
-      for (int i = 0; i < s_agents.size(); i++)
+      if (s_agents.get(i)->getId() == newConnector->getId())
       {
-         SessionAgentConnector *curr = s_agents.get(i);
-         if ((curr->getSessionId() == newConnector->getSessionId()) && !curr->isUserAgent())
-         {
-            nxlog_debug(4, _T("RegisterSessionAgent: forcing shutdown of session agent in session %s"), curr->getSessionName());
-            curr->shutdown(false);
-         }
+         idFound = true;
+         break;
       }
    }
-   else
+   if (!idFound)
    {
-      // Stop this agent if it is running in same session as user agent
-      bool userAgentFound = false;
-      for (int i = 0; i < s_agents.size(); i++)
+      s_agents.add(newConnector);
+      s_sessionAgentCount++;
+      if (newConnector->isUserAgent())
       {
-         SessionAgentConnector *curr = s_agents.get(i);
-         if ((curr->getSessionId() == newConnector->getSessionId()) && curr->isUserAgent())
+         s_userAgentCount++;
+
+         // Stop session agent if it is running in same session as user agent
+         for (int i = 0; i < s_agents.size(); i++)
          {
-            userAgentFound = true;
-            break;
+            SessionAgentConnector *curr = s_agents.get(i);
+            if ((curr->getSessionId() == newConnector->getSessionId()) && !curr->isUserAgent())
+            {
+               nxlog_debug(4, _T("RegisterSessionAgent: forcing shutdown of session agent in session %s"), curr->getSessionName());
+               curr->shutdown(false);
+            }
          }
       }
-      if (userAgentFound)
+      else
       {
-         nxlog_debug(4, _T("RegisterSessionAgent: forcing shutdown of session agent in session %s"), newConnector->getSessionName());
-         newConnector->shutdown(false);
+         // Stop this agent if it is running in same session as user agent
+         bool userAgentFound = false;
+         for (int i = 0; i < s_agents.size(); i++)
+         {
+            SessionAgentConnector *curr = s_agents.get(i);
+            if ((curr->getSessionId() == newConnector->getSessionId()) && curr->isUserAgent())
+            {
+               userAgentFound = true;
+               break;
+            }
+         }
+         if (userAgentFound)
+         {
+            nxlog_debug(4, _T("RegisterSessionAgent: forcing shutdown of session agent in session %s"), newConnector->getSessionName());
+            newConnector->shutdown(false);
+         }
       }
    }
    RWLockUnlock(s_lock);
@@ -229,15 +241,9 @@ void SessionAgentConnector::readThread()
                m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
                m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
                m_userAgent = msg->getFieldAsBoolean(VID_USERAGENT);
-
-               MemFree(m_sessionName);
-               m_sessionName = msg->getFieldAsString(VID_NAME);
-
-               MemFree(m_userName);
-               m_userName = msg->getFieldAsString(VID_USER_NAME);
-
-               MemFree(m_clientName);
-               m_clientName = msg->getFieldAsString(VID_CLIENT_INFO);
+               msg->getFieldAsString(VID_NAME, &m_sessionName);
+               msg->getFieldAsString(VID_USER_NAME, &m_userName);
+               msg->getFieldAsString(VID_CLIENT_INFO, &m_clientName);
 
                delete msg;
                DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d] (%s client)"), 
