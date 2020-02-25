@@ -166,8 +166,10 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
  */
 static void UpdateMapCallback(NetObj *object, void *data)
 {
-	((NetworkMap *)object)->updateContent();
-   ((NetworkMap *)object)->calculateCompoundStatus();
+   if (IsShutdownInProgress())
+      return;
+	static_cast<NetworkMap*>(object)->updateContent();
+	static_cast<NetworkMap*>(object)->calculateCompoundStatus();
 }
 
 /**

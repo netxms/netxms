@@ -735,7 +735,10 @@ void NetworkMap::updateContent()
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object %d cannot be found"), m_name, m_id, m_seedObjects->get(i));
          }
       }
-      updateObjects(&objects);
+      if (!IsShutdownInProgress())
+      {
+         updateObjects(&objects);
+      }
    }
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): completed"), m_name, m_id);
 }
