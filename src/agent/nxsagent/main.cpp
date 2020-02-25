@@ -113,7 +113,8 @@ static void Login()
 
    DWORD sid;
    ProcessIdToSessionId(GetCurrentProcessId(), &sid);
-   msg.setField(VID_SESSION_ID, (UINT32)sid);
+   msg.setField(VID_SESSION_ID, (uint32_t)sid);
+   msg.setField(VID_PROCESS_ID, (uint32_t)GetCurrentProcessId());
 
    DWORD size;
    WTS_CONNECTSTATE_CLASS *state;

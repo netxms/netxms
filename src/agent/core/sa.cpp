@@ -128,6 +128,7 @@ SessionAgentConnector::SessionAgentConnector(UINT32 id, SOCKET s)
    m_sessionState = USER_SESSION_OTHER;
    m_userName = NULL;
    m_clientName = NULL;
+   m_processId = 0;
    m_userAgent = false;
    m_mutex = MutexCreate();
    m_requestId = 0;
@@ -224,6 +225,7 @@ void SessionAgentConnector::readThread()
          {
             if (msg->getCode() == CMD_LOGIN)
             {
+               m_processId = msg->getFieldAsUInt32(VID_PROCESS_ID);
                m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
                m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
                m_userAgent = msg->getFieldAsBoolean(VID_USERAGENT);
@@ -613,6 +615,7 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    value->addColumn(_T("CLIENT_NAME"), DCI_DT_STRING, _T("Client"));
    value->addColumn(_T("STATE"), DCI_DT_INT, _T("State"));
    value->addColumn(_T("AGENT_TYPE"), DCI_DT_INT, _T("Agent type"));
+   value->addColumn(_T("AGENT_PID"), DCI_DT_INT, _T("Agent PID"));
 
    RWLockReadLock(s_lock);
    for(int i = 0; i < s_agents.size(); i++)
@@ -625,6 +628,7 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
       value->set(3, c->getClientName());
       value->set(4, c->getSessionState());
       value->set(5, c->isUserAgent() ? 1 : 0);
+      value->set(6, c->getProcessId());
    }
    RWLockUnlock(s_lock);
 

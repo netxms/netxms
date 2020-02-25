@@ -80,12 +80,13 @@ void SendLoginMessage()
    GetSessionInformation(&session);
 
    NXCPMessage msg(CMD_LOGIN, 0);
-   msg.setField(VID_SESSION_ID, (UINT32)session.sid);
-   msg.setField(VID_SESSION_STATE, (INT16)session.state);
+   msg.setField(VID_SESSION_ID, (uint32_t)session.sid);
+   msg.setField(VID_SESSION_STATE, (int16_t)session.state);
    msg.setField(VID_NAME, session.name);
    msg.setField(VID_USER_NAME, session.user);
    msg.setField(VID_CLIENT_INFO, session.client);
    msg.setField(VID_USERAGENT, true);
+   msg.setField(VID_PROCESS_ID, (uint32_t)GetCurrentProcessId());
    SendMessageToAgent(&msg);
 }
 

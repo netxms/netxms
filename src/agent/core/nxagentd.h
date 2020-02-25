@@ -491,16 +491,17 @@ public:
 class SessionAgentConnector : public RefCountObject
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    SOCKET m_socket;
    MUTEX m_mutex;
    NXCP_BUFFER m_msgBuffer;
    MsgWaitQueue m_msgQueue;
-   UINT32 m_sessionId;
+   uint32_t m_sessionId;
    TCHAR *m_sessionName;
-   INT16 m_sessionState;
+   int16_t m_sessionState;
    TCHAR *m_userName;
    TCHAR *m_clientName;
+   uint32_t m_processId;
    bool m_userAgent;
    VolatileCounter m_requestId;
 
@@ -517,9 +518,10 @@ public:
    void run();
    void disconnect();
 
-   UINT32 getId() const { return m_id; }
-   UINT32 getSessionId() const { return m_sessionId; }
-   INT16 getSessionState() const { return m_sessionState; }
+   uint32_t getId() const { return m_id; }
+   uint32_t getSessionId() const { return m_sessionId; }
+   uint32_t getProcessId() const { return m_processId;  }
+   int16_t getSessionState() const { return m_sessionState; }
    const TCHAR *getSessionName() const { return CHECK_NULL_EX(m_sessionName); }
    const TCHAR *getUserName() const { return CHECK_NULL_EX(m_userName); }
    const TCHAR *getClientName() const { return CHECK_NULL_EX(m_clientName); }
