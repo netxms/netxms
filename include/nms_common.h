@@ -369,7 +369,7 @@ typedef unsigned __int64 uint64_t;
  */
 inline time_t FileTimeToUnixTime(uint64_t ft)
 {
-   return static_cast<time_t>((ft - EPOCHFILETIME) / 10000000);
+   return (ft > 0) ? static_cast<time_t>((ft - EPOCHFILETIME) / 10000000) : 0;
 }
 
 /**
@@ -377,7 +377,7 @@ inline time_t FileTimeToUnixTime(uint64_t ft)
  */
 inline time_t FileTimeToUnixTime(LARGE_INTEGER li)
 {
-   return static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000);
+   return (li.QuadPart > 0) ? static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000) : 0;
 }
 
 /**
@@ -388,7 +388,7 @@ inline time_t FileTimeToUnixTime(const FILETIME &ft)
    LARGE_INTEGER li;
    li.LowPart = ft.dwLowDateTime;
    li.HighPart = ft.dwHighDateTime;
-   return static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000);
+   return (li.QuadPart > 0) ? static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000) : 0;
 }
 
 #endif

@@ -1,6 +1,6 @@
 /* 
 ** Windows 2000+ NetXMS subagent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -333,11 +333,11 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
 
       for (DWORD i = 0; i < count; i++)
       {
-         if ((sessions[i].State == WTSActive) || (sessions[i].State == WTSConnected))
+         if ((sessions[i].State == WTSActive) || (sessions[i].State == WTSDisconnected))
          {
             value->addRow();
             value->set(0, static_cast<uint32_t>(sessions[i].SessionId));
-            value->set(3, (sessions[i].State == WTSActive) ? _T("Active") : _T("Connected"));
+            value->set(3, (sessions[i].State == WTSActive) ? _T("Active") : _T("Disconnected"));
 
             WTSINFO *info;
             DWORD bytes;
@@ -348,9 +348,22 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
                _sntprintf(userName, 256, _T("%s\\%s"), info->Domain, info->UserName);
                value->set(1, userName);
                value->set(2, info->WinStationName);
-               value->set(7, FileTimeToUnixTime(info->ConnectTime));
-               value->set(8, FileTimeToUnixTime(info->LogonTime));
-               value->set(9, FileTimeToUnixTime(info->CurrentTime) - FileTimeToUnixTime(info->LastInputTime));
+
+               if (info->ConnectTime.QuadPart > 0)
+                  value->set(7, FileTimeToUnixTime(info->ConnectTime));
+               else
+                  value->set(7, _T(""));
+
+               if (info->LogonTime.QuadPart > 0)
+                  value->set(8, FileTimeToUnixTime(info->LogonTime));
+               else
+                  value->set(8, _T(""));
+
+               if (info->LastInputTime.QuadPart > 0)
+                  value->set(9, FileTimeToUnixTime(info->CurrentTime) - FileTimeToUnixTime(info->LastInputTime));
+               else
+                  value->set(9, _T(""));
+
                WTSFreeMemory(info);
             }
 
