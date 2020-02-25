@@ -279,29 +279,39 @@ NXSL_METHOD_DEFINITION(NetObj, setGeoLocation)
  */
 NXSL_METHOD_DEFINITION(NetObj, setMapImage)
 {
-   if (!argv[0]->isString())
+   if (!argv[0]->isString() && !argv[0]->isNull())
       return NXSL_ERR_NOT_STRING;
 
    bool success = false;
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid FROM images WHERE upper(guid)=upper(?) OR upper(name)=upper(?)"));
-   if (hStmt != NULL)
+   if (argv[0]->isNull() || !_tcscmp(argv[0]->getValueAsCString(), _T("00000000-0000-0000-0000-000000000000")))
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, argv[0]->getValueAsCString(), DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, argv[0]->getValueAsCString(), DB_BIND_STATIC);
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
-      {
-         if (DBGetNumRows(hResult) > 0)
-         {
-            uuid guid = DBGetFieldGUID(hResult, 0, 0);
-            ((NetObj *)object->getData())->setMapImage(guid);
-         }
-         DBFreeResult(hResult);
-      }
-      DBFreeStatement(hStmt);
+      static_cast<NetObj*>(object->getData())->setMapImage(uuid::NULL_UUID);
+      success = true;
    }
-   DBConnectionPoolReleaseConnection(hdb);
+   else
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid FROM images WHERE upper(guid)=upper(?) OR upper(name)=upper(?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, argv[0]->getValueAsCString(), DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, argv[0]->getValueAsCString(), DB_BIND_STATIC);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               uuid guid = DBGetFieldGUID(hResult, 0, 0);
+               static_cast<NetObj*>(object->getData())->setMapImage(guid);
+               success = true;
+            }
+            DBFreeResult(hResult);
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+
    *result = vm->createValue(success ? 1 : 0);
    return 0;
 }

@@ -9,6 +9,7 @@
 - Removed support for ancient custom CheckPoint SNMP agent on port 260
 - Added option to control case sensitive matching in log parser rules
 - New internal parameters for server stats (object count, alarm count, etc.)
+- Method "setMapImage" of NXSL class "NetObj" accepts null value as "reset to default" indicator
 - Fixed issues:
 	NX-50 (Allow per-DCI SNMP version settings)
 	NX-58 (Refactor Image Library)
