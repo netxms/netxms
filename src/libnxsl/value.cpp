@@ -430,32 +430,41 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
  */
 NXSL_Value::~NXSL_Value()
 {
-	MemFree(m_name);
+   dispose();
+   MemFree(m_name);
+}
+
+/**
+ * Dispose value - prepare for destructor call or value replacement
+ */
+void NXSL_Value::dispose()
+{
    MemFree(m_stringPtr);
 #ifdef UNICODE
-	MemFree(m_mbString);
+   MemFree(m_mbString);
 #endif
+   m_stringIsValid = FALSE;
    switch(m_dataType)
-	{
-		case NXSL_DT_OBJECT:
-			delete m_value.object;
-			break;
-		case NXSL_DT_ARRAY:
-			m_value.arrayHandle->decRefCount();
-			if (m_value.arrayHandle->isUnused())
-				delete m_value.arrayHandle;
-			break;
-		case NXSL_DT_HASHMAP:
-			m_value.hashMapHandle->decRefCount();
-			if (m_value.hashMapHandle->isUnused())
-				delete m_value.hashMapHandle;
-			break;
-		case NXSL_DT_ITERATOR:
-			m_value.iterator->decRefCount();
-			if (m_value.iterator->isUnused())
-				delete m_value.iterator;
-			break;
-	}
+   {
+      case NXSL_DT_OBJECT:
+         delete m_value.object;
+         break;
+      case NXSL_DT_ARRAY:
+         m_value.arrayHandle->decRefCount();
+         if (m_value.arrayHandle->isUnused())
+            delete m_value.arrayHandle;
+         break;
+      case NXSL_DT_HASHMAP:
+         m_value.hashMapHandle->decRefCount();
+         if (m_value.hashMapHandle->isUnused())
+            delete m_value.hashMapHandle;
+         break;
+      case NXSL_DT_ITERATOR:
+         m_value.iterator->decRefCount();
+         if (m_value.iterator->isUnused())
+            delete m_value.iterator;
+         break;
+   }
 }
 
 /**
@@ -463,12 +472,8 @@ NXSL_Value::~NXSL_Value()
  */
 void NXSL_Value::set(INT32 nValue)
 {
+   dispose();
    m_dataType = NXSL_DT_INT32;
-	MemFreeAndNull(m_stringPtr);
-#ifdef UNICODE
-	MemFreeAndNull(m_mbString);
-#endif
-   m_stringIsValid = FALSE;
    m_value.int32 = nValue;
 }
 

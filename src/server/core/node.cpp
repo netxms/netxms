@@ -4327,7 +4327,7 @@ bool Node::confPollSnmp(uint32_t rqId)
    if (m_driver->hasMetrics())
    {
       ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(pTransport, this, m_driverData);
-      if (metrics != NULL)
+      if (metrics != nullptr)
       {
          lockProperties();
          delete m_driverParameters;
