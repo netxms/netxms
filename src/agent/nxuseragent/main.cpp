@@ -25,9 +25,16 @@ DWORD g_mainThreadId = 0;
  */
 static void InitLogging()
 {
-   TCHAR path[MAX_PATH];
-   if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path) != S_OK)
+   TCHAR path[MAX_PATH], *appDataPath;
+   if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appDataPath) == S_OK)
+   {
+      _tcslcpy(path, appDataPath, MAX_PATH);
+      CoTaskMemFree(appDataPath);
+   }
+   else
+   {
       _tcscpy(path, _T("C:"));
+   }
    _tcscat(path, _T("\\nxuseragent\\log"));
    CreateFolder(path);
    
