@@ -9456,7 +9456,6 @@ NetworkMapObjectList *Node::buildInternalCommunicationTopology()
    NetworkMapObjectList *topology = new NetworkMapObjectList();
    topology->setAllowDuplicateLinks(true);
    buildInternalCommunicationTopologyInternal(topology);
-
    return topology;
 }
 
@@ -9480,6 +9479,7 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
             static_cast<Sensor *>(obj)->buildInternalConnectionTopologyInternal(topology, true);
       }
    }
+   delete objects;
 }
 
 /**
