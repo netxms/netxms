@@ -469,6 +469,7 @@ protected:
 #endif
       m_stringIsValid = FALSE;
    }
+   void dispose();
 
    NXSL_Value();
    NXSL_Value(const NXSL_Value *src);
