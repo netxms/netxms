@@ -431,7 +431,7 @@ void NotificationChannel::saveToDatabase()
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_driverName, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_configuration, DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_TEXT, m_name, DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
