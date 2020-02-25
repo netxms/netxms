@@ -125,6 +125,47 @@ ProcessExecutor::~ProcessExecutor()
 #endif
 }
 
+#ifdef _WIN32
+
+/**
+ * Set explicit list of inherited handles
+ */
+static bool SetInheritedHandles(STARTUPINFOEX *si, HANDLE h1, HANDLE h2)
+{
+   SIZE_T size;
+   if (!InitializeProcThreadAttributeList(NULL, 1, 0, &size))
+   {
+      if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+      {
+         TCHAR buffer[1024];
+         nxlog_debug(4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+         return false;
+      }
+   }
+   si->lpAttributeList = static_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(MemAlloc(size));
+
+   if (!InitializeProcThreadAttributeList(si->lpAttributeList, 1, 0, &size))
+   {
+      TCHAR buffer[1024];
+      nxlog_debug(4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      MemFree(si->lpAttributeList);
+      return false;
+   }
+
+   HANDLE handles[2] = { h1, h2 };
+   if (!UpdateProcThreadAttribute(si->lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handles, 2 * sizeof(HANDLE), NULL, NULL))
+   {
+      TCHAR buffer[1024];
+      nxlog_debug(4, _T("ProcessExecutor::execute(): UpdateProcThreadAttribute failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      MemFree(si->lpAttributeList);
+      return false;
+   }
+
+   return true;
+}
+
+#endif   /* _WIN32 */
+
 /**
  * Execute command
  */
@@ -172,19 +213,20 @@ bool ProcessExecutor::execute()
    // Ensure the write handle to the pipe for STDIN is not inherited. 
    SetHandleInformation(stdinWrite, HANDLE_FLAG_INHERIT, 0);
 
-   STARTUPINFO si;
+   STARTUPINFOEX si;
    PROCESS_INFORMATION pi;
 
-   memset(&si, 0, sizeof(STARTUPINFO));
-   si.cb = sizeof(STARTUPINFO);
-   si.dwFlags = STARTF_USESTDHANDLES;
-   si.hStdInput = stdinRead;
-   si.hStdOutput = stdoutWrite;
-   si.hStdError = stdoutWrite;
+   memset(&si, 0, sizeof(STARTUPINFOEX));
+   si.StartupInfo.cb = sizeof(STARTUPINFOEX);
+   si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+   si.StartupInfo.hStdInput = stdinRead;
+   si.StartupInfo.hStdOutput = stdoutWrite;
+   si.StartupInfo.hStdError = stdoutWrite;
+   SetInheritedHandles(&si, stdinRead, stdoutWrite);
 
    StringBuffer cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
    cmdLine.append(m_cmd);
-   if (CreateProcess(NULL, cmdLine.getBuffer(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
+   if (CreateProcess(NULL, cmdLine.getBuffer(), NULL, NULL, TRUE, EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &si.StartupInfo, &pi))
    {
       nxlog_debug(5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.getBuffer());
 
@@ -215,6 +257,9 @@ bool ProcessExecutor::execute()
       CloseHandle(stdinRead);
       CloseHandle(stdinWrite);
    }
+
+   DeleteProcThreadAttributeList(si.lpAttributeList);
+   MemFree(si.lpAttributeList);
 
 #else /* UNIX implementation */
 
