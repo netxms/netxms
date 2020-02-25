@@ -9870,7 +9870,6 @@ NetworkMapObjectList *Node::buildInternalCommunicationTopology()
    NetworkMapObjectList *topology = new NetworkMapObjectList();
    topology->setAllowDuplicateLinks(true);
    buildInternalCommunicationTopologyInternal(topology);
-
    return topology;
 }
 
@@ -9898,6 +9897,7 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
       }
       obj->decRefCount();
    }
+   delete objects;
 }
 
 /**
