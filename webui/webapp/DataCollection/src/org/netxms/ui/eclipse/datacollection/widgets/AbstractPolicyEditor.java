@@ -78,7 +78,7 @@ public abstract class AbstractPolicyEditor extends Composite
    /**
     * Update editor controls from policy
     */
-   protected abstract void updateControlFromPolicy();
+   public abstract void updateControlFromPolicy();
 
    /**
     * Get policy object updated from editor content

@@ -605,7 +605,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlsFromPolicy()
     */
    @Override
-   protected void updateControlFromPolicy()
+   public void updateControlFromPolicy()
    {             
       updateIconFromPolicy();
 

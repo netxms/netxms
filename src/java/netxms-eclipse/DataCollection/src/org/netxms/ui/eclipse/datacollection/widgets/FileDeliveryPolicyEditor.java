@@ -21,7 +21,9 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -34,9 +36,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -53,17 +52,24 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyContentProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyLabelProvider;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PathElement;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Editor for file delivery policy
  */
 public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
 {
-   private TreeViewer fileTree;
+   public static final int COLUMN_NAME = 0;
+   public static final int COLUMN_GUID = 1;
+   public static final int COLUMN_DATE = 2;
+   
+   private SortableTreeViewer fileTree;
    private Set<PathElement> rootElements = new HashSet<PathElement>();
    private Action actionAddRoot;
    private Action actionAddDirectory;
@@ -84,22 +90,13 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       
       setLayout(new FillLayout());
       
-      fileTree = new TreeViewer(this, SWT.NONE);
+
+      final String[] columnNames = { "Name", "Guid", "Date" };
+      final int[] columnWidths = { 300, 300, 300 };         
+      fileTree = new SortableTreeViewer(this, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       fileTree.setContentProvider(new FileDeliveryPolicyContentProvider());
       fileTree.setLabelProvider(new FileDeliveryPolicyLabelProvider());
-      fileTree.setComparator(new ViewerComparator() {
-         @Override
-         public int compare(Viewer viewer, Object e1, Object e2)
-         {
-            PathElement p1 = (PathElement)e1;
-            PathElement p2 = (PathElement)e2;
-            if (p1.isFile() && !p2.isFile())
-               return 1;
-            if (!p1.isFile() && p2.isFile())
-               return -1;
-            return p1.getName().compareToIgnoreCase(p2.getName());
-         }
-      });
+      fileTree.setComparator(new FileDeliveryPolicyComparator());
       
       actionAddRoot = new Action("&Add root directory...", SharedIcons.ADD_OBJECT) {
          @Override
@@ -151,6 +148,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       
       createPopupMenu();
       
+      fileTree.setInput(rootElements);
       updateControlFromPolicy();
    }
 
@@ -211,19 +209,68 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
-   protected void updateControlFromPolicy()
+   public void updateControlFromPolicy()
    {
-      rootElements.clear();
+      Set<PathElement> newElementSet = new HashSet<PathElement>();
       try
       {
          FileDeliveryPolicy policyData = FileDeliveryPolicy.createFromXml(getPolicy().getContent());
-         rootElements.addAll(Arrays.asList(policyData.elements));
+         newElementSet.addAll(Arrays.asList(policyData.elements));
       }
       catch(Exception e)
       {
          Activator.logError("Cannot parse file delivery policy XML", e);
       }
-      fileTree.setInput(rootElements.toArray());
+
+      checkElementsExist(rootElements, newElementSet, false); 
+      checkElementsExist(newElementSet, rootElements, true); 
+      fileTree.refresh(true);
+   }
+   
+   private void checkElementsExist(Set<PathElement> elements1, Set<PathElement> elements2, boolean createMissing)
+   {
+      Iterator<PathElement> iter = elements1.iterator();
+      while (iter.hasNext())
+      {
+         PathElement el = iter.next();
+         PathElement element = null;
+         for (PathElement el2 : elements2)
+         {
+            if(el.getName().equals(el2.getName()))
+            {
+               element = el2;
+               break;
+            }
+         }
+         if (element == null)
+         {
+            if (createMissing)
+            {
+               fileTree.refresh(el, true);
+               elements2.add(el);
+            }
+            else
+            {
+               iter.remove();
+            }
+         }
+         else if (el.isFile() != element.isFile() && createMissing)
+         {
+            elements2.add(el);
+         }
+         else if (!el.isFile())
+         {            
+            if (createMissing)
+            {
+               checkElementsExist(el.getChildrenSet(), element.getChildrenSet(), createMissing);
+            }
+            else
+            {
+               checkElementsExist(el.getChildrenSet(), element.getChildrenSet(), createMissing);              
+            }
+         }
+      }
+      
    }
 
    /**
@@ -285,7 +332,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             }
             else
             {
-               e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID());  
+               e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID(), new Date());  
                notSavedFiles.add(e.getGuid().toString());             
             }
             uploadList.add(e);
@@ -385,6 +432,15 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
                }
             });
             monitor.done();
+            runInUIThread(new Runnable() {               
+               @Override
+               public void run()
+               {
+                  ((PathElement)selection.getFirstElement()).updateCreationTime(); 
+                  fileTree.refresh(true);
+                  fireModifyListeners();
+               }
+            });
          }
          
          @Override
@@ -422,7 +478,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if (parent == null)
       {
          rootElements.add(e);
-         fileTree.setInput(rootElements.toArray());
+         fileTree.refresh(true);
       }
       else
       {
@@ -460,6 +516,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if (dlg.open() != Window.OK)
          return;
 
+      ((PathElement)selection.getFirstElement()).updateCreationTime(); 
       if (element.getParent() == null)
       {
          rootElements.remove(element);
@@ -472,6 +529,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          element.setName(dlg.getValue());
          fileTree.update(element, null);
       }
+      
       fireModifyListeners();
    }
 
@@ -492,7 +550,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       {
          PathElement element = (PathElement)o;
          
-         deleteFiles(element);
+         if (element.isFile())
+            deleteFiles(element);
          
          if (element.getParent() == null)
          {
@@ -505,10 +564,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       }
 
-      if (inputChanged)
-         fileTree.setInput(rootElements.toArray());
-      else
-         fileTree.refresh();
+      fileTree.refresh(true);
       fireModifyListeners();
    }
    
@@ -618,6 +674,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       {
          deleteFile(name);
       }
+      filesForDeletion.clear();
    }
    
    /**
@@ -629,6 +686,6 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       {
          deleteFile(name);
       }
-      super.dispose();
+      notSavedFiles.clear();
    }
 }

@@ -62,7 +62,7 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
-   protected void updateControlFromPolicy()
+   public void updateControlFromPolicy()
    {
       editor.setParserXml(getPolicy().getContent());
    }

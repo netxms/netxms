@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
+import java.util.Set;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 
 /**
@@ -28,10 +29,11 @@ public class FileDeliveryPolicyContentProvider implements ITreeContentProvider
    /**
     * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
     */
+   @SuppressWarnings("unchecked")
    @Override
    public Object[] getElements(Object inputElement)
    {
-      return (Object[])inputElement;
+      return ((Set<PathElement>)inputElement).toArray();
    }
 
    /**

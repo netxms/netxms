@@ -4,6 +4,7 @@
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
 import java.io.File;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -29,6 +30,9 @@ public class PathElement
    @Element(required = false)
    private UUID guid;
    
+   @Element(required = false)
+   private Date creationTime;
+   
    private File localFile = null;
    
    /**
@@ -36,19 +40,20 @@ public class PathElement
     */
    public PathElement(PathElement parent, String name)
    {
-      this(parent, name, null, null);
+      this(parent, name, null, null, new Date());
    }
 
    /**
     * Create new path element 
     */
-   public PathElement(PathElement parent, String name, File localFile, UUID guid)
+   public PathElement(PathElement parent, String name, File localFile, UUID guid, Date creationDate)
    {
       this.parent = parent;
       this.name = name;
       this.guid = guid;
       this.localFile = localFile;
-      children = null;
+      this.creationTime = creationDate;
+      children = new HashSet<PathElement>();
       if (parent != null)
       {
          if (parent.children == null)
@@ -64,7 +69,7 @@ public class PathElement
    {
       name = "";
       parent = null;
-      children = null;
+      children = new HashSet<PathElement>();
       guid = null;
    }
    
@@ -74,11 +79,8 @@ public class PathElement
    public void updateParentReference(PathElement parent)
    {
       this.parent = parent;
-      if (children != null)
-      {
-         for(PathElement e : children)
-            e.updateParentReference(this);
-      }
+      for(PathElement e : children)
+         e.updateParentReference(this);
    }
    
    /**
@@ -118,17 +120,24 @@ public class PathElement
     */
    public PathElement[] getChildren()
    {
-      return (children != null) ? children.toArray(new PathElement[children.size()]) : new PathElement[0];
+      return children.toArray(new PathElement[children.size()]);
+   }
+
+   /**
+    * Get element's children
+    * 
+    * @return element's children
+    */
+   public Set<PathElement> getChildrenSet()
+   {
+      return children;
    }
    
    /**
     * Find child by by name
     */
    public PathElement findChild(String name)
-   {
-      if (children == null)
-         return null;
-      
+   {      
       for (PathElement element : children)
       {
          if(element.getName().equals(name))
@@ -144,7 +153,7 @@ public class PathElement
     */
    public boolean hasChildren()
    {
-      return (children != null) && !children.isEmpty();
+      return !children.isEmpty();
    }
 
    /**
@@ -222,5 +231,15 @@ public class PathElement
    public void setFile(File f)
    {
       localFile = f;
+   }
+
+   public Date getCreationTime()
+   {
+      return creationTime;
+   }
+
+   public void updateCreationTime()
+   {
+      creationTime = new Date();
    }
 }

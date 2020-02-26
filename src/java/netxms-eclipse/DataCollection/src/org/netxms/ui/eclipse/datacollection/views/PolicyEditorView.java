@@ -209,7 +209,15 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                public void run()
                {
                   policy = tmp;
-                  updateFields();
+                  if(editor == null)
+                  {
+                     updateFields();
+                  }
+                  else 
+                  {
+                     editor.setPolicy(policy);
+                     editor.updateControlFromPolicy();
+                  }
                }
             });
          }
@@ -458,7 +466,8 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                   if (!modified)
                   {
                      policy = (AgentPolicy)n.getObject();
-                     updateFields();
+                     editor.setPolicy(policy);
+                     editor.updateControlFromPolicy();
                   }
                   else if (!saveInProgress)
                   { 

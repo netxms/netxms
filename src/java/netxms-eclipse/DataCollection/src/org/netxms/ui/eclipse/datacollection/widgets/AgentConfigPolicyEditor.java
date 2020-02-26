@@ -64,7 +64,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
-   protected void updateControlFromPolicy()
+   public void updateControlFromPolicy()
    {
       editor.setText(getPolicy().getContent());
    }

@@ -18,17 +18,24 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
+import org.eclipse.jface.viewers.IColorProvider;
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.widgets.FileDeliveryPolicyEditor;
 
 /**
  * Label provider for file delivery policy tree
  */
-public class FileDeliveryPolicyLabelProvider extends LabelProvider
+public class FileDeliveryPolicyLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
    private Image imageFolder;
    private Image imageFile;
+   private WorkbenchLabelProvider wbLabelProvider;
    
    /**
     * Constructor 
@@ -37,6 +44,19 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider
    {
       imageFolder = Activator.getImageDescriptor("icons/folder.gif").createImage();
       imageFile = Activator.getImageDescriptor("icons/file.png").createImage();
+      
+      wbLabelProvider = new WorkbenchLabelProvider();
+   }
+   
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
+   @Override
+   public Image getColumnImage(Object element, int columnIndex)
+   {
+      if (columnIndex == 0)
+         return ((PathElement)element).isFile() ? imageFile : imageFolder;
+      return null;
    }
 
    /**
@@ -45,7 +65,7 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider
    @Override
    public Image getImage(Object element)
    {
-      return ((PathElement)element).isFile() ? imageFile : imageFolder;
+      return wbLabelProvider.getImage(element);
    }
 
    /**
@@ -54,7 +74,7 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider
    @Override
    public String getText(Object element)
    {
-      return ((PathElement)element).getName();
+      return wbLabelProvider.getText(element);
    }
 
    /**
@@ -65,6 +85,38 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider
    {
       imageFile.dispose();
       imageFolder.dispose();
+      wbLabelProvider.dispose();
       super.dispose();
+   }
+
+   @Override
+   public Color getForeground(Object element)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
+   @Override
+   public Color getBackground(Object element)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
+   @Override
+   public String getColumnText(Object element, int columnIndex)
+   {
+      switch(columnIndex)
+      {
+         case FileDeliveryPolicyEditor.COLUMN_NAME:
+            return ((PathElement)element).getName();
+         case FileDeliveryPolicyEditor.COLUMN_GUID:
+            return ((PathElement)element).getGuid() != null ? ((PathElement)element).getGuid().toString() : null;
+         case FileDeliveryPolicyEditor.COLUMN_DATE:
+            if (!((PathElement)element).isFile())
+               return null;
+            return ((PathElement)element).getCreationTime() != null ? RegionalSettings.getDateTimeFormat().format(((PathElement)element).getCreationTime()) : null;
+      }
+      return null;
    }
 }
