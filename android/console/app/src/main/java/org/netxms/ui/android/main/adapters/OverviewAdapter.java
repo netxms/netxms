@@ -14,6 +14,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
+import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.ui.android.R;
 
 import android.annotation.SuppressLint;
