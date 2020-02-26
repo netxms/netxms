@@ -4117,7 +4117,6 @@ public class NXCSession
     * Synchronize users by id if does not exist
     *
     * @param userList list of user id's to synchronize
-    * @return 
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */

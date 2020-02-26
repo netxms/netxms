@@ -106,9 +106,6 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 		return resources;
 	}
 
-   /**
-    * @see org.netxms.client.NXCObject#getObjectClassName()
-    */
 	@Override
 	public String getObjectClassName()
 	{

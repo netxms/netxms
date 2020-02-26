@@ -1644,7 +1644,6 @@ public class NXCObjectModificationData
    /**
     * Set rack placement data
     *
-    * @param physicalContainerObjectId         The rack ID to set
     * @param rackImageFront The front rack image to set
     * @param rackImageRear  The rear rack image to set
     * @param rackPosition   The rack position to set

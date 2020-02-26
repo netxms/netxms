@@ -1118,9 +1118,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       return strings;
    }
    
-   /**
-    * @see org.netxms.client.objects.RackElement#getRackOrientation()
-    */
    public RackOrientation getRackOrientation()
    {
       return rackOrientation;
