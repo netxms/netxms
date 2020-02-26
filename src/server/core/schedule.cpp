@@ -202,8 +202,8 @@ void ScheduledTask::saveToDatabase(bool newObject) const
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_taskHandlerId, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_schedule, DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_parameters->m_persistentData, DB_BIND_STATIC, 1023);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_scheduledExecutionTime);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_lastExecutionTime);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_scheduledExecutionTime));
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_lastExecutionTime));
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_flags);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_parameters->m_userId);
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_parameters->m_objectId);
