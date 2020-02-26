@@ -387,15 +387,15 @@ public class OverviewAdapter extends BaseExpandableListAdapter
 	 * @param status NetXMS type of status
 	 * @return Human readable flag
 	 */
-	private String getSnmpVersionName(int version)
+	private String getSnmpVersionName(SnmpVersion version)
 	{
 		switch (version)
 		{
-			case AbstractNode.SNMP_VERSION_1:
+			case V1:
 				return "1"; //$NON-NLS-1$
-			case AbstractNode.SNMP_VERSION_2C:
+			case V2C:
 				return "2c"; //$NON-NLS-1$
-			case AbstractNode.SNMP_VERSION_3:
+			case V3:
 				return "3"; //$NON-NLS-1$
 			default:
 				return "???"; //$NON-NLS-1$
