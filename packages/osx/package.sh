@@ -23,5 +23,5 @@ unzip -x ../../../zulu11.33.15-ca-jre11.0.4-macosx_x64.zip >/dev/null
 mv zulu11.33.15-ca-jre11.0.4-macosx_x64 jre
 cd - >/dev/null
 codesign --deep --force -s 'Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)' -v 'dist/NetXMS Console.app'
-create-dmg --volname "NetXMS ${version}" --volicon ~/Development/netxms/netxms/packages/osx/dmg-icon.icns --window-size 500 320 --background ~/Development/netxms/netxms/packages/osx/dmg-background.png --icon "NetXMS Console.app" 114 132 --app-drop-link 399 132 nxmc-${version}.dmg dist
+create-dmg --no-internet-enable --volname "NetXMS ${version}" --volicon dmg-icon.icns --window-size 500 320 --background dmg-background.png --icon "NetXMS Console.app" 114 132 --app-drop-link 399 132 nxmc-${version}.dmg dist
 codesign -s 'Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)' nxmc-${version}.dmg
