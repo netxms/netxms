@@ -11065,10 +11065,13 @@ void ClientSession::executeScript(NXCPMessage *request)
           (object->getObjectClass() == OBJECT_CLUSTER) ||
           (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
           (object->getObjectClass() == OBJECT_CHASSIS) ||
+          (object->getObjectClass() == OBJECT_RACK) ||
           (object->getObjectClass() == OBJECT_CONTAINER) ||
           (object->getObjectClass() == OBJECT_ZONE) ||
           (object->getObjectClass() == OBJECT_SUBNET) ||
-          (object->getObjectClass() == OBJECT_SENSOR))
+          (object->getObjectClass() == OBJECT_SENSOR) ||
+          (object->getObjectClass() == OBJECT_NETWORK) ||
+          (object->getObjectClass() == OBJECT_SERVICEROOT))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
