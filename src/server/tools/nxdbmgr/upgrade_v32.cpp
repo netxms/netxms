@@ -24,6 +24,33 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.9 to 32.10
+ */
+static bool H_UpgradeFromV9()
+{
+   // Update CAS parameter names and default values if they are already entered manually
+   static const TCHAR *batch =
+            _T("UPDATE config SET var_name='CAS.Host',description='CAS server DNS name or IP address.',default_value='localhost' WHERE var_name='CASHost'\n")
+            _T("UPDATE config SET var_name='CAS.Port',description='CAS server TCP port number.',default_value='8443',data_type='I' WHERE var_name='CASPort'\n")
+            _T("UPDATE config SET var_name='CAS.Service',description='Service to validate (usually NetXMS web UI URL).',default_value='https://127.0.0.1/nxmc' WHERE var_name='CASService'\n")
+            _T("UPDATE config SET var_name='CAS.TrustedCACert',description='File system path to CAS server trusted CA certificate.',default_value='' WHERE var_name='CASTrustedCACert'\n")
+            _T("UPDATE config SET var_name='CAS.ValidateURL',description='URL for service validation on CAS server.',default_value='/cas/serviceValidate' WHERE var_name='CASValidateURL'\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   // Create all parameters if they does not exist
+   CHK_EXEC(CreateConfigParam(_T("CAS.AllowedProxies"), _T(""), _T("Comma-separated list of allowed CAS proxies."), NULL, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("CAS.Host"), _T("localhost"), _T("CAS server DNS name or IP address."), NULL, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("CAS.Port"), _T("8443"), _T("CAS server TCP port number."), NULL, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("CAS.Service"), _T("https://127.0.0.1/nxmc"), _T("Service to validate (usually NetXMS web UI URL)."), NULL, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("CAS.TrustedCACert"), _T(""), _T("File system path to CAS server trusted CA certificate."), NULL, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("CAS.ValidateURL"), _T("/cas/serviceValidate"), _T("URL for service validation on CAS server."), NULL, 'S', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 32.8 to 32.9
  */
 static bool H_UpgradeFromV8()
@@ -218,16 +245,17 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 8,  32, 9, H_UpgradeFromV8 },
-   { 7,  32, 8, H_UpgradeFromV7 },
-   { 6,  32, 7, H_UpgradeFromV6 },
-   { 5,  32, 6, H_UpgradeFromV5 },
-   { 4,  32, 5, H_UpgradeFromV4 },
-   { 3,  32, 4, H_UpgradeFromV3 },
-   { 2,  32, 3, H_UpgradeFromV2 },
-   { 1,  32, 2, H_UpgradeFromV1 },
-   { 0,  32, 1, H_UpgradeFromV0 },
-   { 0,  0,  0, NULL }
+   { 9,  32, 10, H_UpgradeFromV9 },
+   { 8,  32, 9,  H_UpgradeFromV8 },
+   { 7,  32, 8,  H_UpgradeFromV7 },
+   { 6,  32, 7,  H_UpgradeFromV6 },
+   { 5,  32, 6,  H_UpgradeFromV5 },
+   { 4,  32, 5,  H_UpgradeFromV4 },
+   { 3,  32, 4,  H_UpgradeFromV3 },
+   { 2,  32, 3,  H_UpgradeFromV2 },
+   { 1,  32, 2,  H_UpgradeFromV1 },
+   { 0,  32, 1,  H_UpgradeFromV0 },
+   { 0,  0,  0,  NULL }
 };
 
 /**

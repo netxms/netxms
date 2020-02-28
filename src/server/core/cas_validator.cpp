@@ -45,30 +45,43 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("cas")
+
 /**
  * Settings
  */
-static char m_host[128] = "localhost";
-static int m_port = 8443;
-static char m_service[MAX_CONFIG_VALUE] = "";
-static char m_trustedCA[MAX_PATH] = "";
-static char m_validateURL[MAX_CONFIG_VALUE] = "/cas/serviceValidate";
-static char *m_proxies[] = { NULL };
-static MUTEX m_lock = MutexCreate();
+static char s_host[MAX_DNS_NAME] = "localhost";
+static int s_port = 8443;
+static char s_service[MAX_CONFIG_VALUE] = "";
+static char s_trustedCA[MAX_PATH] = "";
+static char s_validateURL[MAX_CONFIG_VALUE] = "/cas/serviceValidate";
+static StringSet s_proxies;
+static MUTEX s_lock = MutexCreate();
 
 /**
  * Read CAS settings
  */
 void CASReadSettings()
 {
-   MutexLock(m_lock);
-   ConfigReadStrA(_T("CASHost"), m_host, 128, "localhost");
-   m_port = ConfigReadInt(_T("CASPort"), 8443);
-   ConfigReadStrA(_T("CASService"), m_service, MAX_CONFIG_VALUE, "http://127.0.0.1:10080/nxmc");
-   ConfigReadStrA(_T("CASTrustedCACert"), m_trustedCA, MAX_PATH, "");
-   ConfigReadStrA(_T("CASValidateURL"), m_validateURL, MAX_CONFIG_VALUE, "/cas/serviceValidate");
-   MutexUnlock(m_lock);
-   DbgPrintf(4, _T("CAS config reloaded"));
+   MutexLock(s_lock);
+
+   ConfigReadStrA(_T("CAS.Host"), s_host, MAX_DNS_NAME, "localhost");
+   s_port = ConfigReadInt(_T("CASPort"), 8443);
+   ConfigReadStrA(_T("CAS.Service"), s_service, MAX_CONFIG_VALUE, "http://127.0.0.1:10080/nxmc");
+   ConfigReadStrA(_T("CAS.TrustedCACert"), s_trustedCA, MAX_PATH, "");
+   ConfigReadStrA(_T("CAS.ValidateURL"), s_validateURL, MAX_CONFIG_VALUE, "/cas/serviceValidate");
+
+   TCHAR proxies[MAX_CONFIG_VALUE];
+   ConfigReadStr(_T("CAS.AllowedProxies"), proxies, MAX_CONFIG_VALUE, _T(""));
+   s_proxies.clear();
+   Trim(proxies);
+   if (proxies[0] != 0)
+   {
+      s_proxies.splitAndAdd(proxies, _T(","));
+   }
+
+   MutexUnlock(s_lock);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS configuration reloaded"));
 }
 
 /**
@@ -104,213 +117,18 @@ void CASReadSettings()
 #define FAIL SET_RET_AND_GOTO_END(CAS_ERROR)
 #define SUCCEED SET_RET_AND_GOTO_END(CAS_SUCCESS)
 
-static int cas_validate(const char *ticket, const char *service, char *outbuf, int outbuflen, char *proxies[]);
-static X509 *get_cert_from_file(const char *filename);
-static int valid_cert(X509 *cert, const char *hostname);
-static int arrayContains(char *array[], char *element);
-static char *element_body(const char *doc, const char *tagname, int n, char *buf, int buflen);
-
-/** Returns status of certification:  0 for invalid, 1 for valid. */
-static int valid_cert(X509 *cert, const char *hostname)
-{
-   char buf[4096];
-   X509_STORE *store = X509_STORE_new();
-   X509_STORE_CTX *ctx = X509_STORE_CTX_new();
-   X509 *cacert = get_cert_from_file(m_trustedCA);
-   if (cacert != NULL)
-   {
-      X509_STORE_add_cert(store, cacert);
-   }
-   else
-   {
-      DbgPrintf(4, _T("CAS: cannot load CA certificate from file %hs"), m_trustedCA);
-   }
-   X509_STORE_CTX_init(ctx, store, cert, sk_X509_new_null());
-   if (X509_verify_cert(ctx) == 0)
-   {
-      DbgPrintf(4, _T("CAS: X509_verify_cert() failed"));
-      return 0;
-   }
-   X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, buf, sizeof(buf) - 1);
-   // anal-retentive:  make sure the hostname isn't as long as the
-   // buffer, since we don't want to match only because of truncation
-   if (strlen(hostname) >= sizeof(buf) - 1)
-   {
-      return 0;
-   }
-
-   DbgPrintf(6, _T("CAS: certificate CN=%hs, hostname=%hs"), buf, hostname);
-   return (!strcmp(buf, hostname));
-}
-
-/** Returns status of ticket by filling 'buf' with a NetID if the ticket
- *  is valid and buf is large enough and returning 0.  If not, error code is
- *  returned.
+/**
+ * Read certificate from file
  */
-static int cas_validate(const char *ticket, const char *service, char *outbuf, int outbuflen, char *proxies[])
+static X509 *ReadCertificateFromFile(const char *filename)
 {
-   InetAddress a;
-   SockAddrBuffer sa;
-   SOCKET s = INVALID_SOCKET;
-   int err, b, ret;
-   size_t total;
-   SSL *ssl = NULL;
-   X509 *s_cert = NULL;
-   char buf[4096];
-   char *full_request = NULL, *str;
-   char netid[14];
-   char parsebuf[128];
-
-   SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
-   if (!ctx)
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
-   }
-   if ((s = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
-   {
-      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
-   }
-
-   a = InetAddress::resolveHostName(m_host);
-   if (!a.isValidUnicast())
-   {
-      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
-   }
-   a.fillSockAddr(&sa, m_port);
-   if (connect(s, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) == -1)
-   {
-      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
-   }
-   if (!(ssl = SSL_new(ctx)))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
-   }
-   if (!SSL_set_fd(ssl, (int)s))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
-   }
-   if (! (err = SSL_connect(ssl)))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CONN);
-   }
-   if (!(s_cert = SSL_get_peer_certificate(ssl))) {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CERT);
-   }
-   if (!valid_cert(s_cert, m_host)) {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CERT);
-   }
-
-   X509_free(s_cert);
-
-   full_request = (char *)malloc(4096);
-   if (snprintf(full_request, 4096, "GET %s?ticket=%s&service=%s HTTP/1.0\n\n", m_validateURL, ticket, service) >= 4096) {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
-   }
-   if (!SSL_write(ssl, full_request, (int)strlen(full_request)))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
-   }
-
-   total = 0;
-   do 
-   {
-      b = SSL_read(ssl, buf + total, static_cast<int>(sizeof(buf) - 1 - total));
-      total += b;
-   } while (b > 0);
-   buf[total] = '\0';
-
-   if (b != 0 || total >= sizeof(buf) - 1) {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);		// unexpected read error or response too large
-   }
-
-   str = (char *)strstr(buf, "\r\n\r\n");  // find the end of the header
-
-   if (!str)
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);			  // no header
-   }
-
-   /*
-    * 'str' now points to the beginning of the body, which should be an
-    * XML document
-    */
-
-   // make sure that the authentication succeeded
-
-   if (!element_body(str, "cas:authenticationSuccess", 1, parsebuf, sizeof(parsebuf)))
-   {
-      DbgPrintf(4, _T("CAS: authentication failure"));
-      SET_RET_AND_GOTO_END(CAS_AUTHENTICATION_FAILURE);
-   }
-
-   // retrieve the NetID
-   if (!element_body(str, "cas:user", 1, netid, sizeof(netid)))
-   {
-      DbgPrintf(4, _T("CAS: unable to determine username"));
-      SET_RET_AND_GOTO_END(CAS_PROTOCOL_FAILURE);
-   }
-
-   // check the first proxy (if present)
-   if (element_body(str, "cas:proxies", 1, parsebuf, sizeof(parsebuf)))
-   {
-      if (element_body(str, "cas:proxy", 1, parsebuf, sizeof(parsebuf)))
-      {
-         if (!arrayContains(proxies, parsebuf))
-         {
-            DbgPrintf(4, _T("CAS: bad proxy (%hs)"), parsebuf);
-            SET_RET_AND_GOTO_END(CAS_BAD_PROXY);
-         }
-      }
-   }
-
-   /*
-    * without enough space, fail entirely, since a partial NetID could
-    * be dangerous
-    */
-   if (outbuflen < (int)strlen(netid) + 1)
-   {
-      DbgPrintf(4, _T("CAS: output buffer too short"));
-      SET_RET_AND_GOTO_END(CAS_PROTOCOL_FAILURE);
-   }
-
-   strcpy(outbuf, netid);
-   SUCCEED;
-
-   /* cleanup and return */
-
-end:
-   MemFree(full_request);
-   if (ssl) SSL_shutdown(ssl);
-   if (s != INVALID_SOCKET) closesocket(s);
-   if (ssl) SSL_free(ssl);
-   if (ctx) SSL_CTX_free(ctx);
-   return ret;
-}
-
-static X509 *get_cert_from_file(const char *filename)
-{
-   X509 *c;
    FILE *f = fopen(filename, "r");
-   if (!f) {
-      return NULL;
-   }
-   c = PEM_read_X509(f, NULL, NULL, NULL);
+   if (f == nullptr)
+      return nullptr;
+
+   X509 *c = PEM_read_X509(f, NULL, NULL, NULL);
    fclose(f);
    return c;
-}
-
-// returns 1 if a char* array contains the given element, 0 otherwise
-static int arrayContains(char *array[], char *element)
-{
-   char *p;
-   int i = 0;
-
-   for (p = array[0]; p; p = array[++i])
-   {
-      if (!strcmp(p, element))
-         return 1;
-   }
-   return 0;
 }
 
 /*
@@ -353,8 +171,7 @@ static char *element_body(const char *doc, const char *tagname, int n, char *buf
       }
       else
       {
-         strncpy(buf, body_start, buflen - 1);
-         buf[buflen - 1] = 0;
+         strlcpy(buf, body_start, buflen);
       }
       SET_RET_AND_GOTO_END(buf);
    }
@@ -366,22 +183,204 @@ end:
 }
 
 /**
+ * Returns status of certification:  0 for invalid, 1 for valid.
+ */
+static int IsValidCertificate(X509 *cert, const char *hostname)
+{
+   char buf[4096];
+   X509_STORE *store = X509_STORE_new();
+   X509_STORE_CTX *ctx = X509_STORE_CTX_new();
+   X509 *cacert = ReadCertificateFromFile(s_trustedCA);
+   if (cacert != NULL)
+   {
+      X509_STORE_add_cert(store, cacert);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: cannot load CA certificate from file %hs"), s_trustedCA);
+   }
+   X509_STORE_CTX_init(ctx, store, cert, sk_X509_new_null());
+   if (X509_verify_cert(ctx) == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: X509_verify_cert() failed"));
+      return 0;
+   }
+   X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, buf, sizeof(buf) - 1);
+   // anal-retentive:  make sure the hostname isn't as long as the
+   // buffer, since we don't want to match only because of truncation
+   if (strlen(hostname) >= sizeof(buf) - 1)
+   {
+      return 0;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("CAS: certificate CN=%hs, hostname=%hs"), buf, hostname);
+   return (!strcmp(buf, hostname));
+}
+
+/** Returns status of ticket by filling 'loginName' with a NetID if the ticket
+ *  is valid and not exceeds NetXMS user name length limitation and returning 0.
+ *  If not, error code is returned.
+ */
+static int CASValidate(const char *ticket, char *loginName)
+{
+   InetAddress a;
+   SockAddrBuffer sa;
+   SOCKET s = INVALID_SOCKET;
+   int err, b, ret;
+   size_t total;
+   SSL *ssl = NULL;
+   X509 *s_cert = NULL;
+   char buf[4096];
+   char *full_request = NULL, *str;
+   char parsebuf[MAX_DNS_NAME];
+
+   SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
+   if (!ctx)
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
+   }
+   if ((s = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+   {
+      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
+   }
+
+   a = InetAddress::resolveHostName(s_host);
+   if (!a.isValidUnicast())
+   {
+      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
+   }
+   a.fillSockAddr(&sa, s_port);
+   if (connect(s, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) == -1)
+   {
+      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
+   }
+   if (!(ssl = SSL_new(ctx)))
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
+   }
+   if (!SSL_set_fd(ssl, (int)s))
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
+   }
+   if (! (err = SSL_connect(ssl)))
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CONN);
+   }
+   if (!(s_cert = SSL_get_peer_certificate(ssl)))
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CERT);
+   }
+   if (!IsValidCertificate(s_cert, s_host))
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CERT);
+   }
+
+   X509_free(s_cert);
+
+   full_request = MemAllocStringA(4096);
+   if (snprintf(full_request, 4096, "GET %s?ticket=%s&service=%s HTTP/1.0\n\n", s_validateURL, ticket, s_service) >= 4096)
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
+   }
+   if (!SSL_write(ssl, full_request, (int)strlen(full_request)))
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
+   }
+
+   total = 0;
+   do 
+   {
+      b = SSL_read(ssl, buf + total, static_cast<int>(sizeof(buf) - 1 - total));
+      total += b;
+   } while (b > 0);
+   buf[total] = '\0';
+
+   if ((b != 0) || (total >= sizeof(buf) - 1))
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);		// unexpected read error or response too large
+   }
+
+   str = (char *)strstr(buf, "\r\n\r\n");  // find the end of the header
+
+   if (str == nullptr)
+   {
+      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);			  // no header
+   }
+
+   /*
+    * 'str' now points to the beginning of the body, which should be an
+    * XML document
+    */
+
+   // make sure that the authentication succeeded
+
+   if (!element_body(str, "cas:authenticationSuccess", 1, parsebuf, sizeof(parsebuf)))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: authentication failure"));
+      SET_RET_AND_GOTO_END(CAS_AUTHENTICATION_FAILURE);
+   }
+
+   // retrieve the NetID
+   if (!element_body(str, "cas:user", 1, loginName, MAX_USER_NAME))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: unable to determine user name"));
+      SET_RET_AND_GOTO_END(CAS_PROTOCOL_FAILURE);
+   }
+
+   // check the first proxy (if present)
+   if (element_body(str, "cas:proxies", 1, parsebuf, sizeof(parsebuf)) != nullptr)
+   {
+      if (element_body(str, "cas:proxy", 1, parsebuf, sizeof(parsebuf)) != nullptr)
+      {
+#ifdef UNICODE
+         WCHAR wproxy[MAX_DNS_NAME];
+         MultiByteToWideChar(CP_UTF8, 0, parsebuf, -1, wproxy, MAX_DNS_NAME);
+         if (!s_proxies.contains(wproxy))
+#else
+         if (!s_proxies.contains(parsebuf))
+#endif
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: proxy %hs is not in allowed proxies list"), parsebuf);
+            SET_RET_AND_GOTO_END(CAS_BAD_PROXY);
+         }
+      }
+   }
+
+   SUCCEED;
+
+   /* cleanup and return */
+
+end:
+   MemFree(full_request);
+   if (ssl != nullptr)
+   {
+      SSL_shutdown(ssl);
+      SSL_free(ssl);
+   }
+   if (s != INVALID_SOCKET)
+      closesocket(s);
+   if (ctx != nullptr)
+      SSL_CTX_free(ctx);
+   return ret;
+}
+
+/**
  * Authenticate user via CAS
  */
 bool CASAuthenticate(const char *ticket, TCHAR *loginName)
 {
    bool success = false;
-   MutexLock(m_lock);
+   MutexLock(s_lock);
 #ifdef UNICODE
    char mbLogin[MAX_USER_NAME];
-   int rc = cas_validate(ticket, m_service, mbLogin, MAX_USER_NAME, m_proxies);
+   int rc = CASValidate(ticket, mbLogin);
    if (rc == CAS_SUCCESS)
    {
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbLogin, -1, loginName, MAX_USER_NAME);
       success = true;
    }
 #else
-   int rc = cas_validate(ticket, m_service, loginName, MAX_USER_NAME, m_proxies);
+   int rc = CASValidate(ticket, loginName);
    if (rc == CAS_SUCCESS)
    {
       success = true;
@@ -389,9 +388,9 @@ bool CASAuthenticate(const char *ticket, TCHAR *loginName)
 #endif
    else
    {
-      DbgPrintf(4, _T("CAS: ticket %hs validation failed, error %d"), ticket, rc);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: ticket %hs validation failed, error %d"), ticket, rc);
    }
-   MutexUnlock(m_lock);
+   MutexUnlock(s_lock);
    return success;
 }
 
@@ -399,7 +398,7 @@ bool CASAuthenticate(const char *ticket, TCHAR *loginName)
 
 bool CASAuthenticate(const char *ticket, TCHAR *loginName)
 {
-	DbgPrintf(4, _T("CAS ticket cannot be validated - server built without encryption support"));
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS ticket cannot be validated - server built without encryption support"));
 	return false;
 }
 

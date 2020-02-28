@@ -1,5 +1,14 @@
 *
-* 3.2
+* Development
+*
+
+- Fixed issues:
+	NX-1799 (Login name is limited to 13 characters if CAS is used)
+	NX-1800 (If CAS response contains proxy information ticket is always rejected)
+
+
+*
+* 3.2.350
 *
 
 - Data collection from web services

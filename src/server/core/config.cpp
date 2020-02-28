@@ -460,7 +460,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       if (ConfigReadBoolean(_T("EnableAlarmSummaryEmails"), false))
          EnableAlarmSummaryEmails();  // this call will update schedule for existing task
    }
-   else if (!_tcsncmp(name, _T("CAS"), 3))
+   else if (!_tcsncmp(name, _T("CAS."), 4))
    {
       CASReadSettings();
    }
