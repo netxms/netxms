@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -303,91 +303,6 @@ public:
       delete m_args;
    }
 };
-
-/**
- * Action executor (for actions with output)
- */
-static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
-{
-   ActionExecutorData *data = (ActionExecutorData *)arg;
-
-   NXCPMessage msg(data->m_session->getProtocolVersion());
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(data->m_requestId);
-   msg.setField(VID_RCC, ERR_SUCCESS);
-   data->m_session->sendMessage(&msg);
-
-   msg.setCode(CMD_COMMAND_OUTPUT);
-   msg.deleteAllFields();
-
-   DebugPrintf(4, _T("ActionExecutionThread: Expanding command \"%s\""), data->m_cmdLine);
-
-   // Substitute $1 .. $9 with actual arguments
-   if (data->m_args != NULL)
-   {
-      StringBuffer cmdLine;
-      for(const TCHAR *sptr = data->m_cmdLine; *sptr != 0; sptr++)
-         if (*sptr == _T('$'))
-         {
-            sptr++;
-            if (*sptr == 0)
-               break;   // Single $ character at the end of line
-            if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
-            {
-               int argNum = *sptr - _T('1');
-               if (argNum < data->m_args->size())
-               {
-                  cmdLine.append(data->m_args->get(argNum));
-               }
-            }
-            else
-            {
-               cmdLine.append(*sptr);
-            }
-         }
-         else
-         {
-            cmdLine.append(*sptr);
-         }
-      free(data->m_cmdLine);
-      data->m_cmdLine = _tcsdup(cmdLine.getBuffer());
-   }
-
-   data->m_session->debugPrintf(4, _T("ActionExecutionThread: Executing \"%s\""), data->m_cmdLine);
-   FILE *pipe = _tpopen(data->m_cmdLine, _T("r"));
-   if (pipe != NULL)
-   {
-      while(true)
-      {
-         TCHAR line[4096];
-
-         TCHAR *ret = safe_fgetts(line, 4096, pipe);
-         if (ret == NULL)
-            break;
-
-         msg.setField(VID_MESSAGE, line);
-         data->m_session->sendMessage(&msg);
-         msg.deleteAllFields();
-      }
-      _pclose(pipe);
-      data->m_session->debugPrintf(4, _T("ActionExecutionThread: command completed"));
-   }
-   else
-   {
-      data->m_session->debugPrintf(4, _T("ActionExecutionThread: popen() failed"));
-
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("Failed to execute command %s"), data->m_cmdLine);
-      msg.setField(VID_MESSAGE, buffer);
-   }
-
-   msg.setEndOfSequence();
-   data->m_session->sendMessage(&msg);
-   data->m_session->decRefCount();
-
-   delete data;
-   return THREAD_OK;
-}
 
 /**
  * List of available actions
