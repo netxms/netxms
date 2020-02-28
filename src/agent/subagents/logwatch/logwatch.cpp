@@ -215,13 +215,13 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 					AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Parser configuration %s missing file name to parse (%d)"), file, i);
 				}
 			}
+         delete parsers;
 		}
 		else
 		{
-			delete parsers;
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Cannot create parser from configuration file %s (%s)"), file, error);
 		}
-		free(xml);
+		MemFree(xml);
 	}
 	else
 	{
