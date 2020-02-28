@@ -545,7 +545,6 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if (!MessageDialogHelper.openQuestion(getShell(), "Delete confirmation", "Delete selected files?"))
          return;
 
-      boolean inputChanged = false;
       for(Object o : selection.toList())
       {
          PathElement element = (PathElement)o;
@@ -556,7 +555,6 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          if (element.getParent() == null)
          {
             rootElements.remove(o);
-            inputChanged = true;
          }
          else
          {

@@ -26,6 +26,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -36,6 +38,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -46,8 +50,11 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -64,7 +71,9 @@ import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.usermanager.views.helpers.UserComparator;
+import org.netxms.ui.eclipse.usermanager.views.helpers.UserFilter;
 import org.netxms.ui.eclipse.usermanager.views.helpers.UserLabelProvider;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -99,18 +108,44 @@ public class UserManagementView extends ViewPart
 	private Action actionEnable;
 	private Action actionDisable;
 	private Action actionDetachUserFromLDAP;
+   private Action actionShowFilter;
 	private RefreshAction actionRefresh;
 	private Composite mainArea;
+   
+   private UserFilter filter;
+   private FilterText filterText;
+   private IDialogSettings settings;
 
+   
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      session = ConsoleSharedData.getSession();
+      settings = Activator.getDefault().getDialogSettings();
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = ConsoleSharedData.getSession();
-		mainArea = parent;
+		mainArea = new Composite(parent, SWT.NONE);
 		mainArea.setLayout(new FormLayout());
+      
+      // Create filter area
+      filterText = new FilterText(mainArea, SWT.NONE);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
 
 		final String[] names = { 
 		      Messages.get().UserManagementView_Name, 
@@ -125,10 +160,13 @@ public class UserManagementView extends ViewPart
 		      "Created"
 		   };
 		final int[] widths = { 100, 80, 180, 250, 80, 170, 250, 400, 250, 250 };
-		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+		viewer = new SortableTableViewer(mainArea, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new UserLabelProvider());
+		UserLabelProvider labelProvider = new UserLabelProvider();
+		viewer.setLabelProvider(labelProvider);
 		viewer.setComparator(new UserComparator());
+      filter = new UserFilter(labelProvider);
+      viewer.addFilter(filter);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -149,17 +187,39 @@ public class UserManagementView extends ViewPart
 				actionEditUser.run();
 			}
 		});
-		
+      
+      // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top =  new FormAttachment(0, 0);
-      fd.bottom = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(filterText);
       fd.right = new FormAttachment(100, 0);
-      viewer.getTable().setLayoutData(fd);		
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getTable().setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);	
 
 		makeActions();
 		contributeToActionBars();
 		createPopupMenu();
+
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            actionShowFilter.setChecked(false);
+         }
+      });
+
+      // Set initial focus to filter input line
+      if (actionShowFilter.isChecked())
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
 
 		// Listener for server's notifications
 		sessionListener = new SessionListener() {
@@ -298,6 +358,8 @@ public class UserManagementView extends ViewPart
 	{
 		manager.add(actionAddUser);
 		manager.add(actionAddGroup);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -312,6 +374,8 @@ public class UserManagementView extends ViewPart
 	{
 		manager.add(actionAddUser);
 		manager.add(actionAddGroup);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -321,6 +385,8 @@ public class UserManagementView extends ViewPart
 	 */
 	private void makeActions()
 	{
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
 		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
@@ -391,6 +457,18 @@ public class UserManagementView extends ViewPart
             detachLDAPUser();
          }
       };
+
+      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            enableFilter(actionShowFilter.isChecked());
+         }
+      };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
+      actionShowFilter.setChecked(getBooleanFromSettings("ActionManager.showFilter", true));
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 	}
 
 	/**
@@ -684,5 +762,49 @@ public class UserManagementView extends ViewPart
          }
       }.start();
       changePassword();
+   }
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   private void enableFilter(boolean enable)
+   {
+      filterText.setVisible(enable);
+      FormData fd = (FormData)viewer.getTable().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      mainArea.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText(""); //$NON-NLS-1$
+         onFilterModify();
+      }
+      settings.put("DataCollectionEditor.showFilter", enable);
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
+
+   /**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private boolean getBooleanFromSettings(String name, boolean defval)
+   {
+      String v = settings.get(name);
+      return (v != null) ? Boolean.valueOf(v) : defval;
    }
 }

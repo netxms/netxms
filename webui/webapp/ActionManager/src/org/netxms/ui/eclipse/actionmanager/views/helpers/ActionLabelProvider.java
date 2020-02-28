@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
  */
 public class ActionLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider
 {
-	private static final String[] ACTION_TYPE = { 
+	public final String[] ACTION_TYPE = { 
    	   Messages.get().ActionLabelProvider_ActionTypeExecute, 
    	   Messages.get().ActionLabelProvider_ActionTypeRemoteExec, 
    	   Messages.get().ActionLabelProvider_ActionTypeMail, 

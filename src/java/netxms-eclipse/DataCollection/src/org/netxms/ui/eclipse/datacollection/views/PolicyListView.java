@@ -585,6 +585,8 @@ public class PolicyListView extends ViewPart implements SessionListener
    {
       manager.add(actionCreate);
       manager.add(new Separator());
+      manager.add(actionShowFilter);
+      manager.add(new Separator());
       manager.add(actionRefresh);
    }
 
@@ -597,6 +599,8 @@ public class PolicyListView extends ViewPart implements SessionListener
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionCreate);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
