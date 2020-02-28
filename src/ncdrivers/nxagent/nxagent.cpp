@@ -61,12 +61,12 @@ NXAgentDriver::NXAgentDriver(Config *config)
 
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("hostname"), CT_STRING, 0, 0, sizeof(m_hostName), 0, m_hostName },	
+		{ _T("hostname"), CT_STRING, 0, 0, sizeof(m_hostName)/sizeof(TCHAR), 0, m_hostName },	
 		{ _T("port"), CT_LONG, 0, 0, 0, 0, &m_port },	
 		{ _T("timeout"), CT_LONG, 0, 0, 0, 0,	&m_timeout },	
-		{ _T("secret"), CT_STRING, 0, 0, sizeof(m_secret), 0,	m_secret },
+		{ _T("secret"), CT_STRING, 0, 0, sizeof(m_secret)/sizeof(TCHAR), 0,	m_secret },
 		{ _T("encryption"), CT_STRING, 0, 0,0, 0, &m_encryptionType },
-		{ _T("keyFile"), CT_STRING, 0, 0, sizeof(m_keyFile), 0, m_keyFile },
+		{ _T("keyFile"), CT_STRING, 0, 0, sizeof(m_keyFile)/sizeof(TCHAR), 0, m_keyFile },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
@@ -90,26 +90,17 @@ bool NXAgentDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
 #ifdef _WITH_ENCRYPTION
       if ((m_encryptionType != ENCRYPTION_DISABLED))
       {
-         if (InitCryptoLib(0xFFFF))
+         serverKey = LoadRSAKeys(m_keyFile);
+         if (serverKey == NULL)
          {
-            serverKey = LoadRSAKeys(m_keyFile);
+            serverKey = RSAGenerateKey(2048);
             if (serverKey == NULL)
             {
-               serverKey = RSAGenerateKey(2048);
-               if (serverKey == NULL)
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 2, _T("Cannot load server RSA key from \"%s\" or generate new key"), m_keyFile);
-                  _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), m_keyFile);
-                  if (m_encryptionType == ENCRYPTION_REQUIRED)
-                     start = false;
-               }
+               nxlog_debug_tag(DEBUG_TAG, 2, _T("Cannot load server RSA key from \"%s\" or generate new key"), m_keyFile);
+               _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), m_keyFile);
+               if (m_encryptionType == ENCRYPTION_REQUIRED)
+                  start = false;
             }
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 2, _T("Error initializing cryptography module"));
-            if (m_encryptionType == ENCRYPTION_REQUIRED)
-               start = false;
          }
       }
 #endif

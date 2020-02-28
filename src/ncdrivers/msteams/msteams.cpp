@@ -106,7 +106,7 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
    TCHAR themeColor[8] = _T("FF6A00");
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("ThemeColor"), CT_STRING, 0, 0, sizeof(themeColor), 0, themeColor },
+		{ _T("ThemeColor"), CT_STRING, 0, 0, sizeof(themeColor)/sizeof(TCHAR), 0, themeColor },
       { _T("UseMessageCards"), CT_BOOLEAN, 0, 0, MST_USE_CARDS, 0, &flags },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
