@@ -34,6 +34,8 @@ private:
    UINT16 m_port;
    TCHAR m_secret[256];
    UINT32 m_timeout;	// Default timeout is 30 seconds
+   UINT16 m_encryptionType;
+   TCHAR m_keyFile[MAX_PATH];
 
 public:
    NXAgentDriver(Config *config);
@@ -49,6 +51,13 @@ NXAgentDriver::NXAgentDriver(Config *config)
    _tcscpy(m_secret, _T(""));
    m_port = 4700;
    m_timeout = 30;	
+#ifdef _WITH_ENCRYPTION
+   m_encryptionType = ENCRYPTION_PREFERRED;
+#else
+   m_encryptionType = ENCRYPTION_DISABLED;
+#endif   
+   GetNetXMSDirectory(nxDirData, m_keyFile);
+   _tcslcat(m_keyFile, DFILE_KEYS, MAX_PATH);
 
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
@@ -56,6 +65,8 @@ NXAgentDriver::NXAgentDriver(Config *config)
 		{ _T("port"), CT_LONG, 0, 0, 0, 0, &m_port },	
 		{ _T("timeout"), CT_LONG, 0, 0, 0, 0,	&m_timeout },	
 		{ _T("secret"), CT_STRING, 0, 0, sizeof(m_secret), 0,	m_secret },
+		{ _T("encryption"), CT_STRING, 0, 0,0, 0, &m_encryptionType },
+		{ _T("keyFile"), CT_STRING, 0, 0, sizeof(m_keyFile), 0, m_keyFile },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
@@ -73,19 +84,59 @@ bool NXAgentDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
    InetAddress addr = InetAddress::resolveHostName(m_hostName);
    if (addr.isValid())
 	{
-      AgentConnection *conn = new AgentConnection(addr, m_port, (m_secret[0] != 0) ? AUTH_SHA1_HASH : AUTH_NONE, m_secret);
-		conn->setCommandTimeout(m_timeout);
-      if (conn->connect())
+      RSA *serverKey = NULL;
+      bool start = true;
+      // Load server key if requested
+#ifdef _WITH_ENCRYPTION
+      if ((m_encryptionType != ENCRYPTION_DISABLED))
       {
-			StringList list;
-			list.add(recipient);
-         list.add(body);
-			UINT32 rcc = conn->execAction(_T("SMS.Send"), list);
-			nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
-         if (rcc == ERR_SUCCESS)
-				bSuccess = true;
-		}
-      conn->decRefCount();
+         if (InitCryptoLib(0xFFFF))
+         {
+            serverKey = LoadRSAKeys(m_keyFile);
+            if (serverKey == NULL)
+            {
+               serverKey = RSAGenerateKey(2048);
+               if (serverKey == NULL)
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 2, _T("Cannot load server RSA key from \"%s\" or generate new key"), m_keyFile);
+                  _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), m_keyFile);
+                  if (m_encryptionType == ENCRYPTION_REQUIRED)
+                     start = false;
+               }
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("Error initializing cryptography module"));
+            if (m_encryptionType == ENCRYPTION_REQUIRED)
+               start = false;
+         }
+      }
+#endif
+
+      if(start)
+      {
+         AgentConnection *conn = new AgentConnection(addr, m_port, (m_secret[0] != 0) ? AUTH_SHA1_HASH : AUTH_NONE, m_secret);
+         conn->setCommandTimeout(m_timeout);
+         conn->setEncryptionPolicy(m_encryptionType);
+         UINT32 dwError;
+         if (conn->connect(serverKey, &dwError))
+         {
+            StringList list;
+            list.add(recipient);
+            list.add(body);
+            UINT32 rcc = conn->execAction(_T("SMS.Send"), list);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+            if (rcc == ERR_SUCCESS)
+               bSuccess = true;
+         }
+         else
+         {            
+               nxlog_debug_tag(DEBUG_TAG, 2, _T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+         }
+         
+         conn->decRefCount();
+      }
 	}
 	return bSuccess;
 }
