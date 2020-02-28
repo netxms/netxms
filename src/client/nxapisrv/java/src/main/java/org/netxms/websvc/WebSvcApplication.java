@@ -64,7 +64,9 @@ public class WebSvcApplication extends Application
       corsService.setAllowedHeaders(new HashSet<String>(Arrays.asList("Content-Type", "Authorization")));
       corsService.setDefaultAllowedMethods(new HashSet<Method>(Arrays.asList(Method.DELETE, Method.GET, Method.OPTIONS, Method.POST, Method.PUT)));
       getServices().add(corsService);
-      setStatusService(new WebSvcStatusService());
+      WebSvcStatusService statusService = new WebSvcStatusService();
+      statusService.setOverwriting(true);
+      setStatusService(statusService);
    }
    
    /* (non-Javadoc)

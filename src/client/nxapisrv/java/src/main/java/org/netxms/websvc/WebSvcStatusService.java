@@ -1,12 +1,13 @@
 /**
  * Web services API for NetXMS
- * Copyright (c) 2017 Raden Solutions
+ * Copyright (c) 2017-2020 Raden Solutions
  */
 package org.netxms.websvc;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.netxms.base.CommonRCC;
+import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -15,6 +16,7 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Resource;
+import org.restlet.resource.ResourceException;
 import org.restlet.service.StatusService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +36,18 @@ public class WebSvcStatusService extends StatusService
    {
       if (throwable != null)
       {
+         if ((throwable instanceof ResourceException) && (throwable.getCause() != null))
+            throwable = throwable.getCause();
+
          if (throwable instanceof WebSvcException)
          {
             log.info("Request processing error: " + throwable.getMessage());
             return new Status(getStatusFromRCC(((WebSvcException)throwable).getErrorCode()), throwable);
+         }
+         if (throwable instanceof NXCException)
+         {
+            log.info("Request processing error: " + throwable.getMessage());
+            return new Status(getStatusFromRCC(((NXCException)throwable).getErrorCode()), throwable);
          }
          log.error("Exception in request handler", throwable);
       }
@@ -52,16 +62,24 @@ public class WebSvcStatusService extends StatusService
    {
       if (throwable != null)
       {
+         if ((throwable instanceof ResourceException) && (throwable.getCause() != null))
+            throwable = throwable.getCause();
+
          if (throwable instanceof WebSvcException)
          {
             log.info("Request processing error: " + throwable.getMessage());
             return new Status(getStatusFromRCC(((WebSvcException)throwable).getErrorCode()), throwable);
          }
+         if (throwable instanceof NXCException)
+         {
+            log.info("Request processing error: " + throwable.getMessage());
+            return new Status(getStatusFromRCC(((NXCException)throwable).getErrorCode()), throwable);
+         }
          log.error("Exception in request handler", throwable);
       }
       return super.toStatus(throwable, resource);
    }
-   
+
    /**
     * Get HTTP status code from NetXMS RCC
     * 
@@ -134,6 +152,18 @@ public class WebSvcStatusService extends StatusService
       if (status.getThrowable() instanceof WebSvcException)
       {
          WebSvcException e = (WebSvcException)status.getThrowable();
+         try
+         {
+            json.put("error", e.getErrorCode());
+            json.put("description", e.getMessage());
+         }
+         catch(JSONException e1)
+         {
+         }
+      }
+      else if (status.getThrowable() instanceof NXCException)
+      {
+         NXCException e = (NXCException)status.getThrowable();
          try
          {
             json.put("error", e.getErrorCode());
