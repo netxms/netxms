@@ -186,7 +186,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
       if (addressResolved && ResolveHostName(newNodeData->zoneUIN, dnsName).equals(newNodeData->ipAddr))
       {
          // We have valid DNS name which resolves back to node's IP address, use it as primary name
-         node->setPrimaryName(dnsName);
+         node->setPrimaryHostName(dnsName);
          nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: Using DNS name %s as primary name for node %s"), dnsName, ipAddrText);
       }
 	}

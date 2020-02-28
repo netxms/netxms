@@ -2544,7 +2544,7 @@ private:
 
 protected:
    InetAddress m_ipAddress;
-	TCHAR m_primaryName[MAX_DNS_NAME];
+	SharedString m_primaryHostName;
 	uuid m_tunnelId;
 	uint32_t m_capabilities;
    NodeType m_type;
@@ -2838,7 +2838,7 @@ public:
    const TCHAR *getSshPassword() const { return m_sshPassword; }
    UINT32 getSshProxy() const { return m_sshProxy; }
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
-   const TCHAR *getPrimaryName() const { return m_primaryName; }
+   SharedString getPrimaryHostName() const { return GetAttributeWithLock(m_primaryHostName, m_mutexProperties); }
    const uuid& getTunnelId() const { return m_tunnelId; }
    const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
    UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
@@ -2857,7 +2857,7 @@ public:
    Interface *createNewInterface(const InetAddress& ipAddr, const MacAddress& macAddr, bool fakeInterface);
    void deleteInterface(Interface *iface);
 
-   void setPrimaryName(const TCHAR *name) { lockProperties(); _tcslcpy(m_primaryName, name, MAX_DNS_NAME); unlockProperties(); }
+   void setPrimaryHostName(const TCHAR *name) { lockProperties(); m_primaryHostName = name; unlockProperties(); }
    void setAgentPort(UINT16 port) { m_agentPort = port; }
    void setSnmpPort(UINT16 port) { m_snmpPort = port; }
    void setSshCredentials(const TCHAR *login, const TCHAR *password);
@@ -4102,7 +4102,7 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
 Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName);
-ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneUIN);
+ObjectArray<NetObj> *FindNodesByHostname(uint32_t zoneUIN, const TCHAR *hostname);
 Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr, bool updateRefCount = false);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr, bool updateRefCount = false);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description, bool updateRefCount = false);

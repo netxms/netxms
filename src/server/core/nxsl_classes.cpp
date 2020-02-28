@@ -1374,6 +1374,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(node->getPlatformName());
    }
+   else if (!strcmp(attr, "primaryHostName"))
+   {
+      value = vm->createValue(node->getPrimaryHostName());
+   }
    else if (!strcmp(attr, "productCode"))
    {
       value = vm->createValue(node->getProductCode());

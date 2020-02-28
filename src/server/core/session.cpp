@@ -5415,7 +5415,7 @@ void ClientSession::createObject(NXCPMessage *request)
 								   object = PollNewNode(&newNodeData);
 								   if (object != NULL)
 								   {
-									   static_cast<Node*>(object)->setPrimaryName(nodePrimaryName);
+									   static_cast<Node*>(object)->setPrimaryHostName(nodePrimaryName);
 								   }
 								   break;
 							   }
@@ -11991,23 +11991,22 @@ void ClientSession::findHostname(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setField(VID_RCC, RCC_SUCCESS);
 
-   UINT32 zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
-   TCHAR hostname[MAX_STRING_VALUE];
-   request->getFieldAsString(VID_HOSTNAME, hostname, MAX_STRING_VALUE);
+   uint32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
+   TCHAR hostname[MAX_DNS_NAME];
+   request->getFieldAsString(VID_HOSTNAME, hostname, MAX_DNS_NAME);
 
-   ObjectArray<NetObj> *nodes = FindNodesByHostname(hostname, zoneUIN);
+   ObjectArray<NetObj> *nodes = FindNodesByHostname(zoneUIN, hostname);
 
    msg.setField(VID_NUM_ELEMENTS, nodes->size());
 
-   UINT32 base = VID_ELEMENT_LIST_BASE;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < nodes->size(); i++)
    {
-      msg.setField(base++, ((Node *)nodes->get(i))->getId());
+      msg.setField(fieldId++, static_cast<Node*>(nodes->get(i))->getId());
    }
+   delete nodes;
 
    sendMessage(&msg);
-
-   delete(nodes);
 }
 
 /**

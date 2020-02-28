@@ -619,7 +619,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
    Node *node = PollNewNode(&newNodeData);
 	if (node != NULL)
 	{
-		node->setPrimaryName(pname);
+		node->setPrimaryHostName(pname);
 		parent->addChild(node);
 		node->addParent(parent);
 		node->unhide();

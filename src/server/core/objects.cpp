@@ -815,38 +815,33 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr, bool update
 
 struct NodeFindHostnameData
 {
-   TCHAR *hostname;
-   UINT32 zoneUIN;
+   uint32_t zoneUIN;
+   TCHAR hostname[MAX_DNS_NAME];
 };
 
 /**
  * Interface description comparator
  */
-static bool HostnameComparator(NetObj *object, void *data)
+static bool HostnameComparator(NetObj *object, NodeFindHostnameData *data)
 {
-   TCHAR primaryName[MAX_DNS_NAME];
-   if ((object->getObjectClass() == OBJECT_NODE) && !object->isDeleted())
-   {
-      _tcscpy(primaryName, ((Node *)object)->getPrimaryName());
-      _tcsupr(primaryName);
-      _tcsupr(((NodeFindHostnameData *)data)->hostname);
-   }
-   else
+   if ((object->getObjectClass() != OBJECT_NODE) || object->isDeleted())
       return false;
 
-   return ((_tcsstr(primaryName, ((NodeFindHostnameData *)data)->hostname) != NULL) &&
-            (IsZoningEnabled() ? (((Node *)object)->getZoneUIN() == ((NodeFindHostnameData *)data)->zoneUIN) : true));
+   TCHAR primaryName[MAX_DNS_NAME];
+   _tcslcpy(primaryName, static_cast<Node*>(object)->getPrimaryHostName(), MAX_DNS_NAME);
+   _tcsupr(primaryName);
+   return (_tcsstr(primaryName, data->hostname) != nullptr) && (!IsZoningEnabled() || (static_cast<Node*>(object)->getZoneUIN() == data->zoneUIN));
 }
 
 /**
  * Find a list of nodes that contain the hostname
  */
-ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneUIN)
+ObjectArray<NetObj> *FindNodesByHostname(uint32_t zoneUIN, const TCHAR *hostname)
 {
    NodeFindHostnameData data;
-   data.hostname = hostname;
    data.zoneUIN = zoneUIN;
-
+   _tcslcpy(data.hostname, hostname, MAX_DNS_NAME);
+   _tcsupr(data.hostname);
    ObjectArray<NetObj> *nodes = g_idxNodeById.findAll(HostnameComparator, &data);
    return nodes;
 }
@@ -2215,7 +2210,7 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
       case OBJECT_NODE:
          ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: isSNMP=%d isAgent=%d isLocalMgmt=%d\n   SNMP ObjectId.......: %s\n"),
                        static_cast<Node*>(object)->getIpAddress().toString(buffer),
-                       static_cast<Node*>(object)->getPrimaryName(),
+                       static_cast<Node*>(object)->getPrimaryHostName().cstr(),
                        static_cast<Node*>(object)->isSNMPSupported(),
                        static_cast<Node*>(object)->isNativeAgent(),
                        static_cast<Node*>(object)->isLocalManagement(),

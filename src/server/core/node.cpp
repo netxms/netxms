@@ -77,7 +77,6 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
 Node::Node() : super(), m_discoveryPollState(_T("discovery")),
          m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
 {
-   m_primaryName[0] = 0;
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
@@ -185,7 +184,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
          m_topologyPollState(_T("topology")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
-   newNodeData->ipAddr.toString(m_primaryName);
+   m_primaryHostName = newNodeData->ipAddr.toString();
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
@@ -403,7 +402,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
    }
 
-   DBGetField(hResult, 0, 0, m_primaryName, MAX_DNS_NAME);
+   m_primaryHostName = DBGetFieldAsSharedString(hResult, 0, 0);
    m_ipAddress = DBGetFieldInetAddr(hResult, 0, 1);
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, 0, 2));
    m_agentAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 3);
@@ -884,7 +883,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          }
 
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryName, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryHostName, DB_BIND_TRANSIENT);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_capabilities);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_snmpVersion);
@@ -3000,11 +2999,11 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
  */
 void Node::updatePrimaryIpAddr()
 {
-   if ((m_primaryName[0] == 0) || IsShutdownInProgress())
+   if (m_primaryHostName.isNull() || m_primaryHostName.isEmpty() || IsShutdownInProgress())
       return;
 
-   InetAddress ipAddr = ResolveHostName(m_zoneUIN, m_primaryName);
-   if (!ipAddr.equals(getIpAddress()) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryName, _T("0.0.0.0"))))
+   InetAddress ipAddr = ResolveHostName(m_zoneUIN, m_primaryHostName);
+   if (!ipAddr.equals(getIpAddress()) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryHostName, _T("0.0.0.0"))))
    {
       TCHAR buffer1[64], buffer2[64];
 
@@ -3360,8 +3359,8 @@ struct DeleteDuplicateNodeData
 static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 {
    PostSystemEvent(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode, "dssdsss",
-            data->originalNode->getId(), data->originalNode->getName(), data->originalNode->getPrimaryName(),
-            data->duplicateNode->getId(), data->duplicateNode->getName(), data->duplicateNode->getPrimaryName(),
+            data->originalNode->getId(), data->originalNode->getName(), data->originalNode->getPrimaryHostName().cstr(),
+            data->duplicateNode->getId(), data->duplicateNode->getName(), data->duplicateNode->getPrimaryHostName().cstr(),
             data->reason);
    data->duplicateNode->deleteObject(NULL);
    // Calling updateObjectIndexes will update all indexes that could be broken
@@ -6486,7 +6485,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
    super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
-   pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
+   pMsg->setField(VID_PRIMARY_NAME, m_primaryHostName);
    pMsg->setField(VID_NODE_TYPE, (INT16)m_type);
    pMsg->setField(VID_NODE_SUBTYPE, m_subType);
    pMsg->setField(VID_HYPERVISOR_TYPE, m_hypervisorType);
@@ -6687,7 +6686,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       // Update primary name if it is not set with the same message
       if (!pRequest->isFieldExist(VID_PRIMARY_NAME))
       {
-         m_ipAddress.toString(m_primaryName);
+         m_primaryHostName = m_ipAddress.toString();
       }
 
       agentLock();
@@ -6722,7 +6721,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
          }
       }
 
-      _tcscpy(m_primaryName, primaryName);
+      m_primaryHostName = primaryName;
       m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
    }
 
@@ -7366,12 +7365,12 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
    lockProperties();
 
    // check if primary name is an IP address
-   if (InetAddress::resolveHostName(m_primaryName).equals(m_ipAddress))
+   if (InetAddress::resolveHostName(m_primaryHostName).equals(m_ipAddress))
    {
       TCHAR ipAddrText[64];
       m_ipAddress.toString(ipAddrText);
-      if (!_tcscmp(ipAddrText, m_primaryName))
-         ipAddr.toString(m_primaryName);
+      if (!_tcscmp(ipAddrText, m_primaryHostName))
+         m_primaryHostName = ipAddr.toString();
 
       setPrimaryIPAddress(ipAddr);
       m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
@@ -9835,7 +9834,7 @@ void Node::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topolog
 
 	// Only agent connection necessary for proxy nodes
 	// Only if IP is set while using agent tunnel
-	if (!agentConnectionOnly && _tcscmp(m_primaryName, _T("0.0.0.0")))
+	if (!agentConnectionOnly && _tcscmp(m_primaryHostName, _T("0.0.0.0")))
 	{
       if (!checkProxyAndLink(topology, seedNode, getEffectiveIcmpProxy(), LINK_TYPE_ICMP_PROXY, _T("ICMP proxy"), checkAllProxies))
          protocols.append(_T("ICMP "));
@@ -9908,7 +9907,7 @@ json_t *Node::toJson()
    json_t *root = super::toJson();
    lockProperties();
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
-   json_object_set_new(root, "primaryName", json_string_t(m_primaryName));
+   json_object_set_new(root, "primaryName", json_string_t(m_primaryHostName));
    json_object_set_new(root, "tunnelId", m_tunnelId.toJson());
    json_object_set_new(root, "stateFlags", json_integer(m_state));
    json_object_set_new(root, "type", json_integer(m_type));

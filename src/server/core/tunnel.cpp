@@ -1297,9 +1297,9 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
       return false;  // Wrong zone
 
    if (node->getIpAddress().equals(tunnel->getAddress()) ||
-       !_tcsicmp(tunnel->getHostname(), node->getPrimaryName()) ||
+       !_tcsicmp(tunnel->getHostname(), node->getPrimaryHostName()) ||
        !_tcsicmp(tunnel->getHostname(), node->getName()) ||
-       !_tcsicmp(tunnel->getSystemName(), node->getPrimaryName()) ||
+       !_tcsicmp(tunnel->getSystemName(), node->getPrimaryHostName()) ||
        !_tcsicmp(tunnel->getSystemName(), node->getName()))
    {
       if (node->isNativeAgent())
