@@ -50,7 +50,7 @@
 /**
  * Settings
  */
-static char s_host[MAX_DNS_NAME] = "localhost";
+static char s_hostname[MAX_DNS_NAME] = "localhost";
 static int s_port = 8443;
 static char s_service[MAX_CONFIG_VALUE] = "";
 static char s_trustedCA[MAX_PATH] = "";
@@ -65,7 +65,7 @@ void CASReadSettings()
 {
    MutexLock(s_lock);
 
-   ConfigReadStrA(_T("CAS.Host"), s_host, MAX_DNS_NAME, "localhost");
+   ConfigReadStrA(_T("CAS.Host"), s_hostname, MAX_DNS_NAME, "localhost");
    s_port = ConfigReadInt(_T("CASPort"), 8443);
    ConfigReadStrA(_T("CAS.Service"), s_service, MAX_CONFIG_VALUE, "http://127.0.0.1:10080/nxmc");
    ConfigReadStrA(_T("CAS.TrustedCACert"), s_trustedCA, MAX_PATH, "");
@@ -244,7 +244,7 @@ static int CASValidate(const char *ticket, char *loginName)
       SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
    }
 
-   a = InetAddress::resolveHostName(s_host);
+   a = InetAddress::resolveHostName(s_hostname);
    if (!a.isValidUnicast())
    {
       SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
@@ -270,7 +270,7 @@ static int CASValidate(const char *ticket, char *loginName)
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CERT);
    }
-   if (!IsValidCertificate(s_cert, s_host))
+   if (!IsValidCertificate(s_cert, s_hostname))
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CERT);
    }
