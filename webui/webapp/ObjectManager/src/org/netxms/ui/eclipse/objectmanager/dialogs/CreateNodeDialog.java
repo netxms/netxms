@@ -83,7 +83,7 @@ public class CreateNodeDialog extends Dialog
 	private long zoneUIN = 0;
 	private int agentPort = 4700;
 	private int snmpPort = 161;
-   private int etherNetIpPort = 44181;
+   private int etherNetIpPort = 44818;
 	private String sshLogin = "";
 	private String sshPassword; 
 	private boolean showAgain = false;
@@ -317,6 +317,11 @@ public class CreateNodeDialog extends Dialog
    		checkCreateAnother = new Button(dialogArea, SWT.CHECK);
    		checkCreateAnother.setText(Messages.get().CreateNodeDialog_ShowAgain);
    		checkCreateAnother.setSelection(showAgain);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         checkCreateAnother.setLayoutData(gd);
 		}		
 		return dialogArea;
 	}
