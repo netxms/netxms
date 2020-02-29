@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -248,8 +248,13 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 
 		List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>(((NetworkMapPage)inputElement).getElements().size());
 		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
-			if ((e instanceof NetworkMapDecoration) || (e instanceof NetworkMapDCIContainer) || (e instanceof NetworkMapDCIImage) || (e instanceof NetworkMapTextBox))
+      {
+			if ((e instanceof NetworkMapDecoration) || (e instanceof NetworkMapDCIContainer) ||
+			    (e instanceof NetworkMapDCIImage) || (e instanceof NetworkMapTextBox))
+         {
 				elements.add((NetworkMapElement)e);
+         }
+      }
 		return elements;
 	}
 }

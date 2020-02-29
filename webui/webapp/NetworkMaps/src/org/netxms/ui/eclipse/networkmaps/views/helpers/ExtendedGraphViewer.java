@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,7 @@ import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
@@ -342,7 +343,8 @@ public class ExtendedGraphViewer extends GraphViewer
 			clearDecorationSelection(false);
 			for(Object o : l)
 			{
-				if ((o instanceof NetworkMapDecoration) || (o instanceof NetworkMapDCIContainer) || (o instanceof NetworkMapDCIImage) || (o instanceof NetworkMapDCIContainer))
+            if ((o instanceof NetworkMapDecoration) || (o instanceof NetworkMapDCIContainer) || 
+                (o instanceof NetworkMapDCIImage) || (o instanceof NetworkMapTextBox))
 				{
 					selectedDecorations.add((NetworkMapElement)o);
 					DecorationLayerAbstractFigure f = decorationFigures.get(((NetworkMapElement)o).getId());

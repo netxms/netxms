@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,8 @@ import org.netxms.client.maps.configs.SingleDciConfig;
 
 /**
  * Network map element representing NetXMS DCI container
- *
  */
-public class NetworkMapDCIContainer  extends NetworkMapElement
+public class NetworkMapDCIContainer extends NetworkMapElement
 {
    private String DCIListXml = "";
    private int backgroundColor;
