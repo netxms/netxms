@@ -25,29 +25,33 @@
 /**
  * Static data
  */
-static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
-static void (* s_fpPostEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list) = NULL;
-static void (* s_fpPostEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **) = NULL;
-static AbstractCommSession *(* s_fpFindServerSession)(UINT64) = NULL;
-static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = NULL;
-static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *) = NULL;
-static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = NULL;
-static const TCHAR *s_dataDirectory = NULL;
-static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = NULL;
-static void (* s_fpExecuteAction)(const TCHAR *, const StringList *);
+static void (* s_fpWriteLog)(int, int, const TCHAR *) = nullptr;
+static void (* s_fpPostEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list) = nullptr;
+static void (* s_fpPostEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **) = nullptr;
+static AbstractCommSession *(* s_fpFindServerSession)(UINT64) = nullptr;
+static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = nullptr;
+static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *) = nullptr;
+static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = nullptr;
+static const TCHAR *s_dataDirectory = nullptr;
+static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
+static void (*s_fpExecuteAction)(const TCHAR *, const StringList *) = nullptr;
+static bool (*s_fpGetScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *) = nullptr;
 
 /**
  * Initialize subagent API
  */
-void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-                                           void (* postEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list),
-                                           void (* postEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **),
-                                           bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
-                                           AbstractCommSession *(* findServerSession)(UINT64),
-                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
-                                           bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
-                                           DB_HANDLE (* getLocalDatabaseHandle)(),
-                                           const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList *))
+void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
+      void (*writeLog)(int, int, const TCHAR *),
+      void (*postEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list),
+      void (*postEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **),
+      bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
+      AbstractCommSession *(*findServerSession)(UINT64),
+      bool (*sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
+      bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
+      DB_HANDLE (*getLocalDatabaseHandle)(),
+      const TCHAR *dataDirectory,
+      void (*executeAction)(const TCHAR *, const StringList *),
+      bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *))
 {
    s_fpWriteLog = writeLog;
 	s_fpPostEvent1 = postEvent1;
@@ -59,6 +63,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
    s_dataDirectory = dataDirectory;
    s_fpGetLocalDatabaseHandle = getLocalDatabaseHandle;
    s_fpExecuteAction = executeAction;
+   s_fpGetScreenInfoForUserSession = getScreenInfoForUserSession;
 }
 
 /**
@@ -69,7 +74,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
    TCHAR szBuffer[4096];
    va_list args;
 
-   if (s_fpWriteLog != NULL)
+   if (s_fpWriteLog != nullptr)
    {
       va_start(args, format);
       _vsntprintf(szBuffer, 4096, format, args);
@@ -86,7 +91,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_
 {
    TCHAR szBuffer[4096];
 
-   if (s_fpWriteLog != NULL)
+   if (s_fpWriteLog != nullptr)
    {
       _vsntprintf(szBuffer, 4096, format, args);
       szBuffer[4095] = 0;
@@ -102,7 +107,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ..
    TCHAR szBuffer[4096];
    va_list args;
 
-   if (s_fpWriteLog != NULL)
+   if (s_fpWriteLog != nullptr)
    {
       va_start(args, format);
       _vsntprintf(szBuffer, 4096, format, args);
@@ -119,7 +124,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, v
 {
    TCHAR szBuffer[4096];
 
-   if (s_fpWriteLog != NULL)
+   if (s_fpWriteLog != nullptr)
    {
       _vsntprintf(szBuffer, 4096, format, args);
       szBuffer[4095] = 0;
@@ -132,7 +137,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, v
  */
 void LIBNXAGENT_EXPORTABLE AgentPostEvent(UINT32 event, const TCHAR *eventName, time_t timestamp, const char *format, ...)
 {
-   if (s_fpPostEvent1 != NULL)
+   if (s_fpPostEvent1 != nullptr)
    {
       va_list args;
       va_start(args, format);
@@ -146,7 +151,7 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent(UINT32 event, const TCHAR *eventName, 
  */
 void LIBNXAGENT_EXPORTABLE AgentPostEvent2(UINT32 event, const TCHAR *eventName, time_t timestamp, int count, const TCHAR **args)
 {
-   if (s_fpPostEvent2 != NULL)
+   if (s_fpPostEvent2 != nullptr)
       s_fpPostEvent2(event, eventName, timestamp, count, args);
 }
 
@@ -158,7 +163,7 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent2(UINT32 event, const TCHAR *eventName,
  */
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data)
 {
-   return (s_fpEnumerateSessions != NULL) ? s_fpEnumerateSessions(callback, data) : false;
+   return (s_fpEnumerateSessions != nullptr) ? s_fpEnumerateSessions(callback, data) : false;
 }
 
 /**
@@ -167,7 +172,7 @@ bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* c
 bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, 
                                                  bool allowCompression, VolatileCounter *cancellationFlag)
 {
-	if ((s_fpSendFile == NULL) || (session == NULL) || (file == NULL))
+	if ((s_fpSendFile == nullptr) || (session == nullptr) || (file == nullptr))
 		return FALSE;
 	return s_fpSendFile(session, requestId, file, offset, allowCompression, cancellationFlag);
 }
@@ -177,7 +182,7 @@ bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId
  */
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value)
 {
-	if (s_fpPushData == NULL)
+	if (s_fpPushData == nullptr)
 		return FALSE;
 	return s_fpPushData(parameter, value, 0, 0);
 }
@@ -249,21 +254,21 @@ const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory()
  * Find server session. Caller must call decRefCount() for session object when finished.
  *
  * @param serverId server ID
- * @return server session object or NULL
+ * @return server session object or nullptr
  */
 AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverId)
 {
-   return (s_fpFindServerSession != NULL) ? s_fpFindServerSession(serverId) : NULL;
+   return (s_fpFindServerSession != nullptr) ? s_fpFindServerSession(serverId) : nullptr;
 }
 
 /**
  * Get handle to local database.
  *
- * @return database handle or NULL if not available
+ * @return database handle or nullptr if not available
  */
 DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle()
 {
-   return (s_fpGetLocalDatabaseHandle != NULL) ? s_fpGetLocalDatabaseHandle() : NULL;
+   return (s_fpGetLocalDatabaseHandle != nullptr) ? s_fpGetLocalDatabaseHandle() : nullptr;
 }
 
 /**
@@ -273,6 +278,14 @@ DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle()
  */
 void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringList *args)
 {
-   if (s_fpExecuteAction != NULL)
+   if (s_fpExecuteAction != nullptr)
       s_fpExecuteAction(action, args);
+}
+
+/**
+ * Get screen information for given user session via session agent.
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp)
+{
+   return (s_fpGetScreenInfoForUserSession != nullptr) ? s_fpGetScreenInfoForUserSession(sessionId, width, height, bpp) : false;
 }

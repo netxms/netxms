@@ -109,15 +109,18 @@ extern TCHAR g_windowsServiceName[];
 extern TCHAR g_windowsServiceDisplayName[];
 #endif
 
-void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-                                           void (* postEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list),
-                                           void (* postEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **),
-                                           bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
-                                           AbstractCommSession *(* findServerSession)(UINT64),
-                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
-                                           bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
-                                           DB_HANDLE (* getLocalDatabaseHandle)(),
-                                           const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList *));
+void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
+      void(*writeLog)(int, int, const TCHAR *),
+      void(*postEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list),
+      void(*postEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **),
+      bool(*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
+      AbstractCommSession *(*findServerSession)(UINT64),
+      bool(*sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
+      bool(*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
+      DB_HANDLE(*getLocalDatabaseHandle)(),
+      const TCHAR *dataDirectory,
+      void(*executeAction)(const TCHAR *, const StringList *),
+      bool(*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *));
 
 int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile, const char *pszFileStore,
    const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues);
@@ -959,7 +962,8 @@ BOOL Initialize()
 
    // Initialize API for subagents
    InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
-      SendFileToServer, PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction);
+         SendFileToServer, PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction,
+         GetScreenInfoForUserSession);
    nxlog_debug(1, _T("Subagent API initialized"));
 
    g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), 1, 32);

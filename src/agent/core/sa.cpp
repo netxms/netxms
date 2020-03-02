@@ -351,6 +351,27 @@ void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
 }
 
 /**
+ * Get screen information via session agent
+ */
+bool SessionAgentConnector::getScreenInfo(uint32_t *width, uint32_t *height, uint32_t *bpp)
+{
+   NXCPMessage msg(CMD_GET_SCREEN_INFO, nextRequestId());
+   if (!sendMessage(&msg))
+      return false;
+
+   NXCPMessage *response = m_msgQueue.waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), 5000);
+   if (response == nullptr)
+      return false;
+
+   *width = response->getFieldAsUInt32(VID_SCREEN_WIDTH);
+   *height = response->getFieldAsUInt32(VID_SCREEN_HEIGHT);
+   *bpp = response->getFieldAsUInt32(VID_SCREEN_BPP);
+
+   delete response;
+   return true;
+}
+
+/**
  * Config merge strategy for support application
  */
 static ConfigEntry *SupportAppMergeStrategy(ConfigEntry *parent, const TCHAR *name)
@@ -611,6 +632,28 @@ SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName)
 }
 
 /**
+ * Acquire session agent connector
+ */
+SessionAgentConnector *AcquireSessionAgentConnector(uint32_t sessionId)
+{
+   SessionAgentConnector *c = NULL;
+
+   RWLockReadLock(s_lock);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      if (s_agents.get(i)->getSessionId() == sessionId)
+      {
+         c = s_agents.get(i);
+         c->incRefCount();
+         break;
+      }
+   }
+   RWLockUnlock(s_lock);
+
+   return c;
+}
+
+/**
  * Get table of registered session agents
  */
 LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
@@ -831,4 +874,18 @@ void LoadUserAgentNotifications()
       }
       DBFreeResult(hResult);
    }
+}
+
+/**
+ * Get screen information for session
+ */
+bool GetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp)
+{
+   SessionAgentConnector *connector = AcquireSessionAgentConnector(sessionId);
+   if (connector == nullptr)
+      return false;
+
+   bool success = connector->getScreenInfo(width, height, bpp);
+   connector->decRefCount();
+   return success;
 }

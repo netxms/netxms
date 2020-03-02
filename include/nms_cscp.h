@@ -647,6 +647,7 @@ typedef struct
 #define CMD_MODIFY_WEB_SERVICE            0x0193
 #define CMD_DELETE_WEB_SERVICE            0x0194
 #define CMD_WEB_SERVICE_DEFINITION        0x0195
+#define CMD_GET_SCREEN_INFO               0x0196
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1357,6 +1358,9 @@ typedef struct
 #define VID_DUPLICATE               ((UINT32)693)
 #define VID_TASK_IS_DISABLED        ((UINT32)694)
 #define VID_PROCESS_ID              ((UINT32)695)
+#define VID_SCREEN_WIDTH            ((UINT32)696)
+#define VID_SCREEN_HEIGHT           ((UINT32)697)
+#define VID_SCREEN_BPP              ((UINT32)698)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

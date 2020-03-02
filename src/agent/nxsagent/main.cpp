@@ -226,6 +226,24 @@ static void ShutdownAgent(bool restart)
 }
 
 /**
+ * Get screen information for current session
+ */
+static void GetScreenInfo(NXCPMessage *msg)
+{
+   DEVMODE dm;
+   if (EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm))
+   {
+      msg->setField(VID_SCREEN_WIDTH, static_cast<uint32_t>(dm.dmPelsWidth));
+      msg->setField(VID_SCREEN_HEIGHT, static_cast<uint32_t>(dm.dmPelsHeight));
+      msg->setField(VID_SCREEN_BPP, static_cast<uint32_t>(dm.dmBitsPerPel));
+   }
+   else
+   {
+      nxlog_debug(5, _T("Call to EnumDisplaySettings failed"));
+   }
+}
+
+/**
  * Process request from master agent
  */
 static void ProcessRequest(NXCPMessage *request)
@@ -242,6 +260,9 @@ static void ProcessRequest(NXCPMessage *request)
          break;
       case CMD_TAKE_SCREENSHOT:
          TakeScreenshot(&msg);
+         break;
+      case CMD_GET_SCREEN_INFO:
+         GetScreenInfo(&msg);
          break;
       case CMD_SHUTDOWN:
          ShutdownAgent(request->getFieldAsBoolean(VID_RESTART));

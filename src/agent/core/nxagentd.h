@@ -529,6 +529,7 @@ public:
 
    bool testConnection();
    void takeScreenshot(NXCPMessage *msg);
+   bool getScreenInfo(uint32_t *width, uint32_t *height, uint32_t *bpp);
    void updateUserAgentConfig();
    void updateUserAgentNotifications();
    void addUserAgentNotification(UserAgentNotification *n);
@@ -767,8 +768,10 @@ bool SendControlMessage(NXCPMessage *msg);
 
 void StartSessionAgentConnector();
 SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
+SessionAgentConnector *AcquireSessionAgentConnector(uint32_t sessionId);
 void ShutdownSessionAgents(bool restart);
 bool IsUserAgentInstalled();
+bool GetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp);
 
 UINT32 GenerateMessageId();
 

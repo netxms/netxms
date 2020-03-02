@@ -331,6 +331,8 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
       value->addColumn(_T("LOGON_TIMESTAMP"), DCI_DT_UINT64, _T("Logon time"));
       value->addColumn(_T("IDLE_TIME"), DCI_DT_UINT, _T("Idle for"));
 
+      DWORD consoleSessionId = WTSGetActiveConsoleSessionId();
+
       for (DWORD i = 0; i < count; i++)
       {
          if ((sessions[i].State == WTSActive) || (sessions[i].State == WTSDisconnected))
@@ -378,11 +380,29 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
                else if (client->ClientAddressFamily == AF_INET6)
                   value->set(5, InetAddress(reinterpret_cast<uint8_t*>(client->ClientAddress)).toString());
 
-               if ((client->HRes > 0) && (client->VRes > 0) && (client->ColorDepth > 0))
+               if ((client->HRes > 0) && (client->VRes > 0) && (client->ColorDepth > 0) && (sessions[i].SessionId != consoleSessionId))
                {
                   TCHAR clientScreen[256];
                   _sntprintf(clientScreen, 256, _T("%ux%ux%u"), client->HRes, client->VRes, client->ColorDepth);
                   value->set(6, clientScreen);
+               }
+               else
+               {
+                  // Attempt to get screen resolution from session agent
+                  uint32_t width, height, bpp;
+                  if (AgentGetScreenInfoForUserSession(sessions[i].SessionId, &width, &height, &bpp))
+                  {
+                     if ((width > 0) && (height > 0) && (bpp > 0))
+                     {
+                        TCHAR clientScreen[256];
+                        _sntprintf(clientScreen, 256, _T("%ux%ux%u"), width, height, bpp);
+                        value->set(6, clientScreen);
+                     }
+                     else
+                     {
+                        nxlog_debug_tag(DEBUG_TAG, 6, _T("Invalid screen resolution data received from session agent"));
+                     }
+                  }
                }
 
                WTSFreeMemory(client);
