@@ -6306,7 +6306,7 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       }
       else if (!_tcsicmp(param, _T("Server.MemoryUsage.DataCollectionCache")))
       {
-         ret_uint64(buffer, GetAlarmMemoryUsage());
+         ret_uint64(buffer, GetDCICacheMemoryUsage());
       }
       else if (!_tcsicmp(param, _T("Server.MemoryUsage.RawDataWriter")))
       {
