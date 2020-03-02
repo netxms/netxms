@@ -1,10 +1,11 @@
 *
-* Development
+* 3.2.380
 *
 
 - New attribute "primaryHostName" in NXSL class "Node"
 - Fixed memory leak in log parser subagent
 - Fixed incorrect value reported by internal parameter Server.MemoryUsage.DataCollectionCache
+- Fixed broken Windows Event Log monitoring in logwatch subagent
 - Fixed issues:
 	NX-1794 (Problems with map decorations selection)
 	NX-1798 (Incorrect default EIP port number)
