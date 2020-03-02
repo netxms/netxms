@@ -66,7 +66,7 @@ void CASReadSettings()
    MutexLock(s_lock);
 
    ConfigReadStrA(_T("CAS.Host"), s_hostname, MAX_DNS_NAME, "localhost");
-   s_port = ConfigReadInt(_T("CASPort"), 8443);
+   s_port = ConfigReadInt(_T("CAS.Port"), 8443);
    ConfigReadStrA(_T("CAS.Service"), s_service, MAX_CONFIG_VALUE, "http://127.0.0.1:10080/nxmc");
    ConfigReadStrA(_T("CAS.TrustedCACert"), s_trustedCA, MAX_PATH, "");
    ConfigReadStrA(_T("CAS.ValidateURL"), s_validateURL, MAX_CONFIG_VALUE, "/cas/serviceValidate");
