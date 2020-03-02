@@ -382,7 +382,7 @@ bool LogParser::monitorEventLogV6()
 	{
 		nxlog_debug_tag(DEBUG_TAG, 1, _T("Start watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
 		setStatus(LPS_RUNNING);
-		WaitForSingleObject(m_stopCondition, INFINITE);
+		ConditionWait(m_stopCondition, INFINITE);
 		nxlog_debug_tag(DEBUG_TAG, 1, _T("Stop watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
 		_EvtClose(handle);
       success = true;
