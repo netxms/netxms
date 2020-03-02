@@ -59,7 +59,7 @@ private:
    RingBuffer m_buffer;
 #ifdef _WIN32
    CRITICAL_SECTION m_bufferLock;
-   HANDLE m_dataCondition;
+   CONDITION_VARIABLE m_dataCondition;
 #else
    pthread_mutex_t m_bufferLock;
    pthread_cond_t m_dataCondition;
@@ -1161,7 +1161,7 @@ TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel) : AbstractCommChannel(), m_
    m_closed = 0;
 #ifdef _WIN32
    InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
-   m_dataCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
+   InitializeConditionVariable(&m_dataCondition);
 #else
    pthread_mutex_init(&m_bufferLock, NULL);
    pthread_cond_init(&m_dataCondition, NULL);
@@ -1175,7 +1175,6 @@ TunnelCommChannel::~TunnelCommChannel()
 {
 #ifdef _WIN32
    DeleteCriticalSection(&m_bufferLock);
-   CloseHandle(m_dataCondition);
 #else
    pthread_mutex_destroy(&m_bufferLock);
    pthread_cond_destroy(&m_dataCondition);
@@ -1200,21 +1199,18 @@ int TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
-   if (m_buffer.isEmpty())
+   while (m_buffer.isEmpty())
    {
-retry_wait:
-      LeaveCriticalSection(&m_bufferLock);
-      if (WaitForSingleObject(m_dataCondition, timeout) == WAIT_TIMEOUT)
+      if (!SleepConditionVariableCS(&m_dataCondition, &m_bufferLock, timeout))
+      {
+         LeaveCriticalSection(&m_bufferLock);
          return -2;
+      }
 
       if (!m_active)
-         return 0;   // closed while waiting
-
-      EnterCriticalSection(&m_bufferLock);
-      if (m_buffer.isEmpty())
       {
-         ResetEvent(m_dataCondition);
-         goto retry_wait;
+         LeaveCriticalSection(&m_bufferLock);
+         return 0;   // closed while waiting
       }
    }
 #else
@@ -1252,8 +1248,6 @@ retry_wait:
 
    size_t bytes = m_buffer.read((BYTE *)buffer, size);
 #ifdef _WIN32
-   if (m_buffer.isEmpty())
-      ResetEvent(m_dataCondition);
    LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_unlock(&m_bufferLock);
@@ -1272,29 +1266,27 @@ int TunnelCommChannel::poll(UINT32 timeout, bool write)
    if (!m_active)
       return -1;
 
-   int rc = 0;
-
 #ifdef _WIN32
+   int rc = 1;
    EnterCriticalSection(&m_bufferLock);
-   if (m_buffer.isEmpty())
+   while (m_buffer.isEmpty())
    {
-retry_wait:
-      LeaveCriticalSection(&m_bufferLock);
-      if (WaitForSingleObject(m_dataCondition, timeout) == WAIT_TIMEOUT)
-         return 0;
+      if (!SleepConditionVariableCS(&m_dataCondition, &m_bufferLock, timeout))
+      {
+         rc = 0;  // Timeout
+         break;
+      }
 
       if (!m_active)
-         return -1;
-
-      EnterCriticalSection(&m_bufferLock);
-      if (m_buffer.isEmpty())
       {
-         ResetEvent(m_dataCondition);
-         goto retry_wait;
+         rc = -1;
+         break;
       }
    }
    LeaveCriticalSection(&m_bufferLock);
+   return rc;
 #else
+   int rc = 0;
    pthread_mutex_lock(&m_bufferLock);
    if (m_buffer.isEmpty())
    {
@@ -1315,9 +1307,8 @@ retry_wait:
 #endif
    }
    pthread_mutex_unlock(&m_bufferLock);
-#endif
-
    return (rc == 0) ? 1 : 0;
+#endif
 }
 
 /**
@@ -1328,10 +1319,12 @@ int TunnelCommChannel::shutdown()
    m_active = false;
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
-   SetEvent(m_dataCondition);
+   WakeAllConditionVariable(&m_dataCondition);
    LeaveCriticalSection(&m_bufferLock);
 #else
+   pthread_mutex_lock(&m_bufferLock);
    pthread_cond_broadcast(&m_dataCondition);
+   pthread_mutex_unlock(&m_bufferLock);
 #endif
    return 0;
 }
@@ -1359,7 +1352,7 @@ void TunnelCommChannel::putData(const BYTE *data, size_t size)
 #endif
    m_buffer.write(data, size);
 #ifdef _WIN32
-   SetEvent(m_dataCondition);
+   WakeAllConditionVariable(&m_dataCondition);
    LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_cond_broadcast(&m_dataCondition);
@@ -1400,7 +1393,7 @@ void ParseTunnelList(TCHAR *list)
       }
    }
 #endif
-   free(list);
+   MemFree(list);
 }
 
 /**
