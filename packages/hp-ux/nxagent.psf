@@ -36,12 +36,12 @@ product
       directory         build/init.d=/sbin/init.d
       file              -m 0555 -o 2 -g 2 nxagentd
       directory         build/lib=/opt/netxms/lib
-      file              libappagent.so
-      file              libappagent.so.2
+      file              libappagent.so.32
       file              libappagent.so.2.0
-      file              libnetxms.so
-      file              libnetxms.so.2
-      file              libnetxms.so.2.0
+      file              libethernetip.so.32
+      file              libethernetip.so.32.0
+      file              libnetxms.so.32
+      file              libnetxms.so.32.0
       file              libnsm_dbquery.so
       file              libnsm_ecs.so
       file              libnsm_hpux.so
@@ -51,34 +51,35 @@ product
       file              libnsm_portcheck.so
       file              libnsm_sms.so
       file              libnsm_ups.so
-      file              libnxagent.so
-      file              libnxagent.so.2
-      file              libnxagent.so.2.0
-      file		libnxcrypto.so.1.1
-      file              libnxdb.so
-      file              libnxdb.so.2
-      file              libnxdb.so.2.0
+      file              libnxagent.so.32
+      file              libnxagent.so.32.0
+      file              libnxcrypto.so.1.1
+      file              libnxdb.so.32
+      file              libnxdb.so.32.0
+      file              libnxddr_informix.so
       file              libnxddr_oracle.so
-      file              libnxexpat.so
+      file              libnxddr_sqlite.so
       file              libnxexpat.so.2
       file              libnxexpat.so.2.0
-      file              libnxlp.so
-      file              libnxlp.so.2
-      file              libnxlp.so.2.0
-      file              libnxsnmp.so
-      file              libnxsnmp.so.2
-      file              libnxsnmp.so.2.0
-      file              libnxsqlite.so
-      file              libnxsqlite.so.2
-      file              libnxsqlite.so.2.0
-      file		libnxssl.so.1.1
-      file              libnxzlib.so
+      file              libnxjansson.so.10
+      file              libnxjansson.so.10.0
+      file              libnxlp.so.32
+      file              libnxlp.so.32.0
+      file              libnxmb.so.32
+      file              libnxmb.so.32.0
+      file              libnxsnmp.so.32
+      file              libnxsnmp.so.32.0
+      file              libnxsqlite.so.3
+      file              libnxsqlite.so.3.22
+      file              libnxssl.so.1.1
+      file              libnxtux.so.32
+      file              libnxtux.so.32.0
       file              libnxzlib.so.1
       file              libnxzlib.so.1.0
-      file		libpcre.so.3
-      file		libpcre.so.3.11
-      file		libpcre32.so.0
-      file		libpcre32.so.0.11
+      file              libpcre.so.3
+      file              libpcre.so.3.11
+      file              libpcre32.so.0
+      file              libpcre32.so.0.11
       directory         build/lib/netxms=/opt/netxms/lib/netxms
       file              dbquery.nsm
       file              ecs.nsm
@@ -92,8 +93,8 @@ product
       file              tuxedo.nsm
       file              ups.nsm
       directory         build/lib/netxms/dbdrv=/opt/netxms/lib/netxms/dbdrv
-      file		informix.ddr
-      file		oracle.ddr
+      file              informix.ddr
+      file              oracle.ddr
       file              sqlite.ddr
    end
 end
