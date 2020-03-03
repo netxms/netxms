@@ -174,7 +174,6 @@ String LIBETHERNETIP_EXPORTABLE CIP_DecodePath(const CIP_EPATH *path)
    size_t size = path->size;
    while(size > 1)
    {
-      size_t slen;
       switch(*curr & 0x03)
       {
          case 0:  // 8 bit
