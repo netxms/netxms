@@ -318,7 +318,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    {
       if (m_script != NULL)
       {
-         NXSL_VM *vm = CreateServerScriptVM(m_script, target, dci);
+         NXSL_VM *vm = CreateServerScriptVM(m_script, target, dci->createDescriptor());
          if (vm != NULL)
          {
             NXSL_Value *parameters[2];
@@ -371,7 +371,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    else
    {
       tvalue = m_expandValue ?
-               ItemValue(target->expandText(m_value.getString(), NULL, NULL, NULL, NULL, NULL, NULL), m_value.getTimeStamp()) :
+               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, nullptr, nullptr), m_value.getTimeStamp()) :
                m_value;
       switch(m_operation)
       {

@@ -447,7 +447,7 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
 }
 
 /**
- * Transform received value
+ * Transform received value. Expected to be called while object is locked.
  */
 bool DCTable::transform(Table *value)
 {
@@ -455,7 +455,7 @@ bool DCTable::transform(Table *value)
       return true;
 
    bool success = false;
-   ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
+   ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner, createDescriptorInternal());
    if (vm.isValid())
    {
       NXSL_Value *nxslValue = vm->createValue(new NXSL_Object(vm, &g_nxslStaticTableClass, value));

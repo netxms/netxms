@@ -1207,12 +1207,12 @@ typedef struct tagICMPHDR
  * Check if given string is NULL and always return valid pointer
  */
 #ifdef __cplusplus
-static inline const TCHAR *CHECK_NULL(const TCHAR *x) { return (x == NULL) ? _T("(null)") : x; }
-static inline const char *CHECK_NULL_A(const char *x) { return (x == NULL) ? "(null)" : x; }
-static inline const WCHAR *CHECK_NULL_W(const WCHAR *x) { return (x == NULL) ? L"(null)" : x; }
-static inline const TCHAR *CHECK_NULL_EX(const TCHAR *x) { return (x == NULL) ? _T("") : x; }
-static inline const char *CHECK_NULL_EX_A(const char *x) { return (x == NULL) ? "" : x; }
-static inline const WCHAR *CHECK_NULL_EX_W(const WCHAR *x) { return (x == NULL) ? L"" : x; }
+static inline const TCHAR *CHECK_NULL(const TCHAR *x) { return (x == nullptr) ? _T("(null)") : x; }
+static inline const char *CHECK_NULL_A(const char *x) { return (x == nullptr) ? "(null)" : x; }
+static inline const WCHAR *CHECK_NULL_W(const WCHAR *x) { return (x == nullptr) ? L"(null)" : x; }
+static inline const TCHAR *CHECK_NULL_EX(const TCHAR *x) { return (x == nullptr) ? _T("") : x; }
+static inline const char *CHECK_NULL_EX_A(const char *x) { return (x == nullptr) ? "" : x; }
+static inline const WCHAR *CHECK_NULL_EX_W(const WCHAR *x) { return (x == nullptr) ? L"" : x; }
 #else
 #define CHECK_NULL(x)      ((x) == NULL ? _T("(null)") : (x))
 #define CHECK_NULL_A(x)    ((x) == NULL ? "(null)" : (x))

@@ -2440,10 +2440,10 @@ json_t *NetObj::toJson()
 /**
  * Expand text
  */
-StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName,
-         const TCHAR *objectName, const StringMap *inputFields, const StringList *args)
+StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, shared_ptr<DCObjectInfo> dci,
+         const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields, const StringList *args)
 {
-   if (textTemplate == NULL)
+   if (textTemplate == nullptr)
       return StringBuffer();
 
    struct tm *lt;
@@ -2456,7 +2456,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
    time_t t;
 
    DbgPrintf(8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
-             m_id, CHECK_NULL(textTemplate), (alarm == NULL) ? 0 : alarm->getAlarmId() , (event == NULL) ? 0 : event->getId());
+             m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId());
 
    StringBuffer output;
    for(const TCHAR *curr = textTemplate; *curr != 0; curr++)
@@ -2479,7 +2479,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append(getPrimaryIpAddress().toString(buffer));
                   break;
                case 'A':   // Associated alarm message
-                  if (alarm != NULL)
+                  if (alarm != nullptr)
                   {
                      output.append(alarm->getMessage());
                   }
@@ -2497,19 +2497,19 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append(m_id);
                   break;
                case 'K':   // Associated alarm key
-                  if (alarm != NULL)
+                  if (alarm != nullptr)
                   {
                      output.append(alarm->getKey());
                   }
                   break;
                case 'm':
-                  if (event != NULL)
+                  if (event != nullptr)
                   {
                      output.append(event->getMessage());
                   }
                   break;
                case 'M':   // Custom message (usually set by matching script in EPP)
-                  if (event != NULL)
+                  if (event != nullptr)
                   {
                      output.append(event->getCustomMessage());
                   }
@@ -2518,25 +2518,25 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append((objectName != NULL) ? objectName : getName());
                   break;
                case 'N':   // Event name
-                  if (event != NULL)
+                  if (event != nullptr)
                   {
                      output.append(event->getName());
                   }
                   break;
                case 's':   // Severity code
-                  if (event != NULL)
+                  if (event != nullptr)
                   {
                      output.append(static_cast<INT32>(event->getSeverity()));
                   }
                   break;
                case 'S':   // Severity text
-                  if (event != NULL)
+                  if (event != nullptr)
                   {
                      output.append(GetStatusAsText(event->getSeverity(), false));
                   }
                   break;
                case 't':   // Event's timestamp
-                  t = (event != NULL) ? event->getTimestamp() : time(NULL);
+                  t = (event != nullptr) ? event->getTimestamp() : time(NULL);
 #if HAVE_LOCALTIME_R
                   lt = localtime_r(&t, &tmbuffer);
 #else
@@ -2546,7 +2546,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append(buffer);
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
-                  output.append(static_cast<INT64>((event != NULL) ? event->getTimestamp() : time(NULL)));
+                  output.append(static_cast<INT64>((event != nullptr) ? event->getTimestamp() : time(nullptr)));
                   break;
                case 'U':   // User name
                   output.append(userName);
@@ -2555,13 +2555,13 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append(NETXMS_VERSION_STRING);
                   break;
                case 'y': // alarm state
-                  if (alarm != NULL)
+                  if (alarm != nullptr)
                   {
                      output.append(static_cast<INT32>(alarm->getState()));
                   }
                   break;
                case 'Y': // alarm ID
-                  if (alarm != NULL)
+                  if (alarm != nullptr)
                   {
                      output.append(alarm->getAlarmId());
                   }
@@ -2587,10 +2587,10 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   {
                      buffer[1] = 0;
                   }
-                  if (event != NULL)
-                     output.append(static_cast<TCHAR*>(event->getParameterList()->get(_tcstol(buffer, NULL, 10) - 1)));
-                  else if (args != NULL)
-                     output.append(args->get(_tcstol(buffer, NULL, 10) - 1));
+                  if (event != nullptr)
+                     output.append(static_cast<TCHAR*>(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1)));
+                  else if (args != nullptr)
+                     output.append(args->get(_tcstol(buffer, nullptr, 10) - 1));
                   break;
                case '[':   // Script
                   for(i = 0, curr++; (*curr != ']') && (*curr != 0) && (i < 255); curr++)
@@ -2607,7 +2607,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 
                      // Entry point can be given in form script/entry_point
                      TCHAR *s = _tcschr(buffer, _T('/'));
-                     if (s != NULL)
+                     if (s != nullptr)
                      {
                         *s = 0;
                         s++;
@@ -2625,36 +2625,36 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      }
                      StrStrip(buffer);
 
-                     NXSL_VM *vm = CreateServerScriptVM(buffer, this);
-                     if (vm != NULL)
+                     NXSL_VM *vm = CreateServerScriptVM(buffer, this, dci);
+                     if (vm != nullptr)
                      {
-                        if (event != NULL)
+                        if (event != nullptr)
                            vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
-                        if (alarm != NULL)
+                        if (alarm != nullptr)
                         {
                            vm->setGlobalVariable("$alarm", vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm, true)));
                            vm->setGlobalVariable("$alarmMessage", vm->createValue(alarm->getMessage()));
                            vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
                         }
 
-                        if (vm->run(0, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
+                        if (vm->run(0, nullptr, nullptr, nullptr, (entryPoint[0] != 0) ? entryPoint : nullptr))
                         {
                            NXSL_Value *result = vm->getResult();
-                           if (result != NULL)
+                           if (result != nullptr)
                            {
                               const TCHAR *temp = result->getValueAsCString();
-                              if (temp != NULL)
+                              if (temp != nullptr)
                               {
                                  output.append(temp);
                                  DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s executed successfully"),
-                                    (int)((event != NULL) ? event->getCode() : 0), textTemplate, buffer);
+                                    (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer);
                               }
                            }
                         }
                         else
                         {
                            DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
-                                     (int)((event != NULL) ? event->getCode() : 0), textTemplate, buffer, vm->getErrorText());
+                                     (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer, vm->getErrorText());
                            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, vm->getErrorText(), 0);
                         }
                         delete vm;
@@ -2662,7 +2662,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      else
                      {
                         DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Cannot find script %s"),
-                           (int)((event != NULL) ? event->getCode() : 0), textTemplate, buffer);
+                           (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer);
                      }
                   }
                   break;
@@ -2679,7 +2679,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   {
                      buffer[i] = 0;
                      TCHAR *defaultValue = _tcschr(buffer, _T(':'));
-                     if (defaultValue != NULL)
+                     if (defaultValue != nullptr)
                      {
                         *defaultValue = 0;
                         defaultValue++;
@@ -2706,7 +2706,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   {
                      curr--;
                   }
-                  else if (inputFields != NULL)
+                  else if (inputFields != nullptr)
                   {
                      buffer[i] = 0;
                      StrStrip(buffer);
@@ -2714,7 +2714,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case '<':   // Named parameter
-                  if (event != NULL)
+                  if (event != nullptr)
                   {
                      for(i = 0, curr++; (*curr != '>') && (*curr != 0) && (i < 255); curr++)
                      {
@@ -2729,7 +2729,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         buffer[i] = 0;
                         const StringList *names = event->getParameterNames();
                         TCHAR *defaultValue = _tcschr(buffer, _T(':'));
-                        if (defaultValue != NULL)
+                        if (defaultValue != nullptr)
                         {
                            *defaultValue = 0;
                            defaultValue++;

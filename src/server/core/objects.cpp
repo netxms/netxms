@@ -2689,7 +2689,7 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
  */
 static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globalVariables)
 {
-   SetupServerScriptVM(vm, object, NULL);
+   SetupServerScriptVM(vm, object, nullptr);
    vm->setContextObject(object->createNXSLObject(vm));
    NXSL_VariableSystem *expressionVariables = NULL;
    ObjectRefArray<NXSL_Value> args(0);

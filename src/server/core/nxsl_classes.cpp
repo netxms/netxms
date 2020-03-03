@@ -170,7 +170,7 @@ NXSL_METHOD_DEFINITION(NetObj, expandString)
       return NXSL_ERR_NOT_STRING;
 
    NetObj *n = static_cast<NetObj*>(object->getData());
-   *result = vm->createValue(n->expandText(argv[0]->getValueAsCString(), NULL, NULL, NULL, NULL, NULL, NULL));
+   *result = vm->createValue(n->expandText(argv[0]->getValueAsCString(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr));
    return 0;
 }
 
@@ -2839,7 +2839,7 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
  */
 void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
 {
-   delete static_cast<DCObjectInfo*>(object->getData());
+   delete static_cast<shared_ptr<DCObjectInfo>*>(object->getData());
 }
 
 /**
@@ -2848,7 +2848,7 @@ void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
 NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_VM *vm = object->vm();
-   DCObjectInfo *dci = static_cast<DCObjectInfo*>(object->getData());
+   const DCObjectInfo *dci = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
    NXSL_Value *value = NULL;
    if (!strcmp(attr, "activeThresholdSeverity"))
    {

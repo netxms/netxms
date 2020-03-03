@@ -1009,7 +1009,7 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 	lockProperties();
 	if (m_filter != NULL)
 	{
-	   SetupServerScriptVM(m_filter, object, NULL);
+	   SetupServerScriptVM(m_filter, object, nullptr);
 		if (m_filter->run())
 		{
 			NXSL_Value *value = m_filter->getResult();

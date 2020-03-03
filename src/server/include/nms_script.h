@@ -368,17 +368,17 @@ NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary();
 /**
  * Setup server script VM. Returns pointer to same VM for convenience.
  */
-NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, DCObject *dci);
+NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, shared_ptr<DCObjectInfo> dciInfo);
 
 /**
  * Create NXSL VM from library script
  */
-ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, NetObj *object, DCObject *dci = NULL);
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, NetObj *object, shared_ptr<DCObjectInfo> dciInfo = shared_ptr<DCObjectInfo>());
 
 /**
  * Create NXSL VM from compiled script
  */
-ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, NetObj *object, DCObject *dci = NULL);
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, NetObj *object, shared_ptr<DCObjectInfo> dciInfo = shared_ptr<DCObjectInfo>());
 
 /**
  * Functions

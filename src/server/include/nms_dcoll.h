@@ -174,6 +174,7 @@ public:
 	int getRepeatInterval() const { return m_repeatInterval; }
 	time_t getLastEventTimestamp() const { return m_lastEventTimestamp; }
 	int getCurrentSeverity() const { return m_currentSeverity; }
+	bool needValueExpansion() const { return m_expandValue; }
 
 	void markLastEvent(int severity);
    void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }
@@ -305,6 +306,7 @@ protected:
    void setTransformationScript(const TCHAR *source);
 
 	virtual bool isCacheLoaded();
+   virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const;
 
 	// --- constructors ---
    DCObject();
@@ -334,7 +336,7 @@ public:
    virtual void updateThresholdsBeforeMaintenanceState();
    virtual void generateEventsBasedOnThrDiff();
 
-   virtual DCObjectInfo *createDescriptor() const;
+   shared_ptr<DCObjectInfo> createDescriptor() const;
 
 	UINT32 getId() const { return m_id; }
 	const uuid& getGuid() const { return m_guid; }
@@ -391,7 +393,7 @@ public:
    virtual void createExportRecord(StringBuffer &xml) = 0;
    virtual json_t *toJson();
 
-   NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
 
    ClientSession *processForcePoll();
    void requestForcePoll(ClientSession *session);
@@ -452,6 +454,7 @@ protected:
    Threshold *getThresholdById(UINT32 id) const;
 
 	virtual bool isCacheLoaded() override;
+   virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const override;
 
    using DCObject::updateFromMessage;
 
@@ -474,8 +477,6 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb) override;
-
-   virtual DCObjectInfo *createDescriptor() const override;
 
    void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(true, conditionId); unlock(); }
    void reloadCache(bool forceReload);
@@ -862,6 +863,6 @@ UINT64 GetDCICacheMemoryUsage();
 /**
  * DCI cache loader queue
  */
-extern ObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue;
+extern SharedObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue;
 
 #endif   /* _nms_dcoll_h_ */

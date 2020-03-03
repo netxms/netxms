@@ -907,7 +907,7 @@ void DCItem::generateEventsBasedOnThrDiff()
 }
 
 /**
- * Transform received value
+ * Transform received value. Assuming that DCI object is locked.
  */
 bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 {
@@ -997,7 +997,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
    if (m_transformationScript != NULL)
    {
-      ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
+      ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner, createDescriptorInternal());
       if (vm.isValid())
       {
          NXSL_Value *nxslValue = vm->createValue(value.getString());
@@ -1184,7 +1184,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
       if (allowLoad && (m_owner != NULL) && (((m_requiredCacheSize - m_cacheSize) * getEffectivePollingInterval() > 300) || (m_source == DS_PUSH_AGENT)))
       {
          m_bCacheLoaded = false;
-         g_dciCacheLoaderQueue.put(createDescriptor());
+         g_dciCacheLoaderQueue.put(createDescriptorInternal());
       }
       else
       {
@@ -2177,9 +2177,11 @@ bool DCItem::hasScriptThresholds() const
       return false;
 
    for(int i = 0; i < m_thresholds->size(); i++)
-      if (m_thresholds->get(i)->getFunction() == F_SCRIPT)
+   {
+      Threshold *t = m_thresholds->get(i);
+      if ((t->getFunction() == F_SCRIPT) || t->needValueExpansion()) // Macro expansion can invoke script
          return true;
-
+   }
    return false;
 }
 
@@ -2201,10 +2203,21 @@ Threshold *DCItem::getThresholdById(UINT32 id) const
 /**
  * Create descriptor for this object
  */
-DCObjectInfo *DCItem::createDescriptor() const
+shared_ptr<DCObjectInfo> DCItem::createDescriptorInternal() const
 {
-   DCObjectInfo *info = DCObject::createDescriptor();
-   info->m_hasActiveThreshold = hasActiveThreshold();
-   info->m_thresholdSeverity = getThresholdSeverity();
+   shared_ptr<DCObjectInfo> info = DCObject::createDescriptorInternal();
+
+   for(int i = 0; i < getThresholdCount(); i++)
+   {
+      Threshold *t = m_thresholds->get(i);
+      if (t->isReached())
+      {
+         info->m_hasActiveThreshold = true;
+         info->m_thresholdSeverity = std::max(info->m_thresholdSeverity, t->getCurrentSeverity());
+         if (!(m_flags & DCF_ALL_THRESHOLDS) || (info->m_thresholdSeverity == SEVERITY_CRITICAL))
+            break;
+      }
+   }
+
    return info;
 }

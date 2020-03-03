@@ -76,7 +76,7 @@ private:
    void *getInternal();
 
 protected:
-   void (*m_destructor)(void*);
+   void (*m_destructor)(void*, Queue*);
 
 public:
    Queue();
@@ -88,7 +88,7 @@ public:
 	void setShutdownMode();
 	void setOwner(bool owner) { m_owner = owner; }
    void *get();
-   void *getOrBlock(UINT32 timeout = INFINITE);
+   void *getOrBlock(uint32_t timeout = INFINITE);
    size_t size() const { return m_size; }
    size_t allocated() const { return m_blockSize * m_blockCount; }
    void clear();
@@ -105,7 +105,7 @@ template<typename T> class ObjectQueue : public Queue
    DISABLE_COPY_CTOR(ObjectQueue)
 
 private:
-   static void destructor(void *object) { delete static_cast<T*>(object); }
+   static void destructor(void *object, Queue *queue) { delete static_cast<T*>(object); }
 
 public:
    ObjectQueue() : Queue() { m_destructor = destructor; }
@@ -113,10 +113,50 @@ public:
    virtual ~ObjectQueue() { }
 
    T *get() { return (T*)Queue::get(); }
-   T *getOrBlock(UINT32 timeout = INFINITE) { return (T*)Queue::getOrBlock(timeout); }
+   T *getOrBlock(uint32_t timeout = INFINITE) { return (T*)Queue::getOrBlock(timeout); }
    template<typename K> T *find(const K *key, bool (*comparator)(const K *, const T *), T *(*transform)(T*) = NULL) { return (T*)Queue::find(key, (QueueComparator)comparator, (void *(*)(void*))transform); }
    template<typename K> bool remove(const K *key, bool (*comparator)(const K *, const T *)) { return Queue::remove(key, (QueueComparator)comparator); }
    template<typename C> void forEach(EnumerationCallbackResult (*callback)(const T *, C *), C *context) { Queue::forEach((QueueEnumerationCallback)callback, (void *)context); }
+};
+
+/**
+ * Shared object queue
+ */
+template<typename T> class SharedObjectQueue : public Queue
+{
+   DISABLE_COPY_CTOR(SharedObjectQueue)
+
+private:
+   ObjectMemoryPool<shared_ptr<T>> m_pool;
+
+   static void destructor(void *object, Queue *queue) { static_cast<SharedObjectQueue<T>*>(queue)->m_pool.destroy(static_cast<shared_ptr<T>*>(object)); }
+
+public:
+   SharedObjectQueue() : Queue(256, Ownership::True) { m_destructor = destructor; }
+   SharedObjectQueue(size_t blockSize) : Queue(blockSize, Ownership::True) { m_destructor = destructor; }
+   virtual ~SharedObjectQueue() { }
+
+   shared_ptr<T> get()
+   {
+      auto p = static_cast<shared_ptr<T>*>(Queue::get());
+      if ((p == nullptr) || (reinterpret_cast<void*>(p) == INVALID_POINTER_VALUE))
+         return shared_ptr<T>();
+      auto v = *p;
+      m_pool.destroy(p);
+      return v;
+   }
+   shared_ptr<T> getOrBlock(uint32_t timeout = INFINITE)
+   {
+      auto p = static_cast<shared_ptr<T>*>(Queue::getOrBlock(timeout));
+      if ((p == nullptr) || (reinterpret_cast<void*>(p) == INVALID_POINTER_VALUE))
+         return shared_ptr<T>();
+      auto v = *p;
+      m_pool.destroy(p);
+      return v;
+   }
+
+   void put(shared_ptr<T> object) { Queue::put(new(m_pool.allocate()) shared_ptr<T>(object)); }
+   void insert(void *object) { Queue::insert(new(m_pool.allocate()) shared_ptr<T>(object)); }
 };
 
 #endif    /* _nxqueue_h_ */

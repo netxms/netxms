@@ -2294,7 +2294,7 @@ static THREAD_RESULT THREAD_CALL RootCauseUpdateThread(void *arg)
       {
          Alarm *alarm = updateList.get(i);
          NetObj *object = FindObjectById(alarm->getSourceObject());
-         NXSL_VM *vm = CreateServerScriptVM(alarm->getRcaScriptName(), object, NULL);
+         NXSL_VM *vm = CreateServerScriptVM(alarm->getRcaScriptName(), object, nullptr);
          if (vm != NULL)
          {
             Event *event = LoadEventFromDatabase(alarm->getSourceEventId());

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,16 +38,19 @@ NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary()
 /**
  * Setup server script VM. Returns pointer to same VM for convenience.
  */
-NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, DCObject *dci)
+NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, shared_ptr<DCObjectInfo> dciInfo)
 {
-   if ((vm == NULL) || (object == NULL))
+   if ((vm == nullptr) || (object == nullptr))
       return vm;
+
    vm->setGlobalVariable("$object", object->createNXSLObject(vm));
    if (object->getObjectClass() == OBJECT_NODE)
       vm->setGlobalVariable("$node", object->createNXSLObject(vm));
    vm->setGlobalVariable("$isCluster", vm->createValue((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
-   if (dci != NULL)
-      vm->setGlobalVariable("$dci", dci->createNXSLObject(vm));
+
+   if (dciInfo != nullptr)
+      vm->setGlobalVariable("$dci", vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, new shared_ptr<DCObjectInfo>(dciInfo))));
+
    return vm;
 }
 
@@ -73,29 +76,31 @@ static bool ScriptValidator(NXSL_LibraryScript *script, void *context)
 }
 
 /**
- * Create NXSL VM from library script
+ * Create NXSL VM from library script. Created VM will take ownership of DCI descriptor.
  */
-ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, NetObj *object, DCObject *dci)
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, NetObj *object, shared_ptr<DCObjectInfo> dciInfo)
 {
    ScriptVMFailureReason failureReason = ScriptVMFailureReason::SCRIPT_NOT_FOUND;
    NXSL_VM *vm = s_scriptLibrary.createVM(name, CreateServerEnvironment, ScriptValidator, &failureReason);
-   return (vm == NULL) ? ScriptVMHandle(failureReason): ScriptVMHandle(SetupServerScriptVM(vm, object, dci));
+   return (vm != nullptr) ? ScriptVMHandle(SetupServerScriptVM(vm, object, dciInfo)) : ScriptVMHandle(failureReason);
 }
 
 /**
- * Create NXSL VM from compiled script
+ * Create NXSL VM from compiled script. Created VM will take ownership of DCI descriptor.
  */
-ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, NetObj *object, DCObject *dci)
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, NetObj *object, shared_ptr<DCObjectInfo> dciInfo)
 {
    if (script->isEmpty())
       return ScriptVMHandle(ScriptVMFailureReason::SCRIPT_IS_EMPTY);
+
    NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
    if (!vm->load(script))
    {
       delete vm;
       return ScriptVMHandle(ScriptVMFailureReason::SCRIPT_LOAD_ERROR);
    }
-   return ScriptVMHandle(SetupServerScriptVM(vm, object, dci));
+
+   return ScriptVMHandle(SetupServerScriptVM(vm, object, dciInfo));
 }
 
 /**

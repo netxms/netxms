@@ -947,7 +947,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
    else
    {
-      NXSL_VM *vm = CreateServerScriptVM(szFilter, NULL);
+      NXSL_VM *vm = CreateServerScriptVM(szFilter, nullptr);
       if (vm != NULL)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);

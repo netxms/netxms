@@ -37,7 +37,7 @@ ThreadPool *g_dataCollectorThreadPool = NULL;
 /**
  * DCI cache loader queue
  */
-ObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue(256, Ownership::True);
+SharedObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue;
 
 /**
  * Average time to queue DCI
@@ -413,8 +413,8 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
    nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread started"));
    while(!IsShutdownInProgress())
    {
-      DCObjectInfo *ref = g_dciCacheLoaderQueue.getOrBlock();
-      if (ref == INVALID_POINTER_VALUE)
+      shared_ptr<DCObjectInfo> ref = g_dciCacheLoaderQueue.getOrBlock();
+      if (ref == nullptr)
          break;
 
       NetObj *object = FindObjectById(ref->getOwnerId());
@@ -430,7 +430,6 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
          }
          object->decRefCount();
       }
-      delete ref;
    }
    nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread stopped"));
    return THREAD_OK;

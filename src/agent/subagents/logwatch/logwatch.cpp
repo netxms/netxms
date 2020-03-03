@@ -198,7 +198,7 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 			for (int i = 0; i < parsers->size(); i++)
 			{
 				LogParser *parser = parsers->get(i);
-				if (parser->getFileName() != NULL)
+				if (parser->getFileName() != nullptr)
 				{
 					parser->setCallback(LogParserMatch);
                parser->setGuid(guid);

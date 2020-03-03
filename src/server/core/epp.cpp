@@ -519,7 +519,7 @@ bool EPRule::matchScript(Event *pEvent)
    if (m_script == NULL)
       return true;
 
-   SetupServerScriptVM(m_script, FindObjectById(pEvent->getSourceId()), NULL);
+   SetupServerScriptVM(m_script, FindObjectById(pEvent->getSourceId()), nullptr);
    m_script->setGlobalVariable("$event", m_script->createValue(new NXSL_Object(m_script, &g_nxslEventClass, pEvent, true)));
    m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue());
    m_script->setGlobalVariable("EVENT_CODE", m_script->createValue(pEvent->getCode()));
@@ -675,7 +675,7 @@ UINT32 EPRule::generateAlarm(Event *event)
 	   if ((m_rcaScriptName != NULL) && (m_rcaScriptName[0] != 0))
 	   {
 	      NetObj *object = FindObjectById(event->getSourceId());
-	      NXSL_VM *vm = CreateServerScriptVM(m_rcaScriptName, object, NULL);
+	      NXSL_VM *vm = CreateServerScriptVM(m_rcaScriptName, object, nullptr);
 	      if (vm != NULL)
 	      {
 	         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));

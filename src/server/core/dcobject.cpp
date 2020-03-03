@@ -454,7 +454,7 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 		}
 		else if (!_tcsncmp(macro, _T("script:"), 7))
 		{
-			NXSL_VM *vm = CreateServerScriptVM(&macro[7], m_owner, this);
+			NXSL_VM *vm = CreateServerScriptVM(&macro[7], m_owner, createDescriptorInternal());
 			if (vm != NULL)
 			{
 				if (vm->run(0, NULL))
@@ -568,7 +568,7 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
          {
             *closingBracker = 0;
 
-            NXSL_VM *vm = CreateServerScriptVM(scriptName, m_owner, this);
+            NXSL_VM *vm = CreateServerScriptVM(scriptName, m_owner, createDescriptorInternal());
             if (vm != NULL)
             {
                if (vm->run(0, NULL))
@@ -1280,9 +1280,9 @@ const TCHAR *DCObject::getOwnerName() const
 /**
  * Create NXSL object for this data collection object
  */
-NXSL_Value *DCObject::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *DCObject::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, createDescriptor()));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, new shared_ptr<DCObjectInfo>(createDescriptor())));
 }
 
 /**
@@ -1335,7 +1335,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
    DCObject *dco = data->dco;
    SharedString dcObjectName = dco->getName();
 
-   SetupServerScriptVM(instanceFilter, dco->getOwner(), dco);
+   SetupServerScriptVM(instanceFilter, dco->getOwner(), dco->createDescriptor());
    instanceFilter->setGlobalVariable("$targetObject", dco->getOwner()->createNXSLObject(instanceFilter));
    if (dco->getSourceNode() != 0)
    {
@@ -1516,7 +1516,7 @@ void DCObject::updateTimeIntervalsInternal()
 {
    if ((m_retentionTimeSrc != NULL) && (*m_retentionTimeSrc != 0))
    {
-      StringBuffer exp = m_owner->expandText(m_retentionTimeSrc, NULL, NULL, NULL, NULL, NULL, NULL);
+      StringBuffer exp = m_owner->expandText(m_retentionTimeSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, nullptr, nullptr);
       m_retentionTime = _tcstol(exp, NULL, 10);
    }
    else
@@ -1526,7 +1526,7 @@ void DCObject::updateTimeIntervalsInternal()
 
    if ((m_pollingIntervalSrc != NULL) && (*m_pollingIntervalSrc != 0))
    {
-      StringBuffer exp = m_owner->expandText(m_pollingIntervalSrc, NULL, NULL, NULL, NULL, NULL, NULL);
+      StringBuffer exp = m_owner->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, nullptr, nullptr);
       m_pollingInterval = _tcstol(exp, NULL, 10);
    }
    else
@@ -1542,10 +1542,7 @@ void DCObject::updateTimeIntervalsInternal()
  */
 bool DCObject::hasAccess(UINT32 userId)
 {
-   if (m_accessList->isEmpty())
-      return true;
-
-   if(userId == 0)
+   if (m_accessList->isEmpty() || (userId == 0))
       return true;
 
    for(int i = 0; i < m_accessList->size(); i++)
@@ -1607,14 +1604,22 @@ json_t *DCObject::toJson()
 }
 
 /**
- * Create descriptor for this object
+ * Create descriptor for this object (external entry point)
  */
-DCObjectInfo *DCObject::createDescriptor() const
+shared_ptr<DCObjectInfo> DCObject::createDescriptor() const
 {
    lock();
-   DCObjectInfo *info = new DCObjectInfo(this);
+   shared_ptr<DCObjectInfo> info = createDescriptorInternal();
    unlock();
    return info;
+}
+
+/**
+ * Create descriptor for this object (internal implementation)
+ */
+shared_ptr<DCObjectInfo> DCObject::createDescriptorInternal() const
+{
+   return shared_ptr<DCObjectInfo>(new DCObjectInfo(this));
 }
 
 /**

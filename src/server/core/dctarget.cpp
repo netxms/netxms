@@ -568,9 +568,9 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 		DCObject *object = m_dcObjects->get(i);
 		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && (object->getStatus() == ITEM_STATUS_ACTIVE) && object->hasAccess(userId))
 		{
-			if (((DCItem *)object)->hasActiveThreshold())
+			if (static_cast<DCItem*>(object)->hasActiveThreshold())
 			{
-				((DCItem *)object)->fillLastValueMessage(msg, varId);
+			   static_cast<DCItem*>(object)->fillLastValueMessage(msg, varId);
 				varId += 50;
 				count++;
 			}
@@ -1032,14 +1032,14 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
       return DCE_COMM_ERROR;
    }
 
-   StringBuffer url = expandText(d->getUrl(), nullptr, nullptr, nullptr, nullptr, nullptr, &args);
+   StringBuffer url = expandText(d->getUrl(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, &args);
 
    StringMap headers;
    auto it = d->getHeaders().constIterator();
    while(it->hasNext())
    {
       auto h = it->next();
-      StringBuffer value = expandText(h->second, nullptr, nullptr, nullptr, nullptr, nullptr, &args);
+      StringBuffer value = expandText(h->second, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, &args);
       headers.set(h->first, value);
    }
 

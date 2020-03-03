@@ -36,6 +36,14 @@ struct QueueBuffer
 };
 
 /**
+ * Default object destructor
+ */
+static void DefaultElementDestructor(void *element, Queue *queue)
+{
+   MemFree(element);
+}
+
+/**
  * Queue constructor
  */
 Queue::Queue(size_t blockSize, Ownership owner)
@@ -85,7 +93,7 @@ void Queue::commonInit()
    m_head = static_cast<QueueBuffer*>(MemAllocZeroed(sizeof(QueueBuffer) + (m_blockSize - 1) * sizeof(void*)));
    m_tail = m_head;
 	m_shutdownFlag = false;
-	m_destructor = MemFree;
+	m_destructor = DefaultElementDestructor;
 }
 
 /**
@@ -100,7 +108,7 @@ Queue::~Queue()
          for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
          {
             if (buffer->elements[pos] != INVALID_POINTER_VALUE)
-               m_destructor(buffer->elements[pos]);
+               m_destructor(buffer->elements[pos], this);
             pos++;
             if (pos == m_blockSize)
                pos = 0;
@@ -220,7 +228,7 @@ void *Queue::get()
 /**
  * Get object from queue or block with timeout if queue if empty
  */
-void *Queue::getOrBlock(UINT32 timeout)
+void *Queue::getOrBlock(uint32_t timeout)
 {
    lock();
    m_readers++;
@@ -279,7 +287,7 @@ void Queue::clear()
          for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
          {
             if (buffer->elements[pos] != INVALID_POINTER_VALUE)
-               m_destructor(buffer->elements[pos]);
+               m_destructor(buffer->elements[pos], this);
             pos++;
             if (pos == m_blockSize)
                pos = 0;
@@ -370,7 +378,7 @@ bool Queue::remove(const void *key, QueueComparator comparator)
          if ((curr != NULL) && (curr != INVALID_POINTER_VALUE) && comparator(key, curr))
          {
             if (m_owner)
-               m_destructor(curr);
+               m_destructor(curr, this);
             buffer->elements[pos] = NULL;
             success = true;
             goto remove_completed;

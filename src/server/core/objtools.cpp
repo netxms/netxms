@@ -1609,10 +1609,12 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
          }
       }
       else
-         inputFields = NULL;
+      {
+         inputFields = nullptr;
+      }
 
       TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
-      m_cmd = MemCopyString(object->expandText(cmd, NULL, NULL, session->getLoginName(), NULL, inputFields, NULL));
+      m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, nullptr, session->getLoginName(), nullptr, inputFields, nullptr));
       free(cmd);
       delete inputFields;
    }
@@ -1627,7 +1629,7 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
    else
    {
       m_requestId = 0;
-      m_session = NULL;
+      m_session = nullptr;
    }
 }
 
@@ -1636,7 +1638,7 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
  */
 ServerCommandExec::~ServerCommandExec()
 {
-   if (m_session != NULL)
+   if (m_session != nullptr)
       m_session->decRefCount();
 }
 

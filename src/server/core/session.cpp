@@ -8071,7 +8071,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                      delete alarm;
                      return;
                   }
-                  list = SplitCommandLine(object->expandText(action, alarm, NULL, m_loginName, NULL, &inputFields, NULL));
+                  list = SplitCommandLine(object->expandText(action, alarm, nullptr, nullptr, m_loginName, nullptr, &inputFields, nullptr));
                   _tcsncpy(action, list->get(0), MAX_PARAM_NAME);
                   list->remove(0);
                   delete alarm;
@@ -10871,7 +10871,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             bool expand = request->getFieldAsBoolean(VID_EXPAND_STRING);
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
 				FileDownloadJob *job = new FileDownloadJob((Node *)object,
-				         expand ? object->expandText(remoteFile, alarm, NULL, m_loginName, NULL, &inputFields, NULL) : remoteFile,
+				         expand ? object->expandText(remoteFile, alarm, nullptr, nullptr, m_loginName, nullptr, &inputFields, nullptr) : remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId(), expand);
 				delete alarm;
 				if (AddJob(job))
@@ -11051,7 +11051,7 @@ void ClientSession::executeScript(NXCPMessage *request)
 {
    NXCPMessage msg;
    bool success = false;
-   NXSL_VM *vm = NULL;
+   NXSL_VM *vm = nullptr;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -11059,7 +11059,7 @@ void ClientSession::executeScript(NXCPMessage *request)
 
    // Get node id and check object class and access rights
    NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != NULL)
+   if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
           (object->getObjectClass() == OBJECT_CLUSTER) ||
@@ -11076,13 +11076,13 @@ void ClientSession::executeScript(NXCPMessage *request)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
 				TCHAR *script = request->getFieldAsString(VID_SCRIPT);
-				if (script != NULL)
+				if (script != nullptr)
 				{
                TCHAR errorMessage[256];
                vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
-               if (vm != NULL)
+               if (vm != nullptr)
                {
-                  SetupServerScriptVM(vm, object, NULL);
+                  SetupServerScriptVM(vm, object, nullptr);
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   sendMessage(&msg);
                   success = true;
@@ -11249,7 +11249,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      delete inputFields;
                      return;
                   }
-                  String expScript = object->expandText(script, alarm, NULL, m_loginName, NULL, inputFields, NULL);
+                  String expScript = object->expandText(script, alarm, nullptr, nullptr, m_loginName, NULL, inputFields, nullptr);
                   MemFree(script);
                   script = MemCopyString(expScript);
                   delete alarm;
@@ -11261,9 +11261,9 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                {
                   NXSL_Environment *env = withOutput ? new NXSL_ClientSessionEnv(this, &msg) : new NXSL_ServerEnv();
                   vm = GetServerScriptLibrary()->createVM(args->get(0), env);
-                  if (vm != NULL)
+                  if (vm != nullptr)
                   {
-                     SetupServerScriptVM(vm, object, NULL);
+                     SetupServerScriptVM(vm, object, nullptr);
                      WriteAuditLog(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), CHECK_NULL(script));
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      sendMessage(&msg);
@@ -11299,7 +11299,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   free(script);
+   MemFree(script);
 
    // start execution
    if (success)
@@ -14536,7 +14536,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
          return;
       }
 
-      String result = object->expandText(textToExpand, alarm, NULL, m_loginName, NULL, &inputFields, NULL);
+      String result = object->expandText(textToExpand, alarm, nullptr, nullptr, m_loginName, nullptr, &inputFields, nullptr);
       msg.setField(outFieldId, result);
       debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, (const TCHAR *)result);
       MemFree(textToExpand);
