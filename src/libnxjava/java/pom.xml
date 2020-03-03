@@ -4,7 +4,7 @@
   <groupId>org.netxms</groupId>
   <artifactId>netxms-java-bridge</artifactId>
   <packaging>jar</packaging>
-  <version>3.2-SNAPSHOT</version>
+  <version>3.3-SNAPSHOT</version>
   <name>NetXMS C++/Java Bridge</name>
   <url>http://www.netxms.org</url>
 

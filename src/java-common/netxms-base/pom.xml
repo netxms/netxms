@@ -5,7 +5,7 @@
   <groupId>org.netxms</groupId>
   <artifactId>netxms-base</artifactId>
   <packaging>jar</packaging>
-  <version>3.2-SNAPSHOT</version>
+  <version>3.3-SNAPSHOT</version>
   <name>netxms-base</name>
   <description>NetXMS base classes and commonly used utility code</description>
   <url>http://www.netxms.org</url>
