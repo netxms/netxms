@@ -129,15 +129,31 @@ enum SNMP_Version
 #define SNMP_INFORM_REQUEST      6
 #define SNMP_REPORT              8
 
-//
-// PDU error codes
-//
-#define SNMP_PDU_ERR_SUCCESS        0
-#define SNMP_PDU_ERR_TOO_BIG        1
-#define SNMP_PDU_ERR_NO_SUCH_NAME   2
-#define SNMP_PDU_ERR_BAD_VALUE      3
-#define SNMP_PDU_ERR_READ_ONLY      4
-#define SNMP_PDU_ERR_GENERIC        5
+/**
+ * SNMP PDU error codes
+ */
+enum SNMP_ErrorCode
+{
+   SNMP_PDU_ERR_SUCCESS              = 0,
+   SNMP_PDU_ERR_TOO_BIG              = 1,
+   SNMP_PDU_ERR_NO_SUCH_NAME         = 2,
+   SNMP_PDU_ERR_BAD_VALUE            = 3,
+   SNMP_PDU_ERR_READ_ONLY            = 4,
+   SNMP_PDU_ERR_GENERIC              = 5,
+   SNMP_PDU_ERR_NO_ACCESS            = 6,
+   SNMP_PDU_ERR_WRONG_TYPE           = 7,
+   SNMP_PDU_ERR_WRONG_LENGTH         = 8,
+   SNMP_PDU_ERR_WRONG_ENCODING       = 9,
+   SNMP_PDU_ERR_WRONG_VALUE          = 10,
+   SNMP_PDU_ERR_NO_CREATON           = 11,
+   SNMP_PDU_ERR_INCONSISTENT_VALUE   = 12,
+   SNMP_PDU_ERR_RESOURCE_UNAVAILABLE = 13,
+   SNMP_PDU_ERR_COMMIT_FAILED        = 14,
+   SNMP_PDU_ERR_UNDO_FAILED          = 15,
+   SNMP_PDU_ERR_AUTHORIZATION_ERROR  = 16,
+   SNMP_PDU_ERR_NOT_WRITABLE         = 17,
+   SNMP_PDU_ERR_INCONSISTENT_NAME    = 18
+};
 
 //
 // ASN.1 identifier types
@@ -534,8 +550,8 @@ private:
    UINT32 m_dwTimeStamp;
    UINT32 m_dwAgentAddr;
    UINT32 m_dwRqId;
-   UINT32 m_dwErrorCode;
-   UINT32 m_dwErrorIndex;
+   UINT32 m_errorCode;
+   UINT32 m_errorIndex;
 	UINT32 m_msgId;
 	UINT32 m_msgMaxSize;
 	BYTE m_contextEngineId[SNMP_MAX_ENGINEID_LEN];
@@ -585,7 +601,7 @@ public:
    int getNumVariables() { return m_variables->size(); }
    SNMP_Variable *getVariable(int index) { return m_variables->get(index); }
    UINT32 getVersion() { return m_version; }
-   UINT32 getErrorCode() { return m_dwErrorCode; }
+   SNMP_ErrorCode getErrorCode() { return static_cast<SNMP_ErrorCode>(m_errorCode); }
 
 	void setMessageId(UINT32 msgId) { m_msgId = msgId; }
 	UINT32 getMessageId() { return m_msgId; }
@@ -749,15 +765,17 @@ public:
  * Functions
  */
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const UINT32 *value, TCHAR *buffer, size_t bufferSize);
-size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, UINT32 *buffer, size_t bufferSize);
+size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize);
 bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid);
 size_t LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid);
-const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 dwError);
 UINT32 LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *pRoot, UINT32 dwFlags);
 UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *fileName, SNMP_MIBObject **ppRoot);
 UINT32 LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *fileName, UINT32 *pdwTimestamp);
-UINT32 LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType);
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(UINT32 type, TCHAR *buffer, size_t bufferSize);
+uint32_t LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *type);
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize);
+
+const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(uint32_t errorCode);
+const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetProtocolErrorText(SNMP_ErrorCode errorCode);
 
 UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId();
 void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(UINT32 timeout);

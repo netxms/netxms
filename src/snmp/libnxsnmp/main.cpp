@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -42,7 +42,7 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const UINT32 *va
  * Will return 0 if OID is invalid or empty, and OID length (in UINT32s) on success
  * Buffer size should be given in number of UINT32s
  */
-size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, UINT32 *buffer, size_t bufferSize)
+size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize)
 {
    TCHAR *pCurr = (TCHAR *)text, *pEnd, szNumber[32];
    size_t length = 0;
@@ -72,7 +72,7 @@ size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, UINT32 *buffer, size
  */
 bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid)
 {
-   UINT32 buffer[MAX_OID_LEN];
+   uint32_t buffer[MAX_OID_LEN];
    size_t len = SNMPParseOID(oid, buffer, MAX_OID_LEN);
    return (len > 0);
 }
@@ -82,14 +82,14 @@ bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid)
  */
 size_t LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid)
 {
-   UINT32 buffer[MAX_OID_LEN];
+   uint32_t buffer[MAX_OID_LEN];
    return SNMPParseOID(oid, buffer, MAX_OID_LEN);
 }
 
 /**
  * Get text for libnxsnmp error code
  */
-const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 errorCode)
+const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(uint32_t errorCode)
 {
    static const TCHAR *errorText[] =
    {
@@ -113,79 +113,91 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 errorCode)
       _T("Unknown engine ID"),
       _T("Authentication failure"),
       _T("Decryption error"),
-      _T("Malformed or unexpected response from agent")
+      _T("Malformed or unexpected response from agent"),
+      _T("Operation aborted")
    };
 
-   return (errorCode <= SNMP_ERR_BAD_RESPONSE) ? errorText[errorCode] : _T("Unknown error");
+   return (errorCode <= SNMP_ERR_ABORTED) ? errorText[errorCode] : _T("Unknown error");
 }
+
+/**
+ * Get text for protocol error code
+ */
+const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetProtocolErrorText(SNMP_ErrorCode errorCode)
+{
+   static const TCHAR *errorText[] =
+   {
+      _T("Success"),
+      _T("Response is too big"),
+      _T("No such name"),
+      _T("Bad value"),
+      _T("Read only variable"),
+      _T("Generic error"),
+      _T("No access"),
+      _T("Wrong type"),
+      _T("Wrong length"),
+      _T("Wrong encoding"),
+      _T("Wrong value"),
+      _T("Creation not allowed"),
+      _T("Inconsistent value"),
+      _T("Resource unavailable"),
+      _T("Commit failed"),
+      _T("Undo failed"),
+      _T("Authorization error"),
+      _T("Not writable"),
+      _T("Inconsistent name")
+   };
+
+   return ((static_cast<int>(errorCode) >= 0) && (static_cast<int>(errorCode) <= SNMP_PDU_ERR_INCONSISTENT_NAME)) ? errorText[errorCode] : _T("Unknown error");
+}
+
+/**
+ * SNMP type names
+ */
+static CodeLookupElement s_typeList[] =
+{
+   { ASN_BIT_STRING, _T("BIT STRING") },
+   { ASN_COUNTER32, _T("COUNTER32") },
+   { ASN_COUNTER64, _T("COUNTER64") },
+   { ASN_GAUGE32, _T("GAUGE32") },
+   { ASN_INTEGER, _T("INTEGER") },
+   { ASN_INTEGER, _T("INT") },
+   { ASN_IP_ADDR, _T("IP ADDRESS") },
+   { ASN_IP_ADDR, _T("IPADDR") },
+   { ASN_NSAP_ADDR, _T("NSAP ADDRESS") },
+   { ASN_NULL, _T("NULL") },
+   { ASN_OBJECT_ID, _T("OBJECT IDENTIFIER") },
+   { ASN_OBJECT_ID, _T("OID") },
+   { ASN_OCTET_STRING, _T("STRING") },
+   { ASN_OCTET_STRING, _T("OCTET STRING") },
+   { ASN_OPAQUE, _T("OPAQUE") },
+   { ASN_SEQUENCE, _T("SEQUENCE") },
+   { ASN_TIMETICKS, _T("TIMETICKS") },
+   { ASN_UINTEGER32, _T("UINTEGER32") },
+   { ASN_UINTEGER32, _T("UINT32") },
+   { 0, nullptr }
+};
 
 /**
  * Resolve text representation of data type to integer value
  */
-UINT32 LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType)
+uint32_t LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *type)
 {
-	static struct
-	{
-		const TCHAR *pszName;
-		UINT32 dwValue;
-	} typeList[] =
-	{
-		{ _T("INT"), ASN_INTEGER },
-		{ _T("INTEGER"), ASN_INTEGER },
-		{ _T("STRING"), ASN_OCTET_STRING },
-		{ _T("OID"), ASN_OBJECT_ID },
-		{ _T("OBJECT IDENTIFIER"), ASN_OBJECT_ID },
-		{ _T("IPADDR"), ASN_IP_ADDR },
-		{ _T("IP ADDRESS"), ASN_IP_ADDR },
-		{ _T("COUNTER32"), ASN_COUNTER32 },
-		{ _T("GAUGE32"), ASN_GAUGE32 },
-		{ _T("TIMETICKS"), ASN_TIMETICKS },
-		{ _T("COUNTER64"), ASN_COUNTER64 },
-		{ _T("UINT32"), ASN_UINTEGER32 },
-		{ _T("UINTEGER32"), ASN_UINTEGER32 },
-		{ NULL, 0 }
-	};
-   int i;
-
-   for(i = 0; typeList[i].pszName != NULL; i++)
-      if (!_tcsicmp(typeList[i].pszName, pszType))
-         return typeList[i].dwValue;
+   for(int i = 0; s_typeList[i].text != nullptr; i++)
+      if (!_tcsicmp(s_typeList[i].text, type))
+         return s_typeList[i].code;
    return ASN_NULL;
 }
 
 /**
  * Get type name
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(UINT32 type, TCHAR *buffer, size_t bufferSize)
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize)
 {
-	static struct
-	{
-		const TCHAR *pszName;
-		UINT32 dwValue;
-	} typeList[] =
-	{
-		{ _T("INTEGER"), ASN_INTEGER },
-		{ _T("STRING"), ASN_OCTET_STRING },
-		{ _T("BIT STRING"), ASN_BIT_STRING },
-		{ _T("NULL"), ASN_NULL },
-		{ _T("OBJECT IDENTIFIER"), ASN_OBJECT_ID },
-		{ _T("SEQUENCE"), ASN_SEQUENCE },
-		{ _T("OPAQUE"), ASN_OPAQUE },
-		{ _T("NSAP ADDRESS"), ASN_NSAP_ADDR },
-		{ _T("IP ADDRESS"), ASN_IP_ADDR },
-		{ _T("COUNTER32"), ASN_COUNTER32 },
-		{ _T("GAUGE32"), ASN_GAUGE32 },
-		{ _T("TIMETICKS"), ASN_TIMETICKS },
-		{ _T("COUNTER64"), ASN_COUNTER64 },
-		{ _T("UINTEGER32"), ASN_UINTEGER32 },
-		{ NULL, 0 }
-	};
-	int i;
-
-	for(i = 0; typeList[i].pszName != NULL; i++)
-		if (typeList[i].dwValue == type)
+	for(int i = 0; s_typeList[i].text != nullptr; i++)
+		if (s_typeList[i].code == type)
 		{
-			nx_strncpy(buffer, typeList[i].pszName, bufferSize);
+			_tcslcpy(buffer, s_typeList[i].text, bufferSize);
 			return buffer;
 		}
 

@@ -68,8 +68,8 @@ SNMP_PDU::SNMP_PDU()
    m_command = SNMP_INVALID_PDU;
    m_variables = new ObjectArray<SNMP_Variable>(0, 16, Ownership::True);
    m_pEnterprise = NULL;
-   m_dwErrorCode = 0;
-   m_dwErrorIndex = 0;
+   m_errorCode = SNMP_PDU_ERR_SUCCESS;
+   m_errorIndex = 0;
    m_dwRqId = 0;
 	m_msgId = 0;
 	m_flags = 0;
@@ -95,8 +95,8 @@ SNMP_PDU::SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion)
    m_command = dwCommand;
    m_variables = new ObjectArray<SNMP_Variable>(0, 16, Ownership::True);
    m_pEnterprise = NULL;
-   m_dwErrorCode = 0;
-   m_dwErrorIndex = 0;
+   m_errorCode = SNMP_PDU_ERR_SUCCESS;
+   m_errorIndex = 0;
    m_dwRqId = dwRqId;
 	m_msgId = dwRqId;
 	m_flags = 0;
@@ -124,8 +124,8 @@ SNMP_PDU::SNMP_PDU(SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeE
    for(int i = 0; i < src->m_variables->size(); i++)
       m_variables->add(new SNMP_Variable(src->m_variables->get(i)));
    m_pEnterprise = (src->m_pEnterprise != NULL) ? new SNMP_ObjectId(*src->m_pEnterprise) : NULL;
-   m_dwErrorCode = src->m_dwErrorCode;
-   m_dwErrorIndex = src->m_dwErrorIndex;
+   m_errorCode = src->m_errorCode;
+   m_errorIndex = src->m_errorIndex;
    m_dwRqId = src->m_dwRqId;
 	m_msgId = src->m_msgId;
 	m_flags = src->m_flags;
@@ -236,7 +236,7 @@ bool SNMP_PDU::parsePduContent(const BYTE *pData, size_t pduLength)
       if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
          if ((dwType == ASN_INTEGER) &&
-             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwErrorCode))
+             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_errorCode))
          {
             pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
@@ -252,7 +252,7 @@ bool SNMP_PDU::parsePduContent(const BYTE *pData, size_t pduLength)
       if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
          if ((dwType == ASN_INTEGER) &&
-             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwErrorIndex))
+             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_errorIndex))
          {
             pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
@@ -1024,12 +1024,12 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
             dwPDUSize += dwBytes;
             pbCurrPos += dwBytes;
 
-            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwErrorCode, sizeof(UINT32), 
+            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_errorCode, sizeof(UINT32),
                                  pbCurrPos, dwBufferSize - dwPDUSize);
             dwPDUSize += dwBytes;
             pbCurrPos += dwBytes;
 
-            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwErrorIndex, sizeof(UINT32), 
+            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_errorIndex, sizeof(UINT32),
                                  pbCurrPos, dwBufferSize - dwPDUSize);
             dwPDUSize += dwBytes;
             pbCurrPos += dwBytes;

@@ -113,7 +113,7 @@ static int SetVariables(int argc, TCHAR *argv[])
          {
             if (response->getErrorCode() != 0)
             {
-               _tprintf(_T("SET operation failed (error code %d)\n"), response->getErrorCode());
+               _tprintf(_T("SET operation failed (%s)\n"), SNMPGetProtocolErrorText(response->getErrorCode()));
             }
             delete response;
          }
