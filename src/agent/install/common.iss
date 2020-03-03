@@ -59,7 +59,7 @@ Var
 
 #include "..\..\install\windows\firewall.iss"
 
-Procedure ExecAndLog(execName, options, workingDir: String);
+Function ExecAndLog(execName, options, workingDir: String): Integer;
 Var
   iResult : Integer;
 Begin
@@ -67,11 +67,13 @@ Begin
   Log('   Working directory: ' + workingDir);
   Exec(execName, options, workingDir, 0, ewWaitUntilTerminated, iResult);
   Log('   Result: ' + IntToStr(iResult));
+  Result := iResult;
 End;
 
 Procedure StopService;
 Var
   strExecName : String;
+  iResult, iRetryCount : Integer;
 Begin
   strExecName := ExpandConstant('{app}\bin\nxagentd.exe');
   If FileExists(strExecName) Then
@@ -80,9 +82,17 @@ Begin
     FileCopy(ExpandConstant('{tmp}\nxreload.exe'), ExpandConstant('{app}\bin\nxreload.exe'), False);
     ExecAndLog(strExecName, '-k', ExpandConstant('{app}\bin'));
     ExecAndLog(strExecName, '-S', ExpandConstant('{app}\bin'));
-    ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{app}\bin'));
     ExecAndLog('taskkill.exe', '/IM nxsagent.exe /F', ExpandConstant('{app}\bin'));
     ExecAndLog('taskkill.exe', '/IM nxuseragent.exe /F', ExpandConstant('{app}\bin'));
+
+    iRetryCount := 12;
+    iResult := ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{app}\bin'));
+    While (iResult = 1) And (iRetryCount > 0) Do
+    Begin
+      Sleep(5000);
+      iResult := ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{app}\bin'));
+      iRetryCount := iRetryCount - 1;
+    End;
   End;
 End;
 

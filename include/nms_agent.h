@@ -672,6 +672,8 @@ public:
    virtual bool open();
    virtual bool write(const BYTE *data, size_t dataSize, bool compressedStream);
    virtual void close(bool success);
+
+   const TCHAR *getFileName() const { return m_fileName; }
 };
 
 /**

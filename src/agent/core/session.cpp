@@ -286,7 +286,8 @@ void CommSession::readThread()
                   }
                   else
                   {
-                     // I/O error
+                     debugPrintf(4, _T("Transfer of file %s aborted because of local I/O error (%s)"),
+                           dInfo->getFileName(), _tcserror(errno));
                      dInfo->close(false);
                      m_downloadFileMap.remove(msg->getId());
 
@@ -1014,18 +1015,20 @@ UINT32 CommSession::upgrade(NXCPMessage *request)
 {
    if (m_masterServer)
    {
-      TCHAR szPkgName[MAX_PATH], szFullPath[MAX_PATH];
+      TCHAR packageName[MAX_PATH] = _T("");
+      request->getFieldAsString(VID_FILE_NAME, packageName, MAX_PATH);
+            
+      // Store upgrade file name to delete it after system start
+      WriteRegistry(_T("upgrade.file"), packageName);
+      debugPrintf(3, _T("Starting agent upgrade using package %s"), packageName);
 
-      szPkgName[0] = 0;
-      request->getFieldAsString(VID_FILE_NAME, szPkgName, MAX_PATH);
-      BuildFullPath(szPkgName, szFullPath);
-
-      //Create line in registry file with upgrade file name to delete it after system start
-      WriteRegistry(_T("upgrade.file"), szPkgName);
-      return UpgradeAgent(szFullPath);
+      TCHAR fullPath[MAX_PATH];
+      BuildFullPath(packageName, fullPath);
+      return UpgradeAgent(fullPath);
    }
    else
    {
+      debugPrintf(3, _T("Upgrade request from server which is not master (upgrade will not start)"));
       return ERR_ACCESS_DENIED;
    }
 }
