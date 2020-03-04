@@ -5,6 +5,7 @@
 - Proxy nodes does not collect DCI data from SNMP nodes marked as down
 - Fixed server memory leak in instance discovery code
 - Fixed issues:
+	NX-1607 (Primary IP address should not be used for topology if it is not present on any interface)
 	NX-1803 (Configuration import with "Replace existing object tools" checkbox set does not replace them)
 
 

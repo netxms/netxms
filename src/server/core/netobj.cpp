@@ -1956,6 +1956,30 @@ ObjectArray<NetObj> *NetObj::getChildren(int typeFilter)
 }
 
 /**
+ * Get count of child objects with optional type filter.
+ */
+int NetObj::getChildrenCount(int typeFilter)
+{
+   int count;
+   lockChildList(false);
+   if (typeFilter == -1)
+   {
+      count = getChildList()->size();
+   }
+   else
+   {
+      count = 0;
+      for(int i = 0; i < getChildList()->size(); i++)
+      {
+          if (typeFilter == static_cast<NetObj*>(getChildList()->get(i))->getObjectClass())
+             count++;
+      }
+   }
+   unlockChildList();
+   return count;
+}
+
+/**
  * Get list of parent objects (direct only). Returned array is
  * dynamically allocated and must be deleted by the caller.
  *
@@ -1968,11 +1992,35 @@ ObjectArray<NetObj> *NetObj::getParents(int typeFilter)
     ObjectArray<NetObj> *list = new ObjectArray<NetObj>(getParentList()->size(), 16);
     for(int i = 0; i < getParentList()->size(); i++)
     {
-        if ((typeFilter == -1) || (typeFilter == static_cast<NetObj *>(getParentList()->get(i))->getObjectClass()))
-            list->add(static_cast<NetObj *>(getParentList()->get(i)));
+        if ((typeFilter == -1) || (typeFilter == static_cast<NetObj*>(getParentList()->get(i))->getObjectClass()))
+           list->add(static_cast<NetObj*>(getParentList()->get(i)));
     }
     unlockParentList();
     return list;
+}
+
+/**
+ * Get count of parent objects with optional type filter.
+ */
+int NetObj::getParentsCount(int typeFilter)
+{
+   int count;
+   lockParentList(false);
+   if (typeFilter == -1)
+   {
+      count = getParentList()->size();
+   }
+   else
+   {
+      count = 0;
+      for(int i = 0; i < getParentList()->size(); i++)
+      {
+          if (typeFilter == static_cast<NetObj*>(getParentList()->get(i))->getObjectClass())
+             count++;
+      }
+   }
+   unlockParentList();
+   return count;
 }
 
 /**
