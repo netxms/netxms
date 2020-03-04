@@ -320,19 +320,19 @@ public:
    {
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
-      m_timestamp = time(NULL);
+      m_timestamp = time(nullptr);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_ITEM;
       m_statusCode = status;
       m_snmpNode = dci->getSnmpTargetGuid();
-      m_value.item = _tcsdup(value);
+      m_value.item = MemCopyString(value);
    }
 
    DataElement(DataCollectionItem *dci, StringList *value, UINT32 status)
    {
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
-      m_timestamp = time(NULL);
+      m_timestamp = time(nullptr);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_LIST;
       m_statusCode = status;
@@ -344,7 +344,7 @@ public:
    {
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
-      m_timestamp = time(NULL);
+      m_timestamp = time(nullptr);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_TABLE;
       m_statusCode = status;
@@ -374,30 +374,30 @@ public:
             {
                m_value.list = new StringList();
                TCHAR *text = DBGetField(hResult, row, 7, NULL, 0);
-               if (text != NULL)
+               if (text != nullptr)
                {
                   m_value.list->splitAndAdd(text, _T("\n"));
-                  free(text);
+                  MemFree(text);
                }
             }
             break;
          case DCO_TYPE_TABLE:
             {
                char *xml = DBGetFieldUTF8(hResult, row, 7, NULL, 0);
-               if (xml != NULL)
+               if (xml != nullptr)
                {
                   m_value.table = Table::createFromXML(xml);
-                  free(xml);
+                  MemFree(xml);
                }
                else
                {
-                  m_value.table = NULL;
+                  m_value.table = nullptr;
                }
             }
             break;
          default:
             m_type = DCO_TYPE_ITEM;
-            m_value.item = _tcsdup(_T(""));
+            m_value.item = MemCopyString(_T(""));
             break;
       }
    }
@@ -407,7 +407,7 @@ public:
       switch(m_type)
       {
          case DCO_TYPE_ITEM:
-            free(m_value.item);
+            MemFree(m_value.item);
             break;
          case DCO_TYPE_LIST:
             delete m_value.list;
