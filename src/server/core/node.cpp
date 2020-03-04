@@ -1947,6 +1947,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    time_t tNow = time(NULL);
 
    bool agentConnected = false;
+   bool resyncDataCollectionConfiguration = false;
 
    int retryCount = 5;
 
@@ -2440,6 +2441,7 @@ restart_agent_check:
             }
             g_monitoringList.removeDisconnectedNode(m_id);
             sendPollerMsg(rqId, POLLER_ERROR _T("Node is unreachable\r\n"));
+            resyncDataCollectionConfiguration = true; // Will cause removal of all remotely collected DCIs from proxy
          }
          else
          {
@@ -2460,6 +2462,7 @@ restart_agent_check:
             m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM);
             PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason);
             sendPollerMsg(rqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
+            resyncDataCollectionConfiguration = true; // Will cause addition of all remotely collected DCIs on proxy
             goto restart_agent_check;
          }
          else
@@ -2612,6 +2615,13 @@ restart_agent_check:
    // Execute hook script
    poller->setStatus(_T("hook"));
    executeHookScript(_T("StatusPoll"));
+
+   if (resyncDataCollectionConfiguration)
+   {
+      // call to onDataCollectionChange will force data collection
+      // configuration upload to this node or relevant proxy nodes
+      onDataCollectionChange();
+   }
 
    poller->setStatus(_T("cleanup"));
 
@@ -9542,7 +9552,7 @@ void Node::onDataCollectionChange()
    UINT32 snmpProxyId = getEffectiveSnmpProxy(false);
    if (snmpProxyId != 0)
    {
-      Node *snmpProxy = (Node *)FindObjectById(snmpProxyId, OBJECT_NODE);
+      Node *snmpProxy = static_cast<Node*>(FindObjectById(snmpProxyId, OBJECT_NODE));
       if (snmpProxy != NULL)
       {
          DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for SNMP proxy %s [%d]"),
@@ -9554,7 +9564,7 @@ void Node::onDataCollectionChange()
    snmpProxyId = getEffectiveSnmpProxy(true);
    if (snmpProxyId != 0)
    {
-      Node *snmpProxy = (Node *)FindObjectById(snmpProxyId, OBJECT_NODE);
+      Node *snmpProxy = static_cast<Node*>(FindObjectById(snmpProxyId, OBJECT_NODE));
       if (snmpProxy != NULL)
       {
          DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for backup SNMP proxy %s [%d]"),

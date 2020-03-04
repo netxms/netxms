@@ -1546,7 +1546,7 @@ void DataCollectionTarget::addProxySnmpTarget(ProxyInfo *info, const Node *node)
  */
 void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
 {
-   if(m_status == STATUS_UNMANAGED)
+   if ((m_status == STATUS_UNMANAGED) || (m_state & DCSF_UNREACHABLE))
       return;
 
    lockDciAccess(false);
@@ -1566,7 +1566,7 @@ void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
 }
 
 /**
- * Callback for colecting proxied SNMP DCIs
+ * Callback for collecting proxied SNMP DCIs
  */
 void DataCollectionTarget::collectProxyInfoCallback(NetObj *object, void *data)
 {
