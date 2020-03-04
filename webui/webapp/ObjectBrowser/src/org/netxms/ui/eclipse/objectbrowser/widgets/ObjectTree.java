@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -765,8 +765,6 @@ public class ObjectTree extends Composite
                      subtree = SubtreeType.DASHBOARDS;
                   else if (obj.isValidSelectionForMove(SubtreeType.MAPS))
                      subtree = SubtreeType.MAPS;
-                  else if (obj.isValidSelectionForMove(SubtreeType.POLICIES))
-                     subtree = SubtreeType.POLICIES;
                }
 
                if (subtree == null)
@@ -792,9 +790,6 @@ public class ObjectTree extends Composite
                      break;
                   case MAPS:
                      filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
-                     break;
-                  case POLICIES:
-                     filter = ObjectSelectionDialog.createPolicyGroupSelectionFilter();
                      break;
                   default:
                      filter = null;

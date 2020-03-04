@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,12 +56,6 @@ public class ObjectAdapter implements IWorkbenchAdapter
 		{
          case AbstractObject.OBJECT_ACCESSPOINT:
             return Activator.getImageDescriptor("icons/access_point.png"); //$NON-NLS-1$
-         case AbstractObject.OBJECT_AGENTPOLICY:
-            return Activator.getImageDescriptor("icons/policy.png"); //$NON-NLS-1$
-         case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
-            return Activator.getImageDescriptor("icons/config_policy.gif"); //$NON-NLS-1$
-         case AbstractObject.OBJECT_AGENTPOLICY_LOGPARSER:
-            return Activator.getImageDescriptor("icons/log_parser_policy.gif"); //$NON-NLS-1$
          case AbstractObject.OBJECT_BUSINESSSERVICE:
          case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
             return Activator.getImageDescriptor("icons/business_service.png"); //$NON-NLS-1$
@@ -97,10 +91,6 @@ public class ObjectAdapter implements IWorkbenchAdapter
             return Activator.getImageDescriptor("icons/node.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_NODELINK:
             return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
-         case AbstractObject.OBJECT_POLICYGROUP:
-            return Activator.getImageDescriptor("icons/policy_group.png"); //$NON-NLS-1$
-         case AbstractObject.OBJECT_POLICYROOT:
-            return Activator.getImageDescriptor("icons/policy_root.gif"); //$NON-NLS-1$
          case AbstractObject.OBJECT_RACK:
             return Activator.getImageDescriptor("icons/rack.gif"); //$NON-NLS-1$
          case AbstractObject.OBJECT_SENSOR:

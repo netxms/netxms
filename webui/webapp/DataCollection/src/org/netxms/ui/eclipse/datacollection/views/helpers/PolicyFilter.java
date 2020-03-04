@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.datacollection.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.AgentPolicy;
 
 /**
  * Filter for policy list

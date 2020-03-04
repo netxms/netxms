@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.datacollection.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.views.PolicyListView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

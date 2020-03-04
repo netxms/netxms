@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,26 +97,6 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		return ObjectSelectionFilterFactory.getInstance().createNetworkMapGroupsSelectionFilter();
 	}
-	
-	/**
-    * Create filter for policy group selection.
-    * 
-    * @return Class filter for policy group selection
-    */
-   public static Set<Integer> createPolicyGroupSelectionFilter()
-   {
-      return ObjectSelectionFilterFactory.getInstance().createPolicyGroupSelectionFilter();
-   }
-   
-   /**
-    * Create filter for policy selection.
-    * 
-    * @return Class filter for policy selection
-    */
-   public static Set<Integer> createPolicySelectionFilter()
-   {
-      return ObjectSelectionFilterFactory.getInstance().createPolicySelectionFilter();
-   }
 	
    /**
     * Create filter for dashboard group selection.
@@ -299,7 +279,6 @@ public class ObjectSelectionDialog extends Dialog
 
 		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton);
 
-		
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
 			objectTree.setFilter(text);

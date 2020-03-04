@@ -6,7 +6,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
-import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener;
 
 public abstract class AbstractPolicyEditor extends Composite

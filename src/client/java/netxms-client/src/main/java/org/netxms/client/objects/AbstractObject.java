@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,10 +83,10 @@ public abstract class AbstractObject
 	public static final int OBJECT_VPNCONNECTOR = 12;
 	public static final int OBJECT_CONDITION = 13;
 	public static final int OBJECT_CLUSTER = 14;
-	public static final int OBJECT_POLICYGROUP = 15;
-	public static final int OBJECT_POLICYROOT = 16;
-	public static final int OBJECT_AGENTPOLICY = 17;
-	public static final int OBJECT_AGENTPOLICY_CONFIG = 18;
+   // public static final int OBJECT_POLICYGROUP = 15;
+   // public static final int OBJECT_POLICYROOT = 16;
+   // public static final int OBJECT_AGENTPOLICY = 17;
+   // public static final int OBJECT_AGENTPOLICY_CONFIG = 18;
 	public static final int OBJECT_NETWORKMAPROOT = 19;
 	public static final int OBJECT_NETWORKMAPGROUP = 20;
 	public static final int OBJECT_NETWORKMAP = 21;
@@ -99,7 +99,7 @@ public abstract class AbstractObject
 	public static final int OBJECT_MOBILEDEVICE = 31;
 	public static final int OBJECT_RACK = 32;
 	public static final int OBJECT_ACCESSPOINT = 33;
-	public static final int OBJECT_AGENTPOLICY_LOGPARSER = 34;
+   // public static final int OBJECT_AGENTPOLICY_LOGPARSER = 34;
    public static final int OBJECT_CHASSIS = 35;
    public static final int OBJECT_DASHBOARDGROUP = 36;
    public static final int OBJECT_SENSOR = 37;

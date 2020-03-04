@@ -126,7 +126,6 @@ import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Chassis;
@@ -148,8 +147,6 @@ import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.NodeLink;
-import org.netxms.client.objects.PolicyGroup;
-import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceCheck;
@@ -1395,12 +1392,6 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_NODELINK:
             object = new NodeLink(msg, this);
-            break;
-         case AbstractObject.OBJECT_POLICYGROUP:
-            object = new PolicyGroup(msg, this);
-            break;
-         case AbstractObject.OBJECT_POLICYROOT:
-            object = new PolicyRoot(msg, this);
             break;
          case AbstractObject.OBJECT_RACK:
             object = new Rack(msg, this);
