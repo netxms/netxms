@@ -33,14 +33,13 @@ import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NetworkServiceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NetworkServiceListLabelProvider;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NetworkServiceTabFilter;
-import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * "NetworkServices" tab
  */
-public class NetworkServiceTab extends NodeComponentTab
+public class NetworkServiceTab extends NodeComponentViewerTab
 {
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;

@@ -30,7 +30,6 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.Activator;
-import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.VPNConnectorListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.VPNConnectorListLabelProvider;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.VPNConnectorTabFilter;
@@ -40,7 +39,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * "VPNs" tab
  */
-public class VPNTab extends NodeComponentTab
+public class VPNTab extends NodeComponentViewerTab
 {
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;

@@ -41,14 +41,13 @@ import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfacesTabFilter;
-import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * "Interfaces" tab
  */
-public class InterfacesTab extends NodeComponentTab
+public class InterfacesTab extends NodeComponentViewerTab
 {
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
@@ -140,7 +139,7 @@ public class InterfacesTab extends NodeComponentTab
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab#createViewer()
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentViewerTab#createViewer()
     */
    @Override
    protected void createViewer()
@@ -210,7 +209,7 @@ public class InterfacesTab extends NodeComponentTab
   }
 
    /**
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab#getFilterSettingName()
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentViewerTab#getFilterSettingName()
     */
    @Override
    public String getFilterSettingName()
@@ -219,7 +218,7 @@ public class InterfacesTab extends NodeComponentTab
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab#needRefreshOnObjectChange(org.netxms.client.objects.AbstractObject)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentViewerTab#needRefreshOnObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    public boolean needRefreshOnObjectChange(AbstractObject object)
