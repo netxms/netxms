@@ -1038,6 +1038,8 @@ public:
 	ObjectArray<NetObj> *getParents(int typeFilter = -1);
 	ObjectArray<NetObj> *getChildren(int typeFilter = -1);
 	ObjectArray<NetObj> *getAllChildren(bool eventSourceOnly, bool updateRefCount);
+   int getParentsCount(int typeFilter = -1);
+   int getChildrenCount(int typeFilter = -1);
 
    NetObj *findChildObject(const TCHAR *name, int typeFilter);
    Node *findChildNode(const InetAddress& addr);

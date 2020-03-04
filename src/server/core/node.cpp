@@ -8851,22 +8851,22 @@ void Node::checkSubnetBinding()
       nxlog_debug(5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
 
       Interface *iface = findInterfaceByIP(addr);
-      if (iface == NULL)
+      if (iface == nullptr)
       {
          nxlog_write(NXLOG_WARNING, _T("Internal error: cannot find interface object in Node::checkSubnetBinding()"));
          continue;   // Something goes really wrong
       }
 
       // Is cluster interconnect interface?
-      bool isSync = (pCluster != NULL) ? pCluster->isSyncAddr(addr) : false;
+      bool isSync = (pCluster != nullptr) ? pCluster->isSyncAddr(addr) : false;
 
       Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, addr);
-      if (pSubnet != NULL)
+      if (pSubnet != nullptr)
       {
          nxlog_debug(5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
          if (isSync)
          {
-            pSubnet = NULL;   // No further checks on this subnet
+            pSubnet = nullptr;   // No further checks on this subnet
          }
          else
          {
@@ -8880,7 +8880,7 @@ void Node::checkSubnetBinding()
                    node has more than one parent. hasIfaceForPrimaryIp parameter should prevent us from going in
                    loop (creating and deleting all the time subnet). */
                   pSubnet->deleteObject();
-                  pSubnet = NULL;   // prevent binding to deleted subnet
+                  pSubnet = nullptr;   // prevent binding to deleted subnet
                }
                else
                {
@@ -8889,7 +8889,7 @@ void Node::checkSubnetBinding()
             }
 
             // Check if node is linked to this subnet
-            if ((pSubnet != NULL) && !pSubnet->isDirectChild(m_id))
+            if ((pSubnet != nullptr) && !pSubnet->isDirectChild(m_id))
             {
                nxlog_debug(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
@@ -8924,7 +8924,7 @@ void Node::checkSubnetBinding()
       }
 
       // Check if subnet mask is correct on interface
-      if ((pSubnet != NULL) && (pSubnet->getIpAddress().getMaskBits() != addr.getMaskBits()) && (addr.getHostBits() > 0))
+      if ((pSubnet != nullptr) && (pSubnet->getIpAddress().getMaskBits() != addr.getMaskBits()) && (addr.getHostBits() > 0))
       {
          Interface *iface = findInterfaceByIP(addr);
          PostSystemEvent(EVENT_INCORRECT_NETMASK, m_id, "idsdd", iface->getId(),
@@ -8936,7 +8936,7 @@ void Node::checkSubnetBinding()
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
    // to find subnet node primary IP
-   if (m_ipAddress.isValidUnicast() && !(m_flags & NF_REMOTE_AGENT) && !addrList.hasAddress(m_ipAddress))
+   if ((getParentsCount(OBJECT_SUBNET) == 0) && m_ipAddress.isValidUnicast() && !(m_flags & NF_REMOTE_AGENT) && !addrList.hasAddress(m_ipAddress))
    {
       Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
       if (pSubnet != NULL)
