@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2020 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.datacollection.views;
 
 import java.util.UUID;
@@ -34,6 +52,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 
 public class PolicyEditorView extends ViewPart implements ISaveablePart2, SessionListener
 {
@@ -44,11 +63,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    private long templateId;
    private UUID policyGUID;
    private AgentPolicy policy;
-   private boolean modified;
    //private FindReplaceAction actionFindReplace; 
    private boolean throwExceptionOnSave;
    private Exception saveException;
    private Display display;
+   private boolean modified = false;
    private boolean modifiedByOtherUser = false;
    private boolean saveInProgress = false;
    
@@ -57,8 +76,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    private Action actionSave;
    private Action actionRefresh;
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -183,18 +201,18 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    private void refresh()
    {
-      if(modified)
+      if (modified)
       {
-         if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
-                                        "Do you really want to refresh the policy?\n You will loose all your changes."))
+         if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Refresh policy",
+               "This will discard all unsaved changes. Do you really want to continue?"))
             return;
-         
+
          modified = false;
          firePropertyChange(PROP_DIRTY);
          actionSave.setEnabled(false);         
       }      
       modifiedByOtherUser = false;
-      
+
       ConsoleJob job = new ConsoleJob("Get agent policy", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -205,7 +223,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                public void run()
                {
                   policy = tmp;
-                  if(editor == null)
+                  if (editor == null)
                   {
                      updateFields();
                   }
@@ -223,7 +241,6 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          {
             return "Cannot load policy";
          }
-         
       };
       job.start();
    }
@@ -239,30 +256,28 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          editor.dispose();
          editor = null;
       }
-      
-      if (policy.getPolicyType().equals(AgentPolicy.AGENT_CONFIG))
+
+      switch(policy.getPolicyType())
       {
-         editor = new AgentConfigPolicyEditor(content, SWT.NONE, policy, this);            
+         case AgentPolicy.AGENT_CONFIG:
+            editor = new AgentConfigPolicyEditor(content, SWT.NONE, policy, this);
+            break;
+         case AgentPolicy.FILE_DELIVERY:
+            editor = new FileDeliveryPolicyEditor(content, SWT.NONE, policy, this);
+            break;
+         case AgentPolicy.LOG_PARSER:
+            editor = new LogParserPolicyEditor(content, SWT.NONE, policy, this);
+            break;
+         case AgentPolicy.SUPPORT_APPLICATION:
+            editor = new SupportAppPolicyEditor(content, SWT.NONE, policy, this);
+            break;
+         default:
+            editor = new GenericPolicyEditor(content, SWT.NONE, policy, this);
+            break;
       }
-      else if (policy.getPolicyType().equals(AgentPolicy.FILE_DELIVERY))
-      {
-         editor = new FileDeliveryPolicyEditor(content, SWT.NONE, policy, this);      
-      }
-      else if (policy.getPolicyType().equals(AgentPolicy.LOG_PARSER))
-      {
-         editor = new LogParserPolicyEditor(content, SWT.NONE, policy, this);      
-      }
-      else if (policy.getPolicyType().equals(AgentPolicy.SUPPORT_APPLICATION))
-      {
-         editor = new SupportAppPolicyEditor(content, SWT.NONE, policy, this);  
-      }
-      else
-      {
-         editor = new GenericPolicyEditor(content, SWT.NONE, policy, this);
-      }
-      
+
       contributeToActionBars();   // Action bars has to be updated after editor update
-      
+
       editor.addModifyListener(new PolicyModifyListener() {
          @Override
          public void modifyParser()
@@ -326,11 +341,12 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    {
       if (modifiedByOtherUser && modified)
       {
-         if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
-                                        "Do you really want to save the policy?\n You will overwrite other user changes."))
+         if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Refresh policy",
+               "This policy already modified by other users. Do you really want to continue and overwrite other users changes?\n"))
             return;
          contentWrapper.hideMessage();       
-      }     
+      }
+
       saveInProgress = true;
       modifiedByOtherUser = false;      
       throwExceptionOnSave = true;
@@ -360,7 +376,6 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          @Override
          protected String getErrorMessage()
          {
-            saveInProgress = false;
             return "Cannot save agent policy";
          }
 
@@ -371,6 +386,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          protected void jobFinalize()
          {
             throwExceptionOnSave = false;
+            saveInProgress = false;
          }
       }.start();
    }
@@ -381,7 +397,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    @Override
    public void setFocus()
    {
-      if(editor != null)
+      if (editor != null)
          editor.setFocus();
    }
 
@@ -424,8 +440,8 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       {
          if (modifiedByOtherUser && modified)
          {
-            if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
-                                           "Do you really want to save the policy?\n You will overwrite other user changes."))
+            if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Refresh policy",
+                  "This policy already modified by other users. Do you really want to continue and overwrite other users changes?\n"))
                return CANCEL;
          }      
          policy = editor.updatePolicyFromControl();
@@ -466,7 +482,8 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                   }
                   else if (!saveInProgress)
                   { 
-                     contentWrapper.showMessage(0, "Policy is modified by other user. Clicking \"refresh\" will discard local changes. Clicking \"save\" will save local changes and discard other user changes.");
+                     contentWrapper.showMessage(MessageBar.WARNING,
+                           "Policy is modified by other users. \"Refresh\" will discard local changes. \"Save\" will overwrite other users changes with local changes.");
                      modifiedByOtherUser = true;
                   }
                }
