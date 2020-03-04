@@ -819,17 +819,17 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
 
    // Can be in form parameter(arg1, arg2, ... argN)
    TCHAR *p = _tcschr(name, _T('('));
-   if (p != NULL)
+   if (p != nullptr)
    {
       size_t l = _tcslen(name) - 1;
       if (name[l] != _T(')'))
-         return NULL;
+         return nullptr;
       name[l] = 0;
       *p = 0;
    }
 
    NXSL_VM *vm = CreateServerScriptVM(name, this);
-   if (vm != NULL)
+   if (vm != nullptr)
    {
       ObjectRefArray<NXSL_Value> args(16, 16);
       if ((p != NULL) && !ParseValueList(vm, &p, args))
@@ -1165,7 +1165,7 @@ DataCollectionError DataCollectionTarget::getStringMapFromScript(const TCHAR *pa
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
-   if (vm != NULL)
+   if (vm != nullptr)
    {
       rc = DCE_SUCCESS;
       NXSL_Value *value = vm->getResult();
@@ -1199,6 +1199,7 @@ DataCollectionError DataCollectionTarget::getStringMapFromScript(const TCHAR *pa
       {
          *map = new StringMap();
       }
+      delete vm;
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
    return rc;
