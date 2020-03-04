@@ -1173,7 +1173,7 @@ void AddTrapCfgToList(SNMPTrapConfiguration *trapCfg);
 
 BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
-UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSession *pSession);
+uint32_t ExecuteTableTool(uint32_t toolId, Node *node, uint32_t requestId, ClientSession *session);
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
 UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg);
