@@ -307,7 +307,6 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
          case OBJECT_TEMPLATEGROUP:
          case OBJECT_TEMPLATEROOT:
 			case OBJECT_VPNCONNECTOR:
-         case OBJECT_AGENTPOLICY_LOGPARSER:
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
 			case OBJECT_DASHBOARDROOT:
@@ -2793,7 +2792,6 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
 
    // Set class constants
    vm->addConstant("ACCESSPOINT", vm->createValue(OBJECT_ACCESSPOINT));
-   vm->addConstant("AGENTPOLICY_LOGPARSER", vm->createValue(OBJECT_AGENTPOLICY_LOGPARSER));
    vm->addConstant("BUSINESSSERVICE", vm->createValue(OBJECT_BUSINESSSERVICE));
    vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESSSERVICEROOT));
    vm->addConstant("CHASSIS", vm->createValue(OBJECT_CHASSIS));

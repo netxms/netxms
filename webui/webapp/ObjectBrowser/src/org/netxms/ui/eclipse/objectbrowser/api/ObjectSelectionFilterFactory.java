@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -124,35 +124,6 @@ public class ObjectSelectionFilterFactory
       HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
-      return classFilter;
-   }
-
-   /**
-    * Create filter for policies group selection.
-    * 
-    * @return Class filter for policies group selection
-    */
-   public Set<Integer> createPolicyGroupSelectionFilter()
-   {
-      HashSet<Integer> classFilter = new HashSet<Integer>(2);
-      classFilter.add(AbstractObject.OBJECT_POLICYROOT);
-      classFilter.add(AbstractObject.OBJECT_POLICYGROUP);
-      return classFilter;
-   }
-
-   /**
-    * Create filter for policies selection.
-    * 
-    * @return Class filter for policies selection
-    */
-   public Set<Integer> createPolicySelectionFilter()
-   {
-      HashSet<Integer> classFilter = new HashSet<Integer>(5);
-      classFilter.add(AbstractObject.OBJECT_POLICYROOT);
-      classFilter.add(AbstractObject.OBJECT_POLICYGROUP);
-      classFilter.add(AbstractObject.OBJECT_AGENTPOLICY);
-      classFilter.add(AbstractObject.OBJECT_AGENTPOLICY_CONFIG);
-      classFilter.add(AbstractObject.OBJECT_AGENTPOLICY_LOGPARSER);
       return classFilter;
    }
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,7 +126,6 @@ public class ObjectBrowser extends ViewPart
 	private Action actionMoveBusinessService;
 	private Action actionMoveDashboard;
 	private Action actionMoveMap;
-	private Action actionMovePolicy;
 	private Action actionRefresh;
 	private Action actionRenameObject;
 	private boolean initHideUnmanaged = false;
@@ -503,15 +502,6 @@ public class ObjectBrowser extends ViewPart
       };
       actionMoveMap.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveMap"); //$NON-NLS-1$
       
-      actionMovePolicy = new Action(Messages.get().ObjectBrowser_MovePolicy) { 
-         @Override
-         public void run()
-         {
-            moveObject(SubtreeType.POLICIES);
-         }
-      };
-      actionMovePolicy.setId("org.netxms.ui.eclipse.objectbrowser.actions.movePolicy"); //$NON-NLS-1$
-		
       actionHideUnmanaged = new Action(Messages.get().ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -652,8 +642,6 @@ public class ObjectBrowser extends ViewPart
          manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveDashboard);
       if (isValidSelectionForMove(SubtreeType.MAPS))
          manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveMap);
-      if (isValidSelectionForMove(SubtreeType.POLICIES))
-         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMovePolicy);
 	}
 	
    /* (non-Javadoc)
@@ -755,9 +743,6 @@ public class ObjectBrowser extends ViewPart
 			   break;
 			case MAPS:
 			   filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
-			   break;
-			case POLICIES:
-			   filter = ObjectSelectionDialog.createPolicyGroupSelectionFilter();
 			   break;
 			default:
 				filter = null;

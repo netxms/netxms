@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,13 +58,6 @@ public class ObjectIcons
 				return Activator.getImageDescriptor("icons/template_group.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_TEMPLATE:
 				return Activator.getImageDescriptor("icons/template.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_POLICYROOT:
-				return Activator.getImageDescriptor("icons/policy_root.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_POLICYGROUP:
-				return Activator.getImageDescriptor("icons/policy_group.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_AGENTPOLICY:
-			case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
-				return Activator.getImageDescriptor("icons/policy.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_NETWORKMAP:
 				return Activator.getImageDescriptor("icons/netmap.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_NETWORKMAPGROUP:

@@ -433,6 +433,17 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              category="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.EtherNetIP"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.EtherNetIP"
+              name="EtherNet/IP">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Node">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
@@ -689,13 +700,6 @@
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createInterface_Node"
                label="%action.label.CreateIface"
                menubarPath="CreateObjectSubmenu/additions">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.ApplyPolicy"
-               enablesFor="+"
-               id="org.netxms.ui.eclipse.objectmanager.actions.ApplyPolicy"
-               label="Apply policy"
-               menubarPath="objectbinding">
          </action>
       </objectContribution>
 

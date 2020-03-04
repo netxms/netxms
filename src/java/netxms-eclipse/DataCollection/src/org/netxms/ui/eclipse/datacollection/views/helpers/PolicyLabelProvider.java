@@ -23,7 +23,7 @@ import java.util.Map;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.views.PolicyListView;
 
 /**

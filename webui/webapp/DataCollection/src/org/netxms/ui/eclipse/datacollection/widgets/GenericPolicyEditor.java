@@ -26,7 +26,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IViewPart;
-import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.AgentPolicy;
 
 /**
  * Generic policy editor widget

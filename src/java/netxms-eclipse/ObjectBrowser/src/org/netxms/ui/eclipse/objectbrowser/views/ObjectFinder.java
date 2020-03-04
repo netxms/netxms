@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -234,8 +234,6 @@ public class ObjectFinder extends ViewPart
    {
       OBJECT_CLASSES = new ArrayList<ObjectClass>();
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_ACCESSPOINT, "Access Point"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_AGENTPOLICY_CONFIG, "Agent Policy (Config)"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_AGENTPOLICY_LOGPARSER, "Agent Policy (Log Parser)"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_BUSINESSSERVICE, "Business Service"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_BUSINESSSERVICEROOT, "Business Service Root"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CHASSIS, "Chassis"));
@@ -253,8 +251,6 @@ public class ObjectFinder extends ViewPart
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKSERVICE, "Network Service"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NODE, "Node"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NODELINK, "Node Link"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_POLICYGROUP, "Policy Group"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_POLICYROOT, "Policy Root"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_RACK, "Rack"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SENSOR, "Sensor"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SERVICEROOT, "Service Root"));

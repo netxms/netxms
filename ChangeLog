@@ -6,6 +6,7 @@
 - Fixed server memory leak in instance discovery code
 - Fixed issues:
 	NX-1607 (Primary IP address should not be used for topology if it is not present on any interface)
+	NX-1773 ("Apply policy" in context menu of node is meaningless and does nothing)
 	NX-1803 (Configuration import with "Replace existing object tools" checkbox set does not replace them)
 
 
