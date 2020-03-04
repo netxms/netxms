@@ -69,7 +69,7 @@ public class DeviceView extends DashboardComposite
 	{
 		super(parent, style);
 		
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		
 		RowLayout layout = new RowLayout();
 		layout.type = SWT.VERTICAL;

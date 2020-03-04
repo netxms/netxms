@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,13 +34,11 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
-import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentTab;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
@@ -48,13 +46,12 @@ import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 /**
  * "Ports" object tab
  */
-public class Ports extends ObjectTab implements ISelectionProvider
+public class Ports extends NodeComponentTab implements ISelectionProvider
 {
 	private ScrolledComposite scroller;
 	private DeviceView deviceView;
 	private ISelection selection = new StructuredSelection();
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
-	private NXCSession session;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -62,9 +59,9 @@ public class Ports extends ObjectTab implements ISelectionProvider
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		session = (NXCSession)ConsoleSharedData.getSession();
-		
-		scroller = new ScrolledComposite(parent, SWT.H_SCROLL | SWT.V_SCROLL);
+      super.createTabContent(parent);
+
+      scroller = new ScrolledComposite(mainArea, SWT.H_SCROLL | SWT.V_SCROLL);
 		deviceView = new DeviceView(scroller, SWT.NONE);
 		deviceView.addSelectionListener(new PortSelectionListener() {
 			@Override
@@ -91,6 +88,7 @@ public class Ports extends ObjectTab implements ISelectionProvider
 					listener.selectionChanged(new SelectionChangedEvent(Ports.this, selection));
 			}
 		});
+      mainArea.setBackground(deviceView.getBackground());
 
 		scroller.setContent(deviceView);
 		scroller.setExpandVertical(true);
@@ -107,15 +105,24 @@ public class Ports extends ObjectTab implements ISelectionProvider
 		createPopupMenu();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	public void objectChanged(AbstractObject object)
-	{
-		deviceView.setNodeId((object != null) ? object.getObjectId() : 0);
-		scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-	}
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      deviceView.setNodeId((getObject() != null) ? getObject().getObjectId() : 0);
+      scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentTab#needRefreshOnObjectChange(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   public boolean needRefreshOnObjectChange(AbstractObject object)
+   {
+      return (object instanceof Interface) && object.isDirectChildOf(deviceView.getNodeId());
+   }
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
