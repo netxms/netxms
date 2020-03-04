@@ -107,7 +107,7 @@ protected:
    bool m_symbol;
 
    void loadSubItems(ConfigEntry *config);
-   void merge(MenuItem *item);
+   void merge(MenuItem *sourceItem);
    void draw(HDC hdc) const;
    void trackMouseEvent();
 

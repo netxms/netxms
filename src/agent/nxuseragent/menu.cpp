@@ -24,10 +24,10 @@ MenuItem::MenuItem()
    m_name = MemCopyString(_T("[ROOT]"));
    m_displayName = MemCopyString(m_name);
    m_path = MemCopyString(_T(""));
-   m_command = NULL;
-   m_parent = NULL;
+   m_command = nullptr;
+   m_parent = nullptr;
    m_subItems = new ObjectArray<MenuItem>(16, 16, Ownership::True);
-   m_hWnd = NULL;
+   m_hWnd = nullptr;
    m_selected = false;
    m_highlighted = false;
    m_standalone = false;
@@ -42,10 +42,10 @@ MenuItem::MenuItem(const TCHAR *text, bool symbol)
    m_name = MemCopyString(text);
    m_displayName = MemCopyString(m_name);
    m_path = MemCopyString(_T(""));
-   m_command = NULL;
-   m_parent = NULL;
-   m_subItems = NULL;
-   m_hWnd = NULL;
+   m_command = nullptr;
+   m_parent = nullptr;
+   m_subItems = nullptr;
+   m_hWnd = nullptr;
    m_selected = false;
    m_highlighted = false;
    m_standalone = true;
@@ -59,11 +59,11 @@ MenuItem::MenuItem(MenuItem *parent)
 {
    m_name = MemCopyString(_T("\x21A9"));
    m_displayName = MemCopyString(m_name);
-   m_path = _tcsdup(parent->getPath());
+   m_path = MemCopyString(parent->getPath());
    m_command = MemCopyString(_T("\x21A9"));
    m_parent = parent;
-   m_subItems = NULL;
-   m_hWnd = NULL;
+   m_subItems = nullptr;
+   m_hWnd = nullptr;
    m_selected = false;
    m_highlighted = false;
    m_standalone = false;
@@ -82,23 +82,23 @@ MenuItem::MenuItem(MenuItem *parent, ConfigEntry *config, const TCHAR *rootPath)
    if (!path.isEmpty())
       path.append(_T(" / "));
    path.append(m_name);
-   m_path = _tcsdup(path);
+   m_path = MemCopyString(path);
 
    ConfigEntry *subItems = config->findEntry(_T("items"));
-   if (subItems != NULL)
+   if (subItems != nullptr)
    {
-      m_command = NULL;
+      m_command = nullptr;
       m_subItems = new ObjectArray<MenuItem>(16, 16, Ownership::True);
       loadSubItems(subItems);
    }
    else
    {
       m_command = MemCopyString(config->getSubEntryValue(_T("command"), 0, _T("")));
-      m_subItems = NULL;
+      m_subItems = nullptr;
    }
 
    m_parent = parent;
-   m_hWnd = NULL;
+   m_hWnd = nullptr;
    m_selected = false;
    m_highlighted = false;
    m_standalone = false;
@@ -152,7 +152,7 @@ void MenuItem::loadSubItems(ConfigEntry *config)
                if (curr->isSubMenu() && !_tcscmp(curr->getPath(), item->getPath()))
                {
                   nxlog_debug(2, _T("Merging menu item %s"), item->getPath());
-                  m_subItems->get(j)->merge(item);
+                  curr->merge(item);
                   delete item;
                   merged = true;
                   break;
@@ -179,18 +179,44 @@ void MenuItem::loadSubItems(ConfigEntry *config)
 /**
  * Merge menu items
  */
-void MenuItem::merge(MenuItem *item)
+void MenuItem::merge(MenuItem *sourceItem)
 {
-   for (int i = 0; i < item->m_subItems->size(); i++)
+   for (int i = 0; i < sourceItem->m_subItems->size(); i++)
    {
-      MenuItem *curr = item->m_subItems->get(i);
-      if (!curr->isBackMenu())
-         m_subItems->add(curr);
+      MenuItem *item = sourceItem->m_subItems->get(i);
+      if (!item->isBackMenu())
+      {
+         item->m_parent = this;
+         if (item->isSubMenu())
+         {
+            bool merged = false;
+            for (int j = 0; j < m_subItems->size(); j++)
+            {
+               MenuItem *curr = m_subItems->get(j);
+               if (curr->isSubMenu() && !_tcscmp(curr->getPath(), item->getPath()))
+               {
+                  nxlog_debug(2, _T("Merging menu item %s"), item->getPath());
+                  curr->merge(item);
+                  delete item;
+                  merged = true;
+                  break;
+               }
+            }
+            if (!merged)
+               m_subItems->add(item);
+         }
+         else
+         {
+            m_subItems->add(item);
+         }
+      }
       else
-         delete curr;
+      {
+         delete item;
+      }
    }
-   item->m_subItems->setOwner(Ownership::False);
-   item->m_subItems->clear();
+   sourceItem->m_subItems->setOwner(Ownership::False);
+   sourceItem->m_subItems->clear();
 }
 
 /**
@@ -202,7 +228,7 @@ void MenuItem::execute()
    {
       ActivateMenuItem(GetParent(m_hWnd), this);
    }
-   else if (!_tcscmp(m_command, _T("\x21A9")))
+   else if (isBackMenu())
    {
       ActivateMenuItem(GetParent(m_hWnd), m_parent->m_parent, m_parent);
    }
