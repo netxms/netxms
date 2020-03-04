@@ -21,6 +21,9 @@
 #include <linux_subagent.h>
 #include <net/if_arp.h>
 
+/**
+ * Handler for Net.IP.Forwarding and Net.IP6.Forwarding parameters
+ */
 LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    int nVer = CAST_FROM_POINTER(pArg, int);
@@ -74,20 +77,18 @@ LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
-   FILE *hFile;
-
-   hFile = fopen("/proc/net/arp", "r");
+   FILE *hFile = fopen("/proc/net/arp", "r");
    if (hFile != NULL)
    {
       char szBuff[256];
-      if (fgets(szBuff, sizeof(szBuff), hFile) != NULL) // skip first line
+      if (fgets(szBuff, sizeof(szBuff), hFile) != nullptr) // skip first line
       {
          int nFd = socket(AF_INET, SOCK_DGRAM, 0);
          if (nFd > 0)
          {
             nRet = SYSINFO_RC_SUCCESS;
 
-            while(fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+            while(fgets(szBuff, sizeof(szBuff), hFile) != nullptr)
             {
                int nIP1, nIP2, nIP3, nIP4;
                UINT32 nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6;
@@ -97,7 +98,7 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
                           "%d.%d.%d.%d %*s %*s %02X:%02X:%02X:%02X:%02X:%02X %*s %255s",
                           &nIP1, &nIP2, &nIP3, &nIP4,
                           &nMAC1, &nMAC2, &nMAC3, &nMAC4, &nMAC5, &nMAC6,
-                          szIf) == 14)
+                          szIf) == 11)
                {
                   int nIndex;
                   struct ifreq irq;
@@ -129,11 +130,23 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
 
                   pValue->add(output);
                }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("H_NetArpCache: cannot parse line \"%hs\""), szBuff);
+               }
             }
             close(nFd);
          }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("H_NetArpCache: cannot open socket (%s)"), _tcserror(errno));
+         }
       }
       fclose(hFile);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_NetArpCache: cannot open cache file (%s)"), _tcserror(errno));
    }
 
    return nRet;
@@ -180,7 +193,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
                szIF,
                &nDestination,
                &nGateway,
-               &nMask) == 8)
+               &nMask) == 4)
             {
                int nIndex;
                struct ifreq irq;
@@ -207,6 +220,10 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
             }
          }
       }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_NetRoutingTable: cannot open route file (%s)"), _tcserror(errno));
    }
 
    close(nFd);

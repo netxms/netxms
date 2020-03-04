@@ -39,6 +39,8 @@
 #include <linux/rtnetlink.h>
 #include <pwd.h>
 
+#define DEBUG_TAG _T("sa.linux")
+
 /**
  * Attributes for H_ProcInfo
  */
