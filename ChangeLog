@@ -1,4 +1,13 @@
 *
+* 3.2-CURRENT
+*
+
+- Proxy nodes does not collect DCI data from SNMP nodes marked as down
+- Fixed issues:
+	NX-1803 (Configuration import with "Replace existing object tools" checkbox set does not replace them)
+
+
+*
 * 3.2.380
 *
 
