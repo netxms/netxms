@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.10 to 32.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.ActiveDiscovery.BlockSize"), _T("1024"), _T("Block size for active discovery."), _T("addresses"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.ActiveDiscovery.InterBlockDelay"), _T("0"), _T("Interval in milliseconds between scanning address blocks during active discovery."), _T("milliseconds"), 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 32.9 to 32.10
  */
 static bool H_UpgradeFromV9()
@@ -245,17 +256,18 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 9,  32, 10, H_UpgradeFromV9 },
-   { 8,  32, 9,  H_UpgradeFromV8 },
-   { 7,  32, 8,  H_UpgradeFromV7 },
-   { 6,  32, 7,  H_UpgradeFromV6 },
-   { 5,  32, 6,  H_UpgradeFromV5 },
-   { 4,  32, 5,  H_UpgradeFromV4 },
-   { 3,  32, 4,  H_UpgradeFromV3 },
-   { 2,  32, 3,  H_UpgradeFromV2 },
-   { 1,  32, 2,  H_UpgradeFromV1 },
-   { 0,  32, 1,  H_UpgradeFromV0 },
-   { 0,  0,  0,  NULL }
+   { 10, 32, 11, H_UpgradeFromV10 },
+   { 9,  32, 10, H_UpgradeFromV9  },
+   { 8,  32, 9,  H_UpgradeFromV8  },
+   { 7,  32, 8,  H_UpgradeFromV7  },
+   { 6,  32, 7,  H_UpgradeFromV6  },
+   { 5,  32, 6,  H_UpgradeFromV5  },
+   { 4,  32, 5,  H_UpgradeFromV4  },
+   { 3,  32, 4,  H_UpgradeFromV3  },
+   { 2,  32, 3,  H_UpgradeFromV2  },
+   { 1,  32, 2,  H_UpgradeFromV1  },
+   { 0,  32, 1,  H_UpgradeFromV0  },
+   { 0,  0,  0,  nullptr          }
 };
 
 /**
@@ -271,10 +283,10 @@ bool MajorSchemaUpgrade_V32()
    {
       // Find upgrade procedure
       int i;
-      for(i = 0; s_dbUpgradeMap[i].upgradeProc != NULL; i++)
+      for(i = 0; s_dbUpgradeMap[i].upgradeProc != nullptr; i++)
          if (s_dbUpgradeMap[i].version == minor)
             break;
-      if (s_dbUpgradeMap[i].upgradeProc == NULL)
+      if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
          _tprintf(_T("Unable to find upgrade procedure for version 32.%d\n"), minor);
          return false;
