@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,6 +85,7 @@ public class LogParserEditor extends Composite
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private Set<LogParserModifyListener> listeners = new HashSet<LogParserModifyListener>();
+   private boolean enableModifyListeners = true;
 	private LogParser parser = new LogParser();
 	private Composite rulesArea;
    private Composite fileArea;
@@ -482,8 +483,9 @@ public class LogParserEditor extends Composite
 	 */
 	public void fireModifyListeners()
 	{
-		for(LogParserModifyListener l : listeners)
-			l.modifyParser();
+      if (enableModifyListeners)
+         for(LogParserModifyListener l : listeners)
+            l.modifyParser();
 	}
 
 	/**
@@ -541,8 +543,10 @@ public class LogParserEditor extends Composite
 	 */
 	public void setParserXml(String xml)
 	{
+      enableModifyListeners = false;
       xmlEditor.setText(xml);
 		updateBuilderFromXml(xml);
+      enableModifyListeners = true;
 	}
 	
 	/**
