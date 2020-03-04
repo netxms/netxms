@@ -3,8 +3,9 @@
 *
 
 - Proxy nodes does not collect DCI data from SNMP nodes marked as down
-- Fixed server memory leak in instance discovery code
 - Configurable address block size and inter-block delay for active network discovery
+- Fixed server memory leak in instance discovery code
+- Fixed broken Net.ArpCache and Net.IP.RoutingTable lists in Linux agent
 - Fixed issues:
 	NX-1607 (Primary IP address should not be used for topology if it is not present on any interface)
 	NX-1773 ("Apply policy" in context menu of node is meaningless and does nothing)
