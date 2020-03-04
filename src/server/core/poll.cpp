@@ -499,7 +499,7 @@ void DiscoveryPoller(PollerInfo *poller)
  */
 void RangeScanCallback(const InetAddress& addr, UINT32 zoneUIN, Node *proxy, UINT32 rtt, ServerConsole *console, void *context)
 {
-   if (proxy != NULL)
+   if (proxy != nullptr)
    {
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
             (const TCHAR *)addr.toString(), proxy->getName(), proxy->getId());
@@ -523,8 +523,8 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       return;
    }
 
-   UINT32 from = range.getBaseAddress().getAddressV4();
-   UINT32 to;
+   uint32_t from = range.getBaseAddress().getAddressV4();
+   uint32_t to;
    if (range.getType() == InetAddressListElement_SUBNET)
    {
       from++;
@@ -537,13 +537,16 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 
    if (from >= to)
    {
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid address range %s"), (const TCHAR *)range.toString());
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid address range %s"), range.toString().cstr());
       return;
    }
 
+   uint32_t blockSize = ConfigReadULong(_T("NetworkDiscovery.ActiveDiscovery.BlockSize"), 1024);
+   uint32_t interBlockDelay = ConfigReadULong(_T("NetworkDiscovery.ActiveDiscovery.InterBlockDelay"), 0);
+
    if ((range.getZoneUIN() != 0) || (range.getProxyId() != 0))
    {
-      UINT32 proxyId;
+      uint32_t proxyId;
       if (range.getProxyId() != 0)
       {
          proxyId = range.getProxyId();
@@ -553,7 +556,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          Zone *zone = FindZoneByUIN(range.getZoneUIN());
          if (zone == NULL)
          {
-            ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid zone UIN for address range %s"), (const TCHAR *)range.toString());
+            ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid zone UIN for address range %s"), range.toString().cstr());
             return;
          }
          proxyId = zone->getProxyNodeId(NULL);
@@ -562,7 +565,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       Node *proxy = static_cast<Node*>(FindObjectById(proxyId, OBJECT_NODE));
       if (proxy == NULL)
       {
-         ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Cannot find zone proxy node for address range %s"), (const TCHAR *)range.toString());
+         ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Cannot find zone proxy node for address range %s"), range.toString().cstr());
          return;
       }
 
@@ -580,8 +583,11 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
                rangeText, proxy->getName(), proxy->getId());
       while((from < to) && !IsShutdownInProgress())
       {
+         if (interBlockDelay > 0)
+            ThreadSleepMs(interBlockDelay);
+
          TCHAR request[256];
-         _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s)"), IpToStr(from, ipAddr1), IpToStr(std::min(to, from + 255), ipAddr2));
+         _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s)"), IpToStr(from, ipAddr1), IpToStr(std::min(to, from + blockSize - 1), ipAddr2));
          StringList *list;
          if (conn->getList(request, &list) == ERR_SUCCESS)
          {
@@ -593,7 +599,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             }
             delete list;
          }
-         from += 256;
+         from += blockSize;
       }
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s via proxy %s [%u]"),
                rangeText, proxy->getName(), proxy->getId());
@@ -606,8 +612,10 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
       while((from < to) && !IsShutdownInProgress())
       {
-         ScanAddressRange(from, std::min(to, from + 1023), callback, console, NULL);
-         from += 1024;
+         if (interBlockDelay > 0)
+            ThreadSleepMs(interBlockDelay);
+         ScanAddressRange(from, std::min(to, from + blockSize - 1), callback, console, NULL);
+         from += blockSize;
       }
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), ipAddr1, ipAddr2);
    }
