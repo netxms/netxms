@@ -5456,9 +5456,9 @@ static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid
                if ((c != NULL) && c->isConvertSnmpStringToHex())
                {
                   size_t size = v->getValueLength();
-                  TCHAR *buffer = (TCHAR *)malloc((size * 2 + 1) * sizeof(TCHAR));
+                  TCHAR *buffer = MemAllocString(size * 2 + 1);
                   BinToStr(v->getValue(), size, buffer);
-                  table->set(i, buffer);
+                  table->setPreallocated(i, buffer);
                }
                else
                {
