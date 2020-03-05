@@ -544,24 +544,25 @@ private:
 	TCHAR m_name[MAX_COLUMN_NAME];
    TCHAR *m_displayName;
 	SNMP_ObjectId *m_snmpOid;
-	UINT16 m_flags;
+	uint16_t m_flags;
 
 public:
 	DCTableColumn(const DCTableColumn *src);
-	DCTableColumn(NXCPMessage *msg, UINT32 baseId);
+	DCTableColumn(NXCPMessage *msg, uint32_t baseId);
 	DCTableColumn(DB_RESULT hResult, int row);
    DCTableColumn(ConfigEntry *e);
 	~DCTableColumn();
 
 	const TCHAR *getName() const { return m_name; }
    const TCHAR *getDisplayName() const { return (m_displayName != NULL) ? m_displayName : m_name; }
-   UINT16 getFlags() const { return m_flags; }
+   uint16_t getFlags() const { return m_flags; }
    int getDataType() const { return TCF_GET_DATA_TYPE(m_flags); }
    int getAggregationFunction() const { return TCF_GET_AGGREGATION_FUNCTION(m_flags); }
 	const SNMP_ObjectId *getSnmpOid() const { return m_snmpOid; }
    bool isInstanceColumn() const { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
    bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 
+   void fillMessage(NXCPMessage *msg, uint32_t baseId);
    void createExportRecord(StringBuffer &xml, int id) const;
    json_t *toJson() const;
 };
@@ -759,8 +760,8 @@ public:
 	void fillLastValueMessage(NXCPMessage *msg);
    void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);
 
-   int getColumnDataType(const TCHAR *name);
-   ObjectArray<DCTableColumn> *getColumns() { return m_columns; }
+   int getColumnDataType(const TCHAR *name) const;
+   const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }
    Table *getLastValue();
    IntegerArray<UINT32> *getThresholdIdList();
 

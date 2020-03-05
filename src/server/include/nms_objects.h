@@ -1707,12 +1707,13 @@ void ResetObjectPollTimers(shared_ptr<ScheduledTaskParameters> parameters);
  */
 struct ProxyInfo
 {
-   UINT32 proxyId;
+   uint32_t proxyId;
    NXCPMessage *msg;
-   UINT32 fieldId;
-   UINT32 count;
-   UINT32 nodeInfoFieldId;
-   UINT32 nodeInfoCount;
+   uint32_t baseInfoFieldId;
+   uint32_t extraInfoFieldId; // Separate field set is needed to keep compatibility with older agents
+   uint32_t count;
+   uint32_t nodeInfoFieldId;
+   uint32_t nodeInfoCount;
 };
 
 /**
@@ -2925,7 +2926,7 @@ public:
    virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
 
    DataCollectionError getItemFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
-   DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
+   DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table);
    DataCollectionError getListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringList **list);
    DataCollectionError getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringMap **values);
    DataCollectionError getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);

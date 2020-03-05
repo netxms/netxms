@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,10 +27,10 @@
  */
 DCTableColumn::DCTableColumn(const DCTableColumn *src)
 {
-	nx_strncpy(m_name, src->m_name, MAX_COLUMN_NAME);
+	_tcslcpy(m_name, src->m_name, MAX_COLUMN_NAME);
 	m_flags = src->m_flags;
-	m_snmpOid = (src->m_snmpOid != NULL) ? new SNMP_ObjectId(*src->m_snmpOid) : NULL;
-   m_displayName = (src->m_displayName != NULL) ? _tcsdup(src->m_displayName) : NULL;
+	m_snmpOid = (src->m_snmpOid != nullptr) ? new SNMP_ObjectId(*src->m_snmpOid) : nullptr;
+   m_displayName = MemCopyString(src->m_displayName);
 }
 
 /**
@@ -52,12 +52,12 @@ DCTableColumn::DCTableColumn(NXCPMessage *msg, UINT32 baseId)
 		}
 		else
 		{
-			m_snmpOid = NULL;
+			m_snmpOid = nullptr;
 		}
 	}
 	else
 	{
-		m_snmpOid = NULL;
+		m_snmpOid = nullptr;
 	}
 }
 
@@ -86,12 +86,12 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 		}
 		else
 		{
-			m_snmpOid = NULL;
+			m_snmpOid = nullptr;
 		}
 	}
 	else
 	{
-		m_snmpOid = NULL;
+		m_snmpOid = nullptr;
 	}
 }
 
@@ -100,7 +100,7 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
  */
 DCTableColumn::DCTableColumn(ConfigEntry *e)
 {
-   nx_strncpy(m_name, e->getSubEntryValue(_T("name"), 0, _T("")), MAX_COLUMN_NAME);
+   _tcslcpy(m_name, e->getSubEntryValue(_T("name"), 0, _T("")), MAX_COLUMN_NAME);
    m_flags = (UINT16)e->getSubEntryValueAsUInt(_T("flags"));
    m_displayName = _tcsdup(e->getSubEntryValue(_T("displayName"), 0, _T("")));
 
@@ -115,12 +115,12 @@ DCTableColumn::DCTableColumn(ConfigEntry *e)
 		}
 		else
 		{
-			m_snmpOid = NULL;
+			m_snmpOid = nullptr;
 		}
    }
 	else
 	{
-		m_snmpOid = NULL;
+		m_snmpOid = nullptr;
 	}
 }
 
@@ -131,6 +131,18 @@ DCTableColumn::~DCTableColumn()
 {
    delete m_snmpOid;
    MemFree(m_displayName);
+}
+
+/**
+ * Fill NXCP message
+ */
+void DCTableColumn::fillMessage(NXCPMessage *msg, uint32_t baseId)
+{
+   msg->setField(baseId, m_name);
+   msg->setField(baseId + 1, m_flags);
+   if (m_snmpOid != nullptr)
+      msg->setFieldFromInt32Array(baseId + 2, m_snmpOid->length(), m_snmpOid->value());
+   msg->setField(baseId + 3, m_displayName);
 }
 
 /**

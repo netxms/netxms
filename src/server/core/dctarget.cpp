@@ -1505,19 +1505,46 @@ bool DataCollectionTarget::isDataCollectionTarget()
  */
 void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco, UINT32 primaryProxyId)
 {
-   info->msg->setField(info->fieldId++, dco->getId());
-   info->msg->setField(info->fieldId++, (INT16)dco->getType());
-   info->msg->setField(info->fieldId++, (INT16)dco->getDataSource());
-   info->msg->setField(info->fieldId++, dco->getName());
-   info->msg->setField(info->fieldId++, (INT32)dco->getEffectivePollingInterval());
-   info->msg->setFieldFromTime(info->fieldId++, dco->getLastPollTime());
-   info->msg->setField(info->fieldId++, m_guid);
-   info->msg->setField(info->fieldId++, dco->getSnmpPort());
+   info->msg->setField(info->baseInfoFieldId++, dco->getId());
+   info->msg->setField(info->baseInfoFieldId++, static_cast<int16_t>(dco->getType()));
+   info->msg->setField(info->baseInfoFieldId++, static_cast<int16_t>(dco->getDataSource()));
+   info->msg->setField(info->baseInfoFieldId++, dco->getName());
+   info->msg->setField(info->baseInfoFieldId++, dco->getEffectivePollingInterval());
+   info->msg->setFieldFromTime(info->baseInfoFieldId++, dco->getLastPollTime());
+   info->msg->setField(info->baseInfoFieldId++, m_guid);
+   info->msg->setField(info->baseInfoFieldId++, dco->getSnmpPort());
    if (dco->getType() == DCO_TYPE_ITEM)
-      info->msg->setField(info->fieldId++, static_cast<const DCItem*>(dco)->getSnmpRawValueType());
+      info->msg->setField(info->baseInfoFieldId++, static_cast<const DCItem*>(dco)->getSnmpRawValueType());
    else
-      info->msg->setField(info->fieldId++, (INT16)0);
-   info->msg->setField(info->fieldId++, primaryProxyId);
+      info->msg->setField(info->baseInfoFieldId++, (INT16)0);
+   info->msg->setField(info->baseInfoFieldId++, primaryProxyId);
+
+   if (dco->getDataSource() == DS_SNMP_AGENT)
+   {
+      info->msg->setField(info->extraInfoFieldId++, static_cast<int16_t>(dco->getSnmpVersion()));
+      if (dco->getType() == DCO_TYPE_TABLE)
+      {
+         info->extraInfoFieldId += 8;
+         const ObjectArray<DCTableColumn> &columns = static_cast<const DCTable*>(dco)->getColumns();
+         int count = std::min(columns.size(), 99);
+         info->msg->setField(info->extraInfoFieldId++, count);
+         for(int i = 0; i < count; i++)
+         {
+            columns.get(i)->fillMessage(info->msg, info->extraInfoFieldId);
+            info->extraInfoFieldId += 10;
+         }
+         info->extraInfoFieldId += (99 - count) * 10;
+      }
+      else
+      {
+         info->extraInfoFieldId += 999;
+      }
+   }
+   else
+   {
+      info->extraInfoFieldId += 1000;
+   }
+
    info->count++;
 }
 

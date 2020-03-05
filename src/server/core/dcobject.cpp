@@ -660,7 +660,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    // is more effective to try schedule on next run
    if (!tryLock())
    {
-      nxlog_debug(3, _T("DCObject::isReadyForPolling: cannot obtain lock for data collection object %d"), m_id);
+      nxlog_debug_tag(_T("dc.scheduler"), 5, _T("DCObject::isReadyForPolling: cannot obtain lock for data collection object [%u]"), m_id);
       return false;
    }
 
@@ -676,7 +676,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
          // DCI cannot be force polled at the moment, clear force poll request
-         nxlog_debug(6, _T("Forced poll of DC object %s [%d] on node %s [%d] cancelled"), m_name.cstr(), m_id, m_owner->getName(), m_owner->getId());
+         nxlog_debug_tag(_T("dc.scheduler"), 6, _T("Forced poll of DC object %s [%u] on node %s [%u] cancelled"), m_name.cstr(), m_id, m_owner->getName(), m_owner->getId());
          if (m_pollingSession != NULL)
          {
             m_pollingSession->decRefCount();

@@ -783,32 +783,24 @@ void DCTable::deleteFromDatabase()
 /**
  * Create NXCP message with item data
  */
-void DCTable::createMessage(NXCPMessage *pMsg)
+void DCTable::createMessage(NXCPMessage *msg)
 {
-	DCObject::createMessage(pMsg);
+	DCObject::createMessage(msg);
 
    lock();
-	pMsg->setField(VID_NUM_COLUMNS, (UINT32)m_columns->size());
-	UINT32 varId = VID_DCI_COLUMN_BASE;
+   msg->setField(VID_NUM_COLUMNS, (UINT32)m_columns->size());
+	uint32_t fieldId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < m_columns->size(); i++)
 	{
-		DCTableColumn *column = m_columns->get(i);
-		pMsg->setField(varId++, column->getName());
-		pMsg->setField(varId++, column->getFlags());
-		const SNMP_ObjectId *oid = column->getSnmpOid();
-		if (oid != NULL)
-			pMsg->setFieldFromInt32Array(varId++, oid->length(), oid->value());
-		else
-			varId++;
-		pMsg->setField(varId++, column->getDisplayName());
-		varId += 6;
+		m_columns->get(i)->fillMessage(msg, fieldId);
+		fieldId += 10;
 	}
 
-	pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
-   varId = VID_DCI_THRESHOLD_BASE;
+	msg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
+   fieldId = VID_DCI_THRESHOLD_BASE;
    for(int i = 0; i < m_thresholds->size(); i++)
    {
-      varId = m_thresholds->get(i)->fillMessage(pMsg, varId);
+      fieldId = m_thresholds->get(i)->fillMessage(msg, fieldId);
    }
 
    unlock();
@@ -894,7 +886,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId)
 /**
  * Get data type of given column
  */
-int DCTable::getColumnDataType(const TCHAR *name)
+int DCTable::getColumnDataType(const TCHAR *name) const
 {
    int dt = DCI_DT_STRING;
    bool found = false;

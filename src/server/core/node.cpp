@@ -5413,16 +5413,16 @@ DataCollectionError Node::getItemFromSNMP(UINT16 port, SNMP_Version version, con
 /**
  * Read one row for SNMP table
  */
-static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid, size_t baseOidLen, UINT32 index,
-                               ObjectArray<DCTableColumn> *columns, Table *table)
+static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid, size_t baseOidLen,
+         uint32_t index, const ObjectArray<DCTableColumn> &columns, Table *table)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   for(int i = 0; i < columns->size(); i++)
+   for(int i = 0; i < columns.size(); i++)
    {
-      DCTableColumn *c = columns->get(i);
+      const DCTableColumn *c = columns.get(i);
       if (c->getSnmpOid() != NULL)
       {
-         UINT32 oid[MAX_OID_LEN];
+         uint32_t oid[MAX_OID_LEN];
          size_t oidLen = c->getSnmpOid()->length();
          memcpy(oid, c->getSnmpOid()->value(), oidLen * sizeof(UINT32));
          if (rowOid != NULL)
@@ -5440,10 +5440,10 @@ static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid
    }
 
    SNMP_PDU *response;
-   UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rc == SNMP_ERR_SUCCESS)
    {
-      if (((int)response->getNumVariables() >= columns->size()) &&
+      if (((int)response->getNumVariables() >= columns.size()) &&
           (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          table->addRow();
@@ -5452,19 +5452,19 @@ static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid
             SNMP_Variable *v = response->getVariable(i);
             if ((v != NULL) && (v->getType() != ASN_NO_SUCH_OBJECT) && (v->getType() != ASN_NO_SUCH_INSTANCE))
             {
-               DCTableColumn *c = columns->get(i);
+               DCTableColumn *c = columns.get(i);
                if ((c != NULL) && c->isConvertSnmpStringToHex())
                {
                   size_t size = v->getValueLength();
-                  TCHAR *buffer = (TCHAR *)malloc((size * 2 + 1) * sizeof(TCHAR));
+                  TCHAR *buffer = MemAllocString(size * 2 + 1);
                   BinToStr(v->getValue(), size, buffer);
-                  table->set(i, buffer);
+                  table->setPreallocated(i, buffer);
                }
                else
                {
                   bool convert = false;
-                  TCHAR buffer[256];
-                  table->set(i, v->getValueAsPrintableString(buffer, 256, &convert));
+                  TCHAR buffer[1024];
+                  table->set(i, v->getValueAsPrintableString(buffer, 1024, &convert));
                }
             }
          }
@@ -5486,7 +5486,7 @@ static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp,
 /**
  * Get table from SNMP
  */
-DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table)
+DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table)
 {
    *table = NULL;
 
@@ -5499,9 +5499,9 @@ DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, co
    if (rc == SNMP_ERR_SUCCESS)
    {
       *table = new Table;
-      for(int i = 0; i < columns->size(); i++)
+      for(int i = 0; i < columns.size(); i++)
       {
-         DCTableColumn *c = columns->get(i);
+         const DCTableColumn *c = columns.get(i);
          if (c->getSnmpOid() != NULL)
             (*table)->addColumn(c->getName(), c->getDataType(), c->getDisplayName(), c->isInstanceColumn());
       }
@@ -9408,6 +9408,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    NXCPMessage msg(conn->getProtocolVersion());
    msg.setCode(CMD_DATA_COLLECTION_CONFIG);
    msg.setId(conn->generateRequestId());
+   msg.setField(VID_EXTENDED_DCI_DATA, true);
 
    if (IsZoningEnabled())
    {
@@ -9421,8 +9422,9 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 
    if (m_status != STATUS_UNMANAGED )
    {
-      UINT32 count = 0;
-      UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+      uint32_t count = 0;
+      uint32_t baseInfoFieldId = VID_ELEMENT_LIST_BASE;
+      uint32_t extraInfoFieldId = VID_EXTRA_DCI_INFO_BASE;
       lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
       {
@@ -9432,13 +9434,14 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
              (dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
              (dco->getSourceNode() == 0))
          {
-            msg.setField(fieldId++, dco->getId());
-            msg.setField(fieldId++, (INT16)dco->getType());
-            msg.setField(fieldId++, (INT16)dco->getDataSource());
-            msg.setField(fieldId++, dco->getName());
-            msg.setField(fieldId++, (INT32)dco->getEffectivePollingInterval());
-            msg.setFieldFromTime(fieldId++, dco->getLastPollTime());
-            fieldId += 4;
+            msg.setField(baseInfoFieldId++, dco->getId());
+            msg.setField(baseInfoFieldId++, (INT16)dco->getType());
+            msg.setField(baseInfoFieldId++, (INT16)dco->getDataSource());
+            msg.setField(baseInfoFieldId++, dco->getName());
+            msg.setField(baseInfoFieldId++, (INT32)dco->getEffectivePollingInterval());
+            msg.setFieldFromTime(baseInfoFieldId++, dco->getLastPollTime());
+            baseInfoFieldId += 4;
+            extraInfoFieldId += 100;
             count++;
          }
       }
@@ -9448,7 +9451,8 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       data.proxyId = m_id;
       data.count = count;
       data.msg = &msg;
-      data.fieldId = fieldId;
+      data.baseInfoFieldId = baseInfoFieldId;
+      data.extraInfoFieldId = extraInfoFieldId;
       data.nodeInfoCount = 0;
       data.nodeInfoFieldId = VID_NODE_INFO_LIST_BASE;
 

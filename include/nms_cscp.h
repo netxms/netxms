@@ -1361,6 +1361,7 @@ typedef struct
 #define VID_SCREEN_WIDTH            ((UINT32)696)
 #define VID_SCREEN_HEIGHT           ((UINT32)697)
 #define VID_SCREEN_BPP              ((UINT32)698)
+#define VID_EXTENDED_DCI_DATA       ((UINT32)699)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1371,6 +1372,9 @@ typedef struct
 
 // Node info list base
 #define VID_NODE_INFO_LIST_BASE     ((UINT32)0x60000000)
+
+// Node info list base
+#define VID_EXTRA_DCI_INFO_BASE     ((UINT32)0x30000000)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((UINT32)0x00001000)
