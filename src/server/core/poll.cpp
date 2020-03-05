@@ -535,7 +535,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       to = range.getEndAddress().getAddressV4();
    }
 
-   if (from >= to)
+   if (from > to)
    {
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid address range %s"), range.toString().cstr());
       return;
@@ -581,7 +581,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s via proxy %s [%u]"),
                rangeText, proxy->getName(), proxy->getId());
-      while((from < to) && !IsShutdownInProgress())
+      while((from <= to) && !IsShutdownInProgress())
       {
          if (interBlockDelay > 0)
             ThreadSleepMs(interBlockDelay);
@@ -610,7 +610,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
    {
       TCHAR ipAddr1[16], ipAddr2[16];
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
-      while((from < to) && !IsShutdownInProgress())
+      while((from <= to) && !IsShutdownInProgress())
       {
          if (interBlockDelay > 0)
             ThreadSleepMs(interBlockDelay);
