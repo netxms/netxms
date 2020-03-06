@@ -1,5 +1,5 @@
 *
-* 3.2-CURRENT
+* 3.2.400
 *
 
 - Proxy nodes does not collect DCI data from SNMP nodes marked as down
