@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.11 to 32.12
+ */
+static bool H_UpgradeFromV11()
+{
+   static const TCHAR *batch =
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','0','Always use name')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','1','Use alias when available')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','2','Concatenate alias with name')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','3','Concatenate name with alias')\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 32.10 to 32.11
  */
 static bool H_UpgradeFromV10()
@@ -256,6 +272,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 11, 32, 12, H_UpgradeFromV11 },
    { 10, 32, 11, H_UpgradeFromV10 },
    { 9,  32, 10, H_UpgradeFromV9  },
    { 8,  32, 9,  H_UpgradeFromV8  },

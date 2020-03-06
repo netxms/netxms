@@ -10,6 +10,7 @@
 	NX-791 (CPU Count DCI not supported on HP-UX)
 	NX-1440 (After netxmsd restart custom schedule DCIs does not have value)
 	NX-1607 (Primary IP address should not be used for topology if it is not present on any interface)
+	NX-1768 (Server configuration variable Objects.Interfaces.UseAliases has no options to select)
 	NX-1773 ("Apply policy" in context menu of node is meaningless and does nothing)
 	NX-1803 (Configuration import with "Replace existing object tools" checkbox set does not replace them)
 
