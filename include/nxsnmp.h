@@ -116,6 +116,24 @@ enum SNMP_Version
    SNMP_VERSION_DEFAULT = 127
 };
 
+/**
+ * Get SNMP version from int
+ */
+inline SNMP_Version SNMP_VersionFromInt(int v)
+{
+   switch(v)
+   {
+      case 0:
+         return SNMP_VERSION_1;
+      case 1:
+         return SNMP_VERSION_2C;
+      case 3:
+         return SNMP_VERSION_3;
+      default:
+         return SNMP_VERSION_DEFAULT;
+   }
+}
+
 //
 // PDU types
 //

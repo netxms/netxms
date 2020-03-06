@@ -37,9 +37,33 @@ bool g_ignoreAgentDbErrors = FALSE;
  */
 static DB_HANDLE s_db = NULL;
 
+/**
+ * Upgrade from V10 to V11
+ */
+static BOOL H_UpgradeFromV10(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(_T("ALTER TABLE dc_config ADD snmp_version")));
+   CHK_EXEC(Query(_T("UPDATE dc_config SET snmp_version=127")));
+   CHK_EXEC(DBSetNotNullConstraint(s_db, _T("dc_config"), _T("snmp_version")));
+
+   static TCHAR query[] =
+         _T("CREATE TABLE dc_snmp_table_columns (")
+         _T("  server_id number(20) not null,")
+         _T("  dci_id integer not null,")
+         _T("  column_id integer not null,")
+         _T("  name varchar(63) not null,")
+         _T("  display_name varchar(255) null,")
+         _T("  snmp_oid varchar(1023) null,")
+         _T("  flags integer not null,")
+         _T("  PRIMARY KEY(server_id,dci_id,column_id))");
+   CHK_EXEC(Query(query));
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 11));
+   return TRUE;
+}
 
 /**
- * Upgrade from V8 to V9
+ * Upgrade from V9 to V10
  */
 static BOOL H_UpgradeFromV9(int currVersion, int newVersion)
 {
@@ -51,13 +75,12 @@ static BOOL H_UpgradeFromV9(int currVersion, int newVersion)
    return TRUE;
 }
 
-
 /**
  * Upgrade from V8 to V9
  */
 static BOOL H_UpgradeFromV8(int currVersion, int newVersion)
 {
-   TCHAR createUserAgentNotifications[] =
+   static TCHAR createUserAgentNotifications[] =
          _T("CREATE TABLE user_agent_notifications (")
          _T("  server_id number(20) not null,")
          _T("  notification_id integer not null,")
@@ -78,7 +101,7 @@ static BOOL H_UpgradeFromV7(int currVersion, int newVersion)
 {
    CHK_EXEC(Query(_T("ALTER TABLE dc_config ADD backup_proxy_id integer")));
 
-   TCHAR createDcProxy[] =
+   static TCHAR createDcProxy[] =
             _T("CREATE TABLE dc_proxy (")
             _T("  server_id number(20) not null,")
             _T("  proxy_id integer not null,")
@@ -86,7 +109,7 @@ static BOOL H_UpgradeFromV7(int currVersion, int newVersion)
             _T("  PRIMARY KEY(server_id,proxy_id))");
    CHK_EXEC(Query(createDcProxy));
 
-   TCHAR createZoneConfig[] =
+   static TCHAR createZoneConfig[] =
             _T("CREATE TABLE zone_config (")
             _T("  server_id number(20) not null,")
             _T("  this_node_id integer not null,")
@@ -138,7 +161,7 @@ static BOOL H_UpgradeFromV6(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV5(int currVersion, int newVersion)
 {
-   TCHAR upgradeQueries[] =
+   static TCHAR upgradeQueries[] =
             _T("CREATE TABLE device_decoder_map (")
             _T("  guid varchar(36) not null,")
             _T("  devAddr varchar(10) null,")
@@ -408,21 +431,19 @@ static struct
    { 7, 8, H_UpgradeFromV7 },
    { 8, 9, H_UpgradeFromV8 },
    { 9, 10, H_UpgradeFromV9 },
+   { 10, 11, H_UpgradeFromV10 },
    { 0, 0, NULL }
 };
-
 
 /**
  * Upgrade database to new version
  */
 bool UpgradeDatabase()
 {
-   int i;
-   UINT32 version = 0;
    s_db = GetLocalDatabaseHandle();
 
    // Get database format version
-	version = ReadMetadataAsInt(_T("SchemaVersion"));
+	int32_t version = ReadMetadataAsInt(_T("SchemaVersion"));
    if (version == DB_SCHEMA_VERSION)
    {
       DebugPrintf(1, _T("Database format is up to date"));
@@ -439,7 +460,8 @@ bool UpgradeDatabase()
       while(version < DB_SCHEMA_VERSION)
       {
          // Find upgrade procedure
-         for(i = 0; m_dbUpgradeMap[i].fpProc != NULL; i++)
+         int i;
+         for(i = 0; m_dbUpgradeMap[i].fpProc != nullptr; i++)
             if (m_dbUpgradeMap[i].version == version)
                break;
          if (m_dbUpgradeMap[i].fpProc == NULL)

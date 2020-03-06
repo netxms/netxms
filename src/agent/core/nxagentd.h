@@ -775,7 +775,7 @@ bool GetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *
 
 UINT32 GenerateMessageId();
 
-void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg);
+void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg);
 
 bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
 AbstractCommSession *FindServerSessionById(UINT32 id);

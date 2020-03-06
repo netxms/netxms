@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -140,6 +140,7 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  polling_interval integer not null,")
    _T("  last_poll integer not null,")
    _T("  snmp_port integer not null,")
+   _T("  snmp_version integer not null,")
    _T("  snmp_target_guid varchar(36) not null,")
    _T("  snmp_raw_type integer not null,")
    _T("  backup_proxy_id integer null,")
@@ -157,6 +158,16 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  PRIMARY KEY(server_id,dci_id,timestamp))"),
 
    _T("CREATE INDEX idx_dc_queue_timestamp ON dc_queue(timestamp)"),
+
+   _T("CREATE TABLE dc_snmp_table_columns (")
+   _T("  server_id number(20) not null,")
+   _T("  dci_id integer not null,")
+   _T("  column_id integer not null,")
+   _T("  name varchar(63) not null,")
+   _T("  display_name varchar(255) null,")
+   _T("  snmp_oid varchar(1023) null,")
+   _T("  flags integer not null,")
+   _T("  PRIMARY KEY(server_id,dci_id,column_id))"),
 
    _T("CREATE TABLE dc_snmp_targets (")
    _T("  guid varchar(36) not null,")
@@ -176,7 +187,7 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  value varchar null,")
    _T("  PRIMARY KEY(attribute))"),
 
-   NULL
+   nullptr
 };
 
 /**
@@ -194,7 +205,16 @@ static bool InitDatabase()
 /**
  * Database tables
  */
-static const TCHAR *s_dbTables[] = { _T("agent_policy"), _T("dc_config"), _T("dc_queue"), _T("dc_snmp_targets"), _T("registry"), NULL };
+static const TCHAR *s_dbTables[] =
+{
+   _T("agent_policy"),
+   _T("dc_config"),
+   _T("dc_queue"),
+   _T("dc_snmp_table_columns"),
+   _T("dc_snmp_targets"),
+   _T("registry"),
+   nullptr
+};
 
 /**
  * Check database structure
