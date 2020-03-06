@@ -10985,39 +10985,33 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
  */
 void ClientSession::testDCITransformation(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
-   NetObj *object;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
    // Get node id and check object class and access rights
-   object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != NULL)
+   NetObj *object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
    {
       if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-				BOOL success;
-				TCHAR *script, value[256], result[256];
-
-				script = pRequest->getFieldAsString(VID_SCRIPT);
-				if (script != NULL)
+				TCHAR *script = pRequest->getFieldAsString(VID_SCRIPT);
+				if (script != nullptr)
 				{
-				   DCObjectInfo *dcObjectInfo = NULL;
+				   shared_ptr<DCObjectInfo> dcObjectInfo;
 				   if (pRequest->isFieldExist(VID_DCI_ID))
 				   {
 				      UINT32 dciId = pRequest->getFieldAsUInt32(VID_DCI_ID);
 				      shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId, m_dwUserId);
-				      dcObjectInfo = new DCObjectInfo(pRequest, dcObject.get());   // will be destroyed by DCItem::testTransformation
+				      dcObjectInfo = make_shared<DCObjectInfo>(pRequest, dcObject.get());
 				   }
+
+				   TCHAR value[256], result[256];
 					pRequest->getFieldAsString(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
-               success = DCItem::testTransformation(static_cast<DataCollectionTarget*>(object), dcObjectInfo, script, value, result, sizeof(result) / sizeof(TCHAR));
+               bool success = DCItem::testTransformation(static_cast<DataCollectionTarget*>(object), dcObjectInfo, script, value, result, sizeof(result) / sizeof(TCHAR));
 					MemFree(script);
 					msg.setField(VID_RCC, RCC_SUCCESS);
-					msg.setField(VID_EXECUTION_STATUS, (WORD)success);
+					msg.setField(VID_EXECUTION_STATUS, success);
 					msg.setField(VID_EXECUTION_RESULT, result);
 				}
 				else

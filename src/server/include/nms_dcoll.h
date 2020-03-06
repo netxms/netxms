@@ -530,7 +530,7 @@ public:
 	void prepareForRecalc();
 	void recalculateValue(ItemValue &value);
 
-   static bool testTransformation(DataCollectionTarget *object, DCObjectInfo *dcObjectInfo, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
+   static bool testTransformation(DataCollectionTarget *object, shared_ptr<DCObjectInfo> dcObjectInfo, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
 struct TableThresholdCbData;
