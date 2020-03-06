@@ -46,10 +46,10 @@ static LONG H_Shutdown(const TCHAR *pszAction, const StringList *pArgList, const
  */
 static bool SubAgentInit(Config *config)
 {
-	StartCpuUsageCollector();
-	StartIOStatCollector();
+   StartCpuUsageCollector();
+   StartIOStatCollector();
    InitProc();
-	return true;
+   return true;
 }
 
 /**
@@ -58,8 +58,8 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
    ShutdownProc();
-	ShutdownCpuUsageCollector();
-	ShutdownIOStatCollector();
+   ShutdownCpuUsageCollector();
+   ShutdownIOStatCollector();
 }
 
 /**
@@ -123,12 +123,13 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 	{ _T("System.ConnectedUsers"), H_ConnectedUsers, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CONNECTEDUSERS },
 
-	{ _T("System.CPU.LoadAvg"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
-	{ _T("System.CPU.LoadAvg5"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
-	{ _T("System.CPU.LoadAvg15"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
-	{ _T("System.CPU.Usage"), H_CpuUsage, (const TCHAR *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
-	{ _T("System.CPU.Usage5"), H_CpuUsage, (const TCHAR *)5, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
-	{ _T("System.CPU.Usage15"), H_CpuUsage, (const TCHAR *)15, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
+   { _T("System.CPU.Count"), H_CpuCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+   { _T("System.CPU.LoadAvg"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
+   { _T("System.CPU.LoadAvg5"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
+   { _T("System.CPU.LoadAvg15"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
+   { _T("System.CPU.Usage"), H_CpuUsage, (const TCHAR *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
+   { _T("System.CPU.Usage5"), H_CpuUsage, (const TCHAR *)5, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
+   { _T("System.CPU.Usage15"), H_CpuUsage, (const TCHAR *)15, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
 
 	{ _T("System.IO.BytesReadRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
 	{ _T("System.IO.BytesReadRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },

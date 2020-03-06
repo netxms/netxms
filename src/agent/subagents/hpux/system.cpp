@@ -147,18 +147,31 @@ LONG H_ActiveUserSessions(const TCHAR *pszParam, const TCHAR *pArg, StringList *
 /**
  * Handler for System.IO.OpenFiles parameter
  */
-LONG H_OpenFiles(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_OpenFiles(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	struct pst_dynamic info;
+   LONG rc = SYSINFO_RC_ERROR;
+   struct pst_dynamic info;
+   if (pstat_getdynamic(&info, sizeof(info), 0, 0) >= 0)
+   {
+      ret_int(value, (int)info.psd_activefiles);
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   return rc;
+}
 
-	if (pstat_getdynamic(&info, sizeof(info), 0, 0) >= 0)
-	{
-		ret_int(pValue, (int)info.psd_activefiles);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
+/**
+ * Handler for System.CPU.Count parameter
+ */
+LONG H_CpuCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   LONG rc = SYSINFO_RC_ERROR;
+   struct pst_dynamic info;
+   if (pstat_getdynamic(&info, sizeof(info), 0, 0) >= 0)
+   {
+      ret_int(value, (int)info.psd_proc_cnt);
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   return rc;
 }
 
 /**
