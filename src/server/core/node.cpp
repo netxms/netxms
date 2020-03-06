@@ -5420,12 +5420,12 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
    for(int i = 0; i < columns.size(); i++)
    {
       const DCTableColumn *c = columns.get(i);
-      if (c->getSnmpOid() != NULL)
+      if (c->getSnmpOid() != nullptr)
       {
          uint32_t oid[MAX_OID_LEN];
          size_t oidLen = c->getSnmpOid()->length();
          memcpy(oid, c->getSnmpOid()->value(), oidLen * sizeof(UINT32));
-         if (rowOid != NULL)
+         if (rowOid != nullptr)
          {
             size_t suffixLen = rowOid->length() - baseOidLen;
             memcpy(&oid[oidLen], rowOid->value() + baseOidLen, suffixLen * sizeof(UINT32));
@@ -5450,9 +5450,9 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
          for(int i = 0; i < response->getNumVariables(); i++)
          {
             SNMP_Variable *v = response->getVariable(i);
-            if ((v != NULL) && (v->getType() != ASN_NO_SUCH_OBJECT) && (v->getType() != ASN_NO_SUCH_INSTANCE))
+            if ((v != nullptr) && (v->getType() != ASN_NO_SUCH_OBJECT) && (v->getType() != ASN_NO_SUCH_INSTANCE))
             {
-               DCTableColumn *c = columns.get(i);
+               const DCTableColumn *c = columns.get(i);
                if ((c != NULL) && c->isConvertSnmpStringToHex())
                {
                   size_t size = v->getValueLength();
@@ -5488,21 +5488,21 @@ static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp,
  */
 DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table)
 {
-   *table = NULL;
+   *table = nullptr;
 
    SNMP_Transport *snmp = createSnmpTransport(port, version);
-   if (snmp == NULL)
+   if (snmp == nullptr)
       return DCE_COMM_ERROR;
 
    ObjectArray<SNMP_ObjectId> oidList(64, 64, Ownership::True);
-   UINT32 rc = SnmpWalk(snmp, oid, SNMPGetTableCallback, &oidList, FALSE);
+   uint32_t rc = SnmpWalk(snmp, oid, SNMPGetTableCallback, &oidList);
    if (rc == SNMP_ERR_SUCCESS)
    {
       *table = new Table;
       for(int i = 0; i < columns.size(); i++)
       {
          const DCTableColumn *c = columns.get(i);
-         if (c->getSnmpOid() != NULL)
+         if (c->getSnmpOid() != nullptr)
             (*table)->addColumn(c->getName(), c->getDataType(), c->getDisplayName(), c->isInstanceColumn());
       }
 

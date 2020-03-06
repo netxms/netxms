@@ -677,6 +677,32 @@ public:
 };
 
 /**
+ * SNMP table column definition
+ */
+class SNMPTableColumnDefinition
+{
+private:
+   TCHAR m_name[MAX_COLUMN_NAME];
+   TCHAR *m_displayName;
+   SNMP_ObjectId *m_snmpOid;
+   uint16_t m_flags;
+
+public:
+   SNMPTableColumnDefinition(NXCPMessage *msg, UINT32 baseId);
+   SNMPTableColumnDefinition(DB_RESULT hResult, int row);
+   SNMPTableColumnDefinition(const SNMPTableColumnDefinition *src);
+   ~SNMPTableColumnDefinition();
+
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDisplayName() const { return (m_displayName != NULL) ? m_displayName : m_name; }
+   uint16_t getFlags() const { return m_flags; }
+   int getDataType() const { return TCF_GET_DATA_TYPE(m_flags); }
+   const SNMP_ObjectId *getSnmpOid() const { return m_snmpOid; }
+   bool isInstanceColumn() const { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
+   bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
+};
+
+/**
  * Functions
  */
 BOOL Initialize();

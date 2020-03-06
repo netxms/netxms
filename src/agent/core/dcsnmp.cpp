@@ -43,7 +43,7 @@ SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId)
    m_authName = msg->getFieldAsUtf8String(baseId + 6);
    m_authPassword = msg->getFieldAsUtf8String(baseId + 7);
    m_encPassword = msg->getFieldAsUtf8String(baseId + 8);
-   m_transport = NULL;
+   m_transport = nullptr;
 }
 
 /**
@@ -63,7 +63,7 @@ SNMPTarget::SNMPTarget(DB_RESULT hResult, int row)
    m_authName = DBGetFieldUTF8(hResult, row, 7, NULL, 0);
    m_authPassword = DBGetFieldUTF8(hResult, row, 8, NULL, 0);
    m_encPassword = DBGetFieldUTF8(hResult, row, 9, NULL, 0);
-   m_transport = NULL;
+   m_transport = nullptr;
 }
 
 /**
@@ -87,7 +87,7 @@ bool SNMPTarget::saveToDatabase(DB_HANDLE hdb)
       hStmt = DBPrepare(hdb, _T("UPDATE dc_snmp_targets SET server_id=?,ip_address=?,snmp_version=?,port=?,auth_type=?,enc_type=?,auth_name=?,auth_pass=?,enc_pass=? WHERE guid=?"));
    else
       hStmt = DBPrepare(hdb, _T("INSERT INTO dc_snmp_targets (server_id,ip_address,snmp_version,port,auth_type,enc_type,auth_name,auth_pass,enc_pass,guid) VALUES (?,?,?,?,?,?,?,?,?,?)"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
@@ -117,7 +117,7 @@ bool SNMPTarget::saveToDatabase(DB_HANDLE hdb)
  */
 SNMP_Transport *SNMPTarget::getTransport(UINT16 port)
 {
-   if (m_transport != NULL)
+   if (m_transport != nullptr)
       return m_transport;
 
    m_transport = new SNMP_UDPTransport;
@@ -142,11 +142,11 @@ void UpdateSnmpTarget(shared_ptr<SNMPTarget> target)
 /**
  * Get value from SNMP node
  */
-UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue)
+uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, const TCHAR *oid, TCHAR *value, int interpretRawValue)
 {
    s_snmpTargetsLock.lock();
    shared_ptr<SNMPTarget> t = s_snmpTargets.getShared(target.getValue());
-   if (t == NULL)
+   if (t == nullptr)
    {
       s_snmpTargetsLock.unlock();
 
@@ -157,7 +157,7 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
    s_snmpTargetsLock.unlock();
 
    SNMP_Transport *snmp = t->getTransport(port);
-   UINT32 rcc;
+   uint32_t rcc;
 
    if (interpretRawValue == SNMP_RAWTYPE_NONE)
    {
@@ -198,6 +198,123 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
 					break;
 			}
 		}
+   }
+
+   return (rcc == SNMP_ERR_SUCCESS) ? ERR_SUCCESS :
+      ((rcc == SNMP_ERR_NO_OBJECT) ? ERR_UNKNOWN_PARAMETER : ERR_INTERNAL_ERROR);
+}
+
+/**
+ * Read one row for SNMP table
+ */
+static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid, size_t baseOidLen,
+         uint32_t index, const ObjectArray<SNMPTableColumnDefinition> &columns, Table *table)
+{
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   for(int i = 0; i < columns.size(); i++)
+   {
+      const SNMPTableColumnDefinition *c = columns.get(i);
+      if (c->getSnmpOid() != nullptr)
+      {
+         uint32_t oid[MAX_OID_LEN];
+         size_t oidLen = c->getSnmpOid()->length();
+         memcpy(oid, c->getSnmpOid()->value(), oidLen * sizeof(UINT32));
+         if (rowOid != nullptr)
+         {
+            size_t suffixLen = rowOid->length() - baseOidLen;
+            memcpy(&oid[oidLen], rowOid->value() + baseOidLen, suffixLen * sizeof(UINT32));
+            oidLen += suffixLen;
+         }
+         else
+         {
+            oid[oidLen++] = index;
+         }
+         request.bindVariable(new SNMP_Variable(oid, oidLen));
+      }
+   }
+
+   SNMP_PDU *response;
+   uint32_t rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      if (((int)response->getNumVariables() >= columns.size()) &&
+          (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      {
+         table->addRow();
+         for(int i = 0; i < response->getNumVariables(); i++)
+         {
+            SNMP_Variable *v = response->getVariable(i);
+            if ((v != nullptr) && (v->getType() != ASN_NO_SUCH_OBJECT) && (v->getType() != ASN_NO_SUCH_INSTANCE))
+            {
+               const SNMPTableColumnDefinition *c = columns.get(i);
+               if ((c != NULL) && c->isConvertSnmpStringToHex())
+               {
+                  size_t size = v->getValueLength();
+                  TCHAR *buffer = MemAllocString(size * 2 + 1);
+                  BinToStr(v->getValue(), size, buffer);
+                  table->setPreallocated(i, buffer);
+               }
+               else
+               {
+                  bool convert = false;
+                  TCHAR buffer[1024];
+                  table->set(i, v->getValueAsPrintableString(buffer, 1024, &convert));
+               }
+            }
+         }
+      }
+      delete response;
+   }
+   return rc;
+}
+
+/**
+ * Callback for SnmpWalk in Node::getTableFromSNMP
+ */
+static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+{
+   ((ObjectArray<SNMP_ObjectId> *)arg)->add(new SNMP_ObjectId(varbind->getName()));
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get table from SNMP node
+ */
+uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, const TCHAR *oid,
+         const ObjectArray<SNMPTableColumnDefinition> &columns, Table *value)
+{
+   s_snmpTargetsLock.lock();
+   shared_ptr<SNMPTarget> t = s_snmpTargets.getShared(target.getValue());
+   if (t == nullptr)
+   {
+      s_snmpTargetsLock.unlock();
+
+      TCHAR buffer[64];
+      DebugPrintf(6, _T("SNMP target with guid %s not found"), target.toString(buffer));
+      return ERR_INTERNAL_ERROR;
+   }
+   s_snmpTargetsLock.unlock();
+
+   SNMP_Transport *snmp = t->getTransport(port);
+
+   ObjectArray<SNMP_ObjectId> oidList(64, 64, Ownership::True);
+   uint32_t rcc = SnmpWalk(snmp, oid, SNMPGetTableCallback, &oidList);
+   if (rcc == SNMP_ERR_SUCCESS)
+   {
+      for(int i = 0; i < columns.size(); i++)
+      {
+         const SNMPTableColumnDefinition *c = columns.get(i);
+         if (c->getSnmpOid() != nullptr)
+            value->addColumn(c->getName(), c->getDataType(), c->getDisplayName(), c->isInstanceColumn());
+      }
+
+      size_t baseOidLen = SNMPGetOIDLength(oid);
+      for(int i = 0; i < oidList.size(); i++)
+      {
+         rcc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, value);
+         if (rcc != SNMP_ERR_SUCCESS)
+            break;
+      }
    }
 
    return (rcc == SNMP_ERR_SUCCESS) ? ERR_SUCCESS :

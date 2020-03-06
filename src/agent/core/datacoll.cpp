@@ -33,7 +33,10 @@
  * Externals
  */
 void UpdateSnmpTarget(shared_ptr<SNMPTarget> target);
-UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
+uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, const TCHAR *oid,
+         TCHAR *value, int interpretRawValue);
+uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, const TCHAR *oid,
+         const ObjectArray<SNMPTableColumnDefinition> &columns, Table *value);
 
 void LoadProxyConfiguration();
 void UpdateProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone);
@@ -59,32 +62,6 @@ static bool s_dataCollectorStarted = false;
  * Unsaved poll time indicator
  */
 static bool s_pollTimeChanged = false;
-
-/**
- * SNMP table column definition
- */
-class SNMPTableColumnDefinition
-{
-private:
-   TCHAR m_name[MAX_COLUMN_NAME];
-   TCHAR *m_displayName;
-   SNMP_ObjectId *m_snmpOid;
-   uint16_t m_flags;
-
-public:
-   SNMPTableColumnDefinition(NXCPMessage *msg, UINT32 baseId);
-   SNMPTableColumnDefinition(DB_RESULT hResult, int row);
-   SNMPTableColumnDefinition(const SNMPTableColumnDefinition *src);
-   ~SNMPTableColumnDefinition();
-
-   const TCHAR *getName() const { return m_name; }
-   const TCHAR *getDisplayName() const { return (m_displayName != NULL) ? m_displayName : m_name; }
-   uint16_t getFlags() const { return m_flags; }
-   int getDataType() const { return TCF_GET_DATA_TYPE(m_flags); }
-   const SNMP_ObjectId *getSnmpOid() const { return m_snmpOid; }
-   bool isInstanceColumn() const { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
-   bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
-};
 
 /**
  * Create column object from NXCP message
@@ -218,6 +195,7 @@ public:
    UINT32 getPollingInterval() const { return (UINT32)m_pollingInterval; }
    time_t getLastPollTime() { return m_lastPollTime; }
    UINT32 getBackupProxyId() const { return m_backupProxyId; }
+   const ObjectArray<SNMPTableColumnDefinition> *getColumns() const { return m_tableColumns; }
 
    bool updateAndSave(const DataCollectionItem *item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void saveToDatabase(bool newObject, DB_HANDLE hdb, DataCollectionStatementSet *statements);
@@ -715,7 +693,7 @@ bool DataElement::sendToServer(bool reconciliation)
 {
    // If data in database was invalid table may not be parsed correctly
    // Consider sending a success in that case so data element can be dropped
-   if ((m_type == DCO_TYPE_TABLE) && (m_value.table == NULL))
+   if ((m_type == DCO_TYPE_TABLE) && (m_value.table == nullptr))
       return true;
 
    CommSession *session = (CommSession *)FindServerSession(SessionComparator_Sender, &m_serverId);
@@ -1152,14 +1130,25 @@ static DataElement *CollectDataFromAgent(DataCollectionItem *dci)
  */
 static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
 {
-   DataElement *e = NULL;
+   DataElement *e = nullptr;
    if (dci->getType() == DCO_TYPE_ITEM)
    {
-      DebugPrintf(8, _T("Read SNMP parameter %s"), dci->getName());
+      nxlog_debug(8, _T("Read SNMP parameter %s"), dci->getName());
 
       TCHAR value[MAX_RESULT_LENGTH];
-      UINT32 status = GetSnmpValue(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getName(), value, dci->getSnmpRawValueType());
+      uint32_t status = GetSnmpValue(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getSnmpVersion(), dci->getName(), value, dci->getSnmpRawValueType());
       e = new DataElement(dci, status == ERR_SUCCESS ? value : _T(""), status);
+   }
+   else if (dci->getType() == DCO_TYPE_TABLE)
+   {
+      nxlog_debug(8, _T("Read SNMP table %s"), dci->getName());
+      const ObjectArray<SNMPTableColumnDefinition> *columns = dci->getColumns();
+      if (columns != nullptr)
+      {
+         Table *value = new Table();
+         uint32_t status = GetSnmpTable(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getSnmpVersion(), dci->getName(), *columns, value);
+         e = new DataElement(dci, value, status);
+      }
    }
    return e;
 }
@@ -1170,7 +1159,7 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
 static void LocalDataCollectionCallback(DataCollectionItem *dci)
 {
    DataElement *e = CollectDataFromAgent(dci);
-   if (e != NULL)
+   if (e != nullptr)
    {
       s_dataSenderQueue.put(e);
    }
@@ -1191,7 +1180,7 @@ static void SnmpDataCollectionCallback(void *arg)
    DataCollectionItem *dci = (DataCollectionItem *)arg;
 
    DataElement *e = CollectDataFromSNMP(dci);
-   if (e != NULL)
+   if (e != nullptr)
    {
       s_dataSenderQueue.put(e);
    }
@@ -1207,7 +1196,7 @@ static void SnmpDataCollectionCallback(void *arg)
 /**
  * Data collectors thread pool
  */
-ThreadPool *g_dataCollectorPool = NULL;
+ThreadPool *g_dataCollectorPool = nullptr;
 
 /**
  * Single data collection scheduler run - schedule data collection if needed and calculate sleep time
@@ -1217,7 +1206,7 @@ static UINT32 DataCollectionSchedulerRun()
    UINT32 sleepTime = 60;
 
    s_itemLock.lock();
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    Iterator<DataCollectionItem> *it = s_items.iterator();
    while(it->hasNext())
    {
