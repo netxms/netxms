@@ -1181,7 +1181,11 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
       // Load missing values from database
       // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
       // to reduce load on database at server startup
-      if (allowLoad && (m_owner != NULL) && (((m_requiredCacheSize - m_cacheSize) * getEffectivePollingInterval() > 300) || (m_source == DS_PUSH_AGENT)))
+      if (allowLoad &&
+          (m_owner != nullptr) &&
+          (((m_requiredCacheSize - m_cacheSize) * getEffectivePollingInterval() > 300) ||
+           (m_source == DS_PUSH_AGENT) ||
+           (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)))
       {
          m_bCacheLoaded = false;
          g_dciCacheLoaderQueue.put(createDescriptor());
