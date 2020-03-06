@@ -290,6 +290,10 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkD
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','1','Passive only');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','2','Active only');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','3','Passive and active');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','0','Always use name');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','1','Use alias when available');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','2','Concatenate alias with name');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','3','Concatenate name with alias');
 
 
 /*
