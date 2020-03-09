@@ -139,6 +139,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"&="	return T_ASSIGN_AND;
 <INITIAL>"|="	return T_ASSIGN_OR;
 <INITIAL>"^="	return T_ASSIGN_XOR;
+<INITIAL>"..."	return T_RANGE;
 <INITIAL>"."	return '.';
 <INITIAL>"{"	return '{';
 <INITIAL>"}"	return '}';

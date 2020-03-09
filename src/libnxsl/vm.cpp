@@ -1399,6 +1399,10 @@ void NXSL_VM::execute()
       case OPCODE_RSHIFT:
 		case OPCODE_CASE:
       case OPCODE_CASE_CONST:
+      case OPCODE_CASE_LT:
+      case OPCODE_CASE_CONST_LT:
+      case OPCODE_CASE_GT:
+      case OPCODE_CASE_CONST_GT:
          doBinaryOperation(cp->m_opCode);
          break;
       case OPCODE_NEG:
@@ -1954,12 +1958,16 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
    switch(nOpCode)
    {
       case OPCODE_CASE:
+      case OPCODE_CASE_LT:
+      case OPCODE_CASE_GT:
 		   pVal1 = m_instructionSet->get(m_cp)->m_operand.m_constant;
 		   pVal2 = m_dataStack->peek();
          break;
       case OPCODE_CASE_CONST:
+      case OPCODE_CASE_CONST_LT:
+      case OPCODE_CASE_CONST_GT:
          var = m_constants->find(*(m_instructionSet->get(m_cp)->m_operand.m_identifier));
-         if (var != NULL)
+         if (var != nullptr)
          {
             pVal1 = var->getValue();
          }
@@ -1983,7 +1991,9 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
           (!pVal2->isNull() && (nOpCode == OPCODE_IN)) ||
           (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) ||
           (nOpCode == OPCODE_CASE_CONST) || (nOpCode == OPCODE_CONCAT) ||
-          (nOpCode == OPCODE_AND) || (nOpCode == OPCODE_OR))
+          (nOpCode == OPCODE_AND) || (nOpCode == OPCODE_OR) ||
+          (nOpCode == OPCODE_CASE_LT) || (nOpCode == OPCODE_CASE_CONST_LT) ||
+          (nOpCode == OPCODE_CASE_GT) || (nOpCode == OPCODE_CASE_CONST_GT))
       {
          if (pVal1->isNumeric() && pVal2->isNumeric() &&
              (nOpCode != OPCODE_CONCAT) && (nOpCode != OPCODE_IN) &&
@@ -2079,6 +2089,14 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                      case OPCODE_CASE:
                      case OPCODE_CASE_CONST:
                         pRes = createValue((LONG)pVal1->EQ(pVal2));
+                        break;
+                     case OPCODE_CASE_LT:    // val2 is switch value, val1 is check value
+                     case OPCODE_CASE_CONST_LT:
+                        pRes = createValue((LONG)pVal2->LT(pVal1));
+                        break;
+                     case OPCODE_CASE_GT:    // val2 is switch value, val1 is check value
+                     case OPCODE_CASE_CONST_GT:
+                        pRes = createValue((LONG)pVal2->GT(pVal1));
                         break;
                      default:
                         error(NXSL_ERR_INTERNAL);
@@ -2190,6 +2208,10 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                case OPCODE_BIT_XOR:
                case OPCODE_LSHIFT:
                case OPCODE_RSHIFT:
+               case OPCODE_CASE_LT:
+               case OPCODE_CASE_CONST_LT:
+               case OPCODE_CASE_GT:
+               case OPCODE_CASE_CONST_GT:
                   error(NXSL_ERR_NOT_NUMBER);
                   break;
                default:

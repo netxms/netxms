@@ -60,6 +60,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_NULL
 %token T_PRINT
 %token T_PRINTLN
+%token T_RANGE
 %token T_RETURN
 %token T_SELECT
 %token T_SUB
@@ -103,6 +104,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %right T_INC T_DEC T_NOT '~' NEGATE
 %left T_REF '@'
 %left T_POST_INC T_POST_DEC '[' ']'
+%left T_RANGE
 
 %type <pConstant> Constant
 %type <valIdentifier> AnyIdentifier
@@ -1017,20 +1019,32 @@ SwitchStatement:
 	'(' Expression ')' '{' CaseList Default '}'
 {
 	pCompiler->closeBreakLevel(pScript);
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (INT16)1));
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (int16_t)1));
 }
 ;
 
 CaseList:
 	Case
 { 
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JMP, pScript->getCodeSize() + 3));
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
 	pScript->resolveLastJump(OPCODE_JZ);
+}
+	CaseList
+|	RangeCase
+{ 
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+	pScript->resolveLastJump(OPCODE_JNZ);
+	pScript->resolveLastJump(OPCODE_JNZ);
 }
 	CaseList
 |	Case
 {
 	pScript->resolveLastJump(OPCODE_JZ);
+}
+|	RangeCase
+{
+	pScript->resolveLastJump(OPCODE_JNZ);
+	pScript->resolveLastJump(OPCODE_JNZ);
 }
 ;
 
@@ -1039,15 +1053,54 @@ Case:
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CASE, $2));
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
-	$2 = NULL;
+	pScript->resolveLastJump(OPCODE_JMP);
+	$2 = nullptr;
 } 
 	':' StatementList
 |	T_CASE T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CASE_CONST, $2));
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+	pScript->resolveLastJump(OPCODE_JMP);
+} 
+	':' StatementList
+;
+
+RangeCase:
+	T_CASE CaseRangeLeft
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JNZ, INVALID_ADDRESS));
+}
+T_RANGE CaseRangeRight 
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JNZ, INVALID_ADDRESS));
+	pScript->resolveLastJump(OPCODE_JMP);
 }
 	':' StatementList
+;
+
+CaseRangeLeft:
+	Constant
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CASE_LT, $1));
+	$1 = nullptr;
+}
+|	T_IDENTIFIER
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CASE_CONST_LT, $1));
+}
+;
+
+CaseRangeRight:
+	Constant
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CASE_GT, $1));
+	$1 = nullptr;
+}
+|	T_IDENTIFIER
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CASE_CONST_GT, $1));
+}
 ;
 
 Default:

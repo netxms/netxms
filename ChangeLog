@@ -1,5 +1,14 @@
 *
-* 3.2-CURRENT
+* 3.3-CURRENT
+* 
+
+- Value ranges in NXSL switch/case statement
+- Fixed issues:
+	NX-1788 (NXSL: add support for ranges in switch/case)
+
+
+*
+* 3.2.400
 *
 
 - Proxy nodes does not collect DCI data from SNMP nodes marked as down

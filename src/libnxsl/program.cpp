@@ -55,7 +55,8 @@ static const char *s_nxslCommandMnemonic[] =
    "SINC", "SINCP", "SDEC", "SDECP", "EPEEK",
    "PUSH", "SET", "CALL", "INC", "DEC",
    "INCP", "DECP", "IN", "PUSH", "SET",
-   "UPDATE", "CLREXPR", "RANGE"
+   "UPDATE", "CLREXPR", "RANGE", "CASELT",
+   "CASELT", "CASEGT", "CASEGT"
 };
 
 /**
@@ -307,6 +308,8 @@ void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructi
          case OPCODE_SET_ATTRIBUTE:
 			case OPCODE_NAME:
          case OPCODE_CASE_CONST:
+         case OPCODE_CASE_CONST_LT:
+         case OPCODE_CASE_CONST_GT:
             _ftprintf(fp, _T("%hs\n"), instr->m_operand.m_identifier->value);
             break;
          case OPCODE_SET_EXPRVAR:
@@ -324,6 +327,8 @@ void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructi
             break;
          case OPCODE_PUSH_CONSTANT:
 			case OPCODE_CASE:
+         case OPCODE_CASE_LT:
+         case OPCODE_CASE_GT:
             if (instr->m_operand.m_constant->isNull())
                _ftprintf(fp, _T("<null>\n"));
             else if (instr->m_operand.m_constant->isArray())

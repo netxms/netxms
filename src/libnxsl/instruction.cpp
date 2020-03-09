@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -153,6 +153,8 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_CALL_EXTERNAL:
       case OPCODE_CALL_METHOD:
       case OPCODE_CASE_CONST:
+      case OPCODE_CASE_CONST_LT:
+      case OPCODE_CASE_CONST_GT:
       case OPCODE_DEC:
       case OPCODE_DECP:
       case OPCODE_GET_ATTRIBUTE:
@@ -172,6 +174,8 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_UPDATE_EXPRVAR:
          return OP_TYPE_IDENTIFIER;
 		case OPCODE_CASE:
+      case OPCODE_CASE_LT:
+      case OPCODE_CASE_GT:
       case OPCODE_PUSH_CONSTANT:
          return OP_TYPE_CONST;
       case OPCODE_PUSH_VARPTR:
