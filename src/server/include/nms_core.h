@@ -1086,9 +1086,10 @@ void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 
 void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
-bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids);
-SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,
-         UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *customTestOids, UINT32 zoneUIN);
+bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool separateRequests);
+SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,
+         uint16_t originalPort, SNMP_SecurityContext *originalContext, const StringList &customTestOids,
+         uint32_t zoneUIN);
 
 void InitLocalNetInfo();
 
@@ -1102,6 +1103,7 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *snmpTransport
 NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const TCHAR *snmpObjectId, const TCHAR *defaultDriver, SNMP_Transport *snmpTransport);
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 void AddDriverSpecificOids(StringList *list);
+void PrintNetworkDeviceDriverList(ServerConsole *console);
 
 void LoadNotificationChannelDrivers();
 void LoadNotificationChannels();

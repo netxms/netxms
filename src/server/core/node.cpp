@@ -4238,7 +4238,7 @@ bool Node::confPollSnmp(uint32_t rqId)
 
    // Check current SNMP settings first
    SNMP_Transport *pTransport = createSnmpTransport();
-   if ((pTransport != NULL) && !SnmpTestRequest(pTransport, &oids))
+   if ((pTransport != nullptr) && !SnmpTestRequest(pTransport, oids, ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false)))
    {
       delete_and_null(pTransport);
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is not responding to SNMP using current settings"), m_name);
@@ -4248,9 +4248,10 @@ bool Node::confPollSnmp(uint32_t rqId)
          return false;
       }
    }
-   if (pTransport == NULL)
-      pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress, &m_snmpVersion, m_snmpPort, m_snmpSecurity, &oids, m_zoneUIN);
-   if (pTransport == NULL)
+   if (pTransport == nullptr)
+      pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress,
+               &m_snmpVersion, m_snmpPort, m_snmpSecurity, oids, m_zoneUIN);
+   if (pTransport == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
       return false;

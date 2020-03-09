@@ -36,7 +36,7 @@ static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
    size_t nameLen = pVar->getName().length();
 	if ((nameLen < 5) || (nameLen > MAX_OID_LEN))
 	{
-		nxlog_debug_tag(_T("topo.ipv4"), 4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, (const TCHAR *)pVar->getName().toString());
+		nxlog_debug_tag(_T("topo.ipv4"), 4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, pVar->getName().toString().cstr());
 		return SNMP_ERR_SUCCESS;
 	}
    memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
@@ -93,18 +93,36 @@ ROUTING_TABLE *SnmpGetRoutingTable(SNMP_Transport *pTransport)
 /**
  * Send request and check if we get any response
  */
-bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids)
+bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool separateRequests)
 {
    bool success = false;
-   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   for(int i = 0; i < testOids->size(); i++)
-      request.bindVariable(new SNMP_Variable(testOids->get(i)));
-   SNMP_PDU *response;
-   UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
-   if (rc == SNMP_ERR_SUCCESS)
+   if (separateRequests)
    {
-      success = (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS) || (response->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME);
-      delete response;
+      for(int i = 0; !success && (i < testOids.size()); i++)
+      {
+         SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+         request.bindVariable(new SNMP_Variable(testOids.get(i)));
+         SNMP_PDU *response;
+         UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+         if (rc == SNMP_ERR_SUCCESS)
+         {
+            success = (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS) || (response->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME);
+            delete response;
+         }
+      }
+   }
+   else
+   {
+      SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+      for(int i = 0; i < testOids.size(); i++)
+         request.bindVariable(new SNMP_Variable(testOids.get(i)));
+      SNMP_PDU *response;
+      UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+      if (rc == SNMP_ERR_SUCCESS)
+      {
+         success = (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS) || (response->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME);
+         delete response;
+      }
    }
    return success;
 }
@@ -112,7 +130,8 @@ bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids)
 /**
  * Check SNMP v3 connectivity
  */
-static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext, StringList *testOids, const TCHAR *id, UINT32 zoneUIN)
+static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext,
+         const StringList &testOids, const TCHAR *id, UINT32 zoneUIN, bool separateRequests)
 {
    pTransport->setSnmpVersion(SNMP_VERSION_3);
 
@@ -122,7 +141,7 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
 		nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckV3CommSettings(%s): trying %hs/%d:%d"), id, originalContext->getUser(),
 		          originalContext->getAuthMethod(), originalContext->getPrivMethod());
 		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
-		if (SnmpTestRequest(pTransport, testOids))
+		if (SnmpTestRequest(pTransport, testOids, separateRequests))
 		{
          nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckV3CommSettings(%s): success"), id);
          return true;
@@ -159,7 +178,7 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
             SNMP_SecurityContext *ctx = contexts.get(i);
             pTransport->setSecurityContext(ctx);
             nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckV3CommSettings(%s): trying %hs/%d:%d"), id, ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
-            if (SnmpTestRequest(pTransport, testOids))
+            if (SnmpTestRequest(pTransport, testOids, separateRequests))
             {
                nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckV3CommSettings(%s): success"), id);
                found = true;
@@ -198,8 +217,8 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
  * On success, returns new security context object (dynamically created).
  * On failure, returns NULL
  */
-SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, SNMP_Version *version, UINT16 originalPort,
-         SNMP_SecurityContext *originalContext, StringList *testOids, UINT32 zoneUIN)
+SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version, uint16_t originalPort,
+         SNMP_SecurityContext *originalContext, const StringList &testOids, uint32_t zoneUIN)
 {
    TCHAR ipAddrText[64];
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): starting check (proxy=%d, originalPort=%d)"), ipAddr.toString(ipAddrText), snmpProxy, (int)originalPort);
@@ -213,13 +232,15 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
 	if (portList[0] == 0)
 	   _tcscpy(portList, _T("161"));
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): global port list: %s)"), ipAddrText, portList);
-   StringList *ports = new StringList(portList, _T(","));
+   StringList ports(portList, _T(","));
+
+   bool separateRequests = ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false);
 
    Zone *zone = FindZoneByUIN(zoneUIN);
    if (zone != NULL)
-      ports->insertAll(0, zone->getSnmpPortList()); // Port list defined at zone level has priority
+      ports.insertAll(0, zone->getSnmpPortList()); // Port list defined at zone level has priority
 
-   for(int j = -1; (j < ports->size()) && !IsShutdownInProgress(); j++)
+   for(int j = -1; (j < ports.size()) && !IsShutdownInProgress(); j++)
    {
       UINT16 port;
       if (j == -1)
@@ -230,7 +251,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
       }
       else
       {
-         port = (UINT16)_tcstoul(ports->get(j), NULL, 10);
+         port = (UINT16)_tcstoul(ports.get(j), NULL, 10);
          if ((port == originalPort) || (port == 0))
             continue;
       }
@@ -261,7 +282,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
       }
 
       // Check for V3 USM
-      if (SnmpCheckV3CommSettings(pTransport, originalContext, testOids, ipAddrText, zoneUIN))
+      if (SnmpCheckV3CommSettings(pTransport, originalContext, testOids, ipAddrText, zoneUIN, separateRequests))
       {
          *version = SNMP_VERSION_3;
          goto success;
@@ -281,7 +302,7 @@ restart_check:
          nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): trying version %d community '%hs'"),
                   ipAddrText, pTransport->getSnmpVersion(), originalContext->getCommunity());
          pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
-         if (SnmpTestRequest(pTransport, testOids))
+         if (SnmpTestRequest(pTransport, testOids, separateRequests))
          {
             *version = pTransport->getSnmpVersion();
             goto success;
@@ -327,9 +348,9 @@ restart_check:
                      ipAddrText, pTransport->getSnmpVersion(), community);
             pTransport->setSecurityContext(new SNMP_SecurityContext(community));
 #ifdef UNICODE
-            free(community);
+            MemFree(community);
 #endif
-            if (SnmpTestRequest(pTransport, testOids))
+            if (SnmpTestRequest(pTransport, testOids, separateRequests))
             {
                *version = pTransport->getSnmpVersion();
                goto success;
@@ -338,7 +359,7 @@ restart_check:
 #ifdef UNICODE
          else
          {
-            free(community);
+            MemFree(community);
          }
 #endif
       }
@@ -353,13 +374,11 @@ restart_check:
 
 fail:
    delete communities;
-   delete ports;
 	nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): failed"), ipAddrText);
-	return NULL;
+	return nullptr;
 
 success:
    delete communities;
-   delete ports;
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): success (version=%d)"), ipAddrText, pTransport->getSnmpVersion());
 	return pTransport;
 }

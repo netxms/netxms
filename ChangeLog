@@ -2,9 +2,12 @@
 * 3.3-CURRENT
 * 
 
+- Option for blacklisting network device drivers
+- Option for switching SNMP probing during configuration poll into single OID per request mode
 - Value ranges in NXSL switch/case statement
 - Fixed issues:
 	NX-1788 (NXSL: add support for ranges in switch/case)
+	NX-1806 (Change order in which ping3.ndd is used during discovery or allow unloading/blacklist)
 
 
 *

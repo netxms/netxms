@@ -1088,6 +1088,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsoleWrite(pCtx, text);
          ConsoleWrite(pCtx, _T("\n"));
       }
+      else if (IsCommand(_T("NDD"), szBuffer, 3))
+      {
+         PrintNetworkDeviceDriverList(pCtx);
+      }
       else if (IsCommand(_T("OBJECTS"), szBuffer, 1))
       {
          // Get filter
@@ -1628,6 +1632,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show index <index>                - Show internal index\n")
             _T("   show modules                      - Show loaded server modules\n")
             _T("   show msgwq                        - Show message wait queues information\n")
+            _T("   show ndd                          - Show loaded network device drivers\n")
             _T("   show objects [<filter>]           - Dump network objects to screen\n")
             _T("   show pe                           - Show registered prediction engines\n")
             _T("   show pollers                      - Show poller threads state information\n")

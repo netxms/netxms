@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,12 +36,12 @@ static NetworkDeviceDriver *s_defaultDriver = new NetworkDeviceDriver();
  *
  * @param file Driver's file name
  */
-static void LoadDriver(const TCHAR *file)
+static void LoadDriver(const TCHAR *file, const StringList &blacklist)
 {
    TCHAR errorText[256];
 
    HMODULE hModule = DLOpen(file, errorText);
-   if (hModule != NULL)
+   if (hModule != nullptr)
    {
 		int *apiVersion = (int *)DLGetSymbolAddr(hModule, "nddAPIVersion", errorText);
       ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = (ObjectArray<NetworkDeviceDriver> *(*)())DLGetSymbolAddr(hModule, "nddCreateInstances", errorText);
@@ -50,14 +50,30 @@ static void LoadDriver(const TCHAR *file)
          if (*apiVersion == NDDRV_API_VERSION)
          {
             ObjectArray<NetworkDeviceDriver> *drivers = CreateInstances();
-				if (drivers != NULL)
+				if (drivers != nullptr)
 				{
+				   int accepted = 0;
 				   for(int i = 0; i < drivers->size(); i++)
 				   {
-                  s_drivers[s_numDrivers++] = drivers->get(i);
-                  nxlog_write(NXLOG_INFO, _T("Network device driver %s loaded successfully"), drivers->get(i)->getName());
+				      NetworkDeviceDriver *drv = drivers->get(i);
+				      if (!blacklist.containsIgnoreCase(drv->getName()))
+				      {
+                     s_drivers[s_numDrivers++] = drv;
+                     nxlog_write(NXLOG_INFO, _T("Network device driver %s loaded successfully"), drv->getName());
+                     accepted++;
+				      }
+				      else
+				      {
+                     nxlog_write(NXLOG_INFO, _T("Network device driver %s blacklisted"), drv->getName());
+                     delete drv;
+				      }
 				   }
 				   delete drivers;
+				   if (accepted == 0)
+				   {
+	               nxlog_write(NXLOG_INFO, _T("No drivers accepted from module \"%s\""), file);
+	               DLClose(hModule);
+				   }
 				}
 				else
 				{
@@ -95,12 +111,17 @@ void LoadNetworkDeviceDrivers()
 	_tcscpy(path, g_netxmsdLibDir);
 	_tcscat(path, LDIR_NDD);
 
+	TCHAR buffer[MAX_CONFIG_VALUE];
+	ConfigReadStr(_T("NetworkDeviceDrivers.Blacklist"), buffer, MAX_CONFIG_VALUE, _T(""));
+   StringList blacklist;
+	blacklist.splitAndAdd(buffer, _T(","));
+
 	DbgPrintf(1, _T("Loading network device drivers from %s"), path);
 #ifdef _WIN32
 	SetDllDirectory(path);
 #endif
 	_TDIR *dir = _topendir(path);
-	if (dir != NULL)
+	if (dir != nullptr)
 	{
 		_tcscat(path, FS_PATH_SEPARATOR);
 		int insPos = (int)_tcslen(path);
@@ -108,10 +129,10 @@ void LoadNetworkDeviceDrivers()
 		struct _tdirent *f;
 		while((f = _treaddir(dir)) != NULL)
 		{
-			if (MatchString(_T("*.ndd"), f->d_name, FALSE))
+			if (MatchString(_T("*.ndd"), f->d_name, false))
 			{
 				_tcscpy(&path[insPos], f->d_name);
-				LoadDriver(path);
+				LoadDriver(path, blacklist);
 				if (s_numDrivers == MAX_DEVICE_DRIVERS)
 					break;	// Too many drivers already loaded
 			}
@@ -119,7 +140,7 @@ void LoadNetworkDeviceDrivers()
 		_tclosedir(dir);
 	}
 #ifdef _WIN32
-	SetDllDirectory(NULL);
+	SetDllDirectory(nullptr);
 #endif
 	DbgPrintf(1, _T("%d network device drivers loaded"), s_numDrivers);
 }
@@ -239,4 +260,17 @@ NetworkDeviceDriver *FindDriverByName(const TCHAR *name)
 	}
 
 	return s_defaultDriver;
+}
+
+/**
+ * Print list of loaded drivers on console
+ */
+void PrintNetworkDeviceDriverList(ServerConsole *console)
+{
+   console->print(_T("Loaded network device drivers:\n"));
+   for(int i = 0; i < s_numDrivers; i++)
+   {
+      console->printf(_T("   %-32s %-16s\n"), s_drivers[i]->getName(), s_drivers[i]->getVersion());
+   }
+   console->printf(_T("%d drivers loaded\n"), s_numDrivers);
 }
