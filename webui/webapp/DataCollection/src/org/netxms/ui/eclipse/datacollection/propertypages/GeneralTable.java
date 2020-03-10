@@ -555,7 +555,6 @@ public class GeneralTable extends DCIPropertyPageDialog
                dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), origin.getSelectionIndex(), true);
 				break;
 			case DataCollectionObject.SNMP:
-			case DataCollectionObject.WEB_SERVICE:
 				SnmpObjectId oid;
 				try
 				{
