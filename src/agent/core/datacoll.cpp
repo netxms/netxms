@@ -363,12 +363,13 @@ bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnO
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
        (m_pollingInterval != item->m_pollingInterval) || m_snmpTargetGuid.compare(item->m_snmpTargetGuid) ||
        (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) ||
-       (m_lastPollTime < item->m_lastPollTime) || m_backupProxyId != item->m_backupProxyId)
+       (m_lastPollTime < item->m_lastPollTime) || (m_backupProxyId != item->m_backupProxyId) ||
+       (item->m_tableColumns != nullptr) || (m_tableColumns != nullptr))   // Do not do actual compare for table columns
    {
       m_type = item->m_type;
       m_origin = item->m_origin;
       MemFree(m_name);
-      m_name = _tcsdup(item->m_name);
+      m_name = MemCopyString(item->m_name);
       m_pollingInterval = item->m_pollingInterval;
       if (m_lastPollTime < item->m_lastPollTime)
          m_lastPollTime = item->m_lastPollTime;
@@ -376,6 +377,18 @@ bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnO
       m_snmpPort = item->m_snmpPort;
       m_snmpRawValueType = item->m_snmpRawValueType;
       m_backupProxyId = item->m_backupProxyId;
+
+      delete m_tableColumns;
+      if (item->m_tableColumns != nullptr)
+      {
+         m_tableColumns = new ObjectArray<SNMPTableColumnDefinition>(item->m_tableColumns->size(), 16, Ownership::True);
+         for(int i = 0; i < item->m_tableColumns->size(); i++)
+            m_tableColumns->add(new SNMPTableColumnDefinition(item->m_tableColumns->get(i)));
+      }
+      else
+      {
+         m_tableColumns = nullptr;
+      }
 
       if (!txnOpen)
       {
@@ -392,7 +405,7 @@ bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnO
  */
 void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataCollectionStatementSet *statements)
 {
-   nxlog_debug(6, _T("DataCollectionItem::saveToDatabase: %s object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) saved to database"),
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollectionItem::saveToDatabase: %s object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) saved to database"),
                newObject ? _T("new") : _T("existing"), m_serverId, m_id);
 
    DB_STATEMENT hStmt;
@@ -415,7 +428,7 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
          statements->updateItem = DBPrepare(hdb,
                     _T("UPDATE dc_config SET type=?,origin=?,name=?,")
                     _T("polling_interval=?,last_poll=?,snmp_port=?,")
-                    _T("snmp_target_guid=?,snmp_raw_type=?,backup_proxy_id=?")
+                    _T("snmp_target_guid=?,snmp_raw_type=?,backup_proxy_id=?,")
                     _T("snmp_version=? WHERE server_id=? AND dci_id=?"));
       }
       hStmt = statements->updateItem;
@@ -504,7 +517,7 @@ void DataCollectionItem::deleteFromDatabase(DB_HANDLE hdb, DataCollectionStateme
 
    if (DBExecute(statements->deleteItem) && DBExecute(statements->deleteColumns))
    {
-      nxlog_debug(6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
    }
 }
 
@@ -777,7 +790,7 @@ static ObjectQueue<DataElement> s_databaseWriterQueue;
 static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-   DebugPrintf(1, _T("Database writer thread started"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Database writer thread started"));
 
    while(true)
    {
@@ -807,7 +820,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
       }
       DBCommit(hdb);
       DBFreeStatement(hStmt);
-      DebugPrintf(7, _T("Database writer: %u records inserted"), count);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Database writer: %u records inserted"), count);
       if (e == INVALID_POINTER_VALUE)
          break;
 
@@ -816,7 +829,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
          ThreadSleepMs(g_dcWriterFlushInterval);
    }
 
-   DebugPrintf(1, _T("Database writer thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Database writer thread stopped"));
    return THREAD_OK;
 }
 
@@ -848,7 +861,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    UINT32 sleepTime = 30000;
-   nxlog_debug(1, _T("Data reconciliation thread started (block size %d, timeout %d ms)"), g_dcReconciliationBlockSize, g_dcReconciliationTimeout);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Data reconciliation thread started (block size %d, timeout %d ms)"), g_dcReconciliationBlockSize, g_dcReconciliationTimeout);
 
    bool vacuumNeeded = false;
    while(!AgentSleepAndCheckForShutdown(sleepTime))
@@ -881,7 +894,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 
          if (vacuumNeeded)
          {
-            DebugPrintf(4, _T("ReconciliationThread: vacuum local database"));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: vacuum local database"));
             DBQuery(hdb, _T("VACUUM"));
             vacuumNeeded = false;
          }
@@ -896,7 +909,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
       if (hResult == NULL)
       {
-         DebugPrintf(4, _T("ReconciliationThread: database query failed: %s"), sqlError);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: database query failed: %s"), sqlError);
          sleepTime = 30000;
          session->decRefCount();
          continue;
@@ -933,7 +946,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                }
                else
                {
-                  DebugPrintf(5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
                   deleteList.add(e);  // record should be deleted
                }
                s_serverSyncStatusLock.unlock();
@@ -942,7 +955,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 
          if (bulkSendList.size() > 0)
          {
-            DebugPrintf(6, _T("ReconciliationThread: %d records to be sent in bulk mode"), bulkSendList.size());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("ReconciliationThread: %d records to be sent in bulk mode"), bulkSendList.size());
 
             NXCPMessage msg(CMD_DCI_DATA, session->generateRequestId(), session->getProtocolVersion());
             msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
@@ -994,24 +1007,24 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                      }
                      else if (rcc == ERR_PROCESSING)
                      {
-                        DebugPrintf(4, _T("ReconciliationThread: server is processing data (%d%% completed)"), response->getFieldAsInt32(VID_PROGRESS));
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: server is processing data (%d%% completed)"), response->getFieldAsInt32(VID_PROGRESS));
                      }
                      else
                      {
-                        DebugPrintf(4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
                      }
                      delete response;
                   }
                   else
                   {
-                     DebugPrintf(4, _T("ReconciliationThread: timeout on bulk send"));
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: timeout on bulk send"));
                      rcc = ERR_REQUEST_TIMEOUT;
                   }
                } while(rcc == ERR_PROCESSING);
             }
             else
             {
-               DebugPrintf(4, _T("ReconciliationThread: communication error"));
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: communication error"));
             }
          }
 
@@ -1033,7 +1046,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                DBFreeStatement(hStmt);
                vacuumNeeded = true;
             }
-            nxlog_debug(4, _T("ReconciliationThread: %d records sent"), deleteList.size());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: %d records sent"), deleteList.size());
          }
       }
       DBFreeResult(hResult);
@@ -1042,7 +1055,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       sleepTime = (count > 0) ? 50 : 30000;
    }
 
-   nxlog_debug(1, _T("Data reconciliation thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Data reconciliation thread stopped"));
    return THREAD_OK;
 }
 
@@ -1056,7 +1069,7 @@ static Queue s_dataSenderQueue;
  */
 static THREAD_RESULT THREAD_CALL DataSender(void *arg)
 {
-   DebugPrintf(1, _T("Data sender thread started"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Data sender thread started"));
    while(true)
    {
       DataElement *e = static_cast<DataElement*>(s_dataSenderQueue.getOrBlock());
@@ -1090,7 +1103,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
 
       delete e;
    }
-   DebugPrintf(1, _T("Data sender thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Data sender thread stopped"));
    return THREAD_OK;
 }
 
@@ -1102,7 +1115,7 @@ static DataElement *CollectDataFromAgent(DataCollectionItem *dci)
    VirtualSession session(dci->getServerId());
 
    DataElement *e = NULL;
-   UINT32 status;
+   uint32_t status;
    if (dci->getType() == DCO_TYPE_ITEM)
    {
       TCHAR value[MAX_RESULT_LENGTH];
@@ -1133,7 +1146,7 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
    DataElement *e = nullptr;
    if (dci->getType() == DCO_TYPE_ITEM)
    {
-      nxlog_debug(8, _T("Read SNMP parameter %s"), dci->getName());
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("Read SNMP parameter %s"), dci->getName());
 
       TCHAR value[MAX_RESULT_LENGTH];
       uint32_t status = GetSnmpValue(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getSnmpVersion(), dci->getName(), value, dci->getSnmpRawValueType());
@@ -1141,13 +1154,17 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
    }
    else if (dci->getType() == DCO_TYPE_TABLE)
    {
-      nxlog_debug(8, _T("Read SNMP table %s"), dci->getName());
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("Read SNMP table %s"), dci->getName());
       const ObjectArray<SNMPTableColumnDefinition> *columns = dci->getColumns();
       if (columns != nullptr)
       {
          Table *value = new Table();
          uint32_t status = GetSnmpTable(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getSnmpVersion(), dci->getName(), *columns, value);
          e = new DataElement(dci, value, status);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("Missing column definition for SNMP table %s"), dci->getName());
       }
    }
    return e;
@@ -1165,7 +1182,7 @@ static void LocalDataCollectionCallback(DataCollectionItem *dci)
    }
    else
    {
-      DebugPrintf(6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
    }
 
    dci->setLastPollTime(time(NULL));
@@ -1175,10 +1192,8 @@ static void LocalDataCollectionCallback(DataCollectionItem *dci)
 /**
  * SNMP data collection callback
  */
-static void SnmpDataCollectionCallback(void *arg)
+static void SnmpDataCollectionCallback(DataCollectionItem *dci)
 {
-   DataCollectionItem *dci = (DataCollectionItem *)arg;
-
    DataElement *e = CollectDataFromSNMP(dci);
    if (e != nullptr)
    {
@@ -1186,7 +1201,7 @@ static void SnmpDataCollectionCallback(void *arg)
    }
    else
    {
-      DebugPrintf(6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
    }
 
    dci->setLastPollTime(time(NULL));
@@ -1244,7 +1259,7 @@ static UINT32 DataCollectionSchedulerRun()
             }
             else
             {
-               DebugPrintf(7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
                dci->setLastPollTime(time(NULL));
             }
          }
@@ -1264,17 +1279,17 @@ static UINT32 DataCollectionSchedulerRun()
  */
 static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
 {
-   DebugPrintf(1, _T("Data collection scheduler thread started"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Data collection scheduler thread started"));
 
    UINT32 sleepTime = DataCollectionSchedulerRun();
    while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))
    {
       sleepTime = DataCollectionSchedulerRun();
-      DebugPrintf(7, _T("DataCollector: sleeping for %d seconds"), sleepTime);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("DataCollector: sleeping for %d seconds"), sleepTime);
    }
 
    ThreadPoolDestroy(g_dataCollectorPool);
-   DebugPrintf(1, _T("Data collection scheduler thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Data collection scheduler thread stopped"));
    return THREAD_OK;
 }
 
@@ -1287,7 +1302,7 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
    if (!s_dataCollectorStarted)
    {
       s_itemLock.unlock();
-      DebugPrintf(1, _T("Local data collector was not started, ignoring configuration received from server ") UINT64X_FMT(_T("016")), serverId);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Local data collector was not started, ignoring configuration received from server ") UINT64X_FMT(_T("016")), serverId);
       return;
    }
    s_itemLock.unlock();
@@ -1308,7 +1323,7 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
       }
       DBCommit(hdb);
    }
-   DebugPrintf(4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    // Read proxy list
    HashMap<ServerObjectKey, DataCollectionProxy> *proxyList = new HashMap<ServerObjectKey, DataCollectionProxy>(Ownership::True);
@@ -1324,7 +1339,7 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
          fieldId += 10;
       }
    }
-   DebugPrintf(4, _T("%d proxies received from server ") UINT64X_FMT(_T("016")), count, serverId);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("%d proxies received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    // Read data collection items
    HashMap<ServerObjectKey, DataCollectionItem> config(Ownership::True);
@@ -1339,7 +1354,8 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
       fieldId += 10;
       extFieldId += 1000;
    }
-   DebugPrintf(4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")) _T(" (extended data: %s)"),
+            count, serverId, hasExtraData ? _T("YES") : _T("NO"));
 
    bool txnOpen = false;
    DataCollectionStatementSet statements;
@@ -1353,7 +1369,7 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
    {
       DataCollectionItem *item = it->next();
       DataCollectionItem *existingItem = s_items.get(item->getKey());
-      if (existingItem != NULL)
+      if (existingItem != nullptr)
       {
          txnOpen = existingItem->updateAndSave(item, txnOpen, hdb, &statements);
       }
@@ -1372,13 +1388,13 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
       if (item->getBackupProxyId() != 0)
       {
          DataCollectionProxy *proxy = proxyList->get(ServerObjectKey(serverId, item->getBackupProxyId()));
-         if (proxy != NULL)
+         if (proxy != nullptr)
          {
             proxy->setInUse(true);
          }
          else
          {
-            DebugPrintf(4, _T("No proxy found for ServerID=") UINT64X_FMT(_T("016")) _T(", ProxyID=%u, ItemID=%u"),
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("No proxy found for ServerID=") UINT64X_FMT(_T("016")) _T(", ProxyID=%u, ItemID=%u"),
                   serverId, item->getBackupProxyId(), item->getId());
          }
       }
@@ -1433,7 +1449,7 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
    }
    delete proxyList;
 
-   DebugPrintf(4, _T("Data collection for server ") UINT64X_FMT(_T("016")) _T(" reconfigured"), serverId);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Data collection for server ") UINT64X_FMT(_T("016")) _T(" reconfigured"), serverId);
 }
 
 /**
@@ -1580,29 +1596,29 @@ void StartLocalDataCollector()
    DB_HANDLE db = GetLocalDatabaseHandle();
    if (db == NULL)
    {
-      DebugPrintf(5, _T("StartLocalDataCollector: local database unavailable"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("StartLocalDataCollector: local database unavailable"));
       return;
    }
 
    if (g_dcReconciliationBlockSize < 16)
    {
-      nxlog_debug(1, _T("Invalid data reconciliation block size %d, resetting to 16"), g_dcReconciliationBlockSize);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Invalid data reconciliation block size %d, resetting to 16"), g_dcReconciliationBlockSize);
       g_dcReconciliationBlockSize = 16;
    }
    else if (g_dcReconciliationBlockSize > MAX_BULK_DATA_BLOCK_SIZE)
    {
-      nxlog_debug(1, _T("Invalid data reconciliation block size %d, resetting to %d"), g_dcReconciliationBlockSize, MAX_BULK_DATA_BLOCK_SIZE);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Invalid data reconciliation block size %d, resetting to %d"), g_dcReconciliationBlockSize, MAX_BULK_DATA_BLOCK_SIZE);
       g_dcReconciliationBlockSize = MAX_BULK_DATA_BLOCK_SIZE;
    }
 
    if (g_dcReconciliationTimeout < 1000)
    {
-      nxlog_debug(1, _T("Invalid data reconciliation timeout %d, resetting to 1000"), g_dcReconciliationTimeout);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Invalid data reconciliation timeout %d, resetting to 1000"), g_dcReconciliationTimeout);
       g_dcReconciliationTimeout = 1000;
    }
    else if (g_dcReconciliationTimeout > 900000)
    {
-      nxlog_debug(1, _T("Invalid data reconciliation timeout %d, resetting to 900000"), g_dcReconciliationTimeout);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Invalid data reconciliation timeout %d, resetting to 900000"), g_dcReconciliationTimeout);
       g_dcReconciliationTimeout = 900000;
    }
 
@@ -1627,7 +1643,7 @@ void ShutdownLocalDataCollector()
 {
    if (!s_dataCollectorStarted)
    {
-      DebugPrintf(5, _T("Local data collector was not started"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Local data collector was not started"));
       return;
    }
 
@@ -1636,21 +1652,21 @@ void ShutdownLocalDataCollector()
    s_dataCollectorStarted = false;
    s_itemLock.unlock();
 
-   DebugPrintf(5, _T("Waiting for data collector thread termination"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Waiting for data collector thread termination"));
    ThreadJoin(s_dataCollectionSchedulerThread);
 
-   DebugPrintf(5, _T("Waiting for data sender thread termination"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Waiting for data sender thread termination"));
    s_dataSenderQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_dataSenderThread);
 
-   DebugPrintf(5, _T("Waiting for database writer thread termination"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Waiting for database writer thread termination"));
    s_databaseWriterQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_databaseWriterThread);
 
-   DebugPrintf(5, _T("Waiting for data reconciliation thread termination"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Waiting for data reconciliation thread termination"));
    ThreadJoin(s_reconciliationThread);
 
-   DebugPrintf(5, _T("Waiting for proxy heartbeat listening thread"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Waiting for proxy heartbeat listening thread"));
    ThreadJoin(s_proxyListennerThread);
 }
 

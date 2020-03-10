@@ -562,7 +562,7 @@ public:
    bool isInstanceColumn() const { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
    bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 
-   void fillMessage(NXCPMessage *msg, uint32_t baseId);
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    void createExportRecord(StringBuffer &xml, int id) const;
    json_t *toJson() const;
 };

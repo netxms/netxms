@@ -22,6 +22,8 @@
 
 #include "nxagentd.h"
 
+#define DEBUG_TAG _T("dc.snmp")
+
 /**
  * SNMP targets
  */
@@ -151,7 +153,7 @@ uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, c
       s_snmpTargetsLock.unlock();
 
       TCHAR buffer[64];
-      DebugPrintf(6, _T("SNMP target with guid %s not found"), target.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP target with guid %s not found"), target.toString(buffer));
       return ERR_INTERNAL_ERROR;
    }
    s_snmpTargetsLock.unlock();
@@ -237,7 +239,7 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
    uint32_t rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rc == SNMP_ERR_SUCCESS)
    {
-      if (((int)response->getNumVariables() >= columns.size()) &&
+      if ((response->getNumVariables() >= columns.size()) &&
           (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          table->addRow();
@@ -290,7 +292,7 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
       s_snmpTargetsLock.unlock();
 
       TCHAR buffer[64];
-      DebugPrintf(6, _T("SNMP target with guid %s not found"), target.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP target with guid %s not found"), target.toString(buffer));
       return ERR_INTERNAL_ERROR;
    }
    s_snmpTargetsLock.unlock();
@@ -315,6 +317,10 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
          if (rcc != SNMP_ERR_SUCCESS)
             break;
       }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("GetSnmpTable: SNMP walk on %s failed (%s)"), oid, SNMPGetErrorText(rcc));
    }
 
    return (rcc == SNMP_ERR_SUCCESS) ? ERR_SUCCESS :

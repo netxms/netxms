@@ -136,7 +136,7 @@ DCTableColumn::~DCTableColumn()
 /**
  * Fill NXCP message
  */
-void DCTableColumn::fillMessage(NXCPMessage *msg, uint32_t baseId)
+void DCTableColumn::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    msg->setField(baseId, m_name);
    msg->setField(baseId + 1, m_flags);
