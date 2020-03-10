@@ -9678,10 +9678,10 @@ void Node::incSnmpTrapCount()
  */
 void Node::collectProxyInfo(ProxyInfo *info)
 {
-   if(m_status == STATUS_UNMANAGED)
+   if ((m_status == STATUS_UNMANAGED) || (m_state & DCSF_UNREACHABLE))
       return;
 
-   UINT32 primarySnmpProxy = getEffectiveSnmpProxy(false);
+   uint32_t primarySnmpProxy = getEffectiveSnmpProxy(false);
    bool snmpProxy = (primarySnmpProxy == info->proxyId);
    bool backupSnmpProxy = (getEffectiveSnmpProxy(true) == info->proxyId);
    bool isTarget = false;
