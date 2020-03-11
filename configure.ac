@@ -1235,7 +1235,9 @@ if test "x$PLATFORM" = "xHP-UX"; then
 	AC_CHECK_PROG([CCC], [aCC], [aCC])
 fi
 if test "x$PLATFORM" = "xAIX"; then
+#	AC_CHECK_PROG([CC], [xlclang], [xlclang])
 	AC_CHECK_PROG([CC], [xlc_r], [xlc_r])
+#	AC_CHECK_PROG([CCC], [xlclang++], [xlclang++])
 	AC_CHECK_PROG([CCC], [xlC_r], [xlC_r])
 fi
 if test "x$PLATFORM" = "xSunOS"; then
@@ -1492,38 +1494,54 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	fi
 
 	if test "x$PLATFORM" = "xAIX"; then
-		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
-			AC_MSG_CHECKING(whether C compiler accepts -maix32)
-			OLD_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="$CPPFLAGS -maix32"
-			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
-					LDFLAGS="-maix32 $LDFLAGS"
-					LTINIT_CC="$CC -maix32"
-					LTINIT_CXX="$CXX -maix32"
-					OBJECT_MODE=32
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
-					CPPFLAGS="$OLD_CPPFLAGS"
-					AC_MSG_RESULT(no)
-				])
+		if test "x$CXX" = "xxlclang++"; then
+			if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+				CPPFLAGS="$CPPFLAGS -m32"
+				LDFLAGS="-m32 $LDFLAGS"
+				LTINIT_CC="$CC -m32"
+				LTINIT_CXX="$CXX -m32"
+				OBJECT_MODE=32
+			else
+				CPPFLAGS="$CPPFLAGS -m64"
+				LDFLAGS="-m64 $LDFLAGS"
+				LTINIT_CC="$CC -m64"
+				LTINIT_CXX="$CXX -m64"
+				OBJECT_MODE=64
+			fi
 		else
-			AC_MSG_CHECKING(whether C compiler accepts -maix64)
-			OLD_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="$CPPFLAGS -maix64"
-			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
-					LDFLAGS="-maix64 $LDFLAGS"
-					LTINIT_CC="$CC -maix64"
-					LTINIT_CXX="$CXX -maix64"
-					OBJECT_MODE=64
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
-					CPPFLAGS="$OLD_CPPFLAGS"
-					AC_MSG_RESULT(no)
-				])
+			if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+				AC_MSG_CHECKING(whether C compiler accepts -maix32)
+				OLD_CPPFLAGS="$CPPFLAGS"
+				CPPFLAGS="$CPPFLAGS -maix32"
+				AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+					[ 
+						LDFLAGS="-maix32 $LDFLAGS"
+						LTINIT_CC="$CC -maix32"
+						LTINIT_CXX="$CXX -maix32"
+						OBJECT_MODE=32
+						AC_MSG_RESULT(yes) 
+					], 
+					[ 
+						CPPFLAGS="$OLD_CPPFLAGS"
+						AC_MSG_RESULT(no)
+					])
+			else
+				AC_MSG_CHECKING(whether C compiler accepts -maix64)
+				OLD_CPPFLAGS="$CPPFLAGS"
+				CPPFLAGS="$CPPFLAGS -maix64"
+				AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+					[ 
+						LDFLAGS="-maix64 $LDFLAGS"
+						LTINIT_CC="$CC -maix64"
+						LTINIT_CXX="$CXX -maix64"
+						OBJECT_MODE=64
+						AC_MSG_RESULT(yes) 
+					], 
+					[ 
+						CPPFLAGS="$OLD_CPPFLAGS"
+						AC_MSG_RESULT(no)
+					])
+			fi
 		fi
 	fi
 	
@@ -1643,6 +1661,21 @@ if test "x$CXX" = "xaCC" ; then
 		])
 
 	AC_CXX_CHECK_OPTION(+std=c++11)
+fi
+
+if test "x$CXX" = "xxlclang++" ; then
+	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -qvisibility=hidden"
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __attribute__ ((visibility ("default"))) z = 0; ]], [[ ]])],
+		[ 
+			AC_DEFINE(VISIBILITY_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports visibility attribute)
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
 fi
 
 if test "x$CXX" = "xxlC_r" ; then
@@ -2129,14 +2162,14 @@ fi
 
 AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h sched.h sys/ptrace.h])
 AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
-AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h netinet/tcp.h net/nh.h sys/socket.h])
+AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h ctype.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
 AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h utime.h endian.h sys/syscall.h])
-AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
-[[#ifdef HAVE_SYS_TYPES_H
+AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,[[
+#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
 #endif
 #ifdef HAVE_SYS_TIME_H
@@ -2144,6 +2177,11 @@ AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 #endif
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
+#endif
+]])
+AC_CHECK_HEADERS([netinet/tcp.h],,,[[
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
 #endif
 ]])
 

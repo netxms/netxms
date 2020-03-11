@@ -675,7 +675,7 @@ UINT32 EPRule::generateAlarm(Event *event)
 	   if ((m_rcaScriptName != NULL) && (m_rcaScriptName[0] != 0))
 	   {
 	      NetObj *object = FindObjectById(event->getSourceId());
-	      NXSL_VM *vm = CreateServerScriptVM(m_rcaScriptName, object, nullptr);
+	      NXSL_VM *vm = CreateServerScriptVM(m_rcaScriptName, object);
 	      if (vm != NULL)
 	      {
 	         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));

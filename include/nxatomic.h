@@ -209,7 +209,7 @@ inline void *InterlockedExchangePointer(void *volatile *target, void *value)
 #endif
 }
 
-#elif defined(__IBMC__) || defined(__IBMCPP__)
+#elif defined(__IBMC__) || defined(__IBMCPP__) || defined(__ibmxl__)
 
 typedef volatile INT32 VolatileCounter;
 typedef volatile INT64 VolatileCounter64;
@@ -327,7 +327,7 @@ inline void InterlockedOr(VolatileCounter *target, UINT32 bits)
    do
    {
       c = *target;
-   } while(InterlockedCompareExchange(target, c | bits, c) != c)
+   } while(InterlockedCompareExchange(target, c | bits, c) != c);
 #else
    __sync_or_and_fetch(target, bits);
 #endif

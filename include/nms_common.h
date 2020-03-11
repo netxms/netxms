@@ -681,38 +681,48 @@ typedef void * HMODULE;
 typedef int mode_t;
 #endif
 
-#ifdef PRId64
+#if defined(PRId64)
 #define INT64_FMT       _T("%") PRId64
 #define INT64_FMTW      L"%" PRId64
 #define INT64_FMTA      "%" PRId64
+#elif SIZEOF_LONG == 8
+#define INT64_FMT		_T("%ld")
+#define INT64_FMTW		L"%ld"
+#define INT64_FMTA		"%ld"
 #else
-#define INT64_FMT			_T("%lld")
+#define INT64_FMT		_T("%lld")
 #define INT64_FMTW		L"%lld"
 #define INT64_FMTA		"%lld"
 #endif
 
-#ifdef PRIu64
+#if defined(PRIu64)
 #define UINT64_FMT       _T("%") PRIu64
 #define UINT64_FMTW      L"%" PRIu64
 #define UINT64_FMTA      "%" PRIu64
+#elif SIZEOF_LONG == 8
+#define UINT64_FMT		_T("%lu")
+#define UINT64_FMTW		L"%lu"
+#define UINT64_FMTA		"%lu"
 #else
 #define UINT64_FMT		_T("%llu")
 #define UINT64_FMTW		L"%llu"
 #define UINT64_FMTA		"%llu"
 #endif
 
-#ifdef PRIX64
+#if defined(PRIX64)
 #define UINT64X_FMT(m)  _T("%") m PRIX64
+#elif SIZEOF_LONG == 8
+#define UINT64X_FMT(m)  _T("%") m _T("lX")
 #else
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
 #endif
 
 #ifdef __64BIT__
-#define TIME_T_FMT		_T("%llu")
-#define TIME_T_FCAST(x)         ((UINT64)(x))
+#define TIME_T_FMT		UINT64_FMT
+#define TIME_T_FCAST(x)         ((uint64_t)(x))
 #else
 #define TIME_T_FMT		_T("%u")
-#define TIME_T_FCAST(x)         ((UINT32)(x))
+#define TIME_T_FCAST(x)         ((uint32_t)(x))
 #endif
 
 typedef int BOOL;
