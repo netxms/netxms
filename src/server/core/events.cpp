@@ -559,7 +559,7 @@ StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) co
         obj = g_pEntireNet;
    }
 
-   return obj->expandText(textTemplate, alarm, this, nullptr, nullptr, nullptr, nullptr, nullptr);
+   return obj->expandText(textTemplate, alarm, this, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
 }
 
 /**

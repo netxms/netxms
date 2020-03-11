@@ -1032,14 +1032,14 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
       return DCE_COMM_ERROR;
    }
 
-   StringBuffer url = expandText(d->getUrl(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, &args);
+   StringBuffer url = expandText(d->getUrl(), nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, &args);
 
    StringMap headers;
    auto it = d->getHeaders().constIterator();
    while(it->hasNext())
    {
       auto h = it->next();
-      StringBuffer value = expandText(h->second, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, &args);
+      StringBuffer value = expandText(h->second, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, &args);
       headers.set(h->first, value);
    }
 

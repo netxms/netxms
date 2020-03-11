@@ -1640,7 +1640,7 @@ static int F_ExpandString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
          return NXSL_ERR_NOT_OBJECT;
    }
 
-   *result = vm->createValue(object->expandText(argv[0]->getValueAsCString(), nullptr, event, nullptr, nullptr, nullptr, nullptr, nullptr));
+   *result = vm->createValue(object->expandText(argv[0]->getValueAsCString(), nullptr, event, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr));
    return 0;
 }
 

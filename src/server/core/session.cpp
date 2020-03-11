@@ -8071,7 +8071,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                      delete alarm;
                      return;
                   }
-                  list = SplitCommandLine(object->expandText(action, alarm, nullptr, nullptr, m_loginName, nullptr, &inputFields, nullptr));
+                  list = SplitCommandLine(object->expandText(action, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr));
                   _tcsncpy(action, list->get(0), MAX_PARAM_NAME);
                   list->remove(0);
                   delete alarm;
@@ -10871,7 +10871,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             bool expand = request->getFieldAsBoolean(VID_EXPAND_STRING);
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
 				FileDownloadJob *job = new FileDownloadJob((Node *)object,
-				         expand ? object->expandText(remoteFile, alarm, nullptr, nullptr, m_loginName, nullptr, &inputFields, nullptr) : remoteFile,
+				         expand ? object->expandText(remoteFile, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr) : remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId(), expand);
 				delete alarm;
 				if (AddJob(job))
@@ -11076,7 +11076,7 @@ void ClientSession::executeScript(NXCPMessage *request)
                vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
                if (vm != nullptr)
                {
-                  SetupServerScriptVM(vm, object, nullptr);
+                  SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   sendMessage(&msg);
                   success = true;
@@ -11243,7 +11243,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      delete inputFields;
                      return;
                   }
-                  String expScript = object->expandText(script, alarm, nullptr, nullptr, m_loginName, NULL, inputFields, nullptr);
+                  String expScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, NULL, inputFields, nullptr);
                   MemFree(script);
                   script = MemCopyString(expScript);
                   delete alarm;
@@ -11257,7 +11257,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                   vm = GetServerScriptLibrary()->createVM(args->get(0), env);
                   if (vm != nullptr)
                   {
-                     SetupServerScriptVM(vm, object, nullptr);
+                     SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
                      WriteAuditLog(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), CHECK_NULL(script));
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      sendMessage(&msg);
@@ -14530,7 +14530,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
          return;
       }
 
-      String result = object->expandText(textToExpand, alarm, nullptr, nullptr, m_loginName, nullptr, &inputFields, nullptr);
+      String result = object->expandText(textToExpand, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr);
       msg.setField(outFieldId, result);
       debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, (const TCHAR *)result);
       MemFree(textToExpand);

@@ -326,7 +326,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
       return true;   // no filtering
 
    bool result = true;
-   SetupServerScriptVM(m_filter, object, nullptr);
+   SetupServerScriptVM(m_filter, object, shared_ptr<DCObjectInfo>());
    if (m_filter->run())
    {
       NXSL_Value *value = m_filter->getResult();

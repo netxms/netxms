@@ -1596,7 +1596,7 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
       }
 
       TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
-      m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, nullptr, session->getLoginName(), nullptr, inputFields, nullptr));
+      m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, inputFields, nullptr));
       free(cmd);
       delete inputFields;
    }

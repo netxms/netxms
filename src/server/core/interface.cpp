@@ -1385,7 +1385,7 @@ void Interface::expandName(const TCHAR *originalName, TCHAR *expandedName)
       return;
    }
 
-   StringBuffer e = expandText(namePattern, nullptr, nullptr, nullptr, nullptr, originalName, nullptr, nullptr);
+   StringBuffer e = expandText(namePattern, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, originalName, nullptr, nullptr);
    _tcslcpy(expandedName, e.cstr(), MAX_OBJECT_NAME);
    Trim(expandedName);
    if (expandedName[0] == 0)

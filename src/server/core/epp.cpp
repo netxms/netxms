@@ -519,7 +519,7 @@ bool EPRule::matchScript(Event *pEvent)
    if (m_script == NULL)
       return true;
 
-   SetupServerScriptVM(m_script, FindObjectById(pEvent->getSourceId()), nullptr);
+   SetupServerScriptVM(m_script, FindObjectById(pEvent->getSourceId()), shared_ptr<DCObjectInfo>());
    m_script->setGlobalVariable("$event", m_script->createValue(new NXSL_Object(m_script, &g_nxslEventClass, pEvent, true)));
    m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue());
    m_script->setGlobalVariable("EVENT_CODE", m_script->createValue(pEvent->getCode()));
