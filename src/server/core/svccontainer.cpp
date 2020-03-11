@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -118,10 +118,10 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	DbgPrintf(7, _T("ServiceContainer::calculateCompoundStatus() for %s [%d]"), m_name, m_id);
 
 	// Calculate own status by selecting the most critical status of the kids
-	lockChildList(false);
-	for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < getChildList()->size(); i++)
+	readLockChildList();
+	for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < getChildList().size(); i++)
 	{
-		int iChildStatus = getChildList()->get(i)->getStatus();
+		int iChildStatus = getChildList().get(i)->getStatus();
 		if ((iChildStatus < STATUS_UNKNOWN) &&
 			(iChildStatus > iMostCriticalStatus))
 		{
@@ -136,9 +136,9 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	// Cause parent object(s) to recalculate it's status
 	if ((iOldStatus != m_status) || bForcedRecalc)
 	{
-		lockParentList(false);
-		for(i = 0; i < getParentList()->size(); i++)
-			getParentList()->get(i)->calculateCompoundStatus();
+		readLockParentList();
+		for(i = 0; i < getParentList().size(); i++)
+			getParentList().get(i)->calculateCompoundStatus();
 		unlockParentList();
 		lockProperties();
 		setModified(MODIFY_COMMON_PROPERTIES);
@@ -339,10 +339,10 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 
 	if (updateChilds)
 	{
-		lockChildList(false);
-		for(int i = 0; i < getChildList()->size(); i++)
+		readLockChildList();
+		for(int i = 0; i < getChildList().size(); i++)
 		{
-			NetObj *child = getChildList()->get(i);
+			NetObj *child = getChildList().get(i);
 			if (child->getObjectClass() == OBJECT_BUSINESSSERVICE || child->getObjectClass() == OBJECT_NODELINK)
 				((ServiceContainer*)child)->updateUptimeStats(currentTime, TRUE);
 		}
@@ -415,7 +415,7 @@ INT32 ServiceContainer::getSecondsInMonth()
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool ServiceContainer::showThresholdSummary()
+bool ServiceContainer::showThresholdSummary() const
 {
 	return false;
 }

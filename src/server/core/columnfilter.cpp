@@ -164,10 +164,10 @@ StringBuffer ColumnFilter::generateSql()
 				sql.append(_T("NOT "));
 
 			{
-				NetObj *object = FindObjectById((UINT32)m_value.numericValue);
+				shared_ptr<NetObj> object = FindObjectById(static_cast<uint32_t>(m_value.numericValue));
 				if (object != NULL)
 				{
-					ObjectArray<NetObj> *childObjects = object->getAllChildren(true, true);
+					SharedObjectArray<NetObj> *childObjects = object->getAllChildren(true);
 					if (childObjects->size() > 0)
 					{
 						sql.append(m_column);
@@ -177,9 +177,8 @@ StringBuffer ColumnFilter::generateSql()
 							if (i > 0)
 								sql.append(_T(", "));
 							TCHAR buffer[32];
-							_sntprintf(buffer, 32, _T("%d"), (int)childObjects->get(i)->getId());
+							_sntprintf(buffer, 32, _T("%u"), childObjects->get(i)->getId());
 							sql.append(buffer);
-                     childObjects->get(i)->decRefCount();
 						}
 						sql.append(_T(")"));
 					}

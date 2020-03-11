@@ -1181,20 +1181,20 @@ struct ThreadPool;
  */
 struct ThreadPoolInfo
 {
-   const TCHAR *name;      // pool name
-   int minThreads;         // min threads
-   int maxThreads;         // max threads
-   int curThreads;         // current threads
-   int activeRequests;     // number of active requests
-   int scheduledRequests;  // number of requests scheduled for execution
-   int serializedRequests; // number of requests waiting in serialized execution queues
-   UINT64 totalRequests;   // Total requests executed (cumulative count)
-   UINT64 threadStarts;    // Number of thread starts
-   UINT64 threadStops;     // Number of thread stops
-   int usage;              // Pool usage in %
-   int load;               // Pool current load in % (can be more than 100% if there are more requests then threads available)
-   double loadAvg[3];      // Pool load average
-   UINT32 averageWaitTime; // Average task wait time
+   const TCHAR *name;          // pool name
+   int32_t minThreads;         // min threads
+   int32_t maxThreads;         // max threads
+   int32_t curThreads;         // current threads
+   int32_t activeRequests;     // number of active requests
+   int32_t scheduledRequests;  // number of requests scheduled for execution
+   int32_t serializedRequests; // number of requests waiting in serialized execution queues
+   uint64_t totalRequests;     // Total requests executed (cumulative count)
+   uint64_t threadStarts;      // Number of thread starts
+   uint64_t threadStops;       // Number of thread stops
+   int32_t usage;              // Pool usage in %
+   int32_t load;               // Pool current load in % (can be more than 100% if there are more requests then threads available)
+   double loadAvg[3];          // Pool load average
+   uint32_t averageWaitTime;   // Average task wait time
 };
 
 /**
@@ -1232,9 +1232,9 @@ template <typename T> class __ThreadPoolExecute_SharedPtr_WrapperData
 {
 public:
    shared_ptr<T> m_object;
-   void (*m_func)(shared_ptr<T>);
+   void (*m_func)(const shared_ptr<T>&);
 
-   __ThreadPoolExecute_SharedPtr_WrapperData(shared_ptr<T> object, void (*func)(shared_ptr<T>)) : m_object(object)
+   __ThreadPoolExecute_SharedPtr_WrapperData(const shared_ptr<T>& object, void (*func)(const shared_ptr<T>&)) : m_object(object)
    {
       m_func = func;
    }
@@ -1253,7 +1253,7 @@ template <typename T> void __ThreadPoolExecute_SharedPtr_Wrapper(void *arg)
 /**
  * Wrapper for ThreadPoolExecute to use smart pointer to given type as argument
  */
-template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(shared_ptr<T>), shared_ptr<T> arg)
+template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
 {
    ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
 }
@@ -1269,7 +1269,7 @@ template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, con
 /**
  * Wrapper for ThreadPoolExecuteSerialized to use smart pointer to given type as argument
  */
-template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(shared_ptr<T>), shared_ptr<T> arg)
+template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
 {
    ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
 }
@@ -1283,19 +1283,43 @@ template <typename T> inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time
 }
 
 /**
+ * Wrapper for ThreadPoolScheduleAbsolute to use pointer to given type as argument
+ */
+template <typename T> inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
+{
+   ThreadPoolScheduleAbsolute(p, runTime, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
+}
+
+/**
  * Wrapper for ThreadPoolScheduleAbsoluteMs to use pointer to given type as argument
  */
-template <typename T> inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, INT64 runTime, void (*f)(T *), T *arg)
+template <typename T> inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, void (*f)(T *), T *arg)
 {
    ThreadPoolScheduleAbsoluteMs(p, runTime, (ThreadPoolWorkerFunction)f, (void *)arg);
 }
 
 /**
+ * Wrapper for ThreadPoolScheduleAbsoluteMs to use pointer to given type as argument
+ */
+template <typename T> inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
+{
+   ThreadPoolScheduleAbsoluteMs(p, runTime, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
+}
+
+/**
  * Wrapper for ThreadPoolScheduleRelative to use pointer to given type as argument
  */
-template <typename T> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, void (*f)(T *), T *arg)
+template <typename T> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(T *), T *arg)
 {
    ThreadPoolScheduleRelative(p, delay, (ThreadPoolWorkerFunction)f, (void *)arg);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleRelative to use pointer to given type as argument
+ */
+template <typename T> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
 }
 
 /**
@@ -1357,7 +1381,7 @@ public:
    shared_ptr<T> m_object;
    void (T::*m_func)();
 
-   __ThreadPoolExecute_SharedPtr_WrapperData_0(shared_ptr<T> object, void (T::*func)()) : m_object(object)
+   __ThreadPoolExecute_SharedPtr_WrapperData_0(const shared_ptr<T>& object, void (T::*func)()) : m_object(object)
    {
       m_func = func;
    }
@@ -1376,7 +1400,7 @@ template <typename T> void __ThreadPoolExecute_SharedPtr_Wrapper_0(void *arg)
 /**
  * Execute task as soon as possible (use class member without arguments) using smart pointer to object
  */
-template <typename T, typename B> inline void ThreadPoolExecute(ThreadPool *p, shared_ptr<T> object, void (B::*f)())
+template <typename T, typename B> inline void ThreadPoolExecute(ThreadPool *p, const shared_ptr<T>& object, void (B::*f)())
 {
    ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
 }
@@ -1384,7 +1408,7 @@ template <typename T, typename B> inline void ThreadPoolExecute(ThreadPool *p, s
 /**
  * Execute serialized task as soon as possible (use class member without arguments) using smart pointer to object
  */
-template <typename T, typename B> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, shared_ptr<T> object, void (B::*f)())
+template <typename T, typename B> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, const shared_ptr<T>& object, void (B::*f)())
 {
    ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
 }
@@ -1392,7 +1416,7 @@ template <typename T, typename B> inline void ThreadPoolExecuteSerialized(Thread
 /**
  * Execute task with delay (use class member without arguments) using smart pointer to object
  */
-template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, shared_ptr<T> object, void (B::*f)())
+template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, const shared_ptr<T>& object, void (B::*f)())
 {
    ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
 }
@@ -1459,7 +1483,7 @@ public:
    void (T::*m_func)(R);
    R m_arg;
 
-   __ThreadPoolExecute_SharedPtr_WrapperData_1(shared_ptr<T> object, void (T::*func)(R), R arg) : m_object(object)
+   __ThreadPoolExecute_SharedPtr_WrapperData_1(const shared_ptr<T>& object, void (T::*func)(R), R arg) : m_object(object)
    {
       m_func = func;
       m_arg = arg;
@@ -1479,7 +1503,7 @@ template <typename T, typename R> void __ThreadPoolExecute_SharedPtr_Wrapper_1(v
 /**
  * Execute task as soon as possible (use class member with one argument) using smart pointer to object
  */
-template <typename T, typename B, typename R> inline void ThreadPoolExecute(ThreadPool *p, shared_ptr<T> object, void (B::*f)(R), R arg)
+template <typename T, typename B, typename R> inline void ThreadPoolExecute(ThreadPool *p, const shared_ptr<T>& object, void (B::*f)(R), R arg)
 {
    ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg));
 }
@@ -1487,7 +1511,7 @@ template <typename T, typename B, typename R> inline void ThreadPoolExecute(Thre
 /**
  * Execute serialized task as soon as possible (use class member with one argument) using smart pointer to object
  */
-template <typename T, typename B, typename R> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, shared_ptr<T> object, void (B::*f)(R), R arg)
+template <typename T, typename B, typename R> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, const shared_ptr<T>& object, void (B::*f)(R), R arg)
 {
    ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg));
 }
@@ -1495,7 +1519,7 @@ template <typename T, typename B, typename R> inline void ThreadPoolExecuteSeria
 /**
  * Execute task with delay (use class member with one argument) using smart pointer to object
  */
-template <typename T, typename B, typename R> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, shared_ptr<T> object, void (B::*f)(R), R arg)
+template <typename T, typename B, typename R> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, const shared_ptr<T>& object, void (B::*f)(R), R arg)
 {
    ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg));
 }

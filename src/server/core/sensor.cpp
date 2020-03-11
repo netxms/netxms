@@ -29,14 +29,14 @@ Sensor::Sensor() : super()
    m_proxyNodeId = 0;
 	m_flags = 0;
 	m_deviceClass = SENSOR_CLASS_UNKNOWN;
-	m_vendor = NULL;
+	m_vendor = nullptr;
 	m_commProtocol = SENSOR_PROTO_UNKNOWN;
-	m_xmlRegConfig = NULL;
-	m_xmlConfig = NULL;
-	m_serialNumber = NULL;
-	m_deviceAddress = NULL;
-	m_metaType = NULL;
-	m_description = NULL;
+	m_xmlRegConfig = nullptr;
+	m_xmlConfig = nullptr;
+	m_serialNumber = nullptr;
+	m_deviceAddress = nullptr;
+	m_metaType = nullptr;
+	m_description = nullptr;
 	m_lastConnectionTime = 0;
 	m_frameCount = 0; //zero when no info
    m_signalStrenght = 1; //+1 when no information(cannot be +)
@@ -48,23 +48,21 @@ Sensor::Sensor() : super()
 /**
  * Constructor with all fields for Sensor class
  */
-Sensor::Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceClass, TCHAR *vendor,
-               UINT32 commProtocol, TCHAR *xmlRegConfig, TCHAR *xmlConfig, TCHAR *serialNumber, TCHAR *deviceAddress,
-               TCHAR *metaType, TCHAR *description, UINT32 proxyNode) : super(name)
+Sensor::Sensor(const TCHAR *name, const NXCPMessage *request) : super(name)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
-   m_flags = flags;
-   m_macAddress = macAddress;
-	m_deviceClass = deviceClass;
-	m_vendor = vendor;
-	m_commProtocol = commProtocol;
-	m_xmlRegConfig = xmlRegConfig;
-	m_xmlConfig = xmlConfig;
-	m_serialNumber = serialNumber;
-	m_deviceAddress = deviceAddress;
-	m_metaType = metaType;
-	m_description = description;
-	m_proxyNodeId = proxyNode;
+   m_flags = request->getFieldAsUInt32(VID_SENSOR_FLAGS);
+   m_macAddress = request->getFieldAsMacAddress(VID_MAC_ADDR);
+	m_deviceClass = request->getFieldAsUInt32(VID_DEVICE_CLASS);
+	m_vendor = request->getFieldAsString(VID_VENDOR);
+	m_commProtocol = request->getFieldAsUInt32(VID_COMM_PROTOCOL);
+	m_xmlRegConfig = request->getFieldAsString(VID_XML_REG_CONFIG);
+	m_xmlConfig = request->getFieldAsString(VID_XML_CONFIG);
+	m_serialNumber = request->getFieldAsString(VID_SERIAL_NUMBER);
+	m_deviceAddress = request->getFieldAsString(VID_DEVICE_ADDRESS);
+	m_metaType = request->getFieldAsString(VID_META_TYPE);
+	m_description = request->getFieldAsString(VID_DESCRIPTION);
+	m_proxyNodeId = request->getFieldAsUInt32(VID_SENSOR_PROXY);
    m_lastConnectionTime = 0;
 	m_frameCount = 0; //zero when no info
    m_signalStrenght = 1; //+1 when no information(cannot be +)
@@ -73,31 +71,18 @@ Sensor::Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceCl
    m_status = STATUS_UNKNOWN;
 }
 
-Sensor *Sensor::createSensor(TCHAR *name, NXCPMessage *request)
+/**
+ * Create new sensor
+ */
+shared_ptr<Sensor> Sensor::create(const TCHAR *name, const NXCPMessage *request)
 {
-   Sensor *sensor = new Sensor(name,
-                          request->getFieldAsUInt32(VID_SENSOR_FLAGS),
-                          request->getFieldAsMacAddress(VID_MAC_ADDR),
-                          request->getFieldAsUInt32(VID_DEVICE_CLASS),
-                          request->getFieldAsString(VID_VENDOR),
-                          request->getFieldAsUInt32(VID_COMM_PROTOCOL),
-                          request->getFieldAsString(VID_XML_REG_CONFIG),
-                          request->getFieldAsString(VID_XML_CONFIG),
-                          request->getFieldAsString(VID_SERIAL_NUMBER),
-                          request->getFieldAsString(VID_DEVICE_ADDRESS),
-                          request->getFieldAsString(VID_META_TYPE),
-                          request->getFieldAsString(VID_DESCRIPTION),
-                          request->getFieldAsUInt32(VID_SENSOR_PROXY));
-
+   shared_ptr<Sensor> sensor = MakeSharedNObject<Sensor>(name, request);
+   sensor->generateGuid();
    switch(request->getFieldAsUInt32(VID_COMM_PROTOCOL))
    {
       case COMM_LORAWAN:
-         sensor->generateGuid();
-         if (registerLoraDevice(sensor) == NULL)
-         {
-            delete sensor;
-            return NULL;
-         }
+         if (!registerLoraDevice(sensor.get()))
+            return shared_ptr<Sensor>();
          break;
       case COMM_DLMS:
          sensor->m_state = SSF_PROVISIONED | SSF_REGISTERED | SSF_ACTIVE;
@@ -112,43 +97,38 @@ Sensor *Sensor::createSensor(TCHAR *name, NXCPMessage *request)
 AgentConnectionEx *Sensor::getAgentConnection()
 {
    if (IsShutdownInProgress())
-      return NULL;
+      return nullptr;
 
-   Node *proxy = static_cast<Node*>(FindObjectById(m_proxyNodeId, OBJECT_NODE));
-   if (proxy == NULL)
-      return NULL;
-
-   return proxy->acquireProxyConnection(SENSOR_PROXY);
+   shared_ptr<NetObj> proxy = FindObjectById(m_proxyNodeId, OBJECT_NODE);
+   return (proxy != nullptr) ? static_cast<Node&>(*proxy).acquireProxyConnection(SENSOR_PROXY) : nullptr;
 }
 
 /**
  * Register LoRa WAN device
  */
-Sensor *Sensor::registerLoraDevice(Sensor *sensor)
+bool Sensor::registerLoraDevice(Sensor *sensor)
 {
-   NetObj *proxy = FindObjectById(sensor->m_proxyNodeId, OBJECT_NODE);
-   if(proxy == NULL)
-      return NULL;
+   shared_ptr<NetObj> proxy = FindObjectById(sensor->m_proxyNodeId, OBJECT_NODE);
+   if (proxy == nullptr)
+      return false;
 
    AgentConnectionEx *conn = sensor->getAgentConnection();
-   if (conn == NULL)
-   {
-      return sensor; // Unprovisioned sensor - will try to provision it on next connect
-   }
+   if (conn == nullptr)
+      return true; // Unprovisioned sensor - will try to provision it on next connect
 
    Config regConfig;
    Config config;
 #ifdef UNICODE
    char *regXml = UTF8StringFromWideString(sensor->getXmlRegConfig());
-   regConfig.loadXmlConfigFromMemory(regXml, (UINT32)strlen(regXml), NULL, "config", false);
-   free(regXml);
+   regConfig.loadXmlConfigFromMemory(regXml, (UINT32)strlen(regXml), nullptr, "config", false);
+   MemFree(regXml);
 
    char *xml = UTF8StringFromWideString(sensor->getXmlConfig());
-   config.loadXmlConfigFromMemory(xml, (UINT32)strlen(xml), NULL, "config", false);
-   free(xml);
+   config.loadXmlConfigFromMemory(xml, (UINT32)strlen(xml), nullptr, "config", false);
+   MemFree(xml);
 #else
-   regConfig.loadXmlConfigFromMemory(sensor->getXmlRegConfig(), (UINT32)strlen(sensor->getXmlRegConfig()), NULL, "config", false);
-   config.loadXmlConfigFromMemory(sensor->getXmlConfig(), (UINT32)strlen(sensor->getXmlConfig()), NULL, "config", false);
+   regConfig.loadXmlConfigFromMemory(sensor->getXmlRegConfig(), (UINT32)strlen(sensor->getXmlRegConfig()), nullptr, "config", false);
+   config.loadXmlConfigFromMemory(sensor->getXmlConfig(), (UINT32)strlen(sensor->getXmlConfig()), nullptr, "config", false);
 #endif
 
    NXCPMessage msg(conn->getProtocolVersion());
@@ -171,7 +151,7 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
    }
 
    NXCPMessage *response = conn->customRequest(&msg);
-   if (response != NULL)
+   if (response != nullptr)
    {
       if (response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
       {
@@ -182,7 +162,7 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
       delete response;
    }
 
-   return sensor;
+   return true;
 }
 
 //set correct status calculation function
@@ -220,25 +200,25 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	_sntprintf(query, 512, _T("SELECT mac_address,device_class,vendor,communication_protocol,xml_config,serial_number,device_address,")
                           _T("meta_type,description,last_connection_time,frame_count,signal_strenght,signal_noise,frequency,proxy_node,xml_reg_config FROM sensors WHERE id=%d"), m_id);
 	DB_RESULT hResult = DBSelect(hdb, query);
-	if (hResult == NULL)
+	if (hResult == nullptr)
 		return false;
 
    m_macAddress = DBGetFieldMacAddr(hResult, 0, 0);
 	m_deviceClass = DBGetFieldULong(hResult, 0, 1);
-	m_vendor = DBGetField(hResult, 0, 2, NULL, 0);
+	m_vendor = DBGetField(hResult, 0, 2, nullptr, 0);
 	m_commProtocol = DBGetFieldULong(hResult, 0, 3);
-	m_xmlConfig = DBGetField(hResult, 0, 4, NULL, 0);
-	m_serialNumber = DBGetField(hResult, 0, 5, NULL, 0);
-	m_deviceAddress = DBGetField(hResult, 0, 6, NULL, 0);
-	m_metaType = DBGetField(hResult, 0, 7, NULL, 0);
-	m_description = DBGetField(hResult, 0, 8, NULL, 0);
+	m_xmlConfig = DBGetField(hResult, 0, 4, nullptr, 0);
+	m_serialNumber = DBGetField(hResult, 0, 5, nullptr, 0);
+	m_deviceAddress = DBGetField(hResult, 0, 6, nullptr, 0);
+	m_metaType = DBGetField(hResult, 0, 7, nullptr, 0);
+	m_description = DBGetField(hResult, 0, 8, nullptr, 0);
    m_lastConnectionTime = DBGetFieldULong(hResult, 0, 9);
    m_frameCount = DBGetFieldULong(hResult, 0, 10);
    m_signalStrenght = DBGetFieldLong(hResult, 0, 11);
    m_signalNoise = DBGetFieldLong(hResult, 0, 12);
    m_frequency = DBGetFieldLong(hResult, 0, 13);
    m_proxyNodeId = DBGetFieldLong(hResult, 0, 14);
-   m_xmlRegConfig = DBGetField(hResult, 0, 15, NULL, 0);
+   m_xmlRegConfig = DBGetField(hResult, 0, 15, nullptr, 0);
    DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -268,12 +248,12 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("INSERT INTO sensors (mac_address,device_class,vendor,communication_protocol,xml_config,serial_number,device_address,meta_type,description,last_connection_time,frame_count,signal_strenght,signal_noise,frequency,proxy_node,id,xml_reg_config) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       else
          hStmt = DBPrepare(hdb, _T("UPDATE sensors SET mac_address=?,device_class=?,vendor=?,communication_protocol=?,xml_config=?,serial_number=?,device_address=?,meta_type=?,description=?,last_connection_time=?,frame_count=?,signal_strenght=?,signal_noise=?,frequency=?,proxy_node=? WHERE id=?"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddress);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)m_deviceClass);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deviceClass);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_commProtocol);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_commProtocol);
          DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_xmlConfig, DB_BIND_STATIC);
          DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_deviceAddress, DB_BIND_STATIC);
@@ -302,7 +282,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
    // Save data collection items
    if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
-		lockDciAccess(false);
+		readLockDciAccess();
       for(int i = 0; i < m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
@@ -331,9 +311,9 @@ bool Sensor::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslSensorClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslSensorClass, new shared_ptr<Sensor>(self())));
 }
 
 /**
@@ -452,7 +432,7 @@ void Sensor::calculateCompoundStatus(BOOL bForcedRecalc)
 void Sensor::calculateStatus(BOOL bForcedRecalc)
 {
    AgentConnectionEx *conn = getAgentConnection();
-   if (conn == NULL)
+   if (conn == nullptr)
    {
       m_status = STATUS_UNKNOWN;
       return;
@@ -476,23 +456,25 @@ void Sensor::calculateStatus(BOOL bForcedRecalc)
  */
 StringMap *Sensor::getInstanceList(DCObject *dco)
 {
-   if (dco->getInstanceDiscoveryData() == NULL)
-      return NULL;
+   if (dco->getInstanceDiscoveryData() == nullptr)
+      return nullptr;
 
+   shared_ptr<NetObj> proxyNode;
    DataCollectionTarget *object;
    if (dco->getSourceNode() != 0)
    {
-      object = static_cast<DataCollectionTarget*>(FindObjectById(dco->getSourceNode(), OBJECT_NODE));
-      if (object == NULL)
+      proxyNode = FindObjectById(dco->getSourceNode(), OBJECT_NODE);
+      if (proxyNode == nullptr)
       {
          DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
-         return NULL;
+         return nullptr;
       }
+      object = static_cast<DataCollectionTarget*>(proxyNode.get());
       if (!object->isTrustedNode(m_id))
       {
          DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source sensor %s [%d]"),
                   dco->getName().cstr(), dco->getId(), m_name, m_id, object->getName(), object->getId());
-         return NULL;
+         return nullptr;
       }
    }
    else
@@ -500,8 +482,8 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
       object = this;
    }
 
-   StringList *instances = NULL;
-   StringMap *instanceMap = NULL;
+   StringList *instances = nullptr;
+   StringMap *instanceMap = nullptr;
    switch(dco->getInstanceDiscoveryMethod())
    {
       case IDM_AGENT_LIST:
@@ -514,13 +496,13 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
          object->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
          break;
       default:
-         instances = NULL;
+         instances = nullptr;
          break;
    }
-   if ((instances == NULL) && (instanceMap == NULL))
-      return NULL;
+   if ((instances == nullptr) && (instanceMap == nullptr))
+      return nullptr;
 
-   if (instanceMap == NULL)
+   if (instanceMap == nullptr)
    {
       instanceMap = new StringMap;
       for(int i = 0; i < instances->size(); i++)
@@ -562,16 +544,16 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    {
       if (!(m_state & SSF_PROVISIONED))
       {
-         if ((registerLoraDevice(this) != NULL) && (m_state & SSF_PROVISIONED))
+         if (registerLoraDevice(this) && (m_state & SSF_PROVISIONED))
          {
             nxlog_debug(6, _T("ConfPoll(%s [%d}): sensor successfully registered"), m_name, m_id);
             hasChanges = true;
          }
       }
-      if ((m_state & SSF_PROVISIONED) && (m_deviceAddress == NULL))
+      if ((m_state & SSF_PROVISIONED) && (m_deviceAddress == nullptr))
       {
          getItemFromAgent(_T("LoraWAN.DevAddr(*)"), 0, m_deviceAddress);
-         if (m_deviceAddress != NULL)
+         if (m_deviceAddress != nullptr)
          {
             nxlog_debug(6, _T("ConfPoll(%s [%d}): sensor DevAddr[%s] successfully obtained"), m_name, m_id, m_deviceAddress);
             hasChanges = true;
@@ -648,7 +630,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 
    AgentConnectionEx *conn = getAgentConnection();
    lockProperties();
-   if (conn != NULL)
+   if (conn != nullptr)
    {
       nxlog_debug(6, _T("StatusPoll(%s): connected to agent"), m_name);
       if (m_state & DCSF_UNREACHABLE)
@@ -676,14 +658,14 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
             TCHAR lastValue[MAX_DCI_STRING_VALUE] = { 0 };
             time_t now;
             getItemFromAgent(_T("LoraWAN.LastContact(*)"), MAX_DCI_STRING_VALUE, lastValue);
-            time_t lastConnectionTime = _tcstol(lastValue, NULL, 0);
+            time_t lastConnectionTime = _tcstol(lastValue, nullptr, 0);
             if (lastConnectionTime != 0)
             {
                m_lastConnectionTime = lastConnectionTime;
                nxlog_debug(6, _T("StatusPoll(%s [%d}): Last connection time updated - %d"), m_name, m_id, m_lastConnectionTime);
             }
 
-            now = time(NULL);
+            now = time(nullptr);
 
             if (!(m_state & SSF_REGISTERED))
             {
@@ -706,11 +688,11 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
                   m_state |= SSF_ACTIVE;
                   nxlog_debug(6, _T("StatusPoll(%s [%d]): Status set to ACTIVE"), m_name, m_id);
                   getItemFromAgent(_T("LoraWAN.RSSI(*)"), MAX_DCI_STRING_VALUE, lastValue);
-                  m_signalStrenght = _tcstol(lastValue, NULL, 10);
+                  m_signalStrenght = _tcstol(lastValue, nullptr, 10);
                   getItemFromAgent(_T("LoraWAN.SNR(*)"), MAX_DCI_STRING_VALUE, lastValue);
-                  m_signalNoise = static_cast<INT32>(_tcstod(lastValue, NULL) * 10);
+                  m_signalNoise = static_cast<INT32>(_tcstod(lastValue, nullptr) * 10);
                   getItemFromAgent(_T("LoraWAN.Frequency(*)"), MAX_DCI_STRING_VALUE, lastValue);
-                  m_frequency = static_cast<UINT32>(_tcstod(lastValue, NULL) * 10);
+                  m_frequency = static_cast<UINT32>(_tcstod(lastValue, nullptr) * 10);
                }
             }
 
@@ -766,13 +748,13 @@ void Sensor::prepareDlmsDciParameters(StringBuffer &parameter)
    Config config;
 #ifdef UNICODE
    char *xml = UTF8StringFromWideString(m_xmlConfig);
-   config.loadXmlConfigFromMemory(xml, (UINT32)strlen(xml), NULL, "config", false);
+   config.loadXmlConfigFromMemory(xml, (UINT32)strlen(xml), nullptr, "config", false);
    free(xml);
 #else
-   config.loadXmlConfigFromMemory(m_xmlConfig, (UINT32)strlen(m_xmlConfig), NULL, "config", false);
+   config.loadXmlConfigFromMemory(m_xmlConfig, (UINT32)strlen(m_xmlConfig), nullptr, "config", false);
 #endif
    ConfigEntry *configRoot = config.getEntry(_T("/connections"));
-	if (configRoot != NULL)
+	if (configRoot != nullptr)
 	{
 	   if (parameter.find(_T(")")) > 0)
 	   {
@@ -840,7 +822,7 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
    nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, szParam);
    // Establish connection if needed
    AgentConnectionEx *conn = getAgentConnection();
-   if (conn == NULL)
+   if (conn == nullptr)
    {
       return dwResult;
    }
@@ -879,7 +861,7 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
             nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
-            if (getAgentConnection() == NULL)
+            if (getAgentConnection() == nullptr)
                break;
             nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
             break;
@@ -902,14 +884,14 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
    DataCollectionError dwResult = DCE_COMM_ERROR;
    UINT32 dwTries = 3;
 
-   *list = NULL;
+   *list = nullptr;
 
    if (m_state & DCSF_UNREACHABLE) //removed disable agent usage for all polls
       return DCE_COMM_ERROR;
 
    nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, name);
    AgentConnectionEx *conn = getAgentConnection();
-   if (conn == NULL)
+   if (conn == nullptr)
    {
       return dwResult;
    }
@@ -947,7 +929,7 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
             DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-            if (getAgentConnection() == NULL)
+            if (getAgentConnection() == nullptr)
                break;
             DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
@@ -973,14 +955,14 @@ void Sensor::prepareForDeletion()
    nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
 
    AgentConnectionEx *conn = getAgentConnection();
-   if ((m_commProtocol == COMM_LORAWAN) && (conn != NULL))
+   if ((m_commProtocol == COMM_LORAWAN) && (conn != nullptr))
    {
       NXCPMessage msg(conn->getProtocolVersion());
       msg.setCode(CMD_UNREGISTER_LORAWAN_SENSOR);
       msg.setId(conn->generateRequestId());
       msg.setField(VID_GUID, m_guid);
       NXCPMessage *response = conn->customRequest(&msg);
-      if (response != NULL)
+      if (response != nullptr)
       {
          if (response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
             nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): successfully unregistered from LoRaWAN server"), m_name, m_id);
@@ -999,7 +981,6 @@ NetworkMapObjectList *Sensor::buildInternalConnectionTopology()
    NetworkMapObjectList *topology = new NetworkMapObjectList();
    topology->setAllowDuplicateLinks(true);
    buildInternalConnectionTopologyInternal(topology, false);
-
    return topology;
 }
 
@@ -1012,12 +993,12 @@ void Sensor::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topol
 
    if (m_proxyNodeId != 0)
    {
-      Node *proxy = static_cast<Node *>(FindObjectById(m_proxyNodeId, OBJECT_NODE));
-      if (proxy != NULL)
+      shared_ptr<NetObj> proxy = FindObjectById(m_proxyNodeId, OBJECT_NODE);
+      if (proxy != nullptr)
       {
          topology->addObject(m_proxyNodeId);
          topology->linkObjects(m_id, m_proxyNodeId, LINK_TYPE_SENSOR_PROXY, _T("Sensor proxy"));
-         proxy->buildInternalConnectionTopologyInternal(topology, m_proxyNodeId, false, checkAllProxies);
+         static_cast<Node&>(*proxy).buildInternalConnectionTopologyInternal(topology, m_proxyNodeId, false, checkAllProxies);
       }
    }
 }

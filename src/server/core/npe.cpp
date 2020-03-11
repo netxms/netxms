@@ -73,16 +73,16 @@ void PredictionEngine::train(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass s
  */
 bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int count, double *series)
 {
-   NetObj *object = FindObjectById(nodeId);
-   if ((object == NULL) || !object->isDataCollectionTarget())
+   shared_ptr<NetObj> object = FindObjectById(nodeId);
+   if ((object == nullptr) || !object->isDataCollectionTarget())
       return false;
 
-   shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId, 0);
+   shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object.get())->getDCObjectById(dciId, 0);
    if (dci->getType() != DCO_TYPE_ITEM)
       return false;
 
    time_t interval = dci->getEffectivePollingInterval();
-   time_t t = time(NULL);
+   time_t t = time(nullptr);
    for(int i = 0; i < count; i++)
    {
       series[i] = getPredictedValue(nodeId, dciId, storageClass, t);
@@ -134,14 +134,14 @@ StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciI
          break;
       default:
          nxlog_debug(1, _T("INTERNAL ERROR: unsupported database in PredictionEngine::getDciValues"));
-         return NULL;   // Unsupported database
+         return nullptr;   // Unsupported database
    }
 
-   StructArray<DciValue> *values = NULL;
+   StructArray<DciValue> *values = nullptr;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       values = new StructArray<DciValue>(count);
@@ -167,7 +167,7 @@ static StringObjectMap<PredictionEngine> s_engines(Ownership::True);
 /**
  * Prediction engine thread pool
  */
-ThreadPool *g_npeThreadPool = NULL;
+ThreadPool *g_npeThreadPool = nullptr;
 
 /**
  * Register prediction engines on startup
@@ -263,110 +263,14 @@ void GetPredictionEngines(NXCPMessage *msg)
 
 /**
  * Get predicted data for DCI
-bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget)
+ */
+bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, const DataCollectionTarget& dcTarget)
 {
    static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
 
    // Find DCI object
-   DCObject *dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
-   if (dci == NULL)
-   {
-      response->setField(VID_RCC, RCC_INVALID_DCI_ID);
-      return false;
-   }
-
-   if (dci->getType() != DCO_TYPE_ITEM)
-   {
-      response->setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-      return false;
-   }
-
-   PredictionEngine *engine = FindPredictionEngine(((DCItem *)dci)->getPredictionEngine());
-
-   // Send CMD_REQUEST_COMPLETED message
-   response->setField(VID_RCC, RCC_SUCCESS);
-   ((DCItem *)dci)->fillMessageWithThresholds(response, false);
-   session->sendMessage(response);
-
-   int dataType = ((DCItem *)dci)->getDataType();
-   time_t timeFrom = request->getFieldAsTime(VID_TIME_FROM);
-   time_t timestamp = request->getFieldAsTime(VID_TIME_TO);
-   time_t interval = dci->getEffectivePollingInterval();
-
-   // Allocate memory for data and prepare data header
-   char buffer[64];
-   int allocated = 8192;
-   int rows = 0;
-   DCI_DATA_HEADER *pData = (DCI_DATA_HEADER *)malloc(allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
-   pData->dataType = htonl((UINT32)dataType);
-   pData->dciId = htonl(dci->getId());
-
-   // Fill memory block with records
-   DCI_DATA_ROW *pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-   while((timestamp >= timeFrom) && (rows < MAX_DCI_DATA_RECORDS))
-   {
-      if (rows == allocated)
-      {
-         allocated += 8192;
-         pData = (DCI_DATA_HEADER *)realloc(pData, allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
-         pCurr = (DCI_DATA_ROW *)(((char *)pData + s_rowSize[dataType] * rows) + sizeof(DCI_DATA_HEADER));
-      }
-      rows++;
-
-      double value = engine->getPredictedValue(dci->getOwner()->getId(), dci->getId(), timestamp);
-      pCurr->timeStamp = htonl((UINT32)timestamp);
-      switch(dataType)
-      {
-         case DCI_DT_INT:
-            pCurr->value.int32 = htonl((UINT32)((INT32)value));
-            break;
-         case DCI_DT_UINT:
-         case DCI_DT_COUNTER32:
-            pCurr->value.int32 = htonl((UINT32)value);
-            break;
-         case DCI_DT_INT64:
-            pCurr->value.ext.v64.int64 = htonq((UINT64)((INT64)value));
-            break;
-         case DCI_DT_UINT64:
-         case DCI_DT_COUNTER64:
-            pCurr->value.ext.v64.int64 = htonq((UINT64)value);
-            break;
-         case DCI_DT_FLOAT:
-            pCurr->value.ext.v64.real = htond(value);
-            break;
-         case DCI_DT_STRING:
-            snprintf(buffer, 64, "%f", value);
-            mb_to_ucs2(buffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
-            SwapUCS2String(pCurr->value.string);
-            break;
-      }
-      pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
-      timestamp -= interval;
-   }
-   pData->numRows = htonl(rows);
-
-   // Prepare and send raw message with fetched data
-   NXCP_MESSAGE *msg =
-      CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
-                           pData, rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
-                           NULL, session->isCompressionEnabled());
-   free(pData);
-   session->sendRawMessage(msg);
-   free(msg);
-   return true;
-}
- */
-
-/**
- * Get predicted data for DCI
- */
-bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget)
-{
-   static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
-
-   // Find DCI object
-   shared_ptr<DCObject> dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
-   if (dci == NULL)
+   shared_ptr<DCObject> dci = dcTarget.getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
+   if (dci == nullptr)
    {
       response->setField(VID_RCC, RCC_INVALID_DCI_ID);
       return false;
@@ -443,7 +347,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    NXCP_MESSAGE *msg =
       CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
                            pData, count * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
-                           NULL, session->isCompressionEnabled());
+                           nullptr, session->isCompressionEnabled());
    MemFree(pData);
    session->sendRawMessage(msg);
    MemFree(msg);

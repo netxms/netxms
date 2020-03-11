@@ -29,12 +29,12 @@
 /**
  * Event processing queue
  */
-ObjectQueue<Event> g_eventQueue;
+ObjectQueue<Event> g_eventQueue(4096, Ownership::True);
 
 /**
  * Event processing policy
  */
-EventPolicy *g_pEventPolicy = NULL;
+EventPolicy *g_pEventPolicy = nullptr;
 
 /**
  * Static data
@@ -44,7 +44,7 @@ static SharedStringObjectMap<EventTemplate> s_eventNameIndex;
 static RWLOCK s_eventTemplatesLock;
 
 #if VA_LIST_IS_POINTER
-#define DUMMY_VA_LIST   NULL
+#define DUMMY_VA_LIST   nullptr
 #else
 static va_list s_dummy_va_list;
 #define DUMMY_VA_LIST   s_dummy_va_list
@@ -56,13 +56,13 @@ static va_list s_dummy_va_list;
 EventTemplate::EventTemplate(DB_RESULT hResult, int row)
 {
    m_code = DBGetFieldULong(hResult, row, 0);
-   m_description = DBGetField(hResult, row, 1, NULL, 0);
+   m_description = DBGetField(hResult, row, 1, nullptr, 0);
    DBGetField(hResult, row, 2, m_name, MAX_EVENT_NAME);
    m_guid = DBGetFieldGUID(hResult, row, 3);
    m_severity = DBGetFieldLong(hResult, row, 4);
    m_flags = DBGetFieldLong(hResult, row, 5);
-   m_messageTemplate = DBGetField(hResult, row, 6, NULL, 0);
-   m_tags = DBGetField(hResult, row, 7, NULL, 0);
+   m_messageTemplate = DBGetField(hResult, row, 6, nullptr, 0);
+   m_tags = DBGetField(hResult, row, 7, nullptr, 0);
 }
 
 /**
@@ -105,7 +105,7 @@ json_t *EventTemplate::toJson() const
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "message", json_string_t(m_messageTemplate));
 
-   if ((m_tags != NULL) && (*m_tags != 0))
+   if ((m_tags != nullptr) && (*m_tags != 0))
    {
       StringList *tags = String(m_tags).split(_T(","));
       json_t *array = json_array();
@@ -168,7 +168,7 @@ bool EventTemplate::saveToDatabase() const
    else
       hStmt = DBPrepare(hdb, _T("INSERT INTO event_cfg (event_name,severity,flags,message,description,tags,event_code,guid) VALUES (?,?,?,?,?,?,?,?)"));
 
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_severity);
@@ -204,11 +204,11 @@ Event::Event()
    m_zoneUIN = 0;
    m_dciId = 0;
    m_flags = 0;
-   m_messageText = NULL;
-   m_messageTemplate = NULL;
+   m_messageText = nullptr;
+   m_messageTemplate = nullptr;
    m_timestamp = 0;
    m_originTimestamp = 0;
-	m_customMessage = NULL;
+	m_customMessage = nullptr;
 	m_parameters.setOwner(Ownership::True);
 }
 
@@ -250,22 +250,22 @@ Event *Event::createFromJson(json_t *json)
 
    json_int_t id, rootId, timestamp, originTimestamp;
    int origin;
-   const char *name = NULL, *message = NULL;
-   json_t *tags = NULL;
+   const char *name = nullptr, *message = nullptr;
+   json_t *tags = nullptr;
    if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:o}",
             "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
             "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
             "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity, "message", &message,
-            (json_object_get(json, "tags") != NULL) ? "tags" : "tag", &tags) == -1)
+            (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
    {
       if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:s, s:o}",
                "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
                "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
                "severity", &event->m_severity, "message", &message,
-               (json_object_get(json, "tags") != NULL) ? "tags" : "tag", &tags) == -1)
+               (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
       {
          delete event;
-         return NULL;   // Unpack failure
+         return nullptr;   // Unpack failure
       }
       originTimestamp = timestamp;
    }
@@ -275,7 +275,7 @@ Event *Event::createFromJson(json_t *json)
    event->m_origin = static_cast<EventOrigin>(origin);
    event->m_timestamp = timestamp;
    event->m_originTimestamp = originTimestamp;
-   if (name != NULL)
+   if (name != nullptr)
    {
 #ifdef UNICODE
       MultiByteToWideChar(CP_UTF8, 0, name, -1, event->m_name, MAX_EVENT_NAME);
@@ -288,7 +288,7 @@ Event *Event::createFromJson(json_t *json)
 #else
    event->m_messageText = MBStringFromUTF8String(message);
 #endif
-   if (tags != NULL)
+   if (tags != nullptr)
    {
       if (json_is_array(tags))
       {
@@ -317,14 +317,14 @@ Event *Event::createFromJson(json_t *json)
    }
 
    json_t *parameters = json_object_get(json, "parameters");
-   if (parameters != NULL)
+   if (parameters != nullptr)
    {
       char *value;
       size_t count = json_array_size(parameters);
       for(size_t i = 0; i < count; i++)
       {
          json_t *p = json_array_get(parameters, i);
-         name = value = NULL;
+         name = value = nullptr;
          if (json_unpack(p, "{s:s, s:s}", "name", &name, "value", &value) != -1)
          {
 #ifdef UNICODE
@@ -355,7 +355,7 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
    init(eventTemplate, origin, originTimestamp, sourceId, dciId, tag);
 
    // Create parameters
-   if (format != NULL)
+   if (format != nullptr)
    {
 		int count = (int)strlen(format);
 		TCHAR *buffer;
@@ -374,7 +374,7 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
                {
                   const char *s = va_arg(args, const char *);
 #ifdef UNICODE
-                  m_parameters.add((s != NULL) ? WideStringFromMBString(s) : MemCopyStringW(L""));
+                  m_parameters.add((s != nullptr) ? WideStringFromMBString(s) : MemCopyStringW(L""));
 #else
 					   m_parameters.add(MemCopyStringA(CHECK_NULL_EX_A(s)));
 #endif
@@ -386,7 +386,7 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
 #ifdef UNICODE
 		   			m_parameters.add(MemCopyStringW(CHECK_NULL_EX_W(s)));
 #else
-                  m_parameters.add((s != NULL) ? MBStringFromWideString(s) : MemCopyStringA(""));
+                  m_parameters.add((s != nullptr) ? MBStringFromWideString(s) : MemCopyStringA(""));
 #endif
                }
                break;
@@ -442,7 +442,7 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
 					m_parameters.add(buffer);
                break;
          }
-			m_parameterNames.add(((names != NULL) && (names[i] != NULL)) ? names[i] : _T(""));
+			m_parameterNames.add(((names != nullptr) && (names[i] != nullptr)) ? names[i] : _T(""));
       }
    }
 }
@@ -471,7 +471,7 @@ void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t 
 {
    m_origin = origin;
    _tcscpy(m_name, eventTemplate->getName());
-   m_timestamp = time(NULL);
+   m_timestamp = time(nullptr);
    m_originTimestamp = (originTimestamp != 0) ? originTimestamp : m_timestamp;
    m_id = CreateUniqueEventId();
    m_rootId = 0;
@@ -480,34 +480,34 @@ void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t 
    m_flags = eventTemplate->getFlags();
    m_sourceId = sourceId;
    m_dciId = dciId;
-   m_messageText = NULL;
+   m_messageText = nullptr;
    m_messageTemplate = MemCopyString(eventTemplate->getMessageTemplate());
 
-   if ((eventTemplate->getTags() != NULL) && (eventTemplate->getTags()[0] != 0))
+   if ((eventTemplate->getTags() != nullptr) && (eventTemplate->getTags()[0] != 0))
       m_tags.splitAndAdd(eventTemplate->getTags(), _T(","));
-   if (tag != NULL)
+   if (tag != nullptr)
       m_tags.add(tag);
 
-   m_customMessage = NULL;
+   m_customMessage = nullptr;
    m_parameters.setOwner(Ownership::True);
 
    // Zone UIN
-   NetObj *source = FindObjectById(sourceId);
-   if (source != NULL)
+   shared_ptr<NetObj> source = FindObjectById(sourceId);
+   if (source != nullptr)
    {
       switch(source->getObjectClass())
       {
          case OBJECT_NODE:
-            m_zoneUIN = static_cast<Node*>(source)->getZoneUIN();
+            m_zoneUIN = static_cast<Node*>(source.get())->getZoneUIN();
             break;
          case OBJECT_CLUSTER:
-            m_zoneUIN = static_cast<Cluster*>(source)->getZoneUIN();
+            m_zoneUIN = static_cast<Cluster*>(source.get())->getZoneUIN();
             break;
          case OBJECT_INTERFACE:
-            m_zoneUIN = static_cast<Interface*>(source)->getZoneUIN();
+            m_zoneUIN = static_cast<Interface*>(source.get())->getZoneUIN();
             break;
          case OBJECT_SUBNET:
-            m_zoneUIN = static_cast<Subnet*>(source)->getZoneUIN();
+            m_zoneUIN = static_cast<Subnet*>(source.get())->getZoneUIN();
             break;
          default:
             m_zoneUIN = 0;
@@ -535,10 +535,10 @@ Event::~Event()
  */
 void Event::expandMessageText()
 {
-   if (m_messageTemplate == NULL)
+   if (m_messageTemplate == nullptr)
       return;
 
-   if (m_messageText != NULL)
+   if (m_messageText != nullptr)
       MemFree(m_messageText);
    m_messageText = MemCopyString(expandText(m_messageTemplate));
 }
@@ -548,18 +548,18 @@ void Event::expandMessageText()
  */
 StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) const
 {
-   if (textTemplate == NULL)
+   if (textTemplate == nullptr)
       return StringBuffer();
 
-   NetObj *obj = FindObjectById(m_sourceId);
-   if (obj == NULL)
+   shared_ptr<NetObj> object = FindObjectById(m_sourceId);
+   if (object == nullptr)
    {
-     obj = FindObjectById(g_dwMgmtNode);
-     if (obj == NULL)
-        obj = g_pEntireNet;
+     object = FindObjectById(g_dwMgmtNode);
+     if (object == nullptr)
+        object = g_entireNetwork;
    }
 
-   return obj->expandText(textTemplate, alarm, this, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
+   return object->expandText(textTemplate, alarm, this, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
 }
 
 /**
@@ -576,7 +576,7 @@ void Event::addParameter(const TCHAR *name, const TCHAR *value)
  */
 void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 {
-   if ((name == NULL) || (name[0] == 0))
+   if ((name == nullptr) || (name[0] == 0))
       return;
 
 	int index = m_parameterNames.indexOfIgnoreCase(name);
@@ -595,7 +595,7 @@ void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
  * Set value (and optionally name) of parameter at given index.
  *
  * @param index 0-based parameter index
- * @param name parameter name (can be NULL)
+ * @param name parameter name (can be nullptr)
  * @param value new value
  */
 void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
@@ -717,29 +717,29 @@ json_t *Event::toJson()
 Event *LoadEventFromDatabase(UINT64 eventId)
 {
    if (eventId == 0)
-      return NULL;
+      return nullptr;
 
-   Event *event = NULL;
+   Event *event = nullptr;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT raw_data FROM event_log WHERE event_id=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, eventId);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            char *data = DBGetFieldUTF8(hResult, 0, 0, NULL, 0);
-            if (data != NULL)
+            char *data = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
+            if (data != nullptr)
             {
                // Event data serialized with JSON_EMBED, so add { } for decoding
                char *pdata = MemAllocArray<char>(strlen(data) + 3);
                pdata[0] = '{';
                strcpy(&pdata[1], data);
                strcat(pdata, "}");
-               json_t *json = json_loads(pdata, 0, NULL);
-               if (json != NULL)
+               json_t *json = json_loads(pdata, 0, nullptr);
+               if (json != nullptr)
                {
                   event = Event::createFromJson(json);
                   json_decref(json);
@@ -764,7 +764,7 @@ static bool LoadEventConfiguration()
    bool success;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT event_code,description,event_name,guid,severity,flags,message,tags FROM event_cfg"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -840,7 +840,7 @@ void ReloadEvents()
  * @param eventCode Event code
  * @param sourceId Event source object ID
  * @param eventTag event's tag
- * @param namedArgs named arguments for event - if not NULL format and args will be ignored
+ * @param namedArgs named arguments for event - if not nullptr format and args will be ignored
  * @param format Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:
  *        s - String
@@ -855,7 +855,7 @@ void ReloadEvents()
  *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
- * @param names names for parameters (NULL if parameters are unnamed)
+ * @param names names for parameters (nullptr if parameters are unnamed)
  * @param args event parameters
  * @param vm NXSL VM for transformation script
  */
@@ -868,18 +868,18 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
    RWLockUnlock(s_eventTemplatesLock);
 
    bool success;
-   if (eventTemplate != NULL)
+   if (eventTemplate != nullptr)
    {
       // Template found, create new event
-      Event *evt = (namedArgs != NULL) ?
+      Event *evt = (namedArgs != nullptr) ?
                new Event(eventTemplate.get(), origin, originTimestamp, sourceId, dciId, eventTag, namedArgs) :
                new Event(eventTemplate.get(), origin, originTimestamp, sourceId, dciId, eventTag, format, names, args);
-      if (eventId != NULL)
+      if (eventId != nullptr)
          *eventId = evt->getId();
 
       // Using transformation within PostEvent may cause deadlock if called from within locked object or DCI
       // Caller of PostEvent should make sure that it does not held object, object index, or DCI locks
-      if (vm != NULL)
+      if (vm != nullptr)
       {
          vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, evt, true)));
          if (!vm->run())
@@ -928,7 +928,7 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t or
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, nullptr, nullptr, format, nullptr, args, nullptr);
    va_end(args);
    return success;
 }
@@ -965,7 +965,7 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t or
       _sntprintf(name, 64, _T("Parameter%d"), i + 1);
       pmap.set(name, parameters.get(i));
    }
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, &pmap, NULL, NULL, DUMMY_VA_LIST, NULL);
+   return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, nullptr, &pmap, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
 }
 
 /**
@@ -993,7 +993,7 @@ bool NXCORE_EXPORTABLE PostSystemEvent(UINT32 eventCode, UINT32 sourceId, const 
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, nullptr, nullptr, format, nullptr, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1024,7 +1024,7 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, nullptr, nullptr, format, nullptr, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1057,7 +1057,7 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, EventOrigin origin, time_t
    va_list args;
    UINT64 eventId;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, origin, originTimestamp, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, origin, originTimestamp, sourceId, 0, nullptr, nullptr, format, nullptr, args, nullptr);
    va_end(args);
    return success ? eventId : 0;
 }
@@ -1088,7 +1088,7 @@ UINT64 NXCORE_EXPORTABLE PostSystemEvent2(UINT32 eventCode, UINT32 sourceId, con
    va_list args;
    UINT64 eventId;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, nullptr, nullptr, format, nullptr, args, nullptr);
    va_end(args);
    return success ? eventId : 0;
 }
@@ -1114,14 +1114,14 @@ UINT64 NXCORE_EXPORTABLE PostSystemEvent2(UINT32 eventCode, UINT32 sourceId, con
  *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
- * @param names names for parameters (NULL if parameters are unnamed)
+ * @param names names for parameters (nullptr if parameters are unnamed)
  */
 bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
          UINT32 sourceId, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, NULL, format, names, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, nullptr, nullptr, format, names, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1137,7 +1137,7 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, 
  */
 bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, parameters, NULL, NULL, DUMMY_VA_LIST, NULL);
+   return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, nullptr, parameters, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
 }
 
 /**
@@ -1159,13 +1159,13 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, 
  *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
- * @param names names for parameters (NULL if parameters are unnamed)
+ * @param names names for parameters (nullptr if parameters are unnamed)
  */
 bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, NULL, format, names, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, nullptr, nullptr, format, names, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1179,7 +1179,7 @@ bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceI
  */
 bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, parameters, NULL, NULL, DUMMY_VA_LIST, NULL);
+   return RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, nullptr, parameters, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
 }
 
 /**
@@ -1202,13 +1202,13 @@ bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceI
  *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
- * @param names names for parameters (NULL if parameters are unnamed)
+ * @param names names for parameters (nullptr if parameters are unnamed)
  */
 bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, NULL, NULL, format, names, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, nullptr, nullptr, format, names, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1223,7 +1223,7 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  */
 bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, NULL, parameters, NULL, NULL, DUMMY_VA_LIST, NULL);
+   return RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, nullptr, parameters, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
 }
 
 /**
@@ -1247,14 +1247,14 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
- * @param names names for parameters (NULL if parameters are unnamed)
+ * @param names names for parameters (nullptr if parameters are unnamed)
  */
 bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
          UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, userTag, NULL, format, names, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, userTag, nullptr, format, names, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1272,7 +1272,7 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin or
 bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
          UINT32 sourceId, const TCHAR *tag, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, NULL, NULL, DUMMY_VA_LIST, NULL);
+   return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
 }
 
 /**
@@ -1303,7 +1303,7 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, EventOrigin origin, ti
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, userTag, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, userTag, nullptr, format, nullptr, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1328,7 +1328,7 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, EventOrigin origin, ti
       _sntprintf(name, 64, _T("Parameter%d"), i + 1);
       pmap.set(name, parameters.get(i));
    }
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, userTag, &pmap, NULL, NULL, DUMMY_VA_LIST, NULL);
+   return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, userTag, &pmap, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
 }
 
 /**
@@ -1359,7 +1359,7 @@ bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, 
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(queue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(queue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, nullptr, nullptr, format, nullptr, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1389,7 +1389,7 @@ bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, UINT32 event
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(queue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(queue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, nullptr, nullptr, format, nullptr, args, nullptr);
    va_end(args);
    return success;
 }
@@ -1407,7 +1407,7 @@ bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, UINT32 event
 bool NXCORE_EXPORTABLE TransformAndPostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
          UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, NULL, NULL, DUMMY_VA_LIST, vm);
+   return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, nullptr, nullptr, DUMMY_VA_LIST, vm);
 }
 
 /**
@@ -1420,7 +1420,7 @@ bool NXCORE_EXPORTABLE TransformAndPostEvent(UINT32 eventCode, EventOrigin origi
  */
 bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, tag, parameters, NULL, NULL, DUMMY_VA_LIST, vm);
+   return RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, tag, parameters, nullptr, nullptr, DUMMY_VA_LIST, vm);
 }
 
 /**
@@ -1429,7 +1429,7 @@ bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(UINT32 eventCode, UINT32 sour
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue)
 {
    Event *e;
-   while ((e = queue->get()) != NULL)
+   while ((e = queue->get()) != nullptr)
       g_eventQueue.put(e);
 }
 
@@ -1444,7 +1444,7 @@ void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode)
 
    // Find event template
    EventTemplate *e = s_eventTemplates.get(eventCode);
-   if (e != NULL)
+   if (e != nullptr)
    {
       str.append(_T("\t\t<event id=\""));
       str.append(e->getCode());
@@ -1480,7 +1480,7 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
    RWLockReadLock(s_eventTemplatesLock);
 
    EventTemplate *e = s_eventTemplates.get(eventCode);
-   if (e != NULL)
+   if (e != nullptr)
    {
       _tcscpy(buffer, e->getName());
       bRet = true;
@@ -1523,7 +1523,7 @@ shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name)
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
 {
    shared_ptr<EventTemplate> e = FindEventTemplateByName(name);
-	return (e != NULL) ? e->getCode() : defaultValue;
+	return (e != nullptr) ? e->getCode() : defaultValue;
 }
 
 /**
@@ -1575,12 +1575,12 @@ UINT32 UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t *
       e = make_shared<EventTemplate>(request);
       s_eventTemplates.set(e->getCode(), e);
       s_eventNameIndex.set(e->getName(), e);
-      *oldValue = NULL;
+      *oldValue = nullptr;
    }
    else
    {
       e = s_eventTemplates.getShared(eventCode);
-      if (e == NULL)
+      if (e == nullptr)
       {
          RWLockUnlock(s_eventTemplatesLock);
          return RCC_INVALID_EVENT_CODE;
@@ -1607,13 +1607,13 @@ UINT32 UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t *
 
    if (!success)
    {
-      if (*oldValue != NULL)
+      if (*oldValue != nullptr)
       {
          json_decref(*oldValue);
-         *oldValue = NULL;
+         *oldValue = nullptr;
       }
       json_decref(*newValue);
-      *newValue = NULL;
+      *newValue = nullptr;
       return RCC_DB_FAILURE;
    }
 
@@ -1630,7 +1630,7 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
 
    RWLockWriteLock(s_eventTemplatesLock);
    auto e = s_eventTemplates.get(eventCode);
-   if (e != NULL)
+   if (e != nullptr)
    {
       rcc = ExecuteQueryOnObject(hdb, eventCode, _T("DELETE FROM event_cfg WHERE event_code=?")) ? RCC_SUCCESS : RCC_DB_FAILURE;
    }

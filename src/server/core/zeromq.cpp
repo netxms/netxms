@@ -32,8 +32,8 @@
 
 using namespace zmq;
 
-static void *m_context = NULL;
-static void *m_socket = NULL;
+static void *m_context = nullptr;
+static void *m_socket = nullptr;
 static MUTEX m_socketLock = MutexCreate();
 static HashMap<UINT32, Subscription> m_eventSubscription(Ownership::True);
 static HashMap<UINT32, Subscription> m_dataSubscription(Ownership::True);
@@ -115,7 +115,7 @@ static void LoadSubscriptions()
 {
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
 	DB_RESULT result = DBSelect(db, _T("SELECT object_id, subscription_type, ignore_items, items FROM zmq_subscription"));
-   if (result != NULL)
+   if (result != nullptr)
    {
       MutexLock(m_eventSubscriptionLock);
       MutexLock(m_dataSubscriptionLock);
@@ -127,9 +127,9 @@ static void LoadSubscriptions()
          UINT32 objectId = DBGetFieldULong(result, i, 0);
          DBGetField(result, i, 1, type, sizeof(type) / sizeof(type[0]));
          bool ignoreItems = DBGetFieldLong(result, i, 2);
-         TCHAR *items = DBGetField(result, i, 3, NULL, 0);
+         TCHAR *items = DBGetField(result, i, 3, nullptr, 0);
 
-         HashMap<UINT32, Subscription> *map = NULL;
+         HashMap<UINT32, Subscription> *map = nullptr;
          switch (type[0])
          {
             case 'E':
@@ -145,7 +145,7 @@ static void LoadSubscriptions()
                break;
          }
 
-         if (map != NULL)
+         if (map != nullptr)
          {
             Subscription *sub;
             if (map->contains(objectId))
@@ -166,7 +166,7 @@ static void LoadSubscriptions()
             int count = itemList->size();
             for (int j = 0; j < count; j++)
             {
-               UINT32 dciId = _tcstol(itemList->get(j), NULL, 0);
+               UINT32 dciId = _tcstol(itemList->get(j), nullptr, 0);
                if (dciId > 0)
                {
                   sub->addItem(dciId);
@@ -236,7 +236,7 @@ static bool SaveSubscriptions()
    {
       DBQuery(db, _T("DELETE FROM zmq_subscription"));
       DB_STATEMENT statement = DBPrepare(db, _T("INSERT INTO zmq_subscription (object_id, subscription_type, ignore_items, items) VALUES (?, ?, ?, ?)"), true);
-      if (statement != NULL)
+      if (statement != nullptr)
       {
          if (SaveSubscriptionInternal(statement, &m_eventSubscription, DB_TYPE_EVENT))
          {
@@ -266,7 +266,7 @@ static bool SaveSubscriptions()
 /**
  * Convert event object to JSON representation
  */
-static char *EventToJson(const Event *event, const NetObj *object)
+static char *EventToJson(const Event *event, const NetObj& object)
 {
    json_t *root = json_object();
    json_t *args = json_object();
@@ -282,12 +282,11 @@ static char *EventToJson(const Event *event, const NetObj *object)
    json_object_set_new(root, "message", json_string_t(event->getMessage()));
 
    json_object_set_new(source, "id", json_integer(event->getSourceId()));
-   int objectType = object->getObjectClass();
-   json_object_set_new(source, "type", json_integer(objectType));
-   json_object_set_new(source, "name", json_string_t(object->getName()));
-   if (objectType == OBJECT_NODE)
+   json_object_set_new(source, "type", json_integer(object.getObjectClass()));
+   json_object_set_new(source, "name", json_string_t(object.getName()));
+   if (object.getObjectClass() == OBJECT_NODE)
    {
-      InetAddress ip = ((Node *)object)->getIpAddress();
+      InetAddress ip = static_cast<const Node&>(object).getIpAddress();
       char buffer[128];
       json_object_set_new(source, "primary-ip", json_string(ip.toStringA(buffer)));
    }
@@ -297,7 +296,7 @@ static char *EventToJson(const Event *event, const NetObj *object)
    for (int i = 0; i < count; i++)
    {
       char name[16];
-      sprintf(name, "p%d", i+1);
+      sprintf(name, "p%d", i + 1);
       json_object_set_new(args, name, json_string_t(event->getParameter(i)));
    }
 
@@ -309,10 +308,10 @@ static char *EventToJson(const Event *event, const NetObj *object)
 /**
  * Convert DCI value to JSON representation
  */
-static char *DataToJson(const NetObj *object, UINT32 dciId, const TCHAR *dciName, const TCHAR *value)
+static char *DataToJson(const NetObj& object, UINT32 dciId, const TCHAR *dciName, const TCHAR *value)
 {
    json_t *root = json_object();
-   json_object_set_new(root, "id", json_integer(object->getId()));
+   json_object_set_new(root, "id", json_integer(object.getId()));
 
    json_t *data = json_array();
    json_object_set_new(root, "data", data);
@@ -321,7 +320,7 @@ static char *DataToJson(const NetObj *object, UINT32 dciId, const TCHAR *dciName
    json_object_set_new(record, "id", json_integer(dciId));
    char *utf8name = UTF8StringFromTString(dciName);
    json_object_set_new(record, utf8name, json_string_t(value));
-   free(utf8name);
+   MemFree(utf8name);
    json_array_append_new(data, record);
 
    char *message = json_dumps(root, 0);
@@ -397,10 +396,10 @@ void StartZMQConnector()
    }
 
    m_context = zmq_ctx_new();
-   if (m_context != NULL)
+   if (m_context != nullptr)
    {
       m_socket = zmq_socket(m_context, ZMQ_PUSH);
-      if (m_socket != NULL)
+      if (m_socket != nullptr)
       {
          MutexLock(m_socketLock);
          if (zmq_connect(m_socket, endpoint) == 0)
@@ -412,9 +411,9 @@ void StartZMQConnector()
          {
             DbgPrintf(1, _T("ZeroMQ: bind failed, integration disabled"));
             zmq_ctx_term(m_context);
-            m_context = NULL;
+            m_context = nullptr;
             zmq_close(m_socket);
-            m_socket = NULL;
+            m_socket = nullptr;
          }
          MutexUnlock(m_socketLock);
       }
@@ -422,7 +421,7 @@ void StartZMQConnector()
       {
          DbgPrintf(1, _T("ZeroMQ: cannot create socket, integration disabled"));
          zmq_ctx_term(m_context);
-         m_context = NULL;
+         m_context = nullptr;
       }
    }
    else
@@ -437,18 +436,18 @@ void StartZMQConnector()
 void StopZMQConnector()
 {
    DbgPrintf(6, _T("ZeroMQ: shutdown initiated"));
-   if (m_socket != NULL)
+   if (m_socket != nullptr)
    {
       MutexLock(m_socketLock);
       zmq_close(m_socket);
-      m_socket = NULL;
+      m_socket = nullptr;
       MutexUnlock(m_socketLock);
    }
    DbgPrintf(6, _T("ZeroMQ: socket closed"));
-   if (m_context != NULL)
+   if (m_context != nullptr)
    {
       zmq_ctx_term(m_context);
-      m_context = NULL;
+      m_context = nullptr;
    }
    DbgPrintf(6, _T("ZeroMQ: context destroyed"));
 }
@@ -458,17 +457,13 @@ void StopZMQConnector()
  */
 void ZmqPublishEvent(const Event *event)
 {
-   if (m_socket == NULL)
-   {
+   if (m_socket == nullptr)
       return;
-   }
 
    UINT32 objectId = event->getSourceId();
-   NetObj *object = FindObjectById(objectId);
-   if (object == NULL)
-   {
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
       return;
-   }
 
    DbgPrintf(7, _T("ZeroMQ: publish event: %s(%d) from %s(%d)"), event->getName(), event->getCode(), object->getName(), event->getSourceId());
 
@@ -483,8 +478,8 @@ void ZmqPublishEvent(const Event *event)
 
    if (doSend)
    {
-      char *message = EventToJson(event, object);
-      if (message != NULL)
+      char *message = EventToJson(event, *object);
+      if (message != nullptr)
       {
          MutexLock(m_socketLock);
          if (zmq_send(m_socket, message, strlen(message), ZMQ_DONTWAIT) != 0)
@@ -492,7 +487,7 @@ void ZmqPublishEvent(const Event *event)
             DbgPrintf(7, _T("ZeroMQ: publish event failed (%d)"), errno);
          }
          MutexUnlock(m_socketLock);
-         free(message);
+         json_free(message);
       }
    }
 }
@@ -502,16 +497,12 @@ void ZmqPublishEvent(const Event *event)
  */
 void ZmqPublishData(UINT32 objectId, UINT32 dciId, const TCHAR *dciName, const TCHAR *value)
 {
-   if (m_socket == NULL)
-   {
+   if (m_socket == nullptr)
       return;
-   }
 
-   NetObj *object = FindObjectById(objectId);
-   if (object == NULL)
-   {
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
       return;
-   }
 
    DbgPrintf(7, _T("ZeroMQ: publish collected data on %s(%d): %s"), object->getName(), objectId, value);
 
@@ -526,8 +517,8 @@ void ZmqPublishData(UINT32 objectId, UINT32 dciId, const TCHAR *dciName, const T
 
    if (doSend)
    {
-      char *message = DataToJson(object, dciId, dciName, value);
-      if (message != NULL)
+      char *message = DataToJson(*object, dciId, dciName, value);
+      if (message != nullptr)
       {
          MutexLock(m_socketLock);
          if (zmq_send(m_socket, message, strlen(message), ZMQ_DONTWAIT) != 0)
@@ -535,7 +526,7 @@ void ZmqPublishData(UINT32 objectId, UINT32 dciId, const TCHAR *dciName, const T
             DbgPrintf(7, _T("ZeroMQ: publish collected data failed (%d)"), errno);
          }
          MutexUnlock(m_socketLock);
-         free(message);
+         json_free(message);
       }
    }
 }

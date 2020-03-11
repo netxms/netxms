@@ -1361,6 +1361,12 @@ private:
       static_cast<SharedObjectArray<T>*>(array->getContext())->m_pool.destroy(static_cast<shared_ptr<T>*>(element));
    }
 
+   static int sortCallback(void *context, const shared_ptr<T> **e1, const shared_ptr<T> **e2)
+   {
+      int (*cb)(const T&, const T&) = reinterpret_cast<int (*)(const T&, const T&)>(context);
+      return cb(*((*e1)->get()), *((*e2)->get()));
+   }
+
 public:
    SharedObjectArray(int initial = 0, int grow = 16) :
       m_pool(std::max(grow, 64)), m_data(initial, grow, Ownership::True, SharedObjectArray<T>::destructor) { m_data.setContext(this); }
@@ -1403,6 +1409,8 @@ public:
 
    int size() const { return m_data.size(); }
    bool isEmpty() const { return m_data.isEmpty(); }
+
+   void sort(int (*cb)(const T&, const T&)) { m_data.sort(reinterpret_cast<int (*)(void *, const void *, const void *)>(sortCallback), (void *)cb); }
 };
 
 template <class T> shared_ptr<T> SharedObjectArray<T>::m_null = shared_ptr<T>();
@@ -2639,6 +2647,19 @@ inline INT64 json_object_get_integer(json_t *object, const char *tag, INT64 defv
 {
    json_t *value = json_object_get(object, tag);
    return json_is_integer(value) ? json_integer_value(value) : defval;
+}
+
+/**
+ * Free libjansson-allocated memory
+ */
+inline void json_free(void *data)
+{
+#if FREE_IS_NULL_SAFE
+   free(data);
+#else
+   if (data != nullptr)
+      free(data);
+#endif
 }
 
 /**

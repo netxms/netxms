@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@
  */
 ConditionObject::ConditionObject() : super()
 {
-   m_scriptSource = NULL;
-   m_script = NULL;
-   m_dciList = NULL;
+   m_scriptSource = nullptr;
+   m_script = nullptr;
+   m_dciList = nullptr;
    m_dciCount = 0;
    m_sourceObject = 0;
    m_activeStatus = STATUS_MAJOR;
@@ -46,9 +46,9 @@ ConditionObject::ConditionObject() : super()
  */
 ConditionObject::ConditionObject(bool hidden) : super()
 {
-   m_scriptSource = NULL;
-   m_script = NULL;
-   m_dciList = NULL;
+   m_scriptSource = nullptr;
+   m_script = nullptr;
+   m_dciList = nullptr;
    m_dciCount = 0;
    m_sourceObject = 0;
    m_activeStatus = STATUS_MAJOR;
@@ -90,7 +90,7 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
                             _T("source_object,active_status,inactive_status,")
                             _T("script FROM conditions WHERE id=%d"), dwId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;     // Query failed
 
    if (DBGetNumRows(hResult) == 0)
@@ -105,21 +105,21 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_sourceObject = DBGetFieldULong(hResult, 0, 2);
    m_activeStatus = DBGetFieldLong(hResult, 0, 3);
    m_inactiveStatus = DBGetFieldLong(hResult, 0, 4);
-   m_scriptSource = DBGetField(hResult, 0, 5, NULL, 0);
+   m_scriptSource = DBGetField(hResult, 0, 5, nullptr, 0);
    DecodeSQLString(m_scriptSource);
 
    DBFreeResult(hResult);
 
    // Compile script
    m_script = NXSLCompileAndCreateVM(m_scriptSource, szQuery, 512, new NXSL_ServerEnv());
-   if (m_script == NULL)
+   if (m_script == nullptr)
       nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szQuery);
 
    // Load DCI map
    _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls ")
                             _T("FROM cond_dci_map WHERE condition_id=%d ORDER BY sequence_number"), dwId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;     // Query failed
 
    m_dciCount = DBGetNumRows(hResult);
@@ -161,7 +161,7 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
       // Check for object's existence in database
       _sntprintf(pszQuery, qlen, _T("SELECT id FROM conditions WHERE id=%d"), m_id);
       hResult = DBSelect(hdb, pszQuery);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
             bNewObject = FALSE;
@@ -256,8 +256,6 @@ void ConditionObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  */
 UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   NetObj *pObject;
-
    // Change script
    if (pRequest->isFieldExist(VID_SCRIPT))
    {
@@ -267,7 +265,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
       delete m_script;
       m_scriptSource = pRequest->getFieldAsString(VID_SCRIPT);
       m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 1024, new NXSL_ServerEnv());
-      if (m_script == NULL)
+      if (m_script == nullptr)
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szError);
    }
 
@@ -312,22 +310,16 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
          // Update cache size of DCIs
          for(int i = 0; i < m_dciCount; i++)
          {
-            pObject = FindObjectById(m_dciList[i].nodeId);
-            if (pObject != NULL)
+            shared_ptr<NetObj> object = FindObjectById(m_dciList[i].nodeId);
+            if ((object != nullptr) && object->isDataCollectionTarget())
             {
-               if ((pObject->getObjectClass() == OBJECT_NODE) ||
-                   (pObject->getObjectClass() == OBJECT_CLUSTER) ||
-                   (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-                   (pObject->getObjectClass() == OBJECT_SENSOR))
-               {
-                  ((DataCollectionTarget *)pObject)->updateDCItemCacheSize(m_dciList[i].id, m_id);
-               }
+               static_cast<DataCollectionTarget*>(object.get())->updateDCItemCacheSize(m_dciList[i].id, m_id);
             }
          }
       }
       else
       {
-         m_dciList = NULL;
+         m_dciList = nullptr;
       }
    }
 
@@ -351,7 +343,7 @@ void ConditionObject::doPoll(PollerInfo *poller)
    check();
    lockProperties();
    m_queuedForPolling = FALSE;
-   m_lastPoll = time(NULL);
+   m_lastPoll = time(nullptr);
    unlockProperties();
    delete poller;
 }
@@ -362,10 +354,9 @@ void ConditionObject::doPoll(PollerInfo *poller)
 void ConditionObject::check()
 {
    NXSL_Value **ppValueList, *pValue;
-   NetObj *pObject;
    int iOldStatus = m_status;
 
-   if ((m_script == NULL) || (m_status == STATUS_UNMANAGED) || IsShutdownInProgress())
+   if ((m_script == nullptr) || (m_status == STATUS_UNMANAGED) || IsShutdownInProgress())
       return;
 
    lockProperties();
@@ -373,30 +364,27 @@ void ConditionObject::check()
    memset(ppValueList, 0, sizeof(NXSL_Value *) * m_dciCount);
    for(int i = 0; i < m_dciCount; i++)
    {
-      pObject = FindObjectById(m_dciList[i].nodeId);
-      if (pObject != NULL)
+      shared_ptr<NetObj> pObject = FindObjectById(m_dciList[i].nodeId, OBJECT_NODE);
+      if (pObject != nullptr)
       {
-         if (pObject->getObjectClass() == OBJECT_NODE)
+         shared_ptr<DCObject> pItem = static_cast<Node*>(pObject.get())->getDCObjectById(m_dciList[i].id, 0);
+         if (pItem != nullptr)
          {
-            shared_ptr<DCObject> pItem = static_cast<Node*>(pObject)->getDCObjectById(m_dciList[i].id, 0);
-            if (pItem != NULL)
+            if (pItem->getType() == DCO_TYPE_ITEM)
             {
-               if (pItem->getType() == DCO_TYPE_ITEM)
+               ppValueList[i] = static_cast<DCItem*>(pItem.get())->getValueForNXSL(m_script, m_dciList[i].function, m_dciList[i].polls);
+            }
+            else if (pItem->getType() == DCO_TYPE_TABLE)
+            {
+               Table *t = static_cast<DCTable*>(pItem.get())->getLastValue();
+               if (t != nullptr)
                {
-                  ppValueList[i] = static_cast<DCItem*>(pItem.get())->getValueForNXSL(m_script, m_dciList[i].function, m_dciList[i].polls);
-               }
-               else if (pItem->getType() == DCO_TYPE_TABLE)
-               {
-                  Table *t = static_cast<DCTable*>(pItem.get())->getLastValue();
-                  if (t != NULL)
-                  {
-                     ppValueList[i] = m_script->createValue(new NXSL_Object(m_script, &g_nxslTableClass, t));
-                  }
+                  ppValueList[i] = m_script->createValue(new NXSL_Object(m_script, &g_nxslTableClass, t));
                }
             }
          }
       }
-      if (ppValueList[i] == NULL)
+      if (ppValueList[i] == nullptr)
          ppValueList[i] = m_script->createValue();
    }
    int numValues = m_dciCount;
@@ -494,9 +482,9 @@ void ConditionObject::check()
    // Cause parent object(s) to recalculate it's status
    if (iOldStatus != m_status)
    {
-      lockParentList(false);
-      for(int i = 0; i < getParentList()->size(); i++)
-         getParentList()->get(i)->calculateCompoundStatus();
+      readLockParentList();
+      for(int i = 0; i < getParentList().size(); i++)
+         getParentList().get(i)->calculateCompoundStatus();
       unlockParentList();
    }
 }

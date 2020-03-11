@@ -50,7 +50,7 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
    }
 
    UINT32 rcc;
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg->getFieldAsString(VID_MENU_PATH), DB_BIND_DYNAMIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, msg->getFieldAsString(VID_TITLE), DB_BIND_DYNAMIC);
@@ -88,7 +88,7 @@ UINT32 DeleteSummaryTable(LONG tableId)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    UINT32 rcc = RCC_DB_FAILURE;
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM dci_summary_tables WHERE id=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
       if (DBExecute(hStmt))
@@ -140,17 +140,17 @@ void SummaryTableColumn::createExportRecord(StringBuffer &xml, int id)
 SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
 {
    TCHAR *ptr = _tcsstr(configStr, _T("^#^"));
-   if (ptr != NULL)
+   if (ptr != nullptr)
    {
       *ptr = 0;
       ptr += 3;
       TCHAR *opt = _tcsstr(ptr, _T("^#^"));
-      if (opt != NULL)
+      if (opt != nullptr)
       {
          *opt = 0;
          opt += 3;
          TCHAR *sep = _tcsstr(opt, _T("^#^"));
-         if (sep != NULL)
+         if (sep != nullptr)
          {
             *sep = 0;
             sep += 3;
@@ -160,7 +160,7 @@ SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
          {
             _tcscpy(m_separator, _T(";"));
          }
-         m_flags = _tcstoul(opt, NULL, 10);
+         m_flags = _tcstoul(opt, nullptr, 10);
       }
       else
       {
@@ -186,8 +186,8 @@ SummaryTable::SummaryTable(NXCPMessage *msg)
    m_title[0] = 0;
    m_menuPath[0] = 0;
    m_flags = msg->getFieldAsUInt32(VID_FLAGS);
-   m_filterSource = NULL;
-   m_filter = NULL;
+   m_filterSource = nullptr;
+   m_filter = nullptr;
    m_aggregationFunction = (AggregationFunction)msg->getFieldAsInt16(VID_FUNCTION);
    m_periodStart = msg->getFieldAsTime(VID_TIME_FROM);
    m_periodEnd = msg->getFieldAsTime(VID_TIME_TO);
@@ -221,39 +221,39 @@ SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
    m_periodEnd = 0;
 
    // Filter script
-   m_filterSource = DBGetField(hResult, 0, 4, NULL, 0);
-   if (m_filterSource != NULL)
+   m_filterSource = DBGetField(hResult, 0, 4, nullptr, 0);
+   if (m_filterSource != nullptr)
    {
       StrStrip(m_filterSource);
       if (*m_filterSource != 0)
       {
          TCHAR errorText[1024];
          m_filter = NXSLCompileAndCreateVM(m_filterSource, errorText, 1024, new NXSL_ServerEnv);
-         if (m_filter == NULL)
+         if (m_filter == nullptr)
          {
             nxlog_debug(4, _T("Error compiling filter script for DCI summary table: %s"), errorText);
          }
       }
       else
       {
-         m_filter = NULL;
+         m_filter = nullptr;
       }
    }
    else
    {
-      m_filter = NULL;
+      m_filter = nullptr;
    }
 
    // Columns
    m_columns = new ObjectArray<SummaryTableColumn>(16, 16, Ownership::True);
-   TCHAR *config = DBGetField(hResult, 0, 5, NULL, 0);
-   if ((config != NULL) && (*config != 0))
+   TCHAR *config = DBGetField(hResult, 0, 5, nullptr, 0);
+   if ((config != nullptr) && (*config != 0))
    {
       TCHAR *curr = config;
-      while(curr != NULL)
+      while(curr != nullptr)
       {
          TCHAR *next = _tcsstr(curr, _T("^~^"));
-         if (next != NULL)
+         if (next != nullptr)
          {
             *next = 0;
             next += 3;
@@ -272,14 +272,14 @@ SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
 SummaryTable *SummaryTable::loadFromDB(INT32 id, UINT32 *rcc)
 {
    nxlog_debug(4, _T("Loading configuration for DCI summary table %d"), id);
-   SummaryTable *table = NULL;
+   SummaryTable *table = nullptr;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT title,flags,guid,menu_path,node_filter,columns,table_dci_name FROM dci_summary_tables WHERE id=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
          {
@@ -320,9 +320,9 @@ SummaryTable::~SummaryTable()
 /**
  * Pass node through filter
  */
-bool SummaryTable::filter(DataCollectionTarget *object)
+bool SummaryTable::filter(const shared_ptr<DataCollectionTarget>& object)
 {
-   if (m_filter == NULL)
+   if (m_filter == nullptr)
       return true;   // no filtering
 
    bool result = true;
@@ -330,7 +330,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
    if (m_filter->run())
    {
       NXSL_Value *value = m_filter->getResult();
-      if (value != NULL)
+      if (value != nullptr)
       {
          result = value->getValueAsBoolean();
       }
@@ -398,18 +398,18 @@ void SummaryTable::createExportRecord(StringBuffer &xml) const
  */
 Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc)
 {
-   NetObj *object = FindObjectById(baseObjectId);
-   if (object == NULL)
+   shared_ptr<NetObj> object = FindObjectById(baseObjectId);
+   if (object == nullptr)
    {
       *rcc = RCC_INVALID_OBJECT_ID;
       delete adHocDefinition;
-      return NULL;
+      return nullptr;
    }
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
    {
       *rcc = RCC_ACCESS_DENIED;
       delete adHocDefinition;
-      return NULL;
+      return nullptr;
    }
    if ((object->getObjectClass() != OBJECT_CONTAINER) && (object->getObjectClass() != OBJECT_CLUSTER) &&
        (object->getObjectClass() != OBJECT_SERVICEROOT) && (object->getObjectClass() != OBJECT_SUBNET) &&
@@ -417,29 +417,26 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
    {
       *rcc = RCC_INCOMPATIBLE_OPERATION;
       delete adHocDefinition;
-      return NULL;
+      return nullptr;
    }
 
-   SummaryTable *tableDefinition = (adHocDefinition != NULL) ? adHocDefinition : SummaryTable::loadFromDB(tableId, rcc);
-   if (tableDefinition == NULL)
-      return NULL;
+   SummaryTable *tableDefinition = (adHocDefinition != nullptr) ? adHocDefinition : SummaryTable::loadFromDB(tableId, rcc);
+   if (tableDefinition == nullptr)
+      return nullptr;
 
-   ObjectArray<NetObj> *childObjects = object->getAllChildren(true, true);
+   SharedObjectArray<NetObj> *childObjects = object->getAllChildren(true);
    Table *tableData = tableDefinition->createEmptyResultTable();
    for(int i = 0; i < childObjects->size(); i++)
    {
       NetObj *obj = childObjects->get(i);
       if (!obj->isDataCollectionTarget() || !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      {
-         obj->decRefCount();
          continue;
-      }
 
-      if (tableDefinition->filter((DataCollectionTarget *)obj))
+      shared_ptr<DataCollectionTarget> target = static_pointer_cast<DataCollectionTarget>(childObjects->getShared(i));
+      if (tableDefinition->filter(target))
       {
-         static_cast<DataCollectionTarget*>(obj)->getDciValuesSummary(tableDefinition, tableData, userId);
+         target->getDciValuesSummary(tableDefinition, tableData, userId);
       }
-      obj->decRefCount();
    }
 
    delete childObjects;
@@ -455,7 +452,7 @@ bool CreateSummaryTableExportRecord(INT32 id, StringBuffer &xml)
 {
    UINT32 rcc;
    SummaryTable *t = SummaryTable::loadFromDB(id, &rcc);
-   if (t == NULL)
+   if (t == nullptr)
       return false;
    t->createExportRecord(xml);
    delete t;
@@ -467,7 +464,7 @@ bool CreateSummaryTableExportRecord(INT32 id, StringBuffer &xml)
  */
 static TCHAR *BuildColumnList(ConfigEntry *root)
 {
-   if (root == NULL)
+   if (root == nullptr)
       return _tcsdup(_T(""));
 
    StringBuffer s;
@@ -495,7 +492,7 @@ static TCHAR *BuildColumnList(ConfigEntry *root)
  */
 static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 {
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
       DBFreeStatement(hStmt);
    DBRollback(hdb);
    DBConnectionPoolReleaseConnection(hdb);
@@ -509,7 +506,7 @@ static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite)
 {
    const TCHAR *guid = config->getSubEntryValue(_T("guid"));
-   if (guid == NULL)
+   if (guid == nullptr)
    {
       DbgPrintf(4, _T("ImportSummaryTable: missing GUID"));
       return false;
@@ -526,14 +523,14 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite)
 
    // Step 1: find existing tool ID by GUID
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM dci_summary_tables WHERE guid=?"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
    {
-      return ImportFailure(hdb, NULL);
+      return ImportFailure(hdb, nullptr);
    }
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       return ImportFailure(hdb, hStmt);
    }
@@ -565,9 +562,9 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite)
       }
       hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,guid=? WHERE id=?"));
    }
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
    {
-      return ImportFailure(hdb, NULL);
+      return ImportFailure(hdb, nullptr);
    }
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("path")), DB_BIND_STATIC);

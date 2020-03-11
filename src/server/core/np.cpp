@@ -38,7 +38,7 @@ extern const TCHAR *g_discoveredAddrSourceTypeAsText[];
 /**
  * Thread pool
  */
-ThreadPool *g_discoveryThreadPool = NULL;
+ThreadPool *g_discoveryThreadPool = nullptr;
 
 /**
  * IP addresses being processed by node poller
@@ -83,11 +83,10 @@ NewNodeData::NewNodeData(const InetAddress& ipAddr)
    sshProxyId = 0;
    sshLogin[0] = 0;
    sshPassword[0] = 0;
-   cluster = NULL;
    zoneUIN = 0;
    doConfPoll = false;
    origin = NODE_ORIGIN_MANUAL;
-   snmpSecurity = NULL;
+   snmpSecurity = nullptr;
 }
 
 /**
@@ -109,11 +108,10 @@ NewNodeData::NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr)
    sshProxyId = msg->getFieldAsUInt32(VID_SSH_PROXY);
    msg->getFieldAsString(VID_SSH_LOGIN, sshLogin, MAX_SSH_LOGIN_LEN);
    msg->getFieldAsString(VID_SSH_PASSWORD, sshPassword, MAX_SSH_PASSWORD_LEN);
-   cluster = NULL;
    zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
    doConfPoll = false;
    origin = NODE_ORIGIN_MANUAL;
-   snmpSecurity = NULL;
+   snmpSecurity = nullptr;
 }
 
 /**
@@ -126,11 +124,11 @@ NewNodeData::~NewNodeData()
 
 /**
  * Poll new node for configuration
- * Returns pointer to new node object on success or NULL on failure
+ * Returns pointer to new node object on success or nullptr on failure
  *
  * @param newNodeData data of new node
  */
-Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
+shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
 {
    TCHAR ipAddrText[64];
    nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode(%s/%d) zone %d"), newNodeData->ipAddr.toString(ipAddrText),
@@ -138,11 +136,11 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
                                                (int)newNodeData->zoneUIN);
 
    // Check for node existence
-   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != NULL) ||
-       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != NULL))
+   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr) ||
+       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: Node %s already exist in database"), ipAddrText);
-      return NULL;
+      return nullptr;
    }
 
    UINT32 flags = 0;
@@ -154,7 +152,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
       flags |= NF_DISABLE_ETHERNET_IP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_NXCP)
       flags |= NF_DISABLE_NXCP;
-   Node *node = new Node(newNodeData, flags);
+   shared_ptr<Node> node = MakeSharedNObject<Node>(newNodeData, flags);
    NetObjInsert(node, true, false);
 
    if (newNodeData->creationFlags & NXC_NCF_ENTER_MAINTENANCE)
@@ -167,20 +165,20 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
       bool addressResolved = false;
 	   if (IsZoningEnabled() && (newNodeData->zoneUIN != 0))
 	   {
-	      Zone *zone = FindZoneByUIN(newNodeData->zoneUIN);
-	      if (zone != NULL)
+	      shared_ptr<Zone> zone = FindZoneByUIN(newNodeData->zoneUIN);
+	      if (zone != nullptr)
 	      {
             AgentConnectionEx *conn = zone->acquireConnectionToProxy();
-            if (conn != NULL)
+            if (conn != nullptr)
             {
-               addressResolved = (conn->getHostByAddr(newNodeData->ipAddr, dnsName, MAX_DNS_NAME) != NULL);
+               addressResolved = (conn->getHostByAddr(newNodeData->ipAddr, dnsName, MAX_DNS_NAME) != nullptr);
                conn->decRefCount();
             }
 	      }
 	   }
 	   else
 		{
-	      addressResolved = (newNodeData->ipAddr.getHostByAddr(dnsName, MAX_DNS_NAME) != NULL);
+	      addressResolved = (newNodeData->ipAddr.getHostByAddr(dnsName, MAX_DNS_NAME) != nullptr);
 		}
 
       if (addressResolved && ResolveHostName(newNodeData->zoneUIN, dnsName).equals(newNodeData->ipAddr))
@@ -192,7 +190,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
 	}
 
 	// Bind node to cluster before first configuration poll
-	if (newNodeData->cluster != NULL)
+	if (newNodeData->cluster != nullptr)
 	{
 	   newNodeData->cluster->applyToTarget(node);
 	}
@@ -205,10 +203,10 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
 
    if (IsZoningEnabled() && (newNodeData->creationFlags & NXC_NCF_AS_ZONE_PROXY) && (newNodeData->zoneUIN != 0))
    {
-      Zone *zone = FindZoneByUIN(newNodeData->zoneUIN);
-      if (zone != NULL)
+      shared_ptr<Zone> zone = FindZoneByUIN(newNodeData->zoneUIN);
+      if (zone != nullptr)
       {
-         zone->addProxy(node);
+         zone->addProxy(*node);
       }
    }
 
@@ -230,13 +228,12 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
  *
  * @param ipAddr new (discovered) IP address
  * @param zoneUIN zone ID
- * @param bMacAddr MAC address of discovered node, or NULL if not known
+ * @param bMacAddr MAC address of discovered node, or nullptr if not known
  *
- * @return pointer to existing interface object with given MAC address or NULL if no such interface found
+ * @return pointer to existing interface object with given MAC address or nullptr if no such interface found
  */
-static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN, BYTE *bMacAddr)
+static shared_ptr<Interface> GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN, BYTE *bMacAddr)
 {
-	Subnet *subnet;
 	BYTE nodeMacAddr[MAC_ADDR_LENGTH];
 	TCHAR szIpAddr[64], szMacAddr[64];
 
@@ -244,23 +241,23 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN,
 	MACToStr(bMacAddr, szMacAddr);
 	DbgPrintf(6, _T("GetOldNodeWithNewIP: ip=%s mac=%s"), szIpAddr, szMacAddr);
 
-	if (bMacAddr == NULL)
+	if (bMacAddr == nullptr)
 	{
-		subnet = FindSubnetForNode(zoneUIN, ipAddr);
-		if (subnet != NULL)
+		shared_ptr<Subnet> subnet = FindSubnetForNode(zoneUIN, ipAddr);
+		if (subnet != nullptr)
 		{
 			MacAddress macAddr = subnet->findMacAddress(ipAddr);
 			if (!macAddr.isValid())
 			{
 				DbgPrintf(6, _T("GetOldNodeWithNewIP: MAC address not found"));
-				return NULL;
+				return shared_ptr<Interface>();
 			}
 	      memcpy(nodeMacAddr, macAddr.value(), MAC_ADDR_LENGTH);
 		}
 		else
 		{
 			DbgPrintf(6, _T("GetOldNodeWithNewIP: subnet not found"));
-			return NULL;
+			return shared_ptr<Interface>();
 		}
 	}
 	else
@@ -268,9 +265,8 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN,
 		memcpy(nodeMacAddr, bMacAddr, MAC_ADDR_LENGTH);
 	}
 
-	Interface *iface = FindInterfaceByMAC(nodeMacAddr, true);
-
-	if (iface == NULL)
+	shared_ptr<Interface> iface = FindInterfaceByMAC(nodeMacAddr);
+	if (iface == nullptr)
 		DbgPrintf(6, _T("GetOldNodeWithNewIP: returning null (FindInterfaceByMAC!)"));
 
 	return iface;
@@ -283,30 +279,30 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 {
 	bool reachable = false;
 
-	if (transport != NULL)
-		*transport = NULL;
-	if (agentConn != NULL)
-		*agentConn = NULL;
+	if (transport != nullptr)
+		*transport = nullptr;
+	if (agentConn != nullptr)
+		*agentConn = nullptr;
 
 	UINT32 zoneProxy = 0;
 
 	if (IsZoningEnabled() && (zoneUIN != 0))
 	{
-		Zone *zone = FindZoneByUIN(zoneUIN);
-		if (zone != NULL)
+		shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+		if (zone != nullptr)
 		{
-			zoneProxy = zone->getProxyNodeId(NULL);
+			zoneProxy = zone->getProxyNodeId(nullptr);
 		}
 	}
 
 	// *** ICMP PING ***
 	if (zoneProxy != 0)
 	{
-		Node *proxyNode = (Node *)g_idxNodeById.get(zoneProxy);
-		if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+		shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
+		if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 		{
 			AgentConnection *conn = proxyNode->createAgentConnection();
-			if (conn != NULL)
+			if (conn != nullptr)
 			{
 				TCHAR parameter[128], buffer[64];
 
@@ -329,7 +325,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 	}
 	else	// not using ICMP proxy
 	{
-		if (IcmpPing(ipAddr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize, false) == ICMP_SUCCESS)
+		if (IcmpPing(ipAddr, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false) == ICMP_SUCCESS)
 			reachable = true;
 	}
 
@@ -340,8 +336,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
    AgentConnection *pAgentConn = new AgentConnectionEx(0, ipAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
 	if (zoneProxy != 0)
 	{
-		Node *proxyNode = (Node *)g_idxNodeById.get(zoneProxy);
-      if (proxyNode != NULL)
+		shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
+      if (proxyNode != nullptr)
       {
          pAgentConn->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(),
                               proxyNode->getAgentAuthMethod(), proxyNode->getSharedSecret());
@@ -364,14 +360,14 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
    }
    if (rcc == ERR_SUCCESS)
    {
-		if (agentConn != NULL)
+		if (agentConn != nullptr)
 		{
 			*agentConn = pAgentConn;
-			pAgentConn = NULL;	// prevent deletion
+			pAgentConn = nullptr;	// prevent deletion
 		}
 		reachable = true;
    }
-   if (pAgentConn != NULL)
+   if (pAgentConn != nullptr)
       pAgentConn->decRefCount();
 
 	if (reachable && !fullCheck)
@@ -383,14 +379,14 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
    oids.add(_T(".1.3.6.1.2.1.1.2.0"));
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
    AddDriverSpecificOids(&oids);
-   SNMP_Transport *pTransport = SnmpCheckCommSettings(zoneProxy, ipAddr, &version, 0, NULL, oids, zoneUIN);
-   if (pTransport != NULL)
+   SNMP_Transport *pTransport = SnmpCheckCommSettings(zoneProxy, ipAddr, &version, 0, nullptr, oids, zoneUIN);
+   if (pTransport != nullptr)
    {
-      if (transport != NULL)
+      if (transport != nullptr)
       {
          pTransport->setSnmpVersion(version);
          *transport = pTransport;
-         pTransport = NULL;	// prevent deletion
+         pTransport = nullptr;	// prevent deletion
       }
       reachable = true;
 	   delete pTransport;
@@ -420,9 +416,9 @@ public:
 
    DiscoveryFilterData(const InetAddress& _ipAddr, UINT32 _zoneUIN) : NObject(), ipAddr(_ipAddr)
    {
-      driver = NULL;
-      driverData = NULL;
-      ifList = NULL;
+      driver = nullptr;
+      driverData = nullptr;
+      ifList = nullptr;
       zoneUIN = _zoneUIN;
       flags = 0;
       snmpVersion = SNMP_VERSION_1;
@@ -466,7 +462,7 @@ NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const ch
 {
    NXSL_VM *vm = object->vm();
    InterfaceInfo *iface = static_cast<InterfaceInfo*>(object->getData());
-   NXSL_Value *value = NULL;
+   NXSL_Value *value = nullptr;
 
    if (!strcmp(attr, "alias"))
    {
@@ -564,7 +560,7 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
 {
    NXSL_VM *vm = object->vm();
    DiscoveryFilterData *data = static_cast<DiscoveryFilterData*>(object->getData());
-   NXSL_Value *value = NULL;
+   NXSL_Value *value = nullptr;
 
    if (!strcmp(attr, "agentVersion"))
    {
@@ -576,11 +572,11 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
       {
          if (IsZoningEnabled() && (data->zoneUIN != 0))
          {
-            Zone *zone = FindZoneByUIN(data->zoneUIN);
-            if (zone != NULL)
+            shared_ptr<Zone> zone = FindZoneByUIN(data->zoneUIN);
+            if (zone != nullptr)
             {
                AgentConnectionEx *conn = zone->acquireConnectionToProxy();
-               if (conn != NULL)
+               if (conn != nullptr)
                {
                   conn->getHostByAddr(data->ipAddr, data->dnsName, MAX_DNS_NAME);
                   conn->decRefCount();
@@ -598,7 +594,7 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
    else if (!strcmp(attr, "interfaces"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
-      if (data->ifList != NULL)
+      if (data->ifList != nullptr)
       {
          for(int i = 0; i < data->ifList->size(); i++)
             array->append(vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredInterfaceClass, data->ifList->get(i))));
@@ -665,8 +661,8 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
    }
    else if (!strcmp(attr, "zone"))
    {
-      Zone *zone = FindZoneByUIN(data->zoneUIN);
-      value = (zone != NULL) ? zone->createNXSLObject(vm) : vm->createValue();
+      shared_ptr<Zone> zone = FindZoneByUIN(data->zoneUIN);
+      value = (zone != nullptr) ? zone->createNXSLObject(vm) : vm->createValue();
    }
    else if (!strcmp(attr, "zoneUIN"))
    {
@@ -691,8 +687,8 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 	SNMP_Transport *pTransport;
 
 	newNodeData->ipAddr.toString(szIpAddr);
-   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != NULL) ||
-       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != NULL))
+   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr) ||
+       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr))
 	{
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): node already exist in database"), szIpAddr);
       return false;  // Node already exist in database
@@ -704,8 +700,8 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       return false;  // Broadcast MAC
    }
 
-   NXSL_VM *hook = FindHookScript(_T("AcceptNewNode"), NULL);
-   if (hook != NULL)
+   NXSL_VM *hook = FindHookScript(_T("AcceptNewNode"), nullptr);
+   if (hook != nullptr)
    {
       bool stop = false;
       hook->setGlobalVariable("$ipAddr", hook->createValue(szIpAddr));
@@ -734,20 +730,19 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    int retryCount = 5;
    while (retryCount-- > 0)
    {
-      Interface *iface = GetOldNodeWithNewIP(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr);
-      if (iface == NULL)
+      shared_ptr<Interface> iface = GetOldNodeWithNewIP(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr);
+      if (iface == nullptr)
          break;
 
-      if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, NULL, NULL))
+      if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, nullptr, nullptr))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): found existing interface with same MAC address, but new IP is not reachable"), szIpAddr);
-         iface->decRefCount();
          return false;
       }
 
       // Interface could be deleted by configuration poller while HostIsReachable was running
-      Node *oldNode = iface->getParentNode();
-      if (!iface->isDeleted() && (oldNode != NULL))
+      shared_ptr<Node> oldNode = iface->getParentNode();
+      if (!iface->isDeleted() && (oldNode != nullptr))
       {
          if (iface->getIpAddressList()->hasAddress(oldNode->getIpAddress()))
          {
@@ -757,11 +752,9 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
             nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): node already exist in database with IP %s, will change to new"), szIpAddr, szOldIpAddr);
             oldNode->changeIPAddress(newNodeData->ipAddr);
          }
-         iface->decRefCount();
          return false;
       }
 
-      iface->decRefCount();
       ThreadSleepMs(100);
    }
    if (retryCount == 0)
@@ -774,7 +767,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    // Allow filtering by loaded modules
    for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
-		if (g_pModuleList[i].pfAcceptNewNode != NULL)
+		if (g_pModuleList[i].pfAcceptNewNode != nullptr)
 		{
 			if (!g_pModuleList[i].pfAcceptNewNode(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr))
 				return false;	// filtered out by module
@@ -800,7 +793,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
          ObjectArray<InetAddressListElement> *list = LoadServerAddressList(2);
          bool result = false;
-         if (list != NULL)
+         if (list != nullptr)
          {
             for(int i = 0; (i < list->size()) && !result; i++)
             {
@@ -822,7 +815,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
 
    // Basic communication settings
-   if (pTransport != NULL)
+   if (pTransport != nullptr)
    {
       data.flags |= NNF_IS_SNMP;
       data.snmpVersion = pTransport->getSnmpVersion();
@@ -830,12 +823,12 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 
       // Get SNMP OID
       SnmpGet(data.snmpVersion, pTransport,
-              _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, data.snmpObjectId, MAX_OID_LEN * 4, 0);
+              _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, data.snmpObjectId, MAX_OID_LEN * 4, 0);
 
-      data.driver = FindDriverForNode(szIpAddr, data.snmpObjectId, NULL, pTransport);
+      data.driver = FindDriverForNode(szIpAddr, data.snmpObjectId, nullptr, pTransport);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): selected device driver %s"), szIpAddr, data.driver->getName());
    }
-   if (pAgentConn != NULL)
+   if (pAgentConn != nullptr)
    {
       data.flags |= NNF_IS_AGENT;
       pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.agentVersion);
@@ -847,7 +840,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    {
       data.ifList = pAgentConn->getInterfaceList();
    }
-   if ((data.ifList == NULL) && (data.flags & NNF_IS_SNMP))
+   if ((data.ifList == nullptr) && (data.flags & NNF_IS_SNMP))
    {
       data.driver->analyzeDevice(pTransport, data.snmpObjectId, &data, &data.driverData);
       data.ifList = data.driver->getInterfaces(pTransport, &data, data.driverData,
@@ -860,7 +853,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
 	{
 		nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
-	   if (pAgentConn != NULL)
+	   if (pAgentConn != nullptr)
 	      pAgentConn->decRefCount();
 	   delete pTransport;
       return TRUE;   // No filtering
@@ -870,7 +863,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    if (data.flags & NNF_IS_SNMP)
    {
       if (SnmpGet(data.snmpVersion, pTransport,
-                  _T(".1.3.6.1.2.1.4.1.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.2.1.4.1.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.flags |= NNF_IS_ROUTER;
@@ -881,7 +874,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       // Check IP forwarding status
       if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
       {
-         if (_tcstoul(szBuffer, NULL, 10) != 0)
+         if (_tcstoul(szBuffer, nullptr, 10) != 0)
             data.flags |= NNF_IS_ROUTER;
       }
    }
@@ -891,14 +884,14 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    {
       // Check if node is a bridge
       if (SnmpGet(data.snmpVersion, pTransport,
-                  _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.2.1.17.1.1.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          data.flags |= NNF_IS_BRIDGE;
       }
 
       // Check for CDP (Cisco Discovery Protocol) support
       if (SnmpGet(data.snmpVersion, pTransport,
-                  _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.flags |= NNF_IS_CDP;
@@ -906,7 +899,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 
       // Check for SONMP (Nortel topology discovery protocol) support
       if (SnmpGet(data.snmpVersion, pTransport,
-                  _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.flags |= NNF_IS_SONMP;
@@ -914,7 +907,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 
       // Check for LLDP (Link Layer Discovery Protocol) support
       if (SnmpGet(data.snmpVersion, pTransport,
-                  _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+                  _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          data.flags |= NNF_IS_LLDP;
       }
@@ -948,14 +941,14 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    else
    {
       NXSL_VM *vm = CreateServerScriptVM(szFilter, nullptr);
-      if (vm != NULL)
+      if (vm != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);
 
-         if (pTransport != NULL)
+         if (pTransport != nullptr)
          {
             vm->setGlobalVariable("$snmp", vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, pTransport)));
-            pTransport = NULL;   // Transport will be deleted by NXSL object destructor
+            pTransport = nullptr;   // Transport will be deleted by NXSL object destructor
          }
          // TODO: make agent connection available in script
          vm->setGlobalVariable("$node", vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data)));
@@ -981,7 +974,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
 
    // Cleanup
-   if (pAgentConn != NULL)
+   if (pAgentConn != nullptr)
       pAgentConn->decRefCount();
    delete pTransport;
 
@@ -994,8 +987,8 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 static void CreateDiscoveredNode(NewNodeData *newNodeData)
 {
    // Double check IP address because parallel discovery may already create that node
-   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == NULL) &&
-       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == NULL))
+   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == nullptr) &&
+       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == nullptr))
    {
       ObjectTransactionStart();
       PollNewNode(newNodeData);
@@ -1024,7 +1017,7 @@ static void ProcessDiscoveredAddress(DiscoveredAddress *address)
 
       if (address->ignoreFilter || AcceptNewNode(newNodeData, address->bMacAddr))
       {
-         if (g_discoveryThreadPool != NULL)
+         if (g_discoveryThreadPool != nullptr)
          {
             TCHAR key[32];
             _sntprintf(key, 32, _T("Zone%u"), address->zoneUIN);
@@ -1070,7 +1063,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 		s_processingList.add(address);
       s_processingListLock.unlock();
 
-      if (g_discoveryThreadPool != NULL)
+      if (g_discoveryThreadPool != nullptr)
       {
          if (g_flags & AF_PARALLEL_NETWORK_DISCOVERY)
          {
@@ -1098,7 +1091,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 INT64 GetDiscoveryPollerQueueSize()
 {
    int poolQueueSize;
-   if (g_discoveryThreadPool != NULL)
+   if (g_discoveryThreadPool != nullptr)
    {
       ThreadPoolInfo info;
       ThreadPoolGetInfo(g_discoveryThreadPool, &info);

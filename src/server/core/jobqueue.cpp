@@ -25,11 +25,12 @@
 /**
  * Constructor
  */
-ServerJobQueue::ServerJobQueue()
+ServerJobQueue::ServerJobQueue(uint32_t objectId)
 {
 	m_jobCount = 0;
-	m_jobList = NULL;
+	m_jobList = nullptr;
 	m_accessMutex = MutexCreate();
+	m_objectId = objectId;
 }
 
 /**
@@ -44,7 +45,7 @@ ServerJobQueue::~ServerJobQueue()
 		m_jobList[i]->cancel();
 		delete m_jobList[i];
 	}
-	free(m_jobList);
+	MemFree(m_jobList);
 
 	MutexDestroy(m_accessMutex);
 }
@@ -55,14 +56,13 @@ ServerJobQueue::~ServerJobQueue()
 void ServerJobQueue::add(ServerJob *job)
 {
 	MutexLock(m_accessMutex);
-	m_jobList = (ServerJob **)realloc(m_jobList, sizeof(ServerJob *) * (m_jobCount + 1));
-	m_jobList[m_jobCount] = job;
-	m_jobCount++;
+	m_jobList = MemReallocArray(m_jobList, m_jobCount + 1);
+	m_jobList[m_jobCount++] = job;
 	job->setOwningQueue(this);
 	MutexUnlock(m_accessMutex);
 
 	DbgPrintf(4, _T("Job %d added to queue (node=%d, type=%s, description=\"%s\")"),
-	          job->getId(), job->getNodeId(), job->getType(), job->getDescription());
+	          job->getId(), job->getObjectId(), job->getType(), job->getDescription());
 
 	runNext();
 }
@@ -125,7 +125,7 @@ bool ServerJobQueue::cancel(UINT32 jobId)
 			if (m_jobList[i]->cancel())
 			{
 				nxlog_debug(4, _T("Job %d cancelled (node=%d, type=%s, description=\"%s\")"),
-							   m_jobList[i]->getId(), m_jobList[i]->getNodeId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+							   m_jobList[i]->getId(), m_jobList[i]->getObjectId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
 				if (m_jobList[i]->getStatus() != JOB_CANCEL_PENDING)
 				{
@@ -159,7 +159,7 @@ bool ServerJobQueue::hold(UINT32 jobId)
 			if (m_jobList[i]->hold())
 			{
 				nxlog_debug(4, _T("Job %d put on hold (node=%d, type=%s, description=\"%s\")"),
-							   m_jobList[i]->getId(), m_jobList[i]->getNodeId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+							   m_jobList[i]->getId(), m_jobList[i]->getObjectId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
 				success = true;
 			}
@@ -186,7 +186,7 @@ bool ServerJobQueue::unhold(UINT32 jobId)
 			if (m_jobList[i]->unhold())
 			{
 				nxlog_debug(4, _T("Job %d unhold (node=%d, type=%s, description=\"%s\")"),
-							   m_jobList[i]->getId(), m_jobList[i]->getNodeId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+							   m_jobList[i]->getId(), m_jobList[i]->getObjectId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
 				success = true;
 			}
@@ -216,7 +216,7 @@ void ServerJobQueue::cleanup()
 			if ((delay > 0) && (now - m_jobList[i]->getLastStatusChange() >= delay))
 			{
 				nxlog_debug(4, _T("Failed job %d deleted from queue (node=%d, type=%s, description=\"%s\")"),
-							   m_jobList[i]->getId(), m_jobList[i]->getNodeId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+							   m_jobList[i]->getId(), m_jobList[i]->getObjectId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
 				// Delete and remove from list
 				m_jobList[i]->cancel();
@@ -254,7 +254,7 @@ ServerJob *ServerJobQueue::findJob(UINT32 jobId)
  * Fill NXCP message with jobs' information
  * Increments base variable id; returns number of jobs added to message
  */
-UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase)
+UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase) const
 {
 	UINT32 id = *varIdBase;
 	int i;
@@ -265,7 +265,7 @@ UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase)
 		msg->setField(id++, m_jobList[i]->getId());
 		msg->setField(id++, m_jobList[i]->getType());
 		msg->setField(id++, m_jobList[i]->getDescription());
-		msg->setField(id++, m_jobList[i]->getNodeId());
+		msg->setField(id++, m_jobList[i]->getObjectId());
 		msg->setField(id++, (WORD)m_jobList[i]->getStatus());
 		msg->setField(id++, (WORD)m_jobList[i]->getProgress());
 		msg->setField(id++, m_jobList[i]->getFailureMessage());
@@ -279,11 +279,11 @@ UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase)
 /**
  * Get number of jobs in job queue
  */
-int ServerJobQueue::getJobCount(const TCHAR *type)
+int ServerJobQueue::getJobCount(const TCHAR *type) const
 {
 	int count;
 	MutexLock(m_accessMutex);
-	if (type == NULL)
+	if (type == nullptr)
 	{
 		count = m_jobCount;
 	}

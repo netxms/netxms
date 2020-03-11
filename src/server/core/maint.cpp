@@ -25,7 +25,7 @@
 /**
  * Execute scheduled maintenance task
  */
-static void ScheduledMaintenance(shared_ptr<ScheduledTaskParameters> parameters, bool enter)
+static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& parameters, bool enter)
 {
    if (parameters->m_objectId == 0)
    {
@@ -33,8 +33,8 @@ static void ScheduledMaintenance(shared_ptr<ScheduledTaskParameters> parameters,
       return;
    }
 
-   NetObj *object = FindObjectById(parameters->m_objectId);
-   if (object != NULL)
+   shared_ptr<NetObj> object = FindObjectById(parameters->m_objectId);
+   if (object != nullptr)
    {
       if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
       {
@@ -61,7 +61,7 @@ static void ScheduledMaintenance(shared_ptr<ScheduledTaskParameters> parameters,
 /**
  * Scheduled task handler - enter maintenance mode
  */
-void MaintenanceModeEnter(shared_ptr<ScheduledTaskParameters> parameters)
+void MaintenanceModeEnter(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    ScheduledMaintenance(parameters, true);
 }
@@ -69,7 +69,7 @@ void MaintenanceModeEnter(shared_ptr<ScheduledTaskParameters> parameters)
 /**
  * Scheduled task handler - leave maintenance mode
  */
-void MaintenanceModeLeave(shared_ptr<ScheduledTaskParameters> parameters)
+void MaintenanceModeLeave(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    ScheduledMaintenance(parameters, false);
 }

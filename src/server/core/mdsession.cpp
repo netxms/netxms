@@ -90,7 +90,7 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr
    m_id = -1;
    m_state = SESSION_STATE_INIT;
    m_pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   m_pCtx = NULL;
+   m_pCtx = nullptr;
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
 	m_mutexSocketWrite = MutexCreate();
@@ -119,7 +119,7 @@ MobileDeviceSession::~MobileDeviceSession()
    delete m_pMessageQueue;
    free(m_pMsgBuffer);
 	MutexDestroy(m_mutexSocketWrite);
-	if (m_pCtx != NULL)
+	if (m_pCtx != nullptr)
 		m_pCtx->decRefCount();
    if (m_condEncryptionSetup != INVALID_CONDITION_HANDLE)
       ConditionDestroy(m_condEncryptionSetup);
@@ -171,7 +171,7 @@ void MobileDeviceSession::readThread()
       }
 
       // Receive error
-      if (msg == NULL)
+      if (msg == nullptr)
       {
          debugPrintf(5, _T("readThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
          break;
@@ -187,7 +187,7 @@ void MobileDeviceSession::readThread()
       if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_dwEncryptionRqId))
       {
 	      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
-         m_dwEncryptionResult = SetupEncryptionContext(msg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
+         m_dwEncryptionResult = SetupEncryptionContext(msg, &m_pCtx, nullptr, g_pServerKey, NXCP_VERSION);
          receiver.setEncryptionContext(m_pCtx);
          ConditionSet(m_condEncryptionSetup);
          m_dwEncryptionRqId = 0;
@@ -207,12 +207,12 @@ void MobileDeviceSession::readThread()
 
    // Notify other threads to exit
    NXCP_MESSAGE *rawMsg;
-	while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->get()) != NULL)
+	while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->get()) != nullptr)
 		free(rawMsg);
    m_pSendQueue->put(INVALID_POINTER_VALUE);
 
    NXCPMessage *msg;
-	while((msg = (NXCPMessage *)m_pMessageQueue->get()) != NULL)
+	while((msg = (NXCPMessage *)m_pMessageQueue->get()) != nullptr)
 		delete msg;
    m_pMessageQueue->put(INVALID_POINTER_VALUE);
 
@@ -253,10 +253,10 @@ void MobileDeviceSession::writeThread()
 		if (ntohs(pRawMsg->code) != CMD_ADM_MESSAGE)
 			debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer));
 
-      if (m_pCtx != NULL)
+      if (m_pCtx != nullptr)
       {
          pEnMsg = m_pCtx->encryptMessage(pRawMsg);
-         if (pEnMsg != NULL)
+         if (pEnMsg != nullptr)
          {
             bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
             free(pEnMsg);
@@ -333,14 +333,14 @@ void MobileDeviceSession::processingThread()
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
 				{
-					if (g_pModuleList[i].pfMobileDeviceCommandHandler != NULL)
+					if (g_pModuleList[i].pfMobileDeviceCommandHandler != nullptr)
 					{
 						status = g_pModuleList[i].pfMobileDeviceCommandHandler(m_wCurrentCmd, msg, this);
 						if (status != NXMOD_COMMAND_IGNORED)
 						{
 							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
 							{
-								msg = NULL;	// Prevent deletion
+								msg = nullptr;	// Prevent deletion
 							}
 							break;   // Message was processed by the module
 						}
@@ -390,10 +390,10 @@ void MobileDeviceSession::sendMessage(NXCPMessage *msg)
       String msgDump = NXCPMessage::dump(pRawMsg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
    }
-   if (m_pCtx != NULL)
+   if (m_pCtx != nullptr)
    {
       NXCP_ENCRYPTED_MESSAGE *pEnMsg = m_pCtx->encryptMessage(pRawMsg);
-      if (pEnMsg != NULL)
+      if (pEnMsg != nullptr)
       {
          bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
@@ -489,18 +489,18 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 #else
 				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
-				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
+				dwResult = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_dwUserId,
 													 &userRights, &changePasswd, &intruderLockout,
 													 &closeOtherSessions, false, &graceLogins);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
 				pCert = CertificateFromLoginMessage(pRequest);
-				if (pCert != NULL)
+				if (pCert != nullptr)
 				{
                size_t sigLen;
 					const BYTE *signature = pRequest->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
-               if (signature != NULL)
+               if (signature != nullptr)
                {
                   dwResult = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR *>(signature), sigLen,
                      pCert, m_challenge, &m_dwUserId, &userRights,
@@ -532,8 +532,8 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 			{
 				TCHAR deviceId[MAX_OBJECT_NAME] = _T("");
 				pRequest->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
-				MobileDevice *md = FindMobileDeviceByDeviceID(deviceId);
-				if (md != NULL)
+				shared_ptr<MobileDevice> md = FindMobileDeviceByDeviceID(deviceId);
+				if (md != nullptr)
 				{
 					m_deviceObjectId = md->getId();
 					m_isAuthenticated = true;
@@ -633,8 +633,8 @@ void MobileDeviceSession::updateDeviceInfo(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setId(request->getId());
 
-	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
-	if (device != NULL)
+	shared_ptr<MobileDevice> device = static_pointer_cast<MobileDevice>(FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE));
+	if (device != nullptr)
 	{
 		device->updateSystemInfo(request);
 		msg.setField(VID_RCC, RCC_SUCCESS);
@@ -658,8 +658,8 @@ void MobileDeviceSession::updateDeviceStatus(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setId(request->getId());
 
-	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
-	if (device != NULL)
+   shared_ptr<MobileDevice> device = static_pointer_cast<MobileDevice>(FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE));
+	if (device != nullptr)
 	{
 		device->updateStatus(request);
 		msg.setField(VID_RCC, RCC_SUCCESS);
@@ -702,8 +702,8 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
-	if (device != NULL)
+   shared_ptr<MobileDevice> device = static_pointer_cast<MobileDevice>(FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE));
+	if (device != nullptr)
 	{
       int count = (int)request->getFieldAsUInt32(VID_NUM_ITEMS);
       if (count > 0)
@@ -731,7 +731,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
                pItem = device->getDCObjectByName(name, 0);
             }
 
-            if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
+            if ((pItem != nullptr) && (pItem->getType() == DCO_TYPE_ITEM))
             {
                if (pItem->getDataSource() == DS_PUSH_AGENT)
                {
@@ -764,7 +764,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
                request->getFieldAsMBString(VID_TIMESTAMP, ts, 256);
 
                struct tm timeBuff;
-               if (strptime(ts, "%Y/%m/%d %H:%M:%S", &timeBuff) != NULL)
+               if (strptime(ts, "%Y/%m/%d %H:%M:%S", &timeBuff) != nullptr)
                {
                   timeBuff.tm_isdst = -1;
                   t = timegm(&timeBuff);

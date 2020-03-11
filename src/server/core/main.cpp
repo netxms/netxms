@@ -81,13 +81,11 @@ void StopDataCollection();
 void StopObjectMaintenanceThreads();
 bool LoadPhysicalLinks();
 
-void ExecuteScheduledAction(shared_ptr<ScheduledTaskParameters> parameters);
-void ExecuteScheduledScript(shared_ptr<ScheduledTaskParameters> parameters);
-void MaintenanceModeEnter(shared_ptr<ScheduledTaskParameters> parameters);
-void MaintenanceModeLeave(shared_ptr<ScheduledTaskParameters> parameters);
-void ProcessUnboundTunnels(shared_ptr<ScheduledTaskParameters> parameters);
-void ScheduleDeployPolicy(shared_ptr<ScheduledTaskParameters> parameters);
-void ScheduleUninstallPolicy(shared_ptr<ScheduledTaskParameters> parameters);
+void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
+void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameters);
+void MaintenanceModeEnter(const shared_ptr<ScheduledTaskParameters>& parameters);
+void MaintenanceModeLeave(const shared_ptr<ScheduledTaskParameters>& parameters);
+void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1280,8 +1278,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	DBConnectionPoolShutdown();
 	DBUnloadDriver(g_dbDriver);
 	nxlog_debug(1, _T("Database driver unloaded"));
-
-	DestroyAllObjects();
 
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();

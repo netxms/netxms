@@ -33,7 +33,7 @@ void TemplateGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool TemplateGroup::showThresholdSummary()
+bool TemplateGroup::showThresholdSummary() const
 {
    return false;
 }
@@ -132,7 +132,7 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
       if ((m_modified & MODIFY_OTHER) && !IsDatabaseRecordExist(hdb, _T("templates"), _T("id"), m_id))
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO templates (id) VALUES (?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             success = DBExecute(hStmt);
@@ -145,16 +145,16 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
    {
       // Update members list
       success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
-      lockChildList(false);
-      if (success && !getChildList()->isEmpty())
+      readLockChildList();
+      if (success && !getChildList().isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"), getChildList()->size() > 1);
-         if (hStmt != NULL)
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"), getChildList().size() > 1);
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; success && (i < getChildList()->size()); i++)
+            for(int i = 0; success && (i < getChildList().size()); i++)
             {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList()->get(i)->getId());
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList().get(i)->getId());
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -230,11 +230,11 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    if (success)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,policy_type FROM ap_common WHERE owner_id=?"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != NULL)
+         if (hResult != nullptr)
          {
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count && success; i++)
@@ -266,31 +266,31 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       TCHAR szQuery[256];
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_id);
       DB_RESULT hResult = DBSelect(hdb, szQuery);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
-            UINT32 dwNodeId = DBGetFieldULong(hResult, i, 0);
-            NetObj *pObject = FindObjectById(dwNodeId);
-            if (pObject != NULL)
+            uint32_t objectId = DBGetFieldULong(hResult, i, 0);
+            shared_ptr<NetObj> object = FindObjectById(objectId);
+            if (object != nullptr)
             {
-               if (pObject-isDataCollectionTarget())
+               if (object->isDataCollectionTarget())
                {
-                  addChild(pObject);
-                  pObject->addParent(this);
+                  addChild(object);
+                  object->addParent(self());
                }
                else
                {
                   nxlog_write(NXLOG_ERROR,
                            _T("Inconsistent database: template object %s [%u] has reference to object %s [%u] which is not data collection target"),
-                           m_name, m_id, pObject->getName(), pObject->getId());
+                           m_name, m_id, object->getName(), object->getId());
                }
             }
             else
             {
                nxlog_write(NXLOG_ERROR, _T("Inconsistent database: template object %s [%u] has reference to non-existent object [%u]"),
-                        m_name, m_id, dwNodeId);
+                        m_name, m_id, objectId);
             }
          }
          DBFreeResult(hResult);
@@ -319,8 +319,8 @@ void Template::createExportRecord(StringBuffer &xml)
 
    // Path in groups
    StringList path;
-   ObjectArray<NetObj> *list = getParents(OBJECT_TEMPLATEGROUP);
-   TemplateGroup *parent = NULL;
+   SharedObjectArray<NetObj> *list = getParents(OBJECT_TEMPLATEGROUP);
+   TemplateGroup *parent = nullptr;
    while(list->size() > 0)
    {
       parent = static_cast<TemplateGroup*>(list->get(0));
@@ -341,7 +341,7 @@ void Template::createExportRecord(StringBuffer &xml)
    }
    xml.append(_T("\t\t\t</path>\n\t\t\t<dataCollection>\n"));
 
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
       m_dcObjects->get(i)->createExportRecord(xml);
    unlockDciAccess();
@@ -363,13 +363,14 @@ void Template::createExportRecord(StringBuffer &xml)
 /**
  * Apply template to data collection target
  */
-BOOL Template::applyToTarget(DataCollectionTarget *target)
+bool Template::applyToTarget(const shared_ptr<DataCollectionTarget>& target)
 {
    //Print in log that policies will be installed
    nxlog_debug_tag(_T("obj.dc"), 2, _T("Apply %d policy items from template \"%s\" to target \"%s\""),
                    m_policyList->size(), m_name, target->getName());
 
-   forceInstallPolicy(target);
+   if (target->getObjectClass() == OBJECT_NODE)
+      forceDeployPolicies(static_pointer_cast<Node>(target));
 
    return super::applyToTarget(target);
 }
@@ -377,28 +378,14 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
 /**
  * Initiate forced policy installation
  */
-void Template::forceInstallPolicy(DataCollectionTarget *target)
+void Template::forceDeployPolicies(const shared_ptr<Node>& target)
 {
-   if(target->getObjectClass() != OBJECT_NODE)
-      return;
-   Node *node = reinterpret_cast<Node*>(target);
-   AgentConnectionEx *conn = node->getAgentConnection();
-   if (conn == NULL)
-   {
-      return;
-   }
-
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
-      shared_ptr<GenericAgentPolicy> object = m_policyList->getShared(i);
-      DeployData *data = new DeployData();
-      data->conn = conn;
-      memset(data->currHash, 0, MD5_DIGEST_SIZE);
-      data->currVerson = 0;
+      GenericAgentPolicy *object = m_policyList->get(i);
+      auto data = make_shared<AgentPolicyDeploymentData>(target->getAgentConnection(), target, target->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
-      data->newTypeFormatSupported = node->supportNewTypeFormat();
-      data->object = node;
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), target->getName(), target->getId(), getName(), object->getName());
       ThreadPoolExecute(g_agentConnectionThreadPool, object, &GenericAgentPolicy::deploy, data);
    }
@@ -520,34 +507,32 @@ void Template::onDataCollectionChange()
  */
 void Template::prepareForDeletion()
 {
-   lockChildList(false);
-   for(int i = 0; i < getChildList()->size(); i++)
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      NetObj *object = getChildList()->get(i);
+      NetObj *object = getChildList().get(i);
       if (object->isDataCollectionTarget())
          queueRemoveFromTarget(object->getId(), true);
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         removeAllPolicies((Node *)object);
+         removeAllPolicies(static_cast<Node*>(object));
       }
    }
    unlockChildList();
    super::prepareForDeletion();
 }
 
+/**
+ * Remove all policies of this template from given node
+ */
 void Template::removeAllPolicies(Node *node)
 {
    for (int i = 0; i < m_policyList->size(); i++)
    {
-      shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
-      UndeployData *data = new UndeployData();
-      data->conn = node->getAgentConnection();
-      data->guid = policy->getGuid();
-      _tcsncpy(data->policyType, policy->getType(), MAX_POLICY_TYPE_LEN);
-      data->newTypeFormatSupported = node->supportNewTypeFormat();
+      GenericAgentPolicy *policy = m_policyList->get(i);
+      auto data = make_shared<AgentPolicyRemovalData>(node->getAgentConnection(), policy->getGuid(), policy->getType(), node->isNewPolicyTypeFormatSupported());
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
-
-      ThreadPoolExecute(g_agentConnectionThreadPool, &UndeployPolicy, data);
+      ThreadPoolExecute(g_agentConnectionThreadPool, RemoveAgentPolicy, data);
    }
 }
 
@@ -560,7 +545,7 @@ bool Template::hasPolicy(const uuid& guid)
    bool hasPolicy = false;
    for (int i = 0; i < m_policyList->size(); i++)
    {
-      if(m_policyList->get(i)->getGuid().equals(guid))
+      if (m_policyList->get(i)->getGuid().equals(guid))
       {
          hasPolicy = true;
          break;
@@ -608,7 +593,7 @@ void Template::fillPolicyMessage(NXCPMessage *pMsg)
 }
 
 /**
- * Update policy if GUID is provided and create policy if GUID is NULL
+ * Update policy if GUID is provided and create policy if GUID is nullptr
  */
 uuid Template::updatePolicyFromMessage(NXCPMessage *request)
 {
@@ -621,7 +606,7 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    if (request->isFieldExist(VID_GUID))
    {
       guid = request->getFieldAsGUID(VID_GUID);
-      GenericAgentPolicy *policy = NULL;
+      GenericAgentPolicy *policy = nullptr;
       for (int i = 0; i < m_policyList->size(); i++)
       {
          if(m_policyList->get(i)->getGuid().equals(guid))
@@ -630,7 +615,7 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
             break;
          }
       }
-      if (policy != NULL)
+      if (policy != nullptr)
       {
          policy->modifyFromMessage(request);
          policy->fillUpdateMessage(&msg);
@@ -663,7 +648,7 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    if(updated)
    {
       msg.setField(VID_TEMPLATE_ID, m_id);
-      NotifyClientsOnPolicyUpdate(&msg, this);
+      NotifyClientsOnPolicyUpdate(&msg, *this);
    }
    return guid;
 }
@@ -675,35 +660,28 @@ bool Template::removePolicy(const uuid& guid)
 {
    lockProperties();
    bool success = false;
-   shared_ptr<GenericAgentPolicy> policy = shared_ptr<GenericAgentPolicy>();
+   shared_ptr<GenericAgentPolicy> policy;
    int index = -1;
    for (int i = 0; i < m_policyList->size(); i++)
    {
-      if(m_policyList->get(i)->getGuid().equals(guid))
+      if (m_policyList->get(i)->getGuid().equals(guid))
       {
          policy = m_policyList->getShared(i);
          m_policyList->remove(i);
          break;
       }
    }
-   if (policy != NULL)
+   if (policy != nullptr)
    {
-      lockChildList(false);
-      for(int i = 0; i < getChildList()->size(); i++)
+      readLockChildList();
+      for(int i = 0; i < getChildList().size(); i++)
       {
-         NetObj *object = getChildList()->get(i);
+         NetObj *object = getChildList().get(i);
          if (object->getObjectClass() == OBJECT_NODE)
          {
-            shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
-            Node *node = reinterpret_cast<Node *>(object);
-            UndeployData *data = new UndeployData();
-            data->conn = node->getAgentConnection();
-            data->guid = policy->getGuid();
-            _tcsncpy(data->policyType, policy->getType(), MAX_POLICY_TYPE_LEN);
-            data->newTypeFormatSupported = node->supportNewTypeFormat();
-            _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
-
-            ThreadPoolExecute(g_agentConnectionThreadPool, &UndeployPolicy, data);
+            auto data = make_shared<AgentPolicyRemovalData>(static_cast<Node*>(object)->getAgentConnection(), policy->getGuid(), policy->getType(), static_cast<Node*>(object)->isNewPolicyTypeFormatSupported());
+            _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), object->getName(), object->getId(), getName(), policy->getName());
+            ThreadPoolExecute(g_agentConnectionThreadPool, RemoveAgentPolicy, data);
          }
       }
       unlockChildList();
@@ -711,7 +689,7 @@ bool Template::removePolicy(const uuid& guid)
       m_deletedPolicyList->add(policy);
       updateVersion();
 
-      NotifyClientsOnPolicyDelete(guid, this);
+      NotifyClientsOnPolicyDelete(guid, *this);
       setModified(MODIFY_POLICY, false);
       success = true;
    }
@@ -724,20 +702,20 @@ bool Template::removePolicy(const uuid& guid)
  */
 void Template::applyPolicyChanges()
 {
-   lockChildList(false);
-   for(int i = 0; i < getChildList()->size(); i++)
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      NetObj *object = getChildList()->get(i);
+      NetObj *object = getChildList().get(i);
       if (object->getObjectClass() == OBJECT_NODE)
       {
          AgentPolicyInfo *ap;
          AgentConnection *conn = static_cast<Node*>(object)->getAgentConnection();
-         if (conn != NULL)
+         if (conn != nullptr)
          {
             UINT32 rcc = conn->getPolicyInventory(&ap);
             if (rcc == RCC_SUCCESS)
             {
-               checkPolicyBind(static_cast<Node*>(object), ap);
+               checkPolicyDeployment(static_pointer_cast<Node>(getChildList().getShared(i)), ap);
                delete ap;
             }
             conn->decRefCount();
@@ -752,15 +730,14 @@ void Template::applyPolicyChanges()
  */
 void Template::forceApplyPolicyChanges()
 {
-   ObjectArray<Node> nodes(64, 64);
-   lockChildList(false);
-   for(int i = 0; i < getChildList()->size(); i++)
+   SharedObjectArray<Node> nodes(64, 64);
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      NetObj *object = getChildList()->get(i);
+      NetObj *object = getChildList().get(i);
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         object->incRefCount();
-         nodes.add(static_cast<Node*>(object));
+         nodes.add(static_pointer_cast<Node>(getChildList().getShared(i)));
       }
    }
    unlockChildList();
@@ -770,62 +747,24 @@ void Template::forceApplyPolicyChanges()
       lockProperties();
       for(int i = 0; i < nodes.size(); i++)
       {
-         Node *node = nodes.get(i);
-         AgentConnectionEx *conn = node->getAgentConnection();
-         if (conn == NULL)
-         {
-            node->decRefCount();
-            continue;
-         }
+         const shared_ptr<Node>& node = nodes.getShared(i);
          for (int i = 0; i < m_policyList->size(); i++)
          {
-            shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
-            DeployData *data = new DeployData();
-            data->conn = conn;
-            conn->incRefCount();
-            memset(data->currHash, 0, MD5_DIGEST_SIZE);
-            data->currVerson = 0;
+            const shared_ptr<GenericAgentPolicy>& policy = m_policyList->getShared(i);
+            auto data = make_shared<AgentPolicyDeploymentData>(node->getAgentConnection(), node, node->isNewPolicyTypeFormatSupported());
             data->forceInstall = true;
-            data->newTypeFormatSupported = node->supportNewTypeFormat();
-            data->object = node;
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
             ThreadPoolExecute(g_agentConnectionThreadPool, policy, &GenericAgentPolicy::deploy, data);
          }
-         conn->decRefCount();
-         node->decRefCount();
       }
       unlockProperties();
    }
 }
 
 /**
- * Verify agent policy list with current policy versions
+ * Check agent policy deployment for exact template
  */
-void Template::applyPolicyChanges(DataCollectionTarget *object)
-{
-   lockChildList(false);
-   if (object->getObjectClass() == OBJECT_NODE)
-   {
-      AgentPolicyInfo *ap;
-      AgentConnection *conn = static_cast<Node*>(object)->getAgentConnection();
-      if (conn != NULL)
-      {
-         UINT32 rcc = conn->getPolicyInventory(&ap);
-         if (rcc == RCC_SUCCESS)
-         {
-            checkPolicyBind(static_cast<Node*>(object), ap);
-            delete ap;
-         }
-         conn->decRefCount();
-      }
-   }
-   unlockChildList();
-}
-
-/**
- * Check agent policy binding for exact template
- */
-void Template::checkPolicyBind(Node *node, AgentPolicyInfo *ap)
+void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap)
 {
    AgentConnectionEx *conn = node->getAgentConnection();
    if (conn == NULL)
@@ -835,35 +774,25 @@ void Template::checkPolicyBind(Node *node, AgentPolicyInfo *ap)
    for (int i = 0; i < m_policyList->size(); i++)
    {
       shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
-      DeployData *data = new DeployData();
+      auto data = make_shared<AgentPolicyDeploymentData>(node->getAgentConnection(), node, node->isNewPolicyTypeFormatSupported());
+      data->forceInstall = true;
 
       int j;
       for(j = 0; j < ap->size(); j++)
       {
          if (ap->getGuid(j).equals(policy->getGuid()))
          {
-            if(ap->getHash(j) != NULL)
+            if (ap->getHash(j) != nullptr)
                memcpy(data->currHash, ap->getHash(j), MD5_DIGEST_SIZE);
             else
                memset(data->currHash, 0, MD5_DIGEST_SIZE);
-
-            data->currVerson = ap->getVersion(j);
+            data->currVersion = ap->getVersion(j);
             break;
          }
       }
-      if (j == ap->size())
-      {
-         memset(data->currHash, 0, MD5_DIGEST_SIZE);
-         data->currVerson = 0;
-      }
 
-      data->conn = conn;
-      data->forceInstall = false;
-      data->newTypeFormatSupported = node->supportNewTypeFormat();
-      data->object = node;
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
       ThreadPoolExecute(g_agentConnectionThreadPool, policy, &GenericAgentPolicy::deploy, data);
-
    }
    unlockProperties();
 }

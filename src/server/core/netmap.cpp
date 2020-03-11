@@ -35,7 +35,7 @@ void NetworkMapGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool NetworkMapGroup::showThresholdSummary()
+bool NetworkMapGroup::showThresholdSummary() const
 {
 	return false;
 }
@@ -60,8 +60,8 @@ NetworkMap::NetworkMap() : super()
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, Ownership::True);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, Ownership::True);
-   m_filterSource = NULL;
-   m_filter = NULL;
+   m_filterSource = nullptr;
+   m_filter = nullptr;
    m_seedObjects = new IntegerArray<UINT32>();
 }
 
@@ -92,8 +92,8 @@ NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : super()
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, Ownership::True);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, Ownership::True);
-   m_filterSource = NULL;
-   m_filter = NULL;
+   m_filterSource = nullptr;
+   m_filter = nullptr;
 	m_isHidden = true;
    setCreationTime();
 
@@ -153,8 +153,8 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                   if (e->getType() != MAP_ELEMENT_OBJECT)
                      continue;
 
-                  NetObj *object = FindObjectById(((NetworkMapObject *)e)->getObjectId());
-                  if (object == NULL)
+                  shared_ptr<NetObj> object = FindObjectById(((NetworkMapObject *)e)->getObjectId());
+                  if (object == nullptr)
                      continue;
 
                   iChildStatus = object->getPropagatedStatus();
@@ -178,8 +178,8 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                   if (e->getType() != MAP_ELEMENT_OBJECT)
                      continue;
 
-                  NetObj *object = FindObjectById(((NetworkMapObject *)e)->getObjectId());
-                  if (object == NULL)
+                  shared_ptr<NetObj> object = FindObjectById(((NetworkMapObject *)e)->getObjectId());
+                  if (object == nullptr)
                      continue;
 
                   iChildStatus = object->getPropagatedStatus();
@@ -214,9 +214,9 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
          // Cause parent object(s) to recalculate it's status
          if ((iOldStatus != m_status) || bForcedRecalc)
          {
-            lockParentList(false);
-            for(int i = 0; i < getParentList()->size(); i++)
-               getParentList()->get(i)->calculateCompoundStatus();
+            readLockParentList();
+            for(int i = 0; i < getParentList().size(); i++)
+               getParentList().get(i)->calculateCompoundStatus();
             unlockParentList();
             lockProperties();
             setModified(MODIFY_RUNTIME);
@@ -229,9 +229,9 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
       if (m_status != STATUS_NORMAL)
       {
          m_status = STATUS_NORMAL;
-         lockParentList(false);
-         for(int i = 0; i < getParentList()->size(); i++)
-            getParentList()->get(i)->calculateCompoundStatus();
+         readLockParentList();
+         for(int i = 0; i < getParentList().size(); i++)
+            getParentList().get(i)->calculateCompoundStatus();
          unlockParentList();
          lockProperties();
          setModified(MODIFY_RUNTIME);
@@ -259,7 +259,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_mapType);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)m_layout);
@@ -295,7 +295,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       if (success && (m_elements->size() > 0))
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (?,?,?,?,?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             for(int i = 0; success && (i < m_elements->size()); i++)
@@ -328,7 +328,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       if (success && (m_links->size() > 0))
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             for(int i = 0; success && (i < m_links->size()); i++)
@@ -361,7 +361,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       if (success && (m_seedObjects->size() > 0))
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             for(int i = 0; success && (i < m_seedObjects->size()); i++)
@@ -420,7 +420,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
 		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
-		if (hResult == NULL)
+		if (hResult == nullptr)
 			return false;
 
 		m_mapType = DBGetFieldLong(hResult, 0, 0);
@@ -435,7 +435,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		m_backgroundColor = DBGetFieldLong(hResult, 0, 9);
 		m_objectDisplayMode = DBGetFieldLong(hResult, 0, 10);
 
-      TCHAR *filter = DBGetField(hResult, 0, 12, NULL, 0);
+      TCHAR *filter = DBGetField(hResult, 0, 12, nullptr, 0);
       setFilter(filter);
       MemFree(filter);
 
@@ -444,7 +444,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	   // Load elements
       _sntprintf(query, 256, _T("SELECT element_id,element_type,element_data,flags FROM network_map_elements WHERE map_id=%d"), m_id);
       hResult = DBSelect(hdb, query);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
@@ -453,8 +453,8 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				UINT32 id = DBGetFieldULong(hResult, i, 0);
 				UINT32 flags = DBGetFieldULong(hResult, i, 3);
 				Config *config = new Config();
-				TCHAR *data = DBGetField(hResult, i, 2, NULL, 0);
-				if (data != NULL)
+				TCHAR *data = DBGetField(hResult, i, 2, nullptr, 0);
+				if (data != nullptr)
 				{
 #ifdef UNICODE
 					char *utf8data = UTF8StringFromWideString(data);
@@ -501,7 +501,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		// Load links
       _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags FROM network_map_links WHERE map_id=%d"), m_id);
       hResult = DBSelect(hdb, query);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
@@ -521,11 +521,11 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
       // Load seed nodes
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT seed_node_id FROM network_map_seed_nodes WHERE map_id=?"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          hResult = DBSelectPrepared(hStmt);
-         if (hResult != NULL)
+         if (hResult != nullptr)
          {
             int nRows = DBGetNumRows(hResult);
             for(int i = 0; i < nRows; i++)
@@ -628,7 +628,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
    if (request->isFieldExist(VID_FILTER))
    {
       TCHAR *filter = request->getFieldAsString(VID_FILTER);
-      if (filter != NULL)
+      if (filter != nullptr)
          StrStrip(filter);
       setFilter(filter);
       MemFree(filter);
@@ -702,8 +702,8 @@ void NetworkMap::updateContent()
       NetworkMapObjectList objects;
       for(int i = 0; i < m_seedObjects->size(); i++)
       {
-         Node *seed = (Node *)FindObjectById(m_seedObjects->get(i), OBJECT_NODE);
-         if (seed != NULL)
+         shared_ptr<Node> seed = static_pointer_cast<Node>(FindObjectById(m_seedObjects->get(i), OBJECT_NODE));
+         if (seed != nullptr)
          {
             UINT32 status;
             NetworkMapObjectList *topology;
@@ -719,10 +719,10 @@ void NetworkMap::updateContent()
                   topology = seed->buildInternalCommunicationTopology();
                   break;
                default:
-                  topology = NULL;
+                  topology = nullptr;
                   break;
             }
-            if (topology != NULL)
+            if (topology != nullptr)
             {
                objects.merge(topology);
                delete topology;
@@ -755,15 +755,15 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u]): updateObjects called"), m_name, m_id);
 
    // Filter out disallowed objects
-   if ((m_flags & MF_FILTER_OBJECTS) && (m_filter != NULL))
+   if ((m_flags & MF_FILTER_OBJECTS) && (m_filter != nullptr))
    {
       for(int j = 0; j < objects->getNumObjects(); j++)
       {
          IntegerArray<UINT32> *idList = objects->getObjects();
          for(int i = 0; i < idList->size(); i++)
          {
-            NetObj *object = FindObjectById(idList->get(i));
-            if ((object == NULL) || !isAllowedOnMap(object))
+            shared_ptr<NetObj> object = FindObjectById(idList->get(i));
+            if ((object == nullptr) || !isAllowedOnMap(object))
             {
                idList->remove(i);
                i--;
@@ -877,13 +877,13 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             config.append(_T("\t<dciList length=\"0\"/>\n"));
             config.append(_T("\t<objectStatusList class=\"java.util.ArrayList\">\n"));
 
-            Node *node = static_cast<Node*>(FindObjectById(linkInfo->id1, OBJECT_NODE));
-            if (node != NULL)
+            shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(linkInfo->id1, OBJECT_NODE));
+            if (node != nullptr)
             {
                for(int n = 0; n < objects->getLinks()->get(i)->portIdCount; n++)
                {
-                  Interface *iface = node->findInterfaceByIndex(linkInfo->portIdArray1[n]);
-                  if (iface != NULL)
+                  shared_ptr<Interface> iface = node->findInterfaceByIndex(linkInfo->portIdArray1[n]);
+                  if (iface != nullptr)
                   {
                      config.append(_T("\t\t<long>"));
                      config.append(iface->getId());
@@ -892,13 +892,13 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
                }
             }
 
-            node = static_cast<Node*>(FindObjectById(linkInfo->id2, OBJECT_NODE));
-            if (node != NULL)
+            node = static_pointer_cast<Node>(FindObjectById(linkInfo->id2, OBJECT_NODE));
+            if (node != nullptr)
             {
                for(int n = 0; n < linkInfo->portIdCount; n++)
                {
-                  Interface *iface = node->findInterfaceByIndex(linkInfo->portIdArray2[n]);
-                  if (iface != NULL)
+                  shared_ptr<Interface> iface = node->findInterfaceByIndex(linkInfo->portIdArray2[n]);
+                  if (iface != nullptr)
                   {
                      config.append(_T("\t\t<long>"));
                      config.append(iface->getId());
@@ -977,43 +977,43 @@ UINT32 NetworkMap::elementIdFromObjectId(UINT32 oid)
 /**
  * Set filter. Object properties must be already locked.
  *
- * @param filter new filter script code or NULL to clear filter
+ * @param filter new filter script code or nullptr to clear filter
  */
 void NetworkMap::setFilter(const TCHAR *filter)
 {
 	MemFree(m_filterSource);
 	delete m_filter;
-	if ((filter != NULL) && (*filter != 0))
+	if ((filter != nullptr) && (*filter != 0))
 	{
 		TCHAR error[256];
 
 		m_filterSource = MemCopyString(filter);
 		m_filter = NXSLCompileAndCreateVM(m_filterSource, error, 256, new NXSL_ServerEnv);
-		if (m_filter == NULL)
+		if (m_filter == nullptr)
 			nxlog_write(NXLOG_WARNING, _T("Failed to compile filter script for network map object %s [%u] (%s)"), m_name, m_id, error);
 	}
 	else
 	{
-		m_filterSource = NULL;
-		m_filter = NULL;
+		m_filterSource = nullptr;
+		m_filter = nullptr;
 	}
 }
 
 /**
  * Check if given object should be placed on map
  */
-bool NetworkMap::isAllowedOnMap(NetObj *object)
+bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 {
 	bool result = true;
 
 	lockProperties();
-	if (m_filter != NULL)
+	if (m_filter != nullptr)
 	{
 	   SetupServerScriptVM(m_filter, object, shared_ptr<DCObjectInfo>());
 		if (m_filter->run())
 		{
 			NXSL_Value *value = m_filter->getResult();
-			result = ((value != NULL) && value->isTrue());
+			result = ((value != nullptr) && value->isTrue());
 		}
 		else
 		{
@@ -1033,7 +1033,7 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 void NetworkMap::onObjectDelete(UINT32 dwObjectId)
 {
    lockProperties();
-   UINT32 elementId = elementIdFromObjectId(dwObjectId);
+   uint32_t elementId = elementIdFromObjectId(dwObjectId);
    int i = 0;
    while(i < m_links->size())
    {

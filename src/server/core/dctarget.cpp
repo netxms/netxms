@@ -27,12 +27,12 @@
  * Data collector thread pool
  */
 extern ThreadPool *g_dataCollectorThreadPool;
-ManualGauge64 *g_currentPollerTimer = NULL;
+ManualGauge64 *g_currentPollerTimer = nullptr;
 
 /**
  * Data collector worker
  */
-void DataCollector(shared_ptr<DCObject> dcObject);
+void DataCollector(const shared_ptr<DCObject>& dcObject);
 
 /**
  * Throttle housekeeper if needed. Returns false if shutdown time has arrived and housekeeper process should be aborted.
@@ -125,7 +125,7 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
    UINT32 countOverview = 0;
    UINT32 fieldIdTooltip = VID_TOOLTIP_DCI_LIST_BASE;
    UINT32 countTooltip = 0;
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
       DCObject *dci = m_dcObjects->get(i);
@@ -166,7 +166,7 @@ UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
  */
 void DataCollectionTarget::updateDciCache()
 {
-	lockDciAccess(false);
+	readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		if (m_dcObjects->get(i)->getType() == DCO_TYPE_ITEM)
@@ -182,9 +182,9 @@ void DataCollectionTarget::updateDciCache()
  */
 void DataCollectionTarget::calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData)
 {
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
 
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *o = m_dcObjects->get(i);
@@ -234,9 +234,9 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    int itemCount = 0;
    int tableCount = 0;
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
 
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *o = m_dcObjects->get(i);
@@ -307,7 +307,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
  */
 void DataCollectionTarget::queuePredictionEngineTraining()
 {
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *o = m_dcObjects->get(i);
@@ -317,7 +317,7 @@ void DataCollectionTarget::queuePredictionEngineTraining()
          if (dci->getPredictionEngine()[0] != 0)
          {
             PredictionEngine *e = FindPredictionEngine(dci->getPredictionEngine());
-            if ((e != NULL) && e->requiresTraining())
+            if ((e != nullptr) && e->requiresTraining())
             {
                QueuePredictionEngineTraining(e, dci);
             }
@@ -354,7 +354,7 @@ UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, NXCPMessage *msg)
 {
 	UINT32 rcc = RCC_INVALID_DCI_ID;
 
-   lockDciAccess(false);
+   readLockDciAccess();
 
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
@@ -379,7 +379,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 {
    bool bResult = true;
 
-   lockDciAccess(true);	// write lock
+   writeLockDciAccess();	// write lock
 
    nxlog_debug(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName().cstr(), m_name);
 
@@ -395,7 +395,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
       // New item from template, just add it
 		DCObject *newObject = dcObject->clone();
       newObject->setTemplateId(dwTemplateId, dcObject->getId());
-      newObject->changeBinding(CreateUniqueId(IDG_ITEM), this, TRUE);
+      newObject->changeBinding(CreateUniqueId(IDG_ITEM), self(), TRUE);
       bResult = addDCObject(newObject, true);
    }
    else
@@ -429,7 +429,7 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
 {
    UINT32 i, j, dwNumDeleted, *pdwDeleteList;
 
-   lockDciAccess(true);  // write lock
+   writeLockDciAccess();  // write lock
 
    pdwDeleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
    dwNumDeleted = 0;
@@ -463,12 +463,12 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
    {
       if (getObjectClass() == OBJECT_NODE)
       {
-         Template *obj = (Template *)FindObjectById(dwTemplateId, OBJECT_TEMPLATE);
+         shared_ptr<Template> obj = static_pointer_cast<Template>(FindObjectById(dwTemplateId, OBJECT_TEMPLATE));
          obj->removeAllPolicies((Node *)this);
       }
-      lockDciAccess(true);  // write lock
+      writeLockDciAccess();  // write lock
 
-		UINT32 *deleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
+		UINT32 *deleteList = MemAllocArray<UINT32>(m_dcObjects->size());
 		int numDeleted = 0;
 
 		int i;
@@ -482,11 +482,11 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
 			deleteDCObject(deleteList[i], false, 0);
 
       unlockDciAccess();
-		free(deleteList);
+		MemFree(deleteList);
    }
    else
    {
-      lockDciAccess(false);
+      readLockDciAccess();
 
       for(int i = 0; i < m_dcObjects->size(); i++)
          if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
@@ -503,13 +503,13 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
  */
 UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId)
 {
-	lockDciAccess(false);
+	readLockDciAccess();
 
 	UINT32 dwId = VID_SYSDCI_LIST_BASE, dwCount = 0;
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-      if ((object->getPerfTabSettings() != NULL) &&
+      if ((object->getPerfTabSettings() != nullptr) &&
           object->hasValue() &&
           (object->getStatus() == ITEM_STATUS_ACTIVE) &&
           object->matchClusterResource() &&
@@ -530,7 +530,7 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId)
                // to allow UI to resolve double template case
                // (template -> instance discovery item on node -> actual item on node)
                shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
-               pMsg->setField(dwId++, (src != NULL) ? src->getTemplateItemId() : 0);
+               pMsg->setField(dwId++, (src != nullptr) ? src->getTemplateItemId() : 0);
                dwId += 2;
             }
             else
@@ -562,7 +562,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 	UINT32 countId = varId++;
 	UINT32 count = 0;
 
-	lockDciAccess(false);
+	readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
@@ -584,7 +584,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(shared_ptr<DCObject> dco, time_t currTime, void *value)
+bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, void *value)
 {
    bool updateStatus;
 	bool result = dco->processNewValue(currTime, value, &updateStatus);
@@ -611,16 +611,15 @@ void DataCollectionTarget::queueItemsForPolling()
    if ((m_status == STATUS_UNMANAGED) || isDataCollectionDisabled() || m_isDeleted)
       return;  // Do not collect data for unmanaged objects or if data collection is disabled
 
-   time_t currTime = time(NULL);
+   time_t currTime = time(nullptr);
 
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
       if (m_dcObjects->get(i)->isReadyForPolling(currTime))
       {
          object->setBusyFlag();
-         incRefCount();   // Increment reference count for each queued DCI
 
          if ((object->getDataSource() == DS_NATIVE_AGENT) ||
              (object->getDataSource() == DS_WINPERF) ||
@@ -649,7 +648,7 @@ void DataCollectionTarget::queueItemsForPolling()
  */
 void DataCollectionTarget::updateDataCollectionTimeIntervals()
 {
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       m_dcObjects->get(i)->updateTimeIntervals();
@@ -660,7 +659,7 @@ void DataCollectionTarget::updateDataCollectionTimeIntervals()
 /**
  * Get object from parameter
  */
-NetObj *DataCollectionTarget::objectFromParameter(const TCHAR *param)
+shared_ptr<NetObj> DataCollectionTarget::objectFromParameter(const TCHAR *param) const
 {
    TCHAR *eptr, arg[256];
    AgentGetParameterArg(param, 1, arg, 256);
@@ -672,15 +671,15 @@ NetObj *DataCollectionTarget::objectFromParameter(const TCHAR *param)
    }
 
    // Find child object with requested ID or name
-   NetObj *object = NULL;
-   lockChildList(false);
-   for(int i = 0; i < getChildList()->size(); i++)
+   shared_ptr<NetObj> object;
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      NetObj *curr = getChildList()->get(i);
+      NetObj *curr = getChildList().get(i);
       if (((objectId == 0) && (!_tcsicmp(curr->getName(), arg))) ||
           (objectId == curr->getId()))
       {
-         object = curr;
+         object = getChildList().getShared(i);
          break;
       }
    }
@@ -753,8 +752,8 @@ DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, si
    }
    else if (MatchString(_T("ChildStatus(*)"), param, FALSE))
    {
-      NetObj *object = objectFromParameter(param);
-      if (object != NULL)
+      shared_ptr<NetObj> object = objectFromParameter(param);
+      if (object != nullptr)
       {
          _sntprintf(buffer, bufSize, _T("%d"), object->getStatus());
       }
@@ -767,16 +766,16 @@ DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, si
    {
       TCHAR *pEnd, szArg[256];
       UINT32 dwId;
-      NetObj *pObject = NULL;
+      shared_ptr<NetObj> pObject;
 
       AgentGetParameterArg(param, 1, szArg, 256);
       dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd == 0)
 		{
 			pObject = FindObjectById(dwId);
-			if (pObject != NULL)
+			if (pObject != nullptr)
 				if (pObject->getObjectClass() != OBJECT_CONDITION)
-					pObject = NULL;
+					pObject = nullptr;
 		}
 		else
       {
@@ -784,7 +783,7 @@ DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, si
 			pObject = FindObjectByName(szArg, OBJECT_CONDITION);
       }
 
-      if (pObject != NULL)
+      if (pObject != nullptr)
       {
 			if (pObject->isTrustedNode(m_id))
 			{
@@ -809,7 +808,7 @@ DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, si
 }
 
 /**
- * Run data collection script. Returns pointer to NXSL VM after successful run and NULL on failure.
+ * Run data collection script. Returns pointer to NXSL VM after successful run and nullptr on failure.
  */
 NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject)
 {
@@ -828,26 +827,26 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       *p = 0;
    }
 
-   NXSL_VM *vm = CreateServerScriptVM(name, this);
+   NXSL_VM *vm = CreateServerScriptVM(name, self());
    if (vm != nullptr)
    {
       ObjectRefArray<NXSL_Value> args(16, 16);
-      if ((p != NULL) && !ParseValueList(vm, &p, args))
+      if ((p != nullptr) && !ParseValueList(vm, &p, args))
       {
          // argument parsing error
          nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Argument parsing error"), m_name, param);
          delete vm;
-         return NULL;
+         return nullptr;
       }
 
-      if (targetObject != NULL)
+      if (targetObject != nullptr)
       {
          vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject(vm));
       }
       if (!vm->run(args))
       {
          nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
-         time_t now = time(NULL);
+         time_t now = time(nullptr);
          time_t lastReport = static_cast<time_t>(m_scriptErrorReports->getInt64(param, 0));
          if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
          {
@@ -861,7 +860,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
    {
       nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): VM load error"), m_name, param);
    }
-   nxlog_debug(7, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): %s"), m_name, param, (vm != NULL) ? _T("success") : _T("failure"));
+   nxlog_debug(7, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): %s"), m_name, param, (vm != nullptr) ? _T("success") : _T("failure"));
    return vm;
 }
 
@@ -976,7 +975,7 @@ static bool ParseCallArgumensList(TCHAR *input, StringList *args)
 DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize)
 {
    uint32_t proxyId = getEffectiveWebServiceProxy();
-   Node *proxyNode = static_cast<Node*>(FindObjectById(proxyId, OBJECT_NODE));
+   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
    if (proxyNode == nullptr)
    {
       nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): cannot find proxy node [%u]"), m_name, param, proxyId);
@@ -988,7 +987,7 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
    Trim(name);
 
    TCHAR *path = _tcsrchr(name, _T(':'));
-   if (path == NULL)
+   if (path == nullptr)
    {
       nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): missing parameter path"), m_name, param);
       return DCE_NOT_SUPPORTED;
@@ -999,7 +998,7 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
    // Can be in form service(arg1, arg2, ... argN)
    StringList args;
    TCHAR *p = _tcschr(name, _T('('));
-   if (p != NULL)
+   if (p != nullptr)
    {
       size_t l = _tcslen(name) - 1;
       if (name[l] != _T(')'))
@@ -1078,12 +1077,12 @@ DataCollectionError DataCollectionTarget::getScriptItem(const TCHAR *param, size
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
-   if (vm != NULL)
+   if (vm != nullptr)
    {
       NXSL_Value *value = vm->getResult();
       if (value->isNull())
       {
-         // NULL value is an error indicator
+         // nullptr value is an error indicator
          rc = DCE_COLLECTION_ERROR;
       }
       else
@@ -1105,7 +1104,7 @@ DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, 
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
-   if (vm != NULL)
+   if (vm != nullptr)
    {
       rc = DCE_SUCCESS;
       NXSL_Value *value = vm->getResult();
@@ -1139,7 +1138,7 @@ DataCollectionError DataCollectionTarget::getScriptTable(const TCHAR *param, Tab
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
-   if (vm != NULL)
+   if (vm != nullptr)
    {
       NXSL_Value *value = vm->getResult();
       if (value->isObject(_T("Table")))
@@ -1224,7 +1223,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
    int offset = tableDefinition->isMultiInstance() ? 2 : 1;
    int baseRow = tableData->getNumRows();
    bool rowAdded = false;
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < tableDefinition->getNumColumns(); i++)
    {
       SummaryTableColumn *tc = tableDefinition->getColumn(i);
@@ -1317,7 +1316,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
  */
 void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
 {
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *o = m_dcObjects->get(i);
@@ -1327,7 +1326,7 @@ void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinitio
            o->hasAccess(userId))
       {
          Table *lastValue = ((DCTable*)o)->getLastValue();
-         if (lastValue == NULL)
+         if (lastValue == nullptr)
             continue;
 
          for(int j = 0; j < lastValue->getNumRows(); j++)
@@ -1351,7 +1350,7 @@ void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinitio
 /**
  * Must return true if object is a possible event source
  */
-bool DataCollectionTarget::isEventSource()
+bool DataCollectionTarget::isEventSource() const
 {
    return true;
 }
@@ -1363,7 +1362,7 @@ bool DataCollectionTarget::isEventSource()
 int DataCollectionTarget::getMostCriticalDCIStatus()
 {
    int status = -1;
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *curr = m_dcObjects->get(i);
@@ -1374,7 +1373,7 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
             continue; // Calculated only on those that are aggregated on cluster
 
          ItemValue *value = static_cast<DCItem*>(curr)->getInternalLastValue();
-         if (value != NULL && (INT32)*value >= STATUS_NORMAL && (INT32)*value <= STATUS_CRITICAL)
+         if (value != nullptr && (INT32)*value >= STATUS_NORMAL && (INT32)*value <= STATUS_CRITICAL)
             status = std::max(status, (INT32)*value);
          delete value;
       }
@@ -1407,7 +1406,7 @@ void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
    DbgPrintf(4, _T("Entering maintenance mode for %s [%d]"), m_name, m_id);
    UINT64 eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "s", CHECK_NULL_EX(comments));
 
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *dco = m_dcObjects->get(i);
@@ -1431,9 +1430,9 @@ void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
 void DataCollectionTarget::leaveMaintenanceMode()
 {
    DbgPrintf(4, _T("Leaving maintenance mode for %s [%d]"), m_name, m_id);
-   PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, NULL);
+   PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, nullptr);
 
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *dco = m_dcObjects->get(i);
@@ -1458,7 +1457,7 @@ void DataCollectionTarget::leaveMaintenanceMode()
       startForcedStatusPoll();
       TCHAR threadKey[32];
       _sntprintf(threadKey, 32, _T("POLL_%u"), getId());
-      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, this, &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(PollerType::STATUS, this));
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, self(), &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(PollerType::STATUS, self()));
    }
 }
 
@@ -1467,9 +1466,9 @@ void DataCollectionTarget::leaveMaintenanceMode()
  */
 void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId)
 {
-   lockDciAccess(false);
+   readLockDciAccess();
    shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
-   if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+   if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
    {
       static_cast<DCItem*>(dci.get())->updateCacheSize(conditionId);
    }
@@ -1481,9 +1480,9 @@ void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionI
  */
 void DataCollectionTarget::reloadDCItemCache(UINT32 dciId)
 {
-   lockDciAccess(false);
+   readLockDciAccess();
    shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
-   if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+   if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
    {
       nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%d] on %s [%d]"),
                dci->getName().cstr(), dci->getId(), m_name, m_id);
@@ -1495,7 +1494,7 @@ void DataCollectionTarget::reloadDCItemCache(UINT32 dciId)
 /**
  * Returns true if object is data collection target
  */
-bool DataCollectionTarget::isDataCollectionTarget()
+bool DataCollectionTarget::isDataCollectionTarget() const
 {
    return true;
 }
@@ -1577,7 +1576,7 @@ void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
    if ((m_status == STATUS_UNMANAGED) || (m_state & DCSF_UNREACHABLE))
       return;
 
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *dco = m_dcObjects->get(i);
@@ -1604,7 +1603,7 @@ void DataCollectionTarget::collectProxyInfoCallback(NetObj *object, void *data)
 /**
  * Get effective source node for given data collection object
  */
-UINT32 DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
+uint32_t DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
 {
    return dco->getSourceNode();
 }
@@ -1625,18 +1624,18 @@ void DataCollectionTarget::applyUserTemplates()
    if (IsShutdownInProgress())
       return;
 
-   ObjectArray<NetObj> *templates = g_idxObjectById.getObjects(true, TemplateSelectionFilter);
+   SharedObjectArray<NetObj> *templates = g_idxObjectById.getObjects(TemplateSelectionFilter);
    for(int i = 0; i < templates->size(); i++)
    {
       Template *pTemplate = (Template *)templates->get(i);
-      AutoBindDecision decision = pTemplate->isApplicable(this);
+      AutoBindDecision decision = pTemplate->isApplicable(self());
       if (decision == AutoBindDecision_Bind)
       {
          if (!pTemplate->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
-            pTemplate->applyToTarget(this);
+            pTemplate->applyToTarget(self());
             PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
          }
       }
@@ -1646,13 +1645,12 @@ void DataCollectionTarget::applyUserTemplates()
          {
             DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
-            pTemplate->deleteChild(this);
-            deleteParent(pTemplate);
+            pTemplate->deleteChild(*this);
+            deleteParent(*pTemplate);
             pTemplate->queueRemoveFromTarget(m_id, true);
             PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
          }
       }
-      pTemplate->decRefCount();
    }
    delete templates;
 }
@@ -1673,19 +1671,19 @@ void DataCollectionTarget::updateContainerMembership()
    if (IsShutdownInProgress())
       return;
 
-   ObjectArray<NetObj> *containers = g_idxObjectById.getObjects(true, ContainerSelectionFilter);
+   SharedObjectArray<NetObj> *containers = g_idxObjectById.getObjects(ContainerSelectionFilter);
    for(int i = 0; i < containers->size(); i++)
    {
       Container *pContainer = (Container *)containers->get(i);
-      AutoBindDecision decision = pContainer->isApplicable(this);
+      AutoBindDecision decision = pContainer->isApplicable(self());
       if (decision == AutoBindDecision_Bind)
       {
          if (!pContainer->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("DataCollectionTarget::updateContainerMembership(): binding object %d \"%s\" to container %d \"%s\""),
                       m_id, m_name, pContainer->getId(), pContainer->getName());
-            pContainer->addChild(this);
-            addParent(pContainer);
+            pContainer->addChild(self());
+            addParent(pContainer->self());
             PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->calculateCompoundStatus();
          }
@@ -1696,13 +1694,12 @@ void DataCollectionTarget::updateContainerMembership()
          {
             DbgPrintf(4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),
                       m_id, m_name, pContainer->getId(), pContainer->getName());
-            pContainer->deleteChild(this);
-            deleteParent(pContainer);
+            pContainer->deleteChild(*this);
+            deleteParent(*pContainer);
             PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->calculateCompoundStatus();
          }
       }
-      pContainer->decRefCount();
    }
    delete containers;
 }
@@ -1720,7 +1717,7 @@ json_t *DataCollectionTarget::toJson()
  */
 void DataCollectionTarget::statusPollWorkerEntry(PollerInfo *poller)
 {
-   statusPollWorkerEntry(poller, NULL, 0);
+   statusPollWorkerEntry(poller, nullptr, 0);
 }
 
 /**
@@ -1754,7 +1751,7 @@ void DataCollectionTarget::statusPoll(PollerInfo *poller, ClientSession *session
  */
 void DataCollectionTarget::configurationPollWorkerEntry(PollerInfo *poller)
 {
-   configurationPollWorkerEntry(poller, NULL, 0);
+   configurationPollWorkerEntry(poller, nullptr, 0);
 }
 
 /**
@@ -1781,7 +1778,7 @@ void DataCollectionTarget::configurationPoll(PollerInfo *poller, ClientSession *
  */
 void DataCollectionTarget::instanceDiscoveryPollWorkerEntry(PollerInfo *poller)
 {
-   instanceDiscoveryPollWorkerEntry(poller, NULL, 0);
+   instanceDiscoveryPollWorkerEntry(poller, nullptr, 0);
 }
 
 /**
@@ -1849,11 +1846,11 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
 }
 
 /**
- * Get list of instances for given data collection object. Default implementation always returns NULL.
+ * Get list of instances for given data collection object. Default implementation always returns nullptr.
  */
 StringMap *DataCollectionTarget::getInstanceList(DCObject *dco)
 {
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -1879,7 +1876,7 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
 
    // collect instance discovery DCIs
    SharedObjectArray<DCObject> rootObjects;
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       shared_ptr<DCObject> object = m_dcObjects->getShared(i);
@@ -1902,7 +1899,7 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
       sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), object->getName().cstr(), object->getId());
       StringMap *instances = getInstanceList(object);
       INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
-      if (instances != NULL)
+      if (instances != nullptr)
       {
          DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
          StringObjectMap<InstanceDiscoveryData> *filteredInstances = object->filterInstanceList(instances);
@@ -1945,7 +1942,7 @@ static EnumerationCallbackResult FindInstanceCallback(const TCHAR *key, const In
 struct CreateInstanceDCOData
 {
    DCObject *root;
-   DataCollectionTarget *object;
+   shared_ptr<DataCollectionTarget> object;
    UINT32 requestId;
 };
 
@@ -1954,8 +1951,8 @@ struct CreateInstanceDCOData
  */
 static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const InstanceDiscoveryData *value, CreateInstanceDCOData *data)
 {
-   DataCollectionTarget *object = data->object;
-   DCObject *root = data->root;
+   auto object = data->object;
+   auto root = data->root;
 
    DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): creating new DCO for instance \"%s\""),
              object->getName(), object->getId(), root->getName().cstr(), root->getId(), key);
@@ -1967,10 +1964,10 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const Insta
    dco->setInstance(value->getInstance());
    dco->setInstanceDiscoveryMethod(IDM_NONE);
    dco->setInstanceDiscoveryData(key);
-   dco->setInstanceFilter(NULL);
+   dco->setInstanceFilter(nullptr);
    dco->expandInstance();
    dco->setRelatedObject(value->getRelatedObject());
-   dco->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
+   dco->changeBinding(CreateUniqueId(IDG_ITEM), object, false);
    object->addDCObject(dco, true);
    return _CONTINUE;
 }
@@ -1982,7 +1979,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
 {
    bool changed = false;
 
-   lockDciAccess(true);
+   writeLockDciAccess();
 
    // Delete DCIs for missing instances and update existing
    IntegerArray<UINT32> deleteList;
@@ -2021,7 +2018,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
          }
          instances->remove(dcoInstance);
          if (notify)
-            NotifyClientsOnDCIUpdate(this, object);
+            NotifyClientsOnDCIUpdate(*this, object);
       }
       else
       {
@@ -2029,7 +2026,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
 
          if ((object->getInstanceGracePeriodStart() == 0) && (retentionTime > 0))
          {
-            object->setInstanceGracePeriodStart(time(NULL));
+            object->setInstanceGracePeriodStart(time(nullptr));
             object->setStatus(ITEM_STATUS_DISABLED, false);
             nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, grace period started"),
                       m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
@@ -2037,7 +2034,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
             changed = true;
          }
 
-         if ((retentionTime == 0) || ((time(NULL) - object->getInstanceGracePeriodStart()) > retentionTime))
+         if ((retentionTime == 0) || ((time(nullptr) - object->getInstanceGracePeriodStart()) > retentionTime))
          {
             // not found, delete DCO
             nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
@@ -2057,7 +2054,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
    {
       CreateInstanceDCOData data;
       data.root = root;
-      data.object = this;
+      data.object = self();
       data.requestId = requestId;
       instances->forEach(CreateInstanceDCI, &data);
       changed = true;
@@ -2072,7 +2069,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
  */
 UINT32 DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId)
 {
-   lockDciAccess(false);
+   readLockDciAccess();
 
    UINT32 dwId = VID_DCI_VALUES_BASE, dwCount = 0;
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -2127,7 +2124,7 @@ void DataCollectionTarget::onDataCollectionChange()
 void DataCollectionTarget::calculateProxyLoad()
 {
    double loadFactor = 0;
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *object = m_dcObjects->get(i);
@@ -2164,10 +2161,10 @@ NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
    NXSL_Array *parents = new NXSL_Array(vm);
    int index = 0;
 
-   lockParentList(false);
-   for(int i = 0; i < getParentList()->size(); i++)
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
    {
-      NetObj *object = getParentList()->get(i);
+      NetObj *object = getParentList().get(i);
       if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedNode(m_id))
       {
          parents->set(index++, object->createNXSLObject(vm));
@@ -2184,7 +2181,7 @@ NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
 UINT64 DataCollectionTarget::getCacheMemoryUsage()
 {
    UINT64 cacheSize = 0;
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *object = m_dcObjects->get(i);
@@ -2207,8 +2204,8 @@ uint32_t DataCollectionTarget::getEffectiveWebServiceProxy()
    if (IsZoningEnabled() && (webServiceProxy == 0) && (zoneUIN != 0))
    {
       // Use zone default proxy if set
-      Zone *zone = FindZoneByUIN(zoneUIN);
-      if (zone != NULL)
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zone != nullptr)
       {
          webServiceProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
       }

@@ -48,7 +48,7 @@ public:
    {
       message = MemCopyBlock(msg, msgLen + 1);
       messageLength = msgLen;
-      timestamp = time(NULL);
+      timestamp = time(nullptr);
       zoneUIN = 0;
       nodeId = 0;
    }
@@ -92,7 +92,7 @@ enum NodeMatchingPolicy
  * Static data
  */
 static UINT64 s_msgId = 1;
-static LogParser *s_parser = NULL;
+static LogParser *s_parser = nullptr;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
 static NodeMatchingPolicy s_nodeMatchingPolicy = SOURCE_IP_THEN_HOSTNAME;
 static THREAD s_receiverThread = INVALID_THREAD_HANDLE;
@@ -118,7 +118,7 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
       return FALSE;  // Timestamp cannot be shorter than 16 bytes
 
    // Prepare local time structure
-   t = time(NULL);
+   t = time(nullptr);
 #if HAVE_LOCALTIME_R
    localtime_r(&t, &timestamp);
 #else
@@ -285,27 +285,27 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, time_t receiverTime, NX
 /**
  * Find node by host name
  */
-static Node *FindNodeByHostname(const char *hostName, UINT32 zoneUIN)
+static shared_ptr<Node> FindNodeByHostname(const char *hostName, UINT32 zoneUIN)
 {
    if (hostName[0] == 0)
-      return NULL;
+      return nullptr;
 
-   Node *node = NULL;
+   shared_ptr<Node> node;
    InetAddress ipAddr = InetAddress::resolveHostName(hostName);
 	if (ipAddr.isValidUnicast())
    {
       node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, ipAddr);
    }
 
-   if (node == NULL)
+   if (node == nullptr)
 	{
 #ifdef UNICODE
 		WCHAR wname[MAX_OBJECT_NAME];
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hostName, -1, wname, MAX_OBJECT_NAME);
 		wname[MAX_OBJECT_NAME - 1] = 0;
-		node = (Node *)FindObjectByName(wname, OBJECT_NODE);
+		node = static_pointer_cast<Node>(FindObjectByName(wname, OBJECT_NODE));
 #else
-		node = (Node *)FindObjectByName(hostName, OBJECT_NODE);
+		node = static_pointer_cast<Node>(FindObjectByName(hostName, OBJECT_NODE));
 #endif
    }
    return node;
@@ -315,25 +315,25 @@ static Node *FindNodeByHostname(const char *hostName, UINT32 zoneUIN)
  * Bind syslog message to NetXMS node object
  * sourceAddr is an IP address from which we receive message
  */
-static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, UINT32 zoneUIN, UINT32 nodeId)
+static shared_ptr<Node> BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, uint32_t zoneUIN, uint32_t nodeId)
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: addr=%s zoneUIN=%d"), (const TCHAR *)sourceAddr.toString(), zoneUIN);
 
-   Node *node = NULL;
+   shared_ptr<Node> node;
    if (nodeId != 0)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: node ID explicitly set to %d"), nodeId);
-      node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+      node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
    }
    else if (sourceAddr.isLoopback() && (zoneUIN == 0))
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: source is loopback in default zone, binding to management node (ID %d)"), g_dwMgmtNode);
-      node = (Node *)FindObjectById(g_dwMgmtNode, OBJECT_NODE);
+      node = static_pointer_cast<Node>(FindObjectById(g_dwMgmtNode, OBJECT_NODE));
    }
    else if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
       node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, sourceAddr);
-      if (node == NULL)
+      if (node == nullptr)
       {
          node = FindNodeByHostname(pRec->szHostName, zoneUIN);
       }
@@ -341,13 +341,13 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr
    else
    {
       node = FindNodeByHostname(pRec->szHostName, zoneUIN);
-      if (node == NULL)
+      if (node == nullptr)
       {
          node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, sourceAddr);
       }
    }
 
-	if (node != NULL)
+	if (node != nullptr)
    {
 	   node->incSyslogMessageCount();
       pRec->dwSourceObject = node->getId();
@@ -355,10 +355,10 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr
       if (pRec->szHostName[0] == 0)
 		{
 #ifdef UNICODE
-			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, node->getName(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, NULL, NULL);
+			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, node->getName(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, nullptr, nullptr);
 			pRec->szHostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
 #else
-         nx_strncpy(pRec->szHostName, node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
+         strlcpy(pRec->szHostName, node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
 #endif
 		}
    }
@@ -399,9 +399,9 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?,?)"), true);
-      if (hStmt == NULL)
+      if (hStmt == nullptr)
       {
-         free(r);
+         MemFree(r);
          DBConnectionPoolReleaseConnection(hdb);
          continue;
       }
@@ -436,7 +436,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
          if (count == maxRecords)
             break;
          r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.get();
-         if ((r == NULL) || (r == INVALID_POINTER_VALUE))
+         if ((r == nullptr) || (r == INVALID_POINTER_VALUE))
             break;
       }
       DBCommit(hdb);
@@ -462,7 +462,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
       InterlockedIncrement64(&g_syslogMessagesReceived);
 
       record.qwMsgId = s_msgId++;
-      Node *node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneUIN, msg->nodeId);
+      shared_ptr<Node> node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneUIN, msg->nodeId);
 
       g_syslogWriteQueue.put(MemCopyBlock(&record, sizeof(NX_SYSLOG_RECORD)));
 
@@ -474,7 +474,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 		            msg->sourceAddr.toString(ipAddr), msg->zoneUIN, record.dwSourceObject, record.szTag, record.szMessage);
 
 		MutexLock(s_parserLock);
-		if ((record.dwSourceObject != 0) && (s_parser != NULL) &&
+		if ((record.dwSourceObject != 0) && (s_parser != nullptr) &&
           ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
 		{
 #ifdef UNICODE
@@ -482,9 +482,9 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szTag, -1, wtag, MAX_SYSLOG_TAG_LEN);
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szMessage, -1, wmsg, MAX_LOG_MSG_LENGTH);
-			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, NULL, 0, record.dwSourceObject);
+			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, nullptr, 0, record.dwSourceObject);
 #else
-			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, NULL, 0, record.dwSourceObject);
+			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, nullptr, 0, record.dwSourceObject);
 #endif
 		}
 		MutexUnlock(s_parserLock);
@@ -564,7 +564,7 @@ static bool EventNameResolver(const TCHAR *name, UINT32 *code)
 {
 	bool success = false;
 	shared_ptr<EventTemplate> event = FindEventTemplateByName(name);
-	if (event != NULL)
+	if (event != nullptr)
 	{
 		*code = event->getCode();
 		success = true;
@@ -579,31 +579,31 @@ static void CreateParserFromConfig()
 {
 	MutexLock(s_parserLock);
 	LogParser *prev = s_parser;
-	s_parser = NULL;
+	s_parser = nullptr;
 #ifdef UNICODE
    char *xml;
 	WCHAR *wxml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
-	if (wxml != NULL)
+	if (wxml != nullptr)
 	{
 		xml = UTF8StringFromWideString(wxml);
 		free(wxml);
 	}
 	else
 	{
-		xml = NULL;
+		xml = nullptr;
 	}
 #else
 	char *xml = ConfigReadCLOB("SyslogParser", "<parser></parser>");
 #endif
-	if (xml != NULL)
+	if (xml != nullptr)
 	{
 		TCHAR parseError[256];
 		ObjectArray<LogParser> *parsers = LogParser::createFromXml(xml, -1, parseError, 256, EventNameResolver);
-		if ((parsers != NULL) && (parsers->size() > 0))
+		if ((parsers != nullptr) && (parsers->size() > 0))
 		{
 			s_parser = parsers->get(0);
 			s_parser->setCallback(SyslogParserCallback);
-			if (prev != NULL)
+			if (prev != nullptr)
 			   s_parser->restoreCounters(prev);
 			nxlog_debug_tag(DEBUG_TAG, 3, _T("Syslog parser successfully created from config"));
 		}
@@ -851,7 +851,7 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
 {
    if (!_tcscmp(name, _T("SyslogIgnoreMessageTimestamp")))
    {
-      s_alwaysUseServerTime = _tcstol(value, NULL, 0) ? true : false;
+      s_alwaysUseServerTime = _tcstol(value, nullptr, 0) ? true : false;
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
    }
 }
@@ -944,7 +944,7 @@ void StartSyslogServer()
    // Determine first available message id
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(msg_id) FROM syslog"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
@@ -961,11 +961,11 @@ void StartSyslogServer()
    CreateParserFromConfig();
 
    // Start processing thread
-   s_processingThread = ThreadCreateEx(SyslogProcessingThread, 0, NULL);
-   s_writerThread = ThreadCreateEx(SyslogWriterThread, 0, NULL);
+   s_processingThread = ThreadCreateEx(SyslogProcessingThread, 0, nullptr);
+   s_writerThread = ThreadCreateEx(SyslogWriterThread, 0, nullptr);
 
    if (ConfigReadBoolean(_T("EnableSyslogReceiver"), false))
-      s_receiverThread = ThreadCreateEx(SyslogReceiver, 0, NULL);
+      s_receiverThread = ThreadCreateEx(SyslogReceiver, 0, nullptr);
 }
 
 /**

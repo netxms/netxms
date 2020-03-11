@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,30 +25,27 @@
 /**
  * Constructor for download job
  */
-FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId, bool allowExpoansion)
-                : ServerJob(_T("DOWNLOAD_FILE"), _T("Download file"), node->getId(), session->getUserId(), false)
+FileDownloadJob::FileDownloadJob(const shared_ptr<Node>& node, const TCHAR *remoteFile, uint32_t maxFileSize, bool follow, ClientSession *session, uint32_t requestId, bool allowExpoansion)
+                : ServerJob(_T("DOWNLOAD_FILE"), _T("Download file"), node, session->getUserId(), false)
 {
 	m_session = session;
 	session->incRefCount();
 
-	m_agentConnection = NULL;
-
-	m_node = node;
-	node->incRefCount();
+	m_agentConnection = nullptr;
 
 	m_requestId = requestId;
 
-	m_remoteFile = _tcsdup(remoteFile);
+	m_remoteFile = MemCopyString(remoteFile);
 
 	TCHAR buffer[1024];
 	buildServerFileName(node->getId(), m_remoteFile, buffer, 1024);
-	m_localFile = _tcsdup(buffer);
+	m_localFile = MemCopyString(buffer);
 
 	_sntprintf(buffer, 1024, _T("Download file %s@%s"), m_remoteFile, node->getName());
 	setDescription(buffer);
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, m_remoteFile);
-	m_info = _tcsdup(buffer);
+	m_info = MemCopyString(buffer);
 
 	setAutoCancelDelay(60);
 
@@ -57,7 +54,7 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 	m_currentSize = 0;
 	m_allowExpansion = allowExpoansion;
 
-   DbgPrintf(5, _T("FileDownloadJob: job created for file %s at node %s, follow = %s"), m_remoteFile, m_node->getName(), m_follow ? _T("true") : _T("false"));
+   DbgPrintf(5, _T("FileDownloadJob: job created for file %s at node %s, follow = %s"), m_remoteFile, node->getName(), m_follow ? _T("true") : _T("false"));
 }
 
 /**
@@ -65,13 +62,12 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
  */
 FileDownloadJob::~FileDownloadJob()
 {
-	m_node->decRefCount();
 	m_session->decRefCount();
-	if (m_agentConnection != NULL)
+	if (m_agentConnection != nullptr)
 	   m_agentConnection->decRefCount();
-	free(m_localFile);
-	free(m_remoteFile);
-	free(m_info);
+	MemFree(m_localFile);
+	MemFree(m_remoteFile);
+	MemFree(m_info);
 }
 
 /**
@@ -113,28 +109,28 @@ ServerJobResult FileDownloadJob::run()
 
    MONITORED_FILE * newFile = new MONITORED_FILE();
    _tcscpy(newFile->fileName, m_localFile);
-   newFile->nodeID = m_node->getId();
+   newFile->nodeID = m_objectId;
    newFile->session = m_session;
 
-   if (g_monitoringList.checkDuplicate(newFile))
+   if (g_monitoringList.isDuplicate(newFile))
    {
       DbgPrintf(6, _T("FileDownloadJob: follow flag cancelled by checkDuplicate()"));
       m_follow = false;
    }
 
-   m_agentConnection = m_node->createAgentConnection();
-	if (m_agentConnection != NULL)
+   m_agentConnection = static_cast<Node&>(*m_object).createAgentConnection();
+	if (m_agentConnection != nullptr)
 	{
 		NXCPMessage msg(m_agentConnection->getProtocolVersion()), *response;
 
 		m_agentConnection->setDeleteFileOnDownloadFailure(false);
 
-		DbgPrintf(5, _T("FileDownloadJob: Sending file stat request for file %s@%s"), m_remoteFile, m_node->getName());
+		DbgPrintf(5, _T("FileDownloadJob: Sending file stat request for file %s@%s"), m_remoteFile, m_object->getName());
 		msg.setCode(CMD_GET_FILE_DETAILS);
 		msg.setId(m_agentConnection->generateRequestId());
 		msg.setField(VID_FILE_NAME, m_remoteFile);
 		response = m_agentConnection->customRequest(&msg);
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			NXCPMessage notify;
 			m_fileSize = (INT64)response->getFieldAsUInt64(VID_FILE_SIZE);
@@ -147,12 +143,12 @@ ServerJobResult FileDownloadJob::run()
 			m_session->sendMessage(&notify);
 
 			rcc = response->getFieldAsUInt32(VID_RCC);
-			DbgPrintf(5, _T("FileDownloadJob: Stat request for file %s@%s RCC=%d"), m_remoteFile, m_node->getName(), rcc);
+			DbgPrintf(5, _T("FileDownloadJob: Stat request for file %s@%s RCC=%d"), m_remoteFile, m_object->getName(), rcc);
 			if (rcc == ERR_SUCCESS)
 			{
 				delete response;
 
-				DbgPrintf(5, _T("FileDownloadJob: Sending download request for file %s@%s"), m_remoteFile, m_node->getName());
+				DbgPrintf(5, _T("FileDownloadJob: Sending download request for file %s@%s"), m_remoteFile, m_object->getName());
 				msg.setCode(CMD_GET_AGENT_FILE);
 				msg.setId(m_agentConnection->generateRequestId());
 				msg.setField(VID_FILE_NAME, m_remoteFile);
@@ -169,13 +165,13 @@ ServerJobResult FileDownloadJob::run()
             }
             msg.setField(VID_FILE_FOLLOW, m_follow);
             msg.setField(VID_NAME, m_localFile);
-            msg.setField(VID_ENABLE_COMPRESSION, (m_session == NULL) || m_session->isCompressionEnabled());
+            msg.setField(VID_ENABLE_COMPRESSION, (m_session == nullptr) || m_session->isCompressionEnabled());
 
 				response = m_agentConnection->customRequest(&msg, m_localFile, false, progressCallback, fileResendCallback, this);
-				if (response != NULL)
+				if (response != nullptr)
 				{
 					rcc = response->getFieldAsUInt32(VID_RCC);
-					DbgPrintf(5, _T("FileDownloadJob: Download request for file %s@%s RCC=%d"), m_remoteFile, m_node->getName(), rcc);
+					DbgPrintf(5, _T("FileDownloadJob: Download request for file %s@%s RCC=%d"), m_remoteFile, m_object->getName(), rcc);
 					if (rcc == ERR_SUCCESS)
 					{
 						success = JOB_RESULT_SUCCESS;
@@ -223,7 +219,7 @@ ServerJobResult FileDownloadJob::run()
 		m_session->sendMessage(&response);
 		if (m_follow)
 		{
-         g_monitoringList.addMonitoringFile(newFile, m_node, m_agentConnection);
+         g_monitoringList.addFile(newFile, static_cast<Node*>(m_object.get()), m_agentConnection);
 		}
 		else
 		{
@@ -265,10 +261,10 @@ ServerJobResult FileDownloadJob::run()
 		m_session->sendMessage(&response);
 	}
 
-	if (m_agentConnection != NULL)
+	if (m_agentConnection != nullptr)
 	{
 	   m_agentConnection->decRefCount();
-	   m_agentConnection = NULL;
+	   m_agentConnection = nullptr;
 	}
 	return success;
 }

@@ -34,7 +34,7 @@ void InitUserAgentNotifications()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,message,objects,start_time,end_time,recall,on_startup FROM user_agent_notifications"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -53,7 +53,7 @@ void InitUserAgentNotifications()
 void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb, UINT32 retentionTime)
 {
    g_userAgentNotificationListMutex.lock();
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    Iterator<UserAgentNotificationItem> *it = g_userAgentNotificationList.iterator();
    while (it->hasNext())
    {
@@ -77,7 +77,7 @@ void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node)
 {
    g_userAgentNotificationListMutex.lock();
    int base = VID_UA_NOTIFICATION_BASE;
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    int count = 0;
    for (int i = 0; i < g_userAgentNotificationList.size(); i++)
    {
@@ -124,7 +124,7 @@ UserAgentNotificationItem::UserAgentNotificationItem(DB_RESULT result, int row) 
    TCHAR **ids = SplitString(objectList, _T(','), &count);
    for(int i = 0; i < count; i++)
    {
-      m_objects.add(_tcstoul(ids[i], NULL, 10));
+      m_objects.add(_tcstoul(ids[i], nullptr, 10));
       MemFree(ids[i]);
    }
    MemFree(ids);
@@ -171,11 +171,11 @@ static void SendUpdate(NXCPMessage *msg, NetObj *object)
 {
    if (object->getObjectClass() == OBJECT_NODE)
    {
-      if ((static_cast<Node *>(object)->getCapabilities() & NC_HAS_USER_AGENT) == 0)
+      if ((static_cast<Node*>(object)->getCapabilities() & NC_HAS_USER_AGENT) == 0)
          return;
 
       AgentConnectionEx *conn = static_cast<Node *>(object)->getAgentConnection(false);
-      if (conn != NULL)
+      if (conn != nullptr)
       {
          msg->setId(conn->generateRequestId());
          conn->sendMessage(msg);
@@ -184,7 +184,7 @@ static void SendUpdate(NXCPMessage *msg, NetObj *object)
    }
    else
    {
-      ObjectArray<NetObj> *children = object->getChildren();
+      SharedObjectArray<NetObj> *children = object->getChildren();
       for(int i = 0; i < children->size(); i++)
       {
          SendUpdate(msg, children->get(i));
@@ -205,9 +205,9 @@ void UserAgentNotificationItem::processUpdate()
    //create and fill message
    for (int i = 0; i < m_objects.size(); i++)
    {
-      NetObj *object = FindObjectById(m_objects.get(i));
-      if (object != NULL)
-         SendUpdate(&msg, object);
+      shared_ptr<NetObj> object = FindObjectById(m_objects.get(i));
+      if (object != nullptr)
+         SendUpdate(&msg, object.get());
    }
 
    saveToDatabase();
@@ -239,11 +239,11 @@ void UserAgentNotificationItem::saveToDatabase()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    static const TCHAR *columns[] = {
-      _T("message"), _T("objects"), _T("start_time"), _T("end_time"), _T("recall"), _T("on_startup"), NULL
+      _T("message"), _T("objects"), _T("start_time"), _T("end_time"), _T("recall"), _T("on_startup"), nullptr
    };
 
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("user_agent_notifications"), _T("id"), m_id, columns);
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_message, MAX_USER_AGENT_MESSAGE_SIZE);
 

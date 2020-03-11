@@ -30,11 +30,11 @@
 static bool IsEventExist(const TCHAR *name, Config *config)
 {
    shared_ptr<EventTemplate> e = FindEventTemplateByName(name);
-	if (e != NULL)
+	if (e != nullptr)
 		return true;
 
 	ConfigEntry *eventsRoot = config->getEntry(_T("/events"));
-	if (eventsRoot != NULL)
+	if (eventsRoot != nullptr)
 	{
 		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
 		for(int i = 0; i < events->size(); i++)
@@ -58,7 +58,7 @@ static bool IsEventExist(const TCHAR *name, Config *config)
 static bool ValidateDci(Config *config, ConfigEntry *dci, const TCHAR *templateName, TCHAR *errorText, int errorTextLen)
 {
 	ConfigEntry *thresholdsRoot = dci->findEntry(_T("thresholds"));
-	if (thresholdsRoot == NULL)
+	if (thresholdsRoot == nullptr)
 		return true;
 
 	bool success = true;
@@ -95,7 +95,7 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 	nxlog_debug_tag(DEBUG_TAG, 6, _T("ValidateConfig(): validating template \"%s\""), root->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
 
 	ConfigEntry *dcRoot = root->findEntry(_T("dataCollection"));
-	if (dcRoot == NULL)
+	if (dcRoot == nullptr)
 		return true;
 
 	bool success = true;
@@ -135,7 +135,7 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen)
 {
    int i;
-	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL;
+	ObjectArray<ConfigEntry> *events = nullptr, *traps = nullptr, *templates = nullptr;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
    bool success = false;
 
@@ -143,7 +143,7 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 
    // Validate events
 	eventsRoot = config->getEntry(_T("/events"));
-	if (eventsRoot != NULL)
+	if (eventsRoot != nullptr)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
 		for(i = 0; i < events->size(); i++)
@@ -155,7 +155,7 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 			if ((code >= FIRST_USER_EVENT_ID) || (code == 0))
 			{
 				ConfigEntry *e = event->findEntry(_T("name"));
-				if (e == NULL)
+				if (e == nullptr)
 				{
 					_sntprintf(errorText, errorTextLen, _T("Mandatory attribute \"name\" missing for entry %s"), event->getName());
 					goto stop_processing;
@@ -166,7 +166,7 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 
 	// Validate traps
 	trapsRoot = config->getEntry(_T("/traps"));
-	if (trapsRoot != NULL)
+	if (trapsRoot != nullptr)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
 		for(i = 0; i < traps->size(); i++)
@@ -183,7 +183,7 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 
 	// Validate templates
 	templatesRoot = config->getEntry(_T("/templates"));
-	if (templatesRoot != NULL)
+	if (templatesRoot != nullptr)
 	{
 		templates = templatesRoot->getSubEntries(_T("template#*"));
 		for(i = 0; i < templates->size(); i++)
@@ -212,7 +212,7 @@ stop_processing:
 static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
 {
 	const TCHAR *name = event->getSubEntryValue(_T("name"));
-	if (name == NULL)
+	if (name == nullptr)
 		return RCC_INTERNAL_ERROR;
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -222,14 +222,14 @@ static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
 	if (!guid.isNull())
 	{
 	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT event_code FROM event_cfg WHERE guid=?"));
-	   if (hStmt == NULL)
+	   if (hStmt == nullptr)
 	   {
 	      DBConnectionPoolReleaseConnection(hdb);
 	      return RCC_DB_FAILURE;
 	   }
 	   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
 	   DB_RESULT hResult = DBSelectPrepared(hStmt);
-	   if (hResult != NULL)
+	   if (hResult != nullptr)
 	   {
 	      code = DBGetFieldULong(hResult, 0, 0);
 	      DBFreeResult(hResult);
@@ -319,7 +319,7 @@ static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions
 {
    UINT32 rcc = RCC_INTERNAL_ERROR;
    shared_ptr<EventTemplate> eventTemplate = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
-	if (eventTemplate == NULL)
+	if (eventTemplate == nullptr)
 		return rcc;
 
 	uuid guid = trap->getSubEntryValueAsUUID(_T("guid"));
@@ -347,7 +347,7 @@ static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions
 	   DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (snmp_oid,event_code,description,user_tag,transformation_script,trap_id,guid) VALUES (?,?,?,?,?,?,?)")) :
 	   DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=?,transformation_script=? WHERE trap_id=?"));
 
-	if (hStmt != NULL)
+	if (hStmt != nullptr)
 	{
 	   TCHAR oid[1024];
 	   trapCfg->getOid().toString(oid, 1024);
@@ -397,21 +397,21 @@ static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions
 /**
  * Find (and create as necessary) parent object for imported template
  */
-NetObj *FindTemplateRoot(ConfigEntry *config)
+static shared_ptr<NetObj> FindTemplateRoot(ConfigEntry *config)
 {
 	ConfigEntry *pathRoot = config->findEntry(_T("path"));
-	if (pathRoot == NULL)
-      return g_pTemplateRoot;  // path not specified in config
+	if (pathRoot == nullptr)
+      return g_templateRoot;  // path not specified in config
 
-   NetObj *parent = g_pTemplateRoot;
+   shared_ptr<NetObj> parent = g_templateRoot;
 	ObjectArray<ConfigEntry> *path = pathRoot->getSubEntries(_T("element#*"));
 	for(int i = 0; i < path->size(); i++)
 	{
       const TCHAR *name = path->get(i)->getValue();
-      NetObj *o = parent->findChildObject(name, OBJECT_TEMPLATEGROUP);
-      if (o == NULL)
+      shared_ptr<NetObj> o = parent->findChildObject(name, OBJECT_TEMPLATEGROUP);
+      if (o == nullptr)
       {
-         o = new TemplateGroup(name);
+         o = MakeSharedNObject<TemplateGroup>(name);
          NetObjInsert(o, true, false);
          o->addParent(parent);
          parent->addChild(o);
@@ -429,8 +429,8 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
  */
 static ObjectArray<uuid> *GetRuleOrdering(ConfigEntry *ruleOrdering)
 {
-   ObjectArray<uuid> *ordering = NULL;
-   if(ruleOrdering != NULL)
+   ObjectArray<uuid> *ordering = nullptr;
+   if(ruleOrdering != nullptr)
    {
       ObjectArray<ConfigEntry> *rules = ruleOrdering->getOrderedSubEntries(_T("rule#*"));
       if (rules->size() > 0)
@@ -448,27 +448,25 @@ static ObjectArray<uuid> *GetRuleOrdering(ConfigEntry *ruleOrdering)
 }
 
 /**
- *
+ * Delete template group if it is empty
  */
-static void DeleteTemplateParentIfNoChildren(NetObj *object)
+static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
 {
-   if (object->getChildCount() == 0)
-   {
-      ObjectArray<NetObj> *parents = object->getParents(OBJECT_TEMPLATEGROUP);
-      NetObj *parent = NULL;
-      if(parents->size() > 0)
-      {
-         parent = parents->get(0);
-      }
-      delete parents;
-      ObjectTransactionStart();
-      object->deleteObject();
-      ObjectTransactionEnd();
-      if(parent != NULL)
-         DeleteTemplateParentIfNoChildren(parent);
+   if (templateGroup->getChildCount() != 0)
+      return;
 
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template group %s [%d] with GUID %s deleted as there was empty"), object->getName(), object->getId());
-   }
+   SharedObjectArray<NetObj> *parents = templateGroup->getParents(OBJECT_TEMPLATEGROUP);
+   shared_ptr<NetObj> parent = parents->getShared(0);
+   delete parents;
+
+   ObjectTransactionStart();
+   templateGroup->deleteObject();
+   ObjectTransactionEnd();
+
+   if (parent != nullptr)
+      DeleteEmptyTemplateGroup(parent);
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template group %s [%d] with GUID %s deleted as there was empty"), templateGroup->getName(), templateGroup->getId());
 }
 
 /**
@@ -476,8 +474,8 @@ static void DeleteTemplateParentIfNoChildren(NetObj *object)
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
 {
-	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL,
-	                         *scripts = NULL, *objectTools = NULL, *summaryTables = NULL, *actions = NULL;
+	ObjectArray<ConfigEntry> *events = nullptr, *traps = nullptr, *templates = nullptr, *rules = nullptr,
+	                         *scripts = nullptr, *objectTools = nullptr, *summaryTables = nullptr, *actions = nullptr;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot,
 	            *scriptsRoot, *objectToolsRoot, *summaryTablesRoot, *actionsRoot;
 	UINT32 rcc = RCC_SUCCESS;
@@ -487,7 +485,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 
    // Import events
 	eventsRoot = config->getEntry(_T("/events"));
-	if (eventsRoot != NULL)
+	if (eventsRoot != nullptr)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): %d events to import"), events->size());
@@ -508,7 +506,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 
 	// Import traps
 	trapsRoot = config->getEntry(_T("/traps"));
-	if (trapsRoot != NULL)
+	if (trapsRoot != nullptr)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): %d SNMP traps to import"), traps->size());
@@ -523,15 +521,15 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 
 	// Import templates
 	templatesRoot = config->getEntry(_T("/templates"));
-	if (templatesRoot != NULL)
+	if (templatesRoot != nullptr)
 	{
 		templates = templatesRoot->getSubEntries(_T("template#*"));
 		for(i = 0; i < templates->size(); i++)
 		{
 		   ConfigEntry *tc = templates->get(i);
 		   uuid guid = tc->getSubEntryValueAsUUID(_T("guid"));
-		   Template *object = (Template *)FindObjectByGUID(guid, OBJECT_TEMPLATE);
-		   if (object != NULL)
+		   shared_ptr<Template> object = static_pointer_cast<Template>(FindObjectByGUID(guid, OBJECT_TEMPLATE));
+		   if (object != nullptr)
 		   {
 		      if (flags & CFG_IMPORT_REPLACE_TEMPLATES)
 		      {
@@ -548,21 +546,21 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
                nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): existing template %s [%d] with GUID %s renamed to %s"), object->getName(), object->getId(), (const TCHAR *)guid.toString(), tc->getSubEntryValue(_T("name")));
 
                object->setName(tc->getSubEntryValue(_T("name")));
-               NetObj *parent = FindTemplateRoot(tc);
-               if(!parent->isChild(object->getId()))
+               shared_ptr<NetObj> parent = FindTemplateRoot(tc);
+               if (!parent->isChild(object->getId()))
                {
                   nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): existing template %s [%d] with GUID %s moved to %s template group"), object->getName(), object->getId(), (const TCHAR *)guid.toString(), parent->getName());
                   ObjectTransactionStart();
-                  ObjectArray<NetObj> *parents = object->getParents(OBJECT_TEMPLATEGROUP);
+                  SharedObjectArray<NetObj> *parents = object->getParents(OBJECT_TEMPLATEGROUP);
                   if (parents->size() > 0)
                   {
-                     NetObj *parent = parents->get(0);
-                     parent->deleteChild(object);
-                     object->deleteParent(parent);
+                     shared_ptr<NetObj> parent = parents->getShared(0);
+                     parent->deleteChild(*object);
+                     object->deleteParent(*parent);
 
                      if (flags & CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS)
                      {
-                        DeleteTemplateParentIfNoChildren(parent);
+                        DeleteEmptyTemplateGroup(parent);
                      }
                   }
                   delete parents;
@@ -576,8 +574,8 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		   {
             ObjectTransactionStart();
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
-            NetObj *parent = FindTemplateRoot(tc);
-            object = new Template(tc);
+            shared_ptr<NetObj> parent = FindTemplateRoot(tc);
+            object = MakeSharedNObject<Template>(tc);
             NetObjInsert(object, true, true);
             object->addParent(parent);
             parent->addChild(object);
@@ -590,7 +588,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 
    // Import actions
    actionsRoot = config->getEntry(_T("/actions"));
-   if (actionsRoot != NULL)
+   if (actionsRoot != nullptr)
    {
       actions = actionsRoot->getSubEntries(_T("action#*"));
       for(i = 0; i < actions->size(); i++)
@@ -602,7 +600,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 
 	// Import rules
 	rulesRoot = config->getEntry(_T("/rules"));
-	if (rulesRoot != NULL)
+	if (rulesRoot != nullptr)
 	{
 		rules = rulesRoot->getOrderedSubEntries(_T("rule#*"));
 		if (rules->size() > 0)
@@ -627,7 +625,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 
 	// Import scripts
 	scriptsRoot = config->getEntry(_T("/scripts"));
-	if (scriptsRoot != NULL)
+	if (scriptsRoot != nullptr)
 	{
 		scripts = scriptsRoot->getSubEntries(_T("script#*"));
 		for(i = 0; i < scripts->size(); i++)
@@ -639,7 +637,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 
 	// Import object tools
 	objectToolsRoot = config->getEntry(_T("/objectTools"));
-	if (objectToolsRoot != NULL)
+	if (objectToolsRoot != nullptr)
 	{
 		objectTools = objectToolsRoot->getSubEntries(_T("objectTool#*"));
 		for(i = 0; i < objectTools->size(); i++)
@@ -651,7 +649,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 
 	// Import summary tables
 	summaryTablesRoot = config->getEntry(_T("/dciSummaryTables"));
-	if (summaryTablesRoot != NULL)
+	if (summaryTablesRoot != nullptr)
 	{
 		summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
 		for(i = 0; i < summaryTables->size(); i++)
@@ -687,13 +685,13 @@ void ImportLocalConfiguration(bool overwrite)
    int count = 0;
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Import configuration files from %s"), path);
    _TDIR *dir = _topendir(path);
-   if (dir != NULL)
+   if (dir != nullptr)
    {
       _tcscat(path, FS_PATH_SEPARATOR);
       int insPos = (int)_tcslen(path);
 
       struct _tdirent *f;
-      while((f = _treaddir(dir)) != NULL)
+      while((f = _treaddir(dir)) != nullptr)
       {
          if (MatchString(_T("*.xml"), f->d_name, FALSE))
          {

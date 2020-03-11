@@ -198,9 +198,9 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, UINT32 userId, NXCPMessage *
 ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId = 0, bool recursive = false);
 Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId);
 UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, UINT32 userId, NXCPMessage *msg, ClientSession *session);
-NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 dwAlarmId, bool alreadyLocked = false);
-NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref);
-int GetMostCriticalStatusForObject(UINT32 dwObjectId);
+shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool alreadyLocked = false);
+shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref);
+int GetMostCriticalStatusForObject(uint32_t objectId);
 void GetAlarmStats(NXCPMessage *pMsg);
 int GetAlarmCount();
 UINT64 GetAlarmMemoryUsage();
@@ -253,7 +253,7 @@ UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *descript
 /**
  * Alarm summary emails
  */
-void SendAlarmSummaryEmail(shared_ptr<ScheduledTaskParameters> parameters);
+void SendAlarmSummaryEmail(const shared_ptr<ScheduledTaskParameters>& parameters);
 void EnableAlarmSummaryEmails();
 
 #endif

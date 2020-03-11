@@ -52,13 +52,14 @@ bool BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
    {
       // Update members list
       success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
-      lockChildList(false);
-      if (success && !getChildList()->isEmpty())
+      readLockChildList();
+      if (success && !getChildList().isEmpty())
       {
          TCHAR szQuery[1024];
-         for(int i = 0; (i < getChildList()->size()) && success; i++)
+         for(int i = 0; (i < getChildList().size()) && success; i++)
          {
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, getChildList()->get(i)->getId());
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"),
+                     m_id, getChildList().get(i)->getId());
             success = DBQuery(hdb, szQuery);
          }
       }
@@ -101,13 +102,13 @@ void BusinessServiceRoot::linkObjects()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         UINT32 dwObjectId = DBGetFieldULong(hResult, i, 0);
-         NetObj *pObject = FindObjectById(dwObjectId);
-         if (pObject != NULL)
-            linkObject(pObject);
+         UINT32 objectId = DBGetFieldULong(hResult, i, 0);
+         shared_ptr<NetObj> object = FindObjectById(objectId);
+         if (object != nullptr)
+            linkObject(object);
          else
             nxlog_write(NXLOG_WARNING, _T("Inconsistent database: %s object %s [%u] has reference to non-existent child object [%u]"),
-                     getObjectClassName(), m_name, m_id, dwObjectId);
+                     getObjectClassName(), m_name, m_id, objectId);
       }
       DBFreeResult(hResult);
    }

@@ -236,8 +236,8 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
 
    bool separateRequests = ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false);
 
-   Zone *zone = FindZoneByUIN(zoneUIN);
-   if (zone != NULL)
+   shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+   if (zone != nullptr)
       ports.insertAll(0, zone->getSnmpPortList()); // Port list defined at zone level has priority
 
    for(int j = -1; (j < ports.size()) && !IsShutdownInProgress(); j++)
@@ -261,13 +261,13 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
       AgentConnection *pConn = NULL;
       if (snmpProxy != 0)
       {
-         Node *proxyNode = (Node *)FindObjectById(snmpProxy, OBJECT_NODE);
-         if (proxyNode == NULL)
+         shared_ptr<NetObj> proxyNode = FindObjectById(snmpProxy, OBJECT_NODE);
+         if (proxyNode == nullptr)
          {
             nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): invalid proxy node ID %u"), ipAddrText, snmpProxy);
             goto fail;
          }
-         pConn = proxyNode->createAgentConnection();
+         pConn = static_cast<Node&>(*proxyNode).createAgentConnection();
          if (pConn == NULL)
          {
             nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): cannot create proxy connection"), ipAddrText);

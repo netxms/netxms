@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,12 +24,9 @@
 /**
  * Network path constructor
  */
-NetworkPath::NetworkPath(const InetAddress& srcAddr)
+NetworkPath::NetworkPath(const InetAddress& srcAddr) : m_path(32, 32, Ownership::True)
 {
    m_sourceAddress = srcAddr;
-	m_hopCount = 0;
-	m_allocated = 0;
-	m_path = NULL;
 	m_complete = false;
 }
 
@@ -38,87 +35,78 @@ NetworkPath::NetworkPath(const InetAddress& srcAddr)
  */
 NetworkPath::~NetworkPath()
 {
-	for(int i = 0; i < m_hopCount; i++)
-		if (m_path[i].object != NULL)
-			m_path[i].object->decRefCount();
-	free(m_path);
 }
 
 /**
  * Add hop to path
  */
-void NetworkPath::addHop(const InetAddress& nextHop, const InetAddress& route, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name)
+void NetworkPath::addHop(const InetAddress& nextHop, const InetAddress& route, const shared_ptr<NetObj>& currentObject, uint32_t ifIndex, bool isVpn, const TCHAR *name)
 {
-	if (m_hopCount == m_allocated)
-	{
-		m_allocated += 16;
-		m_path = (HOP_INFO *)realloc(m_path, sizeof(HOP_INFO) * m_allocated);
-	}
-	m_path[m_hopCount].nextHop = nextHop;
-   m_path[m_hopCount].route = route;
-	m_path[m_hopCount].object = currentObject;
-	m_path[m_hopCount].ifIndex = ifIndex;
-	m_path[m_hopCount].isVpn = isVpn;
-   nx_strncpy(m_path[m_hopCount].name, name, MAX_OBJECT_NAME);
-	m_hopCount++;
-	if (currentObject != NULL)
-		currentObject->incRefCount();
+   NetworkPathElement *element = new NetworkPathElement();
+   element->nextHop = nextHop;
+   element->route = route;
+   element->object = currentObject;
+   element->ifIndex = ifIndex;
+   element->isVpn = isVpn;
+   _tcslcpy(element->name, name, MAX_OBJECT_NAME);
+   m_path.add(element);
 }
 
 /**
  * Fill NXCP message with trace data
  */
-void NetworkPath::fillMessage(NXCPMessage *msg)
+void NetworkPath::fillMessage(NXCPMessage *msg) const
 {
-	msg->setField(VID_HOP_COUNT, (WORD)m_hopCount);
-	msg->setField(VID_IS_COMPLETE, (WORD)(m_complete ? 1 : 0));
-	UINT32 varId = VID_NETWORK_PATH_BASE;
-	for(int i = 0; i < m_hopCount; i++, varId += 5)
+	msg->setField(VID_HOP_COUNT, static_cast<uint16_t>(m_path.size()));
+	msg->setField(VID_IS_COMPLETE, m_complete);
+	uint32_t fieldId = VID_NETWORK_PATH_BASE;
+	for(int i = 0; i < m_path.size(); i++, fieldId += 5)
 	{
-		msg->setField(varId++, m_path[i].object->getId());
-		msg->setField(varId++, m_path[i].nextHop);
-		msg->setField(varId++, m_path[i].ifIndex);
-		msg->setField(varId++, (WORD)(m_path[i].isVpn ? 1 : 0));
-		msg->setField(varId++, m_path[i].name);
+	   const NetworkPathElement *e = m_path.get(i);
+		msg->setField(fieldId++, e->object->getId());
+		msg->setField(fieldId++, e->nextHop);
+		msg->setField(fieldId++, e->ifIndex);
+		msg->setField(fieldId++, e->isVpn);
+		msg->setField(fieldId++, e->name);
 	}
 }
 
 /**
  * Trace route between two nodes
  */
-NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
+NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest)
 {
    UINT32 srcIfIndex;
    InetAddress srcAddr;
-   if (!pSrc->getOutwardInterface(pDest->getIpAddress(), &srcAddr, &srcIfIndex))
-      srcAddr = pSrc->getIpAddress();
+   if (!src->getOutwardInterface(dest->getIpAddress(), &srcAddr, &srcIfIndex))
+      srcAddr = src->getIpAddress();
 
    NetworkPath *path = new NetworkPath(srcAddr);
 
    int hopCount = 0;
-   Node *pCurr, *pNext;
-   for(pCurr = pSrc; (pCurr != pDest) && (pCurr != NULL) && (hopCount < 30); pCurr = pNext, hopCount++)
+   shared_ptr<Node> curr(src), next;
+   for(; (curr != dest) && (curr != NULL) && (hopCount < 30); curr = next, hopCount++)
    {
       UINT32 dwIfIndex;
       InetAddress nextHop;
       InetAddress route;
       bool isVpn;
       TCHAR name[MAX_OBJECT_NAME];
-      if (pCurr->getNextHop(srcAddr, pDest->getIpAddress(), &nextHop, &route, &dwIfIndex, &isVpn, name))
+      if (curr->getNextHop(srcAddr, dest->getIpAddress(), &nextHop, &route, &dwIfIndex, &isVpn, name))
       {
-			pNext = FindNodeByIP(pDest->getZoneUIN(), nextHop);
-			path->addHop(nextHop, route, pCurr, dwIfIndex, isVpn, name);
-         if ((pNext == pCurr) || !nextHop.isValid())
-            pNext = NULL;     // Directly connected subnet or too many hops, stop trace
+			next = FindNodeByIP(dest->getZoneUIN(), nextHop);
+			path->addHop(nextHop, route, curr, dwIfIndex, isVpn, name);
+         if ((next == curr) || !nextHop.isValid())
+            next = NULL;     // Directly connected subnet or too many hops, stop trace
       }
       else
       {
-         pNext = NULL;
+         next = NULL;
       }
    }
-	if (pCurr == pDest)
+	if (curr == dest)
 	{
-      path->addHop(InetAddress::INVALID, InetAddress::INVALID, pCurr, 0, false, _T(""));
+      path->addHop(InetAddress::INVALID, InetAddress::INVALID, curr, 0, false, _T(""));
 		path->setComplete();
 	}
 

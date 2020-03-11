@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,27 +46,27 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 	UINT32 code, id;
 	TCHAR *argList[32], *name;
    char format[] = "ssssssssssssssssssssssssssssssss";
-	NetObj *object;
 
 	if (request->getCode() == CMD_FORWARD_EVENT)
 	{
 	   TCHAR buffer[64];
 		DbgPrintf(4, _T("Event forwarding request from %s"), IpToStr(session->GetPeerAddress(), buffer));
-		
+
+		shared_ptr<NetObj> object;
 		id = request->getFieldAsUInt32(VID_OBJECT_ID);
 		if (id != 0)
 			object = FindObjectById(id);  // Object is specified explicitely
 		else
 			object = FindNodeByIP(0, request->getFieldAsInetAddress(VID_IP_ADDRESS));	// Object is specified by IP address
 		
-		if (object != NULL)
+		if (object != nullptr)
 		{
 			name = request->getFieldAsString(VID_EVENT_NAME);
-			if (name != NULL)
+			if (name != nullptr)
 			{
 				DbgPrintf(5, _T("Event specified by name (%s)"), name);
 				shared_ptr<EventTemplate> pt = FindEventTemplateByName(name);
-				if (pt != NULL)
+				if (pt != nullptr)
 				{
 					code = pt->getCode();
 					DbgPrintf(5, _T("Event name %s resolved to event code %d"), name, code);
@@ -91,7 +91,7 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 
 			format[numArgs] = 0;
 			if (PostEventWithTag(code, EventOrigin::REMOTE_SERVER, 0, object->getId(), request->getFieldAsString(VID_TAGS),
-			                     (numArgs > 0) ? format : NULL,
+			                     (numArgs > 0) ? format : nullptr,
 			                     argList[0], argList[1], argList[2], argList[3],
 										argList[4], argList[5], argList[6], argList[7],
 										argList[8], argList[9], argList[10], argList[11],

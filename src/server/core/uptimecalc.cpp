@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 NetXMS Team
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg)
 
 	while(TRUE)
 	{
-		g_pBusinessServiceRoot->updateUptimeStats(time(NULL), TRUE);
+		g_businessServiceRoot->updateUptimeStats(time(NULL), TRUE);
 		if (SleepAndCheckForShutdown(calcInterval))
 			break;
 	}

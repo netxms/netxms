@@ -67,7 +67,7 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    TCHAR szQuery[256];
    _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,network_type FROM vpn_connector_networks WHERE vpn_id=%d"), m_id);
    DB_RESULT hResult = DBSelect(hdb, szQuery);
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;     // Query failed
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
@@ -84,7 +84,7 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    // Load custom properties
    _sntprintf(szQuery, 256, _T("SELECT node_id,peer_gateway FROM vpn_connectors WHERE id=%d"), dwId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;     // Query failed
 
    bool success = false;
@@ -96,21 +96,16 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       // Link VPN connector to node
       if (!m_isDeleted)
       {
-         NetObj *pObject = FindObjectById(dwNodeId, OBJECT_NODE);
-         if (pObject == NULL)
+         shared_ptr<NetObj> pObject = FindObjectById(dwNodeId, OBJECT_NODE);
+         if (pObject != nullptr)
          {
-            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: VPN connector %s [%u] linked to non-existent node [%u]"), m_name, m_id, dwNodeId);
-         }
-         else if (pObject->getObjectClass() != OBJECT_NODE)
-         {
-            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: VPN connector %s [%u] linked to object %s [%u] which is not a node"),
-                     m_name, m_id, pObject->getName(), pObject->getId());
+            pObject->addChild(self());
+            addParent(pObject);
+            success = true;
          }
          else
          {
-            pObject->addChild(this);
-            addParent(pObject);
-            success = true;
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: VPN connector %s [%u] linked to non-existent node [%u]"), m_name, m_id, dwNodeId);
          }
       }
       else
@@ -140,8 +135,8 @@ bool VPNConnector::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_OTHER))
    {
       // Determine owning node's ID
-      Node *pNode = getParentNode();
-      UINT32 dwNodeId = (pNode != NULL) ? pNode->getId() : 0;
+      shared_ptr<Node> pNode = getParentNode();
+      UINT32 dwNodeId = (pNode != nullptr) ? pNode->getId() : 0;
 
       // Form and execute INSERT or UPDATE query
       TCHAR szQuery[1024];
@@ -202,17 +197,16 @@ bool VPNConnector::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Get connector's parent node
  */
-Node *VPNConnector::getParentNode()
+shared_ptr<Node> VPNConnector::getParentNode() const
 {
-   Node *pNode = NULL;
-
-   lockParentList(false);
-   for(int i = 0; i < getParentList()->size(); i++)
+   shared_ptr<Node> pNode;
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
    {
-      NetObj *object = getParentList()->get(i);
+      NetObj *object = getParentList().get(i);
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         pNode = (Node *)object;
+         pNode = static_pointer_cast<Node>(getParentList().getShared(i));
          break;
       }
    }
@@ -273,7 +267,7 @@ UINT32 VPNConnector::modifyFromMessageInternal(NXCPMessage *pRequest)
 /**
  * Check if given address falls into one of the local nets
  */
-bool VPNConnector::isLocalAddr(const InetAddress& addr)
+bool VPNConnector::isLocalAddr(const InetAddress& addr) const
 {
    bool result = false;
 
@@ -293,7 +287,7 @@ bool VPNConnector::isLocalAddr(const InetAddress& addr)
 /**
  * Check if given address falls into one of the remote nets
  */
-bool VPNConnector::isRemoteAddr(const InetAddress& addr)
+bool VPNConnector::isRemoteAddr(const InetAddress& addr) const
 {
    bool result = false;
 
@@ -313,10 +307,10 @@ bool VPNConnector::isRemoteAddr(const InetAddress& addr)
 /**
  * Get address of peer gateway
  */
-InetAddress VPNConnector::getPeerGatewayAddr()
+InetAddress VPNConnector::getPeerGatewayAddr() const
 {
-   NetObj *node = FindObjectById(m_dwPeerGateway, OBJECT_NODE);
-   return (node != NULL) ? static_cast<Node*>(node)->getIpAddress() : InetAddress();
+   shared_ptr<NetObj> node = FindObjectById(m_dwPeerGateway, OBJECT_NODE);
+   return (node != nullptr) ? static_cast<Node&>(*node).getIpAddress() : InetAddress();
 }
 
 /**

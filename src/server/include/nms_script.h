@@ -31,7 +31,6 @@ class NXSL_NetObjClass : public NXSL_Class
 public:
    NXSL_NetObjClass();
 
-   virtual void onObjectCreate(NXSL_Object *object) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
@@ -368,17 +367,17 @@ NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary();
 /**
  * Setup server script VM. Returns pointer to same VM for convenience.
  */
-NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, shared_ptr<DCObjectInfo> dciInfo);
+NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo);
 
 /**
  * Create NXSL VM from library script
  */
-ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, NetObj *object, shared_ptr<DCObjectInfo> dciInfo = shared_ptr<DCObjectInfo>());
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo = shared_ptr<DCObjectInfo>());
 
 /**
  * Create NXSL VM from compiled script
  */
-ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, NetObj *object, shared_ptr<DCObjectInfo> dciInfo = shared_ptr<DCObjectInfo>());
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo = shared_ptr<DCObjectInfo>());
 
 /**
  * Functions
@@ -389,7 +388,7 @@ bool IsValidScriptId(UINT32 id);
 UINT32 ResolveScriptName(const TCHAR *name);
 void CreateScriptExportRecord(StringBuffer &xml, UINT32 id);
 void ImportScript(ConfigEntry *config, bool overwrite);
-NXSL_VM *FindHookScript(const TCHAR *hookName, NetObj *object);
+NXSL_VM *FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object);
 bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args);
 
 /**

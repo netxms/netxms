@@ -42,7 +42,7 @@ ThreadPool *g_schedulerThreadPool = NULL;
 /**
  * Task handler replacement for missing handlers
  */
-static void MissingTaskHandler(shared_ptr<ScheduledTaskParameters> parameters)
+static void MissingTaskHandler(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
 }
 

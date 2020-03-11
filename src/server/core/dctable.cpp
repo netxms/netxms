@@ -25,7 +25,7 @@
 /**
  * Column ID cache
  */
-TC_ID_MAP_ENTRY __EXPORT *DCTable::m_cache = NULL;
+TC_ID_MAP_ENTRY __EXPORT *DCTable::m_cache = nullptr;
 int __EXPORT DCTable::m_cacheSize = 0;
 int __EXPORT DCTable::m_cacheAllocated = 0;
 MUTEX __EXPORT DCTable::m_cacheMutex = MutexCreate();
@@ -54,23 +54,23 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 	TC_ID_MAP_ENTRY buffer;
 
 	// check that column name is valid
-	if ((name == NULL) || (*name == 0))
+	if ((name == nullptr) || (*name == 0))
 		return 0;
 
 	MutexLock(m_cacheMutex);
 
 	TC_ID_MAP_ENTRY *entry = (TC_ID_MAP_ENTRY *)bsearch(name, m_cache, m_cacheSize, sizeof(TC_ID_MAP_ENTRY), CompareCacheElements);
-	if (entry == NULL)
+	if (entry == nullptr)
 	{
 		// Not in cache, go to database
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 		DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_id FROM dct_column_names WHERE column_name=?"));
-		if (hStmt != NULL)
+		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
-			if (hResult != NULL)
+			if (hResult != nullptr)
 			{
 				entry = &buffer;
 				nx_strncpy(entry->name, name, MAX_COLUMN_NAME);
@@ -86,7 +86,7 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 
 					// update database
 					DB_STATEMENT hStmt2 = DBPrepare(hdb, _T("INSERT INTO dct_column_names (column_id,column_name) VALUES (?,?)"));
-					if (hStmt2 != NULL)
+					if (hStmt2 != nullptr)
 					{
 						DBBind(hStmt2, 1, DB_SQLTYPE_INTEGER, entry->id);
 						DBBind(hStmt2, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
@@ -115,7 +115,7 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 	}
 
 	MutexUnlock(m_cacheMutex);
-	return (entry != NULL) ? entry->id : 0;
+	return (entry != nullptr) ? entry->id : 0;
 }
 
 /**
@@ -129,19 +129,19 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
    m_thresholds = new ObjectArray<DCTableThreshold>(src->m_thresholds->size(), 4, Ownership::True);
 	for(int i = 0; i < src->m_thresholds->size(); i++)
 		m_thresholds->add(new DCTableThreshold(src->m_thresholds->get(i), shadowCopy));
-	m_lastValue = (shadowCopy && (src->m_lastValue != NULL)) ? new Table(src->m_lastValue) : NULL;
+	m_lastValue = (shadowCopy && (src->m_lastValue != nullptr)) ? new Table(src->m_lastValue) : nullptr;
 }
 
 /**
  * Constructor for creating new DCTable from scratch
  */
 DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
-                 DataCollectionOwner *owner, const TCHAR *description, const TCHAR *systemTag)
+         const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag)
         : DCObject(id, name, source, pollingInterval, retentionTime, owner, description, systemTag)
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
-	m_lastValue = NULL;
+	m_lastValue = nullptr;
 }
 
 /**
@@ -155,11 +155,10 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingI
  *    related_object,polling_schedule_type,retention_type,polling_interval_src,
  *    retention_time_src,snmp_version
  */
-DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay) : DCObject()
+DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
    TCHAR readBuffer[4096];
 
-   m_owner = owner;
    m_id = DBGetFieldULong(hResult, row, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, row, 1);
    m_dwTemplateItemId = DBGetFieldULong(hResult, row, 2);
@@ -174,17 +173,17 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner 
 	m_systemTag = DBGetField(hResult, row, 11, readBuffer, 4096);
 	m_dwResourceId = DBGetFieldULong(hResult, row, 12);
 	m_sourceNode = DBGetFieldULong(hResult, row, 13);
-	m_pszPerfTabSettings = DBGetField(hResult, row, 14, NULL, 0);
-   TCHAR *pszTmp = DBGetField(hResult, row, 15, NULL, 0);
-   m_comments = DBGetField(hResult, row, 16, NULL, 0);
+	m_pszPerfTabSettings = DBGetField(hResult, row, 14, nullptr, 0);
+   TCHAR *pszTmp = DBGetField(hResult, row, 15, nullptr, 0);
+   m_comments = DBGetField(hResult, row, 16, nullptr, 0);
    m_guid = DBGetFieldGUID(hResult, row, 17);
    setTransformationScript(pszTmp);
    MemFree(pszTmp);
    m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 18);
    m_instanceDiscoveryData = DBGetField(hResult, row, 19, readBuffer, 4096);
-   m_instanceFilterSource = NULL;
-   m_instanceFilter = NULL;
-   pszTmp = DBGetField(hResult, row, 20, NULL, 0);
+   m_instanceFilterSource = nullptr;
+   m_instanceFilter = nullptr;
+   pszTmp = DBGetField(hResult, row, 20, nullptr, 0);
    setInstanceFilter(pszTmp);
    MemFree(pszTmp);
    m_instance = DBGetField(hResult, row, 21, readBuffer, 4096);
@@ -193,22 +192,22 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner 
    m_relatedObject = DBGetFieldLong(hResult, row, 24);
    m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 25));
    m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 26));
-   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 27, NULL, 0) : NULL;
-   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 28, NULL, 0) : NULL;
+   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 27, nullptr, 0) : nullptr;
+   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 28, nullptr, 0) : nullptr;
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 29));
 
    int effectivePollingInterval = getEffectivePollingInterval();
-   m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
+   m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
-	m_lastValue = NULL;
+	m_lastValue = nullptr;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
-	if (hStmt != NULL)
+	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hColumnList = DBSelectPrepared(hStmt);
-		if (hColumnList != NULL)
+		if (hColumnList != nullptr)
 		{
 			int count = DBGetNumRows(hColumnList);
 			for(int i = 0; i < count; i++)
@@ -230,10 +229,10 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner 
 /**
  * Create DCTable from import file
  */
-DCTable::DCTable(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(config, owner)
+DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : DCObject(config, owner)
 {
 	ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
-	if (columnsRoot != NULL)
+	if (columnsRoot != nullptr)
 	{
 		ObjectArray<ConfigEntry> *columns = columnsRoot->getSubEntries(_T("column#*"));
 		m_columns = new ObjectArray<DCTableColumn>(columns->size(), 8, Ownership::True);
@@ -249,7 +248,7 @@ DCTable::DCTable(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(con
 	}
 
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
-	if (thresholdsRoot != NULL)
+	if (thresholdsRoot != nullptr)
 	{
 		ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
 		m_thresholds = new ObjectArray<DCTableThreshold>(thresholds->size(), 8, Ownership::True);
@@ -264,7 +263,7 @@ DCTable::DCTable(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(con
       m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
 	}
 
-   m_lastValue = NULL;
+   m_lastValue = nullptr;
 }
 
 /**
@@ -274,7 +273,7 @@ DCTable::~DCTable()
 {
 	delete m_columns;
    delete m_thresholds;
-   if (m_lastValue != NULL)
+   if (m_lastValue != nullptr)
       m_lastValue->decRefCount();
 }
 
@@ -296,7 +295,7 @@ bool DCTable::deleteAllData()
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u"), m_owner->getId(), m_id);
+      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u"), m_ownerId, m_id);
    }
 	bool success = DBQuery(hdb, query);
    unlock();
@@ -328,7 +327,7 @@ bool DCTable::deleteEntry(time_t timestamp)
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=%u"), m_owner->getId(), m_id, (UINT32)timestamp);
+      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=%u"), m_ownerId, m_id, (UINT32)timestamp);
    }
    bool success = DBQuery(hdb, query);
    unlock();
@@ -348,8 +347,10 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
    *updateStatus = false;
    lock();
 
-   // Normally m_owner shouldn't be NULL for polled items, but who knows...
-   if (m_owner == NULL)
+   auto owner = m_owner.lock();
+
+   // Normally m_owner shouldn't be nullptr for polled items, but who knows...
+   if (owner == nullptr)
    {
       unlock();
       static_cast<Table*>(value)->decRefCount();
@@ -359,7 +360,7 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
    // Transform input value
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
-   if ((m_owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
+   if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
       if (!transform(static_cast<Table*>(value)))
       {
@@ -370,7 +371,7 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
    }
 
    m_dwErrorCount = 0;
-   if (m_lastValue != NULL)
+   if (m_lastValue != nullptr)
       m_lastValue->decRefCount();
 	m_lastValue = static_cast<Table*>(value);
 	m_lastValue->setTitle(m_description);
@@ -378,7 +379,7 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
 
 	// Copy required fields into local variables
 	UINT32 tableId = m_id;
-	UINT32 nodeId = m_owner->getId();
+	UINT32 nodeId = owner->getId();
    bool save = (m_retentionType != DC_RETENTION_NONE);
 
    static_cast<Table*>(value)->incRefCount();
@@ -420,7 +421,7 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
 	      _sntprintf(query, 256, _T("INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), nodeId);
 	      hStmt = DBPrepare(hdb, query);
 	   }
-	   if (hStmt != NULL)
+	   if (hStmt != nullptr)
 	   {
 		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
 		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
@@ -436,7 +437,7 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
 
 	   DBConnectionPoolReleaseConnection(hdb);
    }
-   if ((g_offlineDataRelevanceTime <= 0) || (timestamp > (time(NULL) - g_offlineDataRelevanceTime)))
+   if ((g_offlineDataRelevanceTime <= 0) || (timestamp > (time(nullptr) - g_offlineDataRelevanceTime)))
       checkThresholds(static_cast<Table*>(value));
 
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
@@ -451,11 +452,11 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
  */
 bool DCTable::transform(Table *value)
 {
-   if (m_transformationScript == NULL)
+   if (m_transformationScript == nullptr)
       return true;
 
    bool success = false;
-   ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner, createDescriptorInternal());
+   ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner.lock(), createDescriptorInternal());
    if (vm.isValid())
    {
       NXSL_Value *nxslValue = vm->createValue(new NXSL_Object(vm, &g_nxslStaticTableClass, value));
@@ -473,14 +474,14 @@ bool DCTable::transform(Table *value)
          }
          else
          {
-            time_t now = time(NULL);
+            time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
                TCHAR buffer[1024];
                _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
                PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
                nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
-                        getOwnerName(), getOwnerId(), m_name.cstr(), m_id, vm->getErrorText());
+                        getOwnerName(), m_ownerId, m_name.cstr(), m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
             }
          }
@@ -489,14 +490,14 @@ bool DCTable::transform(Table *value)
    }
    else if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
    {
-      time_t now = time(NULL);
+      time_t now = time(nullptr);
       if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
       {
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
          PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, _T("Script load error"), m_id);
          nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
-                  getOwnerName(), getOwnerId(), m_name.cstr(), m_id);
+                  getOwnerName(), m_ownerId, m_name.cstr(), m_id);
          m_lastScriptErrorReport = now;
       }
    }
@@ -522,14 +523,14 @@ void DCTable::checkThresholds(Table *value)
          switch(result)
          {
             case ThresholdCheckResult::ACTIVATED:
-               PostDciEventWithNames(t->getActivationEvent(), m_owner->getId(), m_id, "ssids", paramNames, m_name.cstr(), m_description.cstr(), m_id, row, instance);
+               PostDciEventWithNames(t->getActivationEvent(), m_ownerId, m_id, "ssids", paramNames, m_name.cstr(), m_description.cstr(), m_id, row, instance);
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing (for current row)
-               NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), instance, result);
+               NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), instance, result);
                break;
             case ThresholdCheckResult::DEACTIVATED:
-               PostDciEventWithNames(t->getDeactivationEvent(), m_owner->getId(), m_id, "ssids", paramNames, m_name.cstr(), m_description.cstr(), m_id, row, instance);
-               NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), instance, result);
+               PostDciEventWithNames(t->getDeactivationEvent(), m_ownerId, m_id, "ssids", paramNames, m_name.cstr(), m_description.cstr(), m_id, row, instance);
+               NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), instance, result);
                break;
             case ThresholdCheckResult::ALREADY_ACTIVE:
 				   i = m_thresholds->size();  // Threshold condition still true, stop processing
@@ -591,16 +592,16 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       _T("instd_method"), _T("instd_data"), _T("instd_filter"), _T("instance"), _T("instance_retention_time"),
       _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
       _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"),
-      NULL
+      nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_tables"), _T("item_id"), m_id, columns);
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		return FALSE;
 
    lock();
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_owner == NULL) ? (UINT32)0 : m_owner->getId());
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_ownerId);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
 	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME - 1);
@@ -644,7 +645,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 	{
 		// Save column configuration
 		hStmt = DBPrepare(hdb, _T("DELETE FROM dc_table_columns WHERE table_id=?"));
-		if (hStmt != NULL)
+		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 			result = DBExecute(hStmt);
@@ -658,7 +659,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 		if (result && (m_columns->size() > 0))
 		{
 			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,sequence_number,column_name,snmp_oid,flags,display_name) VALUES (?,?,?,?,?,?)"));
-			if (hStmt != NULL)
+			if (hStmt != nullptr)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 				for(int i = 0; i < m_columns->size(); i++)
@@ -667,7 +668,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)(i + 1));
 					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, column->getName(), DB_BIND_STATIC);
 					const SNMP_ObjectId *oid = column->getSnmpOid();
-					DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (oid != NULL) ? (const TCHAR *)oid->toString() : NULL, DB_BIND_TRANSIENT);
+					DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (oid != nullptr) ? (const TCHAR *)oid->toString() : nullptr, DB_BIND_TRANSIENT);
 					DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)column->getFlags());
 					DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, column->getDisplayName(), DB_BIND_STATIC);
 
@@ -696,12 +697,12 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 bool DCTable::loadThresholds(DB_HANDLE hdb)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,activation_event,deactivation_event,sample_count FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -721,7 +722,7 @@ bool DCTable::loadThresholds(DB_HANDLE hdb)
 bool DCTable::saveThresholds(DB_HANDLE hdb)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id=?"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    for(int i = 0; i < m_thresholds->size(); i++)
@@ -732,7 +733,7 @@ bool DCTable::saveThresholds(DB_HANDLE hdb)
    DBFreeStatement(hStmt);
 
    hStmt = DBPrepare(hdb, _T("DELETE FROM dct_threshold_instances WHERE threshold_id=?"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    for(int i = 0; i < m_thresholds->size(); i++)
@@ -743,7 +744,7 @@ bool DCTable::saveThresholds(DB_HANDLE hdb)
    DBFreeStatement(hStmt);
 
    hStmt = DBPrepare(hdb, _T("DELETE FROM dct_thresholds WHERE table_id=?"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DBExecute(hStmt);
@@ -776,8 +777,9 @@ void DCTable::deleteFromDatabase()
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_thresholds WHERE table_id=%d"), (int)m_id);
    QueueSQLRequest(szQuery);
 
-   if (m_owner->isDataCollectionTarget())
-      static_cast<DataCollectionTarget*>(m_owner)->scheduleItemDataCleanup(m_id);
+   auto owner = m_owner.lock();
+   if (owner->isDataCollectionTarget())
+      static_cast<DataCollectionTarget*>(owner.get())->scheduleItemDataCleanup(m_id);
 }
 
 /**
@@ -853,7 +855,7 @@ void DCTable::updateFromMessage(NXCPMessage *pMsg)
 void DCTable::fillLastValueMessage(NXCPMessage *msg)
 {
    lock();
-	if (m_lastValue != NULL)
+	if (m_lastValue != nullptr)
 	{
 		m_lastValue->fillMessage(*msg, 0, -1);
 	}
@@ -905,7 +907,7 @@ int DCTable::getColumnDataType(const TCHAR *name) const
    }
 
    // use last values if not found in definitions
-   if (!found && (m_lastValue != NULL))
+   if (!found && (m_lastValue != nullptr))
    {
       int index = m_lastValue->getColumnIndex(name);
       if (index != -1)
@@ -923,14 +925,14 @@ Table *DCTable::getLastValue()
 {
    lock();
    Table *value;
-   if (m_lastValue != NULL)
+   if (m_lastValue != nullptr)
    {
       value = m_lastValue;
       value->incRefCount();
    }
    else
    {
-      value = NULL;
+      value = nullptr;
    }
    unlock();
    return value;
@@ -974,7 +976,7 @@ void DCTable::mergeValues(Table *dest, Table *src, int count)
          for(int j = 0; j < m_columns->size(); j++)
          {
             DCTableColumn *cd = m_columns->get(j);
-            if ((cd == NULL) || cd->isInstanceColumn() || (cd->getDataType() == DCI_DT_STRING))
+            if ((cd == nullptr) || cd->isInstanceColumn() || (cd->getDataType() == DCI_DT_STRING))
                continue;
             int column = dest->getColumnIndex(cd->getName());
             if (column == -1)
@@ -1030,7 +1032,7 @@ void DCTable::updateResultColumns(Table *t)
       if (index != -1)
       {
          TableColumnDefinition *cd = t->getColumnDefinitions()->get(index);
-         if (cd != NULL)
+         if (cd != nullptr)
          {
             cd->setDataType(col->getDataType());
             cd->setInstanceColumn(col->isInstanceColumn());
@@ -1125,14 +1127,14 @@ void DCTable::createExportRecord(StringBuffer &xml)
    xml.append(EscapeStringForXML2(m_comments));
    xml.append(_T("</comments>\n"));
 
-	if (m_transformationScriptSource != NULL)
+	if (m_transformationScriptSource != nullptr)
 	{
 		xml.append(_T("\t\t\t\t\t<transformation>"));
 		xml.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
 		xml.append(_T("</transformation>\n"));
 	}
 
-   if ((m_schedules != NULL) && (m_schedules->size() > 0))
+   if ((m_schedules != nullptr) && (m_schedules->size() > 0))
    {
       xml.append(_T("\t\t\t\t\t<schedules>\n"));
       for(int i = 0; i < m_schedules->size(); i++)
@@ -1144,7 +1146,7 @@ void DCTable::createExportRecord(StringBuffer &xml)
       xml.append(_T("\t\t\t\t\t</schedules>\n"));
    }
 
-	if (m_columns != NULL)
+	if (m_columns != nullptr)
 	{
 	   xml.append(_T("\t\t\t\t\t<columns>\n"));
 		for(int i = 0; i < m_columns->size(); i++)
@@ -1154,7 +1156,7 @@ void DCTable::createExportRecord(StringBuffer &xml)
 	   xml.append(_T("\t\t\t\t\t</columns>\n"));
 	}
 
-	if (m_thresholds != NULL)
+	if (m_thresholds != nullptr)
 	{
 	   xml.append(_T("\t\t\t\t\t<thresholds>\n"));
 		for(int i = 0; i < m_thresholds->size(); i++)
@@ -1164,21 +1166,21 @@ void DCTable::createExportRecord(StringBuffer &xml)
 	   xml.append(_T("\t\t\t\t\t</thresholds>\n"));
 	}
 
-	if (m_pszPerfTabSettings != NULL)
+	if (m_pszPerfTabSettings != nullptr)
 	{
 		xml.append(_T("\t\t\t\t\t<perfTabSettings>"));
 		xml.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
 		xml.append(_T("</perfTabSettings>\n"));
 	}
 
-	if (m_instanceDiscoveryData != NULL)
+	if (m_instanceDiscoveryData != nullptr)
    {
       xml += _T("\t\t\t\t\t<instanceDiscoveryData>");
       xml.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
       xml += _T("</instanceDiscoveryData>\n");
    }
 
-   if (m_instanceFilterSource != NULL)
+   if (m_instanceFilterSource != nullptr)
    {
       xml.append(_T("\t\t\t\t\t<instanceFilter>"));
       xml.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
@@ -1199,7 +1201,7 @@ void DCTable::updateFromImport(ConfigEntry *config)
    lock();
    m_columns->clear();
    ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
-   if (columnsRoot != NULL)
+   if (columnsRoot != nullptr)
    {
       ObjectArray<ConfigEntry> *columns = columnsRoot->getSubEntries(_T("column#*"));
       for(int i = 0; i < columns->size(); i++)
@@ -1211,7 +1213,7 @@ void DCTable::updateFromImport(ConfigEntry *config)
 
    m_thresholds->clear();
    ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
-   if (thresholdsRoot != NULL)
+   if (thresholdsRoot != nullptr)
    {
       ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
       for(int i = 0; i < thresholds->size(); i++)
@@ -1229,7 +1231,7 @@ void DCTable::updateFromImport(ConfigEntry *config)
 void DCTable::getEventList(IntegerArray<UINT32> *eventList)
 {
    lock();
-   if (m_thresholds != NULL)
+   if (m_thresholds != nullptr)
    {
       for(int i = 0; i < m_thresholds->size(); i++)
       {
@@ -1268,7 +1270,7 @@ IntegerArray<UINT32> *DCTable::getThresholdIdList()
 {
    IntegerArray<UINT32> *list = new IntegerArray<UINT32>(16, 16);
    lock();
-   if (m_thresholds != NULL)
+   if (m_thresholds != nullptr)
    {
       for(int i = 0; i < m_thresholds->size(); i++)
       {

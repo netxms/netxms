@@ -136,7 +136,7 @@ std::string InfluxDBStorageDriver::getString(const TCHAR *tstr)
 #else
    char *buffer = static_cast<char*>(MemAlloc(len + 1));
 #endif
-   WideCharToMultiByte(CP_UTF8, 0, tstr, -1, buffer, (int)len + 1, NULL, NULL);
+   WideCharToMultiByte(CP_UTF8, 0, tstr, -1, buffer, (int)len + 1, nullptr, nullptr);
 #if HAVE_ALLOCA
    return std::string(buffer);
 #else
@@ -447,7 +447,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    bool ignoreMetric = false;
    std::string m_tags = "";
    StringMap *ca = dci->getOwner()->getCustomAttributes();
-   if (ca != NULL)
+   if (ca != nullptr)
    {
       StringList *ca_key = ca->keys();
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - CMA: #%d"), host.c_str(), ca->size());
@@ -492,12 +492,12 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    // Get RelatedObject (Interface) CA's
    const char *relatedObject_type = "none";
 
-   NetObj *relatedObject_iface = FindObjectById(dci->getRelatedObject(), OBJECT_INTERFACE);
-   if (relatedObject_iface != NULL)
+   shared_ptr<NetObj> relatedObject_iface = FindObjectById(dci->getRelatedObject(), OBJECT_INTERFACE);
+   if (relatedObject_iface != nullptr)
    {
       relatedObject_type = relatedObject_iface->getObjectClassNameA();
       StringMap *ca = relatedObject_iface->getCustomAttributes();
-      if (ca != NULL)
+      if (ca != nullptr)
       {
          StringList *ca_key = ca->keys();
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject: %s [%u] - RelatedObjectType: %s - CMA: #%d"),

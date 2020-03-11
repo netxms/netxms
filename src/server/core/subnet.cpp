@@ -118,10 +118,10 @@ bool Subnet::saveToDatabase(DB_HANDLE hdb)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_id);
       DBQuery(hdb, szQuery);
-      lockChildList(false);
-      for(int i = 0; success && (i < getChildList()->size()); i++)
+      readLockChildList();
+      for(int i = 0; success && (i < getChildList().size()); i++)
       {
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, getChildList()->get(i)->getId());
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, getChildList().get(i)->getId());
          success = DBQuery(hdb, szQuery);
       }
       unlockChildList();
@@ -188,7 +188,7 @@ void Subnet::setCorrectMask(const InetAddress& addr)
 
 	if (reAdd)
    {
-      g_idxSubnetByAddr.put(m_ipAddress, this);
+      g_idxSubnetByAddr.put(m_ipAddress, self());
    }
 	setModified(MODIFY_OTHER);
 	unlockProperties();
@@ -207,17 +207,16 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: searching for IP address %s"), m_name, ipAddr.toString(buffer));
 
-   ObjectArray<Node> nodes(256, 256);
-   lockChildList(false);
-   for(int i = 0; i < getChildList()->size(); i++)
+   SharedObjectArray<Node> nodes(256, 256);
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      NetObj *o = getChildList()->get(i);
+      shared_ptr<NetObj> o = getChildList().getShared(i);
       if ((o->getObjectClass() == OBJECT_NODE) &&
           (o->getStatus() != STATUS_UNMANAGED) &&
-          (static_cast<Node*>(o)->isNativeAgent() || static_cast<Node*>(o)->isSNMPSupported()))
+          (static_cast<Node*>(o.get())->isNativeAgent() || static_cast<Node*>(o.get())->isSNMPSupported()))
       {
-         o->incRefCount();
-         nodes.add(static_cast<Node*>(o));
+         nodes.add(static_pointer_cast<Node>(o));
       }
    }
    unlockChildList();
@@ -245,11 +244,7 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
       {
          nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 7, _T("Subnet[%s]::findMacAddress: cannot read ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
       }
-      node->decRefCount();
    }
-
-   for(; i < nodes.size(); i++)
-      nodes.get(i)->decRefCount();
 
 	return macAddr;
 }
@@ -259,17 +254,16 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
  */
 void Subnet::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes)
 {
-	ObjectArray<Node> nodes;
-	lockChildList(false);
-	for(int i = 0; i < getChildList()->size(); i++)
+	SharedObjectArray<Node> nodes;
+	readLockChildList();
+	for(int i = 0; i < getChildList().size(); i++)
 	{
-	   NetObj *object = getChildList()->get(i);
+	   shared_ptr<NetObj> object = getChildList().getShared(i);
 		if ((object->getId() == seedNode) || (object->getObjectClass() != OBJECT_NODE))
 			continue;
-		if (!includeEndNodes && !((Node *)object)->isRouter())
+		if (!includeEndNodes && !((Node *)object.get())->isRouter())
 			continue;
-		object->incRefCount();
-		nodes.add((Node *)object);
+		nodes.add(static_pointer_cast<Node>(object));
 	}
 	unlockChildList();
 
@@ -277,14 +271,13 @@ void Subnet::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth,
 	{
 		Node *n = nodes.get(j);
 		n->buildIPTopologyInternal(topology, nDepth - 1, m_id, NULL, false, includeEndNodes);
-		n->decRefCount();
 	}
 }
 
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool Subnet::showThresholdSummary()
+bool Subnet::showThresholdSummary() const
 {
 	return true;
 }
@@ -306,7 +299,7 @@ UINT32 *Subnet::buildAddressMap(int *length)
       UINT32 addr = m_ipAddress.getAddressV4() + 1;
       for(int i = 1; i < *length - 1; i++, addr++)
       {
-         Node *node = FindNodeByIP(m_zoneUIN, addr);
+         shared_ptr<Node> node = FindNodeByIP(m_zoneUIN, addr);
          map[i] = (node != NULL) ? node->getId() : 0;
       }
    }
@@ -315,7 +308,7 @@ UINT32 *Subnet::buildAddressMap(int *length)
       UINT32 addr = m_ipAddress.getAddressV4();
       for(int i = 0; i < 2; i++)
       {
-         Node *node = FindNodeByIP(m_zoneUIN, addr++);
+         shared_ptr<Node> node = FindNodeByIP(m_zoneUIN, addr++);
          map[i] = (node != NULL) ? node->getId() : 0;
       }
    }
@@ -334,18 +327,18 @@ void Subnet::prepareForDeletion()
 /**
  * Get child node other than given one (useful for subnets representing point to point links)
  */
-Node *Subnet::getOtherNode(UINT32 nodeId)
+shared_ptr<Node> Subnet::getOtherNode(uint32_t nodeId)
 {
-   Node *node = NULL;
-   lockChildList(false);
-   for(int i = 0; i < getChildList()->size(); i++)
+   shared_ptr<Node> node;
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      NetObj *curr = getChildList()->get(i);
+      auto curr = getChildList().getShared(i);
       if (curr->getId() == nodeId)
          continue;
       if (curr->getObjectClass() == OBJECT_NODE)
       {
-         node = static_cast<Node*>(curr);
+         node = static_pointer_cast<Node>(curr);
          break;
       }
    }
@@ -386,7 +379,7 @@ json_t *Subnet::toJson()
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Subnet::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *Subnet::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslSubnetClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslSubnetClass, new shared_ptr<Subnet>(self())));
 }

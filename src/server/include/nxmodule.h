@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ public:
  */
 typedef struct
 {
-   UINT32 dwSize;           // Size of structure in bytes
+   uint32_t dwSize;           // Size of structure in bytes
    TCHAR szName[MAX_OBJECT_NAME];
    bool (* pfInitialize)(Config *config);
    void (* pfServerStarted)();
@@ -78,29 +78,29 @@ typedef struct
 	void (* pfLoadObjects)();
 	void (* pfLinkObjects)();
    int (* pfClientCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, ClientSession *pSession);
-   int (* pfMobileDeviceCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, MobileDeviceSession *pSession);
-   BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
-   BOOL (* pfEventHandler)(Event *event);
-   void (* pfAlarmChangeHook)(UINT32 changeCode, const Alarm *alarm);
-	void (* pfStatusPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
-	bool (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
-	void (* pfTopologyPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
+   int (* pfMobileDeviceCommandHandler)(uint32_t dwCommand, NXCPMessage *pMsg, MobileDeviceSession *pSession);
+   bool (* pfTrapHandler)(SNMP_PDU *pdu, const shared_ptr<Node>& node);
+   bool (* pfEventHandler)(Event *event);
+   void (* pfAlarmChangeHook)(uint32_t changeCode, const Alarm *alarm);
+	void (* pfStatusPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
+	bool (* pfConfPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
+	void (* pfTopologyPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
 	int (* pfCalculateObjectStatus)(NetObj *object);
-	BOOL (* pfNetObjInsert)(NetObj *object);
-	BOOL (* pfNetObjDelete)(NetObj *object);
-	void (* pfPostObjectCreate)(NetObj *object);
-	void (* pfPostObjectLoad)(NetObj *object);
+	bool (* pfNetObjInsert)(const shared_ptr<NetObj>& object);
+	bool (* pfNetObjDelete)(const NetObj& object);
+	void (* pfPostObjectCreate)(const shared_ptr<NetObj>& object);
+	void (* pfPostObjectLoad)(const shared_ptr<NetObj>& object);
 	void (* pfPreObjectDelete)(NetObj *object);
-	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, NXCPMessage *msg);
-	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
-	BOOL (* pfAcceptNewNode)(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr);
-	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, UINT32 zoneId, NXCPMessage *request);
-   UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
+	shared_ptr<NetObj> (* pfCreateObject)(int objectClass, const TCHAR *name, const shared_ptr<NetObj>& parent, NXCPMessage *msg);
+	bool (* pfIsValidParentClass)(int childClass, int parentClass);
+	bool (* pfAcceptNewNode)(const InetAddress& addr, uint32_t zoneId, BYTE *macAddr);
+	uint32_t (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, uint32_t zoneId, NXCPMessage *request);
+   uint32_t (* pfAdditionalLoginCheck)(uint32_t userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
    void (* pfNXSLServerEnvConfig)(NXSL_Environment *env);
    void (* pfNXSLServerVMConfig)(NXSL_VM *vm);
    void (* pfOnConnectToAgent)(Node *node, AgentConnection *conn);
-   BOOL (* pfOnAgentMessage)(NXCPMessage *msg, UINT32 nodeId);
+   bool (* pfOnAgentMessage)(NXCPMessage *msg, uint32_t nodeId);
    void (* pfHousekeeperHook)();
    bool (* pfProcessServerConsoleCommand)(const TCHAR *command, CONSOLE_CTX pCtx);
    ObjectArray<PredictionEngine> *(* pfGetPredictionEngines)();

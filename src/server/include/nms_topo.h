@@ -41,15 +41,15 @@ struct LLDP_LOCAL_PORT_INFO
 };
 
 /**
- * Hop information structure
+ * Network path element
  */
-struct HOP_INFO
+struct NetworkPathElement
 {
-   InetAddress nextHop;  // Next hop address
-   NetObj *object;       // Current hop object
-   UINT32 ifIndex;       // Interface index or VPN connector object ID
-   bool isVpn;           // TRUE if next hop is behind VPN tunnel
-   InetAddress route;    // Route used (UNSPEC for VPN connectors and direct access)
+   InetAddress nextHop;          // Next hop address
+   shared_ptr<NetObj> object;    // Current hop object
+   uint32_t ifIndex;             // Interface index or VPN connector object ID
+   bool isVpn;                   // TRUE if next hop is behind VPN tunnel
+   InetAddress route;            // Route used (UNSPEC for VPN connectors and direct access)
    TCHAR name[MAX_OBJECT_NAME];
 };
 
@@ -60,24 +60,22 @@ class NetworkPath
 {
 private:
    InetAddress m_sourceAddress;
-	int m_hopCount;
-	int m_allocated;
-	HOP_INFO *m_path;
 	bool m_complete;
+	ObjectArray<NetworkPathElement> m_path;
 
 public:
 	NetworkPath(const InetAddress& srcAddr);
 	~NetworkPath();
 
-	void addHop(const InetAddress& nextHop, const InetAddress& route, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name);
+	void addHop(const InetAddress& nextHop, const InetAddress& route, const shared_ptr<NetObj>& currentObject, uint32_t ifIndex, bool isVpn, const TCHAR *name);
 	void setComplete() { m_complete = true; }
 
-   const InetAddress& getSourceAddress() { return m_sourceAddress; }
-	bool isComplete() { return m_complete; }
-	int getHopCount() { return m_hopCount; }
-	HOP_INFO *getHopInfo(int index) { return ((index >= 0) && (index < m_hopCount)) ? &m_path[index] : NULL; }
+   const InetAddress& getSourceAddress() const { return m_sourceAddress; }
+	bool isComplete() const { return m_complete; }
+	int getHopCount() const { return m_path.size(); }
+	NetworkPathElement *getHopInfo(int index) const { return m_path.get(index); }
 
-	void fillMessage(NXCPMessage *msg);
+	void fillMessage(NXCPMessage *msg) const;
 };
 
 /**
@@ -266,10 +264,10 @@ public:
 // Topology functions
 //
 
-NetworkPath *TraceRoute(Node *pSrc, Node *pDest);
+NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, bool includeEndNodes);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
-NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
+shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp);
 

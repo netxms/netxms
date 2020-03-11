@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,18 +51,18 @@ void UniversalRoot::linkObjects()
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_id);
 
    DB_RESULT hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         UINT32 dwObjectId = DBGetFieldULong(hResult, i, 0);
-         NetObj *pObject = FindObjectById(dwObjectId);
-         if (pObject != NULL)
-            linkObject(pObject);
+         uint32_t objectId = DBGetFieldULong(hResult, i, 0);
+         shared_ptr<NetObj> object = FindObjectById(objectId);
+         if (object != nullptr)
+            linkObject(object);
          else
             nxlog_write(NXLOG_ERROR, _T("Inconsistent database: %s object %s [%u] has reference to non-existent child object [%u]"),
-                     getObjectClassName(), m_name, m_id, dwObjectId);
+                     getObjectClassName(), m_name, m_id, objectId);
       }
       DBFreeResult(hResult);
    }
@@ -89,16 +89,16 @@ bool UniversalRoot::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_RELATIONS))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
-      lockChildList(false);
-      if (success && !getChildList()->isEmpty())
+      readLockChildList();
+      if (success && !getChildList().isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO container_members (container_id,object_id) VALUES (?,?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < getChildList()->size()) && success; i++)
+            for(int i = 0; (i < getChildList().size()) && success; i++)
             {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList()->get(i)->getId());
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList().get(i)->getId());
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,21 +62,20 @@ bool ThrottleHousekeeper()
 /**
  * Delete empty subnets from given list
  */
-static void DeleteEmptySubnetsFromList(ObjectArray<NetObj> *subnets)
+static void DeleteEmptySubnetsFromList(SharedObjectArray<NetObj> *subnets)
 {
    nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: %d subnets to check"), subnets->size());
    for(int i = 0; i < subnets->size(); i++)
    {
       NetObj *object = subnets->get(i);
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: checking subnet %s [%d] (refs: %d refs, children: %d, parents: %d)"),
-                object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: checking subnet %s [%d] (children: %d, parents: %d)"),
+                object->getName(), object->getId(), object->getChildCount(), object->getParentCount());
       if (object->isEmpty())
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteEmptySubnets: delete subnet %s [%d] (refs: %d, children: %d, parents: %d)"),
-                   object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteEmptySubnets: delete subnet %s [%d] (children: %d, parents: %d)"),
+                   object->getName(), object->getId(), object->getChildCount(), object->getParentCount());
          object->deleteObject();
       }
-      object->decRefCount();
    }
 }
 
@@ -87,23 +86,22 @@ static void DeleteEmptySubnets()
 {
    if (IsZoningEnabled())
    {
-      ObjectArray<NetObj> *zones = g_idxZoneByUIN.getObjects(true);
+      SharedObjectArray<NetObj> *zones = g_idxZoneByUIN.getObjects();
       nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: %d zones to check"), zones->size());
       for(int i = 0; i < zones->size(); i++)
       {
          Zone *zone = static_cast<Zone*>(zones->get(i));
          nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: processing zone %s (UIN=%u)"), zone->getName(), zone->getUIN());
-         ObjectArray<NetObj> *subnets = zone->getSubnets(true);
+         SharedObjectArray<NetObj> *subnets = zone->getSubnets();
          DeleteEmptySubnetsFromList(subnets);
          delete subnets;
-         zone->decRefCount();
          nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: zone processing completed"));
       }
       delete zones;
    }
    else
    {
-      ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects(true);
+      SharedObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects();
       DeleteEmptySubnetsFromList(subnets);
       delete subnets;
    }
@@ -430,12 +428,10 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 	   // Save object runtime data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Saving object runtime data"));
-	   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
+	   SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
 	   for(int i = 0; i < objects->size(); i++)
 	   {
-	      NetObj *o = objects->get(i);
-	      o->saveRuntimeData(hdb);
-	      o->decRefCount();
+	      objects->get(i)->saveRuntimeData(hdb);
 	   }
 	   delete objects;
 

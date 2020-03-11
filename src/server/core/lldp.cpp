@@ -44,7 +44,7 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
    newOid[oid.length() - 2] = 2;   // lldpLocPortIdSubtype
    request.bindVariable(new SNMP_Variable(newOid, oid.length()));
 
-	SNMP_PDU *pRespPDU = NULL;
+	SNMP_PDU *pRespPDU = nullptr;
    UINT32 rcc = transport->doRequest(&request, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -75,7 +75,7 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
 	if (SnmpWalk(snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports) != SNMP_ERR_SUCCESS)
 	{
 		delete ports;
-		return NULL;
+		return nullptr;
 	}
 	return ports;
 }
@@ -88,13 +88,13 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
  * @param id port ID
  * @param idLen port ID length in bytes
  */
-static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_t idLen)
+static shared_ptr<Interface> FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_t idLen)
 {
 	TCHAR buffer[256];
    nxlog_debug_tag(DEBUG_TAG, 5, _T("LLDPTopoHandler(%s [%d]): FindRemoteInterface: idType=%d id=%s (%d)"), node->getName(), node->getId(), idType, BinToStr(id, idLen, buffer), (int)idLen);
 
 	// Try local LLDP port info first
-   Interface *ifc = NULL;
+   shared_ptr<Interface> ifc;
    LLDP_LOCAL_PORT_INFO port;
    if (node->getLldpLocalPortInfo(idType, id, idLen, &port))
    {
@@ -102,13 +102,13 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
       if (node->isBridge())
          ifc = node->findBridgePort(port.portNumber);
       // Node: some Juniper devices may have bridge port numbers for certain interfaces but still use ifIndex in LLDP local port list
-      if (ifc == NULL)  // unable to find interface by bridge port number or device is not a bridge
+      if (ifc == nullptr)  // unable to find interface by bridge port number or device is not a bridge
          ifc = node->findInterfaceByIndex(port.portNumber);
-      if (ifc == NULL)  // unable to find interface by bridge port number or interface index, try description
+      if (ifc == nullptr)  // unable to find interface by bridge port number or interface index, try description
          ifc = node->findInterfaceByName(port.ifDescr);  /* TODO: find by cached ifName value */
-      if (ifc == NULL)  // some devices may report interface alias as description in LLDP local port list
+      if (ifc == nullptr)  // some devices may report interface alias as description in LLDP local port list
          ifc = node->findInterfaceByAlias(port.ifDescr);
-      if (ifc != NULL)
+      if (ifc != nullptr)
          return ifc;
    }
 
@@ -125,7 +125,7 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 				memcpy(&ipAddr, &id[1], sizeof(UINT32));
 				return node->findInterfaceByIP(ntohl(ipAddr));
 			}
-			return NULL;
+			return nullptr;
 		case 5:	// Interface name
 #ifdef UNICODE
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)id, (int)idLen, ifName, 128);
@@ -138,7 +138,7 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 			}
 #endif
 			ifc = node->findInterfaceByName(ifName);	/* TODO: find by cached ifName value */
-			if ((ifc == NULL) && !_tcsncmp(node->getSNMPObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19))
+			if ((ifc == nullptr) && !_tcsncmp(node->getSNMPObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19))
 			{
 				// Hack for Extreme Networks switches
 				// Must be moved into driver
@@ -149,9 +149,9 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 			}
 			return ifc;
 		case 7:	// local identifier
-			return NULL;   // already tried to find port using local info
+			return nullptr;   // already tried to find port using local info
 		default:
-			return NULL;
+			return nullptr;
 	}
 }
 
@@ -191,15 +191,15 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
    newOid[oid.length() - 4] = 9;   // lldpRemSysName
    SNMP_Variable *lldpRemSysName = GetVariableFromCache(newOid, oid.length(), connections);
 
-	if ((lldpRemChassisIdSubtype != NULL) && (lldpRemPortId != NULL) && (lldpRemPortIdSubtype != NULL) && (lldpRemPortDesc != NULL) && (lldpRemSysName != NULL))
+	if ((lldpRemChassisIdSubtype != nullptr) && (lldpRemPortId != nullptr) && (lldpRemPortIdSubtype != nullptr) && (lldpRemPortDesc != nullptr) && (lldpRemSysName != nullptr))
    {
 		// Build LLDP ID for remote system
 		TCHAR remoteId[256];
       BuildLldpId(lldpRemChassisIdSubtype->getValueAsInt(), var->getValue(), (int)var->getValueLength(), remoteId, 256);
-		Node *remoteNode = FindNodeByLLDPId(remoteId);
+		shared_ptr<Node> remoteNode = FindNodeByLLDPId(remoteId);
 
 		// Try to find node by sysName as fallback
-		if (remoteNode == NULL)
+		if (remoteNode == nullptr)
 		{
 		   TCHAR sysName[256] = _T("");
 		   lldpRemSysName->getValueAsString(sysName, 256);
@@ -208,27 +208,27 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
          remoteNode = FindNodeBySysName(sysName);
 		}
 
-		if (remoteNode != NULL)
+		if (remoteNode != nullptr)
 		{
 	      nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): remoteId=%s remoteNode=%s [%d]"), node->getName(), node->getId(), remoteId, remoteNode->getName(), remoteNode->getId());
 
 			BYTE remoteIfId[1024];
 			size_t remoteIfIdLen = lldpRemPortId->getRawValue(remoteIfId, 1024);
-			Interface *ifRemote = FindRemoteInterface(remoteNode, lldpRemPortIdSubtype->getValueAsUInt(), remoteIfId, remoteIfIdLen);
-         if (ifRemote == NULL)
+			shared_ptr<Interface> ifRemote = FindRemoteInterface(remoteNode.get(), lldpRemPortIdSubtype->getValueAsUInt(), remoteIfId, remoteIfIdLen);
+         if (ifRemote == nullptr)
          {
             // Try to find remote interface by description
             TCHAR *ifDescr = lldpRemPortDesc->getValueAsString((TCHAR *)remoteIfId, 1024 / sizeof(TCHAR));
             Trim(ifDescr);
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): FindRemoteInterface failed, lookup by description (\"%s\")"), node->getName(), node->getId(), CHECK_NULL(ifDescr));
-            if (ifDescr != NULL)
+            if (ifDescr != nullptr)
                ifRemote = remoteNode->findInterfaceByName(ifDescr);
          }
 
 			LL_NEIGHBOR_INFO info;
 
 			info.objectId = remoteNode->getId();
-			info.ifRemote = (ifRemote != NULL) ? ifRemote->getIfIndex() : 0;
+			info.ifRemote = (ifRemote != nullptr) ? ifRemote->getIfIndex() : 0;
 			info.isPtToPt = true;
 			info.protocol = LL_PROTO_LLDP;
          info.isCached = false;
@@ -249,10 +249,10 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
 			//         InterfaceIndex object.
 			if (node->isBridge())
 			{
-				Interface *localIf = node->findBridgePort(localPort);
-				if (localIf != NULL)
+				shared_ptr<Interface> localIf = node->findBridgePort(localPort);
+				if (localIf != nullptr)
 					info.ifLocal = localIf->getIfIndex();
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): lookup bridge port: localPort=%d iface=%s"), node->getName(), node->getId(), localPort, (localIf != NULL) ? localIf->getName() : _T("(null)"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): lookup bridge port: localPort=%d iface=%s"), node->getName(), node->getId(), localPort, (localIf != nullptr) ? localIf->getName() : _T("(null)"));
 			}
 			else
 			{

@@ -139,7 +139,7 @@ void EnableAlarmSummaryEmails()
 /**
  * Scheduled task handler - send summary email
  */
-void SendAlarmSummaryEmail(shared_ptr<ScheduledTaskParameters> parameters)
+void SendAlarmSummaryEmail(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    StringBuffer summary = CreateAlarmSummary();
    time_t currTime;

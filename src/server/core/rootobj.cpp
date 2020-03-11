@@ -41,7 +41,7 @@ ServiceRoot::~ServiceRoot()
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool ServiceRoot::showThresholdSummary()
+bool ServiceRoot::showThresholdSummary() const
 {
 	return true;
 }

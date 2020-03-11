@@ -445,16 +445,22 @@ public:
 	void fillMessage(NXCPMessage *msg);
 };
 
-#define CAF_INHERITABLE 1
-#define CAF_REDEFINED   2
+/**
+ * Custom attribute flags
+ */
+#define CAF_INHERITABLE 0x01
+#define CAF_REDEFINED   0x02
 
+/**
+ * Custom attribute
+ */
 struct CustomAttribute
 {
    SharedString value;
-   UINT32 sourceObject;//original object of inheritance
-   UINT32 flags;
+   uint32_t sourceObject; // source object ID for inherited attribute
+   uint32_t flags;
 
-   CustomAttribute(SharedString value, UINT32 flags, UINT32 sourceObject = 0)
+   CustomAttribute(SharedString value, uint32_t flags, uint32_t sourceObject = 0)
    {
       this->value = value;
       this->flags = flags;
@@ -487,57 +493,68 @@ struct CustomAttribute
    }
 };
 
+/**
+ * Base class for all monitoring objects
+ */
 class LIBNXSRV_EXPORTABLE NObject
 {
    DISABLE_COPY_CTOR(NObject)
 
 private:
+   weak_ptr<NObject> m_self;
+
+   SharedObjectArray<NObject> m_childList;     // Array of pointers to child objects
+   SharedObjectArray<NObject> m_parentList;    // Array of pointers to parent objects
+
    StringObjectMap<CustomAttribute> *m_customAttributes;
    MUTEX m_customAttributeLock;
 
-   ObjectArray<NObject> *m_childList;     // Array of pointers to child objects
-   ObjectArray<NObject> *m_parentList;    // Array of pointers to parent objects
-
    SharedString getCustomAttributeFromParent(const TCHAR *name);
-   bool setCustomAttributeFromMessage(NXCPMessage *msg, UINT32 base);
-   void setCustomAttribute(const TCHAR *name, SharedString value, UINT32 parent);
+   bool setCustomAttributeFromMessage(const NXCPMessage *msg, uint32_t base);
+   void setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent);
    void deletePopulatedCustomAttribute(const TCHAR *name);
-   void populate(const TCHAR *name, SharedString value, UINT32 parentId);
+   void populate(const TCHAR *name, SharedString value, uint32_t parentId);
    void populateRemove(const TCHAR *name);
 
 protected:
-   UINT32 m_id;
+   uint32_t m_id;
    uuid m_guid;
    TCHAR m_name[MAX_OBJECT_NAME];
 
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
 
-   const ObjectArray<NObject> *getChildList() { return m_childList; }
-   const ObjectArray<NObject> *getParentList() { return m_parentList; }
+   const SharedObjectArray<NObject> &getChildList() const { return m_childList; }
+   const SharedObjectArray<NObject> &getParentList() const { return m_parentList; }
 
    void clearChildList();
    void clearParentList();
 
+   bool isDirectChildInternal(uint32_t id) const
+   {
+      for(int i = 0; i < m_childList.size(); i++)
+         if (m_childList.get(i)->getId() == id)
+            return true;
+      return false;
+   }
+   bool isDirectParentInternal(uint32_t id) const
+   {
+      for(int i = 0; i < m_parentList.size(); i++)
+         if (m_parentList.get(i)->getId() == id)
+            return true;
+      return false;
+   }
+
    void lockCustomAttributes() const { MutexLock(m_customAttributeLock); }
    void unlockCustomAttributes() const { MutexUnlock(m_customAttributeLock); }
 
-   void lockParentList(bool writeLock)
-   {
-      if (writeLock)
-         RWLockWriteLock(m_rwlockParentList);
-      else
-         RWLockReadLock(m_rwlockParentList);
-   }
-   void unlockParentList() { RWLockUnlock(m_rwlockParentList); }
-   void lockChildList(bool writeLock)
-   {
-      if (writeLock)
-         RWLockWriteLock(m_rwlockChildList);
-      else
-         RWLockReadLock(m_rwlockChildList);
-   }
-   void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
+   void readLockParentList() const { RWLockReadLock(m_rwlockParentList); }
+   void writeLockParentList() { RWLockWriteLock(m_rwlockParentList); }
+   void unlockParentList() const { RWLockUnlock(m_rwlockParentList); }
+
+   void readLockChildList() const { RWLockReadLock(m_rwlockChildList); }
+   void writeLockChildList() { RWLockWriteLock(m_rwlockChildList); }
+   void unlockChildList() const { RWLockUnlock(m_rwlockChildList); }
 
    virtual void onCustomAttributeChange();
 
@@ -545,44 +562,47 @@ public:
    NObject();
    virtual ~NObject();
 
-   UINT32 getId() const { return m_id; }
+   shared_ptr<NObject> self() const { return m_self.lock(); }
+   void setSelfPtr(const shared_ptr<NObject>& sptr) { m_self = sptr; }
+
+   uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
    const TCHAR *getName() const { return m_name; }
 
-   void addChild(NObject *object);     // Add reference to child object
-   void addParent(NObject *object);    // Add reference to parent object
+   void addChild(const shared_ptr<NObject>& object);     // Add reference to child object
+   void addParent(const shared_ptr<NObject>& object);    // Add reference to parent object
 
-   void deleteChild(NObject *object);  // Delete reference to child object
-   void deleteParent(NObject *object); // Delete reference to parent object
+   void deleteChild(uint32_t objectId);  // Delete reference to child object
+   void deleteParent(uint32_t objectId); // Delete reference to parent object
 
-   bool isChild(UINT32 id);
-   bool isDirectChild(UINT32 id);
-   bool isParent(UINT32 id);
-   bool isDirectParent(UINT32 id);
+   bool isChild(uint32_t id) const;
+   bool isDirectChild(uint32_t id) const;
+   bool isParent(uint32_t id) const;
+   bool isDirectParent(uint32_t id) const;
 
-   int getChildCount() const { return m_childList->size(); }
-   int getParentCount() const { return m_parentList->size(); }
+   int getChildCount() const { return m_childList.size(); }
+   int getParentCount() const { return m_parentList.size(); }
 
    TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
    SharedString getCustomAttribute(const TCHAR *name) const;
    TCHAR *getCustomAttributeCopy(const TCHAR *name) const;
-   INT32 getCustomAttributeAsInt32(const TCHAR *key, INT32 defaultValue) const;
-   UINT32 getCustomAttributeAsUInt32(const TCHAR *key, UINT32 defaultValue) const;
-   INT64 getCustomAttributeAsInt64(const TCHAR *key, INT64 defaultValue) const;
-   UINT64 getCustomAttributeAsUInt64(const TCHAR *key, UINT64 defaultValue) const;
+   int32_t getCustomAttributeAsInt32(const TCHAR *key, int32_t defaultValue) const;
+   uint32_t getCustomAttributeAsUInt32(const TCHAR *key, uint32_t defaultValue) const;
+   int64_t getCustomAttributeAsInt64(const TCHAR *key, int64_t defaultValue) const;
+   uint64_t getCustomAttributeAsUInt64(const TCHAR *key, uint64_t defaultValue) const;
    double getCustomAttributeAsDouble(const TCHAR *key, double defaultValue) const;
    bool getCustomAttributeAsBoolean(const TCHAR *key, bool defaultValue) const;
 
-   StringMap *getCustomAttributes(bool (*filter)(const TCHAR *, const CustomAttribute *, void *) = NULL, void *context = NULL) const;
+   StringMap *getCustomAttributes(bool (*filter)(const TCHAR *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
    StringMap *getCustomAttributes(const TCHAR *regexp) const;
 
    void setCustomAttribute(const TCHAR *name, SharedString value, StateChange inheritable);
-   void setCustomAttribute(const TCHAR *key, INT32 value);
-   void setCustomAttribute(const TCHAR *key, UINT32 value);
-   void setCustomAttribute(const TCHAR *key, INT64 value);
-   void setCustomAttribute(const TCHAR *key, UINT64 value);
+   void setCustomAttribute(const TCHAR *key, int32_t value);
+   void setCustomAttribute(const TCHAR *key, uint32_t value);
+   void setCustomAttribute(const TCHAR *key, int64_t value);
+   void setCustomAttribute(const TCHAR *key, uint64_t value);
 
-   void setCustomAttributesFromMessage(NXCPMessage *msg);
+   void setCustomAttributesFromMessage(const NXCPMessage *msg);
    void setCustomAttributesFromDatabase(DB_RESULT hResult);
    void deleteCustomAttribute(const TCHAR *name);
    void updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name);
@@ -599,10 +619,19 @@ public:
       return result;
    }
 
-   // Debug methods
-   const TCHAR *dbgGetParentList(TCHAR *szBuffer);
-   const TCHAR *dbgGetChildList(TCHAR *szBuffer);
+   StringBuffer dbgGetParentList() const;
+   StringBuffer dbgGetChildList() const;
 };
+
+/**
+ * make_shared() replacement for NObject derived classes
+ */
+template <class C, typename... Args> shared_ptr<C> MakeSharedNObject(Args&&... args)
+{
+   auto object = make_shared<C>(args...);
+   object->setSelfPtr(object);
+   return object;
+}
 
 /**
  * Route information
@@ -631,13 +660,13 @@ typedef struct
 class LIBNXSRV_EXPORTABLE AgentPolicyInfo
 {
 private:
-   bool m_newPolicyType;
+   bool m_newTypeFormat;
 	int m_size;
-	BYTE *m_guidList;
+	uint8_t *m_guidList;
 	TCHAR **m_typeList;
    TCHAR **m_serverInfoList;
-	UINT64 *m_serverIdList;
-   BYTE *m_hashList;
+	uint64_t *m_serverIdList;
+	uint8_t *m_hashList;
 	int *m_version;
 
 public:
@@ -646,12 +675,12 @@ public:
 
 	int size() { return m_size; }
 	uuid getGuid(int index);
-   const BYTE *getHash(int index);
+   const uint8_t *getHash(int index);
 	const TCHAR *getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : NULL; }
 	const TCHAR *getServerInfo(int index) { return ((index >= 0) && (index < m_size)) ? m_serverInfoList[index] : NULL; }
-	UINT64 getServerId(int index) { return ((index >= 0) && (index < m_size)) ? m_serverIdList[index] : 0; }
+	uint64_t getServerId(int index) { return ((index >= 0) && (index < m_size)) ? m_serverIdList[index] : 0; }
 	int getVersion(int index) { return ((index >= 0) && (index < m_size)) ? m_version[index] : -1; }
-	bool isNewPolicyType() { return m_newPolicyType; }
+	bool isNewTypeFormat() { return m_newTypeFormat; }
 };
 
 /**

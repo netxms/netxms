@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,11 +25,9 @@
 /**
  * Recalculation job constructor
  */
-DCIRecalculationJob::DCIRecalculationJob(DataCollectionTarget *object, DCItem *dci, UINT32 userId)
-                    : ServerJob(_T("DCI_RECALC"), _T("Recalculate DCI values"), object->getId(), userId, false)
+DCIRecalculationJob::DCIRecalculationJob(const shared_ptr<DataCollectionTarget>& object, const DCItem *dci, uint32_t userId)
+                    : ServerJob(_T("DCI_RECALC"), _T("Recalculate DCI values"), object, userId, false)
 {
-   m_object = object;
-   m_object->incRefCount();
    m_dci = new DCItem(dci, true);
    m_cancelled = false;
 
@@ -43,7 +41,6 @@ DCIRecalculationJob::DCIRecalculationJob(DataCollectionTarget *object, DCItem *d
  */
 DCIRecalculationJob::~DCIRecalculationJob()
 {
-   m_object->decRefCount();
    delete m_dci;
 }
 
@@ -149,7 +146,7 @@ ServerJobResult DCIRecalculationJob::run()
 
    if (success)
    {
-      m_object->reloadDCItemCache(m_dci->getId());
+      static_cast<DataCollectionTarget&>(*m_object).reloadDCItemCache(m_dci->getId());
       markProgress(100);
    }
    return success ? JOB_RESULT_SUCCESS : JOB_RESULT_FAILED;

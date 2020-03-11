@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,49 +16,64 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: logmonitoring.cpp
+** File: filemonitoring.cpp
 **
 **/
 
 #include "nms_core.h"
 
+/**
+ * Global instance of file monitoring list
+ */
 FileMonitoringList g_monitoringList;
 
+/**
+ * Constructor
+ */
 FileMonitoringList::FileMonitoringList()
 {
    m_mutex = MutexCreate();
    m_monitoredFiles.setOwner(Ownership::True);
 }
 
+/**
+ * Destructor
+ */
 FileMonitoringList::~FileMonitoringList()
 {
    MutexDestroy(m_mutex);
 }
 
-void FileMonitoringList::addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj, AgentConnection *conn)
+/**
+ * Add file to list
+ */
+void FileMonitoringList::addFile(MONITORED_FILE *file, Node *node, AgentConnection *conn)
 {
    lock();
-   fileForAdd->session->incRefCount();
-   m_monitoredFiles.add(fileForAdd);
-   if (!obj->hasFileUpdateConnection())
+   file->session->incRefCount();
+   m_monitoredFiles.add(file);
+   if (!node->hasFileUpdateConnection())
    {
       conn->enableFileUpdates();
-      obj->setFileUpdateConnection(conn);
+      node->setFileUpdateConnection(conn);
    }
-   nxlog_debug(5, _T("File tracker registered: node=%s [%d], file=\"%s\""), obj->getName(), obj->getId(), fileForAdd->fileName);
+   nxlog_debug(5, _T("File tracker registered: node=%s [%d], file=\"%s\""), node->getName(), node->getId(), file->fileName);
    unlock();
 }
 
-bool FileMonitoringList::checkDuplicate(MONITORED_FILE *fileForAdd)
+/**
+ * Check if given fiel is a duplicate
+ */
+bool FileMonitoringList::isDuplicate(MONITORED_FILE *file)
 {
    bool result = false;
    lock();
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      MONITORED_FILE *m_monitoredFile = m_monitoredFiles.get(i);
-      if(_tcscmp(m_monitoredFile->fileName, fileForAdd->fileName) == 0
-         && m_monitoredFile->nodeID == fileForAdd->nodeID
-         && m_monitoredFile->session->getUserId() == fileForAdd->session->getUserId())
+      MONITORED_FILE *curr = m_monitoredFiles.get(i);
+      if(_tcscmp(curr->fileName, file->fileName) == 0
+         && curr->nodeID == file->nodeID
+         && curr->session->getUserId() == file->session->getUserId())
       {
          result=true;
       }
@@ -67,38 +82,44 @@ bool FileMonitoringList::checkDuplicate(MONITORED_FILE *fileForAdd)
    return result;
 }
 
-ObjectArray<ClientSession>* FileMonitoringList::findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID)
+/**
+ * Find client sessions
+ */
+ObjectArray<ClientSession> *FileMonitoringList::findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID)
 {
    lock();
    ObjectArray<ClientSession> *result = new ObjectArray<ClientSession>;
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
-      DbgPrintf(9, _T("FileMonitoringList::findClientByFNameAndNodeID: %s is %s should"), m_monitoredFile->fileName, fileName);
-      if(_tcscmp(m_monitoredFile->fileName, fileName) == 0 && m_monitoredFile->nodeID == nodeID)
+      MONITORED_FILE *curr = m_monitoredFiles.get(i);
+      DbgPrintf(9, _T("FileMonitoringList::findClientByFNameAndNodeID: %s is %s should"), curr->fileName, fileName);
+      if(_tcscmp(curr->fileName, fileName) == 0 && curr->nodeID == nodeID)
       {
-         result->add(m_monitoredFile->session);
+         result->add(curr->session);
       }
    }
    unlock();
    return result;
 }
 
-bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
+/**
+ * Remove file from list
+ */
+bool FileMonitoringList::removeFile(MONITORED_FILE *file)
 {
    lock();
    bool deleted = false;
    int nodeConnectionCount = 0;
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
-      if (m_monitoredFile->nodeID == fileForRemove->nodeID)
+      MONITORED_FILE *curr = m_monitoredFiles.get(i);
+      if (curr->nodeID == file->nodeID)
          nodeConnectionCount++;
-      if(_tcscmp(m_monitoredFile->fileName, fileForRemove->fileName) == 0 &&
-         m_monitoredFile->nodeID == fileForRemove->nodeID &&
-         m_monitoredFile->session == fileForRemove->session)
+      if (_tcscmp(curr->fileName, file->fileName) == 0 &&
+         curr->nodeID == file->nodeID &&
+         curr->session == file->session)
       {
-         fileForRemove->session->decRefCount();
+         file->session->decRefCount();
          m_monitoredFiles.remove(i);
          deleted = true;
          i--;
@@ -107,15 +128,18 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
 
    if (deleted && nodeConnectionCount == 1)
    {
-      Node *object = (Node *)FindObjectById(fileForRemove->nodeID, OBJECT_NODE);
-      if (object != NULL)
-         object->setFileUpdateConnection(NULL);
+      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(file->nodeID, OBJECT_NODE));
+      if (node != NULL)
+         node->setFileUpdateConnection(NULL);
    }
    unlock();
    return deleted;
 }
 
-void FileMonitoringList::removeDisconnectedNode(UINT32 nodeId)
+/**
+ * Remove all files for disconnected node
+ */
+void FileMonitoringList::removeDisconnectedNode(uint32_t nodeId)
 {
    lock();
    for(int i = 0; i < m_monitoredFiles.size(); i++)
@@ -130,14 +154,4 @@ void FileMonitoringList::removeDisconnectedNode(UINT32 nodeId)
       }
    }
    unlock();
-}
-
-void FileMonitoringList::lock()
-{
-   MutexLock(m_mutex);
-}
-
-void FileMonitoringList::unlock()
-{
-   MutexUnlock(m_mutex);
 }

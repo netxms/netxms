@@ -42,8 +42,8 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 INT64 GetEventLogWriterQueueSize();
 void DiscoveryPoller(PollerInfo *poller);
-void RangeScanCallback(const InetAddress& addr, UINT32 zoneUIN, Node *proxy, UINT32 rtt, ServerConsole *console, void *context);
-void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context);
+void RangeScanCallback(const InetAddress& addr, uint32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context);
+void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, uint32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
 
 /**
  * Format string to show value of global flag
@@ -89,9 +89,9 @@ static void PrintArpCache(CONSOLE_CTX ctx, Node *node, ArpCache *arpCache)
    for(int i = 0; i < arpCache->size(); i++)
    {
       const ArpEntry *e = arpCache->get(i);
-      Interface *iface = node->findInterfaceByIndex(e->ifIndex);
+      shared_ptr<Interface> iface = node->findInterfaceByIndex(e->ifIndex);
       ConsolePrintf(ctx, _T("%-15s | %s | %7d | %-20s\n"), e->ipAddr.toString(ipAddrStr), e->macAddr.toString(macAddrStr),
-         e->ifIndex, (iface != NULL) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
+         e->ifIndex, (iface != nullptr) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
    }
    ConsolePrintf(ctx, _T("\n%d entries\n\n"), arpCache->size());
 }
@@ -158,18 +158,17 @@ static int CompareDebugTags(const DebugTagInfo **t1, const DebugTagInfo **t2)
 /**
  * Callback for address scan
  */
-static void PrintScanCallback(const InetAddress& addr, UINT32 zoneUIN, Node *proxy, UINT32 rtt, ServerConsole *console, void *context)
+static void PrintScanCallback(const InetAddress& addr, UINT32 zoneUIN, const Node *proxy, UINT32 rtt, ServerConsole *console, void *context)
 {
-   TCHAR buffer[64];
-
-   if(proxy != NULL)
+   TCHAR ipAddrText[64];
+   if (proxy != nullptr)
    {
       ConsolePrintf(console, _T("   Reply from %s to ICMP ping via proxy %s [%u]\n"),
-            (const TCHAR *)addr.toString(), proxy->getName(), proxy->getId());
+            addr.toString(ipAddrText), proxy->getName(), proxy->getId());
    }
    else
    {
-      ConsolePrintf(console, _T("   Reply from %s in %dms\n"), addr.toString(buffer), rtt);
+      ConsolePrintf(console, _T("   Reply from %s in %dms\n"), addr.toString(ipAddrText), rtt);
    }
 
 }
@@ -183,8 +182,8 @@ static EnumerationCallbackResult ShowDiscoveryQueueElement(const DiscoveredAddre
    TCHAR ipAddrText[48], nodeInfo[256];
    if (address->sourceNodeId != 0)
    {
-      Node *node = static_cast<Node*>(FindObjectById(address->sourceNodeId, OBJECT_NODE));
-      _sntprintf(nodeInfo, 256, _T("%s [%u]"), (node != NULL) ? node->getName() : _T("<unknown>"), address->sourceNodeId);
+      shared_ptr<NetObj> node = FindObjectById(address->sourceNodeId, OBJECT_NODE);
+      _sntprintf(nodeInfo, 256, _T("%s [%u]"), (node != nullptr) ? node->getName() : _T("<unknown>"), address->sourceNodeId);
    }
    else
    {
@@ -212,12 +211,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       pArg = ExtractWord(pArg, szBuffer);
       if (szBuffer[0] == _T('+'))
       {
-         int offset = _tcstoul(&szBuffer[1], NULL, 0);
-         AddOneTimeScheduledTask(_T("Execute.Script"), time(NULL) + offset, pArg, NULL, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
+         int offset = _tcstoul(&szBuffer[1], nullptr, 0);
+         AddOneTimeScheduledTask(_T("Execute.Script"), time(nullptr) + offset, pArg, nullptr, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
       }
       else
       {
-         AddRecurrentScheduledTask(_T("Execute.Script"), szBuffer, pArg, NULL, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
+         AddRecurrentScheduledTask(_T("Execute.Script"), szBuffer, pArg, nullptr, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
    else if (IsCommand(_T("DBCP"), szBuffer, 3))
@@ -346,14 +345,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (IsCommand(_T("ACCESS"), szBuffer, 6))
       {
          ConsoleWrite(pCtx, _T("Raising exception...\n"));
-         char *p = NULL;
+         char *p = nullptr;
          *p = 0;
       }
       else if (IsCommand(_T("BREAKPOINT"), szBuffer, 5))
       {
 #ifdef _WIN32
          ConsoleWrite(pCtx, _T("Raising exception...\n"));
-         RaiseException(EXCEPTION_BREAKPOINT, 0, 0, NULL);
+         RaiseException(EXCEPTION_BREAKPOINT, 0, 0, nullptr);
 #else
          ConsoleWrite(pCtx, _T("ERROR: Not supported on current platform\n"));
 #endif
@@ -482,33 +481,33 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if (pollType > 0)
          {
             ExtractWord(pArg, szBuffer);
-            UINT32 id = _tcstoul(szBuffer, NULL, 0);
+            UINT32 id = _tcstoul(szBuffer, nullptr, 0);
             if (id != 0)
             {
-               NetObj *object = FindObjectById(id);
-               if ((object != NULL) && object->isDataCollectionTarget())
+               shared_ptr<NetObj> object = FindObjectById(id);
+               if ((object != nullptr) && object->isDataCollectionTarget())
                {
                   switch(pollType)
                   {
                      case 1:
-                        static_cast<DataCollectionTarget*>(object)->startForcedConfigurationPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
+                        static_cast<DataCollectionTarget*>(object.get())->startForcedConfigurationPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
                                  &DataCollectionTarget::configurationPollWorkerEntry,
-                                 RegisterPoller(PollerType::CONFIGURATION, static_cast<DataCollectionTarget*>(object)));
+                                 RegisterPoller(PollerType::CONFIGURATION, object));
                         break;
                      case 2:
-                        static_cast<DataCollectionTarget*>(object)->startForcedStatusPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
+                        static_cast<DataCollectionTarget*>(object.get())->startForcedStatusPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
                                  &DataCollectionTarget::statusPollWorkerEntry,
-                                 RegisterPoller(PollerType::STATUS, static_cast<DataCollectionTarget*>(object)));
+                                 RegisterPoller(PollerType::STATUS, object));
                         break;
                      case 3:
                         if (object->getObjectClass() == OBJECT_NODE)
                         {
-                           static_cast<Node*>(object)->startForcedTopologyPoll();
-                           ThreadPoolExecute(g_pollerThreadPool, static_cast<Node*>(object),
+                           static_cast<Node*>(object.get())->startForcedTopologyPoll();
+                           ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<Node>(object),
                                     &Node::topologyPollWorkerEntry,
-                                    RegisterPoller(PollerType::TOPOLOGY, static_cast<Node*>(object)));
+                                    RegisterPoller(PollerType::TOPOLOGY, object));
                         }
                         else
                         {
@@ -518,10 +517,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      case 4:
                         if (object->getObjectClass() == OBJECT_NODE)
                         {
-                           static_cast<Node*>(object)->startForcedRoutePoll();
-                           ThreadPoolExecute(g_pollerThreadPool, static_cast<Node*>(object),
+                           static_cast<Node*>(object.get())->startForcedRoutePoll();
+                           ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<Node>(object),
                                     &Node::routingTablePollWorkerEntry,
-                                    RegisterPoller(PollerType::ROUTING_TABLE, static_cast<Node*>(object)));
+                                    RegisterPoller(PollerType::ROUTING_TABLE, object));
                         }
                         else
                         {
@@ -529,15 +528,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         }
                         break;
                      case 5:
-                        static_cast<DataCollectionTarget*>(object)->startForcedInstancePoll();
-                        ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
+                        static_cast<DataCollectionTarget*>(object.get())->startForcedInstancePoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
                                  &DataCollectionTarget::instanceDiscoveryPollWorkerEntry,
-                                 RegisterPoller(PollerType::INSTANCE_DISCOVERY, static_cast<DataCollectionTarget*>(object)));
+                                 RegisterPoller(PollerType::INSTANCE_DISCOVERY, object));
                         break;
                      case 6:
                         if (object->getObjectClass() == OBJECT_NODE)
                         {
-                           static_cast<Node*>(object)->startForcedDiscoveryPoll();
+                           static_cast<Node*>(object.get())->startForcedDiscoveryPoll();
                            ThreadPoolExecute(g_pollerThreadPool, DiscoveryPoller, RegisterPoller(PollerType::DISCOVERY, object));
                         }
                         else
@@ -588,13 +587,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                if (IsCommand(_T("ZONE"), szBuffer, 1))
                {
                   pArg = ExtractWord(pArg, szBuffer);
-                  proxyId = _tcstoul(szBuffer, NULL, 0);
+                  proxyId = _tcstoul(szBuffer, nullptr, 0);
                   ExtractWord(pArg, szBuffer); // Extract next word if it is discovery
                }
                else if (IsCommand(_T("PROXY"), szBuffer, 1))
                {
                   pArg = ExtractWord(pArg, szBuffer);
-                  zoneUIN = _tcstoul(szBuffer, NULL, 0);
+                  zoneUIN = _tcstoul(szBuffer, nullptr, 0);
                   ExtractWord(pArg, szBuffer);  // Extract next word if it is discovery
                }
                else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))
@@ -625,7 +624,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                {
                   InetAddressListElement range(start, end, proxyId, zoneUIN);
                   ConsolePrintf(pCtx, _T("Scanning address range %s - %s\n"), start.toString(szBuffer), end.toString(addr2));
-                  CheckRange(range, doDiscovery ? RangeScanCallback : PrintScanCallback, pCtx, NULL);
+                  CheckRange(range, doDiscovery ? RangeScanCallback : PrintScanCallback, pCtx, nullptr);
                   ConsolePrintf(pCtx, _T("Address range %s - %s scan completed\n"), start.toString(szBuffer), end.toString(addr2));
                }
                else
@@ -678,18 +677,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
-         UINT32 dwNode = _tcstoul(szBuffer, NULL, 0);
+         UINT32 dwNode = _tcstoul(szBuffer, nullptr, 0);
          if (dwNode != 0)
          {
-            NetObj *pObject = FindObjectById(dwNode);
-            if (pObject != NULL)
+            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
+            if (pObject != nullptr)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  ArpCache *arpCache = static_cast<Node*>(pObject)->getArpCache();
-                  if (arpCache != NULL)
+                  ArpCache *arpCache = static_cast<Node*>(pObject.get())->getArpCache();
+                  if (arpCache != nullptr)
                   {
-                     PrintArpCache(pCtx, static_cast<Node*>(pObject), arpCache);
+                     PrintArpCache(pCtx, static_cast<Node*>(pObject.get()), arpCache);
                      arpCache->decRefCount();
                   }
                   else
@@ -716,16 +715,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
-         UINT32 dwNode = _tcstoul(szBuffer, NULL, 0);
+         UINT32 dwNode = _tcstoul(szBuffer, nullptr, 0);
          if (dwNode != 0)
          {
-            NetObj *pObject = FindObjectById(dwNode);
-            if (pObject != NULL)
+            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
+            if (pObject != nullptr)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  shared_ptr<ComponentTree> components = static_cast<Node*>(pObject)->getComponents();
-                  if (components != NULL)
+                  shared_ptr<ComponentTree> components = static_cast<Node*>(pObject.get())->getComponents();
+                  if (components != nullptr)
                   {
                      components->print(pCtx);
                   }
@@ -800,18 +799,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
-         UINT32 dwNode = _tcstoul(szBuffer, NULL, 0);
+         UINT32 dwNode = _tcstoul(szBuffer, nullptr, 0);
          if (dwNode != 0)
          {
-            NetObj *pObject = FindObjectById(dwNode);
-            if (pObject != NULL)
+            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
+            if (pObject != nullptr)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  ForwardingDatabase *fdb = ((Node *)pObject)->getSwitchForwardingDatabase();
-                  if (fdb != NULL)
+                  ForwardingDatabase *fdb = static_cast<Node*>(pObject.get())->getSwitchForwardingDatabase();
+                  if (fdb != nullptr)
                   {
-                     fdb->print(pCtx, (Node *)pObject);
+                     fdb->print(pCtx, static_cast<Node*>(pObject.get()));
                      fdb->decRefCount();
                   }
                   else
@@ -890,7 +889,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if (IsCommand(_T("DETAILS"), szBuffer, 1))
          {
             TCHAR *text = GetHeapInfo();
-            if (text != NULL)
+            if (text != nullptr)
             {
                ConsoleWrite(pCtx, text);
                ConsoleWrite(pCtx, _T("\n"));
@@ -945,8 +944,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             if (IsCommand(_T("ZONE"), szBuffer, 1))
             {
                ExtractWord(pArg, szBuffer);
-               Zone *zone = FindZoneByUIN(_tcstoul(szBuffer, NULL, 0));
-               if (zone != NULL)
+               shared_ptr<Zone> zone = FindZoneByUIN(_tcstoul(szBuffer, nullptr, 0));
+               if (zone != nullptr)
                {
                   zone->dumpInterfaceIndex(pCtx);
                }
@@ -974,8 +973,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             if (IsCommand(_T("ZONE"), szBuffer, 1))
             {
                ExtractWord(pArg, szBuffer);
-               Zone *zone = FindZoneByUIN(_tcstoul(szBuffer, NULL, 0));
-               if (zone != NULL)
+               shared_ptr<Zone> zone = FindZoneByUIN(_tcstoul(szBuffer, nullptr, 0));
+               if (zone != nullptr)
                {
                   zone->dumpNodeIndex(pCtx);
                }
@@ -1007,8 +1006,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             if (IsCommand(_T("ZONE"), szBuffer, 1))
             {
                ExtractWord(pArg, szBuffer);
-               Zone *zone = FindZoneByUIN(_tcstoul(szBuffer, NULL, 0));
-               if (zone != NULL)
+               shared_ptr<Zone> zone = FindZoneByUIN(_tcstoul(szBuffer, nullptr, 0));
+               if (zone != nullptr)
                {
                   zone->dumpSubnetIndex(pCtx);
                }
@@ -1044,15 +1043,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
-         UINT32 dwNode = _tcstoul(szBuffer, NULL, 0);
+         UINT32 dwNode = _tcstoul(szBuffer, nullptr, 0);
          if (dwNode != 0)
          {
-            NetObj *pObject = FindObjectById(dwNode);
-            if (pObject != NULL)
+            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
+            if (pObject != nullptr)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  ((Node *)pObject)->showLLDPInfo(pCtx);
+                  ((Node *)pObject.get())->showLLDPInfo(pCtx);
                }
                else
                {
@@ -1097,7 +1096,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          // Get filter
          ExtractWord(pArg, szBuffer);
          StrStrip(szBuffer);
-         DumpObjects(pCtx, (szBuffer[0] != 0) ? szBuffer : NULL);
+         DumpObjects(pCtx, (szBuffer[0] != 0) ? szBuffer : nullptr);
       }
       else if (IsCommand(_T("PE"), szBuffer, 2))
       {
@@ -1126,15 +1125,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
       {
-         UINT32 dwNode;
-         NetObj *pObject;
-
          ExtractWord(pArg, szBuffer);
-         dwNode = _tcstoul(szBuffer, NULL, 0);
+         uint32_t dwNode = _tcstoul(szBuffer, nullptr, 0);
          if (dwNode != 0)
          {
-            pObject = FindObjectById(dwNode);
-            if (pObject != NULL)
+            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
+            if (pObject != nullptr)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
@@ -1143,8 +1139,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   int i;
 
                   ConsolePrintf(pCtx, _T("Routing table for node %s:\n\n"), pObject->getName());
-                  pRT = ((Node *)pObject)->getCachedRoutingTable();
-                  if (pRT != NULL)
+                  pRT = ((Node *)pObject.get())->getCachedRoutingTable();
+                  if (pRT != nullptr)
                   {
                      for(i = 0; i < pRT->iNumEntries; i++)
                      {
@@ -1224,14 +1220,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
       {
          ExtractWord(pArg, szBuffer);
-         UINT32 nodeId = _tcstoul(szBuffer, NULL, 0);
+         UINT32 nodeId = _tcstoul(szBuffer, nullptr, 0);
          if (nodeId != 0)
          {
-            Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
-            if (node != NULL)
+            shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
+            if (node != nullptr)
             {
-               LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(node);
-               if (nbs != NULL)
+               LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(node.get());
+               if (nbs != nullptr)
                {
                   ConsolePrintf(pCtx, _T("Proto   | PtP | ifLocal | ifRemote | Peer\n")
                                       _T("--------+-----+---------+----------+------------------------------------\n"));
@@ -1241,8 +1237,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      TCHAR peer[256];
                      if (ni->objectId != 0)
                      {
-                        NetObj *object = FindObjectById(ni->objectId);
-                        if (object != NULL)
+                        shared_ptr<NetObj> object = FindObjectById(ni->objectId);
+                        if (object != nullptr)
                            _sntprintf(peer, 256, _T("%s [%d]"), object->getName(), ni->objectId);
                         else
                            _sntprintf(peer, 256, _T("[%d]"), ni->objectId);
@@ -1281,20 +1277,17 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("VLANS"), szBuffer, 1))
       {
-         UINT32 dwNode;
-         NetObj *pObject;
-
          ExtractWord(pArg, szBuffer);
-         dwNode = _tcstoul(szBuffer, NULL, 0);
-         if (dwNode != 0)
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+         if (nodeId != 0)
          {
-            pObject = FindObjectById(dwNode);
-            if (pObject != NULL)
+            shared_ptr<NetObj> object = FindObjectById(nodeId);
+            if (object != nullptr)
             {
-               if (pObject->getObjectClass() == OBJECT_NODE)
+               if (object->getObjectClass() == OBJECT_NODE)
                {
-                  shared_ptr<VlanList> vlans = static_cast<Node*>(pObject)->getVlans();
-                  if (vlans != NULL)
+                  shared_ptr<VlanList> vlans = static_cast<Node*>(object.get())->getVlans();
+                  if (vlans != nullptr)
                   {
                      ConsoleWrite(pCtx, _T("\x1b[1mVLAN\x1b[0m | \x1b[1mName\x1b[0m             | \x1b[1mPorts\x1b[0m\n")
                                         _T("-----+------------------+-----------------------------------------------------------------\n"));
@@ -1323,7 +1316,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             }
             else
             {
-               ConsolePrintf(pCtx, _T("\x1b[31mERROR: Object with ID %d does not exist\x1b[0m\n\n"), dwNode);
+               ConsolePrintf(pCtx, _T("\x1b[31mERROR: Object with ID %d does not exist\x1b[0m\n\n"), nodeId);
             }
          }
          else
@@ -1348,7 +1341,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    {
       // create access snapshot
       ExtractWord(pArg, szBuffer);
-      UINT32 userId = _tcstoul(szBuffer, NULL, 0);
+      UINT32 userId = _tcstoul(szBuffer, nullptr, 0);
       bool success = CreateObjectAccessSnapshot(userId, OBJECT_NODE);
       ConsolePrintf(pCtx, _T("Object access snapshot creation for user %d %s\n\n"), userId, success ? _T("successful") : _T("failed"));
    }
@@ -1362,26 +1355,26 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       scriptLibrary->lock();
 
       NXSL_Program *compiledScript = scriptLibrary->findNxslProgram(szBuffer);
-      if (compiledScript == NULL)
+      if (compiledScript == nullptr)
       {
          scriptLibrary->unlock();
          libraryLocked = false;
          destroyCompiledScript = true;
          char *script;
          UINT32 fileSize;
-         if ((script = (char *)LoadFile(szBuffer, &fileSize)) != NULL)
+         if ((script = (char *)LoadFile(szBuffer, &fileSize)) != nullptr)
          {
             const int errorMsgLen = 512;
             TCHAR errorMsg[errorMsgLen];
 #ifdef UNICODE
             WCHAR *wscript = WideStringFromMBString(script);
-            compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, NULL);
+            compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, nullptr);
             free(wscript);
 #else
-            compiledScript = NXSLCompile(script, errorMsg, errorMsgLen, NULL);
+            compiledScript = NXSLCompile(script, errorMsg, errorMsgLen, nullptr);
 #endif
             free(script);
-            if (compiledScript == NULL)
+            if (compiledScript == nullptr)
             {
                ConsolePrintf(pCtx, _T("ERROR: Script compilation error: %s\n\n"), errorMsg);
             }
@@ -1392,7 +1385,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
       }
 
-      if (compiledScript != NULL)
+      if (compiledScript != nullptr)
       {
          NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
          pEnv->setConsole(pCtx);
@@ -1449,7 +1442,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             ExtractWord(pArg, szBuffer);
             if (szBuffer[0] != 0)
             {
-               UINT16 port = static_cast<UINT16>(_tcstoul(szBuffer, NULL, 0));
+               UINT16 port = static_cast<UINT16>(_tcstoul(szBuffer, nullptr, 0));
                UINT32 rc = TcpPing(addr, port, 1000);
                switch(rc)
                {
@@ -1484,30 +1477,28 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
    else if (IsCommand(_T("TRACE"), szBuffer, 1))
    {
-      UINT32 dwNode1, dwNode2;
-      NetObj *pObject1, *pObject2;
       NetworkPath *pTrace;
       TCHAR szNextHop[16];
       int i;
 
       // Get arguments
       pArg = ExtractWord(pArg, szBuffer);
-      dwNode1 = _tcstoul(szBuffer, NULL, 0);
+      uint32_t dwNode1 = _tcstoul(szBuffer, nullptr, 0);
 
       ExtractWord(pArg, szBuffer);
-      dwNode2 = _tcstoul(szBuffer, NULL, 0);
+      uint32_t dwNode2 = _tcstoul(szBuffer, nullptr, 0);
 
       if ((dwNode1 != 0) && (dwNode2 != 0))
       {
-         pObject1 = FindObjectById(dwNode1);
-         if (pObject1 == NULL)
+         shared_ptr<NetObj> pObject1 = FindObjectById(dwNode1);
+         if (pObject1 == nullptr)
          {
             ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode1);
          }
          else
          {
-            pObject2 = FindObjectById(dwNode2);
-            if (pObject2 == NULL)
+            shared_ptr<NetObj> pObject2 = FindObjectById(dwNode2);
+            if (pObject2 == nullptr)
             {
                ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode2);
             }
@@ -1515,8 +1506,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if ((pObject1->getObjectClass() == OBJECT_NODE) && (pObject2->getObjectClass() == OBJECT_NODE))
                {
-                  pTrace = TraceRoute((Node *)pObject1, (Node *)pObject2);
-                  if (pTrace != NULL)
+                  pTrace = TraceRoute(static_pointer_cast<Node>(pObject1), static_pointer_cast<Node>(pObject2));
+                  if (pTrace != nullptr)
                   {
                      TCHAR sourceIp[32];
                      ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
@@ -1525,7 +1516,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                            pTrace->getSourceAddress().toString(sourceIp));
                      for(i = 0; i < pTrace->getHopCount(); i++)
                      {
-                        HOP_INFO *hop = pTrace->getHopInfo(i);
+                        NetworkPathElement *hop = pTrace->getHopInfo(i);
                         ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),
                               hop->object->getId(),
                               hop->object->getName(),
@@ -1559,10 +1550,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (IsCommand(_T("BIND"), szBuffer, 1))
       {
          pArg = ExtractWord(pArg, szBuffer);
-         UINT32 tunnelId = _tcstoul(szBuffer, NULL, 0);
+         UINT32 tunnelId = _tcstoul(szBuffer, nullptr, 0);
 
          ExtractWord(pArg, szBuffer);
-         UINT32 nodeId = _tcstoul(szBuffer, NULL, 0);
+         UINT32 nodeId = _tcstoul(szBuffer, nullptr, 0);
 
          if ((tunnelId != 0) && (nodeId != 0))
          {
@@ -1577,7 +1568,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else if (IsCommand(_T("UNBIND"), szBuffer, 1))
       {
          ExtractWord(pArg, szBuffer);
-         UINT32 nodeId = _tcstoul(szBuffer, NULL, 0);
+         UINT32 nodeId = _tcstoul(szBuffer, nullptr, 0);
 
          if (nodeId != 0)
          {

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -148,7 +148,7 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
    // Save data collection items
    if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
-		lockDciAccess(false);
+		readLockDciAccess();
       for(int i = 0; i < m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
@@ -340,9 +340,9 @@ void MobileDevice::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *MobileDevice::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *MobileDevice::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslMobileDeviceClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslMobileDeviceClass, new shared_ptr<MobileDevice>(self())));
 }
 
 /**

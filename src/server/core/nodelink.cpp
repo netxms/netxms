@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -149,7 +149,6 @@ UINT32 NodeLink::modifyFromMessageInternal(NXCPMessage *pRequest)
 	{
 		m_nodeId = pRequest->getFieldAsUInt32(VID_NODE_ID);
 	}
-
 	return super::modifyFromMessageInternal(pRequest);
 }
 
@@ -160,11 +159,12 @@ void NodeLink::execute()
 {
 	DbgPrintf(6, _T("NodeLink::execute() started for %s [%ld]"), m_name, (long)m_id);
 
-   lockChildList(false);
-	for (int i = 0; i < getChildList()->size(); i++)
+   readLockChildList();
+	for (int i = 0; i < getChildList().size(); i++)
 	{
-		if (getChildList()->get(i)->getObjectClass() == OBJECT_SLMCHECK)
-			((SlmCheck *)getChildList()->get(i))->execute();
+	   NetObj *curr = getChildList().get(i);
+		if (curr->getObjectClass() == OBJECT_SLMCHECK)
+			((SlmCheck *)curr)->execute();
 	}
    unlockChildList();
 
@@ -179,14 +179,15 @@ void NodeLink::execute()
 void NodeLink::applyTemplate(SlmCheck *tmpl)
 {
 	// Check if we already have check created from this template
-	SlmCheck *check = NULL;
-	lockChildList(false);
-	for(int i = 0; i < getChildList()->size(); i++)
+	shared_ptr<SlmCheck> check;
+	readLockChildList();
+	for(int i = 0; i < getChildList().size(); i++)
 	{
-		if ((getChildList()->get(i)->getObjectClass() == OBJECT_SLMCHECK) &&
-		    (((SlmCheck *)getChildList()->get(i))->getTemplateId() == tmpl->getId()))
+      NetObj *curr = getChildList().get(i);
+		if ((curr->getObjectClass() == OBJECT_SLMCHECK) &&
+		    (static_cast<SlmCheck*>(curr)->getTemplateId() == tmpl->getId()))
 		{
-			check = (SlmCheck *)getChildList()->get(i);
+			check = static_cast<SlmCheck*>(curr)->self();
 			break;
 		}
 	}
@@ -194,8 +195,8 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 
 	if (check == NULL)
 	{
-		check = new SlmCheck(tmpl);
-		check->addParent(this);
+		check = MakeSharedNObject<SlmCheck>(tmpl);
+		check->addParent(self());
 		addChild(check);
 		NetObjInsert(check, true, false);
 		check->unhide();
@@ -211,15 +212,15 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
  */
 void NodeLink::applyTemplates()
 {
-	ObjectArray<SlmCheck> templates;
+	SharedObjectArray<SlmCheck> templates;
 
-	lockParentList(false);
-	for(int i = 0; i < getParentList()->size(); i++)
+	readLockParentList();
+	for(int i = 0; i < getParentList().size(); i++)
 	{
-		if (getParentList()->get(i)->getObjectClass() != OBJECT_BUSINESSSERVICE)
+		if (getParentList().get(i)->getObjectClass() != OBJECT_BUSINESSSERVICE)
 			continue;
 
-		BusinessService *parent = (BusinessService *)getParentList()->get(i);
+		BusinessService *parent = (BusinessService *)getParentList().get(i);
 		parent->getApplicableTemplates(this, &templates);
 	}
 	unlockParentList();
@@ -228,7 +229,6 @@ void NodeLink::applyTemplates()
 	{
 		SlmCheck *tmpl = templates.get(j);
 		applyTemplate(tmpl);
-		tmpl->decRefCount();
 	}
 }
 

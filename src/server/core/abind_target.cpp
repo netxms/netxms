@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -211,7 +211,7 @@ bool AutoBindTarget::deleteFromDatabase(DB_HANDLE hdb)
  * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not,
  * AutoBindDecision_Ignore if no change required (script error or no auto apply)
  */
-AutoBindDecision AutoBindTarget::isApplicable(DataCollectionTarget *target)
+AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<DataCollectionTarget>& target)
 {
    AutoBindDecision result = AutoBindDecision_Ignore;
 

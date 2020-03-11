@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,33 +23,50 @@
 #ifndef _nms_pkg_h_
 #define _nms_pkg_h_
 
-//
-// Deployment thread startup info
-//
-
-typedef struct
+/**
+ * Package deployment task
+ */
+struct PackageDeploymentTask
 {
    MUTEX mutex;    // Synchronization mutex
-	ObjectArray<Node> *nodeList;
-   ClientSession *pSession;
-   UINT32 dwRqId;
-   UINT32 dwPackageId;
-   Queue *pQueue;  // Used internally by deployment manager
-   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
-   TCHAR szPkgFile[MAX_PATH];
-   TCHAR szVersion[MAX_AGENT_VERSION_LEN];
-} DT_STARTUP_INFO;
+	SharedObjectArray<Node> nodeList;
+   ClientSession *session;
+   uint32_t requestId;
+   uint32_t packageId;
+   ObjectQueue<Node> queue;  // Used internally by deployment manager
+   TCHAR *platform;
+   TCHAR *packageFile;
+   TCHAR *version;
 
+   PackageDeploymentTask(ClientSession *_session, uint32_t _requestId, uint32_t _packageId,
+            const TCHAR *_platform, const TCHAR *_packageFile, const TCHAR *_version)
+   {
+      mutex = MutexCreate();
+      session = _session;
+      requestId = _requestId;
+      packageId = _packageId;
+      platform = MemCopyString(_platform);
+      packageFile = MemCopyString(_packageFile);
+      version = MemCopyString(_version);
+   }
 
-//
-// Package functions
-//
+   ~PackageDeploymentTask()
+   {
+      MutexDestroy(mutex);
+      session->decRefCount();
+      MemFree(platform);
+      MemFree(packageFile);
+      MemFree(version);
+   }
+};
 
+/**
+ * Package functions
+ */
 BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform);
 BOOL IsPackageFileExist(const TCHAR *pszFileName);
 BOOL IsValidPackageId(UINT32 dwPkgId);
 UINT32 UninstallPackage(UINT32 dwPkgId);
-THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg);
-
+THREAD_RESULT THREAD_CALL DeploymentManager(void *arg);
 
 #endif   /* _nms_pkg_h_ */

@@ -65,7 +65,7 @@ void Network::loadFromDatabase(DB_HANDLE hdb)
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool Network::showThresholdSummary()
+bool Network::showThresholdSummary() const
 {
 	return true;
 }

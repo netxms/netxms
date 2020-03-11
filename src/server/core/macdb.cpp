@@ -29,14 +29,19 @@
 struct MacDbEntry
 {
    UT_hash_handle hh;
-   BYTE macAddr[MAC_ADDR_LENGTH];
-   NetObj *object;
+   MacAddress macAddr;
+   shared_ptr<NetObj> object;
+
+   MacDbEntry()
+   {
+      memset(&hh, 0, sizeof(UT_hash_handle));
+   }
 };
 
 /**
  * Root
  */
-static MacDbEntry *s_data = NULL;
+static MacDbEntry *s_data = nullptr;
 
 /**
  * Access lock
@@ -46,7 +51,7 @@ static RWLOCK s_lock = RWLockCreate();
 /**
  * Add interface
  */
-void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, NetObj *object)
+void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_ptr<NetObj>& object)
 {
    // Ignore non-unique or non-Ethernet addresses
    if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast() ||
@@ -57,15 +62,14 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, NetObj *object)
        (!memcmp(macAddr.value(), "\x00\x05\x73\xA0", 4) && ((macAddr.value()[4] & 0xF0) == 0x00))) // HSRP IPv6
       return;
 
-   object->incRefCount();
    RWLockWriteLock(s_lock);
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr.value(), MAC_ADDR_LENGTH, entry);
-   if (entry == NULL)
+   if (entry == nullptr)
    {
-      entry = (MacDbEntry *)malloc(sizeof(MacDbEntry));
-      memcpy(entry->macAddr, macAddr.value(), MAC_ADDR_LENGTH);
-      HASH_ADD_KEYPTR(hh, s_data, entry->macAddr, MAC_ADDR_LENGTH, entry);
+      entry = new MacDbEntry();
+      entry->macAddr = macAddr;
+      HASH_ADD_KEYPTR(hh, s_data, entry->macAddr.value(), entry->macAddr.length(), entry);
    }
    else
    {
@@ -76,7 +80,6 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, NetObj *object)
                      macAddr.toString(macAddrStr), entry->object->getName(), entry->object->getId(),
                      object->getName(), object->getId());
       }
-      entry->object->decRefCount();
    }
    entry->object = object;
    RWLockUnlock(s_lock);
@@ -85,7 +88,7 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, NetObj *object)
 /**
  * Add interface
  */
-void NXCORE_EXPORTABLE MacDbAddInterface(Interface *iface)
+void NXCORE_EXPORTABLE MacDbAddInterface(const shared_ptr<Interface>& iface)
 {
    MacDbAddObject(iface->getMacAddr(), iface);
 }
@@ -93,7 +96,7 @@ void NXCORE_EXPORTABLE MacDbAddInterface(Interface *iface)
 /**
  * Add access point
  */
-void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap)
+void NXCORE_EXPORTABLE MacDbAddAccessPoint(const shared_ptr<AccessPoint>& ap)
 {
    MacDbAddObject(ap->getMacAddr(), ap);
 }
@@ -109,11 +112,10 @@ void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr)
    RWLockWriteLock(s_lock);
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr, MAC_ADDR_LENGTH, entry);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
-      entry->object->decRefCount();
       HASH_DEL(s_data, entry);
-      free(entry);
+      delete entry;
    }
    RWLockUnlock(s_lock);
 }
@@ -131,14 +133,12 @@ void NXCORE_EXPORTABLE MacDbRemove(const MacAddress& macAddr)
 /**
  * Find object by MAC address
  */
-NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr, bool updateRefCount)
+shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const BYTE *macAddr)
 {
    RWLockReadLock(s_lock);
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr, MAC_ADDR_LENGTH, entry);
-   NetObj *object = (entry != NULL) ? entry->object : NULL;
-   if (updateRefCount && (object != NULL))
-      object->incRefCount();
+   shared_ptr<NetObj> object = (entry != nullptr) ? entry->object : shared_ptr<NetObj>();
    RWLockUnlock(s_lock);
    return object;
 }
@@ -146,9 +146,9 @@ NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr, bool updateRefCount)
 /**
  * Find object by MAC address
  */
-NetObj NXCORE_EXPORTABLE *MacDbFind(const MacAddress& macAddr, bool updateRefCount)
+shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr)
 {
    if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast() || (macAddr.length() != MAC_ADDR_LENGTH))
-      return NULL;
-   return MacDbFind(macAddr.value(), updateRefCount);
+      return shared_ptr<NetObj>();
+   return MacDbFind(macAddr.value());
 }

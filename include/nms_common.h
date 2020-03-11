@@ -1240,6 +1240,8 @@ static inline const WCHAR *CHECK_NULL_EX_W(const WCHAR *x) { return (x == nullpt
 
 #include <memory>
 using std::tr1::shared_ptr;
+using std::tr1::weak_ptr;
+using std::tr1::static_pointer_cast;
 
 // xlC++ implementation C++11 TR1 does not have make_shared
 template<typename T, typename... Args>
@@ -1262,7 +1264,9 @@ inline shared_ptr<T> make_shared(Args&&... args)
 
 #include <memory>
 using std::shared_ptr;
+using std::weak_ptr;
 using std::make_shared;
+using std::static_pointer_cast;
 
 #endif
 

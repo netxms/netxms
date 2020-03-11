@@ -28,16 +28,16 @@
  */
 BOOL g_bModificationsLocked = FALSE;
 
-Network NXCORE_EXPORTABLE *g_pEntireNet = NULL;
-ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot = NULL;
-TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot = NULL;
-NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
-DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
-BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot = NULL;
+shared_ptr<Network> NXCORE_EXPORTABLE g_entireNetwork;
+shared_ptr<ServiceRoot> NXCORE_EXPORTABLE g_infrastructureServiceRoot;
+shared_ptr<TemplateRoot> NXCORE_EXPORTABLE g_templateRoot;
+shared_ptr<NetworkMapRoot> NXCORE_EXPORTABLE g_mapRoot;
+shared_ptr<DashboardRoot> NXCORE_EXPORTABLE g_dashboardRoot;
+shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
 UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 
-Queue g_templateUpdateQueue;
+ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue(256, Ownership::True);
 
 ObjectIndex g_idxObjectById;
 HashIndex<uuid> g_idxObjectByGUID;
@@ -78,47 +78,43 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 	DbgPrintf(1, _T("Apply template thread started"));
    while(!IsShutdownInProgress())
    {
-      TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)g_templateUpdateQueue.getOrBlock();
-      if (pInfo == INVALID_POINTER_VALUE)
+      TemplateUpdateTask *task = g_templateUpdateQueue.getOrBlock();
+      if (task == INVALID_POINTER_VALUE)
          break;
 
 		DbgPrintf(5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%s"),
-         pInfo->pTemplate->getId(), pInfo->pTemplate->getName(), pInfo->updateType, pInfo->targetId, pInfo->removeDCI ? _T("true") : _T("false"));
+		         task->source->getId(), task->source->getName(), task->updateType, task->targetId, task->removeDCI ? _T("true") : _T("false"));
       BOOL bSuccess = FALSE;
-      NetObj *dcTarget = FindObjectById(pInfo->targetId);
-      if (dcTarget != NULL)
+      shared_ptr<NetObj> dcTarget = FindObjectById(task->targetId);
+      if ((dcTarget != nullptr) && dcTarget->isDataCollectionTarget())
       {
-         if (dcTarget->isDataCollectionTarget())
+         switch(task->updateType)
          {
-            switch(pInfo->updateType)
-            {
-               case APPLY_TEMPLATE:
-                  pInfo->pTemplate->applyToTarget((DataCollectionTarget *)dcTarget);
-                  static_cast<DataCollectionTarget*>(dcTarget)->applyDCIChanges();
-                  bSuccess = TRUE;
-                  break;
-               case REMOVE_TEMPLATE:
-                  static_cast<DataCollectionTarget*>(dcTarget)->unbindFromTemplate(pInfo->pTemplate->getId(), pInfo->removeDCI);
-                  static_cast<DataCollectionTarget*>(dcTarget)->applyDCIChanges();
-                  bSuccess = TRUE;
-                  break;
-               default:
-                  bSuccess = TRUE;
-                  break;
-            }
+            case APPLY_TEMPLATE:
+               task->source->applyToTarget(static_pointer_cast<DataCollectionTarget>(dcTarget));
+               static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges();
+               bSuccess = TRUE;
+               break;
+            case REMOVE_TEMPLATE:
+               static_cast<DataCollectionTarget*>(dcTarget.get())->unbindFromTemplate(task->source->getId(), task->removeDCI);
+               static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges();
+               bSuccess = TRUE;
+               break;
+            default:
+               bSuccess = TRUE;
+               break;
          }
       }
 
       if (bSuccess)
       {
 			DbgPrintf(8, _T("ApplyTemplateThread: success"));
-			pInfo->pTemplate->decRefCount();
-         free(pInfo);
+         delete task;
       }
       else
       {
 			DbgPrintf(8, _T("ApplyTemplateThread: failed"));
-         g_templateUpdateQueue.put(pInfo);    // Requeue
+         g_templateUpdateQueue.put(task);    // Requeue
          ThreadSleepMs(500);
       }
    }
@@ -132,12 +128,11 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
  */
 static void UpdateDataCollectionCache(ObjectIndex *idx)
 {
-	ObjectArray<NetObj> *objects = idx->getObjects(true);
+	SharedObjectArray<NetObj> *objects = idx->getObjects();
    for(int i = 0; i < objects->size(); i++)
    {
       DataCollectionTarget *t = static_cast<DataCollectionTarget*>(objects->get(i));
       t->updateDciCache();
-      t->decRefCount();
    }
 	delete objects;
 }
@@ -182,7 +177,7 @@ static THREAD_RESULT THREAD_CALL MapUpdateThread(void *pArg)
 	while(!SleepAndCheckForShutdown(60))
 	{
 	   nxlog_debug_tag(_T("obj.netmap"), 6, _T("Updating maps..."));
-		g_idxNetMapById.forEach(UpdateMapCallback, NULL);
+		g_idxNetMapById.forEach(UpdateMapCallback, nullptr);
 		nxlog_debug_tag(_T("obj.netmap"), 6, _T("Map update completed"));
 	}
 	nxlog_debug_tag(_T("obj.netmap"), 2, _T("Map update thread stopped"));
@@ -204,28 +199,28 @@ void ObjectsInit()
    ConfigReadByteArray(_T("StatusThresholds"), m_iStatusThresholds, 4, 50);
 
    // Create "Entire Network" object
-   g_pEntireNet = new Network;
-   NetObjInsert(g_pEntireNet, false, false);
+   g_entireNetwork = MakeSharedNObject<Network>();
+   NetObjInsert(g_entireNetwork, false, false);
 
    // Create "Service Root" object
-   g_pServiceRoot = new ServiceRoot;
-   NetObjInsert(g_pServiceRoot, false, false);
+   g_infrastructureServiceRoot = MakeSharedNObject<ServiceRoot>();
+   NetObjInsert(g_infrastructureServiceRoot, false, false);
 
    // Create "Template Root" object
-   g_pTemplateRoot = new TemplateRoot;
-   NetObjInsert(g_pTemplateRoot, false, false);
+   g_templateRoot = MakeSharedNObject<TemplateRoot>();
+   NetObjInsert(g_templateRoot, false, false);
 
 	// Create "Network Maps Root" object
-   g_pMapRoot = new NetworkMapRoot;
-   NetObjInsert(g_pMapRoot, false, false);
+   g_mapRoot = MakeSharedNObject<NetworkMapRoot>();
+   NetObjInsert(g_mapRoot, false, false);
 
 	// Create "Dashboard Root" object
-   g_pDashboardRoot = new DashboardRoot;
-   NetObjInsert(g_pDashboardRoot, false, false);
+   g_dashboardRoot = MakeSharedNObject<DashboardRoot>();
+   NetObjInsert(g_dashboardRoot, false, false);
 
    // Create "Business Service Root" object
-   g_pBusinessServiceRoot = new BusinessServiceRoot;
-   NetObjInsert(g_pBusinessServiceRoot, false, false);
+   g_businessServiceRoot = MakeSharedNObject<BusinessServiceRoot>();
+   NetObjInsert(g_businessServiceRoot, false, false);
 
 	DbgPrintf(1, _T("Built-in objects created"));
 }
@@ -233,17 +228,17 @@ void ObjectsInit()
 /**
  * Insert new object into network
  */
-void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
+void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importedObject)
 {
    if (newObject)
    {
       // Assign unique ID to new object
-      pObject->setId(CreateUniqueId(IDG_NETWORK_OBJECT));
-      if (!importedObject && pObject->getGuid().isNull()) // imported objects already have valid GUID
-         pObject->generateGuid();
+      object->setId(CreateUniqueId(IDG_NETWORK_OBJECT));
+      if (!importedObject && object->getGuid().isNull()) // imported objects already have valid GUID
+         object->generateGuid();
 
       // Create tables for storing data collection values
-      if (pObject->isDataCollectionTarget() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
+      if (object->isDataCollectionTarget() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
       {
          TCHAR szQuery[256], szQueryTemplate[256];
          UINT32 i;
@@ -251,7 +246,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
          MetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId());
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, object->getId());
          DBQuery(hdb, szQuery);
 
          for(i = 0; i < 10; i++)
@@ -260,7 +255,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
             if (szQueryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, object->getId(), object->getId());
                DBQuery(hdb, szQuery);
             }
          }
@@ -271,7 +266,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
             if (szQueryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, object->getId(), object->getId());
                DBQuery(hdb, szQuery);
             }
          }
@@ -282,7 +277,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
             if (szQueryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, object->getId(), object->getId());
                DBQuery(hdb, szQuery);
             }
          }
@@ -291,12 +286,12 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 		}
    }
 
-	g_idxObjectById.put(pObject->getId(), pObject);
-	g_idxObjectByGUID.put(pObject->getGuid(), pObject);
+	g_idxObjectById.put(object->getId(), object);
+	g_idxObjectByGUID.put(object->getGuid(), object);
 
-   if (!pObject->isDeleted())
+   if (!object->isDeleted())
    {
-      switch(pObject->getObjectClass())
+      switch(object->getObjectClass())
       {
          case OBJECT_GENERIC:
          case OBJECT_NETWORK:
@@ -318,121 +313,121 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 			case OBJECT_RACK:
             break;
          case OBJECT_NODE:
-				g_idxNodeById.put(pObject->getId(), pObject);
-            if (!(static_cast<Node*>(pObject)->getFlags() & NF_REMOTE_AGENT))
+				g_idxNodeById.put(object->getId(), object);
+            if (!(static_cast<Node&>(*object).getFlags() & NF_REMOTE_AGENT))
             {
 			      if (IsZoningEnabled())
 			      {
-				      Zone *zone = (Zone *)g_idxZoneByUIN.get(static_cast<Node*>(pObject)->getZoneUIN());
-				      if (zone != NULL)
+				      shared_ptr<Zone> zone = FindZoneByUIN(static_cast<Node&>(*object).getZoneUIN());
+				      if (zone != nullptr)
 				      {
-					      zone->addToIndex(static_cast<Node*>(pObject));
+					      zone->addToIndex(static_pointer_cast<Node>(object));
 				      }
 				      else
 				      {
 					      nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"),
-					               static_cast<Node*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
+					               static_cast<Node&>(*object).getZoneUIN(), object->getName(), object->getId());
 				      }
                }
                else
                {
-                  if (static_cast<Node*>(pObject)->getIpAddress().isValidUnicast())
-					      g_idxNodeByAddr.put(static_cast<Node*>(pObject)->getIpAddress(), pObject);
+                  if (static_cast<Node&>(*object).getIpAddress().isValidUnicast())
+					      g_idxNodeByAddr.put(static_cast<Node&>(*object).getIpAddress(), object);
                }
             }
             break;
 			case OBJECT_CLUSTER:
-            g_idxClusterById.put(pObject->getId(), pObject);
+            g_idxClusterById.put(object->getId(), object);
             break;
 			case OBJECT_MOBILEDEVICE:
-				g_idxMobileDeviceById.put(pObject->getId(), pObject);
+				g_idxMobileDeviceById.put(object->getId(), object);
             break;
 			case OBJECT_ACCESSPOINT:
-				g_idxAccessPointById.put(pObject->getId(), pObject);
-            MacDbAddAccessPoint((AccessPoint *)pObject);
+				g_idxAccessPointById.put(object->getId(), object);
+            MacDbAddAccessPoint(static_pointer_cast<AccessPoint>(object));
             break;
          case OBJECT_CHASSIS:
-            g_idxChassisById.put(pObject->getId(), pObject);
+            g_idxChassisById.put(object->getId(), object);
             break;
          case OBJECT_SUBNET:
-            g_idxSubnetById.put(pObject->getId(), pObject);
-            if (static_cast<Subnet*>(pObject)->getIpAddress().isValidUnicast())
+            g_idxSubnetById.put(object->getId(), object);
+            if (static_cast<Subnet&>(*object).getIpAddress().isValidUnicast())
             {
 					if (IsZoningEnabled())
 					{
-						Zone *zone = (Zone *)g_idxZoneByUIN.get(static_cast<Subnet*>(pObject)->getZoneUIN());
-						if (zone != NULL)
+						shared_ptr<Zone> zone = FindZoneByUIN(static_cast<Subnet&>(*object).getZoneUIN());
+						if (zone != nullptr)
 						{
-							zone->addToIndex((Subnet *)pObject);
+							zone->addToIndex(static_pointer_cast<Subnet>(object));
 						}
 						else
 						{
 						   nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for subnet object %s [%u]"),
-						            static_cast<Subnet*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
+						            static_cast<Subnet&>(*object).getZoneUIN(), object->getName(), object->getId());
 						}
 					}
 					else
 					{
-						g_idxSubnetByAddr.put(static_cast<Subnet*>(pObject)->getIpAddress(), pObject);
+						g_idxSubnetByAddr.put(static_cast<Subnet&>(*object).getIpAddress(), object);
 					}
                if (newObject)
                {
-                  InetAddress addr = static_cast<Subnet*>(pObject)->getIpAddress();
-                  PostSystemEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), &addr, addr.getMaskBits());
+                  InetAddress addr = static_cast<Subnet&>(*object).getIpAddress();
+                  PostSystemEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", object->getId(), object->getName(), &addr, addr.getMaskBits());
                }
             }
             break;
          case OBJECT_INTERFACE:
-            if (!static_cast<Interface*>(pObject)->isExcludedFromTopology())
+            if (!static_cast<Interface&>(*object).isExcludedFromTopology())
             {
 					if (IsZoningEnabled())
 					{
-						Zone *zone = (Zone *)g_idxZoneByUIN.get(((Interface *)pObject)->getZoneUIN());
-						if (zone != NULL)
+					   shared_ptr<Zone> zone = FindZoneByUIN(static_cast<Interface&>(*object).getZoneUIN());
+						if (zone != nullptr)
 						{
-							zone->addToIndex(static_cast<Interface*>(pObject));
+							zone->addToIndex(static_pointer_cast<Interface>(object));
 						}
 						else
 						{
 							nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for interface object %s [%u]"),
-							         static_cast<Interface*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
+							         static_cast<Interface&>(*object).getZoneUIN(), object->getName(), object->getId());
 						}
 					}
 					else
 					{
-						g_idxInterfaceByAddr.put(static_cast<Interface*>(pObject)->getIpAddressList(), pObject);
+						g_idxInterfaceByAddr.put(static_cast<Interface&>(*object).getIpAddressList(), object);
 					}
             }
-            MacDbAddInterface(static_cast<Interface*>(pObject));
+            MacDbAddInterface(static_pointer_cast<Interface>(object));
             break;
          case OBJECT_ZONE:
-				g_idxZoneByUIN.put(static_cast<Zone*>(pObject)->getUIN(), pObject);
+				g_idxZoneByUIN.put(static_cast<Zone&>(*object).getUIN(), object);
             break;
          case OBJECT_CONDITION:
-				g_idxConditionById.put(pObject->getId(), pObject);
+				g_idxConditionById.put(object->getId(), object);
             break;
 			case OBJECT_SLMCHECK:
-				g_idxServiceCheckById.put(pObject->getId(), pObject);
+				g_idxServiceCheckById.put(object->getId(), object);
             break;
 			case OBJECT_NETWORKMAP:
-				g_idxNetMapById.put(pObject->getId(), pObject);
+				g_idxNetMapById.put(object->getId(), object);
             break;
 			case OBJECT_SENSOR:
-				g_idxSensorById.put(pObject->getId(), pObject);
+				g_idxSensorById.put(object->getId(), object);
             break;
          default:
 				{
 					bool processed = false;
 					for(UINT32 i = 0; i < g_dwNumModules; i++)
 					{
-						if (g_pModuleList[i].pfNetObjInsert != NULL)
+						if (g_pModuleList[i].pfNetObjInsert != nullptr)
 						{
-							if (g_pModuleList[i].pfNetObjInsert(pObject))
+							if (g_pModuleList[i].pfNetObjInsert(object))
 								processed = true;
 						}
 					}
 					if (!processed)
-						nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), pObject->getObjectClass());
+						nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), object->getObjectClass());
 				}
             break;
       }
@@ -441,12 +436,12 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 	// Notify modules about object creation
 	if (newObject)
 	{
-      CALL_ALL_MODULES(pfPostObjectCreate, (pObject));
-      pObject->executeHookScript(_T("PostObjectCreate"));
+      CALL_ALL_MODULES(pfPostObjectCreate, (object));
+      object->executeHookScript(_T("PostObjectCreate"));
 	}
    else
    {
-      CALL_ALL_MODULES(pfPostObjectLoad, (pObject));
+      CALL_ALL_MODULES(pfPostObjectLoad, (object));
    }
 }
 
@@ -456,9 +451,9 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
  * appropriate index. Normally this function should be called from
  * NetObj::deleteObject() method.
  */
-void NetObjDeleteFromIndexes(NetObj *pObject)
+void NetObjDeleteFromIndexes(const NetObj& object)
 {
-   switch(pObject->getObjectClass())
+   switch(object.getObjectClass())
    {
       case OBJECT_GENERIC:
       case OBJECT_NETWORK:
@@ -480,125 +475,125 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_RACK:
 			break;
       case OBJECT_NODE:
-			g_idxNodeById.remove(pObject->getId());
-         if (!(static_cast<Node*>(pObject)->getFlags() & NF_REMOTE_AGENT))
+			g_idxNodeById.remove(object.getId());
+         if (!(static_cast<const Node&>(object).getFlags() & NF_REMOTE_AGENT))
          {
 			   if (IsZoningEnabled())
 			   {
-				   Zone *zone = (Zone *)g_idxZoneByUIN.get(static_cast<Node*>(pObject)->getZoneUIN());
-				   if (zone != NULL)
+				   shared_ptr<Zone> zone = FindZoneByUIN(static_cast<const Node&>(object).getZoneUIN());
+				   if (zone != nullptr)
 				   {
-					   zone->removeFromIndex(static_cast<Node*>(pObject));
+					   zone->removeFromIndex(static_cast<const Node&>(object));
 				   }
 				   else
 				   {
 					   nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"),
-					            static_cast<Node*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
+					            static_cast<const Node&>(object).getZoneUIN(), object.getName(), object.getId());
 				   }
             }
             else
             {
-			      if (static_cast<Node*>(pObject)->getIpAddress().isValidUnicast())
-				      g_idxNodeByAddr.remove(((Node *)pObject)->getIpAddress());
+			      if (static_cast<const Node&>(object).getIpAddress().isValidUnicast())
+				      g_idxNodeByAddr.remove(static_cast<const Node&>(object).getIpAddress());
             }
          }
          break;
 		case OBJECT_CLUSTER:
-			g_idxClusterById.remove(pObject->getId());
+			g_idxClusterById.remove(object.getId());
          break;
       case OBJECT_MOBILEDEVICE:
-			g_idxMobileDeviceById.remove(pObject->getId());
+			g_idxMobileDeviceById.remove(object.getId());
          break;
 		case OBJECT_ACCESSPOINT:
-			g_idxAccessPointById.remove(pObject->getId());
-         MacDbRemove(static_cast<AccessPoint*>(pObject)->getMacAddr());
+			g_idxAccessPointById.remove(object.getId());
+         MacDbRemove(static_cast<const AccessPoint&>(object).getMacAddr());
          break;
 		case OBJECT_CHASSIS:
-         g_idxChassisById.remove(pObject->getId());
+         g_idxChassisById.remove(object.getId());
          break;
       case OBJECT_SUBNET:
-         g_idxSubnetById.remove(pObject->getId());
-         if (static_cast<Subnet*>(pObject)->getIpAddress().isValidUnicast())
+         g_idxSubnetById.remove(object.getId());
+         if (static_cast<const Subnet&>(object).getIpAddress().isValidUnicast())
          {
 				if (IsZoningEnabled())
 				{
-					Zone *zone = (Zone *)g_idxZoneByUIN.get(((Subnet *)pObject)->getZoneUIN());
-					if (zone != NULL)
+					shared_ptr<Zone> zone = FindZoneByUIN(static_cast<const Subnet&>(object).getZoneUIN());
+					if (zone != nullptr)
 					{
-						zone->removeFromIndex((Subnet *)pObject);
+						zone->removeFromIndex(static_cast<const Subnet&>(object));
 					}
 					else
 					{
 					   nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for subnet object %s [%u]"),
-					            static_cast<Subnet*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
+					            static_cast<const Subnet&>(object).getZoneUIN(), object.getName(), object.getId());
 					}
 				}
 				else
 				{
-					g_idxSubnetByAddr.remove(static_cast<Subnet*>(pObject)->getIpAddress());
+					g_idxSubnetByAddr.remove(static_cast<const Subnet&>(object).getIpAddress());
 				}
          }
          break;
       case OBJECT_INTERFACE:
 			if (IsZoningEnabled())
 			{
-				Zone *zone = (Zone *)g_idxZoneByUIN.get(static_cast<Interface*>(pObject)->getZoneUIN());
-				if (zone != NULL)
+				shared_ptr<Zone> zone = FindZoneByUIN(static_cast<const Interface&>(object).getZoneUIN());
+				if (zone != nullptr)
 				{
-					zone->removeFromIndex(static_cast<Interface*>(pObject));
+					zone->removeFromIndex(static_cast<const Interface&>(object));
 				}
 				else
 				{
 					nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for interface object %s [%u]"),
-					         static_cast<Interface*>(pObject)->getZoneUIN(), pObject->getName(), pObject->getId());
+					         static_cast<const Interface&>(object).getZoneUIN(), object.getName(), object.getId());
 				}
 			}
 			else
 			{
-            const ObjectArray<InetAddress> *list = static_cast<Interface*>(pObject)->getIpAddressList()->getList();
+            const ObjectArray<InetAddress> *list = static_cast<const Interface&>(object).getIpAddressList()->getList();
             for(int i = 0; i < list->size(); i++)
             {
                InetAddress *addr = list->get(i);
                if (addr->isValidUnicast())
                {
-				      NetObj *o = g_idxInterfaceByAddr.get(*addr);
-				      if ((o != NULL) && (o->getId() == pObject->getId()))
+				      shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(*addr);
+				      if ((o != nullptr) && (o->getId() == object.getId()))
 				      {
 					      g_idxInterfaceByAddr.remove(*addr);
 				      }
                }
             }
 			}
-         MacDbRemove(static_cast<Interface*>(pObject)->getMacAddr());
+         MacDbRemove(static_cast<const Interface&>(object).getMacAddr());
          break;
       case OBJECT_ZONE:
-			g_idxZoneByUIN.remove(((Zone *)pObject)->getUIN());
+			g_idxZoneByUIN.remove(static_cast<const Zone&>(object).getUIN());
          break;
       case OBJECT_CONDITION:
-			g_idxConditionById.remove(pObject->getId());
+			g_idxConditionById.remove(object.getId());
          break;
       case OBJECT_SLMCHECK:
-			g_idxServiceCheckById.remove(pObject->getId());
+			g_idxServiceCheckById.remove(object.getId());
          break;
 		case OBJECT_NETWORKMAP:
-			g_idxNetMapById.remove(pObject->getId());
+			g_idxNetMapById.remove(object.getId());
          break;
 		case OBJECT_SENSOR:
-			g_idxSensorById.remove(pObject->getId());
+			g_idxSensorById.remove(object.getId());
          break;
       default:
 			{
 				bool processed = false;
 				for(UINT32 i = 0; i < g_dwNumModules; i++)
 				{
-					if (g_pModuleList[i].pfNetObjDelete != NULL)
+					if (g_pModuleList[i].pfNetObjDelete != nullptr)
 					{
-						if (g_pModuleList[i].pfNetObjDelete(pObject))
+						if (g_pModuleList[i].pfNetObjDelete(object))
 							processed = true;
 					}
 				}
 				if (!processed)
-               nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), pObject->getObjectClass());
+               nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), object.getObjectClass());
 			}
          break;
    }
@@ -607,21 +602,15 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 /**
  * Find access point by MAC address
  */
-AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr, bool updateRefCount)
+shared_ptr<AccessPoint> NXCORE_EXPORTABLE FindAccessPointByMAC(const BYTE *macAddr)
 {
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
-		return NULL;
+		return shared_ptr<AccessPoint>();
 
-	NetObj *object = MacDbFind(macAddr, updateRefCount);
-	if (object == NULL)
-	   return NULL;
-	if (object->getObjectClass() != OBJECT_ACCESSPOINT)
-	{
-	   if (updateRefCount)
-	      object->decRefCount();
-	   return NULL;
-	}
-   return static_cast<AccessPoint*>(object);
+	shared_ptr<NetObj> object = MacDbFind(macAddr);
+	if ((object == nullptr) || (object->getObjectClass() != OBJECT_ACCESSPOINT))
+	   return shared_ptr<AccessPoint>();
+   return static_pointer_cast<AccessPoint>(object);
 }
 
 /**
@@ -636,46 +625,49 @@ static bool DeviceIdComparator(NetObj *object, void *deviceId)
 /**
  * Find mobile device by device ID
  */
-MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId)
+shared_ptr<MobileDevice> NXCORE_EXPORTABLE FindMobileDeviceByDeviceID(const TCHAR *deviceId)
 {
-	if ((deviceId == NULL) || (*deviceId == 0))
-		return NULL;
+	if ((deviceId == nullptr) || (*deviceId == 0))
+		return shared_ptr<MobileDevice>();
 
-	return (MobileDevice *)g_idxMobileDeviceById.find(DeviceIdComparator, (void *)deviceId);
+	return static_pointer_cast<MobileDevice>(g_idxMobileDeviceById.find(DeviceIdComparator, (void *)deviceId));
 }
 
-static Node *FindNodeByIPInternal(UINT32 zoneUIN, const InetAddress& ipAddr)
+/**
+ * Find node by IP address - internal implementation
+ */
+static shared_ptr<Node> FindNodeByIPInternal(uint32_t zoneUIN, const InetAddress& ipAddr)
 {
-   Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByUIN.get(zoneUIN) : NULL;
+   shared_ptr<Zone> zone = IsZoningEnabled() ? FindZoneByUIN(zoneUIN) : shared_ptr<Zone>();
 
-   Node *node = NULL;
+   shared_ptr<Node> node;
    if (IsZoningEnabled())
    {
-      if (zone != NULL)
+      if (zone != nullptr)
       {
          node = zone->getNodeByAddr(ipAddr);
       }
    }
    else
    {
-      node = static_cast<Node*>(g_idxNodeByAddr.get(ipAddr));
+      node = static_pointer_cast<Node>(g_idxNodeByAddr.get(ipAddr));
    }
-   if (node != NULL)
+   if (node != nullptr)
       return node;
 
-   Interface *iface = NULL;
+   shared_ptr<Interface> iface = nullptr;
    if (IsZoningEnabled())
    {
-      if (zone != NULL)
+      if (zone != nullptr)
       {
          iface = zone->getInterfaceByAddr(ipAddr);
       }
    }
    else
    {
-      iface = static_cast<Interface*>(g_idxInterfaceByAddr.get(ipAddr));
+      iface = static_pointer_cast<Interface>(g_idxInterfaceByAddr.get(ipAddr));
    }
-   return (iface != NULL) ? iface->getParentNode() : NULL;
+   return (iface != nullptr) ? iface->getParentNode() : nullptr;
 }
 
 /**
@@ -683,43 +675,46 @@ static Node *FindNodeByIPInternal(UINT32 zoneUIN, const InetAddress& ipAddr)
  */
 struct NodeFindCBData
 {
-   const InetAddress *addr;
-   Node *node;
+   InetAddress addr;
+   shared_ptr<Node> node;
+
+   NodeFindCBData(const InetAddress& _addr)
+   {
+      addr = _addr;
+   }
 };
 
 /**
  * Callback for finding node in all zones
  */
-static bool NodeFindCB(NetObj *zone, void *data)
+static bool NodeFindCB(NetObj *zone, NodeFindCBData *data)
 {
-   Node *node = ((Zone *)zone)->getNodeByAddr(*((NodeFindCBData *)data)->addr);
-   if (node == NULL)
+   shared_ptr<Node> node = static_cast<Zone*>(zone)->getNodeByAddr(data->addr);
+   if (node == nullptr)
    {
-      Interface *iface = ((Zone *)zone)->getInterfaceByAddr(*((NodeFindCBData *)data)->addr);
-      if (iface != NULL)
+      shared_ptr<Interface> iface = static_cast<Zone*>(zone)->getInterfaceByAddr(data->addr);
+      if (iface != nullptr)
          node = iface->getParentNode();
    }
 
-   if (node == NULL)
+   if (node == nullptr)
       return false;
 
-   ((NodeFindCBData *)data)->node = node;
+   data->node = node;
    return true;
 }
 
 /**
  * Find node by IP address
  */
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
-      return NULL;
+      return shared_ptr<Node>();
 
    if ((zoneUIN == ALL_ZONES) && IsZoningEnabled())
    {
-      NodeFindCBData data;
-      data.addr = &ipAddr;
-      data.node = NULL;
+      NodeFindCBData data(ipAddr);
       g_idxZoneByUIN.find(NodeFindCB, &data);
       return data.node;
    }
@@ -732,86 +727,95 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 /**
  * Find node by IP address
  */
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, bool allZones, const InetAddress& ipAddr)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, bool allZones, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
-      return NULL;
+      return shared_ptr<Node>();
 
-   Node *node = FindNodeByIPInternal(zoneUIN, ipAddr);
-   if (node != NULL)
+   shared_ptr<Node> node = FindNodeByIPInternal(zoneUIN, ipAddr);
+   if (node != nullptr)
       return node;
-   return allZones ? FindNodeByIP(ALL_ZONES, ipAddr) : NULL;
+   return allZones ? FindNodeByIP(ALL_ZONES, ipAddr) : nullptr;
 }
 
 /**
  * Find node by IP address using first match from IP address list
  */
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddressList *ipAddrList)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, const InetAddressList *ipAddrList)
 {
    for(int i = 0; i < ipAddrList->size(); i++)
    {
-      Node *node = FindNodeByIP(zoneUIN, ipAddrList->get(i));
-      if (node != NULL)
+      shared_ptr<Node> node = FindNodeByIP(zoneUIN, ipAddrList->get(i));
+      if (node != nullptr)
          return node;
    }
-   return NULL;
+   return shared_ptr<Node>();
 }
 
 /**
  * Find interface by IP address
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr, bool updateRefCount)
+shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
-      return NULL;
+      return shared_ptr<Interface>();
 
-	Interface *iface = NULL;
+   shared_ptr<Interface> iface;
 	if (IsZoningEnabled())
 	{
-	   Zone *zone = static_cast<Zone*>(g_idxZoneByUIN.get(zoneUIN));
-		if (zone != NULL)
+	   shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+		if (zone != nullptr)
 		{
 			iface = zone->getInterfaceByAddr(ipAddr);
 		}
 	}
 	else
 	{
-		iface = static_cast<Interface*>(g_idxInterfaceByAddr.get(ipAddr));
+		iface = static_pointer_cast<Interface>(g_idxInterfaceByAddr.get(ipAddr));
 	}
-	if (updateRefCount && (iface != NULL))
-	   iface->incRefCount();
 	return iface;
 }
 
 /**
  * Find node by MAC address
  */
-Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByMAC(const BYTE *macAddr)
 {
-	Interface *pInterface = FindInterfaceByMAC(macAddr);
-	return (pInterface != NULL) ? pInterface->getParentNode() : NULL;
+	shared_ptr<Interface> iface = FindInterfaceByMAC(macAddr);
+	return (iface != nullptr) ? iface->getParentNode() : shared_ptr<Node>();
 }
 
 /**
  * Find interface by MAC address
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr, bool updateRefCount)
+shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const BYTE *macAddr)
 {
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
-		return NULL;
+		return shared_ptr<Interface>();
 
-	NetObj *object = MacDbFind(macAddr, updateRefCount);
-	if (object == NULL)
-	   return NULL;
-	if (object->getObjectClass() != OBJECT_INTERFACE)
-	{
-	   if (updateRefCount)
-	      object->decRefCount();
-	   return NULL;
-	}
-   return static_cast<Interface*>(object);
+	shared_ptr<NetObj> object = MacDbFind(macAddr);
+	if ((object == nullptr) || (object->getObjectClass() != OBJECT_INTERFACE))
+	   return shared_ptr<Interface>();
+   return static_pointer_cast<Interface>(object);
 }
 
+/**
+ * Find interface by MAC address
+ */
+shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const MacAddress& macAddr)
+{
+   if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast())
+      return shared_ptr<Interface>();
+
+   shared_ptr<NetObj> object = MacDbFind(macAddr);
+   if ((object == nullptr) || (object->getObjectClass() != OBJECT_INTERFACE))
+      return shared_ptr<Interface>();
+   return static_pointer_cast<Interface>(object);
+}
+
+/**
+ * Search data for node search by hostname
+ */
 struct NodeFindHostnameData
 {
    uint32_t zoneUIN;
@@ -835,13 +839,13 @@ static bool HostnameComparator(NetObj *object, NodeFindHostnameData *data)
 /**
  * Find a list of nodes that contain the hostname
  */
-ObjectArray<NetObj> *FindNodesByHostname(uint32_t zoneUIN, const TCHAR *hostname)
+SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindNodesByHostname(uint32_t zoneUIN, const TCHAR *hostname)
 {
    NodeFindHostnameData data;
    data.zoneUIN = zoneUIN;
    _tcslcpy(data.hostname, hostname, MAX_DNS_NAME);
    _tcsupr(data.hostname);
-   ObjectArray<NetObj> *nodes = g_idxNodeById.findAll(HostnameComparator, &data);
+   SharedObjectArray<NetObj> *nodes = g_idxNodeById.findAll(HostnameComparator, &data);
    return nodes;
 }
 
@@ -857,12 +861,9 @@ static bool DescriptionComparator(NetObj *object, void *description)
 /**
  * Find interface by description
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description, bool updateRefCount)
+shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByDescription(const TCHAR *description, bool updateRefCount)
 {
-	Interface *iface = static_cast<Interface*>(g_idxObjectById.find(DescriptionComparator, (void *)description));
-	if (updateRefCount && (iface != NULL))
-	   iface->incRefCount();
-	return iface;
+	return static_pointer_cast<Interface>(g_idxObjectById.find(DescriptionComparator, (void *)description));
 }
 
 /**
@@ -871,15 +872,15 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description
 static bool LldpIdComparator(NetObj *object, void *lldpId)
 {
 	const TCHAR *id = ((Node *)object)->getLLDPNodeId();
-	return (id != NULL) && !_tcscmp(id, (const TCHAR *)lldpId);
+	return (id != nullptr) && !_tcscmp(id, (const TCHAR *)lldpId);
 }
 
 /**
  * Find node by LLDP ID
  */
-Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByLLDPId(const TCHAR *lldpId)
 {
-	return (Node *)g_idxNodeById.find(LldpIdComparator, (void *)lldpId);
+	return static_pointer_cast<Node>(g_idxNodeById.find(LldpIdComparator, (void *)lldpId));
 }
 
 /**
@@ -888,20 +889,20 @@ Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 static bool SysNameComparator(NetObj *object, const TCHAR *sysName)
 {
    const TCHAR *n = static_cast<Node*>(object)->getSysName();
-   return (n != NULL) && !_tcscmp(n, sysName);
+   return (n != nullptr) && !_tcscmp(n, sysName);
 }
 
 /**
  * Find node by SNMP sysName
  */
-Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeBySysName(const TCHAR *sysName)
 {
-   if ((sysName == NULL) || (sysName[0] == 0))
-      return NULL;
+   if ((sysName == nullptr) || (sysName[0] == 0))
+      return shared_ptr<Node>();
 
-   // return NULL if multiple nodes with same sysName found
-   ObjectArray<NetObj> *objects = g_idxNodeById.findAll(SysNameComparator, sysName);
-   Node *node = (objects->size() == 1) ? (Node *)objects->get(0) : NULL;
+   // return nullptr if multiple nodes with same sysName found
+   SharedObjectArray<NetObj> *objects = g_idxNodeById.findAll(SysNameComparator, sysName);
+   shared_ptr<Node> node = (objects->size() == 1) ? static_pointer_cast<Node>(objects->getShared(0)) : shared_ptr<Node>();
    delete objects;
    return node;
 }
@@ -917,31 +918,31 @@ static bool BridgeIdComparator(NetObj *object, void *bridgeId)
 /**
  * Find node by bridge ID (bridge base address)
  */
-Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByBridgeId(const BYTE *bridgeId)
 {
-	return (Node *)g_idxNodeById.find(BridgeIdComparator, (void *)bridgeId);
+	return static_pointer_cast<Node>(g_idxNodeById.find(BridgeIdComparator, (void *)bridgeId));
 }
 
 /**
  * Find subnet by IP address
  */
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
+shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
-      return NULL;
+      return shared_ptr<Subnet>();
 
-	Subnet *subnet = NULL;
+   shared_ptr<Subnet> subnet;
 	if (IsZoningEnabled())
 	{
-		Zone *zone = (Zone *)g_idxZoneByUIN.get(zoneUIN);
-		if (zone != NULL)
+		shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+		if (zone != nullptr)
 		{
 			subnet = zone->getSubnetByAddr(ipAddr);
 		}
 	}
 	else
 	{
-		subnet = (Subnet *)g_idxSubnetByAddr.get(ipAddr);
+		subnet = static_pointer_cast<Subnet>(g_idxSubnetByAddr.get(ipAddr));
 	}
 	return subnet;
 }
@@ -953,7 +954,7 @@ struct SUBNET_MATCHING_DATA
 {
    InetAddress ipAddr; // IP address to find subnet for
    int maskLen;        // Current match mask length
-   Subnet *subnet;     // search result
+   shared_ptr<Subnet> subnet;     // search result
 };
 
 /**
@@ -968,7 +969,7 @@ static void SubnetMatchCallback(const InetAddress& addr, NetObj *object, void *a
       if (maskLen > data->maskLen)
       {
          data->maskLen = maskLen;
-         data->subnet = (Subnet *)object;
+         data->subnet = ((Subnet *)object)->self();
       }
    }
 }
@@ -976,19 +977,19 @@ static void SubnetMatchCallback(const InetAddress& addr, NetObj *object, void *a
 /**
  * Find subnet for given IP address
  */
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneUIN, const InetAddress& nodeAddr)
+shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(UINT32 zoneUIN, const InetAddress& nodeAddr)
 {
    if (!nodeAddr.isValidUnicast())
-      return NULL;
+      return shared_ptr<Subnet>();
 
    SUBNET_MATCHING_DATA matchData;
    matchData.ipAddr = nodeAddr;
    matchData.maskLen = -1;
-   matchData.subnet = NULL;
+   matchData.subnet = nullptr;
 	if (IsZoningEnabled())
 	{
-		Zone *zone = (Zone *)g_idxZoneByUIN.get(zoneUIN);
-		if (zone != NULL)
+		shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+		if (zone != nullptr)
 		{
 			zone->forEachSubnet(SubnetMatchCallback, &matchData);
 		}
@@ -1007,7 +1008,7 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneUIN, const InetAddress& n
 bool AdjustSubnetBaseAddress(InetAddress& baseAddr, UINT32 zoneUIN)
 {
    InetAddress addr = baseAddr.getSubnetAddress();
-   while(FindSubnetByIP(zoneUIN, addr) != NULL)
+   while(FindSubnetByIP(zoneUIN, addr) != nullptr)
    {
       baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
       addr = baseAddr.getSubnetAddress();
@@ -1020,7 +1021,7 @@ bool AdjustSubnetBaseAddress(InetAddress& baseAddr, UINT32 zoneUIN)
 /**
  * Find object by ID
  */
-NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(UINT32 dwId, int objClass)
 {
    ObjectIndex *index;
    switch(objClass)
@@ -1048,10 +1049,10 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
          break;
    }
 
-   NetObj *object = index->get(dwId);
-	if ((object == NULL) || (objClass == -1))
+   shared_ptr<NetObj> object = index->get(dwId);
+	if ((object == nullptr) || (objClass == -1))
 		return object;
-	return (objClass == object->getObjectClass()) ? object : NULL;
+	return (objClass == object->getObjectClass()) ? object : shared_ptr<NetObj>();
 }
 
 /**
@@ -1066,7 +1067,7 @@ static bool ObjectNameRegexAndClassFilter(NetObj *object, std::pair<int, PCRE*> 
    int ovector[30];
    return !object->isDeleted() &&
           (object->getObjectClass() == context->first) &&
-          (_pcre_exec_t(context->second, NULL, reinterpret_cast<const PCRE_TCHAR*>(object->getName()), static_cast<int>(_tcslen(object->getName())), 0, 0, ovector, 30) >= 0);
+          (_pcre_exec_t(context->second, nullptr, reinterpret_cast<const PCRE_TCHAR*>(object->getName()), static_cast<int>(_tcslen(object->getName())), 0, 0, ovector, 30) >= 0);
 }
 
 /**
@@ -1077,13 +1078,13 @@ static bool ObjectNameRegexAndClassFilter(NetObj *object, std::pair<int, PCRE*> 
  * @param objClass
  * @return
  */
-ObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass)
+SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass)
 {
    const char *eptr;
    int eoffset;
-   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
-   if (preg == NULL)
-      return NULL;
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (preg == nullptr)
+      return nullptr;
 
    ObjectIndex *index;
    switch(objClass)
@@ -1112,7 +1113,7 @@ ObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, in
    }
 
    std::pair<int, PCRE*> context(objClass, preg);
-   ObjectArray<NetObj> *result = index->getObjects(true, ObjectNameRegexAndClassFilter, &context);
+   SharedObjectArray<NetObj> *result = index->getObjects(ObjectNameRegexAndClassFilter, &context);
    _pcre_free_t(preg);
    return result;
 }
@@ -1122,14 +1123,14 @@ ObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, in
  */
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName)
 {
-	NetObj *object = g_idxObjectById.get(id);
-   return (object != NULL) ? object->getName() : defaultName;
+	shared_ptr<NetObj> object = g_idxObjectById.get(id);
+   return (object != nullptr) ? object->getName() : defaultName;
 }
 
 /**
  * Generic object finding method
  */
-NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void *userData, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (* comparator)(NetObj *, void *), void *context, int objClass)
 {
    ObjectIndex *index;
    switch(objClass)
@@ -1159,8 +1160,8 @@ NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void
          index = &g_idxObjectById;
          break;
    }
-   NetObj *object = index->find(comparator, userData);
-   return ((object == NULL) || (objClass == -1)) ? object : ((object->getObjectClass() == objClass) ? object : NULL);
+   shared_ptr<NetObj> object = index->find(comparator, context);
+   return ((object == nullptr) || (objClass == -1)) ? object : ((object->getObjectClass() == objClass) ? object : shared_ptr<NetObj>());
 }
 
 /**
@@ -1185,7 +1186,7 @@ static bool ObjectNameComparator(NetObj *object, void *data)
 /**
  * Find object by name
  */
-NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objClass)
 {
 	struct __find_object_by_name_data data;
 	data.objClass = objClass;
@@ -1196,10 +1197,10 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 /**
  * Find object by GUID
  */
-NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objClass)
 {
-   NetObj *object = g_idxObjectByGUID.get(guid);
-   return ((object == NULL) || (objClass == -1)) ? object : ((object->getObjectClass() == objClass) ? object : NULL);
+   shared_ptr<NetObj> object = g_idxObjectByGUID.get(guid);
+   return ((object == nullptr) || (objClass == -1)) ? object : ((object->getObjectClass() == objClass) ? object : shared_ptr<NetObj>());
 }
 
 /**
@@ -1213,9 +1214,9 @@ static bool TemplateNameComparator(NetObj *object, void *name)
 /**
  * Find template object by name
  */
-Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
+shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *name)
 {
-	return (Template *)g_idxObjectById.find(TemplateNameComparator, (void *)pszName);
+	return static_pointer_cast<Template>(g_idxObjectById.find(TemplateNameComparator, (void *)name));
 }
 
 /**
@@ -1243,20 +1244,20 @@ static bool ClusterIPComparator(NetObj *object, void *data)
  * Check if given IP address is used by cluster (it's either
  * resource IP or located on one of sync subnets)
  */
-bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneUIN, const InetAddress& ipAddr)
+bool NXCORE_EXPORTABLE IsClusterIP(uint32_t zoneUIN, const InetAddress& ipAddr)
 {
 	struct __cluster_ip_data data;
 	data.zoneUIN = zoneUIN;
 	data.ipAddr = ipAddr;
-	return g_idxObjectById.find(ClusterIPComparator, &data) != NULL;
+	return g_idxObjectById.find(ClusterIPComparator, &data) != nullptr;
 }
 
 /**
  * Find zone object by UIN (unique identification number)
  */
-Zone NXCORE_EXPORTABLE *FindZoneByUIN(UINT32 uin)
+shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(uint32_t uin)
 {
-	return static_cast<Zone*>(g_idxZoneByUIN.get(uin));
+	return static_pointer_cast<Zone>(g_idxZoneByUIN.get(uin));
 }
 
 /**
@@ -1264,15 +1265,15 @@ Zone NXCORE_EXPORTABLE *FindZoneByUIN(UINT32 uin)
  */
 static bool ZoneProxyIdComparator(NetObj *object, void *data)
 {
-   return static_cast<Zone*>(object)->isProxyNode(*static_cast<UINT32*>(data));
+   return static_cast<Zone*>(object)->isProxyNode(*static_cast<uint32_t*>(data));
 }
 
 /**
  * Find zone object by proxy node ID. Can be used to determine if given node is a proxy for any zone.
  */
-Zone NXCORE_EXPORTABLE *FindZoneByProxyId(UINT32 proxyId)
+shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId)
 {
-   return static_cast<Zone*>(g_idxZoneByUIN.find(ZoneProxyIdComparator, &proxyId));
+   return static_pointer_cast<Zone>(g_idxZoneByUIN.find(ZoneProxyIdComparator, &proxyId));
 }
 
 /**
@@ -1290,7 +1291,7 @@ UINT32 FindUnusedZoneUIN()
    s_zoneUinSelectorLock.lock();
    for(UINT32 i = 1; i < 0x7FFFFFFF; i++)
    {
-      if (g_idxZoneByUIN.get(i) != NULL)
+      if (g_idxZoneByUIN.get(i) != nullptr)
          continue;
       if (s_zoneUinSelectorHistory.contains(i))
          continue;
@@ -1315,8 +1316,8 @@ static bool LocalMgmtNodeComparator(NetObj *object, void *data)
  */
 UINT32 FindLocalMgmtNode()
 {
-	NetObj *object = g_idxNodeById.find(LocalMgmtNodeComparator, NULL);
-	return (object != NULL) ? object->getId() : 0;
+	shared_ptr<NetObj> object = g_idxNodeById.find(LocalMgmtNodeComparator, nullptr);
+	return (object != nullptr) ? object->getId() : 0;
 }
 
 /**
@@ -1345,15 +1346,15 @@ BOOL LoadObjects()
 
    DB_HANDLE mainDB = DBConnectionPoolAcquireConnection();
    DB_HANDLE hdb = mainDB;
-   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
-   if (cachedb != NULL)
+   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : nullptr;
+   if (cachedb != nullptr)
    {
       static const TCHAR *intColumns[] = { _T("condition_id"), _T("sequence_number"), _T("dci_id"), _T("node_id"), _T("dci_func"), _T("num_pols"),
                                            _T("dashboard_id"), _T("element_id"), _T("element_type"), _T("threshold_id"), _T("item_id"),
                                            _T("check_function"), _T("check_operation"), _T("sample_count"), _T("event_code"), _T("rearm_event_code"),
                                            _T("repeat_interval"), _T("current_state"), _T("current_severity"), _T("match_count"),
                                            _T("last_event_timestamp"), _T("table_id"), _T("flags"), _T("id"), _T("activation_event"),
-                                           _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"), NULL };
+                                           _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"), nullptr };
 
       nxlog_debug(1, _T("Caching object configuration tables"));
       bool success =
@@ -1401,7 +1402,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("ap_common"), _T("guid"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_maps"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_elements"), _T("map_id,element_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("network_map_links"), NULL, _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("network_map_links"), nullptr, _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_seed_nodes"), _T("map_id,seed_node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("node_components"), _T("node_id,component_index"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*")) &&
@@ -1435,12 +1436,12 @@ BOOL LoadObjects()
 
    // Load built-in object properties
    DbgPrintf(2, _T("Loading built-in object properties..."));
-   g_pEntireNet->loadFromDatabase(hdb);
-   g_pServiceRoot->loadFromDatabase(hdb);
-   g_pTemplateRoot->loadFromDatabase(hdb);
-	g_pMapRoot->loadFromDatabase(hdb);
-	g_pDashboardRoot->loadFromDatabase(hdb);
-	g_pBusinessServiceRoot->loadFromDatabase(hdb);
+   g_entireNetwork->loadFromDatabase(hdb);
+   g_infrastructureServiceRoot->loadFromDatabase(hdb);
+   g_templateRoot->loadFromDatabase(hdb);
+	g_mapRoot->loadFromDatabase(hdb);
+	g_dashboardRoot->loadFromDatabase(hdb);
+	g_businessServiceRoot->loadFromDatabase(hdb);
 
 	// Switch indexes to startup mode
 	g_idxObjectById.setStartupMode(true);
@@ -1459,34 +1460,32 @@ BOOL LoadObjects()
    // Load zones
    if (g_flags & AF_ENABLE_ZONING)
    {
-      Zone *pZone;
-
       DbgPrintf(2, _T("Loading zones..."));
 
       // Load (or create) default zone
-      pZone = new Zone;
-      pZone->generateGuid();
-      pZone->loadFromDatabase(hdb, BUILTIN_OID_ZONE0);
-      NetObjInsert(pZone, false, false);
-      g_pEntireNet->AddZone(pZone);
+      auto zone = MakeSharedNObject<Zone>();
+      zone->generateGuid();
+      zone->loadFromDatabase(hdb, BUILTIN_OID_ZONE0);
+      NetObjInsert(zone, false, false);
+      g_entireNetwork->addZone(zone);
 
       DB_RESULT hResult = DBSelect(hdb, _T("SELECT id FROM zones WHERE id<>4"));
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
             UINT32 id = DBGetFieldULong(hResult, i, 0);
-            pZone = new Zone;
-            if (pZone->loadFromDatabase(hdb, id))
+            zone = MakeSharedNObject<Zone>();
+            if (zone->loadFromDatabase(hdb, id))
             {
-               if (!pZone->isDeleted())
-                  g_pEntireNet->AddZone(pZone);
-               NetObjInsert(pZone, false, false);  // Insert into indexes
+               if (!zone->isDeleted())
+                  g_entireNetwork->addZone(zone);
+               NetObjInsert(zone, false, false);  // Insert into indexes
             }
             else     // Object load failed
             {
-               pZone->destroy();
+               zone->destroy();
                nxlog_write(NXLOG_ERROR, _T("Failed to load zone object with ID %u from database"), id);
             }
          }
@@ -1500,13 +1499,13 @@ BOOL LoadObjects()
    // DCI cache size calculation uses information from condition objects
    DbgPrintf(2, _T("Loading conditions..."));
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT id FROM conditions"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         ConditionObject *condition = new ConditionObject();
+         auto condition = MakeSharedNObject<ConditionObject>();
          if (condition->loadFromDatabase(hdb, id))
          {
             NetObjInsert(condition, false, false);  // Insert into indexes
@@ -1524,26 +1523,26 @@ BOOL LoadObjects()
    // Load subnets
    DbgPrintf(2, _T("Loading subnets..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM subnets"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Subnet *subnet = new Subnet;
+         auto subnet = MakeSharedNObject<Subnet>();
          if (subnet->loadFromDatabase(hdb, id))
          {
             if (!subnet->isDeleted())
             {
                if (g_flags & AF_ENABLE_ZONING)
                {
-                  Zone *zone = FindZoneByUIN(subnet->getZoneUIN());
-                  if (zone != NULL)
+                  shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
+                  if (zone != nullptr)
                      zone->addSubnet(subnet);
                }
                else
                {
-                  g_pEntireNet->AddSubnet(subnet);
+                  g_entireNetwork->addSubnet(subnet);
                }
             }
             NetObjInsert(subnet, false, false);  // Insert into indexes
@@ -1561,13 +1560,13 @@ BOOL LoadObjects()
    // Load racks
    DbgPrintf(2, _T("Loading racks..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM racks"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Rack *rack = new Rack;
+         auto rack = MakeSharedNObject<Rack>();
          if (rack->loadFromDatabase(hdb, id))
          {
             NetObjInsert(rack, false, false);  // Insert into indexes
@@ -1584,13 +1583,13 @@ BOOL LoadObjects()
    // Load chassis
    DbgPrintf(2, _T("Loading chassis..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM chassis"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Chassis *chassis = new Chassis;
+         auto chassis = MakeSharedNObject<Chassis>();
          if (chassis->loadFromDatabase(hdb, id))
          {
             NetObjInsert(chassis, false, false);  // Insert into indexes
@@ -1608,13 +1607,13 @@ BOOL LoadObjects()
    // Load mobile devices
    DbgPrintf(2, _T("Loading mobile devices..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM mobile_devices"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         MobileDevice *md = new MobileDevice;
+         auto md = MakeSharedNObject<MobileDevice>();
          if (md->loadFromDatabase(hdb, id))
          {
             NetObjInsert(md, false, false);  // Insert into indexes
@@ -1632,13 +1631,13 @@ BOOL LoadObjects()
    // Load sensors
    DbgPrintf(2, _T("Loading sensors..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM sensors"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Sensor *sensor = new Sensor;
+         auto sensor = MakeSharedNObject<Sensor>();
          if (sensor->loadFromDatabase(hdb, id))
          {
             NetObjInsert(sensor, false, false);  // Insert into indexes
@@ -1656,20 +1655,20 @@ BOOL LoadObjects()
    // Load nodes
    DbgPrintf(2, _T("Loading nodes..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM nodes"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Node *node = new Node;
+         auto node = MakeSharedNObject<Node>();
          if (node->loadFromDatabase(hdb, id))
          {
             NetObjInsert(node, false, false);  // Insert into indexes
             if (IsZoningEnabled())
             {
-               Zone *zone = FindZoneByProxyId(id);
-               if (zone != NULL)
+               shared_ptr<Zone> zone = FindZoneByProxyId(id);
+               if (zone != nullptr)
                {
                   zone->updateProxyStatus(node, false);
                }
@@ -1688,13 +1687,13 @@ BOOL LoadObjects()
    // Load access points
    DbgPrintf(2, _T("Loading access points..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM access_points"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         AccessPoint *ap = new AccessPoint;
+         auto ap = MakeSharedNObject<AccessPoint>();
          if (ap->loadFromDatabase(hdb, id))
          {
             NetObjInsert(ap, false, false);  // Insert into indexes
@@ -1712,13 +1711,13 @@ BOOL LoadObjects()
    // Load interfaces
    DbgPrintf(2, _T("Loading interfaces..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM interfaces"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Interface *iface = new Interface;
+         auto iface = MakeSharedNObject<Interface>();
          if (iface->loadFromDatabase(hdb, id))
          {
             NetObjInsert(iface, false, false);  // Insert into indexes
@@ -1735,13 +1734,13 @@ BOOL LoadObjects()
    // Load network services
    DbgPrintf(2, _T("Loading network services..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM network_services"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         NetworkService *service = new NetworkService;
+         auto service = MakeSharedNObject<NetworkService>();
          if (service->loadFromDatabase(hdb, id))
          {
             NetObjInsert(service, false, false);  // Insert into indexes
@@ -1758,13 +1757,13 @@ BOOL LoadObjects()
    // Load VPN connectors
    DbgPrintf(2, _T("Loading VPN connectors..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM vpn_connectors"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         VPNConnector *connector = new VPNConnector;
+         auto connector = MakeSharedNObject<VPNConnector>();
          if (connector->loadFromDatabase(hdb, id))
          {
             NetObjInsert(connector, false, false);  // Insert into indexes
@@ -1781,13 +1780,13 @@ BOOL LoadObjects()
    // Load clusters
    DbgPrintf(2, _T("Loading clusters..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM clusters"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Cluster *cluster = new Cluster;
+         auto cluster = MakeSharedNObject<Cluster>();
          if (cluster->loadFromDatabase(hdb, id))
          {
             NetObjInsert(cluster, false, false);  // Insert into indexes
@@ -1804,18 +1803,18 @@ BOOL LoadObjects()
 
    // Start cache loading thread.
    // All data collection targets must be loaded at this point.
-   ThreadCreate(CacheLoadingThread, 0, NULL);
+   ThreadCreate(CacheLoadingThread, 0, nullptr);
 
    // Load templates
    DbgPrintf(2, _T("Loading templates..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM templates"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Template *tmpl = new Template;
+         auto tmpl = MakeSharedNObject<Template>();
          if (tmpl->loadFromDatabase(hdb, id))
          {
             NetObjInsert(tmpl, false, false);  // Insert into indexes
@@ -1833,13 +1832,13 @@ BOOL LoadObjects()
    // Load network maps
    DbgPrintf(2, _T("Loading network maps..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM network_maps"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         NetworkMap *map = new NetworkMap;
+         auto map = MakeSharedNObject<NetworkMap>();
          if (map->loadFromDatabase(hdb, id))
          {
             NetObjInsert(map, false, false);  // Insert into indexes
@@ -1859,22 +1858,20 @@ BOOL LoadObjects()
    TCHAR query[256];
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_CONTAINER);
    hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
-      Container *pContainer;
-
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         pContainer = new Container;
-         if (pContainer->loadFromDatabase(hdb, id))
+         auto container = MakeSharedNObject<Container>();
+         if (container->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pContainer, false, false);  // Insert into indexes
+            NetObjInsert(container, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            pContainer->destroy();
+            container->destroy();
             nxlog_write(NXLOG_ERROR, _T("Failed to load container object with ID %u from database"), id);
          }
       }
@@ -1885,22 +1882,20 @@ BOOL LoadObjects()
    DbgPrintf(2, _T("Loading template groups..."));
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_TEMPLATEGROUP);
    hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
-      TemplateGroup *pGroup;
-
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         pGroup = new TemplateGroup;
-         if (pGroup->loadFromDatabase(hdb, id))
+         auto group = MakeSharedNObject<TemplateGroup>();
+         if (group->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pGroup, false, false);  // Insert into indexes
+            NetObjInsert(group, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            pGroup->destroy();
+            group->destroy();
             nxlog_write(NXLOG_ERROR, _T("Failed to load template group object with ID %u from database"), id);
          }
       }
@@ -1911,13 +1906,13 @@ BOOL LoadObjects()
    DbgPrintf(2, _T("Loading map groups..."));
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NETWORKMAPGROUP);
    hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         NetworkMapGroup *group = new NetworkMapGroup;
+         auto group = MakeSharedNObject<NetworkMapGroup>();
          if (group->loadFromDatabase(hdb, id))
          {
             NetObjInsert(group, false, false);  // Insert into indexes
@@ -1934,13 +1929,13 @@ BOOL LoadObjects()
    // Load dashboard objects
    DbgPrintf(2, _T("Loading dashboards..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM dashboards"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Dashboard *dashboard = new Dashboard;
+         auto dashboard = MakeSharedNObject<Dashboard>();
          if (dashboard->loadFromDatabase(hdb, id))
          {
             NetObjInsert(dashboard, false, false);  // Insert into indexes
@@ -1958,13 +1953,13 @@ BOOL LoadObjects()
    DbgPrintf(2, _T("Loading dashboard groups..."));
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_DASHBOARDGROUP);
    hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         DashboardGroup *group = new DashboardGroup;
+         auto group = MakeSharedNObject<DashboardGroup>();
          if (group->loadFromDatabase(hdb, id))
          {
             NetObjInsert(group, false, false);  // Insert into indexes
@@ -1982,13 +1977,13 @@ BOOL LoadObjects()
    DbgPrintf(2, _T("Loading business services..."));
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
    hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
 	   int count = DBGetNumRows(hResult);
 	   for(int i = 0; i < count; i++)
 	   {
 		   UINT32 id = DBGetFieldULong(hResult, i, 0);
-		   BusinessService *service = new BusinessService;
+		   auto service = MakeSharedNObject<BusinessService>();
 		   if (service->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(service, false, false);  // Insert into indexes
@@ -2006,13 +2001,13 @@ BOOL LoadObjects()
    DbgPrintf(2, _T("Loading node links..."));
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NODELINK);
    hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
 	   int count = DBGetNumRows(hResult);
 	   for(int i = 0; i < count; i++)
 	   {
 		   UINT32 id = DBGetFieldULong(hResult, i, 0);
-		   NodeLink *nl = new NodeLink;
+		   auto nl = MakeSharedNObject<NodeLink>();
 		   if (nl->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(nl, false, false);  // Insert into indexes
@@ -2029,13 +2024,13 @@ BOOL LoadObjects()
    // Load service check objects
    DbgPrintf(2, _T("Loading service checks..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM slm_checks"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         SlmCheck *check = new SlmCheck;
+         auto check = MakeSharedNObject<SlmCheck>();
          if (check->loadFromDatabase(hdb, id))
          {
             NetObjInsert(check, false, false);  // Insert into indexes
@@ -2059,7 +2054,7 @@ BOOL LoadObjects()
 
    // Link children to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
-	g_idxObjectById.forEach(LinkObjects, NULL);
+	g_idxObjectById.forEach(LinkObjects, nullptr);
 
 	// Link custom object classes provided by modules
    CALL_ALL_MODULES(pfLinkObjects, ());
@@ -2068,44 +2063,28 @@ BOOL LoadObjects()
    g_bModificationsLocked = FALSE;
 
    // Recalculate status for built-in objects
-   g_pEntireNet->calculateCompoundStatus();
-   g_pServiceRoot->calculateCompoundStatus();
-   g_pTemplateRoot->calculateCompoundStatus();
-   g_pMapRoot->calculateCompoundStatus();
-   g_pBusinessServiceRoot->calculateCompoundStatus();
+   g_entireNetwork->calculateCompoundStatus();
+   g_infrastructureServiceRoot->calculateCompoundStatus();
+   g_templateRoot->calculateCompoundStatus();
+   g_mapRoot->calculateCompoundStatus();
+   g_businessServiceRoot->calculateCompoundStatus();
 
    // Recalculate status for zone objects
    if (g_flags & AF_ENABLE_ZONING)
    {
-		g_idxZoneByUIN.forEach(RecalcStatusCallback, NULL);
+		g_idxZoneByUIN.forEach(RecalcStatusCallback, nullptr);
    }
 
    // Start map update thread
-   s_mapUpdateThread = ThreadCreateEx(MapUpdateThread, 0, NULL);
+   s_mapUpdateThread = ThreadCreateEx(MapUpdateThread, 0, nullptr);
 
    // Start template update applying thread
-   s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread, 0, NULL);
+   s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread, 0, nullptr);
 
-   if (cachedb != NULL)
+   if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
 
    return TRUE;
-}
-
-/**
- * Callback for destroying object
- */
-static void DestroyObject(NetObj *object, void *context)
-{
-   delete object;
-}
-
-/**
- * Destroy all objects (called on shutdown)
- */
-void DestroyAllObjects()
-{
-   g_idxObjectById.forEach(DestroyObject, NULL);
 }
 
 /**
@@ -2140,7 +2119,6 @@ void DeleteUserFromAllObjects(UINT32 dwUserId)
 struct __dump_objects_data
 {
 	CONSOLE_CTX console;
-	TCHAR *buffer;
    const TCHAR *filter;
 };
 
@@ -2152,21 +2130,21 @@ static void PrintObjectInfo(ServerConsole *console, UINT32 objectId, const TCHAR
    if (objectId == 0)
       return;
 
-   NetObj *object = FindObjectById(objectId);
-   ConsolePrintf(console, _T("%s %s [%u]\n"), prefix, (object != NULL) ? object->getName() : _T("<unknown>"), objectId);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   ConsolePrintf(console, _T("%s %s [%u]\n"), prefix, (object != nullptr) ? object->getName() : _T("<unknown>"), objectId);
 }
 
 /**
  * Print ICMP statistic for node's child object
  */
-template <class O> static void PrintObjectIcmpStatistic(ServerConsole *console, O *object)
+template <class O> static void PrintObjectIcmpStatistic(ServerConsole *console, const O& object)
 {
-   Node *parentNode = object->getParentNode();
-   if (parentNode == NULL)
+   auto parentNode = object.getParentNode();
+   if (parentNode == nullptr)
       return;
 
    TCHAR target[MAX_OBJECT_NAME + 2];
-   _sntprintf(target, MAX_OBJECT_NAME + 2, _T("N:%s"), object->getName());
+   _sntprintf(target, MAX_OBJECT_NAME + 2, _T("N:%s"), object.getName());
    UINT32 last, min, max, avg, loss;
    if (parentNode->getIcmpStatistics(target, &last, &min, &max, &avg, &loss))
    {
@@ -2182,16 +2160,18 @@ template <class O> static void PrintObjectIcmpStatistic(ServerConsole *console, 
 /**
  * Dump object information to console
  */
-static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
+static void DumpObject(ServerConsole *console, const NetObj& object)
 {
    ConsolePrintf(console, _T("\x1b[1mObject ID %d \"%s\"\x1b[0m\n")
-                       _T("   Class=%s  Status=%s  IsModified=%d  IsDeleted=%d  RefCount=%d\n"),
-                 object->getId(), object->getName(), object->getObjectClassName(),
-                 GetStatusAsText(object->getStatus(), true),
-                 object->isModified(), object->isDeleted(), object->getRefCount());
+                       _T("   Class=%s  Status=%s  IsModified=%d  IsDeleted=%d\n"),
+                 object.getId(), object.getName(), object.getObjectClassName(),
+                 GetStatusAsText(object.getStatus(), true),
+                 object.isModified(), object.isDeleted());
    ConsolePrintf(console, _T("   Parents: <%s>\n   Children: <%s>\n"),
-                 object->dbgGetParentList(buffer), object->dbgGetChildList(&buffer[4096]));
-   time_t t = object->getTimeStamp();
+                 object.dbgGetParentList().cstr(), object.dbgGetChildList().cstr());
+
+   TCHAR buffer[256];
+   time_t t = object.getTimeStamp();
 #if HAVE_LOCALTIME_R
    struct tm tmbuffer;
    struct tm *ltm = localtime_r(&t, &tmbuffer);
@@ -2200,31 +2180,32 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
 #endif
    _tcsftime(buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
    ConsolePrintf(console, _T("   Last change.........: %s\n"), buffer);
-   if (object->isDataCollectionTarget())
+
+   if (object.isDataCollectionTarget())
    {
-      ConsolePrintf(console, _T("   State flags.........: 0x%08x\n"), static_cast<DataCollectionTarget*>(object)->getState());
+      ConsolePrintf(console, _T("   State flags.........: 0x%08x\n"), static_cast<const DataCollectionTarget&>(object).getState());
    }
-   switch(object->getObjectClass())
+   switch(object.getObjectClass())
    {
       case OBJECT_NODE:
          ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: isSNMP=%d isAgent=%d isLocalMgmt=%d\n   SNMP ObjectId.......: %s\n"),
-                       static_cast<Node*>(object)->getIpAddress().toString(buffer),
-                       static_cast<Node*>(object)->getPrimaryHostName().cstr(),
-                       static_cast<Node*>(object)->isSNMPSupported(),
-                       static_cast<Node*>(object)->isNativeAgent(),
-                       static_cast<Node*>(object)->isLocalManagement(),
-                       static_cast<Node*>(object)->getSNMPObjectId().cstr());
-         PrintObjectInfo(console, object->getAssignedZoneProxyId(false), _T("   Primary zone proxy..:"));
-         PrintObjectInfo(console, object->getAssignedZoneProxyId(true), _T("   Backup zone proxy...:"));
+                       static_cast<const Node&>(object).getIpAddress().toString(buffer),
+                       static_cast<const Node&>(object).getPrimaryHostName().cstr(),
+                       static_cast<const Node&>(object).isSNMPSupported(),
+                       static_cast<const Node&>(object).isNativeAgent(),
+                       static_cast<const Node&>(object).isLocalManagement(),
+                       static_cast<const Node&>(object).getSNMPObjectId().cstr());
+         PrintObjectInfo(console, object.getAssignedZoneProxyId(false), _T("   Primary zone proxy..:"));
+         PrintObjectInfo(console, object.getAssignedZoneProxyId(true), _T("   Backup zone proxy...:"));
          ConsolePrintf(console, _T("   ICMP polling........: %s\n"),
-                  static_cast<Node*>(object)->isIcmpStatCollectionEnabled() ? _T("ON") : _T("OFF"));
-         if (static_cast<Node*>(object)->isIcmpStatCollectionEnabled())
+                  static_cast<const Node&>(object).isIcmpStatCollectionEnabled() ? _T("ON") : _T("OFF"));
+         if (static_cast<const Node&>(object).isIcmpStatCollectionEnabled())
          {
-            StringList *collectors = static_cast<Node*>(object)->getIcmpStatCollectors();
+            StringList *collectors = static_cast<const Node&>(object).getIcmpStatCollectors();
             for(int i = 0; i < collectors->size(); i++)
             {
                UINT32 last, min, max, avg, loss;
-               if (static_cast<Node*>(object)->getIcmpStatistics(collectors->get(i), &last, &min, &max, &avg, &loss))
+               if (static_cast<const Node&>(object).getIcmpStatistics(collectors->get(i), &last, &min, &max, &avg, &loss))
                {
                   ConsolePrintf(console, _T("   ICMP statistics (%s):\n"), collectors->get(i));
                   ConsolePrintf(console, _T("      RTT last.........: %u ms\n"), last);
@@ -2239,39 +2220,39 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
          break;
       case OBJECT_SUBNET:
          ConsolePrintf(console, _T("   IP address..........: %s/%d\n"),
-                  static_cast<Subnet*>(object)->getIpAddress().toString(buffer),
-                  static_cast<Subnet*>(object)->getIpAddress().getMaskBits());
+                  static_cast<const Subnet&>(object).getIpAddress().toString(buffer),
+                  static_cast<const Subnet&>(object).getIpAddress().getMaskBits());
          break;
       case OBJECT_ACCESSPOINT:
-         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<AccessPoint*>(object)->getMacAddr().toString(buffer));
-         ConsolePrintf(console, _T("   IP address..........: %s\n"), static_cast<AccessPoint*>(object)->getIpAddress().toString(buffer));
-         PrintObjectIcmpStatistic(console, static_cast<AccessPoint*>(object));
+         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const AccessPoint&>(object).getMacAddr().toString(buffer));
+         ConsolePrintf(console, _T("   IP address..........: %s\n"), static_cast<const AccessPoint&>(object).getIpAddress().toString(buffer));
+         PrintObjectIcmpStatistic(console, static_cast<const AccessPoint&>(object));
          break;
       case OBJECT_INTERFACE:
-         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<Interface*>(object)->getMacAddr().toString(buffer));
-         for(int n = 0; n < static_cast<Interface*>(object)->getIpAddressList()->size(); n++)
+         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const Interface&>(object).getMacAddr().toString(buffer));
+         for(int n = 0; n < static_cast<const Interface&>(object).getIpAddressList()->size(); n++)
          {
-            const InetAddress& a = static_cast<Interface*>(object)->getIpAddressList()->get(n);
+            const InetAddress& a = static_cast<const Interface&>(object).getIpAddressList()->get(n);
             ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(buffer), a.getMaskBits());
          }
-         ConsolePrintf(console, _T("   Interface index.....: %u\n"), static_cast<Interface*>(object)->getIfIndex());
+         ConsolePrintf(console, _T("   Interface index.....: %u\n"), static_cast<const Interface&>(object).getIfIndex());
          ConsolePrintf(console, _T("   Physical port.......: %s\n"),
-                  static_cast<Interface*>(object)->isPhysicalPort() ? _T("yes") : _T("no"));
-         if (static_cast<Interface*>(object)->isPhysicalPort())
+                  static_cast<const Interface&>(object).isPhysicalPort() ? _T("yes") : _T("no"));
+         if (static_cast<const Interface&>(object).isPhysicalPort())
          {
             ConsolePrintf(console, _T("   Physical location...: %s\n"),
-                     static_cast<Interface*>(object)->getPhysicalLocation().toString(buffer, 256));
+                     static_cast<const Interface&>(object).getPhysicalLocation().toString(buffer, 256));
          }
-         PrintObjectIcmpStatistic(console, static_cast<Interface*>(object));
+         PrintObjectIcmpStatistic(console, static_cast<const Interface&>(object));
          break;
       case OBJECT_TEMPLATE:
          ConsolePrintf(console, _T("   Version.............: %d\n"),
-                  static_cast<Template*>(object)->getVersion());
+                  static_cast<const Template&>(object).getVersion());
          break;
       case OBJECT_ZONE:
          ConsolePrintf(console, _T("   UIN.................: %d\n"),
-                  static_cast<Zone*>(object)->getUIN());
-         static_cast<Zone*>(object)->dumpState(console);
+                  static_cast<const Zone&>(object).getUIN());
+         static_cast<const Zone&>(object).dumpState(console);
          break;
    }
 }
@@ -2282,9 +2263,9 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
 static void DumpObjectCallback(NetObj *object, void *data)
 {
 	struct __dump_objects_data *dd = static_cast<__dump_objects_data*>(data);
-   if ((dd->filter == NULL) || MatchString(dd->filter, object->getName(), false))
+   if ((dd->filter == nullptr) || MatchString(dd->filter, object->getName(), false))
    {
-      DumpObject(dd->console, object, dd->buffer);
+      DumpObject(dd->console, *object);
    }
 }
 
@@ -2293,20 +2274,17 @@ static void DumpObjectCallback(NetObj *object, void *data)
  */
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter)
 {
-	__dump_objects_data data;
-   data.buffer = MemAllocArrayNoInit<TCHAR>(128000);
-
    bool findById = false;
-   if (filter != NULL)
+   if (filter != nullptr)
    {
       uuid guid = uuid::parse(filter);
       if (!guid.isNull())
       {
          findById = true;
-         NetObj *object = FindObjectByGUID(guid);
-         if (object != NULL)
+         shared_ptr<NetObj> object = FindObjectByGUID(guid);
+         if (object != nullptr)
          {
-            DumpObject(pCtx, object, data.buffer);
+            DumpObject(pCtx, *object);
          }
          else
          {
@@ -2317,12 +2295,11 @@ void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter)
 
    if (!findById)
    {
+      __dump_objects_data data;
       data.console = pCtx;
       data.filter = filter;
       g_idxObjectById.forEach(DumpObjectCallback, &data);
    }
-
-	MemFree(data.buffer);
 }
 
 /**
@@ -2416,7 +2393,7 @@ bool IsValidParentClass(int childClass, int parentClass)
    // Additional check by loaded modules
    for(UINT32 i = 0; i < g_dwNumModules; i++)
 	{
-		if (g_pModuleList[i].pfIsValidParentClass != NULL)
+		if (g_pModuleList[i].pfIsValidParentClass != nullptr)
 		{
 			if (g_pModuleList[i].pfIsValidParentClass(childClass, parentClass))
 				return true;	// accepted by module
@@ -2427,49 +2404,28 @@ bool IsValidParentClass(int childClass, int parentClass)
 }
 
 /**
- * Callback for postponed object deletion
- */
-static void DeleteObjectCallback(void *arg)
-{
-   NetObj *object = (NetObj *)arg;
-   while(object->getRefCount() > 0)
-      ThreadSleep(1);
-   DbgPrintf(4, _T("Executing postponed delete of object %s [%d]"), object->getName(), object->getId());
-   delete object;
-}
-
-/**
  * Delete object (final step)
  * This function should be called ONLY from syncer thread
  * Object will be removed from index by ID and destroyed.
  */
 void NetObjDelete(NetObj *object)
 {
-	DbgPrintf(4, _T("Final delete step for object %s [%d]"), object->getName(), object->getId());
+	DbgPrintf(4, _T("Final delete step for object %s [%u]"), object->getName(), object->getId());
 
    // Delete object from index by ID and object itself
 	g_idxObjectById.remove(object->getId());
 	g_idxObjectByGUID.remove(object->getGuid());
-	if (object->getRefCount() == 0)
-	{
-	   delete object;
-	}
-	else
-	{
-	   DbgPrintf(4, _T("Object %s [%d] has %d references at final delete step - postpone deletion"), object->getName(), object->getId());
-	   ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DeleteObject"), DeleteObjectCallback, object);
-	}
 }
 
 /**
  * Update interface index when IP address changes
  */
-void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Interface *iface)
+void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, const shared_ptr<Interface>& iface)
 {
 	if (IsZoningEnabled())
 	{
-		Zone *zone = static_cast<Zone*>(g_idxZoneByUIN.get(iface->getZoneUIN()));
-		if (zone != NULL)
+		shared_ptr<Zone> zone = FindZoneByUIN(iface->getZoneUIN());
+		if (zone != nullptr)
 		{
 			zone->updateInterfaceIndex(oldIpAddr, newIpAddr, iface);
 		}
@@ -2489,12 +2445,12 @@ void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIp
 /**
  * Update node index when IP address changes
  */
-void UpdateNodeIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Node *node)
+void UpdateNodeIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, const shared_ptr<Node>& node)
 {
    if (IsZoningEnabled())
    {
-      Zone *zone = static_cast<Zone*>(g_idxZoneByUIN.get(node->getZoneUIN()));
-      if (zone != NULL)
+      shared_ptr<Zone> zone = FindZoneByUIN(node->getZoneUIN());
+      if (zone != nullptr)
       {
          zone->updateNodeIndex(oldIpAddr, newIpAddr, node);
       }
@@ -2582,10 +2538,10 @@ bool IsEventSource(int objectClass)
 /**
  * Check of object1 is parent of object2 (also indirect parent)
  */
-bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2)
+bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2)
 {
-   NetObj *p = FindObjectById(object1);
-   return (p != NULL) ? p->isChild(object2) : false;
+   shared_ptr<NetObj> p = FindObjectById(object1);
+   return (p != nullptr) ? p->isChild(object2) : false;
 }
 
 /**
@@ -2658,7 +2614,7 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
       if (success && (accessList.size() > 0))
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_access_snapshot (user_id,object_id,access_rights) VALUES (?,?,?)"), accessList.size() > 1);
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
             for(int i = 0; (i < accessList.size()) && success; i++)
@@ -2686,18 +2642,18 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
 /**
  * Filter object
  */
-static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globalVariables)
+static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, NXSL_VariableSystem **globalVariables)
 {
    SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
    vm->setContextObject(object->createNXSLObject(vm));
-   NXSL_VariableSystem *expressionVariables = NULL;
+   NXSL_VariableSystem *expressionVariables = nullptr;
    ObjectRefArray<NXSL_Value> args(0);
    if (!vm->run(args, globalVariables, &expressionVariables))
    {
       delete expressionVariables;
       return -1;
    }
-   if ((globalVariables != NULL) && (expressionVariables != NULL))
+   if ((globalVariables != nullptr) && (expressionVariables != nullptr))
    {
       (*globalVariables)->merge(expressionVariables);
       delete expressionVariables;
@@ -2752,7 +2708,7 @@ static int ObjectQueryComparator(ObjectQueryComparatorData *data, const ObjectQu
       const TCHAR *v2 = (*object2)->values->get(attrIndex);
 
       // Try to compare as numbers
-      if ((v1 != NULL) && (v2 != NULL))
+      if ((v1 != nullptr) && (v2 != nullptr))
       {
          TCHAR *eptr;
          double d1 = _tcstod(v1, &eptr);
@@ -2781,14 +2737,14 @@ static int ObjectQueryComparator(ObjectQueryComparatorData *data, const ObjectQu
 /**
  * Query objects
  */
-ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage,
-         size_t errorMessageLen, const StringList *fields, const StringList *orderBy, UINT32 limit)
+ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage,
+         size_t errorMessageLen, const StringList *fields, const StringList *orderBy, uint32_t limit)
 {
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
-   if (vm == NULL)
-      return NULL;
+   if (vm == nullptr)
+      return nullptr;
 
-   bool readFields = (fields != NULL);
+   bool readFields = (fields != nullptr);
 
    // Set class constants
    vm->addConstant("ACCESSPOINT", vm->createValue(OBJECT_ACCESSPOINT));
@@ -2821,14 +2777,14 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
    vm->addConstant("VPNCONNECTOR", vm->createValue(OBJECT_VPNCONNECTOR));
    vm->addConstant("ZONE", vm->createValue(OBJECT_ZONE));
 
-   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, FilterAccessibleObjects);
+   SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects(FilterAccessibleObjects);
    ObjectArray<ObjectQueryResult> *resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
    for(int i = 0; i < objects->size(); i++)
    {
-      NetObj *curr = objects->get(i);
+      shared_ptr<NetObj> curr = objects->getShared(i);
 
-      NXSL_VariableSystem *globals = NULL;
-      int rc = FilterObject(vm, curr, readFields ? &globals : NULL);
+      NXSL_VariableSystem *globals = nullptr;
+      int rc = FilterObject(vm, curr, readFields ? &globals : nullptr);
       if (rc < 0)
       {
          _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);
@@ -2848,7 +2804,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
             for(int j = 0; j < fields->size(); j++)
             {
                NXSL_Variable *v = globals->find(fields->get(j));
-               if (v != NULL)
+               if (v != nullptr)
                {
                   objectData->add(v->getValue()->getValueAsCString());
                }
@@ -2856,13 +2812,13 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
                {
 #ifdef UNICODE
                   char attr[MAX_IDENTIFIER_LENGTH];
-                  WideCharToMultiByte(CP_UTF8, 0, fields->get(j), -1, attr, MAX_IDENTIFIER_LENGTH - 1, NULL, NULL);
+                  WideCharToMultiByte(CP_UTF8, 0, fields->get(j), -1, attr, MAX_IDENTIFIER_LENGTH - 1, nullptr, nullptr);
                   attr[MAX_IDENTIFIER_LENGTH - 1] = 0;
                   NXSL_Value *av = object->getClass()->getAttr(object, attr);
 #else
                   NXSL_Value *av = object->getClass()->getAttr(object, fields->get(j));
 #endif
-                  if (av != NULL)
+                  if (av != nullptr)
                   {
                      objectData->add(av->getValueAsCString());
                      vm->destroyValue(av);
@@ -2877,7 +2833,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
          }
          else
          {
-            objectData = NULL;
+            objectData = nullptr;
          }
          resultSet->add(new ObjectQueryResult(curr, objectData));
       }
@@ -2885,14 +2841,12 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
    }
 
    delete vm;
-   for(int i = 0; i < objects->size(); i++)
-      objects->get(i)->decRefCount();
    delete objects;
 
    // Sort result set and apply limit
-   if (resultSet != NULL)
+   if (resultSet != nullptr)
    {
-      if ((orderBy != NULL) && !orderBy->isEmpty())
+      if ((orderBy != nullptr) && !orderBy->isEmpty())
       {
          ObjectQueryComparatorData cd;
          cd.fields = fields;
@@ -2913,7 +2867,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
  */
 struct NodeDependencyCheckData
 {
-   UINT32 nodeId;
+   uint32_t nodeId;
    StructArray<DependentNode> *dependencies;
 };
 
@@ -2925,7 +2879,7 @@ static void NodeDependencyCheckCallback(NetObj *object, void *context)
    NodeDependencyCheckData *d = static_cast<NodeDependencyCheckData*>(context);
    Node *node = static_cast<Node*>(object);
 
-   UINT32 type = 0;
+   uint32_t type = 0;
    if (node->getEffectiveAgentProxy() == d->nodeId)
       type |= NODE_DEP_AGENT_PROXY;
    if (node->getEffectiveSnmpProxy() == d->nodeId)
@@ -2947,7 +2901,7 @@ static void NodeDependencyCheckCallback(NetObj *object, void *context)
 /**
  * Get dependent nodes
  */
-StructArray<DependentNode> *GetNodeDependencies(UINT32 nodeId)
+StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId)
 {
    NodeDependencyCheckData data;
    data.nodeId = nodeId;
@@ -2955,7 +2909,6 @@ StructArray<DependentNode> *GetNodeDependencies(UINT32 nodeId)
    g_idxNodeById.forEach(NodeDependencyCheckCallback, &data);
    return data.dependencies;
 }
-
 
 /**
  * Callback for cleaning expired DCI data on node
@@ -2968,13 +2921,13 @@ static void ResetPollTimers(NetObj *object, void *data)
 /**
  * Reset poll timers for all nodes
  */
-void ResetObjectPollTimers(shared_ptr<ScheduledTaskParameters> parameters)
+void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    nxlog_debug_tag(_T("poll.system"), 2, _T("Resetting object poll timers"));
-   g_idxNodeById.forEach(ResetPollTimers, NULL);
-   g_idxClusterById.forEach(ResetPollTimers, NULL);
-   g_idxMobileDeviceById.forEach(ResetPollTimers, NULL);
-   g_idxSensorById.forEach(ResetPollTimers, NULL);
-   g_idxAccessPointById.forEach(ResetPollTimers, NULL);
-   g_idxChassisById.forEach(ResetPollTimers, NULL);
+   g_idxNodeById.forEach(ResetPollTimers, nullptr);
+   g_idxClusterById.forEach(ResetPollTimers, nullptr);
+   g_idxMobileDeviceById.forEach(ResetPollTimers, nullptr);
+   g_idxSensorById.forEach(ResetPollTimers, nullptr);
+   g_idxAccessPointById.forEach(ResetPollTimers, nullptr);
+   g_idxChassisById.forEach(ResetPollTimers, nullptr);
 }

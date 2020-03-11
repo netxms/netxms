@@ -293,14 +293,14 @@ void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 gr
 /**
  * Send policy update/create to all sessions
  */
-void NotifyClientsOnPolicyUpdate(NXCPMessage *msg, Template *object)
+void NotifyClientsOnPolicyUpdate(NXCPMessage *msg, const Template& object)
 {
    RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if ((s_sessionList[i] != NULL) &&
           s_sessionList[i]->isAuthenticated() &&
           !s_sessionList[i]->isTerminated() &&
-          object->checkAccessRights(s_sessionList[i]->getUserId(), OBJECT_ACCESS_MODIFY))
+          object.checkAccessRights(s_sessionList[i]->getUserId(), OBJECT_ACCESS_MODIFY))
          s_sessionList[i]->postMessage(msg);
    RWLockUnlock(s_sessionListLock);
 }
@@ -308,23 +308,23 @@ void NotifyClientsOnPolicyUpdate(NXCPMessage *msg, Template *object)
 /**
  * Send policy update/create to all sessions
  */
-void NotifyClientsOnPolicyDelete(uuid guid, Template *object)
+void NotifyClientsOnPolicyDelete(uuid guid, const Template& object)
 {
    NXCPMessage msg;
    msg.setCode(CMD_DELETE_AGENT_POLICY);
    msg.setField(VID_GUID, guid);
-   msg.setField(VID_TEMPLATE_ID, object->getId());
+   msg.setField(VID_TEMPLATE_ID, object.getId());
    NotifyClientsOnPolicyUpdate(&msg, object);
 }
 
 /**
  * Send DCI update to all active sessions
  */
-void NotifyClientsOnDCIUpdate(DataCollectionOwner *object, DCObject *dco)
+void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco)
 {
    NXCPMessage msg;
    msg.setCode(CMD_MODIFY_NODE_DCI);
-   msg.setField(VID_OBJECT_ID, object->getId());
+   msg.setField(VID_OBJECT_ID, object.getId());
    dco->createMessage(&msg);
    NotifyClientsOnDCIUpdate(&msg, object);
 }
@@ -332,11 +332,11 @@ void NotifyClientsOnDCIUpdate(DataCollectionOwner *object, DCObject *dco)
 /**
  * Send graph update to all active sessions
  */
-void NotifyClientsOnDCIDelete(DataCollectionOwner *object, UINT32 dcoId)
+void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, UINT32 dcoId)
 {
    NXCPMessage msg;
    msg.setCode(CMD_DELETE_NODE_DCI);
-   msg.setField(VID_OBJECT_ID, object->getId());
+   msg.setField(VID_OBJECT_ID, object.getId());
    msg.setField(VID_DCI_ID, dcoId);
    NotifyClientsOnDCIUpdate(&msg, object);
 }
@@ -344,11 +344,11 @@ void NotifyClientsOnDCIDelete(DataCollectionOwner *object, UINT32 dcoId)
 /**
  * Send DCI delete to all active sessions
  */
-void NotifyClientsOnDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status)
+void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, UINT32 dcoId, int status)
 {
    NXCPMessage msg;
    msg.setCode(CMD_SET_DCI_STATUS);
-   msg.setField(VID_OBJECT_ID, object->getId());
+   msg.setField(VID_OBJECT_ID, object.getId());
    msg.setField(VID_DCI_STATUS, status);
    msg.setField(VID_NUM_ITEMS, 1);
    msg.setField(VID_ITEM_LIST, dcoId);
@@ -358,7 +358,7 @@ void NotifyClientsOnDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, i
 /**
  * Send DCI update/delete to all active sessions
  */
-void NotifyClientsOnDCIUpdate(NXCPMessage *update, NetObj *object)
+void NotifyClientsOnDCIUpdate(NXCPMessage *update, const NetObj& object)
 {
    RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
@@ -367,8 +367,8 @@ void NotifyClientsOnDCIUpdate(NXCPMessage *update, NetObj *object)
       if ((session != NULL) &&
           session->isAuthenticated() &&
           !session->isTerminated() &&
-          object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) &&
-          session->isDCOpened(object->getId()))
+          object.checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) &&
+          session->isDCOpened(object.getId()))
       {
          session->postMessage(update);
       }
@@ -381,7 +381,7 @@ void NotifyClientsOnDCIUpdate(NXCPMessage *update, NetObj *object)
  */
 void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresholdId, const TCHAR *instance, ThresholdCheckResult change)
 {
-   NetObj *object = FindObjectById(objectId);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
    if (object == NULL)
       return;
 

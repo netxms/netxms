@@ -143,7 +143,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
          json_t *json = pEvent->toJson();
          char *jsonText = json_dumps(json, JSON_INDENT(3) | JSON_EMBED);
          query.append(DBPrepareStringUTF8(hdb, jsonText));
-         MemFree(jsonText);
+         json_free(jsonText);
          json_decref(json);
          query.append(_T(')'));
 
@@ -156,7 +156,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,")
 				_T("origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) ")
 				_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"), true);
-			if (hStmt != NULL)
+			if (hStmt != nullptr)
 			{
 				do
 				{
@@ -177,7 +177,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 					nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;
 					pEvent = s_loggerQueue.getOrBlock(500);
-				} while((pEvent != NULL) && (pEvent != INVALID_POINTER_VALUE));
+				} while((pEvent != nullptr) && (pEvent != INVALID_POINTER_VALUE));
 				DBFreeStatement(hStmt);
 			}
 			else
@@ -200,8 +200,8 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 {
    ThreadSetName("EventProcessor");
 
-	s_threadLogger = ThreadCreateEx(EventLogger, 0, NULL);
-	s_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
+	s_threadLogger = ThreadCreateEx(EventLogger, 0, nullptr);
+	s_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, nullptr);
    while(true)
    {
       Event *pEvent = g_eventQueue.getOrBlock();
@@ -226,12 +226,12 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		// Pass event to modules
       CALL_ALL_MODULES(pfEventHandler, (pEvent));
 
-      NetObj *sourceObject = FindObjectById(pEvent->getSourceId());
-      if (sourceObject == NULL)
+      shared_ptr<NetObj> sourceObject = FindObjectById(pEvent->getSourceId());
+      if (sourceObject == nullptr)
       {
          sourceObject = FindObjectById(g_dwMgmtNode);
-         if (sourceObject == NULL)
-            sourceObject = g_pEntireNet;
+         if (sourceObject == nullptr)
+            sourceObject = g_entireNetwork;
       }
 
       ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::EventProcessor"), sourceObject);

@@ -36,9 +36,9 @@ AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, W
          AgentConnection(ipAddr, port, authMethod, secret, allowCompression)
 {
    m_nodeId = nodeId;
-   m_tunnel = NULL;
-   m_proxyTunnel = NULL;
-   m_tcpProxySession = NULL;
+   m_tunnel = nullptr;
+   m_proxyTunnel = nullptr;
+   m_tcpProxySession = nullptr;
 }
 
 /**
@@ -50,8 +50,8 @@ AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int aut
    m_nodeId = nodeId;
    m_tunnel = tunnel;
    m_tunnel->incRefCount();
-   m_proxyTunnel = NULL;
-   m_tcpProxySession = NULL;
+   m_proxyTunnel = nullptr;
+   m_tcpProxySession = nullptr;
 }
 
 /**
@@ -59,9 +59,9 @@ AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int aut
  */
 AgentConnectionEx::~AgentConnectionEx()
 {
-   if (m_tunnel != NULL)
+   if (m_tunnel != nullptr)
       m_tunnel->decRefCount();
-   if (m_proxyTunnel != NULL)
+   if (m_proxyTunnel != nullptr)
       m_proxyTunnel->decRefCount();
 }
 
@@ -70,9 +70,9 @@ AgentConnectionEx::~AgentConnectionEx()
  */
 AbstractCommChannel *AgentConnectionEx::createChannel()
 {
-   if (m_tunnel != NULL)
+   if (m_tunnel != nullptr)
       return m_tunnel->createChannel();
-   if (isProxyMode() && (m_proxyTunnel != NULL))
+   if (isProxyMode() && (m_proxyTunnel != nullptr))
       return m_proxyTunnel->createChannel();
    return AgentConnection::createChannel();
 }
@@ -82,10 +82,10 @@ AbstractCommChannel *AgentConnectionEx::createChannel()
  */
 void AgentConnectionEx::setTunnel(AgentTunnel *tunnel)
 {
-   if (m_tunnel != NULL)
+   if (m_tunnel != nullptr)
       m_tunnel->decRefCount();
    m_tunnel = tunnel;
-   if (m_tunnel != NULL)
+   if (m_tunnel != nullptr)
       m_tunnel->incRefCount();
 }
 
@@ -94,10 +94,10 @@ void AgentConnectionEx::setTunnel(AgentTunnel *tunnel)
  */
 void AgentConnectionEx::setProxy(AgentTunnel *tunnel, int authMethod, const TCHAR *secret)
 {
-   if (m_proxyTunnel != NULL)
+   if (m_proxyTunnel != nullptr)
       m_proxyTunnel->decRefCount();
    m_proxyTunnel = tunnel;
-   if (m_proxyTunnel != NULL)
+   if (m_proxyTunnel != nullptr)
       m_proxyTunnel->incRefCount();
    setProxy(InetAddress::INVALID, 0, authMethod, secret);
 }
@@ -110,17 +110,17 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
    if (IsShutdownInProgress())
       return;
 
-   Node *pNode = NULL;
    TCHAR szBuffer[64];
-
    debugPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s, node ID %d"), getIpAddr().toString(szBuffer), m_nodeId);
-	if (m_nodeId != 0)
-		pNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-	if (pNode == NULL)
-      pNode = FindNodeByIP(0, getIpAddr());
-   if (pNode != NULL)
+
+   shared_ptr<Node> node;
+   if (m_nodeId != 0)
+	   node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+	if (node == nullptr)
+      node = FindNodeByIP(0, getIpAddr());
+   if (node != nullptr)
    {
-      if (pNode->getStatus() != STATUS_UNMANAGED)
+      if (node->getStatus() != STATUS_UNMANAGED)
       {
 		   // Check for duplicate traps - only accept traps with ID
 		   // higher than last received
@@ -130,7 +130,7 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 		   QWORD trapId = pMsg->getFieldAsUInt64(VID_TRAP_ID);
 		   if (trapId != 0)
 		   {
-			   acceptTrap = pNode->checkAgentTrapId(trapId);
+			   acceptTrap = node->checkAgentTrapId(trapId);
 			   debugPrintf(5, _T("AgentConnectionEx::onTrap(): trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
 		   }
 		   else
@@ -151,12 +151,12 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 			   debugPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
 			   StringList parameters(pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
-			   PostEvent(dwEventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), pNode->getId(), parameters);
+			   PostEvent(dwEventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), parameters);
 		   }
       }
       else
       {
-         debugPrintf(3, _T("AgentConnectionEx::onTrap(): node %s [%d] in in UNMANAGED state - trap ignored"), pNode->getName(), pNode->getId());
+         debugPrintf(3, _T("AgentConnectionEx::onTrap(): node %s [%d] in in UNMANAGED state - trap ignored"), node->getName(), node->getId());
       }
    }
    else
@@ -177,12 +177,12 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
    debugPrintf(3, _T("AgentConnectionEx::onSyslogMessage(): Received message from agent at %s, node ID %d"), getIpAddr().toString(buffer), m_nodeId);
 
    UINT32 zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
-   Node *node = NULL;
+   shared_ptr<Node> node;
    if (m_nodeId != 0)
-      node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-   if (node == NULL)
+      node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+   if (node == nullptr)
       node = FindNodeByIP(zoneUIN, getIpAddr());
-   if (node != NULL)
+   if (node != nullptr)
    {
       // Check for duplicate messages - only accept messages with ID
       // higher than last received
@@ -227,13 +227,13 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 	msg->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 	msg->getFieldAsString(VID_VALUE, value, MAX_RESULT_LENGTH);
 
-   Node *sender = NULL;
+   shared_ptr<Node> sender;
 	if (m_nodeId != 0)
-		sender = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-   if (sender == NULL)
+		sender = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+   if (sender == nullptr)
       sender = FindNodeByIP(0, getIpAddr());
 
-	if (sender != NULL)
+	if (sender != nullptr)
 	{
 		// Check for duplicate data requests - only accept requests with ID
 		// higher than last received
@@ -254,13 +254,13 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 
 		if (acceptRequest)
 		{
-         Node *target;
+         shared_ptr<Node> target;
          UINT32 objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
          if (objectId != 0)
          {
             // push on behalf of other node
-            target = (Node *)FindObjectById(objectId, OBJECT_NODE);
-            if (target != NULL)
+            target = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
+            if (target != nullptr)
             {
                if (target->isTrustedNode(sender->getId()))
                {
@@ -269,7 +269,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
                else
                {
                   DbgPrintf(5, _T("%s: agent data push: not in trusted node list for target %s [%d]"), sender->getName(), target->getName(), target->getId());
-                  target = NULL;
+                  target.reset();
                }
             }
          }
@@ -278,16 +278,16 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
             target = sender;
          }
 
-         if (target != NULL)
+         if (target != nullptr)
          {
 		      DbgPrintf(5, _T("%s: agent data push: %s=%s"), target->getName(), name, value);
 		      shared_ptr<DCObject> dci = target->getDCObjectByName(name, 0);
-		      if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
+		      if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
 			      DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
                time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
                if (t == 0)
-			         t = time(NULL);
+			         t = time(nullptr);
 			      target->processNewDCValue(dci, t, value);
                if (t > dci->getLastPollTime())
 			         dci->setLastPollTime(t);
@@ -312,7 +312,7 @@ static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
 {
    nxlog_debug(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled"));
    AgentConnection *conn = object->createAgentConnection();
-   if(conn != NULL)
+   if (conn != nullptr)
    {
       NXCPMessage request(conn->getProtocolVersion());
       request.setId(conn->generateRequestId());
@@ -333,14 +333,14 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
    if (IsShutdownInProgress())
       return;
 
-	Node *object = NULL;
+	shared_ptr<Node> object;
 	if (m_nodeId != 0)
-		object = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-	if (object != NULL)
+		object = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+	if (object != nullptr)
 	{
 	   TCHAR remoteFile[MAX_PATH];
       pMsg->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
-      ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
+      ObjectArray<ClientSession> *result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
       debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->getName(), object->getId());
       int validSessionCount = result->size();
       for(int i = 0; i < result->size(); i++)
@@ -348,19 +348,19 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
          if (!result->get(i)->sendMessage(pMsg))
          {
             MONITORED_FILE file;
-            _tcsncpy(file.fileName, remoteFile, MAX_PATH);
+            _tcslcpy(file.fileName, remoteFile, MAX_PATH);
             file.nodeID = m_nodeId;
             file.session = result->get(i);
-            g_monitoringList.removeMonitoringFile(&file);
+            g_monitoringList.removeFile(&file);
             validSessionCount--;
 
             if (validSessionCount == 0)
-               CancelUnknownFileMonitoring(object, remoteFile);
+               CancelUnknownFileMonitoring(object.get(), remoteFile);
          }
       }
       if (result->size() == 0)
       {
-         CancelUnknownFileMonitoring(object, remoteFile);
+         CancelUnknownFileMonitoring(object.get(), remoteFile);
       }
       delete result;
 	}
@@ -398,7 +398,7 @@ static SNMP_ProxyTransport *CreateSNMPProxyTransport(AgentConnectionEx *conn, No
 {
    conn->incRefCount();
    SNMP_ProxyTransport *snmpTransport = new SNMP_ProxyTransport(conn, originAddr, port);
-   if (originNode != NULL)
+   if (originNode != nullptr)
    {
       snmpTransport->setSecurityContext(originNode->getSnmpSecurityContext());
    }
@@ -413,7 +413,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
    if (IsShutdownInProgress())
       return;
 
-   Node *proxyNode = NULL;
+   shared_ptr<Node> proxyNode;
    TCHAR ipStringBuffer[4096];
 
    static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
@@ -423,8 +423,8 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
       getIpAddr().toString(ipStringBuffer), m_nodeId);
 
 	if (m_nodeId != 0)
-		proxyNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-   if (proxyNode != NULL)
+		proxyNode = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+   if (proxyNode != nullptr)
    {
       // Check for duplicate traps - only accept traps with ID
       // higher than last received
@@ -447,24 +447,24 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          size_t pduLenght;
          const BYTE *pduBytes = msg->getBinaryFieldPtr(VID_PDU, &pduLenght);
          UINT32 zoneUIN = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_UIN) : 0;
-         Node *originNode = FindNodeByIP(zoneUIN, originSenderIP);
-         if ((originNode != NULL) || ConfigReadBoolean(_T("LogAllSNMPTraps"), false))
+         shared_ptr<Node> originNode = FindNodeByIP(zoneUIN, originSenderIP);
+         if ((originNode != nullptr) || ConfigReadBoolean(_T("LogAllSNMPTraps"), false))
          {
             SNMP_PDU *pdu = new SNMP_PDU;
-            SNMP_SecurityContext *sctx = (originNode != NULL) ? originNode->getSnmpSecurityContext() : NULL;
+            SNMP_SecurityContext *sctx = (originNode != nullptr) ? originNode->getSnmpSecurityContext() : nullptr;
             if (pdu->parse(pduBytes, pduLenght, sctx, true))
             {
                nxlog_debug(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
                if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
                {
                   bool isInformRequest = (pdu->getCommand() == SNMP_INFORM_REQUEST);
-                  SNMP_ProxyTransport *snmpTransport = isInformRequest ? CreateSNMPProxyTransport(this, originNode, originSenderIP, msg->getFieldAsUInt16(VID_PORT)) : NULL;
+                  SNMP_ProxyTransport *snmpTransport = isInformRequest ? CreateSNMPProxyTransport(this, originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT)) : nullptr;
                   if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
                   {
                      SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
                      context->setAuthoritativeEngine(localEngine);
                   }
-                  if (snmpTransport != NULL)
+                  if (snmpTransport != nullptr)
                      snmpTransport->setWaitForResponse(false);
                   ProcessTrap(pdu, originSenderIP, zoneUIN, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
                   delete snmpTransport;
@@ -474,7 +474,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                   // Engine ID discovery
                   nxlog_debug(6, _T("SNMPTrapReceiver: EngineId discovery"));
 
-                  SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(this, originNode, originSenderIP, msg->getFieldAsUInt16(VID_PORT));
+                  SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(this, originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT));
 
                   SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
                   response->setReportable(false);
@@ -486,7 +486,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                   response->bindVariable(var);
 
                   SNMP_SecurityContext *context = new SNMP_SecurityContext();
-                  localEngine.setTime((int)time(NULL));
+                  localEngine.setTime((int)time(nullptr));
                   context->setAuthoritativeEngine(localEngine);
                   context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
                   context->setAuthMethod(SNMP_AUTH_NONE);
@@ -595,8 +595,8 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       return ERR_INTERNAL_ERROR;
    }
 
-	Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-   if (node == NULL)
+	shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+   if (node == nullptr)
    {
       debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
       return ERR_INTERNAL_ERROR;
@@ -617,12 +617,12 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       return ERR_RESOURCE_BUSY;
    }
 
-   DataCollectionTarget *target;
+   shared_ptr<DataCollectionTarget> target;
    uuid targetId = msg->getFieldAsGUID(VID_NODE_ID);
    if (!targetId.isNull())
    {
-      NetObj *object = FindObjectByGUID(targetId, -1);
-      if (object == NULL)
+      shared_ptr<NetObj> object = FindObjectByGUID(targetId, -1);
+      if (object == nullptr)
       {
          TCHAR buffer[64];
          debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find target node with GUID %s"), targetId.toString(buffer));
@@ -634,7 +634,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
          debugPrintf(5, _T("AgentConnectionEx::processCollectedData: object with GUID %s is not a data collection target"), targetId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
-      target = (DataCollectionTarget *)object;
+      target = static_pointer_cast<DataCollectionTarget>(object);
    }
    else
    {
@@ -643,7 +643,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 
    UINT32 dciId = msg->getFieldAsUInt32(VID_DCI_ID);
    shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
-   if (dcObject == NULL)
+   if (dcObject == nullptr)
    {
       debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on object %s [%d]"),
                   dciId, target->getName(), target->getId());
@@ -739,8 +739,8 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       return ERR_INTERNAL_ERROR;
    }
 
-   Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-   if (node == NULL)
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+   if (node == nullptr)
    {
       debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
       return ERR_INTERNAL_ERROR;
@@ -792,12 +792,12 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
          continue;
       }
 
-      DataCollectionTarget *target;
+      shared_ptr<DataCollectionTarget> target;
       uuid targetId = request->getFieldAsGUID(fieldId + 3);
       if (!targetId.isNull())
       {
-         NetObj *object = FindObjectByGUID(targetId, -1);
-         if (object == NULL)
+         shared_ptr<NetObj> object = FindObjectByGUID(targetId, -1);
+         if (object == nullptr)
          {
             TCHAR buffer[64];
             debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find target object with GUID %s (element %d)"),
@@ -813,7 +813,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
             status[i] = BULK_DATA_REC_FAILURE;
             continue;
          }
-         target = (DataCollectionTarget *)object;
+         target = static_pointer_cast<DataCollectionTarget>(object);
       }
       else
       {
@@ -822,7 +822,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
 
       UINT32 dciId = request->getFieldAsUInt32(fieldId);
       shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
-      if (dcObject == NULL)
+      if (dcObject == nullptr)
       {
          debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find DCI with ID %d on object %s [%d] (element %d)"),
                      dciId, target->getName(), target->getId(), i);
@@ -891,6 +891,6 @@ void AgentConnectionEx::setTcpProxySession(ClientSession *session)
  */
 void AgentConnectionEx::processTcpProxyData(UINT32 channelId, const void *data, size_t size)
 {
-   if (m_tcpProxySession != NULL)
+   if (m_tcpProxySession != nullptr)
       m_tcpProxySession->processTcpProxyData(this, channelId, data, size);
 }

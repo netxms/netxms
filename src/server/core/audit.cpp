@@ -254,6 +254,6 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
 #else
    WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1, js2, format, args);
 #endif
-   free(js1);
-   free(js2);
+   json_free(js1);
+   json_free(js2);
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, const SNMP_ObjectId& oid, SNMP_Tra
 	pRqPDU->bindVariable(new SNMP_Variable(eosEntryOID, oid.length()));
 
 	WORD result = 0;
-	SNMP_PDU *pRespPDU = NULL;
+	SNMP_PDU *pRespPDU = nullptr;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
 	if ((rcc == SNMP_ERR_SUCCESS) && (pRespPDU->getNumVariables() > 0) && (pRespPDU->getVariable(0)->getType() == ASN_OCTET_STRING))
@@ -73,24 +73,24 @@ static UINT32 NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	remoteIp = ntohl(remoteIp);
 	TCHAR ipAddrText[32];
 	DbgPrintf(6, _T("NDP(%s [%d]): found peer at %d.%d IP address %s"), node->getName(), node->getId(), slot, port, IpToStr(remoteIp, ipAddrText));
-	Node *remoteNode = FindNodeByIP(node->getZoneUIN(), remoteIp);
-	if (remoteNode == NULL)
+	shared_ptr<Node> remoteNode = FindNodeByIP(node->getZoneUIN(), remoteIp);
+	if (remoteNode == nullptr)
 	{
 		DbgPrintf(6, _T("NDP(%s [%d]): node object for IP %s not found"), node->getName(), node->getId(), ipAddrText);
 		return SNMP_ERR_SUCCESS;
 	}
 
-	Interface *ifLocal = node->findInterfaceByLocation(InterfacePhysicalLocation(0, slot, 0, port));
+	shared_ptr<Interface> ifLocal = node->findInterfaceByLocation(InterfacePhysicalLocation(0, slot, 0, port));
 	DbgPrintf(6, _T("NDP(%s [%d]): remote node is %s [%d], local interface object \"%s\""), node->getName(), node->getId(),
-	          remoteNode->getName(), remoteNode->getId(), (ifLocal != NULL) ? ifLocal->getName() : _T("(null)"));
-	if (ifLocal != NULL)
+	          remoteNode->getName(), remoteNode->getId(), (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"));
+	if (ifLocal != nullptr)
 	{
 		WORD rport = ReadRemoteSlotAndPort(node, oid, transport);
 		DbgPrintf(6, _T("NDP(%s [%d]): remote slot/port is %04X"), node->getName(), node->getId(), rport);
 		if (rport != 0)
 		{
-			Interface *ifRemote = remoteNode->findInterfaceByLocation(InterfacePhysicalLocation(0, rport >> 8, 0, rport & 0xFF));
-			if (ifRemote != NULL)
+			shared_ptr<Interface> ifRemote = remoteNode->findInterfaceByLocation(InterfacePhysicalLocation(0, rport >> 8, 0, rport & 0xFF));
+			if (ifRemote != nullptr)
 			{
 				LL_NEIGHBOR_INFO info;
 				info.objectId = remoteNode->getId();

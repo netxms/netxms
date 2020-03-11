@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 struct HashIndexElement
 {
    UT_hash_handle hh;
-   NetObj *object;
+   shared_ptr<NetObj> object;
    BYTE key[4];   // Actual key length may differ
 };
 
@@ -63,6 +63,7 @@ HashIndexBase::~HashIndexBase()
    HASH_ITER(hh, m_primary->elements, entry, tmp)
    {
       HASH_DEL(m_primary->elements, entry);
+      entry->object.~shared_ptr();
       MemFree(entry);
    }
    MemFree(m_primary);
@@ -70,6 +71,7 @@ HashIndexBase::~HashIndexBase()
    HASH_ITER(hh, m_secondary->elements, entry, tmp)
    {
       HASH_DEL(m_secondary->elements, entry);
+      entry->object.~shared_ptr();
       MemFree(entry);
    }
    MemFree(m_secondary);
@@ -91,7 +93,7 @@ void HashIndexBase::swapAndWait()
 /**
  * Acquire index
  */
-HashIndexHead *HashIndexBase::acquireIndex()
+HashIndexHead *HashIndexBase::acquireIndex() const
 {
    HashIndexHead *h;
    while(true)
@@ -116,12 +118,12 @@ static inline void ReleaseIndex(HashIndexHead *h)
 /**
  * Add element to index
  */
-static inline bool SetElement(HashIndexHead *index, const void *key, size_t keyLength, NetObj *object)
+static inline bool SetElement(HashIndexHead *index, const void *key, size_t keyLength, const shared_ptr<NetObj>& object)
 {
    bool replace;
    HashIndexElement *entry;
    HASH_FIND(hh, index->elements, key, keyLength, entry);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
       entry->object = object;
       replace = true;
@@ -129,8 +131,8 @@ static inline bool SetElement(HashIndexHead *index, const void *key, size_t keyL
    else
    {
       entry = static_cast<HashIndexElement*>(MemAlloc(sizeof(HashIndexElement) + keyLength - 4));
+      new(&entry->object) shared_ptr<NetObj>(object);
       memcpy(entry->key, key, keyLength);
-      entry->object = object;
       HASH_ADD_KEYPTR(hh, index->elements, entry->key, keyLength, entry);
       replace = false;
    }
@@ -140,7 +142,7 @@ static inline bool SetElement(HashIndexHead *index, const void *key, size_t keyL
 /**
  * Add object to index
  */
-bool HashIndexBase::put(const void *key, NetObj *object)
+bool HashIndexBase::put(const void *key, const shared_ptr<NetObj>& object)
 {
    MutexLock(m_writerLock);
    SetElement(m_secondary, key, m_keyLength, object);
@@ -158,9 +160,10 @@ static inline void RemoveElement(HashIndexHead *index, const void *key, size_t k
 {
    HashIndexElement *entry;
    HASH_FIND(hh, index->elements, key, keyLength, entry);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
       HASH_DEL(index->elements, entry);
+      entry->object.~shared_ptr();
       MemFree(entry);
    }
 }
@@ -181,12 +184,12 @@ void HashIndexBase::remove(const void *key)
 /**
  * Get object with given key
  */
-NetObj *HashIndexBase::get(const void *key)
+shared_ptr<NetObj> HashIndexBase::get(const void *key) const
 {
    HashIndexHead *index = acquireIndex();
    HashIndexElement *entry;
    HASH_FIND(hh, index->elements, key, m_keyLength, entry);
-   NetObj *object = (entry != NULL) ? entry->object : NULL;
+   shared_ptr<NetObj> object = (entry != nullptr) ? entry->object : shared_ptr<NetObj>();
    ReleaseIndex(index);
    return object;
 }
@@ -194,14 +197,14 @@ NetObj *HashIndexBase::get(const void *key)
 /**
  * Find element within index
  */
-NetObj *HashIndexBase::find(bool (*comparator)(NetObj *, void *), void *context)
+shared_ptr<NetObj> HashIndexBase::find(bool (*comparator)(NetObj *, void *), void *context) const
 {
-   NetObj *object = NULL;
+   shared_ptr<NetObj> object;
    HashIndexHead *index = acquireIndex();
    HashIndexElement *entry, *tmp;
    HASH_ITER(hh, index->elements, entry, tmp)
    {
-      if (comparator(entry->object, context))
+      if (comparator(entry->object.get(), context))
       {
          object = entry->object;
          break;
@@ -214,7 +217,7 @@ NetObj *HashIndexBase::find(bool (*comparator)(NetObj *, void *), void *context)
 /**
  * Get index size
  */
-int HashIndexBase::size()
+int HashIndexBase::size() const
 {
    HashIndexHead *index = acquireIndex();
    int s = HASH_COUNT(index->elements);
@@ -225,13 +228,13 @@ int HashIndexBase::size()
 /**
  * Enumerate all elements
  */
-void HashIndexBase::forEach(void (*callback)(const void *, NetObj *, void *), void *context)
+void HashIndexBase::forEach(void (*callback)(const void *, NetObj *, void *), void *context) const
 {
    HashIndexHead *index = acquireIndex();
    HashIndexElement *entry, *tmp;
    HASH_ITER(hh, index->elements, entry, tmp)
    {
-      callback(entry->key, entry->object, context);
+      callback(entry->key, entry->object.get(), context);
    }
    ReleaseIndex(index);
 }

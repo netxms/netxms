@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -142,7 +142,7 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount, const UINT32 userId)
 StringBuffer LogHandle::buildObjectAccessConstraint(const UINT32 userId)
 {
    StringBuffer constraint;
-	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
+	SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
    IntegerArray<UINT32> *allowed = new IntegerArray<UINT32>(objects->size());
    IntegerArray<UINT32> *restricted = new IntegerArray<UINT32>(objects->size());
 	for(int i = 0; i < objects->size(); i++)
@@ -159,7 +159,6 @@ StringBuffer LogHandle::buildObjectAccessConstraint(const UINT32 userId)
             restricted->add(object->getId());
          }
       }
-      object->decRefCount();
 	}
    delete objects;
 

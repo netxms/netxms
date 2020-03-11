@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,9 @@
 /**
  * Static data
  */
-static ObjectIndex s_jobNodes;
+static AbstractIndexWithDestructor<ServerJobQueue> s_jobQueues(Ownership::True);
+static AbstractIndex<ServerJobQueue> s_jobQueueIndex(Ownership::False);
+static Mutex s_indexLock;
 
 /**
  * Add job
@@ -44,9 +46,16 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 	bool success = false;
 	if (job->isValid())
 	{
-		ServerJobQueue *queue = job->getNode()->getJobQueue();
+	   s_indexLock.lock();
+		ServerJobQueue *queue = s_jobQueues.get(job->getObjectId());
+		if (queue == nullptr)
+		{
+		   queue = new ServerJobQueue(job->getObjectId());
+		   s_jobQueues.put(job->getObjectId(), queue);
+		}
+		s_indexLock.unlock();
 		queue->add(job);
-		s_jobNodes.put(job->getId(), job->getNode());
+		s_jobQueueIndex.put(job->getId(), queue);
 		success = true;
 	}
 	return success;
@@ -57,7 +66,7 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
  */
 void UnregisterJob(UINT32 jobId)
 {
-	s_jobNodes.remove(jobId);
+   s_jobQueueIndex.remove(jobId);
 }
 
 /**
@@ -66,17 +75,16 @@ void UnregisterJob(UINT32 jobId)
 struct __job_callback_data
 {
 	NXCPMessage *msg;
-	UINT32 jobCount;
-	UINT32 baseId;
+	uint32_t jobCount;
+	uint32_t baseId;
 };
 
 /**
  * Callback for job enumeration
  */
-static void JobListCallback(NetObj *object, void *data)
+static void JobListCallback(ServerJobQueue *queue, void *data)
 {
 	struct __job_callback_data *jcb = (struct __job_callback_data *)data;
-	ServerJobQueue *queue = ((Node *)object)->getJobQueue();
 	jcb->jobCount += queue->fillMessage(jcb->msg, &jcb->baseId);
 }
 
@@ -90,55 +98,52 @@ void GetJobList(NXCPMessage *msg)
 	jcb.msg = msg;
 	jcb.jobCount = 0;
 	jcb.baseId = VID_JOB_LIST_BASE;
-	g_idxNodeById.forEach(JobListCallback, &jcb);
+	s_jobQueues.forEach(JobListCallback, &jcb);
 	msg->setField(VID_JOB_COUNT, jcb.jobCount);
 }
 
 /**
- * Implementatoin for job status changing operations: cancel, hold, unhold
+ * Implementation for job status changing operations: cancel, hold, unhold
  */
 static UINT32 ChangeJobStatus(UINT32 userId, NXCPMessage *msg, int operation)
 {
 	UINT32 rcc = RCC_INVALID_JOB_ID;
 	UINT32 jobId = msg->getFieldAsUInt32(VID_JOB_ID);
-	Node *node = (Node *)s_jobNodes.get(jobId);
-	if (node != NULL)
-	{
-		ServerJobQueue *queue = node->getJobQueue();
-		if (queue->findJob(jobId) != NULL)
-		{
-			if (node->checkAccessRights(userId, OBJECT_ACCESS_CONTROL))
-			{
-				switch(operation)
-				{
-					case CANCEL_JOB:
-						rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
-						break;
-					case HOLD_JOB:
-						rcc = queue->hold(jobId) ? RCC_SUCCESS : RCC_JOB_HOLD_FAILED;
-						break;
-					case UNHOLD_JOB:
-						rcc = queue->unhold(jobId) ? RCC_SUCCESS : RCC_JOB_UNHOLD_FAILED;
-						break;
-					default:
-						rcc = RCC_INTERNAL_ERROR;
-						break;
-				}
-				nxlog_debug_tag(DEBUG_TAG, 4, _T("Processed job status change request (userId=%u, operation=%d, jobId=%u, rcc=%u)"),
-				         userId, operation, jobId, rcc);
-			}
-			else
-			{
-				rcc = RCC_ACCESS_DENIED;
-			}
-		}
-		else
-		{
-			// Remove stalled record in job_id -> node mapping
-		   nxlog_debug_tag(DEBUG_TAG, 5, _T("Removing stalled job to node mapping for job ID %u"), jobId);
-			s_jobNodes.remove(jobId);
-		}
-	}
+   ServerJobQueue *queue = s_jobQueueIndex.get(jobId);
+   if (queue->findJob(jobId) != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(queue->getObjectId());
+      if ((object != nullptr) && object->checkAccessRights(userId, OBJECT_ACCESS_CONTROL))
+      {
+         switch(operation)
+         {
+            case CANCEL_JOB:
+               rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
+               break;
+            case HOLD_JOB:
+               rcc = queue->hold(jobId) ? RCC_SUCCESS : RCC_JOB_HOLD_FAILED;
+               break;
+            case UNHOLD_JOB:
+               rcc = queue->unhold(jobId) ? RCC_SUCCESS : RCC_JOB_UNHOLD_FAILED;
+               break;
+            default:
+               rcc = RCC_INTERNAL_ERROR;
+               break;
+         }
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Processed job status change request (userId=%u, operation=%d, jobId=%u, rcc=%u)"),
+                  userId, operation, jobId, rcc);
+      }
+      else
+      {
+         rcc = RCC_ACCESS_DENIED;
+      }
+   }
+   else
+   {
+      // Remove stalled record in job_id -> node mapping
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Removing stalled job to queue mapping for job ID %u"), jobId);
+      s_jobQueueIndex.remove(jobId);
+   }
 	return rcc;
 }
 
@@ -169,9 +174,8 @@ UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, NXCPMessage *msg)
 /**
  * Cleanup job queue
  */
-static void CleanupJobQueue(NetObj *object, void *data)
+static void CleanupJobQueue(ServerJobQueue *queue, void *data)
 {
-	ServerJobQueue *queue = ((Node *)object)->getJobQueue();
 	queue->cleanup();
 }
 
@@ -186,7 +190,7 @@ THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
 	while(!SleepAndCheckForShutdown(10))
 	{
 	   nxlog_debug_tag(DEBUG_TAG, 7, _T("Checking queues"));
-		g_idxNodeById.forEach(CleanupJobQueue, NULL);
+	   s_jobQueues.forEach(CleanupJobQueue, NULL);
 	}
 
 	nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread stopped"));

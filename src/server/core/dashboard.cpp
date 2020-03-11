@@ -232,7 +232,7 @@ UINT32 Dashboard::modifyFromMessageInternal(NXCPMessage *request)
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool Dashboard::showThresholdSummary()
+bool Dashboard::showThresholdSummary() const
 {
 	return false;
 }
@@ -264,7 +264,7 @@ void DashboardGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool DashboardGroup::showThresholdSummary()
+bool DashboardGroup::showThresholdSummary() const
 {
    return false;
 }

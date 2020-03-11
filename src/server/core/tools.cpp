@@ -74,7 +74,7 @@ InetAddress GetLocalIpAddr()
 {
    InetAddress addr;
    InterfaceList *pIfList = GetLocalInterfaceList();
-   if (pIfList != NULL)
+   if (pIfList != nullptr)
    {
       // Find first interface with IP address
       for(int i = 0; i < pIfList->size(); i++)
@@ -195,7 +195,7 @@ BOOL ExecCommand(TCHAR *pszCommand)
    si.dwFlags = 0;
 
    // Create new process
-   if (!CreateProcess(NULL, pszCommand, NULL, NULL, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &si, &pi))
+   if (!CreateProcess(nullptr, pszCommand, nullptr, nullptr, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, nullptr, nullptr, &si, &pi))
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
@@ -223,7 +223,7 @@ BOOL ExecCommand(TCHAR *pszCommand)
 #else
 		pTmp = strdup(pszCommand);
 #endif
-		if (pTmp != NULL)
+		if (pTmp != nullptr)
 		{
 			pCmd[nCount++] = pTmp;
 			int nLen = strlen(pTmp);
@@ -257,7 +257,7 @@ BOOL ExecCommand(TCHAR *pszCommand)
 						break;
 				}
 			}
-			pCmd[nCount] = NULL;
+			pCmd[nCount] = nullptr;
 
 			if ((stat(pCmd[0], &st) == 0) && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
 			{
@@ -373,7 +373,7 @@ void EscapeString(StringBuffer &str)
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
    bool success = DBExecute(hStmt) ? true : false;
@@ -390,15 +390,15 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneUIN, const TCHAR *hostn
    if (!ipAddr.isValid() && IsZoningEnabled() && (zoneUIN != 0))
    {
       // resolve address through proxy agent
-      Zone *zone = FindZoneByUIN(zoneUIN);
-      if (zone != NULL)
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zone != nullptr)
       {
-         Node *proxy = static_cast<Node*>(FindObjectById(zone->getProxyNodeId(NULL), OBJECT_NODE));
-         if (proxy != NULL)
+         shared_ptr<NetObj> proxy = FindObjectById(zone->getProxyNodeId(nullptr), OBJECT_NODE);
+         if (proxy != nullptr)
          {
             TCHAR query[256], buffer[128];
             _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s)"), hostname);
-            if (proxy->getItemFromAgent(query, 128, buffer) == ERR_SUCCESS)
+            if (static_cast<Node&>(*proxy).getItemFromAgent(query, 128, buffer) == ERR_SUCCESS)
             {
                ipAddr = InetAddress::parse(buffer);
             }
@@ -430,8 +430,8 @@ ObjectUrl::ObjectUrl(NXCPMessage *msg, UINT32 baseId)
 ObjectUrl::ObjectUrl(DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
-   m_url = DBGetField(hResult, row, 1, NULL, 0);
-   m_description = DBGetField(hResult, row, 2, NULL, 0);
+   m_url = DBGetField(hResult, row, 1, nullptr, 0);
+   m_description = DBGetField(hResult, row, 2, nullptr, 0);
 }
 
 /**
@@ -470,69 +470,52 @@ json_t *ObjectUrl::toJson() const
  */
 int DistanceSortCallback(const ObjectsDistance **obj1, const ObjectsDistance **obj2)
 {
-   return (*obj1)->m_distance - (*obj2)->m_distance;
+   return (*obj1)->distance - (*obj2)->distance;
 }
 
 /**
  * Calculate nearest objects from current one
  * Object ref count will be automatically decreased on array delete
  */
-ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDistance, bool (* filter)(NetObj *object, void *data), void *sortData, int (* calculateRealDistance)(GeoLocation &loc1, GeoLocation &loc2))
+ObjectArray<ObjectsDistance> *FindNearestObjects(uint32_t currObjectId, int maxDistance,
+         bool (* filter)(NetObj *object, void *context), void *context, int (* calculateRealDistance)(GeoLocation &loc1, GeoLocation &loc2))
 {
-   NetObj *currObj = FindObjectById(currObjectId);
-   currObj->incRefCount();
+   shared_ptr<NetObj> currObj = FindObjectById(currObjectId);
    GeoLocation currLocation = currObj->getGeoLocation();
    if (currLocation.getType() == GL_UNSET)
-   {
-      currObj->decRefCount();
-      return NULL;
-   }
+      return nullptr;
 
-   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, filter, sortData);
-   ObjectArray<ObjectsDistance> *result = new ObjectArray<ObjectsDistance>(16, 16, Ownership::True);
+   SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects(filter, context);
+   auto result = new ObjectArray<ObjectsDistance>(16, 16, Ownership::True);
 	for(int i = 0; i < objects->size(); i++)
 	{
 	   NetObj *object = objects->get(i);
+      if (object->getId() == currObjectId)
+         continue;
+
       GeoLocation location = object->getGeoLocation();
       if (currLocation.getType() == GL_UNSET)
-      {
-         object->decRefCount();
          continue;
-      }
 
       // leave object only in given distance
       int distance = currLocation.calculateDistance(location);
       if (distance > maxDistance)
-      {
-         object->decRefCount();
          continue;
-      }
-
-      // remove current object from list
-      if (object->getId() == currObjectId)
-      {
-         object->decRefCount();
-         continue;
-      }
 
       // Filter objects by real path calculation
-      if (calculateRealDistance != NULL)
+      if (calculateRealDistance != nullptr)
       {
          distance = calculateRealDistance(location, currLocation);
-         if(distance > maxDistance)
-         {
-            object->decRefCount();
+         if (distance > maxDistance)
             continue;
-         }
       }
 
-      result->add(new ObjectsDistance(object, distance));
+      result->add(new ObjectsDistance(objects->getShared(i), distance));
    }
 
    // Sort filtered objects
    result->sort(DistanceSortCallback);
 
-   currObj->decRefCount();
    return result;
 }
 
@@ -549,7 +532,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(table);
       query.append(_T(" ("));
       int count = 0;
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(columns[i]);
          query.append(_T(','));
@@ -562,7 +545,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(_T(") ON CONFLICT ("));
       query.append(idColumn);
       query.append(_T(") DO UPDATE SET "));
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(columns[i]);
          query.append(_T("=excluded."));
@@ -576,7 +559,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(_T("MERGE INTO "));
       query.append(table);
       query.append(_T(" t USING (SELECT "));
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(_T("? AS "));
          query.append(columns[i]);
@@ -589,7 +572,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(_T("=d."));
       query.append(idColumn);
       query.append(_T(") WHEN MATCHED THEN UPDATE SET "));
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(_T("t."));
          query.append(columns[i]);
@@ -599,14 +582,14 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       }
       query.shrink();
       query.append(_T(" WHEN NOT MATCHED THEN INSERT ("));
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(columns[i]);
          query.append(_T(','));
       }
       query.append(idColumn);
       query.append(_T(") VALUES ("));
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(_T("d."));
          query.append(columns[i]);
@@ -622,7 +605,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(table);
       query.append(_T(" ("));
       int count = 0;
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(columns[i]);
          query.append(_T(','));
@@ -633,7 +616,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       for(int i = 0; i < count; i++)
          query.append(_T(",?"));
       query.append(_T(") ON DUPLICATE KEY UPDATE "));
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(columns[i]);
          query.append(_T("=VALUES("));
@@ -650,7 +633,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(_T("UPDATE "));
       query.append(table);
       query.append(_T(" SET "));
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(columns[i]);
          query.append(_T("=?,"));
@@ -666,7 +649,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(table);
       query.append(_T(" ("));
       int count = 0;
-      for(int i = 0; columns[i] != NULL; i++)
+      for(int i = 0; columns[i] != nullptr; i++)
       {
          query.append(columns[i]);
          query.append(_T(','));

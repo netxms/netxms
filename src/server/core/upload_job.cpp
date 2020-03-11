@@ -32,14 +32,14 @@ MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
 /**
  * Scheduled file upload
  */
-static void ScheduledFileUpload(shared_ptr<ScheduledTaskParameters> parameters)
+static void ScheduledFileUpload(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
-   Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
-   if (object != NULL)
+   shared_ptr<NetObj> object = FindObjectById(parameters->m_objectId, OBJECT_NODE);
+   if (object != nullptr)
    {
       if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
       {
-         ServerJob *job = new FileUploadJob(parameters->m_persistentData, parameters->m_objectId, parameters->m_userId);
+         ServerJob *job = new FileUploadJob(parameters->m_persistentData, static_pointer_cast<Node>(object), parameters->m_userId);
          if (!AddJob(job))
          {
             delete job;
@@ -47,10 +47,14 @@ static void ScheduledFileUpload(shared_ptr<ScheduledTaskParameters> parameters)
          }
       }
       else
+      {
          DbgPrintf(4, _T("ScheduledUploadFile: Access to node %s denied"), object->getName());
+      }
    }
    else
+   {
       DbgPrintf(4, _T("ScheduledUploadFile: Node with id=\'%d\' not found"), parameters->m_userId);
+   }
 }
 
 /**
@@ -66,8 +70,8 @@ void FileUploadJob::init()
 /**
  * Constructor
  */
-FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold)
-              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->getId(), userId, createOnHold)
+FileUploadJob::FileUploadJob(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId, bool createOnHold)
+              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node, userId, createOnHold)
 {
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Upload file %s"), GetCleanFileName(localFile));
@@ -86,24 +90,18 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 /**
  * Create file upload job from scheduled task
  */
-FileUploadJob::FileUploadJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
-              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), nodeId, userId, false)
+FileUploadJob::FileUploadJob(const TCHAR *params, const shared_ptr<Node>& node, uint32_t userId)
+              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node, userId, false)
 {
    m_localFile = NULL;
    m_localFileFullPath = NULL;
    m_remoteFile = NULL;
    m_info = NULL;
 
-   if (!isValid())
-   {
-      nxlog_debug(4, _T("FileUploadJob: base job object is invalid for (\"%s\", nodeId=%d, userId=%d)"), params, nodeId, userId);
-      return;
-   }
-
    StringList fileList(params, _T(","));
    if (fileList.size() < 2)
    {
-      nxlog_debug(4, _T("FileUploadJob: invalid job parameters \"%s\" (nodeId=%d, userId=%d)"), params, nodeId, userId);
+      nxlog_debug(4, _T("FileUploadJob: invalid job parameters \"%s\" (nodeId=%d, userId=%d)"), params, node->getId(), userId);
       invalidate();
       return;
    }
@@ -173,7 +171,7 @@ ServerJobResult FileUploadJob::run()
 		ThreadSleep(5);
 	}
 
-	AgentConnectionEx *conn = getNode()->createAgentConnection();
+	AgentConnectionEx *conn = static_cast<Node&>(*m_object).createAgentConnection();
 	if (conn != NULL)
 	{
 		m_fileSize = (INT64)FileSize(m_localFileFullPath);
@@ -247,5 +245,5 @@ const String FileUploadJob::serializeParameters()
 void FileUploadJob::rescheduleExecution()
 {
    AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), nullptr,
-            0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), nullptr, true);//TODO: change to correct user
+            0, m_objectId, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);//TODO: change to correct user
 }

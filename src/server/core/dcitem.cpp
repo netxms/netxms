@@ -50,7 +50,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    }
    else
    {
-      m_ppValueCache = NULL;
+      m_ppValueCache = nullptr;
    }
    m_tPrevValueTimeStamp = shadowCopy ? src->m_tPrevValueTimeStamp : 0;
    m_bCacheLoaded = shadowCopy ? src->m_bCacheLoaded : false;
@@ -72,7 +72,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
 	}
 	else
 	{
-		m_thresholds = NULL;
+		m_thresholds = nullptr;
 	}
 }
 
@@ -87,11 +87,10 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
  *    retention_type,polling_interval_src,retention_time_src,snmp_version
  */
-DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay) : DCObject()
+DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
    TCHAR readBuffer[4096];
 
-   m_owner = owner;
    m_id = DBGetFieldULong(hResult, row, 0);
    m_name = DBGetField(hResult, row, 1, readBuffer, 4096);
    m_source = (BYTE)DBGetFieldLong(hResult, row, 2);
@@ -100,17 +99,17 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *o
    m_retentionTime = DBGetFieldLong(hResult, row, 5);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 6);
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, row, 7);
-   TCHAR *pszTmp = DBGetField(hResult, row, 8, NULL, 0);
+   TCHAR *pszTmp = DBGetField(hResult, row, 8, nullptr, 0);
    setTransformationScript(pszTmp);
    MemFree(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, row, 9);
    m_description = DBGetField(hResult, row, 10, readBuffer, 4096);
    m_instance = DBGetField(hResult, row, 11, readBuffer, 4096);
    m_dwTemplateItemId = DBGetFieldULong(hResult, row, 12);
-   m_thresholds = NULL;
+   m_thresholds = nullptr;
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
-   m_ppValueCache = NULL;
+   m_ppValueCache = nullptr;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
    m_flags = (WORD)DBGetFieldLong(hResult, row, 13);
@@ -118,20 +117,20 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *o
 	m_sourceNode = DBGetFieldULong(hResult, row, 15);
 	m_nBaseUnits = DBGetFieldLong(hResult, row, 16);
 	m_nMultiplier = DBGetFieldLong(hResult, row, 17);
-	m_customUnitName = DBGetField(hResult, row, 18, NULL, 0);
-	m_pszPerfTabSettings = DBGetField(hResult, row, 19, NULL, 0);
+	m_customUnitName = DBGetField(hResult, row, 18, nullptr, 0);
+	m_pszPerfTabSettings = DBGetField(hResult, row, 19, nullptr, 0);
 	m_systemTag = DBGetField(hResult, row, 20, readBuffer, 4096);
 	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 21));
 	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, row, 22);
 	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 23);
 	m_instanceDiscoveryData = DBGetField(hResult, row, 24, readBuffer, 4096);
-	m_instanceFilterSource = NULL;
-   m_instanceFilter = NULL;
-   pszTmp = DBGetField(hResult, row, 25, NULL, 0);
+	m_instanceFilterSource = nullptr;
+   m_instanceFilter = nullptr;
+   pszTmp = DBGetField(hResult, row, 25, nullptr, 0);
 	setInstanceFilter(pszTmp);
    MemFree(pszTmp);
 	m_sampleCount = DBGetFieldLong(hResult, row, 26);
-   m_comments = DBGetField(hResult, row, 27, NULL, 0);
+   m_comments = DBGetField(hResult, row, 27, nullptr, 0);
    m_guid = DBGetFieldGUID(hResult, row, 28);
    DBGetField(hResult, row, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
    m_instanceRetentionTime = DBGetFieldLong(hResult, row, 30);
@@ -139,18 +138,18 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *o
    m_relatedObject = DBGetFieldLong(hResult, row, 32);
    m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 33));
    m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 34));
-   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 35, NULL, 0) : NULL;
-   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 36, NULL, 0) : NULL;
+   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 35, nullptr, 0) : nullptr;
+   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 36, nullptr, 0) : nullptr;
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 37));
 
    int effectivePollingInterval = getEffectivePollingInterval();
-   m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
+   m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
    // Load last raw value from database
 	TCHAR szQuery[256];
    _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%d"), m_id);
    DB_RESULT hTempResult = DBSelect(hdb, szQuery);
-   if (hTempResult != NULL)
+   if (hTempResult != nullptr)
    {
       if (DBGetNumRows(hTempResult) > 0)
       {
@@ -171,23 +170,23 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *o
 /**
  * Constructor for creating new DCItem from scratch
  */
-DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType,
-         const TCHAR *pollingInterval, const TCHAR *retentionTime, DataCollectionOwner *owner,
+DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, const TCHAR *pollingInterval,
+         const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description, const TCHAR *systemTag)
 	: DCObject(id, name, source, pollingInterval, retentionTime, owner, description, systemTag)
 {
    m_dataType = dataType;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
-   m_thresholds = NULL;
+   m_thresholds = nullptr;
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
-   m_ppValueCache = NULL;
+   m_ppValueCache = nullptr;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
-	m_customUnitName = NULL;
+	m_customUnitName = nullptr;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
 
@@ -197,19 +196,19 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType,
 /**
  * Create DCItem from import file
  */
-DCItem::DCItem(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(config, owner)
+DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : DCObject(config, owner)
 {
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
-   m_ppValueCache = NULL;
+   m_ppValueCache = nullptr;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
 	m_nBaseUnits = DCI_BASEUNITS_OTHER;
 	m_nMultiplier = 1;
-	m_customUnitName = NULL;
+	m_customUnitName = nullptr;
 	m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
    _tcslcpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
@@ -220,7 +219,7 @@ DCItem::DCItem(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(confi
 		m_flags |= DCF_RAW_VALUE_OCTET_STRING;
 
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
-	if (thresholdsRoot != NULL)
+	if (thresholdsRoot != nullptr)
 	{
 		ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
 		m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, Ownership::True);
@@ -232,7 +231,7 @@ DCItem::DCItem(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(confi
 	}
 	else
 	{
-		m_thresholds = NULL;
+		m_thresholds = nullptr;
 	}
 
 	updateCacheSizeInternal(false);
@@ -266,7 +265,7 @@ void DCItem::clearCache()
    for(UINT32 i = 0; i < m_cacheSize; i++)
       delete m_ppValueCache[i];
    MemFree(m_ppValueCache);
-   m_ppValueCache = NULL;
+   m_ppValueCache = nullptr;
    m_cacheSize = 0;
 }
 
@@ -284,11 +283,11 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
 				  _T("last_event_timestamp,match_count,state_before_maint,")
 				  _T("last_checked_value FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
-	if (hStmt != NULL)
+	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			int count = DBGetNumRows(hResult);
 			if (count > 0)
@@ -318,16 +317,16 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
       _T("grace_period_start"),_T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
       _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"),
-      NULL
+      nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("items"), _T("item_id"), m_id, columns);
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		return false;
 
    lock();
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_owner == NULL) ? 0 : m_owner->getId());
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_ownerId);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME - 1);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_source);
@@ -376,7 +375,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBFreeStatement(hStmt);
 
    // Save thresholds
-   if (bResult && (m_thresholds != NULL))
+   if (bResult && (m_thresholds != nullptr))
    {
 		for(int i = 0; i < m_thresholds->size(); i++)
          m_thresholds->get(i)->saveToDB(hdb, i);
@@ -386,7 +385,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT threshold_id FROM thresholds WHERE item_id=%d"), m_id);
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int iNumRows = DBGetNumRows(hResult);
       for(int i = 0; i < iNumRows; i++)
@@ -409,7 +408,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    if (!IsDatabaseRecordExist(hdb, _T("raw_dci_values"), _T("item_id"), m_id))
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (?,?,?)"));
-      if (hStmt == NULL)
+      if (hStmt == nullptr)
       {
          unlock();
          return false;
@@ -430,35 +429,37 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
  */
 void DCItem::checkThresholds(ItemValue &value)
 {
-	if (m_thresholds == NULL)
+	if (m_thresholds == nullptr)
 		return;
+
+	auto owner = m_owner.lock();
 
 	bool thresholdDeactivated = false;
    for(int i = 0; i < m_thresholds->size(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
       ItemValue checkValue, thresholdValue;
-      ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue, thresholdValue, m_owner, this);
+      ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue, thresholdValue, owner, this);
       t->setLastCheckedValue(checkValue);
       switch(result)
       {
          case ThresholdCheckResult::ACTIVATED:
             {
-               PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
+               PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
                      s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
                      checkValue.getString(), m_id, m_instance.cstr(), 0, value.getString());
 				   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
-				   if (evt != NULL)
+				   if (evt != nullptr)
 				   {
 					   t->markLastEvent(evt->getSeverity());
 				   }
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing
             }
-            NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
+            NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::DEACTIVATED:
-            PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
+            PostDciEventWithNames(t->getRearmEventCode(), m_ownerId, m_id, "ssissss",
                   s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(),
                   thresholdValue.getString(), checkValue.getString(), value.getString());
             if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -466,20 +467,20 @@ void DCItem::checkThresholds(ItemValue &value)
                // this flag used to re-send activation event for next active threshold
                thresholdDeactivated = true;
             }
-            NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
+            NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
             {
    				// Check if we need to re-sent threshold violation event
-	            time_t now = time(NULL);
+	            time_t now = time(nullptr);
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now)))
 				   {
-                  PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
+                  PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
                         s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
                         checkValue.getString(), m_id, m_instance.cstr(), 1, value.getString());
                   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
-					   if (evt != NULL)
+					   if (evt != nullptr)
 					   {
 						   t->markLastEvent(evt->getSeverity());
 					   }
@@ -512,9 +513,9 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_MULTIPLIER, (UINT32)m_nMultiplier);
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
 	pMsg->setField(VID_NPE_NAME, m_predictionEngine);
-	if (m_customUnitName != NULL)
+	if (m_customUnitName != nullptr)
 		pMsg->setField(VID_CUSTOM_UNITS_NAME, m_customUnitName);
-	if (m_thresholds != NULL)
+	if (m_thresholds != nullptr)
 	{
 		pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
 		UINT32 dwId = VID_DCI_THRESHOLD_BASE;
@@ -543,8 +544,9 @@ void DCItem::deleteFromDatabase()
    QueueSQLRequest(szQuery);
    QueueRawDciDataDelete(m_id);
 
-   if (m_owner->isDataCollectionTarget())
-      static_cast<DataCollectionTarget*>(m_owner)->scheduleItemDataCleanup(m_id);
+   auto owner = m_owner.lock();
+   if ((owner != nullptr) && owner->isDataCollectionTarget())
+      static_cast<DataCollectionTarget*>(owner.get())->scheduleItemDataCleanup(m_id);
 }
 
 /**
@@ -613,13 +615,13 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
          (*ppdwMapId)[*pdwNumMaps] = ppNewList[i]->getId();
          (*pdwNumMaps)++;
       }
-      if (ppNewList[i] != NULL)
+      if (ppNewList[i] != nullptr)
          ppNewList[i]->updateFromMessage(pMsg, dwId);
    }
 
 	if (dwNum > 0)
 	{
-		if (m_thresholds != NULL)
+		if (m_thresholds != nullptr)
 		{
 			m_thresholds->setOwner(Ownership::False);
 			m_thresholds->clear();
@@ -631,7 +633,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 		}
 		for(UINT32 i = 0; i < dwNum; i++)
       {
-         if (ppNewList[i] != NULL)
+         if (ppNewList[i] != nullptr)
 			   m_thresholds->add(ppNewList[i]);
       }
 	}
@@ -662,8 +664,10 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
 
    lock();
 
+   auto owner = m_owner.lock();
+
    // Normally m_owner shouldn't be NULL for polled items, but who knows...
-   if (m_owner == NULL)
+   if (owner == nullptr)
    {
       unlock();
       return false;
@@ -677,7 +681,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
 
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
-   if ((m_owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
+   if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
       if (!transform(*pValue, (tmTimeStamp > m_tPrevValueTimeStamp) ? (tmTimeStamp - m_tPrevValueTimeStamp) : 0))
       {
@@ -709,25 +713,25 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
 
 	// Save transformed value to database
    if (m_retentionType != DC_RETENTION_NONE)
-	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), getStorageClass());
+	   QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), getStorageClass());
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
 #ifdef WITH_ZMQ
-   ZmqPublishData(m_owner->getId(), m_id, m_name, pValue->getString());
+   ZmqPublishData(owner->getId(), m_id, m_name, pValue->getString());
 #endif
 
    // Update prediction engine
    if (m_predictionEngine[0] != 0)
    {
       PredictionEngine *engine = FindPredictionEngine(m_predictionEngine);
-      if (engine != NULL)
-         engine->update(m_owner->getId(), m_id, getStorageClass(), tmTimeStamp, pValue->getDouble());
+      if (engine != nullptr)
+         engine->update(owner->getId(), m_id, getStorageClass(), tmTimeStamp, pValue->getDouble());
    }
 
    // Check thresholds and add value to cache
    if (m_bCacheLoaded && (tmTimeStamp >= m_tPrevValueTimeStamp) &&
-       ((g_offlineDataRelevanceTime <= 0) || (tmTimeStamp > (time(NULL) - g_offlineDataRelevanceTime))))
+       ((g_offlineDataRelevanceTime <= 0) || (tmTimeStamp > (time(nullptr) - g_offlineDataRelevanceTime))))
    {
       if (hasScriptThresholds())
       {
@@ -743,7 +747,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
          {
             Threshold *src = shadowCopy->m_thresholds->get(i);
             Threshold *dst = getThresholdById(src->getId());
-            if (dst != NULL)
+            if (dst != nullptr)
             {
                dst->reconcile(src);
             }
@@ -796,13 +800,6 @@ void DCItem::processNewError(bool noInstance, time_t now)
 {
    lock();
 
-   // Normally m_owner shouldn't be NULL for polled items, but who knows...
-   if (m_owner == NULL)
-   {
-      unlock();
-      return;
-   }
-
    m_dwErrorCount++;
 
 	for(int i = 0; i < getThresholdCount(); i++)
@@ -813,11 +810,11 @@ void DCItem::processNewError(bool noInstance, time_t now)
       {
          case ThresholdCheckResult::ACTIVATED:
             {
-               PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
+               PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
 					   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
                   m_id, m_instance.cstr(), 0, _T(""));
                shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
-				   if (evt != NULL)
+				   if (evt != nullptr)
 				   {
 					   t->markLastEvent(evt->getSeverity());
 				   }
@@ -826,12 +823,12 @@ void DCItem::processNewError(bool noInstance, time_t now)
                   i = m_thresholds->size();  // Stop processing
                }
             }
-            NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
+            NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::DEACTIVATED:
-            PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
+            PostDciEventWithNames(t->getRearmEventCode(), m_ownerId, m_id, "ssissss",
 					s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(), _T(""), _T(""), _T(""));
-            NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
+            NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
             {
@@ -839,11 +836,11 @@ void DCItem::processNewError(bool noInstance, time_t now)
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
 				   {
-					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
+					   PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
 						   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
 						   m_id, m_instance.cstr(), 1, _T(""));
 					   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
-					   if (evt != NULL)
+					   if (evt != nullptr)
 					   {
 						   t->markLastEvent(evt->getSeverity());
 					   }
@@ -882,21 +879,22 @@ void DCItem::generateEventsBasedOnThrDiff()
 {
    lock();
    int trCount = getThresholdCount() - 1;
-   for(int i = trCount; i >= 0; i--)//go backwards to generate events in correct order
+   uint32_t ownerId = m_owner.lock()->getId();
+   for(int i = trCount; i >= 0; i--)   // go backwards to generate events in correct order
    {
       Threshold *t = m_thresholds->get(i);
-      if(t->isReached() != t->wasReachedBeforeMaintenance())
+      if (t->isReached() != t->wasReachedBeforeMaintenance())
       {
-         if(t->isReached())
+         if (t->isReached())
          {
-            PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
+            PostDciEventWithNames(t->getEventCode(), ownerId, m_id, "ssssisds",
                               s_paramNamesReach, m_name.cstr(), m_description.cstr(), t->getStringValue(),
                               t->getLastCheckValue().getString(), m_id, m_instance.cstr(), 0,
                               (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
          }
          else
          {
-            PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
+            PostDciEventWithNames(t->getRearmEventCode(), ownerId, m_id, "ssissss",
                               s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instance.cstr(), t->getStringValue(),
                               t->getLastCheckValue().getString(),
                               (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
@@ -995,9 +993,9 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          break;
    }
 
-   if (m_transformationScript != NULL)
+   if (m_transformationScript != nullptr)
    {
-      ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner, createDescriptorInternal());
+      ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner.lock(), createDescriptorInternal());
       if (vm.isValid())
       {
          NXSL_Value *nxslValue = vm->createValue(value.getString());
@@ -1011,7 +1009,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          if (success)
          {
             nxslValue = vm->getResult();
-            if (nxslValue != NULL)
+            if (nxslValue != nullptr)
             {
                switch(m_dataType)
                {
@@ -1047,7 +1045,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          }
          else
          {
-            time_t now = time(NULL);
+            time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
                TCHAR buffer[1024];
@@ -1062,7 +1060,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
       }
       else if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
       {
-         time_t now = time(NULL);
+         time_t now = time(nullptr);
          if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
          {
             TCHAR buffer[1024];
@@ -1090,7 +1088,7 @@ int DCItem::getNXSLDataType() const
 /**
  * Set new ID and node/template association
  */
-void DCItem::changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doMacroExpansion)
+void DCItem::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion)
 {
 	DCObject::changeBinding(newId, newOwner, doMacroExpansion);
 
@@ -1098,7 +1096,7 @@ void DCItem::changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doM
 	if (newId != 0)
 	{
 		for(int i = 0; i < getThresholdCount(); i++)
-         m_thresholds->get(i)->bindToItem(m_id, m_owner->getId());
+         m_thresholds->get(i)->bindToItem(m_id, m_ownerId);
 	}
 
    clearCache();
@@ -1114,17 +1112,19 @@ void DCItem::changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doM
  */
 void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
 {
+   auto owner = m_owner.lock();
+
    // Sanity check
-   if (m_owner == NULL)
+   if (owner == nullptr)
    {
-      nxlog_debug(3, _T("DCItem::updateCacheSize() called for DCI %d when m_owner == NULL"), m_id);
+      nxlog_debug(3, _T("DCItem::updateCacheSize() called for DCI %d when m_owner == nullptr"), m_id);
       return;
    }
 
    // Minimum cache size is 1 for nodes (so GetLastValue can work)
    // and it is always 0 for templates
-   if (((m_owner->isDataCollectionTarget() && (m_owner->getObjectClass() != OBJECT_CLUSTER)) ||
-        ((m_owner->getObjectClass() == OBJECT_CLUSTER) && isAggregateOnCluster())) &&
+   if (((owner->isDataCollectionTarget() && (owner->getObjectClass() != OBJECT_CLUSTER)) ||
+        ((owner->getObjectClass() == OBJECT_CLUSTER) && isAggregateOnCluster())) &&
        (m_instanceDiscoveryMethod == IDM_NONE))
    {
       UINT32 requiredSize = 1;
@@ -1134,14 +1134,13 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
          if (requiredSize < m_thresholds->get(i)->getRequiredCacheSize())
             requiredSize = m_thresholds->get(i)->getRequiredCacheSize();
 
-		ObjectArray<NetObj> *conditions = g_idxConditionById.getObjects(true);
+		SharedObjectArray<NetObj> *conditions = g_idxConditionById.getObjects();
 		for(int i = 0; i < conditions->size(); i++)
       {
-		   ConditionObject *c = (ConditionObject *)conditions->get(i);
-			UINT32 size = c->getCacheSizeForDCI(m_id, conditionId == c->getId());
+		   ConditionObject *c = static_cast<ConditionObject*>(conditions->get(i));
+			uint32_t size = c->getCacheSizeForDCI(m_id, conditionId == c->getId());
          if (size > requiredSize)
             requiredSize = size;
-         c->decRefCount();
       }
 		delete conditions;
 
@@ -1153,7 +1152,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
    }
 
    nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::updateCacheSizeInternal(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
-            m_name.cstr(), m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
+            m_name.cstr(), owner->getName(), owner->getId(), m_requiredCacheSize, m_cacheSize);
 
    // Update cache if needed
    if (m_requiredCacheSize < m_cacheSize)
@@ -1173,7 +1172,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
       else
       {
          MemFree(m_ppValueCache);
-         m_ppValueCache = NULL;
+         m_ppValueCache = nullptr;
       }
    }
    else if (m_requiredCacheSize > m_cacheSize)
@@ -1182,7 +1181,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
       // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
       // to reduce load on database at server startup
       if (allowLoad &&
-          (m_owner != nullptr) &&
+          (m_ownerId != 0) &&
           (((m_requiredCacheSize - m_cacheSize) * getEffectivePollingInterval() > 300) ||
            (m_source == DS_PUSH_AGENT) ||
            (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)))
@@ -1230,7 +1229,7 @@ void DCItem::reloadCache(bool forceReload)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
-                    m_requiredCacheSize, m_owner->getId(), m_id);
+                    m_requiredCacheSize, m_ownerId, m_id);
          }
          break;
       case DB_SYNTAX_ORACLE:
@@ -1244,7 +1243,7 @@ void DCItem::reloadCache(bool forceReload)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
-                    m_owner->getId(), m_id, m_requiredCacheSize);
+                    m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
       case DB_SYNTAX_MYSQL:
@@ -1260,7 +1259,7 @@ void DCItem::reloadCache(bool forceReload)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
-                    m_owner->getId(), m_id, m_requiredCacheSize);
+                    m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
       case DB_SYNTAX_TSDB:
@@ -1274,7 +1273,7 @@ void DCItem::reloadCache(bool forceReload)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
-                    m_owner->getId(), m_id, m_requiredCacheSize);
+                    m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
       case DB_SYNTAX_DB2:
@@ -1288,7 +1287,7 @@ void DCItem::reloadCache(bool forceReload)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                _T("WHERE item_id=%d ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-               m_owner->getId(), m_id, m_requiredCacheSize);
+               m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
       default:
@@ -1301,7 +1300,7 @@ void DCItem::reloadCache(bool forceReload)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
-                    m_owner->getId(), m_id);
+                    m_ownerId, m_id);
          }
          break;
    }
@@ -1323,8 +1322,8 @@ void DCItem::reloadCache(bool forceReload)
       }
 
       nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
-               m_name.cstr(), m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
-      if (hResult != NULL)
+               m_name.cstr(), getOwnerName(), m_ownerId, m_requiredCacheSize, m_cacheSize);
+      if (hResult != nullptr)
       {
          // Create cache entries
          bool moreData = true;
@@ -1346,7 +1345,7 @@ void DCItem::reloadCache(bool forceReload)
          if (i < m_requiredCacheSize)
          {
             nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
-                     m_name.cstr(), m_owner->getName(), m_owner->getId(), m_requiredCacheSize - i);
+                     m_name.cstr(), getOwnerName(), m_ownerId, m_requiredCacheSize - i);
             for(; i < m_requiredCacheSize; i++)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
          }
@@ -1362,7 +1361,7 @@ void DCItem::reloadCache(bool forceReload)
       m_cacheSize = m_requiredCacheSize;
       m_bCacheLoaded = true;
    }
-   else if (hResult != NULL)
+   else if (hResult != nullptr)
    {
       DBFreeResult(hResult);
    }
@@ -1410,7 +1409,7 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
 	pMsg->setField(dwId++, m_dwErrorCount);
 	pMsg->setField(dwId++, m_dwTemplateItemId);
 
-	if (m_thresholds != NULL)
+	if (m_thresholds != nullptr)
 	{
       int mostCritical = -1;
       int severity = STATUS_NORMAL;
@@ -1530,7 +1529,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
 const TCHAR *DCItem::getLastValue()
 {
    lock();
-   const TCHAR *v = (m_cacheSize > 0) ? (const TCHAR *)m_ppValueCache[0]->getString() : NULL;
+   const TCHAR *v = (m_cacheSize > 0) ? (const TCHAR *)m_ppValueCache[0]->getString() : nullptr;
    unlock();
    return v;
 }
@@ -1541,7 +1540,7 @@ const TCHAR *DCItem::getLastValue()
 ItemValue *DCItem::getInternalLastValue()
 {
    lock();
-   ItemValue *v = (m_cacheSize > 0) ? new ItemValue(m_ppValueCache[0]) : NULL;
+   ItemValue *v = (m_cacheSize > 0) ? new ItemValue(m_ppValueCache[0]) : nullptr;
    unlock();
    return v;
 }
@@ -1549,13 +1548,13 @@ ItemValue *DCItem::getInternalLastValue()
 /**
  * Get aggregate value. Returned value must be deallocated by caller.
  *
- * @return dynamically allocated value or NULL on error
+ * @return dynamically allocated value or nullptr on error
  */
 TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	TCHAR query[1024];
-   TCHAR *result = NULL;
+   TCHAR *result = nullptr;
 
    static const TCHAR *functions[] = { _T(""), _T("min"), _T("max"), _T("avg"), _T("sum") };
 
@@ -1594,44 +1593,45 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
    }
    else
    {
+      uint32_t ownerId = m_owner.lock()->getId();
       if (g_dbSyntax == DB_SYNTAX_ORACLE)
       {
          _sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
             _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-            functions[func], m_owner->getId());
+            functions[func], m_ownerId);
       }
       else if (g_dbSyntax == DB_SYNTAX_MSSQL)
       {
          _sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u ")
             _T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
-            functions[func], m_owner->getId());
+            functions[func], m_ownerId);
       }
       else if ((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB))
       {
          _sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata_%u ")
             _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
-            functions[func], m_owner->getId());
+            functions[func], m_ownerId);
       }
       else
       {
          _sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
             _T("WHERE item_id=? and idata_timestamp between ? and ?"),
-            functions[func], m_owner->getId());
+            functions[func], m_ownerId);
       }
    }
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	if (hStmt != NULL)
+	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)periodStart);
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)periodEnd);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			if (DBGetNumRows(hResult) == 1)
 			{
-				result = DBGetField(hResult, 0, 0, NULL, 0);
+				result = DBGetField(hResult, 0, 0, nullptr, 0);
 			}
 			DBFreeResult(hResult);
 		}
@@ -1660,7 +1660,7 @@ bool DCItem::deleteAllData()
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_owner->getId(), m_id);
+      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_ownerId, m_id);
    }
 	bool success = DBQuery(hdb, query);
 	clearCache();
@@ -1694,7 +1694,7 @@ bool DCItem::deleteEntry(time_t timestamp)
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=%d"), m_owner->getId(), m_id, (int)timestamp);
+      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=%d"), m_ownerId, m_id, (int)timestamp);
    }
    unlock();
 
@@ -1745,7 +1745,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 	m_nBaseUnits = item->m_nBaseUnits;
 	m_nMultiplier = item->m_nMultiplier;
 	MemFree(m_customUnitName);
-	m_customUnitName = (item->m_customUnitName != NULL) ? _tcsdup(item->m_customUnitName) : NULL;
+	m_customUnitName = (item->m_customUnitName != nullptr) ? _tcsdup(item->m_customUnitName) : nullptr;
 
    // Copy thresholds
    // ***************************
@@ -1762,12 +1762,12 @@ void DCItem::updateFromTemplate(DCObject *src)
 		m_thresholds->remove(count);
 
    // (Re)create thresholds starting from first unmatched
-	if ((m_thresholds == NULL) && (item->getThresholdCount() > 0))
+	if ((m_thresholds == nullptr) && (item->getThresholdCount() > 0))
 		m_thresholds = new ObjectArray<Threshold>(item->getThresholdCount(), 8, Ownership::True);
 	for(i = count; i < item->getThresholdCount(); i++)
    {
       Threshold *t = new Threshold(item->m_thresholds->get(i), false);
-      t->bindToItem(m_id, m_owner->getId());
+      t->bindToItem(m_id, m_ownerId);
 		m_thresholds->add(t);
    }
 
@@ -1785,7 +1785,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 void DCItem::getEventList(IntegerArray<UINT32> *eventList)
 {
    lock();
-   if (m_thresholds != NULL)
+   if (m_thresholds != nullptr)
    {
       for(int i = 0; i < m_thresholds->size(); i++)
       {
@@ -1839,14 +1839,14 @@ void DCItem::createExportRecord(StringBuffer &xml)
 								  (int)m_instanceDiscoveryMethod, m_instanceRetentionTime,
 								  (const TCHAR *)EscapeStringForXML2(m_comments));
 
-	if (m_transformationScriptSource != NULL)
+	if (m_transformationScriptSource != nullptr)
 	{
 		xml.append(_T("\t\t\t\t\t<transformation>"));
 		xml.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
 		xml.append(_T("</transformation>\n"));
 	}
 
-	if ((m_schedules != NULL) && (m_schedules->size() > 0))
+	if ((m_schedules != nullptr) && (m_schedules->size() > 0))
    {
       xml.append(_T("\t\t\t\t\t<schedules>\n"));
       for(int i = 0; i < m_schedules->size(); i++)
@@ -1858,7 +1858,7 @@ void DCItem::createExportRecord(StringBuffer &xml)
       xml.append(_T("\t\t\t\t\t</schedules>\n"));
    }
 
-	if (m_thresholds != NULL)
+	if (m_thresholds != nullptr)
 	{
 	   xml.append(_T("\t\t\t\t\t<thresholds>\n"));
 		for(int i = 0; i < m_thresholds->size(); i++)
@@ -1868,21 +1868,21 @@ void DCItem::createExportRecord(StringBuffer &xml)
 	   xml.append(_T("\t\t\t\t\t</thresholds>\n"));
 	}
 
-	if (m_pszPerfTabSettings != NULL)
+	if (m_pszPerfTabSettings != nullptr)
 	{
 		xml.append(_T("\t\t\t\t\t<perfTabSettings>"));
 		xml.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
 		xml.append(_T("</perfTabSettings>\n"));
 	}
 
-   if (m_instanceDiscoveryData != NULL)
+   if (m_instanceDiscoveryData != nullptr)
 	{
 		xml.append(_T("\t\t\t\t\t<instanceDiscoveryData>"));
 		xml.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
 		xml.append(_T("</instanceDiscoveryData>\n"));
 	}
 
-   if (m_instanceFilterSource != NULL)
+   if (m_instanceFilterSource != nullptr)
 	{
 		xml.append(_T("\t\t\t\t\t<instanceFilter>"));
 		xml.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
@@ -1898,7 +1898,7 @@ void DCItem::createExportRecord(StringBuffer &xml)
  */
 void DCItem::addThreshold(Threshold *pThreshold)
 {
-	if (m_thresholds == NULL)
+	if (m_thresholds == nullptr)
 		m_thresholds = new ObjectArray<Threshold>(8, 8, Ownership::True);
 	m_thresholds->add(pThreshold);
 }
@@ -1911,7 +1911,7 @@ BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), vo
 	BOOL bRet = TRUE;
 
 	lock();
-	if (m_thresholds != NULL)
+	if (m_thresholds != nullptr)
 	{
 		for(int i = 0; i < m_thresholds->size(); i++)
 		{
@@ -1928,30 +1928,31 @@ BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), vo
 
 /**
  * Test DCI's transformation script
- * If dcObjectInfo is not NULL it will be destroyed by this method
+ * If dcObjectInfo is not nullptr it will be destroyed by this method
  */
-bool DCItem::testTransformation(DataCollectionTarget *object, shared_ptr<DCObjectInfo> dcObjectInfo, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
+bool DCItem::testTransformation(const DataCollectionTarget& object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
+         const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
 	bool success = false;
 	NXSL_VM *vm = NXSLCompileAndCreateVM(script, buffer, (int)bufSize, new NXSL_ServerEnv);
-   if (vm != NULL)
+   if (vm != nullptr)
    {
       NXSL_Value *pValue = vm->createValue(value);
-      vm->setGlobalVariable("$object", object->createNXSLObject(vm));
-      if (object->getObjectClass() == OBJECT_NODE)
+      vm->setGlobalVariable("$object", object.createNXSLObject(vm));
+      if (object.getObjectClass() == OBJECT_NODE)
       {
-         vm->setGlobalVariable("$node", object->createNXSLObject(vm));
+         vm->setGlobalVariable("$node", object.createNXSLObject(vm));
       }
       if (dcObjectInfo != nullptr)
       {
          vm->setGlobalVariable(_T("$dci"), vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, new shared_ptr<DCObjectInfo>(dcObjectInfo))));
       }
-      vm->setGlobalVariable("$isCluster", vm->createValue((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+      vm->setGlobalVariable("$isCluster", vm->createValue((object.getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
 
 		if (vm->run(1, &pValue))
       {
          pValue = vm->getResult();
-         if (pValue != NULL)
+         if (pValue != nullptr)
          {
 				if (pValue->isNull())
 				{
@@ -2069,10 +2070,10 @@ void DCItem::updateFromImport(ConfigEntry *config)
    m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
 
    ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
-   if (thresholdsRoot != NULL)
+   if (thresholdsRoot != nullptr)
    {
       ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-      if (m_thresholds != NULL)
+      if (m_thresholds != nullptr)
          m_thresholds->clear();
       else
          m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, Ownership::True);
@@ -2142,7 +2143,8 @@ void DCItem::recalculateValue(ItemValue &value)
 
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
-   if ((m_owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
+   auto owner = m_owner.lock();
+   if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
       if (!transform(value, (value.getTimeStamp() > m_tPrevValueTimeStamp) ? (value.getTimeStamp() - m_tPrevValueTimeStamp) : 0))
       {
@@ -2171,7 +2173,7 @@ void DCItem::recalculateValue(ItemValue &value)
  */
 bool DCItem::hasScriptThresholds() const
 {
-   if (m_thresholds == NULL)
+   if (m_thresholds == nullptr)
       return false;
 
    for(int i = 0; i < m_thresholds->size(); i++)
@@ -2188,14 +2190,14 @@ bool DCItem::hasScriptThresholds() const
  */
 Threshold *DCItem::getThresholdById(UINT32 id) const
 {
-   if (m_thresholds == NULL)
-      return NULL;
+   if (m_thresholds == nullptr)
+      return nullptr;
 
    for(int i = 0; i < m_thresholds->size(); i++)
       if (m_thresholds->get(i)->getId() == id)
          return m_thresholds->get(i);
 
-   return NULL;
+   return nullptr;
 }
 
 /**

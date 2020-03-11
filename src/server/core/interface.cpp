@@ -52,8 +52,8 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneUIN = 0;
    m_ifTableSuffixLen = 0;
-   m_ifTableSuffix = NULL;
-   m_vlans = NULL;
+   m_ifTableSuffix = nullptr;
+   m_vlans = nullptr;
 }
 
 /**
@@ -92,8 +92,8 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSynt
 	m_zoneUIN = zoneUIN;
    m_isHidden = true;
    m_ifTableSuffixLen = 0;
-   m_ifTableSuffix = NULL;
-   m_vlans = NULL;
+   m_ifTableSuffix = nullptr;
+   m_vlans = nullptr;
    setCreationTime();
 }
 
@@ -135,8 +135,8 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
 	m_zoneUIN = zoneUIN;
    m_isHidden = true;
    m_ifTableSuffixLen = 0;
-   m_ifTableSuffix = NULL;
-   m_vlans = NULL;
+   m_ifTableSuffix = nullptr;
+   m_vlans = nullptr;
    setCreationTime();
 }
 
@@ -168,12 +168,12 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
       _T("oper_state,peer_proto,alias,mtu,speed,parent_iface,")
       _T("iftable_suffix FROM interfaces WHERE id=?"));
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult == NULL)
+   if (hResult == nullptr)
 	{
 		DBFreeStatement(hStmt);
       return false;     // Query failed
@@ -222,17 +222,17 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       // Link interface to node
       if (!m_isDeleted)
       {
-         NetObj *object = FindObjectById(nodeId, OBJECT_NODE);
-         if (object == NULL)
+         shared_ptr<NetObj> object = FindObjectById(nodeId, OBJECT_NODE);
+         if (object != nullptr)
          {
-            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: interface %s [%u] linked to non-existent node [%u]"), m_name, m_id, nodeId);
+            object->addChild(self());
+            addParent(object);
+            m_zoneUIN = static_cast<Node*>(object.get())->getZoneUIN();
+            success = true;
          }
          else
          {
-            object->addChild(this);
-            addParent(object);
-				m_zoneUIN = static_cast<Node*>(object)->getZoneUIN();
-            success = true;
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: interface %s [%u] linked to non-existent node [%u]"), m_name, m_id, nodeId);
          }
       }
       else
@@ -246,11 +246,11 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
 	// Read VLANs
    hStmt = DBPrepare(hdb, _T("SELECT vlan_id FROM interface_vlan_list WHERE iface_id = ?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          if (count > 0)
@@ -268,11 +268,11 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    // Read IP addresses
    hStmt = DBPrepare(hdb, _T("SELECT ip_addr,ip_netmask FROM interface_address_list WHERE iface_id = ?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
@@ -337,11 +337,11 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          _T("phy_chassis"), _T("phy_module"), _T("phy_pic"), _T("phy_port"), _T("peer_node_id"), _T("peer_if_id"),
          _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
          _T("peer_proto"), _T("alias"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"),
-         NULL
+         nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("interfaces"), _T("id"), m_id, columns);
-      if (hStmt == NULL)
+      if (hStmt == nullptr)
       {
          unlockProperties();
          return false;
@@ -389,10 +389,10 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id = ?"));
       }
 
-      if (success && (m_vlans != NULL) && !m_vlans->isEmpty())
+      if (success && (m_vlans != nullptr) && !m_vlans->isEmpty())
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO interface_vlan_list (iface_id,vlan_id) VALUES (?,?)"), m_vlans->size() > 1);
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             for(int i = 0; (i < m_vlans->size()) && success; i++)
@@ -417,7 +417,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       if (success && (m_ipAddressList.size() > 0))
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO interface_address_list (iface_id,ip_addr,ip_netmask) VALUES (?,?,?)"), m_ipAddressList.size() > 1);
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
@@ -475,8 +475,8 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
       return;
 
    m_pollRequestor = session;
-   Node *pNode = getParentNode();
-   if (pNode == NULL)
+   shared_ptr<Node> pNode = getParentNode();
+   if (pNode == nullptr)
    {
       m_status = STATUS_UNKNOWN;
       return;     // Cannot find parent node, which is VERY strange
@@ -509,7 +509,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 
    if (bNeedPoll && (pNode->getCapabilities() & NC_IS_SNMP) &&
        (!(pNode->getFlags() & NF_DISABLE_SNMP)) && (!(pNode->getState() & NSF_SNMP_UNREACHABLE)) &&
-		 (snmpTransport != NULL))
+		 (snmpTransport != nullptr))
    {
       sendPollerMsg(rqId, _T("      Retrieving interface status from SNMP agent\r\n"));
       pNode->getInterfaceStatusFromSNMP(snmpTransport, m_index, m_ifTableSuffixLen, m_ifTableSuffix, &adminState, &operState);
@@ -600,10 +600,10 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 	}
 
 	// Check 802.1x state
-	if ((pNode->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != NULL))
+	if ((pNode->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr))
 	{
 		DbgPrintf(5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->getName(), m_name);
-		paeStatusPoll(rqId, snmpTransport, pNode);
+		paeStatusPoll(rqId, snmpTransport, pNode.get());
 		if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
 			newStatus = STATUS_MAJOR;
 	}
@@ -719,10 +719,10 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 
 	if (IsZoningEnabled() && (m_zoneUIN != 0) && (icmpProxy == 0))
 	{
-		Zone *zone = FindZoneByUIN(m_zoneUIN);
-		if (zone != NULL)
+		shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+		if (zone != nullptr)
 		{
-			icmpProxy = zone->getProxyNodeId(getParentNode());
+			icmpProxy = zone->getProxyNodeId(getParentNode().get());
 		}
 	}
 
@@ -730,12 +730,12 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 	{
 		sendPollerMsg(rqId, _T("      Starting ICMP ping via proxy\r\n"));
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping via proxy [%u]"), m_id, m_name, icmpProxy);
-		Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
-		if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+		shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(icmpProxy));
+		if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 		{
 			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
 			AgentConnection *conn = proxyNode->createAgentConnection();
-			if (conn != NULL)
+			if (conn != nullptr)
 			{
 				TCHAR parameter[128], buffer[64];
             const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
@@ -743,7 +743,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
             for(int i = 0; (i < list->size()) && ((value == 10000) || (value == -1)); i++)
             {
                const InetAddress *a = list->get(i);
-               if (a->isValidUnicast() && ((cluster == NULL) || !cluster->isSyncAddr(*a)))
+               if (a->isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(*a)))
                {
 				      _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), a->toString(buffer));
 				      if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
@@ -795,11 +795,11 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
       for(int i = 0; (i < list->size()) && (dwPingStatus != ICMP_SUCCESS); i++)
       {
          const InetAddress *a = list->get(i);
-         if (a->isValidUnicast() && ((cluster == NULL) || !cluster->isSyncAddr(*a)))
+         if (a->isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(*a)))
          {
 		      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d)"),
                m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, g_icmpPingSize);
-		      dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, NULL, g_icmpPingSize, false);
+		      dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false);
          }
       }
 		if (dwPingStatus == ICMP_SUCCESS)
@@ -857,10 +857,10 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 	bool modified = false;
 
 	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.1.%d"), m_index);
-	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &paeState, sizeof(INT32), 0);
+	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, nullptr, 0, &paeState, sizeof(INT32), 0);
 
 	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.2.%d"), m_index);
-	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &backendState, sizeof(INT32), 0);
+	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, nullptr, 0, &backendState, sizeof(INT32), 0);
 
 	if (m_dot1xPaeAuthState != (WORD)paeState)
 	{
@@ -1038,37 +1038,37 @@ UINT32 Interface::wakeUp()
 /**
  * Get interface's parent node
  */
-Node *Interface::getParentNode()
+shared_ptr<Node> Interface::getParentNode() const
 {
-   Node *pNode = NULL;
+   shared_ptr<Node> node;
 
-   lockParentList(false);
-   for(int i = 0; i < getParentList()->size(); i++)
-      if (getParentList()->get(i)->getObjectClass() == OBJECT_NODE)
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
+      if (getParentList().get(i)->getObjectClass() == OBJECT_NODE)
       {
-         pNode = (Node *)getParentList()->get(i);
+         node = static_pointer_cast<Node>(getParentList().getShared(i));
          break;
       }
    unlockParentList();
-   return pNode;
+   return node;
 }
 
 /**
  * Get ID of parent node object
  */
-UINT32 Interface::getParentNodeId()
+uint32_t Interface::getParentNodeId() const
 {
-   Node *node = getParentNode();
-   return (node != NULL) ? node->getId() : 0;
+   shared_ptr<Node> node = getParentNode();
+   return (node != nullptr) ? node->getId() : 0;
 }
 
 /**
  * Get name of parent node object
  */
-String Interface::getParentNodeName()
+String Interface::getParentNodeName() const
 {
-   Node *node = getParentNode();
-   return (node != NULL) ? String(node->getName()) : String(_T("<none>"));
+   shared_ptr<Node> node = getParentNode();
+   return (node != nullptr) ? String(node->getName()) : String(_T("<none>"));
 }
 
 /**
@@ -1076,8 +1076,8 @@ String Interface::getParentNodeName()
  */
 void Interface::updateZoneUIN()
 {
-   Node *node = getParentNode();
-   if (node == NULL)
+   shared_ptr<Node> node = getParentNode();
+   if (node == nullptr)
       return;
 
    if (isExcludedFromTopology())
@@ -1090,9 +1090,9 @@ void Interface::updateZoneUIN()
    }
 
    // Unregister from old zone
-   Zone *zone = FindZoneByUIN(m_zoneUIN);
-   if (zone != NULL)
-      zone->removeFromIndex(this);
+   shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+   if (zone != nullptr)
+      zone->removeFromIndex(*this);
 
    UINT32 newZoneUIN = node->getZoneUIN();
    lockProperties();
@@ -1102,8 +1102,8 @@ void Interface::updateZoneUIN()
 
    // Register in new zone
    zone = FindZoneByUIN(newZoneUIN);
-   if (zone != NULL)
-      zone->addToIndex(this);
+   if (zone != nullptr)
+      zone->addToIndex(self());
 }
 
 /**
@@ -1182,7 +1182,7 @@ void Interface::setMacAddr(const MacAddress& macAddr, bool updateMacDB)
       MacDbRemove(m_macAddr);
    m_macAddr = macAddr;
    if (updateMacDB)
-      MacDbAddInterface(this);
+      MacDbAddInterface(self());
    setModified(MODIFY_INTERFACE_PROPERTIES);
    unlockProperties();
 }
@@ -1195,7 +1195,7 @@ void Interface::setIpAddress(const InetAddress& addr)
    lockProperties();
    if (m_ipAddressList.size() == 1)
    {
-      UpdateInterfaceIndex(m_ipAddressList.get(0), addr, this);
+      UpdateInterfaceIndex(m_ipAddressList.get(0), addr, self());
       m_ipAddressList.clear();
       m_ipAddressList.add(addr);
       setModified(MODIFY_INTERFACE_PROPERTIES);
@@ -1228,10 +1228,10 @@ void Interface::addIpAddress(const InetAddress& addr)
    {
 		if (IsZoningEnabled())
 		{
-			Zone *zone = FindZoneByUIN(m_zoneUIN);
-			if (zone != NULL)
+			shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+			if (zone != nullptr)
 			{
-				zone->addToIndex(addr, this);
+				zone->addToIndex(addr, self());
 			}
 			else
 			{
@@ -1240,7 +1240,7 @@ void Interface::addIpAddress(const InetAddress& addr)
 		}
 		else
 		{
-         g_idxInterfaceByAddr.put(addr, this);
+         g_idxInterfaceByAddr.put(addr, self());
       }
    }
 }
@@ -1258,8 +1258,8 @@ void Interface::deleteIpAddress(InetAddress addr)
    {
 		if (IsZoningEnabled())
 		{
-			Zone *zone = FindZoneByUIN(m_zoneUIN);
-			if (zone != NULL)
+			shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+			if (zone != nullptr)
 			{
             zone->removeFromInterfaceIndex(addr);
 			}
@@ -1303,7 +1303,7 @@ void Interface::setPhysicalLocation(const InterfacePhysicalLocation& location)
 void Interface::addVlan(UINT32 id)
 {
    lockProperties();
-   if (m_vlans == NULL)
+   if (m_vlans == nullptr)
    {
       m_vlans = new IntegerArray<UINT32>();
    }
@@ -1318,9 +1318,9 @@ void Interface::addVlan(UINT32 id)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Interface::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *Interface::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, new shared_ptr<Interface>(self())));
 }
 
 /**
@@ -1330,7 +1330,7 @@ NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm)
 {
    NXSL_Array *a = new NXSL_Array(vm);
    lockProperties();
-   if (m_vlans != NULL)
+   if (m_vlans != nullptr)
    {
       for (int i = 0; i < m_vlans->size(); i++)
       {

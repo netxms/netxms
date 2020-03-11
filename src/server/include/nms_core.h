@@ -89,7 +89,6 @@
 #include "nxcore_winperf.h"
 #include "nms_objects.h"
 #include "nms_locks.h"
-#include "nms_pkg.h"
 #include "nms_topo.h"
 #include "nms_script.h"
 #include "nxcore_ps.h"
@@ -531,10 +530,9 @@ private:
    UINT32 m_objectNotificationDelay;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
-   static void pollerThreadStarter(void *);
 
    void readThread();
-   void pollerThread(DataCollectionTarget *pNode, int iPollType, UINT32 dwRqId);
+   void pollerThread(shared_ptr<DataCollectionTarget> object, int pollType, uint32_t requestId);
 
    void processRequest(NXCPMessage *request);
 
@@ -584,7 +582,7 @@ private:
    void applyTemplate(NXCPMessage *pRequest);
    void getCollectedData(NXCPMessage *pRequest);
    void getTableCollectedData(NXCPMessage *pRequest);
-	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType, HistoricalDataType historicalDataType);
+	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, const DataCollectionTarget& object, int dciType, HistoricalDataType historicalDataType);
 	void clearDCIData(NXCPMessage *pRequest);
 	void deleteDCIEntry(NXCPMessage *request);
 	void forceDCIPoll(NXCPMessage *pRequest);
@@ -818,8 +816,8 @@ private:
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
-   void sendObjectUpdate(NetObj *object);
-   void scheduleObjectUpdate(NetObj *object);
+   void sendObjectUpdate(shared_ptr<NetObj> object);
+   void scheduleObjectUpdate(shared_ptr<NetObj> object);
 
 public:
    ClientSession(SOCKET hSocket, const InetAddress& addr);
@@ -883,7 +881,7 @@ public:
    void onNewEvent(Event *pEvent);
    void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
    void onNewSNMPTrap(NXCPMessage *pMsg);
-   void onObjectChange(NetObj *pObject);
+   void onObjectChange(const shared_ptr<NetObj>& object);
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
@@ -1121,7 +1119,7 @@ bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *la
 
 void CheckForMgmtNode();
 void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId);
-Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData);
+shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData);
 INT64 GetDiscoveryPollerQueueSize();
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, void *), void *context);
@@ -1133,12 +1131,12 @@ template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 graphId);
-void NotifyClientsOnPolicyUpdate(NXCPMessage *msg, Template *object);
-void NotifyClientsOnPolicyDelete(uuid guid, Template *object);
-void NotifyClientsOnDCIUpdate(DataCollectionOwner *object, DCObject *dco);
-void NotifyClientsOnDCIDelete(DataCollectionOwner *object, UINT32 dcoId);
-void NotifyClientsOnDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status);
-void NotifyClientsOnDCIUpdate(NXCPMessage *update, NetObj *object);
+void NotifyClientsOnPolicyUpdate(NXCPMessage *msg, const Template& object);
+void NotifyClientsOnPolicyDelete(uuid guid, const Template& object);
+void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco);
+void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, UINT32 dcoId);
+void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, UINT32 dcoId, int status);
+void NotifyClientsOnDCIUpdate(NXCPMessage *update, const NetObj& object);
 void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresholdId, const TCHAR *instance, ThresholdCheckResult change);
 int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int typeFilter, const TCHAR *loginFilter);
 bool IsLoggedIn(UINT32 dwUserId);
@@ -1175,7 +1173,7 @@ void AddTrapCfgToList(SNMPTrapConfiguration *trapCfg);
 
 BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
-uint32_t ExecuteTableTool(uint32_t toolId, Node *node, uint32_t requestId, ClientSession *session);
+uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_t requestId, ClientSession *session);
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
 UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg);
@@ -1312,7 +1310,7 @@ UINT32 DeleteScript(const NXCPMessage *request);
 /**
  * ICMP scan
  */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context);
+void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, uint32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
 
 /**
  * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence
@@ -1321,33 +1319,43 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*call
 DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id, const TCHAR * const *columns);
 
 /**
- * File monitoring
+ * Monitored file
  */
 struct MONITORED_FILE
 {
    TCHAR fileName[MAX_PATH];
    ClientSession *session;
-   UINT32 nodeID;
+   uint32_t nodeID;
 };
 
+/**
+ * List of monitored files
+ */
 class FileMonitoringList
 {
 private:
    MUTEX m_mutex;
-   ObjectArray<MONITORED_FILE>  m_monitoredFiles;
+   ObjectArray<MONITORED_FILE> m_monitoredFiles;
+
+   void lock()
+   {
+      MutexLock(m_mutex);
+   }
+
+   void unlock()
+   {
+      MutexUnlock(m_mutex);
+   }
 
 public:
    FileMonitoringList();
    ~FileMonitoringList();
-   void addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj, AgentConnection *conn);
-   bool checkDuplicate(MONITORED_FILE *fileForAdd);
-   ObjectArray<ClientSession>* findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID);
-   bool removeMonitoringFile(MONITORED_FILE *fileForRemove);
-   void removeDisconnectedNode(UINT32 nodeId);
 
-private:
-   void lock();
-   void unlock();
+   void addFile(MONITORED_FILE *file, Node *node, AgentConnection *conn);
+   bool isDuplicate(MONITORED_FILE *file);
+   bool removeFile(MONITORED_FILE *file);
+   void removeDisconnectedNode(uint32_t nodeId);
+   ObjectArray<ClientSession> *findClientByFNameAndNodeID(const TCHAR *fileName, uint32_t nodeID);
 };
 
 /**********************
@@ -1357,21 +1365,23 @@ private:
 /**
  * Class stores object and distance to it from provided node
  */
-class ObjectsDistance
+struct ObjectsDistance
 {
-public:
-   NetObj *m_obj;
-   int m_distance;
+   shared_ptr<NetObj> object;
+   int distance;
 
-   ObjectsDistance(NetObj *obj, int distance) { m_obj = obj; m_distance = distance; }
-   ~ObjectsDistance() { m_obj->decRefCount(); }
+   ObjectsDistance(const shared_ptr<NetObj>& _object, int _distance) : object(_object)
+   {
+      distance = _distance;
+   }
 };
 
 /**
  * Calculate nearest objects from current one
  * Object ref count will be automatically decreased on array delete
  */
-ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDistance, bool (* filter)(NetObj *object, void *data), void *sortData, int (* calculateRealDistance)(GeoLocation &loc1, GeoLocation &loc2));
+ObjectArray<ObjectsDistance> *FindNearestObjects(uint32_t currObjectId, int maxDistance,
+         bool (* filter)(NetObj *object, void *context), void *context, int (* calculateRealDistance)(GeoLocation &loc1, GeoLocation &loc2));
 
 /**
  * Global variables

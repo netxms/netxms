@@ -119,7 +119,7 @@ AgentTunnel *GetTunnelForNode(UINT32 nodeId)
  */
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId)
 {
-   AgentTunnel *tunnel = NULL;
+   AgentTunnel *tunnel = nullptr;
    s_tunnelListLock.lock();
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
@@ -132,7 +132,7 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId)
    }
    s_tunnelListLock.unlock();
 
-   if (tunnel == NULL)
+   if (tunnel == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("BindAgentTunnel: unbound tunnel with ID %u not found"), tunnelId);
       return RCC_INVALID_TUNNEL_ID;
@@ -151,11 +151,11 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId)
  */
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId)
 {
-   Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
-   if (node == NULL)
+   shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
+   if (node == nullptr)
       return RCC_INVALID_OBJECT_ID;
 
-   if (node->getTunnelId().isNull())
+   if (static_cast<Node&>(*node).getTunnelId().isNull())
       return RCC_SUCCESS;  // tunnel is not set
 
    TCHAR userName[MAX_USER_NAME];
@@ -163,14 +163,14 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId)
             nodeId, ResolveUserId(userId, userName, true));
 
    TCHAR subject[256];
-   _sntprintf(subject, 256, _T("OU=%s,CN=%s"), (const TCHAR *)node->getGuid().toString(), (const TCHAR *)node->getTunnelId().toString());
+   _sntprintf(subject, 256, _T("OU=%s,CN=%s"), node->getGuid().toString().cstr(), static_cast<Node&>(*node).getTunnelId().toString().cstr());
    LogCertificateAction(REVOKE_CERTIFICATE, userId, nodeId, node->getGuid(), CERT_TYPE_AGENT,
-            (node->getAgentCertificateSubject() != NULL) ? node->getAgentCertificateSubject() : subject, 0);
+            (static_cast<Node&>(*node).getAgentCertificateSubject() != nullptr) ? static_cast<Node&>(*node).getAgentCertificateSubject() : subject, 0);
 
-   node->setTunnelId(uuid::NULL_UUID, NULL);
+   static_cast<Node&>(*node).setTunnelId(uuid::NULL_UUID, nullptr);
 
    AgentTunnel *tunnel = GetTunnelForNode(nodeId);
-   if (tunnel != NULL)
+   if (tunnel != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("UnbindAgentTunnel(%s): shutting down existing tunnel"), node->getName());
       tunnel->shutdown();
@@ -264,16 +264,16 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_nodeId = nodeId;
    m_zoneUIN = zoneUIN;
    m_state = AGENT_TUNNEL_INIT;
-   m_systemName = NULL;
-   m_platformName = NULL;
-   m_systemInfo = NULL;
-   m_agentVersion = NULL;
-   m_agentBuildTag = NULL;
+   m_systemName = nullptr;
+   m_platformName = nullptr;
+   m_systemInfo = nullptr;
+   m_agentVersion = nullptr;
+   m_agentBuildTag = nullptr;
    m_bindRequestId = 0;
    m_bindUserId = 0;
    m_channelLock = MutexCreate();
    m_hostname[0] = 0;
-   m_startTime = time(NULL);
+   m_startTime = time(nullptr);
    m_userAgentInstalled = false;
    m_agentProxy = false;
    m_snmpProxy = false;
@@ -357,7 +357,7 @@ void AgentTunnel::recvThread()
                MutexLock(m_channelLock);
                AgentTunnelCommChannel *channel = m_channels.get(msg->getId());
                MutexUnlock(m_channelLock);
-               if (channel != NULL)
+               if (channel != nullptr)
                {
                   channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
                   channel->decRefCount();
@@ -373,7 +373,7 @@ void AgentTunnel::recvThread()
             break;
          default:
             m_queue.put(msg);
-            msg = NULL; // prevent message deletion
+            msg = nullptr; // prevent message deletion
             break;
       }
       delete msg;
@@ -506,12 +506,12 @@ void AgentTunnel::setup(const NXCPMessage *request)
       request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
       m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
       m_agentBuildTag = request->getFieldAsString(VID_AGENT_BUILD_TAG);
-      if (m_agentBuildTag == NULL)
+      if (m_agentBuildTag == nullptr)
       {
          // Agents before 3.0 release return tag as version
          m_agentBuildTag = MemCopyString(m_agentVersion);
          TCHAR *p = _tcsrchr(m_agentVersion, _T('-'));
-         if (p != NULL)
+         if (p != nullptr)
             *p = 0;  // Remove git commit hash from version string
       }
 
@@ -559,17 +559,17 @@ UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
    if ((m_state != AGENT_TUNNEL_UNBOUND) || (m_bindRequestId != 0))
       return RCC_OUT_OF_STATE_REQUEST;
 
-   Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
-   if (node == NULL)
+   shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
+   if (node == nullptr)
       return RCC_INVALID_OBJECT_ID;
 
-   if (!node->getAgentId().equals(m_agentId))
+   if (!static_cast<Node&>(*node).getAgentId().equals(m_agentId))
    {
       debugPrintf(3, _T("Node agent ID (%s) do not match tunnel agent ID (%s) on bind"),
-               (const TCHAR *)node->getAgentId().toString(), (const TCHAR *)m_agentId.toString());
+               static_cast<Node&>(*node).getAgentId().toString().cstr(), m_agentId.toString().cstr());
       PostSystemEventWithNames(EVENT_TUNNEL_AGENT_ID_MISMATCH, nodeId, "dAsssssGG", s_eventParamNamesAgentIdMismatch,
                m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
-               m_agentVersion, &node->getAgentId(), &m_agentId);
+               m_agentVersion, &static_cast<Node&>(*node).getAgentId(), &m_agentId);
    }
 
    NXCPMessage msg;
@@ -592,7 +592,7 @@ UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
    sendMessage(&msg);
 
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-   if (response == NULL)
+   if (response == nullptr)
       return RCC_TIMEOUT;
 
    UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
@@ -600,7 +600,7 @@ UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
    if (rcc == ERR_SUCCESS)
    {
       debugPrintf(4, _T("Bind successful, resetting tunnel"));
-      node->setNewTunnelBindFlag();
+      static_cast<Node&>(*node).setNewTunnelBindFlag();
       msg.setCode(CMD_RESET_TUNNEL);
       msg.setId(InterlockedIncrement(&m_requestId));
       sendMessage(&msg);
@@ -623,21 +623,21 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
    {
       size_t certRequestLen;
       const BYTE *certRequestData = request->getBinaryFieldPtr(VID_CERTIFICATE, &certRequestLen);
-      if (certRequestData != NULL)
+      if (certRequestData != nullptr)
       {
-         X509_REQ *certRequest = d2i_X509_REQ(NULL, &certRequestData, (long)certRequestLen);
-         if (certRequest != NULL)
+         X509_REQ *certRequest = d2i_X509_REQ(nullptr, &certRequestData, (long)certRequestLen);
+         if (certRequest != nullptr)
          {
             char *ou = m_bindGuid.toString().getUTF8String();
             char *cn = m_guid.toString().getUTF8String();
             X509 *cert = IssueCertificate(certRequest, ou, cn, 365);
             free(ou);
             free(cn);
-            if (cert != NULL)
+            if (cert != nullptr)
             {
                LogCertificateAction(ISSUE_CERTIFICATE, m_bindUserId, m_nodeId, m_bindGuid, CERT_TYPE_AGENT, cert);
 
-               BYTE *buffer = NULL;
+               BYTE *buffer = nullptr;
                int len = i2d_X509(cert, &buffer);
                if (len > 0)
                {
@@ -646,10 +646,10 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
                   OPENSSL_free(buffer);
                   debugPrintf(4, _T("Certificate issued"));
 
-                  Node *node = (Node *)FindObjectByGUID(m_bindGuid, OBJECT_NODE);
-                  if (node != NULL)
+                  shared_ptr<NetObj> node = FindObjectByGUID(m_bindGuid, OBJECT_NODE);
+                  if (node != nullptr)
                   {
-                     node->setTunnelId(m_guid, GetCertificateSubjectString(cert));
+                     static_cast<Node&>(*node).setTunnelId(m_guid, GetCertificateSubjectString(cert));
                   }
                }
                else
@@ -694,10 +694,10 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
    NXCPMessage request(CMD_CREATE_CHANNEL, InterlockedIncrement(&m_requestId));
    sendMessage(&request);
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId());
-   if (response == NULL)
+   if (response == nullptr)
    {
       debugPrintf(4, _T("createChannel: request timeout"));
-      return NULL;
+      return nullptr;
    }
 
    UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
@@ -705,7 +705,7 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
    {
       delete response;
       debugPrintf(4, _T("createChannel: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
-      return NULL;
+      return nullptr;
    }
 
    AgentTunnelCommChannel *channel = new AgentTunnelCommChannel(this, response->getFieldAsUInt32(VID_CHANNEL_ID));
@@ -727,7 +727,7 @@ void AgentTunnel::processChannelClose(UINT32 channelId)
    MutexLock(m_channelLock);
    AgentTunnelCommChannel *ch = m_channels.get(channelId);
    MutexUnlock(m_channelLock);
-   if (ch != NULL)
+   if (ch != nullptr)
    {
       ch->shutdown();
       ch->decRefCount();
@@ -759,7 +759,7 @@ void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
  */
 ssize_t AgentTunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 {
-   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, nullptr, false);
    ssize_t rc = sslWrite(msg, ntohl(msg->size));
    if (rc == static_cast<ssize_t>(ntohl(msg->size)))
       rc = len;  // adjust number of bytes to exclude tunnel overhead
@@ -803,10 +803,10 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id) :
    m_active = true;
 #ifdef _WIN32
    InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
-   m_dataCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
+   m_dataCondition = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 #else
-   pthread_mutex_init(&m_bufferLock, NULL);
-   pthread_cond_init(&m_dataCondition, NULL);
+   pthread_mutex_init(&m_bufferLock, nullptr);
+   pthread_cond_init(&m_dataCondition, nullptr);
 #endif
 }
 
@@ -872,7 +872,7 @@ retry_wait:
 #else
       struct timeval now;
       struct timespec ts;
-      gettimeofday(&now, NULL);
+      gettimeofday(&now, nullptr);
       ts.tv_sec = now.tv_sec + (timeout / 1000);
       now.tv_usec += (timeout % 1000) * 1000;
       ts.tv_sec += now.tv_usec / 1000000;
@@ -949,7 +949,7 @@ retry_wait:
 #else
       struct timeval now;
       struct timespec ts;
-      gettimeofday(&now, NULL);
+      gettimeofday(&now, nullptr);
       ts.tv_sec = now.tv_sec + (timeout / 1000);
       now.tv_usec += (timeout % 1000) * 1000;
       ts.tv_sec += now.tv_usec / 1000000;
@@ -1031,13 +1031,13 @@ static void SetupTunnel(void *arg)
 {
    ConnectionRequest *request = (ConnectionRequest *)arg;
 
-   SSL_CTX *context = NULL;
-   SSL *ssl = NULL;
-   AgentTunnel *tunnel = NULL;
+   SSL_CTX *context = nullptr;
+   SSL *ssl = nullptr;
+   AgentTunnel *tunnel = nullptr;
    int rc;
    UINT32 nodeId = 0;
    UINT32 zoneUIN = 0;
-   X509 *cert = NULL;
+   X509 *cert = nullptr;
 
    // Setup secure connection
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
@@ -1045,14 +1045,14 @@ static void SetupTunnel(void *arg)
 #else
    const SSL_METHOD *method = SSLv23_method();
 #endif
-   if (method == NULL)
+   if (method == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot obtain TLS method"), (const TCHAR *)request->addr.toString());
       goto failure;
    }
 
    context = SSL_CTX_new((SSL_METHOD *)method);
-   if (context == NULL)
+   if (context == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot create TLS context"), (const TCHAR *)request->addr.toString());
       goto failure;
@@ -1069,7 +1069,7 @@ static void SetupTunnel(void *arg)
    }
 
    ssl = SSL_new(context);
-   if (ssl == NULL)
+   if (ssl == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot create SSL object"), (const TCHAR *)request->addr.toString());
       goto failure;
@@ -1102,29 +1102,29 @@ retry:
    }
 
    cert = SSL_get_peer_certificate(ssl);
-   if (cert != NULL)
+   if (cert != nullptr)
    {
       if (ValidateAgentCertificate(cert))
       {
          TCHAR ou[256], cn[256];
          if (GetCertificateOU(cert, ou, 256) && GetCertificateCN(cert, cn, 256))
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate OU=%s CN=%s"), (const TCHAR *)request->addr.toString(), ou, cn);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate OU=%s CN=%s"), request->addr.toString().cstr(), ou, cn);
             uuid nodeGuid = uuid::parse(ou);
             uuid tunnelGuid = uuid::parse(cn);
             if (!nodeGuid.isNull() && !tunnelGuid.isNull())
             {
-               Node *node = (Node *)FindObjectByGUID(nodeGuid, OBJECT_NODE);
-               if (node != NULL)
+               shared_ptr<NetObj> node = FindObjectByGUID(nodeGuid, OBJECT_NODE);
+               if (node != nullptr)
                {
-                  if (tunnelGuid.equals(node->getTunnelId()))
+                  if (tunnelGuid.equals(static_cast<Node&>(*node).getTunnelId()))
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), request->addr.toString().cstr(), node->getName(), node->getId());
                      if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
                      {
-                        node->clearNewTunnelBindFlag();
-                        node->setRecheckCapsFlag();
-                        node->forceConfigurationPoll();
+                        static_cast<Node&>(*node).clearNewTunnelBindFlag();
+                        static_cast<Node&>(*node).setRecheckCapsFlag();
+                        static_cast<Node&>(*node).forceConfigurationPoll();
                      }
                      nodeId = node->getId();
                      zoneUIN = node->getZoneUIN();
@@ -1171,9 +1171,9 @@ retry:
    return;
 
 failure:
-   if (ssl != NULL)
+   if (ssl != nullptr)
       SSL_free(ssl);
-   if (context != NULL)
+   if (context != nullptr)
       SSL_CTX_free(context);
    shutdown(request->sock, SHUT_RDWR);
    closesocket(request->sock);
@@ -1306,7 +1306,7 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
       {
          // Additional checks if agent already reachable on that node
          AgentConnectionEx *conn = node->getAgentConnection();
-         if (conn != NULL)
+         if (conn != nullptr)
          {
             TCHAR agentVersion[MAX_RESULT_LENGTH] = _T(""), hostName[MAX_RESULT_LENGTH] = _T(""), fqdn[MAX_RESULT_LENGTH] = _T("");
             conn->getParameter(_T("Agent.Version"), MAX_RESULT_LENGTH, agentVersion);
@@ -1349,10 +1349,8 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
 /**
  * Finish automatic node creation
  */
-static void FinishNodeCreation(void *arg)
+static void FinishNodeCreation(const shared_ptr<Node>& node)
 {
-   Node *node = static_cast<Node*>(arg);
-
    int retryCount = 36;
    while(node->getTunnelId().isNull() && (retryCount-- > 0))
       ThreadSleep(5);
@@ -1367,8 +1365,6 @@ static void FinishNodeCreation(void *arg)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Tunnel was not re-established after binding for new node %s [%d]"), node->getName(), node->getId());
    }
-
-   node->decRefCount();
 }
 
 /**
@@ -1385,7 +1381,7 @@ enum TimeoutAction
 /**
  * Scheduled task for automatic binding of unbound tunnels
  */
-void ProcessUnboundTunnels(shared_ptr<ScheduledTaskParameters> parameters)
+void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    int timeout = ConfigReadInt(_T("AgentTunnels.UnboundTunnelTimeout"), 3600);
    if (timeout < 0)
@@ -1394,7 +1390,7 @@ void ProcessUnboundTunnels(shared_ptr<ScheduledTaskParameters> parameters)
    ObjectRefArray<AgentTunnel> processingList(16, 16);
 
    s_tunnelListLock.lock();
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
       AgentTunnel *t = s_unboundTunnels.get(i);
@@ -1427,8 +1423,8 @@ void ProcessUnboundTunnels(shared_ptr<ScheduledTaskParameters> parameters)
             break;
          case BIND_NODE:
          case BIND_OR_CREATE_NODE:
-            Node *node = static_cast<Node*>(g_idxNodeById.find(MatchTunnelToNode, t));
-            if (node != NULL)
+            shared_ptr<Node> node = static_pointer_cast<Node>(g_idxNodeById.find(MatchTunnelToNode, t));
+            if (node != nullptr)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Binding tunnel from %s (%s) to existing node %s [%d]"),
                         t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), node->getName(), node->getId());
@@ -1446,29 +1442,24 @@ void ProcessUnboundTunnels(shared_ptr<ScheduledTaskParameters> parameters)
                nd.origin = NODE_ORIGIN_TUNNEL_AUTOBIND;
                nd.agentId = t->getAgentId();
                node = PollNewNode(&nd);
-               if (node != NULL)
+               if (node != nullptr)
                {
                   TCHAR containerName[MAX_OBJECT_NAME];
                   ConfigReadStr(_T("AgentTunnels.NewNodesContainer"), containerName, MAX_OBJECT_NAME, _T("New Tunnel Nodes"));
-                  Container *c = static_cast<Container*>(FindObjectByName(containerName, OBJECT_CONTAINER));
-                  if (c != NULL)
+                  shared_ptr<NetObj> container = FindObjectByName(containerName, OBJECT_CONTAINER);
+                  if (container != nullptr)
                   {
-                     c->addChild(node);
-                     node->addParent(c);
+                     container->addChild(node);
+                     node->addParent(container);
                   }
                   else
                   {
-                     NetObj *root = FindObjectById(2, -1);
-                     if (root != NULL)
-                     {
-                        root->addChild(node);
-                        node->addParent(root);
-                     }
+                     g_infrastructureServiceRoot->addChild(node);
+                     node->addParent(g_infrastructureServiceRoot);
                   }
 
                   if (BindAgentTunnel(t->getId(), node->getId(), 0) == RCC_SUCCESS)
                   {
-                     node->incRefCount();
                      ThreadPoolScheduleRelative(g_mainThreadPool, 60000, FinishNodeCreation, node);
                   }
                }

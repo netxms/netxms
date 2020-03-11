@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	
    TCHAR ipAddrText[16];
 	DbgPrintf(6, _T("CDP(%s [%d]): remote IP address %s"), node->getName(), node->getId(), IpToStr(remoteIp, ipAddrText));
-	Node *remoteNode = FindNodeByIP(node->getZoneUIN(), remoteIp);
-	if (remoteNode == NULL)
+	shared_ptr<Node> remoteNode = FindNodeByIP(node->getZoneUIN(), remoteIp);
+	if (remoteNode == nullptr)
 	{
 		DbgPrintf(6, _T("CDP(%s [%d]): node object for remote IP %s not found"), node->getName(), node->getId(), ipAddrText);
 		return SNMP_ERR_SUCCESS;
@@ -51,7 +51,7 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	newOid.changeElement(13, 7);	// cdpCacheDevicePort
 	pRqPDU->bindVariable(new SNMP_Variable(newOid));
 
-   SNMP_PDU *pRespPDU = NULL;
+   SNMP_PDU *pRespPDU = nullptr;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
 
@@ -62,14 +62,13 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 			TCHAR ifName[MAX_CONNECTOR_NAME] = _T("");
 			pRespPDU->getVariable(0)->getValueAsString(ifName, MAX_CONNECTOR_NAME);
 			DbgPrintf(6, _T("CDP(%s [%d]): remote port is \"%s\""), node->getName(), node->getId(), ifName);
-			Interface *ifRemote = remoteNode->findInterfaceByName(ifName);
-			if (ifRemote != NULL)
+			shared_ptr<Interface> ifRemote = remoteNode->findInterfaceByName(ifName);
+			if (ifRemote != nullptr)
 			{
 				DbgPrintf(6, _T("CDP(%s [%d]): remote interface object is %s [%d]"), node->getName(), node->getId(), ifRemote->getName(), ifRemote->getId());
 		
-				LL_NEIGHBOR_INFO info;
-
 				// Index for cdpCacheTable is cdpCacheIfIndex, cdpCacheDeviceIndex
+            LL_NEIGHBOR_INFO info;
 				info.ifLocal = oid.value()[oid.length() - 2];
 				info.ifRemote = ifRemote->getIfIndex();
 				info.objectId = remoteNode->getId();
@@ -77,7 +76,7 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 				info.protocol = LL_PROTO_CDP;
             info.isCached = false;
 
-				((LinkLayerNeighbors *)arg)->addConnection(&info);
+				static_cast<LinkLayerNeighbors*>(arg)->addConnection(&info);
 			}
 		}
       delete pRespPDU;

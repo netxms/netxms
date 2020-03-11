@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,12 +41,12 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, boo
 		LL_NEIGHBOR_INFO *info = nbs->getConnection(i);
 		if (info != NULL)
 		{
-			Node *node = (Node *)FindObjectById(info->objectId);
+			shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
 			if ((node != NULL) && (nDepth > 0) && (node->isBridge() || includeEndNodes))
 			{
-				BuildL2Topology(topology, node, nDepth - 1, includeEndNodes);
-				Interface *ifLocal = root->findInterfaceByIndex(info->ifLocal);
-				Interface *ifRemote = node->findInterfaceByIndex(info->ifRemote);
+				BuildL2Topology(topology, node.get(), nDepth - 1, includeEndNodes);
+				shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
+				shared_ptr<Interface> ifRemote = node->findInterfaceByIndex(info->ifRemote);
 				DbgPrintf(5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %p, ifRemote=%d %p"),
 				          root->getName(), root->getId(), node->getName(), node->getId(), info->ifLocal, ifLocal, info->ifRemote, ifRemote);
 				topology.linkObjectsEx(root->getId(), node->getId(),
@@ -62,7 +62,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, boo
 /**
  * Find connection point for interface
  */
-NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
+shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
 {
 	TCHAR macAddrText[64];
 	nxlog_debug(6, _T("Called FindInterfaceConnectionPoint(%s)"), macAddr.toString(macAddrText));
@@ -72,11 +72,11 @@ NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
    if (!macAddr.isValid() || (macAddr.length() != MAC_ADDR_LENGTH))
       return NULL;
 
-	NetObj *cp = NULL;
-	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true);
+	shared_ptr<NetObj> cp;
+	SharedObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
 
-	Node *bestMatchNode = NULL;
-	UINT32 bestMatchIfIndex = 0;
+	Node *bestMatchNode = nullptr;
+	uint32_t bestMatchIfIndex = 0;
 	int bestMatchCount = 0x7FFFFFFF;
 
 	for(int i = 0; (i < nodes->size()) && (cp == NULL); i++)
@@ -89,7 +89,7 @@ NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
 			          macAddrText, node->getName(), (int)node->getId());
          bool isStatic;
-			UINT32 ifIndex = fdb->findMacAddress(macAddr.value(), &isStatic);
+         uint32_t ifIndex = fdb->findMacAddress(macAddr.value(), &isStatic);
 			if (ifIndex != 0)
 			{
 			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): MAC address found on interface %d (%s)"),
@@ -106,7 +106,7 @@ NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
                }
                else
                {
-					   Interface *iface = node->findInterfaceByIndex(ifIndex);
+					   shared_ptr<Interface> iface = node->findInterfaceByIndex(ifIndex);
 					   if (iface != NULL)
 					   {
 						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%u] on node %s [%u]"), macAddrText,
@@ -148,7 +148,7 @@ NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
                WirelessStationInfo *ws = wsList->get(i);
                if (!memcmp(ws->macAddr, macAddr.value(), MAC_ADDR_LENGTH))
                {
-                  AccessPoint *ap = (AccessPoint *)FindObjectById(ws->apObjectId, OBJECT_ACCESSPOINT);
+                  auto ap = static_pointer_cast<AccessPoint>(FindObjectById(ws->apObjectId, OBJECT_ACCESSPOINT));
                   if (ap != NULL)
                   {
 						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] AP %s"), macAddrText,
@@ -158,7 +158,7 @@ NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
                   }
                   else
                   {
-                     Interface *iface = node->findInterfaceByIndex(ws->rfIndex);
+                     shared_ptr<Interface> iface = node->findInterfaceByIndex(ws->rfIndex);
                      if (iface != NULL)
                      {
 						      DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] interface %s"),
@@ -186,10 +186,6 @@ NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
       }
 	}
 
-	for(int i = 0; i < nodes->size(); i++)
-	   nodes->get(i)->decRefCount();
-	delete nodes;
-
 	if ((cp == NULL) && (bestMatchNode != NULL))
 	{
 		cp = bestMatchNode->findInterfaceByIndex(bestMatchIfIndex);
@@ -199,5 +195,7 @@ NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
          *type = CP_TYPE_DIRECT;
       }
 	}
+
+   delete nodes;
 	return cp;
 }

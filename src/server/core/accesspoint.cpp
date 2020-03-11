@@ -28,10 +28,10 @@ AccessPoint::AccessPoint() : super(), m_macAddr(MacAddress::ZERO)
 {
 	m_nodeId = 0;
    m_index = 0;
-	m_vendor = NULL;
-	m_model = NULL;
-	m_serialNumber = NULL;
-	m_radioInterfaces = NULL;
+	m_vendor = nullptr;
+	m_model = nullptr;
+	m_serialNumber = nullptr;
+	m_radioInterfaces = nullptr;
 	m_apState = AP_ADOPTED;
    m_prevState = m_apState;
 }
@@ -43,10 +43,10 @@ AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) :
 {
 	m_nodeId = 0;
    m_index = index;
-	m_vendor = NULL;
-	m_model = NULL;
-	m_serialNumber = NULL;
-	m_radioInterfaces = NULL;
+	m_vendor = nullptr;
+	m_model = nullptr;
+	m_serialNumber = nullptr;
+	m_radioInterfaces = nullptr;
 	m_apState = AP_ADOPTED;
    m_prevState = m_apState;
 	m_isHidden = true;
@@ -103,16 +103,16 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	bool success = false;
    if (!m_isDeleted)
    {
-      NetObj *object = FindObjectById(m_nodeId, OBJECT_NODE);
-      if (object == NULL)
+      shared_ptr<NetObj> object = FindObjectById(m_nodeId, OBJECT_NODE);
+      if (object != nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Inconsistent database: access point %s [%u] linked to non-existent node [%u]"), m_name, m_id, m_nodeId);
+         object->addChild(self());
+         addParent(object);
+         success = true;
       }
       else
       {
-         object->addChild(this);
-         addParent(object);
-         success = true;
+         nxlog_write(NXLOG_ERROR, _T("Inconsistent database: access point %s [%u] linked to non-existent node [%u]"), m_name, m_id, m_nodeId);
       }
    }
    else
@@ -164,7 +164,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    // Save data collection items
    if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
-		lockDciAccess(false);
+		readLockDciAccess();
       for(int i = 0; i < m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
@@ -250,18 +250,18 @@ void AccessPoint::attachToNode(UINT32 nodeId)
 
 	if (m_nodeId != 0)
 	{
-		Node *currNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-		if (currNode != NULL)
+		shared_ptr<NetObj> currNode = FindObjectById(m_nodeId, OBJECT_NODE);
+		if (currNode != nullptr)
 		{
-			currNode->deleteChild(this);
-			deleteParent(currNode);
+			currNode->deleteChild(*this);
+			deleteParent(*currNode);
 		}
 	}
 
-	Node *newNode = (Node *)FindObjectById(nodeId, OBJECT_NODE);
-	if (newNode != NULL)
+	shared_ptr<NetObj> newNode = FindObjectById(nodeId, OBJECT_NODE);
+	if (newNode != nullptr)
 	{
-		newNode->addChild(this);
+		newNode->addChild(self());
 		addParent(newNode);
 	}
 
@@ -357,9 +357,9 @@ void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
 /**
  * Get access point's parent node
  */
-Node *AccessPoint::getParentNode() const
+shared_ptr<Node> AccessPoint::getParentNode() const
 {
-   return static_cast<Node*>(FindObjectById(m_nodeId, OBJECT_NODE));
+   return static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
 }
 
 /**
@@ -446,8 +446,8 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 
       if (IsZoningEnabled() && (controller->getZoneUIN() != 0))
 		{
-			Zone *zone = FindZoneByUIN(controller->getZoneUIN());
-			if (zone != NULL)
+			shared_ptr<Zone> zone = FindZoneByUIN(controller->getZoneUIN());
+			if (zone != nullptr)
 			{
 				icmpProxy = zone->getProxyNodeId(this);
 			}
@@ -457,8 +457,8 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 		{
 			sendPollerMsg(rqId, _T("      Starting ICMP ping via proxy\r\n"));
 			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping via proxy [%u]"), m_id, m_name, icmpProxy);
-			Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
-			if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+			shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(icmpProxy));
+			if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 			{
 				DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
 				AgentConnection *conn = proxyNode->createAgentConnection();
@@ -533,9 +533,9 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslAccessPointClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslAccessPointClass, new shared_ptr<AccessPoint>(self())));
 }
 
 /**
@@ -543,7 +543,7 @@ NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm)
  */
 uint32_t AccessPoint::getZoneUIN() const
 {
-   Node *node = getParentNode();
+   shared_ptr<Node> node = getParentNode();
    return (node != nullptr) ? node->getZoneUIN() : 0;
 }
 

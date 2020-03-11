@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -186,18 +186,18 @@ void CleanupActions()
 /**
  * Execute remote action
  */
-static BOOL ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
+static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
 {
    AgentConnection *pConn;
    if (pszTarget[0] == '@')
    {
       //Resolve name of node to connection to it. Name should be in @name format.
-      Node *node = (Node *)FindObjectByName(&pszTarget[1], OBJECT_NODE);
-      if(node == NULL)
-         return FALSE;
+      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByName(&pszTarget[1], OBJECT_NODE));
+      if (node == nullptr)
+         return false;
       pConn = node->createAgentConnection();
-      if (pConn == NULL)
-         return FALSE;
+      if (pConn == nullptr)
+         return false;
    }
    else
    {
@@ -206,7 +206,7 @@ static BOOL ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
       if (!addr.isValid())
          return FALSE;
 
-      Node *node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
+      shared_ptr<Node> node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
       if (node != NULL)
       {
          pConn = node->createAgentConnection();
@@ -221,7 +221,7 @@ static BOOL ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
          if (!pConn->connect(g_pServerKey))
          {
             pConn->decRefCount();
-            return FALSE;
+            return false;
          }
       }
    }
@@ -280,16 +280,15 @@ static bool ForwardEvent(const TCHAR *server, const Event *event)
 	if (rcc == ISC_ERR_SUCCESS)
 	{
 		NXCPMessage msg;
-		NetObj *object;
-
 		msg.setId(1);
 		msg.setCode(CMD_FORWARD_EVENT);
-		object = FindObjectById(event->getSourceId());
-		if (object != NULL)
+
+		shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
+		if (object != nullptr)
 		{
          if (object->getObjectClass() == OBJECT_NODE)
          {
-			   msg.setField(VID_IP_ADDRESS, ((Node *)object)->getIpAddress());
+			   msg.setField(VID_IP_ADDRESS, static_cast<Node*>(object.get())->getIpAddress());
          }
 			msg.setField(VID_EVENT_CODE, event->getCode());
 			msg.setField(VID_EVENT_NAME, event->getName());
@@ -835,7 +834,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
 /**
  * Task handler for scheduled action execution
  */
-void ExecuteScheduledAction(shared_ptr<ScheduledTaskParameters> parameters)
+void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    UINT32 actionId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("action"), 0);
    Event *restoredEvent = NULL;

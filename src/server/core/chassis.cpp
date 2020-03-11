@@ -56,7 +56,7 @@ Chassis::~Chassis()
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool Chassis::showThresholdSummary()
+bool Chassis::showThresholdSummary() const
 {
    return true;
 }
@@ -67,12 +67,12 @@ bool Chassis::showThresholdSummary()
 void Chassis::updateRackBinding()
 {
    bool rackFound = false;
-   ObjectArray<NetObj> deleteList;
+   SharedObjectArray<NetObj> deleteList;
 
-   lockParentList(true);
-   for(int i = 0; i < getParentList()->size(); i++)
+   writeLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
    {
-      NetObj *object = getParentList()->get(i);
+      NetObj *object = getParentList().get(i);
       if (object->getObjectClass() != OBJECT_RACK)
          continue;
       if (object->getId() == m_rackId)
@@ -80,8 +80,7 @@ void Chassis::updateRackBinding()
          rackFound = true;
          continue;
       }
-      object->incRefCount();
-      deleteList.add(object);
+      deleteList.add(getParentList().getShared(i));
    }
    unlockParentList();
 
@@ -89,18 +88,17 @@ void Chassis::updateRackBinding()
    {
       NetObj *rack = deleteList.get(n);
       DbgPrintf(5, _T("Chassis::updateRackBinding(%s [%d]): delete incorrect rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-      rack->deleteChild(this);
-      deleteParent(rack);
-      rack->decRefCount();
+      rack->deleteChild(*this);
+      deleteParent(*rack);
    }
 
    if (!rackFound && (m_rackId != 0))
    {
-      Rack *rack = (Rack *)FindObjectById(m_rackId, OBJECT_RACK);
-      if (rack != NULL)
+      shared_ptr<Rack> rack = static_pointer_cast<Rack>(FindObjectById(m_rackId, OBJECT_RACK));
+      if (rack != nullptr)
       {
          DbgPrintf(5, _T("Chassis::updateRackBinding(%s [%d]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-         rack->addChild(this);
+         rack->addChild(self());
          addParent(rack);
       }
       else
@@ -117,10 +115,10 @@ void Chassis::updateControllerBinding()
 {
    bool controllerFound = false;
 
-   lockParentList(true);
-   for(int i = 0; i < getParentList()->size(); i++)
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
    {
-      NetObj *object = getParentList()->get(i);
+      NetObj *object = getParentList().get(i);
       if (object->getId() == m_controllerId)
       {
          controllerFound = true;
@@ -131,10 +129,10 @@ void Chassis::updateControllerBinding()
 
    if ((m_flags & CHF_BIND_UNDER_CONTROLLER) && !controllerFound)
    {
-      NetObj *controller = FindObjectById(m_controllerId);
-      if (controller != NULL)
+      shared_ptr<NetObj> controller = FindObjectById(m_controllerId);
+      if (controller != nullptr)
       {
-         controller->addChild(this);
+         controller->addChild(self());
          addParent(controller);
       }
       else
@@ -144,11 +142,11 @@ void Chassis::updateControllerBinding()
    }
    else if (!(m_flags & CHF_BIND_UNDER_CONTROLLER) && controllerFound)
    {
-      NetObj *controller = FindObjectById(m_controllerId);
-      if (controller != NULL)
+      shared_ptr<NetObj> controller = FindObjectById(m_controllerId);
+      if (controller != nullptr)
       {
-         controller->deleteChild(this);
-         deleteParent(controller);
+         controller->deleteChild(*this);
+         deleteParent(*controller);
       }
    }
 }
@@ -212,7 +210,7 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image_front,")
                                 _T("rack_position,rack_height,rack_orientation,rack_image_rear,id)")
                                 _T("VALUES (?,?,?,?,?,?,?,?)"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_controllerId);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_rackId);
@@ -234,7 +232,7 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
 
    if (success)
    {
-      lockDciAccess(false);
+      readLockDciAccess();
       for(int i = 0; (i < m_dcObjects->size()) && success; i++)
          success = m_dcObjects->get(i)->saveToDatabase(hdb);
       unlockDciAccess();
@@ -275,12 +273,12 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image_front,")
                                        _T("rack_position,rack_height,rack_orientation,")
                                        _T("rack_image_rear FROM chassis WHERE id=?"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       DBFreeStatement(hStmt);
       return false;
@@ -322,8 +320,8 @@ void Chassis::linkObjects()
  */
 void Chassis::onDataCollectionChange()
 {
-   Node *controller = (Node *)FindObjectById(m_controllerId, OBJECT_NODE);
-   if (controller == NULL)
+   shared_ptr<Node> controller = static_pointer_cast<Node>(FindObjectById(m_controllerId, OBJECT_NODE));
+   if (controller == nullptr)
    {
       nxlog_debug(4, _T("Chassis::onDataCollectionChange(%s [%d]): cannot find controller node object with id %d"), m_name, m_id, m_controllerId);
       return;
@@ -336,11 +334,11 @@ void Chassis::onDataCollectionChange()
  */
 void Chassis::collectProxyInfo(ProxyInfo *info)
 {
-   if(m_status == STATUS_UNMANAGED)
+   if (m_status == STATUS_UNMANAGED)
       return;
 
-   Node *controller = (Node *)FindObjectById(m_controllerId, OBJECT_NODE);
-   if (controller == NULL)
+   shared_ptr<Node> controller = static_pointer_cast<Node>(FindObjectById(m_controllerId, OBJECT_NODE));
+   if (controller == nullptr)
    {
       nxlog_debug(4, _T("Chassis::collectProxyInfo(%s [%d]): cannot find controller node object with id %d"), m_name, m_id, m_controllerId);
       return;
@@ -351,7 +349,7 @@ void Chassis::collectProxyInfo(ProxyInfo *info)
    bool backupSnmpProxy = (controller->getEffectiveSnmpProxy(true) == info->proxyId);
    bool isTarget = false;
 
-   lockDciAccess(false);
+   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *dco = m_dcObjects->get(i);
@@ -370,21 +368,21 @@ void Chassis::collectProxyInfo(ProxyInfo *info)
    unlockDciAccess();
 
    if (isTarget)
-      addProxySnmpTarget(info, controller);
+      addProxySnmpTarget(info, controller.get());
 }
 
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Chassis::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *Chassis::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslChassisClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslChassisClass, new shared_ptr<Chassis>(self())));
 }
 
 /**
  * Get effective source node for given data collection object
  */
-UINT32 Chassis::getEffectiveSourceNode(DCObject *dco)
+uint32_t Chassis::getEffectiveSourceNode(DCObject *dco)
 {
    if (dco->getSourceNode() != 0)
       return dco->getSourceNode();

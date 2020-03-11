@@ -33,7 +33,7 @@ GenericAgentPolicy::GenericAgentPolicy(const uuid& guid, const TCHAR *type, UINT
    _tcslcpy(m_type, type, MAX_POLICY_TYPE_LEN);
    m_guid = guid;
    m_ownerId = ownerId;
-   m_content = NULL;
+   m_content = nullptr;
    m_version = 1;
    m_flags = 0;
    m_expandedPolicyHashes = new HashMap<UINT32, BYTE>();
@@ -49,7 +49,7 @@ GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UIN
    _tcslcpy(m_type, type, MAX_POLICY_TYPE_LEN);
    m_guid = uuid::generate();
    m_ownerId = ownerId;
-   m_content = NULL;
+   m_content = nullptr;
    m_version = 1;
    m_flags = 0;
    m_expandedPolicyHashes = new HashMap<UINT32, BYTE>();
@@ -76,7 +76,7 @@ bool GenericAgentPolicy::saveToDatabase(DB_HANDLE hdb)
    else
       hStmt = DBPrepare(hdb, _T("UPDATE ap_common SET policy_name=?,owner_id=?,policy_type=?,file_content=?,version=?,flags=? WHERE guid=?"));
 
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
@@ -112,14 +112,14 @@ bool GenericAgentPolicy::loadFromDatabase(DB_HANDLE hdb)
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT policy_name,owner_id,policy_type,file_content,version,flags FROM ap_common WHERE guid='%s'"), (const TCHAR *)m_guid.toString());
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
          DBGetField(hResult, 0, 0, m_name, MAX_OBJECT_NAME);
          m_ownerId = DBGetFieldLong(hResult, 0, 1);
          DBGetField(hResult, 0, 2, m_type, MAX_POLICY_TYPE_LEN);
-         m_content = DBGetFieldUTF8(hResult, 0, 3, NULL, 0);
+         m_content = DBGetFieldUTF8(hResult, 0, 3, nullptr, 0);
          m_version = DBGetFieldLong(hResult, 0, 4);
          m_flags = DBGetFieldLong(hResult, 0, 5);
          success = true;
@@ -180,7 +180,7 @@ UINT32 GenericAgentPolicy::modifyFromMessage(NXCPMessage *msg)
  */
 bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported)
 {
-   if (content == NULL)
+   if (content == nullptr)
       return false;  // Policy cannot be deployed
 
    msg->setField(VID_CONFIG_FILE_DATA, reinterpret_cast<BYTE*>(content), strlen(content));
@@ -209,19 +209,25 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, char *content
 /**
  * Deploy policy to agent. Default implementation calls connector's deployPolicy() method
  */
-void GenericAgentPolicy::deploy(DeployData *data)
+void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 {
+   if (data->conn == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GenericAgentPolicy::deploy(%s): failed - no connection to agent"), data->debugId);
+      return;
+   }
+
    StringBuffer expandedContent;
    bool sendUpdate = true;
    m_contentLock->lock();
 
-   if(!data->forceInstall && data->currVerson >= m_version && (m_flags & EXPAND_MACRO) == 0)
+   if (!data->forceInstall && data->currVersion >= m_version && (m_flags & EXPAND_MACRO) == 0)
    {
       sendUpdate = false;
    }
 
-   char *content = NULL;
-   if((m_flags & EXPAND_MACRO) > 0)
+   char *content = nullptr;
+   if (m_flags & EXPAND_MACRO)
    {
 #ifdef UNICODE
       WCHAR *tmp = WideStringFromMBString(m_content);
@@ -233,10 +239,10 @@ void GenericAgentPolicy::deploy(DeployData *data)
       content = MemCopyString(expanded.cstr());
 #endif
       BYTE newHash[MD5_DIGEST_SIZE];
-      if(!data->forceInstall)
+      if (!data->forceInstall)
       {
-         CalculateMD5Hash(reinterpret_cast<BYTE *>(content), strlen(content), newHash);
-         if(!memcmp(newHash, data->currHash, MD5_DIGEST_SIZE))
+         CalculateMD5Hash(reinterpret_cast<BYTE*>(content), strlen(content), newHash);
+         if (!memcmp(newHash, data->currHash, MD5_DIGEST_SIZE))
             sendUpdate = false;
       }
    }
@@ -248,13 +254,13 @@ void GenericAgentPolicy::deploy(DeployData *data)
 
    if (sendUpdate)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Calling GenericAgentPolicy::deploy at %s (type=%s, newTypeFormat=%d)"), data->debugId, m_type, data->newTypeFormatSupported);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Calling GenericAgentPolicy::deploy at %s (type=%s, newTypeFormat=%d)"), data->debugId, m_type, data->newTypeFormat);
 
       NXCPMessage msg(data->conn->getProtocolVersion());
-      if (createDeploymentMessage(&msg, content, data->newTypeFormatSupported))
+      if (createDeploymentMessage(&msg, content, data->newTypeFormat))
       {
-         UINT32 rcc = data->conn->deployPolicy(&msg);
-         if(rcc == RCC_SUCCESS)
+         uint32_t rcc = data->conn->deployPolicy(&msg);
+         if (rcc == RCC_SUCCESS)
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("GenericAgentPolicy::deploy(%s): policy successfully deployed"), data->debugId);
          }
@@ -265,7 +271,7 @@ void GenericAgentPolicy::deploy(DeployData *data)
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("GenericAgentPolicy::deploy(%s): failed to create policy dployment message"), data->debugId);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("GenericAgentPolicy::deploy(%s): failed to create policy deployment message"), data->debugId);
       }
       data->conn->decRefCount();
    }
@@ -273,8 +279,8 @@ void GenericAgentPolicy::deploy(DeployData *data)
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("GenericAgentPolicy::deploy(%s): policy not changed - nothing to install"), data->debugId);
    }
+
    MemFree(content);
-   delete data;
 }
 
 /**
@@ -343,7 +349,7 @@ struct FileInfo
 static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, ObjectArray<FileInfo> *files, bool updateGuid)
 {
    ConfigEntry *children = currEntry->findEntry(_T("children"));
-   if (children == NULL)
+   if (children == nullptr)
       return;
 
    size_t pathPos = currPath->length();
@@ -351,7 +357,7 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
    currPath->append(_T("/"));
 
    ObjectArray<ConfigEntry> *elements = children->getSubEntries(_T("*"));
-   if (elements != NULL)
+   if (elements != nullptr)
    {
       for(int i = 0; i < elements->size(); i++)
       {
@@ -399,9 +405,9 @@ UINT32 FileDeliveryPolicy::modifyFromMessage(NXCPMessage *request)
       m_contentLock->lock();
       ObjectArray<FileInfo> files(64, 64, Ownership::True);
       Config data;
-      data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
+      data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
       ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
-      if (rootElements != NULL)
+      if (rootElements != nullptr)
       {
          for(int i = 0; i < rootElements->size(); i++)
          {
@@ -441,9 +447,9 @@ bool FileDeliveryPolicy::deleteFromDatabase(DB_HANDLE hdb)
 {
    ObjectArray<FileInfo> files(64, 64, Ownership::True);
    Config data;
-   data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
+   data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
    ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
-   if (rootElements != NULL)
+   if (rootElements != nullptr)
    {
       for(int i = 0; i < rootElements->size(); i++)
       {
@@ -471,36 +477,38 @@ bool FileDeliveryPolicy::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Deploy file delivery policy
  */
-void FileDeliveryPolicy::deploy(DeployData *deployData)
+void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 {
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s):)"), deployData->debugId);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s):)"), data->debugId);
 
-   if (!deployData->newTypeFormatSupported)
+   if (!data->newTypeFormat)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): filed file delivery not implemented)"), deployData->debugId);
-      deployData->conn->decRefCount();
-      delete deployData;
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): failed - file delivery policy not supported by agent"), data->debugId);
+      return;
+   }
+
+   if (data->conn == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): failed - no connection to agent"), data->debugId);
       return;
    }
 
    m_contentLock->lock();
-   if (m_content == NULL)
+   if (m_content == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): empty content)"), deployData->debugId);
-      deployData->conn->decRefCount();
-      delete deployData;
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): empty content)"), data->debugId);
       m_contentLock->unlock();
       return;
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::deploy(%s): preparing file list"), deployData->debugId);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::deploy(%s): preparing file list"), data->debugId);
    ObjectArray<FileInfo> files(64, 64, Ownership::True);
-   Config data;
-   data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), NULL, "FileDeliveryPolicy", false);
+   Config content;
+   content.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
    m_contentLock->unlock();
 
-   ObjectArray<ConfigEntry> *rootElements = data.getSubEntries(_T("/elements"), _T("*"));
-   if (rootElements != NULL)
+   ObjectArray<ConfigEntry> *rootElements = content.getSubEntries(_T("/elements"), _T("*"));
+   if (rootElements != nullptr)
    {
       for(int i = 0; i < rootElements->size(); i++)
       {
@@ -513,14 +521,14 @@ void FileDeliveryPolicy::deploy(DeployData *deployData)
    StringList fileRequest;
    for(int i = 0; i < files.size(); i++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): processing file path %s"), deployData->debugId, files.get(i)->path);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): processing file path %s"), data->debugId, files.get(i)->path);
       fileRequest.add(files.get(i)->path);
    }
    ObjectArray<RemoteFileInfo> *remoteFiles;
-   UINT32 rcc = deployData->conn->getFileSetInfo(&fileRequest, true, &remoteFiles);
+   uint32_t rcc = data->conn->getFileSetInfo(&fileRequest, true, &remoteFiles);
    if (rcc != RCC_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): call to AgentConnection::getFileSetInfo failed (%s)"), deployData->debugId, AgentErrorCodeToText(rcc));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): call to AgentConnection::getFileSetInfo failed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       return;
    }
 
@@ -529,7 +537,7 @@ void FileDeliveryPolicy::deploy(DeployData *deployData)
       RemoteFileInfo *remoteFile = remoteFiles->get(i);
       if ((remoteFile->status() != ERR_SUCCESS) && (remoteFile->status() != ERR_FILE_STAT_FAILED))
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): file %s with status %d skipped"), deployData->debugId, remoteFile->name(), remoteFile->status());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): file %s with status %d skipped"), data->debugId, remoteFile->name(), remoteFile->status());
          continue;
       }
 
@@ -540,38 +548,39 @@ void FileDeliveryPolicy::deploy(DeployData *deployData)
       BYTE localHash[MD5_DIGEST_SIZE];
       if (CalculateFileMD5Hash(localFile, localHash) && ((remoteFile->status() == ERR_FILE_STAT_FAILED) || memcmp(localHash, remoteFile->hash(), MD5_DIGEST_SIZE)))
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): uploading %s"), deployData->debugId, files.get(i)->path);
-         rcc = deployData->conn->uploadFile(localFile, remoteFile->name(), true);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed (%s)"), deployData->debugId, AgentErrorCodeToText(rcc));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): uploading %s"), data->debugId, files.get(i)->path);
+         rcc = data->conn->uploadFile(localFile, remoteFile->name(), true);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       }
       else
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): remote file %s and local file %s are the same, synchronization skipped"), deployData->debugId, remoteFile->name(), localFile.cstr());
-
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): remote file %s and local file %s are the same, synchronization skipped"), data->debugId, remoteFile->name(), localFile.cstr());
+      }
    }
    delete remoteFiles;
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): policy successfully installed"), deployData->debugId);
-   deployData->conn->decRefCount();
-   delete deployData;
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): policy successfully deployed"), data->debugId);
 }
 
-void UndeployPolicy(UndeployData *data)
+/**
+ * Remove policy from agent. Will destroy provided removal data.
+ */
+void RemoveAgentPolicy(const shared_ptr<AgentPolicyRemovalData>& data)
 {
-   if (data->conn != NULL)
+   if (data->conn != nullptr)
    {
-      UINT32 rcc = data->conn->uninstallPolicy(data->guid, data->policyType, data->newTypeFormatSupported);
-      data->conn->decRefCount();
+      uint32_t rcc = data->conn->uninstallPolicy(data->guid, data->policyType, data->newTypeFormat);
       if (rcc == ERR_SUCCESS)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("UninstallPolicy(%s): policy successfully uninstalled"), data->debugId);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("RemoveAgentPolicy(%s): policy successfully removed"), data->debugId);
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("UninstallPolicy(%s): policy uninstall failed: %s"), data->debugId, AgentErrorCodeToText(rcc));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("RemoveAgentPolicy(%s): policy removal failed: %s"), data->debugId, AgentErrorCodeToText(rcc));
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("UninstallPolicy(%s): policy uninstall failed: no connection to agent"), data->debugId);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("RemoveAgentPolicy(%s): policy removal failed: no connection to agent"), data->debugId);
    }
 }

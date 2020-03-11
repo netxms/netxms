@@ -323,7 +323,7 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
    MemFree(responseData);
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
-   free(json);
+   json_free(json);
    return response;
 }
 

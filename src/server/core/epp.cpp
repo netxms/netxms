@@ -32,14 +32,14 @@ EPRule::EPRule(UINT32 id) : m_actions(0, 16, Ownership::True)
    m_id = id;
    m_guid = uuid::generate();
    m_flags = 0;
-   m_comments = NULL;
+   m_comments = nullptr;
    m_alarmSeverity = 0;
-   m_alarmKey = NULL;
-   m_alarmMessage = NULL;
-   m_alarmImpact = NULL;
-   m_rcaScriptName = NULL;
-   m_scriptSource = NULL;
-   m_script = NULL;
+   m_alarmKey = nullptr;
+   m_alarmMessage = nullptr;
+   m_alarmImpact = nullptr;
+   m_rcaScriptName = nullptr;
+   m_scriptSource = nullptr;
+   m_script = nullptr;
 	m_alarmTimeout = 0;
 	m_alarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 }
@@ -56,13 +56,13 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
    m_flags = config->getSubEntryValueAsUInt(_T("flags"));
 
 	ConfigEntry *eventsRoot = config->findEntry(_T("events"));
-   if (eventsRoot != NULL)
+   if (eventsRoot != nullptr)
    {
 		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
       for(int i = 0; i < events->size(); i++)
       {
          shared_ptr<EventTemplate> e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
-         if (e != NULL)
+         if (e != nullptr)
          {
             m_events.add(e->getCode());
          }
@@ -80,7 +80,7 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
    m_rcaScriptName = MemCopyString(config->getSubEntryValue(_T("rootCauseAnalysisScript")));
 
    ConfigEntry *pStorageEntry = config->findEntry(_T("pStorageActions"));
-   if (pStorageEntry != NULL)
+   if (pStorageEntry != nullptr)
    {
       ObjectArray<ConfigEntry> *tmp = pStorageEntry->getSubEntries(_T("set#*"));
       for(int i = 0; i < tmp->size(); i++)
@@ -98,17 +98,17 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
    }
 
    ConfigEntry *alarmCategoriesEntry = config->findEntry(_T("alarmCategories"));
-   if(alarmCategoriesEntry != NULL)
+   if(alarmCategoriesEntry != nullptr)
    {
       ObjectArray<ConfigEntry> *categories = alarmCategoriesEntry->getSubEntries(_T("category#*"));
-      if (categories != NULL)
+      if (categories != nullptr)
       {
          for (int i = 0; i < categories->size(); i++)
          {
             const TCHAR *name = categories->get(i)->getAttribute(_T("name"));
             const TCHAR *description = categories->get(i)->getValue();
 
-            if ((name != NULL) && (*name != 0))
+            if ((name != nullptr) && (*name != 0))
             {
                UINT32 id = GetAndUpdateAlarmCategoryByName(name, description);
                if(id > 0)
@@ -126,12 +126,12 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
    }
 
    m_scriptSource = _tcsdup(config->getSubEntryValue(_T("script"), 0, _T("")));
-   if ((m_scriptSource != NULL) && (*m_scriptSource != 0))
+   if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
       TCHAR szError[256];
 
       m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 256, new NXSL_ServerEnv);
-      if (m_script != NULL)
+      if (m_script != nullptr)
       {
       	m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue(_T("")));
       }
@@ -142,11 +142,11 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
    }
    else
    {
-      m_script = NULL;
+      m_script = nullptr;
    }
 
    ConfigEntry *actionsRoot = config->findEntry(_T("actions"));
-   if (actionsRoot != NULL)
+   if (actionsRoot != nullptr)
    {
       ObjectArray<ConfigEntry> *actions = actionsRoot->getSubEntries(_T("action#*"));
       for(int i = 0; i < actions->size(); i++)
@@ -171,15 +171,15 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
    }
 
    ConfigEntry *timerCancellationsRoot = config->findEntry(_T("timerCancellations"));
-   if (timerCancellationsRoot != NULL)
+   if (timerCancellationsRoot != nullptr)
    {
       ConfigEntry *keys = timerCancellationsRoot->findEntry(_T("timerKey"));
-      if (keys != NULL)
+      if (keys != nullptr)
       {
          for(int i = 0; i < keys->getValueCount(); i++)
          {
             const TCHAR *v = keys->getValue(i);
-            if ((v != NULL) && (*v != 0))
+            if ((v != nullptr) && (*v != 0))
                m_timerCancellations.add(v);
          }
       }
@@ -197,17 +197,17 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
    m_id = DBGetFieldULong(hResult, row, 0);
    m_guid = DBGetFieldGUID(hResult, row, 1);
    m_flags = DBGetFieldULong(hResult, row, 2);
-   m_comments = DBGetField(hResult, row, 3, NULL, 0);
-   m_alarmMessage = DBGetField(hResult, row, 4, NULL, 0);
+   m_comments = DBGetField(hResult, row, 3, nullptr, 0);
+   m_alarmMessage = DBGetField(hResult, row, 4, nullptr, 0);
    m_alarmSeverity = DBGetFieldLong(hResult, row, 5);
-   m_alarmKey = DBGetField(hResult, row, 6, NULL, 0);
-   m_scriptSource = DBGetField(hResult, row, 7, NULL, 0);
-   if ((m_scriptSource != NULL) && (*m_scriptSource != 0))
+   m_alarmKey = DBGetField(hResult, row, 6, nullptr, 0);
+   m_scriptSource = DBGetField(hResult, row, 7, nullptr, 0);
+   if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
       TCHAR szError[256];
 
       m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 256, new NXSL_ServerEnv);
-      if (m_script != NULL)
+      if (m_script != nullptr)
       {
       	m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue(_T("")));
       }
@@ -218,12 +218,12 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
    }
    else
    {
-      m_script = NULL;
+      m_script = nullptr;
    }
 	m_alarmTimeout = DBGetFieldULong(hResult, row, 8);
 	m_alarmTimeoutEvent = DBGetFieldULong(hResult, row, 9);
-	m_rcaScriptName = DBGetField(hResult, row, 10, NULL, 0);
-   m_alarmImpact = DBGetField(hResult, row, 11, NULL, 0);
+	m_rcaScriptName = DBGetField(hResult, row, 10, nullptr, 0);
+   m_alarmImpact = DBGetField(hResult, row, 11, nullptr, 0);
 }
 
 /**
@@ -242,7 +242,7 @@ EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, Ownership::True)
       msg->getFieldAsInt32Array(VID_RULE_ACTIONS, &actions);
       for(int i = 0; i < actions.size(); i++)
       {
-         m_actions.add(new ActionExecutionConfiguration(actions.get(i), 0, NULL));
+         m_actions.add(new ActionExecutionConfiguration(actions.get(i), 0, nullptr));
       }
    }
    else
@@ -292,12 +292,12 @@ EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, Ownership::True)
    }
 
    m_scriptSource = msg->getFieldAsString(VID_SCRIPT);
-   if ((m_scriptSource != NULL) && (*m_scriptSource != 0))
+   if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
       TCHAR szError[256];
 
       m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 256, new NXSL_ServerEnv);
-      if (m_script != NULL)
+      if (m_script != nullptr)
       {
       	m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue(_T("")));
       }
@@ -308,7 +308,7 @@ EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, Ownership::True)
    }
    else
    {
-      m_script = NULL;
+      m_script = nullptr;
    }
 }
 
@@ -371,8 +371,8 @@ void EPRule::createExportRecord(StringBuffer &xml) const
 
    for(int i = 0; i < m_sources.size(); i++)
    {
-      NetObj *object = FindObjectById(m_sources.get(i));
-      if (object != NULL)
+      shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
+      if (object != nullptr)
       {
          TCHAR guidText[128];
          xml.appendFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
@@ -461,8 +461,8 @@ bool EPRule::matchSource(UINT32 objectId)
          break;
       }
 
-      NetObj *object = FindObjectById(m_sources.get(i));
-      if (object != NULL)
+      shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
+      if (object != nullptr)
       {
          if (object->isChild(objectId))
          {
@@ -516,7 +516,7 @@ bool EPRule::matchScript(Event *pEvent)
 {
    bool bRet = true;
 
-   if (m_script == NULL)
+   if (m_script == nullptr)
       return true;
 
    SetupServerScriptVM(m_script, FindObjectById(pEvent->getSourceId()), shared_ptr<DCObjectInfo>());
@@ -536,17 +536,17 @@ bool EPRule::matchScript(Event *pEvent)
       ppValueList[i] = m_script->createValue(pEvent->getParameter(i));
 
    // Run script
-   NXSL_VariableSystem *globals = NULL;
+   NXSL_VariableSystem *globals = nullptr;
    if (m_script->run(pEvent->getParametersCount(), ppValueList, &globals))
    {
       NXSL_Value *value = m_script->getResult();
-      if (value != NULL)
+      if (value != nullptr)
       {
          bRet = value->getValueAsBoolean();
          if (bRet)
          {
          	NXSL_Variable *var = globals->find("CUSTOM_MESSAGE");
-         	if (var != NULL)
+         	if (var != nullptr)
          	{
          		// Update custom message in event
          		pEvent->setCustomMessage(CHECK_NULL_EX(var->getValue()->getValueAsCString()));
@@ -614,10 +614,10 @@ bool EPRule::processEvent(Event *event)
          else
          {
             TCHAR parameters[64], comments[256];
-            _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != NULL) ? alarm->getAlarmId() : 0);
+            _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != nullptr) ? alarm->getAlarmId() : 0);
             _sntprintf(comments, 256, _T("Delayed action execution for event %s"), event->getName());
-            String key = ((a->timerKey != NULL) && (*a->timerKey != 0)) ? event->expandText(a->timerKey, alarm) : String();
-            AddOneTimeScheduledTask(_T("Execute.Action"), time(NULL) + a->timerDelay, parameters,
+            String key = ((a->timerKey != nullptr) && (*a->timerKey != 0)) ? event->expandText(a->timerKey, alarm) : String();
+            AddOneTimeScheduledTask(_T("Execute.Action"), time(nullptr) + a->timerDelay, parameters,
                      new ActionExecutionTransientData(event, alarm), 0, event->getSourceId(), SYSTEM_ACCESS_FULL,
                      comments, key.isEmpty() ? nullptr : key.cstr(), true);
          }
@@ -672,11 +672,11 @@ UINT32 EPRule::generateAlarm(Event *event)
 	else	// Generate new alarm
 	{
 	   UINT32 parentAlarmId = 0;
-	   if ((m_rcaScriptName != NULL) && (m_rcaScriptName[0] != 0))
+	   if ((m_rcaScriptName != nullptr) && (m_rcaScriptName[0] != 0))
 	   {
-	      NetObj *object = FindObjectById(event->getSourceId());
+	      shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
 	      NXSL_VM *vm = CreateServerScriptVM(m_rcaScriptName, object);
-	      if (vm != NULL)
+	      if (vm != nullptr)
 	      {
 	         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
 	         if (vm->run())
@@ -717,7 +717,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    // Load rule's sources
    _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -732,7 +732,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    // Load rule's events
    _sntprintf(szQuery, 256, _T("SELECT event_code FROM policy_event_list WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -747,14 +747,14 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    // Load rule's actions
    _sntprintf(szQuery, 256, _T("SELECT action_id,timer_delay,timer_key FROM policy_action_list WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          UINT32 actionId = DBGetFieldULong(hResult, i, 0);
          UINT32 timerDelay = DBGetFieldULong(hResult, i, 1);
-         TCHAR *timerKey = DBGetField(hResult, i, 2, NULL, 0);
+         TCHAR *timerKey = DBGetField(hResult, i, 2, nullptr, 0);
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, timerKey));
       }
       DBFreeResult(hResult);
@@ -767,12 +767,12 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    // Load timer cancellations
    _sntprintf(szQuery, 256, _T("SELECT timer_key FROM policy_timer_cancellation_list WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         m_timerCancellations.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+         m_timerCancellations.addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
       }
       DBFreeResult(hResult);
    }
@@ -784,7 +784,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    // Load pstorage actions
    _sntprintf(szQuery, 256, _T("SELECT ps_key,action,value FROM policy_pstorage_actions WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       TCHAR key[MAX_DB_STRING];
       int count = DBGetNumRows(hResult);
@@ -793,7 +793,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
          DBGetField(hResult, i, 0, key, MAX_DB_STRING);
          if (DBGetFieldULong(hResult, i, 1) == PSTORAGE_SET)
          {
-            m_pstorageSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, NULL, 0));
+            m_pstorageSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, nullptr, 0));
          }
          if (DBGetFieldULong(hResult, i, 1) == PSTORAGE_DELETE)
          {
@@ -810,7 +810,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    // Load alarm categories
    _sntprintf(szQuery, 256, _T("SELECT category_id FROM alarm_category_map WHERE alarm_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -850,7 +850,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
                                   _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,rca_script_name) ")
                                   _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       TCHAR guidText[128];
       DBBind(hStmt, 1, DB_CTYPE_INT32, m_id);
@@ -877,7 +877,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
    if (success && !m_actions.isEmpty())
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_action_list (rule_id,action_id,timer_delay,timer_key) VALUES (?,?,?,?)"), m_actions.size() > 1);
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for(i = 0; i < m_actions.size() && success; i++)
@@ -900,7 +900,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
    if (success && !m_timerCancellations.isEmpty())
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_timer_cancellation_list (rule_id,timer_key) VALUES (?,?)"), m_timerCancellations.size() > 1);
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for(i = 0; i < m_timerCancellations.size() && success; i++)
@@ -940,7 +940,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
    if (success && !m_pstorageSetActions.isEmpty())
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key,value) VALUES (?,1,?,?)"), m_pstorageSetActions.size() > 1);
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          success = _STOP != m_pstorageSetActions.forEach(SavePstorageSetActions, hStmt);
@@ -951,7 +951,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
    if (success && !m_pstorageDeleteActions.isEmpty())
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key) VALUES (?,2,?)"), m_pstorageDeleteActions.size() > 1);
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for(int i = 0; i < m_pstorageDeleteActions.size() && success; i++)
@@ -967,7 +967,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
    if (success && !m_alarmCategoryList.isEmpty())
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_map (alarm_id,category_id) VALUES (?,?)"), m_alarmCategoryList.size() > 1);
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER && success, m_id);
          for(i = 0; (i < m_alarmCategoryList.size()) && success; i++)
@@ -1101,7 +1101,7 @@ bool EventPolicy::loadFromDB()
    hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
                            _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
                            _T("rca_script_name,alarm_impact FROM event_policy ORDER BY rule_id"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       success = true;
       int count = DBGetNumRows(hResult);
@@ -1197,7 +1197,7 @@ void EventPolicy::replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList)
 {
    writeLock();
    m_rules.clear();
-   if (ppRuleList != NULL)
+   if (ppRuleList != nullptr)
    {
       for(int i = 0; i < (int)dwNumRules; i++)
       {
@@ -1318,7 +1318,7 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
    else //insert new rule
    {
       bool foundPreviousIndex = true;
-      if(ruleOrdering != NULL)
+      if (ruleOrdering != nullptr)
       {
          int newRulePrevIndex = -1;
          for (int i = 0; i < ruleOrdering->size(); i++)
@@ -1330,7 +1330,7 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
             }
          }
 
-         if(newRulePrevIndex != -1)
+         if (newRulePrevIndex != -1)
          {
             //find rule before this rule
             if (newRulePrevIndex > 0)
@@ -1347,11 +1347,10 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
             //check if any rule after this rule already exist if before not found
             for (int i = newRulePrevIndex + 2; ruleIndex == -1 && i < ruleOrdering->size(); i++)
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i));
-
          }
       }
 
-      if(ruleIndex == -1) // Add new rule at the end
+      if (ruleIndex == -1) // Add new rule at the end
       {
          rule->setId(m_rules.size());
          m_rules.add(rule);

@@ -62,43 +62,43 @@ const TCHAR *DCObject::getStorageClassName(DCObjectStorageClass storageClass)
 /**
  * Default constructor for DCObject
  */
-DCObject::DCObject()
+DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner)
 {
    m_id = 0;
    m_guid = uuid::generate();
+   m_ownerId = (owner != nullptr) ? owner->getId() : 0;
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
 	m_pollingScheduleType = DC_POLLING_SCHEDULE_DEFAULT;
    m_pollingInterval = 0;
-   m_pollingIntervalSrc = NULL;
+   m_pollingIntervalSrc = nullptr;
    m_retentionType = DC_RETENTION_DEFAULT;
    m_retentionTime = 0;
-   m_retentionTimeSrc = NULL;
+   m_retentionTimeSrc = nullptr;
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
    m_lastPoll = 0;
-   m_owner = NULL;
    m_hMutex = MutexCreateRecursive();
-   m_schedules = NULL;
+   m_schedules = nullptr;
    m_tLastCheck = 0;
 	m_flags = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
 	m_sourceNode = 0;
-	m_pszPerfTabSettings = NULL;
+	m_pszPerfTabSettings = nullptr;
 	m_snmpPort = 0;	// use default
 	m_snmpVersion = SNMP_VERSION_DEFAULT;
-   m_transformationScriptSource = NULL;
-   m_transformationScript = NULL;
+   m_transformationScriptSource = nullptr;
+   m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
-   m_comments = NULL;
+   m_comments = nullptr;
    m_doForcePoll = false;
-   m_pollingSession = NULL;
+   m_pollingSession = nullptr;
    m_instanceDiscoveryMethod = IDM_NONE;
-   m_instanceFilterSource = NULL;
-   m_instanceFilter = NULL;
+   m_instanceFilterSource = nullptr;
+   m_instanceFilter = nullptr;
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
@@ -111,10 +111,12 @@ DCObject::DCObject()
  */
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_name(src->m_name), m_description(src->m_description), m_systemTag(src->m_systemTag),
-         m_instanceDiscoveryData(src->m_instanceDiscoveryData), m_instance(src->m_instance)
+         m_instanceDiscoveryData(src->m_instanceDiscoveryData), m_instance(src->m_instance),
+         m_owner(src->m_owner)
 {
    m_id = src->m_id;
    m_guid = src->m_guid;
+   m_ownerId = src->m_ownerId;
    m_dwTemplateId = src->m_dwTemplateId;
    m_dwTemplateItemId = src->m_dwTemplateItemId;
    m_busy = shadowCopy ? src->m_busy : 0;
@@ -128,7 +130,6 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_source = src->m_source;
    m_status = src->m_status;
    m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
-   m_owner = src->m_owner;
    m_hMutex = MutexCreateRecursive();
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
    m_dwErrorCount = shadowCopy ? src->m_dwErrorCount : 0;
@@ -140,18 +141,18 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_snmpVersion = src->m_snmpVersion;
 	m_comments = MemCopyString(src->m_comments);
 	m_doForcePoll = false;
-	m_pollingSession = NULL;
+	m_pollingSession = nullptr;
 
-   m_transformationScriptSource = NULL;
-   m_transformationScript = NULL;
+   m_transformationScriptSource = nullptr;
+   m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
    setTransformationScript(src->m_transformationScriptSource);
 
-   m_schedules = (src->m_schedules != NULL) ? new StringList(src->m_schedules) : NULL;
+   m_schedules = (src->m_schedules != nullptr) ? new StringList(src->m_schedules) : nullptr;
 
    m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
-   m_instanceFilterSource = NULL;
-   m_instanceFilter = NULL;
+   m_instanceFilterSource = nullptr;
+   m_instanceFilter = nullptr;
    setInstanceFilter(src->m_instanceFilterSource);
    m_accessList = new IntegerArray<UINT32>(src->m_accessList);
    m_instanceRetentionTime = src->m_instanceRetentionTime;
@@ -163,45 +164,45 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 /**
  * Constructor for creating new DCObject from scratch
  */
-DCObject::DCObject(UINT32 id, const TCHAR *name, int source,
-               const TCHAR *pollingInterval, const TCHAR *retentionTime, DataCollectionOwner *owner,
-               const TCHAR *description, const TCHAR *systemTag) :
+DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
+         const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag) :
          m_name(name), m_description(description), m_systemTag(systemTag),
-         m_instanceDiscoveryData(_T("")), m_instance(_T(""))
+         m_instanceDiscoveryData(_T("")), m_instance(_T("")),
+         m_owner(owner)
 {
    m_id = id;
    m_guid = uuid::generate();
+   m_ownerId = (owner != nullptr) ? owner->getId() : 0;
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
    m_source = source;
-   m_pollingScheduleType = (pollingInterval != NULL) ? DC_POLLING_SCHEDULE_CUSTOM : DC_POLLING_SCHEDULE_DEFAULT;
+   m_pollingScheduleType = (pollingInterval != nullptr) ? DC_POLLING_SCHEDULE_CUSTOM : DC_POLLING_SCHEDULE_DEFAULT;
    m_pollingIntervalSrc = MemCopyString(pollingInterval);
-   m_retentionTime = (retentionTime != NULL) ? DC_RETENTION_CUSTOM : DC_RETENTION_DEFAULT;
+   m_retentionTime = (retentionTime != nullptr) ? DC_RETENTION_CUSTOM : DC_RETENTION_DEFAULT;
    m_retentionTimeSrc = MemCopyString(retentionTime);
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
    m_lastPoll = 0;
-   m_owner = owner;
    m_hMutex = MutexCreateRecursive();
    m_flags = 0;
-   m_schedules = NULL;
+   m_schedules = nullptr;
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
 	m_sourceNode = 0;
-	m_pszPerfTabSettings = NULL;
+	m_pszPerfTabSettings = nullptr;
 	m_snmpPort = 0;	// use default
    m_snmpVersion = SNMP_VERSION_DEFAULT;
-   m_transformationScriptSource = NULL;
-   m_transformationScript = NULL;
+   m_transformationScriptSource = nullptr;
+   m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
-   m_comments = NULL;
+   m_comments = nullptr;
    m_doForcePoll = false;
-   m_pollingSession = NULL;
+   m_pollingSession = nullptr;
    m_instanceDiscoveryMethod = IDM_NONE;
-   m_instanceFilterSource = NULL;
-   m_instanceFilter = NULL;
+   m_instanceFilterSource = nullptr;
+   m_instanceFilter = nullptr;
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
@@ -214,21 +215,22 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source,
 /**
  * Create DCObject from import file
  */
-DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
+DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner)
 {
    m_id = CreateUniqueId(IDG_ITEM);
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
    if (m_guid.isNull())
       m_guid = uuid::generate();
+   m_ownerId = (owner != nullptr) ? owner->getId() : 0;
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
    m_name = config->getSubEntryValue(_T("name"), 0, _T("unnamed"));
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
-   m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, NULL);
+   m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
 	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
-   if(config->findEntry(_T("scheduleType")) != NULL)
+   if(config->findEntry(_T("scheduleType")) != nullptr)
    {
       m_pollingScheduleType = config->getSubEntryValueAsInt(_T("scheduleType"));
    }
@@ -239,7 +241,7 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
          m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
    }
    m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
-   if(config->findEntry(_T("retentionType")) != NULL)
+   if(config->findEntry(_T("retentionType")) != nullptr)
    {
       m_retentionType = config->getSubEntryValueAsInt(_T("retentionType"));
    }
@@ -253,7 +255,6 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
    m_busy = 0;
 	m_scheduledForDeletion = 0;
    m_lastPoll = 0;
-   m_owner = owner;
    m_hMutex = MutexCreateRecursive();
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
@@ -263,14 +264,14 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
    m_pszPerfTabSettings = MemCopyString(perfTabSettings);
 	m_snmpPort = static_cast<UINT16>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
-   m_schedules = NULL;
+   m_schedules = nullptr;
 
-	m_transformationScriptSource = NULL;
-	m_transformationScript = NULL;
+	m_transformationScriptSource = nullptr;
+	m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
    m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
    m_doForcePoll = false;
-   m_pollingSession = NULL;
+   m_pollingSession = nullptr;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
 
    // for compatibility with old format
@@ -278,9 +279,9 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
       m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
 
 	ConfigEntry *schedules = config->findEntry(_T("schedules"));
-	if (schedules != NULL)
+	if (schedules != nullptr)
 		schedules = schedules->findEntry(_T("schedule"));
-	if ((schedules != NULL) && (schedules->getValueCount() > 0))
+	if ((schedules != nullptr) && (schedules->getValueCount() > 0))
 	{
 	   m_schedules = new StringList();
 	   int count = schedules->getValueCount();
@@ -292,8 +293,8 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
 
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
    m_instanceDiscoveryData = config->getSubEntryValue(_T("instanceDiscoveryData"));
-   m_instanceFilterSource = NULL;
-   m_instanceFilter = NULL;
+   m_instanceFilterSource = nullptr;
+   m_instanceFilter = nullptr;
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    m_instance = config->getSubEntryValue(_T("instance"));
    m_accessList = new IntegerArray<UINT32>(0, 16);
@@ -331,12 +332,12 @@ bool DCObject::loadAccessList(DB_HANDLE hdb)
    m_accessList->clear();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_id FROM dci_access WHERE dci_id=?"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -346,7 +347,7 @@ bool DCObject::loadAccessList(DB_HANDLE hdb)
       DBFreeResult(hResult);
    }
    DBFreeStatement(hStmt);
-   return hResult != NULL;
+   return hResult != nullptr;
 }
 
 /**
@@ -359,12 +360,12 @@ bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
 		return true;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT schedule FROM dci_schedules WHERE item_id=?"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       if (count > 0)
@@ -372,13 +373,13 @@ bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
          m_schedules = new StringList();
          for(int i = 0; i < count; i++)
          {
-            m_schedules->addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+            m_schedules->addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
          }
       }
       DBFreeResult(hResult);
    }
    DBFreeStatement(hStmt);
-	return hResult != NULL;
+	return hResult != nullptr;
 }
 
 /**
@@ -387,16 +388,15 @@ bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
  */
 bool DCObject::matchClusterResource()
 {
-	Cluster *pCluster;
-
-   if ((m_dwResourceId == 0) || (m_owner->getObjectClass() != OBJECT_NODE))
+   auto owner = m_owner.lock();
+   if ((m_dwResourceId == 0) || (owner->getObjectClass() != OBJECT_NODE))
 		return true;
 
-	pCluster = ((Node *)m_owner)->getMyCluster();
-	if (pCluster == NULL)
+	shared_ptr<Cluster> cluster = static_cast<Node*>(owner.get())->getMyCluster();
+	if (cluster == nullptr)
 		return false;	// Has association, but cluster object cannot be found
 
-	return pCluster->isResourceOnNode(m_dwResourceId, m_owner->getId());
+	return cluster->isResourceOnNode(m_dwResourceId, m_ownerId);
 }
 
 /**
@@ -420,47 +420,49 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 		dst = head;
 		if (!_tcscmp(macro, _T("node_id")))
 		{
-			if (m_owner != NULL)
+			if (m_ownerId != 0)
 			{
-				dst.append(m_owner->getId());
+				dst.append(m_ownerId);
 			}
 			else
 			{
-				dst += _T("(error)");
+            dst.append(_T("(error)"));
 			}
 		}
 		else if (!_tcscmp(macro, _T("node_name")))
 		{
-			if (m_owner != NULL)
+         auto owner = m_owner.lock();
+			if (owner != nullptr)
 			{
-				dst += m_owner->getName();
+				dst.append(owner->getName());
 			}
 			else
 			{
-				dst += _T("(error)");
+				dst.append(_T("(error)"));
 			}
 		}
 		else if (!_tcscmp(macro, _T("node_primary_ip")))
 		{
-			if ((m_owner != NULL) && (m_owner->getObjectClass() == OBJECT_NODE))
+		   auto owner = m_owner.lock();
+			if ((owner != nullptr) && (owner->getObjectClass() == OBJECT_NODE))
 			{
 				TCHAR ipAddr[64];
-				dst += static_cast<Node*>(m_owner)->getIpAddress().toString(ipAddr);
+				dst.append(static_cast<Node*>(owner.get())->getIpAddress().toString(ipAddr));
 			}
 			else
 			{
-				dst += _T("(error)");
+            dst.append(_T("(error)"));
 			}
 		}
 		else if (!_tcsncmp(macro, _T("script:"), 7))
 		{
-			NXSL_VM *vm = CreateServerScriptVM(&macro[7], m_owner, createDescriptorInternal());
-			if (vm != NULL)
+			NXSL_VM *vm = CreateServerScriptVM(&macro[7], m_owner.lock(), createDescriptorInternal());
+			if (vm != nullptr)
 			{
-				if (vm->run(0, NULL))
+				if (vm->run(0, nullptr))
 				{
 					NXSL_Value *result = vm->getResult();
-					if (result != NULL)
+					if (result != nullptr)
 						dst.append(result->getValueAsCString());
 		         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_id, src, &macro[7]);
 				}
@@ -503,10 +505,11 @@ bool DCObject::deleteEntry(time_t timestamp)
 /**
  * Set new ID and node/template association
  */
-void DCObject::changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doMacroExpansion)
+void DCObject::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion)
 {
    lock();
    m_owner = newOwner;
+   m_ownerId = (newOwner != nullptr) ? newOwner->getId() : 0;
 	if (newId != 0)
 	{
 		m_id = newId;
@@ -530,10 +533,11 @@ void DCObject::changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool d
  */
 void DCObject::setStatus(int status, bool generateEvent)
 {
-   if ((m_owner != NULL) && (m_status != (BYTE)status))
+   auto owner = m_owner.lock();
+   if ((owner != nullptr) && (m_status != (BYTE)status))
    {
-      NotifyClientsOnDCIStatusChange(getOwner(), getId(), status);
-      if (generateEvent && IsEventSource(m_owner->getObjectClass()))
+      NotifyClientsOnDCIStatusChange(*owner, getId(), status);
+      if (generateEvent && IsEventSource(owner->getObjectClass()))
       {
          static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
          static const TCHAR *originName[11] =
@@ -543,7 +547,7 @@ void DCObject::setStatus(int status, bool generateEvent)
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
                _T("Device Driver")
             };
-         PostSystemEvent(eventCode[status], m_owner->getId(), "dssds", m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
+         PostSystemEvent(eventCode[status], owner->getId(), "dssds", m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
       }
    }
    m_status = (BYTE)status;
@@ -560,24 +564,24 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
    if (_tcslen(schedule) > 4 && !_tcsncmp(schedule, _T("%["), 2))
    {
       TCHAR *scriptName = _tcsdup(schedule + 2);
-      if (scriptName != NULL)
+      if (scriptName != nullptr)
       {
          bool success = false;
          TCHAR *closingBracker = _tcschr(scriptName, _T(']'));
-         if (closingBracker != NULL)
+         if (closingBracker != nullptr)
          {
             *closingBracker = 0;
 
-            NXSL_VM *vm = CreateServerScriptVM(scriptName, m_owner, createDescriptorInternal());
-            if (vm != NULL)
+            NXSL_VM *vm = CreateServerScriptVM(scriptName, m_owner.lock(), createDescriptorInternal());
+            if (vm != nullptr)
             {
-               if (vm->run(0, NULL))
+               if (vm->run(0, nullptr))
                {
                   NXSL_Value *result = vm->getResult();
-                  if (result != NULL)
+                  if (result != nullptr)
                   {
                      const TCHAR *temp = result->getValueAsCString();
-                     if (temp != NULL)
+                     if (temp != nullptr)
                      {
                         DbgPrintf(7, _T("DCObject::matchSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
                         _tcslcpy(expandedSchedule, temp, 1024);
@@ -641,7 +645,7 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
    ExtractWord(pszCurr, szValue);
    if (szValue[0] != _T('\0'))
    {
-      if (withSeconds != NULL)
+      if (withSeconds != nullptr)
          *withSeconds = true;
       return MatchScheduleElement(szValue, currLocalTime->tm_sec, 59, currLocalTime, currTimestamp, true);
    }
@@ -676,11 +680,11 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
          // DCI cannot be force polled at the moment, clear force poll request
-         nxlog_debug_tag(_T("dc.scheduler"), 6, _T("Forced poll of DC object %s [%u] on node %s [%u] cancelled"), m_name.cstr(), m_id, m_owner->getName(), m_owner->getId());
-         if (m_pollingSession != NULL)
+         nxlog_debug_tag(_T("dc.scheduler"), 6, _T("Forced poll of DC object %s [%u] on node %s [%u] cancelled"), m_name.cstr(), m_id, getOwnerName(), m_ownerId);
+         if (m_pollingSession != nullptr)
          {
             m_pollingSession->decRefCount();
-            m_pollingSession = NULL;
+            m_pollingSession = nullptr;
          }
          m_doForcePoll = false;
          unlock();
@@ -695,7 +699,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    {
       if (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)
       {
-         if (m_schedules != NULL)
+         if (m_schedules != nullptr)
          {
             struct tm tmCurrLocal, tmLastLocal;
 #if HAVE_LOCALTIME_R
@@ -795,7 +799,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_SNMP_VERSION, static_cast<INT16>(m_snmpVersion));
    pMsg->setField(VID_COMMENTS, m_comments);
    pMsg->setField(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
-	if (m_schedules != NULL)
+	if (m_schedules != nullptr)
 	{
       pMsg->setField(VID_NUM_SCHEDULES, (UINT32)m_schedules->size());
       UINT32 fieldId = VID_DCI_SCHEDULE_BASE;
@@ -856,7 +860,7 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
    int count = pMsg->getFieldAsInt32(VID_NUM_SCHEDULES);
    if (count > 0)
    {
-      if (m_schedules != NULL)
+      if (m_schedules != nullptr)
          m_schedules->clear();
       else
          m_schedules = new StringList();
@@ -865,7 +869,7 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
       for(int i = 0; i < count; i++, fieldId++)
       {
          TCHAR *s = pMsg->getFieldAsString(fieldId);
-         if (s != NULL)
+         if (s != nullptr)
          {
             m_schedules->addPreallocated(s);
          }
@@ -903,10 +907,10 @@ bool DCObject::saveToDatabase(DB_HANDLE hdb)
 
    // Save schedules
    bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_schedules WHERE item_id=?"));
-	if (success && (m_schedules != NULL) && !m_schedules->isEmpty())
+	if (success && (m_schedules != nullptr) && !m_schedules->isEmpty())
    {
 	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (?,?,?)"));
-	   if (hStmt != NULL)
+	   if (hStmt != nullptr)
 	   {
 	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for(int i = 0; (i < m_schedules->size()) && success; i++)
@@ -931,7 +935,7 @@ bool DCObject::saveToDatabase(DB_HANDLE hdb)
    if (success && !m_accessList->isEmpty())
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_access (dci_id,user_id) VALUES (?,?)"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for(int i = 0; (i < m_accessList->size()) && success; i++)
@@ -1036,7 +1040,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 
    // Copy schedules
    delete m_schedules;
-   m_schedules = (src->m_schedules != NULL) ? new StringList(src->m_schedules) : NULL;
+   m_schedules = (src->m_schedules != nullptr) ? new StringList(src->m_schedules) : nullptr;
 
    if ((src->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE))
    {
@@ -1054,7 +1058,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_instanceRetentionTime = src->m_instanceRetentionTime;
 
    if (((m_status != ITEM_STATUS_DISABLED) || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE)) &&
-       !((m_owner->getId() == m_dwTemplateId) && (m_instanceGracePeriodStart > 0))) // check if DCI is not disabled by instance discovery
+       !((m_ownerId == m_dwTemplateId) && (m_instanceGracePeriodStart > 0))) // check if DCI is not disabled by instance discovery
    {
       setStatus(src->m_status, true);
    }
@@ -1079,7 +1083,7 @@ bool DCObject::processNewValue(time_t nTimeStamp, void *value, bool *updateStatu
  */
 void DCObject::processNewError(bool noInstance)
 {
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    processNewError(noInstance, now);
 }
 
@@ -1109,7 +1113,8 @@ void DCObject::generateEventsBasedOnThrDiff()
  */
 bool DCObject::hasValue()
 {
-   if ((m_owner != NULL) && (m_owner->getObjectClass() == OBJECT_CLUSTER))
+   auto owner = m_owner.lock();
+   if ((owner != nullptr) && (owner->getObjectClass() == OBJECT_CLUSTER))
       return isAggregateOnCluster() && (m_instanceDiscoveryMethod == IDM_NONE);
    return m_instanceDiscoveryMethod == IDM_NONE;
 }
@@ -1121,15 +1126,15 @@ void DCObject::setTransformationScript(const TCHAR *source)
 {
    free(m_transformationScriptSource);
    delete m_transformationScript;
-   if (source != NULL)
+   if (source != nullptr)
    {
       m_transformationScriptSource = _tcsdup(source);
       StrStrip(m_transformationScriptSource);
       if (m_transformationScriptSource[0] != 0)
       {
          TCHAR errorText[1024];
-         m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, NULL);
-         if (m_transformationScript == NULL)
+         m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, nullptr);
+         if (m_transformationScript == nullptr)
          {
             nxlog_write(NXLOG_WARNING, _T("Failed to compile transformation script for object %s [%u] DCI %s [%u] (%s)"),
                      getOwnerName(), getOwnerId(), m_name.cstr(), m_id, errorText);
@@ -1137,13 +1142,13 @@ void DCObject::setTransformationScript(const TCHAR *source)
       }
       else
       {
-         m_transformationScript = NULL;
+         m_transformationScript = nullptr;
       }
    }
    else
    {
-      m_transformationScriptSource = NULL;
-      m_transformationScript = NULL;
+      m_transformationScriptSource = nullptr;
+      m_transformationScript = nullptr;
    }
    m_lastScriptErrorReport = 0;  // allow immediate error report after script change
 }
@@ -1156,23 +1161,24 @@ INT16 DCObject::getAgentCacheMode()
    if ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT))
       return AGENT_CACHE_OFF;
 
-   Node *node = NULL;
+   shared_ptr<Node> node;
    if (m_sourceNode != 0)
    {
-      node = (Node *)FindObjectById(m_sourceNode, OBJECT_NODE);
+      node = static_pointer_cast<Node>(FindObjectById(m_sourceNode, OBJECT_NODE));
    }
    else
    {
-      if (m_owner->getObjectClass() == OBJECT_NODE)
+      auto owner = m_owner.lock();
+      if (owner->getObjectClass() == OBJECT_NODE)
       {
-         node = (Node *)m_owner;
+         node = static_pointer_cast<Node>(owner);
       }
-      else if (m_owner->getObjectClass() == OBJECT_CHASSIS)
+      else if (owner->getObjectClass() == OBJECT_CHASSIS)
       {
-         node = (Node *)FindObjectById(((Chassis *)m_owner)->getControllerId(), OBJECT_NODE);
+         node = static_pointer_cast<Node>(FindObjectById(static_cast<Chassis*>(owner.get())->getControllerId(), OBJECT_NODE));
       }
    }
-   if (node == NULL)
+   if (node == nullptr)
       return AGENT_CACHE_OFF;
 
    if ((m_source == DS_SNMP_AGENT) && (node->getEffectiveSnmpProxy() == 0))
@@ -1193,7 +1199,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
 
    m_name = config->getSubEntryValue(_T("name"), 0, _T("unnamed"));
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
-   m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, NULL);
+   m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
@@ -1205,7 +1211,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    MemFree(m_pollingIntervalSrc);
    MemFree(m_retentionTimeSrc);
    m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
-   if(config->findEntry(_T("scheduleType")) != NULL)
+   if(config->findEntry(_T("scheduleType")) != nullptr)
    {
       m_pollingScheduleType = config->getSubEntryValueAsInt(_T("scheduleType"));
    }
@@ -1216,7 +1222,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
          m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
    }
    m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
-   if(config->findEntry(_T("retentionType")) != NULL)
+   if(config->findEntry(_T("retentionType")) != nullptr)
    {
       m_retentionType = config->getSubEntryValueAsInt(_T("retentionType"));
    }
@@ -1232,11 +1238,11 @@ void DCObject::updateFromImport(ConfigEntry *config)
    setTransformationScript(config->getSubEntryValue(_T("transformation")));
 
    ConfigEntry *schedules = config->findEntry(_T("schedules"));
-   if (schedules != NULL)
+   if (schedules != nullptr)
       schedules = schedules->findEntry(_T("schedule"));
-   if ((schedules != NULL) && (schedules->getValueCount() > 0))
+   if ((schedules != nullptr) && (schedules->getValueCount() > 0))
    {
-      if (m_schedules != NULL)
+      if (m_schedules != nullptr)
          m_schedules->clear();
       else
          m_schedules = new StringList();
@@ -1262,19 +1268,12 @@ void DCObject::updateFromImport(ConfigEntry *config)
 }
 
 /**
- * Get owner ID
- */
-UINT32 DCObject::getOwnerId() const
-{
-   return (m_owner != NULL) ? m_owner->getId() : 0;
-}
-
-/**
  * Get owner name
  */
 const TCHAR *DCObject::getOwnerName() const
 {
-   return (m_owner != NULL) ? m_owner->getName() : _T("(null)");
+   auto owner = m_owner.lock();
+   return (owner != nullptr) ? owner->getName() : _T("(null)");
 }
 
 /**
@@ -1292,7 +1291,7 @@ ClientSession *DCObject::processForcePoll()
 {
    lock();
    ClientSession *session = m_pollingSession;
-   m_pollingSession = NULL;
+   m_pollingSession = nullptr;
    m_doForcePoll = false;
    unlock();
    return session;
@@ -1304,10 +1303,10 @@ ClientSession *DCObject::processForcePoll()
 void DCObject::requestForcePoll(ClientSession *session)
 {
    lock();
-   if (m_pollingSession != NULL)
+   if (m_pollingSession != nullptr)
       m_pollingSession->decRefCount();
    m_pollingSession = session;
-   if (m_pollingSession != NULL)
+   if (m_pollingSession != nullptr)
       m_pollingSession->incRefCount();
    m_doForcePoll = true;
    unlock();
@@ -1339,8 +1338,8 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
    instanceFilter->setGlobalVariable("$targetObject", dco->getOwner()->createNXSLObject(instanceFilter));
    if (dco->getSourceNode() != 0)
    {
-      Node *sourceNode = (Node *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
-      if (sourceNode != NULL)
+      shared_ptr<NetObj> sourceNode = FindObjectById(dco->getSourceNode(), OBJECT_NODE);
+      if (sourceNode != nullptr)
          instanceFilter->setGlobalVariable("$sourceNode", sourceNode->createNXSLObject(instanceFilter));
    }
 
@@ -1355,7 +1354,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
       const TCHAR *name = (const TCHAR *)value;
       UINT32 relatedObject = 0;
       NXSL_Value *result = instanceFilter->getResult();
-      if (result != NULL)
+      if (result != nullptr)
       {
          if (result->isArray())
          {
@@ -1367,7 +1366,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
                {
                   // transformed value
                   const TCHAR *newValue = array->get(1)->getValueAsCString();
-                  if ((newValue != NULL) && (*newValue != 0))
+                  if ((newValue != nullptr) && (*newValue != 0))
                   {
                      DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" replaced by \"%s\""),
                               dcObjectName.cstr(), dco->getId(), instance, newValue);
@@ -1378,7 +1377,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
                {
                   // instance name
                   const TCHAR *newName = array->get(2)->getValueAsCString();
-                  if ((newName != NULL) && (*newName != 0))
+                  if ((newName != nullptr) && (*newName != 0))
                   {
                      DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
                               dcObjectName.cstr(), dco->getId(), instance, newName);
@@ -1443,7 +1442,7 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
    auto filteredInstances = new StringObjectMap<InstanceDiscoveryData>(Ownership::True);
 
    lock();
-   if (m_instanceFilter == NULL)
+   if (m_instanceFilter == nullptr)
    {
       unlock();
       instances->forEach(CopyElements, filteredInstances);
@@ -1474,38 +1473,39 @@ void DCObject::setInstanceFilter(const TCHAR *pszScript)
 {
    MemFree(m_instanceFilterSource);
    delete m_instanceFilter;
-   if (pszScript != NULL)
+   if (pszScript != nullptr)
    {
       m_instanceFilterSource = MemCopyString(pszScript);
       StrStrip(m_instanceFilterSource);
       if (m_instanceFilterSource[0] != 0)
       {
          TCHAR errorText[1024];
-         m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, NULL);
-         if (m_instanceFilter == NULL)
+         m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, nullptr);
+         if (m_instanceFilter == nullptr)
          {
-            // node can be NULL if this DCO was just created from template
+            // node can be nullptr if this DCO was just created from template
             // in this case compilation error will be reported on template level anyway
-            if (m_owner != NULL)
+            auto owner = m_owner.lock();
+            if (owner != nullptr)
             {
                nxlog_write(NXLOG_WARNING, _T("Failed to compile instance filter script for object %s [%u] DCI %s [%u] (%s)"),
-                        getOwnerName(), getOwnerId(), m_name.cstr(), m_id, errorText);
+                        owner->getName(), owner->getId(), m_name.cstr(), m_id, errorText);
 
                TCHAR scriptIdentification[1024];
-               _sntprintf(scriptIdentification, 1024, _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
+               _sntprintf(scriptIdentification, 1024, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
                PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", scriptIdentification, errorText, m_id);
             }
          }
       }
       else
       {
-         m_instanceFilter = NULL;
+         m_instanceFilter = nullptr;
       }
    }
    else
    {
-      m_instanceFilterSource = NULL;
-      m_instanceFilter = NULL;
+      m_instanceFilterSource = nullptr;
+      m_instanceFilter = nullptr;
    }
 }
 
@@ -1514,20 +1514,20 @@ void DCObject::setInstanceFilter(const TCHAR *pszScript)
  */
 void DCObject::updateTimeIntervalsInternal()
 {
-   if ((m_retentionTimeSrc != NULL) && (*m_retentionTimeSrc != 0))
+   if ((m_retentionTimeSrc != nullptr) && (*m_retentionTimeSrc != 0))
    {
-      StringBuffer exp = m_owner->expandText(m_retentionTimeSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, nullptr, nullptr);
-      m_retentionTime = _tcstol(exp, NULL, 10);
+      StringBuffer exp = m_owner.lock()->expandText(m_retentionTimeSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, nullptr, nullptr);
+      m_retentionTime = _tcstol(exp, nullptr, 10);
    }
    else
    {
       m_retentionTime = 0;
    }
 
-   if ((m_pollingIntervalSrc != NULL) && (*m_pollingIntervalSrc != 0))
+   if ((m_pollingIntervalSrc != nullptr) && (*m_pollingIntervalSrc != 0))
    {
-      StringBuffer exp = m_owner->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, nullptr, nullptr);
-      m_pollingInterval = _tcstol(exp, NULL, 10);
+      StringBuffer exp = m_owner.lock()->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, nullptr, nullptr);
+      m_pollingInterval = _tcstol(exp, nullptr, 10);
    }
    else
    {
@@ -1583,7 +1583,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "dwTemplateId", json_integer(m_dwTemplateId));
    json_object_set_new(root, "dwTemplateItemId", json_integer(m_dwTemplateItemId));
-   json_object_set_new(root, "schedules", (m_schedules != NULL) ? m_schedules->toJson() : json_array());
+   json_object_set_new(root, "schedules", (m_schedules != nullptr) ? m_schedules->toJson() : json_array());
    json_object_set_new(root, "lastCheck", json_integer(m_tLastCheck));
    json_object_set_new(root, "errorCount", json_integer(m_dwErrorCount));
    json_object_set_new(root, "resourceId", json_integer(m_dwResourceId));
@@ -1656,8 +1656,8 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, const DCObject *object)
 {
    m_id = msg->getFieldAsUInt32(VID_DCI_ID);
    m_ownerId = msg->getFieldAsUInt32(VID_OBJECT_ID);
-   m_templateId = (object != NULL) ? object->getTemplateId() : 0;
-   m_templateItemId = (object != NULL) ? object->getTemplateItemId() : 0;
+   m_templateId = (object != nullptr) ? object->getTemplateId() : 0;
+   m_templateItemId = (object != nullptr) ? object->getTemplateItemId() : 0;
    m_type = msg->getFieldAsInt16(VID_DCOBJECT_TYPE);
    msg->getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
    msg->getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
@@ -1668,12 +1668,12 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, const DCObject *object)
    m_dataType = (m_type == DCO_TYPE_ITEM) ? msg->getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;
    m_origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
    m_status = msg->getFieldAsInt16(VID_DCI_STATUS);
-   m_pollingInterval = (object != NULL) ? object->getEffectivePollingInterval() : 0;
-   m_errorCount = (object != NULL) ? object->getErrorCount() : 0;
-   m_lastPollTime = (object != NULL) ? object->getLastPollTime() : 0;
+   m_pollingInterval = (object != nullptr) ? object->getEffectivePollingInterval() : 0;
+   m_errorCount = (object != nullptr) ? object->getErrorCount() : 0;
+   m_lastPollTime = (object != nullptr) ? object->getLastPollTime() : 0;
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
-   m_relatedObject = (object != NULL) ? object->getRelatedObject() : 0;
+   m_relatedObject = (object != nullptr) ? object->getRelatedObject() : 0;
 }
 
 /**

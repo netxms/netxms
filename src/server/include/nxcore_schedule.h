@@ -35,7 +35,7 @@ class ScheduledTask;
 class ScheduledTaskParameters;
 struct SchedulerCallback;
 
-typedef void (*ScheduledTaskHandler)(shared_ptr<ScheduledTaskParameters> parameters);
+typedef void (*ScheduledTaskHandler)(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 /**
  * Scheduler callback

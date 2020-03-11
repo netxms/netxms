@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ static int WINAPI EchoCallback(void *context)
 /**
  * Scan range of IPv4 addresses
  */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context)
+void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, uint32_t, const Node*, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
 {
    static char payload[64] = "NetXMS ICMP probe [range scan]";
 
@@ -163,7 +163,7 @@ static void ProcessResponse(SOCKET sock, UINT32 baseAddr, UINT32 lastAddr, ScanS
 /**
 * Scan range of IPv4 addresses
 */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context)
+void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, uint32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
 {
    SOCKET sock = CreateSocket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
    if (sock == INVALID_SOCKET)
@@ -220,7 +220,7 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*cal
    for(UINT32 a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
    {
       if (status[i].success)
-         callback(a, 0, NULL, status[i].rtt, console, context);
+         callback(a, 0, nullptr, status[i].rtt, console, context);
    }
    MemFree(status);
 }

@@ -63,11 +63,9 @@ class NetObj;
 class NXCORE_EXPORTABLE ServerJob
 {
 private:
-	UINT32 m_id;
-	UINT32 m_userId;
+   uint32_t m_id;
+   uint32_t m_userId;
 	TCHAR m_type[MAX_JOB_NAME_LEN];
-	UINT32 m_nodeId;
-   Node *m_node;
 	TCHAR m_description[MAX_DB_STRING];
 	ServerJobStatus m_status;
 	int m_progress;
@@ -89,6 +87,8 @@ private:
 	void updateHistoryRecord(bool onStart);
 
 protected:
+   uint32_t m_objectId;
+   shared_ptr<NetObj> m_object;
 	int m_retryCount;
 
 	virtual ServerJobResult run();
@@ -106,8 +106,7 @@ protected:
 	int getRetryDelay();
 
 public:
-	ServerJob(const TCHAR *type, const TCHAR *description, UINT32 nodeId, UINT32 userId, bool createOnHold, int retryCount = -1);
-	ServerJob(const TCHAR *params, UINT32 nodeId, UINT32 userId);
+	ServerJob(const TCHAR *type, const TCHAR *description, const shared_ptr<NetObj>& object, UINT32 userId, bool createOnHold, int retryCount = -1);
 	virtual ~ServerJob();
 
 	void start();
@@ -122,14 +121,14 @@ public:
 	bool isBlockNextJobsOnFailure() const { return m_blockNextJobsOnFailure; }
 	bool isValid() const { return m_valid; }
 
-	UINT32 getId() const { return m_id; }
-	UINT32 getUserId() const { return m_userId; }
+	uint32_t getId() const { return m_id; }
+	uint32_t getUserId() const { return m_userId; }
 	const TCHAR *getType() const { return m_type; }
 	const TCHAR *getDescription() const { return m_description; }
 	ServerJobStatus getStatus() const { return m_status; }
 	int getProgress() const { return m_progress; }
-	UINT32 getNodeId() const { return m_nodeId; }
-   Node *getNode() const { return m_node; }
+	uint32_t getObjectId() const { return m_objectId; }
+   const shared_ptr<NetObj>& getObject() const { return m_object; }
 	const TCHAR *getFailureMessage() const { return CHECK_NULL_EX(m_failureMessage); }
 	time_t getLastStatusChange() const { return m_lastStatusChange; }
 
@@ -149,9 +148,10 @@ private:
 	int m_jobCount;
 	ServerJob **m_jobList;
 	MUTEX m_accessMutex;
+	uint32_t m_objectId;
 
 public:
-	ServerJobQueue();
+	ServerJobQueue(uint32_t objectId);
 	~ServerJobQueue();
 
 	void add(ServerJob *job);
@@ -162,11 +162,12 @@ public:
 	void cleanup();
 
 	ServerJob *findJob(UINT32 jobId);
-	int getJobCount(const TCHAR *type = NULL);
+	int getJobCount(const TCHAR *type = nullptr) const;
+	uint32_t getObjectId() const { return m_objectId; }
 
 	void jobCompleted(ServerJob *job);
 
-	UINT32 fillMessage(NXCPMessage *msg, UINT32 *varIdBase);
+	UINT32 fillMessage(NXCPMessage *msg, UINT32 *varIdBase) const;
 };
 
 /**
@@ -192,7 +193,7 @@ private:
 	TCHAR *m_localFileFullPath;
 	TCHAR *m_remoteFile;
 	TCHAR *m_info;
-	INT64 m_fileSize;
+	int64_t m_fileSize;
 
    void setLocalFileFullPath();
 
@@ -206,8 +207,8 @@ protected:
 public:
 	static void init();
 
-	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold);
-	FileUploadJob(const TCHAR *params, UINT32 nodeId, UINT32 userId);
+	FileUploadJob(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId, bool createOnHold);
+	FileUploadJob(const TCHAR *params, const shared_ptr<Node>& node, uint32_t userId);
 	virtual ~FileUploadJob();
 
 	virtual void rescheduleExecution() override;
@@ -219,7 +220,6 @@ public:
 class FileDownloadJob : public ServerJob
 {
 private:
-	Node *m_node;
 	ClientSession *m_session;
 	AgentConnection *m_agentConnection;
 	UINT32 m_requestId;
@@ -242,7 +242,7 @@ protected:
 	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
 
 public:
-	FileDownloadJob(Node *node, const TCHAR *remoteName, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId, bool allowExpansion);
+	FileDownloadJob(const shared_ptr<Node>& node, const TCHAR *remoteName, uint32_t maxFileSize, bool follow, ClientSession *session, uint32_t requestId, bool allowExpansion);
 	virtual ~FileDownloadJob();
 
 	const TCHAR *getLocalFileName();
@@ -254,7 +254,6 @@ public:
 class DCIRecalculationJob : public ServerJob
 {
 private:
-   DataCollectionTarget *m_object;
    DCItem *m_dci;
    bool m_cancelled;
 
@@ -263,7 +262,7 @@ protected:
    virtual bool onCancel();
 
 public:
-   DCIRecalculationJob(DataCollectionTarget *object, DCItem *dci, UINT32 userId);
+   DCIRecalculationJob(const shared_ptr<DataCollectionTarget>& object, const DCItem *dci, uint32_t userId);
    virtual ~DCIRecalculationJob();
 };
 

@@ -32,7 +32,7 @@
 /**
  * Thread pool for data collectors
  */
-ThreadPool *g_dataCollectorThreadPool = NULL;
+ThreadPool *g_dataCollectorThreadPool = nullptr;
 
 /**
  * DCI cache loader queue
@@ -107,8 +107,8 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_SSH:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               Node *proxy = static_cast<Node*>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveSshProxy(), OBJECT_NODE));
-               if (proxy != NULL)
+               shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveSshProxy(), OBJECT_NODE));
+               if (proxy != nullptr)
                {
                   TCHAR name[MAX_PARAM_NAME], ipAddr[64];
                   _sntprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s,\"%s\",\"%s\",\"%s\")"),
@@ -139,7 +139,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer, static_cast<DataCollectionTarget*>(pItem->getOwner()));
+            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer, static_cast<DataCollectionTarget*>(pItem->getOwner().get()));
             break;
          case DS_WEB_SERVICE:
             *error = dcTarget->getWebServiceItem(pItem->getName(), pBuffer, MAX_LINE_SIZE);
@@ -157,7 +157,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
  */
 static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32 *error)
 {
-	Table *result = NULL;
+	Table *result = nullptr;
    if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {
       if (table->isAggregateOnCluster())
@@ -177,7 +177,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
 				   *error = ((Node *)dcTarget)->getTableFromAgent(table->getName(), &result);
-               if ((*error == DCE_SUCCESS) && (result != NULL))
+               if ((*error == DCE_SUCCESS) && (result != nullptr))
                   table->updateResultColumns(result);
             }
 			   else
@@ -189,7 +189,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
                *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table->getSnmpPort(), table->getSnmpVersion(), table->getName(), table->getColumns(), &result);
-               if ((*error == DCE_SUCCESS) && (result != NULL))
+               if ((*error == DCE_SUCCESS) && (result != nullptr))
                   table->updateResultColumns(result);
             }
 			   else
@@ -198,7 +198,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getScriptTable(table->getName(), &result, (DataCollectionTarget *)table->getOwner());
+            *error = dcTarget->getScriptTable(table->getName(), &result, static_cast<DataCollectionTarget*>(table->getOwner().get()));
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
@@ -211,28 +211,26 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 /**
  * Data collector
  */
-void DataCollector(shared_ptr<DCObject> dcObject)
+void DataCollector(const shared_ptr<DCObject>& dcObject)
 {
-   DataCollectionTarget *target = static_cast<DataCollectionTarget*>(dcObject->getOwner());
+   shared_ptr<DataCollectionTarget> target = static_pointer_cast<DataCollectionTarget>(dcObject->getOwner());
 
    SharedString dcObjectName = dcObject->getName();
    if (dcObject->isScheduledForDeletion())
    {
-      nxlog_debug(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
-                  dcObject->getId(), dcObjectName.cstr(), (target != NULL) ? (int)target->getId() : -1);
+      nxlog_debug(7, _T("DataCollector(): about to destroy DC object [%u] \"%s\" owner=[%u]"),
+                  dcObject->getId(), dcObjectName.cstr(), (target != nullptr) ? target->getId() : 0);
       dcObject->deleteFromDatabase();
-      if (target != NULL)
-         target->decRefCount();
       return;
    }
 
-   if (target == NULL)
+   if (target == nullptr)
    {
-      nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=%d \"%s\")"),
+      nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=[%u] \"%s\")"),
                   dcObject->getId(), dcObjectName.cstr());
 
       // Update item's last poll time and clear busy flag so item can be polled again
-      dcObject->setLastPollTime(time(NULL));
+      dcObject->setLastPollTime(time(nullptr));
       dcObject->clearBusyFlag();
       return;
    }
@@ -240,42 +238,37 @@ void DataCollector(shared_ptr<DCObject> dcObject)
    if (IsShutdownInProgress())
    {
       dcObject->clearBusyFlag();
-      if (target != NULL)
-         target->decRefCount();
       return;
    }
 
    DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
-             dcObject->getId(), dcObjectName.cstr(), (target != NULL) ? (int)target->getId() : -1, dcObject->getSourceNode());
+             dcObject->getId(), dcObjectName.cstr(), (target != nullptr) ? (int)target->getId() : -1, dcObject->getSourceNode());
    UINT32 sourceNodeId = target->getEffectiveSourceNode(dcObject.get());
    if (sourceNodeId != 0)
    {
-      Node *sourceNode = static_cast<Node*>(FindObjectById(sourceNodeId, OBJECT_NODE));
-      if (sourceNode != NULL)
+      shared_ptr<Node> sourceNode = static_pointer_cast<Node>(FindObjectById(sourceNodeId, OBJECT_NODE));
+      if (sourceNode != nullptr)
       {
-         if (((target->getObjectClass() == OBJECT_CHASSIS) && (((Chassis *)target)->getControllerId() == sourceNodeId)) ||
+         if (((target->getObjectClass() == OBJECT_CHASSIS) && (static_cast<Chassis*>(target.get())->getControllerId() == sourceNodeId)) ||
              sourceNode->isTrustedNode(target->getId()))
          {
             target = sourceNode;
-            target->incRefCount();
          }
          else
          {
             // Change item's status to "not supported"
             dcObject->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
-            target->decRefCount();
-            target = NULL;
+            target = nullptr;
          }
       }
       else
       {
-         target->decRefCount();
-         target = NULL;
+         target = nullptr;
       }
    }
 
-   time_t currTime = time(NULL);
-   if (target != NULL)
+   time_t currTime = time(nullptr);
+   if (target != nullptr)
    {
       if (!IsShutdownInProgress())
       {
@@ -285,13 +278,13 @@ void DataCollector(shared_ptr<DCObject> dcObject)
          switch(dcObject->getType())
          {
             case DCO_TYPE_ITEM:
-               data = GetItemData(target, static_cast<DCItem*>(dcObject.get()), buffer, &error);
+               data = GetItemData(target.get(), static_cast<DCItem*>(dcObject.get()), buffer, &error);
                break;
             case DCO_TYPE_TABLE:
-               data = GetTableData(target, static_cast<DCTable*>(dcObject.get()), &error);
+               data = GetTableData(target.get(), static_cast<DCTable*>(dcObject.get()), &error);
                break;
             default:
-               data = NULL;
+               data = nullptr;
                error = DCE_NOT_SUPPORTED;
                break;
          }
@@ -302,7 +295,7 @@ void DataCollector(shared_ptr<DCObject> dcObject)
             case DCE_SUCCESS:
                if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                   dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-               if (!static_cast<DataCollectionTarget*>(dcObject->getOwner())->processNewDCValue(dcObject, currTime, data))
+               if (!static_cast<DataCollectionTarget*>(dcObject->getOwner().get())->processNewDCValue(dcObject, currTime, data))
                {
                   // value processing failed, convert to data collection error
                   dcObject->processNewError(false);
@@ -331,26 +324,19 @@ void DataCollector(shared_ptr<DCObject> dcObject)
          if (dcObject->isForcePollRequested())
          {
             ClientSession *session = dcObject->processForcePoll();
-            if (session != NULL)
+            if (session != nullptr)
             {
                session->notify(NX_NOTIFY_FORCE_DCI_POLL, dcObject->getOwnerId());
                session->decRefCount();
             }
          }
       }
-
-      // Decrement node's usage counter
-      target->decRefCount();
-      if ((sourceNodeId != 0) && (dcObject->getOwner() != NULL))
-      {
-         dcObject->getOwner()->decRefCount();
-      }
    }
-   else     /* target == NULL */
+   else     /* target == nullptr */
    {
-      DataCollectionOwner *n = dcObject->getOwner();
-      nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
-                  dcObject->getId(), dcObjectName.cstr(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
+      shared_ptr<DataCollectionOwner> n = dcObject->getOwner();
+      nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=[%u] \"%s\" target=[%u] sourceNode=[%u])"),
+                  dcObject->getId(), dcObjectName.cstr(), (n != nullptr) ? n->getId() : 0, sourceNodeId);
    }
 
    // Update item's last poll time and clear busy flag so item can be polled again
@@ -417,18 +403,16 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
       if (ref == nullptr)
          break;
 
-      NetObj *object = FindObjectById(ref->getOwnerId());
-      if ((object != NULL) && object->isDataCollectionTarget())
+      shared_ptr<NetObj> object = FindObjectById(ref->getOwnerId());
+      if ((object != nullptr) && object->isDataCollectionTarget())
       {
-         object->incRefCount();
-         shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(ref->getId(), 0, true);
-         if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+         shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object.get())->getDCObjectById(ref->getId(), 0, true);
+         if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
          {
             nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
                      ref->getName(), ref->getId(), object->getName(), object->getId());
             static_cast<DCItem*>(dci.get())->reloadCache(false);
          }
-         object->decRefCount();
       }
    }
    nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread stopped"));
@@ -451,8 +435,8 @@ void InitDataCollector()
             ConfigReadInt(_T("ThreadPool.DataCollector.MaxSize"), 250),
             128 * 1024);
 
-   s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, NULL);
-   s_cacheLoaderThread = ThreadCreateEx(CacheLoader, 0, NULL);
+   s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, nullptr);
+   s_cacheLoaderThread = ThreadCreateEx(CacheLoader, 0, nullptr);
 }
 
 /**
@@ -482,7 +466,7 @@ static void UpdateParamList(NetObj *object, void *data)
    WriteFullParamListToMessage_CallbackData *cd = static_cast<WriteFullParamListToMessage_CallbackData*>(data);
 
 	ObjectArray<AgentParameterDefinition> *paramList = static_cast<Node*>(object)->openParamList(cd->origin);
-	if ((paramList != NULL) && (paramList->size() > 0))
+	if ((paramList != nullptr) && (paramList->size() > 0))
 	{
 		for(int i = 0; i < paramList->size(); i++)
 		{
@@ -510,7 +494,7 @@ static void UpdateTableList(NetObj *object, void *data)
 	ObjectArray<AgentTableDefinition> *fullList = (ObjectArray<AgentTableDefinition> *)data;
 
    ObjectArray<AgentTableDefinition> *tableList = static_cast<Node*>(object)->openTableList();
-	if ((tableList != NULL) && (tableList->size() > 0))
+	if ((tableList != nullptr) && (tableList->size() > 0))
 	{
 		for(int i = 0; i < tableList->size(); i++)
 		{
@@ -574,11 +558,11 @@ void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
  */
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId)
 {
-   Node *node = static_cast<Node*>(FindObjectById(nodeId, OBJECT_NODE));
-   if (node != NULL)
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
+   if (node != nullptr)
    {
       shared_ptr<DCObject> dcObject = node->getDCObjectById(dciId, 0);
-      if (dcObject != NULL)
+      if (dcObject != nullptr)
       {
          return dcObject->getType();
       }

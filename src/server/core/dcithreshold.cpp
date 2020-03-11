@@ -247,7 +247,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
  *    THRESHOLD_REARMED - when item's value doesn't match the threshold condition while previous check do
  *    NO_ACTION - when there are no changes in item's value match to threshold's condition
  */
-ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, NetObj *target, DCItem *dci)
+ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci)
 {
    // check if there is enough cached data
    switch(m_function)

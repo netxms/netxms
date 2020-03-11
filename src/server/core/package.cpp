@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nms_pkg.h>
 
 /**
  * Check if package with specific parameters already installed
@@ -43,7 +44,7 @@ BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       bResult = (DBGetNumRows(hResult) > 0);
       DBFreeResult(hResult);
@@ -67,7 +68,7 @@ BOOL IsValidPackageId(UINT32 dwPkgId)
 
    _sntprintf(szQuery, 256, _T("SELECT pkg_name FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       bResult = (DBGetNumRows(hResult) > 0);
       DBFreeResult(hResult);
@@ -107,7 +108,7 @@ UINT32 UninstallPackage(UINT32 dwPkgId)
 
    _sntprintf(szQuery, 256, _T("SELECT pkg_file FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
@@ -143,73 +144,66 @@ UINT32 UninstallPackage(UINT32 dwPkgId)
    return dwResult;
 }
 
-
-//
-// Package deployment worker thread
-//
-
-static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
+/**
+ * Package deployment worker thread
+ */
+static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
 {
-   DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
-   Node *pNode;
-   NXCPMessage msg;
-   BOOL bSuccess;
-   AgentConnection *pAgentConn;
-   const TCHAR *pszErrorMsg;
-   UINT32 dwMaxWait;
+   PackageDeploymentTask *task = static_cast<PackageDeploymentTask*>(arg);
 
    // Read configuration
-   dwMaxWait = ConfigReadULong(_T("AgentUpgradeWaitTime"), 600);
+   uint32_t dwMaxWait = ConfigReadULong(_T("AgentUpgradeWaitTime"), 600);
    if (dwMaxWait % 20 != 0)
       dwMaxWait += 20 - (dwMaxWait % 20);
 
    // Prepare notification message
+   NXCPMessage msg;
    msg.setCode(CMD_INSTALLER_INFO);
-   msg.setId(pStartup->dwRqId);
+   msg.setId(task->requestId);
 
-   while(1)
+   while(true)
    {
       // Get node object for upgrade
-      pNode = (Node *)pStartup->pQueue->get();
-      if (pNode == NULL)
+      Node *node = task->queue.get();
+      if (node == nullptr)
          break;   // Queue is empty, exit
 
-      bSuccess = FALSE;
-		pszErrorMsg = _T("");
+      bool success = false;
+		const TCHAR *errorMessage = _T("");
 
       // Preset node id in notification message
-      msg.setField(VID_OBJECT_ID, pNode->getId());
+      msg.setField(VID_OBJECT_ID, node->getId());
 
       // Check if node is a management server itself
-      if (!(pNode->getCapabilities() & NC_IS_LOCAL_MGMT))
+      if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT))
       {
          // Change deployment status to "Initializing"
          msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
-         pStartup->pSession->sendMessage(&msg);
+         task->session->sendMessage(&msg);
 
          // Create agent connection
-         pAgentConn = pNode->createAgentConnection();
-         if (pAgentConn != NULL)
+         AgentConnection *agentConn = node->createAgentConnection();
+         if (agentConn != nullptr)
          {
             BOOL bCheckOK = FALSE;
-            TCHAR szBuffer[256];
+            TCHAR szBuffer[MAX_PATH];
 
             // Check if package can be deployed on target node
-            if (!_tcsicmp(pStartup->szPlatform, _T("src")))
+            if (!_tcsicmp(task->platform, _T("src")))
             {
                // Source package, check if target node
                // supports source packages
-               if (pAgentConn->getParameter(_T("Agent.SourcePackageSupport"), 32, szBuffer) == ERR_SUCCESS)
+               if (agentConn->getParameter(_T("Agent.SourcePackageSupport"), 32, szBuffer) == ERR_SUCCESS)
                {
-                  bCheckOK = (_tcstol(szBuffer, NULL, 0) != 0);
+                  bCheckOK = (_tcstol(szBuffer, nullptr, 0) != 0);
                }
             }
             else
             {
                // Binary package, check target platform
-               if (pAgentConn->getParameter(_T("System.PlatformName"), 256, szBuffer) == ERR_SUCCESS)
+               if (agentConn->getParameter(_T("System.PlatformName"), MAX_PATH, szBuffer) == ERR_SUCCESS)
                {
-                  bCheckOK = !_tcsicmp(szBuffer, pStartup->szPlatform);
+                  bCheckOK = !_tcsicmp(szBuffer, task->platform);
                }
             }
 
@@ -217,34 +211,33 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
             {
                // Change deployment status to "File Transfer"
                msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
-               pStartup->pSession->sendMessage(&msg);
+               task->session->sendMessage(&msg);
 
                // Upload package file to agent
-               _tcscpy(szBuffer, g_netxmsdDataDir);
-               _tcscat(szBuffer, DDIR_PACKAGES);
-               _tcscat(szBuffer, FS_PATH_SEPARATOR);
-               _tcscat(szBuffer, pStartup->szPkgFile);
-               if (pAgentConn->uploadFile(szBuffer) == ERR_SUCCESS)
+               _tcslcpy(szBuffer, g_netxmsdDataDir, MAX_PATH);
+               _tcslcat(szBuffer, DDIR_PACKAGES, MAX_PATH);
+               _tcslcat(szBuffer, FS_PATH_SEPARATOR, MAX_PATH);
+               _tcslcat(szBuffer, task->packageFile, MAX_PATH);
+               if (agentConn->uploadFile(szBuffer) == ERR_SUCCESS)
                {
-                  if (pAgentConn->startUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
+                  if (agentConn->startUpgrade(task->packageFile) == ERR_SUCCESS)
                   {
                      BOOL bConnected = FALSE;
-                     UINT32 i;
 
                      // Delete current connection
-                     pAgentConn->decRefCount();
+                     agentConn->decRefCount();
 
                      // Change deployment status to "Package installation"
                      msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
-                     pStartup->pSession->sendMessage(&msg);
+                     task->session->sendMessage(&msg);
 
                      // Wait for agent's restart
                      ThreadSleep(20);
-                     for(i = 20; i < dwMaxWait; i += 20)
+                     for(uint32_t i = 20; i < dwMaxWait; i += 20)
                      {
                         ThreadSleep(20);
-                        pAgentConn = pNode->createAgentConnection();
-                        if (pAgentConn != NULL)
+                        agentConn = node->createAgentConnection();
+                        if (agentConn != nullptr)
                         {
                            bConnected = TRUE;
                            break;   // Connected successfully
@@ -254,68 +247,67 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                      // Last attempt to reconnect
                      if (!bConnected)
                      {
-                        pAgentConn = pNode->createAgentConnection();
-                        if (pAgentConn != NULL)
+                        agentConn = node->createAgentConnection();
+                        if (agentConn != nullptr)
                            bConnected = TRUE;
                      }
 
                      if (bConnected)
                      {
                         // Check version
-                        if (pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+                        if (agentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
                         {
-                           if (!_tcsicmp(szBuffer, pStartup->szVersion))
+                           if (!_tcsicmp(szBuffer, task->version))
                            {
-                              bSuccess = TRUE;
+                              success = true;
                            }
                            else
                            {
-                              pszErrorMsg = _T("Agent's version doesn't match package version after upgrade");
+                              errorMessage = _T("Agent's version doesn't match package version after upgrade");
                            }
                         }
                         else
                         {
-                           pszErrorMsg = _T("Unable to get agent's version after upgrade");
+                           errorMessage = _T("Unable to get agent's version after upgrade");
                         }
                      }
                      else
                      {
-                        pszErrorMsg = _T("Unable to contact agent after upgrade");
+                        errorMessage = _T("Unable to contact agent after upgrade");
                      }
                   }
                   else
                   {
-                     pszErrorMsg = _T("Unable to start upgrade process");
+                     errorMessage = _T("Unable to start upgrade process");
                   }
                }
                else
                {
-                  pszErrorMsg = _T("File transfer failed");
+                  errorMessage = _T("File transfer failed");
                }
             }
             else
             {
-               pszErrorMsg = _T("Package is not compatible with target machine");
+               errorMessage = _T("Package is not compatible with target machine");
             }
-            if (pAgentConn != NULL)
-               pAgentConn->decRefCount();
+            if (agentConn != nullptr)
+               agentConn->decRefCount();
          }
          else
          {
-            pszErrorMsg = _T("Unable to connect to agent");
+            errorMessage = _T("Unable to connect to agent");
          }
       }
       else
       {
-         pszErrorMsg = _T("Management server cannot deploy agent to itself");
+         errorMessage = _T("Management server cannot deploy agent to itself");
       }
 
       // Finish node processing
       msg.setField(VID_DEPLOYMENT_STATUS, 
-         bSuccess ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
-      msg.setField(VID_ERROR_MESSAGE, pszErrorMsg);
-      pStartup->pSession->sendMessage(&msg);
-      pNode->decRefCount();
+         success ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
+      msg.setField(VID_ERROR_MESSAGE, errorMessage);
+      task->session->sendMessage(&msg);
    }
    return THREAD_OK;
 }
@@ -323,66 +315,49 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 /**
  * Package deployment thread
  */
-THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
+THREAD_RESULT THREAD_CALL DeploymentManager(void *arg)
 {
-   DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
-   int i, numThreads;
-   NXCPMessage msg;
-   Queue *pQueue;
-   THREAD *pThreadList;
+   PackageDeploymentTask *task = static_cast<PackageDeploymentTask*>(arg);
 
    // Wait for parent initialization completion
-   MutexLock(pStartup->mutex);
-   MutexUnlock(pStartup->mutex);
-
-   // Sanity check
-   if ((pStartup->nodeList == NULL) || (pStartup->nodeList->size() == 0))
-   {
-      pStartup->pSession->decRefCount();
-      return THREAD_OK;
-   }
+   MutexLock(task->mutex);
+   MutexUnlock(task->mutex);
 
    // Read number of upgrade threads
-   numThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
-   if (numThreads > pStartup->nodeList->size())
-      numThreads = pStartup->nodeList->size();
-
-   // Create processing queue
-   pQueue = new Queue;
-   pStartup->pQueue = pQueue;
+   int numThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
+   if (numThreads > task->nodeList.size())
+      numThreads = task->nodeList.size();
 
    // Send initial status for each node and queue them for deployment
+   NXCPMessage msg;
    msg.setCode(CMD_INSTALLER_INFO);
-   msg.setId(pStartup->dwRqId);
-   for(i = 0; i < pStartup->nodeList->size(); i++)
+   msg.setId(task->requestId);
+   for(int i = 0; i < task->nodeList.size(); i++)
    {
-      pQueue->put(pStartup->nodeList->get(i));
-      msg.setField(VID_OBJECT_ID, pStartup->nodeList->get(i)->getId());
+      Node *node = task->nodeList.get(i);
+      task->queue.put(node);
+      msg.setField(VID_OBJECT_ID, node->getId());
       msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
-      pStartup->pSession->sendMessage(&msg);
+      task->session->sendMessage(&msg);
       msg.deleteAllFields();
    }
 
    // Start worker threads
-   pThreadList = (THREAD *)malloc(sizeof(THREAD) * numThreads);
-   for(i = 0; i < numThreads; i++)
-      pThreadList[i] = ThreadCreateEx(DeploymentThread, 0, pStartup);
+   THREAD *threadList = MemAllocArray<THREAD>(numThreads);
+   for(int i = 0; i < numThreads; i++)
+      threadList[i] = ThreadCreateEx(DeploymentThread, 0, task);
 
    // Wait for all worker threads termination
-   for(i = 0; i < numThreads; i++)
-      ThreadJoin(pThreadList[i]);
+   for(int i = 0; i < numThreads; i++)
+      ThreadJoin(threadList[i]);
 
    // Send final notification to client
    msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_FINISHED);
-   pStartup->pSession->sendMessage(&msg);
-   pStartup->pSession->decRefCount();
+   task->session->sendMessage(&msg);
 
    // Cleanup
-   MutexDestroy(pStartup->mutex);
-   delete pStartup->nodeList;
-   free(pStartup);
-   free(pThreadList);
-   delete pQueue;
+   delete task;
+   MemFree(threadList);
 
    return THREAD_OK;
 }

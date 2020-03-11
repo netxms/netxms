@@ -181,7 +181,7 @@ public:
    void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
 
    BOOL saveToDB(DB_HANDLE hdb, UINT32 dwIndex);
-   ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, NetObj *target, DCItem *dci);
+   ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
@@ -245,8 +245,10 @@ class NXCORE_EXPORTABLE DCObject
    friend class DCObjectInfo;
 
 protected:
-   UINT32 m_id;
+   uint32_t m_id;
    uuid m_guid;
+   weak_ptr<DataCollectionOwner> m_owner;  // Pointer to node or template object this item related to
+   uint32_t m_ownerId;                     // Cached owner object ID
    SharedString m_name;
    SharedString m_description;
    SharedString m_systemTag;
@@ -261,10 +263,9 @@ protected:
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
-	UINT16 m_flags;
-   UINT32 m_dwTemplateId;         // Related template's id
-   UINT32 m_dwTemplateItemId;     // Related template item's id
-   DataCollectionOwner *m_owner;             // Pointer to node or template object this item related to
+	uint16_t m_flags;
+	uint32_t m_dwTemplateId;         // Related template's id
+	uint32_t m_dwTemplateItemId;     // Related template item's id
    MUTEX m_hMutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
@@ -280,7 +281,7 @@ protected:
 	TCHAR *m_comments;
 	bool m_doForcePoll;                    // Force poll indicator
 	ClientSession *m_pollingSession;       // Force poll requestor session
-   WORD m_instanceDiscoveryMethod;
+   uint16_t m_instanceDiscoveryMethod;
    SharedString m_instanceDiscoveryData;
    TCHAR *m_instanceFilterSource;
    NXSL_Program *m_instanceFilter;
@@ -289,7 +290,7 @@ protected:
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
    INT32 m_instanceRetentionTime;      // Retention time if instance is not found
    time_t m_startTime;                 // Time to start data collection
-   UINT32 m_relatedObject;
+   uint32_t m_relatedObject;
 
    void lock() const { MutexLock(m_hMutex); }
    bool tryLock() const { return MutexTryLock(m_hMutex); }
@@ -309,10 +310,10 @@ protected:
    virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const;
 
 	// --- constructors ---
-   DCObject();
-   DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime, DataCollectionOwner *owner,
-            const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
-	DCObject(ConfigEntry *config, DataCollectionOwner *owner);
+   DCObject(const shared_ptr<DataCollectionOwner>& owner);
+   DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
+            const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
+	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
    DCObject(const DCObject *src, bool shadowCopy);
 
 public:
@@ -338,7 +339,7 @@ public:
 
    shared_ptr<DCObjectInfo> createDescriptor() const;
 
-	UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
 	const uuid& getGuid() const { return m_guid; }
    int getDataSource() const { return m_source; }
    int getStatus() const { return m_status; }
@@ -346,8 +347,8 @@ public:
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_hMutex); }
 	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
    int getEffectivePollingInterval() const { return (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? std::max(m_pollingInterval, 1) : m_defaultPollingInterval; }
-   DataCollectionOwner *getOwner() const { return m_owner; }
-   UINT32 getOwnerId() const;
+   shared_ptr<DataCollectionOwner> getOwner() const { return m_owner.lock(); }
+   uint32_t getOwnerId() const { return m_ownerId; }
    const TCHAR *getOwnerName() const;
    UINT32 getTemplateId() const { return m_dwTemplateId; }
    UINT32 getTemplateItemId() const { return m_dwTemplateItemId; }
@@ -384,7 +385,7 @@ public:
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
 
-   virtual void changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doMacroExpansion);
+   virtual void changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion);
 
 	virtual bool deleteAllData();
 	virtual bool deleteEntry(time_t timestamp);
@@ -460,11 +461,10 @@ protected:
 
 public:
    DCItem(const DCItem *src, bool shadowCopy);
-   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay);
-   DCItem(UINT32 id, const TCHAR *name, int source, int dataType,
-          const TCHAR *pollingInterval, const TCHAR *retentionTime, DataCollectionOwner *owner,
-          const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
-	DCItem(ConfigEntry *config, DataCollectionOwner *owner);
+   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
+   DCItem(UINT32 id, const TCHAR *name, int source, int dataType, const TCHAR *pollingInterval, const TCHAR *retentionTime,
+            const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
+	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
    virtual ~DCItem();
 
    virtual DCObject *clone() const override;
@@ -509,7 +509,7 @@ public:
    void updateFromMessage(NXCPMessage *msg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
 
-   virtual void changeBinding(UINT32 newId, DataCollectionOwner *newOwner, bool doMacroExpansion) override;
+   virtual void changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion) override;
 
 	virtual bool deleteAllData() override;
    virtual bool deleteEntry(time_t timestamp) override;
@@ -530,7 +530,8 @@ public:
 	void prepareForRecalc();
 	void recalculateValue(ItemValue &value);
 
-   static bool testTransformation(DataCollectionTarget *object, shared_ptr<DCObjectInfo> dcObjectInfo, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
+   static bool testTransformation(const DataCollectionTarget& object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
+            const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
 struct TableThresholdCbData;
@@ -727,9 +728,9 @@ protected:
 public:
    DCTable(const DCTable *src, bool shadowCopy);
    DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
-         DataCollectionOwner *owner, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
-   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, DataCollectionOwner *owner, bool useStartupDelay);
-   DCTable(ConfigEntry *config, DataCollectionOwner *owner);
+            const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
+   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
+   DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);
 	virtual ~DCTable();
 
 	virtual DCObject *clone() const override;
@@ -836,7 +837,7 @@ public:
    UINT32 getErrorCount() const { return m_errorCount; }
    INT32 getPollingInterval() const { return m_pollingInterval; }
    time_t getLastPollTime() const { return m_lastPollTime; }
-   UINT32 getOwnerId() const { return m_ownerId; }
+   uint32_t getOwnerId() const { return m_ownerId; }
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
    int getThresholdSeverity() const { return m_thresholdSeverity; }
    UINT32 getRelatedObject() const { return m_relatedObject; }

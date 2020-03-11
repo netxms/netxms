@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,44 +29,46 @@ static const TCHAR *PolicyNames[] = { _T("None"), _T("AgentConfig"), _T("LogPars
  */
 AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 {
-   m_newPolicyType = msg->getFieldAsBoolean(VID_NEW_POLICY_TYPE);
+   m_newTypeFormat = msg->getFieldAsBoolean(VID_NEW_POLICY_TYPE);
 	m_size = msg->getFieldAsUInt32(VID_NUM_ELEMENTS);
 	if (m_size > 0)
 	{
-		m_guidList = (BYTE *)malloc(UUID_LENGTH * m_size);
-		m_typeList = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
-		m_serverIdList = (UINT64*)malloc(sizeof(UINT64) * m_size);
-		m_serverInfoList = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
-		m_version = (int *)malloc(sizeof(int) * m_size);
-		m_hashList = (BYTE *)malloc(MD5_DIGEST_SIZE * m_size);
+		m_guidList = MemAllocArray<uint8_t>(UUID_LENGTH * m_size);
+		m_typeList = MemAllocArray<TCHAR*>(m_size);
+		m_serverIdList = MemAllocArray<uint64_t>(m_size);
+		m_serverInfoList = MemAllocArray<TCHAR*>(m_size);
+		m_version = MemAllocArray<int>(m_size);
+		m_hashList = MemAllocArray<uint8_t>(MD5_DIGEST_SIZE * m_size);
 		memset(m_hashList, 0, MD5_DIGEST_SIZE * m_size);
 
-		UINT32 varId = VID_ELEMENT_LIST_BASE;
-		for(int i = 0; i < m_size; i++, varId += 4)
+		uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < m_size; i++, fieldId += 4)
 		{
-			msg->getFieldAsBinary(varId++, &m_guidList[i * UUID_LENGTH], UUID_LENGTH);
-			if(!m_newPolicyType)
+			msg->getFieldAsBinary(fieldId++, &m_guidList[i * UUID_LENGTH], UUID_LENGTH);
+			if (m_newTypeFormat)
 			{
-	         int type = (int)msg->getFieldAsUInt32(varId++);
-	         m_typeList[i] = _tcsdup(PolicyNames[type]);
+            m_typeList[i] = msg->getFieldAsString(fieldId++);
 			}
 			else
-			   m_typeList[i] = msg->getFieldAsString(varId++);
+			{
+	         int type = (int)msg->getFieldAsUInt32(fieldId++);
+	         m_typeList[i] = MemCopyString(PolicyNames[type]);
+			}
 
-			m_serverInfoList[i] = msg->getFieldAsString(varId++);
-			m_serverIdList[i] = msg->getFieldAsUInt64(varId++);
-			m_version[i] = (int)msg->getFieldAsUInt32(varId++);
-			msg->getFieldAsBinary(varId++, &m_hashList[i * MD5_DIGEST_SIZE], UUID_LENGTH);
+			m_serverInfoList[i] = msg->getFieldAsString(fieldId++);
+			m_serverIdList[i] = msg->getFieldAsUInt64(fieldId++);
+			m_version[i] = (int)msg->getFieldAsUInt32(fieldId++);
+			msg->getFieldAsBinary(fieldId++, &m_hashList[i * MD5_DIGEST_SIZE], UUID_LENGTH);
 		}
 	}
 	else
 	{
-		m_guidList = NULL;
-		m_typeList = NULL;
-		m_serverInfoList = NULL;
-		m_serverIdList = NULL;
-		m_version = NULL;
-		m_hashList = NULL;
+		m_guidList = nullptr;
+		m_typeList = nullptr;
+		m_serverInfoList = nullptr;
+		m_serverIdList = nullptr;
+		m_version = nullptr;
+		m_hashList = nullptr;
 	}
 }
 
@@ -76,15 +78,15 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 AgentPolicyInfo::~AgentPolicyInfo()
 {
    for(int i = 0; i < m_size; i++)
-      free(m_typeList[i]);
-   free(m_typeList);
+      MemFree(m_typeList[i]);
+   MemFree(m_typeList);
    for(int i = 0; i < m_size; i++)
-		free(m_serverInfoList[i]);
-   free(m_serverInfoList);
-	free(m_serverIdList);
-	free(m_guidList);
-	free(m_version);
-	free(m_hashList);
+      MemFree(m_serverInfoList[i]);
+   MemFree(m_serverInfoList);
+   MemFree(m_serverIdList);
+   MemFree(m_guidList);
+   MemFree(m_version);
+   MemFree(m_hashList);
 }
 
 /**
@@ -105,7 +107,7 @@ uuid AgentPolicyInfo::getGuid(int index)
 /**
  * Get hash
  */
-const BYTE *AgentPolicyInfo::getHash(int index)
+const uint8_t *AgentPolicyInfo::getHash(int index)
 {
    if ((index >= 0) && (index < m_size))
    {
@@ -113,6 +115,6 @@ const BYTE *AgentPolicyInfo::getHash(int index)
    }
    else
    {
-      return NULL;
+      return nullptr;
    }
 }

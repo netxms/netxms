@@ -55,10 +55,10 @@ SNMPTrapConfiguration::SNMPTrapConfiguration() : m_objectId(), m_mappings(8, 8, 
    m_guid = uuid::generate();
    m_id = CreateUniqueId(IDG_SNMP_TRAP);
    m_eventCode = EVENT_SNMP_UNMATCHED_TRAP;
-   m_eventTag = NULL;
-   m_description = NULL;
-   m_scriptSource = NULL;
-   m_script = NULL;
+   m_eventTag = nullptr;
+   m_description = nullptr;
+   m_scriptSource = nullptr;
+   m_script = nullptr;
 }
 
 /**
@@ -70,14 +70,14 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb
    TCHAR buffer[MAX_OID_LENGTH];
    m_objectId = SNMP_ObjectId::parse(DBGetField(trapResult, row, 1, buffer, MAX_OID_LENGTH));
    m_eventCode = DBGetFieldULong(trapResult, row, 2);
-   m_description = DBGetField(trapResult, row, 3, NULL, 0);
-   m_eventTag = DBGetField(trapResult, row, 4, NULL, 0);
+   m_description = DBGetField(trapResult, row, 3, nullptr, 0);
+   m_eventTag = DBGetField(trapResult, row, 4, nullptr, 0);
    m_guid = DBGetFieldGUID(trapResult, row, 5);
-   m_scriptSource = DBGetField(trapResult, row, 6, NULL, 0);
-   m_script = NULL;
+   m_scriptSource = DBGetField(trapResult, row, 6, nullptr, 0);
+   m_script = nullptr;
 
    DB_RESULT mapResult;
-   if (stmt != NULL)
+   if (stmt != nullptr)
    {
       DBBind(stmt, 1, DB_SQLTYPE_INTEGER, m_id);
       mapResult = DBSelectPrepared(stmt);
@@ -88,7 +88,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb
       _sntprintf(query, 256, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=%u ORDER BY parameter"), m_id);
       mapResult = DBSelect(hdb, query);
    }
-   if (mapResult != NULL)
+   if (mapResult != nullptr)
    {
       int mapCount = DBGetNumRows(mapResult);
       for(int i = 0; i < mapCount; i++)
@@ -120,10 +120,10 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& gui
    m_description = MemCopyString(entry->getSubEntryValue(_T("description")));
    m_eventTag = MemCopyString(entry->getSubEntryValue(_T("eventTag"), 0, entry->getSubEntryValue(_T("userTag"))));
    m_scriptSource = MemCopyString(entry->getSubEntryValue(_T("transformationScript")));
-   m_script = NULL;
+   m_script = nullptr;
 
    ConfigEntry *parametersRoot = entry->findEntry(_T("parameters"));
-   if (parametersRoot != NULL)
+   if (parametersRoot != nullptr)
    {
       ObjectArray<ConfigEntry> *parameters = parametersRoot->getOrderedSubEntries(_T("parameter#*"));
       if (parameters->size() > 0)
@@ -156,7 +156,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(NXCPMessage *msg) : m_mappings(8, 8
    m_description = msg->getFieldAsString(VID_DESCRIPTION);
    m_eventTag = msg->getFieldAsString(VID_USER_TAG);
    m_scriptSource = msg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
-   m_script = NULL;
+   m_script = nullptr;
 
    // Read new mappings from message
    int count = msg->getFieldAsInt32(VID_TRAP_NUM_MAPS);
@@ -186,11 +186,11 @@ SNMPTrapConfiguration::~SNMPTrapConfiguration()
 void SNMPTrapConfiguration::compileScript()
 {
    delete m_script;
-   if ((m_scriptSource != NULL) && (*m_scriptSource != 0))
+   if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
       TCHAR errorMessage[1024];
-      m_script = NXSLCompile(m_scriptSource, errorMessage, 1024, NULL);
-      if (m_script == NULL)
+      m_script = NXSLCompile(m_scriptSource, errorMessage, 1024, nullptr);
+      if (m_script == nullptr)
       {
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("SNMPTrap::%d"), m_id);
@@ -200,7 +200,7 @@ void SNMPTrapConfiguration::compileScript()
    }
    else
    {
-      m_script = NULL;
+      m_script = nullptr;
    }
 }
 
@@ -265,7 +265,7 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping()
    m_objectId = new SNMP_ObjectId();
    m_position = 0;
    m_flags = 0;
-   m_description = NULL;
+   m_description = nullptr;
 }
 
 /**
@@ -278,8 +278,8 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping(DB_RESULT mapResult, int row)
 
    if (!_tcsncmp(oid, _T("POS:"), 4))
    {
-      m_objectId = NULL;
-      m_position = _tcstoul(&oid[4], NULL, 10);
+      m_objectId = nullptr;
+      m_position = _tcstoul(&oid[4], nullptr, 10);
    }
    else
    {
@@ -287,7 +287,7 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping(DB_RESULT mapResult, int row)
       m_position = 0;
    }
 
-   m_description = DBGetField(mapResult, row, 1, NULL, 0);
+   m_description = DBGetField(mapResult, row, 1, nullptr, 0);
    m_flags = DBGetFieldULong(mapResult, row, 2);
 }
 
@@ -299,7 +299,7 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping(ConfigEntry *entry)
    int position = entry->getSubEntryValueAsInt(_T("position"), 0, -1);
    if (position > 0)
    {
-      m_objectId = NULL;
+      m_objectId = nullptr;
       m_position = position; // Positional parameter
    }
    else
@@ -321,7 +321,7 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping(NXCPMessage *msg, UINT32 base
    m_description = msg->getFieldAsString(base + 1);
    if (msg->getFieldAsUInt32(base + 2) == BY_POSITION)
    {
-      m_objectId = NULL;
+      m_objectId = nullptr;
       m_position = msg->getFieldAsUInt32(base + 3);
    }
    else
@@ -365,12 +365,12 @@ void LoadTrapCfg()
 
    // Load traps
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT trap_id,snmp_oid,event_code,description,user_tag,guid,transformation_script FROM snmp_trap_cfg"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       DB_STATEMENT hStmt = (g_dbSyntax == DB_SYNTAX_ORACLE) ?
                DBPrepare(hdb, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=? ORDER BY parameter"), true)
-               : NULL;
-      if ((g_dbSyntax != DB_SYNTAX_ORACLE) || (hStmt != NULL))
+               : nullptr;
+      if ((g_dbSyntax != DB_SYNTAX_ORACLE) || (hStmt != nullptr))
       {
          int numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
@@ -384,7 +384,7 @@ void LoadTrapCfg()
             }
             m_trapCfgList.add(trapCfg);
          }
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
             DBFreeStatement(hStmt);
       }
       DBFreeResult(hResult);
@@ -404,7 +404,7 @@ void InitTraps()
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(trap_id) FROM snmp_trap_log"));
-	if (hResult != NULL)
+	if (hResult != nullptr)
 	{
 		if (DBGetNumRows(hResult) > 0)
 		   s_trapId = DBGetFieldInt64(hResult, 0, 0);
@@ -418,7 +418,7 @@ void InitTraps()
 /**
  * Generate event for matched trap
  */
-static void GenerateTrapEvent(Node *node, UINT32 dwIndex, SNMP_PDU *pdu, int sourcePort)
+static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP_PDU *pdu, int sourcePort)
 {
    SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(dwIndex);
 
@@ -438,7 +438,7 @@ static void GenerateTrapEvent(Node *node, UINT32 dwIndex, SNMP_PDU *pdu, int sou
          // so map first mapping position to index 2 and so on
          int index = (pdu->getVersion() == SNMP_VERSION_1) ? pm->getPosition() - 1 : pm->getPosition() + 1;
          SNMP_Variable *varbind = pdu->getVariable(index);
-         if (varbind != NULL)
+         if (varbind != nullptr)
          {
 				bool convertToHex = true;
             TCHAR name[64], buffer[3072];
@@ -473,10 +473,10 @@ static void GenerateTrapEvent(Node *node, UINT32 dwIndex, SNMP_PDU *pdu, int sou
    parameters.set(_T("sourcePort"), sourcePort);
 
    NXSL_VM *vm;
-   if (trapCfg->getScript() != NULL)
+   if (trapCfg->getScript() != nullptr)
    {
       vm = CreateServerScriptVM(trapCfg->getScript(), node);
-      if (vm != NULL)
+      if (vm != nullptr)
       {
          vm->setGlobalVariable("$trap", vm->createValue(pdu->getTrapId()->toString()));
          NXSL_Array *varbinds = new NXSL_Array(vm);
@@ -493,7 +493,7 @@ static void GenerateTrapEvent(Node *node, UINT32 dwIndex, SNMP_PDU *pdu, int sou
    }
    else
    {
-      vm = NULL;
+      vm = nullptr;
    }
    TransformAndPostEvent(trapCfg->getEventCode(), EventOrigin::SNMP, 0, node->getId(), trapCfg->getEventTag(), &parameters, vm);
    delete vm;
@@ -557,7 +557,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
 	if (isInformRq)
 	{
 		SNMP_PDU *response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
-		if (snmpTransport->getSecurityContext() == NULL)
+		if (snmpTransport->getSecurityContext() == nullptr)
 		{
 		   snmpTransport->setSecurityContext(new SNMP_SecurityContext(pdu->getCommunity()));
 		}
@@ -568,14 +568,14 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
 	}
 
    // Match IP address to object
-   Node *node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, srcAddr);
+   shared_ptr<Node> node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, srcAddr);
 
    // Write trap to log if required
-   if (s_logAllTraps || (node != NULL))
+   if (s_logAllTraps || (node != nullptr))
    {
       NXCPMessage msg;
       TCHAR szQuery[8192], oidText[1024];
-      UINT32 dwTimeStamp = (UINT32)time(NULL);
+      UINT32 dwTimeStamp = (UINT32)time(nullptr);
 
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Varbinds for %s %s from %s:"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"), &buffer[96], buffer);
       varbinds = BuildVarbindList(pdu);
@@ -586,7 +586,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
                                 _T("ip_addr,object_id,zone_uin,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,%d,'%s',%s)"),
                  trapId, dwTimeStamp, srcAddr.toString(buffer),
-                 (node != NULL) ? node->getId() : (UINT32)0, (node != NULL) ? node->getZoneUIN() : zoneUIN,
+                 (node != nullptr) ? node->getId() : (UINT32)0, (node != nullptr) ? node->getZoneUIN() : zoneUIN,
                  pdu->getTrapId()->toString(oidText, 1024),
                  (const TCHAR *)DBPrepareString(g_dbDriver, varbinds));
       QueueSQLRequest(szQuery);
@@ -598,7 +598,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
       msg.setField(VID_TRAP_LOG_MSG_BASE, trapId);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
-      msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (node != NULL) ? node->getId() : (UINT32)0);
+      msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (node != nullptr) ? node->getId() : (UINT32)0);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 4, pdu->getTrapId()->toString(oidText, 1024));
       msg.setField(VID_TRAP_LOG_MSG_BASE + 5, varbinds);
       EnumerateClientSessions(BroadcastNewTrap, &msg);
@@ -610,7 +610,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
    }
 
    // Process trap if it is coming from host registered in database
-   if (node != NULL)
+   if (node != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: trap matched to node %s [%d]"), node->getName(), node->getId());
       node->incSnmpTrapCount();
@@ -621,7 +621,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
          {
             for(UINT32 i = 0; i < g_dwNumModules; i++)
             {
-               if (g_pModuleList[i].pfTrapHandler != NULL)
+               if (g_pModuleList[i].pfTrapHandler != nullptr)
                {
                   if (g_pModuleList[i].pfTrapHandler(pdu, node))
 				      {
@@ -671,7 +671,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
             if (!processed)
             {
                // Generate default event for unmatched traps
-               const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
+               const TCHAR *names[3] = { _T("oid"), nullptr, _T("sourcePort") };
                TCHAR oidText[1024];
                PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, EventOrigin::SNMP, 0, node->getId(), "ssd", names,
                   pdu->getTrapId()->toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
@@ -701,11 +701,11 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
 static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addrLen)
 {
    InetAddress ipAddr = InetAddress::createFromSockaddr(addr);
-	Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
+	shared_ptr<Node> node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
 	TCHAR buffer[64];
 	nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
-      ipAddr.toString(buffer), (node != NULL) ? node->getName() : _T("<unknown>"));
-	return (node != NULL) ? node->getSnmpSecurityContext() : NULL;
+      ipAddr.toString(buffer), (node != nullptr) ? node->getName() : _T("<unknown>"));
+	return (node != nullptr) ? node->getSnmpSecurityContext() : nullptr;
 }
 
 /**
@@ -714,7 +714,7 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
 static SNMP_Transport *CreateTransport(SOCKET hSocket)
 {
    if (hSocket == INVALID_SOCKET)
-      return NULL;
+      return nullptr;
 
    SNMP_Transport *t = new SNMP_UDPTransport(hSocket);
 	t->enableEngineIdAutoupdate(true);
@@ -891,7 +891,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
          SNMP_Transport *transport = snmp;
 #endif
          int bytes = transport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen, ContextFinder);
-         if ((bytes > 0) && (pdu != NULL))
+         if ((bytes > 0) && (pdu != nullptr))
          {
             InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
@@ -919,7 +919,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 				   response->bindVariable(var);
 
 				   SNMP_SecurityContext *context = new SNMP_SecurityContext();
-				   localEngine.setTime((int)time(NULL));
+				   localEngine.setTime((int)time(nullptr));
 				   context->setAuthoritativeEngine(localEngine);
 				   context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
 				   context->setAuthMethod(SNMP_AUTH_NONE);
@@ -1015,7 +1015,7 @@ UINT32 DeleteTrap(UINT32 id)
          DB_STATEMENT hStmtCfg = DBPrepare(hdb, _T("DELETE FROM snmp_trap_cfg WHERE trap_id=?"));
          DB_STATEMENT hStmtMap = DBPrepare(hdb, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=?"));
 
-         if (hStmtCfg != NULL && hStmtMap != NULL)
+         if (hStmtCfg != nullptr && hStmtMap != nullptr)
          {
             DBBind(hStmtCfg, 1, DB_SQLTYPE_INTEGER, id);
             DBBind(hStmtMap, 1, DB_SQLTYPE_INTEGER, id);
@@ -1057,7 +1057,7 @@ bool SNMPTrapConfiguration::saveParameterMapping(DB_HANDLE hdb)
       return true;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,snmp_oid,description,flags) VALUES (?,?,?,?,?)"), true);
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1092,7 +1092,7 @@ UINT32 CreateNewTrap(UINT32 *pdwTrapId)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (guid,trap_id,snmp_oid,event_code,description,user_tag) VALUES (?,?,'',?,'','')"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration();
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, trapCfg->getGuid());
@@ -1133,7 +1133,7 @@ UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
       if (m_trapCfgList.get(i)->getId() == id)
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=?,transformation_script=? WHERE trap_id=?"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(pMsg);
             trapCfg->getOid().toString(oid, 1024);
@@ -1247,11 +1247,11 @@ UINT32 ResolveTrapGuid(const uuid& guid)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT trap_id FROM snmp_trap_cfg WHERE guid=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
             id = DBGetFieldULong(hResult, 0, 0);

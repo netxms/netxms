@@ -38,7 +38,7 @@ NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary()
 /**
  * Setup server script VM. Returns pointer to same VM for convenience.
  */
-NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, shared_ptr<DCObjectInfo> dciInfo)
+NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    if ((vm == nullptr) || (object == nullptr))
       return vm;
@@ -78,7 +78,7 @@ static bool ScriptValidator(NXSL_LibraryScript *script, void *context)
 /**
  * Create NXSL VM from library script. Created VM will take ownership of DCI descriptor.
  */
-ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, NetObj *object, shared_ptr<DCObjectInfo> dciInfo)
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    ScriptVMFailureReason failureReason = ScriptVMFailureReason::SCRIPT_NOT_FOUND;
    NXSL_VM *vm = s_scriptLibrary.createVM(name, CreateServerEnvironment, ScriptValidator, &failureReason);
@@ -88,7 +88,7 @@ ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, NetObj 
 /**
  * Create NXSL VM from compiled script. Created VM will take ownership of DCI descriptor.
  */
-ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, NetObj *object, shared_ptr<DCObjectInfo> dciInfo)
+ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo)
 {
    if (script->isEmpty())
       return ScriptVMHandle(ScriptVMFailureReason::SCRIPT_IS_EMPTY);
@@ -481,13 +481,13 @@ void ImportScript(ConfigEntry *config, bool overwrite)
 /**
  * Execute library script from scheduler
  */
-void ExecuteScheduledScript(shared_ptr<ScheduledTaskParameters> parameters)
+void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    TCHAR name[256];
    _tcslcpy(name, parameters->m_persistentData, 256);
    Trim(name);
 
-   NetObj *object = FindObjectById(parameters->m_objectId);
+   shared_ptr<NetObj> object = FindObjectById(parameters->m_objectId);
    if ((object != NULL) && !object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
    {
       nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),

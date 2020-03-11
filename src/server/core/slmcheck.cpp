@@ -455,10 +455,10 @@ UINT32 SlmCheck::getOwnerId()
 {
 	UINT32 ownerId = 0;
 
-	lockParentList(false);
-	for(int i = 0; i < getParentList()->size(); i++)
+	readLockParentList();
+	for(int i = 0; i < getParentList().size(); i++)
 	{
-      NetObj *object = getParentList()->get(i);
+      NetObj *object = getParentList().get(i);
 		if ((object->getObjectClass() == OBJECT_BUSINESSSERVICE) ||
 		    (object->getObjectClass() == OBJECT_NODELINK))
 		{
@@ -479,10 +479,10 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL(NXSL_VM *vm)
 	NXSL_Value *value = NULL;
 	UINT32 nodeId = 0;
 
-	lockParentList(false);
-	for(int i = 0; i < getParentList()->size(); i++)
+	readLockParentList();
+	for(int i = 0; i < getParentList().size(); i++)
 	{
-	   NetObj *object = getParentList()->get(i);
+	   NetObj *object = getParentList().get(i);
 		if (object->getObjectClass() == OBJECT_NODELINK)
 		{
 			nodeId = ((NodeLink *)object)->getNodeId();
@@ -493,10 +493,10 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL(NXSL_VM *vm)
 
 	if (nodeId != 0)
 	{
-		NetObj *node = FindObjectById(nodeId);
+		shared_ptr<NetObj> node = FindObjectById(nodeId);
 		if ((node != NULL) && (node->getObjectClass() == OBJECT_NODE))
 		{
-			value = vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, node));
+			value = node->createNXSLObject(vm);
 		}
 	}
 

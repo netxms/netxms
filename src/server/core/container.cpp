@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -63,17 +63,16 @@ void AbstractContainer::linkObjects()
       // Find and link child objects
       for(UINT32 i = 0; i < m_dwChildIdListSize; i++)
       {
-         NetObj *pObject = FindObjectById(m_pdwChildIdList[i]);
-         if (pObject != NULL)
-            linkObject(pObject);
+         shared_ptr<NetObj> object = FindObjectById(m_pdwChildIdList[i]);
+         if (object != nullptr)
+            linkObject(object);
          else
             nxlog_write(NXLOG_ERROR, _T("Inconsistent database: container object %s [%u] has reference to non-existing child object [%u]"),
                      m_name, m_id, m_pdwChildIdList[i]);
       }
 
       // Cleanup
-      free(m_pdwChildIdList);
-      m_pdwChildIdList = NULL;
+      MemFreeAndNull(m_pdwChildIdList);
       m_dwChildIdListSize = 0;
    }
 }
@@ -197,16 +196,16 @@ bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_RELATIONS))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
-      lockChildList(false);
-      if (success && !getChildList()->isEmpty())
+      readLockChildList();
+      if (success && !getChildList().isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO container_members (container_id,object_id) VALUES (?,?)"));
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < getChildList()->size()) && success; i++)
+            for(int i = 0; (i < getChildList().size()) && success; i++)
             {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList()->get(i)->getId());
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList().get(i)->getId());
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -299,7 +298,7 @@ bool Container::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool Container::showThresholdSummary()
+bool Container::showThresholdSummary() const
 {
    return true;
 }
@@ -325,7 +324,7 @@ void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *Container::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslContainerClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslContainerClass, new shared_ptr<Container>(self())));
 }

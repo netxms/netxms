@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -183,10 +183,10 @@ void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *p
 	m_lastPollTime = time(NULL);
 
 	// Loop through the kids and execute their either scripts or thresholds
-   lockChildList(false);
-	for (int i = 0; i < getChildList()->size(); i++)
+   readLockChildList();
+	for (int i = 0; i < getChildList().size(); i++)
 	{
-	   NetObj *object = getChildList()->get(i);
+	   NetObj *object = getChildList().get(i);
 		if (object->getObjectClass() == OBJECT_SLMCHECK)
 			((SlmCheck *)object)->execute();
 		else if (object->getObjectClass() == OBJECT_NODELINK)
@@ -205,28 +205,26 @@ void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *p
 /**
  * Get template checks applicable for given target
  */
-void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates)
+void BusinessService::getApplicableTemplates(ServiceContainer *target, SharedObjectArray<SlmCheck> *templates)
 {
-	lockChildList(false);
-	for(int i = 0; i < getChildList()->size(); i++)
+	readLockChildList();
+	for(int i = 0; i < getChildList().size(); i++)
 	{
-      NetObj *object = getChildList()->get(i);
-		if ((object->getObjectClass() == OBJECT_SLMCHECK) &&
-          ((SlmCheck *)object)->isTemplate())
+      shared_ptr<NetObj> object = getChildList().getShared(i);
+		if ((object->getObjectClass() == OBJECT_SLMCHECK) && static_cast<SlmCheck*>(object.get())->isTemplate())
 		{
-		   object->incRefCount();
-			templates->add((SlmCheck *)object);
+			templates->add(static_pointer_cast<SlmCheck>(object));
 		}
 	}
 	unlockChildList();
 
-	lockParentList(false);
-	for(int i = 0; i < getParentList()->size(); i++)
+	readLockParentList();
+	for(int i = 0; i < getParentList().size(); i++)
 	{
-      NetObj *object = getParentList()->get(i);
+      NetObj *object = getParentList().get(i);
 		if (object->getObjectClass() == OBJECT_BUSINESSSERVICE)
 		{
-			((BusinessService *)object)->getApplicableTemplates(target, templates);
+			static_cast<BusinessService*>(object)->getApplicableTemplates(target, templates);
 		}
 	}
 	unlockParentList();

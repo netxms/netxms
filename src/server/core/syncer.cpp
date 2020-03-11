@@ -33,7 +33,7 @@ void NetObjDelete(NetObj *pObject);
 /**
  * Thread pool
  */
-ThreadPool *g_syncerThreadPool = NULL;
+ThreadPool *g_syncerThreadPool = nullptr;
 
 /**
  * Outstanding save requests
@@ -93,7 +93,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockWriteLock(s_objectTxnLock);
 
-	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(false);
+	SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
    nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("%d objects to process"), objects->size());
 	for(int i = 0; i < objects->size(); i++)
    {
@@ -103,31 +103,23 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
       if (object->isDeleted())
       {
          nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] marked for deletion"), object->getName(), object->getId());
-         if (object->getRefCount() == 0)
+         DBBegin(hdb);
+         if (object->deleteFromDatabase(hdb))
          {
-   		   DBBegin(hdb);
-            if (object->deleteFromDatabase(hdb))
-            {
-               nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 4, _T("Object %d \"%s\" deleted from database"), object->getId(), object->getName());
-               DBCommit(hdb);
-               NetObjDelete(object);
-            }
-            else
-            {
-               DBRollback(hdb);
-               nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 4, _T("Call to deleteFromDatabase() failed for object %s [%d], transaction rollback"), object->getName(), object->getId());
-            }
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 4, _T("Object %d \"%s\" deleted from database"), object->getId(), object->getName());
+            DBCommit(hdb);
+            NetObjDelete(object);
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 3, _T("Unable to delete object with id %d because it is being referenced %d time(s)"),
-                      object->getId(), object->getRefCount());
+            DBRollback(hdb);
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 4, _T("Call to deleteFromDatabase() failed for object %s [%d], transaction rollback"), object->getName(), object->getId());
          }
       }
 		else if (object->isModified())
 		{
 		   nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] modified"), object->getName(), object->getId());
-		   if (g_syncerThreadPool != NULL)
+		   if (g_syncerThreadPool != nullptr)
 		   {
 		      InterlockedIncrement(&s_outstandingSaveRequests);
 		      ThreadPoolExecute(g_syncerThreadPool, SaveObject, object);
@@ -152,7 +144,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 		}
    }
 
-	if (g_syncerThreadPool != NULL)
+	if (g_syncerThreadPool != nullptr)
 	{
 	   while(s_outstandingSaveRequests > 0)
 	   {

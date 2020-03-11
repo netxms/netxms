@@ -54,12 +54,12 @@
  */
 typedef struct
 {
-   UINT64 qwMsgId;       // NetXMS internal message ID
+   uint64_t qwMsgId;       // NetXMS internal message ID
    time_t tmTimeStamp;
-   INT32 nFacility;
-   INT32 nSeverity;
-   UINT32 dwSourceObject;
-   UINT32 zoneUIN;
+   int32_t nFacility;
+   int32_t nSeverity;
+   uint32_t dwSourceObject;
+   uint32_t zoneUIN;
    char szHostName[MAX_SYSLOG_HOSTNAME_LEN];
    char szTag[MAX_SYSLOG_TAG_LEN];
    char szMessage[MAX_LOG_MSG_LENGTH];

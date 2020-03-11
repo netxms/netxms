@@ -64,7 +64,6 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    bool bResult = false;
 	DB_RESULT hResult;
 	UINT32 dwNodeId;
-	NetObj *pObject;
 	int i, nRows;
 
    m_id = dwId;
@@ -101,11 +100,11 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 			for(i = 0; i < nRows; i++)
 			{
 				dwNodeId = DBGetFieldULong(hResult, i, 0);
-				pObject = FindObjectById(dwNodeId, OBJECT_NODE);
-				if (pObject != NULL)
+				shared_ptr<NetObj> object = FindObjectById(dwNodeId, OBJECT_NODE);
+				if (object != nullptr)
 				{
-               addChild(pObject);
-               pObject->addParent(this);
+               addChild(object);
+               object->addParent(self());
 				}
 				else
 				{
@@ -178,7 +177,7 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
-bool Cluster::showThresholdSummary()
+bool Cluster::showThresholdSummary() const
 {
    return true;
 }
@@ -222,7 +221,7 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
-		lockDciAccess(false);
+		readLockDciAccess();
       for(int i = 0; (i < m_dcObjects->size()) && success; i++)
          success = m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
@@ -249,13 +248,13 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            lockChildList(false);
-            for(int i = 0; (i < getChildList()->size()) && success; i++)
+            readLockChildList();
+            for(int i = 0; (i < getChildList().size()) && success; i++)
             {
-               if (getChildList()->get(i)->getObjectClass() != OBJECT_NODE)
+               if (getChildList().get(i)->getObjectClass() != OBJECT_NODE)
                   continue;
 
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList()->get(i)->getId());
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList().get(i)->getId());
                success = DBExecute(hStmt);
             }
             unlockChildList();
@@ -576,17 +575,16 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
    UINT32 modified = 0;
 
    // Create polling list
-	ObjectArray<DataCollectionTarget> pollList(getChildList()->size(), 16);
-   lockChildList(false);
+	SharedObjectArray<DataCollectionTarget> pollList(getChildList().size(), 16);
+   readLockChildList();
    int i;
-   for(i = 0; i < getChildList()->size(); i++)
+   for(i = 0; i < getChildList().size(); i++)
    {
-      NetObj *object = getChildList()->get(i);
+      shared_ptr<NetObj> object = getChildList().getShared(i);
       if ((object->getStatus() != STATUS_UNMANAGED) && object->isDataCollectionTarget())
       {
-         object->incRefCount();
-         static_cast<DataCollectionTarget*>(object)->lockForStatusPoll();
-         pollList.add(static_cast<DataCollectionTarget*>(object));
+         static_cast<DataCollectionTarget*>(object.get())->lockForStatusPoll();
+         pollList.add(static_pointer_cast<DataCollectionTarget>(object));
       }
    }
    unlockChildList();
@@ -666,7 +664,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 								else
 								{
 									// Moved
-									NetObj *pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
+									shared_ptr<NetObj> pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
 									PostSystemEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_id, "dsdsds",
 												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
 												 m_pResourceList[k].dwCurrOwner,
@@ -697,7 +695,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 		{
 			if ((!resourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
 			{
-				NetObj *pObject = FindObjectById(m_pResourceList[i].dwCurrOwner);
+				shared_ptr<NetObj> pObject = FindObjectById(m_pResourceList[i].dwCurrOwner);
 				PostSystemEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_id, "dsds",
 							 m_pResourceList[i].dwId, m_pResourceList[i].szName,
 							 m_pResourceList[i].dwCurrOwner,
@@ -718,12 +716,6 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 
    calculateCompoundStatus(true);
    poller->setStatus(_T("cleanup"));
-
-   // Cleanup
-	for(i = 0; i < pollList.size(); i++)
-	{
-		pollList.get(i)->decRefCount();
-	}
 
 	lockProperties();
 	if (modified != 0)
@@ -782,14 +774,14 @@ UINT32 Cluster::getResourceOwnerInternal(UINT32 id, const TCHAR *name)
  */
 UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
-   lockChildList(false);
-   ObjectArray<ItemValue> values(getChildList()->size(), 32, Ownership::True);
-   for(int i = 0; i < getChildList()->size(); i++)
+   readLockChildList();
+   ObjectArray<ItemValue> values(getChildList().size(), 32, Ownership::True);
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      if (getChildList()->get(i)->getObjectClass() != OBJECT_NODE)
+      if (getChildList().get(i)->getObjectClass() != OBJECT_NODE)
          continue;
 
-      Node *node = static_cast<Node*>(getChildList()->get(i));
+      Node *node = static_cast<Node*>(getChildList().get(i));
       shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(item->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
@@ -848,15 +840,15 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
  */
 UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 {
-   lockChildList(false);
-   Table **values = (Table **)malloc(sizeof(Table *) * getChildList()->size());
+   readLockChildList();
+   Table **values = MemAllocArray<Table*>(getChildList().size());
    int valueCount = 0;
-   for(int i = 0; i < getChildList()->size(); i++)
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      if (getChildList()->get(i)->getObjectClass() != OBJECT_NODE)
+      if (getChildList().get(i)->getObjectClass() != OBJECT_NODE)
          continue;
 
-      Node *node = static_cast<Node*>(getChildList()->get(i));
+      Node *node = static_cast<Node*>(getChildList().get(i));
       shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(table->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
@@ -910,9 +902,9 @@ void Cluster::onDataCollectionChange()
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Cluster::createNXSLObject(NXSL_VM *vm)
+NXSL_Value *Cluster::createNXSLObject(NXSL_VM *vm) const
 {
-   return vm->createValue(new NXSL_Object(vm, &g_nxslClusterClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslClusterClass, new shared_ptr<Cluster>(self())));
 }
 
 /**
@@ -923,12 +915,12 @@ NXSL_Array *Cluster::getNodesForNXSL(NXSL_VM *vm)
    NXSL_Array *nodes = new NXSL_Array(vm);
    int index = 0;
 
-   lockChildList(false);
-   for(int i = 0; i < getChildList()->size(); i++)
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
    {
-      if (getChildList()->get(i)->getObjectClass() == OBJECT_NODE)
+      if (getChildList().get(i)->getObjectClass() == OBJECT_NODE)
       {
-         nodes->set(index++, getChildList()->get(i)->createNXSLObject(vm));
+         nodes->set(index++, getChildList().get(i)->createNXSLObject(vm));
       }
    }
    unlockChildList();

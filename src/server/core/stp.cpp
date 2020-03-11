@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, 
    oid[10] = 9;   // dot1dStpPortDesignatedPort
    request->bindVariable(new SNMP_Variable(oid, var->getName().length()));
 
-	SNMP_PDU *response = NULL;
+	SNMP_PDU *response = nullptr;
    UINT32 rcc = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
 	delete request;
 	if (rcc == SNMP_ERR_SUCCESS)
@@ -61,20 +61,20 @@ static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, 
          {
             // Usually bridge ID is a MAC address of one of bridge interfaces
             // If this will not work, try to find bridge by bridge ID value
-            Node *bridge = FindNodeByMAC(&designatedBridge[2]);
-            if (bridge == NULL)
+            shared_ptr<Node> bridge = FindNodeByMAC(&designatedBridge[2]);
+            if (bridge == nullptr)
                bridge = FindNodeByBridgeId(&designatedBridge[2]);
-            if ((bridge != NULL) && (bridge != node))
+            if ((bridge != nullptr) && (bridge->getId() != node->getId()))
             {
                nxlog_debug(6, _T("STP: found designated bridge %s [%d] for node %s [%d] port %d"),
                   bridge->getName(), bridge->getId(), node->getName(), node->getId(), oid[11]);
-               Interface *ifLocal = node->findBridgePort(oid[11]);
-               if (ifLocal != NULL)
+               shared_ptr<Interface> ifLocal = node->findBridgePort(oid[11]);
+               if (ifLocal != nullptr)
                {
                   nxlog_debug(6, _T("STP: found local port %s [%d] for node %s [%d]"),
                      ifLocal->getName(), ifLocal->getId(), node->getName(), node->getId());
-                  Interface *ifRemote = bridge->findBridgePort((UINT32)designatedPort[1]);
-                  if (ifRemote != NULL)
+                  shared_ptr<Interface> ifRemote = bridge->findBridgePort((UINT32)designatedPort[1]);
+                  if (ifRemote != nullptr)
                   {
                      nxlog_debug(6, _T("STP: found remote port %s [%d] on node %s [%d]"),
                         ifRemote->getName(), ifRemote->getId(), bridge->getName(), bridge->getId());
