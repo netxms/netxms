@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.1 to 32.2
+ */
+static bool H_UpgradeFromV1()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE ap_common ADD flags integer\n")
+            _T("UPDATE ap_common SET flags=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("ap_common"), _T("flags")));
+
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 33.0 to 33.1
  */
 static bool H_UpgradeFromV0()
@@ -45,6 +61,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 1,  33, 2,  H_UpgradeFromV1  },
    { 0,  33, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };

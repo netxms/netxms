@@ -21,10 +21,17 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentPolicy;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 
 /**
@@ -33,6 +40,9 @@ import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 public class AgentConfigPolicyEditor extends AbstractPolicyEditor
 {
    private AgentConfigEditor editor;
+   private Button buttonExpandMacro;
+   
+   private int flags; 
 
    /**
     * Constructor
@@ -42,11 +52,37 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
     */
    public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
    {
-      super(parent, style, policy, viewPart);      
+      super(parent, style, policy, viewPart);  
 
+      flags = policy.getFlags();
       setLayout(new FillLayout());
       
-      editor = new AgentConfigEditor(this, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
+      Composite mainArea = new Composite(this, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.INNER_SPACING;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      mainArea.setLayout(layout);
+      
+      buttonExpandMacro = new Button(mainArea, SWT.CHECK);
+      buttonExpandMacro.setText("Expand macro");
+      buttonExpandMacro.setLayoutData(new GridData());
+      buttonExpandMacro.addSelectionListener(new SelectionListener() {
+         
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            fireModifyListeners();
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
+      editor = new AgentConfigEditor(mainArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
       editor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -54,6 +90,12 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
             fireModifyListeners();
          }
       }); 
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      editor.setLayoutData(gd);
       
       updateControlFromPolicy();
    }
@@ -65,6 +107,8 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    public void updateControlFromPolicy()
    {
       editor.setText(getPolicy().getContent());
+      flags = getPolicy().getFlags();
+      buttonExpandMacro.setSelection((flags & AgentPolicy.EXPAND_MACRO) > 0);
    }
 
    /**
@@ -74,6 +118,15 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    public AgentPolicy updatePolicyFromControl()
    {
       getPolicy().setContent(editor.getText());
+      if(buttonExpandMacro.getSelection())
+      {
+         flags |= AgentPolicy.EXPAND_MACRO;
+      }
+      else
+      {
+         flags &= ~AgentPolicy.EXPAND_MACRO;         
+      }
+      getPolicy().setFlags(flags);
       return getPolicy();
    }   
 

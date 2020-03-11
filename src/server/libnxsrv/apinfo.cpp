@@ -38,9 +38,11 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 		m_serverIdList = (UINT64*)malloc(sizeof(UINT64) * m_size);
 		m_serverInfoList = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
 		m_version = (int *)malloc(sizeof(int) * m_size);
+		m_hashList = (BYTE *)malloc(MD5_DIGEST_SIZE * m_size);
+		memset(m_hashList, 0, MD5_DIGEST_SIZE * m_size);
 
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
-		for(int i = 0; i < m_size; i++, varId += 5)
+		for(int i = 0; i < m_size; i++, varId += 4)
 		{
 			msg->getFieldAsBinary(varId++, &m_guidList[i * UUID_LENGTH], UUID_LENGTH);
 			if(!m_newPolicyType)
@@ -54,6 +56,7 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 			m_serverInfoList[i] = msg->getFieldAsString(varId++);
 			m_serverIdList[i] = msg->getFieldAsUInt64(varId++);
 			m_version[i] = (int)msg->getFieldAsUInt32(varId++);
+			msg->getFieldAsBinary(varId++, &m_hashList[i * MD5_DIGEST_SIZE], UUID_LENGTH);
 		}
 	}
 	else
@@ -63,6 +66,7 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 		m_serverInfoList = NULL;
 		m_serverIdList = NULL;
 		m_version = NULL;
+		m_hashList = NULL;
 	}
 }
 
@@ -80,6 +84,7 @@ AgentPolicyInfo::~AgentPolicyInfo()
 	free(m_serverIdList);
 	free(m_guidList);
 	free(m_version);
+	free(m_hashList);
 }
 
 /**
@@ -95,4 +100,19 @@ uuid AgentPolicyInfo::getGuid(int index)
 	{
       return uuid::NULL_UUID;
 	}
+}
+
+/**
+ * Get hash
+ */
+const BYTE *AgentPolicyInfo::getHash(int index)
+{
+   if ((index >= 0) && (index < m_size))
+   {
+      return m_hashList + (index * MD5_DIGEST_SIZE);
+   }
+   else
+   {
+      return NULL;
+   }
 }

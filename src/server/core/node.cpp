@@ -2966,34 +2966,29 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 
          if (!found)
          {
-            ServerJob *job = new PolicyUninstallJob(this, ap->getType(i), guid, 0);
-            if (!AddJob(job))
-               delete job;
+            UndeployData *data = new UndeployData();
+            data->conn = getAgentConnection();
+            data->guid = guid;
+            _tcsncpy(data->policyType, ap->getType(i), MAX_POLICY_TYPE_LEN);
+            data->newTypeFormatSupported = supportNewTypeFormat();
+            _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), getName(), getId(), _T("unknown"), guid.toString().cstr());
+
+            ThreadPoolExecute(g_agentConnectionThreadPool, &UndeployPolicy, data);
          }
 
          unlockParentList();
       }
 
       // Check for bound but not installed policies and schedule it's installation again
-      // Job will be unbound if it was not possible to add job
-      ObjectArray<NetObj> unbindList(64, 64, Ownership::False);
       lockParentList(false);
       for(int i = 0; i < getParentList()->size(); i++)
       {
          if (getParentList()->get(i)->getObjectClass() == OBJECT_TEMPLATE)
          {
-            static_cast<Template*>(getParentList()->get(i))->checkPolicyBind(this, ap, &unbindList);
+            static_cast<Template*>(getParentList()->get(i))->checkPolicyBind(this, ap);
          }
       }
       unlockParentList();
-
-      for(int i = 0; i < unbindList.size(); i++)
-      {
-         NetObj *object = unbindList.get(i);
-         object->deleteChild(this);
-         deleteParent(object);
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_name, object->getName(), object->getId());
-      }
 
       m_capabilities |= ap->isNewPolicyType() ? NC_IS_NEW_POLICY_TYPES : 0;
       delete ap;

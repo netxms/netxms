@@ -32,10 +32,13 @@ public class AgentPolicy
    public static final String LOG_PARSER = "LogParserConfig";
    public static final String SUPPORT_APPLICATION = "SupportApplicationConfig";
    
+   public static final long EXPAND_MACRO = 1;
+   
    private UUID guid;
    private String name;
 	private String policyType;
-	private String content;
+	private String content;	
+	private int flags;
 	
 	/**
 	 * @param msg
@@ -46,6 +49,7 @@ public class AgentPolicy
 		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
 		policyType = msg.getFieldAsString(NXCPCodes.VID_POLICY_TYPE);
 		content = msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE_DATA);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 	}
 	
 	public AgentPolicy(String policyName, String policyType)
@@ -62,6 +66,7 @@ public class AgentPolicy
       policyType = msg.getFieldAsString(base+1);
       name = msg.getFieldAsString(base+2);
       content = msg.getFieldAsString(base+3);    
+      flags = msg.getFieldAsInt32(base+4);   
    }
 
    public AgentPolicy(AgentPolicy policy)
@@ -70,6 +75,7 @@ public class AgentPolicy
       name = policy.name;
       policyType = policy.policyType;
       content = policy.content;
+      flags = policy.flags;
    }
 
    public void fillMessage(NXCPMessage msg)
@@ -79,6 +85,7 @@ public class AgentPolicy
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_POLICY_TYPE, policyType);
       msg.setField(NXCPCodes.VID_CONFIG_FILE_DATA, content);
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
    }
 
 	/**
@@ -129,9 +136,28 @@ public class AgentPolicy
       this.content = content;
    }
 
+   /**
+    * @param newObjectGuid the new object GUID to set
+    */
    public void setGuid(UUID newObjectGuid)
    {
       guid = newObjectGuid;
+   }
+
+   /**
+    * @return the flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   /**
+    * @param flags the flags to set
+    */
+   public void setFlags(int flags)
+   {
+      this.flags = flags;
    }
 
    /* (non-Javadoc)
@@ -149,5 +175,6 @@ public class AgentPolicy
       name = object.name;
       policyType = object.policyType;
       content = object.content;
+      flags = object.flags;
    }
 }

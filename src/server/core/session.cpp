@@ -14635,12 +14635,9 @@ void ClientSession::getPolicy(NXCPMessage *request)
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          uuid guid = request->getFieldAsGUID(VID_GUID);
-         GenericAgentPolicy *ap = templateObject->getAgentPolicyCopy(guid);
-         if(ap != NULL)
+         if(templateObject->fillMessageWithPolicy(&msg, guid))
          {
-            ap->fillMessage(&msg, VID_AGENT_POLICY_BASE);
             msg.setField(VID_RCC, RCC_SUCCESS);
-            delete ap;
          }
          else
             msg.setField(VID_RCC, RCC_INVALID_POLICY_ID);

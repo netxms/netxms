@@ -525,29 +525,21 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
 /**
  * Deploy policy to agent
  */
-UINT32 AgentConnectionEx::deployPolicy(GenericAgentPolicy *policy, bool newTypeFormatSupported)
+UINT32 AgentConnectionEx::deployPolicy(NXCPMessage *msg)
 {
 	UINT32 rqId, rcc;
-	NXCPMessage msg(getProtocolVersion());
 
    rqId = generateRequestId();
-   msg.setId(rqId);
-	msg.setCode(CMD_DEPLOY_AGENT_POLICY);
-	if (policy->createDeploymentMessage(&msg, newTypeFormatSupported))
-	{
-		if (sendMessage(&msg))
-		{
-			rcc = waitForRCC(rqId, getCommandTimeout());
-		}
-		else
-		{
-			rcc = ERR_CONNECTION_BROKEN;
-		}
-	}
-	else
-	{
-		rcc = ERR_INTERNAL_ERROR;
-	}
+   msg->setId(rqId);
+	msg->setCode(CMD_DEPLOY_AGENT_POLICY);
+   if (sendMessage(msg))
+   {
+      rcc = waitForRCC(rqId, getCommandTimeout());
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
    return rcc;
 }
 

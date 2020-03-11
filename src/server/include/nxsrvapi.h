@@ -637,6 +637,7 @@ private:
 	TCHAR **m_typeList;
    TCHAR **m_serverInfoList;
 	UINT64 *m_serverIdList;
+   BYTE *m_hashList;
 	int *m_version;
 
 public:
@@ -645,6 +646,7 @@ public:
 
 	int size() { return m_size; }
 	uuid getGuid(int index);
+   const BYTE *getHash(int index);
 	const TCHAR *getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : NULL; }
 	const TCHAR *getServerInfo(int index) { return ((index >= 0) && (index < m_size)) ? m_serverInfoList[index] : NULL; }
 	UINT64 getServerId(int index) { return ((index >= 0) && (index < m_size)) ? m_serverIdList[index] : 0; }

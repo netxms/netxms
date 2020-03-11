@@ -123,7 +123,7 @@ public:
    AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
    virtual ~AgentConnectionEx();
 
-   UINT32 deployPolicy(GenericAgentPolicy *policy, bool newTypeFormatSupported);
+   UINT32 deployPolicy(NXCPMessage *msg);
    UINT32 uninstallPolicy(uuid guid, TCHAR *type, bool newTypeFormatSupported);
 
    void setTunnel(AgentTunnel *tunnel);
@@ -1253,6 +1253,30 @@ public:
 	void associateItems();
 };
 
+#define EXPAND_MACRO 1
+
+struct UndeployData
+{
+   AgentConnectionEx *conn;
+   uuid guid;
+   TCHAR policyType[MAX_POLICY_TYPE_LEN];
+   bool newTypeFormatSupported;
+   TCHAR debugId[256];
+};
+
+struct DeployData
+{
+   AgentConnectionEx *conn;
+   NetObj *object;
+   bool forceInstall;
+   int currVerson;
+   BYTE currHash[MD5_DIGEST_SIZE];
+   bool newTypeFormatSupported;
+   TCHAR debugId[256];
+};
+
+void UndeployPolicy(UndeployData *data);
+
 /**
  * Generic agent policy object
  */
@@ -1265,20 +1289,22 @@ protected:
    TCHAR m_type[MAX_POLICY_TYPE_LEN];
    char *m_content;
    UINT32 m_version;
+   UINT32 m_flags;
+   HashMap<UINT32, BYTE> *m_expandedPolicyHashes;
+   Mutex *m_contentLock;
 
-   GenericAgentPolicy(const GenericAgentPolicy *src);
+   virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
 
 public:
    GenericAgentPolicy(const uuid& guid, const TCHAR *type, UINT32 ownerId);
    GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId);
    virtual ~GenericAgentPolicy();
 
-   virtual GenericAgentPolicy *clone() const;
-
    const TCHAR *getName() const { return m_name; }
    const uuid getGuid() const { return m_guid; }
    const UINT32 getVersion() const { return m_version; }
    const TCHAR *getType() const { return m_type; }
+   const UINT32 getFlags() const { return m_flags; }
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1293,8 +1319,7 @@ public:
 
    virtual json_t *toJson();
 
-   virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported, const TCHAR *debugId);
-   virtual bool createDeploymentMessage(NXCPMessage *msg, bool newTypeFormatSupported);
+   virtual void deploy(DeployData *data);
 };
 
 /**
@@ -1302,19 +1327,15 @@ public:
  */
 class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 {
-protected:
-   FileDeliveryPolicy(const FileDeliveryPolicy *src) : GenericAgentPolicy(src) { }
-
 public:
    FileDeliveryPolicy(const uuid& guid, UINT32 ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
    FileDeliveryPolicy(const TCHAR *name, UINT32 ownerId) : GenericAgentPolicy(name, _T("FileDelivery"), ownerId) { }
    virtual ~FileDeliveryPolicy() { }
 
-   virtual GenericAgentPolicy *clone() const override;
    virtual UINT32 modifyFromMessage(NXCPMessage *request) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported, const TCHAR *debugId) override;
+   virtual void deploy(DeployData *data) override;
 };
 
 /**
@@ -1326,8 +1347,8 @@ private:
    typedef DataCollectionOwner super;
 
 protected:
-   HashMap<uuid, GenericAgentPolicy> *m_policyList;
-   ObjectArray<GenericAgentPolicy> *m_deletedPolicyList;
+   SharedObjectArray<GenericAgentPolicy> *m_policyList;
+   SharedObjectArray<GenericAgentPolicy> *m_deletedPolicyList;
 
    virtual void prepareForDeletion() override;
    virtual void onDataCollectionChange() override;
@@ -1356,15 +1377,15 @@ public:
 
    void createExportRecord(StringBuffer &xml);
 
-   GenericAgentPolicy *getAgentPolicyCopy(const uuid& guid);
    bool hasPolicy(const uuid& guid);
+   bool fillMessageWithPolicy(NXCPMessage *msg, const uuid& guid);
    uuid updatePolicyFromMessage(NXCPMessage *request);
    bool removePolicy(const uuid& guid);
    void fillPolicyMessage(NXCPMessage *pMsg);
    void applyPolicyChanges();
    void forceApplyPolicyChanges();
    void applyPolicyChanges(DataCollectionTarget *object);
-   void checkPolicyBind(Node *node, AgentPolicyInfo *ap, ObjectArray<NetObj> *unbindList);
+   void checkPolicyBind(Node *node, AgentPolicyInfo *ap);
    void forceInstallPolicy(DataCollectionTarget *target);
    void removeAllPolicies(Node *node);
 };
