@@ -381,13 +381,19 @@ void Template::forceInstallPolicy(DataCollectionTarget *target)
 {
    if(target->getObjectClass() != OBJECT_NODE)
       return;
+   Node *node = reinterpret_cast<Node*>(target);
+   AgentConnectionEx *conn = node->getAgentConnection();
+   if (conn == NULL)
+   {
+      return;
+   }
+
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
       shared_ptr<GenericAgentPolicy> object = m_policyList->getShared(i);
       DeployData *data = new DeployData();
-      Node *node = reinterpret_cast<Node*>(target);
-      data->conn = node->getAgentConnection();
+      data->conn = conn;
       memset(data->currHash, 0, MD5_DIGEST_SIZE);
       data->currVerson = 0;
       data->forceInstall = true;
@@ -765,11 +771,18 @@ void Template::forceApplyPolicyChanges()
       for(int i = 0; i < nodes.size(); i++)
       {
          Node *node = nodes.get(i);
+         AgentConnectionEx *conn = node->getAgentConnection();
+         if (conn == NULL)
+         {
+            node->decRefCount();
+            continue;
+         }
          for (int i = 0; i < m_policyList->size(); i++)
          {
             shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
             DeployData *data = new DeployData();
-            data->conn = node->getAgentConnection();
+            data->conn = conn;
+            conn->incRefCount();
             memset(data->currHash, 0, MD5_DIGEST_SIZE);
             data->currVerson = 0;
             data->forceInstall = true;
@@ -778,6 +791,7 @@ void Template::forceApplyPolicyChanges()
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
             ThreadPoolExecute(g_agentConnectionThreadPool, policy, &GenericAgentPolicy::deploy, data);
          }
+         conn->decRefCount();
          node->decRefCount();
       }
       unlockProperties();
@@ -813,6 +827,10 @@ void Template::applyPolicyChanges(DataCollectionTarget *object)
  */
 void Template::checkPolicyBind(Node *node, AgentPolicyInfo *ap)
 {
+   AgentConnectionEx *conn = node->getAgentConnection();
+   if (conn == NULL)
+      return;
+
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
@@ -839,7 +857,7 @@ void Template::checkPolicyBind(Node *node, AgentPolicyInfo *ap)
          data->currVerson = 0;
       }
 
-      data->conn = node->getAgentConnection();
+      data->conn = conn;
       data->forceInstall = true;
       data->newTypeFormatSupported = node->supportNewTypeFormat();
       data->object = node;

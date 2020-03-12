@@ -224,11 +224,11 @@ void GenericAgentPolicy::deploy(DeployData *data)
    {
 #ifdef UNICODE
       WCHAR *tmp = WideStringFromMBString(m_content);
-      StringBuffer expanded = data->object->expandText(tmp, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+      StringBuffer expanded = data->object->expandText(tmp, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
       content = MBStringFromWideString(expanded.cstr());
       MemFree(tmp);
 #else
-      StringBuffer expanded = data->object->expandText(m_content, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+      StringBuffer expanded = data->object->expandText(m_content, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
       content = MemCopyString(expanded.cstr());
 #endif
       BYTE newHash[MD5_DIGEST_SIZE];
@@ -245,7 +245,7 @@ void GenericAgentPolicy::deploy(DeployData *data)
    }
    m_contentLock->unlock();
 
-   if (sendUpdate)
+   if (sendUpdate && data->conn != NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Calling GenericAgentPolicy::deploy at %s (type=%s, newTypeFormat=%d)"), data->debugId, m_type, data->newTypeFormatSupported);
 
@@ -266,8 +266,8 @@ void GenericAgentPolicy::deploy(DeployData *data)
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): failed to create policy dployment message"), data->debugId);
       }
+      data->conn->decRefCount();
    }
-   data->conn->decRefCount();
    MemFree(content);
    delete data;
 }
@@ -473,6 +473,8 @@ void FileDeliveryPolicy::deploy(DeployData *deployData)
    if (!deployData->newTypeFormatSupported)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): filed file delivery not implemented)"), deployData->debugId);
+      deployData->conn->decRefCount();
+      delete deployData;
       return;
    }
 
@@ -480,6 +482,8 @@ void FileDeliveryPolicy::deploy(DeployData *deployData)
    if (m_content == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): empty content)"), deployData->debugId);
+      deployData->conn->decRefCount();
+      delete deployData;
       m_contentLock->unlock();
       return;
    }
@@ -541,8 +545,8 @@ void FileDeliveryPolicy::deploy(DeployData *deployData)
    }
    delete remoteFiles;
 
-   deployData->conn->decRefCount();
    nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): policy successfully installed"), deployData->debugId);
+   deployData->conn->decRefCount();
    delete deployData;
 }
 
