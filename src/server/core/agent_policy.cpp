@@ -228,7 +228,7 @@ void GenericAgentPolicy::deploy(DeployData *data)
       content = MBStringFromWideString(expanded.cstr());
       MemFree(tmp);
 #else
-      StringBuffer expanded = object->expandText(m_content, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+      StringBuffer expanded = data->object->expandText(m_content, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       content = MemCopyString(expanded.cstr());
 #endif
       BYTE newHash[MD5_DIGEST_SIZE];
