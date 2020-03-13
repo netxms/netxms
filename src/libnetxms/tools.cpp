@@ -668,7 +668,7 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str)
 	char *p = str + strlen(str) - 1;
 	if (*p == '\n')
 		p--;
-	if (*p == '\r')
+	if ((p >= str) && (*p == '\r'))
 		p--;
 	*(p + 1) = 0;
 }
@@ -684,7 +684,7 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
 	WCHAR *p = str + wcslen(str) - 1;
 	if (*p == L'\n')
 		p--;
-	if (*p == L'\r')
+	if ((p >= str) && (*p == L'\r'))
 		p--;
 	*(p + 1) = 0;
 }
@@ -3791,10 +3791,60 @@ TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port,
 #ifndef _WIN32
 
 /**
+ * Unset environment variable
+ */
+static BOOL UnsetEnvVariable(const TCHAR *var)
+{
+#if HAVE_UNSETENV
+
+#ifdef UNICODE
+   char *mbenv = MBStringFromWideStringSysLocale(var);
+   BOOL result = unsetenv(mbenv) == 0;
+   MemFree(mbenv);
+   return result;
+#else
+   return unsetenv(var) == 0;
+#endif
+
+#else //HAVE_UNSETENV
+
+   size_t len = _tcslen(var) + 1;
+   TCHAR *env = MemAllocString(len);
+   _sntprintf(env, len, _T("%s"), var);
+#ifdef UNICODE
+   char *mbenv = MBStringFromWideStringSysLocale(env);
+   MemFree(env);
+   return putenv(mbenv) == 0;
+#else
+   return putenv(env) == 0;
+#endif
+
+#endif //HAVE_UNSETENV
+}
+
+/**
  * SetEnvironmentVariable implementation for non-Windows environments
  */
 BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *value)
 {
+   if (value == NULL)
+      return UnsetEnvVariable(var);
+
+#if HAVE_SETENV
+
+#ifdef UNICODE
+   char *mbenv = MBStringFromWideStringSysLocale(var);
+   char *mvalue = MBStringFromWideStringSysLocale(value);
+   BOOL result = setenv(mbenv, mvalue, 1) == 0;
+   MemFree(mbenv);
+   MemFree(mvalue);
+   return result;
+#else
+   return setenv(var, value, 1) == 0;
+#endif
+
+#else //HAVE_SETENV
+
    size_t len = _tcslen(var) + _tcslen(value) + 2;
    TCHAR *env = MemAllocString(len);
    _sntprintf(env, len, _T("%s=%s"), var, value);
@@ -3805,6 +3855,8 @@ BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *
 #else
    return putenv(env) == 0;
 #endif
+
+#endif //HAVE_SETENV
 }
 
 #endif
