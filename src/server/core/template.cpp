@@ -562,7 +562,7 @@ bool Template::hasPolicy(const uuid& guid)
    {
       if(m_policyList->get(i)->getGuid().equals(guid))
       {
-         bool hasPolicy = true;
+         hasPolicy = true;
          break;
       }
    }
@@ -851,14 +851,14 @@ void Template::checkPolicyBind(Node *node, AgentPolicyInfo *ap)
             break;
          }
       }
-      if (j != ap->size())
+      if (j == ap->size())
       {
          memset(data->currHash, 0, MD5_DIGEST_SIZE);
          data->currVerson = 0;
       }
 
       data->conn = conn;
-      data->forceInstall = true;
+      data->forceInstall = false;
       data->newTypeFormatSupported = node->supportNewTypeFormat();
       data->object = node;
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());

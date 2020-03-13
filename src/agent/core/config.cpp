@@ -27,6 +27,9 @@
 #include <shlobj.h>
 #endif
 
+static shared_ptr<Config> s_config;
+static Mutex s_lock;
+
 /**
  * Externals
  */
@@ -225,33 +228,6 @@ int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile
    return (fp != NULL) ? 0 : 2;
 }
 
-/**
-* Init config
-*/
-void InitConfig(const TCHAR *configSection)
-{
-   g_config = new Config();
-   g_config->setTopLevelTag(_T("config"));
-   g_config->setAlias(_T("agent"), configSection);
-
-   // Set default data directory
-   if (!_tcscmp(g_szDataDirectory, _T("{default}")))
-   {
-#ifdef _WIN32
-      if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, g_szDataDirectory) == S_OK)
-      {
-         _tcslcat(g_szDataDirectory, _T("\\nxagentd"), MAX_PATH);
-      }
-      else
-      {
-         GetNetXMSDirectory(nxDirData, g_szDataDirectory);
-      }
-#else
-      GetNetXMSDirectory(nxDirData, g_szDataDirectory);
-#endif
-   }
-}
-
 #ifdef _WIN32
 
 /**
@@ -328,22 +304,46 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 /**
  * Load config
  */
-bool LoadConfig()
+bool LoadConfig(const TCHAR *configSection, bool firstStart)
 {
-   nxlog_set_debug_writer(DebugWriter);
-   nxlog_set_debug_level(1);
-   bool validConfig = g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, NULL, true);
+   shared_ptr<Config> config = make_shared<Config>();
+   config->setTopLevelTag(_T("config"));
+   config->setAlias(_T("agent"), configSection);
+
+   // Set default data directory
+   if (!_tcscmp(g_szDataDirectory, _T("{default}")))
+   {
+#ifdef _WIN32
+      if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, g_szDataDirectory) == S_OK)
+      {
+         _tcslcat(g_szDataDirectory, _T("\\nxagentd"), MAX_PATH);
+      }
+      else
+      {
+         GetNetXMSDirectory(nxDirData, g_szDataDirectory);
+      }
+#else
+      GetNetXMSDirectory(nxDirData, g_szDataDirectory);
+#endif
+   }
+
+   if (firstStart)
+   {
+      nxlog_set_debug_writer(DebugWriter);
+      nxlog_set_debug_level(1);
+   }
+   bool validConfig = config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, NULL, true);
    if (validConfig)
    {
-      const TCHAR *dir = g_config->getValue(_T("/%agent/DataDirectory"));
+      const TCHAR *dir = config->getValue(_T("/%agent/DataDirectory"));
       if (dir != NULL)
          _tcslcpy(g_szDataDirectory, dir, MAX_PATH);
 
-      dir = g_config->getValue(_T("/%agent/ConfigIncludeDir"));
+      dir = config->getValue(_T("/%agent/ConfigIncludeDir"));
       if (dir != NULL)
          _tcslcpy(g_szConfigIncludeDir, dir, MAX_PATH);
 
-      validConfig = g_config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, NULL, false);
+      validConfig = config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, NULL, false);
       if (!validConfig)
       {
          ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigIncludeDir);
@@ -365,7 +365,7 @@ bool LoadConfig()
       }
       _tcscat(g_szConfigPolicyDir, FS_PATH_SEPARATOR);
 
-      validConfig = g_config->loadConfigDirectory(g_szConfigPolicyDir, DEFAULT_CONFIG_SECTION);
+      validConfig = config->loadConfigDirectory(g_szConfigPolicyDir, DEFAULT_CONFIG_SECTION);
       if (!validConfig)
       {
          ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigPolicyDir);
@@ -375,7 +375,28 @@ bool LoadConfig()
    {
       ConsolePrintf(_T("Error loading configuration from \"%s\" section ") DEFAULT_CONFIG_SECTION _T("\n"), g_szConfigFile);
    }
-   nxlog_set_debug_writer(NULL);
-   nxlog_set_debug_level(0);
+
+   if (firstStart)
+   {
+      nxlog_set_debug_writer(NULL);
+      nxlog_set_debug_level(0);
+   }
+
+   s_lock.lock();
+   s_config = config;
+   s_lock.unlock();
    return validConfig;
 }
+
+/**
+ * Get general config
+ */
+shared_ptr<Config> GetConfig()
+{
+   shared_ptr<Config> config;
+   s_lock.lock();
+   config = s_config;
+   s_lock.unlock();
+   return config;
+}
+

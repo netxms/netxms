@@ -124,8 +124,6 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
 
 int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile, const char *pszFileStore,
    const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues);
-void InitConfig(const TCHAR *configSection);
-bool LoadConfig();
 
 /**
  * OpenSSL APPLINK
@@ -213,7 +211,6 @@ UINT16 g_sessionAgentPort = 28180;
 #else
 UINT16 g_sessionAgentPort = 0;
 #endif
-Config *g_config = NULL;
 UINT32 g_dwIdleTimeout = 120;   // Session idle timeout
 
 #if !defined(_WIN32)
@@ -537,7 +534,7 @@ static StringBuffer BuildRestartCommandLine(bool withWaitPid)
       command.append(_T('"'));
    }
 
-   const TCHAR *configSection = g_config->getAlias(_T("agent"));
+   const TCHAR *configSection = GetConfig()->getAlias(_T("agent"));
    if ((configSection != NULL) && (*configSection != 0))
    {
       command.append(_T(" -G "));
@@ -1022,6 +1019,8 @@ BOOL Initialize()
       GetLocalHostName(g_systemName, MAX_OBJECT_NAME, false);
    nxlog_write(NXLOG_INFO, _T("Using system name \"%s\""), g_systemName);
 
+   shared_ptr<Config> config = GetConfig();
+
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
 	   g_commThreadPool = ThreadPoolCreate(_T("COMM"), 1, 32);
@@ -1049,7 +1048,7 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
-      if (g_config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
+      if (config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
       {
          nxlog_write(NXLOG_INFO, _T("Arbitrary command execution enabled"));
          AddAction(_T("System.Execute"), AGENT_ACTION_SUBAGENT, NULL, H_SystemExecute, _T("CORE"), _T("Execute system command"));
@@ -1214,7 +1213,7 @@ BOOL Initialize()
       }
 
       // Additional external subagents implicitly defined by EXT:* config sections
-      ObjectArray<ConfigEntry> *entries = g_config->getSubEntries(_T("/"), _T("EXT:*"));
+      ObjectArray<ConfigEntry> *entries = config->getSubEntries(_T("/"), _T("EXT:*"));
       for(int i = 0; i < entries->size(); i++)
       {
          const TCHAR *name = entries->get(i)->getName() + 4;
@@ -1605,7 +1604,7 @@ static int GetGroupId(const char *name)
  */
 static void UpdateEnvironment()
 {
-   ObjectArray<ConfigEntry> *entrySet = g_config->getSubEntries(_T("/ENV"), _T("*"));
+   ObjectArray<ConfigEntry> *entrySet = GetConfig()->getSubEntries(_T("/ENV"), _T("*"));
    if (entrySet == NULL)
       return;
    for(int i = 0; i < entrySet->size(); i++)
@@ -1961,8 +1960,6 @@ int main(int argc, char *argv[])
    }
 #endif
 
-   InitConfig(configSection);
-
    if (bRestart)
       DoRestartActions(dwOldPID);
 
@@ -2001,8 +1998,9 @@ int main(int argc, char *argv[])
             }
          }
 
-			if (LoadConfig())
+			if (LoadConfig(configSection, true))
 			{
+			   shared_ptr<Config> config = GetConfig();
             // Check if master section starts with EXT:
             // If yes, switch to external subagent mode
             if (!_tcsnicmp(configSection, _T("EXT:"), 4))
@@ -2010,7 +2008,7 @@ int main(int argc, char *argv[])
                _tcslcpy(g_masterAgent, &configSection[4], MAX_PATH);
             }
 
-				if (g_config->parseTemplate(configSection, m_cfgTemplate))
+				if (config->parseTemplate(configSection, m_cfgTemplate))
 				{
 				   DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
 
@@ -2106,7 +2104,7 @@ int main(int argc, char *argv[])
 #ifndef _WIN32
 					   if (gid == 0)
 					   {
-					      const TCHAR *v = g_config->getValue(_T("/%agent/GroupId"));
+					      const TCHAR *v = config->getValue(_T("/%agent/GroupId"));
 					      if (v != NULL)
 					      {
 #ifdef UNICODE
@@ -2121,7 +2119,7 @@ int main(int argc, char *argv[])
 					   }
                   if (uid == 0)
                   {
-                     const TCHAR *v = g_config->getValue(_T("/%agent/UserId"));
+                     const TCHAR *v = config->getValue(_T("/%agent/UserId"));
                      if (v != NULL)
                      {
 #ifdef UNICODE
@@ -2195,11 +2193,12 @@ int main(int argc, char *argv[])
          break;
       case ACTION_CHECK_CONFIG:
          {
-            bool validConfig = LoadConfig();
+            bool validConfig = LoadConfig(configSection, true);
             if (validConfig)
             {
-               g_config->print(stdout);
-               validConfig = g_config->parseTemplate(configSection, m_cfgTemplate);
+               shared_ptr<Config> config = GetConfig();
+               config->print(stdout);
+               validConfig = config->parseTemplate(configSection, m_cfgTemplate);
             }
 
             if (!validConfig)
@@ -2226,9 +2225,9 @@ int main(int argc, char *argv[])
          break;
       case ACTION_GET_LOG_LOCATION:
          {
-            if (LoadConfig())
+            if (LoadConfig(configSection, true))
             {
-               if (g_config->parseTemplate(configSection, m_cfgTemplate))
+               if (GetConfig()->parseTemplate(configSection, m_cfgTemplate))
                {
 
                   _tprintf(_T("%s\n"), g_szLogFile);
@@ -2275,6 +2274,5 @@ int main(int argc, char *argv[])
          break;
    }
 
-   delete g_config;
    return iExitCode;
 }

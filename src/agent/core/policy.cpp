@@ -26,9 +26,85 @@
 void UpdateUserAgentsConfiguration();
 
 /**
+ * Update agent environment from config
+ */
+static void UpdateEnvironment(CommSession *session)
+{
+   shared_ptr<Config> oldConfig = GetConfig();
+   StringList currEnvList;
+   ObjectArray<ConfigEntry> *entrySet = oldConfig->getSubEntries(_T("/ENV"), _T("*"));
+   if (entrySet != NULL)
+   {
+      for(int i = 0; i < entrySet->size(); i++)
+      {
+         ConfigEntry *e = entrySet->get(i);
+         currEnvList.add(e->getName());
+      }
+      delete entrySet;
+   }
+
+   //reload config
+   if (LoadConfig(oldConfig->getAlias(_T("agent")), false))
+   {
+      StringList newEnvList;
+      shared_ptr<Config> newConfig = GetConfig();
+      ObjectArray<ConfigEntry> *newEntrySet = newConfig->getSubEntries(_T("/ENV"), _T("*"));
+      if (newEntrySet != NULL)
+      {
+         for(int i = 0; i < newEntrySet->size(); i++)
+         {
+            ConfigEntry *e = newEntrySet->get(i);
+            session->debugPrintf(6, _T("UpdateEnvironment(): set environment variable %s=%s"), e->getName(), e->getValue());
+            SetEnvironmentVariable(e->getName(), e->getValue());
+            newEnvList.add(e->getName());
+         }
+         delete newEntrySet;
+      }
+
+      for(int i = 0; i < currEnvList.size(); i++)
+      {
+         int j = 0;
+         for(;j < newEnvList.size(); j++)
+         {
+            if(_tcscmp(currEnvList.get(i), newEnvList.get(j)))
+               break;
+         }
+         if (j == newEnvList.size())
+         {
+            session->debugPrintf(6, _T("UpdateEnvironment(): unset environment variable %s"), currEnvList.get(i));
+            SetEnvironmentVariable(currEnvList.get(i), NULL);
+         }
+      }
+   }
+}
+
+/**
+ * Check is if new config contains ENV section
+ */
+static void CheckEnvSectionAndReload(CommSession *session, const char *configContent)
+{
+   if(configContent != NULL)
+   {
+      Config config;
+      config.setTopLevelTag(_T("config"));
+      bool validConfig = config.loadConfigFromMemory(configContent, strlen(configContent), DEFAULT_CONFIG_SECTION, NULL, true, false);
+      if (validConfig)
+      {
+         ObjectArray<ConfigEntry> *entrySet = config.getSubEntries(_T("/ENV"), _T("*"));
+         if (entrySet != NULL)
+         {
+            session->debugPrintf(7, _T("CheckEnvSectionAndReload(): ENV section exists"));
+            UpdateEnvironment(session);
+            delete entrySet;
+         }
+      }
+   }
+}
+
+/**
  * Register policy in persistent storage
  */
-static void RegisterPolicy(CommSession *session, const TCHAR *type, const uuid& guid, UINT32 version)
+static void RegisterPolicy(CommSession *session, const TCHAR *type, const uuid& guid, UINT32 version, BYTE *hash)
 {
    bool isNew = true;
    TCHAR buffer[64];
@@ -51,13 +127,13 @@ static void RegisterPolicy(CommSession *session, const TCHAR *type, const uuid& 
       if (isNew)
       {
          hStmt = DBPrepare(hdb,
-                       _T("INSERT INTO agent_policy (type,server_info,server_id,version,guid)")
-                       _T(" VALUES (?,?,?,?,?)"));
+                       _T("INSERT INTO agent_policy (type,server_info,server_id,version,content_hash,guid)")
+                       _T(" VALUES (?,?,?,?,?,?)"));
       }
       else
       {
          hStmt = DBPrepare(hdb,
-                       _T("UPDATE agent_policy SET type=?,server_info=?,server_id=?,version=?")
+                       _T("UPDATE agent_policy SET type=?,server_info=?,server_id=?,version=?,content_hash=?")
                        _T(" WHERE guid=?"));
       }
 
@@ -69,7 +145,10 @@ static void RegisterPolicy(CommSession *session, const TCHAR *type, const uuid& 
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, session->getServerId());
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, version);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, guid);
+      TCHAR hashAsText[33];
+      BinToStr(hash, MD5_DIGEST_SIZE, hashAsText);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, hashAsText, DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, guid);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -189,9 +268,22 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 
 	uuid guid = request->getFieldAsGUID(VID_GUID);
 
+   size_t size = request->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
+   char *content = NULL;
+   if (size > 0)
+   {
+      BYTE *data = (BYTE *)MemAlloc(size+1);
+      request->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
+      content = reinterpret_cast<char *>(data);
+      data[size] = 0;
+   }
+
+   session->debugPrintf(2, _T("DeployPolicy() size %d"), size);
+
    if (!_tcscmp(type, _T("AgentConfig")))
    {
       rcc = DeployPolicy(session, guid, request, g_szConfigPolicyDir);
+      CheckEnvSectionAndReload(session, content);
    }
    else if (!_tcscmp(type, _T("LogParserConfig")))
    {
@@ -213,7 +305,16 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 	if (rcc == RCC_SUCCESS)
 	{
 	   UINT32 version = request->getFieldAsUInt32(VID_VERSION);
-		RegisterPolicy(session, type, guid, version);
+      BYTE newHash[MD5_DIGEST_SIZE];
+      if (content != NULL)
+      {
+         CalculateMD5Hash(reinterpret_cast<BYTE *>(content), strlen(content), newHash);
+      }
+      else
+      {
+         memset(newHash, 0, MD5_DIGEST_SIZE);
+      }
+		RegisterPolicy(session, type, guid, version, newHash);
 
       PolicyChangeNotification n;
       n.guid = guid;
@@ -221,6 +322,7 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &n);
 	}
 	session->debugPrintf(3, _T("Policy deployment: TYPE=%s RCC=%d"), type, rcc);
+	MemFree(content);
    return rcc;
 }
 
@@ -291,7 +393,7 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
 	DB_HANDLE hdb = GetLocalDatabaseHandle();
 	if (hdb != NULL)
    {
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type,server_info,server_id,version FROM agent_policy"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type,server_info,server_id,version,content_hash FROM agent_policy"));
       if (hResult != NULL)
       {
          int count = DBGetNumRows(hResult);
@@ -300,7 +402,7 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
             msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
 
             UINT32 varId = VID_ELEMENT_LIST_BASE;
-            for (int row = 0; row < count; row++, varId += 5)
+            for (int row = 0; row < count; row++, varId += 4)
             {
                msg->setField(varId++, DBGetFieldGUID(hResult, row, 0));
                TCHAR type[32];
@@ -310,6 +412,13 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
                free(text);
                msg->setField(varId++, DBGetFieldInt64(hResult, row, 3));
                msg->setField(varId++, DBGetFieldULong(hResult, row, 4));
+               TCHAR hashAsText[33];
+               if(DBGetField(hResult, row, 5, hashAsText, 33) != NULL)
+               {
+                  BYTE hash[MD5_DIGEST_SIZE];
+                  StrToBin(hashAsText, hash, MD5_DIGEST_SIZE);
+                  msg->setField(varId++, hash, MD5_DIGEST_SIZE);
+               }
             }
          }
          else

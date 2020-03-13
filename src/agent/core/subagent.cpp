@@ -35,7 +35,8 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
    bool success = false;
 
    NETXMS_SUBAGENT_INFO *pInfo;
-   if (SubAgentRegister(&pInfo, g_config))
+   shared_ptr<Config> generalConfig = GetConfig();
+   if (SubAgentRegister(&pInfo, generalConfig.get()))
    {
       // Check if information structure is valid
       if (pInfo->magic == NETXMS_SUBAGENT_INFO_MAGIC)
@@ -48,7 +49,7 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
          if (i == s_subAgents.size())
          {
 				// Initialize subagent
-				bool initOK = (pInfo->init != NULL) ? pInfo->init(g_config) : true;
+				bool initOK = (pInfo->init != NULL) ? pInfo->init(generalConfig.get()) : true;
 				if (initOK)
 				{
 					// Add subagent to subagent's list

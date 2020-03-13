@@ -64,7 +64,8 @@ void StartWatchdog()
 		szPlatformSuffixOption[0] = 0;
 	}
 
-   const TCHAR *configSection = g_config->getAlias(_T("agent"));
+	shared_ptr<Config> generalConfig = GetConfig();
+   const TCHAR *configSection = generalConfig->getAlias(_T("agent"));
    TCHAR configSectionOption[256];
    if ((configSection != NULL) && (*configSection != 0))
    {

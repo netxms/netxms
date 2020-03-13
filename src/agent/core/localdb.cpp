@@ -121,6 +121,7 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  server_info varchar(64) null,")
    _T("  server_id number(20) not null,")
    _T("  version integer not null,")
+   _T("  hash varchar(32) not null,")
    _T("  PRIMARY KEY(guid))"),
 
    _T("CREATE TABLE device_decoder_map (")

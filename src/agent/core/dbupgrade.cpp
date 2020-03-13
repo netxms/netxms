@@ -38,11 +38,22 @@ bool g_ignoreAgentDbErrors = FALSE;
 static DB_HANDLE s_db = NULL;
 
 /**
+ * Upgrade from V11 to V12
+ */
+static BOOL H_UpgradeFromV11(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(_T("ALTER TABLE agent_policy ADD content_hash varchar(32)")));
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 12));
+   return TRUE;
+}
+
+/**
  * Upgrade from V10 to V11
  */
 static BOOL H_UpgradeFromV10(int currVersion, int newVersion)
 {
-   CHK_EXEC(Query(_T("ALTER TABLE dc_config ADD snmp_version")));
+   CHK_EXEC(Query(_T("ALTER TABLE dc_config ADD snmp_version integer")));
    CHK_EXEC(Query(_T("UPDATE dc_config SET snmp_version=127")));
    CHK_EXEC(DBSetNotNullConstraint(s_db, _T("dc_config"), _T("snmp_version")));
 
@@ -432,6 +443,7 @@ static struct
    { 8, 9, H_UpgradeFromV8 },
    { 9, 10, H_UpgradeFromV9 },
    { 10, 11, H_UpgradeFromV10 },
+   { 11, 12, H_UpgradeFromV11 },
    { 0, 0, NULL }
 };
 

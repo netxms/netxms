@@ -391,7 +391,8 @@ void SessionAgentConnector::updateUserAgentConfig()
    config.setMergeStrategy(SupportAppMergeStrategy);
    if (config.loadConfigDirectory(g_userAgentPolicyDirectory, _T("SupportAppPolicy"), "SupportAppPolicy", true, true))
    {
-      const ConfigEntry *e = g_config->getEntry(_T("/UserAgent"));
+      shared_ptr<Config> generalConfig = GetConfig();
+      const ConfigEntry *e = generalConfig->getEntry(_T("/UserAgent"));
       if (e != NULL)
       {
          nxlog_debug(5, _T("SA-%d: adding local policy to user agent configuration"), m_id);

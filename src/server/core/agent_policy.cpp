@@ -214,6 +214,7 @@ void GenericAgentPolicy::deploy(DeployData *data)
    StringBuffer expandedContent;
    bool sendUpdate = true;
    m_contentLock->lock();
+
    if(!data->forceInstall && data->currVerson >= m_version && (m_flags & EXPAND_MACRO) == 0)
    {
       sendUpdate = false;
@@ -235,7 +236,7 @@ void GenericAgentPolicy::deploy(DeployData *data)
       if(!data->forceInstall)
       {
          CalculateMD5Hash(reinterpret_cast<BYTE *>(content), strlen(content), newHash);
-         if(memcmp(newHash, data->currHash, MD5_DIGEST_SIZE))
+         if(!memcmp(newHash, data->currHash, MD5_DIGEST_SIZE))
             sendUpdate = false;
       }
    }
@@ -245,7 +246,7 @@ void GenericAgentPolicy::deploy(DeployData *data)
    }
    m_contentLock->unlock();
 
-   if (sendUpdate && data->conn != NULL)
+   if (sendUpdate)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Calling GenericAgentPolicy::deploy at %s (type=%s, newTypeFormat=%d)"), data->debugId, m_type, data->newTypeFormatSupported);
 
@@ -255,18 +256,22 @@ void GenericAgentPolicy::deploy(DeployData *data)
          UINT32 rcc = data->conn->deployPolicy(&msg);
          if(rcc == RCC_SUCCESS)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): policy successfully deployed"), data->debugId);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("GenericAgentPolicy::deploy(%s): policy successfully deployed"), data->debugId);
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("UninstallPolicy: policy deploy failed: %s"), data->debugId, AgentErrorCodeToText(rcc));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("GenericAgentPolicy::deploy(%s) policy deploy failed: %s"), data->debugId, AgentErrorCodeToText(rcc));
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): failed to create policy dployment message"), data->debugId);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("GenericAgentPolicy::deploy(%s): failed to create policy dployment message"), data->debugId);
       }
       data->conn->decRefCount();
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("GenericAgentPolicy::deploy(%s): policy not changed - nothing to install"), data->debugId);
    }
    MemFree(content);
    delete data;
