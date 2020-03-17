@@ -1484,7 +1484,7 @@ protected:
    virtual void onObjectDelete(UINT32 objectId) override;
    virtual void prepareForDeletion() override;
 
-	virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
 
    void setExpectedStateInternal(int state);
@@ -3339,8 +3339,8 @@ class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTar
 protected:
    typedef AbstractContainer super;
 
-   UINT32 modifyFromMessageInternal(NXCPMessage *request);
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
 public:
    Container() : super(), AutoBindTarget(this) {}
