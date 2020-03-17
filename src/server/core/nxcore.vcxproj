@@ -206,7 +206,6 @@
     <ClCompile Include="agent_policy.cpp" />
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
-    <ClCompile Include="ap_jobs.cpp" />
     <ClCompile Include="audit.cpp" />
     <ClCompile Include="beacon.cpp" />
     <ClCompile Include="bizservice.cpp" />

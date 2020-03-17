@@ -57,6 +57,10 @@ enum ServerJobResult
 class ServerJobQueue;
 class NetObj;
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<NetObj>;
+#endif
+
 /**
  * Job class
  */

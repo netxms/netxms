@@ -664,7 +664,7 @@ void DataCollectionOwner::sendItemsToClient(ClientSession *pSession, UINT32 dwRq
 /**
  * Get item by it's id
  */
-shared_ptr<DCObject> DataCollectionOwner::getDCObjectById(UINT32 itemId, UINT32 userId, bool lock) const
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectById(uint32_t itemId, uint32_t userId, bool lock) const
 {
    shared_ptr<DCObject> object;
 
@@ -692,7 +692,7 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectById(UINT32 itemId, UINT32 
 /**
  * Get item by template item id
  */
-shared_ptr<DCObject> DataCollectionOwner::getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId) const
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByTemplateId(uint32_t tmplItemId, uint32_t userId) const
 {
    shared_ptr<DCObject> object;
 
@@ -768,7 +768,7 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectByDescription(const TCHAR *
 /**
  * Get item by GUID
  */
-shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock) const
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(const uuid& guid, uint32_t userId, bool lock) const
 {
    shared_ptr<DCObject> object;
 

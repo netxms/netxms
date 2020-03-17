@@ -27,14 +27,19 @@
 /**
  * Default constructor for the class
  */
-NObject::NObject() : m_parentList(4, 4), m_childList(0, 16)
+NObject::NObject()
 {
+#ifdef _WIN32
+   m_self = new weak_ptr<NObject>();
+#endif
    m_id = 0;
    m_name[0] = 0;
    m_customAttributes = new StringObjectMap<CustomAttribute>(Ownership::True);
    m_customAttributeLock = MutexCreateFast();
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();
+   m_parentList = new SharedObjectArray<NObject>(8, 8);
+   m_childList = new SharedObjectArray<NObject>(0, 32);
 }
 
 /**
@@ -42,10 +47,15 @@ NObject::NObject() : m_parentList(4, 4), m_childList(0, 16)
  */
 NObject::~NObject()
 {
+   delete m_parentList;
+   delete m_childList;
    delete m_customAttributes;
    MutexDestroy(m_customAttributeLock);
    RWLockDestroy(m_rwlockParentList);
    RWLockDestroy(m_rwlockChildList);
+#ifdef _WIN32
+   delete m_self;
+#endif
 }
 
 /**
@@ -54,7 +64,7 @@ NObject::~NObject()
  */
 void NObject::clearParentList()
 {
-   m_parentList.clear();
+   m_parentList->clear();
 }
 
 /**
@@ -62,7 +72,7 @@ void NObject::clearParentList()
  */
 void NObject::clearChildList()
 {
-   m_childList.clear();
+   m_childList->clear();
 }
 
 /**
@@ -76,7 +86,7 @@ void NObject::addChild(const shared_ptr<NObject>& object)
       unlockChildList();
       return;     // Already in the child list
    }
-   m_childList.add(object);
+   m_childList->add(object);
    unlockChildList();
 
    // Update custom attribute inheritance
@@ -107,7 +117,7 @@ void NObject::addParent(const shared_ptr<NObject>& object)
       unlockParentList();
       return;     // Already in the parents list
    }
-   m_parentList.add(object);
+   m_parentList->add(object);
    unlockParentList();
 }
 
@@ -117,10 +127,10 @@ void NObject::addParent(const shared_ptr<NObject>& object)
 void NObject::deleteChild(uint32_t objectId)
 {
    writeLockChildList();
-   for(int i = 0; i < m_childList.size(); i++)
-      if (m_childList.get(i)->getId() == objectId)
+   for(int i = 0; i < m_childList->size(); i++)
+      if (m_childList->get(i)->getId() == objectId)
       {
-         m_childList.remove(i);
+         m_childList->remove(i);
          break;
       }
    unlockChildList();
@@ -133,10 +143,10 @@ void NObject::deleteParent(uint32_t objectId)
 {
    writeLockParentList();
    bool success = false;
-   for(int i = 0; i < m_parentList.size(); i++)
-      if (m_parentList.get(i)->getId() == objectId)
+   for(int i = 0; i < m_parentList->size(); i++)
+      if (m_parentList->get(i)->getId() == objectId)
       {
-         m_parentList.remove(i);
+         m_parentList->remove(i);
          success = true;
          break;
       }
@@ -175,8 +185,8 @@ bool NObject::isChild(uint32_t id) const
    if (!result)
    {
       readLockChildList();
-      for(int i = 0; i < m_childList.size(); i++)
-         if (m_childList.get(i)->isChild(id))
+      for(int i = 0; i < m_childList->size(); i++)
+         if (m_childList->get(i)->isChild(id))
          {
             result = true;
             break;
@@ -217,8 +227,8 @@ bool NObject::isParent(uint32_t id) const
    if (!result)
    {
       readLockParentList();
-      for(int i = 0; i < m_parentList.size(); i++)
-         if (m_parentList.get(i)->isParent(id))
+      for(int i = 0; i < m_parentList->size(); i++)
+         if (m_parentList->get(i)->isParent(id))
          {
             result = true;
             break;
@@ -253,9 +263,9 @@ SharedString NObject::getCustomAttributeFromParent(const TCHAR *name)
 {
    SharedString value;
    readLockParentList();
-   for(int i = 0; i < m_parentList.size(); i++)
+   for(int i = 0; i < m_parentList->size(); i++)
    {
-      value = m_parentList.get(i)->getCustomAttribute(name);
+      value = m_parentList->get(i)->getCustomAttribute(name);
       if (!value.isNull())
          break;
    }
@@ -284,7 +294,7 @@ static StringBuffer ObjectListToString(const SharedObjectArray<NObject>& list)
 StringBuffer NObject::dbgGetChildList() const
 {
    readLockChildList();
-   StringBuffer list = ObjectListToString(m_childList);
+   StringBuffer list = ObjectListToString(*m_childList);
    unlockChildList();
    return list;
 }
@@ -295,7 +305,7 @@ StringBuffer NObject::dbgGetChildList() const
 StringBuffer NObject::dbgGetParentList() const
 {
    readLockParentList();
-   StringBuffer list = ObjectListToString(m_parentList);
+   StringBuffer list = ObjectListToString(*m_parentList);
    unlockParentList();
    return list;
 }
@@ -354,7 +364,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
 /**
  * Set custom attribute
  */
-void NObject::setCustomAttribute(const TCHAR *name, SharedString value, UINT32 parent)
+void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent)
 {
    lockCustomAttributes();
 
@@ -440,9 +450,9 @@ void NObject::setCustomAttribute(const TCHAR *key, uint64_t value)
 void NObject::populate(const TCHAR *name, SharedString value, uint32_t source)
 {
    writeLockChildList();
-   for(int i = 0; i < m_childList.size(); i++)
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      m_childList.get(i)->setCustomAttribute(name, value, source);
+      m_childList->get(i)->setCustomAttribute(name, value, source);
    }
    unlockChildList();
 }
@@ -453,9 +463,9 @@ void NObject::populate(const TCHAR *name, SharedString value, uint32_t source)
 void NObject::populateRemove(const TCHAR *name)
 {
    writeLockChildList();
-   for(int i = 0; i < m_childList.size(); i++)
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      m_childList.get(i)->deletePopulatedCustomAttribute(name);
+      m_childList->get(i)->deletePopulatedCustomAttribute(name);
    }
    unlockChildList();
 }

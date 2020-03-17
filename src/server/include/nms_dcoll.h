@@ -237,6 +237,10 @@ enum DCObjectRetentionType
    DC_RETENTION_NONE = 2
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE weak_ptr<DataCollectionOwner>;
+#endif
+
 /**
  * Generic data collection object
  */

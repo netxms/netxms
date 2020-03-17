@@ -151,7 +151,8 @@ void StartPushConnector()
       return;
    }
 
-   const TCHAR *user = GetConfig()->getValue(_T("/%agent/PushUser"), _T("*"));
+   shared_ptr<Config> config = g_config;
+   const TCHAR *user = config->getValue(_T("/%agent/PushUser"), _T("*"));
    s_listener = NamedPipeListener::create(_T("nxagentd.push"), ProcessPushRequest, NULL,
             (user != NULL) && (user[0] != 0) && _tcscmp(user, _T("*")) ? user : NULL);
    if (s_listener != NULL)

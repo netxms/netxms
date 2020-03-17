@@ -809,7 +809,6 @@ AbstractCommSession *FindServerSessionByServerId(UINT64 serverId);
 AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
 
 bool LoadConfig(const TCHAR *configSection, bool firstStart);
-shared_ptr<Config> GetConfig();
 
 #ifdef WITH_SYSTEMD
 bool RestartService(UINT32 pid);
@@ -869,6 +868,7 @@ extern UINT16 g_sessionAgentPort;
 extern UINT32 g_zoneUIN;
 extern UINT32 g_tunnelKeepaliveInterval;
 extern UINT16 g_syslogListenPort;
+extern shared_ptr_store<Config> g_config;
 
 extern UINT32 g_acceptErrors;
 extern UINT32 g_acceptedConnections;

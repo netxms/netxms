@@ -672,6 +672,10 @@ enum NodeOrigin
    NODE_ORIGIN_TUNNEL_AUTOBIND = 2
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<Cluster>;
+#endif
+
 /**
  * Data for new node creation
  */
@@ -1236,11 +1240,11 @@ public:
    bool updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId, UINT32 userId);
    bool deleteDCObject(UINT32 dcObjectId, bool needLock, UINT32 userId);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
-   shared_ptr<DCObject> getDCObjectById(UINT32 itemId, UINT32 userId, bool lock = true) const;
-   shared_ptr<DCObject> getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock = true) const;
-   shared_ptr<DCObject> getDCObjectByTemplateId(UINT32 tmplItemId, uint32_t userId) const;
+   shared_ptr<DCObject> getDCObjectById(uint32_t itemId, uint32_t userId, bool lock = true) const;
+   shared_ptr<DCObject> getDCObjectByGUID(const uuid& guid, uint32_t userId, bool lock = true) const;
+   shared_ptr<DCObject> getDCObjectByTemplateId(uint32_t tmplItemId, uint32_t userId) const;
    shared_ptr<DCObject> getDCObjectByName(const TCHAR *name, uint32_t userId) const;
-   shared_ptr<DCObject> getDCObjectByDescription(const TCHAR *description, UINT32 userId) const;
+   shared_ptr<DCObject> getDCObjectByDescription(const TCHAR *description, uint32_t userId) const;
    SharedObjectArray<DCObject> *getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId) const;
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userId) const;
    void setDCIModificationFlag() { m_dciListModified = true; }
@@ -1269,7 +1273,7 @@ struct AgentPolicyDeploymentData
    AgentConnectionEx *conn;
    shared_ptr<NetObj> object;
    bool forceInstall;
-   int currVersion;
+   uint32_t currVersion;
    uint8_t currHash[MD5_DIGEST_SIZE];
    bool newTypeFormat;
    TCHAR debugId[256];
@@ -1664,6 +1668,10 @@ public:
 
    void expandName(const TCHAR *originalName, TCHAR *expandedName);
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE weak_ptr<Node>;
+#endif
 
 /**
  * Network service class
@@ -2311,6 +2319,10 @@ public:
 
    NXSL_Array *getNodesForNXSL(NXSL_VM *vm);
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<Cluster>;
+#endif
 
 /**
  * Rack orientation

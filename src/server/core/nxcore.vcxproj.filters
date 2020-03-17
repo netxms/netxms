@@ -42,9 +42,6 @@
     <ClCompile Include="alarm_category.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ap_jobs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="audit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

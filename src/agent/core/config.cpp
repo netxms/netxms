@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,8 +27,10 @@
 #include <shlobj.h>
 #endif
 
-static shared_ptr<Config> s_config;
-static Mutex s_lock;
+/**
+ * Global config instance
+ */
+shared_ptr_store<Config> g_config;
 
 /**
  * Externals
@@ -67,7 +69,6 @@ BOOL DownloadConfig(TCHAR *pszServer)
    NXCP_MESSAGE *pRawMsg;
    NXCP_BUFFER *pBuffer;
    NXCPEncryptionContext *pDummyCtx = NULL;
-   int nLen;
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -107,11 +108,11 @@ BOOL DownloadConfig(TCHAR *pszServer)
 
          // Send request
          pRawMsg = msg.serialize();
-         nLen = ntohl(pRawMsg->size);
+         ssize_t nLen = ntohl(pRawMsg->size);
          if (SendEx(hSocket, pRawMsg, nLen, 0, NULL) == nLen)
          {
-            pRawMsg = (NXCP_MESSAGE *)realloc(pRawMsg, MAX_MSG_SIZE);
-            pBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
+            pRawMsg = (NXCP_MESSAGE *)MemRealloc(pRawMsg, MAX_MSG_SIZE);
+            pBuffer = MemAllocStruct<NXCP_BUFFER>();
             NXCPInitBuffer(pBuffer);
 
             nLen = RecvNXCPMessage(hSocket, pRawMsg, pBuffer, MAX_MSG_SIZE,
@@ -129,15 +130,15 @@ BOOL DownloadConfig(TCHAR *pszServer)
                      if (pszConfig != NULL)
                      {
                         bRet = SaveConfig(pszConfig);
-                        free(pszConfig);
+                        MemFree(pszConfig);
                      }
                   }
                   delete pResponse;
                }
             }
-            free(pBuffer);
+            MemFree(pBuffer);
          }
-         free(pRawMsg);
+         MemFree(pRawMsg);
       }
       else
       {
@@ -382,21 +383,6 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
       nxlog_set_debug_level(0);
    }
 
-   s_lock.lock();
-   s_config = config;
-   s_lock.unlock();
+   g_config.set(config);
    return validConfig;
 }
-
-/**
- * Get general config
- */
-shared_ptr<Config> GetConfig()
-{
-   shared_ptr<Config> config;
-   s_lock.lock();
-   config = s_config;
-   s_lock.unlock();
-   return config;
-}
-

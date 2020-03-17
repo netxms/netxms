@@ -30,7 +30,7 @@ void UpdateUserAgentsConfiguration();
  */
 static void UpdateEnvironment(CommSession *session)
 {
-   shared_ptr<Config> oldConfig = GetConfig();
+   shared_ptr<Config> oldConfig = g_config;
    StringList currEnvList;
    ObjectArray<ConfigEntry> *entrySet = oldConfig->getSubEntries(_T("/ENV"), _T("*"));
    if (entrySet != NULL)
@@ -47,7 +47,7 @@ static void UpdateEnvironment(CommSession *session)
    if (LoadConfig(oldConfig->getAlias(_T("agent")), false))
    {
       StringList newEnvList;
-      shared_ptr<Config> newConfig = GetConfig();
+      shared_ptr<Config> newConfig = g_config;
       ObjectArray<ConfigEntry> *newEntrySet = newConfig->getSubEntries(_T("/ENV"), _T("*"));
       if (newEntrySet != NULL)
       {

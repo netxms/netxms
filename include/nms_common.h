@@ -774,6 +774,7 @@ inline FILE *_popen(const char *command, const char *type) { return ::popen(comm
 inline int _putenv(char *string) { return ::putenv(string); }
 inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
 inline int _remove(const char *pathname) { return ::remove(pathname); }
+inline char *_strdup(const char *s) { return ::strdup(s); }
 inline int _unlink(const char *pathname) { return ::unlink(pathname); }
 inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
 

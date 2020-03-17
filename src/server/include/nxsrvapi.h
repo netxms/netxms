@@ -501,10 +501,14 @@ class LIBNXSRV_EXPORTABLE NObject
    DISABLE_COPY_CTOR(NObject)
 
 private:
+#ifdef _WIN32
+   weak_ptr<NObject> *m_self; // should be pointer because of DLL linkage issues on Windows
+#else
    weak_ptr<NObject> m_self;
+#endif
 
-   SharedObjectArray<NObject> m_childList;     // Array of pointers to child objects
-   SharedObjectArray<NObject> m_parentList;    // Array of pointers to parent objects
+   SharedObjectArray<NObject> *m_childList;     // Array of pointers to child objects
+   SharedObjectArray<NObject> *m_parentList;    // Array of pointers to parent objects
 
    StringObjectMap<CustomAttribute> *m_customAttributes;
    MUTEX m_customAttributeLock;
@@ -524,23 +528,23 @@ protected:
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
 
-   const SharedObjectArray<NObject> &getChildList() const { return m_childList; }
-   const SharedObjectArray<NObject> &getParentList() const { return m_parentList; }
+   const SharedObjectArray<NObject> &getChildList() const { return *m_childList; }
+   const SharedObjectArray<NObject> &getParentList() const { return *m_parentList; }
 
    void clearChildList();
    void clearParentList();
 
    bool isDirectChildInternal(uint32_t id) const
    {
-      for(int i = 0; i < m_childList.size(); i++)
-         if (m_childList.get(i)->getId() == id)
+      for(int i = 0; i < m_childList->size(); i++)
+         if (m_childList->get(i)->getId() == id)
             return true;
       return false;
    }
    bool isDirectParentInternal(uint32_t id) const
    {
-      for(int i = 0; i < m_parentList.size(); i++)
-         if (m_parentList.get(i)->getId() == id)
+      for(int i = 0; i < m_parentList->size(); i++)
+         if (m_parentList->get(i)->getId() == id)
             return true;
       return false;
    }
@@ -562,8 +566,13 @@ public:
    NObject();
    virtual ~NObject();
 
+#ifdef _WIN32
+   shared_ptr<NObject> self() const { return m_self->lock(); }
+   void setSelfPtr(const shared_ptr<NObject>& sptr) { *m_self = sptr; }
+#else
    shared_ptr<NObject> self() const { return m_self.lock(); }
    void setSelfPtr(const shared_ptr<NObject>& sptr) { m_self = sptr; }
+#endif
 
    uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
@@ -580,8 +589,8 @@ public:
    bool isParent(uint32_t id) const;
    bool isDirectParent(uint32_t id) const;
 
-   int getChildCount() const { return m_childList.size(); }
-   int getParentCount() const { return m_parentList.size(); }
+   int getChildCount() const { return m_childList->size(); }
+   int getParentCount() const { return m_parentList->size(); }
 
    TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
    SharedString getCustomAttribute(const TCHAR *name) const;

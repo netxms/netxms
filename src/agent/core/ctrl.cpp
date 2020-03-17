@@ -69,7 +69,8 @@ static THREAD_RESULT THREAD_CALL ControlConnector(void *arg)
 	ea.grfAccessPermissions = (FILE_GENERIC_READ | FILE_GENERIC_WRITE) & ~FILE_CREATE_PIPE_INSTANCE;
 	ea.grfAccessMode = SET_ACCESS;
 	ea.grfInheritance = NO_INHERITANCE;
-	const TCHAR *user = g_config->getValue(_T("/%agent/ControlUser"), _T("!"));   // * for everyone, ! for Administrators group members
+   shared_ptr<Config> config = g_config;
+	const TCHAR *user = config->getValue(_T("/%agent/ControlUser"), _T("!"));   // * for everyone, ! for Administrators group members
 	if ((user[0] == 0) || !_tcscmp(user, _T("!")))
 	{
       // Create a well-known SID for the Administrators group.

@@ -534,7 +534,8 @@ static StringBuffer BuildRestartCommandLine(bool withWaitPid)
       command.append(_T('"'));
    }
 
-   const TCHAR *configSection = GetConfig()->getAlias(_T("agent"));
+   shared_ptr<Config> config = g_config;
+   const TCHAR *configSection = config->getAlias(_T("agent"));
    if ((configSection != NULL) && (*configSection != 0))
    {
       command.append(_T(" -G "));
@@ -1019,7 +1020,7 @@ BOOL Initialize()
       GetLocalHostName(g_systemName, MAX_OBJECT_NAME, false);
    nxlog_write(NXLOG_INFO, _T("Using system name \"%s\""), g_systemName);
 
-   shared_ptr<Config> config = GetConfig();
+   shared_ptr<Config> config = g_config;
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
@@ -1327,7 +1328,7 @@ BOOL Initialize()
 	   // Delete file used for upgrade if exists
       TCHAR upgradeFileName[MAX_PATH];
 	   ReadRegistryAsString(_T("upgrade.file"), upgradeFileName, MAX_PATH, _T(""));
-	   if(upgradeFileName[0] != 0)
+	   if (upgradeFileName[0] != 0)
 	   {
          _tremove(upgradeFileName);
          DeleteRegistryEntry(_T("upgrade.file"));
@@ -1604,7 +1605,8 @@ static int GetGroupId(const char *name)
  */
 static void UpdateEnvironment()
 {
-   ObjectArray<ConfigEntry> *entrySet = GetConfig()->getSubEntries(_T("/ENV"), _T("*"));
+   shared_ptr<Config> config = g_config;
+   ObjectArray<ConfigEntry> *entrySet = config->getSubEntries(_T("/ENV"), _T("*"));
    if (entrySet == NULL)
       return;
    for(int i = 0; i < entrySet->size(); i++)
@@ -2000,7 +2002,7 @@ int main(int argc, char *argv[])
 
 			if (LoadConfig(configSection, true))
 			{
-			   shared_ptr<Config> config = GetConfig();
+			   shared_ptr<Config> config = g_config;
             // Check if master section starts with EXT:
             // If yes, switch to external subagent mode
             if (!_tcsnicmp(configSection, _T("EXT:"), 4))
@@ -2196,7 +2198,7 @@ int main(int argc, char *argv[])
             bool validConfig = LoadConfig(configSection, true);
             if (validConfig)
             {
-               shared_ptr<Config> config = GetConfig();
+               shared_ptr<Config> config = g_config;
                config->print(stdout);
                validConfig = config->parseTemplate(configSection, m_cfgTemplate);
             }
@@ -2227,9 +2229,8 @@ int main(int argc, char *argv[])
          {
             if (LoadConfig(configSection, true))
             {
-               if (GetConfig()->parseTemplate(configSection, m_cfgTemplate))
+               if (g_config->parseTemplate(configSection, m_cfgTemplate))
                {
-
                   _tprintf(_T("%s\n"), g_szLogFile);
                }
                else

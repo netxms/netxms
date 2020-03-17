@@ -3051,6 +3051,57 @@ struct CodeLookupElement
    const TCHAR *text;
 };
 
+/**
+ * Store for shared_ptr with synchronized access
+ */
+template<typename T> class shared_ptr_store
+{
+private:
+   shared_ptr<T> pointer;
+   MUTEX mutex;
+
+public:
+   shared_ptr_store()
+   {
+      mutex = MutexCreateFast();
+   }
+
+   shared_ptr_store(const shared_ptr<T>& p) : pointer(p)
+   {
+      mutex = MutexCreateFast();
+   }
+
+   ~shared_ptr_store()
+   {
+      MutexDestroy(mutex);
+   }
+
+   operator shared_ptr<T>()
+   {
+      return get();
+   }
+
+   T* operator-> ()
+   {
+      return get().operator->();
+   }
+
+   shared_ptr<T> get()
+   {
+      MutexLock(mutex);
+      auto p = pointer;
+      MutexUnlock(mutex);
+      return p;
+   }
+
+   void set(const shared_ptr<T>& p)
+   {
+      MutexLock(mutex);
+      pointer = p;
+      MutexUnlock(mutex);
+   }
+};
+
 #endif   /* __cplusplus */
 
 /**

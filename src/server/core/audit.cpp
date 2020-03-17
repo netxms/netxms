@@ -243,8 +243,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
                                                     json_t *oldValue, json_t *newValue,
                                                     const TCHAR *format, va_list args)
 {
-   char *js1 = (oldValue != NULL) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : strdup("");
-   char *js2 = (newValue != NULL) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : strdup("");
+   char *js1 = (oldValue != nullptr) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : _strdup("");
+   char *js2 = (newValue != nullptr) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : _strdup("");
 #ifdef UNICODE
    WCHAR *js1w = WideStringFromUTF8String(js1);
    WCHAR *js2w = WideStringFromUTF8String(js2);
