@@ -11496,9 +11496,9 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 
-			debugPrintf(5, _T("findNodeConnection: cp=%p type=%d"), cp, type);
 			if (cp != nullptr)
-			{
+         {
+            debugPrintf(5, _T("findNodeConnection: cp=%s [%u] type=%d"), cp->getName(), cp->getId(), type);
             shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
             if (node != nullptr)
             {
@@ -11516,6 +11516,7 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
             }
             else
             {
+               debugPrintf(5, _T("findNodeConnection: cp=(null)"));
       			msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
             }
 			}
@@ -11545,9 +11546,9 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 	shared_ptr<NetObj> cp = FindInterfaceConnectionPoint(macAddr, &type);
 	msg.setField(VID_RCC, RCC_SUCCESS);
 
-	debugPrintf(5, _T("findMacAddress: cp=%p type=%d"), cp, type);
 	if (cp != nullptr)
 	{
+      debugPrintf(5, _T("findMacAddress: cp=%s [%u] type=%d"), cp->getName(), cp->getId(), type);
 		uint32_t localNodeId, localIfId;
 		shared_ptr<Interface> localIf = FindInterfaceByMAC(macAddr);
 		if (localIf != nullptr)
@@ -11584,6 +11585,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 	}
 	else
 	{
+      debugPrintf(5, _T("findMacAddress: cp=(null)"));
       shared_ptr<Interface> localIf = FindInterfaceByMAC(macAddr);
       if (localIf != nullptr)
       {

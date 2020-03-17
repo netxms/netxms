@@ -1760,7 +1760,8 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 				else
 				{
 					value = vm->createValue();
-					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=%p peerNode=%p"), iface->getName(), iface->getId(), parentNode, peerNode);
+					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=% [%u] peerNode=%s [%u]"),
+                     iface->getName(), iface->getId(), parentNode->getName(), parentNode->getId(), peerNode->getName(), peerNode->getId());
 				}
 			}
 			else
