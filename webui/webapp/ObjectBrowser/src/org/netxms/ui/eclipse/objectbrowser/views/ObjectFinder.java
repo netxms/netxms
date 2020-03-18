@@ -707,6 +707,9 @@ public class ObjectFinder extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
+            if (!session.isObjectsSynchronized())
+               session.syncObjects();//synchronize all objects first
+            
             try
             {
                final List<AbstractObject> objects = session.queryObjects(query);
