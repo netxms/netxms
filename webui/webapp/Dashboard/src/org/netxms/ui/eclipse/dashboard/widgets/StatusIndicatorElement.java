@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -34,7 +37,9 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
@@ -98,6 +103,35 @@ public class StatusIndicatorElement extends ElementWidget
 				drawContent(e);
 			}
 		});
+		
+		final NXCSession session = ConsoleSharedData.getSession();
+		ConsoleJob job = new ConsoleJob("Sync objects", viewPart, Activator.PLUGIN_ID, null) {
+         
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            List<Long> relatedOpbjects = new ArrayList<Long>();
+            relatedOpbjects.add(config.getObjectId());
+            session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
+           
+            runInUIThread(new Runnable() {
+               
+               @Override
+               public void run()
+               {
+                  refreshData();
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Failed to sync objects";
+         }
+      };
+      job.setUser(false);
+      job.start();
 
 		startRefreshTimer();
 	}
