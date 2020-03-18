@@ -273,7 +273,6 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("GenericAgentPolicy::deploy(%s): failed to create policy deployment message"), data->debugId);
       }
-      data->conn->decRefCount();
    }
    else
    {
