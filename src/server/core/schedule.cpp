@@ -587,11 +587,17 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint32_t id, uint32_t user, uint6
    s_cronScheduleLock.lock();
    for(int i = 0; i < s_cronSchedules.size(); i++)
    {
-      if (s_cronSchedules.get(i)->getId() == id)
+      ScheduledTask *task = s_cronSchedules.get(i);
+      if (task->getId() == id)
       {
-         if (!s_cronSchedules.get(i)->canAccess(user, systemRights))
+         if (!task->canAccess(user, systemRights))
          {
             rcc = RCC_ACCESS_DENIED;
+            break;
+         }
+         if (task->isRunning())
+         {
+            rcc = RCC_RESOURCE_BUSY;
             break;
          }
          s_cronSchedules.remove(i);
@@ -606,15 +612,20 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint32_t id, uint32_t user, uint6
       s_oneTimeScheduleLock.lock();
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
-         if (s_oneTimeSchedules.get(i)->getId() == id)
+         ScheduledTask *task = s_oneTimeSchedules.get(i);
+         if (task->getId() == id)
          {
-            if (!s_cronSchedules.get(i)->canAccess(user, systemRights))
+            if (!task->canAccess(user, systemRights))
             {
                rcc = RCC_ACCESS_DENIED;
                break;
             }
+            if (task->isRunning())
+            {
+               rcc = RCC_RESOURCE_BUSY;
+               break;
+            }
             s_oneTimeSchedules.remove(i);
-            s_oneTimeSchedules.sort(ScheduledTaskComparator);
             s_wakeupCondition.set();
             rcc = RCC_SUCCESS;
             break;
@@ -626,9 +637,12 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint32_t id, uint32_t user, uint6
    if (rcc == RCC_SUCCESS)
    {
       DeleteScheduledTaskFromDB(id);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("RemoveSchedule: scheduled task [%u] removed"), id);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteScheduledTask: task [%u] removed"), id);
    }
-
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteScheduledTask: task [%u] cannot be removed (RCC=%u)"), id, rcc);
+   }
    return rcc;
 }
 
@@ -674,6 +688,42 @@ ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
 }
 
 /**
+ * Delayed scheduled task delete
+ */
+static void DelayedTaskDelete(ScheduledTask *task)
+{
+   while(task->isRunning())
+      ThreadSleep(10);
+   DeleteScheduledTask(task->getId(), 0, SYSTEM_ACCESS_FULL);
+}
+
+/**
+ * Delete scheduled task(s) by task handler id from specific task category
+ */
+static void DeleteScheduledTaskByHandlerId(ObjectArray<ScheduledTask> *category, const TCHAR *taskHandlerId, IntegerArray<uint32_t> *deleteList)
+{
+   for (int i = 0; i < category->size(); i++)
+   {
+      ScheduledTask *task = category->get(i);
+      if (!_tcscmp(task->getTaskHandlerId(), taskHandlerId))
+      {
+         if (!task->isRunning())
+         {
+            deleteList->add(task->getId());
+            category->remove(i);
+            i--;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Delete of scheduled task [%u] delayed because task is still running"), task->getId());
+            task->disable();  // Prevent re-run
+            ThreadPoolExecuteSerialized(g_schedulerThreadPool, _T("DeleteTask"), DelayedTaskDelete, task);
+         }
+      }
+   }
+}
+
+/**
  * Delete scheduled task(s) by task handler id
  */
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
@@ -681,29 +731,11 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId
    IntegerArray<uint32_t> deleteList;
 
    s_oneTimeScheduleLock.lock();
-   for (int i = 0; i < s_oneTimeSchedules.size(); i++)
-   {
-      if (!_tcscmp(s_oneTimeSchedules.get(i)->getTaskHandlerId(), taskHandlerId))
-      {
-         deleteList.add(s_oneTimeSchedules.get(i)->getId());
-         s_oneTimeSchedules.remove(i);
-         i--;
-      }
-   }
-   if (!deleteList.isEmpty())
-      s_oneTimeSchedules.sort(ScheduledTaskComparator);
+   DeleteScheduledTaskByHandlerId(&s_oneTimeSchedules, taskHandlerId, &deleteList);
    s_oneTimeScheduleLock.unlock();
 
    s_cronScheduleLock.lock();
-   for (int i = 0; i < s_cronSchedules.size(); i++)
-   {
-      if (!_tcscmp(s_cronSchedules.get(i)->getTaskHandlerId(), taskHandlerId))
-      {
-         deleteList.add(s_cronSchedules.get(i)->getId());
-         s_cronSchedules.remove(i);
-         i--;
-      }
-   }
+   DeleteScheduledTaskByHandlerId(&s_cronSchedules, taskHandlerId, &deleteList);
    s_cronScheduleLock.unlock();
 
    for(int i = 0; i < deleteList.size(); i++)
@@ -715,6 +747,32 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId
 }
 
 /**
+ * Delete scheduled task(s) by task key from gien task category
+ */
+static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const TCHAR *taskKey, IntegerArray<uint32_t> *deleteList)
+{
+   for (int i = 0; i < category->size(); i++)
+   {
+      ScheduledTask *task = category->get(i);
+      if (!_tcscmp(task->getTaskKey(), taskKey))
+      {
+         if (!task->isRunning())
+         {
+            deleteList->add(task->getId());
+            category->remove(i);
+            i--;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Delete of scheduled task [%u] delayed because task is still running"), task->getId());
+            task->disable();  // Prevent re-run
+            ThreadPoolExecuteSerialized(g_schedulerThreadPool, _T("DeleteTask"), DelayedTaskDelete, task);
+         }
+      }
+   }
+}
+
+/**
  * Delete scheduled task(s) by task key
  */
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
@@ -722,31 +780,11 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
    IntegerArray<uint32_t> deleteList;
 
    s_oneTimeScheduleLock.lock();
-   for (int i = 0; i < s_oneTimeSchedules.size(); i++)
-   {
-      String k = s_oneTimeSchedules.get(i)->getTaskKey();
-      if (!_tcscmp(k, taskKey))
-      {
-         deleteList.add(s_oneTimeSchedules.get(i)->getId());
-         s_oneTimeSchedules.remove(i);
-         i--;
-      }
-   }
-   if (!deleteList.isEmpty())
-      s_oneTimeSchedules.sort(ScheduledTaskComparator);
+   DeleteScheduledTaskByKey(&s_oneTimeSchedules, taskKey, &deleteList);
    s_oneTimeScheduleLock.unlock();
 
    s_cronScheduleLock.lock();
-   for (int i = 0; i < s_cronSchedules.size(); i++)
-   {
-      String k = s_cronSchedules.get(i)->getTaskKey();
-      if (!_tcscmp(k, taskKey))
-      {
-         deleteList.add(s_cronSchedules.get(i)->getId());
-         s_cronSchedules.remove(i);
-         i--;
-      }
-   }
+   DeleteScheduledTaskByKey(&s_cronSchedules, taskKey, &deleteList);
    s_cronScheduleLock.unlock();
 
    for(int i = 0; i < deleteList.size(); i++)

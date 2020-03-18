@@ -177,6 +177,13 @@ public:
       unlock();
    }
 
+   void disable()
+   {
+      lock();
+      m_flags |= SCHEDULED_TASK_DISABLED;
+      unlock();
+   }
+
    void startExecution(SchedulerCallback *callback);
 
    void update(const TCHAR *taskHandlerId, const TCHAR *schedule, shared_ptr<ScheduledTaskParameters> parameters, bool systemTask, bool disabled);
