@@ -11,6 +11,14 @@
 
 
 *
+* 3.2-CURRENT
+* 
+
+- Fixed issues:
+	NX-1810 (Server can cash if scheduled task deleted while running)
+
+
+*
 * 3.2.400
 *
 
