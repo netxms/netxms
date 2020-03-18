@@ -690,7 +690,7 @@ void Template::applyPolicyChanges()
             UINT32 rcc = conn->getPolicyInventory(&ap);
             if (rcc == RCC_SUCCESS)
             {
-               checkPolicyBind(static_cast<Node*>(object), ap, NULL);
+               checkPolicyBind(static_cast<Node*>(object), ap);
                delete ap;
             }
          }
@@ -760,7 +760,7 @@ void Template::applyPolicyChanges(DataCollectionTarget *object)
          UINT32 rcc = conn->getPolicyInventory(&ap);
          if (rcc == RCC_SUCCESS)
          {
-            checkPolicyBind(static_cast<Node*>(object), ap, NULL);
+            checkPolicyBind(static_cast<Node*>(object), ap);
             delete ap;
          }
          conn->decRefCount();
@@ -772,7 +772,7 @@ void Template::applyPolicyChanges(DataCollectionTarget *object)
 /**
  * Check agent policy binding for exact template
  */
-void Template::checkPolicyBind(Node *node, AgentPolicyInfo *ap, ObjectArray<NetObj> *unbindList)
+void Template::checkPolicyBind(Node *node, AgentPolicyInfo *ap)
 {
    lockProperties();
    Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
@@ -796,8 +796,6 @@ void Template::checkPolicyBind(Node *node, AgentPolicyInfo *ap, ObjectArray<NetO
          {
             delete job;
             DbgPrintf(5, _T("Template::checkPolicyBind(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
-            if (unbindList != NULL)
-               unbindList->add(this);
          }
       }
    }

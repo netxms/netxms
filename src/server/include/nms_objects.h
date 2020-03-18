@@ -1364,7 +1364,7 @@ public:
    void applyPolicyChanges();
    void forceApplyPolicyChanges();
    void applyPolicyChanges(DataCollectionTarget *object);
-   void checkPolicyBind(Node *node, AgentPolicyInfo *ap, ObjectArray<NetObj> *unbindList);
+   void checkPolicyBind(Node *node, AgentPolicyInfo *ap);
    void forceInstallPolicy(DataCollectionTarget *target);
    void removeAllPolicies(Node *node);
 };
