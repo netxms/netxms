@@ -5367,10 +5367,6 @@ void ClientSession::createObject(NXCPMessage *request)
 									   object = MakeSharedNObject<Zone>(zoneUIN, objectName);
 									   NetObjInsert(object, true, false);
 								   }
-								   else
-								   {
-									   object = nullptr;
-								   }
 								   break;
 							   default:
 								   // Try to create unknown classes by modules

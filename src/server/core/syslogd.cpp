@@ -288,11 +288,11 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, time_t receiverTime, NX
 static shared_ptr<Node> FindNodeByHostname(const char *hostName, UINT32 zoneUIN)
 {
    if (hostName[0] == 0)
-      return nullptr;
+      return shared_ptr<Node>();
 
    shared_ptr<Node> node;
    InetAddress ipAddr = InetAddress::resolveHostName(hostName);
-	if (ipAddr.isValidUnicast())
+   if (ipAddr.isValidUnicast())
    {
       node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, ipAddr);
    }

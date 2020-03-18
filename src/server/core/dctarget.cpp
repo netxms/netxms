@@ -765,17 +765,15 @@ DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, si
    else if (MatchString(_T("ConditionStatus(*)"), param, FALSE))
    {
       TCHAR *pEnd, szArg[256];
-      UINT32 dwId;
       shared_ptr<NetObj> pObject;
 
       AgentGetParameterArg(param, 1, szArg, 256);
-      dwId = _tcstoul(szArg, &pEnd, 0);
+      uint32_t dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd == 0)
 		{
 			pObject = FindObjectById(dwId);
-			if (pObject != nullptr)
-				if (pObject->getObjectClass() != OBJECT_CONDITION)
-					pObject = nullptr;
+         if ((pObject != nullptr) && (pObject->getObjectClass() != OBJECT_CONDITION))
+            pObject.reset();
 		}
 		else
       {

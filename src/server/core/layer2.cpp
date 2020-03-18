@@ -66,13 +66,13 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, boo
  */
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
 {
-	TCHAR macAddrText[64];
-	nxlog_debug(6, _T("Called FindInterfaceConnectionPoint(%s)"), macAddr.toString(macAddrText));
+   TCHAR macAddrText[64];
+   nxlog_debug(6, _T("Called FindInterfaceConnectionPoint(%s)"), macAddr.toString(macAddrText));
 
    *type = CP_TYPE_INDIRECT;
 
    if (!macAddr.isValid() || (macAddr.length() != MAC_ADDR_LENGTH))
-      return nullptr;
+      return shared_ptr<NetObj>();
 
 	shared_ptr<NetObj> cp;
 	SharedObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();

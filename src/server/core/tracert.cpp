@@ -85,7 +85,7 @@ NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& des
 
    int hopCount = 0;
    shared_ptr<Node> curr(src), next;
-   for(; (curr != dest) && (curr != NULL) && (hopCount < 30); curr = next, hopCount++)
+   for(; (curr != dest) && (curr != nullptr) && (hopCount < 30); curr = next, hopCount++)
    {
       UINT32 dwIfIndex;
       InetAddress nextHop;
@@ -97,18 +97,18 @@ NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& des
 			next = FindNodeByIP(dest->getZoneUIN(), nextHop);
 			path->addHop(nextHop, route, curr, dwIfIndex, isVpn, name);
          if ((next == curr) || !nextHop.isValid())
-            next = NULL;     // Directly connected subnet or too many hops, stop trace
+            next.reset();     // Directly connected subnet or too many hops, stop trace
       }
       else
       {
-         next = NULL;
+         next.reset();
       }
    }
-	if (curr == dest)
-	{
+   if (curr == dest)
+   {
       path->addHop(InetAddress::INVALID, InetAddress::INVALID, curr, 0, false, _T(""));
-		path->setComplete();
-	}
+      path->setComplete();
+   }
 
    return path;
 }

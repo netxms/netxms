@@ -722,8 +722,8 @@ static void LoadDriver(const TCHAR *file)
    {
       int *apiVersion = reinterpret_cast<int *>(DLGetSymbolAddr(hModule, "NcdAPIVersion", errorText));
       const char **name = reinterpret_cast<const char **>(DLGetSymbolAddr(hModule, "NcdName", errorText));
-      NCDriver *(*InstanceFactory)(Config *, NCDriverStorageManager *) = reinterpret_cast<NCDriver *(*)(Config *, NCDriverStorageManager *)>(DLGetSymbolAddr(hModule, "NcdCreateInstance", errorText));
-      NCConfigurationTemplate *(*GetConfigTemplate)() = reinterpret_cast<NCConfigurationTemplate *(*)()>(DLGetSymbolAddr(hModule, "NcdGetConfigurationTemplate", errorText));
+      NCDriver *(*InstanceFactory)(Config *, NCDriverStorageManager *) = (NCDriver *(*)(Config *, NCDriverStorageManager *))DLGetSymbolAddr(hModule, "NcdCreateInstance", errorText);
+      NCConfigurationTemplate *(*GetConfigTemplate)() = (NCConfigurationTemplate *(*)())DLGetSymbolAddr(hModule, "NcdGetConfigurationTemplate", errorText);
 
       if ((apiVersion != NULL) && (InstanceFactory != NULL) && (name != NULL) && (GetConfigTemplate != NULL))
       {

@@ -140,7 +140,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
        (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: Node %s already exist in database"), ipAddrText);
-      return nullptr;
+      return shared_ptr<Node>();
    }
 
    UINT32 flags = 0;
@@ -700,7 +700,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       return false;  // Broadcast MAC
    }
 
-   NXSL_VM *hook = FindHookScript(_T("AcceptNewNode"), nullptr);
+   NXSL_VM *hook = FindHookScript(_T("AcceptNewNode"), shared_ptr<NetObj>());
    if (hook != nullptr)
    {
       bool stop = false;
@@ -940,7 +940,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
    else
    {
-      NXSL_VM *vm = CreateServerScriptVM(szFilter, nullptr);
+      NXSL_VM *vm = CreateServerScriptVM(szFilter, shared_ptr<NetObj>());
       if (vm != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);

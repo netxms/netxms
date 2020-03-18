@@ -125,7 +125,7 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, UINT32 idType, BYTE
 				memcpy(&ipAddr, &id[1], sizeof(UINT32));
 				return node->findInterfaceByIP(ntohl(ipAddr));
 			}
-			return nullptr;
+			return shared_ptr<Interface>();
 		case 5:	// Interface name
 #ifdef UNICODE
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)id, (int)idLen, ifName, 128);
@@ -149,9 +149,9 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, UINT32 idType, BYTE
 			}
 			return ifc;
 		case 7:	// local identifier
-			return nullptr;   // already tried to find port using local info
+			return shared_ptr<Interface>();   // already tried to find port using local info
 		default:
-			return nullptr;
+			return shared_ptr<Interface>();
 	}
 }
 

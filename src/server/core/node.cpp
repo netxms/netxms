@@ -1695,7 +1695,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
                 m_name, m_id, info->name, info->index, pass ? _T("accepted") : _T("rejected"));
       if (!pass)
       {
-         iface = nullptr;
+         iface.reset();
       }
    }
    return iface;
@@ -8719,7 +8719,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
                 m_name, m_id, subnet->getName(), pass ? _T("accepted") : _T("rejected"));
       if (!pass)
       {
-         subnet = nullptr;
+         subnet.reset();
       }
    }
    else
@@ -8821,7 +8821,7 @@ void Node::checkSubnetBinding()
          nxlog_debug(5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
          if (isSync)
          {
-            pSubnet = nullptr;   // No further checks on this subnet
+            pSubnet.reset();   // No further checks on this subnet
          }
          else
          {
@@ -8835,7 +8835,7 @@ void Node::checkSubnetBinding()
                    node has more than one parent. hasIfaceForPrimaryIp parameter should prevent us from going in
                    loop (creating and deleting all the time subnet). */
                   pSubnet->deleteObject();
-                  pSubnet = nullptr;   // prevent binding to deleted subnet
+                  pSubnet.reset();   // prevent binding to deleted subnet
                }
                else
                {
@@ -10023,7 +10023,7 @@ void Node::icmpPoll(PollerInfo *poller)
       if ((proxyNode == nullptr) || !proxyNode->isNativeAgent() || proxyNode->isDown())
       {
          nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): proxy node not available"), m_name, m_id);
-         proxyNode = nullptr;
+         proxyNode.reset();
          goto end_poll;
       }
       nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): proxy node found: %s"), m_name, m_id, proxyNode->getName());

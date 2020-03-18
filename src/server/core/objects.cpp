@@ -655,7 +655,7 @@ static shared_ptr<Node> FindNodeByIPInternal(uint32_t zoneUIN, const InetAddress
    if (node != nullptr)
       return node;
 
-   shared_ptr<Interface> iface = nullptr;
+   shared_ptr<Interface> iface;
    if (IsZoningEnabled())
    {
       if (zone != nullptr)
@@ -667,7 +667,7 @@ static shared_ptr<Node> FindNodeByIPInternal(uint32_t zoneUIN, const InetAddress
    {
       iface = static_pointer_cast<Interface>(g_idxInterfaceByAddr.get(ipAddr));
    }
-   return (iface != nullptr) ? iface->getParentNode() : nullptr;
+   return (iface != nullptr) ? iface->getParentNode() : shared_ptr<Node>();
 }
 
 /**
@@ -678,10 +678,7 @@ struct NodeFindCBData
    InetAddress addr;
    shared_ptr<Node> node;
 
-   NodeFindCBData(const InetAddress& _addr)
-   {
-      addr = _addr;
-   }
+   NodeFindCBData(const InetAddress& _addr) : addr(_addr) { }
 };
 
 /**
@@ -735,7 +732,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, bool allZones, c
    shared_ptr<Node> node = FindNodeByIPInternal(zoneUIN, ipAddr);
    if (node != nullptr)
       return node;
-   return allZones ? FindNodeByIP(ALL_ZONES, ipAddr) : nullptr;
+   return allZones ? FindNodeByIP(ALL_ZONES, ipAddr) : shared_ptr<Node>();
 }
 
 /**
@@ -950,26 +947,31 @@ shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetByIP(UINT32 zoneUIN, const InetAd
 /**
  * Subnet matching data
  */
-struct SUBNET_MATCHING_DATA
+struct SubnetMatchingData
 {
    InetAddress ipAddr; // IP address to find subnet for
    int maskLen;        // Current match mask length
    shared_ptr<Subnet> subnet;     // search result
+
+   SubnetMatchingData(const InetAddress& _ipAddr) : ipAddr(_ipAddr)
+   {
+      maskLen = -1;
+   }
 };
 
 /**
  * Subnet matching callback
  */
-static void SubnetMatchCallback(const InetAddress& addr, NetObj *object, void *arg)
+static void SubnetMatchCallback(const InetAddress& addr, NetObj *object, void *context)
 {
-   SUBNET_MATCHING_DATA *data = (SUBNET_MATCHING_DATA *)arg;
-   if (((Subnet *)object)->getIpAddress().contain(data->ipAddr))
+   SubnetMatchingData *data = static_cast<SubnetMatchingData*>(context);
+   if (static_cast<Subnet*>(object)->getIpAddress().contain(data->ipAddr))
    {
-      int maskLen = ((Subnet *)object)->getIpAddress().getMaskBits();
+      int maskLen = static_cast<Subnet*>(object)->getIpAddress().getMaskBits();
       if (maskLen > data->maskLen)
       {
          data->maskLen = maskLen;
-         data->subnet = ((Subnet *)object)->self();
+         data->subnet = static_cast<Subnet*>(object)->self();
       }
    }
 }
@@ -982,23 +984,20 @@ shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(UINT32 zoneUIN, const Ine
    if (!nodeAddr.isValidUnicast())
       return shared_ptr<Subnet>();
 
-   SUBNET_MATCHING_DATA matchData;
-   matchData.ipAddr = nodeAddr;
-   matchData.maskLen = -1;
-   matchData.subnet = nullptr;
-	if (IsZoningEnabled())
-	{
-		shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
-		if (zone != nullptr)
-		{
-			zone->forEachSubnet(SubnetMatchCallback, &matchData);
-		}
-	}
-	else
-	{
+   SubnetMatchingData matchData(nodeAddr);
+   if (IsZoningEnabled())
+   {
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zone != nullptr)
+      {
+         zone->forEachSubnet(SubnetMatchCallback, &matchData);
+      }
+   }
+   else
+   {
       g_idxSubnetByAddr.forEach(SubnetMatchCallback, &matchData);
-	}
-	return matchData.subnet;
+   }
+   return matchData.subnet;
 }
 
 /**
