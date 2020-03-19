@@ -122,8 +122,7 @@ public class LastValues extends OverviewPageElement
       });
       
       viewer.setInput(((DataCollectionTarget)getObject()).getOverviewDciData().toArray());
-      viewer.getTable().getColumn(0).pack();
-      viewer.getTable().getColumn(1).pack();
+      adjustCollumns();
       
       createPopupMenu();
       
@@ -131,6 +130,18 @@ public class LastValues extends OverviewPageElement
       refresh();
 
       return viewer.getTable();
+   }
+   
+   /**
+    * Adjust column size 
+    */
+   private void adjustCollumns()
+   {
+      for(TableColumn cl : viewer.getTable().getColumns())
+      {
+         cl.pack();
+         cl.setWidth(cl.getWidth() + 10); // compensate for pack issues on Linux         
+      }
    }
    
    /**
@@ -144,6 +155,10 @@ public class LastValues extends OverviewPageElement
 
       tc = new TableColumn(viewer.getTable(), SWT.LEFT);
       tc.setText(Messages.get().LastValues_Value);
+      tc.setWidth(100);
+
+      tc = new TableColumn(viewer.getTable(), SWT.LEFT);
+      tc.setText("Time");
       tc.setWidth(100);
 
       viewer.getTable().setHeaderVisible(false);
@@ -205,8 +220,7 @@ public class LastValues extends OverviewPageElement
    protected void onObjectChange()
    {
       viewer.setInput(((DataCollectionTarget)getObject()).getOverviewDciData().toArray());
-      viewer.getTable().getColumn(0).pack();
-      viewer.getTable().getColumn(1).pack();
+      adjustCollumns();
    }
    
    /**
@@ -230,8 +244,7 @@ public class LastValues extends OverviewPageElement
                      if (viewer.getControl().isDisposed() || (getObject().getObjectId() != nodeId))
                         return;
                      viewer.setInput(list);
-                     viewer.getTable().getColumn(0).pack();
-                     viewer.getTable().getColumn(1).pack();
+                     adjustCollumns();
                   }
                });
             }
