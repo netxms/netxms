@@ -4058,23 +4058,43 @@ bool Node::confPollAgent(UINT32 rqId)
          unlockProperties();
       }
 
-      checkAgentPolicyBinding(pAgentConn);
-
-      // Update user agent notification list
-      if (m_capabilities & NC_HAS_USER_AGENT)
+      // Server ID should be set on this connection before updating configuration elements on agent side
+      if (pAgentConn->setServerId(g_serverId) == ERR_SUCCESS)
       {
-         NXCPMessage msg;
-         msg.setCode(CMD_UPDATE_UA_NOTIFICATIONS);
-         msg.setId(pAgentConn->generateRequestId());
-         FillUserAgentNotificationsAll(&msg, this);
-         pAgentConn->sendMessage(&msg);
+         checkAgentPolicyBinding(pAgentConn);
+
+         // Update user agent notification list
+         if (m_capabilities & NC_HAS_USER_AGENT)
+         {
+            NXCPMessage msg(pAgentConn->getProtocolVersion());
+            msg.setCode(CMD_UPDATE_UA_NOTIFICATIONS);
+            FillUserAgentNotificationsAll(&msg, this);
+            NXCPMessage *response = pAgentConn->customRequest(&msg);
+            if (response != nullptr)
+            {
+               rcc = response->getFieldAsUInt32(VID_RCC);
+               delete response;
+            }
+            else
+            {
+               rcc = ERR_REQUEST_TIMEOUT;
+            }
+            if (rcc == ERR_SUCCESS)
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): user agent notifications synchronized"), m_name);
+            else
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot synchronize user agent notifications (%s)"), m_name, AgentErrorCodeToText(rcc));
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot set server ID (%s)"), m_name, AgentErrorCodeToText(rcc));
       }
 
       pAgentConn->disconnect();
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (%s)"), m_name, AgentErrorCodeToText(rcc));
       sendPollerMsg(rqId, POLLER_ERROR _T("   Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(rcc));
    }
    pAgentConn->decRefCount();
@@ -6584,7 +6604,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       pMsg->setField(VID_CIP_STATUS_TEXT, CIP_DecodeDeviceStatus(m_cipStatus));
       pMsg->setField(VID_CIP_EXT_STATUS_TEXT, CIP_DecodeExtendedDeviceStatus(m_cipStatus));
       pMsg->setField(VID_CIP_STATE, m_cipState);
-      pMsg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(m_cipState));
+      pMsg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(static_cast<uint8_t>(m_cipState)));
    }
 }
 
