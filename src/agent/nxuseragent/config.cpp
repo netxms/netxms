@@ -216,6 +216,8 @@ void LoadConfig()
          s_colors[APP_COLOR_MENU_FOREGROUND] = config.getValueAsUInt(_T("/menuTextColor"), s_defaultColors[APP_COLOR_MENU_FOREGROUND]);
          s_colors[APP_COLOR_NOTIFICATION_BACKGROUND] = config.getValueAsUInt(_T("/notificationBackgroundColor"), s_defaultColors[APP_COLOR_NOTIFICATION_BACKGROUND]);
          s_colors[APP_COLOR_NOTIFICATION_FOREGROUND] = config.getValueAsUInt(_T("/notificationTextColor"), s_defaultColors[APP_COLOR_NOTIFICATION_FOREGROUND]);
+         s_colors[APP_COLOR_NOTIFICATION_SELECTED] = config.getValueAsUInt(_T("/notificationSelectionColor"), s_defaultColors[APP_COLOR_NOTIFICATION_SELECTED]);
+         s_colors[APP_COLOR_NOTIFICATION_HIGHLIGHTED] = config.getValueAsUInt(_T("/notificationHighligtColor"), s_defaultColors[APP_COLOR_NOTIFICATION_HIGHLIGHTED]);
       }
       else
       {
