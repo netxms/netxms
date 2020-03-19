@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -25,39 +25,39 @@
 /**
  * User agent notification constructor
  */
-UserAgentNotification::UserAgentNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId)
+UserAgentNotification::UserAgentNotification(uint64_t serverId, const NXCPMessage *msg, uint32_t baseId)
       : m_id(serverId, msg->getFieldAsUInt32(baseId))
 {
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
    m_endTime = msg->getFieldAsTime(baseId + 3);
-   m_onStartup = msg->getFieldAsBoolean(baseId + 4);
+   m_startup = msg->getFieldAsBoolean(baseId + 4);
    m_read = false;
 }
 
 /**
  * User agent notification constructor
  */
-UserAgentNotification::UserAgentNotification(const NXCPMessage *msg, UINT32 baseId)
+UserAgentNotification::UserAgentNotification(const NXCPMessage *msg, uint32_t baseId)
       : m_id(msg->getFieldAsUInt64(baseId + 9), msg->getFieldAsUInt32(baseId))
 {
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
    m_endTime = msg->getFieldAsTime(baseId + 3);
-   m_onStartup = msg->getFieldAsBoolean(baseId + 4);
+   m_startup = msg->getFieldAsBoolean(baseId + 4);
    m_read = false;
 }
 
 /**
  * User agent notification constructor
  */
-UserAgentNotification::UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end, bool onStartup)
+UserAgentNotification::UserAgentNotification(uint64_t serverId, uint32_t notificationId, TCHAR *message, time_t start, time_t end, bool startup)
       : m_id(serverId, notificationId)
 {
    m_message = message;
    m_startTime = start;
    m_endTime = end;
-   m_onStartup = onStartup;
+   m_startup = startup;
    m_read = false;
 }
 
@@ -69,7 +69,7 @@ UserAgentNotification::UserAgentNotification(const UserAgentNotification *src) :
    m_message = MemCopyString(src->m_message);
    m_startTime = src->m_startTime;
    m_endTime = src->m_endTime;
-   m_onStartup = src->m_onStartup;
+   m_startup = src->m_startup;
    m_read = src->m_read;
 }
 
@@ -84,13 +84,13 @@ UserAgentNotification::~UserAgentNotification()
 /**
  * Prepare NXCP message with user agent notification info
  */
-void UserAgentNotification::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void UserAgentNotification::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {
    msg->setField(baseId, m_id.objectId);
    msg->setField(baseId + 1, m_message);
    msg->setFieldFromTime(baseId + 2, m_startTime);
    msg->setFieldFromTime(baseId + 3, m_endTime);
-   msg->setFieldFromTime(baseId + 4, m_onStartup);
+   msg->setFieldFromTime(baseId + 4, m_startup);
    msg->setField(baseId + 9, m_id.serverId);
 }
 
@@ -102,8 +102,8 @@ void UserAgentNotification::saveToDatabase(DB_HANDLE db)
    TCHAR query[2048];
    _sntprintf(query, 2048,
          _T("INSERT INTO user_agent_notifications (server_id,notification_id,message,start_time,end_time,on_startup)")
-         _T(" VALUES (") INT64_FMT _T(",%u,%s,%d,%d,%s)"), m_id.serverId, m_id.objectId,
+         _T(" VALUES (") INT64_FMT _T(",%u,%s,%u,%u,%s)"), m_id.serverId, m_id.objectId,
          (const TCHAR *)DBPrepareString(db, m_message, 1023), static_cast<unsigned int>(m_startTime),
-         static_cast<unsigned int>(m_endTime), m_onStartup ? _T("1") : _T("0"));
+         static_cast<unsigned int>(m_endTime), m_startup ? _T("1") : _T("0"));
    DBQuery(db, query);
 }

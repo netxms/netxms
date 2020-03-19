@@ -7,6 +7,7 @@
  */
 HFONT g_menuFont = NULL;
 HFONT g_messageFont = NULL;
+HFONT g_notificationFont = NULL;
 HFONT g_symbolFont = NULL;
 HFONT g_footerFont = NULL;
 
@@ -255,6 +256,9 @@ bool PrepareApplicationWindow()
    g_messageFont = CreateFont(-MulDiv(FONT_SIZE_MESSAGE, GetDeviceCaps(hdc, LOGPIXELSY), 72), 0, 0, 0,
       FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
       PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Calibri"));
+   g_notificationFont = CreateFont(-MulDiv(FONT_SIZE_NOTIFICATION, GetDeviceCaps(hdc, LOGPIXELSY), 72), 0, 0, 0,
+      FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+      PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Calibri"));
    g_symbolFont = CreateFont(-MulDiv(FONT_SIZE_SYMBOLS, GetDeviceCaps(hdc, LOGPIXELSY), 72), 0, 0, 0,
       FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
       PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Segoe UI Symbol"));
@@ -455,7 +459,7 @@ void OpenApplicationWindow(POINT pt, bool hotkeyOpen)
 /**
  * Close application window
  */
-void CloseApplicationWindow()
+void CloseApplicationWindow(void *context)
 {
    ResetMenuCursor();
    if (s_hWnd != NULL)

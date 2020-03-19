@@ -7,6 +7,21 @@ static HashMap<ServerObjectKey, UserAgentNotification> s_notifications(Ownership
 static Mutex s_notificationLock;
 
 /**
+ * Delete read mark in registry
+ */
+static void DeleteReadMark(const ServerObjectKey& id)
+{
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\NetXMS\\UserAgent\\Notifications"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+   {
+      TCHAR name[64];
+      _sntprintf(name, 64, _T("%u:%I64u"), id.objectId, id.serverId);
+      RegDeleteValue(hKey, name);
+      RegCloseKey(hKey);
+   }
+}
+
+/**
  * Update read flag
  */
 static void MarkAsRead(UserAgentNotification *n)
@@ -25,18 +40,27 @@ static void MarkAsRead(UserAgentNotification *n)
 }
 
 /**
- * Delete read mark in registry
+ * Mark notifications in given list as read. Provided list is a copy of original objects.
  */
-static void DeleteReadMark(const ServerObjectKey& id)
+void MarkNotificationAsRead(const ServerObjectKey& id)
 {
-   HKEY hKey;
-   if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\NetXMS\\UserAgent\\Notifications"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+   s_notificationLock.lock();
+
+   UserAgentNotification *n = s_notifications.get(id);
+   if (n != nullptr)
    {
-      TCHAR name[64];
-      _sntprintf(name, 64, _T("%u:%I64u"), id.objectId, id.serverId);
-      RegDeleteValue(hKey, name);
-      RegCloseKey(hKey);
+      if (n->isInstant())  // Delete instant messages immediately after read
+      {
+         DeleteReadMark(id);
+         s_notifications.remove(id);
+      }
+      else
+      {
+         MarkAsRead(n);
+      }
    }
+
+   s_notificationLock.unlock();
 }
 
 /**
@@ -63,7 +87,7 @@ static bool IsMarkedAsRead(const ServerObjectKey& id)
 /**
  * Update notifications for user
  */
-void UpdateNotifications(NXCPMessage *request)
+void UpdateNotifications(const NXCPMessage *request)
 {
    s_notificationLock.lock();
 
@@ -81,36 +105,36 @@ void UpdateNotifications(NXCPMessage *request)
 
    s_notificationLock.unlock();
 
-   //PostThreadMessage(g_mainThreadId, NXUA_MSG_OPEN_MESSAGE_WINDOW, 0, 0);
+   PostThreadMessage(g_mainThreadId, NXUA_MSG_SHOW_NOTIFICATIONS, 1, 0);
 }
 
 /**
  * Add new notification
  */
-void AddNotification(NXCPMessage *request)
+void AddNotification(const NXCPMessage *request)
 {
    UserAgentNotification *n = new UserAgentNotification(request, VID_UA_NOTIFICATION_BASE);
    nxlog_debug(7, _T("Add notification [%u]: %s"), n->getId().objectId, n->getMessage());
 
-   if (n->getStartTime() == 0)
+   s_notificationLock.lock();
+   s_notifications.set(n->getId(), n);
+   s_notificationLock.unlock();
+
+   if (n->isInstant())
    {
-      ShowTrayNotification(n->getMessage());
+      PostThreadMessage(g_mainThreadId, NXUA_MSG_SHOW_NOTIFICATIONS, 0, 0);
    }
    else
    {
       if (IsMarkedAsRead(n->getId()))
          n->setRead();
-
-      s_notificationLock.lock();
-      s_notifications.set(n->getId(), n);
-      s_notificationLock.unlock();
    }
 }
 
 /**
  * Remove notification
  */
-void RemoveNotification(NXCPMessage *request)
+void RemoveNotification(const NXCPMessage *request)
 {
    ServerObjectKey id = ServerObjectKey(request->getFieldAsUInt64(VID_UA_NOTIFICATION_BASE + 1),
          request->getFieldAsUInt32(VID_UA_NOTIFICATION_BASE));
@@ -129,7 +153,22 @@ void RemoveNotification(NXCPMessage *request)
 static EnumerationCallbackResult NotificationSelector(const void *key, const void *value, void *context)
 {
    const UserAgentNotification *n = static_cast<const UserAgentNotification*>(value);
-   if (!n->isRead() && (n->getStartTime() <= time(NULL)))
+   time_t now = time(nullptr);
+   if (!n->isRead() && !n->isStartup() && (n->isInstant() || ((n->getStartTime() <= now) && (n->getEndTime() >= now))))
+   {
+      static_cast<ObjectArray<UserAgentNotification>*>(context)->add(new UserAgentNotification(n));
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Selector for startup notifications
+ */
+static EnumerationCallbackResult StartupNotificationSelector(const void *key, const void *value, void *context)
+{
+   const UserAgentNotification *n = static_cast<const UserAgentNotification*>(value);
+   time_t now = time(nullptr);
+   if (n->isStartup() && (n->getStartTime() <= now) && (n->getEndTime() >= now))
    {
       static_cast<ObjectArray<UserAgentNotification>*>(context)->add(new UserAgentNotification(n));
    }
@@ -139,12 +178,49 @@ static EnumerationCallbackResult NotificationSelector(const void *key, const voi
 /**
  * Get list of notifications to be displayed (should be destroyed by caller).
  */
-ObjectArray<UserAgentNotification> *GetNotificationsForDisplay()
+ObjectArray<UserAgentNotification> *GetNotificationsForDisplay(bool startup)
 {
    ObjectArray<UserAgentNotification> *list = new ObjectArray<UserAgentNotification>(64, 64, Ownership::True);
    time_t now = time(NULL);
    s_notificationLock.lock();
-   s_notifications.forEach(NotificationSelector, list);
+   s_notifications.forEach(startup ? StartupNotificationSelector : NotificationSelector, list);
    s_notificationLock.unlock();
    return list;
+}
+
+/**
+ * Callback for checking pnding notifications
+ */
+static EnumerationCallbackResult CheckPendingNotifications(const void *key, const void *value, void *context)
+{
+   const UserAgentNotification *n = static_cast<const UserAgentNotification*>(value);
+   time_t now = time(nullptr);
+   if (!n->isRead() && !n->isStartup() && (n->isInstant() || ((n->getStartTime() <= now) && (n->getEndTime() >= now))))
+   {
+      *static_cast<bool*>(context) = true;
+      return _STOP;
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Notification manager
+ */
+THREAD_RESULT THREAD_CALL NotificationManager(void *arg)
+{
+   nxlog_write(NXLOG_INFO, _T("Notification manager thread started"));
+   while (!ConditionWait(g_shutdownCondition, 10000))
+   {
+      bool pendingNotifications = false;
+      s_notificationLock.lock();
+      s_notifications.forEach(CheckPendingNotifications, &pendingNotifications);
+      s_notificationLock.unlock();
+      if (pendingNotifications)
+      {
+         nxlog_debug(4, _T("NotificationManager: pending notifications found"));
+         PostThreadMessage(g_mainThreadId, NXUA_MSG_SHOW_NOTIFICATIONS, 0, 0);
+      }
+   }
+   nxlog_write(NXLOG_INFO, _T("Notification manager thread stopped"));
+   return THREAD_OK;
 }
