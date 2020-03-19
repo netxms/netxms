@@ -728,6 +728,9 @@ void ShutdownSessionAgents(bool restart)
 bool IsUserAgentInstalled()
 {
 #ifdef _WIN32
+   if (g_config->getValueAsBoolean(_T("/CORE/ForceReportUserAgent"), false))
+      return true;
+
    HKEY hKey;
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Agent"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
       return false;
@@ -752,7 +755,7 @@ UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request)
    DB_HANDLE db = GetLocalDatabaseHandle();
 
    s_userAgentNotificationsLock.lock();
-   if (n->getStartTime() != 0)
+   if (!n->isInstant())
    {
       s_userAgentNotifications.set(n->getId(), n);
       n->saveToDatabase(db);
@@ -767,7 +770,7 @@ UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request)
    }
    RWLockUnlock(s_lock);
 
-   if (n->getStartTime() == 0)
+   if (n->isInstant())
       delete n;
 
    s_userAgentNotificationsLock.unlock();

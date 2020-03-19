@@ -8,7 +8,7 @@ bool g_closeOnDeactivate = false;
 /**
  * Default application colors
  */
-static COLORREF s_defaultColors[8] = {
+static COLORREF s_defaultColors[12] = {
    RGB(48, 48, 48),        // background
    RGB(192, 192, 192),     // foreground
    RGB(192, 32, 32),       // highlight
@@ -16,13 +16,17 @@ static COLORREF s_defaultColors[8] = {
    RGB(48, 48, 48),        // menu background
    RGB(210, 105, 0),       // menu selected
    RGB(80, 80, 80),        // menu highlighted
-   RGB(240, 240, 240)      // menu text
+   RGB(240, 240, 240),     // menu text
+   RGB(240, 240, 240),     // notification background
+   RGB(32, 32, 32),        // notification foreground
+   RGB(255, 127, 0),       // notification selected
+   RGB(192, 192, 192)      // notification highlighted
 };
 
 /**
  * Application colors
  */
-static COLORREF s_colors[8] = {
+static COLORREF s_colors[12] = {
    RGB(48, 48, 48),        // background
    RGB(192, 192, 192),     // foreground
    RGB(192, 32, 32),       // highlight
@@ -30,7 +34,11 @@ static COLORREF s_colors[8] = {
    RGB(48, 48, 48),        // menu background
    RGB(210, 105, 0),       // menu selected
    RGB(80, 80, 80),        // menu highlighted
-   RGB(240, 240, 240)      // menu text
+   RGB(240, 240, 240),     // menu text
+   RGB(240, 240, 240),     // notification background
+   RGB(32, 32, 32),        // notification foreground
+   RGB(255, 127, 0),       // notification selected
+   RGB(192, 192, 192)      // notification highlighted
 };
 
 /**
@@ -206,6 +214,8 @@ void LoadConfig()
          s_colors[APP_COLOR_MENU_SELECTED] = config.getValueAsUInt(_T("/menuSelectionColor"), s_defaultColors[APP_COLOR_MENU_SELECTED]);
          s_colors[APP_COLOR_MENU_HIGHLIGHTED] = config.getValueAsUInt(_T("/menuHighligtColor"), s_defaultColors[APP_COLOR_MENU_HIGHLIGHTED]);
          s_colors[APP_COLOR_MENU_FOREGROUND] = config.getValueAsUInt(_T("/menuTextColor"), s_defaultColors[APP_COLOR_MENU_FOREGROUND]);
+         s_colors[APP_COLOR_NOTIFICATION_BACKGROUND] = config.getValueAsUInt(_T("/notificationBackgroundColor"), s_defaultColors[APP_COLOR_NOTIFICATION_BACKGROUND]);
+         s_colors[APP_COLOR_NOTIFICATION_FOREGROUND] = config.getValueAsUInt(_T("/notificationTextColor"), s_defaultColors[APP_COLOR_NOTIFICATION_FOREGROUND]);
       }
       else
       {
@@ -221,6 +231,8 @@ void LoadConfig()
       {
          g_mainWindowPosition = MainWindowPosition::AUTOMATIC;
       }
+
+      g_notificationTimeout = config.getValueAsUInt(_T("/notificationTimeout"), 60000);
 
       LoadMenuItems(&config);
    }

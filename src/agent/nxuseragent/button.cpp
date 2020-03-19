@@ -5,11 +5,18 @@
 /**
  * Create new button
  */
-Button::Button(HWND parent, RECT pos, const TCHAR *text, bool symbol, void(*handler)())
+Button::Button(HWND parent, RECT pos, const TCHAR *text, bool symbol, void(*handler)(void*), void *context)
 {
-   m_text = _tcsdup(text);
+   m_text = MemCopyString(text);
    m_symbol = symbol;
    m_handler = handler;
+   m_context = context;
+
+   m_backgroundColor = GetApplicationColor(APP_COLOR_BACKGROUND);
+   m_foregroundColor = GetApplicationColor(APP_COLOR_FOREGROUND);
+   m_selectionColor = GetApplicationColor(APP_COLOR_MENU_SELECTED);
+   m_highlightColor = GetApplicationColor(APP_COLOR_MENU_HIGHLIGHTED);
+
    m_hWnd = CreateWindow(BUTTON_CLASS_NAME, text,
       WS_CHILD, pos.left, pos.top, pos.right - pos.left + 1, pos.bottom - pos.top + 1,
       parent, NULL, g_hInstance, NULL);
@@ -33,8 +40,8 @@ void Button::execute()
 {
    m_selected = false;
    m_highlighted = false;
-   if (m_handler != NULL)
-      m_handler();
+   if (m_handler != nullptr)
+      m_handler(m_context);
 }
 
 /**
@@ -44,9 +51,8 @@ void Button::draw(HDC hdc) const
 {
    RECT rect;
    GetClientRect(m_hWnd, &rect);
-   SetBkColor(hdc, GetApplicationColor(m_selected ? APP_COLOR_MENU_SELECTED :
-      (m_highlighted ? APP_COLOR_MENU_HIGHLIGHTED : APP_COLOR_BACKGROUND)));
-   SetTextColor(hdc, GetApplicationColor(APP_COLOR_FOREGROUND));
+   SetBkColor(hdc, m_selected ? m_selectionColor : (m_highlighted ? m_highlightColor : m_backgroundColor));
+   SetTextColor(hdc, m_foregroundColor);
    SelectObject(hdc, m_symbol ? g_symbolFont : g_menuFont);
 
    HBRUSH brush = CreateSolidBrush(GetBkColor(hdc));
@@ -156,7 +162,7 @@ LRESULT Button::processMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK ButtonWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
    Button *b = (Button*)GetWindowLongPtr(hWnd, 0);
-   return (b != NULL) ? b->processMessage(uMsg, wParam, lParam) : DefWindowProc(hWnd, uMsg, wParam, lParam);
+   return (b != nullptr) ? b->processMessage(uMsg, wParam, lParam) : DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
 /**
@@ -170,7 +176,7 @@ bool InitButtons()
    wc.hInstance = g_hInstance;
    wc.cbWndExtra = sizeof(Button*);
    wc.lpszClassName = BUTTON_CLASS_NAME;
-   wc.hbrBackground = CreateSolidBrush(GetApplicationColor(APP_COLOR_BACKGROUND));
+   wc.hbrBackground = NULL;
    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
    if (RegisterClass(&wc) == 0)
    {

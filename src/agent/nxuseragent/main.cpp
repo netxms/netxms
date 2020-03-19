@@ -21,6 +21,11 @@ HINSTANCE g_hInstance;
 DWORD g_mainThreadId = 0;
 
 /**
+ * Shutdown condition
+ */
+CONDITION g_shutdownCondition = ConditionCreate(true);
+
+/**
  * Initialize logging
  */
 static void InitLogging()
@@ -199,7 +204,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
    icc.dwICC = ICC_LINK_CLASS;
 
    if ((wrc != 0) || !InitCommonControlsEx(&icc) || !InitMenu() || !SetupTrayIcon() ||
-       !PrepareApplicationWindow() || !PrepareMessageWindow() || !SetupSessionEventHandler() ||
+       !PrepareApplicationWindow() || !PrepareNotificationWindows() || !SetupSessionEventHandler() ||
        !InitButtons() || !StartEchoListener())
    {
       nxlog_write(NXLOG_ERROR, _T("NetXMS User Agent initialization failed"));
@@ -219,6 +224,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
       RegisterHotKey(NULL, 1, modifiers, keycode);
    }
 
+   THREAD notificationManager = ThreadCreateEx(NotificationManager, 0, nullptr);
+
+   bool startup = true;
    MSG msg;
    while(GetMessage(&msg, NULL, 0, 0))
    {
@@ -229,9 +237,17 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
          SetForegroundWindow(GetTrayWindow());
          OpenApplicationWindow(pt, true);
       }
-      else if (msg.message == NXUA_MSG_OPEN_MESSAGE_WINDOW)
+      else if (msg.message == NXUA_MSG_SHOW_NOTIFICATIONS)
       {
-         OpenMessageWindow();
+         if (startup && (msg.wParam != 0))
+         {
+            ShowPendingNotifications(true);
+            startup = false;
+         }
+         else
+         {
+            ShowPendingNotifications(false);
+         }
       }
       else
       {
@@ -240,19 +256,22 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
       }
    }
 
+   ConditionSet(g_shutdownCondition);
+
    if (s_echoListener != nullptr)
    {
       nxlog_debug(2, _T("Stopping echo listener"));
       s_echoListener->stop();
       delete s_echoListener;
    }
-
    StopAgentConnector();
    if (keycode != 0)
    {
       UnregisterHotKey(NULL, 1);
    }
    RemoveTrayIcon();
+   ThreadJoin(notificationManager);
+
    nxlog_write(NXLOG_INFO, _T("NetXMS user agent stopped"));
    nxlog_close();
    return 0;

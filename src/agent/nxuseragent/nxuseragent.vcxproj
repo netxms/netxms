@@ -159,7 +159,7 @@
     <ClCompile Include="desktop.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
-    <ClCompile Include="msgwnd.cpp" />
+    <ClCompile Include="notificationwnd.cpp" />
     <ClCompile Include="notifications.cpp" />
     <ClCompile Include="net.cpp" />
     <ClCompile Include="screenshot.cpp" />

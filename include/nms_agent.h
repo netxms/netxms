@@ -638,13 +638,18 @@ struct PolicyChangeNotification
  */
 struct LIBNXAGENT_EXPORTABLE ServerObjectKey
 {
-   UINT64 serverId;
-   UINT32 objectId;
+   uint64_t serverId;
+   uint32_t objectId;
 
-   ServerObjectKey(UINT64 _serverId, UINT32 _objectId)
+   ServerObjectKey(uint64_t _serverId, uint32_t _objectId)
    {
       serverId = _serverId;
       objectId = _objectId;
+   }
+
+   bool equals(const ServerObjectKey& k) const
+   {
+      return (serverId == k.serverId) && (objectId == k.objectId);
    }
 };
 
@@ -981,13 +986,13 @@ private:
    TCHAR *m_message;
    time_t m_startTime;
    time_t m_endTime;
-   bool m_onStartup;
+   bool m_startup;
    bool m_read;
 
 public:
-   UserAgentNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
-   UserAgentNotification(const NXCPMessage *msg, UINT32 baseId);
-   UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end, bool onStartup);
+   UserAgentNotification(uint64_t serverId, const NXCPMessage *msg, uint32_t baseId);
+   UserAgentNotification(const NXCPMessage *msg, uint32_t baseId);
+   UserAgentNotification(uint64_t serverId, uint32_t notificationId, TCHAR *message, time_t start, time_t end, bool startup);
    UserAgentNotification(const UserAgentNotification *src);
    ~UserAgentNotification();
 
@@ -995,11 +1000,13 @@ public:
    const TCHAR *getMessage() const { return m_message; }
    time_t getStartTime() const { return m_startTime; }
    time_t getEndTime() const { return m_endTime; }
+   bool isInstant() const { return m_startTime == 0; }
+   bool isStartup() const { return m_startup; }
    bool isRead() const { return m_read; }
 
    void setRead() { m_read = true; }
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   void fillMessage(NXCPMessage *msg, uint32_t baseId);
    void saveToDatabase(DB_HANDLE hdb);
 };
 

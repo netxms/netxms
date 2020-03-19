@@ -17,27 +17,30 @@
 
 /*** Messages ***/
 #define NXUA_MSG_TOOLTIP_NOTIFY        (WM_USER + 1)
-#define NXUA_MSG_OPEN_MESSAGE_WINDOW   (WM_USER + 2)
+#define NXUA_MSG_SHOW_NOTIFICATIONS    (WM_USER + 2)
 
 /*** Main window parameters ***/
-#define MARGIN_WIDTH             15
-#define BORDER_WIDTH             1
-#define WINDOW_VERTICAL_SPACING  12
-#define MENU_VERTICAL_SPACING    12
-#define INFO_AREA_SPACING        20
-#define MENU_HIGHLIGHT_MARGIN    2
-#define HEADER_HEIGHT            16
-#define FOOTER_HEIGHT            16
-#define INDICATOR_HEIGHT         8
-#define APP_ICON_SIZE            64
-#define APP_ICON_SPACING         12
-#define BUTTON_MARGIN_WIDTH      3
-#define BUTTON_MARGIN_HEIGHT     3
+#define MARGIN_WIDTH               15
+#define MARGIN_HEIGHT              15
+#define BORDER_WIDTH               1
+#define WINDOW_VERTICAL_SPACING    12
+#define WINDOW_HORIZONTAL_SPACING  12
+#define MENU_VERTICAL_SPACING      12
+#define INFO_AREA_SPACING          20
+#define MENU_HIGHLIGHT_MARGIN      2
+#define HEADER_HEIGHT              16
+#define FOOTER_HEIGHT              16
+#define INDICATOR_HEIGHT           8
+#define APP_ICON_SIZE              64
+#define APP_ICON_SPACING           12
+#define BUTTON_MARGIN_WIDTH        3
+#define BUTTON_MARGIN_HEIGHT       3
 
-#define FONT_SIZE_MESSAGE        12
-#define FONT_SIZE_MENU           13
-#define FONT_SIZE_SYMBOLS        12
-#define FONT_SIZE_FOOTER         8
+#define FONT_SIZE_MESSAGE          12
+#define FONT_SIZE_MENU             13
+#define FONT_SIZE_SYMBOLS          12
+#define FONT_SIZE_FOOTER           8
+#define FONT_SIZE_NOTIFICATION     13
 
 #define MENU_ITEM_CLASS_NAME  _T("NetXMS_UA_MenuItem")
 
@@ -70,7 +73,11 @@ enum ApplicationColorId
    APP_COLOR_MENU_BACKGROUND = 4,
    APP_COLOR_MENU_SELECTED = 5,
    APP_COLOR_MENU_HIGHLIGHTED = 6,
-   APP_COLOR_MENU_FOREGROUND = 7
+   APP_COLOR_MENU_FOREGROUND = 7,
+   APP_COLOR_NOTIFICATION_BACKGROUND = 8,
+   APP_COLOR_NOTIFICATION_FOREGROUND = 9,
+   APP_COLOR_NOTIFICATION_SELECTED = 10,
+   APP_COLOR_NOTIFICATION_HIGHLIGHTED = 11
 };
 
 /**
@@ -91,7 +98,7 @@ struct UserSession
  */
 class MenuItem
 {
-   DISABLE_COPY_CTOR(MenuItem);
+   DISABLE_COPY_CTOR(MenuItem)
 
 protected:
    TCHAR *m_name;
@@ -148,7 +155,7 @@ public:
  */
 class Button
 {
-   DISABLE_COPY_CTOR(Button);
+   DISABLE_COPY_CTOR(Button)
 
 protected:
    TCHAR *m_text;
@@ -156,16 +163,25 @@ protected:
    bool m_highlighted;
    bool m_selected;
    bool m_symbol;
-   void (*m_handler)();
+   void (*m_handler)(void*);
+   void *m_context;
+   COLORREF m_backgroundColor;
+   COLORREF m_foregroundColor;
+   COLORREF m_selectionColor;
+   COLORREF m_highlightColor;
 
    void draw(HDC hdc) const;
    void trackMouseEvent();
 
 public:
-   Button(HWND parent, RECT pos, const TCHAR *text, bool symbol, void (*handler)() = NULL);
+   Button(HWND parent, RECT pos, const TCHAR *text, bool symbol, void (*handler)(void*) = nullptr, void *context = nullptr);
    virtual ~Button();
 
    void setSelected(bool selected);
+   void setBackgroundColor(COLORREF color) { m_backgroundColor = color; }
+   void setForegroundColor(COLORREF color) { m_foregroundColor = color; }
+   void setSelectionColor(COLORREF color) { m_selectionColor = color; }
+   void setHighlightColor(COLORREF color) { m_highlightColor = color; }
 
    virtual void execute();
    virtual LRESULT processMessage(UINT msg, WPARAM wParam, LPARAM lParam);
@@ -191,7 +207,7 @@ void ActivateMenuItem(HWND hParentWnd, MenuItem *item, MenuItem *selection = NUL
 void ExecuteCurrentMenuItem();
 void ExecuteReturnToParentMenu();
 void OpenApplicationWindow(POINT pt, bool hotkeyOpen);
-void CloseApplicationWindow();
+void CloseApplicationWindow(void *context = nullptr);
 COLORREF GetApplicationColor(ApplicationColorId colorId);
 const TCHAR *GetWelcomeMessage();
 HICON GetApplicationIcon();
@@ -205,13 +221,15 @@ void TakeScreenshot(NXCPMessage *response);
 void StartAgentConnector();
 void StopAgentConnector();
 void SendLoginMessage();
-void UpdateNotifications(NXCPMessage *request);
-void AddNotification(NXCPMessage *request);
-void RemoveNotification(NXCPMessage *request);
-ObjectArray<UserAgentNotification> *GetNotificationsForDisplay();
+THREAD_RESULT THREAD_CALL NotificationManager(void *arg);
+void UpdateNotifications(const NXCPMessage *request);
+void AddNotification(const NXCPMessage *request);
+void RemoveNotification(const NXCPMessage *request);
+ObjectArray<UserAgentNotification> *GetNotificationsForDisplay(bool startup);
+void MarkNotificationAsRead(const ServerObjectKey& id);
+void ShowPendingNotifications(bool startup);
 void ShowTrayNotification(const TCHAR *text);
-bool PrepareMessageWindow();
-void OpenMessageWindow();
+bool PrepareNotificationWindows();
 bool InitButtons();
 void DrawTextOnDesktop(const TCHAR *text);
 void UpdateDesktopWallpaper();
@@ -219,13 +237,16 @@ void UpdateDesktopWallpaper();
 /*** Global variables ***/
 extern HINSTANCE g_hInstance;
 extern DWORD g_mainThreadId;
+extern CONDITION g_shutdownCondition;
 extern HFONT g_menuFont;
 extern HFONT g_messageFont;
+extern HFONT g_notificationFont;
 extern HFONT g_symbolFont;
 extern bool g_reloadConfig;
 extern bool g_connectedToAgent;
 extern bool g_closeOnDeactivate;
 extern TCHAR *g_desktopWallpaper;
 extern MainWindowPosition g_mainWindowPosition;
+extern uint32_t g_notificationTimeout;
 
 #endif
