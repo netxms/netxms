@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.LocalSelectionTransfer;
@@ -113,8 +112,8 @@ public class ObjectTree extends Composite
    {
       super(parent, style);
 
-      IDialogSettings settings = ConsoleSharedData.getSettings();
-      objectsFullySync = settings.getBoolean("ObjectsFullSync");
+      IPreferenceStore store = ConsoleSharedData.getSettings();
+      objectsFullySync = store.getBoolean("ObjectsFullSync");
 
       session = ConsoleSharedData.getSession();
       refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), this, new Runnable() {
