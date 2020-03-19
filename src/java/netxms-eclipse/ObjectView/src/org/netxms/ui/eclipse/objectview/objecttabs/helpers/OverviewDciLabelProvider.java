@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
@@ -60,6 +61,10 @@ public class OverviewDciLabelProvider extends LabelProvider implements ITableLab
             return dci.getDescription();
          case 1:
             return dci.getValue();
+         case 2:            
+            if (dci.getTimestamp().getTime() <= 1000)
+               return null;
+            return RegionalSettings.getDateTimeFormat().format(dci.getTimestamp());            
          default:
             return null;
       }
