@@ -18,14 +18,19 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.preferencepages;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Preferences page for object browser
@@ -33,6 +38,7 @@ import org.netxms.ui.eclipse.objectbrowser.Activator;
 public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
    private BooleanFieldEditor useServerFilter;
+   private BooleanFieldEditor makeFullSync;
    private Composite autoApplyParent;
    private Composite delayParent;
    private Composite minLengthParent;
@@ -55,6 +61,9 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
    @Override
    protected void createFieldEditors()
    {
+      makeFullSync = new BooleanFieldEditor("ObjectsFullSync", "Full object synchronization on startup", getFieldEditorParent()); //$NON-NLS-1$
+      addField(makeFullSync); 
+      
       addField(new BooleanFieldEditor("ObjectBrowser.showStatusIndicator", "Show &status indicator", getFieldEditorParent())); //$NON-NLS-1$
       addField(new BooleanFieldEditor("ObjectBrowser.showFilter", "Show &filter", getFieldEditorParent())); //$NON-NLS-1$
       
@@ -102,5 +111,30 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
       autoApply.setEnabled(enabled, autoApplyParent);
       delay.setEnabled(enabled, delayParent);
       minLength.setEnabled(enabled, minLengthParent);
+
+      boolean fullySync = makeFullSync.getBooleanValue();
+      IPreferenceStore globalStore = ConsoleSharedData.getSettings();
+      globalStore.setValue("ObjectsFullSync", fullySync);
+      if (fullySync)
+      {
+         final NXCSession session = ConsoleSharedData.getSession();
+         ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID, null) {
+            
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               if (!session.isObjectsSynchronized())
+                  session.syncObjects();
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Failed to synchronize all objects";
+            }
+         };
+         job.setUser(false);
+         job.start();
+      }
    }
 }

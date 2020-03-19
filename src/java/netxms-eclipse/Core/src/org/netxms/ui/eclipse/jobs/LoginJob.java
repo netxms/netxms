@@ -27,8 +27,8 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
@@ -125,8 +125,8 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(1);
          
          monitor.setTaskName(Messages.get().LoginJob_sync_objects);
-         IDialogSettings settings = ConsoleSharedData.getSettings();
-         boolean fullySync = settings.getBoolean("ObjectsFullSync");
+         IPreferenceStore store = ConsoleSharedData.getSettings();
+         boolean fullySync = store.getBoolean("ObjectsFullSync");
          session.syncObjects(fullySync);
          monitor.worked(1);
 

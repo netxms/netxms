@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.shared;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
-import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
@@ -141,8 +141,8 @@ public class ConsoleSharedData
    /**
     * @param trayIcon the trayIcon to set
     */
-   public static IDialogSettings getSettings()
-   {
-      return Activator.getDefault().getDialogSettings();
+   public static IPreferenceStore getSettings()
+   {      
+      return Activator.getDefault().getPreferenceStore();
    }
 }

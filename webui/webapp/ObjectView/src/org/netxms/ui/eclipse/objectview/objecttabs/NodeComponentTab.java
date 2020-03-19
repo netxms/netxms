@@ -19,7 +19,7 @@
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -55,8 +55,8 @@ public abstract class NodeComponentTab extends ObjectTab
    {
       session = ConsoleSharedData.getSession();
 
-      IDialogSettings coreSettings = ConsoleSharedData.getSettings();
-      objectsFullySync = coreSettings.getBoolean("ObjectsFullSync");
+      IPreferenceStore coreStore = ConsoleSharedData.getSettings();
+      objectsFullySync = coreStore.getBoolean("ObjectsFullSync");
 
       // Create tab main area
       mainArea = new Composite(parent, SWT.BORDER);
