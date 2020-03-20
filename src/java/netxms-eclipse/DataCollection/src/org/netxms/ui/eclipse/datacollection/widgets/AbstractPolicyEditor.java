@@ -17,6 +17,7 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    private Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
    private FindReplaceAction actionFindReplace = null;
    private IViewPart viewPart;
+   private boolean enableModifyListeners = true;
 
    /**
     * Create abstract policy editor
@@ -53,8 +54,9 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
     */
    protected void fireModifyListeners()
    {
-      for(PolicyModifyListener l : listeners)
-         l.modifyParser();
+      if (enableModifyListeners)
+         for(PolicyModifyListener l : listeners)
+            l.modifyParser();
    }
    
    /**
@@ -75,7 +77,9 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    public void setPolicy(AgentPolicy policy)
    {
       this.policy = policy;   
+      enableModifyListeners = false;
       updateControlFromPolicy();
+      enableModifyListeners = true;
    }
 
    /**

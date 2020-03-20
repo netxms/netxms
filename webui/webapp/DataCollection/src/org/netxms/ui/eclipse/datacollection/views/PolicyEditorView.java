@@ -54,6 +54,9 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.MessageBar;
 
+/**
+ * Agent policy editor
+ */
 public class PolicyEditorView extends ViewPart implements ISaveablePart2, SessionListener
 {
    public static final String ID = "org.netxms.ui.eclipse.datacollection.views.policy_editor"; //$NON-NLS-1$
@@ -478,7 +481,6 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                   {
                      policy = (AgentPolicy)n.getObject();
                      editor.setPolicy(policy);
-                     editor.updateControlFromPolicy();
                   }
                   else if (!saveInProgress)
                   { 

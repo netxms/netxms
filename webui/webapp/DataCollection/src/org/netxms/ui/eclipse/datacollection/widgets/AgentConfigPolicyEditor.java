@@ -118,7 +118,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    public AgentPolicy updatePolicyFromControl()
    {
       getPolicy().setContent(editor.getText());
-      if(buttonExpandMacro.getSelection())
+      if (buttonExpandMacro.getSelection())
       {
          flags |= AgentPolicy.EXPAND_MACRO;
       }

@@ -65,6 +65,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppPolicy;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
@@ -90,11 +91,16 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private ColorSelector menuHighligtColor;
    private ColorSelector menuSelectionColor;
    private ColorSelector menuTextColor;
+   private ColorSelector notificationBackgroundColor;
+   private ColorSelector notificationHighligtColor;
+   private ColorSelector notificationSelectionColor;
+   private ColorSelector notificationTextColor;
    private LabeledText desktopWallpaperFile;
    private LabeledText welcomeMessageText;
    private Button customColorSchemaCheckbox;
    private Button closeOnDeactivateCheckbox;
    private Combo windowPositioning;
+   private LabeledSpinner notificationTimeout;
    private Action addSubMenuAction;
    private Action addItemAction;
    private Action deleteAction;
@@ -159,13 +165,13 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       colorSelectors.setText("Color schema");
       layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.numColumns = 2;
+      layout.numColumns = 3;
       layout.makeColumnsEqualWidth = true;
       colorSelectors.setLayout(layout);
       colorSelectors.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 
       GridData gd = new GridData();
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = layout.numColumns;
       customColorSchemaCheckbox = new Button(colorSelectors, SWT.CHECK);
       customColorSchemaCheckbox.setText("Use custom color schema");
       customColorSchemaCheckbox.setLayoutData(gd);
@@ -179,6 +185,10 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu text", WidgetHelper.DEFAULT_LAYOUT_DATA);
       menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
       menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      notificationBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification background", WidgetHelper.DEFAULT_LAYOUT_DATA);   
+      notificationTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification text", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      notificationSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      notificationHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
       
       welcomeMessageText = new LabeledText(topArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
       welcomeMessageText.setLabel("Welcome message");
@@ -187,12 +197,18 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       Group windowBehaviorGroup = new Group(topArea, SWT.NONE);
       windowBehaviorGroup.setText("Window behavior");
       windowBehaviorGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
-      windowBehaviorGroup.setLayout(new GridLayout());
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      windowBehaviorGroup.setLayout(layout);
       
       closeOnDeactivateCheckbox = new Button(windowBehaviorGroup, SWT.CHECK);
       closeOnDeactivateCheckbox.setText("Close on &deactivate");
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      closeOnDeactivateCheckbox.setLayoutData(gd);
       
-      windowPositioning = WidgetHelper.createLabeledCombo(windowBehaviorGroup, SWT.DROP_DOWN | SWT.READ_ONLY, "Positioning", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      windowPositioning = WidgetHelper.createLabeledCombo(windowBehaviorGroup, SWT.DROP_DOWN | SWT.READ_ONLY, "Positioning",
+            new GridData(SWT.FILL, SWT.BOTTOM, true, false));
       windowPositioning.add("Undefined");
       windowPositioning.add("Automatic");
       windowPositioning.add("Top - Left");
@@ -206,6 +222,11 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       windowPositioning.add("Bottom - Right");
       windowPositioning.select(0);
       
+      notificationTimeout = new LabeledSpinner(windowBehaviorGroup, SWT.NONE);
+      notificationTimeout.setLabel("Notification timeout");
+      notificationTimeout.setRange(0, 3600);
+      notificationTimeout.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+
       desktopWallpaperFile = new LabeledText(topArea, SWT.NONE);
       desktopWallpaperFile.setLabel("Desktop wallpaper file name");
       gd = new GridData();
@@ -230,7 +251,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
             editAction.setEnabled(!selection.isEmpty());            
          }
       });
-      
+
       updateControlFromPolicy();      
 
       IPropertyChangeListener colorChangeListener = new IPropertyChangeListener() {
@@ -248,6 +269,10 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuTextColor.addListener(colorChangeListener); 
       menuHighligtColor.addListener(colorChangeListener); 
       menuSelectionColor.addListener(colorChangeListener);
+      notificationBackgroundColor.addListener(colorChangeListener);
+      notificationTextColor.addListener(colorChangeListener);
+      notificationHighligtColor.addListener(colorChangeListener);
+      notificationSelectionColor.addListener(colorChangeListener);
 
       ModifyListener textModifyListener = new ModifyListener() {
          @Override
@@ -258,6 +283,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       };
       welcomeMessageText.getTextControl().addModifyListener(textModifyListener);
       desktopWallpaperFile.getTextControl().addModifyListener(textModifyListener);
+      notificationTimeout.getSpinnerControl().addModifyListener(textModifyListener);
 
       customColorSchemaCheckbox.addSelectionListener(new SelectionListener() {
          @Override
@@ -272,6 +298,10 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
             menuTextColor.setEnabled(enableSelection);
             menuHighligtColor.setEnabled(enableSelection);
             menuSelectionColor.setEnabled(enableSelection);
+            notificationBackgroundColor.setEnabled(enableSelection);
+            notificationTextColor.setEnabled(enableSelection);
+            notificationHighligtColor.setEnabled(enableSelection);
+            notificationSelectionColor.setEnabled(enableSelection);
             fireModifyListeners();
          }
          
@@ -625,6 +655,14 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          menuSelectionColor.setColorValue(ColorConverter.rgbFromInt(policyData.menuSelectionColor));
       if (policyData.menuTextColor != null)
          menuTextColor.setColorValue(ColorConverter.rgbFromInt(policyData.menuTextColor));
+      if (policyData.notificationBackgroundColor != null)
+         notificationBackgroundColor.setColorValue(ColorConverter.rgbFromInt(policyData.notificationBackgroundColor));
+      if (policyData.notificationHighligtColor != null)
+         notificationHighligtColor.setColorValue(ColorConverter.rgbFromInt(policyData.notificationHighligtColor));
+      if (policyData.notificationSelectionColor != null)
+         notificationSelectionColor.setColorValue(ColorConverter.rgbFromInt(policyData.notificationSelectionColor));
+      if (policyData.notificationTextColor != null)
+         notificationTextColor.setColorValue(ColorConverter.rgbFromInt(policyData.notificationTextColor));
       
       customColorSchemaCheckbox.setSelection(policyData.customColorSchema);
       backgroundColor.setEnabled(policyData.customColorSchema);
@@ -635,6 +673,10 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuTextColor.setEnabled(policyData.customColorSchema);
       menuHighligtColor.setEnabled(policyData.customColorSchema);
       menuSelectionColor.setEnabled(policyData.customColorSchema);
+      notificationBackgroundColor.setEnabled(policyData.customColorSchema);
+      notificationTextColor.setEnabled(policyData.customColorSchema);
+      notificationHighligtColor.setEnabled(policyData.customColorSchema);
+      notificationSelectionColor.setEnabled(policyData.customColorSchema);
 
       welcomeMessageText.setText(policyData.welcomeMessage != null ? policyData.welcomeMessage : "");
       
@@ -642,6 +684,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
 
       closeOnDeactivateCheckbox.setSelection(policyData.closeOnDeactivate);
       windowPositioning.select(windowPositionIndexFromValue(policyData.mainWindowPosition));
+      notificationTimeout.setSelection((policyData.notificationTimeout != null) ? policyData.notificationTimeout / 1000 : 0);
 
       viewer.setInput(new Object[] { policyData.menu });
    }
@@ -666,10 +709,16 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       policyData.menuHighligtColor = ColorConverter.rgbToInt(menuHighligtColor.getColorValue());
       policyData.menuSelectionColor = ColorConverter.rgbToInt(menuSelectionColor.getColorValue());
       policyData.menuTextColor = ColorConverter.rgbToInt(menuTextColor.getColorValue());
-      
+      policyData.notificationBackgroundColor = ColorConverter.rgbToInt(notificationBackgroundColor.getColorValue());
+      policyData.notificationHighligtColor = ColorConverter.rgbToInt(notificationHighligtColor.getColorValue());
+      policyData.notificationSelectionColor = ColorConverter.rgbToInt(notificationSelectionColor.getColorValue());
+      policyData.notificationTextColor = ColorConverter.rgbToInt(notificationTextColor.getColorValue());
+
       policyData.closeOnDeactivate = closeOnDeactivateCheckbox.getSelection();
       policyData.mainWindowPosition = WINDOW_POSITION_CODES[windowPositioning.getSelectionIndex()];
-      
+      int timeout = notificationTimeout.getSelection();
+      policyData.notificationTimeout = (timeout > 0) ? timeout * 1000 : null;
+
       try
       {
          getPolicy().setContent(policyData.createXml());

@@ -486,7 +486,6 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                   {
                      policy = (AgentPolicy)n.getObject();
                      editor.setPolicy(policy);
-                     editor.updateControlFromPolicy();
                   }
                   else if (!saveInProgress)
                   { 
