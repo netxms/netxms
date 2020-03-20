@@ -1028,7 +1028,7 @@ static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
          if (task->isDisabled() || task->isRunning())
             continue;
 
-         if (MatchSchedule(task->getSchedule(), &currLocal, now))
+         if (MatchSchedule(task->getSchedule(), NULL, &currLocal, now))
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("RecurrentScheduler: starting scheduled task [%u] with handler \"%s\" (schedule \"%s\")"),
                      task->getId(), task->getTaskHandlerId().cstr(), task->getSchedule().cstr());

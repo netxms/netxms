@@ -976,7 +976,7 @@ bool LogParser::isExclusionPeriod()
 #endif
    for(int i = 0; i < m_exclusionSchedules.size(); i++)
    {
-      if (MatchSchedule(m_exclusionSchedules.get(i), &localTime, now))
+      if (MatchSchedule(m_exclusionSchedules.get(i), NULL, &localTime, now))
          return true;
    }
    return false;

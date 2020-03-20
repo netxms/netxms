@@ -37,6 +37,28 @@ bool g_ignoreAgentDbErrors = FALSE;
  */
 static DB_HANDLE s_db = NULL;
 
+
+/**
+ * Upgrade from V12 to V13
+ */
+static BOOL H_UpgradeFromV12(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(_T("ALTER TABLE dc_config ADD schedule_type integer")));
+   CHK_EXEC(Query(_T("UPDATE dc_config SET schedule_type=0")));
+   CHK_EXEC(DBSetNotNullConstraint(s_db, _T("dc_config"), _T("schedule_type")));
+
+   static TCHAR query[] =
+         _T("CREATE TABLE dc_schedules (")
+         _T("  server_id number(20) not null,")
+         _T("  dci_id integer not null,")
+         _T("  schedule varchar(255) not null)");
+   CHK_EXEC(Query(query));
+   CHK_EXEC(Query(_T("CREATE INDEX idx_dc_schedules ON dc_schedules(server_id,dci_id)")));
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 13));
+   return TRUE;
+}
+
 /**
  * Upgrade from V11 to V12
  */
@@ -444,6 +466,7 @@ static struct
    { 9, 10, H_UpgradeFromV9 },
    { 10, 11, H_UpgradeFromV10 },
    { 11, 12, H_UpgradeFromV11 },
+   { 12, 13, H_UpgradeFromV12 },
    { 0, 0, NULL }
 };
 

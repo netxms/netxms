@@ -93,6 +93,13 @@ bool WriteMetadata(const TCHAR *name, INT32 value)
  */
 static const TCHAR *s_dbInitQueries[] =
 {
+   _T("CREATE TABLE dc_schedules (")
+   _T("  server_id number(20) not null,")
+   _T("  dci_id integer not null,")
+   _T("  schedule varchar(255) not null"),
+
+   _T("CREATE INDEX idx_dc_schedules ON dc_schedules(server_id,dci_id)"),
+
    _T("CREATE TABLE user_agent_notifications (")
    _T("  server_id number(20) not null,")
    _T("  notification_id integer not null,")
@@ -145,6 +152,7 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  snmp_target_guid varchar(36) not null,")
    _T("  snmp_raw_type integer not null,")
    _T("  backup_proxy_id integer null,")
+   _T("  schedule_type integer not null,")
    _T("  PRIMARY KEY(server_id,dci_id))"),
 
    _T("CREATE TABLE dc_queue (")

@@ -672,7 +672,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
 #else
             struct tm *ltm = localtime(&now);
 #endif
-            if (!MatchSchedule(schedule, ltm, now))
+            if (!MatchSchedule(schedule, NULL, ltm, now))
             {
                sleepTime = 60000;
                continue;

@@ -1542,6 +1542,12 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
       info->extraInfoFieldId += 1000;
    }
 
+   if(dco->isAdvancedSchedule())
+   {
+      dco->fillScheduleInMessage(info->extraInfoFieldId, info->msg);
+   }
+   info->extraInfoFieldId += 100;
+
    info->count++;
 }
 

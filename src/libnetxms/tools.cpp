@@ -2165,39 +2165,49 @@ check_step:
 }
 
 /**
- * Match cron-style schedule
+ * Match schedule to current time
  */
-bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, struct tm *currTime, time_t now)
+bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currTime, time_t now)
 {
-   TCHAR value[256];
+   TCHAR szValue[256];
 
    // Minute
-   const TCHAR *curr = ExtractWord(schedule, value);
-   if (!MatchScheduleElement(value, currTime->tm_min, 59, currTime, now, false))
+   const TCHAR *pszCurr = ExtractWord(schedule, szValue);
+   if (!MatchScheduleElement(szValue, currTime->tm_min, 59, currTime, now, false))
       return false;
 
    // Hour
-   curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_hour, 23, currTime, now, false))
+   pszCurr = ExtractWord(pszCurr, szValue);
+   if (!MatchScheduleElement(szValue, currTime->tm_hour, 23, currTime, now, false))
       return false;
 
    // Day of month
-   curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_mday, GetLastMonthDay(currTime), currTime, now, false))
+   pszCurr = ExtractWord(pszCurr, szValue);
+   if (!MatchScheduleElement(szValue, currTime->tm_mday, GetLastMonthDay(currTime), currTime, now, false))
       return false;
 
    // Month
-   curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_mon + 1, 12, currTime, now, false))
+   pszCurr = ExtractWord(pszCurr, szValue);
+   if (!MatchScheduleElement(szValue, currTime->tm_mon + 1, 12, currTime, now, false))
       return false;
 
    // Day of week
-   ExtractWord(curr, value);
-   for(int i = 0; value[i] != 0; i++)
-      if (value[i] == _T('7'))
-         value[i] = _T('0');
-   if (!MatchScheduleElement(value, currTime->tm_wday, 6, currTime, now, false))
+   pszCurr = ExtractWord(pszCurr, szValue);
+   for(int i = 0; szValue[i] != 0; i++)
+      if (szValue[i] == _T('7'))
+         szValue[i] = _T('0');
+   if (!MatchScheduleElement(szValue, currTime->tm_wday, 6, currTime, now, false))
       return false;
+
+   // Seconds
+   szValue[0] = _T('\0');
+   ExtractWord(pszCurr, szValue);
+   if (szValue[0] != _T('\0'))
+   {
+      if (withSeconds != nullptr)
+         *withSeconds = true;
+      return MatchScheduleElement(szValue, currTime->tm_sec, 59, currTime, now, true);
+   }
 
    return true;
 }

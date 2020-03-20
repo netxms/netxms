@@ -302,7 +302,7 @@ protected:
 
    bool loadAccessList(DB_HANDLE hdb);
 	bool loadCustomSchedules(DB_HANDLE hdb);
-   bool matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currLocalTime, time_t currTimestamp);
+	String expandSchedule(const TCHAR *schedule);
 
    void updateTimeIntervalsInternal();
 
@@ -385,6 +385,7 @@ public:
    void clearBusyFlag() { m_busy = 0; }
    void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
    void updateTimeIntervals() { lock(); updateTimeIntervalsInternal(); unlock(); }
+   void fillScheduleInMessage(uint32_t base, NXCPMessage *msg) const;
 
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);

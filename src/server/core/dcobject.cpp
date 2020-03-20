@@ -553,14 +553,9 @@ void DCObject::setStatus(int status, bool generateEvent)
    m_status = (BYTE)status;
 }
 
-/**
- * Match schedule to current time
- */
-bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currLocalTime, time_t currTimestamp)
+String DCObject::expandSchedule(const TCHAR *schedule)
 {
-   TCHAR szValue[256], expandedSchedule[1024];
-   const TCHAR *realSchedule = schedule;
-
+   StringBuffer expandedSchedule;
    if (_tcslen(schedule) > 4 && !_tcsncmp(schedule, _T("%["), 2))
    {
       TCHAR *scriptName = _tcsdup(schedule + 2);
@@ -583,74 +578,34 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
                      const TCHAR *temp = result->getValueAsCString();
                      if (temp != nullptr)
                      {
-                        DbgPrintf(7, _T("DCObject::matchSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
-                        _tcslcpy(expandedSchedule, temp, 1024);
-                        realSchedule = expandedSchedule;
-                        success = true;
+                        DbgPrintf(7, _T("DCObject::expandSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
+                        expandedSchedule = StringBuffer(temp);
                      }
                   }
                }
                else
                {
-                  DbgPrintf(4, _T("DCObject::matchSchedule(%%[%s]) script execution failed (%s)"), scriptName, vm->getErrorText());
+                  DbgPrintf(4, _T("DCObject::expandSchedule(%%[%s]) script execution failed (%s)"), scriptName, vm->getErrorText());
                }
                delete vm;
             }
          }
          else
          {
-            DbgPrintf(4, _T("DCObject::matchSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name.cstr());
+            DbgPrintf(4, _T("DCObject::expandSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name.cstr());
          }
          free(scriptName);
-         if (!success)
-            return false;
       }
       else
       {
-         DbgPrintf(4, _T("DCObject::matchSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name.cstr());
-         return false;
+         DbgPrintf(4, _T("DCObject::expandSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name.cstr());
       }
    }
-
-   // Minute
-   const TCHAR *pszCurr = ExtractWord(realSchedule, szValue);
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_min, 59, currLocalTime, currTimestamp, false))
-      return false;
-
-   // Hour
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_hour, 23, currLocalTime, currTimestamp, false))
-      return false;
-
-   // Day of month
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_mday, GetLastMonthDay(currLocalTime), currLocalTime, currTimestamp, false))
-      return false;
-
-   // Month
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_mon + 1, 12, currLocalTime, currTimestamp, false))
-      return false;
-
-   // Day of week
-   pszCurr = ExtractWord(pszCurr, szValue);
-   for(int i = 0; szValue[i] != 0; i++)
-      if (szValue[i] == _T('7'))
-         szValue[i] = _T('0');
-   if (!MatchScheduleElement(szValue, currLocalTime->tm_wday, 6, currLocalTime, currTimestamp, false))
-      return false;
-
-   // Seconds
-   szValue[0] = _T('\0');
-   ExtractWord(pszCurr, szValue);
-   if (szValue[0] != _T('\0'))
+   else
    {
-      if (withSeconds != nullptr)
-         *withSeconds = true;
-      return MatchScheduleElement(szValue, currLocalTime->tm_sec, 59, currLocalTime, currTimestamp, true);
+      expandedSchedule = StringBuffer(schedule);
    }
-
-   return true;
+   return expandedSchedule;
 }
 
 /**
@@ -713,7 +668,9 @@ bool DCObject::isReadyForPolling(time_t currTime)
             for(int i = 0; i < m_schedules->size(); i++)
             {
                bool withSeconds = false;
-               if (matchSchedule(m_schedules->get(i), &withSeconds, &tmCurrLocal, currTime))
+
+               String schedule = expandSchedule(m_schedules->get(i));
+               if (MatchSchedule(schedule, &withSeconds, &tmCurrLocal, currTime))
                {
                   // TODO: do we have to take care about the schedules with seconds
                   // that trigger polling too often?
@@ -1620,6 +1577,17 @@ shared_ptr<DCObjectInfo> DCObject::createDescriptor() const
 shared_ptr<DCObjectInfo> DCObject::createDescriptorInternal() const
 {
    return shared_ptr<DCObjectInfo>(new DCObjectInfo(this));
+}
+
+void DCObject::fillScheduleInMessage(uint32_t base, NXCPMessage *msg) const
+{
+   msg->setField(base++, m_schedules->size());
+
+   for(int i = 0; i < m_schedules->size(); i++)
+   {
+      msg->setField(base++, m_schedules->get(i));
+   }
+
 }
 
 /**

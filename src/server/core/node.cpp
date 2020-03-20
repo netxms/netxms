@@ -9413,7 +9413,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       }
    }
 
-   if (m_status != STATUS_UNMANAGED )
+   if (m_status != STATUS_UNMANAGED)
    {
       uint32_t count = 0;
       uint32_t baseInfoFieldId = VID_ELEMENT_LIST_BASE;
@@ -9435,6 +9435,11 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
             msg.setFieldFromTime(baseInfoFieldId++, dco->getLastPollTime());
             baseInfoFieldId += 4;
             extraInfoFieldId += 1000;
+            if(dco->isAdvancedSchedule())
+            {
+               dco->fillScheduleInMessage(extraInfoFieldId, &msg);
+            }
+            extraInfoFieldId += 100;
             count++;
          }
       }

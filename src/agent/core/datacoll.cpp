@@ -153,6 +153,15 @@ struct DataCollectionStatementSet
    DB_STATEMENT deleteItem;
    DB_STATEMENT insertColumn;
    DB_STATEMENT deleteColumns;
+   DB_STATEMENT deleteSchedules;
+   DB_STATEMENT insertSchedules;
+};
+
+enum class ScheduleType
+{
+   NONE = 0,
+   MINUTES = 1,
+   SECONDS = 2
 };
 
 /**
@@ -175,6 +184,9 @@ private:
    time_t m_lastPollTime;
    uint32_t m_backupProxyId;
    ObjectArray<SNMPTableColumnDefinition> *m_tableColumns;
+   StringList m_schedules;
+   ScheduleType m_scheduleType;
+   time_t m_tLastCheck;
 
 public:
    DataCollectionItem(UINT64 serverId, NXCPMessage *msg, uint32_t baseId, uint32_t extBaseId, bool hasExtraData);
@@ -205,14 +217,70 @@ public:
    void startDataCollection() { m_busy = 1; incRefCount(); }
    void finishDataCollection() { m_busy = 0; decRefCount(); }
 
-   uint32_t getTimeToNextPoll(time_t now) const
+   uint32_t getTimeToNextPoll(time_t now)
    {
       if (m_busy) // being polled now - time to next poll should not be less than full polling interval
          return m_pollingInterval;
-      time_t diff = now - m_lastPollTime;
-      return (diff >= m_pollingInterval) ? 0 : m_pollingInterval - static_cast<uint32_t>(diff);
+
+      if(m_scheduleType == ScheduleType::NONE)
+      {
+         time_t diff = now - m_lastPollTime;
+         return (diff >= m_pollingInterval) ? 0 : m_pollingInterval - static_cast<uint32_t>(diff);
+      }
+      else
+      {
+         bool scheduleMatched = false;
+         struct tm tmCurrLocal, tmLastLocal;
+#if HAVE_LOCALTIME_R
+         localtime_r(&now, &tmCurrLocal);
+         localtime_r(&m_tLastCheck, &tmLastLocal);
+#else
+         memcpy(&tmCurrLocal, localtime(&currTime), sizeof(struct tm));
+         memcpy(&tmLastLocal, localtime(&m_tLastCheck), sizeof(struct tm));
+#endif
+
+         for (int i = 0; i < m_schedules.size(); i++)
+         {
+            bool withSeconds = false;
+            if (MatchSchedule(m_schedules.get(i), &withSeconds, &tmCurrLocal, now))
+            {
+               if (withSeconds || (now - m_tLastCheck >= 60) || (tmCurrLocal.tm_min != tmLastLocal.tm_min))
+               {
+                  scheduleMatched = true;
+                  break;
+               }
+            }
+         }
+         m_tLastCheck = now;
+
+         if (scheduleMatched)
+            return 0;
+         if (m_scheduleType == ScheduleType::SECONDS)
+            return 1;
+         else
+            return 60 - (now % 60);
+
+      }
    }
 };
+
+static bool UsesSeconds(const TCHAR *schedule)
+{
+   TCHAR szValue[256];
+
+   const TCHAR *pszCurr = ExtractWord(schedule, szValue);
+   for (int i = 0; i < 5; i++)
+   {
+      szValue[0] = _T('\0');
+      pszCurr = ExtractWord(pszCurr, szValue);
+      if (szValue[0] == _T('\0'))
+      {
+         return false;
+      }
+   }
+
+   return true;
+}
 
 /**
  * Create data collection item from NXCP mesage
@@ -231,6 +299,7 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
    m_snmpRawValueType = static_cast<uint8_t>(msg->getFieldAsUInt16(baseId + 8));
    m_backupProxyId = msg->getFieldAsInt32(baseId + 9);
    m_busy = 0;
+   m_tLastCheck = 0;
 
    if (hasExtraData && (m_origin == DS_SNMP_AGENT))
    {
@@ -245,6 +314,7 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
             m_tableColumns->add(new SNMPTableColumnDefinition(msg, fieldId));
             fieldId += 10;
          }
+         fieldId += (99 - count) * 10;
       }
       else
       {
@@ -256,10 +326,29 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
       m_snmpVersion = SNMP_VERSION_DEFAULT;
       m_tableColumns = nullptr;
    }
+   extBaseId += 1000;
+
+   int32_t size = msg->getFieldAsInt32(extBaseId++);
+   if (size > 0)
+   {
+      m_scheduleType = ScheduleType::MINUTES;
+      for(int i = 0; i < size; i++)
+      {
+         TCHAR *tmp = msg->getFieldAsString(extBaseId++);
+         if(UsesSeconds(tmp))
+            m_scheduleType = ScheduleType::SECONDS;
+
+         m_schedules.addPreallocated(tmp);
+      }
+   }
+   else
+   {
+      m_scheduleType = ScheduleType::NONE;
+   }
 }
 
 /**
- * Data is selected in this order: server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,snmp_version
+ * Data is selected in this order: server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,snmp_version,schedule_type
  */
 DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
 {
@@ -275,7 +364,9 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_snmpRawValueType = static_cast<uint8_t>(DBGetFieldULong(hResult, row, 9));
    m_backupProxyId = DBGetFieldULong(hResult, row, 10);
    m_snmpVersion = SNMP_VersionFromInt(DBGetFieldLong(hResult, row, 11));
+   m_scheduleType = static_cast<ScheduleType>(DBGetFieldLong(hResult, row, 12));
    m_busy = 0;
+   m_tLastCheck = 0;
 
    if ((m_origin == DS_SNMP_AGENT) && (m_type == DCO_TYPE_TABLE))
    {
@@ -312,12 +403,31 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    {
       m_tableColumns = nullptr;
    }
+
+   if (m_scheduleType != ScheduleType::NONE)
+   {
+      DB_HANDLE hdb = GetLocalDatabaseHandle();
+
+      TCHAR query[256];
+      _sntprintf(query, 256,
+               _T("SELECT schedule FROM dc_schedules WHERE server_id=") UINT64_FMT _T(" AND dci_id=%u"),
+               m_serverId, m_id);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
+      {
+        int count = DBGetNumRows(hResult);
+        for(int i = 0; i < count; i++)
+        {
+           m_schedules.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+        }
+      }
+   }
 }
 
 /**
  * Copy constructor
  */
- DataCollectionItem::DataCollectionItem(const DataCollectionItem *item)
+ DataCollectionItem::DataCollectionItem(const DataCollectionItem *item) : m_schedules(item->m_schedules)
  {
    m_serverId = item->m_serverId;
    m_id = item->m_id;
@@ -342,6 +452,8 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
       m_tableColumns = nullptr;
    }
    m_busy = 0;
+   m_tLastCheck = 0;
+   m_scheduleType = item->m_scheduleType;
  }
 
 /**
@@ -364,7 +476,9 @@ bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnO
        (m_pollingInterval != item->m_pollingInterval) || m_snmpTargetGuid.compare(item->m_snmpTargetGuid) ||
        (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) ||
        (m_lastPollTime < item->m_lastPollTime) || (m_backupProxyId != item->m_backupProxyId) ||
-       (item->m_tableColumns != nullptr) || (m_tableColumns != nullptr))   // Do not do actual compare for table columns
+       (item->m_tableColumns != nullptr) || (m_tableColumns != nullptr) ||
+       (item->m_scheduleType != m_scheduleType) || (item->m_schedules.size() > 0) ||
+       (m_schedules.size() > 0))   // Do not do actual compare for table columns
    {
       m_type = item->m_type;
       m_origin = item->m_origin;
@@ -389,6 +503,9 @@ bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnO
       {
          m_tableColumns = nullptr;
       }
+      m_scheduleType = item->m_scheduleType;
+      m_schedules.clear();
+      m_schedules.addAll(&item->m_schedules);
 
       if (!txnOpen)
       {
@@ -416,8 +533,8 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
          statements->insertItem = DBPrepare(hdb,
                   _T("INSERT INTO dc_config (type,origin,name,polling_interval,")
                   _T("last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,")
-                  _T("snmp_version,server_id,dci_id)")
-                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"));
+                  _T("snmp_version,schedule_type,server_id,dci_id)")
+                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
       hStmt = statements->insertItem;
    }
@@ -429,7 +546,7 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
                     _T("UPDATE dc_config SET type=?,origin=?,name=?,")
                     _T("polling_interval=?,last_poll=?,snmp_port=?,")
                     _T("snmp_target_guid=?,snmp_raw_type=?,backup_proxy_id=?,")
-                    _T("snmp_version=? WHERE server_id=? AND dci_id=?"));
+                    _T("snmp_version=?,schedule_type=? WHERE server_id=? AND dci_id=?"));
       }
       hStmt = statements->updateItem;
    }
@@ -447,8 +564,9 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (int32_t)m_snmpRawValueType);
    DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_backupProxyId);
    DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (int32_t)m_snmpVersion);
-	DBBind(hStmt, 11, DB_SQLTYPE_BIGINT, m_serverId);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (int32_t)m_scheduleType);
+	DBBind(hStmt, 12, DB_SQLTYPE_BIGINT, m_serverId);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
 
    if (!DBExecute(hStmt))
       return;
@@ -490,6 +608,35 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
          }
       }
    }
+
+   if (m_scheduleType != ScheduleType::NONE)
+   {
+      if (statements->deleteSchedules == nullptr)
+      {
+         statements->deleteSchedules = DBPrepare(hdb, _T("DELETE FROM dc_schedules WHERE server_id=? AND dci_id=?"), true);
+         if (statements->deleteSchedules == nullptr)
+            return;
+      }
+      DBBind(statements->deleteSchedules, 1, DB_SQLTYPE_BIGINT, m_serverId);
+      DBBind(statements->deleteSchedules, 2, DB_SQLTYPE_INTEGER, m_id);
+      if (!DBExecute(statements->deleteSchedules))
+         return;
+
+      if (statements->insertSchedules == nullptr)
+      {
+         statements->insertSchedules = DBPrepare(hdb, _T("INSERT INTO dc_schedules (server_id,dci_id,schedule) VALUES (?,?,?)"), true);
+         if (statements->insertSchedules == nullptr)
+            return;
+      }
+
+      DBBind(statements->insertSchedules, 1, DB_SQLTYPE_BIGINT, m_serverId);
+      DBBind(statements->insertSchedules, 2, DB_SQLTYPE_INTEGER, m_id);
+      for(int i = 0; i < m_schedules.size(); i++)
+      {
+         DBBind(statements->insertSchedules, 3, DB_SQLTYPE_VARCHAR, m_schedules.get(i), DB_BIND_STATIC);
+         DBExecute(statements->insertSchedules);
+      }
+   }
 }
 
 /**
@@ -515,7 +662,16 @@ void DataCollectionItem::deleteFromDatabase(DB_HANDLE hdb, DataCollectionStateme
    DBBind(statements->deleteColumns, 1, DB_SQLTYPE_BIGINT, m_serverId);
    DBBind(statements->deleteColumns, 2, DB_SQLTYPE_INTEGER, m_id);
 
-   if (DBExecute(statements->deleteItem) && DBExecute(statements->deleteColumns))
+   if (statements->deleteSchedules == nullptr)
+   {
+      statements->deleteSchedules = DBPrepare(hdb, _T("DELETE FROM dc_schedules WHERE server_id=? AND dci_id=?"), true);
+      if (statements->deleteSchedules == nullptr)
+         return;
+   }
+   DBBind(statements->deleteSchedules, 1, DB_SQLTYPE_BIGINT, m_serverId);
+   DBBind(statements->deleteSchedules, 2, DB_SQLTYPE_INTEGER, m_id);
+
+   if (DBExecute(statements->deleteItem) && DBExecute(statements->deleteColumns) && DBExecute(statements->deleteSchedules))
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
    }
@@ -1352,7 +1508,7 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
       DataCollectionItem *dci = new DataCollectionItem(serverId, msg, fieldId, extFieldId, hasExtraData);
       config.set(dci->getKey(), dci);
       fieldId += 10;
-      extFieldId += 1000;
+      extFieldId += 1100;
    }
    nxlog_debug_tag(DEBUG_TAG, 4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")) _T(" (extended data: %s)"),
             count, serverId, hasExtraData ? _T("YES") : _T("NO"));
@@ -1436,6 +1592,10 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
       DBFreeStatement(statements.insertColumn);
    if (statements.deleteColumns != nullptr)
       DBFreeStatement(statements.deleteColumns);
+   if (statements.insertSchedules != nullptr)
+      DBFreeStatement(statements.insertSchedules);
+   if (statements.deleteSchedules != nullptr)
+      DBFreeStatement(statements.deleteSchedules);
 
    s_itemLock.unlock();
 
@@ -1458,7 +1618,7 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
 static void LoadState()
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type FROM dc_config"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,snmp_version,schedule_type FROM dc_config"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
