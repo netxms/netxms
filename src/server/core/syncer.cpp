@@ -46,6 +46,72 @@ static VolatileCounter s_outstandingSaveRequests = 0;
 static RWLOCK s_objectTxnLock = RWLockCreate();
 
 /**
+ * Syncer run time statistic
+ */
+static ManualGauge64 s_syncerRunTime(_T("Syncer"), 5, 900);
+static Mutex s_syncerGaugeLock(true);
+static time_t s_lastRunTime = 0;
+
+/**
+ * Get syncer run time
+ */
+int64_t GetSyncerRunTime(StatisticType statType)
+{
+   s_syncerGaugeLock.lock();
+   int64_t value;
+   switch(statType)
+   {
+      case StatisticType::AVERAGE:
+         value = s_syncerRunTime.getAverage();
+         break;
+      case StatisticType::CURRENT:
+         value = s_syncerRunTime.getCurrent();
+         break;
+      case StatisticType::MAX:
+         value = s_syncerRunTime.getMax();
+         break;
+      case StatisticType::MIN:
+         value = s_syncerRunTime.getMin();
+         break;
+   }
+   s_syncerGaugeLock.unlock();
+   return value;
+}
+
+/**
+ * Show syncer stats on server debug console
+ */
+void ShowSyncerStats(ServerConsole *console)
+{
+   s_syncerGaugeLock.lock();
+   TCHAR runTime[128];
+   if (s_lastRunTime > 0)
+   {
+#if HAVE_LOCALTIME_R
+      struct tm tmbuf;
+      struct tm *ltm = localtime_r(&s_lastRunTime, &tmbuf);
+#else
+      struct tm *ltm = localtime(&s_lastRunTime);
+#endif
+      _tcsftime(runTime, 128, _T("%Y.%b.%d %H:%M:%S"), ltm);
+   }
+   else
+   {
+      _tcscpy(runTime, _T("never"));
+   }
+   console->printf(
+            _T("Last run at .........: %s\n")
+            _T("Average run time ....: %d ms\n")
+            _T("Last run time .......: %d ms\n")
+            _T("Max run time ........: %d ms\n")
+            _T("Min run time ........: %d ms\n")
+            _T("\n"), runTime,
+            s_syncerRunTime.getCurrent(), s_syncerRunTime.getAverage(),
+            s_syncerRunTime.getMax(), s_syncerRunTime.getMin());
+   s_syncerGaugeLock.unlock();
+}
+
+/**
  * Start object transaction
  */
 void NXCORE_EXPORTABLE ObjectTransactionStart()
@@ -188,6 +254,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       nxlog_debug_tag(DEBUG_TAG_SYNC, 7, _T("Syncer wakeup"));
       if (!(g_flags & AF_DB_CONNECTION_LOST))    // Don't try to save if DB connection is lost
       {
+         int64_t startTime = GetCurrentTimeMs();
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          SaveObjects(hdb, watchdogId, false);
          nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("Saving user database"));
@@ -195,6 +262,10 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
          nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("Saving NXSL persistent storage"));
          UpdatePStorageDatabase(hdb, watchdogId);
          DBConnectionPoolReleaseConnection(hdb);
+         s_syncerGaugeLock.lock();
+         s_syncerRunTime.update(GetCurrentTimeMs() - startTime);
+         s_lastRunTime = static_cast<time_t>(startTime / 1000);
+         s_syncerGaugeLock.unlock();
       }
       WatchdogStartSleep(watchdogId);
       nxlog_debug_tag(DEBUG_TAG_SYNC, 7, _T("Syncer run completed"));

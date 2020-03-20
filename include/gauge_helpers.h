@@ -94,7 +94,7 @@ public:
 };
 
 /**
- * 64 bit gauge
+ * Generic gauge
  */
 template <typename T> class Gauge
 {
@@ -139,20 +139,20 @@ public:
 /**
  * 64 bit integer gauge
  */
-class Gauge64 : public Gauge<INT64>
+class Gauge64 : public Gauge<int64_t>
 {
 public:
-   Gauge64(const TCHAR *name, int interval, int period) : Gauge<INT64>(name, interval, period) { }
+   Gauge64(const TCHAR *name, int interval, int period) : Gauge<int64_t>(name, interval, period) { }
    virtual ~Gauge64() = default;
 };
 
 /**
  * 32 bit integer gauge
  */
-class Gauge32 : public Gauge<INT32>
+class Gauge32 : public Gauge<int32_t>
 {
 public:
-   Gauge32(const TCHAR *name, int interval, int period) : Gauge<INT32>(name, interval, period) { }
+   Gauge32(const TCHAR *name, int interval, int period) : Gauge<int32_t>(name, interval, period) { }
    virtual ~Gauge32() = default;
 };
 
@@ -165,7 +165,7 @@ private:
    Queue *m_queue;
 
 protected:
-   virtual INT64 readCurrentValue() override
+   virtual int64_t readCurrentValue() override
    {
       return m_queue->size();
    }
@@ -187,7 +187,7 @@ private:
    ThreadPool *m_pool;
 
 protected:
-   virtual INT64 readCurrentValue() override
+   virtual int64_t readCurrentValue() override
    {
       ThreadPoolInfo poolInfo;
       ThreadPoolGetInfo(m_pool, &poolInfo);
@@ -208,10 +208,10 @@ public:
 class GaugeFunction : public Gauge64
 {
 private:
-   INT64 (*m_function)();
+   int64_t (*m_function)();
 
 protected:
-   virtual INT64 readCurrentValue() override
+   virtual int64_t readCurrentValue() override
    {
       return m_function();
    }
@@ -230,7 +230,7 @@ public:
 class ManualGauge64 : public Gauge64
 {
 protected:
-   virtual INT64 readCurrentValue() override { return 0; }
+   virtual int64_t readCurrentValue() override { return 0; }
 
 public:
    ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64(name, interval, period) {}

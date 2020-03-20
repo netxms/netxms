@@ -2,6 +2,8 @@
 * 3.2-CURRENT
 * 
 
+- Internal parameters for monitoring syncer performance (Syncer.RunTime.*)
+- Improved notification handling in user support application
 - Fixed issues:
 	NX-1810 (Server can cash if scheduled task deleted while running)
 
