@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,17 +29,14 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.agentmanager.Activator;
-import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.DateTimeSelector;
-import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -48,17 +45,14 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class SendUserAgentNotificationDialog extends Dialog
 {
    private LabeledText textMessage;
-   private Button checkStartup;
-   private Button radioOneTime;
-   private Button radioInterval;
+   private Button radioInstant;
+   private Button radioDelayed;
+   private Button radioStartup;
    private DateTimeSelector startDateSelector;
-   private Group retentionGroup;
-   private LabeledSpinner days;
-   private LabeledSpinner hours;
-   private LabeledSpinner minutes;
+   private DateTimeSelector endDateSelector;
    private String message;
    private Date startTime;
-   private Date endTime;   
+   private Date endTime;
    private boolean startupNotification;
 	
 	/**
@@ -97,13 +91,13 @@ public class SendUserAgentNotificationDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		
 		textMessage = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
-		textMessage.setLabel("Message text:");
+      textMessage.setLabel("Message text");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.heightHint = 200;
+      gd.widthHint = 600;
       gd.horizontalSpan = 2;
       textMessage.setLayoutData(gd);
       textMessage.setFocus();
@@ -112,12 +106,9 @@ public class SendUserAgentNotificationDialog extends Dialog
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            startDateSelector.setEnabled(radioInterval.getSelection());
-            days.setEnabled(radioInterval.getSelection());
-            hours.setEnabled(radioInterval.getSelection());
-            minutes.setEnabled(radioInterval.getSelection());
-            if (radioOneTime.getSelection())
-               checkStartup.setSelection(false);
+            boolean enable = radioDelayed.getSelection() || radioStartup.getSelection();
+            startDateSelector.setEnabled(enable);
+            endDateSelector.setEnabled(enable);
          }
          
          @Override
@@ -127,45 +118,30 @@ public class SendUserAgentNotificationDialog extends Dialog
          }
       };
       
-      checkStartup = new Button(dialogArea, SWT.CHECK);
-      checkStartup.setText("Startup notification");
+      radioInstant = new Button(dialogArea, SWT.RADIO);
+      radioInstant.setText("Instant");
+      radioInstant.setSelection(true);
+      radioInstant.addSelectionListener(listener);
       gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
-      checkStartup.setLayoutData(gd);
-      checkStartup.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            if (checkStartup.getSelection())
-            {
-               radioInterval.setSelection(true);
-               radioOneTime.setSelection(false);
-               startDateSelector.setEnabled(radioInterval.getSelection());
-               days.setEnabled(radioInterval.getSelection());
-               hours.setEnabled(radioInterval.getSelection());
-               minutes.setEnabled(radioInterval.getSelection());
-            }
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-      });
+      radioInstant.setLayoutData(gd);
       
-      radioOneTime = new Button(dialogArea, SWT.RADIO);
-      radioOneTime.setText("One time");
-      radioOneTime.setSelection(true);
-      radioOneTime.addSelectionListener(listener);
+      radioDelayed = new Button(dialogArea, SWT.RADIO);
+      radioDelayed.setText("Delayed");
+      radioDelayed.setSelection(false);
+      radioDelayed.addSelectionListener(listener);
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      radioDelayed.setLayoutData(gd);
       
-      radioInterval = new Button(dialogArea, SWT.RADIO);
-      radioInterval.setText("Interval");
-      radioInterval.setSelection(false);
-      radioInterval.addSelectionListener(listener);
-      
+      radioStartup = new Button(dialogArea, SWT.RADIO);
+      radioStartup.setText("Startup");
+      radioStartup.setSelection(false);
+      radioStartup.addSelectionListener(listener);
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      radioStartup.setLayoutData(gd);
+
       final WidgetFactory factory = new WidgetFactory() {
          @Override
          public Control createControl(Composite parent, int style)
@@ -173,87 +149,35 @@ public class SendUserAgentNotificationDialog extends Dialog
             return new DateTimeSelector(parent, style);
          }
       };
-      
-      startDateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(dialogArea, SWT.NONE, factory, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+
+      startDateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(dialogArea, SWT.NONE, factory, "Valid from", WidgetHelper.DEFAULT_LAYOUT_DATA);
       startDateSelector.setValue(new Date());      
-
-      
-      retentionGroup = new Group(dialogArea, SWT.NONE);
-      retentionGroup.setText(Messages.get().ScheduleSelector_Schedule);
-      
-      layout = new GridLayout();
-      layout.marginWidth = WidgetHelper.OUTER_SPACING;
-      layout.marginHeight = WidgetHelper.OUTER_SPACING;
-      layout.horizontalSpacing = 16;
-      layout.makeColumnsEqualWidth = false;
-      layout.numColumns = 3;
-      retentionGroup.setLayout(layout);
-      
-      days = new LabeledSpinner(retentionGroup, SWT.NONE);
-      days.setLabel("Days");
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = SWT.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      days.setLayoutData(gridData);
-      days.setRange(0, 999);
-      days.setSelection(0);
-      
-      hours = new LabeledSpinner(retentionGroup, SWT.NONE);
-      hours.setLabel("Hours");
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      hours.setLayoutData(gridData);
-      hours.setRange(0, 23);
-      hours.setSelection(0);
-      
-      minutes = new LabeledSpinner(retentionGroup, SWT.NONE);
-      minutes.setLabel("Minutes");
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      minutes.setLayoutData(gridData);
-      minutes.setRange(0, 59);
-      minutes.setSelection(0);
-
       startDateSelector.setEnabled(false);
-      days.setEnabled(false);
-      hours.setEnabled(false);
-      minutes.setEnabled(false);
-      
+
+      endDateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(dialogArea, SWT.NONE, factory, "Valid until", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      endDateSelector.setValue(new Date(System.currentTimeMillis() + 86400000L));
+      endDateSelector.setEnabled(false);
+
       final NXCSession session = ConsoleSharedData.getSession();
-      
       new ConsoleJob("Get default user agent notification retention time", null, Activator.PLUGIN_ID, null) {
-         
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {     
             final int defaultTime = session.getPublicServerVariableAsInt("UserAgent.DefaultMessageRetentionTime");
-            
             runInUIThread(new Runnable() {
-               
                @Override
                public void run()
                {
-                  if(defaultTime > 0)
-                  {
-                     int d = defaultTime/60/24;
-                     int h = (defaultTime)/60 - d*24;
-                     int m = defaultTime - (d * 24 + h) * 60;
-   
-                     days.setSelection(d);
-                     hours.setSelection(h);
-                     minutes.setSelection(m);
-                  }
+                  if (defaultTime > 0)
+                     endDateSelector.setValue(new Date(System.currentTimeMillis() + defaultTime * 60000L));
                }
             });
-            
          }
          
          @Override
          protected String getErrorMessage()
          {
-            return "Error getting user agent default retention time";
+            return "Cannot get default user agent notification retention time";
          }
       }.start();
       
@@ -267,16 +191,17 @@ public class SendUserAgentNotificationDialog extends Dialog
 	protected void okPressed()
 	{
 	   message = textMessage.getText();
-	   startupNotification = checkStartup.getSelection();
-	   if(radioInterval.getSelection())
+      if (radioDelayed.getSelection() || radioStartup.getSelection())
 	   {
    	   startTime = startDateSelector.getValue();
-   	   endTime = new Date(new Date().getTime() + (days.getSelection() * 86400L + hours.getSelection() * 3600L + minutes.getSelection() * 60L)*1000L);
+         endTime = endDateSelector.getValue();
+         startupNotification = radioStartup.getSelection();
 	   }
 	   else
 	   {
 	      startTime = new Date(0);
 	      endTime = new Date(0);
+         startupNotification = false;
 	   }
 		super.okPressed();
 	}
