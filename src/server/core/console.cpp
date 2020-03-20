@@ -44,6 +44,7 @@ INT64 GetEventLogWriterQueueSize();
 void DiscoveryPoller(PollerInfo *poller);
 void RangeScanCallback(const InetAddress& addr, uint32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context);
 void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, uint32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
+void ShowSyncerStats(ServerConsole *console);
 
 /**
  * Format string to show value of global flag
@@ -1205,6 +1206,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowServerStats(pCtx);
       }
+      else if (IsCommand(_T("SYNCER"), szBuffer, 2))
+      {
+         ShowSyncerStats(pCtx);
+      }
       else if (IsCommand(_T("THREADS"), szBuffer, 2))
       {
          ShowThreadPool(pCtx, g_mainThreadPool);
@@ -1630,7 +1635,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show queues                       - Show internal queues statistics\n")
             _T("   show routing-table <node>         - Show cached routing table for node\n")
             _T("   show sessions                     - Show active client sessions\n")
-            _T("   show stats                        - Show server statistics\n")
+            _T("   show stats                        - Show global server statistics\n")
+            _T("   show syncer                       - Show syncer statistics\n")
             _T("   show topology <node>              - Collect and show link layer topology for node\n")
             _T("   show tunnels                      - Show active agent tunnels\n")
             _T("   show users                        - Show users\n")

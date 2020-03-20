@@ -60,6 +60,11 @@ int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComp
 ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet);
 
 /**
+ * Get syncer run time statistic
+ */
+int64_t GetSyncerRunTime(StatisticType statType);
+
+/**
  * Poll cancellation checkpoint
  */
 #define POLL_CANCELLATION_CHECKPOINT() \
@@ -6326,6 +6331,22 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       else if (!_tcsicmp(param, _T("Server.ReceivedSyslogMessages")))
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_syslogMessagesReceived);
+      }
+      else if (!_tcsicmp(_T("Server.SyncerRunTime.Average"), param))
+      {
+         ret_int64(buffer, GetSyncerRunTime(StatisticType::AVERAGE));
+      }
+      else if (!_tcsicmp(_T("Server.SyncerRunTime.Last"), param))
+      {
+         ret_int64(buffer, GetSyncerRunTime(StatisticType::CURRENT));
+      }
+      else if (!_tcsicmp(_T("Server.SyncerRunTime.Max"), param))
+      {
+         ret_int64(buffer, GetSyncerRunTime(StatisticType::MAX));
+      }
+      else if (!_tcsicmp(_T("Server.SyncerRunTime.Min"), param))
+      {
+         ret_int64(buffer, GetSyncerRunTime(StatisticType::MIN));
       }
       else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), param, false))
       {
