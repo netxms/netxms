@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
 import java.io.StringWriter;
@@ -9,6 +27,9 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
+/**
+ * User support application policy
+ */
 @Root(name="SupportAppPolicy", strict=false)
 public class SupportAppPolicy
 {
@@ -19,6 +40,9 @@ public class SupportAppPolicy
    public Integer mainWindowPosition = null;
    
    @Element(required=false)
+   public Integer notificationTimeout = null;
+
+   @Element(required = false)
    public boolean customColorSchema = false;
 
    @Element(required=false)
@@ -46,6 +70,18 @@ public class SupportAppPolicy
    public Integer menuTextColor = 0xF0F0F0;
 
    @Element(required=false)
+   public Integer notificationBackgroundColor = 0xF0F0F0;
+
+   @Element(required = false)
+   public Integer notificationHighligtColor = 0xC0C0C0;
+
+   @Element(required = false)
+   public Integer notificationSelectionColor = 0x007FFF;
+
+   @Element(required = false)
+   public Integer notificationTextColor = 0x202020;
+
+   @Element(required = false)
    public String icon;
 
    @Element(required=false)

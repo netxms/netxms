@@ -14,6 +14,7 @@ public abstract class AbstractPolicyEditor extends Composite
    private AgentPolicy policy;  
    private Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
    private IViewPart viewPart;
+   private boolean enableModifyListeners = true;
 
    /**
     * Create abstract policy editor
@@ -50,8 +51,9 @@ public abstract class AbstractPolicyEditor extends Composite
     */
    protected void fireModifyListeners()
    {
-      for(PolicyModifyListener l : listeners)
-         l.modifyParser();
+      if (enableModifyListeners)
+         for(PolicyModifyListener l : listeners)
+            l.modifyParser();
    }
    
    /**
@@ -72,7 +74,9 @@ public abstract class AbstractPolicyEditor extends Composite
    public void setPolicy(AgentPolicy policy)
    {
       this.policy = policy;   
+      enableModifyListeners = false;
       updateControlFromPolicy();
+      enableModifyListeners = true;
    }
 
    /**
