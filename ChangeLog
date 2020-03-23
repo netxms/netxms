@@ -4,6 +4,8 @@
 
 - Internal parameters for monitoring syncer performance (Syncer.RunTime.*)
 - Improved notification handling in user support application
+- Allow usage of chat ID as recipient address for Telegram
+- Support for standard SSH configuration file in SSH subagent
 - Fixed issues:
 	NX-1810 (Server can cash if scheduled task deleted while running)
 
