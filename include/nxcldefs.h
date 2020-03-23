@@ -1072,13 +1072,14 @@ enum AggregationFunction
 /**
  * Node creation flags
  */
-#define NXC_NCF_DISABLE_ICMP        0x0001
-#define NXC_NCF_DISABLE_NXCP        0x0002
-#define NXC_NCF_DISABLE_SNMP        0x0004
-#define NXC_NCF_CREATE_UNMANAGED    0x0008
-#define NXC_NCF_ENTER_MAINTENANCE   0x0010
-#define NXC_NCF_AS_ZONE_PROXY       0x0020
-#define NXC_NCF_DISABLE_ETHERNET_IP 0x0040
+#define NXC_NCF_DISABLE_ICMP         0x0001
+#define NXC_NCF_DISABLE_NXCP         0x0002
+#define NXC_NCF_DISABLE_SNMP         0x0004
+#define NXC_NCF_CREATE_UNMANAGED     0x0008
+#define NXC_NCF_ENTER_MAINTENANCE    0x0010
+#define NXC_NCF_AS_ZONE_PROXY        0x0020
+#define NXC_NCF_DISABLE_ETHERNET_IP  0x0040
+#define NXC_NCF_SNMP_SETTINGS_LOCKED 0x0080
 
 /**
  * Agent data cache modes

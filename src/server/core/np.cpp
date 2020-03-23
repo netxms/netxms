@@ -152,6 +152,8 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
       flags |= NF_DISABLE_ETHERNET_IP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_NXCP)
       flags |= NF_DISABLE_NXCP;
+   if (newNodeData->creationFlags & NXC_NCF_SNMP_SETTINGS_LOCKED)
+      flags |= NF_SNMP_SETTINGS_LOCKED;
    shared_ptr<Node> node = MakeSharedNObject<Node>(newNodeData, flags);
    NetObjInsert(node, true, false);
 

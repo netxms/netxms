@@ -34,13 +34,14 @@ import org.netxms.client.objects.NetworkService;
 public class NXCObjectCreationData
 {
 	// Creation flags
-	public static int CF_DISABLE_ICMP        = 0x0001;
-	public static int CF_DISABLE_NXCP        = 0x0002;
-	public static int CF_DISABLE_SNMP        = 0x0004;
-	public static int CF_CREATE_UNMANAGED    = 0x0008;
-   public static int CF_ENTER_MAINTENANCE   = 0x0010;
-   public static int CF_AS_ZONE_PROXY       = 0x0020;
-   public static int CF_DISABLE_ETHERNET_IP = 0x0040;
+	public static int CF_DISABLE_ICMP         = 0x0001;
+	public static int CF_DISABLE_NXCP         = 0x0002;
+	public static int CF_DISABLE_SNMP         = 0x0004;
+	public static int CF_CREATE_UNMANAGED     = 0x0008;
+   public static int CF_ENTER_MAINTENANCE    = 0x0010;
+   public static int CF_AS_ZONE_PROXY        = 0x0020;
+   public static int CF_DISABLE_ETHERNET_IP  = 0x0040;
+   public static int CF_SNMP_SETTINGS_LOCKED = 0x0080;
 	
 	private int objectClass;
 	private String name;

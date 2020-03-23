@@ -65,6 +65,7 @@ public class CreateNodeDialog extends Dialog
    private Button checkDisableEtherNetIP;
 	private Button checkDisablePing;
 	private Button checkCreateAnother;
+	private Button checkDisableAutomaticSNMPConfig;
 	private ObjectSelector agentProxySelector;
 	private ObjectSelector snmpProxySelector;
    private ObjectSelector etherNetIpProxySelector;
@@ -237,6 +238,10 @@ public class CreateNodeDialog extends Dialog
          });
       }
       
+      checkDisableAutomaticSNMPConfig = new Button(optionsGroup, SWT.CHECK);
+      checkDisableAutomaticSNMPConfig.setText("Prevent automatic SNMP configuration changes");
+      checkDisableAutomaticSNMPConfig.setSelection((creationFlags & NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED) != 0);
+      
 		checkDisableAgent = new Button(optionsGroup, SWT.CHECK);
 		checkDisableAgent.setText(Messages.get().CreateNodeDialog_DisableAgent);
 		checkDisableAgent.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_NXCP) != 0);
@@ -362,6 +367,8 @@ public class CreateNodeDialog extends Dialog
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_SNMP;
       if (checkDisableEtherNetIP.getSelection())
          creationFlags |= NXCObjectCreationData.CF_DISABLE_ETHERNET_IP;
+      if (checkDisableAutomaticSNMPConfig.getSelection())
+         creationFlags |= NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED;
 		
 		agentPort = agentPortField.getSelection();
 		snmpPort = snmpPortField.getSelection();
