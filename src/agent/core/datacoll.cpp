@@ -235,7 +235,7 @@ public:
          localtime_r(&now, &tmCurrLocal);
          localtime_r(&m_tLastCheck, &tmLastLocal);
 #else
-         memcpy(&tmCurrLocal, localtime(&currTime), sizeof(struct tm));
+         memcpy(&tmCurrLocal, localtime(&now), sizeof(struct tm));
          memcpy(&tmLastLocal, localtime(&m_tLastCheck), sizeof(struct tm));
 #endif
 
