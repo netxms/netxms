@@ -35,6 +35,7 @@
 
 #define DISABLE_IP_V4 1
 #define DISABLE_IP_V6 2
+#define NUMBERS_TEXT _T("1234567890")
 
 /**
  * Request data for cURL call
@@ -679,22 +680,27 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 
    // Recipient name started with @ indicates public channel
    // In that case use channel name instead of chat ID
-   INT64 chatId;
-   if (recipient[0] != _T('@'))
+   INT64 chatId = 0;
+   bool usePainRecipient = recipient[0] == _T('@');
+   if (!usePainRecipient)
+   {
+      int numCount = _tcsspn((recipient[0] != _T('-')) ? recipient : (recipient + 1), NUMBERS_TEXT);
+      int textLen = _tcslen(recipient);
+      usePainRecipient = (recipient[0] == _T('-')) ? (numCount == (textLen - 1)) : (numCount == textLen);
+   }
+
+   if (!usePainRecipient)
    {
       MutexLock(m_chatsLock);
       Chat *chatObject = m_chats.get(recipient);
       chatId = (chatObject != NULL) ? chatObject->id : 0;
       MutexUnlock(m_chatsLock);
    }
-   else
-   {
-      chatId = 0;
-   }
-   if ((chatId != 0) || (recipient[0] == _T('@')))
+
+   if ((chatId != 0) || usePainRecipient)
    {
       json_t *request = json_object();
-      json_object_set_new(request, "chat_id", (recipient[0] == _T('@')) ? json_string_t(recipient) : json_integer(chatId));
+      json_object_set_new(request, "chat_id", usePainRecipient ? json_string_t(recipient) : json_integer(chatId));
       json_object_set_new(request, "text", json_string_t(body));
 
       json_t *response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "sendMessage", request);
