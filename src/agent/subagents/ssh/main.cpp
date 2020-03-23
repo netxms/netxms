@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,8 +26,9 @@
 /**
  * Configuration options
  */
-UINT32 g_sshConnectTimeout = 2000;
-UINT32 g_sshSessionIdleTimeout = 300;
+uint32_t g_sshConnectTimeout = 2000;
+uint32_t g_sshSessionIdleTimeout = 300;
+char g_sshConfigFile[MAX_PATH] = "";
 
 #if defined(_WIN32) || _USE_GNU_PTH
 
@@ -90,6 +91,7 @@ static struct ssh_threads_callbacks_struct s_threadCallbacks =
  */
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
 {
+   { _T("ConfigFile"), CT_MB_STRING, 0, 0, MAX_PATH, 0, g_sshConfigFile },
    { _T("ConnectTimeout"), CT_LONG, 0, 0, 0, 0, &g_sshConnectTimeout },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_sshSessionIdleTimeout },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }

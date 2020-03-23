@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -98,6 +98,9 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password)
    ssh_options_set(m_session, SSH_OPTIONS_USER, user);
 #endif
 
+   if (ssh_options_parse_config(m_session, (g_sshConfigFile[0] != 0) ? g_sshConfigFile : nullptr) != 0)
+      nxlog_debug(6, _T("SSH: config load for %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+
    if (ssh_connect(m_session) == SSH_OK)
    {
 #ifdef UNICODE
@@ -122,7 +125,7 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password)
 
    if (success)
    {
-      nx_strncpy(m_user, user, MAX_SSH_LOGIN_LEN);
+      _tcslcpy(m_user, user, MAX_SSH_LOGIN_LEN);
       _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("%s@%s:%d/%d"), m_user, (const TCHAR *)m_addr.toString(), m_port, m_id);
       m_lastAccess = time(NULL);
    }

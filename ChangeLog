@@ -6,10 +6,10 @@
 - Option for switching SNMP probing during configuration poll into single OID per request mode
 - Value ranges in NXSL switch/case statement
 - Fixed issues:
+	NX-713 (Scheduled DCI will not work with offline DCI functionality)
+	NX-1699 (Allow user turn on "Prevent automatic SNMP configuration changes" when creating node)
 	NX-1788 (NXSL: add support for ranges in switch/case)
 	NX-1806 (Change order in which ping3.ndd is used during discovery or allow unloading/blacklist)
-   NX-1699 (Allow user turn on "Prevent automatic SNMP configuration changes" when creating node)
-   NX-713  (Scheduled DCI will not work with offline DCI functionality)
 
 
 *
@@ -18,6 +18,8 @@
 
 - Internal parameters for monitoring syncer performance (Syncer.RunTime.*)
 - Improved notification handling in user support application
+- Allow usage of chat ID as recipient address for Telegram
+- Support for standard SSH configuration file in SSH subagent
 - Fixed issues:
 	NX-1810 (Server can cash if scheduled task deleted while running)
 
