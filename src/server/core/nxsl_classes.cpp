@@ -3189,8 +3189,26 @@ NXSL_Value *NXSL_SNMPTransportClass::getAttr(NXSL_Object *object, const char *at
 
 	if (!strcmp(attr, "snmpVersion"))
 	{
-		const TCHAR *versions[] = { _T("1"), _T("2c"), _T("3") };
-		value = object->vm()->createValue((const TCHAR *)versions[t->getSnmpVersion()]);
+	   const TCHAR *version = NULL;
+		switch (t->getSnmpVersion())
+		{
+		   case SNMP_VERSION_1:
+		      version = _T("1");
+		      break;
+		   case SNMP_VERSION_2C:
+		      version = _T("2c");
+		      break;
+		   case SNMP_VERSION_3:
+		      version = _T("3");
+		      break;
+		   case SNMP_VERSION_DEFAULT:
+		      version = _T("Default");
+		      break;
+		   default:
+		      version = _T("Unknown");
+		}
+
+		value = object->vm()->createValue(version);
 	}
 
 	return value;
