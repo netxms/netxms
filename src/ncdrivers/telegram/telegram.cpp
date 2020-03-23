@@ -681,15 +681,15 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
    // Recipient name started with @ indicates public channel
    // In that case use channel name instead of chat ID
    INT64 chatId = 0;
-   bool usePainRecipient = recipient[0] == _T('@');
-   if (!usePainRecipient)
+   bool useRecipientName = recipient[0] == _T('@');
+   if (!useRecipientName)
    {
       int numCount = _tcsspn((recipient[0] != _T('-')) ? recipient : (recipient + 1), NUMBERS_TEXT);
       int textLen = _tcslen(recipient);
-      usePainRecipient = (recipient[0] == _T('-')) ? (numCount == (textLen - 1)) : (numCount == textLen);
+      useRecipientName = (recipient[0] == _T('-')) ? (numCount == (textLen - 1)) : (numCount == textLen);
    }
 
-   if (!usePainRecipient)
+   if (!useRecipientName)
    {
       MutexLock(m_chatsLock);
       Chat *chatObject = m_chats.get(recipient);
@@ -697,10 +697,10 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
       MutexUnlock(m_chatsLock);
    }
 
-   if ((chatId != 0) || usePainRecipient)
+   if ((chatId != 0) || useRecipientName)
    {
       json_t *request = json_object();
-      json_object_set_new(request, "chat_id", usePainRecipient ? json_string_t(recipient) : json_integer(chatId));
+      json_object_set_new(request, "chat_id", useRecipientName ? json_string_t(recipient) : json_integer(chatId));
       json_object_set_new(request, "text", json_string_t(body));
 
       json_t *response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "sendMessage", request);
