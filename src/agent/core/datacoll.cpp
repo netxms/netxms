@@ -137,7 +137,7 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
 }
 
 /**
- * Data is selected in this order: server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type
+ * Data is selected in this order: server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id
  */
 DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
 {
@@ -1201,7 +1201,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 static void LoadState()
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type FROM dc_config"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id FROM dc_config"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
