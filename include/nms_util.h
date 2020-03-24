@@ -3846,6 +3846,7 @@ enum class StateChange
  */
 template<typename T> inline void UpdateExpMovingAverage(T& load, int exp, T n)
 {
+   n <<= EMA_FP_SHIFT;
    load *= exp;
    load += n * (EMA_FP_1 - exp);
    load >>= EMA_FP_SHIFT;
