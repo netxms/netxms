@@ -9,6 +9,7 @@
 - Environment variables from agent configuration file also set for user agent processes
 - Fixed issues:
 	NX-1810 (Server can cash if scheduled task deleted while running)
+   NX-1814 (Values of internal parameters Server.QueueSize.Average and Server.QueueSize.Current are inconsistent)
 
 
 *
