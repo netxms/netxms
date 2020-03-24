@@ -226,8 +226,8 @@ int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile
 }
 
 /**
-* Init config
-*/
+ * Init config
+ */
 void InitConfig(const TCHAR *configSection)
 {
    g_config = new Config();

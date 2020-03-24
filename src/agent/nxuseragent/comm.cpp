@@ -155,6 +155,24 @@ static void GetScreenInfo(NXCPMessage *msg)
    }
 }
 
+/**
+ * Update environment from master agent
+ */
+static void UpdateEnvironment(const NXCPMessage *request)
+{
+   int count = request->getFieldAsInt32(VID_NUM_ELEMENTS);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for (int i = 0; i < count; i++)
+   {
+      TCHAR *name = request->getFieldAsString(fieldId++);
+      TCHAR *value = request->getFieldAsString(fieldId++);
+      SetEnvironmentVariable(name, value);
+      nxlog_debug(4, _T("SetEnvironmentVariable: %s = %s"), name, value);
+      MemFree(name);
+      MemFree(value);
+   }
+}
+
 /** 
  * Process request from master agent
  */
@@ -175,6 +193,9 @@ static void ProcessRequest(NXCPMessage *request)
          break;
       case CMD_UPDATE_AGENT_CONFIG:
          UpdateConfig(request);
+         break;
+      case CMD_UPDATE_ENVIRONMENT:
+         UpdateEnvironment(request);
          break;
       case CMD_UPDATE_UA_NOTIFICATIONS:
          UpdateNotifications(request);

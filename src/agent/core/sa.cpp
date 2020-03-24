@@ -253,6 +253,7 @@ void SessionAgentConnector::readThread()
 
                if (m_userAgent)
                {
+                  updateUserAgentEnvironment();
                   updateUserAgentConfig();
 
                   s_userAgentNotificationsLock.lock();
@@ -407,6 +408,31 @@ void SessionAgentConnector::updateUserAgentConfig()
    {
       nxlog_debug(4, _T("SA-%d: cannot load user agent configuration from %s"), m_id, g_userAgentPolicyDirectory);
    }
+}
+
+/**
+ * Send environment for user agent
+ */
+void SessionAgentConnector::updateUserAgentEnvironment()
+{
+   shared_ptr<Config> config = g_config;
+   ObjectArray<ConfigEntry> *entrySet = config->getSubEntries(_T("/ENV"), _T("*"));
+   if (entrySet == nullptr)
+      return;
+
+   NXCPMessage msg(CMD_UPDATE_ENVIRONMENT, nextRequestId());
+   msg.setField(VID_NUM_ELEMENTS, entrySet->size());
+
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for (int i = 0; i < entrySet->size(); i++)
+   {
+      ConfigEntry *e = entrySet->get(i);
+      msg.setField(fieldId++, e->getName());
+      msg.setField(fieldId++, e->getValue());
+   }
+   delete entrySet;
+
+   sendMessage(&msg);
 }
 
 /**
@@ -704,6 +730,21 @@ void UpdateUserAgentsConfiguration()
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
          c->updateUserAgentConfig();
+   }
+   RWLockUnlock(s_lock);
+}
+
+/**
+ * Update environment on all connected user agents
+ */
+void UpdateUserAgentsEnvironment()
+{
+   RWLockReadLock(s_lock);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      SessionAgentConnector *c = s_agents.get(i);
+      if (c->isUserAgent())
+         c->updateUserAgentEnvironment();
    }
    RWLockUnlock(s_lock);
 }

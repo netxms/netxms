@@ -448,10 +448,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_MODIFY_WEB_SERVICE"),
       _T("CMD_DELETE_WEB_SERVICE"),
       _T("CMD_WEB_SERVICE_DEFINITION"),
-      _T("CMD_GET_SCREEN_INFO")
+      _T("CMD_GET_SCREEN_INFO"),
+      _T("CMD_UPDATE_ENVIRONMENT")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_SCREEN_INFO))
+   if ((code >= CMD_LOGIN) && (code <= CMD_UPDATE_ENVIRONMENT))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

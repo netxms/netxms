@@ -98,6 +98,8 @@ BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN);
 
 void UpdatePolicyInventory();
 
+void UpdateUserAgentsEnvironment();
+
 void ParseTunnelList(TCHAR *list);
 
 #if !defined(_WIN32)
@@ -1606,14 +1608,17 @@ static int GetGroupId(const char *name)
 static void UpdateEnvironment()
 {
    ObjectArray<ConfigEntry> *entrySet = g_config->getSubEntries(_T("/ENV"), _T("*"));
-   if (entrySet == NULL)
+   if (entrySet == nullptr)
       return;
+
    for(int i = 0; i < entrySet->size(); i++)
    {
       ConfigEntry *e = entrySet->get(i);
       SetEnvironmentVariable(e->getName(), e->getValue());
    }
    delete entrySet;
+
+   UpdateUserAgentsEnvironment();
 }
 
 /**
