@@ -415,8 +415,7 @@ void SessionAgentConnector::updateUserAgentConfig()
  */
 void SessionAgentConnector::updateUserAgentEnvironment()
 {
-   shared_ptr<Config> config = g_config;
-   ObjectArray<ConfigEntry> *entrySet = config->getSubEntries(_T("/ENV"), _T("*"));
+   ObjectArray<ConfigEntry> *entrySet = g_config->getSubEntries(_T("/ENV"), _T("*"));
    if (entrySet == nullptr)
       return;
 
