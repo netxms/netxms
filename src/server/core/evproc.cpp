@@ -59,15 +59,15 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 	UINT64 numEvents, prevEvents, eventsPerSecond;
 	int duration, actualDuration = 0;
 	
-	if (!ConfigReadBoolean(_T("EnableEventStormDetection"), false))
+	if (!ConfigReadBoolean(_T("EventStorm.EnableDetection"), false))
 	{
 		// Event storm detection is off
 	   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped because event storm detection is off"));
 		return THREAD_OK;
 	}
 
-	eventsPerSecond = ConfigReadInt(_T("EventStormEventsPerSecond"), 100);
-	duration = ConfigReadInt(_T("EventStormDuraction"), 15);
+	eventsPerSecond = ConfigReadInt(_T("EventStorm.EventsPerSecond"), 100);
+	duration = ConfigReadInt(_T("EventStorm.Duration"), 15);
 
 	prevEvents = g_totalEventsProcessed;	
 	while(!(g_flags & AF_SHUTDOWN))

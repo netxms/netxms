@@ -24,14 +24,30 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.2 to 32.3
+ */
+static bool H_UpgradeFromV2()
+{
+   static const TCHAR *batch =
+      _T("UPDATE config SET var_name='EventStorm.Duration',description='Time period for events per second to be above threshold that defines event storm condition.',units='seconds' WHERE var_name='EventStormDuration'\n")
+      _T("UPDATE config SET var_name='EventStorm.EnableDetection',description='Enable/disable event storm detection.' WHERE var_name='EnableEventStormDetection'\n")
+      _T("UPDATE config SET var_name='EventStorm.EventsPerSecond',description='Threshold for number of events per second that defines event storm condition.',units='events/second',default_value='1000' WHERE var_name='EventStormEventsPerSecond'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 32.1 to 32.2
  */
 static bool H_UpgradeFromV1()
 {
    static const TCHAR *batch =
-            _T("ALTER TABLE ap_common ADD flags integer\n")
-            _T("UPDATE ap_common SET flags=0\n")
-            _T("<END>");
+      _T("ALTER TABLE ap_common ADD flags integer\n")
+      _T("UPDATE ap_common SET flags=0\n")
+      _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("ap_common"), _T("flags")));
 
@@ -61,6 +77,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 2,  33, 3,  H_UpgradeFromV2  },
    { 1,  33, 2,  H_UpgradeFromV1  },
    { 0,  33, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
