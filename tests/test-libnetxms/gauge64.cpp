@@ -1,5 +1,4 @@
-//#include <nms_common.h>
-//#include <nms_util.h>
+#include <nms_common.h>
 #include <math.h>
 #include <gauge_helpers.h>
 #include <testtools.h>
@@ -15,7 +14,7 @@ static int64_t sample3[SAMPLE3_LEN] = { 1, 1, 2, 2, 2, 1,2 };
 
 void TestGauge64()
 {
-   StartTest(_T("Gauge64 test"));
+   StartTest(_T("Gauge64"));
    ManualGauge64 gauge(_T("Test"), 5, 10);
    for (int i = 0; i < SAMPLE1_LEN; i++)
    {
