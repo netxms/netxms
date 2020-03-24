@@ -67,7 +67,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 	}
 
 	eventsPerSecond = ConfigReadInt(_T("EventStormEventsPerSecond"), 100);
-	duration = ConfigReadInt(_T("EventStormDuraction"), 15);
+	duration = ConfigReadInt(_T("EventStormDuration"), 15);
 
 	prevEvents = g_totalEventsProcessed;	
 	while(!(g_flags & AF_SHUTDOWN))
