@@ -420,13 +420,13 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		ps->state = XML_STATE_FILE;
 		const char *encoding = XMLGetAttr(attrs, "encoding");
-		if (encoding != NULL)
+		if (encoding != nullptr)
 		{
-			if ((*encoding == 0))
+			if ((*encoding == 0) || !stricmp(encoding, "auto"))
 			{
 				ps->encodings.add(LP_FCP_AUTO);
 			}
-			if (!stricmp(encoding, "acp"))
+			else if (!stricmp(encoding, "acp"))
 			{
 				ps->encodings.add(LP_FCP_ACP);
 			}

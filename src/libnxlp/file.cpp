@@ -35,6 +35,21 @@
 #define READ_BUFFER_SIZE      4096
 
 /**
+ * File encoding names
+ */
+static const TCHAR *s_encodingName[] =
+{
+   _T("ACP"),
+   _T("UTF-8"),
+   _T("UCS-2"),
+   _T("UCS-2LE"),
+   _T("UCS-2BE"),
+   _T("UCS-4"),
+   _T("UCS-4LE"),
+   _T("UCS-4BE")
+};
+
+/**
  * Find byte sequence in the stream
  */
 static char *FindSequence(char *start, int length, const char *sequence, int seqLength)
@@ -90,7 +105,7 @@ static char *FindEOL(char *start, int length, int encoding)
 			break;
 	}
 
-   if (eol == NULL)
+   if (eol == nullptr)
    {
       // Try to find CR
 	   switch(encoding)
@@ -135,12 +150,28 @@ static char *FindEOL(char *start, int length, int encoding)
  */
 static off_t ParseNewRecords(LogParser *parser, int fh)
 {
-   char *ptr, *eptr, buffer[READ_BUFFER_SIZE];
+   int encoding = parser->getFileEncoding();
+   int charSize;
+   switch (encoding)
+   {
+      case LP_FCP_UCS2:
+      case LP_FCP_UCS2_LE:
+      case LP_FCP_UCS2_BE:
+         charSize = 2;
+         break;
+      case LP_FCP_UCS4:
+      case LP_FCP_UCS4_LE:
+      case LP_FCP_UCS4_BE:
+         charSize = 4;
+         break;
+      default:
+         charSize = 1;
+         break;
+   }
+
+   char buffer[READ_BUFFER_SIZE];
    int bytes, bufPos = 0;
    off_t resetPos;
-	int encoding = parser->getFileEncoding();
-	TCHAR text[READ_BUFFER_SIZE];
-
    do
    {
       resetPos = _lseek(fh, 0, SEEK_CUR);
@@ -148,11 +179,13 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Read %d bytes into buffer at offset %d"), bytes, bufPos);
          bytes += bufPos;
-         for(ptr = buffer;; ptr = eptr + 1)
+
+         char *ptr, *eptr;
+         for(ptr = buffer;; ptr = eptr + charSize)
          {
             bufPos = (int)(ptr - buffer);
 				eptr = FindEOL(ptr, bytes - bufPos, encoding);
-            if (eptr == NULL)
+            if (eptr == nullptr)
             {
 					int remaining = bytes - bufPos;
                resetPos = _lseek(fh, 0, SEEK_CUR) - remaining;
@@ -175,59 +208,64 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 					case LP_FCP_UCS2:
 #if WORDS_BIGENDIAN
                   if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\0\r", 2))
-							eptr -= 2;
-						*eptr = 0;
-						*(eptr + 1) = 0;
+							*(eptr - 1) = 0;
+                  else
+   						*(eptr + 1) = 0;
 #else
-
 						if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\r\0", 2))
-							eptr -= 2;
-						*eptr = 0;
-						*(eptr + 1) = 0;
+							*(eptr - 2) = 0;
+                  else
+						   *eptr = 0;
 #endif
 						break;
 					case LP_FCP_UCS2_LE:
-						if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\r\0", 2))
-							eptr -= 2;
-						*eptr = 0;
-						*(eptr + 1) = 0;
-						break;
+                  if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\r\0", 2))
+                     *(eptr - 2) = 0;
+                  else
+                     *eptr = 0;
+                  break;
 					case LP_FCP_UCS2_BE:
-						if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\0\r", 2))
-							eptr -= 2;
-						*eptr = 0;
-						*(eptr + 1) = 0;
-						break;
+                  if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\0\r", 2))
+                     *(eptr - 1) = 0;
+                  else
+                     *(eptr + 1) = 0;
+                  break;
 					case LP_FCP_UCS4:
 #if WORDS_BIGENDIAN
                  if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\0\0\0\r", 4))
-							eptr -= 4;
-						memset(eptr, 0, 4);
+                    *(eptr - 1) = 0;
+                 else
+                    *(eptr + 3) = 0;
 #else
-
 						if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\r\0\0\0", 4))
-							eptr -= 4;
-						memset(eptr, 0, 4);
+                     *(eptr - 4) = 0;
+                  else
+                     *eptr = 0;
 #endif
 						break;
 					case LP_FCP_UCS4_LE:
-						if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\r\0\0\0", 4))
-							eptr -= 4;
-						memset(eptr, 0, 4);
-						break;
+                  if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\r\0\0\0", 4))
+                     *(eptr - 4) = 0;
+                  else
+                     *eptr = 0;
+                  break;
 					case LP_FCP_UCS4_BE:
-						if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\0\0\0\r", 4))
-							eptr -= 4;
-						memset(eptr, 0, 4);
-						break;
+                  if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\0\0\0\r", 4))
+                     *(eptr - 1) = 0;
+                  else
+                     *(eptr + 3) = 0;
+                  break;
 					default:
 						if ((eptr - ptr >= 1) && *(eptr - 1) == '\r')
-							eptr--;
-						*eptr = 0;
+							*(eptr - 1) = 0;
+                  else
+						   *eptr = 0;
 						break;
 				}
+
 				// Now ptr points to null-terminated string in original encoding
 				// Do the conversion to platform encoding
+            TCHAR text[READ_BUFFER_SIZE];
 #ifdef UNICODE
 				switch(encoding)
 				{
@@ -349,7 +387,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 }
 
 /**
- * Scan first 10 bytes of a file to find its encoding
+ * Scan first 4 bytes of a file to find its encoding
  */
 static int ScanFileEncoding(int fh)
 {
@@ -367,7 +405,6 @@ static int ScanFileEncoding(int fh)
       if (!memcmp(buffer, "\xFF\xFE", 2))
          return LP_FCP_UCS2_LE;
    }
-
    return LP_FCP_ACP;
 }
 
@@ -541,7 +578,7 @@ bool LogParser::monitorFile()
       }
 
 #ifdef _WIN32
-      fh = _tsopen(fname, O_RDONLY, _SH_DENYNO);
+      fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
 #else
 		fh = _topen(fname, O_RDONLY);
 #endif
@@ -556,10 +593,11 @@ bool LogParser::monitorFile()
 		setStatus(LPS_RUNNING);
 		nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
 
-      if (m_fileEncoding == -1)
+      if (m_fileEncoding == LP_FCP_AUTO)
       {
          m_fileEncoding = ScanFileEncoding(fh);
          _lseek(fh, 0, SEEK_SET);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Detected encoding %s for file \"%s\""), s_encodingName[m_fileEncoding], fname);
       }
 
 		size_t size = (size_t)st.st_size;
