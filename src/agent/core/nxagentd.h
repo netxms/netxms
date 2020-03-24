@@ -531,6 +531,7 @@ public:
    void takeScreenshot(NXCPMessage *msg);
    bool getScreenInfo(uint32_t *width, uint32_t *height, uint32_t *bpp);
    void updateUserAgentConfig();
+   void updateUserAgentEnvironment();
    void updateUserAgentNotifications();
    void addUserAgentNotification(UserAgentNotification *n);
    void removeUserAgentNotification(const ServerObjectKey& id);
