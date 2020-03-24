@@ -33,6 +33,9 @@
     <ClCompile Include="mempool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gauge64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\testtools.h">

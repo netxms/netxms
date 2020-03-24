@@ -83,7 +83,7 @@ inline void ExitTestProcess()
 /**
  * Show test start mark
  */
-inline void StartTest(const TCHAR *name)
+static inline void StartTest(const TCHAR *name)
 {
    TCHAR filler[80];
    int l = 60 - (int)_tcslen(name);
@@ -104,7 +104,7 @@ inline void StartTest(const TCHAR *name)
 /**
  * Show test start mark
  */
-inline void StartTest(const TCHAR *prefix, const TCHAR *name)
+static inline void StartTest(const TCHAR *prefix, const TCHAR *name)
 {
    TCHAR fullName[256];
    _sntprintf(fullName, 256, _T("%s: %s"), prefix, name);
@@ -114,7 +114,7 @@ inline void StartTest(const TCHAR *prefix, const TCHAR *name)
 /**
  * Show test end
  */
-inline void EndTest()
+static inline void EndTest()
 {
    _tprintf(_T("OK\n"));
 }
@@ -122,7 +122,7 @@ inline void EndTest()
 /**
  * Show test end with timimg
  */
-inline void EndTest(INT64 ms)
+static inline void EndTest(INT64 ms)
 {
    _tprintf(_T("%d ms\n"), (int)ms);
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -366,10 +366,10 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
          {
             TCHAR context[16];
             _sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
-            if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, context, true))
+            if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, context, true) != SNMP_ERR_SUCCESS)
             {
-               delete fdb;
-               return NULL;
+               // Some Cisco switches may not return data for certain system VLANs
+               nxlog_debug(5, _T("FDB: cannot read port table in context %s"), context);
             }
          }
       }
@@ -396,10 +396,13 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
             fdb->setCurrentVlanId((UINT16)vlans->get(i)->getVlanId());
 				if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context) != SNMP_ERR_SUCCESS)
 				{
-				   delete fdb;
-				   return NULL;
-				}
-				DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
+               // Some Cisco switches may not return data for certain system VLANs
+               nxlog_debug(5, _T("FDB: cannot read  FDB in context %s"), context);
+            }
+            else
+            {
+               nxlog_debug(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
+            }
 				size = fdb->getSize();
 			}
 		}
