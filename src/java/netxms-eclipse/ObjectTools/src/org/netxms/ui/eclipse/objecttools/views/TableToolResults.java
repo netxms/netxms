@@ -61,6 +61,7 @@ public class TableToolResults extends ViewPart
 	
 	private NXCSession session;
 	private ObjectTool tool;
+	private AbstractObject object;
 	private long nodeId;
 	private SortableTableViewer viewer;
 	private Action actionRefresh;
@@ -87,7 +88,7 @@ public class TableToolResults extends ViewPart
 			throw new PartInitException(Messages.get().TableToolResults_InvalidToolID);
 		
 		nodeId = Long.parseLong(parts[1]);
-		AbstractObject object = session.findObjectById(nodeId);
+		object = session.findObjectById(nodeId);
 		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
 			throw new PartInitException(Messages.get().TableToolResults_InvalidObjectID);
 		
@@ -214,7 +215,9 @@ public class TableToolResults extends ViewPart
 					@Override
 					public void run()
 					{
-						updateViewer(table);
+					   if (!table.getTitle().isEmpty())
+					      setPartName(object.getObjectName() + ": " + table.getTitle()); //$NON-NLS-1$
+					   updateViewer(table);
 					}
 				});
 			}
