@@ -27,6 +27,7 @@
 	NX-1810 (Server can cash if scheduled task deleted while running)
 	NX-1814 (Values of internal parameters Server.QueueSize.Average and Server.QueueSize.Current are inconsistent)
 	NX-1815 (FDB cannot be read on certain Cisco switches)
+	NX-1817 (Log file can be read twice after rotation by log parser on Windows)
 
 
 *
