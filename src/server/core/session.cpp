@@ -10815,9 +10815,9 @@ void ClientSession::executeScript(NXCPMessage *request)
           (object->getObjectClass() == OBJECT_NETWORK) ||
           (object->getObjectClass() == OBJECT_SERVICEROOT))
       {
+         TCHAR *script = request->getFieldAsString(VID_SCRIPT);
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-				TCHAR *script = request->getFieldAsString(VID_SCRIPT);
 				if (script != nullptr)
 				{
                TCHAR errorMessage[256];
@@ -10828,13 +10828,13 @@ void ClientSession::executeScript(NXCPMessage *request)
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   sendMessage(&msg);
                   success = true;
+                  writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), _T(""), script, _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
                }
                else
                {
                   msg.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
                   msg.setField(VID_ERROR_TEXT, errorMessage);
                }
-					MemFree(script);
 				}
 				else
 				{
@@ -10843,8 +10843,10 @@ void ClientSession::executeScript(NXCPMessage *request)
          }
          else  // User doesn't have READ rights on object
          {
+            writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), _T(""), script, _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
+         MemFree(script);
       }
       else     // Object is not a node
       {
@@ -11028,7 +11030,8 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
          }
          else  // User doesn't have CONTROL rights on object
          {
-			   WriteAuditLog(AUDIT_OBJECTS, false, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script execution failed. No access rights to the object."), CHECK_NULL(script));
+			   writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on executing library script \"%s\" on object %s [%u]"),
+                  CHECK_NULL(script), object->getName(), object->getId());
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
@@ -11041,11 +11044,11 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   MemFree(script);
 
    // start execution
    if (success)
    {
+      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed library script \"%s\" for object %s [%u]"), script, object->getName(), object->getId());
       if (withOutput)
       {
          ObjectRefArray<NXSL_Value> sargs(args->size() - 1, 1);
@@ -11082,6 +11085,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
       sendMessage(&msg);
    }
 
+   MemFree(script);
    delete args;
 }
 
