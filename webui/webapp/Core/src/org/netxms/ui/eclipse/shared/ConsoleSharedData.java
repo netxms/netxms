@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.shared;
 
 import java.util.TimeZone;
-
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.ClientInfo;

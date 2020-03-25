@@ -368,7 +368,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          }
       }
    }
-   
+
    /* (non-Javadoc)
     * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
     */
