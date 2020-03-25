@@ -171,10 +171,9 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 
    char buffer[READ_BUFFER_SIZE];
    int bytes, bufPos = 0;
-   off_t resetPos;
+   off_t resetPos = _lseek(fh, 0, SEEK_CUR);
    do
    {
-      resetPos = _lseek(fh, 0, SEEK_CUR);
       if ((bytes = _read(fh, &buffer[bufPos], READ_BUFFER_SIZE - bufPos)) > 0)
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Read %d bytes into buffer at offset %d"), bytes, bufPos);
