@@ -128,9 +128,16 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(40);
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_objects);
-         IPreferenceStore store = ConsoleSharedData.getSettings();
-         boolean fullySync = store.getBoolean("ObjectsFullSync");
-         session.syncObjects(fullySync);
+         final boolean[] objectsFullSync = new boolean[1];
+         display.syncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               IPreferenceStore store = ConsoleSharedData.getSettings();
+               objectsFullSync[0] = store.getBoolean("ObjectsFullSync");
+            }
+         });
+         session.syncObjects(objectsFullSync[0]);
          monitor.worked(25);
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_users);
