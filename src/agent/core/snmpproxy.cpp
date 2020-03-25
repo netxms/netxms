@@ -132,25 +132,25 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                }
                free(pduOut);
                response.setField(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
-               debugPrintf(7, _T("proxySnmpRequest(%d): %s (%d retries)"), requestId, (nRetries == 3) ? _T("failure") : _T("success"), nRetries);
+               debugPrintf(7, _T("proxySnmpRequest(%d, %s): %s (%d retries)"), requestId, (const TCHAR *)addr.toString(), (nRetries == 3) ? _T("failure") : _T("success"), nRetries);
             }
             else
             {
                response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
-               debugPrintf(7, _T("proxySnmpRequest(%d): memory allocation failure"), requestId);
+               debugPrintf(7, _T("proxySnmpRequest(%d, %s): memory allocation failure"), requestId, (const TCHAR *)addr.toString());
             }
          }
          else
          {
             response.setField(VID_RCC, ERR_SOCKET_ERROR);
-            debugPrintf(7, _T("proxySnmpRequest(%d): connect() call failed (%d)"), requestId, WSAGetLastError());
+            debugPrintf(7, _T("proxySnmpRequest(%d, %s): connect() call failed (%d)"), requestId, (const TCHAR *)addr.toString(), WSAGetLastError());
          }
          closesocket(hSocket);
       }
       else
       {
          response.setField(VID_RCC, ERR_SOCKET_ERROR);
-         debugPrintf(7, _T("proxySnmpRequest(%d): socket() call failed (%d)"), requestId, WSAGetLastError());
+         debugPrintf(7, _T("proxySnmpRequest(%d, %s): socket() call failed (%d)"), requestId,  (const TCHAR *)addr.toString(), WSAGetLastError());
       }
    }
    else
