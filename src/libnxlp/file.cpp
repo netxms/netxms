@@ -199,6 +199,8 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
                   }
 					}
 					bufPos = remaining;
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("Last line in data block for file \"%s\", resetPos=") UINT64_FMT _T(", remaining=%d"),
+                     parser->getFileName(), static_cast<uint64_t>(resetPos), remaining);
                break;
             }
 				// remove possible CR character and put 0 to indicate end of line
@@ -766,7 +768,10 @@ bool LogParser::monitorFile2()
       if (CALL_STAT(fname, &st) != 0)
       {
          if (errno == ENOENT)
+         {
             readFromStart = true;
+            firstRead = true;
+         }
          setStatus(LPS_NO_FILE);
          if (ConditionWait(m_stopCondition, 10000))
             break;
@@ -795,7 +800,7 @@ bool LogParser::monitorFile2()
       }
 
 #ifdef _WIN32
-      int fh = _tsopen(fname, O_RDONLY, _SH_DENYNO);
+      int fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
 #else
       int fh = _topen(fname, O_RDONLY);
 #endif
@@ -817,12 +822,12 @@ bool LogParser::monitorFile2()
 #endif
       {
 #ifdef _WIN32
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("File \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
-            static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("File \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"), fname,
+               static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
          ctime = st.st_ctime;
 #else
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("File \"%s\" rotation detected (size=%llu/%llu)"),  fname,
-            static_cast<UINT64>(size), static_cast<UINT64>(st.st_size));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("File \"%s\" rotation detected (size=%llu/%llu)"), fname,
+               static_cast<UINT64>(size), static_cast<UINT64>(st.st_size));
 #endif
          readFromStart = true;   // Assume file rotation
       }
@@ -869,6 +874,10 @@ bool LogParser::monitorFile2()
                }
             }
          }
+      }
+      else
+      {
+         firstRead = false;   // Could be set together with readFromStart if file was missing for some time
       }
       readFromStart = false;
 
