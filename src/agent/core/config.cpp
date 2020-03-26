@@ -51,7 +51,7 @@ static BOOL SaveConfig(TCHAR *pszConfig)
    BOOL bRet = FALSE;
 
    fp = _tfopen(g_szConfigFile, _T("w"));
-   if (fp != NULL)
+   if (fp != nullptr)
    {
       bRet = (_fputts(pszConfig, fp) >= 0);
       fclose(fp);
@@ -68,7 +68,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
    TCHAR szBuffer[MAX_RESULT_LENGTH], *pszConfig;
    NXCP_MESSAGE *pRawMsg;
    NXCP_BUFFER *pBuffer;
-   NXCPEncryptionContext *pDummyCtx = NULL;
+   NXCPEncryptionContext *pDummyCtx = nullptr;
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -98,7 +98,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
          NXCPMessage msg(2);  // Server version is not known, use protocol version 2
          msg.setCode(CMD_GET_MY_CONFIG);
          msg.setId(1);
-         if (H_PlatformName(NULL, NULL, szBuffer, NULL) != SYSINFO_RC_SUCCESS)
+         if (H_PlatformName(nullptr, nullptr, szBuffer, nullptr) != SYSINFO_RC_SUCCESS)
             _tcscpy(szBuffer, _T("error"));
          msg.setField(VID_PLATFORM_NAME, szBuffer);
          msg.setField(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
@@ -109,25 +109,25 @@ BOOL DownloadConfig(TCHAR *pszServer)
          // Send request
          pRawMsg = msg.serialize();
          ssize_t nLen = ntohl(pRawMsg->size);
-         if (SendEx(hSocket, pRawMsg, nLen, 0, NULL) == nLen)
+         if (SendEx(hSocket, pRawMsg, nLen, 0, nullptr) == nLen)
          {
             pRawMsg = (NXCP_MESSAGE *)MemRealloc(pRawMsg, MAX_MSG_SIZE);
             pBuffer = MemAllocStruct<NXCP_BUFFER>();
             NXCPInitBuffer(pBuffer);
 
             nLen = RecvNXCPMessage(hSocket, pRawMsg, pBuffer, MAX_MSG_SIZE,
-                                   &pDummyCtx, NULL, 30000);
+                                   &pDummyCtx, nullptr, 30000);
             if (nLen >= 16)
             {
                NXCPMessage *pResponse = NXCPMessage::deserialize(pRawMsg);
-               if (pResponse != NULL)
+               if (pResponse != nullptr)
                {
                   if ((pResponse->getCode() == CMD_REQUEST_COMPLETED) &&
                       (pResponse->getId() == 1) &&
                       (pResponse->getFieldAsUInt32(VID_RCC) == 0))
                   {
                      pszConfig = pResponse->getFieldAsString(VID_CONFIG_FILE);
-                     if (pszConfig != NULL)
+                     if (pszConfig != nullptr)
                      {
                         bRet = SaveConfig(pszConfig);
                         MemFree(pszConfig);
@@ -156,8 +156,8 @@ BOOL DownloadConfig(TCHAR *pszServer)
 /**
  * Create configuration file
  */
-int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile, const char *pszFileStore,
-      const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues)
+int CreateConfig(bool forceCreate, const char *masterServers, const char *logFile, const char *fileStore,
+      const char *configIncludeDir, int numSubAgents, char **subAgentList, const char *extraValues)
 {
    FILE *fp;
    time_t currTime;
@@ -167,40 +167,65 @@ int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile
       return 0;  // File already exist, we shouldn't overwrite it
 
    fp = _tfopen(g_szConfigFile, _T("w"));
-   if (fp != NULL)
+   if (fp != nullptr)
    {
-      currTime = time(NULL);
+      currTime = time(nullptr);
       _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by agent installer at %s#\n\n"),
          _tctime(&currTime));
-      _ftprintf(fp, _T("MasterServers = %hs\nConfigIncludeDir = %hs\nLogFile = %hs\nFileStore = %hs\n"),
-         pszServer, configIncludeDir, pszLogFile, pszFileStore);
+      if (*masterServers == _T('~'))
+      {
+         // Setup agent-server tunnel(s)
+         _ftprintf(fp, _T("MasterServers = %hs\n"), &masterServers[1]);
+         const char *curr = &masterServers[1];
+         while (true)
+         {
+            const char *next = strchr(curr, ',');
+            if (next == nullptr)
+            {
+               _ftprintf(fp, _T("ServerConnection = %hs\n"), curr);
+               break;
+            }
+            size_t len = next - curr;
+            char temp[256];
+            strlcpy(temp, curr, std::min(len + 1, sizeof(temp)));
+            StrStripA(temp);
+            if (temp[0] != 0)
+               _ftprintf(fp, _T("ServerConnection = %hs\n"), temp);
+            curr = next + 1;
+         }
+      }
+      else
+      {
+         _ftprintf(fp, _T("MasterServers = %hs\n"), masterServers);
+      }
+      _ftprintf(fp, _T("ConfigIncludeDir = %hs\nLogFile = %hs\nFileStore = %hs\n"), configIncludeDir, logFile, fileStore);
 
       Array extSubAgents;
-      for (i = 0; i < iNumSubAgents; i++)
+      for (i = 0; i < numSubAgents; i++)
       {
-         if (!strnicmp(ppszSubAgentList[i], "EXT:", 4))
+         if (!strnicmp(subAgentList[i], "EXT:", 4))
          {
-            extSubAgents.add(ppszSubAgentList[i] + 4);
+            extSubAgents.add(subAgentList[i] + 4);
          }
          else
          {
-            _ftprintf(fp, _T("SubAgent = %hs\n"), ppszSubAgentList[i]);
+            _ftprintf(fp, _T("SubAgent = %hs\n"), subAgentList[i]);
          }
       }
 
       for (i = 0; i < extSubAgents.size(); i++)
       {
          char section[MAX_PATH];
-         strncpy(section, (const char *)extSubAgents.get(i), MAX_PATH);
+         strlcpy(section, (const char *)extSubAgents.get(i), MAX_PATH);
          char *eptr = strrchr(section, '.');
-         if (eptr != NULL)
+         if (eptr != nullptr)
             *eptr = 0;
          strupr(section);
          _ftprintf(fp, _T("\n[EXT:%hs]\n"), section);
          _ftprintf(fp, _T("SubAgent = %hs\n"), (const char *)extSubAgents.get(i));
       }
 
-      if (extraValues != NULL)
+      if (extraValues != nullptr)
       {
          char *temp = MemCopyStringA(extraValues);
          char *curr = temp;
@@ -211,22 +236,22 @@ int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile
          do
          {
             next = strstr(curr, "~~");
-            if (next != NULL)
+            if (next != nullptr)
                *next = 0;
             StrStripA(curr);
-            if ((*curr == '[') || (*curr == '*') || (strchr(curr, '=') != NULL))
+            if ((*curr == '[') || (*curr == '*') || (strchr(curr, '=') != nullptr))
             {
                _ftprintf(fp, _T("%hs\n"), curr);
             }
             curr = next + 2;
-         } while (next != NULL);
+         } while (next != nullptr);
 
-         free(temp);
+         MemFree(temp);
       }
 
       fclose(fp);
    }
-   return (fp != NULL) ? 0 : 2;
+   return (fp != nullptr) ? 0 : 2;
 }
 
 #ifdef _WIN32
@@ -247,7 +272,7 @@ static void RecoverDataDirectory()
       return;  // Data directory exist
 
    TCHAR appDataDir[MAX_PATH];
-   if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appDataDir) != S_OK)
+   if (SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, appDataDir) != S_OK)
       return;
 
    _tcslcat(appDataDir, _T("\\nxagentd"), MAX_PATH);
@@ -294,7 +319,7 @@ void RecoverConfigPolicyDirectory()
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if (tag != NULL)
+   if (tag != nullptr)
    {
       ConsolePrintf(_T("<%s> "), tag);
    }
@@ -315,7 +340,7 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
    if (!_tcscmp(g_szDataDirectory, _T("{default}")))
    {
 #ifdef _WIN32
-      if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, g_szDataDirectory) == S_OK)
+      if (SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, g_szDataDirectory) == S_OK)
       {
          _tcslcat(g_szDataDirectory, _T("\\nxagentd"), MAX_PATH);
       }
@@ -333,18 +358,18 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
       nxlog_set_debug_writer(DebugWriter);
       nxlog_set_debug_level(1);
    }
-   bool validConfig = config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, NULL, true);
+   bool validConfig = config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, nullptr, true);
    if (validConfig)
    {
       const TCHAR *dir = config->getValue(_T("/%agent/DataDirectory"));
-      if (dir != NULL)
+      if (dir != nullptr)
          _tcslcpy(g_szDataDirectory, dir, MAX_PATH);
 
       dir = config->getValue(_T("/%agent/ConfigIncludeDir"));
-      if (dir != NULL)
+      if (dir != nullptr)
          _tcslcpy(g_szConfigIncludeDir, dir, MAX_PATH);
 
-      validConfig = config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, NULL, false);
+      validConfig = config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, nullptr, false);
       if (!validConfig)
       {
          ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigIncludeDir);
@@ -379,7 +404,7 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
 
    if (firstStart)
    {
-      nxlog_set_debug_writer(NULL);
+      nxlog_set_debug_writer(nullptr);
       nxlog_set_debug_level(0);
    }
 

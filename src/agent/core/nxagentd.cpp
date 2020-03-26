@@ -124,8 +124,8 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void(*executeAction)(const TCHAR *, const StringList *),
       bool(*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *));
 
-int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile, const char *pszFileStore,
-   const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues);
+int CreateConfig(bool forceCreate, const char *masterServers, const char *logFile, const char *fileStore,
+   const char *configIncludeDir, int numSubAgents, char **subAgentList, const char *extraValues);
 
 /**
  * OpenSSL APPLINK
