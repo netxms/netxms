@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -131,6 +131,18 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       return SYSINFO_RC_SUCCESS;
    }
 
+   if (!strcmp(mf, "QEMU"))
+   {
+      ret_mbstring(value, "QEMU");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (!strcmp(mf, "Amazon EC2"))
+   {
+      ret_mbstring(value, "Amazon EC2");
+      return SYSINFO_RC_SUCCESS;
+   }
+
    if (IsVirtualBox())
    {
       ret_mbstring(value, "VirtualBox");
@@ -161,6 +173,11 @@ LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
       return SYSINFO_RC_SUCCESS;
    if (IsVirtualBox() && GetVirtualBoxVersionString(value))
       return SYSINFO_RC_SUCCESS;
+   if (!strcmp(SMBIOS_GetHardwareManufacturer(), "Amazon EC2"))
+   {
+      ret_mbstring(value, SMBIOS_GetHardwareProduct());
+      return SYSINFO_RC_SUCCESS;
+   }
    return SYSINFO_RC_UNSUPPORTED;
 }
 
