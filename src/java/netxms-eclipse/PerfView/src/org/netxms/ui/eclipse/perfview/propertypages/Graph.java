@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -38,7 +39,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphSettings;
@@ -57,7 +57,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Predefined graph properties property page
  */
-public class PredefinedGraph extends PropertyPage
+public class Graph extends PreferencePage
 {
    private GraphSettings settings;
 	private LabeledText name;
@@ -65,19 +65,28 @@ public class PredefinedGraph extends PropertyPage
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(2);
 	private HashMap<Long, AccessListElement> acl;
 	
+	
+	/**
+	 * Constructor
+	 * @param settings
+	 */
+	public Graph(GraphSettings settings)
+	{
+      super(settings.isTemplate() ? "Template Graph" : "Predefined Graph");
+      this.settings = settings;	   
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
-	{
-	   settings = (GraphSettings)getElement().getAdapter(GraphSettings.class);
-		
+	{		
 		acl = new HashMap<Long, AccessListElement>(settings.getAccessList().size());
 		for(AccessListElement e : settings.getAccessList())
 			acl.put(e.getUserId(), new AccessListElement(e));
 		
-		final NXCSession session = ConsoleSharedData.getSession();
+		NXCSession session = ConsoleSharedData.getSession();
 		
 		ConsoleJob job = new ConsoleJob("Synchronize missing users", null, Activator.PLUGIN_ID) {         
          @Override
@@ -171,7 +180,7 @@ public class PredefinedGraph extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(PredefinedGraph.this.getShell(), AbstractUserObject.class);
+				SelectUserDialog dlg = new SelectUserDialog(Graph.this.getShell(), AbstractUserObject.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();
@@ -326,7 +335,7 @@ public class PredefinedGraph extends PropertyPage
 						@Override
 						public void run()
 						{
-							PredefinedGraph.this.setValid(true);
+							Graph.this.setValid(true);
 						}
 					});
 				}

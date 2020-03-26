@@ -19,5 +19,6 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.1",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objecttools.api,
+ org.netxms.ui.eclipse.objecttools.propertypages,
  org.netxms.ui.eclipse.objecttools.widgets
 Automatic-Module-Name: org.netxms.ui.eclipse.objecttools

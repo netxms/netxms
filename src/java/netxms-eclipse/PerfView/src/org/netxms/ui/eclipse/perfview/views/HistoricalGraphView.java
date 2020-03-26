@@ -32,6 +32,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
@@ -44,12 +47,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
@@ -75,6 +78,9 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.dialogs.SaveGraphDlg;
+import org.netxms.ui.eclipse.perfview.propertypages.DataSources;
+import org.netxms.ui.eclipse.perfview.propertypages.General;
+import org.netxms.ui.eclipse.perfview.propertypages.Graph;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
@@ -82,7 +88,6 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
 /**
  * History graph view
  */
-@SuppressWarnings("restriction")
 public class HistoricalGraphView extends ViewPart implements GraphSettingsChangeListener
 {
    public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoryGraph"; //$NON-NLS-1$
@@ -579,10 +584,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, settings);
-            if (dlg != null)
+            if (showGraphPropertyPages(settings))
             {
-               dlg.open();
                configureGraphFromSettings();
                refreshMenuSelection();
             }
@@ -732,7 +735,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       };  
 
-      //TODO: add check that graph uses only one node as source
       actionSaveAsTemplate = new Action("Save as template") {
          @Override
          public void run()
@@ -1248,5 +1250,30 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
        * @return current chart object
        */
       public HistoricalDataChart getChart();
+   } 
+   
+   /**
+    * Show Graph configuration dialog
+    * 
+    * @param trap Object tool details object
+    * @return true if OK was pressed
+    */
+   private boolean showGraphPropertyPages(GraphSettings settings)
+   {
+      PreferenceManager pm = new PreferenceManager();    
+      pm.addToRoot(new PreferenceNode("graph", new Graph(settings)));
+      pm.addToRoot(new PreferenceNode("general", new General(settings)));
+      pm.addToRoot(new PreferenceNode("source", new DataSources(settings)));
+      
+      PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
+         @Override
+         protected void configureShell(Shell newShell)
+         {
+            super.configureShell(newShell);
+            newShell.setText("Properties for " + settings.getDisplayName());
+         }
+      };
+      dlg.setBlockOnOpen(true);
+      return dlg.open() == Window.OK;
    }
 }

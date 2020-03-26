@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objecttools.propertypages;
 
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -27,7 +28,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objecttools.ObjectAction;
 import org.netxms.client.objecttools.ObjectTool;
@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * "Filter" property page for object tool
  */
-public class Filter extends PropertyPage
+public class Filter extends PreferencePage
 {
 	private ObjectMenuFilter filter;
 	private Button checkAgent;
@@ -54,27 +54,40 @@ public class Filter extends PropertyPage
 	private Text textTemplate;
    private Text textCustomAttributes;
 	private ObjectToolDetails objectTool = null;
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createControl(Composite parent)
-	{
-		noDefaultAndApplyButton();
-		super.createControl(parent);
-	}
+	private ObjectAction action = null;
+   
+   
+   /**
+    * Constructor
+    * 
+    * @param toolDetails
+    */
+   public Filter(ObjectAction action)
+   {
+      super("Filter");
+      noDefaultAndApplyButton();
+      this.action = action;
+   }     
+	
+   /**
+    * Constructor
+    * 
+    * @param toolDetails
+    */
+   public Filter(ObjectToolDetails toolDetails)
+   {
+      super("Filter");
+      noDefaultAndApplyButton();
+      objectTool = toolDetails;
+      action = (ObjectAction)objectTool;
+   }	
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
-	{
-	   ObjectAction action = (ObjectAction)getElement().getAdapter(ObjectAction.class);
-	   if (action instanceof ObjectTool)
-	      objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);	   
-	   
+	{	   
 	   filter = action.getMenuFilter();
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);

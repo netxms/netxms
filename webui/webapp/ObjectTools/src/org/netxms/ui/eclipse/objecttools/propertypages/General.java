@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -38,7 +39,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -74,14 +74,17 @@ public class General extends PropertyPage
 	private Label iconLabel;
 	private Image icon;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param toolDetails
 	 */
-	@Override
-	public void createControl(Composite parent)
+	public General(ObjectToolDetails toolDetails)
 	{
-		noDefaultAndApplyButton();
-		super.createControl(parent);
+      super("General");
+      noDefaultAndApplyButton();
+	   objectTool = toolDetails;
 	}
 	
 	/* (non-Javadoc)
@@ -89,9 +92,7 @@ public class General extends PropertyPage
 	 */
 	@Override
 	protected Control createContents(Composite parent)
-	{
-		objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class); 
-			
+	{			
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();

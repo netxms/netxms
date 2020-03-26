@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objecttools.propertypages;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -43,7 +44,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.InputField;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -55,7 +55,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * "Input Fields" property page for object tool
  */
-public class InputFields extends PropertyPage
+public class InputFields extends PreferencePage
 {
 	private ObjectToolDetails objectTool;
 	private List<InputField> fields = new ArrayList<InputField>();
@@ -65,16 +65,19 @@ public class InputFields extends PropertyPage
 	private Button buttonRemove;
 	private Button buttonUp;
 	private Button buttonDown;
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createControl(Composite parent)
-	{
-		noDefaultAndApplyButton();
-		super.createControl(parent);
-	}
+   
+   
+   /**
+    * Constructor
+    * 
+    * @param toolDetails
+    */
+   public InputFields(ObjectToolDetails toolDetails)
+   {
+      super("Input Fields");
+      noDefaultAndApplyButton();
+      objectTool = toolDetails;
+   }  
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -82,7 +85,6 @@ public class InputFields extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);
 		for(InputField f : objectTool.getInputFields())
 			fields.add(new InputField(f));
 

@@ -34,6 +34,9 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -51,6 +54,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -70,17 +74,21 @@ import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.objecttools.ObjectToolsAdapterFactory;
 import org.netxms.ui.eclipse.objecttools.dialogs.CreateNewToolDialog;
+import org.netxms.ui.eclipse.objecttools.propertypages.AccessControl;
+import org.netxms.ui.eclipse.objecttools.propertypages.Columns;
+import org.netxms.ui.eclipse.objecttools.propertypages.Filter;
+import org.netxms.ui.eclipse.objecttools.propertypages.General;
+import org.netxms.ui.eclipse.objecttools.propertypages.InputFields;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsComparator;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsFilter;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -362,20 +370,17 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				if (selection.size() != 1)
 					return;
-				final long toolId = ((ObjectTool)selection.getFirstElement()).getId();
 				
 				// Check if we have details loaded or can load before showing properties dialog
 				// If there will be error, adapter factory will show error message to user
 				if (Platform.getAdapterManager().getAdapter(selection.getFirstElement(), ObjectToolDetails.class) == null)
 					return;
 				
-				super.run();
-				
-				ObjectToolDetails details = ObjectToolsAdapterFactory.getDetailsFromCache(toolId);
-				if ((details != null) && details.isModified())
-				{
-					saveObjectTool(details);
-				}
+		      ObjectToolDetails objectToolDetails = (ObjectToolDetails)Platform.getAdapterManager().getAdapter(selection.getFirstElement(), ObjectToolDetails.class);   
+		      if (showObjectToolPropertyPages(objectToolDetails))
+		      {
+		         saveObjectTool(objectToolDetails);
+		      }
 			}
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
@@ -621,19 +626,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			{
 				return Messages.get().ObjectToolsEditor_JobSaveError;
 			}
-
-			@Override
-			protected void jobFailureHandler()
-			{
-				// Was unable to save configuration on server, invalidate cache
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						ObjectToolsAdapterFactory.deleteFromCache(details.getId());
-					}
-				});
-			}
 		}.schedule();
 	}
 	
@@ -761,7 +753,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						ObjectToolsAdapterFactory.deleteFromCache(n.getSubCode());
 						tools.remove(n.getSubCode());
 						viewer.setInput(tools.values().toArray());
 						return Status.OK_STATUS;
@@ -778,9 +769,36 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	public void dispose()
 	{
 		session.removeListener(this);
-		ObjectToolsAdapterFactory.clearCache();
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		settings.put("ObjectTools.showFilter", initShowFilter);
 		super.dispose();
 	}
+	   
+   /**
+    * Show Object tools configuration dialog
+    * 
+    * @param trap Object tool details object
+    * @return true if OK was pressed
+    */
+   private boolean showObjectToolPropertyPages(ObjectToolDetails objectTool)
+   {
+      PreferenceManager pm = new PreferenceManager();    
+      pm.addToRoot(new PreferenceNode("general", new General(objectTool)));
+      pm.addToRoot(new PreferenceNode("access_control", new AccessControl(objectTool)));
+      pm.addToRoot(new PreferenceNode("filter", new Filter(objectTool)));
+      pm.addToRoot(new PreferenceNode("input_fields", new InputFields(objectTool)));
+      if (objectTool.getToolType() == ObjectTool.TYPE_AGENT_LIST || objectTool.getToolType() == ObjectTool.TYPE_AGENT_TABLE)
+         pm.addToRoot(new PreferenceNode("columns", new Columns(objectTool)));
+      
+      PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
+         @Override
+         protected void configureShell(Shell newShell)
+         {
+            super.configureShell(newShell);
+            newShell.setText("Properties for " + objectTool.getCommandDisplayName());
+         }
+      };
+      dlg.setBlockOnOpen(true);
+      return dlg.open() == Window.OK;
+   }
 }

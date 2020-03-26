@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -39,7 +40,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectToolDetails;
@@ -55,7 +55,7 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 /**
  * "Access Control" property page
  */
-public class AccessControl extends PropertyPage
+public class AccessControl extends PreferencePage
 {
 	private ObjectToolDetails objectTool;
 	private Set<AbstractUserObject> acl = new HashSet<AbstractUserObject>();
@@ -63,25 +63,26 @@ public class AccessControl extends PropertyPage
 	private Button buttonAdd;
 	private Button buttonRemove;
 	private NXCSession session;
+   
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createControl(Composite parent)
-	{
-		noDefaultAndApplyButton();
-		super.createControl(parent);
-	}
+   /**
+    * Constructor
+    * 
+    * @param toolDetails
+    */
+   public AccessControl(ObjectToolDetails toolDetails)
+   {
+      super("Access Control");
+      noDefaultAndApplyButton();
+      objectTool = toolDetails;
+   }
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
-	{
-		objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);
-		
+	{	
 		// Build internal copy of access list
 		session = (NXCSession)ConsoleSharedData.getSession();
 		for(Long uid : objectTool.getAccessList())

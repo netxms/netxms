@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.objecttools;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -66,13 +64,6 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 			try
 			{
 				result = session.getObjectToolDetails(toolId);
-				display.asyncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  cache.put(toolId, result);
-               }
-            });
 			}
 			catch(final Exception e)
 			{
@@ -99,8 +90,6 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 		IWorkbenchAdapter.class,
 		ObjectToolDetails.class
 	};
-	
-	private static Map<Long, ObjectToolDetails> cache = new HashMap<Long, ObjectToolDetails>();
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
@@ -116,21 +105,18 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 		if (adapterType == ObjectToolDetails.class)
 		{
 			final long toolId = ((ObjectTool)adaptableObject).getId();
-			ObjectToolDetails details = cache.get(toolId);
-			if (details == null)
+			ObjectToolDetails details = null;
+			ToolDetailLoader job = new ToolDetailLoader(toolId, PlatformUI.getWorkbench().getDisplay());
+			IProgressService service = PlatformUI.getWorkbench().getProgressService();
+			try
 			{
-				ToolDetailLoader job = new ToolDetailLoader(toolId, PlatformUI.getWorkbench().getDisplay());
-				IProgressService service = PlatformUI.getWorkbench().getProgressService();
-				try
-				{
-					service.busyCursorWhile(job);
-					details = job.getResult();
-				}
-				catch(Exception e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				service.busyCursorWhile(job);
+				details = job.getResult();
+			}
+			catch(Exception e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			return details;
 		}
@@ -176,34 +162,5 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 	public Class[] getAdapterList()
 	{
 		return supportedClasses;
-	}
-	
-	/**
-	 * Get details object from c ache
-	 * 
-	 * @param toolId tool ID
-	 * @return
-	 */
-	public static ObjectToolDetails getDetailsFromCache(long toolId)
-	{
-		return cache.get(toolId);
-	}
-	
-	/**
-	 * Remove tool details from cache
-	 * 
-	 * @param toolId tool ID
-	 */
-	public static void deleteFromCache(long toolId)
-	{
-		cache.remove(toolId);
-	}
-	
-	/**
-	 * Clear cache
-	 */
-	public static void clearCache()
-	{
-		cache.clear();
 	}
 }

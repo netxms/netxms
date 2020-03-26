@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -44,7 +45,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -65,7 +65,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * DCI list editor for dashboard element
  */
-public class DataSources extends PropertyPage
+public class DataSources extends PreferencePage
 {
 	public static final int COLUMN_POSITION = 0;
 	public static final int COLUMN_NODE = 1;
@@ -84,6 +84,17 @@ public class DataSources extends PropertyPage
 	private List<ChartDciConfig> dciList = null;
 	private ColorCache colorCache;
 	private boolean graphIsTemplate = false;
+   
+   
+   /**
+    * Constructor
+    * @param settings
+    */
+   public DataSources(GraphSettings settings)
+   {
+      super("Data Source");
+      config = settings;     
+   }
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -91,7 +102,6 @@ public class DataSources extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		config = (ChartConfig)getElement().getAdapter(ChartConfig.class);
 		
 		if(config instanceof GraphSettings)
 		   graphIsTemplate = ((GraphSettings)config).isTemplate();

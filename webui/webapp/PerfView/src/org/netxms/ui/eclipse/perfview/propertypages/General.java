@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.perfview.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -32,7 +33,6 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.GraphSettings;
@@ -49,7 +49,7 @@ import org.netxms.ui.eclipse.widgets.TimePeriodSelector;
 /**
  * "General" property page for chart
  */
-public class General extends PropertyPage
+public class General extends PreferencePage
 {
 	private ChartConfig config;
 	private LabeledText title;
@@ -69,15 +69,24 @@ public class General extends PropertyPage
 	private Spinner refreshIntervalSpinner;
 	private TimePeriodSelector timeSelector;
 	private YAxisRangeEditor yAxisRange;
+   
+   
+   /**
+    * Constructor
+    * @param settings
+    */
+   public General(GraphSettings settings)
+   {
+      super("General");
+      config = settings;     
+   }
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
-	{
-	   config = (ChartConfig)getElement().getAdapter(ChartConfig.class);
-		
+	{		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();

@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.objecttools.propertypages;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -42,7 +42,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.objecttools.ObjectToolTableColumn;
@@ -55,7 +54,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * "Columns" property page for object tool
  */
-public class Columns extends PropertyPage
+public class Columns extends PreferencePage
 {
 	private ObjectToolDetails objectTool;
 	private List<ObjectToolTableColumn> columns = new ArrayList<ObjectToolTableColumn>();
@@ -63,16 +62,19 @@ public class Columns extends PropertyPage
 	private Button buttonAdd;
 	private Button buttonEdit;
 	private Button buttonRemove;
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createControl(Composite parent)
-	{
-		noDefaultAndApplyButton();
-		super.createControl(parent);
-	}
+   
+	
+   /**
+    * Constructor
+    * 
+    * @param toolDetails
+    */
+   public Columns(ObjectToolDetails toolDetails)
+   {
+      super("Columns");
+      noDefaultAndApplyButton();
+      objectTool = toolDetails;
+   }
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -80,7 +82,6 @@ public class Columns extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);
 		for(ObjectToolTableColumn tc : objectTool.getColumns())
 			columns.add(new ObjectToolTableColumn(tc));
 

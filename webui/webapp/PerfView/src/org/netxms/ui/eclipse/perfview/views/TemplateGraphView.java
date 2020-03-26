@@ -28,6 +28,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -37,11 +40,11 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
@@ -53,9 +56,13 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.propertypages.Filter;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.dialogs.SaveGraphDlg;
+import org.netxms.ui.eclipse.perfview.propertypages.General;
+import org.netxms.ui.eclipse.perfview.propertypages.Graph;
+import org.netxms.ui.eclipse.perfview.propertypages.TemplateDataSources;
 import org.netxms.ui.eclipse.perfview.views.helpers.TemplateGraphLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -64,7 +71,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Template Graph Configuration
  */
-@SuppressWarnings("restriction")
 public class TemplateGraphView extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TemplateGraphView"; //$NON-NLS-1$
@@ -320,39 +326,35 @@ public class TemplateGraphView extends ViewPart implements SessionListener
          return;
       
       GraphSettings settings = (GraphSettings)selection.getFirstElement();
-      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, settings);
-      if (dlg != null)
+      if (showGraphPropertyPages(settings))
       {
-         if (dlg.open() == Window.OK)
+         final GraphSettings newSettings = settings;
+         try
          {
-            final GraphSettings newSettings = settings;
-            try
-            {
-               new ConsoleJob("Update template graph", null, Activator.PLUGIN_ID, null) {
-                  @Override
-                  protected void runInternal(IProgressMonitor monitor) throws Exception
-                  {
-                     session.saveGraph(newSettings, false);
-                     runInUIThread(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                           viewer.update(newSettings, null);
-                        }
-                     });
-                  }
-                  
-                  @Override
-                  protected String getErrorMessage()
-                  {
-                     return "Cannot update predefined graph";
-                  }
-               }.start();
-            }
-            catch(Exception e)
-            {
-               MessageDialogHelper.openError(getSite().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+            new ConsoleJob("Update template graph", null, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  session.saveGraph(newSettings, false);
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewer.update(newSettings, null);
+                     }
+                  });
+               }
+               
+               @Override
+               protected String getErrorMessage()
+               {
+                  return "Cannot update predefined graph";
+               }
+            }.start();
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(getSite().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
          }
       }
    }
@@ -504,5 +506,32 @@ public class TemplateGraphView extends ViewPart implements SessionListener
 			   return String.format("Error getting ");
 			}
 		}.start();
-	}
+	}	
+
+   
+   /**
+    * Show Graph configuration dialog
+    * 
+    * @param trap Object tool details object
+    * @return true if OK was pressed
+    */
+   private boolean showGraphPropertyPages(GraphSettings settings)
+   {
+      PreferenceManager pm = new PreferenceManager();    
+      pm.addToRoot(new PreferenceNode("graph", new Graph(settings)));
+      pm.addToRoot(new PreferenceNode("general", new General(settings)));
+      pm.addToRoot(new PreferenceNode("filter", new Filter(settings)));
+      pm.addToRoot(new PreferenceNode("template", new TemplateDataSources(settings)));
+      
+      PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
+         @Override
+         protected void configureShell(Shell newShell)
+         {
+            super.configureShell(newShell);
+            newShell.setText("Properties for " + settings.getDisplayName());
+         }
+      };
+      dlg.setBlockOnOpen(true);
+      return dlg.open() == Window.OK;
+   }
 }
