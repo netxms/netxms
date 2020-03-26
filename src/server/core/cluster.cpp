@@ -885,9 +885,9 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 /**
  * Unbind cluster from template
  */
-void Cluster::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
+void Cluster::unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI)
 {
-   super::unbindFromTemplate(dwTemplateId, removeDCI);
+   super::unbindFromTemplate(templateObject, removeDCI);
    queueUpdate();
 }
 

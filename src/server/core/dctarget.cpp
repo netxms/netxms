@@ -457,15 +457,16 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
  * Unbind data collection target from template, i.e either remove DCI
  * association with template or remove these DCIs at all
  */
-void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
+void DataCollectionTarget::unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI)
 {
+   if ((getObjectClass() == OBJECT_NODE) && (templateObject->getObjectClass() == OBJECT_TEMPLATE))
+   {
+      static_cast<Template&>(*templateObject).removeAllPolicies(static_cast<Node*>(this));
+   }
+
+   uint32_t templateId = templateObject->getId();
    if (removeDCI)
    {
-      if (getObjectClass() == OBJECT_NODE)
-      {
-         shared_ptr<Template> obj = static_pointer_cast<Template>(FindObjectById(dwTemplateId, OBJECT_TEMPLATE));
-         obj->removeAllPolicies((Node *)this);
-      }
       writeLockDciAccess();  // write lock
 
 		UINT32 *deleteList = MemAllocArray<UINT32>(m_dcObjects->size());
@@ -473,7 +474,7 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
 
 		int i;
       for(i = 0; i < m_dcObjects->size(); i++)
-         if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
+         if (m_dcObjects->get(i)->getTemplateId() == templateId)
          {
             deleteList[numDeleted++] = m_dcObjects->get(i)->getId();
          }
@@ -489,7 +490,7 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
       readLockDciAccess();
 
       for(int i = 0; i < m_dcObjects->size(); i++)
-         if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
+         if (m_dcObjects->get(i)->getTemplateId() == templateId)
          {
             m_dcObjects->get(i)->setTemplateId(0, 0);
          }

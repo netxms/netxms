@@ -2032,7 +2032,7 @@ public:
 
    bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
-   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
+   virtual void unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
 
    virtual bool isEventSource() const override;
 
@@ -2300,7 +2300,7 @@ public:
 
    virtual bool lockForInstancePoll() override { return false; }
 
-   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI) override;
+   virtual void unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
 
