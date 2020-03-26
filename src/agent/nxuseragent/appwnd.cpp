@@ -191,6 +191,18 @@ static void ProcessKeyPress(HWND hWnd, WPARAM key)
 }
 
 /**
+ * Erase background of application window
+ */
+static void EraseBackground(HWND hWnd, HDC hdc)
+{
+   RECT rect;
+   GetClientRect(hWnd, &rect);
+   HBRUSH brush = CreateSolidBrush(GetApplicationColor(APP_COLOR_BACKGROUND));
+   FillRect(hdc, &rect, brush);
+   DeleteObject(brush);
+}
+
+/**
  * Window procedure for application window
  */
 static LRESULT CALLBACK AppWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -203,6 +215,9 @@ static LRESULT CALLBACK AppWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
       case WM_PRINTCLIENT:
          PaintWindow(hWnd, (HDC)wParam);
          break;
+      case WM_ERASEBKGND:
+         EraseBackground(hWnd, (HDC)wParam);
+         return 1;
       case WM_ACTIVATEAPP:
          if (wParam)
          {
@@ -238,7 +253,7 @@ bool PrepareApplicationWindow()
    wc.hInstance = g_hInstance;
    wc.cbWndExtra = 0;
    wc.lpszClassName = APP_WINDOW_CLASS_NAME;
-   wc.hbrBackground = CreateSolidBrush(GetApplicationColor(APP_COLOR_BACKGROUND));
+   wc.hbrBackground = NULL;
    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
    if (RegisterClass(&wc) == 0)
    {
