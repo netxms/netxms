@@ -463,26 +463,27 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
    {
       if (getObjectClass() == OBJECT_NODE)
       {
-         Template *obj = (Template *)FindObjectById(dwTemplateId, OBJECT_TEMPLATE);
-         obj->removeAllPolicies((Node *)this);
+         Template *tmpl = static_cast<Template*>(FindObjectById(dwTemplateId, OBJECT_TEMPLATE));
+	 if (tmpl != nullptr) // can be NULL if parent is not a template (e.g. cluster)
+            tmpl->removeAllPolicies(static_cast<Node*>(this));
       }
       lockDciAccess(true);  // write lock
 
-		UINT32 *deleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
-		int numDeleted = 0;
+      UINT32 *deleteList = MemAllocArray<UINT32>(m_dcObjects->size());
+      int numDeleted = 0;
 
-		int i;
+      int i;
       for(i = 0; i < m_dcObjects->size(); i++)
          if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
          {
             deleteList[numDeleted++] = m_dcObjects->get(i)->getId();
          }
 
-		for(i = 0; i < numDeleted; i++)
-			deleteDCObject(deleteList[i], false, 0);
+      for(i = 0; i < numDeleted; i++)
+         deleteDCObject(deleteList[i], false, 0);
 
       unlockDciAccess();
-		free(deleteList);
+      MemFree(deleteList);
    }
    else
    {
