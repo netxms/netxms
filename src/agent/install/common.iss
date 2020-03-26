@@ -25,8 +25,16 @@ Filename: "icacls.exe"; Parameters: """{app}"" /inheritance:r"; StatusMsg: "Sett
 Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}\*"" /reset /T"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
-Filename: "icacls.exe"; Parameters: """{app}\bin"" /grant:r *S-1-5-11:(OI)(CI)RX"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
-Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-11:RX /inheritancelevel:d"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-11:(OI)(CI)RX"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\etc"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\etc"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\etc"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\log"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\log"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\log"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\var"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" {code:GetForceCreateConfigFlag} ""{code:GetMasterServer}"" ""{code:GetLogFile}"" ""{code:GetFileStore}"" ""{code:GetConfigIncludeDir}"" {code:GetSubagentList} {code:GetExtraConfigValues}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" {code:GetCentralConfigOption} {code:GetCustomCmdLine} -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing service..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting service..."; Flags: runhidden
@@ -41,6 +49,7 @@ Filename: "taskkill.exe"; Parameters: "/F /IM nxuseragent.exe /T"; StatusMsg: "K
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling service..."; RunOnceId: "DelService"; Flags: runhidden
 
 [UninstallDelete]
+Type: files; Name: "{app}\bin\nxreload.exe"
 Type: filesandordirs; Name: "{app}\etc\*"
 Type: filesandordirs; Name: "{app}\log\*"
 Type: filesandordirs; Name: "{app}\var\*"
@@ -49,10 +58,10 @@ Type: filesandordirs; Name: "{app}\var\*"
 Var
   ServerSelectionPage: TWizardPage;
   editServerName: TNewEdit;
-  cbDownloadConfig: TNewCheckBox;
+  cbDownloadConfig, cbSetupTunnel: TNewCheckBox;
   SubagentSelectionPage: TInputOptionWizardPage;
-  serverName, sbECS, sbFileMgr, sbLogWatch, sbPing, sbPortCheck, 
-    sbWinPerf, sbWMI, sbUPS, sbDownloadConfig, extraConfigValues: String;
+  serverName, sbECS, sbFileMgr, sbLogWatch, sbMQTT, sbNetSvc, sbPing, sbPortCheck, sbSSH,
+    sbWinPerf, sbWMI, sbUPS, sbDownloadConfig, sbSetupTunnel, extraConfigValues: String;
   backupFileSuffix: String;
   logFile: String;
   fileSTore: String;
@@ -146,12 +155,16 @@ Begin
   sbECS := 'FALSE';
   sbFileMgr := 'FALSE';
   sbLogWatch := 'FALSE';
+  sbMQTT := 'FALSE';
+  sbNetSvc := 'FALSE';
   sbPing := 'FALSE';
   sbPortCheck := 'FALSE';
+  sbSSH := 'FALSE';
   sbWinPerf := 'TRUE';
   sbWMI := 'FALSE';
   sbUPS := 'FALSE';
   sbDownloadConfig := 'FALSE';
+  sbSetupTunnel := 'FALSE';
   extraConfigValues := '';
   logFile := '';
   fileStore := '';
@@ -176,6 +189,14 @@ Begin
       sbDownloadConfig := 'FALSE';
     End;
 
+    If Pos('/TUNNEL', param) = 1 Then Begin
+      sbSetupTunnel := 'TRUE';
+    End;
+
+    If Pos('/NOTUNNEL', param) = 1 Then Begin
+      sbSetupTunnel := 'FALSE';
+    End;
+
     If Pos('/SUBAGENT=', param) = 1 Then Begin
       Delete(param, 1, 10);
       param := Uppercase(param);
@@ -185,10 +206,16 @@ Begin
         sbFileMgr := 'TRUE';
       If param = 'LOGWATCH' Then
         sbLogWatch := 'TRUE';
+      If param = 'MQTT' Then
+        sbMQTT := 'TRUE';
+      If param = 'NETSVC' Then
+        sbNetSvc := 'TRUE';
       If param = 'PING' Then
         sbPing := 'TRUE';
       If param = 'PORTCHECK' Then
         sbPortCheck := 'TRUE';
+      If param = 'SSH' Then
+        sbSSH := 'TRUE';
       If param = 'WINPERF' Then
         sbWinPerf := 'TRUE';
       If param = 'WMI' Then
@@ -206,10 +233,16 @@ Begin
         sbFileMgr := 'FALSE';
       If param = 'LOGWATCH' Then
         sbLogWatch := 'FALSE';
+      If param = 'MQTT' Then
+        sbMQTT := 'FALSE';
+      If param = 'NETSVC' Then
+        sbNetSvc := 'FALSE';
       If param = 'PING' Then
         sbPing := 'FALSE';
       If param = 'PORTCHECK' Then
         sbPortCheck := 'FALSE';
+      If param = 'SSH' Then
+        sbSSH := 'FALSE';
       If param = 'WINPERF' Then
         sbWinPerf := 'FALSE';
       If param = 'WMI' Then
@@ -271,6 +304,14 @@ Begin
   cbDownloadConfig.Checked := StrToBool(GetPreviousData('DownloadConfig', sbDownloadConfig));
   cbDownloadConfig.Parent := ServerSelectionPage.Surface;
 
+  cbSetupTunnel := TNewCheckBox.Create(ServerSelectionPage);
+  cbSetupTunnel.Top := editServerName.Top + editServerName.Height + cbDownloadConfig.Height + ScaleY(24);
+  cbSetupTunnel.Width := ServerSelectionPage.SurfaceWidth;
+  cbSetupTunnel.Height := ScaleY(17);
+  cbSetupTunnel.Caption := 'Setup tunnel to master server';
+  cbSetupTunnel.Checked := StrToBool(GetPreviousData('SetupTunnel', sbSetupTunnel));
+  cbSetupTunnel.Parent := ServerSelectionPage.Surface;
+
   SubagentSelectionPage := CreateInputOptionPage(ServerSelectionPage.Id,
     'Subagent Selection', 'Select desired subagents.',
     'Please select additional subagents you wish to load.', False, False);
@@ -278,7 +319,10 @@ Begin
   SubagentSelectionPage.Add('File Manager Subagent - filemgr.nsm');
   SubagentSelectionPage.Add('ICMP Pinger Subagent - ping.nsm');
   SubagentSelectionPage.Add('Log Monitoring Subagent - logwatch.nsm');
+  SubagentSelectionPage.Add('MQTT Subagent - mqtt.nsm');
+  SubagentSelectionPage.Add('Network Service Checker Subagent - netsvc.nsm');
   SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
+  SubagentSelectionPage.Add('SSH Subagent - ssh.nsm');
   SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
   SubagentSelectionPage.Add('WMI Subagent - wmi.nsm');
   SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
@@ -286,29 +330,39 @@ Begin
   SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_FILEMGR', sbFileMgr));
   SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_PING', sbPing));
   SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_LOGWATCH', sbLogWatch));
-  SubagentSelectionPage.Values[4] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
-  SubagentSelectionPage.Values[5] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
-  SubagentSelectionPage.Values[6] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
-  SubagentSelectionPage.Values[7] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
+  SubagentSelectionPage.Values[4] := StrToBool(GetPreviousData('Subagent_MQTT', sbMQTT));
+  SubagentSelectionPage.Values[5] := StrToBool(GetPreviousData('Subagent_NETSVC', sbNetSvc));
+  SubagentSelectionPage.Values[6] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
+  SubagentSelectionPage.Values[7] := StrToBool(GetPreviousData('Subagent_SSH', sbSSH));
+  SubagentSelectionPage.Values[8] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
+  SubagentSelectionPage.Values[9] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
+  SubagentSelectionPage.Values[10] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);
 Begin
   SetPreviousData(PreviousDataKey, 'MasterServer', editServerName.Text);
   SetPreviousData(PreviousDataKey, 'DownloadConfig', BoolToStr(cbDownloadConfig.Checked));
+  SetPreviousData(PreviousDataKey, 'SetupTunnel', BoolToStr(cbSetupTunnel.Checked));
   SetPreviousData(PreviousDataKey, 'Subagent_ECS', BoolToStr(SubagentSelectionPage.Values[0]));
   SetPreviousData(PreviousDataKey, 'Subagent_FILEMGR', BoolToStr(SubagentSelectionPage.Values[1]));
   SetPreviousData(PreviousDataKey, 'Subagent_PING', BoolToStr(SubagentSelectionPage.Values[2]));
   SetPreviousData(PreviousDataKey, 'Subagent_LOGWATCH', BoolToStr(SubagentSelectionPage.Values[3]));
-  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[4]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[5]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[6]));
-  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[7]));
+  SetPreviousData(PreviousDataKey, 'Subagent_MQTT', BoolToStr(SubagentSelectionPage.Values[4]));
+  SetPreviousData(PreviousDataKey, 'Subagent_NETSVC', BoolToStr(SubagentSelectionPage.Values[5]));
+  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[6]));
+  SetPreviousData(PreviousDataKey, 'Subagent_SSH', BoolToStr(SubagentSelectionPage.Values[7]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[8]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[9]));
+  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[10]));
 End;
 
 Function GetMasterServer(Param: String): String;
 Begin
-  Result := editServerName.Text;
+  If cbSetupTunnel.Checked Then
+    Result := '~' + editServerName.Text
+  Else
+    Result := editServerName.Text;
 End;
 
 Function GetSubagentList(Param: String): String;
@@ -323,12 +377,18 @@ Begin
   If SubagentSelectionPage.Values[3] Then
     Result := Result + 'logwatch.nsm ';
   If SubagentSelectionPage.Values[4] Then
-    Result := Result + 'portcheck.nsm ';
+    Result := Result + 'mqtt.nsm ';
   If SubagentSelectionPage.Values[5] Then
-    Result := Result + 'winperf.nsm ';
+    Result := Result + 'netsvc.nsm ';
   If SubagentSelectionPage.Values[6] Then
-    Result := Result + 'wmi.nsm ';
+    Result := Result + 'portcheck.nsm ';
   If SubagentSelectionPage.Values[7] Then
+    Result := Result + 'ssh.nsm ';
+  If SubagentSelectionPage.Values[8] Then
+    Result := Result + 'winperf.nsm ';
+  If SubagentSelectionPage.Values[9] Then
+    Result := Result + 'wmi.nsm ';
+  If SubagentSelectionPage.Values[10] Then
     Result := Result + 'ups.nsm ';
 End;
 
