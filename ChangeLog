@@ -22,6 +22,7 @@
 - Allow usage of chat ID as recipient address for Telegram
 - Support for standard SSH configuration file in SSH subagent
 - Environment variables from agent configuration file also set for user agent processes
+- Improved hypervisor type detection by agent
 - Fixed issues:
 	NX-1635 (Log parser can skip lines in a log file)
 	NX-1810 (Server can cash if scheduled task deleted while running)
