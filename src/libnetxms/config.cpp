@@ -81,7 +81,7 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
          if (*(in + 1) == _T('{'))  // environment string expansion
          {
             const TCHAR *end = _tcschr(in, _T('}'));
-            if (end != NULL)
+            if (end != nullptr)
             {
                in += 2;
 
@@ -92,7 +92,7 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
                memcpy(name, in, nameLen * sizeof(TCHAR));
                name[nameLen] = 0;
                const TCHAR *env = _tgetenv(name);
-               if ((env != NULL) && (*env != 0))
+               if ((env != nullptr) && (*env != 0))
                {
                   size_t len = _tcslen(env);
                   allocated += len;
@@ -130,11 +130,11 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
 ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, const TCHAR *file, int line, int id)
 {
    m_name = MemCopyString(CHECK_NULL(name));
-   m_first = NULL;
-   m_last = NULL;
-   m_next = NULL;
-   m_parent = NULL;
-   if (parent != NULL)
+   m_first = nullptr;
+   m_last = nullptr;
+   m_next = nullptr;
+   m_parent = nullptr;
+   if (parent != nullptr)
       parent->addEntry(this);
    m_file = MemCopyString(CHECK_NULL(file));
    m_line = line;
@@ -148,10 +148,10 @@ ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *o
 ConfigEntry::ConfigEntry(const ConfigEntry *src, const Config *owner)
 {
    m_name = MemCopyString(src->m_name);
-   m_first = NULL;
-   m_last = NULL;
-   m_next = NULL;
-   m_parent = NULL;
+   m_first = nullptr;
+   m_last = nullptr;
+   m_next = nullptr;
+   m_parent = nullptr;
    m_values.addAll(&src->m_values);
    m_attributes.addAll(&src->m_attributes);
    m_file = MemCopyString(src->m_file);
@@ -166,7 +166,7 @@ ConfigEntry::ConfigEntry(const ConfigEntry *src, const Config *owner)
 ConfigEntry::~ConfigEntry()
 {
    ConfigEntry *entry, *next;
-   for(entry = m_first; entry != NULL; entry = next)
+   for(entry = m_first; entry != nullptr; entry = next)
    {
       next = entry->getNext();
       delete entry;
@@ -193,18 +193,18 @@ ConfigEntry* ConfigEntry::findEntry(const TCHAR *name) const
    if (name[0] == _T('%'))
    {
       const TCHAR *alias = m_owner->getAlias(&name[1]);
-      if (alias == NULL)
-         return NULL;
+      if (alias == nullptr)
+         return nullptr;
       realName = alias;
    }
    else
    {
       realName = name;
    }
-   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
+   for(ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
       if (!_tcsicmp(e->getName(), realName))
          return e;
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -216,14 +216,14 @@ ConfigEntry* ConfigEntry::createEntry(const TCHAR *name)
    if (name[0] == _T('%'))
    {
       const TCHAR *alias = m_owner->getAlias(&name[1]);
-      realName = (alias != NULL) ? alias : &name[1];
+      realName = (alias != nullptr) ? alias : &name[1];
    }
    else
    {
       realName = name;
    }
 
-   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
+   for(ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
       if (!_tcsicmp(e->getName(), realName))
          return e;
 
@@ -236,11 +236,11 @@ ConfigEntry* ConfigEntry::createEntry(const TCHAR *name)
 void ConfigEntry::addEntry(ConfigEntry *entry)
 {
    entry->m_parent = this;
-   entry->m_next = NULL;
-   if (m_last != NULL)
+   entry->m_next = nullptr;
+   if (m_last != nullptr)
       m_last->m_next = entry;
    m_last = entry;
-   if (m_first == NULL)
+   if (m_first == nullptr)
       m_first = entry;
 }
 
@@ -251,11 +251,11 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
 {
    ConfigEntry *curr, *prev;
 
-   for(curr = m_first, prev = NULL; curr != NULL; curr = curr->m_next)
+   for(curr = m_first, prev = nullptr; curr != nullptr; curr = curr->m_next)
    {
       if (curr == entry)
       {
-         if (prev != NULL)
+         if (prev != nullptr)
          {
             prev->m_next = curr->m_next;
          }
@@ -265,7 +265,7 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
          }
          if (m_last == curr)
             m_last = prev;
-         curr->m_next = NULL;
+         curr->m_next = nullptr;
          break;
       }
       prev = curr;
@@ -279,8 +279,8 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
 ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask) const
 {
    ObjectArray<ConfigEntry> *list = new ObjectArray<ConfigEntry>(16, 16, Ownership::False);
-   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
-      if ((mask == NULL) || MatchString(mask, e->getName(), FALSE))
+   for(ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
+      if ((mask == nullptr) || MatchString(mask, e->getName(), FALSE))
       {
          list->add(e);
       }
@@ -311,7 +311,7 @@ ObjectArray<ConfigEntry> *ConfigEntry::getOrderedSubEntries(const TCHAR *mask) c
 INT32 ConfigEntry::getValueAsInt(int index, INT32 defaultValue)
 {
    const TCHAR *value = getValue(index);
-   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -320,7 +320,7 @@ INT32 ConfigEntry::getValueAsInt(int index, INT32 defaultValue)
 UINT32 ConfigEntry::getValueAsUInt(int index, UINT32 defaultValue)
 {
    const TCHAR *value = getValue(index);
-   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -329,7 +329,7 @@ UINT32 ConfigEntry::getValueAsUInt(int index, UINT32 defaultValue)
 INT64 ConfigEntry::getValueAsInt64(int index, INT64 defaultValue)
 {
    const TCHAR *value = getValue(index);
-   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -338,7 +338,7 @@ INT64 ConfigEntry::getValueAsInt64(int index, INT64 defaultValue)
 UINT64 ConfigEntry::getValueAsUInt64(int index, UINT64 defaultValue)
 {
    const TCHAR *value = getValue(index);
-   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -348,10 +348,10 @@ UINT64 ConfigEntry::getValueAsUInt64(int index, UINT64 defaultValue)
 bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue)
 {
    const TCHAR *value = getValue(index);
-   if (value != NULL)
+   if (value != nullptr)
    {
       return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
-         || (_tcstol(value, NULL, 0) != 0);
+         || (_tcstol(value, nullptr, 0) != 0);
    }
    else
    {
@@ -365,7 +365,7 @@ bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue)
 uuid ConfigEntry::getValueAsUUID(int index)
 {
    const TCHAR *value = getValue(index);
-   if (value != NULL)
+   if (value != nullptr)
    {
       return uuid::parse(value);
    }
@@ -400,40 +400,40 @@ int ConfigEntry::getConcatenatedValuesLength()
  *
  * @param name sub-entry name
  * @param index sub-entry index (0 if omited)
- * @param defaultValue value to be returned if requested sub-entry is missing (NULL if omited)
+ * @param defaultValue value to be returned if requested sub-entry is missing (nullptr if omited)
  * @return sub-entry value or default value if requested sub-entry does not exist
  */
 const TCHAR* ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const TCHAR *defaultValue) const
 {
    ConfigEntry *e = findEntry(name);
-   if (e == NULL)
+   if (e == nullptr)
       return defaultValue;
    const TCHAR *value = e->getValue(index);
-   return (value != NULL) ? value : defaultValue;
+   return (value != nullptr) ? value : defaultValue;
 }
 
 INT32 ConfigEntry::getSubEntryValueAsInt(const TCHAR *name, int index, INT32 defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
-   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
 UINT32 ConfigEntry::getSubEntryValueAsUInt(const TCHAR *name, int index, UINT32 defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
-   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
 }
 
 INT64 ConfigEntry::getSubEntryValueAsInt64(const TCHAR *name, int index, INT64 defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
-   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
 UINT64 ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, UINT64 defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
-   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -443,9 +443,9 @@ UINT64 ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, UINT6
 bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
-   if (value != NULL)
+   if (value != nullptr)
    {
-      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
+      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on")) || (_tcstol(value, nullptr, 0) != 0);
    }
    else
    {
@@ -459,7 +459,7 @@ bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool d
 uuid ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, int index) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
-   if (value != NULL)
+   if (value != nullptr)
    {
       return uuid::parse(value);
    }
@@ -475,7 +475,7 @@ uuid ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, int index) const
 INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
-   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -484,7 +484,7 @@ INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue) cons
 UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
-   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -493,7 +493,7 @@ UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue) c
 INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
-   return (value != NULL) ? _tcstoll(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstoll(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -502,7 +502,7 @@ INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue) co
 UINT64 ConfigEntry::getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
-   return (value != NULL) ? _tcstoull(value, NULL, 0) : defaultValue;
+   return (value != nullptr) ? _tcstoull(value, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -512,9 +512,9 @@ UINT64 ConfigEntry::getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue)
 bool ConfigEntry::getAttributeAsBoolean(const TCHAR *name, bool defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
-   if (value != NULL)
+   if (value != nullptr)
    {
-      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
+      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on")) || (_tcstol(value, nullptr, 0) != 0);
    }
    else
    {
@@ -575,12 +575,12 @@ void ConfigEntry::setAttribute(const TCHAR *name, bool value)
  */
 void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
 {
-   for(ConfigEntry *src = root->m_first; src != NULL; src = src->m_next)
+   for(ConfigEntry *src = root->m_first; src != nullptr; src = src->m_next)
    {
       ConfigEntry *dst;
       if (merge)
       {
-         if (m_owner->getMergeStrategy() != NULL)
+         if (m_owner->getMergeStrategy() != nullptr)
          {
             dst = m_owner->getMergeStrategy()(this, src->m_name);
          }
@@ -588,7 +588,7 @@ void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
          {
             dst = findEntry(src->m_name);
          }
-         if (dst != NULL)
+         if (dst != nullptr)
          {
             dst->m_values.addAll(&src->m_values);
          }
@@ -619,12 +619,12 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
 
    if (level > 0)
    {
-      prefix[(level - 1) * 4 + 1] = (m_next == NULL) ? _T(' ') : _T('|');
+      prefix[(level - 1) * 4 + 1] = (m_next == nullptr) ? _T(' ') : _T('|');
       prefix[(level - 1) * 4 + 2] = _T(' ');
    }
 
    // Do not print empty values for non-leaf nodes
-   if ((m_first == NULL) || (!m_values.isEmpty() && (*m_values.get(0) != 0)))
+   if ((m_first == nullptr) || (!m_values.isEmpty() && (*m_values.get(0) != 0)))
    {
       for(int i = 0; i < m_values.size(); i++)
       {
@@ -635,7 +635,7 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
       }
    }
 
-   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
+   for(ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
    {
       _tcscat(prefix, _T(" +- "));
       e->print(file, level + 1, prefix);
@@ -660,7 +660,7 @@ void ConfigEntry::createXml(StringBuffer &xml, int level)
 {
    TCHAR *name = _tcsdup(m_name);
    TCHAR *ptr = _tcschr(name, _T('#'));
-   if (ptr != NULL)
+   if (ptr != nullptr)
       *ptr = 0;
 
    if (m_id == 0)
@@ -670,10 +670,10 @@ void ConfigEntry::createXml(StringBuffer &xml, int level)
    m_attributes.forEach(AddAttribute, &xml);
    xml += _T(">");
 
-   if (m_first != NULL)
+   if (m_first != nullptr)
    {
       xml += _T("\n");
-      for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
+      for(ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
          e->createXml(xml, level + 1);
       xml.appendFormattedString(_T("%*s"), level * 4, _T(""));
    }
@@ -684,7 +684,7 @@ void ConfigEntry::createXml(StringBuffer &xml, int level)
 
    for(int i = 1; i < m_values.size(); i++)
    {
-      if ((*m_values.get(i) == 0) && (m_first != NULL))
+      if ((*m_values.get(i) == 0) && (m_first != nullptr))
          continue;   // Skip empty values for non-leaf elements
 
       if (m_id == 0)
@@ -703,11 +703,11 @@ void ConfigEntry::createXml(StringBuffer &xml, int level)
  */
 Config::Config(bool allowMacroExpansion)
 {
-   m_root = new ConfigEntry(_T("[root]"), NULL, this, NULL, 0, 0);
+   m_root = new ConfigEntry(_T("[root]"), nullptr, this, nullptr, 0, 0);
    m_errorCount = 0;
    m_mutex = MutexCreate();
    m_allowMacroExpansion = allowMacroExpansion;
-   m_mergeStrategy = NULL;
+   m_mergeStrategy = nullptr;
 }
 
 /**
@@ -780,13 +780,13 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
    {
       _tcslcpy(&name[pos], cfgTemplate[i].token, MAX_PATH - pos);
       entry = getEntry(name);
-      if (entry != NULL)
+      if (entry != nullptr)
       {
          const TCHAR *value = CHECK_NULL(entry->getValue(entry->getValueCount() - 1));
          switch(cfgTemplate[i].type)
          {
             case CT_LONG:
-               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+               if ((cfgTemplate[i].overrideIndicator != nullptr) &&
                    (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
@@ -798,7 +798,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                }
                break;
             case CT_WORD:
-               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+               if ((cfgTemplate[i].overrideIndicator != nullptr) &&
                    (*((INT16 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
@@ -832,7 +832,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                }
                break;
             case CT_STRING:
-               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+               if ((cfgTemplate[i].overrideIndicator != nullptr) &&
                    (*((TCHAR *)cfgTemplate[i].overrideIndicator) != 0))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
@@ -840,14 +840,14 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                _tcslcpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
                break;
             case CT_MB_STRING:
-               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+               if ((cfgTemplate[i].overrideIndicator != nullptr) &&
                    (*((char *)cfgTemplate[i].overrideIndicator) != 0))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
                }
 #ifdef UNICODE
                memset(cfgTemplate[i].buffer, 0, (size_t)cfgTemplate[i].bufferSize);
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, (int)cfgTemplate[i].bufferSize - 1, NULL, NULL);
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, (int)cfgTemplate[i].bufferSize - 1, nullptr, nullptr);
 #else
                strlcpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
 #endif
@@ -864,7 +864,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                *curr = 0;
                break;
             case CT_SIZE_BYTES:
-               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+               if ((cfgTemplate[i].overrideIndicator != nullptr) &&
                    (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
@@ -872,7 +872,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                *((UINT64 *)cfgTemplate[i].buffer) = ParseSize(value, 1024);
                break;
             case CT_SIZE_UNITS:
-               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+               if ((cfgTemplate[i].overrideIndicator != nullptr) &&
                    (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
@@ -893,14 +893,14 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 /**
  * Get value
  */
-const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
+const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue, int index)
 {
    const TCHAR *value;
    ConfigEntry *entry = getEntry(path);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
-      value = entry->getValue();
-      if (value == NULL)
+      value = entry->getValue(index);
+      if (value == nullptr)
          value = defaultValue;
    }
    else
@@ -911,51 +911,73 @@ const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
 }
 
 /**
+ * Get first non-empty value
+ */
+const TCHAR *Config::getFirstNonEmptyValue(const TCHAR *path)
+{
+   const TCHAR *value = nullptr;
+   ConfigEntry *entry = getEntry(path);
+   if (entry != nullptr)
+   {
+      for (int i = 0; i < entry->getValueCount(); i++)
+      {
+         const TCHAR *v = entry->getValue(i);
+         if ((v != nullptr) && (*v != 0))
+         {
+            value = v;
+            break;
+         }
+      }
+   }
+   return value;
+}
+
+/**
  * Get value as 32 bit integer
  */
-INT32 Config::getValueAsInt(const TCHAR *path, INT32 defaultValue)
+int32_t Config::getValueAsInt(const TCHAR *path, int32_t defaultValue, int index)
 {
-   const TCHAR *value = getValue(path);
-   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+   const TCHAR *value = getValue(path, nullptr, index);
+   return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
 /**
  * Get value as unsigned 32 bit integer
  */
-UINT32 Config::getValueAsUInt(const TCHAR *path, UINT32 defaultValue)
+uint32_t Config::getValueAsUInt(const TCHAR *path, uint32_t defaultValue, int index)
 {
-   const TCHAR *value = getValue(path);
-   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+   const TCHAR *value = getValue(path, nullptr, index);
+   return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
 }
 
 /**
  * Get value as 64 bit integer
  */
-INT64 Config::getValueAsInt64(const TCHAR *path, INT64 defaultValue)
+int64_t Config::getValueAsInt64(const TCHAR *path, int64_t defaultValue, int index)
 {
-   const TCHAR *value = getValue(path);
-   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+   const TCHAR *value = getValue(path, nullptr, index);
+   return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
 /**
  * Get value as unsigned 64 bit integer
  */
-UINT64 Config::getValueAsUInt64(const TCHAR *path, UINT64 defaultValue)
+uint64_t Config::getValueAsUInt64(const TCHAR *path, uint64_t defaultValue, int index)
 {
-   const TCHAR *value = getValue(path);
-   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+   const TCHAR *value = getValue(path, nullptr, index);
+   return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
 }
 
 /**
  * Get value as boolean
  */
-bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue)
+bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue, int index)
 {
-   const TCHAR *value = getValue(path);
-   if (value != NULL)
+   const TCHAR *value = getValue(path, nullptr, index);
+   if (value != nullptr)
    {
       return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
-         || (_tcstol(value, NULL, 0) != 0);
+         || (_tcstol(value, nullptr, 0) != 0);
    }
    else
    {
@@ -966,10 +988,10 @@ bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue)
 /**
  * Get value at given path as UUID
  */
-uuid Config::getValueAsUUID(const TCHAR *path)
+uuid Config::getValueAsUUID(const TCHAR *path, int index)
 {
-   const TCHAR *value = getValue(path);
-   if (value != NULL)
+   const TCHAR *value = getValue(path, nullptr, index);
+   if (value != nullptr)
    {
       return uuid::parse(value);
    }
@@ -985,7 +1007,7 @@ uuid Config::getValueAsUUID(const TCHAR *path)
 ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *mask)
 {
    ConfigEntry *entry = getEntry(path);
-   return (entry != NULL) ? entry->getSubEntries(mask) : NULL;
+   return (entry != nullptr) ? entry->getSubEntries(mask) : nullptr;
 }
 
 /**
@@ -994,7 +1016,7 @@ ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *
 ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask)
 {
    ConfigEntry *entry = getEntry(path);
-   return (entry != NULL) ? entry->getOrderedSubEntries(mask) : NULL;
+   return (entry != nullptr) ? entry->getOrderedSubEntries(mask) : nullptr;
 }
 
 /**
@@ -1002,8 +1024,8 @@ ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const 
  */
 ConfigEntry *Config::getEntry(const TCHAR *path)
 {
-   if ((path == NULL) || (*path != _T('/')))
-      return NULL;
+   if ((path == nullptr) || (*path != _T('/')))
+      return nullptr;
 
    if (!_tcscmp(path, _T("/")))
       return m_root;
@@ -1013,10 +1035,10 @@ ConfigEntry *Config::getEntry(const TCHAR *path)
    ConfigEntry *entry = m_root;
 
    curr = path + 1;
-   while(entry != NULL)
+   while(entry != nullptr)
    {
       end = _tcschr(curr, _T('/'));
-      if (end != NULL)
+      if (end != nullptr)
       {
          int len = std::min((int)(end - curr), 255);
          _tcsncpy(name, curr, len);
@@ -1029,12 +1051,12 @@ ConfigEntry *Config::getEntry(const TCHAR *path)
          return entry->findEntry(curr);
       }
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Create entry if does not exist, or return existing
- * Will return NULL on error
+ * Will return nullptr on error
  */
 ConfigEntry *Config::createEntry(const TCHAR *path)
 {
@@ -1042,8 +1064,8 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
    TCHAR name[256];
    ConfigEntry *entry, *parent;
 
-   if ((path == NULL) || (*path != _T('/')))
-      return NULL;
+   if ((path == nullptr) || (*path != _T('/')))
+      return nullptr;
 
    if (!_tcscmp(path, _T("/")))
       return m_root;
@@ -1053,25 +1075,25 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
    do
    {
       end = _tcschr(curr, _T('/'));
-      if (end != NULL)
+      if (end != nullptr)
       {
          int len = std::min((int)(end - curr), 255);
          _tcsncpy(name, curr, len);
          name[len] = 0;
          entry = parent->findEntry(name);
          curr = end + 1;
-         if (entry == NULL)
+         if (entry == nullptr)
             entry = new ConfigEntry(name, parent, this, _T("<memory>"), 0, 0);
          parent = entry;
       }
       else
       {
          entry = parent->findEntry(curr);
-         if (entry == NULL)
+         if (entry == nullptr)
             entry = new ConfigEntry(curr, parent, this, _T("<memory>"), 0, 0);
       }
    }
-   while(end != NULL);
+   while(end != nullptr);
    return entry;
 }
 
@@ -1081,11 +1103,11 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
 void Config::deleteEntry(const TCHAR *path)
 {
    ConfigEntry *entry = getEntry(path);
-   if (entry == NULL)
+   if (entry == nullptr)
       return;
 
    ConfigEntry *parent = entry->getParent();
-   if (parent == NULL)	// root entry
+   if (parent == nullptr)	// root entry
       return;
 
    parent->unlinkEntry(entry);
@@ -1099,7 +1121,7 @@ void Config::deleteEntry(const TCHAR *path)
 bool Config::setValue(const TCHAR *path, const TCHAR *value)
 {
    ConfigEntry *entry = createEntry(path);
-   if (entry == NULL)
+   if (entry == nullptr)
       return false;
    entry->setValue(value);
    return true;
@@ -1191,7 +1213,7 @@ static TCHAR *FindComment(TCHAR *str)
          return curr;
       }
    }
-   return NULL;
+   return nullptr;
 }
 
 
@@ -1206,7 +1228,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
    bool success;
 
    xml = LoadFile(file, &size);
-   if (xml != NULL)
+   if (xml != nullptr)
    {
       success = loadIniConfigFromMemory((char *)xml, (int)size, file, defaultIniSection, ignoreErrors);
       free(xml);
@@ -1229,18 +1251,18 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
    bool validConfig = true;
 
    currentSection = m_root->findEntry(defaultIniSection);
-   if (currentSection == NULL)
+   if (currentSection == nullptr)
    {
       currentSection = new ConfigEntry(defaultIniSection, m_root, this, fileName, 0, 0);
    }
 
    const char *curr = content;
    const char *next = curr;
-   while(next != NULL)
+   while(next != nullptr)
    {
       // Read line from file
       next = strchr(curr, '\n');
-      size_t llen = (next != NULL) ? next - curr : length - (curr - content);
+      size_t llen = (next != nullptr) ? next - curr : length - (curr - content);
 #ifdef UNICODE
       llen = MultiByteToWideChar(CP_UTF8, 0, curr, (int)llen, buffer, 4095);
 #else
@@ -1248,14 +1270,14 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
       memcpy(buffer, curr, llen);
 #endif
       buffer[llen] = 0;
-      curr = (next != NULL) ? next+1 : NULL;
+      curr = (next != nullptr) ? next+1 : nullptr;
 
       sourceLine++;
       ptr = _tcschr(buffer, _T('\r'));
-      if (ptr != NULL)
+      if (ptr != nullptr)
          *ptr = 0;
       ptr = FindComment(buffer);
-      if (ptr != NULL)
+      if (ptr != nullptr)
          *ptr = 0;
 
       StrStrip(buffer);
@@ -1268,7 +1290,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
          if (buffer[0] == _T('['))
          {
             TCHAR *end = _tcschr(buffer, _T(']'));
-            if (end != NULL)
+            if (end != nullptr)
                *end = 0;
          }
 
@@ -1278,7 +1300,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
          do
          {
             s = _tcschr(curr, _T('/'));
-            if (s != NULL)
+            if (s != nullptr)
                *s = 0;
             if (*curr == _T('@'))
             {
@@ -1288,20 +1310,20 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
             else
             {
                currentSection = parent->findEntry(curr);
-               if (currentSection == NULL)
+               if (currentSection == nullptr)
                {
                   currentSection = new ConfigEntry(curr, parent, this, fileName, sourceLine, 0);
                }
             }
             curr = s + 1;
             parent = currentSection;
-         } while(s != NULL);
+         } while(s != nullptr);
       }
       else
       {
          // Divide on two parts at = sign
          ptr = _tcschr(buffer, _T('='));
-         if (ptr == NULL)
+         if (ptr == nullptr)
          {
             error(_T("Syntax error in configuration file %s at line %d"), fileName, sourceLine);
             validConfig = false;
@@ -1313,7 +1335,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
          StrStrip(ptr);
 
          ConfigEntry *entry = currentSection->findEntry(buffer);
-         if (entry == NULL)
+         if (entry == nullptr)
          {
             entry = new ConfigEntry(buffer, currentSection, this, fileName, sourceLine, 0);
          }
@@ -1414,7 +1436,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          bool merge = XMLGetAttrBoolean(attrs, "merge", ps->merge);
          if (merge)
          {
-            if (ps->config->getMergeStrategy() != NULL)
+            if (ps->config->getMergeStrategy() != nullptr)
             {
                ps->stack[ps->level] = ps->config->getMergeStrategy()(ps->stack[ps->level - 1], entryName);
             }
@@ -1425,14 +1447,14 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          }
          else
          {
-            ps->stack[ps->level] = NULL;
+            ps->stack[ps->level] = nullptr;
          }
-         if (ps->stack[ps->level] == NULL)
+         if (ps->stack[ps->level] == nullptr)
          {
             ConfigEntry *e = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), (int)id);
             ps->stack[ps->level] = e;
             // add all attributes to the entry
-            for(int i = 0; attrs[i] != NULL; i += 2)
+            for(int i = 0; attrs[i] != nullptr; i += 2)
             {
 #ifdef UNICODE
                e->setAttributePreallocated(WideStringFromMBString(attrs[i]), WideStringFromMBString(attrs[i + 1]));
@@ -1501,7 +1523,7 @@ bool Config::loadConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *
 
    if (ch == '<')
    {
-      success = loadXmlConfigFromMemory(xml, xmlSize, NULL, topLevelTag, merge);
+      success = loadXmlConfigFromMemory(xml, xmlSize, nullptr, topLevelTag, merge);
    }
    else
    {
@@ -1518,16 +1540,16 @@ bool Config::loadXmlConfigFromMemory(const char *xml, size_t xmlSize, const TCHA
 {
    Config_XmlParserState state;
 
-   XML_Parser parser = XML_ParserCreate(NULL);
+   XML_Parser parser = XML_ParserCreate(nullptr);
    XML_SetUserData(parser, &state);
    XML_SetElementHandler(parser, StartElement, EndElement);
    XML_SetCharacterDataHandler(parser, CharData);
 
-   state.topLevelTag = (topLevelTag != NULL) ? topLevelTag : "config";
+   state.topLevelTag = (topLevelTag != nullptr) ? topLevelTag : "config";
    state.config = this;
    state.level = 0;
    state.parser = parser;
-   state.file = (name != NULL) ? name : _T("<mem>");
+   state.file = (name != nullptr) ? name : _T("<mem>");
    state.merge = merge;
 
    bool success = (XML_Parse(parser, xml, static_cast<int>(xmlSize), TRUE) != XML_STATUS_ERROR);
@@ -1549,7 +1571,7 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag, bool merg
    bool success;
 
    xml = LoadFile(file, &size);
-   if (xml != NULL)
+   if (xml != nullptr)
    {
       success = loadXmlConfigFromMemory((char *)xml, size, file, topLevelTag, merge);
       MemFree(xml);
@@ -1581,7 +1603,7 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const
    }
 
    FILE *f = _tfopen(file, _T("r"));
-   if (f == NULL)
+   if (f == nullptr)
    {
       error(_T("Cannot open file %s"), file);
       return false;
@@ -1612,14 +1634,14 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
    bool success;
 
    dir = _topendir(path);
-   if (dir != NULL)
+   if (dir != nullptr)
    {
       success = true;
       bool trailingSeparator = (path[_tcslen(path) - 1] == FS_PATH_SEPARATOR_CHAR);
       while(true)
       {
          file = _treaddir(dir);
-         if (file == NULL)
+         if (file == nullptr)
             break;
 
          if (!_tcscmp(file->d_name, _T(".")) || !_tcscmp(file->d_name, _T("..")))
@@ -1655,7 +1677,7 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
 void Config::addSubTree(const TCHAR *path, const ConfigEntry *root, bool merge)
 {
    ConfigEntry *entry = getEntry(path);
-   if (entry != NULL)
+   if (entry != nullptr)
       entry->addSubTree(root, merge);
 }
 
@@ -1665,7 +1687,7 @@ void Config::addSubTree(const TCHAR *path, const ConfigEntry *root, bool merge)
 void Config::print(FILE *file)
 {
    TCHAR prefix[256] = _T("");
-   if (m_root != NULL)
+   if (m_root != nullptr)
       m_root->print(file, 0, prefix);
 }
 

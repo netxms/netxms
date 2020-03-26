@@ -202,22 +202,33 @@ void LoadConfig()
       g_closeOnDeactivate = config.getValueAsBoolean(_T("/closeOnDeactivate"), false);
 
       MemFree(g_desktopWallpaper);
-      g_desktopWallpaper = MemCopyString(config.getValue(_T("/desktopWallpaper"), NULL));
+      g_desktopWallpaper = MemCopyString(config.getFirstNonEmptyValue(_T("/desktopWallpaper")));
 
-      if (config.getValueAsBoolean(_T("/customColorSchema"), false))
+      ConfigEntry *customColorSchema = config.getEntry(_T("/customColorSchema"));
+      int customColorSchemaIndex = -1;
+      if (customColorSchema != nullptr)
       {
-         s_colors[APP_COLOR_BACKGROUND] = config.getValueAsUInt(_T("/backgroundColor"), s_defaultColors[APP_COLOR_BACKGROUND]);
-         s_colors[APP_COLOR_FOREGROUND] = config.getValueAsUInt(_T("/textColor"), s_defaultColors[APP_COLOR_FOREGROUND]);
-         s_colors[APP_COLOR_HIGHLIGHT] = config.getValueAsUInt(_T("/highlightColor"), s_defaultColors[APP_COLOR_HIGHLIGHT]);
-         s_colors[APP_COLOR_BORDER] = config.getValueAsUInt(_T("/borderColor"), s_defaultColors[APP_COLOR_BORDER]);
-         s_colors[APP_COLOR_MENU_BACKGROUND] = config.getValueAsUInt(_T("/menuBackgroundColor"), s_defaultColors[APP_COLOR_MENU_BACKGROUND]);
-         s_colors[APP_COLOR_MENU_SELECTED] = config.getValueAsUInt(_T("/menuSelectionColor"), s_defaultColors[APP_COLOR_MENU_SELECTED]);
-         s_colors[APP_COLOR_MENU_HIGHLIGHTED] = config.getValueAsUInt(_T("/menuHighligtColor"), s_defaultColors[APP_COLOR_MENU_HIGHLIGHTED]);
-         s_colors[APP_COLOR_MENU_FOREGROUND] = config.getValueAsUInt(_T("/menuTextColor"), s_defaultColors[APP_COLOR_MENU_FOREGROUND]);
-         s_colors[APP_COLOR_NOTIFICATION_BACKGROUND] = config.getValueAsUInt(_T("/notificationBackgroundColor"), s_defaultColors[APP_COLOR_NOTIFICATION_BACKGROUND]);
-         s_colors[APP_COLOR_NOTIFICATION_FOREGROUND] = config.getValueAsUInt(_T("/notificationTextColor"), s_defaultColors[APP_COLOR_NOTIFICATION_FOREGROUND]);
-         s_colors[APP_COLOR_NOTIFICATION_SELECTED] = config.getValueAsUInt(_T("/notificationSelectionColor"), s_defaultColors[APP_COLOR_NOTIFICATION_SELECTED]);
-         s_colors[APP_COLOR_NOTIFICATION_HIGHLIGHTED] = config.getValueAsUInt(_T("/notificationHighligtColor"), s_defaultColors[APP_COLOR_NOTIFICATION_HIGHLIGHTED]);
+         for (int i = 0; i < customColorSchema->getValueCount(); i++)
+            if (customColorSchema->getValueAsBoolean(i))
+            {
+               customColorSchemaIndex = i;
+               break;
+            }
+      }
+      if (customColorSchemaIndex != -1)
+      {
+         s_colors[APP_COLOR_BACKGROUND] = config.getValueAsUInt(_T("/backgroundColor"), s_defaultColors[APP_COLOR_BACKGROUND], customColorSchemaIndex);
+         s_colors[APP_COLOR_FOREGROUND] = config.getValueAsUInt(_T("/textColor"), s_defaultColors[APP_COLOR_FOREGROUND], customColorSchemaIndex);
+         s_colors[APP_COLOR_HIGHLIGHT] = config.getValueAsUInt(_T("/highlightColor"), s_defaultColors[APP_COLOR_HIGHLIGHT], customColorSchemaIndex);
+         s_colors[APP_COLOR_BORDER] = config.getValueAsUInt(_T("/borderColor"), s_defaultColors[APP_COLOR_BORDER], customColorSchemaIndex);
+         s_colors[APP_COLOR_MENU_BACKGROUND] = config.getValueAsUInt(_T("/menuBackgroundColor"), s_defaultColors[APP_COLOR_MENU_BACKGROUND], customColorSchemaIndex);
+         s_colors[APP_COLOR_MENU_SELECTED] = config.getValueAsUInt(_T("/menuSelectionColor"), s_defaultColors[APP_COLOR_MENU_SELECTED], customColorSchemaIndex);
+         s_colors[APP_COLOR_MENU_HIGHLIGHTED] = config.getValueAsUInt(_T("/menuHighligtColor"), s_defaultColors[APP_COLOR_MENU_HIGHLIGHTED], customColorSchemaIndex);
+         s_colors[APP_COLOR_MENU_FOREGROUND] = config.getValueAsUInt(_T("/menuTextColor"), s_defaultColors[APP_COLOR_MENU_FOREGROUND], customColorSchemaIndex);
+         s_colors[APP_COLOR_NOTIFICATION_BACKGROUND] = config.getValueAsUInt(_T("/notificationBackgroundColor"), s_defaultColors[APP_COLOR_NOTIFICATION_BACKGROUND], customColorSchemaIndex);
+         s_colors[APP_COLOR_NOTIFICATION_FOREGROUND] = config.getValueAsUInt(_T("/notificationTextColor"), s_defaultColors[APP_COLOR_NOTIFICATION_FOREGROUND], customColorSchemaIndex);
+         s_colors[APP_COLOR_NOTIFICATION_SELECTED] = config.getValueAsUInt(_T("/notificationSelectionColor"), s_defaultColors[APP_COLOR_NOTIFICATION_SELECTED], customColorSchemaIndex);
+         s_colors[APP_COLOR_NOTIFICATION_HIGHLIGHTED] = config.getValueAsUInt(_T("/notificationHighligtColor"), s_defaultColors[APP_COLOR_NOTIFICATION_HIGHLIGHTED], customColorSchemaIndex);
       }
       else
       {

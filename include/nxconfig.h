@@ -78,7 +78,7 @@ public:
    void addValuePreallocated(TCHAR *value) { m_values.addPreallocated(value); }
 	void setValue(const TCHAR*value);
 
-	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = NULL) const;
+	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = nullptr) const;
 	INT32 getSubEntryValueAsInt(const TCHAR *name, int index = 0, INT32 defaultValue = 0) const;
 	UINT32 getSubEntryValueAsUInt(const TCHAR *name, int index = 0, UINT32 defaultValue = 0) const;
 	INT64 getSubEntryValueAsInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0) const;
@@ -157,27 +157,28 @@ public:
    void setMergeStrategy(ConfigMergeStrategy s) { m_mergeStrategy = s; }
    ConfigMergeStrategy getMergeStrategy() const { return m_mergeStrategy; }
 
-	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL, bool merge = true);
-	bool loadXmlConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *name = NULL, const char *topLevelTag = NULL, bool merge = true);
+	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = nullptr, bool merge = true);
+	bool loadXmlConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *name = nullptr, const char *topLevelTag = nullptr, bool merge = true);
 	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors = true);
    bool loadIniConfigFromMemory(const char *content, size_t length, const TCHAR *fileName, const TCHAR *defaultIniSection, bool ignoreErrors = true);
-	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const char *topLevelTag = NULL, bool ignoreErrors = true, bool merge = true);
+	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const char *topLevelTag = nullptr, bool ignoreErrors = true, bool merge = true);
 	bool loadConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge);
 
-	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, const char *topLevelTag = NULL, bool ignoreErrors = true, bool merge = true);
+	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, const char *topLevelTag = nullptr, bool ignoreErrors = true, bool merge = true);
 
    void addSubTree(const TCHAR *path, const ConfigEntry *root, bool merge = true);
 
 	void deleteEntry(const TCHAR *path);
 
 	ConfigEntry *getEntry(const TCHAR *path);
-	const TCHAR *getValue(const TCHAR *path, const TCHAR *defaultValue = NULL);
-	INT32 getValueAsInt(const TCHAR *path, INT32 defaultValue);
-	UINT32 getValueAsUInt(const TCHAR *path, UINT32 defaultValue);
-	INT64 getValueAsInt64(const TCHAR *path, INT64 defaultValue);
-	UINT64 getValueAsUInt64(const TCHAR *path, UINT64 defaultValue);
-	bool getValueAsBoolean(const TCHAR *path, bool defaultValue);
-	uuid getValueAsUUID(const TCHAR *path);
+	const TCHAR *getValue(const TCHAR *path, const TCHAR *defaultValue = nullptr, int index = 0);
+   const TCHAR *getFirstNonEmptyValue(const TCHAR *path);
+   int32_t getValueAsInt(const TCHAR *path, int32_t defaultValue, int index = 0);
+	uint32_t getValueAsUInt(const TCHAR *path, uint32_t defaultValue, int index = 0);
+	int64_t getValueAsInt64(const TCHAR *path, int64_t defaultValue, int index = 0);
+	uint64_t getValueAsUInt64(const TCHAR *path, uint64_t defaultValue, int index = 0);
+	bool getValueAsBoolean(const TCHAR *path, bool defaultValue, int index = 0);
+	uuid getValueAsUUID(const TCHAR *path, int index = 0);
 	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *path, const TCHAR *mask);
 	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
 
@@ -196,7 +197,7 @@ public:
 	void print(FILE *file);
 	String createXml();
 
-   void setAlias(const TCHAR *alias, const TCHAR *value) { if (alias != NULL) m_aliases.set(alias, value); else m_aliases.remove(alias); }
+   void setAlias(const TCHAR *alias, const TCHAR *value) { if (alias != nullptr) m_aliases.set(alias, value); else m_aliases.remove(alias); }
    const TCHAR *getAlias(const TCHAR *alias) const { return m_aliases.get(alias); }
 
    bool isExpansionAllowed() { return m_allowMacroExpansion; }
