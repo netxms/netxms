@@ -13,6 +13,7 @@
 - Added SMBIOS parameters support on FreeBSD
 - Fixed issues:
 	NX-1635 (Log parser can skip lines in a log file)
+	NX-1737 (User Agent Startup and Recurring Notifications not working)
 	NX-1810 (Server can cash if scheduled task deleted while running)
 	NX-1812 (In the WebUI Filter in Alarm browser hiding column headers and first row when resized)
 	NX-1814 (Values of internal parameters Server.QueueSize.Average and Server.QueueSize.Current are inconsistent)
