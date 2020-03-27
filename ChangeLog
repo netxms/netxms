@@ -18,6 +18,7 @@
 	NX-1815 (FDB cannot be read on certain Cisco switches)
 	NX-1816 (Removing node from cluster crashes server)
 	NX-1817 (Log file can be read twice after rotation by log parser on Windows)
+	NX-1819 (NXSL methods NetObj::bindTo() and NetObj::unbindFrom() crash server when given null as parameter)
 
 
 *
