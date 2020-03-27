@@ -96,8 +96,6 @@ public class DataSources extends PreferencePage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		config = (ChartConfig)getElement().getAdapter(ChartConfig.class);
-		
 		if(config instanceof GraphSettings)
 		   graphIsTemplate = ((GraphSettings)config).isTemplate();
 		Composite dialogArea = new Composite(parent, SWT.NONE);
