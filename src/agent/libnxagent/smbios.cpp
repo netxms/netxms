@@ -950,7 +950,7 @@ bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
 
    size_t size;
    BYTE *bios = reader(&size);
-   if (bios == NULL)
+   if (bios == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 2, _T("BIOS read failed"));
       return false;

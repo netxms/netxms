@@ -25,6 +25,7 @@
 - Improved hypervisor type detection by agent
 - Tunnel option can be turned on in Windows agent installer
 - Fixed issues with hardened file system permissions in Windows installer
+- Added SMBIOS parameters support on FreeBSD
 - Fixed issues:
 	NX-1635 (Log parser can skip lines in a log file)
 	NX-1810 (Server can cash if scheduled task deleted while running)
