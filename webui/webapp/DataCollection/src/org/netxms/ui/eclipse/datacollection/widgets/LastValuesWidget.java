@@ -500,7 +500,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		filterEnabled = enable;
 		filterText.setVisible(filterEnabled);
 		FormData fd = (FormData)dataViewer.getTable().getLayoutData();
-		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+		fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
 		getContent().layout();
 		if (enable)
 			filterText.setFocus();

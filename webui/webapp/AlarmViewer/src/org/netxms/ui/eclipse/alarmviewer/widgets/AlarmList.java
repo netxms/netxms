@@ -54,8 +54,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -159,6 +157,7 @@ public class AlarmList extends CompositeWithMessageBar
    public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix, VisibilityValidator visibilityValidator)
 	{
 		super(parent, style);
+
 		session = ConsoleSharedData.getSession();
 		this.viewPart = viewPart;
 		this.visibilityValidator = visibilityValidator;
@@ -232,13 +231,6 @@ public class AlarmList extends CompositeWithMessageBar
 		
 		createActions();
 		createPopupMenu();
-
-      addListener(SWT.Resize, new Listener() {
-         public void handleEvent(Event e)
-         {
-            alarmViewer.getControl().setBounds(AlarmList.this.getClientArea());
-         }
-      });
 
       if ((visibilityValidator == null) || visibilityValidator.isVisible())
          refresh();
@@ -1203,7 +1195,7 @@ public class AlarmList extends CompositeWithMessageBar
       initShowfilter = enable;
       filterText.setVisible(initShowfilter);
       FormData fd = (FormData)alarmViewer.getControl().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
       getContent().layout();
       if (enable)
          filterText.setFocus();

@@ -23,9 +23,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.contexts.IContextService;
@@ -51,16 +49,9 @@ public class AlarmBrowser extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-      FormLayout formLayout = new FormLayout();
-		parent.setLayout(formLayout);
+		parent.setLayout(new FillLayout());
 		
 		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser", null); //$NON-NLS-1$
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		alarmView.setLayoutData(fd);
 		
 		createActions();
 		contributeToActionBars();
