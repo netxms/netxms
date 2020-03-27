@@ -60,6 +60,9 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
    if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
    NXSL_Object *nxslChild = argv[0]->getValueAsObject();
    if (!nxslChild->getClass()->instanceOf(g_nxslNetObjClass.getName()))
       return NXSL_ERR_BAD_CLASS;
@@ -85,6 +88,9 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
 NXSL_METHOD_DEFINITION(NetObj, bindTo)
 {
    NetObj *thisObject = static_cast<NetObj*>(object->getData());
+
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
 
    NXSL_Object *nxslParent = argv[0]->getValueAsObject();
    if (!nxslParent->getClass()->instanceOf(g_nxslNetObjClass.getName()))
