@@ -124,7 +124,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
             try
             {
                session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, AgentActionResults.this, null);
-               out.write(Messages.get().LocalCommandResults_Terminated);
+               out.write(Messages.get(getDisplay()).LocalCommandResults_Terminated);
             }
             finally
             {
