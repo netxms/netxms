@@ -780,7 +780,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
-   private boolean showObjectToolPropertyPages(ObjectToolDetails objectTool)
+   private boolean showObjectToolPropertyPages(final ObjectToolDetails objectTool)
    {
       PreferenceManager pm = new PreferenceManager();    
       pm.addToRoot(new PreferenceNode("general", new General(objectTool)));

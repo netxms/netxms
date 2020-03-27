@@ -1209,7 +1209,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
-   private boolean showGraphPropertyPages(GraphSettings settings)
+   private boolean showGraphPropertyPages(final GraphSettings settings)
    {
       PreferenceManager pm = new PreferenceManager();    
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings)));

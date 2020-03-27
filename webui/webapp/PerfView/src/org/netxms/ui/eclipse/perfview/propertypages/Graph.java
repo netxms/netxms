@@ -86,13 +86,13 @@ public class Graph extends PreferencePage
 		for(AccessListElement e : settings.getAccessList())
 			acl.put(e.getUserId(), new AccessListElement(e));
 		
-		NXCSession session = ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		
 		ConsoleJob job = new ConsoleJob("Synchronize missing users", null, Activator.PLUGIN_ID) {         
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if(session.syncMissingUsers(acl.keySet().toArray(new Long[acl.size()])))
+            if (session.syncMissingUsers(acl.keySet().toArray(new Long[acl.size()])))
             {
                runInUIThread(new Runnable() {
                   @Override
