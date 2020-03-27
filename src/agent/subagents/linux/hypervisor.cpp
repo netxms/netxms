@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2018 Raden Solutions
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -295,11 +295,11 @@ static bool IsXEN()
 
    UINT32 size;
    BYTE *content = LoadFileA("/sys/hypervisor/type", &size);
-   if (content == NULL)
+   if (content == nullptr)
       return false;
    
    bool result = (strncasecmp((char *)content, "xen", MIN(size, 3)) == 0);
-   free(content);
+   MemFree(content);
    return result;
 }
 
@@ -333,6 +333,31 @@ static bool GetXENVersionString(TCHAR *value)
 
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%d%hs"), major, minor, extra);
    return true;
+}
+
+/**
+ * Check for VirtualBox host
+ */
+static bool IsVirtualBox()
+{
+   return !strcmp(SMBIOS_GetHardwareProduct(), "VirtualBox");
+}
+
+/**
+ * Get VirtualBox host version
+ */
+static bool GetVirtualBoxVersionString(TCHAR *value)
+{
+   const char * const *oemStrings = SMBIOS_GetOEMStrings();
+   for(int i = 0; oemStrings[i] != NULL; i++)
+   {
+      if (!strncmp(oemStrings[i], "vboxVer_", 8))
+      {
+         _sntprintf(value, MAX_RESULT_LENGTH, _T("VirtualBox %hs"), oemStrings[i] + 8);
+         return true;
+      }
+   }
+   return false;
 }
 
 /**
@@ -378,15 +403,38 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       return SYSINFO_RC_SUCCESS;
    }
 
-   if (!strcmp(s_cpuVendorId, "Microsoft Hv"))
+   const char *mf = SMBIOS_GetHardwareManufacturer();
+   const char *prod = SMBIOS_GetHardwareProduct();
+
+   if ((!strcmp(mf, "Microsoft Corporation") && !strcmp(prod, "Virtual Machine")) ||
+       !strcmp(s_cpuVendorId, "Microsoft Hv"))
    {
       ret_mbstring(value, "Hyper-V");
       return SYSINFO_RC_SUCCESS;
    }
 
-   if (!strncmp(s_cpuVendorId, "KVM", 3))
+   if ((!strcmp(mf, "Red Hat") && !strcmp(prod, "KVM")) ||
+       !strncmp(s_cpuVendorId, "KVM", 3))
    {
       ret_mbstring(value, "KVM");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (!strcmp(mf, "QEMU"))
+   {
+      ret_mbstring(value, "QEMU");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (!strcmp(mf, "Amazon EC2"))
+   {
+      ret_mbstring(value, "Amazon EC2");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (IsVirtualBox())
+   {
+      ret_mbstring(value, "VirtualBox");
       return SYSINFO_RC_SUCCESS;
    }
 
@@ -417,6 +465,13 @@ LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
       return SYSINFO_RC_SUCCESS;
    if (IsVMware() && GetVMwareVersionString(value))
       return SYSINFO_RC_SUCCESS;
+   if (IsVirtualBox() && GetVirtualBoxVersionString(value))
+      return SYSINFO_RC_SUCCESS;
+   if (!strcmp(SMBIOS_GetHardwareManufacturer(), "Amazon EC2"))
+   {
+      ret_mbstring(value, SMBIOS_GetHardwareProduct());
+      return SYSINFO_RC_SUCCESS;
+   }
    return SYSINFO_RC_UNSUPPORTED;
 }
 
