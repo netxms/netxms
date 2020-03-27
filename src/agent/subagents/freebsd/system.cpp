@@ -247,29 +247,3 @@ LONG H_SourcePkgSupport(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
 }
-
-/**
- * Handler for Hypervisor.Type parameter
- */
-LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
-{
-   char name[128];
-   LONG rc = ExecSysctl("kern.vm_guest", name, 128);
-   if (rc != SYSINFO_RC_SUCCESS)
-      return rc;
-
-   if (!strcmp(name, "none") || !strcmp(name, "generic"))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   if (!strcmp(name, "vmware"))
-      ret_mbstring(value, "VMware");
-   else if (!strcmp(name, "hv"))
-      ret_mbstring(value, "Hyper-V");
-   else if (!strcmp(name, "kvm"))
-      ret_mbstring(value, "KVM");
-   else if (!strcmp(name, "xen"))
-      ret_mbstring(value, "XEN");
-   else
-      ret_mbstring(value, name);
-   return SYSINFO_RC_SUCCESS;
-}

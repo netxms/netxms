@@ -21,6 +21,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include "freebsd_subagent.h"
+#include <kenv.h>
 
 /**
  * Execute sysctl on named parameter
@@ -51,13 +52,143 @@ int ExecSysctl(const char *param, void *buffer, size_t buffSize)
 }
 
 /**
+ * Scan memory for SMBIOS header
+ */
+static off_t ScanMemory()
+{
+   int fd = _open("/dev/mem", O_RDONLY);
+   if (fd == -1)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot open /dev/mem (%s)"), _tcserror(errno));
+      return -1;
+   }
+
+   if (_lseek(fd, 0xF0000, SEEK_SET) == -1)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot seek /dev/mem to beginning of BIOS memory (%s)"), _tcserror(errno));
+      close(fd);
+      return -1;
+   }
+
+   bool found = false;
+   off_t offset = 0;
+   for(; offset < 0x10000; offset += 16)
+   {
+      BYTE buffer[16];
+      if (_read(fd, buffer, 16) < 16)
+         break;
+      if (!memcmp(buffer, "_SM_", 4) || !memcmp(buffer, "_SM3_", 5))
+      {
+         found = true;
+	 break;
+      }
+   }
+
+   _close(fd);
+   return found ? offset + 0xF0000 : -1;
+}
+
+/**
+ * SMBIOS reader
+ */
+static BYTE *BIOSReader(size_t *size)
+{
+   off_t offset;
+   char addrstr[KENV_MVALLEN + 1];
+   if (kenv(KENV_GET, "hint.smbios.0.mem", addrstr, sizeof(addrstr)) > 0)
+   {
+      offset = static_cast<off_t>(strtoull(addrstr, nullptr, 0));
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("SMBIOS offset obtained from kernel environment: %lld"), static_cast<long long>(offset));
+   }
+   else
+   {
+      offset = ScanMemory();
+      if (offset == -1)
+      {
+         nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("SMBIOS offset not found"));
+         return nullptr;
+      }
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("SMBIOS offset obtained from memory scan: %lld"), static_cast<long long>(offset));
+   }
+
+   int fd = _open("/dev/mem", O_RDONLY);
+   if (fd == -1)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot open /dev/mem (%s)"), _tcserror(errno));
+      return nullptr;
+   }
+
+   if (_lseek(fd, offset, SEEK_SET) == -1)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot seek /dev/mem to offset %lld (%s)"),
+            static_cast<long long>(offset), _tcserror(errno));
+      _close(fd);
+      return nullptr;
+   }
+
+   BYTE biosHeader[32];
+   if (_read(fd, biosHeader, 32) < 20)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot read at least 20 bytes from /dev/mem at offset %lld (%s)"),
+            static_cast<long long>(offset), _tcserror(errno));
+      _close(fd);
+      return nullptr;
+   }
+
+   size_t dataSize;
+   if (!memcmp(biosHeader, "_SM_", 4))
+   {
+      dataSize = *reinterpret_cast<uint16_t*>(&biosHeader[0x16]);
+      offset = *reinterpret_cast<uint32_t*>(&biosHeader[0x18]);
+   }
+   else if (!memcmp(biosHeader, "_SM3_", 5))
+   {
+      dataSize = *reinterpret_cast<uint32_t*>(&biosHeader[0x0C]);
+      offset = *reinterpret_cast<uint64_t*>(&biosHeader[0x10]);
+   }
+   else
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Invalid SMBIOS signature at offset %lld"), static_cast<long long>(offset));
+      _close(fd);
+      return nullptr;
+   }
+
+   if (_lseek(fd, offset, SEEK_SET) == -1)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot seek /dev/mem to offset %lld (%s)"),
+            static_cast<long long>(offset), _tcserror(errno));
+      _close(fd);
+      return nullptr;
+   }
+
+   auto bios = MemAllocArray<BYTE>(dataSize);
+   ssize_t bytes = _read(fd, bios, dataSize);
+   if (bytes <= 0)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot read SMBIOS structures from /dev/mem at offset %lld (%s)"),
+            static_cast<long long>(offset), _tcserror(errno));
+      MemFreeAndNull(bios);
+   }
+   else
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("Read %lld bytes of SMBIOS tables from /dev/mem"), static_cast<long long>(bytes));
+   }
+   _close(fd);
+   
+   *size = bytes;
+   return bios;
+}
+
+/**
  * Initalization callback
  */
 static bool SubAgentInit(Config *config)
 {
-	StartCpuUsageCollector();
-	nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 1, _T("FreeBSD platform subagent initialized"));
-	return true;
+   ReadCPUVendorId();
+   SMBIOS_Parse(BIOSReader);
+   StartCpuUsageCollector();
+   nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 1, _T("FreeBSD platform subagent initialized"));
+   return true;
 }
 
 /**
@@ -65,7 +196,7 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-	ShutdownCpuUsageCollector();
+   ShutdownCpuUsageCollector();
 }
 
 /**
@@ -95,7 +226,49 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.UsedInodes(*)"),      H_DiskInfo, (const TCHAR *)DISK_USED_INODES,       DCI_DT_UINT64,	DCIDESC_FS_USEDINODES },
    { _T("FileSystem.UsedInodesPerc(*)"),  H_DiskInfo, (const TCHAR *)DISK_USED_INODES_PERC,  DCI_DT_FLOAT,	DCIDESC_FS_USEDINODESPERC },
 
+   { _T("Hardware.Baseboard.Manufacturer"), SMBIOS_ParameterHandler, _T("bM"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER },
+   { _T("Hardware.Baseboard.Product"), SMBIOS_ParameterHandler, _T("bP"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_PRODUCT },
+   { _T("Hardware.Baseboard.SerialNumber"), SMBIOS_ParameterHandler, _T("bS"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_SERIALNUMBER },
+   { _T("Hardware.Baseboard.Type"), SMBIOS_ParameterHandler, _T("bT"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_TYPE },
+   { _T("Hardware.Baseboard.Version"), SMBIOS_ParameterHandler, _T("bV"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_VERSION },
+   { _T("Hardware.Battery.Capacity(*)"), SMBIOS_BatteryParameterHandler, _T("c"), DCI_DT_UINT, DCIDESC_HARDWARE_BATTERY_CAPACITY },
+   { _T("Hardware.Battery.Chemistry(*)"), SMBIOS_BatteryParameterHandler, _T("C"), DCI_DT_STRING, DCIDESC_HARDWARE_BATTERY_CHEMISTRY },
+   { _T("Hardware.Battery.Location(*)"), SMBIOS_BatteryParameterHandler, _T("L"), DCI_DT_STRING, DCIDESC_HARDWARE_BATTERY_LOCATION },
+   { _T("Hardware.Battery.ManufactureDate(*)"), SMBIOS_BatteryParameterHandler, _T("D"), DCI_DT_STRING, DCIDESC_HARDWARE_BATTERY_MANUFACTURE_DATE },
+   { _T("Hardware.Battery.Manufacturer(*)"), SMBIOS_BatteryParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_HARDWARE_BATTERY_MANUFACTURER },
+   { _T("Hardware.Battery.Name(*)"), SMBIOS_BatteryParameterHandler, _T("N"), DCI_DT_STRING, DCIDESC_HARDWARE_BATTERY_NAME },
+   { _T("Hardware.Battery.SerialNumber(*)"), SMBIOS_BatteryParameterHandler, _T("s"), DCI_DT_STRING, DCIDESC_HARDWARE_BATTERY_SERIALNUMBER },
+   { _T("Hardware.Battery.Voltage(*)"), SMBIOS_BatteryParameterHandler, _T("V"), DCI_DT_UINT, DCIDESC_HARDWARE_BATTERY_VOLTAGE },
+   { _T("Hardware.MemoryDevice.Bank(*)"), SMBIOS_MemDevParameterHandler, _T("B"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_BANK },
+   { _T("Hardware.MemoryDevice.ConfiguredSpeed(*)"), SMBIOS_MemDevParameterHandler, _T("c"), DCI_DT_UINT, DCIDESC_HARDWARE_MEMORYDEVICE_CONFSPEED },
+   { _T("Hardware.MemoryDevice.FormFactor(*)"), SMBIOS_MemDevParameterHandler, _T("F"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_FORMFACTOR },
+   { _T("Hardware.MemoryDevice.Location(*)"), SMBIOS_MemDevParameterHandler, _T("L"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_LOCATION },
+   { _T("Hardware.MemoryDevice.Manufacturer(*)"), SMBIOS_MemDevParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_MANUFACTURER },
+   { _T("Hardware.MemoryDevice.MaxSpeed(*)"), SMBIOS_MemDevParameterHandler, _T("m"), DCI_DT_UINT, DCIDESC_HARDWARE_MEMORYDEVICE_MAXSPEED },
+   { _T("Hardware.MemoryDevice.PartNumber(*)"), SMBIOS_MemDevParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_PARTNUMBER },
+   { _T("Hardware.MemoryDevice.SerialNumber(*)"), SMBIOS_MemDevParameterHandler, _T("s"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_SERIALNUMBER },
+   { _T("Hardware.MemoryDevice.Size(*)"), SMBIOS_MemDevParameterHandler, _T("S"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_SIZE },
+   { _T("Hardware.MemoryDevice.Type(*)"), SMBIOS_MemDevParameterHandler, _T("T"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_TYPE },
+   { _T("Hardware.Processor.Cores(*)"), SMBIOS_ProcessorParameterHandler, _T("C"), DCI_DT_UINT, DCIDESC_HARDWARE_PROCESSOR_CORES },
+   { _T("Hardware.Processor.CurrentSpeed(*)"), SMBIOS_ProcessorParameterHandler, _T("c"), DCI_DT_UINT, DCIDESC_HARDWARE_PROCESSOR_CURRSPEED },
+   { _T("Hardware.Processor.Family(*)"), SMBIOS_ProcessorParameterHandler, _T("F"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_FAMILY },
+   { _T("Hardware.Processor.Manufacturer(*)"), SMBIOS_ProcessorParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_MANUFACTURER },
+   { _T("Hardware.Processor.MaxSpeed(*)"), SMBIOS_ProcessorParameterHandler, _T("m"), DCI_DT_UINT, DCIDESC_HARDWARE_PROCESSOR_MAXSPEED },
+   { _T("Hardware.Processor.PartNumber(*)"), SMBIOS_ProcessorParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_PARTNUMBER },
+   { _T("Hardware.Processor.SerialNumber(*)"), SMBIOS_ProcessorParameterHandler, _T("s"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_SERIALNUMBER },
+   { _T("Hardware.Processor.Socket(*)"), SMBIOS_ProcessorParameterHandler, _T("S"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_SOCKET },
+   { _T("Hardware.Processor.Threads(*)"), SMBIOS_ProcessorParameterHandler, _T("t"), DCI_DT_UINT, DCIDESC_HARDWARE_PROCESSOR_THREADS },
+   { _T("Hardware.Processor.Type(*)"), SMBIOS_ProcessorParameterHandler, _T("T"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_TYPE },
+   { _T("Hardware.Processor.Version(*)"), SMBIOS_ProcessorParameterHandler, _T("V"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_VERSION },
+   { _T("Hardware.System.Manufacturer"), SMBIOS_ParameterHandler, _T("HM"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
+   { _T("Hardware.System.Product"), SMBIOS_ParameterHandler, _T("HP"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
+   { _T("Hardware.System.ProductCode"), SMBIOS_ParameterHandler, _T("HC"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCTCODE },
+   { _T("Hardware.System.SerialNumber"), SMBIOS_ParameterHandler, _T("HS"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
+   { _T("Hardware.System.Version"), SMBIOS_ParameterHandler, _T("HV"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_VERSION },
+   { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
+
    { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
+   { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
 
    { _T("Net.Interface.64BitCounters"), H_NetInterface64bitSupport, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_64BITCOUNTERS },
 
@@ -132,6 +305,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Process.WkSet(*)"),             H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_WKSET },
 
+   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("BD"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
+   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("Bv"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
+   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("BV"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
+
 	{ _T("System.CPU.Count"), H_CpuInfo, _T("C"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_COUNT },
 	{ _T("System.CPU.Frequency"), H_CpuInfo, _T("F"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_FREQUENCY },
 	{ _T("System.CPU.LoadAvg"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
@@ -139,10 +316,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.CPU.LoadAvg15"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
 	{ _T("System.CPU.Model"), H_CpuInfo, _T("M"), DCI_DT_STRING, DCIDESC_SYSTEM_CPU_MODEL },
 
-	{ _T("System.CPU.Interrupts"), H_CpuInterrupts,        MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_INTERRUPTS),
-            DCI_DT_UINT,  DCIDESC_SYSTEM_CPU_INTERRUPTS },
-    { _T("System.CPU.ContextSwitches"), H_CpuCswitch,        MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_CONTEXT_SWITCHES),
-            DCI_DT_UINT,  DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES },
+   { _T("System.CPU.Interrupts"), H_CpuInterrupts, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_INTERRUPTS), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS },
+   { _T("System.CPU.ContextSwitches"), H_CpuCswitch, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_CONTEXT_SWITCHES), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES },
 
 	/* usage */
 	{ _T("System.CPU.Usage"),             H_CpuUsage,        MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERAL),
@@ -214,6 +389,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.CPU.Usage15.Idle(*)"),        H_CpuUsageEx,      MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_IDLE),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX },
 
+   { _T("System.CPU.VendorId"), H_CpuVendorId, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_CPU_VENDORID },
+
+   { _T("System.IsVirtual"), H_IsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
+
    { _T("System.Memory.Physical.Available"),  H_MemoryInfo, (const TCHAR *)PHYSICAL_AVAIL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (const TCHAR *)PHYSICAL_AVAIL_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
    { _T("System.Memory.Physical.Cached"),  H_MemoryInfo, (const TCHAR *)PHYSICAL_CACHED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_CACHED },
@@ -248,12 +427,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-	{ _T("FileSystem.MountPoints"),       H_MountPoints,     NULL },
-	{ _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
-	{ _T("Net.InterfaceList"),            H_NetIfList,       NULL },
-	{ _T("Net.InterfaceNames"),           H_NetIfNames,      NULL },
-	{ _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
-	{ _T("System.ProcessList"),           H_ProcessList,     NULL },
+   { _T("FileSystem.MountPoints"),       H_MountPoints,     NULL },
+   { _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
+   { _T("Net.InterfaceList"),            H_NetIfList,       NULL },
+   { _T("Net.InterfaceNames"),           H_NetIfNames,      NULL },
+   { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
+   { _T("System.ProcessList"),           H_ProcessList,     NULL },
 };
 
 /**
