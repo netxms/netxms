@@ -277,7 +277,7 @@ static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value
    unsigned int eax, ebx, ecx, edx;
    if (__get_cpuid(0x1, &eax, &ebx, &ecx, &edx) != 1)
       return SYSINFO_RC_UNSUPPORTED;
-   ret_int(value, (ecx & 0x80000000) != 0 ? 1 : 0);
+   ret_int(value, (ecx & 0x80000000) != 0 ? VTYPE_FULL : VTYPE_NONE);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -301,23 +301,23 @@ static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value
          if (data[1] & 0x01)
          {
             // Root partition
-            ret_int(value, 0);
+            ret_int(value, VTYPE_NONE);
          }
          else
          {
             // Guest partition
-            ret_int(value, 1);
+            ret_int(value, VTYPE_FULL);
          }
       }
       else
       {
          // Other virtualization product, assume guest OS
-         ret_int(value, 1);
+         ret_int(value, VTYPE_FULL);
       }
    }
    else
    {
-      ret_int(value, 0);
+      ret_int(value, VTYPE_NONE);
    }
    return SYSINFO_RC_SUCCESS;
 }
