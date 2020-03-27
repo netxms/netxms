@@ -18,6 +18,7 @@ echo Version: $version
 mkdir -p dist
 rm -rf dist/* nxmc-${version}.dmg
 cp -R ../../src/java/netxms-eclipse/Product/target/products/org.netxms.ui.eclipse.console.product/macosx/cocoa/x86_64/Eclipse.app dist/NetXMS\ Console.app
+rm -rf dist/NetXMS\ Console.app/Contents/Eclipse/p2/org.eclipse.equinox.p2.*
 
 cat Info.plist | sed "s,@version@,${version},g" > "dist/NetXMS Console.app/Contents/Info.plist"
 cd dist/NetXMS\ Console.app/Contents/
@@ -33,13 +34,12 @@ cd dist/NetXMS\ Console.app/Contents/jre
 codesign --options=runtime --deep --force -s "Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)" -v --entitlements ../../../../entitlements.plist `find . -type f | xargs -n 1 file | grep Mach-O | cut -d: -f1`
 cd -
 
-7z x dist/NetXMS\ Console.app/Contents/Eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64_3.113.0.v20191204-0601.jar libswt-pi-cocoa-4930r7.jnilib libswt-cocoa-4930r7.jnilib libswt-awt-cocoa-4930r7.jnilib
+7z x dist/NetXMS\ Console.app/Contents/Eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64_*.jar \*.jnilib
 codesign --options=runtime --deep --force -s "Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)" -v --entitlements entitlements.plist ./libswt-*
-7z a dist/NetXMS\ Console.app/Contents/Eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64_3.113.0.v20191204-0601.jar libswt-pi-cocoa-4930r7.jnilib libswt-cocoa-4930r7.jnilib libswt-awt-cocoa-4930r7.jnilib
-rm libswt-pi-cocoa-4930r7.jnilib libswt-cocoa-4930r7.jnilib libswt-awt-cocoa-4930r7.jnilib
+7z a dist/NetXMS\ Console.app/Contents/Eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64_*.jar \*.jnilib
+rm -f *.jnilib
 codesign --options=runtime --deep --force -s "Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)" -v --entitlements entitlements.plist dist/NetXMS\ Console.app
 
-##codesign --options=runtime --deep --force -s 'Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)' -v 'dist/NetXMS Console.app'
 create-dmg --no-internet-enable --volname "NetXMS ${version}" --volicon dmg-icon.icns --window-size 500 320 --background dmg-background.png --icon "NetXMS Console.app" 114 132 --app-drop-link 399 132 nxmc-${version}.dmg dist
 codesign -s 'Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)' nxmc-${version}.dmg
 
