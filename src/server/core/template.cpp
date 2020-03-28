@@ -65,40 +65,9 @@ Template::Template() : super(), AutoBindTarget(this), VersionableObject(this)
 }
 
 /**
- * Create template object from import file
- */
-Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, config), VersionableObject(this, config)
-{
-   UINT32 flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
-   if (flags != 0)
-   {
-      if (flags & AAF_AUTO_APPLY)
-         m_autoBindFlag = true;
-      if (flags & AAF_AUTO_REMOVE)
-         m_autoUnbindFlag = true;
-      m_flags &= !(AAF_AUTO_APPLY | AAF_AUTO_REMOVE);
-   }
-
-   m_policyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
-   m_deletedPolicyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
-   ObjectArray<ConfigEntry> *dcis = config->getSubEntries(_T("agentPolicy#*"));
-   for(int i = 0; i < dcis->size(); i++)
-   {
-      ConfigEntry *e = dcis->get(i);
-      uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-      GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("policyType")), m_id);
-      curr->updateFromImport(e);
-      m_policyList->add(curr);
-   }
-   delete dcis;
-
-   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
-}
-
-/**
  * Create new template
  */
-Template::Template(const TCHAR *pszName) : super(pszName), AutoBindTarget(this), VersionableObject(this)
+Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), AutoBindTarget(this), VersionableObject(this)
 {
    m_policyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
    m_deletedPolicyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
@@ -446,6 +415,16 @@ void Template::updateFromImport(ConfigEntry *config)
 
    lockProperties();
 
+   uint32_t flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
+   if (flags != 0)
+   {
+      if (flags & AAF_AUTO_APPLY)
+         m_autoBindFlag = true;
+      if (flags & AAF_AUTO_REMOVE)
+         m_autoUnbindFlag = true;
+      m_flags &= !(AAF_AUTO_APPLY | AAF_AUTO_REMOVE);
+   }
+
    m_policyList->clear();
    ObjectArray<ConfigEntry> *policies = config->getSubEntries(_T("agentPolicy#*"));
    for(int i = 0; i < policies->size(); i++)
@@ -456,13 +435,10 @@ void Template::updateFromImport(ConfigEntry *config)
       curr->updateFromImport(e);
       for (int i = 0; i < m_policyList->size(); i++)
       {
-         if(m_policyList->get(i)->getGuid().equals(guid))
-         {
+         if (m_policyList->get(i)->getGuid().equals(guid))
             break;
-         }
       }
-
-      if(i != m_policyList->size())
+      if (i != m_policyList->size())
          m_policyList->replace(i, curr);
       else
          m_policyList->add(curr);

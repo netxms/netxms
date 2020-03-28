@@ -1102,7 +1102,6 @@ protected:
 
 public:
    VersionableObject(NetObj *_this);
-   VersionableObject(NetObj *_this, ConfigEntry *config);
 
    void updateVersion() { InterlockedIncrement(&m_version); }
    UINT32 getVersion() const { return m_version; }
@@ -1139,7 +1138,6 @@ protected:
 
 public:
    AutoBindTarget(NetObj *_this);
-   AutoBindTarget(NetObj *_this, ConfigEntry *config);
    virtual ~AutoBindTarget();
 
    AutoBindDecision isApplicable(const shared_ptr<DataCollectionTarget>& object);
@@ -1221,8 +1219,7 @@ protected:
 
 public:
    DataCollectionOwner();
-   DataCollectionOwner(const TCHAR *pszName);
-   DataCollectionOwner(ConfigEntry *config);
+   DataCollectionOwner(const TCHAR *name, const uuid& guid = uuid::NULL_UUID);
    virtual ~DataCollectionOwner();
 
    shared_ptr<DataCollectionOwner> self() const { return static_pointer_cast<DataCollectionOwner>(NObject::self()); }
@@ -1406,8 +1403,7 @@ protected:
 
 public:
    Template();
-   Template(ConfigEntry *config);
-   Template(const TCHAR *pszName);
+   Template(const TCHAR *name, const uuid& guid = uuid::NULL_UUID);
    ~Template();
 
    shared_ptr<Template> self() const { return static_pointer_cast<Template>(NObject::self()); }

@@ -32,15 +32,6 @@ VersionableObject::VersionableObject(NetObj *_this)
 }
 
 /**
- * Versionable object constructor
- */
-VersionableObject::VersionableObject(NetObj *_this, ConfigEntry *config)
-{
-   m_this = _this;
-   m_version = config->getSubEntryValueAsUInt(_T("version"), 0, 0x00010000);
-}
-
-/**
  * Create NXCP message with object's data
  */
 void VersionableObject::fillMessage(NXCPMessage *msg)

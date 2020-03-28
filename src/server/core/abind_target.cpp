@@ -28,31 +28,11 @@
 AutoBindTarget::AutoBindTarget(NetObj *_this)
 {
    m_this = _this;
-   m_bindFilter = NULL;
-   m_bindFilterSource = NULL;
+   m_bindFilter = nullptr;
+   m_bindFilterSource = nullptr;
    m_mutexProperties = MutexCreate();
    m_autoBindFlag = false;
    m_autoUnbindFlag = false;
-}
-
-/**
- * Auto bind object constructor
- */
-AutoBindTarget::AutoBindTarget(NetObj *_this, ConfigEntry *config)
-{
-   m_this = _this;
-   m_bindFilter = NULL;
-   m_bindFilterSource = NULL;
-   m_mutexProperties = MutexCreate();
-
-   ObjectArray<ConfigEntry> *tmp = config->getSubEntries(_T("filter"));
-   if(tmp->size() > 0)
-   {
-     m_autoBindFlag = tmp->get(0)->getAttributeAsBoolean(_T("autoBind"));
-     m_autoUnbindFlag = tmp->get(0)->getAttributeAsBoolean(_T("autoUnbind"));
-   }
-   delete tmp;
-   setAutoBindFilter(config->getSubEntryValue(_T("filter")));
 }
 
 /**
@@ -87,12 +67,12 @@ void AutoBindTarget::setAutoBindFilter(const TCHAR *filter)
    internalLock();
    MemFree(m_bindFilterSource);
    delete m_bindFilter;
-   if (filter != NULL)
+   if (filter != nullptr)
    {
       TCHAR error[256];
       m_bindFilterSource = MemCopyString(filter);
-      m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
-      if (m_bindFilter == NULL)
+      m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, nullptr);
+      if (m_bindFilter == nullptr)
       {
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), m_this->getId());
@@ -102,8 +82,8 @@ void AutoBindTarget::setAutoBindFilter(const TCHAR *filter)
    }
    else
    {
-      m_bindFilterSource = NULL;
-      m_bindFilter = NULL;
+      m_bindFilterSource = nullptr;
+      m_bindFilter = nullptr;
    }
    internalUnlock();
 }
@@ -154,10 +134,10 @@ bool AutoBindTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 objectId)
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT bind_filter,bind_flag,unbind_flag FROM auto_bind_target WHERE object_id=%d"), objectId);
    DB_RESULT hResult = DBSelect(hdb, szQuery);
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;
 
-   TCHAR *filter = DBGetField(hResult, 0, 0, NULL, 0);
+   TCHAR *filter = DBGetField(hResult, 0, 0, nullptr, 0);
    setAutoBindFilter(filter);
    MemFree(filter);
 
@@ -183,7 +163,7 @@ bool AutoBindTarget::saveToDatabase(DB_HANDLE hdb)
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO auto_bind_target (bind_filter,bind_flag,unbind_flag,object_id) VALUES (?,?,?,?)"));
    }
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       internalLock();
       DBBind(hStmt, 1, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
@@ -215,12 +195,12 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<DataCollectionTar
 {
    AutoBindDecision result = AutoBindDecision_Ignore;
 
-   NXSL_VM *filter = NULL;
+   NXSL_VM *filter = nullptr;
    internalLock();
-   if (m_autoBindFlag && (m_bindFilter != NULL))
+   if (m_autoBindFlag && (m_bindFilter != nullptr))
    {
       filter = CreateServerScriptVM(m_bindFilter, target);
-      if (filter == NULL)
+      if (filter == nullptr)
       {
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), m_this->getId());
@@ -230,7 +210,7 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<DataCollectionTar
    }
    internalUnlock();
 
-   if (filter == NULL)
+   if (filter == nullptr)
       return result;
 
    if (filter->run())
@@ -270,7 +250,7 @@ void AutoBindTarget::toJson(json_t *root)
 void AutoBindTarget::createExportRecord(StringBuffer &str)
 {
    internalLock();
-   if (m_bindFilterSource != NULL)
+   if (m_bindFilterSource != nullptr)
    {
       str.append(_T("\t\t\t<filter autoBind=\""));
       str.append(m_autoBindFlag);
@@ -288,14 +268,17 @@ void AutoBindTarget::createExportRecord(StringBuffer &str)
  */
 void AutoBindTarget::updateFromImport(ConfigEntry *config)
 {
-   setAutoBindFilter(config->getSubEntryValue(_T("filter")));
-   ObjectArray<ConfigEntry> *tmp = config->getSubEntries(_T("filter"));
-   if(tmp->size() > 0)
+   ConfigEntry *filter = config->findEntry(_T("filter"));
+   if (filter != nullptr)
    {
+      setAutoBindFilter(filter->getValue());
       internalLock();
-      m_autoBindFlag = tmp->get(0)->getAttributeAsBoolean(_T("autoBind"));
-      m_autoUnbindFlag = tmp->get(0)->getAttributeAsBoolean(_T("autoUnbind"));
+      m_autoBindFlag = filter->getAttributeAsBoolean(_T("autoBind"));
+      m_autoUnbindFlag = filter->getAttributeAsBoolean(_T("autoUnbind"));
       internalUnlock();
    }
-   delete tmp;
+   else
+   {
+      setAutoBindFilter(nullptr);
+   }
 }

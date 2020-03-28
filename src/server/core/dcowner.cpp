@@ -37,59 +37,18 @@ DataCollectionOwner::DataCollectionOwner() : super()
 /**
  * Constructor for new data collection owner object
  */
-DataCollectionOwner::DataCollectionOwner(const TCHAR *pszName) : super()
+DataCollectionOwner::DataCollectionOwner(const TCHAR *name, const uuid& guid) : super()
 {
-   nx_strncpy(m_name, pszName, MAX_OBJECT_NAME);
+   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
 	m_dcObjects = new SharedObjectArray<DCObject>(0, 128);
    m_status = STATUS_NORMAL;
    m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
    setCreationTime();
-}
 
-/**
- * Create data collection owner object from import file
- */
-DataCollectionOwner::DataCollectionOwner(ConfigEntry *config)
-{
-   m_isHidden = true;
-   m_status = STATUS_NORMAL;
-   m_dciAccessLock = RWLockCreate();
-   m_dciListModified = false;
-
-   // GUID
-   uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
    if (!guid.isNull())
       m_guid = guid;
-
-   // Name
-   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);
-   m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
-
-   //Comment
-   m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
-
-   // Data collection
-   m_dcObjects = new SharedObjectArray<DCObject>(0, 128);
-   ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
-   if (dcRoot != NULL)
-   {
-      ObjectArray<ConfigEntry> *dcis = dcRoot->getSubEntries(_T("dci#*"));
-      for(int i = 0; i < dcis->size(); i++)
-      {
-         m_dcObjects->add(make_shared<DCItem>(dcis->get(i), self()));
-      }
-      delete dcis;
-
-      ObjectArray<ConfigEntry> *dctables = dcRoot->getSubEntries(_T("dctable#*"));
-      for(int i = 0; i < dctables->size(); i++)
-      {
-         m_dcObjects->add(make_shared<DCTable>(dctables->get(i), self()));
-      }
-      delete dctables;
-   }
-   setCreationTime();
 }
 
 /**
@@ -1010,6 +969,7 @@ void DataCollectionOwner::prepareForDeletion()
 void DataCollectionOwner::updateFromImport(ConfigEntry *config)
 {
    lockProperties();
+   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);
    m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, m_flags);
    unlockProperties();
    setComments(MemCopyString(config->getSubEntryValue(_T("comments"), 0, _T(""))));
