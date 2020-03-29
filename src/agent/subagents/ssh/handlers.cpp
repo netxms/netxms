@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "ssh_subagent.h"
+#include <netxms-regex.h>
 
 /**
  * Generic handler to execute command on any host
@@ -36,11 +37,11 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 
    UINT16 port = 22;
    TCHAR *p = _tcschr(hostName, _T(':'));
-   if (p != NULL)
+   if (p != nullptr)
    {
       *p = 0;
       p++;
-      port = (UINT16)_tcstoul(p, NULL, 10);
+      port = (UINT16)_tcstoul(p, nullptr, 10);
    }
 
    InetAddress addr = InetAddress::resolveHostName(hostName);
@@ -49,14 +50,52 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 
    LONG rc = SYSINFO_RC_ERROR;
    SSHSession *ssh = AcquireSession(addr, port, login, password);
-   if (ssh != NULL)
+   if (ssh != nullptr)
    {
       StringList *output = ssh->execute(command);
-      if (output != NULL)
+      if (output != nullptr)
       {
          if (output->size() > 0)
          {
-            ret_string(value, output->get(0));
+            TCHAR pattern[256] = _T("");
+            AgentGetParameterArg(param, 5, pattern, 256);
+            if (pattern[0] != 0)
+            {
+               bool match = false;
+               const char *errptr;
+               int erroffset;
+               PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &errptr, &erroffset, nullptr);
+               if (preg != nullptr)
+               {
+                  int ovector[60];
+                  for(int i = 0; i < output->size(); i++)
+                  {
+                     const TCHAR *line = output->get(i);
+                     int cgcount = _pcre_exec_w(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, ovector, 60);
+                     if (cgcount >= 0) // MATCH
+                     {
+                        match = true;
+                        if ((cgcount > 1) && (ovector[2] != -1))
+                        {
+                           int len = ovector[3] - ovector[2];
+                           _tcslcpy(value, &line[ovector[2]], std::min(MAX_RESULT_LENGTH, len + 1));
+                        }
+                        else
+                        {
+                           ret_string(value, line);
+                        }
+                        break;
+                     }
+                  }
+                  _pcre_free_t(preg);
+               }
+               if (!match)
+                  ret_string(value, _T(""));
+            }
+            else
+            {
+               ret_string(value, output->get(0));
+            }
             rc = SYSINFO_RC_SUCCESS;
          }
          delete output;
@@ -80,11 +119,11 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 
    UINT16 port = 22;
    TCHAR *p = _tcschr(hostName, _T(':'));
-   if (p != NULL)
+   if (p != nullptr)
    {
       *p = 0;
       p++;
-      port = (UINT16)_tcstoul(p, NULL, 10);
+      port = (UINT16)_tcstoul(p, nullptr, 10);
    }
 
    InetAddress addr = InetAddress::resolveHostName(hostName);
@@ -93,10 +132,10 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 
    LONG rc = SYSINFO_RC_ERROR;
    SSHSession *ssh = AcquireSession(addr, port, login, password);
-   if (ssh != NULL)
+   if (ssh != nullptr)
    {
       StringList *output = ssh->execute(command);
-      if (output != NULL)
+      if (output != nullptr)
       {
          value->addAll(output);
          rc = SYSINFO_RC_SUCCESS;
