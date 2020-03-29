@@ -7,11 +7,13 @@
 - Value ranges in NXSL switch/case statement
 - Fixed issues:
 	NX-713 (Scheduled DCI will not work with offline DCI functionality)
+	NX-814 (NXSL: add new node attribute – isRemotelyManaged)
 	NX-1699 (Allow user turn on "Prevent automatic SNMP configuration changes" when creating node)
 	NX-1788 (NXSL: add support for ranges in switch/case)
 	NX-1806 (Change order in which ping3.ndd is used during discovery or allow unloading/blacklist)
 	NX-1671 (Title from Object Tool's properties is not used anywhere)
-	
+	NX-1820 (Object deletion and negative reference count)
+
 
 *
 * 3.2.451
