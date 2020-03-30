@@ -559,10 +559,11 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 						@Override
 						public void run()
 						{
-							PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, details);
-							dlg.open();
-							if (details.isModified())
-								saveObjectTool(details);
+						   if (showObjectToolPropertyPages(details))
+			            {
+	                     if (details.isModified())
+	                        saveObjectTool(details);
+			            }
 						}
 					});
 				}
