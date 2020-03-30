@@ -7,6 +7,7 @@
 - Value ranges in NXSL switch/case statement
 - Fixed issues:
 	NX-713 (Scheduled DCI will not work with offline DCI functionality)
+	NX-806 (NXSL: add method to lookup table row by instance)
 	NX-814 (NXSL: add new node attribute – isRemotelyManaged)
 	NX-1362 (Pattern matching for command output in SSH.Command parameter)
 	NX-1699 (Allow user turn on "Prevent automatic SNMP configuration changes" when creating node)

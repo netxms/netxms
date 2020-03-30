@@ -64,7 +64,7 @@ public:
  */
 NXSL_METHOD_DEFINITION(Table, addRow)
 {
-   *result = vm->createValue((INT32)((Table *)object->getData())->addRow());
+   *result = vm->createValue(static_cast<Table*>(object->getData())->addRow());
    return 0;
 }
 
@@ -103,20 +103,7 @@ NXSL_METHOD_DEFINITION(Table, addColumn)
       isInstance = (argv[3]->getValueAsInt32() != 0);
    }
 
-   *result = vm->createValue((INT32)((Table *)object->getData())->addColumn(argv[0]->getValueAsCString(), dataType, displayName, isInstance));
-   return 0;
-}
-
-/**
- * deleteRow(index) method
- */
-NXSL_METHOD_DEFINITION(Table, deleteRow)
-{
-   if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
-
-   ((Table *)object->getData())->deleteRow(argv[0]->getValueAsInt32());
-   *result = vm->createValue();
+   *result = vm->createValue(static_cast<Table*>(object->getData())->addColumn(argv[0]->getValueAsCString(), dataType, displayName, isInstance));
    return 0;
 }
 
@@ -128,8 +115,47 @@ NXSL_METHOD_DEFINITION(Table, deleteColumn)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   ((Table *)object->getData())->deleteColumn(argv[0]->getValueAsInt32());
+   static_cast<Table*>(object->getData())->deleteColumn(argv[0]->getValueAsInt32());
    *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * deleteRow(index) method
+ */
+NXSL_METHOD_DEFINITION(Table, deleteRow)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   static_cast<Table*>(object->getData())->deleteRow(argv[0]->getValueAsInt32());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * findRowByInstance(instance) method
+ */
+NXSL_METHOD_DEFINITION(Table, findRowByInstance)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   auto table = static_cast<Table*>(object->getData());
+   int index = table->findRowByInstance(argv[0]->getValueAsCString());
+   *result = (index != -1) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableRowClass, new TableRowReference(table, index))) : vm->createValue();
+   return 0;
+}
+
+/**
+ * findRowIndexByInstance(instance) method
+ */
+NXSL_METHOD_DEFINITION(Table, findRowIndexByInstance)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = vm->createValue(static_cast<Table*>(object->getData())->findRowByInstance(argv[0]->getValueAsCString()));
    return 0;
 }
 
@@ -146,10 +172,10 @@ NXSL_METHOD_DEFINITION(Table, get)
 
    int columnIndex = argv[1]->isInteger() ?
       argv[1]->getValueAsInt32() :
-      ((Table *)object->getData())->getColumnIndex(argv[1]->getValueAsCString());
+      static_cast<Table*>(object->getData())->getColumnIndex(argv[1]->getValueAsCString());
 
-   const TCHAR *value = ((Table *)object->getData())->getAsString(argv[0]->getValueAsInt32(), columnIndex);
-   *result = (value != NULL) ? vm->createValue(value) : vm->createValue();
+   const TCHAR *value = static_cast<Table*>(object->getData())->getAsString(argv[0]->getValueAsInt32(), columnIndex);
+   *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
    return 0;
 }
 
@@ -208,6 +234,8 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Table, addRow, 0);
    NXSL_REGISTER_METHOD(Table, deleteColumn, 1);
    NXSL_REGISTER_METHOD(Table, deleteRow, 1);
+   NXSL_REGISTER_METHOD(Table, findRowByInstance, 1);
+   NXSL_REGISTER_METHOD(Table, findRowIndexByInstance, 1);
    NXSL_REGISTER_METHOD(Table, get, 2);
    NXSL_REGISTER_METHOD(Table, getColumnIndex, 1);
    NXSL_REGISTER_METHOD(Table, getColumnName, 1);
@@ -413,6 +441,12 @@ NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const char *attr)
    if (!strcmp(attr, "index"))
    {
       value = vm->createValue(row->getIndex());
+   }
+   else if (!strcmp(attr, "instance"))
+   {
+      TCHAR instance[1024] = _T("");
+      row->getTable()->buildInstanceString(row->getIndex(), instance, 1024);
+      value = vm->createValue(instance);
    }
    else if (!strcmp(attr, "values"))
    {
