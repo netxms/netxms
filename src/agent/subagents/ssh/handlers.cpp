@@ -71,7 +71,7 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
                   for(int i = 0; i < output->size(); i++)
                   {
                      const TCHAR *line = output->get(i);
-                     int cgcount = _pcre_exec_w(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, ovector, 60);
+                     int cgcount = _pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, ovector, 60);
                      if (cgcount >= 0) // MATCH
                      {
                         match = true;
