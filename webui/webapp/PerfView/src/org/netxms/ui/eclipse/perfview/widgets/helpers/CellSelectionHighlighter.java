@@ -1,9 +1,26 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.perfview.widgets.helpers;
 
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -11,11 +28,14 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class CellSelectionHighlighter
 {
+   private Display display;
+
 	/**
 	 * @param viewer
 	 */
 	public CellSelectionHighlighter(SortableTableViewer viewer, CellSelectionManager manager)
 	{
+	   display = viewer.getControl().getDisplay();
 	}
 
 	/**
@@ -34,15 +54,10 @@ public class CellSelectionHighlighter
 		if (cell == null)
 			return;
 		
-		final String key = "CELL#" + cell.getColumnIndex();
-		if (cell.getItem().getData(key) == null)
-		{
-			cell.getItem().setData(key, cell.getText());
-			// FIXME: read colors from current theme
-			cell.setText("<span style='color:white;background-color: #00589f;'>" + cell.getText() + "</span>");
-		}
+	   cell.setBackground(display.getSystemColor(SWT.COLOR_LIST_SELECTION));
+	   cell.setForeground(display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
 	}
-	
+
 	/**
 	 * @param cell
 	 */
@@ -51,12 +66,7 @@ public class CellSelectionHighlighter
 		if ((cell == null) || cell.getItem().isDisposed())
 			return;
 		
-		final String key = "CELL#" + cell.getColumnIndex();
-		Object data = cell.getItem().getData(key);
-		if (data != null)
-		{
-			cell.setText((String)data);
-			cell.getItem().setData(key, null);
-		}
+	   cell.setBackground(null);
+	   cell.setForeground(null);
 	}	
 }

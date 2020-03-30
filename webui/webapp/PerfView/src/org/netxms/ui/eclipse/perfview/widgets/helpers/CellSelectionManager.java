@@ -11,6 +11,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerRow;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.accessibility.ACC;
 import org.eclipse.swt.events.DisposeEvent;
@@ -48,6 +49,7 @@ public class CellSelectionManager
 		this.viewer = viewer;
 		this.cellHighlighter = new CellSelectionHighlighter(viewer, this);
 		this.navigationStrategy = new CellNavigationStrategy();
+		viewer.getTable().setData(RWT.CUSTOM_VARIANT, "cellselect");
 		hookListener(viewer);
 	}
 
