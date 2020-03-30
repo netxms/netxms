@@ -65,9 +65,6 @@ static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr, TCHAR 
  */
 LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   if (!AgentGetParameterArg(pszParam, 1, szBuffer, 128))
-      return SYSINFO_RC_UNSUPPORTED;
-
    LONG nRet = SYSINFO_RC_ERROR, nCmd;
    TCHAR szBuffer[128], *eptr;
    BYTE pbValue[41];
@@ -76,6 +73,9 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
    SENDCMDOUTPARAMS *pResult;
    DWORD dwBytes;
    BOOL bSwapWords = FALSE;
+
+   if (!AgentGetParameterArg(pszParam, 1, szBuffer, 128))
+      return SYSINFO_RC_UNSUPPORTED;
 
    // Get physical disk number (zero-based)
    LONG nDisk = _tcstol(szBuffer, &eptr, 0);
