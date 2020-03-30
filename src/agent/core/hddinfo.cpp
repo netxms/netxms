@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,13 +34,10 @@
 #define ATTR_TYPE_BYTE        0
 #define ATTR_TYPE_HEX_STRING  1
 
-
-//
-// Get value of specific attribute from SMART_ATA_VALUES structure
-//
-
-static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
-                              TCHAR *pValue, int nType)
+/**
+ * Get value of specific attribute from SMART_ATA_VALUES structure
+ */
+static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr, TCHAR *pValue, int nType)
 {
    int i;
    BOOL bResult = FALSE;
@@ -63,32 +60,30 @@ static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
    return bResult;
 }
 
-
-//
-// Handler for PhysicalDisk.*
-//
-
+/**
+ * Handler for PhysicalDisk.*
+ */
 LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   LONG nRet = SYSINFO_RC_ERROR, nDisk, nCmd;
-   TCHAR szBuffer[128], *eptr;                     //
-   BYTE pbValue[40];                               //
+   if (!AgentGetParameterArg(pszParam, 1, szBuffer, 128))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   LONG nRet = SYSINFO_RC_ERROR, nCmd;
+   TCHAR szBuffer[128], *eptr;
+   BYTE pbValue[41];
    HANDLE hDevice;
    SENDCMDINPARAMS rq;
    SENDCMDOUTPARAMS *pResult;
    DWORD dwBytes;
    BOOL bSwapWords = FALSE;
-   //memset(pbValue, 0, 40);
-   if (!AgentGetParameterArg(pszParam, 1, szBuffer, 128))
-      return SYSINFO_RC_UNSUPPORTED;
 
    // Get physical disk number (zero-based)
-   nDisk = _tcstol(szBuffer, &eptr, 0);             //
+   LONG nDisk = _tcstol(szBuffer, &eptr, 0);
    if ((*eptr != 0) || (nDisk < 0) || (nDisk > 255))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Open device
-   _sntprintf(szBuffer, 128, _T("\\\\.\\PHYSICALDRIVE%d"), nDisk);      //
+   _sntprintf(szBuffer, 128, _T("\\\\.\\PHYSICALDRIVE%d"), nDisk);
    hDevice = CreateFile(szBuffer, GENERIC_READ | GENERIC_WRITE,
                         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
    if (hDevice != INVALID_HANDLE_VALUE)
@@ -130,7 +125,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
       }
 
       // Allocate buffer for result
-      pResult = (SENDCMDOUTPARAMS *)malloc(sizeof(SENDCMDOUTPARAMS) - 1 + SMART_BUFFER_SIZE);
+      pResult = (SENDCMDOUTPARAMS *)MemAlloc(sizeof(SENDCMDOUTPARAMS) - 1 + SMART_BUFFER_SIZE);
       if (DeviceIoControl(hDevice, nCmd, &rq, sizeof(SENDCMDINPARAMS) - 1,
                           pResult, sizeof(SENDCMDOUTPARAMS) - 1 + SMART_BUFFER_SIZE,
                           &dwBytes, NULL))
@@ -193,42 +188,39 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
                break;
             case _T('M'):   // Model
 #if defined UNICODE
-				memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40); // has bug
-				pbValue[41] = 0;
-               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 41);
-               StrStrip(pValue);
+               memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40);
+               pbValue[40] = 0;
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, MAX_RESULT_LENGTH);
 #else
-			   memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40); //
-               pValue[41] = 0;
-               StrStrip(pValue);
+               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40);
+               pValue[40] = 0;
 #endif
+               StrStrip(pValue);
                nRet = SYSINFO_RC_SUCCESS;
                break;
             case _T('N'):   // Serial number
 #if defined UNICODE
-			   memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20); // has bug
-			   pbValue[21] = 0;
-               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 21);
-               StrStrip(pValue);
+               memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20);
+               pbValue[20] = 0;
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, MAX_RESULT_LENGTH);
 #else
-			   memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20); //
-               pValue[21] = 0;
-               StrStrip(pValue);
+               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20);
+               pValue[20] = 0;
 #endif
+               StrStrip(pValue);
                nRet = SYSINFO_RC_SUCCESS;
                break;
             case _T('F'):   // Firmware
 #if defined UNICODE
-				memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8); // has bug
-			   pbValue[8] = 0;
-               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 8);
-               StrStrip(pValue);
+               memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8);
+               pbValue[8] = 0;
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, MAX_RESULT_LENGTH);
 #else
-				memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8);  //
+               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8);
                pValue[8] = 0;
-               StrStrip(pValue);
 #endif
-				nRet = SYSINFO_RC_SUCCESS;
+               StrStrip(pValue);
+               nRet = SYSINFO_RC_SUCCESS;
                break;
             default:
                nRet = SYSINFO_RC_UNSUPPORTED;
@@ -241,7 +233,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
          nxlog_debug(7, _T("H_PhysicalDiskInfo: call to DeviceIoControl failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       }
 
-      free(pResult);
+      MemFree(pResult);
       CloseHandle(hDevice);
    }
    else
