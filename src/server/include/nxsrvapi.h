@@ -500,6 +500,8 @@ class LIBNXSRV_EXPORTABLE NObject
 {
    DISABLE_COPY_CTOR(NObject)
 
+   template <class C, typename... Args> friend shared_ptr<C> MakeSharedNObject(Args&&... args);
+
 private:
 #ifdef _WIN32
    weak_ptr<NObject> *m_self; // should be pointer because of DLL linkage issues on Windows
@@ -527,6 +529,12 @@ protected:
 
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
+
+#ifdef _WIN32
+   void setSelfPtr(const shared_ptr<NObject>& sptr) { *m_self = sptr; }
+#else
+   void setSelfPtr(const shared_ptr<NObject>& sptr) { m_self = sptr; }
+#endif
 
    const SharedObjectArray<NObject> &getChildList() const { return *m_childList; }
    const SharedObjectArray<NObject> &getParentList() const { return *m_parentList; }
@@ -568,10 +576,8 @@ public:
 
 #ifdef _WIN32
    shared_ptr<NObject> self() const { return m_self->lock(); }
-   void setSelfPtr(const shared_ptr<NObject>& sptr) { *m_self = sptr; }
 #else
    shared_ptr<NObject> self() const { return m_self.lock(); }
-   void setSelfPtr(const shared_ptr<NObject>& sptr) { m_self = sptr; }
 #endif
 
    uint32_t getId() const { return m_id; }
