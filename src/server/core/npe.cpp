@@ -177,7 +177,7 @@ void RegisterPredictionEngines()
    g_npeThreadPool = ThreadPoolCreate(_T("NPE"), 0, 1024);
    ENUMERATE_MODULES(pfGetPredictionEngines)
    {
-      ObjectArray<PredictionEngine> *engines = g_pModuleList[__i].pfGetPredictionEngines();
+      ObjectArray<PredictionEngine> *engines = CURRENT_MODULE.pfGetPredictionEngines();
       engines->setOwner(Ownership::False);
       for(int i = 0; i < engines->size(); i++)
       {

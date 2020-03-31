@@ -547,7 +547,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
 {
    StringBuffer varbinds;
    TCHAR buffer[4096];
-	BOOL processed = FALSE;
+	bool processedByModule = false;
    int iResult;
 
    InterlockedIncrement64(&g_snmpTrapsReceived);
@@ -617,18 +617,12 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
       if ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
          // Pass trap to loaded modules
-         if (!(g_flags & AF_SHUTDOWN))
+         ENUMERATE_MODULES(pfTrapHandler)
          {
-            for(UINT32 i = 0; i < g_dwNumModules; i++)
+            if (CURRENT_MODULE.pfTrapHandler(pdu, node))
             {
-               if (g_pModuleList[i].pfTrapHandler != nullptr)
-               {
-                  if (g_pModuleList[i].pfTrapHandler(pdu, node))
-				      {
-					      processed = TRUE;
-                     break;   // Trap was processed by the module
-				      }
-               }
+               processedByModule = true;
+               break;   // Trap was processed by the module
             }
          }
 
@@ -665,17 +659,13 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
          {
             GenerateTrapEvent(node, matchIndex, pdu, srcPort);
          }
-         else     // Process unmatched traps
+         else if (!processedByModule)    // Process unmatched traps not processed by module
          {
-            // Handle unprocessed traps
-            if (!processed)
-            {
-               // Generate default event for unmatched traps
-               const TCHAR *names[3] = { _T("oid"), nullptr, _T("sourcePort") };
-               TCHAR oidText[1024];
-               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, EventOrigin::SNMP, 0, node->getId(), "ssd", names,
-                  pdu->getTrapId()->toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
-            }
+            // Generate default event for unmatched traps
+            const TCHAR *names[3] = { _T("oid"), nullptr, _T("sourcePort") };
+            TCHAR oidText[1024];
+            PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, EventOrigin::SNMP, 0, node->getId(), "ssd", names,
+               pdu->getTrapId()->toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
          }
          s_trapCfgLock.unlock();
       }

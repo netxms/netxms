@@ -1650,17 +1650,17 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
    else
    {
-      bool success = false;
+      bool processed = false;
       ENUMERATE_MODULES(pfProcessServerConsoleCommand)
       {
-         if (g_pModuleList[__i].pfProcessServerConsoleCommand(pszCmdLine, pCtx))
+         if (CURRENT_MODULE.pfProcessServerConsoleCommand(pszCmdLine, pCtx))
          {
-            success = true;
+            processed = true;
             break;
          }
       }
 
-      if (!success)
+      if (!processed)
          ConsoleWrite(pCtx, _T("UNKNOWN COMMAND\n\n"));
    }
 

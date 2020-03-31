@@ -1031,7 +1031,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    // Query loaded modules for object status
    ENUMERATE_MODULES(pfCalculateObjectStatus)
    {
-      int moduleStatus = g_pModuleList[__i].pfCalculateObjectStatus(this);
+      int moduleStatus = CURRENT_MODULE.pfCalculateObjectStatus(this);
       if (moduleStatus != STATUS_UNKNOWN)
       {
          if (m_status == STATUS_UNKNOWN)

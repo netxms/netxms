@@ -767,13 +767,10 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
 
    // Allow filtering by loaded modules
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   ENUMERATE_MODULES(pfAcceptNewNode)
 	{
-		if (g_pModuleList[i].pfAcceptNewNode != nullptr)
-		{
-			if (!g_pModuleList[i].pfAcceptNewNode(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr))
-				return false;	// filtered out by module
-		}
+      if (!CURRENT_MODULE.pfAcceptNewNode(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr))
+         return false;	// filtered out by module
 	}
 
    // Read configuration

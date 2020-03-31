@@ -442,13 +442,10 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		g_idxObjectById.forEach(QueueTemplateUpdate, NULL);
 
       // Call hooks in loaded modules
-      for(UINT32 i = 0; i < g_dwNumModules; i++)
-      {
-         if (g_pModuleList[i].pfHousekeeperHook != NULL)
-         {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Housekeeper: calling hook in module %s"), g_pModuleList[i].szName);
-            g_pModuleList[i].pfHousekeeperHook();
-         }
+		ENUMERATE_MODULES(pfHousekeeperHook)
+		{
+		   nxlog_debug_tag(DEBUG_TAG, 3, _T("Housekeeper: calling hook in module %s"), CURRENT_MODULE.szName);
+		   CURRENT_MODULE.pfHousekeeperHook();
       }
 
 		SaveCurrentFreeId();

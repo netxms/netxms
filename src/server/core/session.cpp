@@ -1415,28 +1415,23 @@ void ClientSession::processRequest(NXCPMessage *request)
          else
          {
             // Pass message to loaded modules
-            UINT32 i;
-            for(i = 0; i < g_dwNumModules; i++)
+            bool processedByModule = false;
+            ENUMERATE_MODULES(pfClientCommandHandler)
             {
-               if (g_pModuleList[i].pfClientCommandHandler != nullptr)
+               int status = CURRENT_MODULE.pfClientCommandHandler(code, request, this);
+               if (status != NXMOD_COMMAND_IGNORED)
                {
-                  int status = g_pModuleList[i].pfClientCommandHandler(code, request, this);
-                  if (status != NXMOD_COMMAND_IGNORED)
+                  if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
                   {
-                     if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
-                     {
-                        request = nullptr;	// Prevent deletion
-                     }
-                     break;   // Message was processed by the module
+                     request = nullptr;	// Prevent deletion
                   }
+                  processedByModule = true;
+                  break;   // Message was processed by the module
                }
             }
-            if (i == g_dwNumModules)
+            if (!processedByModule)
             {
-               NXCPMessage response;
-
-               response.setId(request->getId());
-               response.setCode(CMD_REQUEST_COMPLETED);
+               NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
                response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
                sendMessage(&response);
             }
@@ -1864,16 +1859,13 @@ void ClientSession::login(NXCPMessage *pRequest)
       // Additional validation by loaded modules
       if (dwResult == RCC_SUCCESS)
       {
-         for(UINT32 i = 0; i < g_dwNumModules; i++)
+         ENUMERATE_MODULES(pfAdditionalLoginCheck)
          {
-            if (g_pModuleList[i].pfAdditionalLoginCheck != nullptr)
+            dwResult = CURRENT_MODULE.pfAdditionalLoginCheck(m_dwUserId, pRequest);
+            if (dwResult != RCC_SUCCESS)
             {
-               dwResult = g_pModuleList[i].pfAdditionalLoginCheck(m_dwUserId, pRequest);
-               if (dwResult != RCC_SUCCESS)
-               {
-                  debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), g_pModuleList[i].szName, dwResult);
-                  break;
-               }
+               debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), CURRENT_MODULE.szName, dwResult);
+               break;
             }
          }
       }
@@ -5211,17 +5203,15 @@ void ClientSession::createObject(NXCPMessage *request)
 					{
                   // Do additional validation by modules
                   UINT32 moduleRCC = RCC_SUCCESS;
-                  for(UINT32 i = 0; i < g_dwNumModules; i++)
+                  ENUMERATE_MODULES(pfValidateObjectCreation)
 	               {
-		               if (g_pModuleList[i].pfValidateObjectCreation != nullptr)
-		               {
-                        moduleRCC = g_pModuleList[i].pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneUIN, request);
-			               if (moduleRCC != RCC_SUCCESS)
-                        {
-                           DbgPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%d)"), objectName, objectClass, g_pModuleList[i].szName, moduleRCC);
-                           break;
-                        }
-		               }
+                     moduleRCC = CURRENT_MODULE.pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneUIN, request);
+                     if (moduleRCC != RCC_SUCCESS)
+                     {
+                        debugPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%d)"),
+                                 objectName, objectClass, CURRENT_MODULE.szName, moduleRCC);
+                        break;
+                     }
 	               }
 
                   if (moduleRCC == RCC_SUCCESS)
@@ -5370,14 +5360,11 @@ void ClientSession::createObject(NXCPMessage *request)
 								   break;
 							   default:
 								   // Try to create unknown classes by modules
-								   for(UINT32 i = 0; i < g_dwNumModules; i++)
+							      ENUMERATE_MODULES(pfCreateObject)
 								   {
-									   if (g_pModuleList[i].pfCreateObject != nullptr)
-									   {
-										   object = g_pModuleList[i].pfCreateObject(objectClass, objectName, parent, request);
-										   if (object != nullptr)
-											   break;
-									   }
+                              object = CURRENT_MODULE.pfCreateObject(objectClass, objectName, parent, request);
+                              if (object != nullptr)
+                                 break;
 								   }
 								   break;
 						   }

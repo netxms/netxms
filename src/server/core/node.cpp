@@ -25,10 +25,11 @@
 #include <entity_mib.h>
 #include <ethernet_ip.h>
 
-#define DEBUG_TAG_CONF_POLL   _T("poll.conf")
-#define DEBUG_TAG_AGENT       _T("node.agent")
-#define DEBUG_TAG_STATUS_POLL _T("poll.status")
-#define DEBUG_TAG_ICMP_POLL   _T("poll.icmp")
+#define DEBUG_TAG_CONF_POLL      _T("poll.conf")
+#define DEBUG_TAG_AGENT          _T("node.agent")
+#define DEBUG_TAG_STATUS_POLL    _T("poll.status")
+#define DEBUG_TAG_ICMP_POLL      _T("poll.icmp")
+#define DEBUG_TAG_TOPOLOGY_POLL  _T("poll.topology")
 
 /**
  * Performance counters
@@ -2586,13 +2587,10 @@ restart_agent_check:
    POLL_CANCELLATION_CHECKPOINT();
 
    // Call hooks in loaded modules
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   ENUMERATE_MODULES(pfStatusPollHook)
    {
-      if (g_pModuleList[i].pfStatusPollHook != nullptr)
-      {
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_name, m_id, g_pModuleList[i].szName);
-         g_pModuleList[i].pfStatusPollHook(this, pSession, rqId, poller);
-      }
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      CURRENT_MODULE.pfStatusPollHook(this, pSession, rqId, poller);
    }
 
    // Execute hook script
@@ -3528,14 +3526,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       POLL_CANCELLATION_CHECKPOINT();
 
       // Call hooks in loaded modules
-      for(UINT32 i = 0; i < g_dwNumModules; i++)
+      ENUMERATE_MODULES(pfConfPollHook)
       {
-         if (g_pModuleList[i].pfConfPollHook != nullptr)
-         {
-            DbgPrintf(5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, g_pModuleList[i].szName);
-            if (g_pModuleList[i].pfConfPollHook(this, session, rqId, poller))
-               modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
-         }
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+         if (CURRENT_MODULE.pfConfPollHook(this, session, rqId, poller))
+            modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
       }
 
       POLL_CANCELLATION_CHECKPOINT();
@@ -5279,7 +5274,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       m_agentConnection->enableTraps();
       setFileUpdateConnection(nullptr);
       setLastAgentCommTime();
-      CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_agentConnection));
+      CALL_ALL_MODULES(pfOnConnectToAgent, (self(), m_agentConnection));
    }
    else
    {
@@ -8583,13 +8578,10 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
    // Call hooks in loaded modules
    poller->setStatus(_T("calling modules"));
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   ENUMERATE_MODULES(pfTopologyPollHook)
    {
-      if (g_pModuleList[i].pfTopologyPollHook != nullptr)
-      {
-         DbgPrintf(5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_name, m_id, g_pModuleList[i].szName);
-         g_pModuleList[i].pfTopologyPollHook(this, pSession, rqId, poller);
-      }
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      CURRENT_MODULE.pfTopologyPollHook(this, pSession, rqId, poller);
    }
 
    POLL_CANCELLATION_CHECKPOINT();

@@ -331,22 +331,20 @@ void MobileDeviceSession::processingThread()
             break;
          default:
             // Pass message to loaded modules
-            for(i = 0; i < g_dwNumModules; i++)
+            status = NXMOD_COMMAND_IGNORED;
+            ENUMERATE_MODULES(pfMobileDeviceCommandHandler)
 				{
-					if (g_pModuleList[i].pfMobileDeviceCommandHandler != nullptr)
-					{
-						status = g_pModuleList[i].pfMobileDeviceCommandHandler(m_wCurrentCmd, msg, this);
-						if (status != NXMOD_COMMAND_IGNORED)
-						{
-							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
-							{
-								msg = nullptr;	// Prevent deletion
-							}
-							break;   // Message was processed by the module
-						}
-					}
+               status = CURRENT_MODULE.pfMobileDeviceCommandHandler(m_wCurrentCmd, msg, this);
+               if (status != NXMOD_COMMAND_IGNORED)
+               {
+                  if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
+                  {
+                     msg = nullptr;	// Prevent deletion
+                  }
+                  break;   // Message was processed by the module
+               }
 				}
-            if (i == g_dwNumModules)
+            if (status == NXMOD_COMMAND_IGNORED)
             {
                NXCPMessage response;
 

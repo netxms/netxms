@@ -418,13 +418,10 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
          default:
 				{
 					bool processed = false;
-					for(UINT32 i = 0; i < g_dwNumModules; i++)
+					ENUMERATE_MODULES(pfNetObjInsert)
 					{
-						if (g_pModuleList[i].pfNetObjInsert != nullptr)
-						{
-							if (g_pModuleList[i].pfNetObjInsert(object))
-								processed = true;
-						}
+                  if (CURRENT_MODULE.pfNetObjInsert(object))
+                     processed = true;
 					}
 					if (!processed)
 						nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), object->getObjectClass());
@@ -584,13 +581,10 @@ void NetObjDeleteFromIndexes(const NetObj& object)
       default:
 			{
 				bool processed = false;
-				for(UINT32 i = 0; i < g_dwNumModules; i++)
+				ENUMERATE_MODULES(pfNetObjDelete)
 				{
-					if (g_pModuleList[i].pfNetObjDelete != nullptr)
-					{
-						if (g_pModuleList[i].pfNetObjDelete(object))
-							processed = true;
-					}
+               if (CURRENT_MODULE.pfNetObjDelete(object))
+                  processed = true;
 				}
 				if (!processed)
                nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), object.getObjectClass());
@@ -2390,13 +2384,10 @@ bool IsValidParentClass(int childClass, int parentClass)
    }
 
    // Additional check by loaded modules
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   ENUMERATE_MODULES(pfIsValidParentClass)
 	{
-		if (g_pModuleList[i].pfIsValidParentClass != nullptr)
-		{
-			if (g_pModuleList[i].pfIsValidParentClass(childClass, parentClass))
-				return true;	// accepted by module
-		}
+      if (CURRENT_MODULE.pfIsValidParentClass(childClass, parentClass))
+         return true;	// accepted by module
 	}
 
    return false;

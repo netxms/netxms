@@ -99,10 +99,10 @@ typedef struct
    void (* pfClientSessionClose)(ClientSession *session);
    void (* pfNXSLServerEnvConfig)(NXSL_Environment *env);
    void (* pfNXSLServerVMConfig)(NXSL_VM *vm);
-   void (* pfOnConnectToAgent)(Node *node, AgentConnection *conn);
+   void (* pfOnConnectToAgent)(const shared_ptr<Node>& node, AgentConnection *conn);
    bool (* pfOnAgentMessage)(NXCPMessage *msg, uint32_t nodeId);
    void (* pfHousekeeperHook)();
-   bool (* pfProcessServerConsoleCommand)(const TCHAR *command, CONSOLE_CTX pCtx);
+   bool (* pfProcessServerConsoleCommand)(const TCHAR *command, ServerConsole *console);
    ObjectArray<PredictionEngine> *(* pfGetPredictionEngines)();
    NXCORE_LOG *logs;
    HMODULE hModule;
@@ -152,14 +152,19 @@ __EXPORT_VAR(NXMODULE_METADATA NXM_metadata) = \
  */
 #define ENUMERATE_MODULES(e) if (!(g_flags & AF_SHUTDOWN)) \
    for(UINT32 __i = 0; __i < g_dwNumModules; __i++) \
-      if (g_pModuleList[__i]. e != NULL)
+      if (g_pModuleList[__i]. e != nullptr)
+
+/**
+ * Reference to current module in ENUMERATE_MODULES
+ */
+#define CURRENT_MODULE g_pModuleList[__i]
 
 /**
  * Call module entry point for all loaded modules
  */
 #define CALL_ALL_MODULES(e, p) if (!(g_flags & AF_SHUTDOWN)) { \
    for(UINT32 __i = 0; __i < g_dwNumModules; __i++) { \
-      if (g_pModuleList[__i]. e != NULL) { g_pModuleList[__i]. e p; } \
+      if (g_pModuleList[__i]. e != nullptr) { g_pModuleList[__i]. e p; } \
    } \
 }
 

@@ -385,7 +385,7 @@ bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
 
    ENUMERATE_MODULES(pfOnAgentMessage)
    {
-      if (g_pModuleList[__i].pfOnAgentMessage(msg, m_nodeId))
+      if (CURRENT_MODULE.pfOnAgentMessage(msg, m_nodeId))
          return true;    // accepted by module
    }
    return false;

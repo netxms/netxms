@@ -196,14 +196,11 @@ int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc)
       return rc;
 
    // Try to find log definition in loaded modules
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   ENUMERATE_MODULES(logs)
 	{
-		if (g_pModuleList[i].logs != NULL)
-		{
-         rc = OpenLogInternal(g_pModuleList[i].logs, name, session, rcc);
-         if (rc != -2)
-            return rc;
-		}
+      rc = OpenLogInternal(CURRENT_MODULE.logs, name, session, rcc);
+      if (rc != -2)
+         return rc;
 	}
 
 	*rcc = RCC_UNKNOWN_LOG_NAME;
