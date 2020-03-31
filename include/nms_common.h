@@ -631,14 +631,14 @@ typedef unsigned int uint32_t;
 typedef short int16_t;
 #endif
 #if !HAVE_UINT16_T
-typedef unsigend short uint16_t;
+typedef unsigned short uint16_t;
 #endif
 
 #if !HAVE_INT8_T
 typedef char int8_t;
 #endif
 #if !HAVE_UINT8_T
-typedef unsigend char uint8_t;
+typedef unsigned char uint8_t;
 #endif
 
 #if !HAVE_INTPTR_T
