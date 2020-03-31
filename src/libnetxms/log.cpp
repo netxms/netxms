@@ -707,14 +707,14 @@ bool LIBNETXMS_EXPORTABLE nxlog_rotate()
 /**
  * Background writer thread - file
  */
-static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
+static void BackgroundWriterThread()
 {
    bool stop = false;
    while(!stop)
    {
       stop = ConditionWait(s_writerStopCondition, 1000);
 
-	   // Check for new day start
+      // Check for new day start
       time_t t = time(NULL);
 	   if ((s_logFileHandle != -1) && (s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
 	   {
@@ -757,13 +757,12 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
          MutexUnlock(s_mutexLogAccess);
       }
    }
-   return THREAD_OK;
 }
 
 /**
  * Background writer thread - stdout
  */
-static THREAD_RESULT THREAD_CALL BackgroundWriterThreadStdOut(void *arg)
+static void BackgroundWriterThreadStdOut()
 {
    bool stop = false;
    while(!stop)
@@ -785,7 +784,6 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThreadStdOut(void *arg)
          MutexUnlock(s_mutexLogAccess);
       }
    }
-   return THREAD_OK;
 }
 
 /**
@@ -827,7 +825,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
       {
          s_logBuffer.setAllocationStep(8192);
          s_writerStopCondition = ConditionCreate(TRUE);
-         s_writerThread = ThreadCreateEx(BackgroundWriterThreadStdOut, 0, NULL);
+         s_writerThread = ThreadCreateEx(BackgroundWriterThreadStdOut);
       }
    }
    else
@@ -868,7 +866,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
          {
             s_logBuffer.setAllocationStep(8192);
             s_writerStopCondition = ConditionCreate(TRUE);
-            s_writerThread = ThreadCreateEx(BackgroundWriterThread, 0, NULL);
+            s_writerThread = ThreadCreateEx(BackgroundWriterThread);
          }
       }
 
