@@ -667,12 +667,12 @@ inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 	return ret;
 }
 
-inline UINT32 GetCurrentProcessId()
+static inline UINT32 GetCurrentProcessId()
 {
    return getpid();
 }
 
-inline UINT32 GetCurrentThreadId()
+static inline UINT32 GetCurrentThreadId()
 {
    return (UINT32)pth_self();
 }
@@ -1138,7 +1138,7 @@ inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 /**
  * Get ID of current process
  */
-inline UINT32 GetCurrentProcessId()
+static inline UINT32 GetCurrentProcessId()
 {
    return getpid();
 }
@@ -1146,7 +1146,7 @@ inline UINT32 GetCurrentProcessId()
 /**
  *  Get ID of current thread
  */
-inline UINT32 GetCurrentThreadId()
+static inline UINT32 GetCurrentThreadId()
 {
 #if HAVE_GETTID_SYSCALL
    return (UINT32)syscall(SYS_gettid);
@@ -1163,6 +1163,180 @@ inline UINT32 GetCurrentThreadId()
 }
 
 #endif   /* _WIN32 */
+
+/**
+ * Template wrapper for ThreadCreate/ThreadCreateEx thread functions (no arguments)
+ */
+static inline THREAD_RESULT THREAD_CALL ThreadCreate_Wrapper_0(void *function)
+{
+   ((void (*)())function)();
+   return THREAD_OK;
+}
+
+/**
+ * Template wrapper for ThreadCreate (no arguments)
+ */
+static inline bool ThreadCreate(void (*function)(), int stackSize = 0)
+{
+   return ThreadCreate(ThreadCreate_Wrapper_0, stackSize, (void*)function);
+}
+
+/**
+ * Template wrapper for ThreadCreateEx (no arguments)
+ */
+static inline THREAD ThreadCreateEx(void (*function)(), int stackSize = 0)
+{
+   return ThreadCreateEx(ThreadCreate_Wrapper_0, stackSize, (void*)function);
+}
+
+/**
+ * Template wrapper data for ThreadCreate/ThreadCreateEx thread functions (1 argument)
+ */
+template<typename R> class ThreadCreate_WrapperData_1
+{
+   void (*function)(R);
+   R arg;
+
+   ThreadCreate_WrapperData_1(void (*_function)(R), R _arg) : arg(_arg)
+   {
+      function = _function;
+   }
+};
+
+/**
+ * Template wrapper for ThreadCreate/ThreadCreateEx thread functions (1 argument)
+ */
+template<typename R> THREAD_RESULT THREAD_CALL ThreadCreate_Wrapper_1(void *context)
+{
+   auto wd = static_cast<ThreadCreate_WrapperData_1<R>*>(context);
+   wd->function(wd->arg);
+   delete wd;
+   return THREAD_OK;
+}
+
+/**
+ * Template wrapper for ThreadCreate (1 argument)
+ */
+template<typename R> bool ThreadCreate(void (*function)(R), R arg, int stackSize = 0)
+{
+   auto wd = new ThreadCreate_WrapperData_1<R>(function, arg);
+   bool success = ThreadCreate(ThreadCreate_Wrapper_1<R>, stackSize, wd);
+   if (!success)
+      delete wd;
+   return success;
+}
+
+/**
+ * Template wrapper for ThreadCreateEx (1 argument)
+ */
+template<typename R> THREAD ThreadCreateEx(void (*function)(R), R arg, int stackSize = 0)
+{
+   auto wd = new ThreadCreate_WrapperData_1<R>(function, arg);
+   THREAD thread = ThreadCreateEx(ThreadCreate_Wrapper_1<R>, stackSize, wd);
+   if (thread == INVALID_THREAD_HANDLE)
+      delete wd;
+   return thread;
+}
+
+/**
+ * Template wrapper data for ThreadCreate/ThreadCreateEx thread functions (2 arguments)
+ */
+template<typename R1, typename R2> class ThreadCreate_WrapperData_2
+{
+   void (*function)(R1, R2);
+   R1 arg1;
+   R2 arg2;
+
+   ThreadCreate_WrapperData_2(void (*_function)(R1, R2), R1 _arg1, R2 _arg2) : arg1(_arg1), arg2(_arg2)
+   {
+      function = _function;
+   }
+};
+
+/**
+ * Template wrapper for ThreadCreate/ThreadCreateEx thread functions (2 arguments)
+ */
+template<typename R1, typename R2> THREAD_RESULT THREAD_CALL ThreadCreate_Wrapper_2(void *context)
+{
+   auto wd = static_cast<ThreadCreate_WrapperData_2<R1, R2>*>(context);
+   wd->function(wd->arg1, wd->arg2);
+   delete wd;
+   return THREAD_OK;
+}
+
+/**
+ * Template wrapper for ThreadCreate (2 arguments)
+ */
+template<typename R1, typename R2> bool ThreadCreate(void (*function)(R1, R2), R1 arg1, R2 arg2, int stackSize = 0)
+{
+   auto wd = new ThreadCreate_WrapperData_2<R1, R2>(function, arg1, arg2);
+   bool success = ThreadCreate(ThreadCreate_Wrapper_2<R1, R2>, stackSize, wd);
+   if (!success)
+      delete wd;
+   return success;
+}
+
+/**
+ * Template wrapper for ThreadCreateEx (2 arguments)
+ */
+template<typename R1, typename R2> THREAD ThreadCreateEx(void (*function)(R1, R2), R1 arg1, R2 arg2, int stackSize = 0)
+{
+   auto wd = new ThreadCreate_WrapperData_2<R1, R2>(function, arg1, arg2);
+   THREAD thread = ThreadCreateEx(ThreadCreate_Wrapper_2<R1, R2>, stackSize, wd);
+   if (thread == INVALID_THREAD_HANDLE)
+      delete wd;
+   return thread;
+}
+
+/**
+ * Wrapper data for ThreadCreate/ThreadCreateEx on object method using smart pointer to object (no arguments)
+ */
+template <typename T> class ThreadCreate_SharedPtr_WrapperData_0
+{
+public:
+   shared_ptr<T> m_object;
+   void (T::*m_func)();
+
+   ThreadCreate_SharedPtr_WrapperData_0(const shared_ptr<T>& object, void (T::*func)()) : m_object(object)
+   {
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadCreate/ThreadCreateEx on object method using smart pointer to object (no arguments)
+ */
+template <typename T> THREAD_RESULT THREAD_CALL ThreadCreate_SharedPtr_Wrapper_0(void *arg)
+{
+   auto wd = static_cast<ThreadCreate_SharedPtr_WrapperData_0<T>*>(arg);
+   ((*wd->m_object.get()).*(wd->m_func))();
+   delete wd;
+   return THREAD_OK;
+}
+
+/**
+ * Template wrapper for ThreadCreate on object method using smart pointer to object (no arguments)
+ */
+template<typename T, typename B> bool ThreadCreate(const shared_ptr<T>& object, void (B::*method)(), int stackSize = 0)
+{
+   auto wd = new ThreadCreate_SharedPtr_WrapperData_0<B>(object, method);
+   bool success = ThreadCreate(ThreadCreate_SharedPtr_Wrapper_0<B>, stackSize, wd);
+   if (!success)
+      delete wd;
+   return success;
+}
+
+/**
+ * Template wrapper for ThreadCreateEx on object method using smart pointer to object (no arguments)
+ */
+template<typename T, typename B> THREAD ThreadCreateEx(const shared_ptr<T>& object, void (B::*method)(), int stackSize = 0)
+{
+   auto wd = new ThreadCreate_SharedPtr_WrapperData_0<B>(object, method);
+   THREAD thread = ThreadCreateEx(ThreadCreate_SharedPtr_Wrapper_0<B>, stackSize, wd);
+   if (thread == INVALID_THREAD_HANDLE)
+      delete wd;
+   return thread;
+}
 
 #include <rwlock.h>
 
