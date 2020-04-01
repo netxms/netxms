@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,13 +26,12 @@
 /**
  * Constructor
  */
-SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, UINT16 port)
+SNMP_ProxyTransport::SNMP_ProxyTransport(const shared_ptr<AgentConnection>& conn, const InetAddress& ipAddr, uint16_t port) : m_agentConnection(conn)
 {
    m_reliable = true;   // no need for retries on server side, agent will do retry if needed
-	m_agentConnection = conn;
 	m_ipAddr = ipAddr;
 	m_port = port;
-	m_response = NULL;
+	m_response = nullptr;
 	m_waitForResponse = true;
 }
 
@@ -41,7 +40,6 @@ SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddres
  */
 SNMP_ProxyTransport::~SNMP_ProxyTransport()
 {
-	m_agentConnection->decRefCount();
 	delete m_response;
 }
 
@@ -139,7 +137,7 @@ InetAddress SNMP_ProxyTransport::getPeerIpAddress()
 /**
  * Get port number
  */
-UINT16 SNMP_ProxyTransport::getPort()
+uint16_t SNMP_ProxyTransport::getPort()
 {
    return m_port;
 }

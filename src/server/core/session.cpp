@@ -114,14 +114,6 @@ void ClientSessionConsole::write(const TCHAR *text)
 }
 
 /**
- * Callback to delete agent connections for loading files in destructor
- */
-static void DeleteAgentConnection(AgentConnection *conn, void *context)
-{
-   conn->decRefCount();
-}
-
-/**
  * Callback for sending image library delete notifications
  */
 static void ImageLibraryDeleteCallback(ClientSession *pSession, void *context)
@@ -148,7 +140,7 @@ THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *arg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_agentConnections(Ownership::False)
+ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
 {
    m_hSocket = hSocket;
    m_id = -1;
@@ -227,7 +219,6 @@ ClientSession::~ClientSession()
 	delete m_console;
 
    m_musicTypeList.clear();
-   m_agentConnections.forEach(DeleteAgentConnection, nullptr);
 
    delete m_serverCommands;
    delete m_downloadFileMap;
@@ -405,7 +396,7 @@ void ClientSession::readThread()
             }
             else
             {
-               AgentConnection *conn = m_agentConnections.get(msg->getId());
+               shared_ptr<AgentConnection> conn = m_agentConnections.get(msg->getId());
                if (conn != nullptr)
                {
                   if (msg->getCode() == CMD_FILE_DATA)
@@ -417,7 +408,6 @@ void ClientSession::readThread()
                            debugPrintf(6, _T("Got end of file marker"));
                            //get response with specific ID if ok< then send ok, else send error
                            m_agentConnections.remove(msg->getId());
-                           conn->decRefCount();
 
                            NXCPMessage response;
                            response.setCode(CMD_REQUEST_COMPLETED);
@@ -431,7 +421,6 @@ void ClientSession::readThread()
                         debugPrintf(6, _T("Error while sending to agent"));
                         // I/O error
                         m_agentConnections.remove(msg->getId());
-                        conn->decRefCount();
 
                         NXCPMessage response;
                         response.setCode(CMD_REQUEST_COMPLETED);
@@ -445,7 +434,6 @@ void ClientSession::readThread()
                      // Resend abort message
                      conn->sendMessage(msg);
                      m_agentConnections.remove(msg->getId());
-                     conn->decRefCount();
                   }
                }
                else
@@ -456,8 +444,8 @@ void ClientSession::readThread()
          }
          else if (msg->getCode() == CMD_TCP_PROXY_DATA)
          {
-            AgentConnectionEx *conn = nullptr;
-            UINT32 agentChannelId = 0;
+            shared_ptr<AgentConnectionEx> conn;
+            uint32_t agentChannelId = 0;
             MutexLock(m_tcpProxyLock);
             for(int i = 0; i < m_tcpProxyConnections->size(); i++)
             {
@@ -465,7 +453,6 @@ void ClientSession::readThread()
                if (p->clientChannelId == msg->getId())
                {
                   conn = p->agentConnection;
-                  conn->incRefCount();
                   agentChannelId = p->agentChannelId;
                   break;
                }
@@ -485,7 +472,6 @@ void ClientSession::readThread()
                fwmsg->size = htonl(static_cast<UINT32>(msgSize));
                memcpy(fwmsg->fields, msg->getBinaryData(), size);
                conn->postRawMessage(fwmsg);
-               conn->decRefCount();
             }
          }
          delete msg;
@@ -7658,13 +7644,12 @@ void ClientSession::getAgentConfig(NXCPMessage *pRequest)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_AGENT))
          {
-            AgentConnection *pConn = static_cast<Node&>(*object).createAgentConnection();
+            shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
             if (pConn != nullptr)
             {
                TCHAR *pszConfig;
                uint32_t size;
                uint32_t dwResult = pConn->getConfigFile(&pszConfig, &size);
-               pConn->decRefCount();
                switch(dwResult)
                {
                   case ERR_SUCCESS:
@@ -7725,7 +7710,7 @@ void ClientSession::updateAgentConfig(NXCPMessage *pRequest)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
-            AgentConnection *pConn = static_cast<Node&>(*object).createAgentConnection();
+            shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
             if (pConn != nullptr)
             {
                pszConfig = pRequest->getFieldAsString(VID_CONFIG_FILE);
@@ -7757,7 +7742,6 @@ void ClientSession::updateAgentConfig(NXCPMessage *pRequest)
                      msg.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
-               pConn->decRefCount();
             }
             else
             {
@@ -7853,7 +7837,7 @@ void ClientSession::executeAction(NXCPMessage *request)
 
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
-            AgentConnection *pConn = static_cast<Node&>(*object).createAgentConnection();
+            shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
             if (pConn != nullptr)
             {
                StringList *list = nullptr;
@@ -7926,7 +7910,6 @@ void ClientSession::executeAction(NXCPMessage *request)
                      msg.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
-               pConn->decRefCount();
                delete list;
             }
             else
@@ -10675,7 +10658,7 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
          g_monitoringList.removeFile(newFile);
          delete newFile;
 
-         AgentConnection *conn = static_cast<Node&>(*object).createAgentConnection();
+         shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
          debugPrintf(6, _T("Cancel file monitoring %s"), remoteFile);
          if (conn != nullptr)
          {
@@ -10701,7 +10684,6 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
             {
                msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
             }
-            conn->decRefCount();
          }
          else
          {
@@ -13255,7 +13237,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-            AgentConnection *conn = static_cast<Node&>(*object).createAgentConnection();
+            shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
             if (conn != nullptr)
             {
                request->setId(conn->generateRequestId());
@@ -13369,7 +13351,6 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                {
                   msg.setField(VID_RCC, RCC_TIMEOUT);
                }
-               conn->decRefCount();
             }
             else
             {
@@ -13462,7 +13443,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-            AgentConnection *conn = static_cast<Node&>(*object).createAgentConnection();
+            shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
             if (conn != nullptr)
             {
                request->setField(VID_ALLOW_PATH_EXPANSION, false);   // explicitly disable path expansion
@@ -13492,10 +13473,6 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                else
                {
                   msg.setField(VID_RCC, RCC_TIMEOUT);
-               }
-               if (rcc != RCC_SUCCESS)
-               {
-                  conn->decRefCount();
                }
             }
             else
@@ -13714,7 +13691,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-            AgentConnection *conn = static_cast<Node&>(*object).createAgentConnection();
+            shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
             if (conn != nullptr)
             {
                // Screenshot transfer can take significant amount of time on slow links
@@ -13731,8 +13708,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
                {
                   msg.setField(VID_RCC, AgentErrorToRCC(dwError));
                }
-               free(data);
-               conn->decRefCount();
+               MemFree(data);
             }
             else
             {
@@ -13809,7 +13785,7 @@ void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   UINT32 objectId = request->getFieldAsUInt32(VID_NODE_ID);
+   uint32_t objectId = request->getFieldAsUInt32(VID_NODE_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
 	if (object != nullptr)
 	{
@@ -13817,12 +13793,11 @@ void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-            AgentConnectionEx *conn = static_cast<Node&>(*object).createAgentConnection();
+            shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
             if (conn != nullptr)
             {
-               static_cast<Node&>(*object).clearDataCollectionConfigFromAgent(conn);
+               static_cast<Node&>(*object).clearDataCollectionConfigFromAgent(conn.get());
                msg.setField(VID_RCC, RCC_SUCCESS);
-               conn->decRefCount();
             }
             else
             {
@@ -14075,7 +14050,7 @@ void ClientSession::setupTcpProxy(NXCPMessage *request)
       {
          if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
-            AgentConnectionEx *conn = static_cast<Node&>(*node).createAgentConnection();
+            shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*node).createAgentConnection();
             if (conn != nullptr)
             {
                conn->setTcpProxySession(this);
@@ -14100,7 +14075,6 @@ void ClientSession::setupTcpProxy(NXCPMessage *request)
                {
                   msg.setField(VID_RCC, AgentErrorToRCC(rcc));
                }
-               conn->decRefCount();
             }
             else
             {
@@ -14135,7 +14109,7 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
 
    UINT32 clientChannelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
 
-   AgentConnection *conn = nullptr;
+   shared_ptr<AgentConnectionEx> conn;
    UINT32 agentChannelId, nodeId;
    MutexLock(m_tcpProxyLock);
    for(int i = 0; i < m_tcpProxyConnections->size(); i++)
@@ -14146,7 +14120,6 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
          agentChannelId = p->agentChannelId;
          nodeId = p->nodeId;
          conn = p->agentConnection;
-         conn->incRefCount();
          m_tcpProxyConnections->remove(i);
          break;
       }
@@ -14156,7 +14129,6 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
    if (conn != nullptr)
    {
       conn->closeTcpProxy(agentChannelId);
-      conn->decRefCount();
       writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed TCP proxy channel %u"), clientChannelId);
    }
 
@@ -14173,7 +14145,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, UINT32 agentCha
    for(int i = 0; i < m_tcpProxyConnections->size(); i++)
    {
       TcpProxy *p = m_tcpProxyConnections->get(i);
-      if ((p->agentConnection == conn) && (p->agentChannelId == agentChannelId))
+      if ((p->agentConnection.get() == conn) && (p->agentChannelId == agentChannelId))
       {
          clientChannelId = p->clientChannelId;
          if (size == 0) // close indicator

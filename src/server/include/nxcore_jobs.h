@@ -225,7 +225,7 @@ class FileDownloadJob : public ServerJob
 {
 private:
 	ClientSession *m_session;
-	AgentConnection *m_agentConnection;
+	shared_ptr<AgentConnection> m_agentConnection;
 	UINT32 m_requestId;
 	TCHAR *m_localFile;
 	TCHAR *m_remoteFile;

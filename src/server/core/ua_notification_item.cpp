@@ -174,12 +174,11 @@ static void SendUpdate(NXCPMessage *msg, NetObj *object)
       if ((static_cast<Node*>(object)->getCapabilities() & NC_HAS_USER_AGENT) == 0)
          return;
 
-      AgentConnectionEx *conn = static_cast<Node *>(object)->getAgentConnection(false);
+      shared_ptr<AgentConnectionEx> conn = static_cast<Node *>(object)->getAgentConnection(false);
       if (conn != nullptr)
       {
          msg->setId(conn->generateRequestId());
          conn->sendMessage(msg);
-         conn->decRefCount();
       }
    }
    else

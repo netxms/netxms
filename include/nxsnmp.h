@@ -670,7 +670,7 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) = 0;
    virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) = 0;
    virtual InetAddress getPeerIpAddress() = 0;
-   virtual UINT16 getPort() = 0;
+   virtual uint16_t getPort() = 0;
    virtual bool isProxyTransport() = 0;
 
    UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout = INFINITE, int numRetries = 1);
@@ -719,7 +719,7 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) override;
    virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) override;
    virtual InetAddress getPeerIpAddress() override;
-   virtual UINT16 getPort() override;
+   virtual uint16_t getPort() override;
    virtual bool isProxyTransport() override;
 
    UINT32 createUDPTransport(const TCHAR *hostName, UINT16 port = SNMP_DEFAULT_PORT);

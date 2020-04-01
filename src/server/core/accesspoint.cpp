@@ -79,13 +79,13 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	TCHAR query[256];
 	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,node_id,ap_state,ap_index FROM access_points WHERE id=%d"), (int)m_id);
 	DB_RESULT hResult = DBSelect(hdb, query);
-	if (hResult == NULL)
+	if (hResult == nullptr)
 		return false;
 
 	m_macAddr = DBGetFieldMacAddr(hResult, 0, 0);
-	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
-	m_model = DBGetField(hResult, 0, 2, NULL, 0);
-	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
+	m_vendor = DBGetField(hResult, 0, 1, nullptr, 0);
+	m_model = DBGetField(hResult, 0, 2, nullptr, 0);
+	m_serialNumber = DBGetField(hResult, 0, 3, nullptr, 0);
 	m_nodeId = DBGetFieldULong(hResult, 0, 4);
 	m_apState = (AccessPointState)DBGetFieldLong(hResult, 0, 5);
    m_prevState = (m_apState != AP_DOWN) ? m_apState : AP_ADOPTED;
@@ -140,7 +140,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=?,ap_state=?,ap_index=? WHERE id=?"));
       else
          hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,ap_index,id) VALUES (?,?,?,?,?,?,?,?)"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddr);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
@@ -204,7 +204,7 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_STATE, (UINT16)m_apState);
    msg->setField(VID_AP_INDEX, m_index);
 
-   if (m_radioInterfaces != NULL)
+   if (m_radioInterfaces != nullptr)
    {
       msg->setField(VID_RADIO_COUNT, (WORD)m_radioInterfaces->size());
       UINT32 varId = VID_RADIO_LIST_BASE;
@@ -277,7 +277,7 @@ void AccessPoint::attachToNode(UINT32 nodeId)
 void AccessPoint::updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *ri)
 {
 	lockProperties();
-	if (m_radioInterfaces == NULL)
+	if (m_radioInterfaces == nullptr)
 		m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(ri->size(), 4, Ownership::True);
 	m_radioInterfaces->clear();
 	for(int i = 0; i < ri->size(); i++)
@@ -296,7 +296,7 @@ bool AccessPoint::isMyRadio(int rfIndex)
 {
 	bool result = false;
 	lockProperties();
-	if (m_radioInterfaces != NULL)
+	if (m_radioInterfaces != nullptr)
 	{
 		for(int i = 0; i < m_radioInterfaces->size(); i++)
 		{
@@ -318,7 +318,7 @@ bool AccessPoint::isMyRadio(const BYTE *macAddr)
 {
 	bool result = false;
 	lockProperties();
-	if (m_radioInterfaces != NULL)
+	if (m_radioInterfaces != nullptr)
 	{
 		for(int i = 0; i < m_radioInterfaces->size(); i++)
 		{
@@ -340,7 +340,7 @@ void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
 {
 	buffer[0] = 0;
 	lockProperties();
-	if (m_radioInterfaces != NULL)
+	if (m_radioInterfaces != nullptr)
 	{
 		for(int i = 0; i < m_radioInterfaces->size(); i++)
 		{
@@ -461,8 +461,8 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 			if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 			{
 				DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
-				AgentConnection *conn = proxyNode->createAgentConnection();
-				if (conn != NULL)
+				shared_ptr<AgentConnection> conn = proxyNode->createAgentConnection();
+				if (conn != nullptr)
 				{
 					TCHAR parameter[64], buffer[64];
 
@@ -488,7 +488,6 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 						}
 					}
 					conn->disconnect();
-					conn->decRefCount();
 				}
 				else
 				{
@@ -498,7 +497,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 			}
 			else
 			{
-				DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node not available"), m_id, m_name);
+			   nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node not available"), m_id, m_name);
 				sendPollerMsg(rqId, POLLER_ERROR _T("      ICMP proxy not available\r\n"));
 			}
 		}
@@ -506,7 +505,8 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 		{
          TCHAR buffer[64];
 			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
-			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,NULL,%d)"), m_id, m_name, m_ipAddress.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
+			nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing on %s, timeout=%d, size=%d"), m_id, m_name,
+			         m_ipAddress.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
 			UINT32 responseTime;
 			UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &responseTime, g_icmpPingSize, false);
 			if (dwPingStatus == ICMP_SUCCESS)
@@ -520,7 +520,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
             state = AP_DOWN;
 			}
-			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping result %d, state=%d"), m_id, m_name, dwPingStatus, state);
+			nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): ping result %d, state=%d"), m_id, m_name, dwPingStatus, state);
 		}
    }
 

@@ -529,7 +529,7 @@ InetAddress SNMP_UDPTransport::getPeerIpAddress()
 /**
  * Get port number
  */
-UINT16 SNMP_UDPTransport::getPort()
+uint16_t SNMP_UDPTransport::getPort()
 {
    return m_port;
 }

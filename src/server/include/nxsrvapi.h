@@ -783,14 +783,25 @@ public:
 };
 
 /**
+ * Receiver for agent connection
+ */
+class AgentConnectionReceiver;
+
+/**
  * Agent connection
  */
 class LIBNXSRV_EXPORTABLE AgentConnection
 {
+   friend class AgentConnectionReceiver;
+
 private:
-   VolatileCounter m_userRefCount;
-   VolatileCounter m_internalRefCount;
-   UINT32 m_debugId;
+#ifdef _WIN32
+   weak_ptr<AgentConnection> *m_self; // should be pointer because of DLL linkage issues on Windows
+#else
+   weak_ptr<AgentConnection> m_self;
+#endif
+   shared_ptr<AgentConnectionReceiver> m_receiver;
+   uint32_t m_debugId;
    InetAddress m_addr;
    int m_nProtocolVersion;
    bool m_controlServer;
@@ -800,20 +811,18 @@ private:
    time_t m_tLastCommandTime;
    AbstractCommChannel *m_channel;
    VolatileCounter m_requestId;
-   UINT32 m_dwCommandTimeout;
-	UINT32 m_connectionTimeout;
-   UINT32 m_dwRecvTimeout;
+   uint32_t m_commandTimeout;
+   uint32_t m_connectionTimeout;
+	uint32_t m_recvTimeout;
    MsgWaitQueue *m_pMsgWaitQueue;
    bool m_isConnected;
    MUTEX m_mutexDataLock;
 	MUTEX m_mutexSocketWrite;
-   THREAD m_hReceiverThread;
-   NXCPEncryptionContext *m_pCtx;
    int m_iEncryptionPolicy;
    bool m_useProxy;
    InetAddress m_proxyAddr;
-   WORD m_wPort;
-   WORD m_wProxyPort;
+   uint16_t m_port;
+   uint16_t m_proxyPort;
    int m_iProxyAuth;
    char m_szProxySecret[MAX_SECRET_LENGTH];
 	int m_hCurrFile;
@@ -830,7 +839,6 @@ private:
 	VolatileCounter m_bulkDataProcessing;
 
    void receiverThread();
-   static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
 
    UINT32 setupEncryption(RSA *pServerKey);
    UINT32 authenticate(BOOL bProxyData);
@@ -867,19 +875,34 @@ protected:
 	NXCPEncryptionContext *acquireEncryptionContext();
    AbstractCommChannel *acquireChannel();
 
-   UINT32 waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut);
+   uint32_t waitForRCC(uint32_t requestId, uint32_t timeout);
 
-   void incInternalRefCount() { InterlockedIncrement(&m_internalRefCount); }
-   void decInternalRefCount() { if (InterlockedDecrement(&m_internalRefCount) == 0) delete this; }
+#ifdef _WIN32
+   void setSelfPtr(const shared_ptr<AgentConnection>& sptr) { *m_self = sptr; }
+#else
+   void setSelfPtr(const shared_ptr<AgentConnection>& sptr) { m_self = sptr; }
+#endif
+
+   AgentConnection(const InetAddress& addr, uint16_t port, const TCHAR *secret, bool allowCompression);
 
 public:
-   AgentConnection(const InetAddress& addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
+   static shared_ptr<AgentConnection> create(const InetAddress& addr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr, bool allowCompression = true)
+   {
+      auto object = new AgentConnection(addr, port, secret, allowCompression);
+      auto p = shared_ptr<AgentConnection>(object);
+      object->setSelfPtr(p);
+      return p;
+   }
+
    virtual ~AgentConnection();
 
-   void incRefCount() { InterlockedIncrement(&m_userRefCount); }
-   void decRefCount() { if (InterlockedDecrement(&m_userRefCount) == 0) { disconnect(); decInternalRefCount(); } }
+#ifdef _WIN32
+   shared_ptr<AgentConnection> self() const { return m_self->lock(); }
+#else
+   shared_ptr<AgentConnection> self() const { return m_self.lock(); }
+#endif
 
-   bool connect(RSA *pServerKey = NULL, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL, UINT64 serverId = 0);
+   bool connect(RSA *serverKey = nullptr, uint32_t *error = nullptr, uint32_t *socketError = nullptr, uint64_t serverId = 0);
    void disconnect();
    bool isConnected() const { return m_isConnected; }
    bool isProxyMode() { return m_useProxy; }
@@ -925,24 +948,23 @@ public:
    UINT32 setupTcpProxy(const InetAddress& ipAddr, UINT16 port, UINT32 *channelId);
    UINT32 closeTcpProxy(UINT32 channelId);
 
-	UINT32 generateRequestId() { return (UINT32)InterlockedIncrement(&m_requestId); }
+   uint32_t generateRequestId() { return (uint32_t)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false,
 	         void (*downloadProgressCallback)(size_t, void *) = NULL,
 	         void (*fileResendCallback)(NXCP_MESSAGE *, void *) = NULL, void *cbArg = NULL);
 
-   void setConnectionTimeout(UINT32 dwTimeout) { m_connectionTimeout = MAX(dwTimeout, 1000); }
-	UINT32 getConnectionTimeout() { return m_connectionTimeout; }
-   void setCommandTimeout(UINT32 dwTimeout) { m_dwCommandTimeout = MAX(dwTimeout, 500); }
-	UINT32 getCommandTimeout() { return m_dwCommandTimeout; }
-   void setRecvTimeout(UINT32 dwTimeout) { m_dwRecvTimeout = MAX(dwTimeout, 10000); }
+   void setConnectionTimeout(uint32_t timeout) { m_connectionTimeout = MAX(timeout, 1000); }
+	uint32_t getConnectionTimeout() const { return m_connectionTimeout; }
+   void setCommandTimeout(uint32_t timeout) { m_commandTimeout = MAX(timeout, 500); }
+   uint32_t getCommandTimeout() const { return m_commandTimeout; }
+   void setRecvTimeout(uint32_t timeout) { m_recvTimeout = MAX(timeout, 1800000); }
    void setEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
-   void setProxy(InetAddress addr, WORD wPort = AGENT_LISTEN_PORT,
-                 int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
-   void setPort(WORD wPort) { m_wPort = wPort; }
-   void setAuthData(int method, const TCHAR *secret);
+   void setProxy(const InetAddress& addr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr);
+   void setPort(uint16_t port) { m_port = port; }
+   void setSharedSecret(const TCHAR *secret);
 
    void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
-   UINT32 cancelFileDownload();
+   uint32_t cancelFileDownload();
 };
 
 /**
@@ -951,14 +973,14 @@ public:
 class LIBNXSRV_EXPORTABLE SNMP_ProxyTransport : public SNMP_Transport
 {
 protected:
-	AgentConnection *m_agentConnection;
+	shared_ptr<AgentConnection> m_agentConnection;
 	NXCPMessage *m_response;
 	InetAddress m_ipAddr;
-	UINT16 m_port;
+	uint16_t m_port;
 	bool m_waitForResponse;
 
 public:
-	SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, UINT16 port);
+	SNMP_ProxyTransport(const shared_ptr<AgentConnection>& conn, const InetAddress& ipAddr, uint16_t port);
 	virtual ~SNMP_ProxyTransport();
 
    virtual int readMessage(SNMP_PDU **ppData, UINT32 timeout = INFINITE,
@@ -966,7 +988,7 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) override;
    virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) override;
    virtual InetAddress getPeerIpAddress() override;
-   virtual UINT16 getPort() override;
+   virtual uint16_t getPort() override;
    virtual bool isProxyTransport() override;
 
    void setWaitForResponse(bool wait) { m_waitForResponse = wait; }

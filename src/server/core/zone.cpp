@@ -556,7 +556,7 @@ void Zone::fillAgentConfigurationMessage(NXCPMessage *msg) const
 /**
  * Acquire connection to any available proxy node
  */
-AgentConnectionEx *Zone::acquireConnectionToProxy(bool validate)
+shared_ptr<AgentConnectionEx> Zone::acquireConnectionToProxy(bool validate)
 {
    uint32_t nodeId = getProxyNodeId(nullptr);
    if (nodeId == 0)
@@ -566,7 +566,7 @@ AgentConnectionEx *Zone::acquireConnectionToProxy(bool validate)
    }
 
    shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
-   return (node != nullptr) ? static_cast<Node&>(*node).acquireProxyConnection(ZONE_PROXY, validate) : nullptr;
+   return (node != nullptr) ? static_cast<Node&>(*node).acquireProxyConnection(ZONE_PROXY, validate) : shared_ptr<AgentConnectionEx>();
 }
 
 /**

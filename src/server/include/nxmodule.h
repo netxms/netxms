@@ -99,7 +99,7 @@ typedef struct
    void (* pfClientSessionClose)(ClientSession *session);
    void (* pfNXSLServerEnvConfig)(NXSL_Environment *env);
    void (* pfNXSLServerVMConfig)(NXSL_VM *vm);
-   void (* pfOnConnectToAgent)(const shared_ptr<Node>& node, AgentConnection *conn);
+   void (* pfOnConnectToAgent)(const shared_ptr<Node>& node, const shared_ptr<AgentConnection>& conn);
    bool (* pfOnAgentMessage)(NXCPMessage *msg, uint32_t nodeId);
    void (* pfHousekeeperHook)();
    bool (* pfProcessServerConsoleCommand)(const TCHAR *command, ServerConsole *console);

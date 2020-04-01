@@ -171,8 +171,8 @@ ServerJobResult FileUploadJob::run()
 		ThreadSleep(5);
 	}
 
-	AgentConnectionEx *conn = static_cast<Node&>(*m_object).createAgentConnection();
-	if (conn != NULL)
+	shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*m_object).createAgentConnection();
+	if (conn != nullptr)
 	{
 		m_fileSize = (INT64)FileSize(m_localFileFullPath);
 		UINT32 rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, false, uploadCallback, this, NXCP_STREAM_COMPRESSION_DEFLATE);
@@ -184,7 +184,6 @@ ServerJobResult FileUploadJob::run()
 		{
 			setFailureMessage(AgentErrorCodeToText(rcc));
 		}
-		conn->decRefCount();
 	}
 	else
 	{

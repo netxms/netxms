@@ -47,7 +47,7 @@ FileMonitoringList::~FileMonitoringList()
 /**
  * Add file to list
  */
-void FileMonitoringList::addFile(MONITORED_FILE *file, Node *node, AgentConnection *conn)
+void FileMonitoringList::addFile(MONITORED_FILE *file, Node *node, const shared_ptr<AgentConnection>& conn)
 {
    lock();
    file->session->incRefCount();

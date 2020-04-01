@@ -1238,7 +1238,7 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResu
       return NXSL_ERR_BAD_CLASS;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
-   AgentConnection *conn = node->createAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
    if (conn != nullptr)
    {
       StringList list;
@@ -1246,7 +1246,6 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResu
          list.add(argv[i]->getValueAsCString());
       UINT32 rcc = conn->execAction(argv[1]->getValueAsCString(), list, false, nullptr, nullptr);
       *ppResult = vm->createValue((rcc == ERR_SUCCESS) ? 1 : 0);
-      conn->decRefCount();
       nxlog_debug(5, _T("NXSL: F_AgentExecuteAction: action %s on node %s [%d]: RCC=%d"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
@@ -1292,7 +1291,7 @@ static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Valu
       return NXSL_ERR_BAD_CLASS;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
-   AgentConnection *conn = node->createAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
    if (conn != nullptr)
    {
       StringList list;
@@ -1301,7 +1300,6 @@ static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Valu
       StringBuffer output;
       UINT32 rcc = conn->execAction(argv[1]->getValueAsCString(), list, true, ActionOutputHandler, &output);
       *ppResult = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
-      conn->decRefCount();
       nxlog_debug(5, _T("NXSL: F_AgentExecuteActionWithOutput: action %s on node %s [%d]: RCC=%d"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else

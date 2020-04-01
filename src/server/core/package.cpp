@@ -182,7 +182,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
          task->session->sendMessage(&msg);
 
          // Create agent connection
-         AgentConnection *agentConn = node->createAgentConnection();
+         shared_ptr<AgentConnectionEx> agentConn = node->createAgentConnection();
          if (agentConn != nullptr)
          {
             BOOL bCheckOK = FALSE;
@@ -225,7 +225,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
                      BOOL bConnected = FALSE;
 
                      // Delete current connection
-                     agentConn->decRefCount();
+                     agentConn.reset();
 
                      // Change deployment status to "Package installation"
                      msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
@@ -290,8 +290,6 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
             {
                errorMessage = _T("Package is not compatible with target machine");
             }
-            if (agentConn != nullptr)
-               agentConn->decRefCount();
          }
          else
          {

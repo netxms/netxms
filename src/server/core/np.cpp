@@ -170,11 +170,10 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
 	      shared_ptr<Zone> zone = FindZoneByUIN(newNodeData->zoneUIN);
 	      if (zone != nullptr)
 	      {
-            AgentConnectionEx *conn = zone->acquireConnectionToProxy();
+            shared_ptr<AgentConnectionEx> conn = zone->acquireConnectionToProxy();
             if (conn != nullptr)
             {
                addressResolved = (conn->getHostByAddr(newNodeData->ipAddr, dnsName, MAX_DNS_NAME) != nullptr);
-               conn->decRefCount();
             }
 	      }
 	   }
@@ -277,14 +276,14 @@ static shared_ptr<Interface> GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT
 /**
  * Check if host at given IP address is reachable by NetXMS server
  */
-static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool fullCheck, SNMP_Transport **transport, AgentConnection **agentConn)
+static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool fullCheck, SNMP_Transport **transport, shared_ptr<AgentConnection> *agentConn)
 {
 	bool reachable = false;
 
 	if (transport != nullptr)
 		*transport = nullptr;
 	if (agentConn != nullptr)
-		*agentConn = nullptr;
+		agentConn->reset();
 
 	UINT32 zoneProxy = 0;
 
@@ -303,7 +302,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 		shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
 		if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 		{
-			AgentConnection *conn = proxyNode->createAgentConnection();
+			shared_ptr<AgentConnectionEx> conn = proxyNode->createAgentConnection();
 			if (conn != nullptr)
 			{
 				TCHAR parameter[128], buffer[64];
@@ -321,7 +320,6 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 						}
 					}
 				}
-				conn->decRefCount();
 			}
 		}
 	}
@@ -335,15 +333,14 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 		return true;
 
 	// *** NetXMS agent ***
-   AgentConnection *pAgentConn = new AgentConnectionEx(0, ipAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+   shared_ptr<AgentConnectionEx> pAgentConn = AgentConnectionEx::create(0, ipAddr, AGENT_LISTEN_PORT,nullptr);
    shared_ptr<Node> proxyNode = shared_ptr<Node>();
 	if (zoneProxy != 0)
 	{
 		proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
       if (proxyNode != nullptr)
       {
-         pAgentConn->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(),
-                              proxyNode->getAgentAuthMethod(), proxyNode->getSharedSecret());
+         pAgentConn->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(), proxyNode->getSharedSecret());
       }
 	}
 
@@ -374,33 +371,27 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
          }
          DBConnectionPoolReleaseConnection(hdb);
 
-
-         for(int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
+         for (int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
          {
-           pAgentConn->setAuthData(AUTH_SHA1_HASH, secrets.get(i));
-           if (pAgentConn->connect(g_pServerKey, &rcc))
-           {
-              break;
-           }
+            pAgentConn->setSharedSecret(secrets.get(i));
+            if (pAgentConn->connect(g_pServerKey, &rcc))
+            {
+               break;
+            }
 
-           if (((rcc != ERR_AUTH_REQUIRED) || (rcc != ERR_AUTH_FAILED)))
-           {
-              break;
-           }
+            if (((rcc != ERR_AUTH_REQUIRED) || (rcc != ERR_AUTH_FAILED)))
+            {
+               break;
+            }
          }
       }
    }
    if (rcc == ERR_SUCCESS)
    {
 		if (agentConn != nullptr)
-		{
 			*agentConn = pAgentConn;
-			pAgentConn = nullptr;	// prevent deletion
-		}
 		reachable = true;
    }
-   if (pAgentConn != nullptr)
-      pAgentConn->decRefCount();
 
 	if (reachable && !fullCheck)
 		return true;
@@ -607,11 +598,10 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
             shared_ptr<Zone> zone = FindZoneByUIN(data->zoneUIN);
             if (zone != nullptr)
             {
-               AgentConnectionEx *conn = zone->acquireConnectionToProxy();
+               shared_ptr<AgentConnectionEx> conn = zone->acquireConnectionToProxy();
                if (conn != nullptr)
                {
                   conn->getHostByAddr(data->ipAddr, data->dnsName, MAX_DNS_NAME);
-                  conn->decRefCount();
                }
             }
          }
@@ -715,7 +705,6 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 {
    TCHAR szFilter[MAX_CONFIG_VALUE], szBuffer[256], szIpAddr[64];
    UINT32 dwTemp;
-   AgentConnection *pAgentConn;
 	SNMP_Transport *pTransport;
 
 	newNodeData->ipAddr.toString(szIpAddr);
@@ -837,7 +826,8 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
 
    // Check if host is reachable
-   if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &pTransport, &pAgentConn))
+   shared_ptr<AgentConnection> agentConnection;
+   if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &pTransport, &agentConnection))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
       return FALSE;
@@ -857,17 +847,17 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       data.driver = FindDriverForNode(szIpAddr, data.snmpObjectId, nullptr, pTransport);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): selected device driver %s"), szIpAddr, data.driver->getName());
    }
-   if (pAgentConn != nullptr)
+   if (agentConnection != nullptr)
    {
       data.flags |= NNF_IS_AGENT;
-      pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.agentVersion);
-      pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, data.platform);
+      agentConnection->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.agentVersion);
+      agentConnection->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, data.platform);
    }
 
    // Read interface list if possible
    if (data.flags & NNF_IS_AGENT)
    {
-      data.ifList = pAgentConn->getInterfaceList();
+      data.ifList = agentConnection->getInterfaceList();
    }
    if ((data.ifList == nullptr) && (data.flags & NNF_IS_SNMP))
    {
@@ -882,8 +872,6 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
 	{
 		nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
-	   if (pAgentConn != nullptr)
-	      pAgentConn->decRefCount();
 	   delete pTransport;
       return TRUE;   // No filtering
 	}
@@ -901,7 +889,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    else if (data.flags & NNF_IS_AGENT)
    {
       // Check IP forwarding status
-      if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
+      if (agentConnection->getParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
       {
          if (_tcstoul(szBuffer, nullptr, 10) != 0)
             data.flags |= NNF_IS_ROUTER;
@@ -1003,8 +991,6 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
 
    // Cleanup
-   if (pAgentConn != nullptr)
-      pAgentConn->decRefCount();
    delete pTransport;
 
    return result;

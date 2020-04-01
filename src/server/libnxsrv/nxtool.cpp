@@ -45,19 +45,19 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    char *eptr;
    bool start = true, useProxy = false;
    int i, ch, iExitCode = 3, iInterval = 0;
-   int authMethod = AUTH_NONE, proxyAuth = AUTH_NONE;
 #ifdef _WITH_ENCRYPTION
    int iEncryptionPolicy = ENCRYPTION_PREFERRED;
 #else
    int iEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
    WORD agentPort = AGENT_LISTEN_PORT, proxyPort = AGENT_LISTEN_PORT;
+   TCHAR *secret = nullptr;
    UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwError;
-   TCHAR szSecret[MAX_SECRET_LENGTH] = _T(""), szRequest[MAX_DB_STRING] = _T("");
+   TCHAR szRequest[MAX_DB_STRING] = _T("");
    TCHAR keyFile[MAX_PATH];
    TCHAR szResponse[MAX_DB_STRING] = _T("");
    char szProxy[MAX_OBJECT_NAME] = "";
-   TCHAR szProxySecret[MAX_SECRET_LENGTH] = _T("");
+   TCHAR *proxySecret = nullptr;
    RSA *serverKey = NULL;
 
    InitNetXMSProcess(true);
@@ -68,7 +68,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
 
    // Parse command line
    opterr = 1;
-   char options[128] = "a:A:D:e:hK:O:p:s:S:vw:W:X:";
+   char options[128] = "D:e:hK:O:p:s:S:vw:W:X:";
    strlcat(options, tool->additionalOptions, 128);
 
    while((ch = getopt(tool->argc, tool->argv, options)) != -1)
@@ -78,9 +78,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          case 'h':   // Display help and exit
             _tprintf(_T("%s\n")
                      _T("Common options:\n")
-                     _T("   -a auth      : Authentication method for agent. Valid methods are \"none\",\n")
-                     _T("                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n")
-                     _T("   -A auth      : Authentication method for proxy agent.\n")
                      _T("   -D level     : Set debug level (default is 0).\n")
 #ifdef _WITH_ENCRYPTION
                      _T("   -e policy    : Set encryption policy. Possible values are:\n")
@@ -111,26 +108,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                      agentPort, agentPort);
             start = false;
             break;
-         case 'a':   // Auth method
-         case 'A':
-            if (!strcmp(optarg, "none"))
-               i = AUTH_NONE;
-            else if (!strcmp(optarg, "plain"))
-               i = AUTH_PLAINTEXT;
-            else if (!strcmp(optarg, "md5"))
-               i = AUTH_MD5_HASH;
-            else if (!strcmp(optarg, "sha1"))
-               i = AUTH_SHA1_HASH;
-            else
-            {
-               printf("Invalid authentication method \"%s\"\n", optarg);
-               start = false;
-            }
-            if (ch == 'a')
-               authMethod = i;
-            else
-               proxyAuth = i;
-            break;
          case 'D':   // debug level
             nxlog_set_debug_level((int)strtol(optarg, NULL, 0));
             break;
@@ -152,26 +129,16 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             break;
          case 's':   // Shared secret
 #ifdef UNICODE
-#if HAVE_MBSTOWCS
-            mbstowcs(szSecret, optarg, MAX_SECRET_LENGTH);
+            secret = WideStringFromMBStringSysLocale(optarg);
 #else
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szSecret, MAX_SECRET_LENGTH);
-#endif
-            szSecret[MAX_SECRET_LENGTH - 1] = 0;
-#else
-            strlcpy(szSecret, optarg, MAX_SECRET_LENGTH);
+            secret = MemCopyStringA(optarg);
 #endif
             break;
          case 'S':   // Shared secret for proxy agent
 #ifdef UNICODE
-#if HAVE_MBSTOWCS
-            mbstowcs(szProxySecret, optarg, MAX_SECRET_LENGTH);
+            proxySecret = WideStringFromMBStringSysLocale(optarg);
 #else
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szProxySecret, MAX_SECRET_LENGTH);
-#endif
-            szProxySecret[MAX_SECRET_LENGTH - 1] = 0;
-#else
-            strlcpy(szProxySecret, optarg, MAX_SECRET_LENGTH);
+            proxySecret = MemCopyStringA(optarg);
 #endif
             break;
          case 'v':   // Print version and exit
@@ -253,11 +220,6 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
          start = false;
       }
-      else if ((authMethod != AUTH_NONE) && (szSecret[0] == 0))
-      {
-         printf("Shared secret not specified or empty\n");
-         start = false;
-      }
 
       // Load server key if requested
 #ifdef _WITH_ENCRYPTION
@@ -306,24 +268,22 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          }
          else
          {
-            DecryptPassword(_T("netxms"), szSecret, szSecret, MAX_SECRET_LENGTH);
-            AgentConnection *conn = new AgentConnection(addr, agentPort, authMethod, szSecret);
+            shared_ptr<AgentConnection> conn = AgentConnection::create(addr, agentPort, secret);
 
             conn->setConnectionTimeout(dwConnTimeout);
             conn->setCommandTimeout(dwTimeout);
             conn->setEncryptionPolicy(iEncryptionPolicy);
             if (useProxy)
-               conn->setProxy(proxyAddr, proxyPort, proxyAuth, szProxySecret);
+               conn->setProxy(proxyAddr, proxyPort, proxySecret);
             if (conn->connect(serverKey, &dwError))
             {
-               iExitCode = tool->executeCommandCb(conn, tool->argc, tool->argv, serverKey);
+               iExitCode = tool->executeCommandCb(conn.get(), tool->argc, tool->argv, serverKey);
             }
             else
             {
                WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
-            conn->decRefCount();
          }
       }
    }

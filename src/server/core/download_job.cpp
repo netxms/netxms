@@ -63,8 +63,6 @@ FileDownloadJob::FileDownloadJob(const shared_ptr<Node>& node, const TCHAR *remo
 FileDownloadJob::~FileDownloadJob()
 {
 	m_session->decRefCount();
-	if (m_agentConnection != nullptr)
-	   m_agentConnection->decRefCount();
 	MemFree(m_localFile);
 	MemFree(m_remoteFile);
 	MemFree(m_info);
@@ -262,10 +260,7 @@ ServerJobResult FileDownloadJob::run()
 	}
 
 	if (m_agentConnection != nullptr)
-	{
-	   m_agentConnection->decRefCount();
-	   m_agentConnection = nullptr;
-	}
+	   m_agentConnection.reset();
 	return success;
 }
 

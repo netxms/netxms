@@ -431,23 +431,16 @@ public:
  */
 struct TcpProxy
 {
-   AgentConnectionEx *agentConnection;
+   shared_ptr<AgentConnectionEx> agentConnection;
    UINT32 agentChannelId;
    UINT32 clientChannelId;
    UINT32 nodeId;
 
-   TcpProxy(AgentConnectionEx *c, UINT32 aid, UINT32 cid, UINT32 nid)
+   TcpProxy(const shared_ptr<AgentConnectionEx>& c, UINT32 aid, UINT32 cid, UINT32 nid) : agentConnection(c)
    {
-      agentConnection = c;
       agentChannelId = aid;
       clientChannelId = cid;
       nodeId = nid;
-      agentConnection->incRefCount();
-   }
-
-   ~TcpProxy()
-   {
-      agentConnection->decRefCount();
    }
 };
 
@@ -475,7 +468,7 @@ typedef int session_id_t;
 
 // Explicit instantiation of AbstractIndex<AgentConnection> template class
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE AbstractIndex<AgentConnection>;
+template class NXCORE_EXPORTABLE SharedPointerIndex<AgentConnection>;
 #endif
 
 /**
@@ -518,7 +511,7 @@ private:
    CONDITION m_condEncryptionSetup;
 	ClientSessionConsole *m_console;			// Server console context
 	StringList m_musicTypeList;
-	AbstractIndex<AgentConnection> m_agentConnections;
+	SharedPointerIndex<AgentConnection> m_agentConnections;
 	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
 	HashMap<UINT32, ProcessExecutor> *m_serverCommands;
@@ -1353,7 +1346,7 @@ public:
    FileMonitoringList();
    ~FileMonitoringList();
 
-   void addFile(MONITORED_FILE *file, Node *node, AgentConnection *conn);
+   void addFile(MONITORED_FILE *file, Node *node, const shared_ptr<AgentConnection>& conn);
    bool isDuplicate(MONITORED_FILE *file);
    bool removeFile(MONITORED_FILE *file);
    void removeDisconnectedNode(uint32_t nodeId);

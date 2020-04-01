@@ -566,7 +566,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          return;
       }
 
-      AgentConnectionEx *conn = proxy->createAgentConnection();
+      shared_ptr<AgentConnectionEx> conn = proxy->createAgentConnection();
       if (conn == nullptr)
       {
          ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Cannot connect to proxy agent for address range %s"), (const TCHAR *)range.toString());
@@ -600,8 +600,6 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       }
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s via proxy %s [%u]"),
                rangeText, proxy->getName(), proxy->getId());
-
-      conn->decRefCount();
    }
    else
    {

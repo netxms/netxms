@@ -734,7 +734,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 		if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 		{
 			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
-			AgentConnection *conn = proxyNode->createAgentConnection();
+			shared_ptr<AgentConnection> conn = proxyNode->createAgentConnection();
 			if (conn != nullptr)
 			{
 				TCHAR parameter[128], buffer[64];
@@ -773,7 +773,6 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 						*operState = IF_OPER_STATE_DOWN;
 					}
 				}
-				conn->decRefCount();
 			}
 			else
 			{

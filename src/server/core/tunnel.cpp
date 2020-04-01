@@ -1305,14 +1305,13 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
       if (node->isNativeAgent())
       {
          // Additional checks if agent already reachable on that node
-         AgentConnectionEx *conn = node->getAgentConnection();
+         shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
          if (conn != nullptr)
          {
             TCHAR agentVersion[MAX_RESULT_LENGTH] = _T(""), hostName[MAX_RESULT_LENGTH] = _T(""), fqdn[MAX_RESULT_LENGTH] = _T("");
             conn->getParameter(_T("Agent.Version"), MAX_RESULT_LENGTH, agentVersion);
             conn->getParameter(_T("System.Hostname"), MAX_RESULT_LENGTH, hostName);
             conn->getParameter(_T("System.FQDN"), MAX_RESULT_LENGTH, fqdn);
-            conn->decRefCount();
 
             if (_tcscmp(agentVersion, tunnel->getAgentVersion()))
             {

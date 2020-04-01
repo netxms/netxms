@@ -534,7 +534,7 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
    _tcscat(keyFile, DFILE_KEYS);
    RSA *key = LoadRSAKeys(keyFile);
 
-   AgentConnection *ac = new AgentConnection(addr);
+   shared_ptr<AgentConnection> ac = AgentConnection::create(addr);
    if (ac->connect(key))
    {
       TCHAR result[MAX_RESULT_LENGTH];
@@ -543,18 +543,16 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
 #else
       UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd)"), MAX_RESULT_LENGTH, result);
 #endif
-      ac->decRefCount();
-      if (key != NULL)
+      if (key != nullptr)
          RSA_free(key);
       if (rcc == ERR_SUCCESS)
       {
-         return _tcstol(result, NULL, 10) > 0;
+         return _tcstol(result, nullptr, 10) > 0;
       }
    }
    else
    {
-      ac->decRefCount();
-      if (key != NULL)
+      if (key != nullptr)
          RSA_free(key);
    }
 

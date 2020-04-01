@@ -258,7 +258,6 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
 
       nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): checking port %d"), ipAddrText, (int)port);
 
-      AgentConnection *pConn = NULL;
       if (snmpProxy != 0)
       {
          shared_ptr<NetObj> proxyNode = FindObjectById(snmpProxy, OBJECT_NODE);
@@ -267,13 +266,13 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
             nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): invalid proxy node ID %u"), ipAddrText, snmpProxy);
             goto fail;
          }
-         pConn = static_cast<Node&>(*proxyNode).createAgentConnection();
-         if (pConn == NULL)
+         shared_ptr<AgentConnectionEx> connection = static_cast<Node&>(*proxyNode).createAgentConnection();
+         if (connection == nullptr)
          {
             nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): cannot create proxy connection"), ipAddrText);
             goto fail;
          }
-         pTransport = new SNMP_ProxyTransport(pConn, ipAddr, port);
+         pTransport = new SNMP_ProxyTransport(connection, ipAddr, port);
       }
       else
       {

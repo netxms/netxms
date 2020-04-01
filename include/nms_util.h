@@ -792,26 +792,25 @@ public:
 };
 
 /**
- * Class that can store any object with connected to it mutex
+ * Class that can store any object guarded by mutex
  */
 template <class T> class ObjectLock
 {
 private:
    Mutex m_mutex;
-   T *m_object;
+   T m_object;
 
 public:
-   ObjectLock() { m_object = NULL; }
-   ObjectLock(T *object) { m_object = object; }
-   ObjectLock(const ObjectLock<T> &src) { m_object = src.m_object; m_mutex = src.m_mutex; }
+   ObjectLock() : m_mutex(true) { }
+   ObjectLock(const T& object) : m_mutex(true), m_object(object) { }
+   ObjectLock(const ObjectLock<T> &src) : m_object(src.m_object), m_mutex(src.m_mutex) { }
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }
 
-   T *get() { return m_object; }
-   void set(T *object) { m_object = object; }
+   const T& get() { return m_object; }
+   void set(const T& object) { m_object = object; }
 
-   operator T*() { return m_object; }
    ObjectLock<T>& operator =(const ObjectLock<T> &src)
    {
       m_object = src.m_object;

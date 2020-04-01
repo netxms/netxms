@@ -685,7 +685,7 @@ void Template::applyPolicyChanges()
       if (object->getObjectClass() == OBJECT_NODE)
       {
          AgentPolicyInfo *ap;
-         AgentConnection *conn = static_cast<Node*>(object)->getAgentConnection();
+         shared_ptr<AgentConnectionEx> conn = static_cast<Node*>(object)->getAgentConnection();
          if (conn != nullptr)
          {
             UINT32 rcc = conn->getPolicyInventory(&ap);
@@ -694,7 +694,6 @@ void Template::applyPolicyChanges()
                checkPolicyDeployment(static_pointer_cast<Node>(getChildList().getShared(i)), ap);
                delete ap;
             }
-            conn->decRefCount();
          }
       }
    }
@@ -742,15 +741,15 @@ void Template::forceApplyPolicyChanges()
  */
 void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap)
 {
-   AgentConnectionEx *conn = node->getAgentConnection();
-   if (conn == NULL)
+   shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
+   if (conn == nullptr)
       return;
 
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
       shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
-      auto data = make_shared<AgentPolicyDeploymentData>(node->getAgentConnection(), node, node->isNewPolicyTypeFormatSupported());
+      auto data = make_shared<AgentPolicyDeploymentData>(conn, node, node->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
 
       int j;

@@ -188,7 +188,7 @@ void CleanupActions()
  */
 static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
 {
-   AgentConnection *pConn;
+   shared_ptr<AgentConnection> pConn;
    if (pszTarget[0] == '@')
    {
       //Resolve name of node to connection to it. Name should be in @name format.
@@ -204,25 +204,22 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
       // Resolve hostname
       InetAddress addr = InetAddress::resolveHostName(pszTarget);
       if (!addr.isValid())
-         return FALSE;
+         return false;
 
       shared_ptr<Node> node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
       if (node != NULL)
       {
          pConn = node->createAgentConnection();
-         if (pConn == NULL)
-            return FALSE;
+         if (pConn == nullptr)
+            return false;
       }
       else
       {
          // Target node is not in our database, try default communication settings
-         pConn = new AgentConnection(addr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+         pConn = AgentConnection::create(addr, AGENT_LISTEN_PORT, nullptr);
          pConn->setCommandTimeout(g_agentCommandTimeout);
          if (!pConn->connect(g_pServerKey))
-         {
-            pConn->decRefCount();
             return false;
-         }
       }
    }
 
@@ -232,7 +229,6 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
    UINT32 rcc = pConn->execAction(pTmp, list);
    delete list;
    pConn->disconnect();
-   pConn->decRefCount();
    MemFree(pTmp);
    return rcc == ERR_SUCCESS;
 }

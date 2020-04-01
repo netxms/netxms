@@ -94,13 +94,13 @@ shared_ptr<Sensor> Sensor::create(const TCHAR *name, const NXCPMessage *request)
 /**
  * Create agent connection
  */
-AgentConnectionEx *Sensor::getAgentConnection()
+shared_ptr<AgentConnectionEx> Sensor::getAgentConnection()
 {
    if (IsShutdownInProgress())
-      return nullptr;
+      return shared_ptr<AgentConnectionEx>();
 
    shared_ptr<NetObj> proxy = FindObjectById(m_proxyNodeId, OBJECT_NODE);
-   return (proxy != nullptr) ? static_cast<Node&>(*proxy).acquireProxyConnection(SENSOR_PROXY) : nullptr;
+   return (proxy != nullptr) ? static_cast<Node&>(*proxy).acquireProxyConnection(SENSOR_PROXY) : shared_ptr<AgentConnectionEx>();
 }
 
 /**
@@ -112,7 +112,7 @@ bool Sensor::registerLoraDevice(Sensor *sensor)
    if (proxy == nullptr)
       return false;
 
-   AgentConnectionEx *conn = sensor->getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = sensor->getAgentConnection();
    if (conn == nullptr)
       return true; // Unprovisioned sensor - will try to provision it on next connect
 
@@ -431,7 +431,7 @@ void Sensor::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 void Sensor::calculateStatus(BOOL bForcedRecalc)
 {
-   AgentConnectionEx *conn = getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
    {
       m_status = STATUS_UNKNOWN;
@@ -628,7 +628,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    poller->setStatus(_T("check agent"));
    sendPollerMsg(rqId, _T("Checking NetXMS agent connectivity\r\n"));
 
-   AgentConnectionEx *conn = getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    lockProperties();
    if (conn != nullptr)
    {
@@ -821,11 +821,9 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
 
    nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, szParam);
    // Establish connection if needed
-   AgentConnectionEx *conn = getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
-   {
       return dwResult;
-   }
 
    StringBuffer parameter(szParam);
    switch(m_commProtocol)
@@ -890,11 +888,9 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
       return DCE_COMM_ERROR;
 
    nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, name);
-   AgentConnectionEx *conn = getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
-   {
       return dwResult;
-   }
 
    StringBuffer parameter(name);
    switch(m_commProtocol)
@@ -954,7 +950,7 @@ void Sensor::prepareForDeletion()
       ThreadSleepMs(100);
    nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
 
-   AgentConnectionEx *conn = getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if ((m_commProtocol == COMM_LORAWAN) && (conn != nullptr))
    {
       NXCPMessage msg(conn->getProtocolVersion());

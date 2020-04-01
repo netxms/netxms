@@ -102,7 +102,7 @@ class GenericAgentPolicy;
 class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
 {
 protected:
-   UINT32 m_nodeId;
+   uint32_t m_nodeId;
    AgentTunnel *m_tunnel;
    AgentTunnel *m_proxyTunnel;
    ClientSession *m_tcpProxySession;
@@ -118,18 +118,36 @@ protected:
    virtual bool processCustomMessage(NXCPMessage *msg) override;
    virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size) override;
 
+   AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port, const TCHAR *secret, bool allowCompression);
+   AgentConnectionEx(uint32_t nodeId, AgentTunnel *tunnel, const TCHAR *secret, bool allowCompression);
+
 public:
-   AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = nullptr, bool allowCompression = true);
-   AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int authMethod = AUTH_NONE, const TCHAR *secret = nullptr, bool allowCompression = true);
+   static shared_ptr<AgentConnectionEx> create(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr, bool allowCompression = true)
+   {
+      auto object = new AgentConnectionEx(nodeId, ipAddr, port, secret, allowCompression);
+      auto p = shared_ptr<AgentConnectionEx>(object);
+      object->setSelfPtr(p);
+      return p;
+   }
+   static shared_ptr<AgentConnectionEx> create(uint32_t nodeId, AgentTunnel *tunnel, const TCHAR *secret = nullptr, bool allowCompression = true)
+   {
+      auto object = new AgentConnectionEx(nodeId, tunnel, secret, allowCompression);
+      auto p = shared_ptr<AgentConnectionEx>(object);
+      object->setSelfPtr(p);
+      return p;
+   }
+
    virtual ~AgentConnectionEx();
 
-   UINT32 deployPolicy(NXCPMessage *msg);
-   UINT32 uninstallPolicy(uuid guid, TCHAR *type, bool newTypeFormatSupported);
+   shared_ptr<AgentConnectionEx> self() const { return static_pointer_cast<AgentConnectionEx>(AgentConnection::self()); }
+
+   uint32_t deployPolicy(NXCPMessage *msg);
+   uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
 
    void setTunnel(AgentTunnel *tunnel);
 
    using AgentConnection::setProxy;
-   void setProxy(AgentTunnel *tunnel, int authMethod, const TCHAR *secret);
+   void setProxy(AgentTunnel *tunnel, const TCHAR *secret);
 
    void setTcpProxySession(ClientSession *session);
 };
@@ -1267,7 +1285,7 @@ public:
  */
 struct AgentPolicyDeploymentData
 {
-   AgentConnectionEx *conn;
+   shared_ptr<AgentConnectionEx> conn;
    shared_ptr<NetObj> object;
    bool forceInstall;
    uint32_t currVersion;
@@ -1275,20 +1293,13 @@ struct AgentPolicyDeploymentData
    bool newTypeFormat;
    TCHAR debugId[256];
 
-   AgentPolicyDeploymentData(AgentConnectionEx *_conn, const shared_ptr<NetObj>& _object, bool _newTypeFormat) : object(_object)
+   AgentPolicyDeploymentData(const shared_ptr<AgentConnectionEx>& _conn, const shared_ptr<NetObj>& _object, bool _newTypeFormat) : conn(_conn), object(_object)
    {
-      conn = _conn;
       forceInstall = false;
       currVersion = 0;
       memset(currHash, 0, MD5_DIGEST_SIZE);
       newTypeFormat = _newTypeFormat;
       debugId[0] = 0;
-   }
-
-   ~AgentPolicyDeploymentData()
-   {
-      if (conn != nullptr)
-         conn->decRefCount();
    }
 };
 
@@ -1297,24 +1308,18 @@ struct AgentPolicyDeploymentData
  */
 struct AgentPolicyRemovalData
 {
-   AgentConnectionEx *conn;
+   shared_ptr<AgentConnectionEx> conn;
    uuid guid;
    TCHAR policyType[MAX_POLICY_TYPE_LEN];
    bool newTypeFormat;
    TCHAR debugId[256];
 
-   AgentPolicyRemovalData(AgentConnectionEx *_conn, const uuid& _guid, const TCHAR *_type, bool _newTypeFormat) : guid(_guid)
+   AgentPolicyRemovalData(const shared_ptr<AgentConnectionEx>& _conn, const uuid& _guid, const TCHAR *_type, bool _newTypeFormat) : conn(_conn), guid(_guid)
    {
       conn = _conn;
       _tcslcpy(policyType, _type, MAX_POLICY_TYPE_LEN);
       newTypeFormat = _newTypeFormat;
       debugId[0] = 0;
-   }
-
-   ~AgentPolicyRemovalData()
-   {
-      if (conn != nullptr)
-         conn->decRefCount();
    }
 };
 
@@ -2486,7 +2491,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   AgentConnectionEx *getAgentConnection();
+   shared_ptr<AgentConnectionEx> getAgentConnection();
 
    void checkDlmsConverterAccessibility();
    void prepareDlmsDciParameters(StringBuffer &parameter);
@@ -2581,15 +2586,15 @@ enum class IcmpStatFunction
 /**
  * Container for proxy agent connections
  */
-class ProxyAgentConnection : public ObjectLock<AgentConnectionEx>
+class ProxyAgentConnection : public ObjectLock<shared_ptr<AgentConnectionEx>>
 {
 private:
    time_t m_lastConnect;
 
 public:
-   ProxyAgentConnection() : ObjectLock<AgentConnectionEx>() { m_lastConnect = 0; }
-   ProxyAgentConnection(AgentConnectionEx *object) : ObjectLock<AgentConnectionEx>(object) { m_lastConnect = 0; }
-   ProxyAgentConnection(const ProxyAgentConnection &src) : ObjectLock<AgentConnectionEx>(src) { m_lastConnect = src.m_lastConnect; }
+   ProxyAgentConnection() : ObjectLock<shared_ptr<AgentConnectionEx>>() { m_lastConnect = 0; }
+   ProxyAgentConnection(const shared_ptr<AgentConnectionEx>& object) : ObjectLock<shared_ptr<AgentConnectionEx>>(object) { m_lastConnect = 0; }
+   ProxyAgentConnection(const ProxyAgentConnection &src) : ObjectLock<shared_ptr<AgentConnectionEx>>(src) { m_lastConnect = src.m_lastConnect; }
 
    void setLastConnectTime(time_t t) { m_lastConnect = t; }
    time_t getLastConnectTime() const { return m_lastConnect; }
@@ -2618,10 +2623,7 @@ private:
 	void deleteAgentConnection()
 	{
 	   if (m_agentConnection != nullptr)
-	   {
-	      m_agentConnection->decRefCount();
-	      m_agentConnection = nullptr;
-	   }
+	      m_agentConnection.reset();
 	}
 
 	void onSnmpProxyChange(UINT32 oldProxy);
@@ -2692,7 +2694,7 @@ protected:
    MUTEX m_hSmclpAccessMutex;
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
-   AgentConnectionEx *m_agentConnection;
+   shared_ptr<AgentConnectionEx> m_agentConnection;
    ProxyAgentConnection *m_proxyConnections;
    VolatileCounter m_pendingDataConfigurationSync;
    SMCLP_Connection *m_smclpConnection;
@@ -2723,7 +2725,7 @@ protected:
 	ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
    ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
 	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
-	AgentConnection *m_fileUpdateConn;
+	shared_ptr<AgentConnection> m_fileUpdateConnection;
 	INT16 m_rackHeight;
 	INT16 m_rackPosition;
 	UINT32 m_physicalContainer;
@@ -2790,7 +2792,7 @@ protected:
    void checkInterfaceNames(InterfaceList *pIfList);
    shared_ptr<Interface> createInterfaceObject(InterfaceInfo *info, bool manuallyCreated, bool fakeInterface, bool syntheticMask);
    shared_ptr<Subnet> createSubnet(InetAddress& baseAddr, bool syntheticMask);
-   void checkAgentPolicyBinding(AgentConnection *conn);
+   void checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn);
    void updatePrimaryIpAddr();
    bool confPollAgent(uint32_t requestId);
    bool confPollSnmp(uint32_t requestId);
@@ -2921,7 +2923,7 @@ public:
    uint32_t getPhysicalContainerId() const { return m_physicalContainer; }
    INT16 getRackHeight() const { return m_rackHeight; }
    INT16 getRackPosition() const { return m_rackPosition; }
-   bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConn != nullptr); unlockProperties(); return result; }
+   bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConnection != nullptr); unlockProperties(); return result; }
    uint32_t getIcmpProxy() const { return m_icmpProxy; }
    const TCHAR *getSshLogin() const { return m_sshLogin; }
    const TCHAR *getSshPassword() const { return m_sshPassword; }
@@ -2952,7 +2954,7 @@ public:
    void changeIPAddress(const InetAddress& ipAddr);
    void changeZone(UINT32 newZone);
    void setTunnelId(const uuid& tunnelId, const TCHAR *certSubject);
-   void setFileUpdateConnection(AgentConnection *conn);
+   void setFileUpdateConnection(const shared_ptr<AgentConnection>& connection);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void forceSyncDataCollectionConfig();
    void relatedNodeDataCollectionChanged() { onDataCollectionChange(); }
@@ -3038,9 +3040,9 @@ public:
    ObjectArray<AgentTableDefinition> *openTableList();
    void closeTableList() { unlockProperties(); }
 
-   AgentConnectionEx *createAgentConnection(bool sendServerId = false);
-   AgentConnectionEx *getAgentConnection(bool forcePrimary = false);
-   AgentConnectionEx *acquireProxyConnection(ProxyType type, bool validate = false);
+   shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
+   shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
+   shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
 	SNMP_Transport *createSnmpTransport(UINT16 port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const TCHAR *context = nullptr);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
 
@@ -3563,7 +3565,7 @@ public:
 	IntegerArray<UINT32> *getAllProxyNodes() const;
 	void fillAgentConfigurationMessage(NXCPMessage *msg) const;
 
-   AgentConnectionEx *acquireConnectionToProxy(bool validate = false);
+   shared_ptr<AgentConnectionEx> acquireConnectionToProxy(bool validate = false);
 
    void addProxy(const Node& node);
    void updateProxyStatus(const shared_ptr<Node>& node, bool activeMode);

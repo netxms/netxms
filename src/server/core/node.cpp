@@ -105,7 +105,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
    m_mutexTopoAccess = MutexCreate();
-   m_agentConnection = nullptr;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
    m_smclpConnection = nullptr;
@@ -160,7 +159,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_hardwareComponents = nullptr;
    m_winPerfObjects = nullptr;
    memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
-   m_fileUpdateConn = nullptr;
    m_physicalContainer = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
@@ -221,7 +219,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
    m_mutexTopoAccess = MutexCreate();
-   m_agentConnection = nullptr;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
    m_smclpConnection = nullptr;
@@ -277,7 +274,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_hardwareComponents = nullptr;
    m_winPerfObjects = nullptr;
    memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
-   m_fileUpdateConn = nullptr;
    m_physicalContainer = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
@@ -311,11 +307,6 @@ Node::~Node()
    MutexDestroy(m_hSmclpAccessMutex);
    MutexDestroy(m_mutexRTAccess);
    MutexDestroy(m_mutexTopoAccess);
-   if (m_agentConnection != nullptr)
-      m_agentConnection->decRefCount();
-   for(int i = 0; i < MAX_PROXY_TYPE; i++)
-      if(m_proxyConnections[i].get() != nullptr)
-         m_proxyConnections[i].get()->decRefCount();
    delete[] m_proxyConnections;
    delete m_smclpConnection;
    delete m_agentParameters;
@@ -1168,11 +1159,10 @@ ArpCache *Node::getArpCache(bool forceRead)
    }
    else if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      AgentConnectionEx *conn = getAgentConnection();
+      shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
          arpCache = conn->getArpCache();
-         conn->decRefCount();
       }
    }
    else if ((m_capabilities & NC_IS_SNMP) && (m_driver != nullptr))
@@ -1209,11 +1199,10 @@ InterfaceList *Node::getInterfaceList()
 
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
-      AgentConnectionEx *conn = getAgentConnection();
+      shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
          pIfList = conn->getInterfaceList();
-         conn->decRefCount();
       }
    }
    if ((pIfList == nullptr) && (m_capabilities & NC_IS_LOCAL_MGMT))
@@ -2015,16 +2004,12 @@ restart_agent_check:
          {
             if (pTransport->isProxyTransport() && (dwResult == SNMP_ERR_COMM))
             {
-               AgentConnectionEx *pconn = acquireProxyConnection(SNMP_PROXY, true);
-               if (pconn != nullptr)
+               shared_ptr<AgentConnectionEx> pconn = acquireProxyConnection(SNMP_PROXY, true);
+               if ((pconn != nullptr) && (retryCount > 0))
                {
-                  pconn->decRefCount();
-                  if (retryCount > 0)
-                  {
-                     retryCount--;
-                     delete pTransport;
-                     goto restart_agent_check;
-                  }
+                  retryCount--;
+                  delete pTransport;
+                  goto restart_agent_check;
                }
             }
 
@@ -2135,15 +2120,12 @@ restart_agent_check:
 
       // If file update connection is active, send NOP command to prevent disconnection by idle timeout
       lockProperties();
-      AgentConnection *fileUpdateConnection = m_fileUpdateConn;
-      if (fileUpdateConnection != nullptr)
-         fileUpdateConnection->incRefCount();
+      shared_ptr<AgentConnection> fileUpdateConnection = m_fileUpdateConnection;
       unlockProperties();
       if (fileUpdateConnection != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): sending keepalive command on file monitoring connection"), m_name);
          fileUpdateConnection->nop();
-         fileUpdateConnection->decRefCount();
       }
    }
 
@@ -2921,7 +2903,7 @@ bool Node::checkNetworkPath(UINT32 requestId)
  * Check agent policy binding
  * Intended to be called only from configuration poller
  */
-void Node::checkAgentPolicyBinding(AgentConnection *conn)
+void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
 {
    AgentPolicyInfo *ap;
    UINT32 rcc = conn->getPolicyInventory(&ap);
@@ -2947,7 +2929,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 
          if (!found)
          {
-            auto data = make_shared<AgentPolicyRemovalData>(getAgentConnection(), guid, ap->getType(i), isNewPolicyTypeFormatSupported());
+            auto data = make_shared<AgentPolicyRemovalData>(conn, guid, ap->getType(i), isNewPolicyTypeFormatSupported());
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), getName(), getId(), _T("unknown"), guid.toString().cstr());
             ThreadPoolExecute(g_agentConnectionThreadPool, RemoveAgentPolicy, data);
          }
@@ -3782,7 +3764,7 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::detectNodeType(%s [%d]): NetXMS agent node"), m_name, m_id);
 
-      AgentConnection *conn = getAgentConnection();
+      shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
          TCHAR buffer[MAX_RESULT_LENGTH];
@@ -3806,7 +3788,6 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
                type = NODE_TYPE_PHYSICAL;
             }
          }
-         conn->decRefCount();
       }
    }
    return type;
@@ -3825,10 +3806,10 @@ bool Node::confPollAgent(UINT32 rqId)
 
    sendPollerMsg(rqId, _T("   Checking NetXMS agent...\r\n"));
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
-   AgentConnectionEx *pAgentConn;
+   shared_ptr<AgentConnectionEx> pAgentConn;
    if (tunnel != nullptr)
    {
-      pAgentConn = new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
+      pAgentConn = AgentConnectionEx::create(m_id, tunnel, m_szSharedSecret, isAgentCompressionAllowed());
       tunnel->decRefCount();
    }
    else
@@ -3839,8 +3820,8 @@ bool Node::confPollAgent(UINT32 rqId)
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
          return false;
       }
-      pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
-      setAgentProxy(pAgentConn);
+      pAgentConn = AgentConnectionEx::create(m_id, m_ipAddress, m_agentPort, m_szSharedSecret, isAgentCompressionAllowed());
+      setAgentProxy(pAgentConn.get());
    }
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
@@ -3875,7 +3856,7 @@ bool Node::confPollAgent(UINT32 rqId)
 
          for(int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
          {
-            pAgentConn->setAuthData(AUTH_SHA1_HASH, secrets.get(i));
+            pAgentConn->setSharedSecret(secrets.get(i));
             if (pAgentConn->connect(g_pServerKey, &rcc))
             {
                m_agentAuthMethod = AUTH_SHA1_HASH;
@@ -4019,7 +4000,7 @@ bool Node::confPollAgent(UINT32 rqId)
       if (!_tcsncmp(m_platformName, _T("windows-"), 8))
       {
          sendPollerMsg(rqId, _T("   Reading list of available Windows Performance Counters...\r\n"));
-         ObjectArray<WinPerfObject> *perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, pAgentConn);
+         ObjectArray<WinPerfObject> *perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, pAgentConn.get());
          lockProperties();
          delete m_winPerfObjects;
          m_winPerfObjects = perfObjects;
@@ -4075,15 +4056,12 @@ bool Node::confPollAgent(UINT32 rqId)
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot set server ID (%s)"), m_name, AgentErrorCodeToText(rcc));
       }
-
-      pAgentConn->disconnect();
    }
    else
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (%s)"), m_name, AgentErrorCodeToText(rcc));
       sendPollerMsg(rqId, POLLER_ERROR _T("   Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(rcc));
    }
-   pAgentConn->decRefCount();
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
    return hasChanges;
 }
@@ -5251,8 +5229,8 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    if (m_agentConnection == nullptr)
    {
       m_agentConnection = (tunnel != nullptr) ?
-               new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed()) :
-               new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
+               AgentConnectionEx::create(m_id, tunnel, m_szSharedSecret, isAgentCompressionAllowed()) :
+               AgentConnectionEx::create(m_id, m_ipAddress, m_agentPort, m_szSharedSecret, isAgentCompressionAllowed());
       nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
    }
    else
@@ -5277,9 +5255,9 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    if (newConnection != nullptr)
       *newConnection = true;
    m_agentConnection->setPort(m_agentPort);
-   m_agentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
+   m_agentConnection->setSharedSecret(m_szSharedSecret);
    if (tunnel == nullptr)
-      setAgentProxy(m_agentConnection);
+      setAgentProxy(m_agentConnection.get());
    m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
    DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
    bool success = m_agentConnection->connect(g_pServerKey, error, socketError, g_serverId);
@@ -5288,7 +5266,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       UINT32 rcc = m_agentConnection->setServerId(g_serverId);
       if (rcc == ERR_SUCCESS)
       {
-         syncDataCollectionWithAgent(m_agentConnection);
+         syncDataCollectionWithAgent(m_agentConnection.get());
       }
       else
       {
@@ -5299,7 +5277,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          }
       }
       m_agentConnection->enableTraps();
-      setFileUpdateConnection(nullptr);
+      setFileUpdateConnection(shared_ptr<AgentConnection>());
       setLastAgentCommTime();
       CALL_ALL_MODULES(pfOnConnectToAgent, (self(), m_agentConnection));
    }
@@ -5623,7 +5601,7 @@ DataCollectionError Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSiz
    DataCollectionError rc = DCE_COMM_ERROR;
    int retry = 3;
 
-   AgentConnectionEx *conn = getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
       goto end_loop;
 
@@ -5648,7 +5626,6 @@ DataCollectionError Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSiz
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
          case ERR_REQUEST_TIMEOUT:
-            conn->decRefCount();
             conn = getAgentConnection();
             if (conn == nullptr)
                goto end_loop;
@@ -5661,8 +5638,6 @@ DataCollectionError Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSiz
    }
 
 end_loop:
-   if (conn != nullptr)
-      conn->decRefCount();
    nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, rc);
    return rc;
 }
@@ -5754,7 +5729,7 @@ DataCollectionError Node::getTableFromAgent(const TCHAR *name, Table **table)
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
 
-   AgentConnectionEx *conn = getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
       goto end_loop;
 
@@ -5779,7 +5754,6 @@ DataCollectionError Node::getTableFromAgent(const TCHAR *name, Table **table)
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
          case ERR_REQUEST_TIMEOUT:
-            conn->decRefCount();
             conn = getAgentConnection();
             if (conn == nullptr)
                goto end_loop;
@@ -5792,8 +5766,6 @@ DataCollectionError Node::getTableFromAgent(const TCHAR *name, Table **table)
    }
 
 end_loop:
-   if (conn != nullptr)
-      conn->decRefCount();
    DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, result);
    return result;
 }
@@ -5815,7 +5787,7 @@ DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
 
-   AgentConnectionEx *conn = getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
       goto end_loop;
 
@@ -5840,7 +5812,6 @@ DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
          case ERR_REQUEST_TIMEOUT:
-            conn->decRefCount();
             conn = getAgentConnection();
             if (conn == nullptr)
                goto end_loop;
@@ -5853,8 +5824,6 @@ DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
    }
 
 end_loop:
-   if (conn != nullptr)
-      conn->decRefCount();
    DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, rc);
    return rc;
 }
@@ -7162,11 +7131,10 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, i
        (!(m_state & NSF_AGENT_UNREACHABLE)) &&
        (!(m_state & DCSF_UNREACHABLE)))
    {
-      AgentConnection *conn = createAgentConnection();
+      shared_ptr<AgentConnectionEx> conn = createAgentConnection();
       if (conn != nullptr)
       {
          dwError = conn->checkNetworkService(pdwStatus, ipAddr, iServiceType, wPort, wProto, pszRequest, pszResponse, responseTime);
-         conn->decRefCount();
       }
    }
    return dwError;
@@ -7216,7 +7184,7 @@ void Node::checkOSPFSupport(SNMP_Transport *pTransport)
 /**
  * Create ready to use agent connection
  */
-AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
+shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
 {
    if ((!(m_capabilities & NC_IS_NATIVE_AGENT)) ||
        (m_flags & NF_DISABLE_NXCP) ||
@@ -7224,14 +7192,14 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
        (m_state & DCSF_UNREACHABLE) ||
        (m_status == STATUS_UNMANAGED) ||
        m_isDeleteInitiated)
-      return nullptr;
+      return shared_ptr<AgentConnectionEx>();
 
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
-   AgentConnectionEx *conn;
+   shared_ptr<AgentConnectionEx> conn;
    if (tunnel != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): using agent tunnel"), m_name, (int)m_id);
-      conn = new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
+      conn = AgentConnectionEx::create(m_id, tunnel, m_szSharedSecret, isAgentCompressionAllowed());
       tunnel->decRefCount();
    }
    else
@@ -7242,24 +7210,22 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
                   (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
          return nullptr;
       }
-      conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
-      if (!setAgentProxy(conn))
+      conn = AgentConnectionEx::create(m_id, m_ipAddress, m_agentPort, m_szSharedSecret, isAgentCompressionAllowed());
+      if (!setAgentProxy(conn.get()))
       {
-         conn->decRefCount();
-         return nullptr;
+         return shared_ptr<AgentConnectionEx>();
       }
    }
    conn->setCommandTimeout(g_agentCommandTimeout);
    if (!conn->connect(g_pServerKey, nullptr, nullptr, sendServerId ? g_serverId : 0))
    {
-      conn->decRefCount();
-      conn = nullptr;
+      conn.reset();
    }
    else
    {
       setLastAgentCommTime();
    }
-   nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
+   nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn.get());
    return conn;
 }
 
@@ -7268,12 +7234,12 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
  * when connection is no longer needed. File transfers and other long running oprations should
  * be avoided.
  */
-AgentConnectionEx *Node::getAgentConnection(bool forcePrimary)
+shared_ptr<AgentConnectionEx> Node::getAgentConnection(bool forcePrimary)
 {
    if (m_status == STATUS_UNMANAGED)
-      return nullptr;
+      return shared_ptr<AgentConnectionEx>();
 
-   AgentConnectionEx *conn = nullptr;
+   shared_ptr<AgentConnectionEx> conn;
 
    bool success;
    int retryCount = 5;
@@ -7285,7 +7251,6 @@ AgentConnectionEx *Node::getAgentConnection(bool forcePrimary)
          if (connectToAgent())
          {
             conn = m_agentConnection;
-            conn->incRefCount();
          }
          MutexUnlock(m_hAgentAccessMutex);
          break;
@@ -7306,16 +7271,15 @@ AgentConnectionEx *Node::getAgentConnection(bool forcePrimary)
 /**
  * Acquire SNMP proxy agent connection
  */
-AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
+shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool validate)
 {
    m_proxyConnections[type].lock();
 
-   AgentConnectionEx *conn = m_proxyConnections[type].get();
+   shared_ptr<AgentConnectionEx> conn = m_proxyConnections[type].get();
    if ((conn != nullptr) && !conn->isConnected())
    {
-      conn->decRefCount();
-      conn = nullptr;
-      m_proxyConnections[type].set(nullptr);
+      conn.reset();
+      m_proxyConnections[type].set(shared_ptr<AgentConnectionEx>());
       nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection dropped"), m_name, (int)m_id, (int)type);
    }
 
@@ -7324,9 +7288,8 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
       UINT32 rcc = conn->nop();
       if (rcc != ERR_SUCCESS)
       {
-         conn->decRefCount();
-         conn = nullptr;
-         m_proxyConnections[type].set(nullptr);
+         conn.reset();
+         m_proxyConnections[type].set(shared_ptr<AgentConnectionEx>());
          nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, (int)type, rcc);
       }
    }
@@ -7344,15 +7307,11 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
          else
          {
             nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::acquireProxyConnection(%s [%d] type=%d): server does not have master access to agent"), m_name, (int)m_id, (int)type);
-            conn->decRefCount();
-            conn = nullptr;
+            conn.reset();
          }
       }
       m_proxyConnections[type].setLastConnectTime(time(nullptr));
    }
-
-   if (conn != nullptr)
-      conn->incRefCount();
 
    m_proxyConnections[type].unlock();
    return conn;
@@ -7491,15 +7450,11 @@ void Node::changeZone(UINT32 newZoneUIN)
 /**
  * Set connection for file update messages
  */
-void Node::setFileUpdateConnection(AgentConnection *conn)
+void Node::setFileUpdateConnection(const shared_ptr<AgentConnection>& connection)
 {
+   nxlog_debug(6, _T("Changing file tracking connection for node %s [%d]"), m_name, m_id);
    lockProperties();
-   nxlog_debug(6, _T("Changing file tracking connection for node %s [%d]: %p -> %p"), m_name, m_id, m_fileUpdateConn, conn);
-   if (m_fileUpdateConn != nullptr)
-      m_fileUpdateConn->decRefCount();
-   m_fileUpdateConn = conn;
-   if (m_fileUpdateConn != nullptr)
-      m_fileUpdateConn->incRefCount();
+   m_fileUpdateConnection = connection;
    unlockProperties();
 }
 
@@ -7532,11 +7487,10 @@ ROUTING_TABLE *Node::getRoutingTable()
 
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
-      AgentConnectionEx *conn = getAgentConnection();
+      shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
          pRT = conn->getRoutingTable();
-         conn->decRefCount();
       }
    }
    if ((pRT == nullptr) && (m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
@@ -7795,12 +7749,12 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
    AgentTunnel *tunnel = GetTunnelForNode(proxyNode);
    if (tunnel != nullptr)
    {
-      conn->setProxy(tunnel, node->m_agentAuthMethod, node->m_szSharedSecret);
+      conn->setProxy(tunnel, node->m_szSharedSecret);
       tunnel->decRefCount();
    }
    else
    {
-      conn->setProxy(node->m_ipAddress, node->m_agentPort, node->m_agentAuthMethod, node->m_szSharedSecret);
+      conn->setProxy(node->m_ipAddress, node->m_agentPort, node->m_szSharedSecret);
    }
    return true;
 }
@@ -7981,7 +7935,7 @@ SNMP_Transport *Node::createSnmpTransport(UINT16 port, SNMP_Version version, con
       shared_ptr<Node> proxyNode = (snmpProxy == m_id) ? self() : static_pointer_cast<Node>(g_idxNodeById.get(snmpProxy));
       if (proxyNode != nullptr)
       {
-         AgentConnection *conn = proxyNode->acquireProxyConnection(SNMP_PROXY);
+         shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(SNMP_PROXY);
          if (conn != nullptr)
          {
             // Use loopback address if node is SNMP proxy for itself
@@ -8055,11 +8009,10 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
    if (m_zoneUIN != 0)
    {
       shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-      AgentConnectionEx *conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : nullptr;
+      shared_ptr<AgentConnectionEx> conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : nullptr;
       if (conn != nullptr)
       {
          nameResolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);
-         conn->decRefCount();
       }
    }
    else
@@ -9544,7 +9497,7 @@ void Node::onDataCollectionChangeAsyncCallback()
       if (connectToAgent(nullptr, nullptr, &newConnection))
       {
          if (!newConnection)
-            syncDataCollectionWithAgent(m_agentConnection);
+            syncDataCollectionWithAgent(m_agentConnection.get());
       }
       agentUnlock();
    }
@@ -10079,7 +10032,7 @@ void Node::icmpPoll(PollerInfo *poller)
    unlockChildList();
 
    shared_ptr<Node> proxyNode;
-   AgentConnection *conn = nullptr;
+   shared_ptr<AgentConnection> conn;
    UINT32 icmpProxy = getEffectiveIcmpProxy();
    if (icmpProxy != 0)
    {
@@ -10103,13 +10056,10 @@ void Node::icmpPoll(PollerInfo *poller)
    for(int i = 0; i < targets.size(); i++)
    {
       const IcmpPollTarget *t = targets.get(i);
-      icmpPollAddress(conn, t->name, t->address);
+      icmpPollAddress(conn.get(), t->name, t->address);
    }
 
 end_poll:
-   if (conn != nullptr)
-      conn->decRefCount();
-
    m_icmpPollState.complete(GetCurrentTimeMs() - startTime);
 }
 

@@ -32,8 +32,8 @@ void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneUIN, UINT32 n
 /**
  * Create normal agent connection
  */
-AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, WORD port, int authMethod, const TCHAR *secret, bool allowCompression) :
-         AgentConnection(ipAddr, port, authMethod, secret, allowCompression)
+AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port, const TCHAR *secret, bool allowCompression) :
+         AgentConnection(ipAddr, port, secret, allowCompression)
 {
    m_nodeId = nodeId;
    m_tunnel = nullptr;
@@ -44,8 +44,8 @@ AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, W
 /**
  * Create agent connection within tunnel
  */
-AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int authMethod, const TCHAR *secret, bool allowCompression) :
-         AgentConnection(InetAddress::INVALID, 0, authMethod, secret, allowCompression)
+AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, AgentTunnel *tunnel, const TCHAR *secret, bool allowCompression) :
+         AgentConnection(InetAddress::INVALID, 0, secret, allowCompression)
 {
    m_nodeId = nodeId;
    m_tunnel = tunnel;
@@ -92,14 +92,14 @@ void AgentConnectionEx::setTunnel(AgentTunnel *tunnel)
 /**
  * Set proxy tunnel to use
  */
-void AgentConnectionEx::setProxy(AgentTunnel *tunnel, int authMethod, const TCHAR *secret)
+void AgentConnectionEx::setProxy(AgentTunnel *tunnel, const TCHAR *secret)
 {
    if (m_proxyTunnel != nullptr)
       m_proxyTunnel->decRefCount();
    m_proxyTunnel = tunnel;
    if (m_proxyTunnel != nullptr)
       m_proxyTunnel->incRefCount();
-   setProxy(InetAddress::INVALID, 0, authMethod, secret);
+   setProxy(InetAddress::INVALID, 0, secret);
 }
 
 /**
@@ -311,7 +311,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
 {
    nxlog_debug(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled"));
-   AgentConnection *conn = object->createAgentConnection();
+   shared_ptr<AgentConnection> conn = object->createAgentConnection();
    if (conn != nullptr)
    {
       NXCPMessage request(conn->getProtocolVersion());
@@ -321,7 +321,6 @@ static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
       request.setField(VID_OBJECT_ID, object->getId());
       NXCPMessage* response = conn->customRequest(&request);
       delete response;
-      conn->decRefCount();
    }
 }
 
@@ -394,9 +393,8 @@ bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
 /**
  * Create SNMP proxy transport for sending trap response
  */
-static SNMP_ProxyTransport *CreateSNMPProxyTransport(AgentConnectionEx *conn, Node *originNode, const InetAddress& originAddr, UINT16 port)
+static SNMP_ProxyTransport *CreateSNMPProxyTransport(const shared_ptr<AgentConnectionEx>& conn, Node *originNode, const InetAddress& originAddr, UINT16 port)
 {
-   conn->incRefCount();
    SNMP_ProxyTransport *snmpTransport = new SNMP_ProxyTransport(conn, originAddr, port);
    if (originNode != nullptr)
    {
@@ -458,7 +456,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
                {
                   bool isInformRequest = (pdu->getCommand() == SNMP_INFORM_REQUEST);
-                  SNMP_ProxyTransport *snmpTransport = isInformRequest ? CreateSNMPProxyTransport(this, originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT)) : nullptr;
+                  SNMP_ProxyTransport *snmpTransport = isInformRequest ? CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT)) : nullptr;
                   if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
                   {
                      SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
@@ -474,7 +472,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                   // Engine ID discovery
                   nxlog_debug(6, _T("SNMPTrapReceiver: EngineId discovery"));
 
-                  SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(this, originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT));
+                  SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT));
 
                   SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
                   response->setReportable(false);
@@ -525,9 +523,9 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
 /**
  * Deploy policy to agent
  */
-UINT32 AgentConnectionEx::deployPolicy(NXCPMessage *msg)
+uint32_t AgentConnectionEx::deployPolicy(NXCPMessage *msg)
 {
-	UINT32 rqId, rcc;
+   uint32_t rqId, rcc;
 
    rqId = generateRequestId();
    msg->setId(rqId);
@@ -546,9 +544,9 @@ UINT32 AgentConnectionEx::deployPolicy(NXCPMessage *msg)
 /**
  * Uninstall policy from agent
  */
-UINT32 AgentConnectionEx::uninstallPolicy(uuid guid, TCHAR *type, bool newTypeFormatSupported)
+uint32_t AgentConnectionEx::uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported)
 {
-	UINT32 rqId, rcc;
+   uint32_t rqId, rcc;
 	NXCPMessage msg(getProtocolVersion());
 
    rqId = generateRequestId();

@@ -39,7 +39,7 @@
 /**
  * Agent connection thread pool
  */
-LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool) = NULL;
+LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool) = nullptr;
 
 /**
  * Unique connection ID
@@ -66,107 +66,54 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy)
 }
 
 /**
- * Receiver thread starter
+ * Agent connection receiver
  */
-THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
+class AgentConnectionReceiver
 {
-   ThreadSetName("AgentReceiver");
-   ((AgentConnection *)pArg)->receiverThread();
-   ((AgentConnection *)pArg)->decInternalRefCount();
-   return THREAD_OK;
-}
+private:
+   weak_ptr<AgentConnection> m_connection;
+   uint32_t m_debugId;
+   uint32_t m_recvTimeout;
+   AbstractCommChannel *m_channel;
+   VolatileCounter m_running;
 
-/**
- * Constructor for AgentConnection
- */
-AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMethod, const TCHAR *secret, bool allowCompression)
-{
-   m_internalRefCount = 1;
-   m_userRefCount = 1;
-   m_debugId = InterlockedIncrement(&s_connectionId);
-   m_addr = addr;
-   m_wPort = port;
-   m_iAuthMethod = authMethod;
-   if (secret != NULL)
+   void debugPrintf(int level, const TCHAR *format, ...);
+
+public:
+   NXCPEncryptionContext *m_encryptionContext;
+
+   AgentConnectionReceiver(const shared_ptr<AgentConnection>& connection) : m_connection(connection)
    {
-#ifdef UNICODE
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
-		m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
-#else
-      strlcpy(m_szSecret, secret, MAX_SECRET_LENGTH);
-#endif
-   }
-   else
-   {
-      m_szSecret[0] = 0;
-   }
-   m_allowCompression = allowCompression;
-   m_channel = NULL;
-   m_tLastCommandTime = 0;
-   m_pMsgWaitQueue = new MsgWaitQueue;
-   m_requestId = 0;
-	m_connectionTimeout = 5000;	// 5 seconds
-   m_dwCommandTimeout = 5000;   // Default timeout 5 seconds
-   m_isConnected = false;
-   m_mutexDataLock = MutexCreate();
-	m_mutexSocketWrite = MutexCreate();
-   m_hReceiverThread = INVALID_THREAD_HANDLE;
-   m_pCtx = NULL;
-   m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
-   m_useProxy = false;
-   m_iProxyAuth = AUTH_NONE;
-   m_wProxyPort = 4700;
-   m_dwRecvTimeout = 420000;  // 7 minutes
-   m_nProtocolVersion = NXCP_VERSION;
-	m_hCurrFile = -1;
-   m_deleteFileOnDownloadFailure = true;
-	m_condFileDownload = ConditionCreate(TRUE);
-   m_fileDownloadSucceeded = false;
-	m_fileUploadInProgress = false;
-   m_sendToClientMessageCallback = NULL;
-   m_dwDownloadRequestId = 0;
-   m_downloadProgressCallback = NULL;
-   m_downloadProgressCallbackArg = NULL;
-   m_bulkDataProcessing = 0;
-   m_controlServer = false;
-   m_masterServer = false;
-}
-
-/**
- * Destructor
- */
-AgentConnection::~AgentConnection()
-{
-   debugPrintf(7, _T("AgentConnection destructor called (this=%p, thread=%p)"), this, (void *)m_hReceiverThread);
-
-   ThreadDetach(m_hReceiverThread);
-
-   delete m_pMsgWaitQueue;
-	if (m_pCtx != NULL)
-		m_pCtx->decRefCount();
-
-	if (m_hCurrFile != -1)
-	{
-		_close(m_hCurrFile);
-		onFileDownload(false);
-	}
-   else if (m_sendToClientMessageCallback != NULL)
-   {
-      onFileDownload(false);
+      m_debugId = connection->m_debugId;
+      m_channel = connection->m_channel;
+      m_channel->incRefCount();
+      m_encryptionContext = nullptr;
+      m_recvTimeout = connection->m_recvTimeout; // 7 minutes
+      m_running = 0;
    }
 
-	if (m_channel != NULL)
-	   m_channel->decRefCount();
+   ~AgentConnectionReceiver()
+   {
+      debugPrintf(7, _T("AgentConnectionReceiver destructor called (this=%p)"), this);
 
-   MutexDestroy(m_mutexDataLock);
-	MutexDestroy(m_mutexSocketWrite);
-	ConditionDestroy(m_condFileDownload);
-}
+      if (m_encryptionContext != nullptr)
+         m_encryptionContext->decRefCount();
+      if (m_channel != nullptr)
+         m_channel->decRefCount();
+   }
+
+   void run();
+
+   void detach()
+   {
+      m_connection.reset();
+   }
+};
 
 /**
- * Write debug output
+ * Write debug output in receiver
  */
-void AgentConnection::debugPrintf(int level, const TCHAR *format, ...)
+void AgentConnectionReceiver::debugPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -177,9 +124,10 @@ void AgentConnection::debugPrintf(int level, const TCHAR *format, ...)
 /**
  * Receiver thread
  */
-void AgentConnection::receiverThread()
+void AgentConnectionReceiver::run()
 {
-   AbstractCommChannel *channel = m_channel;
+   ThreadSetName("AgentReceiver");
+
    UINT32 msgBufferSize = 1024;
 
    // Initialize raw message receiving function
@@ -191,7 +139,7 @@ void AgentConnection::receiverThread()
 #ifdef _WITH_ENCRYPTION
    BYTE *decryptionBuffer = (BYTE *)MemAlloc(msgBufferSize);
 #else
-   BYTE *decryptionBuffer = NULL;
+   BYTE *decryptionBuffer = nullptr;
 #endif
 
    while(true)
@@ -201,25 +149,25 @@ void AgentConnection::receiverThread()
       {
          msgBufferSize = 131072;
          rawMsg = MemRealloc(rawMsg, msgBufferSize);
-         if (decryptionBuffer != NULL)
+         if (decryptionBuffer != nullptr)
             decryptionBuffer = MemRealloc(decryptionBuffer, msgBufferSize);
       }
 
       // Receive raw message
-      ssize_t rc = RecvNXCPMessageEx(channel, &rawMsg, msgBuffer, &msgBufferSize, &m_pCtx,
-            (decryptionBuffer != NULL) ? &decryptionBuffer : NULL, m_dwRecvTimeout, MAX_MSG_SIZE);
+      ssize_t rc = RecvNXCPMessageEx(m_channel, &rawMsg, msgBuffer, &msgBufferSize, &m_encryptionContext,
+            (decryptionBuffer != nullptr) ? &decryptionBuffer : nullptr, m_recvTimeout, MAX_MSG_SIZE);
       if (rc <= 0)
       {
          if ((rc != 0) && (WSAGetLastError() != WSAESHUTDOWN))
-            debugPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), rc, WSAGetLastError());
+            debugPrintf(6, _T("RecvNXCPMessage() failed: error=%d, socket_error=%d"), rc, WSAGetLastError());
          else
-            debugPrintf(6, _T("AgentConnection::ReceiverThread(): communication channel shutdown"));
+            debugPrintf(6, _T("Communication channel shutdown"));
          break;
       }
 
       if (IsShutdownInProgress())
       {
-         debugPrintf(6, _T("AgentConnection::ReceiverThread(): process shutdown"));
+         debugPrintf(6, _T("Process shutdown"));
          break;
       }
 
@@ -238,10 +186,14 @@ void AgentConnection::receiverThread()
          continue;
       }
 
+      shared_ptr<AgentConnection> connection = m_connection.lock();
+      if (connection == nullptr)
+         break;   // Parent connection was destroyed
+
       // Check for timeout
       if (rc == 3)
       {
-         if (m_fileUploadInProgress)
+         if (connection->m_fileUploadInProgress)
             continue;   // Receive timeout may occur when uploading large files via slow links
          debugPrintf(6, _T("Timed out waiting for message"));
          break;
@@ -264,48 +216,48 @@ void AgentConnection::receiverThread()
          {
             TCHAR buffer[64];
             debugPrintf(6, _T("Received raw message %s (%d) from agent at %s"),
-               NXCPMessageCodeName(rawMsg->code, buffer), rawMsg->id, (const TCHAR *)m_addr.toString());
+               NXCPMessageCodeName(rawMsg->code, buffer), rawMsg->id, (const TCHAR *)connection->m_addr.toString());
          }
 
-         if ((rawMsg->code == CMD_FILE_DATA) && (rawMsg->id == m_dwDownloadRequestId))
+         if ((rawMsg->code == CMD_FILE_DATA) && (rawMsg->id == connection->m_dwDownloadRequestId))
          {
-            if (m_sendToClientMessageCallback != NULL)
+            if (connection->m_sendToClientMessageCallback != nullptr)
             {
                rawMsg->code = ntohs(rawMsg->code);
                rawMsg->numFields = ntohl(rawMsg->numFields);
-               m_sendToClientMessageCallback(rawMsg, m_downloadProgressCallbackArg);
+               connection->m_sendToClientMessageCallback(rawMsg, connection->m_downloadProgressCallbackArg);
 
                if (ntohs(rawMsg->flags) & MF_END_OF_FILE)
                {
-                  m_sendToClientMessageCallback = NULL;
-                  onFileDownload(true);
+                  connection->m_sendToClientMessageCallback = nullptr;
+                  connection->onFileDownload(true);
                }
                else
                {
-                  if (m_downloadProgressCallback != NULL)
+                  if (connection->m_downloadProgressCallback != nullptr)
                   {
-                     m_downloadProgressCallback(rawMsg->size - (NXCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
+                     connection->m_downloadProgressCallback(rawMsg->size - (NXCP_HEADER_SIZE + 8), connection->m_downloadProgressCallbackArg);
                   }
                }
             }
             else
             {
-               if (m_hCurrFile != -1)
+               if (connection->m_hCurrFile != -1)
                {
-                  if (_write(m_hCurrFile, rawMsg->fields, rawMsg->numFields) == (int)rawMsg->numFields)
+                  if (_write(connection->m_hCurrFile, rawMsg->fields, rawMsg->numFields) == (int)rawMsg->numFields)
                   {
                      if (ntohs(rawMsg->flags) & MF_END_OF_FILE)
                      {
-                        _close(m_hCurrFile);
-                        m_hCurrFile = -1;
+                        _close(connection->m_hCurrFile);
+                        connection->m_hCurrFile = -1;
 
-                        onFileDownload(true);
+                        connection->onFileDownload(true);
                      }
                      else
                      {
-                        if (m_downloadProgressCallback != NULL)
+                        if (connection->m_downloadProgressCallback != nullptr)
                         {
-                           m_downloadProgressCallback(_tell(m_hCurrFile), m_downloadProgressCallbackArg);
+                           connection->m_downloadProgressCallback(_tell(connection->m_hCurrFile), connection->m_downloadProgressCallbackArg);
                         }
                      }
                   }
@@ -313,36 +265,36 @@ void AgentConnection::receiverThread()
                else
                {
                   // I/O error
-                  _close(m_hCurrFile);
-                  m_hCurrFile = -1;
+                  _close(connection->m_hCurrFile);
+                  connection->m_hCurrFile = -1;
 
-                  onFileDownload(false);
+                  connection->onFileDownload(false);
                }
             }
          }
-         else if ((rawMsg->code == CMD_ABORT_FILE_TRANSFER) && (rawMsg->id == m_dwDownloadRequestId))
+         else if ((rawMsg->code == CMD_ABORT_FILE_TRANSFER) && (rawMsg->id == connection->m_dwDownloadRequestId))
          {
-            if (m_sendToClientMessageCallback != NULL)
+            if (connection->m_sendToClientMessageCallback != nullptr)
             {
                rawMsg->code = ntohs(rawMsg->code);
                rawMsg->numFields = ntohl(rawMsg->numFields);
-               m_sendToClientMessageCallback(rawMsg, m_downloadProgressCallbackArg);
-               m_sendToClientMessageCallback = NULL;
+               connection->m_sendToClientMessageCallback(rawMsg, connection->m_downloadProgressCallbackArg);
+               connection->m_sendToClientMessageCallback = nullptr;
 
-               onFileDownload(false);
+               connection->onFileDownload(false);
             }
             else
             {
                //error on agent side
-               _close(m_hCurrFile);
-               m_hCurrFile = -1;
+               _close(connection->m_hCurrFile);
+               connection->m_hCurrFile = -1;
 
-               onFileDownload(false);
+               connection->onFileDownload(false);
             }
          }
          else if (rawMsg->code == CMD_TCP_PROXY_DATA)
          {
-            processTcpProxyData(rawMsg->id, rawMsg->fields, rawMsg->numFields);
+            connection->processTcpProxyData(rawMsg->id, rawMsg->fields, rawMsg->numFields);
          }
       }
       else if (ntohs(rawMsg->flags) & MF_CONTROL)
@@ -356,33 +308,32 @@ void AgentConnection::receiverThread()
          {
             TCHAR buffer[64];
             debugPrintf(6, _T("Received control message %s from agent at %s"),
-               NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)m_addr.toString());
+               NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)connection->m_addr.toString());
          }
-         m_pMsgWaitQueue->put(MemCopyBlock(rawMsg, ntohl(rawMsg->size)));
+         connection->m_pMsgWaitQueue->put(MemCopyBlock(rawMsg, ntohl(rawMsg->size)));
       }
       else
       {
          // Create message object from raw message
-         NXCPMessage *msg = NXCPMessage::deserialize(rawMsg, m_nProtocolVersion);
-         if (msg != NULL)
+         NXCPMessage *msg = NXCPMessage::deserialize(rawMsg, connection->m_nProtocolVersion);
+         if (msg != nullptr)
          {
             if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
             {
                TCHAR buffer[64];
                debugPrintf(6, _T("Received message %s (%d) from agent at %s"),
-                  NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), (const TCHAR *)m_addr.toString());
+                  NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), (const TCHAR *)connection->m_addr.toString());
             }
             switch(msg->getCode())
             {
                case CMD_REQUEST_COMPLETED:
                case CMD_SESSION_KEY:
-                  m_pMsgWaitQueue->put(msg);
+                  connection->m_pMsgWaitQueue->put(msg);
                   break;
                case CMD_TRAP:
-                  if (g_agentConnectionThreadPool != NULL)
+                  if (g_agentConnectionThreadPool != nullptr)
                   {
-                     incInternalRefCount();
-                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onTrapCallback, msg);
+                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onTrapCallback, msg);
                   }
                   else
                   {
@@ -390,10 +341,9 @@ void AgentConnection::receiverThread()
                   }
                   break;
                case CMD_SYSLOG_RECORDS:
-                  if (g_agentConnectionThreadPool != NULL)
+                  if (g_agentConnectionThreadPool != nullptr)
                   {
-                     incInternalRefCount();
-                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSyslogMessageCallback, msg);
+                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onSyslogMessageCallback, msg);
                   }
                   else
                   {
@@ -401,10 +351,9 @@ void AgentConnection::receiverThread()
                   }
                   break;
                case CMD_PUSH_DCI_DATA:
-                  if (g_agentConnectionThreadPool != NULL)
+                  if (g_agentConnectionThreadPool != nullptr)
                   {
-                     incInternalRefCount();
-                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onDataPushCallback, msg);
+                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onDataPushCallback, msg);
                   }
                   else
                   {
@@ -412,28 +361,26 @@ void AgentConnection::receiverThread()
                   }
                   break;
                case CMD_DCI_DATA:
-                  if (g_agentConnectionThreadPool != NULL)
+                  if (g_agentConnectionThreadPool != nullptr)
                   {
-                     incInternalRefCount();
-                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::processCollectedDataCallback, msg);
+                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::processCollectedDataCallback, msg);
                   }
                   else
                   {
-                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_nProtocolVersion);
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), connection->m_nProtocolVersion);
                      response.setField(VID_RCC, ERR_INTERNAL_ERROR);
-                     sendMessage(&response);
+                     connection->sendMessage(&response);
                      delete msg;
                   }
                   break;
                case CMD_FILE_MONITORING:
-                  onFileMonitoringData(msg);
+                  connection->onFileMonitoringData(msg);
                   delete msg;
                   break;
                case CMD_SNMP_TRAP:
-                  if (g_agentConnectionThreadPool != NULL)
+                  if (g_agentConnectionThreadPool != nullptr)
                   {
-                     incInternalRefCount();
-                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSnmpTrapCallback, msg);
+                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onSnmpTrapCallback, msg);
                   }
                   else
                   {
@@ -441,14 +388,14 @@ void AgentConnection::receiverThread()
                   }
                   break;
                case CMD_CLOSE_TCP_PROXY:
-                  processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), NULL, 0);
+                  connection->processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0);
                   delete msg;
                   break;
                default:
-                  if (processCustomMessage(msg))
+                  if (connection->processCustomMessage(msg))
                      delete msg;
                   else
-                     m_pMsgWaitQueue->put(msg);
+                     connection->m_pMsgWaitQueue->put(msg);
                   break;
             }
          }
@@ -461,29 +408,28 @@ void AgentConnection::receiverThread()
    debugPrintf(6, _T("Receiver loop terminated"));
 
    // Close socket and mark connection as disconnected
-   lock();
-	if (m_hCurrFile != -1)
-	{
-		_close(m_hCurrFile);
-		m_hCurrFile = -1;
-		onFileDownload(false);
-	}
-   else if (m_sendToClientMessageCallback != NULL)
-   {
-      m_sendToClientMessageCallback = NULL;
-      onFileDownload(false);
-   }
+   m_channel->close();
 
-	debugPrintf(6, _T("Closing communication channel"));
-	channel->close();
-	channel->decRefCount();
-	if (m_pCtx != NULL)
-	{
-		m_pCtx->decRefCount();
-		m_pCtx = NULL;
-	}
-   m_isConnected = false;
-   unlock();
+   shared_ptr<AgentConnection> connection = m_connection.lock();
+   if (connection != nullptr)
+   {
+      connection->lock();
+      if (connection->m_hCurrFile != -1)
+      {
+         _close(connection->m_hCurrFile);
+         connection->m_hCurrFile = -1;
+         connection->onFileDownload(false);
+      }
+      else if (connection->m_sendToClientMessageCallback != nullptr)
+      {
+         connection->m_sendToClientMessageCallback = nullptr;
+         connection->onFileDownload(false);
+      }
+
+      debugPrintf(6, _T("Closing communication channel"));
+      connection->m_isConnected = false;
+      connection->unlock();
+   }
 
    MemFree(rawMsg);
    MemFree(msgBuffer);
@@ -495,13 +441,113 @@ void AgentConnection::receiverThread()
 }
 
 /**
+ * Constructor for AgentConnection
+ */
+AgentConnection::AgentConnection(const InetAddress& addr, WORD port, const TCHAR *secret, bool allowCompression)
+{
+#ifdef _WIN32
+   m_self = new weak_ptr<AgentConnection>();
+#endif
+   m_debugId = InterlockedIncrement(&s_connectionId);
+   m_addr = addr;
+   m_port = port;
+   if ((secret != nullptr) && (*secret != 0))
+   {
+#ifdef UNICODE
+		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, nullptr, nullptr);
+		m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
+#else
+      strlcpy(m_szSecret, secret, MAX_SECRET_LENGTH);
+#endif
+      m_iAuthMethod = AUTH_SHA1_HASH;
+   }
+   else
+   {
+      m_szSecret[0] = 0;
+      m_iAuthMethod = AUTH_NONE;
+   }
+   m_allowCompression = allowCompression;
+   m_channel = nullptr;
+   m_tLastCommandTime = 0;
+   m_pMsgWaitQueue = new MsgWaitQueue;
+   m_requestId = 0;
+	m_connectionTimeout = 5000;	// 5 seconds
+   m_commandTimeout = 5000;   // Default timeout 5 seconds
+   m_recvTimeout = 420000; // 7 minutes
+   m_isConnected = false;
+   m_mutexDataLock = MutexCreate();
+	m_mutexSocketWrite = MutexCreate();
+   m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
+   m_useProxy = false;
+   m_iProxyAuth = AUTH_NONE;
+   m_proxyPort = 4700;
+   m_nProtocolVersion = NXCP_VERSION;
+	m_hCurrFile = -1;
+   m_deleteFileOnDownloadFailure = true;
+	m_condFileDownload = ConditionCreate(TRUE);
+   m_fileDownloadSucceeded = false;
+	m_fileUploadInProgress = false;
+   m_sendToClientMessageCallback = nullptr;
+   m_dwDownloadRequestId = 0;
+   m_downloadProgressCallback = nullptr;
+   m_downloadProgressCallbackArg = nullptr;
+   m_bulkDataProcessing = 0;
+   m_controlServer = false;
+   m_masterServer = false;
+}
+
+/**
+ * Destructor
+ */
+AgentConnection::~AgentConnection()
+{
+   debugPrintf(7, _T("AgentConnection destructor called (this=%p)"), this);
+
+   if (m_receiver != nullptr)
+      m_receiver->detach();
+
+   delete m_pMsgWaitQueue;
+
+	if (m_hCurrFile != -1)
+	{
+		_close(m_hCurrFile);
+		onFileDownload(false);
+	}
+   else if (m_sendToClientMessageCallback != nullptr)
+   {
+      onFileDownload(false);
+   }
+
+	if (m_channel != nullptr)
+	{
+	   m_channel->shutdown();
+	   m_channel->decRefCount();
+	}
+
+   MutexDestroy(m_mutexDataLock);
+	MutexDestroy(m_mutexSocketWrite);
+	ConditionDestroy(m_condFileDownload);
+}
+
+/**
+ * Write debug output
+ */
+void AgentConnection::debugPrintf(int level, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   nxlog_debug_tag_object2(DEBUG_TAG, m_debugId, level, format, args);
+   va_end(args);
+}
+
+/**
  * Create channel. Default implementation creates socket channel.
  */
 AbstractCommChannel *AgentConnection::createChannel()
 {
    SOCKET s = m_useProxy ?
-            ConnectToHost(m_proxyAddr, m_wProxyPort, m_connectionTimeout) :
-            ConnectToHost(m_addr, m_wPort, m_connectionTimeout);
+            ConnectToHost(m_proxyAddr, m_proxyPort, m_connectionTimeout) :
+            ConnectToHost(m_addr, m_port, m_connectionTimeout);
 
    // Connect to server
    if (s == INVALID_SOCKET)
@@ -509,8 +555,8 @@ AbstractCommChannel *AgentConnection::createChannel()
       TCHAR buffer[64];
       debugPrintf(5, _T("Cannot establish connection with agent at %s:%d"),
                m_useProxy ? m_proxyAddr.toString(buffer) : m_addr.toString(buffer),
-               (int)(m_useProxy ? m_wProxyPort : m_wPort));
-      return NULL;
+               (int)(m_useProxy ? m_proxyPort : m_port));
+      return nullptr;
    }
 
    return new SocketCommChannel(s);
@@ -523,7 +569,7 @@ AbstractCommChannel *AgentConnection::acquireChannel()
 {
    lock();
    AbstractCommChannel *channel = m_channel;
-   if (channel != NULL)
+   if (channel != nullptr)
       channel->incRefCount();
    unlock();
    return channel;
@@ -532,42 +578,56 @@ AbstractCommChannel *AgentConnection::acquireChannel()
 /**
  * Connect to agent
  */
-bool AgentConnection::connect(RSA *pServerKey, UINT32 *pdwError, UINT32 *pdwSocketError, UINT64 serverId)
+bool AgentConnection::connect(RSA *serverKey, uint32_t *error, uint32_t *socketError, uint64_t serverId)
 {
    TCHAR szBuffer[256];
    bool success = false;
    bool forceEncryption = false;
    bool secondPass = false;
-   UINT32 dwError = 0;
+   uint32_t dwError = 0;
 
-   if (pdwError != NULL)
-      *pdwError = ERR_INTERNAL_ERROR;
+   if (error != nullptr)
+      *error = ERR_INTERNAL_ERROR;
 
-   if (pdwSocketError != NULL)
-      *pdwSocketError = 0;
+   if (socketError != nullptr)
+      *socketError = 0;
+
+   lock();
 
    // Check if already connected
    if (m_isConnected)
-      return false;
-
-   // Wait for receiver thread from previous connection, if any
-   ThreadJoin(m_hReceiverThread);
-   m_hReceiverThread = INVALID_THREAD_HANDLE;
-
-   // Check if we need to close existing channel
-   if (m_channel != NULL)
    {
-      m_channel->decRefCount();
-      m_channel = NULL;
+      unlock();
+      return false;
    }
 
-   m_channel = createChannel();
-   if (m_channel == NULL)
+   // Wait for receiver thread from previous connection, if any
+   if (m_receiver != nullptr)
+   {
+      m_receiver->detach();
+      m_receiver.reset();
+   }
+
+   // Check if we need to close existing channel
+   if (m_channel != nullptr)
+   {
+      m_channel->decRefCount();
+      m_channel = nullptr;
+   }
+
+   unlock();
+
+   auto channel = createChannel();
+   if (channel == nullptr)
    {
       debugPrintf(6, _T("Cannot create communication channel"));
       dwError = ERR_CONNECT_FAILED;
       goto connect_cleanup;
    }
+
+   lock();
+   m_channel = channel;
+   unlock();
 
    if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, m_mutexSocketWrite))
    {
@@ -578,16 +638,16 @@ bool AgentConnection::connect(RSA *pServerKey, UINT32 *pdwError, UINT32 *pdwSock
    debugPrintf(6, _T("Using NXCP version %d"), m_nProtocolVersion);
 
    // Start receiver thread
-   incInternalRefCount();
-   m_channel->incRefCount();  // for receiver thread
-   m_hReceiverThread = ThreadCreateEx(receiverThreadStarter, 0, this);
-   if (m_hReceiverThread == INVALID_THREAD_HANDLE)
+   lock();
+   m_receiver = make_shared<AgentConnectionReceiver>(self());
+   if (!ThreadCreate(m_receiver, &AgentConnectionReceiver::run))
    {
+      unlock();
       debugPrintf(3, _T("Cannot start receiver thread"));
       dwError = ERR_INTERNAL_ERROR;
-      m_channel->decRefCount();
       goto connect_cleanup;
    }
+   unlock();
 
    // Setup encryption
 setup_encryption:
@@ -595,9 +655,9 @@ setup_encryption:
        (m_iEncryptionPolicy == ENCRYPTION_REQUIRED) ||
        forceEncryption)    // Agent require encryption
    {
-      if (pServerKey != NULL)
+      if (serverKey != nullptr)
       {
-         dwError = setupEncryption(pServerKey);
+         dwError = setupEncryption(serverKey);
          if ((dwError != ERR_SUCCESS) &&
              ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption))
             goto connect_cleanup;
@@ -648,10 +708,10 @@ setup_encryption:
       if (dwError != ERR_SUCCESS)
          goto connect_cleanup;
 		lock();
-		if (m_pCtx != NULL)
+		if (m_receiver->m_encryptionContext != nullptr)
 		{
-			m_pCtx->decRefCount();
-	      m_pCtx = NULL;
+		   m_receiver->m_encryptionContext->decRefCount();
+		   m_receiver->m_encryptionContext = nullptr;
 		}
 		unlock();
 
@@ -666,11 +726,11 @@ setup_encryption:
 	   msg.flags = htons(MF_CONTROL);
 	   if (m_channel->send(&msg, NXCP_HEADER_SIZE, m_mutexSocketWrite) == NXCP_HEADER_SIZE)
 	   {
-	      NXCP_MESSAGE *rsp = m_pMsgWaitQueue->waitForRawMessage(CMD_NXCP_CAPS, 0, m_dwCommandTimeout);
-	      if (rsp != NULL)
+	      NXCP_MESSAGE *rsp = m_pMsgWaitQueue->waitForRawMessage(CMD_NXCP_CAPS, 0, m_commandTimeout);
+	      if (rsp != nullptr)
 	      {
 	         m_nProtocolVersion = rsp->numFields >> 24;
-	         free(rsp);
+	         MemFree(rsp);
 	      }
 	      else
 	      {
@@ -701,35 +761,30 @@ setup_encryption:
 connect_cleanup:
    if (!success)
    {
-		if (pdwSocketError != NULL)
-			*pdwSocketError = (UINT32)WSAGetLastError();
+		if (socketError != nullptr)
+			*socketError = (UINT32)WSAGetLastError();
 
       lock();
-      if (m_channel != NULL)
-         m_channel->shutdown();
-      unlock();
-      ThreadJoin(m_hReceiverThread);
-      m_hReceiverThread = INVALID_THREAD_HANDLE;
 
-      lock();
-      if (m_channel != NULL)
+      if (m_receiver != nullptr)
       {
-         m_channel->close();
-         m_channel->decRefCount();
-         m_channel = NULL;
+         m_receiver->detach();
+         m_receiver.reset();
       }
 
-		if (m_pCtx != NULL)
-		{
-			m_pCtx->decRefCount();
-	      m_pCtx = NULL;
-		}
+      if (m_channel != nullptr)
+      {
+         m_channel->shutdown();
+         m_channel->close();
+         m_channel->decRefCount();
+         m_channel = nullptr;
+      }
 
       unlock();
    }
    m_isConnected = success;
-   if (pdwError != NULL)
-      *pdwError = dwError;
+   if (error != nullptr)
+      *error = dwError;
    return success;
 }
 
@@ -746,17 +801,17 @@ void AgentConnection::disconnect()
 		m_hCurrFile = -1;
 		onFileDownload(false);
 	}
-	else if (m_sendToClientMessageCallback != NULL)
+	else if (m_sendToClientMessageCallback != nullptr)
 	{
-      m_sendToClientMessageCallback = NULL;
+      m_sendToClientMessageCallback = nullptr;
       onFileDownload(false);
 	}
 
-   if (m_channel != NULL)
+   if (m_channel != nullptr)
    {
       m_channel->shutdown();
       m_channel->decRefCount();
-      m_channel = NULL;
+      m_channel = nullptr;
    }
    m_isConnected = false;
    unlock();
@@ -764,17 +819,25 @@ void AgentConnection::disconnect()
 }
 
 /**
- * Set authentication data
+ * Set shared secret for authentication (nullptr will disable authentication)
  */
-void AgentConnection::setAuthData(int method, const TCHAR *secret)
+void AgentConnection::setSharedSecret(const TCHAR *secret)
 {
-   m_iAuthMethod = method;
+   if ((secret != nullptr) && (*secret != 0))
+   {
 #ifdef UNICODE
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
-	m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, nullptr, nullptr);
+      m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-   strlcpy(m_szSecret, secret, MAX_SECRET_LENGTH);
+      strlcpy(m_szSecret, secret, MAX_SECRET_LENGTH);
 #endif
+      m_iAuthMethod = AUTH_SHA1_HASH;
+   }
+   else
+   {
+      m_szSecret[0] = 0;
+      m_iAuthMethod = AUTH_NONE;
+   }
 }
 
 /**
@@ -784,7 +847,7 @@ InterfaceList *AgentConnection::getInterfaceList()
 {
    StringList *data;
    if (getList(_T("Net.InterfaceList"), &data) != ERR_SUCCESS)
-      return NULL;
+      return nullptr;
 
    InterfaceList *pIfList = new InterfaceList(data->size());
 
@@ -799,16 +862,16 @@ InterfaceList *AgentConnection::getInterfaceList()
 
       // Index
       TCHAR *pChar = _tcschr(pBuf, ' ');
-      if (pChar != NULL)
+      if (pChar != nullptr)
       {
          *pChar = 0;
-         ifIndex = _tcstoul(pBuf, NULL, 10);
+         ifIndex = _tcstoul(pBuf, nullptr, 10);
          pBuf = pChar + 1;
       }
 
       bool newInterface = false;
       InterfaceInfo *iface = pIfList->findByIfIndex(ifIndex);
-      if (iface == NULL)
+      if (iface == nullptr)
       {
          iface = new InterfaceInfo(ifIndex);
          newInterface = true;
@@ -816,14 +879,14 @@ InterfaceList *AgentConnection::getInterfaceList()
 
       // Address and mask
       pChar = _tcschr(pBuf, _T(' '));
-      if (pChar != NULL)
+      if (pChar != nullptr)
       {
          TCHAR *pSlash;
          static TCHAR defaultMask[] = _T("24");
 
          *pChar = 0;
          pSlash = _tcschr(pBuf, _T('/'));
-         if (pSlash != NULL)
+         if (pSlash != nullptr)
          {
             *pSlash = 0;
             pSlash++;
@@ -835,7 +898,7 @@ InterfaceList *AgentConnection::getInterfaceList()
          InetAddress addr = InetAddress::parse(pBuf);
          if (addr.isValid())
          {
-            addr.setMaskBits(_tcstol(pSlash, NULL, 10));
+            addr.setMaskBits(_tcstol(pSlash, nullptr, 10));
             // Agent may return 0.0.0.0/0 for interfaces without IP address
             if ((addr.getFamily() != AF_INET) || (addr.getAddressV4() != 0))
                iface->ipAddrList.add(addr);
@@ -847,7 +910,7 @@ InterfaceList *AgentConnection::getInterfaceList()
       {
          // Interface type
          pChar = _tcschr(pBuf, ' ');
-         if (pChar != NULL)
+         if (pChar != nullptr)
          {
             *pChar = 0;
 
@@ -859,10 +922,10 @@ InterfaceList *AgentConnection::getInterfaceList()
             {
                pBuf = eptr + 1;
                eptr = _tcschr(pBuf, _T(')'));
-               if (eptr != NULL)
+               if (eptr != nullptr)
                {
                   *eptr = 0;
-                  iface->mtu = _tcstol(pBuf, NULL, 10);
+                  iface->mtu = _tcstol(pBuf, nullptr, 10);
                }
             }
 
@@ -871,7 +934,7 @@ InterfaceList *AgentConnection::getInterfaceList()
 
          // MAC address
          pChar = _tcschr(pBuf, ' ');
-         if (pChar != NULL)
+         if (pChar != nullptr)
          {
             *pChar = 0;
             StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
@@ -908,8 +971,8 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
    UINT32 dwRetCode;
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (response != NULL)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      if (response != nullptr)
       {
          dwRetCode = response->getFieldAsUInt32(VID_RCC);
          if (dwRetCode == ERR_SUCCESS)
@@ -963,8 +1026,8 @@ UINT32 AgentConnection::queryWebService(const TCHAR *url, UINT32 retentionTime, 
    UINT32 dwRetCode;
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (response != NULL)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      if (response != nullptr)
       {
          dwRetCode = response->getFieldAsUInt32(VID_RCC);
          if (dwRetCode == ERR_SUCCESS)
@@ -1000,7 +1063,7 @@ ArpCache *AgentConnection::getArpCache()
 {
    StringList *data;
    if (getList(_T("Net.ArpCache"), &data) != ERR_SUCCESS)
-      return NULL;
+      return nullptr;
 
    // Create empty structure
    ArpCache *arpCache = new ArpCache();
@@ -1029,7 +1092,7 @@ ArpCache *AgentConnection::getArpCache()
       for(int j = 0; j < 6; j++)
       {
          memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
-         macAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
+         macAddr[j] = (BYTE)_tcstol(szByte, nullptr, 16);
          pBuf += 2;
       }
 
@@ -1037,12 +1100,12 @@ ArpCache *AgentConnection::getArpCache()
       while(*pBuf == ' ')
          pBuf++;
       pChar = _tcschr(pBuf, _T(' '));
-      if (pChar != NULL)
+      if (pChar != nullptr)
          *pChar = 0;
       InetAddress ipAddr = InetAddress::parse(pBuf);
 
       // Interface index
-      UINT32 ifIndex = (pChar != NULL) ? _tcstoul(pChar + 1, NULL, 10) : 0;
+      UINT32 ifIndex = (pChar != nullptr) ? _tcstoul(pChar + 1, nullptr, 10) : 0;
 
       arpCache->addEntry(ipAddr, MacAddress(macAddr, 6), ifIndex);
 
@@ -1068,7 +1131,7 @@ UINT32 AgentConnection::nop()
    msg.setCode(CMD_KEEPALIVE);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_dwCommandTimeout);
+      return waitForRCC(dwRqId, m_commandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -1089,8 +1152,8 @@ UINT32 AgentConnection::setServerCapabilities()
    if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;
 
-   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-   if (response == NULL)
+   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+   if (response == nullptr)
       return ERR_REQUEST_TIMEOUT;
 
    UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
@@ -1126,7 +1189,7 @@ UINT32 AgentConnection::setServerId(UINT64 serverId)
    msg.setField(VID_SERVER_ID, serverId);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_dwCommandTimeout);
+      return waitForRCC(dwRqId, m_commandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -1134,11 +1197,11 @@ UINT32 AgentConnection::setServerId(UINT64 serverId)
 /**
  * Wait for request completion code
  */
-UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
+uint32_t AgentConnection::waitForRCC(uint32_t requestId, uint32_t timeout)
 {
-   UINT32 rcc;
-   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
-   if (response != NULL)
+   uint32_t rcc;
+   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, requestId, timeout);
+   if (response != nullptr)
    {
       rcc = response->getFieldAsUInt32(VID_RCC);
       delete response;
@@ -1156,7 +1219,7 @@ UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 {
    AbstractCommChannel *channel = acquireChannel();
-   if (channel == NULL)
+   if (channel == nullptr)
       return false;
 
    if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
@@ -1169,10 +1232,10 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    bool success;
    NXCP_MESSAGE *rawMsg = pMsg->serialize(m_allowCompression);
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
-   if (pCtx != NULL)
+   if (pCtx != nullptr)
    {
       NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(rawMsg);
-      if (pEnMsg != NULL)
+      if (pEnMsg != nullptr)
       {
          success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
@@ -1198,16 +1261,16 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
 {
    AbstractCommChannel *channel = acquireChannel();
-   if (channel == NULL)
+   if (channel == nullptr)
       return false;
 
    bool success;
    NXCP_MESSAGE *rawMsg = pMsg;
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
-   if (pCtx != NULL)
+   if (pCtx != nullptr)
    {
       NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(rawMsg);
-      if (pEnMsg != NULL)
+      if (pEnMsg != nullptr)
       {
          success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
@@ -1232,8 +1295,7 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
 void AgentConnection::postRawMessageCallback(NXCP_MESSAGE *msg)
 {
    sendRawMessage(msg);
-   free(msg);
-   decInternalRefCount();
+   MemFree(msg);
 }
 
 /**
@@ -1241,10 +1303,9 @@ void AgentConnection::postRawMessageCallback(NXCP_MESSAGE *msg)
  */
 void AgentConnection::postRawMessage(NXCP_MESSAGE *msg)
 {
-   incInternalRefCount();
    TCHAR key[64];
    _sntprintf(key, 64, _T("PostMessage_%p"), this);
-   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, this, &AgentConnection::postRawMessageCallback, msg);
+   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, self(), &AgentConnection::postRawMessageCallback, msg);
 }
 
 /**
@@ -1254,7 +1315,6 @@ void AgentConnection::onTrapCallback(NXCPMessage *msg)
 {
    onTrap(msg);
    delete msg;
-   decInternalRefCount();
 }
 
 /**
@@ -1272,7 +1332,6 @@ void AgentConnection::onSyslogMessageCallback(NXCPMessage *msg)
 {
    onSyslogMessage(msg);
    delete msg;
-   decInternalRefCount();
 }
 
 /**
@@ -1290,7 +1349,6 @@ void AgentConnection::onDataPushCallback(NXCPMessage *msg)
 {
    onDataPush(msg);
    delete msg;
-   decInternalRefCount();
 }
 
 /**
@@ -1316,7 +1374,6 @@ void AgentConnection::onSnmpTrapCallback(NXCPMessage *msg)
 {
    onSnmpTrap(msg);
    delete msg;
-   decInternalRefCount();
 }
 
 /**
@@ -1342,15 +1399,15 @@ bool AgentConnection::processCustomMessage(NXCPMessage *pMsg)
 UINT32 AgentConnection::getList(const TCHAR *param, StringList **list)
 {
    UINT32 rcc;
-   *list = NULL;
+   *list = nullptr;
    if (m_isConnected)
    {
       NXCPMessage msg(CMD_GET_LIST, generateRequestId(), m_nProtocolVersion);
       msg.setField(VID_PARAMETER, param);
       if (sendMessage(&msg))
       {
-         NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), m_dwCommandTimeout);
-         if (response != NULL)
+         NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), m_commandTimeout);
+         if (response != nullptr)
          {
             rcc = response->getFieldAsUInt32(VID_RCC);
             if (rcc == ERR_SUCCESS)
@@ -1388,7 +1445,7 @@ UINT32 AgentConnection::getTable(const TCHAR *pszParam, Table **table)
    NXCPMessage msg(m_nProtocolVersion), *pResponse;
    UINT32 dwRqId, dwRetCode;
 
-	*table = NULL;
+	*table = nullptr;
    if (m_isConnected)
    {
       dwRqId = generateRequestId();
@@ -1397,8 +1454,8 @@ UINT32 AgentConnection::getTable(const TCHAR *pszParam, Table **table)
       msg.setField(VID_PARAMETER, pszParam);
       if (sendMessage(&msg))
       {
-         pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-         if (pResponse != NULL)
+         pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+         if (pResponse != nullptr)
          {
             dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
             if (dwRetCode == ERR_SUCCESS)
@@ -1470,7 +1527,7 @@ UINT32 AgentConnection::authenticate(BOOL bProxyData)
          break;
    }
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_dwCommandTimeout);
+      return waitForRCC(dwRqId, m_commandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -1501,15 +1558,15 @@ UINT32 AgentConnection::execAction(const TCHAR *action, const StringList &list,
    {
       if (withOutput)
       {
-         UINT32 rcc = waitForRCC(dwRqId, m_dwCommandTimeout);
+         UINT32 rcc = waitForRCC(dwRqId, m_commandTimeout);
          if (rcc == ERR_SUCCESS)
          {
-            outputCallback(ACE_CONNECTED, NULL, cbData);    // Indicate successful start
+            outputCallback(ACE_CONNECTED, nullptr, cbData);    // Indicate successful start
             bool eos = false;
             while(!eos)
             {
-               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, dwRqId, m_dwCommandTimeout * 10);
-               if (response != NULL)
+               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, dwRqId, m_commandTimeout * 10);
+               if (response != nullptr)
                {
                   eos = response->isEndOfSequence();
                   if (response->isFieldExist(VID_MESSAGE))
@@ -1525,7 +1582,7 @@ UINT32 AgentConnection::execAction(const TCHAR *action, const StringList &list,
                   return ERR_REQUEST_TIMEOUT;
                }
             }
-            outputCallback(ACE_DISCONNECTED, NULL, cbData);
+            outputCallback(ACE_DISCONNECTED, nullptr, cbData);
             return ERR_SUCCESS;
          }
          else
@@ -1535,7 +1592,7 @@ UINT32 AgentConnection::execAction(const TCHAR *action, const StringList &list,
       }
       else
       {
-         return waitForRCC(dwRqId, m_dwCommandTimeout);
+         return waitForRCC(dwRqId, m_commandTimeout);
       }
    }
    else
@@ -1571,7 +1628,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    }
 
    // Use core agent if destination file name is not set and file manager subagent otherwise
-   if ((destinationFile == NULL) || (*destinationFile == 0))
+   if ((destinationFile == nullptr) || (*destinationFile == 0))
    {
       msg.setCode(CMD_TRANSFER_FILE);
       int i;
@@ -1590,7 +1647,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 
    if (sendMessage(&msg))
    {
-      dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
+      dwResult = waitForRCC(dwRqId, m_commandTimeout);
    }
    else
    {
@@ -1600,18 +1657,18 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    if (dwResult == ERR_SUCCESS)
    {
       AbstractCommChannel *channel = acquireChannel();
-      if (channel != NULL)
+      if (channel != nullptr)
       {
          debugPrintf(5, _T("Sending file \"%s\" to agent %s compression"),
                   localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
          m_fileUploadInProgress = true;
          NXCPEncryptionContext *ctx = acquireEncryptionContext();
          if (SendFileOverNXCP(channel, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
-            dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
+            dwResult = waitForRCC(dwRqId, m_commandTimeout);
          else
             dwResult = ERR_IO_FAILURE;
          m_fileUploadInProgress = false;
-         if (ctx != NULL)
+         if (ctx != nullptr)
             ctx->decRefCount();
          channel->decRefCount();
       }
@@ -1646,7 +1703,7 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 
    if (sendMessage(&msg))
    {
-      dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
+      dwResult = waitForRCC(dwRqId, m_commandTimeout);
    }
    else
    {
@@ -1688,13 +1745,13 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, const InetAddress
    {
       // Wait up to 90 seconds for results
       pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 90000);
-      if (pResponse != NULL)
+      if (pResponse != nullptr)
       {
          dwResult = pResponse->getFieldAsUInt32(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
             *pdwStatus = pResponse->getFieldAsUInt32(VID_SERVICE_STATUS);
-            if (responseTime != NULL)
+            if (responseTime != nullptr)
             {
                *responseTime = pResponse->getFieldAsUInt32(VID_RESPONSE_TIME);
             }
@@ -1722,8 +1779,8 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
    UINT32 dwRqId, dwResult;
    NXCPMessage msg(m_nProtocolVersion), *pResponse;
 
-   *paramList = NULL;
-	*tableList = NULL;
+   *paramList = nullptr;
+	*tableList = nullptr;
 
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1735,8 +1792,8 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
 
    if (sendMessage(&msg))
    {
-      pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (pResponse != NULL)
+      pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      if (pResponse != nullptr)
       {
          dwResult = pResponse->getFieldAsUInt32(VID_RCC);
 			DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): RCC=%d"), dwResult);
@@ -1792,10 +1849,10 @@ UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
    msg.setId(dwRqId);
    if (sendMessage(&msg))
    {
-      pResp = waitForMessage(CMD_SESSION_KEY, dwRqId, m_dwCommandTimeout);
-      if (pResp != NULL)
+      pResp = waitForMessage(CMD_SESSION_KEY, dwRqId, m_commandTimeout);
+      if (pResp != nullptr)
       {
-         dwResult = SetupEncryptionContext(pResp, &m_pCtx, NULL, pServerKey, m_nProtocolVersion);
+         dwResult = SetupEncryptionContext(pResp, &m_receiver->m_encryptionContext, nullptr, pServerKey, m_nProtocolVersion);
          switch(dwResult)
          {
             case RCC_SUCCESS:
@@ -1837,7 +1894,7 @@ UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
  */
 UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 {
-   *ppszConfig = NULL;
+   *ppszConfig = nullptr;
    *pdwSize = 0;
 
    if (!m_isConnected)
@@ -1852,13 +1909,13 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 
    if (sendMessage(&msg))
    {
-      NXCPMessage *pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (pResponse != NULL)
+      NXCPMessage *pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      if (pResponse != nullptr)
       {
          dwResult = pResponse->getFieldAsUInt32(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
-            size_t size = pResponse->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
+            size_t size = pResponse->getFieldAsBinary(VID_CONFIG_FILE, nullptr, 0);
             BYTE *utf8Text = (BYTE *)malloc(size + 1);
             pResponse->getFieldAsBinary(VID_CONFIG_FILE, (BYTE *)utf8Text, size);
 
@@ -1917,7 +1974,7 @@ UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
    nChars = (int)_tcslen(pszConfig);
    pBuffer = (BYTE *)malloc(nChars + 1);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       pszConfig, nChars, (char *)pBuffer, nChars + 1, NULL, NULL);
+                       pszConfig, nChars, (char *)pBuffer, nChars + 1, nullptr, nullptr);
    msg.setField(VID_CONFIG_FILE, pBuffer, nChars);
    free(pBuffer);
 #else
@@ -1926,7 +1983,7 @@ UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
 
    if (sendMessage(&msg))
    {
-      dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
+      dwResult = waitForRCC(dwRqId, m_commandTimeout);
    }
    else
    {
@@ -1943,7 +2000,7 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
 {
    StringList *data;
    if (getList(_T("Net.IP.RoutingTable"), &data) != ERR_SUCCESS)
-      return NULL;
+      return nullptr;
 
    ROUTING_TABLE *pRT = (ROUTING_TABLE *)malloc(sizeof(ROUTING_TABLE));
    pRT->iNumEntries = data->size();
@@ -1955,14 +2012,14 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
 
       // Destination address and mask
       TCHAR *pChar = _tcschr(pBuf, _T(' '));
-      if (pChar != NULL)
+      if (pChar != nullptr)
       {
          TCHAR *pSlash;
          static TCHAR defaultMask[] = _T("24");
 
          *pChar = 0;
          pSlash = _tcschr(pBuf, _T('/'));
-         if (pSlash != NULL)
+         if (pSlash != nullptr)
          {
             *pSlash = 0;
             pSlash++;
@@ -1972,14 +2029,14 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
             pSlash = defaultMask;
          }
          pRT->pRoutes[i].dwDestAddr = ntohl(_t_inet_addr(pBuf));
-         UINT32 dwBits = _tcstoul(pSlash, NULL, 10);
+         UINT32 dwBits = _tcstoul(pSlash, nullptr, 10);
          pRT->pRoutes[i].dwDestMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
          pBuf = pChar + 1;
       }
 
       // Next hop address
       pChar = _tcschr(pBuf, _T(' '));
-      if (pChar != NULL)
+      if (pChar != nullptr)
       {
          *pChar = 0;
          pRT->pRoutes[i].dwNextHop = ntohl(_t_inet_addr(pBuf));
@@ -1988,15 +2045,15 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
 
       // Interface index
       pChar = _tcschr(pBuf, ' ');
-      if (pChar != NULL)
+      if (pChar != nullptr)
       {
          *pChar = 0;
-         pRT->pRoutes[i].dwIfIndex = _tcstoul(pBuf, NULL, 10);
+         pRT->pRoutes[i].dwIfIndex = _tcstoul(pBuf, nullptr, 10);
          pBuf = pChar + 1;
       }
 
       // Route type
-      pRT->pRoutes[i].dwRouteType = _tcstoul(pBuf, NULL, 10);
+      pRT->pRoutes[i].dwRouteType = _tcstoul(pBuf, nullptr, 10);
 
       free(line);
    }
@@ -2008,23 +2065,24 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
 /**
  * Set proxy information
  */
-void AgentConnection::setProxy(InetAddress addr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
+void AgentConnection::setProxy(const InetAddress& addr, uint16_t port, const TCHAR *secret)
 {
    m_proxyAddr = addr;
-   m_wProxyPort = wPort;
-   m_iProxyAuth = iAuthMethod;
-   if (pszSecret != NULL)
+   m_proxyPort = port;
+   if ((secret != nullptr) && (*secret != 0))
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                          pszSecret, -1, m_szProxySecret, MAX_SECRET_LENGTH, NULL, NULL);
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szProxySecret, MAX_SECRET_LENGTH, nullptr, nullptr);
+      m_szProxySecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-      nx_strncpy(m_szProxySecret, pszSecret, MAX_SECRET_LENGTH);
+      strlcpy(m_szProxySecret, pszSecret, MAX_SECRET_LENGTH);
 #endif
+      m_iProxyAuth = AUTH_SHA1_HASH;
    }
    else
    {
       m_szProxySecret[0] = 0;
+      m_iProxyAuth = AUTH_NONE;
    }
    m_useProxy = true;
 }
@@ -2042,7 +2100,7 @@ UINT32 AgentConnection::setupProxyConnection()
    msg.setId(dwRqId);
    msg.setField(VID_IP_ADDRESS, m_addr.getAddressV4());  // For compatibility with agents < 2.2.7
    msg.setField(VID_DESTINATION_ADDRESS, m_addr);
-   msg.setField(VID_AGENT_PORT, m_wPort);
+   msg.setField(VID_AGENT_PORT, m_port);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect
    else
@@ -2061,7 +2119,7 @@ UINT32 AgentConnection::enableTraps()
    msg.setCode(CMD_ENABLE_AGENT_TRAPS);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_dwCommandTimeout);
+      return waitForRCC(dwRqId, m_commandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -2079,7 +2137,7 @@ UINT32 AgentConnection::enableFileUpdates()
    msg.setId(dwRqId);
    if (sendMessage(&msg))
    {
-      return waitForRCC(dwRqId, m_dwCommandTimeout);
+      return waitForRCC(dwRqId, m_commandTimeout);
    }
    else
       return ERR_CONNECTION_BROKEN;
@@ -2099,21 +2157,21 @@ UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, si
    msg.setField(VID_NAME, sessionName);
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (response != NULL)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      if (response != nullptr)
       {
          UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == ERR_SUCCESS)
          {
             const BYTE *p = response->getBinaryFieldPtr(VID_FILE_DATA, size);
-            if (p != NULL)
+            if (p != nullptr)
             {
                *data = (BYTE *)malloc(*size);
                memcpy(*data, p, *size);
             }
             else
             {
-               *data = NULL;
+               *data = nullptr;
             }
          }
          delete response;
@@ -2140,21 +2198,21 @@ TCHAR *AgentConnection::getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, 
    msg.setCode(CMD_GET_HOSTNAME_BY_IPADDR);
    msg.setId(dwRqId);
    msg.setField(VID_IP_ADDRESS, ipAddr);
-   TCHAR *result = NULL;
+   TCHAR *result = nullptr;
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (response != NULL)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      if (response != nullptr)
       {
          if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
          {
             result = response->getFieldAsString(VID_NAME, buffer, bufLen);
-            if ((result != NULL) && (*result == 0))
+            if ((result != nullptr) && (*result == 0))
             {
                // Agents before 2.2.16 can return empty string instead of error if IP cannot be resolved
-               if (buffer == NULL)
+               if (buffer == nullptr)
                   MemFree(result);
-               result = NULL;
+               result = nullptr;
             }
          }
          delete response;
@@ -2170,11 +2228,11 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
          void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg)
 {
    UINT32 dwRqId, rcc;
-	NXCPMessage *msg = NULL;
+	NXCPMessage *msg = nullptr;
 
    dwRqId = generateRequestId();
    pRequest->setId(dwRqId);
-	if (recvFile != NULL)
+	if (recvFile != nullptr)
 	{
 		rcc = prepareFileDownload(recvFile, dwRqId, append, downloadProgressCallback, fileResendCallback,cbArg);
 		if (rcc != ERR_SUCCESS)
@@ -2187,12 +2245,12 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
 		}
 	}
 
-	if (msg == NULL)
+	if (msg == nullptr)
 	{
 		if (sendMessage(pRequest))
 		{
-			msg = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-			if ((msg != NULL) && (recvFile != NULL))
+			msg = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+			if ((msg != nullptr) && (recvFile != nullptr))
 			{
 				if (msg->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 				{
@@ -2212,7 +2270,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
 				}
 				else
 				{
-               if (fileResendCallback != NULL)
+               if (fileResendCallback != nullptr)
                {
                   _close(m_hCurrFile);
                   m_hCurrFile = -1;
@@ -2230,16 +2288,16 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
 /**
  * Cancel file download
  */
-UINT32 AgentConnection::cancelFileDownload()
+uint32_t AgentConnection::cancelFileDownload()
 {
    NXCPMessage msg(CMD_CANCEL_FILE_DOWNLOAD, generateRequestId(), getProtocolVersion());
    msg.setField(VID_REQUEST_ID, m_dwDownloadRequestId);
 
-   UINT32 rcc;
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
-      NXCPMessage *result = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), m_dwCommandTimeout);
-      if (result != NULL)
+      NXCPMessage *result = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), m_commandTimeout);
+      if (result != nullptr)
       {
          rcc = result->getFieldAsUInt32(VID_RCC);
          delete result;
@@ -2262,7 +2320,7 @@ UINT32 AgentConnection::cancelFileDownload()
 UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *),
                                              void (* fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg)
 {
-   if (fileResendCallback == NULL)
+   if (fileResendCallback == nullptr)
    {
       if (m_hCurrFile != -1)
          return ERR_RESOURCE_BUSY;
@@ -2285,7 +2343,7 @@ UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, 
       m_downloadProgressCallback = downloadProgressCallback;
       m_downloadProgressCallbackArg = cbArg;
 
-      m_sendToClientMessageCallback = NULL;
+      m_sendToClientMessageCallback = nullptr;
 
       return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
    }
@@ -2322,14 +2380,14 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId, rcc;
 
-	*info = NULL;
+	*info = nullptr;
    dwRqId = generateRequestId();
    msg.setCode(CMD_GET_POLICY_INVENTORY);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
 	{
-		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-		if (response != NULL)
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+		if (response != nullptr)
 		{
 			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
@@ -2362,7 +2420,7 @@ UINT32 AgentConnection::uninstallPolicy(const uuid& guid)
 	msg.setField(VID_GUID, guid);
 	if (sendMessage(&msg))
 	{
-		rcc = waitForRCC(rqId, m_dwCommandTimeout);
+		rcc = waitForRCC(rqId, m_commandTimeout);
 	}
 	else
 	{
@@ -2377,8 +2435,8 @@ UINT32 AgentConnection::uninstallPolicy(const uuid& guid)
 NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
 {
 	lock();
-	NXCPEncryptionContext *ctx = m_pCtx;
-	if (ctx != NULL)
+	NXCPEncryptionContext *ctx = (m_receiver != nullptr) ? m_receiver->m_encryptionContext : nullptr;
+	if (ctx != nullptr)
 		ctx->incRefCount();
 	unlock();
 	return ctx;
@@ -2412,7 +2470,6 @@ void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
 
    sendMessage(&response);
    delete msg;
-   decInternalRefCount();
 }
 
 /**
@@ -2444,8 +2501,8 @@ UINT32 AgentConnection::setupTcpProxy(const InetAddress& ipAddr, UINT16 port, UI
    UINT32 rcc;
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_dwCommandTimeout);
-      if (response != NULL)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
       {
          rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == ERR_SUCCESS)
@@ -2477,8 +2534,8 @@ UINT32 AgentConnection::closeTcpProxy(UINT32 channelId)
    UINT32 rcc;
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_dwCommandTimeout);
-      if (response != NULL)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
       {
          rcc = response->getFieldAsUInt32(VID_RCC);
          delete response;
@@ -2507,7 +2564,7 @@ void AgentConnection::processTcpProxyData(UINT32 channelId, const void *data, si
  */
 UINT32 AgentConnection::getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **fileSetInfo)
 {
-   *fileSetInfo = NULL;
+   *fileSetInfo = nullptr;
    UINT32 requestId = generateRequestId();
    NXCPMessage msg(CMD_GET_FILE_SET_DETAILS, requestId, m_nProtocolVersion);
    msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
@@ -2515,8 +2572,8 @@ UINT32 AgentConnection::getFileSetInfo(const StringList &fileSet, bool allowPath
    UINT32 rcc;
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_dwCommandTimeout);
-      if (response != NULL)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
       {
          rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == ERR_SUCCESS)
@@ -2611,10 +2668,10 @@ AgentTableDefinition::AgentTableDefinition(NXCPMessage *msg, UINT32 baseId)
    m_description = msg->getFieldAsString(baseId + 2);
 
    TCHAR *instanceColumns = msg->getFieldAsString(baseId + 1);
-   if (instanceColumns != NULL)
+   if (instanceColumns != nullptr)
    {
       m_instanceColumns = new StringList(instanceColumns, _T("|"));
-      free(instanceColumns);
+      MemFree(instanceColumns);
    }
    else
    {

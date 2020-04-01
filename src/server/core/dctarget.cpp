@@ -1023,7 +1023,7 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
       return DCE_NOT_SUPPORTED;
    }
 
-   AgentConnectionEx *conn = proxyNode->acquireProxyConnection(WEB_SERVICE_PROXY);
+   shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(WEB_SERVICE_PROXY);
    if (conn == nullptr)
    {
       nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): cannot acquire proxy connection"), m_name, param);
@@ -1045,7 +1045,6 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
    parameters.add(path);
    StringMap results;
    uint32_t agentStatus = conn->queryWebService(url, d->getCacheRetentionTime(), d->getLogin(), d->getPassword(), d->getAuthType(), headers, parameters, false, &results);
-   conn->decRefCount();
 
    DataCollectionError rc;
    if (agentStatus == ERR_SUCCESS)

@@ -1,6 +1,6 @@
 /* 
 ** SMS Driver for sending SMS via NetXMS agent
-** Copyright (C) 2007-2019 Raden Solutions
+** Copyright (C) 2007-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ bool NXAgentDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
 
       if(start)
       {
-         AgentConnection *conn = new AgentConnection(addr, m_port, (m_secret[0] != 0) ? AUTH_SHA1_HASH : AUTH_NONE, m_secret);
+         shared_ptr<AgentConnection> conn = AgentConnection::create(addr, m_port, m_secret);
          conn->setCommandTimeout(m_timeout);
          conn->setEncryptionPolicy(m_encryptionType);
          UINT32 dwError;
@@ -125,8 +125,6 @@ bool NXAgentDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
          {            
                nxlog_debug_tag(DEBUG_TAG, 2, _T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
          }
-         
-         conn->decRefCount();
       }
 	}
 	return bSuccess;

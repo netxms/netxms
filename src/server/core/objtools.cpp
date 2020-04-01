@@ -172,7 +172,7 @@ static void GetAgentTable(ToolStartupInfo *toolData)
    {
       *tableName = 0;
       tableName++;
-      AgentConnection *pConn = toolData->node->createAgentConnection();
+      shared_ptr<AgentConnectionEx> pConn = toolData->node->createAgentConnection();
       if (pConn != nullptr)
       {
          Table *table;
@@ -210,7 +210,6 @@ static void GetAgentTable(ToolStartupInfo *toolData)
          {
             msg.setField(VID_RCC, AgentErrorToRCC(err));
          }
-         pConn->decRefCount();
       }
       else
       {
@@ -282,7 +281,7 @@ static void GetAgentList(ToolStartupInfo *toolData)
                PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pszRegEx), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
                if (preg != nullptr)
                {
-                  AgentConnection *pConn = toolData->node->createAgentConnection();
+                  shared_ptr<AgentConnectionEx> pConn = toolData->node->createAgentConnection();
                   if (pConn != nullptr)
                   {
                      StringList *values;
@@ -325,7 +324,6 @@ static void GetAgentList(ToolStartupInfo *toolData)
                      {
                         msg.setField(VID_RCC, AgentErrorToRCC(dwResult));
                      }
-                     pConn->decRefCount();
                   }
                   else
                   {

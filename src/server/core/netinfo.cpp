@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -396,12 +396,11 @@ ArpCache *GetLocalArpCache()
    // Try to get ARP cache from agent via loopback address
    if (pArpCache == NULL)
    {
-      AgentConnection *conn = new AgentConnection(InetAddress::LOOPBACK);
+      shared_ptr<AgentConnection> conn = AgentConnection::create(InetAddress::LOOPBACK);
       if (conn->connect(g_pServerKey))
       {
          pArpCache = conn->getArpCache();
       }
-      conn->decRefCount();
    }
 
    return pArpCache;
@@ -420,12 +419,11 @@ InterfaceList *GetLocalInterfaceList()
    // Try to get local interface list from agent via loopback address
    if (pIfList == NULL)
    {
-      AgentConnection *conn = new AgentConnection(InetAddress::LOOPBACK);
+      shared_ptr<AgentConnection> conn = AgentConnection::create(InetAddress::LOOPBACK);
       if (conn->connect(g_pServerKey))
       {
          pIfList = conn->getInterfaceList();
       }
-      conn->decRefCount();
    }
    return pIfList;
 }
