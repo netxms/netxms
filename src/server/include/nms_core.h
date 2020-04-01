@@ -807,6 +807,8 @@ private:
    void getWebServices(NXCPMessage *request);
    void modifyWebService(NXCPMessage *request);
    void deleteWebService(NXCPMessage *request);
+   void sendSharedSecretList(UINT32 requestId);
+   void updateSharedSecretList(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

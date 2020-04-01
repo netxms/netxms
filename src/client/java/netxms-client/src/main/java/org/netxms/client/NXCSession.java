@@ -11742,4 +11742,65 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+
+   /**
+    * Get shared secret list form server
+    * 
+    * @return map with zone id and shared secret list
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<Integer, List<String>> getShredSecrets() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SHARED_SECRET_LIST);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      long baseId = NXCPCodes.VID_SHARED_SECRET_LIST_BASE;
+      Map<Integer, List<String>> map = new HashMap<Integer, List<String>>(count);
+      List<String> stringList = new ArrayList<String>();
+      int zoneId = 0;
+      for(int i = 0; i < count; i++)
+      {
+         if (i != 0 && zoneId != response.getFieldAsInt32(baseId+1))
+         {
+            map.put(zoneId, stringList);
+            stringList = new ArrayList<String>();
+         }
+         stringList.add(response.getFieldAsString(baseId++));
+         zoneId = response.getFieldAsInt32(baseId++);
+         baseId += 8;
+      }
+      if (count > 0)
+         map.put(zoneId, stringList);
+      return map;
+   }
+
+   /**
+    * Update shared secret list on server
+    * 
+    * @param sharedSecrets list of shared secrets
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateSharedSecrets(Map<Integer, List<String>> sharedSecrets) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SHARED_SECRET_LIST);
+      long baseId = NXCPCodes.VID_SHARED_SECRET_LIST_BASE;
+      int count = 0;
+      for(Integer i : sharedSecrets.keySet())
+      {
+         for(String s : sharedSecrets.get(i))
+         {
+            msg.setField(baseId++, s);
+            msg.setFieldInt32(baseId++, i);
+            baseId += 8;
+            count++;
+         }
+      }
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, count);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 }

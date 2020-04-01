@@ -8,7 +8,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.views.SnmpCredentials;
+import org.netxms.ui.eclipse.snmp.views.NetworkCredentials;
 
 /**
  * Label provider for SnmpUsmCredentials class
@@ -36,17 +36,17 @@ public class SnmpUsmLabelProvider extends LabelProvider implements ITableLabelPr
 		SnmpUsmCredential c = (SnmpUsmCredential)element;		
 		switch(columnIndex)
       {
-		   case SnmpCredentials.USM_CRED_USER_NAME:
+		   case NetworkCredentials.USM_CRED_USER_NAME:
 		      return c.getName();
-		   case SnmpCredentials.USM_CRED_AUTHENTICATION:
+		   case NetworkCredentials.USM_CRED_AUTHENTICATION:
 		      return authMethodName[c.getAuthMethod()];
-		   case SnmpCredentials.USM_CRED_ENCRYPTION:
+		   case NetworkCredentials.USM_CRED_ENCRYPTION:
 		      return privMethodName[c.getPrivMethod()];
-		   case SnmpCredentials.USM_CRED_AUTH_PASSWORD:
+		   case NetworkCredentials.USM_CRED_AUTH_PASSWORD:
 		      return c.getAuthPassword();
-		   case SnmpCredentials.USM_CRED_ENC_PASSWORD:
+		   case NetworkCredentials.USM_CRED_ENC_PASSWORD:
 		      return c.getPrivPassword();
-		   case SnmpCredentials.USM_CRED_COMMENTS:
+		   case NetworkCredentials.USM_CRED_COMMENTS:
 		      return c.getComment();
       }
 		return null;

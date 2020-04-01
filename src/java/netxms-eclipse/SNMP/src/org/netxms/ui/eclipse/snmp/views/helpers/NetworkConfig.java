@@ -13,7 +13,7 @@ import org.netxms.client.objects.Zone;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.SnmpUsmCredential;
 
-public class SnmpConfig
+public class NetworkConfig
 {
    // Global SNMP config flag
    public static int SNMP_CONFIG_GLOBAL = -1;
@@ -21,11 +21,12 @@ public class SnmpConfig
    private Map<Integer, List<String>> communities;
    private Map<Integer, List<SnmpUsmCredential>> usmCredentials;
    private Map<Integer, List<String>> ports;
+   private Map<Integer, List<String>> sharedSecrets;
 
    /**
     * Create empty object
     */
-   private SnmpConfig()
+   private NetworkConfig()
    {
    }
    
@@ -38,13 +39,14 @@ public class SnmpConfig
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public static SnmpConfig load(NXCSession session) throws NXCException, IOException
+   public static NetworkConfig load(NXCSession session) throws NXCException, IOException
    {
-      SnmpConfig config = new SnmpConfig();
+      NetworkConfig config = new NetworkConfig();
       
       config.communities = session.getSnmpCommunities();
       config.usmCredentials = session.getSnmpUsmCredentials();
       config.ports = loadPortConfig(session);
+      config.sharedSecrets = session.getShredSecrets();
 
       return config;
    }
@@ -105,6 +107,7 @@ public class SnmpConfig
       session.updateSnmpCommunities(communities);
       session.updateSnmpUsmCredentials(usmCredentials);
       savePortConfig(session);
+      session.updateSharedSecrets(sharedSecrets);
    }
    
    private void savePortConfig(final NXCSession session) throws IOException, NXCException
@@ -196,5 +199,32 @@ public class SnmpConfig
          list.add(credential);
          usmCredentials.put((int)zoneUIN, list);
       }
-   }   
+   } 
+   
+   /**
+    * @return the shared secrets
+    */
+   public List<String> getSharedSecrets(long zoneUIN)
+   {
+      if (sharedSecrets.containsKey((int)zoneUIN))
+         return sharedSecrets.get((int)zoneUIN);
+      else
+         return new ArrayList<String>();
+   }
+
+   /**
+    * @param sharedSecret the shared secret to set
+    * @param zoneUIN zone UIN
+    */
+   public void addSharedSecret(String sharedSecret, long zoneUIN)
+   {
+      if (this.sharedSecrets.containsKey((int)zoneUIN))
+         this.sharedSecrets.get((int)zoneUIN).add(sharedSecret);
+      else
+      {
+         List<String> list = new ArrayList<String>();
+         list.add(sharedSecret);
+         this.sharedSecrets.put((int)zoneUIN, list);
+      }
+   }
 }

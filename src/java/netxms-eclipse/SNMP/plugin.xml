@@ -31,9 +31,9 @@
       <view
             allowMultiple="false"
             category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.snmp.views.SnmpCredentials"
-            id="org.netxms.ui.eclipse.snmp.views.SnmpCredentials"
-            name="%view.name.SNMPCredentials"
+            class="org.netxms.ui.eclipse.snmp.views.NetworkCredentials"
+            id="org.netxms.ui.eclipse.snmp.views.NetworkCredentials"
+            name="%view.name.NetworkCredentials"
             restorable="true">
       </view>
    </extension>
@@ -108,16 +108,16 @@
       </actionSet>
       <actionSet
             id="org.netxms.ui.eclipse.action_set.snmp_configuration"
-            label="SNMP Credentials"
+            label="%view.name.NetworkCredentials"
             visible="true">
          <action
-               class="org.netxms.ui.eclipse.snmp.actions.OpenSnmpCredentialsEditor"
+               class="org.netxms.ui.eclipse.snmp.actions.OpenNetworkCredentialsEditor"
                definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_configuration"
                id="org.netxms.ui.eclipse.snmp.actions.open_snmp_configuration"
-               label="%action.label.SNMPCredentials"
+               label="%view.name.NetworkCredentials"
                menubarPath="config/additions"
                style="push"
-               tooltip="%action.tooltip.SNMPCredentials">
+               tooltip="%action.tooltip.NetworkCredentials">
          </action>
       </actionSet>
    </extension>

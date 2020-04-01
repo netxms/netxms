@@ -3852,15 +3852,42 @@ bool Node::confPollAgent(UINT32 rqId)
       // If there are authentication problem, try default shared secret
       if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
       {
-         TCHAR secret[MAX_SECRET_LENGTH];
-         ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
-         DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
-         pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
-         if (pAgentConn->connect(g_pServerKey, &rcc))
+         StringList secrets;
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=? ORDER BY zone DESC, id ASC"));
+         if (hStmt != NULL)
          {
-            m_agentAuthMethod = AUTH_SHA1_HASH;
-            _tcslcpy(m_szSharedSecret, secret, MAX_SECRET_LENGTH);
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_zoneUIN);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, SNMP_CONFIG_GLOBAL);
+
+            DB_RESULT hResult = DBSelectPrepared(hStmt);
+            if (hResult != NULL)
+            {
+               int count = DBGetNumRows(hResult);
+               for(int i = 0; i < count; i++)
+                  secrets.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+               DBFreeResult(hResult);
+            }
+            DBFreeStatement(hStmt);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
+
+
+         for(int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
+         {
+            pAgentConn->setAuthData(AUTH_SHA1_HASH, secrets.get(i));
+            if (pAgentConn->connect(g_pServerKey, &rcc))
+            {
+               m_agentAuthMethod = AUTH_SHA1_HASH;
+               _tcslcpy(m_szSharedSecret, secrets.get(i), MAX_SECRET_LENGTH);
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
+               break;
+            }
+
+            if (((rcc != ERR_AUTH_REQUIRED) || (rcc != ERR_AUTH_FAILED)))
+            {
+               break;
+            }
          }
       }
    }

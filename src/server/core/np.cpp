@@ -336,15 +336,17 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 
 	// *** NetXMS agent ***
    AgentConnection *pAgentConn = new AgentConnectionEx(0, ipAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+   shared_ptr<Node> proxyNode = shared_ptr<Node>();
 	if (zoneProxy != 0)
 	{
-		shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
+		proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
       if (proxyNode != nullptr)
       {
          pAgentConn->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(),
                               proxyNode->getAgentAuthMethod(), proxyNode->getSharedSecret());
       }
 	}
+
 	pAgentConn->setCommandTimeout(g_agentCommandTimeout);
    UINT32 rcc;
    if (!pAgentConn->connect(g_pServerKey, &rcc))
@@ -352,12 +354,40 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
       // If there are authentication problem, try default shared secret
       if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
       {
-         TCHAR secret[MAX_SECRET_LENGTH];
-         ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
-         DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
+         StringList secrets;
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=? ORDER BY zone DESC, id ASC"));
+         if (hStmt != NULL)
+         {
+           DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (proxyNode != nullptr) ? proxyNode->getZoneUIN() : 0);
+           DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, SNMP_CONFIG_GLOBAL);
 
-         pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
-         pAgentConn->connect(g_pServerKey, &rcc);
+           DB_RESULT hResult = DBSelectPrepared(hStmt);
+           if (hResult != NULL)
+           {
+              int count = DBGetNumRows(hResult);
+              for(int i = 0; i < count; i++)
+                 secrets.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+              DBFreeResult(hResult);
+           }
+           DBFreeStatement(hStmt);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
+
+
+         for(int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
+         {
+           pAgentConn->setAuthData(AUTH_SHA1_HASH, secrets.get(i));
+           if (pAgentConn->connect(g_pServerKey, &rcc))
+           {
+              break;
+           }
+
+           if (((rcc != ERR_AUTH_REQUIRED) || (rcc != ERR_AUTH_FAILED)))
+           {
+              break;
+           }
+         }
       }
    }
    if (rcc == ERR_SUCCESS)

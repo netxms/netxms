@@ -1056,6 +1056,12 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UPDATE_COMMUNITY_LIST:
          UpdateCommunityList(request);
          break;
+      case CMD_GET_SHARED_SECRET_LIST:
+         sendSharedSecretList(request->getId());
+         break;
+      case CMD_UPDATE_SHARED_SECRET_LIST:
+         updateSharedSecretList(request);
+         break;
       case CMD_GET_USM_CREDENTIALS:
          sendUsmCredentials(request->getId());
          break;
@@ -10321,7 +10327,7 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, _T("SELECT community,zone FROM snmp_communities ORDER BY zone"));
+		hResult = DBSelect(hdb, _T("SELECT community,zone FROM snmp_communities ORDER BY zone DESC, id ASC"));
 		if (hResult != nullptr)
 		{
 			int count = DBGetNumRows(hResult);
@@ -15111,6 +15117,101 @@ void ClientSession::deleteWebService(NXCPMessage *request)
    }
 
    sendMessage(&response);
+}
+
+/**
+ * Send shared secret list
+ */
+void ClientSession::sendSharedSecretList(UINT32 dwRqId)
+{
+   NXCPMessage msg;
+   msg.setId(dwRqId);
+   msg.setCode(CMD_REQUEST_COMPLETED);
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT secret,zone FROM shared_secrets ORDER BY zone DESC, id ASC"));
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         UINT32 baseId = VID_SHARED_SECRET_LIST_BASE;
+         msg.setField(VID_NUM_ELEMENTS, (UINT32)count);
+         for(int i = 0; i < count; i++, baseId +=8)
+         {
+            TCHAR buffer[MAX_SECRET_LENGTH];
+            msg.setField(baseId++, DBGetField(hResult, i, 0, buffer, MAX_SECRET_LENGTH));
+            msg.setField(baseId++, DBGetFieldULong(hResult, i, 1));
+         }
+         DBFreeResult(hResult);
+         msg.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_DB_FAILURE);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Update shared secret list
+ */
+void ClientSession::updateSharedSecretList(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+   UINT32 rcc = RCC_SUCCESS;
+
+   msg.setId(pRequest->getId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      if (DBBegin(hdb))
+      {
+         DBQuery(hdb, _T("DELETE FROM shared_secrets"));
+         UINT32 baseId = VID_SHARED_SECRET_LIST_BASE;
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO shared_secrets (id,secret,zone) VALUES(?,?,?)"));
+         if (hStmt != nullptr)
+         {
+            int count = pRequest->getFieldAsUInt32(VID_NUM_ELEMENTS);
+            for(int i = 0; i < count; i++, baseId += 8)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(baseId++), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pRequest->getFieldAsUInt32(baseId++));
+               if (!DBExecute(hStmt))
+               {
+                  rcc = RCC_DB_FAILURE;
+                  break;
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+            rcc = RCC_DB_FAILURE;
+
+         if (rcc == RCC_SUCCESS)
+            DBCommit(hdb);
+         else
+            DBRollback(hdb);
+      }
+      else
+         rcc = RCC_DB_FAILURE;
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+      rcc = RCC_ACCESS_DENIED;
+
+   msg.setField(VID_RCC, rcc);
+   sendMessage(&msg);
 }
 
 #ifdef WITH_ZMQ

@@ -150,7 +150,7 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
 
 	// Try pre-configured SNMP v3 USM credentials
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials WHERE zone=? OR zone=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials WHERE zone=? OR zone=? ORDER BY zone DESC, id ASC"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
@@ -314,7 +314,7 @@ restart_check:
       {
          communities = new StringList();
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? OR zone=?"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? OR zone=? ORDER BY zone DESC, id ASC"));
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);

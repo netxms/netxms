@@ -1446,22 +1446,24 @@ UINT32 AgentConnection::authenticate(BOOL bProxyData)
    msg.setCode(CMD_AUTHENTICATE);
    msg.setId(dwRqId);
    msg.setField(VID_AUTH_METHOD, (WORD)iAuthMethod);
+   char secret[MAX_SECRET_LENGTH];
+   DecryptPasswordA("netxms", pszSecret, secret, MAX_SECRET_LENGTH);
    switch(iAuthMethod)
    {
       case AUTH_PLAINTEXT:
 #ifdef UNICODE
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszSecret, -1, szBuffer, MAX_SECRET_LENGTH);
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, secret, -1, szBuffer, MAX_SECRET_LENGTH);
          msg.setField(VID_SHARED_SECRET, szBuffer);
 #else
-         msg.setField(VID_SHARED_SECRET, pszSecret);
+         msg.setField(VID_SHARED_SECRET, secret);
 #endif
          break;
       case AUTH_MD5_HASH:
-         CalculateMD5Hash((BYTE *)pszSecret, (int)strlen(pszSecret), hash);
+         CalculateMD5Hash((BYTE *)secret, (int)strlen(secret), hash);
          msg.setField(VID_SHARED_SECRET, hash, MD5_DIGEST_SIZE);
          break;
       case AUTH_SHA1_HASH:
-         CalculateSHA1Hash((BYTE *)pszSecret, (int)strlen(pszSecret), hash);
+         CalculateSHA1Hash((BYTE *)secret, (int)strlen(secret), hash);
          msg.setField(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
          break;
       default:

@@ -2242,3 +2242,14 @@ CREATE TABLE websvc_headers
    value varchar(2000) null,
    PRIMARY KEY(websvc_id,name)
 ) TABLE_TYPE;
+
+/**
+ * Shared secrets default and for zones
+ */
+CREATE TABLE shared_secrets 
+(
+   id integer not null,
+   secret varchar(64) null,
+   zone integer null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;

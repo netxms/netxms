@@ -24,14 +24,14 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.views.SnmpCredentials;
+import org.netxms.ui.eclipse.snmp.views.NetworkCredentials;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /** 
  * Workbench action for opening SNMP trap configurator view.
  *
  */
-public class OpenSnmpCredentialsEditor implements IWorkbenchWindowActionDelegate
+public class OpenNetworkCredentialsEditor implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
 	
@@ -62,11 +62,11 @@ public class OpenSnmpCredentialsEditor implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(SnmpCredentials.ID);
+				window.getActivePage().showView(NetworkCredentials.ID);
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSnmpCredentialsEditor_Error, String.format(Messages.get().OpenSnmpCredentialsEditor_CannotOpenView, e.getLocalizedMessage()));
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenNetworkCredentialsEditor_Error, String.format(Messages.get().OpenNetworkCredentialsEditor_CannotOpenView, e.getLocalizedMessage()));
 			}
 		}
 	}

@@ -24,6 +24,43 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.3 to 32.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE shared_secrets (")
+         _T("id integer not null,")
+         _T("secret varchar(64) null,")
+         _T("zone integer null,")
+         _T("PRIMARY KEY(id))")));
+
+   TCHAR secret[MAX_SECRET_LENGTH];
+   secret[0] = 0;
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='AgentDefaultSharedSecret'"));
+   if (hResult != NULL)
+   {
+      if(DBGetNumRows(hResult) > 0)
+      {
+         DBGetField(hResult, 0, 0, secret, MAX_SECRET_LENGTH);
+      }
+      DBFreeResult(hResult);
+   }
+
+   if (secret[0] != 0)
+   {
+      TCHAR query[1024];
+      _sntprintf(query, 1024, _T("INSERT INTO shared_secrets (id,secret,zone) VALUES(%d,'%s',%d)"), 1, secret, -1);
+      CHK_EXEC(SQLQuery(query));
+   }
+
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='AgentDefaultSharedSecret'")));
+
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 32.2 to 32.3
  */
 static bool H_UpgradeFromV2()
@@ -77,6 +114,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 3,  33, 4,  H_UpgradeFromV3  },
    { 2,  33, 3,  H_UpgradeFromV2  },
    { 1,  33, 2,  H_UpgradeFromV1  },
    { 0,  33, 1,  H_UpgradeFromV0  },

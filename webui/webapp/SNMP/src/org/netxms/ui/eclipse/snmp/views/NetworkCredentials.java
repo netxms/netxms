@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.snmp.views;
 
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -58,19 +59,17 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.AddUsmCredDialog;
-import org.netxms.ui.eclipse.snmp.views.helpers.SnmpConfig;
-import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmComparator;
+import org.netxms.ui.eclipse.snmp.views.helpers.NetworkConfig;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmLabelProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Configurator for network discovery
  */
-public class SnmpCredentials extends ViewPart implements ISaveablePart
+public class NetworkCredentials extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpCredentials"; //$NON-NLS-1$
+	public static final String ID = "org.netxms.ui.eclipse.snmp.views.NetworkCredentials"; //$NON-NLS-1$
 
 	public static final int USM_CRED_USER_NAME = 0;
    public static final int USM_CRED_AUTHENTICATION = 1;
@@ -86,10 +85,11 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	private TableViewer snmpCommunityList;
 	private SortableTableViewer snmpUsmCredList;
 	private TableViewer snmpPortList;
+   private TableViewer sharedSecretList;
 	private Action actionSave;
-	private SnmpConfig config;
+	private NetworkConfig config;
 	private ZoneSelector zoneSelector;
-	private long zoneUIN = SnmpConfig.SNMP_CONFIG_GLOBAL;
+	private long zoneUIN = NetworkConfig.SNMP_CONFIG_GLOBAL;
 
 	/* (non-Javadoc)
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -109,7 +109,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	{
 		toolkit = new FormToolkit(getSite().getShell().getDisplay());
 		form = toolkit.createScrolledForm(parent);
-      form.setText(Messages.get().SnmpCredentials_FormTitle);
+      form.setText(Messages.get().NetworkCredentials_FormTitle);
 	
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
@@ -142,6 +142,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		createSnmpCommunitySection();
 		createSnmpPortList();
       createSnmpUsmCredSection();
+      createSharedSecretList();
 		
 		createActions();
 		contributeToActionBars();
@@ -156,11 +157,11 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void loadSnmpConfig()
 	{
-	   new ConsoleJob(Messages.get().SnmpCredentials_LoadingConfig, this, Activator.PLUGIN_ID, null) {
+	   new ConsoleJob(Messages.get().NetworkCredentials_LoadingConfig, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final SnmpConfig loadedConfig = SnmpConfig.load(session);
+            final NetworkConfig loadedConfig = NetworkConfig.load(session);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -173,7 +174,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
          @Override
          protected String getErrorMessage()
          {
-            return Messages.get().SnmpCredentials_ErrorLoadingConfig;
+            return Messages.get(getDisplay()).NetworkCredentials_ErrorLoadingConfig;
          }
       }.start();
 	}
@@ -250,12 +251,10 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		gd.verticalSpan = 2;
+		gd.verticalSpan = 4;
 		gd.heightHint = 150;
 		snmpCommunityList.getTable().setLayoutData(gd);
-		snmpCommunityList.getTable().setSortDirection(SWT.UP);
 		snmpCommunityList.setContentProvider(new ArrayContentProvider());
-		snmpCommunityList.setComparator(new StringComparator());
 		
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText(Messages.get().SnmpConfigurator_Add);
@@ -284,9 +283,37 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 				removeCommunity();
 			}
 		});
+      
+      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkUp.setText("Up");
+      linkUp.setImage(SharedIcons.IMG_UP);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkUp.setLayoutData(gd);
+      linkUp.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            moveCommunity(true);
+         }
+      });
+      
+      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkDown.setText("Down");
+      linkDown.setImage(SharedIcons.IMG_DOWN);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkDown.setLayoutData(gd);
+      linkDown.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            moveCommunity(false);
+         }
+      });
 	}
-	
-	/**
+
+   /**
 	 * Create "Address Filters" section
 	 */
 	private void createSnmpUsmCredSection()
@@ -315,12 +342,11 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		gd.verticalSpan = 3;
+		gd.verticalSpan = 5;
 		gd.heightHint = 150;
 		snmpUsmCredList.getTable().setLayoutData(gd);
 		snmpUsmCredList.setContentProvider(new ArrayContentProvider());
 		snmpUsmCredList.setLabelProvider(new SnmpUsmLabelProvider());
-		snmpUsmCredList.setComparator(new SnmpUsmComparator());
 		snmpUsmCredList.addDoubleClickListener(new IDoubleClickListener() {
          
          @Override
@@ -371,16 +397,44 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 				removeUsmCredentials();
 			}
 		});
+      
+      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkUp.setText("Up");
+      linkUp.setImage(SharedIcons.IMG_UP);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkUp.setLayoutData(gd);
+      linkUp.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+           moveUsmCredentials(true);
+         }
+      });
+      
+      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkDown.setText("Down");
+      linkDown.setImage(SharedIcons.IMG_DOWN);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkDown.setLayoutData(gd);
+      linkDown.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            moveUsmCredentials(false);
+         }
+      });
 	}
-	
-	  /**
+
+   /**
     * Create "Port List" section
     */
    private void createSnmpPortList()
    {
       Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-      section.setText(Messages.get().SnmpCredentials_Ports);
-      section.setDescription(Messages.get().SnmpCredentials_PortsDescription);
+      section.setText(Messages.get().NetworkCredentials_Ports);
+      section.setDescription(Messages.get().NetworkCredentials_PortsDescription);
       TableWrapData td = new TableWrapData();
       td.align = TableWrapData.FILL;
       td.grabHorizontal = true;
@@ -399,11 +453,10 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 2;
+      gd.verticalSpan = 4;
       gd.heightHint = 150;
       snmpPortList.getTable().setLayoutData(gd);
       snmpPortList.setContentProvider(new ArrayContentProvider());
-      snmpPortList.setComparator(new StringComparator());
 
       final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
       linkAdd.setText(Messages.get().SnmpConfigurator_Add);
@@ -432,9 +485,125 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
             removeSnmpPort();
          }
       });
+      
+      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkUp.setText("Up");
+      linkUp.setImage(SharedIcons.IMG_UP);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkUp.setLayoutData(gd);
+      linkUp.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            moveSnmpPort(true);
+         }
+      });
+      
+      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkDown.setText("Down");
+      linkDown.setImage(SharedIcons.IMG_DOWN);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkDown.setLayoutData(gd);
+      linkDown.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            moveSnmpPort(false);
+         }
+      });
    }
 
-	/* (non-Javadoc)
+   /**
+    * Create "Port List" section
+    */
+   private void createSharedSecretList()
+   {
+      Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
+      section.setText("Shared secrets");
+      section.setDescription("Shared secrets used in the network");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      section.setLayoutData(td);
+      
+      Composite clientArea = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+      
+      sharedSecretList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      toolkit.adapt(sharedSecretList.getTable());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.verticalSpan = 4;
+      gd.heightHint = 150;
+      sharedSecretList.getTable().setLayoutData(gd);
+      sharedSecretList.setContentProvider(new ArrayContentProvider());
+
+      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(Messages.get().SnmpConfigurator_Add);
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addSharedSecret();
+         }
+      });
+      
+      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeSharedSecret();
+         }
+      });
+      
+      final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkUp.setText("Up");
+      linkUp.setImage(SharedIcons.IMG_UP);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkUp.setLayoutData(gd);
+      linkUp.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            moveSharedSecret(true);
+         }
+      });
+      
+      final ImageHyperlink linkDown = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkDown.setText("Down");
+      linkDown.setImage(SharedIcons.IMG_DOWN);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkDown.setLayoutData(gd);
+      linkDown.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            moveSharedSecret(false);
+         }
+      });
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -446,12 +615,13 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	/**
 	 * @param config
 	 */
-	private void setConfig(SnmpConfig config)
+	private void setConfig(NetworkConfig config)
 	{
 		this.config = config;
 		snmpCommunityList.setInput(config.getCommunities(zoneUIN));
 		snmpUsmCredList.setInput(config.getUsmCredentials(zoneUIN));
 		snmpPortList.setInput(config.getPorts(zoneUIN));
+		sharedSecretList.setInput(config.getSharedSecrets(zoneUIN));
 		
 		modified = false;
 		firePropertyChange(PROP_DIRTY);
@@ -482,7 +652,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		catch(Exception e)
 		{
 			MessageDialogHelper.openError(getSite().getShell(), Messages.get().SnmpConfigurator_Error, 
-			      String.format(Messages.get().SnmpCredentials_CannotSaveConfig, e.getLocalizedMessage()));
+			      String.format(Messages.get().NetworkCredentials_CannotSaveConfig, e.getLocalizedMessage()));
 		}
 	}
 
@@ -526,7 +696,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void save()
 	{
-		new ConsoleJob(Messages.get().SnmpCredentials_SaveConfig, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().NetworkCredentials_SaveConfig, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -544,7 +714,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().SnmpCredentials_ErrorSavingConfig;
+				return Messages.get(getDisplay()).NetworkCredentials_ErrorSavingConfig;
 			}
 		}.start();
 	}
@@ -582,6 +752,40 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			setModified();
 		}
 	}
+   
+	/**
+	 * Move community string in priority
+	 * 
+	 * @param up true to move up or false to move down
+	 */
+   protected void moveCommunity(boolean up)
+   {
+      final List<String> list = config.getCommunities(zoneUIN);
+      IStructuredSelection selection = (IStructuredSelection)snmpCommunityList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            int index = list.indexOf(o);
+            if (up)
+            {
+               if (index < 1)
+                  return;
+               
+               Collections.swap(list, index - 1, index);
+            }
+            else
+            {
+               if ((index + 1) == list.size())
+                  return;
+               
+               Collections.swap(list, index + 1, index);
+            }
+         }
+         snmpCommunityList.setInput(list);
+         setModified();
+      }
+   }
 
 	/**
 	 * Add SNMP USM credentials to the list
@@ -634,14 +838,48 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			setModified();
 		}
 	}
+
+	/**
+	 * Move SNMP USM credential
+	 * 
+	 * @param up true if up, false if down
+	 */
+   protected void moveUsmCredentials(boolean up)
+   {
+      final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
+      IStructuredSelection selection = (IStructuredSelection)snmpUsmCredList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            int index = list.indexOf(o);
+            if (up)
+            {
+               if (index < 1)
+                  return;
+               
+               Collections.swap(list, index - 1, index);
+            }
+            else
+            {
+               if ((index + 1) == list.size())
+                  return;
+               
+               Collections.swap(list, index + 1, index);
+            }
+         }
+         snmpUsmCredList.setInput(list);
+         setModified();
+      }
+   }
 	
-	  /**
-    * Add SNMP USM credentials to the list
+	 /**
+    * Add SNMP port to the list
     */
    private void addSnmpPort()
    {
-      InputDialog dlg = new InputDialog(getSite().getShell(), Messages.get().SnmpCredentials_AddPort, 
-            Messages.get().SnmpCredentials_PleaseEnterPort, "", null); //$NON-NLS-1$
+      InputDialog dlg = new InputDialog(getSite().getShell(), Messages.get().NetworkCredentials_AddPort, 
+            Messages.get().NetworkCredentials_PleaseEnterPort, "", null); //$NON-NLS-1$
       if (dlg.open() == Window.OK)
       {
          String value = dlg.getValue();
@@ -652,7 +890,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
    }
    
    /**
-    * Remove selected SNMP USM credentials
+    * Remove selected SNMP port
     */
    private void removeSnmpPort()
    {
@@ -665,6 +903,97 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
             list.remove(o);
          }
          snmpPortList.setInput(list.toArray());
+         setModified();
+      }
+   }
+
+   /**
+    * Move SNMP port
+    * 
+    * @param up true if up, false if down
+    */
+   protected void moveSnmpPort(boolean up)
+   {
+      final List<String> list = config.getPorts(zoneUIN);
+      IStructuredSelection selection = (IStructuredSelection)snmpPortList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            int index = list.indexOf(o);
+            if (up)
+            {
+               if (index < 1)
+                  return;
+               
+               Collections.swap(list, index - 1, index);
+            }
+            else
+            {
+               if ((index + 1) == list.size())
+                  return;
+               
+               Collections.swap(list, index + 1, index);
+            }
+         }
+         snmpPortList.setInput(list);
+         setModified();
+      }
+   }
+
+   protected void addSharedSecret()
+   {
+      InputDialog dlg = new InputDialog(getSite().getShell(), "Add shared secret", 
+            "Please enter shared secret", "", null); //$NON-NLS-1$
+      if (dlg.open() == Window.OK)
+      {
+         String value = dlg.getValue();
+         config.addSharedSecret(value, zoneUIN);
+         sharedSecretList.setInput(config.getSharedSecrets(zoneUIN));
+         setModified();
+      }
+   }
+
+   protected void removeSharedSecret()
+   {
+      final List<String> list = config.getSharedSecrets(zoneUIN);
+      IStructuredSelection selection = (IStructuredSelection)sharedSecretList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            list.remove(o);
+         }
+         sharedSecretList.setInput(list.toArray());
+         setModified();
+      }
+   }
+
+   protected void moveSharedSecret(boolean up)
+   {
+      final List<String> list = config.getSharedSecrets(zoneUIN);
+      IStructuredSelection selection = (IStructuredSelection)sharedSecretList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            int index = list.indexOf(o);
+            if (up)
+            {
+               if (index < 1)
+                  return;
+               
+               Collections.swap(list, index - 1, index);
+            }
+            else
+            {
+               if ((index + 1) == list.size())
+                  return;
+               
+               Collections.swap(list, index + 1, index);
+            }
+         }
+         sharedSecretList.setInput(list);
          setModified();
       }
    }

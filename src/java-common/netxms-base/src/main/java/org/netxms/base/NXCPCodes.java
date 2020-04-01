@@ -420,6 +420,10 @@ public class NXCPCodes
    public static final int CMD_MODIFY_WEB_SERVICE = 0x0193;
    public static final int CMD_DELETE_WEB_SERVICE = 0x0194;
    public static final int CMD_WEB_SERVICE_DEFINITION = 0x0195;
+   public static final int CMD_GET_SCREEN_INFO = 0x0196;
+   public static final int CMD_UPDATE_ENVIRONMENT = 0x0197;
+   public static final int CMD_GET_SHARED_SECRET_LIST = 0x0198;
+   public static final int CMD_UPDATE_SHARED_SECRET_LIST = 0x0199;
    
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1233,4 +1237,5 @@ public class NXCPCodes
    public static final long VID_NOTIFICATION_CHANNEL_BASE = 0x10000000L;
    public static final long VID_NOTIFICATION_DRIVER_BASE = 0x10000000L;
    public static final long VID_HEADERS_BASE = 0x20000000L;
+   public static final long VID_SHARED_SECRET_LIST_BASE = 0x10000000L;
 }
