@@ -21,14 +21,11 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -53,7 +50,6 @@ public class Agent extends PropertyPage
    private AbstractNode node;
    private LabeledText agentPort;
    private LabeledText agentSharedSecret;
-   private Combo agentAuthMethod;
    private Button agentForceEncryption;
    private Button agentTunnelOnly;
    private ObjectSelector agentProxy;
@@ -109,38 +105,13 @@ public class Agent extends PropertyPage
       fd.top = new FormAttachment(agentForceEncryption, 0, SWT.BOTTOM);
       agentTunnelOnly.setLayoutData(fd);
       
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(agentTunnelOnly, 0, SWT.BOTTOM);
-      agentAuthMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().Communication_AuthMethod, fd);
-      agentAuthMethod.add(Messages.get().Communication_AuthNone);
-      agentAuthMethod.add(Messages.get().Communication_AuthPlain);
-      agentAuthMethod.add(Messages.get().Communication_AuthMD5);
-      agentAuthMethod.add(Messages.get().Communication_AuthSHA1);
-      agentAuthMethod.select(node.getAgentAuthMethod());
-      agentAuthMethod.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            agentSharedSecret.getTextControl().setEnabled(agentAuthMethod.getSelectionIndex() != AbstractNode.AGENT_AUTH_NONE);
-         }
-      });
-      
       agentSharedSecret = new LabeledText(dialogArea, SWT.NONE);
       agentSharedSecret.setLabel(Messages.get().Communication_SharedSecret);
       agentSharedSecret.setText(node.getAgentSharedSecret());
       fd = new FormData();
-      fd.left = new FormAttachment(agentAuthMethod.getParent(), 0, SWT.RIGHT);
-      fd.right = new FormAttachment(100, 0);
+      fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(agentTunnelOnly, 0, SWT.BOTTOM);
       agentSharedSecret.setLayoutData(fd);
-      agentSharedSecret.getTextControl().setEnabled(node.getAgentAuthMethod() != AbstractNode.AGENT_AUTH_NONE);
       
       /* agent compression */
       Group agentCompressionGroup = new Group(dialogArea, SWT.NONE);
@@ -209,7 +180,7 @@ public class Agent extends PropertyPage
          return false;
       }
       md.setAgentProxy(agentProxy.getObjectId());
-      md.setAgentAuthMethod(agentAuthMethod.getSelectionIndex());
+      md.setAgentAuthMethod(agentSharedSecret.getText().isEmpty() ? AbstractNode.AGENT_AUTH_NONE : AbstractNode.AGENT_AUTH_SHA1);
       md.setAgentSecret(agentSharedSecret.getText());
       md.setAgentCompressionMode(collectAgentCompressionMode());
       md.setObjectFlags((agentForceEncryption.getSelection() ? AbstractNode.NF_FORCE_ENCRYPTION : 0) | 
@@ -276,7 +247,6 @@ public class Agent extends PropertyPage
       
       agentPort.setText("4700"); //$NON-NLS-1$
       agentForceEncryption.setSelection(false);
-      agentAuthMethod.select(0);
       agentProxy.setObjectId(0);
       agentSharedSecret.setText(""); //$NON-NLS-1$
       agentSharedSecret.getTextControl().setEnabled(false);
