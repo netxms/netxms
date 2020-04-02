@@ -42,7 +42,7 @@ private:
    RingBuffer m_buffer;
 #ifdef _WIN32
    CRITICAL_SECTION m_bufferLock;
-   HANDLE m_dataCondition;
+   CONDITION_VARIABLE m_dataCondition;
 #else
    pthread_mutex_t m_bufferLock;
    pthread_cond_t m_dataCondition;
