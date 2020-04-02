@@ -471,6 +471,49 @@ bool Tunnel::loadCertificate()
 }
 
 /**
+ * SSL message callback
+ */
+static void SSLInfoCallback(const SSL *ssl, int where, int ret)
+{
+   if (where & SSL_CB_ALERT)
+   {
+      nxlog_debug_tag(_T("ssl"), 4, _T("SSL %s alert: %hs (%hs)"), (where & SSL_CB_READ) ? _T("read") : _T("write"),
+               SSL_alert_type_string_long(ret), SSL_alert_desc_string_long(ret));
+   }
+   else if (where & SSL_CB_HANDSHAKE_START)
+   {
+      nxlog_debug_tag(_T("ssl"), 6, _T("SSL handshake start (%hs)"), SSL_state_string_long(ssl));
+   }
+   else if (where & SSL_CB_HANDSHAKE_DONE)
+   {
+      nxlog_debug_tag(_T("ssl"), 6, _T("SSL handshake done (%hs)"), SSL_state_string_long(ssl));
+   }
+   else
+   {
+      int method = where & ~SSL_ST_MASK;
+      const TCHAR *prefix;
+      if (method & SSL_ST_CONNECT)
+         prefix = _T("SSL_connect");
+      else if (method & SSL_ST_ACCEPT)
+         prefix = _T("SSL_accept");
+      else
+         prefix = _T("undefined");
+
+      if (where & SSL_CB_LOOP)
+      {
+         nxlog_debug_tag(_T("ssl"), 6, _T("%s: %hs"), prefix, SSL_state_string_long(ssl));
+      }
+      else if (where & SSL_CB_EXIT)
+      {
+         if (ret == 0)
+            nxlog_debug_tag(_T("ssl"), 3, _T("%s: failed in %hs"), prefix, SSL_state_string_long(ssl));
+         else if (ret < 0)
+            nxlog_debug_tag(_T("ssl"), 3, _T("%s: error in %hs"), prefix, SSL_state_string_long(ssl));
+      }
+   }
+}
+
+/**
  * Connect to server
  */
 bool Tunnel::connectToServer()
@@ -526,6 +569,10 @@ bool Tunnel::connectToServer()
       debugPrintf(4, _T("Cannot create TLS context"));
       MutexUnlock(m_stateLock);
       return false;
+   }
+   if (g_dwFlags & AF_ENABLE_SSL_TRACE)
+   {
+      SSL_CTX_set_info_callback(m_context, SSLInfoCallback);
    }
 #ifdef SSL_OP_NO_COMPRESSION
    SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);

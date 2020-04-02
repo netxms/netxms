@@ -284,6 +284,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnablePushConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_PUSH_CONNECTOR, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPTrapProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, NULL },
+   { _T("EnableSSLTrace"), CT_BOOLEAN, 0, 0, AF_ENABLE_SSL_TRACE, 0, &g_dwFlags, NULL },
    { _T("EnableSyslogProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SYSLOG_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, NULL },
    { _T("EnableTCPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_TCP_PROXY, 0, &g_dwFlags, NULL },
