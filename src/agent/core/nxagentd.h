@@ -120,6 +120,7 @@
 #define AF_SYSTEMD_DAEMON           0x08000000
 #define AF_JSON_LOG                 0x10000000
 #define AF_LOG_TO_STDOUT            0x20000000
+#define AF_ENABLE_SSL_TRACE         0x40000000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
