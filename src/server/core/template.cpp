@@ -693,6 +693,7 @@ void Template::applyPolicyChanges()
                checkPolicyBind(static_cast<Node*>(object), ap);
                delete ap;
             }
+            conn->decRefCount();
          }
       }
    }

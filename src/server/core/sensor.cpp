@@ -127,7 +127,7 @@ AgentConnectionEx *Sensor::getAgentConnection()
 Sensor *Sensor::registerLoraDevice(Sensor *sensor)
 {
    NetObj *proxy = FindObjectById(sensor->m_proxyNodeId, OBJECT_NODE);
-   if(proxy == NULL)
+   if (proxy == NULL)
       return NULL;
 
    AgentConnectionEx *conn = sensor->getAgentConnection();
@@ -182,6 +182,7 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
       delete response;
    }
 
+   conn->decRefCount();
    return sensor;
 }
 
@@ -451,12 +452,6 @@ void Sensor::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 void Sensor::calculateStatus(BOOL bForcedRecalc)
 {
-   AgentConnectionEx *conn = getAgentConnection();
-   if (conn == NULL)
-   {
-      m_status = STATUS_UNKNOWN;
-      return;
-   }
    super::calculateCompoundStatus(bForcedRecalc);
    lockProperties();
    int status = 0;
@@ -656,6 +651,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
          m_state &= ~DCSF_UNREACHABLE;
          sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
       }
+      conn->decRefCount();
    }
    else
    {
@@ -852,7 +848,7 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
          prepareLoraDciParameters(parameter);
          break;
       case COMM_DLMS:
-         if(parameter.find(_T("Sensor")) != -1)
+         if (parameter.find(_T("Sensor")) != -1)
             prepareDlmsDciParameters(parameter);
          break;
    }
@@ -879,8 +875,13 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
             nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
-            if (getAgentConnection() == NULL)
+            conn->decRefCount();
+            conn = getAgentConnection();
+            if (conn == NULL)
+            {
+               retry = 0;
                break;
+            }
             nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
             break;
          case ERR_INTERNAL_ERROR:
@@ -888,6 +889,9 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
             break;
       }
    }
+
+   if (conn != nullptr)
+      conn->decRefCount();
 
    nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, dwResult);
    return dwResult;
@@ -900,7 +904,7 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
 {
    UINT32 dwError = ERR_NOT_CONNECTED;
    DataCollectionError dwResult = DCE_COMM_ERROR;
-   UINT32 dwTries = 3;
+   int retries = 3;
 
    *list = NULL;
 
@@ -928,7 +932,7 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
    nxlog_debug(3, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, parameter.getBuffer());
 
    // Get parameter from agent
-   while(dwTries-- > 0)
+   while(retries-- > 0)
    {
       dwError = conn->getList(parameter, list);
       switch(dwError)
@@ -947,8 +951,13 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
             DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-            if (getAgentConnection() == NULL)
+            conn->decRefCount();
+            conn = getAgentConnection();
+            if (conn == NULL)
+            {
+               retries = 0;
                break;
+            }
             DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
@@ -972,19 +981,23 @@ void Sensor::prepareForDeletion()
       ThreadSleepMs(100);
    nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
 
-   AgentConnectionEx *conn = getAgentConnection();
-   if ((m_commProtocol == COMM_LORAWAN) && (conn != NULL))
+   if (m_commProtocol == COMM_LORAWAN)
    {
-      NXCPMessage msg(conn->getProtocolVersion());
-      msg.setCode(CMD_UNREGISTER_LORAWAN_SENSOR);
-      msg.setId(conn->generateRequestId());
-      msg.setField(VID_GUID, m_guid);
-      NXCPMessage *response = conn->customRequest(&msg);
-      if (response != NULL)
+      AgentConnectionEx *conn = getAgentConnection();
+      if (conn != nullptr)
       {
-         if (response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
-            nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): successfully unregistered from LoRaWAN server"), m_name, m_id);
-         delete response;
+         NXCPMessage msg(conn->getProtocolVersion());
+         msg.setCode(CMD_UNREGISTER_LORAWAN_SENSOR);
+         msg.setId(conn->generateRequestId());
+         msg.setField(VID_GUID, m_guid);
+         NXCPMessage *response = conn->customRequest(&msg);
+         if (response != NULL)
+         {
+            if (response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
+               nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): successfully unregistered from LoRaWAN server"), m_name, m_id);
+            delete response;
+         }
+         conn->decRefCount();
       }
    }
 

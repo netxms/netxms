@@ -251,7 +251,7 @@ PolicyUninstallJob::PolicyUninstallJob(const TCHAR *params, UINT32 node, UINT32 
    }
 
    m_policyGuid = uuid::parse(paramList.get(0));
-   _tcsncpy(m_policyType, paramList.get(1), 32);
+   _tcslcpy(m_policyType, paramList.get(1), 32);
 
    m_retryCount = (paramList.size() >= 2) ? _tcstol(paramList.get(1), NULL, 0) : 0;
 
