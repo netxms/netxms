@@ -2287,7 +2287,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
    if ((invalidSymbolIndex < plen - 2) || ((invalidSymbolIndex != plen) && ((encryptedPasswd[invalidSymbolIndex] != '=') || ((invalidSymbolIndex == plen - 2) && (encryptedPasswd[plen - 1] != '=')))))
       return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
 
-   BYTE encrypted[32], decrypted[32], key[16];
+   BYTE encrypted[64], decrypted[64], key[16];
    size_t encSize = ((plen == 44) ? 32 : 64);
    base64_decode(encryptedPasswd, strlen(encryptedPasswd), (char *)encrypted, &encSize);
    if (encSize != ((plen == 44) ? 32 : 64))
