@@ -803,7 +803,7 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id) :
    m_active = true;
 #ifdef _WIN32
    InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
-   m_dataCondition = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+   InitializeConditionVariable(&m_dataCondition);
 #else
    pthread_mutex_init(&m_bufferLock, nullptr);
    pthread_cond_init(&m_dataCondition, nullptr);
@@ -818,7 +818,6 @@ AgentTunnelCommChannel::~AgentTunnelCommChannel()
    m_tunnel->decRefCount();
 #ifdef _WIN32
    DeleteCriticalSection(&m_bufferLock);
-   CloseHandle(m_dataCondition);
 #else
    pthread_mutex_destroy(&m_bufferLock);
    pthread_cond_destroy(&m_dataCondition);
@@ -843,32 +842,27 @@ ssize_t AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
-   if (m_buffer.isEmpty())
-   {
-retry_wait:
-      LeaveCriticalSection(&m_bufferLock);
-      if (WaitForSingleObject(m_dataCondition, timeout) == WAIT_TIMEOUT)
-         return -2;
-
-      if (!m_active)
-         return 0;   // closed while waiting
-
-      EnterCriticalSection(&m_bufferLock);
-      if (m_buffer.isEmpty())
-      {
-         ResetEvent(m_dataCondition);
-         goto retry_wait;
-      }
-   }
 #else
    pthread_mutex_lock(&m_bufferLock);
+#endif
    if (m_buffer.isEmpty())
    {
-#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+#ifdef _WIN32
+      // SleepConditionVariableCS is subject to spurious wakeups so we need a loop here
+      BOOL signalled = FALSE;
+      do
+      {
+         int64_t startTime = GetCurrentTimeMs();
+         signalled = SleepConditionVariableCS(&m_dataCondition, &m_bufferLock, timeout);
+         if (signalled)
+            break;
+         timeout -= std::min(timeout, static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
+      } while (timeout > 0);
+#elif HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
       struct timespec ts;
       ts.tv_sec = timeout / 1000;
       ts.tv_nsec = (timeout % 1000) * 1000000;
-      int rc = pthread_cond_reltimedwait_np(&m_dataCondition, &m_bufferLock, &ts);
+      bool signalled = (pthread_cond_reltimedwait_np(&m_dataCondition, &m_bufferLock, &ts) == 0);
 #else
       struct timeval now;
       struct timespec ts;
@@ -877,26 +871,31 @@ retry_wait:
       now.tv_usec += (timeout % 1000) * 1000;
       ts.tv_sec += now.tv_usec / 1000000;
       ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
-      int rc = pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts);
+      bool signalled = (pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts) == 0);
 #endif
-      if (rc != 0)
+      if (!signalled)
       {
+#ifdef _WIN32
+         LeaveCriticalSection(&m_bufferLock);
+#else
          pthread_mutex_unlock(&m_bufferLock);
+#endif
          return -2;  // timeout
       }
 
       if (!m_active) // closed while waiting
       {
+#ifdef _WIN32
+         LeaveCriticalSection(&m_bufferLock);
+#else
          pthread_mutex_unlock(&m_bufferLock);
+#endif
          return 0;
       }
    }
-#endif
 
    size_t bytes = m_buffer.read((BYTE *)buffer, size);
 #ifdef _WIN32
-   if (m_buffer.isEmpty())
-      ResetEvent(m_dataCondition);
    LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_unlock(&m_bufferLock);
@@ -919,33 +918,28 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
 
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
-   if (m_buffer.isEmpty())
-   {
-retry_wait:
-      LeaveCriticalSection(&m_bufferLock);
-      if (WaitForSingleObject(m_dataCondition, timeout) == WAIT_TIMEOUT)
-         return 0;
-
-      if (!m_active)
-         return -1;
-
-      EnterCriticalSection(&m_bufferLock);
-      if (m_buffer.isEmpty())
-      {
-         ResetEvent(m_dataCondition);
-         goto retry_wait;
-      }
-   }
-   LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_lock(&m_bufferLock);
+#endif
+   BOOL success;
    if (m_buffer.isEmpty())
    {
-#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+#ifdef _WIN32
+      // SleepConditionVariableCS is subject to spurious wakeups so we need a loop here
+      success = FALSE;
+      do
+      {
+         int64_t startTime = GetCurrentTimeMs();
+         success = SleepConditionVariableCS(&m_dataCondition, &m_bufferLock, timeout);
+         if (success)
+            break;
+         timeout -= std::min(timeout, static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
+      } while (timeout > 0);
+#elif HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
       struct timespec ts;
       ts.tv_sec = timeout / 1000;
       ts.tv_nsec = (timeout % 1000) * 1000000;
-      rc = pthread_cond_reltimedwait_np(&m_dataCondition, &m_bufferLock, &ts);
+      success = (pthread_cond_reltimedwait_np(&m_dataCondition, &m_bufferLock, &ts) == 0);
 #else
       struct timeval now;
       struct timespec ts;
@@ -954,13 +948,16 @@ retry_wait:
       now.tv_usec += (timeout % 1000) * 1000;
       ts.tv_sec += now.tv_usec / 1000000;
       ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
-      rc = pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts);
+      success = (pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts) == 0);
 #endif
    }
+#ifdef _WIN32
+   LeaveCriticalSection(&m_bufferLock);
+#else
    pthread_mutex_unlock(&m_bufferLock);
 #endif
 
-   return (rc == 0) ? 1 : 0;
+   return success ? 1 : 0;
 }
 
 /**
@@ -970,9 +967,7 @@ int AgentTunnelCommChannel::shutdown()
 {
    m_active = false;
 #ifdef _WIN32
-   EnterCriticalSection(&m_bufferLock);
-   SetEvent(m_dataCondition);
-   LeaveCriticalSection(&m_bufferLock);
+   WakeAllConditionVariable(&m_dataCondition);
 #else
    pthread_cond_broadcast(&m_dataCondition);
 #endif
@@ -986,9 +981,7 @@ void AgentTunnelCommChannel::close()
 {
    m_active = false;
 #ifdef _WIN32
-   EnterCriticalSection(&m_bufferLock);
-   SetEvent(m_dataCondition);
-   LeaveCriticalSection(&m_bufferLock);
+   WakeAllConditionVariable(&m_dataCondition);
 #else
    pthread_cond_broadcast(&m_dataCondition);
 #endif
@@ -1007,7 +1000,7 @@ void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
 #endif
    m_buffer.write(data, size);
 #ifdef _WIN32
-   SetEvent(m_dataCondition);
+   WakeAllConditionVariable(&m_dataCondition);
    LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_cond_broadcast(&m_dataCondition);
