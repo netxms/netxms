@@ -159,9 +159,9 @@ enum RTCPStatisticElementIndex
  */
 struct RTCPStatistic
 {
-   UINT64 rtt[4];
-   UINT64 jitter[4];
-   UINT64 packetLoss[4];
+   uint64_t rtt[4];
+   uint64_t jitter[4];
+   uint64_t packetLoss[4];
 };
 
 /**
@@ -175,9 +175,9 @@ private:
    char *m_password;
    char *m_domain;
    char *m_proxy;
-   UINT32 m_interval;
+   uint32_t m_interval;
    time_t m_lastRunTime;
-   INT32 m_elapsedTime;
+   int32_t m_elapsedTime;
    int m_status;
    MUTEX m_mutex;
    bool m_stop;
@@ -192,9 +192,9 @@ public:
    const char *getLogin() const { return m_login; }
    const char *getDomain() const { return m_domain; }
    const char *getProxy() const { return m_proxy; }
-   UINT32 getInterval() const { return m_interval; }
+   uint32_t getInterval() const { return m_interval; }
    time_t getLastRunTime() const { return GetAttributeWithLock(m_lastRunTime, m_mutex); }
-   INT32 getElapsedTime() const { return GetAttributeWithLock(m_elapsedTime, m_mutex); }
+   int32_t getElapsedTime() const { return GetAttributeWithLock(m_elapsedTime, m_mutex); }
    int getStatus() const { return GetAttributeWithLock(m_status, m_mutex); }
 
    void start();

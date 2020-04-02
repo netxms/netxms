@@ -66,7 +66,7 @@ void AsteriskSystem::processRTCP(AmiMessage *msg)
 /**
  * Initialize RTCP statistic entry
  */
-inline void InitRTCPStatisticEntry(UINT32 curr, UINT64 *stat)
+inline void InitRTCPStatisticEntry(UINT32 curr, uint64_t *stat)
 {
    stat[RTCP_LAST] = curr;
    stat[RTCP_MIN] = curr;
@@ -77,14 +77,14 @@ inline void InitRTCPStatisticEntry(UINT32 curr, UINT64 *stat)
 /**
  * Update RTCP statistic entry
  */
-inline void UpdateRTCPStatisticEntry(UINT32 curr, UINT64 *stat)
+inline void UpdateRTCPStatisticEntry(UINT32 curr, uint64_t *stat)
 {
    stat[RTCP_LAST] = curr;
    if (curr < stat[RTCP_MIN])
       stat[RTCP_MIN] = curr;
    if (curr > stat[RTCP_MAX])
       stat[RTCP_MAX] = curr;
-   UpdateExpMovingAverage(stat[RTCP_AVG], EMA_EXP_15, static_cast<UINT64>(curr) << EMA_FP_SHIFT);
+   UpdateExpMovingAverage(stat[RTCP_AVG], EMA_EXP_15, static_cast<uint64_t>(curr));
 }
 
 /**
@@ -145,7 +145,7 @@ RTCPStatistic *AsteriskSystem::getPeerRTCPStatistic(const TCHAR *peer, RTCPStati
 /**
  * Get value from RTCP statistics
  */
-inline void GetRTCPValue(UINT64 *elements, TCHAR key, TCHAR *value)
+inline void GetRTCPValue(uint64_t *elements, TCHAR key, TCHAR *value)
 {
    RTCPStatisticElementIndex index;
    switch(key)
