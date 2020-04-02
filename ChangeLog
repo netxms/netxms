@@ -1,4 +1,12 @@
 *
+* 3.2.460
+*
+
+- Fixed bug in thread pool manager that can cause start of excessive number of threads
+- Additional SSL trace output in agent
+
+
+*
 * 3.2.451
 * 
 
