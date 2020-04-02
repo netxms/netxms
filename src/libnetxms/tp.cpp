@@ -59,8 +59,8 @@ struct WorkRequest
 {
    ThreadPoolWorkerFunction func;
    void *arg;
-   INT64 queueTime;
-   INT64 runTime;
+   int64_t queueTime;
+   int64_t runTime;
 };
 
 /**
@@ -69,13 +69,13 @@ struct WorkRequest
 class SerializationQueue: public Queue
 {
 private:
-   UINT32 m_maxWaitTime;
+   uint32_t m_maxWaitTime;
 
 public:
    SerializationQueue() : Queue() { m_maxWaitTime = 0; }
    SerializationQueue(size_t blockSize) : Queue(blockSize, Ownership::False) { m_maxWaitTime = 0; }
 
-   UINT32 getMaxWaitTime() { return m_maxWaitTime; }
+   uint32_t getMaxWaitTime() { return m_maxWaitTime; }
    void updateMaxWaitTime(UINT32 waitTime) { m_maxWaitTime = std::max(waitTime, m_maxWaitTime); }
 };
 
@@ -87,7 +87,7 @@ struct ThreadPool
    int minThreads;
    int maxThreads;
    int stackSize;
-   UINT32 workerIdleTimeout;
+   uint32_t workerIdleTimeout;
    VolatileCounter activeRequests;
    MUTEX mutex;
    THREAD maintThread;
@@ -100,10 +100,10 @@ struct ThreadPool
    MUTEX schedulerLock;
    TCHAR *name;
    bool shutdownMode;
-   INT64 loadAverage[3];
-   INT64 averageWaitTime;
-   UINT64 threadStartCount;
-   UINT64 threadStopCount;
+   int64_t loadAverage[3];
+   int64_t averageWaitTime;
+   uint64_t threadStartCount;
+   uint64_t threadStopCount;
    VolatileCounter64 taskExecutionCount;
 };
 
@@ -178,7 +178,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
       if (rq->func == NULL) // stop indicator
          break;
       
-      INT64 waitTime = (GetCurrentTimeMs() - rq->queueTime) << EMA_FP_SHIFT;
+      int64_t waitTime = GetCurrentTimeMs() - rq->queueTime;
       MutexLock(p->mutex);
       UpdateExpMovingAverage(p->averageWaitTime, EMA_EXP_180, waitTime);
       MutexUnlock(p->mutex);
@@ -223,7 +223,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
       {
          cycleTime = 0;
 
-         INT64 requestCount = static_cast<INT64>(p->activeRequests) << EMA_FP_SHIFT;
+         int64_t requestCount = static_cast<int64_t>(p->activeRequests);
          UpdateExpMovingAverage(p->loadAverage[0], EMA_EXP_12, requestCount);
          UpdateExpMovingAverage(p->loadAverage[1], EMA_EXP_60, requestCount);
          UpdateExpMovingAverage(p->loadAverage[2], EMA_EXP_180, requestCount);
@@ -237,7 +237,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
 
             MutexLock(p->mutex);
             int threadCount = p->threads->size();
-            INT64 averageWaitTime = p->averageWaitTime / EMA_FP_1;
+            int64_t averageWaitTime = p->averageWaitTime / EMA_FP_1;
             if (((averageWaitTime > s_waitTimeHighWatermark) && (threadCount < p->maxThreads)) ||
                 ((threadCount == 0) && (p->activeRequests > 0)))
             {
@@ -571,7 +571,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    info->loadAvg[0] = GetExpMovingAverageValue(p->loadAverage[0]);
    info->loadAvg[1] = GetExpMovingAverageValue(p->loadAverage[1]);
    info->loadAvg[2] = GetExpMovingAverageValue(p->loadAverage[2]);
-   info->averageWaitTime = static_cast<UINT32>(p->averageWaitTime / EMA_FP_1);
+   info->averageWaitTime = static_cast<uint32_t>(p->averageWaitTime / EMA_FP_1);
    MutexUnlock(p->mutex);
 
    MutexLock(p->schedulerLock);
