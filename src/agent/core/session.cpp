@@ -812,10 +812,11 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
    {
       TCHAR szSecret[MAX_SECRET_LENGTH];
       BYTE hash[32];
-      WORD wAuthMethod;
 
-      wAuthMethod = pRequest->getFieldAsUInt16(VID_AUTH_METHOD);
-      switch(wAuthMethod)
+      int authMethod = pRequest->getFieldAsInt16(VID_AUTH_METHOD);
+      if (authMethod == 0)
+         authMethod = AUTH_SHA1_HASH;
+      switch(authMethod)
       {
          case AUTH_PLAINTEXT:
             pRequest->getFieldAsString(VID_SHARED_SECRET, szSecret, MAX_SECRET_LENGTH);

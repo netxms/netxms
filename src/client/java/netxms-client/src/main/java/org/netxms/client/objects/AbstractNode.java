@@ -119,7 +119,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    protected long etherNetIpProxyId;
    protected long icmpProxyId;
 	protected int agentPort;
-	protected int agentAuthMethod;
 	protected UUID agentId;
 	protected AgentCacheMode agentCacheMode;
 	protected AgentCompressionMode agentCompressionMode;
@@ -218,7 +217,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       etherNetIpProxyId = msg.getFieldAsInt64(NXCPCodes.VID_ETHERNET_IP_PROXY);
       icmpProxyId = msg.getFieldAsInt64(NXCPCodes.VID_ICMP_PROXY);
 		agentPort = msg.getFieldAsInt32(NXCPCodes.VID_AGENT_PORT);
-		agentAuthMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
 		agentSharedSecret = msg.getFieldAsString(NXCPCodes.VID_SHARED_SECRET);
       agentCacheMode = AgentCacheMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_CACHE_MODE));
       agentCompressionMode = AgentCompressionMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_COMPRESSION_MODE));
@@ -426,14 +424,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	public int getAgentPort()
 	{
 		return agentPort;
-	}
-
-	/**
-	 * @return the agentAuthMethod
-	 */
-	public int getAgentAuthMethod()
-	{
-		return agentAuthMethod;
 	}
 
 	/**

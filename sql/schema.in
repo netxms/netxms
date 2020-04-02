@@ -339,8 +339,7 @@ CREATE TABLE nodes
   usm_priv_password varchar(127) null,
   usm_methods integer not null,
   snmp_oid varchar(255) null,
-  auth_method integer not null,
-  secret varchar(64) null,
+  secret varchar(88) null,
   agent_port integer not null,
   status_poll_type integer not null,
   agent_version varchar(63) null,
@@ -2249,7 +2248,7 @@ CREATE TABLE websvc_headers
 CREATE TABLE shared_secrets 
 (
    id integer not null,
-   secret varchar(64) null,
+   secret varchar(88) null,
    zone integer null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;

@@ -5430,9 +5430,8 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxy());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AGENT_AUTH))
+      if (data.isFieldSet(NXCObjectModificationData.AGENT_SECRET))
       {
-         msg.setFieldInt16(NXCPCodes.VID_AUTH_METHOD, data.getAgentAuthMethod());
          msg.setField(NXCPCodes.VID_SHARED_SECRET, data.getAgentSecret());
       }
 

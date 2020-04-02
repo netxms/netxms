@@ -2653,10 +2653,9 @@ protected:
 	uint32_t m_requiredPollCount;
 	uint32_t m_zoneUIN;
    uint16_t m_agentPort;
-   int16_t m_agentAuthMethod;
    int16_t m_agentCacheMode;
    int16_t m_agentCompressionMode;  // agent compression mode (enabled/disabled/default)
-   TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
+   TCHAR m_agentSecret[MAX_SECRET_LENGTH];
    int16_t m_iStatusPollType;
    SNMP_Version m_snmpVersion;
    uint16_t m_snmpPort;
@@ -2916,9 +2915,8 @@ public:
    const BYTE *getBridgeId() const { return m_baseBridgeAddress; }
    const TCHAR *getDriverName() const { return (m_driver != nullptr) ? m_driver->getName() : _T("GENERIC"); }
    uint16_t getAgentPort() const { return m_agentPort; }
-   int16_t getAgentAuthMethod() const { return m_agentAuthMethod; }
    int16_t getAgentCacheMode() const { return (m_state & NSF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
-   const TCHAR *getSharedSecret() const { return m_szSharedSecret; }
+   const TCHAR *getAgentSecret() const { return m_agentSecret; }
    uint32_t getAgentProxy() const { return m_agentProxy; }
    uint32_t getPhysicalContainerId() const { return m_physicalContainer; }
    INT16 getRackHeight() const { return m_rackHeight; }

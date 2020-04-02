@@ -340,7 +340,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 		proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
       if (proxyNode != nullptr)
       {
-         pAgentConn->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(), proxyNode->getSharedSecret());
+         pAgentConn->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(), proxyNode->getAgentSecret());
       }
 	}
 

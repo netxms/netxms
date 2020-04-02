@@ -65,7 +65,7 @@ public class NXCObjectModificationData
    public static final int VERSION                = 7;
    public static final int DESCRIPTION            = 8;
    public static final int AGENT_PORT             = 9;
-   public static final int AGENT_AUTH             = 10;
+   public static final int AGENT_SECRET           = 10;
    public static final int SNMP_VERSION           = 11;
    public static final int SNMP_AUTH              = 12;
    public static final int AGENT_PROXY            = 13;
@@ -154,7 +154,6 @@ public class NXCObjectModificationData
    private int version;
    private String description;
    private int agentPort;
-   private int agentAuthMethod;
    private String agentSecret;
    private long agentProxy;
    private int snmpPort;
@@ -425,23 +424,6 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the agentAuthMethod
-    */
-   public int getAgentAuthMethod()
-   {
-      return agentAuthMethod;
-   }
-
-   /**
-    * @param agentAuthMethod the agentAuthMethod to set
-    */
-   public void setAgentAuthMethod(int agentAuthMethod)
-   {
-      this.agentAuthMethod = agentAuthMethod;
-      fieldSet.add(AGENT_AUTH);
-   }
-
-   /**
     * @return the agentSecret
     */
    public String getAgentSecret()
@@ -455,7 +437,7 @@ public class NXCObjectModificationData
    public void setAgentSecret(String agentSecret)
    {
       this.agentSecret = agentSecret;
-      fieldSet.add(AGENT_AUTH);
+      fieldSet.add(AGENT_SECRET);
    }
 
    /**

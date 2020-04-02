@@ -806,8 +806,7 @@ private:
    int m_nProtocolVersion;
    bool m_controlServer;
    bool m_masterServer;
-   int m_iAuthMethod;
-   char m_szSecret[MAX_SECRET_LENGTH];
+   char m_secret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;
    AbstractCommChannel *m_channel;
    VolatileCounter m_requestId;
@@ -818,13 +817,12 @@ private:
    bool m_isConnected;
    MUTEX m_mutexDataLock;
 	MUTEX m_mutexSocketWrite;
-   int m_iEncryptionPolicy;
+   int m_encryptionPolicy;
    bool m_useProxy;
    InetAddress m_proxyAddr;
    uint16_t m_port;
    uint16_t m_proxyPort;
-   int m_iProxyAuth;
-   char m_szProxySecret[MAX_SECRET_LENGTH];
+   char m_proxySecret[MAX_SECRET_LENGTH];
 	int m_hCurrFile;
 	TCHAR m_currentFileName[MAX_PATH];
 	UINT32 m_dwDownloadRequestId;
@@ -958,7 +956,7 @@ public:
    void setCommandTimeout(uint32_t timeout) { m_commandTimeout = MAX(timeout, 500); }
    uint32_t getCommandTimeout() const { return m_commandTimeout; }
    void setRecvTimeout(uint32_t timeout) { m_recvTimeout = MAX(timeout, 1800000); }
-   void setEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
+   void setEncryptionPolicy(int policy) { m_encryptionPolicy = policy; }
    void setProxy(const InetAddress& addr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr);
    void setPort(uint16_t port) { m_port = port; }
    void setSharedSecret(const TCHAR *secret);

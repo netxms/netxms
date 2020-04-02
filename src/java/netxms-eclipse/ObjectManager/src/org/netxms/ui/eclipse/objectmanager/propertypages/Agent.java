@@ -110,9 +110,10 @@ public class Agent extends PropertyPage
       agentSharedSecret.setText(node.getAgentSharedSecret());
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(agentTunnelOnly, 0, SWT.BOTTOM);
       agentSharedSecret.setLayoutData(fd);
-      
+
       /* agent compression */
       Group agentCompressionGroup = new Group(dialogArea, SWT.NONE);
       agentCompressionGroup.setText("Protocol compression mode");
@@ -180,8 +181,7 @@ public class Agent extends PropertyPage
          return false;
       }
       md.setAgentProxy(agentProxy.getObjectId());
-      md.setAgentAuthMethod(agentSharedSecret.getText().isEmpty() ? AbstractNode.AGENT_AUTH_NONE : AbstractNode.AGENT_AUTH_SHA1);
-      md.setAgentSecret(agentSharedSecret.getText());
+      md.setAgentSecret(agentSharedSecret.getText().trim());
       md.setAgentCompressionMode(collectAgentCompressionMode());
       md.setObjectFlags((agentForceEncryption.getSelection() ? AbstractNode.NF_FORCE_ENCRYPTION : 0) | 
                (agentTunnelOnly.getSelection() ? AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY : 0), 

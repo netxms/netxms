@@ -443,7 +443,7 @@ void AgentConnectionReceiver::run()
 /**
  * Constructor for AgentConnection
  */
-AgentConnection::AgentConnection(const InetAddress& addr, WORD port, const TCHAR *secret, bool allowCompression)
+AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const TCHAR *secret, bool allowCompression)
 {
 #ifdef _WIN32
    m_self = new weak_ptr<AgentConnection>();
@@ -454,17 +454,16 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, const TCHAR
    if ((secret != nullptr) && (*secret != 0))
    {
 #ifdef UNICODE
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, nullptr, nullptr);
-		m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
+		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_secret, MAX_SECRET_LENGTH, nullptr, nullptr);
+		m_secret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-      strlcpy(m_szSecret, secret, MAX_SECRET_LENGTH);
+      strlcpy(m_secret, secret, MAX_SECRET_LENGTH);
 #endif
-      m_iAuthMethod = AUTH_SHA1_HASH;
+      DecryptPasswordA("netxms", m_secret, m_secret, MAX_SECRET_LENGTH);
    }
    else
    {
-      m_szSecret[0] = 0;
-      m_iAuthMethod = AUTH_NONE;
+      m_secret[0] = 0;
    }
    m_allowCompression = allowCompression;
    m_channel = nullptr;
@@ -477,10 +476,10 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, const TCHAR
    m_isConnected = false;
    m_mutexDataLock = MutexCreate();
 	m_mutexSocketWrite = MutexCreate();
-   m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
+   m_encryptionPolicy = m_iDefaultEncryptionPolicy;
    m_useProxy = false;
-   m_iProxyAuth = AUTH_NONE;
    m_proxyPort = 4700;
+   m_proxySecret[0] = 0;
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
    m_deleteFileOnDownloadFailure = true;
@@ -651,20 +650,20 @@ bool AgentConnection::connect(RSA *serverKey, uint32_t *error, uint32_t *socketE
 
    // Setup encryption
 setup_encryption:
-   if ((m_iEncryptionPolicy == ENCRYPTION_PREFERRED) ||
-       (m_iEncryptionPolicy == ENCRYPTION_REQUIRED) ||
+   if ((m_encryptionPolicy == ENCRYPTION_PREFERRED) ||
+       (m_encryptionPolicy == ENCRYPTION_REQUIRED) ||
        forceEncryption)    // Agent require encryption
    {
       if (serverKey != nullptr)
       {
          dwError = setupEncryption(serverKey);
          if ((dwError != ERR_SUCCESS) &&
-             ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption))
+             ((m_encryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption))
             goto connect_cleanup;
       }
       else
       {
-         if ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption)
+         if ((m_encryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption)
          {
             dwError = ERR_ENCRYPTION_REQUIRED;
             goto connect_cleanup;
@@ -676,7 +675,7 @@ setup_encryption:
    if ((dwError = authenticate(m_useProxy && !secondPass)) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
-          (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
+          (m_encryptionPolicy != ENCRYPTION_DISABLED))
       {
          forceEncryption = true;
          goto setup_encryption;
@@ -690,7 +689,7 @@ setup_encryption:
    if ((dwError = setServerCapabilities()) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
-          (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
+          (m_encryptionPolicy != ENCRYPTION_DISABLED))
       {
          forceEncryption = true;
          goto setup_encryption;
@@ -826,17 +825,16 @@ void AgentConnection::setSharedSecret(const TCHAR *secret)
    if ((secret != nullptr) && (*secret != 0))
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, nullptr, nullptr);
-      m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_secret, MAX_SECRET_LENGTH, nullptr, nullptr);
+      m_secret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-      strlcpy(m_szSecret, secret, MAX_SECRET_LENGTH);
+      strlcpy(m_secret, secret, MAX_SECRET_LENGTH);
 #endif
-      m_iAuthMethod = AUTH_SHA1_HASH;
+      DecryptPasswordA("netxms", m_secret, m_secret, MAX_SECRET_LENGTH);
    }
    else
    {
-      m_szSecret[0] = 0;
-      m_iAuthMethod = AUTH_NONE;
+      m_secret[0] = 0;
    }
 }
 
@@ -1487,47 +1485,20 @@ UINT32 AgentConnection::getTable(const TCHAR *pszParam, Table **table)
  */
 UINT32 AgentConnection::authenticate(BOOL bProxyData)
 {
-   NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId;
-   BYTE hash[32];
-   int iAuthMethod = bProxyData ? m_iProxyAuth : m_iAuthMethod;
-   const char *pszSecret = bProxyData ? m_szProxySecret : m_szSecret;
-#ifdef UNICODE
-   WCHAR szBuffer[MAX_SECRET_LENGTH];
-#endif
-
-   if (iAuthMethod == AUTH_NONE)
+   const char *secret = bProxyData ? m_proxySecret : m_secret;
+   if (*secret == 0)
       return ERR_SUCCESS;  // No authentication required
 
-   dwRqId = generateRequestId();
+   NXCPMessage msg(m_nProtocolVersion);
    msg.setCode(CMD_AUTHENTICATE);
-   msg.setId(dwRqId);
-   msg.setField(VID_AUTH_METHOD, (WORD)iAuthMethod);
-   char secret[MAX_SECRET_LENGTH];
-   DecryptPasswordA("netxms", pszSecret, secret, MAX_SECRET_LENGTH);
-   switch(iAuthMethod)
-   {
-      case AUTH_PLAINTEXT:
-#ifdef UNICODE
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, secret, -1, szBuffer, MAX_SECRET_LENGTH);
-         msg.setField(VID_SHARED_SECRET, szBuffer);
-#else
-         msg.setField(VID_SHARED_SECRET, secret);
-#endif
-         break;
-      case AUTH_MD5_HASH:
-         CalculateMD5Hash((BYTE *)secret, (int)strlen(secret), hash);
-         msg.setField(VID_SHARED_SECRET, hash, MD5_DIGEST_SIZE);
-         break;
-      case AUTH_SHA1_HASH:
-         CalculateSHA1Hash((BYTE *)secret, (int)strlen(secret), hash);
-         msg.setField(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
-         break;
-      default:
-         break;
-   }
+   uint32_t requestId = generateRequestId();
+   msg.setId(requestId);
+   msg.setField(VID_AUTH_METHOD, (WORD)AUTH_SHA1_HASH);  // For compatibility with agents before 3.3
+   BYTE hash[SHA1_DIGEST_SIZE];
+   CalculateSHA1Hash(reinterpret_cast<const BYTE*>(secret), strlen(secret), hash);
+   msg.setField(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_commandTimeout);
+      return waitForRCC(requestId, m_commandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -2072,17 +2043,16 @@ void AgentConnection::setProxy(const InetAddress& addr, uint16_t port, const TCH
    if ((secret != nullptr) && (*secret != 0))
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szProxySecret, MAX_SECRET_LENGTH, nullptr, nullptr);
-      m_szProxySecret[MAX_SECRET_LENGTH - 1] = 0;
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_proxySecret, MAX_SECRET_LENGTH, nullptr, nullptr);
+      m_proxySecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
       strlcpy(m_szProxySecret, pszSecret, MAX_SECRET_LENGTH);
 #endif
-      m_iProxyAuth = AUTH_SHA1_HASH;
+      DecryptPasswordA("netxms", m_proxySecret, m_proxySecret, MAX_SECRET_LENGTH);
    }
    else
    {
-      m_szProxySecret[0] = 0;
-      m_iProxyAuth = AUTH_NONE;
+      m_proxySecret[0] = 0;
    }
    m_useProxy = true;
 }

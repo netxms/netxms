@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.4 to 32.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE nodes SET secret='' WHERE auth_method=0")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("nodes"), _T("auth_method")));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("nodes"), _T("secret"), 88, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("shared_secrets"), _T("secret"), 88, true));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 32.3 to 32.4
  */
 static bool H_UpgradeFromV3()
@@ -114,6 +127,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4,  33, 5,  H_UpgradeFromV4  },
    { 3,  33, 4,  H_UpgradeFromV3  },
    { 2,  33, 3,  H_UpgradeFromV2  },
    { 1,  33, 2,  H_UpgradeFromV1  },
