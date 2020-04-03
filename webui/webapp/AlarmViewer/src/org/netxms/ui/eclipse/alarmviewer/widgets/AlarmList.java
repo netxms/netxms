@@ -126,6 +126,8 @@ public class AlarmList extends CompositeWithMessageBar
    private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
    private VisibilityValidator visibilityValidator;
    private boolean needInitialRefresh = false;
+   private boolean filterRunning = false;
+   private boolean filterRunPending = false;
    private Action actionComments;
    private Action actionAcknowledge;
    private Action actionResolve;
@@ -255,7 +257,7 @@ public class AlarmList extends CompositeWithMessageBar
                case SessionNotification.NEW_ALARM:
                   synchronized(alarmList)
                   {
-                     newAlarmList.add((Alarm)n.getObject());// Add to this list only new alms to be able to notify with sound
+                     newAlarmList.add((Alarm)n.getObject());// Add to this list only new alarms to be able to notify with sound
                   }
                case SessionNotification.ALARM_CHANGED:
                   synchronized(alarmList)
@@ -757,10 +759,17 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
    /**
-    * Call filterAndLimit() method on background thread
+    * Call filterAndLimit() method on background thread. Should be called on UI thread.
     */
    private void startFilterAndLimit()
    {
+      // Check if filtering job already running
+      if (filterRunning)
+      {
+         filterRunPending = true;
+         return;
+      }
+
       ConsoleJob job = new ConsoleJob("Filter alarms", viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -844,6 +853,14 @@ public class AlarmList extends CompositeWithMessageBar
                   }
                }
                newAlarmList.clear();
+            }
+
+            // Mark job end and check if another filter run is needed
+            filterRunning = false;
+            if (filterRunPending)
+            {
+               filterRunPending = false;
+               refreshTimer.execute();
             }
          }
       });
