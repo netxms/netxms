@@ -2961,6 +2961,9 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
+/**
+ * Get users from given set
+ */
 void ClientSession::getSelectedUsers(NXCPMessage *request)
 {
    NXCPMessage msg;
@@ -2972,7 +2975,6 @@ void ClientSession::getSelectedUsers(NXCPMessage *request)
 
    IntegerArray<UINT32> userIds;
    request->getFieldAsInt32Array(VID_OBJECT_LIST, &userIds);
-
 
    // Prepare message
    msg.setCode(CMD_USER_DATA);

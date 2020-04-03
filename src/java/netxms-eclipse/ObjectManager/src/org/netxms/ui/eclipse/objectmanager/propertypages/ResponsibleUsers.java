@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -160,31 +161,33 @@ public class ResponsibleUsers extends PropertyPage
             deleteButton.setEnabled(!selection.isEmpty());
          }
       });
-      
+
       syncUsersAndRefresh();
-      
       return dialogArea;
    }
    
+   /**
+    * Synchronize users and refresh view
+    */
    void syncUsersAndRefresh()
    {
       if (session.isUserDatabaseSynchronized())
       {
          return;
       }
-      
+
       ConsoleJob syncUsersJob = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if(session.syncMissingUsers(object.getResponsibleUsers().toArray(new Long[object.getResponsibleUsers().size()])))
+            if (session.syncMissingUsers(new HashSet<Long>(object.getResponsibleUsers())))
             {
                runInUIThread(new Runnable() {               
                   @Override
                   public void run()
                   {
                      userList = session.findUserDBObjectsByIds(object.getResponsibleUsers());
-                     userTable.refresh(true);                  
+                     userTable.refresh(true);
                   }
                });
             }

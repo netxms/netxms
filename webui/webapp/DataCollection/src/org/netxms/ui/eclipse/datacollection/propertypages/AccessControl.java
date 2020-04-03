@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -169,13 +169,11 @@ public class AccessControl extends DCIPropertyPageDialog
 	 */
 	private void getUsersAndRefresh()
    {
-	   
       ConsoleJob job = new ConsoleJob("Synchronize node components", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            List<Long> aclList = dco.getAccessList();
-            if(session.syncMissingUsers(aclList.toArray(new Long[aclList.size()])))
+            if (session.syncMissingUsers(new HashSet<Long>(dco.getAccessList())))
             {
                runInUIThread(new Runnable() {
                   @Override
@@ -193,7 +191,7 @@ public class AccessControl extends DCIPropertyPageDialog
                });
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -214,7 +212,7 @@ public class AccessControl extends DCIPropertyPageDialog
       else
          viewer.setInput(acl.toArray());
 	}
-	
+
 	/**
 	 * Add users to ACL
 	 */
@@ -228,7 +226,7 @@ public class AccessControl extends DCIPropertyPageDialog
 			setViewerInput();
 		}
 	}
-	
+
 	/**
 	 * Remove users from ACL
 	 */
@@ -239,7 +237,7 @@ public class AccessControl extends DCIPropertyPageDialog
 			acl.remove(o);
       setViewerInput();
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -252,19 +250,19 @@ public class AccessControl extends DCIPropertyPageDialog
 			list.add(o.getId());
 		dco.setAccessList(list);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{

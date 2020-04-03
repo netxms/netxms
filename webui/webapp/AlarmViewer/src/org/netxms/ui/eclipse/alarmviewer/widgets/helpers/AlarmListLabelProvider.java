@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
-import java.util.HashSet;
-import java.util.Set;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -61,7 +59,6 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    private boolean showColor = true;
 	private WorkbenchLabelProvider wbLabelProvider;
 	private TreeViewer viewer;
-	private Set<Long> unresolvedUserId = new HashSet<Long>();
 	
 	/**
 	 * Default constructor 
@@ -81,9 +78,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 		wbLabelProvider = new WorkbenchLabelProvider();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -106,9 +103,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -141,8 +138,6 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 					return null;
 				long userId = (((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) ? ((Alarm)element).getAcknowledgedByUser() : ((Alarm)element).getResolvedByUser();
 				AbstractUserObject user = session.findUserDBObjectById(userId, new UserRefreshRunnable(viewer, element)); 
-				if(user == null)
-				   unresolvedUserId.add(userId);
 				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAcknowledgedByUser()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmList.COLUMN_CREATED:
 				return RegionalSettings.getDateTimeFormat().format(((Alarm)element).getCreationTime());
@@ -161,9 +156,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -180,7 +175,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 		blinkState = !blinkState;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
     */
    @Override
@@ -189,7 +184,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
       return showColor ? FOREGROUND_COLORS[((Alarm)element).getCurrentSeverity().getValue()] : null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
     */
    @Override

@@ -26,6 +26,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -212,6 +213,33 @@ public class NXCPMessageField
 		integerValue = (long)0;
 		realValue = (double)0;
 	}
+
+   /**
+    * Create binary variable from Set<Long>
+    * 
+    * @param varId Variable ID
+    * @param value Value
+    */
+   public NXCPMessageField(final long varId, final Set<Long> value)
+   {
+      id = varId;
+      type = TYPE_BINARY;
+
+      final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.size() * 4);
+      final DataOutputStream out = new DataOutputStream(byteStream);
+      try
+      {
+         for(Long v : value)
+            out.writeInt(v.intValue());
+      }
+      catch(IOException e)
+      {
+      }
+      binaryValue = byteStream.toByteArray();
+      stringValue = "";
+      integerValue = (long)0;
+      realValue = (double)0;
+   }
 
 	/**
 	 * @param varId

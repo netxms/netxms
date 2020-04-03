@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.CRC32;
 import com.jcraft.jzlib.Deflater;
@@ -348,6 +349,17 @@ public class NXCPMessage
 	{
 		setField(new NXCPMessageField(fieldId, value));
 	}
+
+   /**
+    * Set field of BINARY type (array of integers)
+    * 
+    * @param fieldId field ID
+    * @param value value as set of Long
+    */
+   public void setField(final long fieldId, final Set<Long> value)
+   {
+      setField(new NXCPMessageField(fieldId, value));
+   }
 
 	/**
 	 * Set field of UTF8-STRING type

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2020 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.propertypages;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -185,7 +187,7 @@ public class AccessControl extends PropertyPage
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if(session.syncMissingUsers(category.getAccessControl()))
+            if (session.syncMissingUsers(new HashSet<Long>(Arrays.asList(category.getAccessControl()))))
             {
                runInUIThread(new Runnable() {
                   @Override

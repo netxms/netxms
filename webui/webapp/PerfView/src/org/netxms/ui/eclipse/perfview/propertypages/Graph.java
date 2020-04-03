@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,8 +64,7 @@ public class Graph extends PreferencePage
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(2);
 	private HashMap<Long, AccessListElement> acl;
-	
-	
+
 	/**
 	 * Constructor
 	 * @param settings
@@ -85,14 +84,13 @@ public class Graph extends PreferencePage
 		acl = new HashMap<Long, AccessListElement>(settings.getAccessList().size());
 		for(AccessListElement e : settings.getAccessList())
 			acl.put(e.getUserId(), new AccessListElement(e));
-		
-		final NXCSession session = ConsoleSharedData.getSession();
-		
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		ConsoleJob job = new ConsoleJob("Synchronize missing users", null, Activator.PLUGIN_ID) {         
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if (session.syncMissingUsers(acl.keySet().toArray(new Long[acl.size()])))
+            if (session.syncMissingUsers(acl.keySet()))
             {
                runInUIThread(new Runnable() {
                   @Override
@@ -107,7 +105,7 @@ public class Graph extends PreferencePage
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot sunchronize users";
+            return "Cannot synchronize users";
          }
       };
       job.setUser(false);

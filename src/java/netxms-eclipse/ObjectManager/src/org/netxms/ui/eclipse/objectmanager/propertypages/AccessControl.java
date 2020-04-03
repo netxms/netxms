@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -261,13 +260,12 @@ public class AccessControl extends PropertyPage
       {
          return;
       }
-      
+
       ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            Set<Long> aclIdSet = acl.keySet();
-            if (session.syncMissingUsers(aclIdSet.toArray(new Long[aclIdSet.size()])))
+            if (session.syncMissingUsers(acl.keySet()))
             {
                runInUIThread(new Runnable() {
                   @Override
@@ -278,7 +276,7 @@ public class AccessControl extends PropertyPage
                });
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -288,7 +286,7 @@ public class AccessControl extends PropertyPage
       job.setUser(false);
       job.start();  
    }
-	
+
 	/**
 	 * Create access control check box.
 	 * 
