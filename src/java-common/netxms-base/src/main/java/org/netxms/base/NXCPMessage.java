@@ -239,48 +239,60 @@ public class NXCPMessage
 	}
 	
 	/**
-	 * @return the msgCode
-	 */
+    * Get this message's code
+    * 
+    * @return this message's code
+    */
 	public int getMessageCode()
 	{
 		return messageCode;
 	}
 
 	/**
-	 * @param msgCode the msgCode to set
-	 */
+    * Set new message code
+    * 
+    * @param msgCode new message code
+    */
 	public void setMessageCode(final int msgCode)
 	{
 		this.messageCode = msgCode;
 	}
 
 	/**
-	 * @return the msgId
-	 */
+    * Get this message's ID
+    *
+    * @return this message's ID
+    */
 	public long getMessageId()
 	{
 		return messageId;
 	}
 
 	/**
-	 * @param msgId the msgId to set
-	 */
+    * Set new message ID
+    * 
+    * @param msgId new message ID
+    */
 	public void setMessageId(final long msgId)
 	{
 		this.messageId = msgId;
 	}
 
 	/**
-	 * @return the timestamp
-	 */
+    * Get message timestamp
+    *
+    * @return the timestamp
+    */
 	public long getTimestamp()
 	{
 		return timestamp;
 	}
 
 	/**
-	 * @param timestamp the timestamp to set
-	 */
+    * Set message timestamp
+    *
+    * @param timestamp new timestamp
+    */
 	public void setTimestamp(final long timestamp)
 	{
 		this.timestamp = timestamp;
@@ -318,32 +330,34 @@ public class NXCPMessage
 	}
 
 	/**
-	 * Set field of BINARY type (array of bytes)
-	 * 
-	 * @param fieldId
-	 * @param value
-	 */
+    * Set binary field from given byte array
+    * 
+    * @param fieldId field ID
+    * @param value binary value
+    */
 	public void setField(final long fieldId, final byte[] value)
 	{
 		setField(new NXCPMessageField(fieldId, value));
 	}
 
 	/**
-	 * Set field of BINARY type (array of integers)
-	 * 
-	 * @param fieldId
-	 * @param value
-	 */
+    * Set binary field from array of long integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
 	public void setField(final long fieldId, final long[] value)
 	{
 		setField(new NXCPMessageField(fieldId, value));
 	}
 
    /**
-    * Set field of BINARY type (array of integers)
+    * Set binary field from array of long integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
     * 
-    * @param fieldId
-    * @param value
+    * @param fieldId field ID
+    * @param value value to be encoded
     */
 	public void setField(final long fieldId, final Long[] value)
 	{
@@ -351,10 +365,11 @@ public class NXCPMessage
 	}
 
    /**
-    * Set field of BINARY type (array of integers)
+    * Set binary field from set of long integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
     * 
     * @param fieldId field ID
-    * @param value value as set of Long
+    * @param value value to be encoded
     */
    public void setField(final long fieldId, final Set<Long> value)
    {
@@ -385,22 +400,22 @@ public class NXCPMessage
    }
 
 	/**
-	 * Set field of DOUBLE type
-	 * 
-	 * @param fieldId
-	 * @param value
-	 */
+    * Set field of DOUBLE type
+    * 
+    * @param fieldId field ID
+    * @param value floating point number value
+    */
 	public void setField(final long fieldId, final Double value)
 	{
 		setField(new NXCPMessageField(fieldId, value));
 	}
 
 	/**
-	 * Set field of INETADDR type
-	 * 
-	 * @param fieldId
-	 * @param value
-	 */
+    * Set field of INETADDR type
+    * 
+    * @param fieldId field ID
+    * @param value value to encode
+    */
 	public void setField(final long fieldId, final InetAddress value)
 	{
 		setField(new NXCPMessageField(fieldId, value));
@@ -409,8 +424,8 @@ public class NXCPMessage
    /**
     * Set field of INETADDR type
     * 
-    * @param fieldId
-    * @param value
+    * @param fieldId field ID
+    * @param value value to encode
     */
    public void setField(long fieldId, InetAddressEx value)
    {
@@ -418,44 +433,44 @@ public class NXCPMessage
    }
 	
 	/**
-	 * Set field of BINARY type to GUID value (byte array of length 16).
-	 * 
-	 * @param fieldId
-	 * @param value
-	 */
+    * Set field of BINARY type to GUID value (byte array of length 16).
+    * 
+    * @param fieldId field ID
+    * @param value value to encode
+    */
 	public void setField(final long fieldId, final UUID value)
 	{
 		setField(new NXCPMessageField(fieldId, value));
 	}
 
 	/**
-	 * Set field of type INT64
-	 * 
-	 * @param fieldId
-	 * @param value
-	 */
+    * Set field of type INT64
+    * 
+    * @param fieldId field ID
+    * @param value integer value to encode
+    */
 	public void setFieldInt64(final long fieldId, final long value)
 	{
 		setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INT64, value));
 	}
 
 	/**
-	 * Set field of type INT32
-	 * 
-	 * @param fieldId
-	 * @param value
-	 */
+    * Set field of type INT32
+    * 
+    * @param fieldId field ID
+    * @param value integer value to encode
+    */
 	public void setFieldInt32(final long fieldId, final int value)
 	{
 		setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INTEGER, (long)value));
 	}
 
 	/**
-	 * Set field of type INT16
-	 * 
-	 * @param fieldId
-	 * @param value
-	 */
+    * Set field of type INT16
+    * 
+    * @param fieldId field ID
+    * @param value integer value to encode
+    */
 	public void setFieldInt16(final long fieldId, final int value)
 	{
 		setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INT16, (long)value));
@@ -464,8 +479,8 @@ public class NXCPMessage
    /**
     * Set field of type INT16 to 1 if value is true and 0 otherwise.
     * 
-    * @param fieldId
-    * @param value
+    * @param fieldId field ID
+    * @param value boolean value to encode
     */
    public void setField(final long fieldId, final boolean value)
    {
@@ -665,10 +680,11 @@ public class NXCPMessage
 	}
 
 	/**
-	 * Create binary NXCP message
-	 * 
-	 * @return byte stream ready to send
-	 */
+    * Create binary NXCP message
+    * 
+    * @return byte stream ready to send
+    * @throws IOException if write to underlying data output stream fails
+    */
 	public byte[] createNXCPMessage(boolean allowCompression) throws IOException
 	{
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
@@ -1026,9 +1042,9 @@ public class NXCPMessage
       return map;
    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+   /**
+    * @see java.lang.Object#toString()
+    */
 	@Override
 	public String toString()
 	{

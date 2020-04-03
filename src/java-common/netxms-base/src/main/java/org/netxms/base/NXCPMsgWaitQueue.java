@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,9 +75,11 @@ public class NXCPMsgWaitQueue
 	}
 	
 	/**
-	 * @param defaultTimeout
-	 * @param messageLifeTime
-	 */
+    * Create message wait queue.
+    * 
+    * @param defaultTimeout default wait timeout in milliseconds
+    * @param messageLifeTime message lifetime in milliseconds
+    */
 	public NXCPMsgWaitQueue(final int defaultTimeout, final int messageLifeTime)
 	{
 		this.defaultTimeout = defaultTimeout;
@@ -86,18 +88,18 @@ public class NXCPMsgWaitQueue
 	}
 
 	/**
-	 * @param defaultTimeout
-	 */
+    * Create message wait queue with default message lifetime (60 seconds).
+    * 
+    * @param defaultTimeout default wait timeout in milliseconds
+    */
 	public NXCPMsgWaitQueue(final int defaultTimeout)
 	{
-		this.defaultTimeout = defaultTimeout;
-		this.messageLifeTime = 60000;		// Default lifetime 60 seconds
-		housekeeperThread = new HousekeeperThread();
+      this(defaultTimeout, 60000);
 	}
 	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#finalize()
-	 */
+   /**
+    * @see java.lang.Object#finalize()
+    */
 	@Override
 	protected void finalize()
 	{
@@ -166,11 +168,11 @@ public class NXCPMsgWaitQueue
 	}
 
 	/**
-	 * Wait for message.
-	 * 
-	 * @param code	Message code
-	 * @param id Message id
-	 */
+    * Wait for message using default wait timeout.
+    * 
+    * @param code Message code
+    * @param id Message id
+    */
 	public NXCPMessage waitForMessage(final int code, final long id)
 	{
 		return waitForMessage(code, id, defaultTimeout);
@@ -200,14 +202,16 @@ public class NXCPMsgWaitQueue
 	}
 
 	/**
-	 * @return the defaultTimeout
-	 */
+    * Get queue's default wait timeout
+    * 
+    * @return default wait timeout in milliseconds
+    */
 	public int getDefaultTimeout()
 	{
 		return defaultTimeout;
 	}
-	
-	  /* (non-Javadoc)
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
