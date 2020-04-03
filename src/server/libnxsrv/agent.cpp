@@ -2046,7 +2046,7 @@ void AgentConnection::setProxy(const InetAddress& addr, uint16_t port, const TCH
       WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_proxySecret, MAX_SECRET_LENGTH, nullptr, nullptr);
       m_proxySecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-      strlcpy(m_szProxySecret, pszSecret, MAX_SECRET_LENGTH);
+      strlcpy(m_proxySecret, secret, MAX_SECRET_LENGTH);
 #endif
       DecryptPasswordA("netxms", m_proxySecret, m_proxySecret, MAX_SECRET_LENGTH);
    }
