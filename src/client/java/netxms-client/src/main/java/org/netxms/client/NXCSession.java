@@ -1208,11 +1208,11 @@ public class NXCSession
    /**
     * User synchronization thread
     */
-   class UserSync extends Thread
+   class BackgroundUserSync extends Thread
    {
-      public UserSync()
+      public BackgroundUserSync()
       {
-         setName("SyncUsers");
+         setName("BackgroundUserSync");
          setDaemon(true);
          start();
       }
@@ -1225,29 +1225,22 @@ public class NXCSession
       {
          while(true)
          {
+            Set<Long> userSyncListCopy = null;
+            List<Runnable> callbackListCopy = null;
+
             synchronized(userSyncList)
             {
-               try
+               while(userSyncList.isEmpty())
                {
-                  userSyncList.wait();
+                  try
+                  {
+                     userSyncList.wait();
+                  }
+                  catch(InterruptedException e)
+                  {
+                  }
                }
-               catch(InterruptedException e)
-               {
-               }
-            }
-            
-            try
-            {
-               sleep(5);
-            }
-            catch(InterruptedException e)
-            {
-            }
-            
-            Set<Long> userSyncListCopy;
-            List<Runnable> callbackListCopy;
-            synchronized(userSyncList)
-            {
+
                userSyncListCopy = userSyncList;
                userSyncList = new HashSet<Long>();
                callbackListCopy = callbackList;
@@ -1256,32 +1249,47 @@ public class NXCSession
             
             try
             {
-               syncMissingUsers(userSyncListCopy.toArray(new Long[userSyncListCopy.size()]));
+               syncMissingUsers(userSyncListCopy);
+               for(Runnable cb : callbackListCopy)
+                  cb.run();
             }
             catch(Exception e)
             {
+               Logger.error("NXCSession", "Exception while synchronizing user database objects", e);
                continue;
-            }
-
-            for(Runnable cb : callbackListCopy)
-            {
-               cb.run();
             }
          }         
       }
-      
    }
 
+   /**
+    * Create session object that will connect to given address on default port (4701) without encryption.
+    * 
+    * @param connAddress server host name or IP address
+    */
    public NXCSession(String connAddress)
    {
       this(connAddress, DEFAULT_CONN_PORT, false);
    }
 
+   /**
+    * Create session object that will connect to given address on given port without encryption.
+    * 
+    * @param connAddress server host name or IP address
+    * @param port TCP port
+    */
    public NXCSession(String connAddress, int connPort)
    {
       this(connAddress, connPort, false);
    }
 
+   /**
+    * Create session object that will connect to given address on given port.
+    * 
+    * @param connAddress server host name or IP address
+    * @param port TCP port
+    * @param connUseEncryption setup encrypted session if true
+    */
    public NXCSession(String connAddress, int connPort, boolean connUseEncryption)
    {
       this.connAddress = connAddress;
@@ -2007,7 +2015,7 @@ public class NXCSession
          recvThread = new ReceiverThread();
          housekeeperThread = new HousekeeperThread();
          new NotificationProcessor();
-         new UserSync();
+         new BackgroundUserSync();
 
          // get server information
          Logger.debug("NXCSession.connect", "connection established, retrieving server info");
@@ -4111,47 +4119,46 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncUserSet(Long[] userList) throws IOException, NXCException
+   public void syncUserSet(Set<Long> users) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_USERS);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, userList.length);
-      msg.setField(NXCPCodes.VID_OBJECT_LIST, userList);
-      sendMessage(msg);   
+      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, users.size());
+      msg.setField(NXCPCodes.VID_OBJECT_LIST, users);
+      sendMessage(msg);
+
+      // First request completion message will indicate successful sync start
       waitForRCC(msg.getMessageId());
+
+      // Server will send second completion message when all user database objects were sent back
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Synchronize only objects that were not yet synchronized
     * 
-    * @param userList
-    * @throws IOException
-    * @throws NXCException
+    * @param users set of user IDs to sync
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return true if synchronization was completed and false if synchronization is not needed
     */
-   public boolean syncMissingUsers(Long[] userList) throws IOException, NXCException
+   public boolean syncMissingUsers(Set<Long> users) throws IOException, NXCException
    {
       if (userDatabaseSynchronized)
          return false;
       
-      final Long[] syncList = Arrays.copyOf(userList, userList.length);
-      int count = syncList.length;
+      final Set<Long> syncSet = new HashSet<Long>();
       synchronized(userDatabase)
       {
-         for(int i = 0; i < syncList.length; i++)
+         for(Long id : users)
          {
-            if (userDatabase.containsKey(syncList[i]))
-            {
-               syncList[i] = 0L;
-               count--;
-            }
+            if (!userDatabase.containsKey(id))
+               syncSet.add(id);
          }
       }
 
-      if (count > 0)
-      {
-         syncUserSet(syncList);
-      }
-      return count > 0;
+      if (!syncSet.isEmpty())
+         syncUserSet(syncSet);
+      return !syncSet.isEmpty();
    }   
 
    /**
@@ -4186,10 +4193,13 @@ public class NXCSession
    }
 
    /**
-    * Find user or group by ID
+    * Find user or group by ID. If full user database synchronization was not done this method may return null for existing user
+    * that is not yet synchronized with the client. In such case client library will initiate background synchronization of that
+    * user object. If provided callback is not null it will be executed when synchronization is complete.
     *
-    * @param id The user DBObject Id
-    * @return User object with given ID or null if such user does not exist
+    * @param id The user database object ID
+    * @param callback synchronization completion callback (may be null)
+    * @return User object with given ID or null if such user does not exist or not synchronized with client.
     */
    public AbstractUserObject findUserDBObjectById(final long id, Runnable callback)
    {
@@ -4198,7 +4208,7 @@ public class NXCSession
       {
          object = userDatabase.get(id);
       }
-      if(object == null)
+      if (object == null)
       {
          synchronized(userSyncList)
          {
