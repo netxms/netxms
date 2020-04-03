@@ -1564,7 +1564,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it)
  */
 ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids)
 {
-   ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(16, 16, Ownership::True);
+   ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(ids->size(), 16, Ownership::True);
    RWLockReadLock(s_userDatabaseLock);
    for(int i = 0; i < ids->size(); i++)
    {
