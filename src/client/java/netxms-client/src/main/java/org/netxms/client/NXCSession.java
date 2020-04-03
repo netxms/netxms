@@ -346,6 +346,7 @@ public class NXCSession
    // Users
    private Map<Long, AbstractUserObject> userDatabase = new HashMap<Long, AbstractUserObject>();
    private Map<UUID, AbstractUserObject> userDatabaseGUID = new HashMap<UUID, AbstractUserObject>();
+   private Set<Long> missingUsers = new HashSet<Long>(); // users that cannot be synchronized
    private boolean userDatabaseSynchronized = false;
    private Set<Long> userSyncList = new HashSet<Long>();
    private List<Runnable> callbackList = new ArrayList<Runnable>();
@@ -509,11 +510,13 @@ public class NXCSession
                            AbstractUserObject o = userDatabase.remove(user.getId());
                            if (o != null)
                               userDatabaseGUID.remove(o.getGuid());
+                           missingUsers.add(user.getId());
                         }
                         else
                         {
                            userDatabase.put(user.getId(), user);
                            userDatabaseGUID.put(user.getGuid(), user);
+                           missingUsers.remove(user.getId());
                         }
                      }
                      break;
@@ -526,11 +529,13 @@ public class NXCSession
                            AbstractUserObject o = userDatabase.remove(group.getId());
                            if (o != null)
                               userDatabaseGUID.remove(o.getGuid());
+                           missingUsers.add(group.getId());
                         }
                         else
                         {
                            userDatabase.put(group.getId(), group);
                            userDatabaseGUID.put(group.getGuid(), group);
+                           missingUsers.add(group.getId());
                         }
                      }
                      break;
@@ -900,6 +905,7 @@ public class NXCSession
                {
                   userDatabase.put(id, object);
                   userDatabaseGUID.put(object.getGuid(), object);
+                  missingUsers.remove(id);
                }
                break;
             case SessionNotification.USER_DB_OBJECT_DELETED:
@@ -911,6 +917,7 @@ public class NXCSession
                      userDatabase.remove(id);
                      userDatabaseGUID.remove(object.getGuid());
                   }
+                  missingUsers.add(id);
                }
                break;
          }
@@ -1225,9 +1232,6 @@ public class NXCSession
       {
          while(true)
          {
-            Set<Long> userSyncListCopy = null;
-            List<Runnable> callbackListCopy = null;
-
             synchronized(userSyncList)
             {
                while(userSyncList.isEmpty())
@@ -1241,12 +1245,27 @@ public class NXCSession
                   }
                }
 
+            }
+
+            // Delay actual sync in case more synchronization requests will come
+            try
+            {
+               Thread.sleep(200);
+            }
+            catch(InterruptedException e)
+            {
+            }
+
+            Set<Long> userSyncListCopy;
+            List<Runnable> callbackListCopy;
+            synchronized(userSyncList)
+            {
                userSyncListCopy = userSyncList;
                userSyncList = new HashSet<Long>();
                callbackListCopy = callbackList;
                callbackList = new ArrayList<Runnable>();
             }
-            
+
             try
             {
                syncMissingUsers(userSyncListCopy);
@@ -4131,6 +4150,18 @@ public class NXCSession
 
       // Server will send second completion message when all user database objects were sent back
       waitForRCC(msg.getMessageId());
+
+      // Check that each user from set was synchronized and add update missing list
+      synchronized(userDatabase)
+      {
+         for(Long id : users)
+         {
+            if (userDatabase.containsKey(id))
+               missingUsers.remove(id);
+            else
+               missingUsers.add(id);
+         }
+      }
    }
 
    /**
@@ -4159,7 +4190,7 @@ public class NXCSession
       if (!syncSet.isEmpty())
          syncUserSet(syncSet);
       return !syncSet.isEmpty();
-   }   
+   }
 
    /**
     * Check if user database is synchronized with client
@@ -4204,11 +4235,14 @@ public class NXCSession
    public AbstractUserObject findUserDBObjectById(final long id, Runnable callback)
    {
       AbstractUserObject object = null;
+      boolean needSync = false;
       synchronized(userDatabase)
       {
          object = userDatabase.get(id);
+         if ((object == null) && !userDatabaseSynchronized && !missingUsers.contains(id))
+            needSync = true;
       }
-      if (object == null)
+      if (needSync)
       {
          synchronized(userSyncList)
          {

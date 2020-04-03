@@ -47,7 +47,8 @@ public class UserRefreshRunnable implements Runnable
          @Override
          public void run()
          {
-            viewer.update(element, null);
+            if (!viewer.getControl().isDisposed())
+               viewer.update(element, null);
          }
       });
    }
