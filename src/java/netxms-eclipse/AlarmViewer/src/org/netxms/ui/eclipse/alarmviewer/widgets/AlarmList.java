@@ -26,7 +26,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IAction;
@@ -130,7 +132,6 @@ public class AlarmList extends CompositeWithMessageBar
 	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private List<Alarm> newAlarmList = new ArrayList<Alarm>();
-   private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
    private VisibilityValidator visibilityValidator;
    private boolean needInitialRefresh = false;
    private boolean filterRunning = false;
@@ -304,7 +305,8 @@ public class AlarmList extends CompositeWithMessageBar
                   {
                      alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
                   }
-                  refreshTimer.execute();
+                  if (alarmFilter.filter((Alarm)n.getObject()))
+                     refreshTimer.execute();
                   break;
                case SessionNotification.ALARM_TERMINATED:
                case SessionNotification.ALARM_DELETED:
@@ -857,7 +859,7 @@ public class AlarmList extends CompositeWithMessageBar
          needInitialRefresh = false;
          refresh();
       }
-      else
+      else if ((visibilityValidator == null) || visibilityValidator.isVisible())
       {
          startFilterAndLimit();
       }
@@ -883,7 +885,7 @@ public class AlarmList extends CompositeWithMessageBar
    private void startFilterAndLimit()
    {
       // Check if filtering job already running
-      if (filterRunning)
+      if (filterRunning || ((visibilityValidator != null) && !visibilityValidator.isVisible()))
       {
          filterRunPending = true;
          return;
@@ -917,20 +919,21 @@ public class AlarmList extends CompositeWithMessageBar
    private void filterAndLimit()
    {
       // filter
-      filteredAlarmList.clear();
+      final List<Alarm> selectedAlarms = new ArrayList<Alarm>();
       for(Alarm alarm : alarmList.values())
       {
          if (alarmFilter.filter(alarm))
          {
-            filteredAlarmList.add(alarm);
+            selectedAlarms.add(alarm);
          }
       }
 
       // limit number of alarms to display
-      if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() > session.getAlarmListDisplayLimit()))
+      final List<Alarm> filteredAlarms;
+      if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() > session.getAlarmListDisplayLimit()))
       {
          // sort by last change - newest first
-         Collections.sort(filteredAlarmList, new Comparator<Alarm>() {
+         Collections.sort(selectedAlarms, new Comparator<Alarm>() {
             @Override
             public int compare(Alarm alarm1, Alarm alarm2)
             {
@@ -938,7 +941,11 @@ public class AlarmList extends CompositeWithMessageBar
             }
          });
 
-         filteredAlarmList = filteredAlarmList.subList(0, session.getAlarmListDisplayLimit());
+         filteredAlarms = selectedAlarms.subList(0, session.getAlarmListDisplayLimit());
+      }
+      else
+      {
+         filteredAlarms = selectedAlarms;
       }
 
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
@@ -948,20 +955,15 @@ public class AlarmList extends CompositeWithMessageBar
             if (alarmViewer.getControl().isDisposed())
                return;
 
-            if ((visibilityValidator != null) && !visibilityValidator.isVisible())
-               return;
-
-            synchronized(alarmList)
+            alarmViewer.setInput(filteredAlarms);
+            if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
             {
-               alarmViewer.setInput(filteredAlarmList);
-               if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
-               {
-                  showMessage(MessageBar.INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
-               }
-               else
-               {
-                  hideMessage();
-               }
+               showMessage(MessageBar.INFORMATION,
+                     String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarms.size()));
+            }
+            else
+            {
+               hideMessage();
             }
 
             // Mark job end and check if another filter run is needed
@@ -979,7 +981,7 @@ public class AlarmList extends CompositeWithMessageBar
       {
          for(Alarm a : newAlarmList)
          {
-            if (filteredAlarmList.contains(a))
+            if (filteredAlarms.contains(a))
                AlarmNotifier.playSounOnAlarm(a);
          }
       }
@@ -994,7 +996,7 @@ public class AlarmList extends CompositeWithMessageBar
       if ((visibilityValidator != null) && !visibilityValidator.isVisible())
 	      return;
 
-		new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, this) {
+      new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -1005,6 +1007,22 @@ public class AlarmList extends CompositeWithMessageBar
       		   alarmList.putAll(alarms);
                filterAndLimit();
             }
+         }
+
+         /**
+          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#createFailureStatus(java.lang.Exception)
+          */
+         @Override
+         protected IStatus createFailureStatus(Exception e)
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  showMessage(MessageBar.ERROR, getErrorMessage() + ": " + e.getMessage());
+               }
+            });
+            return Status.OK_STATUS;
          }
 
          @Override

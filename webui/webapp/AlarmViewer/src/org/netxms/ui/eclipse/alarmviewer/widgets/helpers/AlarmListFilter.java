@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,9 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
@@ -37,19 +38,11 @@ public class AlarmListFilter extends ViewerFilter
 {
    private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
    
-   private List<Long> rootObjects = new ArrayList<Long>();
+   private Set<Long> rootObjects = new HashSet<Long>();
    private int stateFilter = -1;
    private int severityFilter = 0xFF;
-   private NXCSession session;
+   private NXCSession session = ConsoleSharedData.getSession();
    private String filterString = null;
-
-   /**
-	 * 
-	 */
-   public AlarmListFilter()
-   {
-      session = (NXCSession)ConsoleSharedData.getSession();
-   }
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -199,20 +192,23 @@ public class AlarmListFilter extends ViewerFilter
       if (((1 << alarm.getCurrentSeverity().getValue()) & severityFilter) == 0)
          return false;
 
-      if ((rootObjects.size() == 0) || (rootObjects.contains(((Alarm)alarm).getSourceObjectId())))
-         return true; // No filtering by object ID or root object is a source
-
-      AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
-      if (object != null)
+      synchronized(this.rootObjects)
       {
-         // convert List of Longs to array of longs
-         long[] rootObjectsArray = new long[rootObjects.size()];
-         int i = 0;
-         for(long objectId : rootObjects)
+         if (rootObjects.isEmpty() || (rootObjects.contains(((Alarm)alarm).getSourceObjectId())))
+            return true; // No filtering by object ID or root object is a source
+
+         AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+         if (object != null)
          {
-            rootObjectsArray[i++] = objectId;
+            // convert List of Longs to array of longs
+            long[] rootObjectsArray = new long[rootObjects.size()];
+            int i = 0;
+            for(long objectId : rootObjects)
+            {
+               rootObjectsArray[i++] = objectId;
+            }
+            return object.isChildOf(rootObjectsArray);
          }
-         return object.isChildOf(rootObjectsArray);
       }
       return false;
    }
@@ -222,8 +218,11 @@ public class AlarmListFilter extends ViewerFilter
     */
    public final void setRootObject(long rootObject)
    {
-      this.rootObjects.clear();
-      this.rootObjects.add(rootObject);
+      synchronized(this.rootObjects)
+      {
+         this.rootObjects.clear();
+         this.rootObjects.add(rootObject);
+      }
    }
 
    /**
@@ -231,8 +230,11 @@ public class AlarmListFilter extends ViewerFilter
     */
    public void setRootObjects(List<Long> selectedObjects)
    {
-      this.rootObjects.clear();
-      this.rootObjects.addAll(selectedObjects);
+      synchronized(this.rootObjects)
+      {
+         this.rootObjects.clear();
+         this.rootObjects.addAll(selectedObjects);
+      }
    }
 
    /**
