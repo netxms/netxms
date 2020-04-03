@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.TrayItem;
@@ -225,32 +227,6 @@ public class AlarmNotifier
       }, "AlarmSoundPlayer");
       playerThread.setDaemon(true);
       playerThread.start();
-      
-
-      Thread alarmCountResetThread = new Thread(new Runnable() {
-         @Override
-         public void run()
-         {
-            while(true)
-            {
-               try
-               {
-                  Thread.sleep(5000);
-               }
-               catch(InterruptedException e)
-               {
-               }
-               
-               if (trayPopupCount.get() > 0)
-               {
-                  trayPopupCount.set(0);    
-                  trayPopupError.set(0);      
-               }
-            }
-         }
-      }, "AlarmCountResetThread"); //$NON-NLS-1$
-      alarmCountResetThread.setDaemon(true);
-      alarmCountResetThread.start();
    }
 
    /**
@@ -264,7 +240,6 @@ public class AlarmNotifier
       }
    }
    
-
    /**
     * @param severity
     * @return
@@ -360,11 +335,21 @@ public class AlarmNotifier
          session.removeListener(listener);
    }
    
+   /**
+    * Check if global sound is enabled
+    * 
+    * @return true if enabled
+    */
    public static boolean isGlobalSoundEnabled()
    {
       return !ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL");
    }
    
+   /**
+    * PLay sound for new alarm
+    * 
+    * @param alarm new alarm
+    */
    public static void playSounOnAlarm(final Alarm alarm)
    {
       try
@@ -395,7 +380,7 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      if(!ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"))
+      if (!ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"))
       {
          playSounOnAlarm(alarm);
       }
@@ -404,13 +389,13 @@ public class AlarmNotifier
          lastReminderTime = System.currentTimeMillis();
       outstandingAlarms++;
 
-      if (!Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_POPUPS")) //$NON-NLS-1$
+      if ((trayPopupError.get() > 0) || !Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_POPUPS")) //$NON-NLS-1$
          return;
 
       final TrayItem trayIcon = ConsoleSharedData.getTrayIcon();
       if (trayIcon != null)
       {
-         if (trayPopupCount.incrementAndGet() < 2)
+         if (trayPopupCount.incrementAndGet() < 10)
          {
             new UIJob("Create alarm popup") { //$NON-NLS-1$
                @Override
@@ -446,9 +431,23 @@ public class AlarmNotifier
                            + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")"); //$NON-NLS-1$ //$NON-NLS-1$
                      tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId()))
                            + ": " + alarm.getMessage()); //$NON-NLS-1$
-                     tip.setAutoHide(true);
+                     tip.setAutoHide(false);
                      trayIcon.setToolTip(tip);
                      tip.setVisible(true);
+                     tip.getDisplay().timerExec(10000, new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           tip.dispose();
+                        }
+                     });
+                     tip.addDisposeListener(new DisposeListener() {
+                        @Override
+                        public void widgetDisposed(DisposeEvent e)
+                        {
+                           trayPopupCount.decrementAndGet();
+                        }
+                     });
                   }
                   return Status.OK_STATUS;
                }
@@ -460,14 +459,12 @@ public class AlarmNotifier
             trayPopupCount.decrementAndGet();
             Activator.logInfo("Skipping alarm tray popup creation - too many consecutive alarms");
             
-            if(trayPopupError.get() == 0)
+            if (trayPopupError.incrementAndGet() == 1)
             {
-               trayPopupError.incrementAndGet();
                new UIJob("Create alarm popup") { //$NON-NLS-1$
                   @Override
                   public IStatus runInUIThread(IProgressMonitor monitor)
                   {
-      
                      int severityFlag = SWT.ICON_INFORMATION;
       
                      IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
@@ -482,13 +479,37 @@ public class AlarmNotifier
                         final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
                         tip.setText("Too many consecutive alarms"); //$NON-NLS-1$ //$NON-NLS-1$
                         tip.setMessage("Skipping alarm tray popup creation - too many consecutive alarms"); //$NON-NLS-1$
-                        tip.setAutoHide(true);
+                        tip.setAutoHide(false);
                         trayIcon.setToolTip(tip);
                         tip.setVisible(true);
+                        tip.getDisplay().timerExec(10000, new Runnable() {
+                           @Override
+                           public void run()
+                           {
+                              tip.dispose();
+                           }
+                        });
+                        tip.addDisposeListener(new DisposeListener() {
+                           @Override
+                           public void widgetDisposed(DisposeEvent e)
+                           {
+                              Display.getCurrent().timerExec(60000, new Runnable() {
+                                 @Override
+                                 public void run()
+                                 {
+                                    trayPopupError.decrementAndGet();
+                                 }
+                              });
+                           }
+                        });
                      }
                      return Status.OK_STATUS;
                   }
                }.schedule();
+            }
+            else
+            {
+               trayPopupError.decrementAndGet();
             }
          }
       }

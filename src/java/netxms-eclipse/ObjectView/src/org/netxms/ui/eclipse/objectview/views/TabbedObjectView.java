@@ -307,7 +307,8 @@ public class TabbedObjectView extends ViewPart
 				while(display.readAndDispatch()); // wait for events to finish before continue
 				if (objectId != getObjectId(object))
 					return;	// already received next object change
-				setObjectInternal(object);
+            if (!tabFolder.isDisposed())
+               setObjectInternal(object);
 			}
 		});
 	}

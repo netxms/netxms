@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 
 /**
  * Alarm browser view
@@ -50,9 +51,15 @@ public class AlarmBrowser extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		parent.setLayout(new FillLayout());
-		
-		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser", null); //$NON-NLS-1$
-		
+
+      alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser", new VisibilityValidator() { //$NON-NLS-1$
+         @Override
+         public boolean isVisible()
+         {
+            return getSite().getPage().isPartVisible(AlarmBrowser.this);
+         }
+      });
+
 		createActions();
 		contributeToActionBars();
 		activateContext();
