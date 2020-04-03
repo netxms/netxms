@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ public class NXCPMessageReceiver
 	private byte[] recvBuffer;
 	private int bufferPos = 0;
 
-	/* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -44,10 +44,11 @@ public class NXCPMessageReceiver
    }
 
    /**
-	 * Constructor
-	 * @param defaultBufferSize default receiving buffer size (in bytes)
-	 * @param maxBufferSize maximum receiving buffer size (in bytes)
-	 */
+    * Create new receiver.
+    *
+    * @param defaultBufferSize default receiving buffer size (in bytes)
+    * @param maxBufferSize maximum receiving buffer size (in bytes)
+    */
 	public NXCPMessageReceiver(int defaultBufferSize, int maxBufferSize)
 	{
 	   this.defaultBufferSize = defaultBufferSize;
@@ -60,9 +61,8 @@ public class NXCPMessageReceiver
 	 * 
 	 * @param header byte array containing message header
 	 * @return message size in bytes
-	 * @throws IOException
 	 */
-	private long getMessageSize(final byte[] header) throws IOException
+   private long getMessageSize(final byte[] header)
 	{
 		return (((long)header[4] << 24) & 0xFF000000) | 
 		       (((long)header[5] << 16) & 0x00FF0000) | 
@@ -71,13 +71,13 @@ public class NXCPMessageReceiver
 	}
 	
 	/**
-	 * Get message from receiver's buffer
-	 * 
-	 * @return message object or null if there are not enough data in the buffer
-	 * @throws IOException
-	 * @throws NXCPException
-	 */
-	private NXCPMessage getMessageFromBuffer(EncryptionContext ectx) throws IOException, NXCPException
+    * Get message from receiver's buffer
+    * 
+    * @return message object or null if there are not enough data in the buffer
+    * @throws IOException if read from underlying data input stream fails
+    * @throws NXCPException if message is too large
+    */
+   private NXCPMessage getMessageFromBuffer(EncryptionContext ectx) throws IOException, NXCPException
 	{
 		NXCPMessage msg = null;
 
@@ -119,13 +119,13 @@ public class NXCPMessageReceiver
 	}
 	
 	/**
-	 * Receive NXCP message from input stream
-	 * 
-	 * @param in input stream
-	 * @return message object
-	 * @throws IOException
-	 * @throws NXCPException
-	 */
+    * Receive NXCP message from input stream
+    * 
+    * @param in input stream
+    * @return message object
+    * @throws IOException if read from input stream fails
+    * @throws NXCPException if message is too large or if communication session is closed
+    */
 	public NXCPMessage receiveMessage(final InputStream in, EncryptionContext ectx) throws IOException, NXCPException
 	{
 		NXCPMessage msg = null;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,6 +57,9 @@ public class NXCPMessageField
 	private byte[] binaryValue;
 	private InetAddressEx inetAddressValue;
 
+   /**
+    * @see java.lang.Object#toString()
+    */
 	@Override
 	public String toString() {
 		return "NXCPMessageField{" +
@@ -97,26 +100,28 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * @param varId
-	 * @param varType
-	 * @param value
-	 */
-	public NXCPMessageField(final long varId, final int varType, final Long value)
+    * Create numeric or string field (actual type determined by fieldType parameter)
+    *
+    * @param fieldId
+    * @param fieldType
+    * @param value
+    */
+	public NXCPMessageField(final long fieldId, final int fieldType, final Long value)
 	{
-		id = varId;
-		type = varType;
+		id = fieldId;
+		type = fieldType;
 		integerValue = value;
 		stringValue = integerValue.toString();
 		realValue = integerValue.doubleValue();
 	}
 
-	/**
-	 * Create string field
-	 * 
-	 * @param fieldId field ID
-	 * @param value string value
-	 * @param forceUcsEncoding if true, encode field as UCS-2 instead of UTF-8
-	 */
+   /**
+    * Create string field
+    * 
+    * @param fieldId field ID
+    * @param value string value
+    * @param forceUcsEncoding if true, encode field as UCS-2 instead of UTF-8
+    */
 	public NXCPMessageField(final long fieldId, final String value, boolean forceUcsEncoding)
 	{
 		id = fieldId;
@@ -125,8 +130,10 @@ public class NXCPMessageField
 	}
 
    /**
-    * @param fieldId
-    * @param value
+    * Create string field
+    * 
+    * @param fieldId field ID
+    * @param value string value
     */
    public NXCPMessageField(final long fieldId, final String value)
    {
@@ -134,12 +141,14 @@ public class NXCPMessageField
    }
 
 	/**
-	 * @param varId
-	 * @param value
-	 */
-	public NXCPMessageField(final long varId, final Double value)
+    * Create floating point number field
+    * 
+    * @param fieldId field ID
+    * @param value floating point number value
+    */
+	public NXCPMessageField(final long fieldId, final Double value)
 	{
-		id = varId;
+		id = fieldId;
 		type = TYPE_FLOAT;
 		realValue = value;
 		stringValue = value.toString();
@@ -147,12 +156,14 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * @param varId
-	 * @param value
-	 */
-	public NXCPMessageField(final long varId, final byte[] value)
+    * Create binary field from given byte array
+    * 
+    * @param fieldId field ID
+    * @param value binary value
+    */
+   public NXCPMessageField(final long fieldId, final byte[] value)
 	{
-		id = varId;
+      id = fieldId;
 		type = TYPE_BINARY;
 		binaryValue = value;
 		stringValue = "";
@@ -161,14 +172,15 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * Create binary variable from long[]
-	 * 
-	 * @param varId Variable ID
-	 * @param value Value
-	 */
-	public NXCPMessageField(final long varId, final long[] value)
+    * Create binary field from array of long integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public NXCPMessageField(final long fieldId, final long[] value)
 	{
-		id = varId;
+      id = fieldId;
 		type = TYPE_BINARY;
 
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.length * 4);
@@ -187,15 +199,16 @@ public class NXCPMessageField
 		realValue = (double)0;
 	}
 
-	/**
-	 * Create binary variable from Long[]
-	 * 
-	 * @param varId Variable ID
-	 * @param value Value
-	 */
-	public NXCPMessageField(final long varId, final Long[] value)
+   /**
+    * Create binary field from array of long integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public NXCPMessageField(final long fieldId, final Long[] value)
 	{
-		id = varId;
+      id = fieldId;
 		type = TYPE_BINARY;
 
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.length * 4);
@@ -215,14 +228,15 @@ public class NXCPMessageField
 	}
 
    /**
-    * Create binary variable from Set<Long>
+    * Create binary field from set of long integers. Each element will be converted to network byte order and then array will be
+    * serialized as array of bytes.
     * 
-    * @param varId Variable ID
-    * @param value Value
+    * @param fieldId field ID
+    * @param value value to be encoded
     */
-   public NXCPMessageField(final long varId, final Set<Long> value)
+   public NXCPMessageField(final long fieldId, final Set<Long> value)
    {
-      id = varId;
+      id = fieldId;
       type = TYPE_BINARY;
 
       final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.size() * 4);
@@ -242,12 +256,14 @@ public class NXCPMessageField
    }
 
 	/**
-	 * @param varId
-	 * @param value
-	 */
-	public NXCPMessageField(final long varId, final InetAddress value)
+    * Create field of InetAddress type.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public NXCPMessageField(final long fieldId, final InetAddress value)
 	{
-		id = varId;
+      id = fieldId;
       type = TYPE_INETADDR;
       inetAddressValue = new InetAddressEx(value, (value instanceof Inet4Address) ? 32 : 128);
       stringValue = inetAddressValue.toString();
@@ -256,12 +272,14 @@ public class NXCPMessageField
 	}
 
    /**
-    * @param varId
-    * @param value
+    * Create field of InetAddress type.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
     */
-   public NXCPMessageField(final long varId, final InetAddressEx value)
+   public NXCPMessageField(final long fieldId, final InetAddressEx value)
    {
-      id = varId;
+      id = fieldId;
       type = TYPE_INETADDR;
       inetAddressValue = value;
       stringValue = inetAddressValue.toString();
@@ -270,12 +288,14 @@ public class NXCPMessageField
    }
 
 	/**
-	 * @param varId
-	 * @param value
-	 */
-	public NXCPMessageField(final long varId, final UUID value)
+    * Create binary field from UUID object.
+    *
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public NXCPMessageField(final long fieldId, final UUID value)
 	{
-		id = varId;
+      id = fieldId;
 		type = TYPE_BINARY;
 
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(16);
@@ -295,11 +315,11 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * Create NXCPVariable from NXCP message data field
-	 *
-	 * @param nxcpDataField
-	 * @throws java.io.IOException
-	 */
+    * Create field object from NXCP message data field
+    *
+    * @param nxcpDataField NXCP message data field
+    * @throws java.io.IOException if read from underlying data input stream fails
+    */
 	public NXCPMessageField(final byte[] nxcpDataField) throws IOException
 	{
 		NXCPDataInputStream in = new NXCPDataInputStream(nxcpDataField);
@@ -368,40 +388,40 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * Get variable's value as long integer
-	 * 
-	 * @return Variable's value as long integer
-	 */
+    * Get field's value as long integer
+    * 
+    * @return Field's value as long integer
+    */
 	public Long getAsInteger()
 	{
 		return integerValue;
 	}
 
 	/**
-	 * Get variable's value as floating point number
-	 * 
-	 * @return Variable's value as floating point number
-	 */
+    * Get field's value as floating point number
+    * 
+    * @return Field's value as floating point number
+    */
 	public Double getAsReal()
 	{
 		return realValue;
 	}
 
 	/**
-	 * Get variable's value as string
-	 * 
-	 * @return Variable's value as string
-	 */
+    * Get field's value as string
+    * 
+    * @return Field's value as string
+    */
 	public String getAsString()
 	{
 		return stringValue;
 	}
 
 	/**
-	 * Get variable's value as byte array
-	 * 
-	 * @return Variable's value as byte array
-	 */
+    * Get field's value as byte array
+    * 
+    * @return Field's value as byte array
+    */
 	public byte[] getAsBinary()
 	{
 		return binaryValue;
@@ -494,10 +514,10 @@ public class NXCPMessageField
    }
    
 	/**
-	 * Get variable's value as UUID
-	 * 
-	 * @return Variable's value as UUID
-	 */
+    * Get field's value as UUID
+    * 
+    * @return Field's value as UUID
+    */
 	public UUID getAsUUID()
 	{
 		if ((type != TYPE_BINARY) || (binaryValue == null) || (binaryValue.length != 16))
@@ -521,11 +541,11 @@ public class NXCPMessageField
 	}
 	
 	/**
-	 * Get variable's value as array of long integers. Variable should be of
-	 * binary type, and integer values should be packet as DWORD's in network byte order.
-	 * 
-	 * @return Variable's value as array of long integers
-	 */
+    * Get field's value as array of long integers. Variable should be of binary type, and integer values should be packet as DWORD's
+    * in network byte order.
+    * 
+    * @return Field's value as array of long integers
+    */
 	public long[] getAsUInt32Array()
 	{
 		if ((type != TYPE_BINARY) || (binaryValue == null))
@@ -547,11 +567,11 @@ public class NXCPMessageField
 	}
 	
 	/**
-	 * Get variable's value as array of long integers. Variable should be of
-	 * binary type, and integer values should be packet as DWORD's in network byte order.
-	 * 
-	 * @return Variable's value as array of long integers
-	 */
+    * Get field's value as array of long integers. Variable should be of binary type, and integer values should be packet as DWORD's
+    * in network byte order.
+    * 
+    * @return Field's value as array of long integers
+    */
 	public Long[] getAsUInt32ArrayEx()
 	{
 		if ((type != TYPE_BINARY) || (binaryValue == null))
@@ -583,18 +603,20 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * @param id new ID for this field
-	 */
+    * Set new ID for this field.
+    *
+    * @param id new ID for this field
+    */
 	public void setId(final long id)
 	{
 		this.id = id;
 	}
 
 	/**
-	 * Get type of this field
-	 * 
-	 * @return this field type
-	 */
+    * Get type of this field.
+    * 
+    * @return this field type
+    */
 	public int getType()
 	{
 		return type;
@@ -649,11 +671,11 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * Create NXCP DF structure
-	 * 
-	 * @return encoded NXCP data field as byte array
-	 * @throws IOException
-	 */
+    * Create NXCP DF structure
+    * 
+    * @return encoded NXCP data field as byte array
+    * @throws IOException if write to underlying data output stream fails
+    */
 	public byte[] createNXCPDataField() throws IOException
 	{
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(calculateBinarySize());
