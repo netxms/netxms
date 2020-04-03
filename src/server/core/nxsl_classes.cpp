@@ -796,6 +796,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
             array->append(node->createNXSLObject(vm));
       }
       value = vm->createValue(array);
+      delete proxies;
    }
    else if (!strcmp(attr, "proxyNodeIds"))
    {
@@ -804,6 +805,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       for(int i = 0; i < proxies->size(); i++)
          array->append(vm->createValue(proxies->get(i)));
       value = vm->createValue(array);
+      delete proxies;
    }
    else if (!strcmp(attr, "uin"))
    {
