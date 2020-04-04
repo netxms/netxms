@@ -826,19 +826,30 @@ struct VREF_RESTORE_POINT
 #define MAX_VREF_RESTORE_POINTS  256
 
 /**
+ * Variable system type
+ */
+enum class NXSL_VariableSystemType
+{
+   GLOBAL,
+   LOCAL,
+   EXPRESSION,
+   CONSTANT
+};
+
+/**
  * Variable system
  */
 class LIBNXSL_EXPORTABLE NXSL_VariableSystem : public NXSL_RuntimeObject
 {
 protected:
    NXSL_VariablePtr *m_variables;
-   bool m_isConstant;
+   NXSL_VariableSystemType m_type;
    int m_restorePointCount;
    VREF_RESTORE_POINT m_restorePoints[MAX_VREF_RESTORE_POINTS];
 
 public:
-   NXSL_VariableSystem(NXSL_VM *vm, BooleanFlag constant = BooleanFlag::False);
-   NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystem *src);
+   NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystemType type);
+   NXSL_VariableSystem(NXSL_VM *vm, const NXSL_VariableSystem *src);
    ~NXSL_VariableSystem();
 
    NXSL_Variable *find(const NXSL_Identifier& name);
@@ -846,7 +857,7 @@ public:
    void merge(NXSL_VariableSystem *src, bool overwrite = false);
    void addAll(NXSL_ValueHashMap<NXSL_Identifier> *src);
    void clear();
-   bool isConstant() { return m_isConstant; }
+   bool isConstant() { return m_type == NXSL_VariableSystemType::CONSTANT; }
 
    bool createVariableReferenceRestorePoint(UINT32 addr, NXSL_Identifier *identifier);
    void restoreVariableReferences(ObjectArray<NXSL_Instruction> *instructions);

@@ -1468,15 +1468,6 @@ enum VirtualizationType
 };
 
 /**
- * Generic boolean flag
- */
-enum class BooleanFlag : bool
-{
-   False = false,
-   True = true
-};
-
-/**
  * Ownership indicator
  */
 enum class Ownership : bool

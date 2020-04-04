@@ -155,9 +155,9 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_errorCode = 0;
    m_errorLine = 0;
    m_errorText = NULL;
-   m_constants = new NXSL_VariableSystem(this, BooleanFlag::True);
-   m_globalVariables = new NXSL_VariableSystem(this, BooleanFlag::False);
-   m_localVariables = NULL;
+   m_constants = new NXSL_VariableSystem(this, NXSL_VariableSystemType::CONSTANT);
+   m_globalVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::GLOBAL);
+   m_localVariables = nullptr;
    m_expressionVariables = NULL;
    m_exportedExpressionVariables = NULL;
    m_context = NULL;
@@ -304,7 +304,7 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
 
    // Create local variable system for main() and bind arguments
    NXSL_Array *argsArray = new NXSL_Array(this);
-   m_localVariables = new NXSL_VariableSystem(this);
+   m_localVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::LOCAL);
    for(int i = 0; i < args.size(); i++)
    {
       argsArray->set(i + 1, createValue(args.get(i)));
@@ -600,7 +600,7 @@ void NXSL_VM::execute()
          break;
       case OPCODE_PUSH_EXPRVAR:
          if (m_expressionVariables == NULL)
-            m_expressionVariables = new NXSL_VariableSystem(this);
+            m_expressionVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::EXPRESSION);
 
          pVar = m_expressionVariables->find(*cp->m_operand.m_identifier);
          if (pVar != NULL)
@@ -640,7 +640,7 @@ void NXSL_VM::execute()
          }
 
          if (m_expressionVariables == NULL)
-            m_expressionVariables = new NXSL_VariableSystem(this);
+            m_expressionVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::EXPRESSION);
 
          pVar = m_expressionVariables->find(*cp->m_operand.m_identifier);
          if (pVar != NULL)
@@ -741,7 +741,7 @@ void NXSL_VM::execute()
          if (pValue != NULL)
          {
             if (m_expressionVariables == NULL)
-               m_expressionVariables = new NXSL_VariableSystem(this);
+               m_expressionVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::EXPRESSION);
 
             pVar = m_expressionVariables->find(*cp->m_operand.m_identifier);
             if (pVar != NULL)
@@ -2387,7 +2387,7 @@ void NXSL_VM::callFunction(int nArgCount)
       m_codeStack->push(CAST_TO_POINTER(m_cp + 1, void *));
       m_codeStack->push(m_localVariables);
       m_localVariables->restoreVariableReferences(m_instructionSet);
-      m_localVariables = new NXSL_VariableSystem(this);
+      m_localVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::LOCAL);
       m_codeStack->push(m_expressionVariables);
       if (m_expressionVariables != NULL)
       {
