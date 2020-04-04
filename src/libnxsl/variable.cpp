@@ -79,20 +79,20 @@ struct NXSL_VariablePtr
 /**
  * Create new variable system
  */
-NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, BooleanFlag constant) : NXSL_RuntimeObject(vm)
+NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystemType type) : NXSL_RuntimeObject(vm)
 {
    m_variables = NULL;
-	m_isConstant = static_cast<bool>(constant);
+	m_type = type;
 	m_restorePointCount = 0;
 }
 
 /**
  * Clone existing variable system
  */
-NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystem *src) : NXSL_RuntimeObject(vm)
+NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, const NXSL_VariableSystem *src) : NXSL_RuntimeObject(vm)
 {
    m_variables = NULL;
-   m_isConstant = src->m_isConstant;
+   m_type = src->m_type;
    m_restorePointCount = 0;
 
    NXSL_VariablePtr *var, *tmp;
@@ -183,7 +183,7 @@ NXSL_Variable *NXSL_VariableSystem::find(const NXSL_Identifier& name)
 NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Value *value)
 {
    NXSL_VariablePtr *var = MemAllocStruct<NXSL_VariablePtr>();
-   NXSL_Variable *v = new (&var->v) NXSL_Variable(m_vm, name, (value != NULL) ? value : m_vm->createValue(), m_isConstant);
+   NXSL_Variable *v = new (&var->v) NXSL_Variable(m_vm, name, (value != NULL) ? value : m_vm->createValue(), isConstant());
    HASH_ADD_KEYPTR(hh, m_variables, v->m_name.value, v->m_name.length, var);
    return v;
 }
