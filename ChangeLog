@@ -1,5 +1,14 @@
 *
+* 3.2.472
+*
+
+- Improved alarm browser performance when displaying big number of alarms
+- Fixed memory leak in server
+- Fixed issue NX-1821 (Scheduled Task script not accepting parameters)
+
+
 * 3.2.462
+*
 *
 
 - Fixed bug in thread pool manager that can cause start of excessive number of threads
