@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <npe.h>
 #include <nxcore_websvc.h>
 
 /**

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,11 +29,6 @@
 #define MAX_NPE_ERROR_MESSAGE_LEN   1024
 
 /**
- * Max. length for engine name
- */
-#define MAX_NPE_NAME_LEN            16
-
-/**
  * DCI value
  */
 struct DciValue
@@ -41,9 +36,6 @@ struct DciValue
    time_t timestamp;
    double value;
 };
-
-enum class DCObjectStorageClass;
-class DCItem;
 
 /**
  * Prediction engine interface

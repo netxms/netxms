@@ -76,7 +76,6 @@
 #include <nxsl.h>
 #include <nxdbapi.h>
 #include <nddrv.h>
-#include <npe.h>
 #include <nxcore_smclp.h>
 #include <nxproc.h>
 

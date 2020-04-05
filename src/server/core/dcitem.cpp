@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <npe.h>
 
 #ifdef WITH_ZMQ
 #include "zeromq.h"
