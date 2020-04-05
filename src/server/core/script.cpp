@@ -479,11 +479,23 @@ void ImportScript(ConfigEntry *config, bool overwrite)
 void ExecuteScheduledScript(shared_ptr<ScheduledTaskParameters> parameters)
 {
    TCHAR name[256];
-   _tcslcpy(name, parameters->m_persistentData, 256);
+   TCHAR *argListStart = _tcschr(parameters->m_persistentData, _T('('));
+   if (argListStart != nullptr)
+   {
+      size_t l = argListStart - parameters->m_persistentData;
+      if (l > 255)
+         l = 255;
+      memcpy(name, parameters->m_persistentData, l * sizeof(TCHAR));
+      name[l] = 0;
+   }
+   else
+   {
+      _tcslcpy(name, parameters->m_persistentData, 256);
+   }
    Trim(name);
 
    NetObj *object = FindObjectById(parameters->m_objectId);
-   if ((object != NULL) && !object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
+   if ((object != nullptr) && !object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
    {
       nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
                name, parameters->m_userId, object->getName(), object->getId());
@@ -491,9 +503,9 @@ void ExecuteScheduledScript(shared_ptr<ScheduledTaskParameters> parameters)
    }
 
    NXSL_VM *vm = CreateServerScriptVM(name, object);
-   if (vm == NULL)
+   if (vm == nullptr)
    {
-      if (object != NULL)
+      if (object != nullptr)
          nxlog_debug(4, _T("ExecuteScheduledScript(%s): cannot create VM (object \"%s\" [%d])"),
                   name, object->getName(), object->getId());
       else
@@ -503,18 +515,17 @@ void ExecuteScheduledScript(shared_ptr<ScheduledTaskParameters> parameters)
 
    ObjectRefArray<NXSL_Value> args(16, 16);
 
-   // Can be in form parameter(arg1, arg2, ... argN)
-   TCHAR *p = _tcschr(name, _T('('));
-   if (p != NULL)
+   // Can be in form script(arg1, arg2, ... argN)
+   if (argListStart != nullptr)
    {
-      if (name[_tcslen(name) - 1] != _T(')'))
-         return;
-      name[_tcslen(name) - 1] = 0;
+      TCHAR parameters[4096];
+      _tcslcpy(parameters, argListStart, 4096);
 
+      TCHAR *p = parameters;
       if (!ParseValueList(vm, &p, args))
       {
          // argument parsing error
-         if (object != NULL)
+         if (object != nullptr)
             nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (object \"%s\" [%d])"),
                      name, object->getName(), object->getId());
          else
