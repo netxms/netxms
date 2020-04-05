@@ -294,7 +294,7 @@ public:
 
    void setOwner(Ownership owner)
    {
-      m_owner = static_cast<bool>(owner);
+      m_owner = (owner == Ownership::True);
    }
 
    void setStartupMode(bool startupMode);

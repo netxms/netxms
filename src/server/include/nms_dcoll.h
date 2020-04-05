@@ -24,6 +24,11 @@
 #define _nms_dcoll_h_
 
 /**
+ * Max. length for prediction engine name
+ */
+#define MAX_NPE_NAME_LEN            16
+
+/**
  * Instance discovery data
  */
 class InstanceDiscoveryData
