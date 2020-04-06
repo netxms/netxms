@@ -863,7 +863,7 @@ public class AlarmList extends CompositeWithMessageBar
                {
                   for(Alarm a : newAlarmList)
                   {
-                     if (filteredAlarmList.contains(a))
+                     if (filteredAlarms.contains(a))
                         notifier.processNewAlarm(a);
                   }
                }
