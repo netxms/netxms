@@ -347,6 +347,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          fileTree.refresh();
          fireModifyListeners();
          
+         Activator.logInfo("FileDeliveryPolicyEditor: " + uploadList.size() + " files to upload");
          final NXCSession session = ConsoleSharedData.getSession();
          new ConsoleJob("Upload files", getViewPart(), Activator.PLUGIN_ID, null) {
             @Override
@@ -355,6 +356,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
                monitor.beginTask("Upload files", uploadList.size());
                for(PathElement e : uploadList)
                {
+                  Activator.logInfo("FileDeliveryPolicyEditor: uploading file " + e.getName() + " from " + e.getLocalFile());
                   monitor.subTask(e.getName());
                   session.uploadFileToServer(e.getLocalFile(), "FileDelivery-" + e.getGuid().toString(), null);
                   monitor.worked(1);

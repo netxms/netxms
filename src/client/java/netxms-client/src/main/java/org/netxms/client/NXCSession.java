@@ -1687,7 +1687,7 @@ public class NXCSession
       if (listener != null)
          listener.setTotalWorkAmount(file.length());
       final InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
-      sendFileStream(requestId, inputStream, listener, allowStreamCompression);
+      sendFileStream(requestId, inputStream, listener, allowStreamCompression && (file.length() > 1024));
       inputStream.close();
    }
 
@@ -1742,7 +1742,7 @@ public class NXCSession
             msg.setEndOfFile(true);
          }
 
-         if ((compressor != null) && (bytesRead > 0))
+         if ((compressor != null) && (bytesRead >= 0))
          {
             byte[] compressedData = new byte[compressor.deflateBound(bytesRead) + 4];
             compressor.setInput(buffer, 0, bytesRead, false);
