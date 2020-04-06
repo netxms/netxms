@@ -1340,10 +1340,8 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
                               dcObjectName.cstr(), dco->getId(), instance, newName);
                      name = newName;
                   }
-
-
                }
-               if (array->size() > 3 && array->get(3)->isObject(_T("NetObj")))
+               if ((array->size() > 3) && array->get(3)->isObject(_T("NetObj")))
                {
                   relatedObject = ((NetObj *)array->get(3)->getValueAsObject()->getData())->getId();
                }

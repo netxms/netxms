@@ -979,7 +979,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
 
    writeLockDciAccess();
    ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
-   if (dcRoot != NULL)
+   if (dcRoot != nullptr)
    {
       ObjectArray<ConfigEntry> *dcis = dcRoot->getSubEntries(_T("dci#*"));
       for(int i = 0; i < dcis->size(); i++)

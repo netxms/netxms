@@ -315,15 +315,16 @@ void Template::createExportRecord(StringBuffer &xml)
       m_dcObjects->get(i)->createExportRecord(xml);
    unlockDciAccess();
 
-   xml.append(_T("\t\t\t</dataCollection>\n"));
+   xml.append(_T("\t\t\t</dataCollection>\n\t\t\t<agentPolicies>\n"));
 
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
-      GenericAgentPolicy *object = m_policyList->get(i);
-      object->createExportRecord(xml);
+      m_policyList->get(i)->createExportRecord(xml, i + 1);
    }
    unlockProperties();
+
+   xml.append(_T("\t\t\t</agentPolicies>\n"));
 
    AutoBindTarget::createExportRecord(xml);
    xml.append(_T("\t\t</template>\n"));
@@ -426,27 +427,30 @@ void Template::updateFromImport(ConfigEntry *config)
    }
 
    m_policyList->clear();
-   ObjectArray<ConfigEntry> *policies = config->getSubEntries(_T("agentPolicy#*"));
-   for(int i = 0; i < policies->size(); i++)
+   ConfigEntry *policyRoot = config->findEntry(_T("agentPolicies"));
+   if (policyRoot != nullptr)
    {
-      ConfigEntry *e = policies->get(i);
-      uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-      GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("policyType")), m_id);
-      curr->updateFromImport(e);
-      for (int i = 0; i < m_policyList->size(); i++)
+      ObjectArray<ConfigEntry> *policies = policyRoot->getSubEntries(_T("agentPolicy#*"));
+      for(int i = 0; i < policies->size(); i++)
       {
-         if (m_policyList->get(i)->getGuid().equals(guid))
-            break;
+         ConfigEntry *e = policies->get(i);
+         uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
+         GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("type"), 0, _T("Unknown")), m_id);
+         curr->updateFromImport(e);
+         for (int i = 0; i < m_policyList->size(); i++)
+         {
+            if (m_policyList->get(i)->getGuid().equals(guid))
+               break;
+         }
+         if (i != m_policyList->size())
+            m_policyList->replace(i, curr);
+         else
+            m_policyList->add(curr);
       }
-      if (i != m_policyList->size())
-         m_policyList->replace(i, curr);
-      else
-         m_policyList->add(curr);
+      delete policies;
    }
-   delete policies;
 
    setModified(MODIFY_ALL);
-
    unlockProperties();
 }
 
