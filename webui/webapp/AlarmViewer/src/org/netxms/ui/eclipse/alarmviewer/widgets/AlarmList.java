@@ -125,7 +125,6 @@ public class AlarmList extends CompositeWithMessageBar
    private FilterText filterText;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private List<Alarm> newAlarmList = new ArrayList<Alarm>();
-   private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
    private VisibilityValidator visibilityValidator;
    private boolean needInitialRefresh = false;
    private boolean filterRunning = false;
@@ -736,15 +735,8 @@ public class AlarmList extends CompositeWithMessageBar
    public void setRootObject(long objectId)
    {
       alarmFilter.setRootObject(objectId);
-      if (needInitialRefresh)
-      {
-         needInitialRefresh = false;
-         refresh();
-      }
-      else if ((visibilityValidator == null) || visibilityValidator.isVisible())
-      {
-         startFilterAndLimit();
-      }
+      filterRunPending = true;
+      doPendingUpdates();
    }
 
    /**
@@ -755,7 +747,21 @@ public class AlarmList extends CompositeWithMessageBar
    public void setRootObjects(List<Long> selectedObjects) 
    {
       alarmFilter.setRootObjects(selectedObjects);
-      if ((visibilityValidator == null) || visibilityValidator.isVisible())
+      filterRunPending = true;
+      doPendingUpdates();
+   }
+
+   /**
+    * Execute pending content updates if any
+    */
+   public void doPendingUpdates()
+   {
+      if (needInitialRefresh)
+      {
+         needInitialRefresh = false;
+         refresh();
+      }
+      else if (filterRunPending)
       {
          startFilterAndLimit();
       }
@@ -772,6 +778,9 @@ public class AlarmList extends CompositeWithMessageBar
          filterRunPending = true;
          return;
       }
+
+      filterRunning = true;
+      filterRunPending = false;
 
       ConsoleJob job = new ConsoleJob("Filter alarms", viewPart, Activator.PLUGIN_ID, null) {
          @Override
@@ -879,6 +888,9 @@ public class AlarmList extends CompositeWithMessageBar
    {
       if ((visibilityValidator != null) && !visibilityValidator.isVisible())
 	      return;
+
+      filterRunning = true;
+      filterRunPending = false;
 
       new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID) {
 			@Override

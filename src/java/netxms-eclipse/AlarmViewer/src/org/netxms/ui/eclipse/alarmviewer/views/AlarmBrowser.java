@@ -26,6 +26,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
@@ -65,8 +67,39 @@ public class AlarmBrowser extends ViewPart
 		activateContext();
 		
 		getSite().setSelectionProvider(alarmView.getSelectionProvider());
+
+      getSite().getPage().addPartListener(new IPartListener() {
+         @Override
+         public void partOpened(IWorkbenchPart part)
+         {
+         }
+
+         @Override
+         public void partDeactivated(IWorkbenchPart part)
+         {
+         }
+
+         @Override
+         public void partClosed(IWorkbenchPart part)
+         {
+         }
+
+         @Override
+         public void partBroughtToTop(IWorkbenchPart part)
+         {
+            if (part == AlarmBrowser.this)
+               alarmView.doPendingUpdates();
+         }
+
+         @Override
+         public void partActivated(IWorkbenchPart part)
+         {
+            if (part == AlarmBrowser.this)
+               alarmView.doPendingUpdates();
+         }
+      });
 	}
-	
+
    /**
     * Activate context
     */

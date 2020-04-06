@@ -28,7 +28,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -38,6 +40,7 @@ import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.MessageBar;
 
@@ -82,14 +85,19 @@ public class ObjectAlarmBrowser extends ViewPart
 	{
 		parent.setLayout(new FillLayout());		
 		content = new CompositeWithMessageBar(parent, SWT.NONE);
-      alarmView = new AlarmList(this, content.getContent(), SWT.NONE, "ObjectAlarmBrowser", null); //$NON-NLS-1$
+      alarmView = new AlarmList(this, content.getContent(), SWT.NONE, "ObjectAlarmBrowser", new VisibilityValidator() { //$NON-NLS-1$
+         @Override
+         public boolean isVisible()
+         {
+            return getSite().getPage().isPartVisible(ObjectAlarmBrowser.this);
+         }
+      });
 		alarmView.setRootObjects(objects);
 
 		if (objects.size() == 1) 
 		{
 	      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			setPartName(String.format(Messages.get().ObjectAlarmBrowser_Title, session.getObjectName(objects.get(0))));
-			//content.hideMessage();
 		} 
 		else
 		{
@@ -101,8 +109,39 @@ public class ObjectAlarmBrowser extends ViewPart
       contributeToActionBars();
 
       getSite().setSelectionProvider(alarmView.getSelectionProvider());
+
+      getSite().getPage().addPartListener(new IPartListener() {
+         @Override
+         public void partOpened(IWorkbenchPart part)
+         {
+         }
+
+         @Override
+         public void partDeactivated(IWorkbenchPart part)
+         {
+         }
+
+         @Override
+         public void partClosed(IWorkbenchPart part)
+         {
+         }
+
+         @Override
+         public void partBroughtToTop(IWorkbenchPart part)
+         {
+            if (part == ObjectAlarmBrowser.this)
+               alarmView.doPendingUpdates();
+         }
+
+         @Override
+         public void partActivated(IWorkbenchPart part)
+         {
+            if (part == ObjectAlarmBrowser.this)
+               alarmView.doPendingUpdates();
+         }
+      });
    }
-   
+
    /**
     * Show list of selected objects
     */
