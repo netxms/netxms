@@ -50,9 +50,9 @@ import org.netxms.client.ProgressListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicy;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyContentProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyLabelProvider;
-import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PathElement;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -348,6 +348,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          fileTree.refresh();
          fireModifyListeners();
          
+         Activator.logInfo("FileDeliveryPolicyEditor: " + uploadList.size() + " files to upload");
          final NXCSession session = ConsoleSharedData.getSession();
          new ConsoleJob("Upload files", getViewPart(), Activator.PLUGIN_ID, null) {
             @Override
@@ -356,6 +357,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
                monitor.beginTask("Upload files", uploadList.size());
                for(PathElement e : uploadList)
                {
+                  Activator.logInfo("FileDeliveryPolicyEditor: uploading file " + e.getName() + " from " + e.getLocalFile());
                   monitor.subTask(e.getName());
                   session.uploadFileToServer(e.getLocalFile(), "FileDelivery-" + e.getGuid().toString(), null);
                   monitor.worked(1);
