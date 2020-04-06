@@ -1710,24 +1710,24 @@ CREATE TABLE snmp_communities
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Agent policies - common attributes
-*/
+/**
+ * Agent policies - common attributes
+ */
 CREATE TABLE ap_common
 (
-  policy_name varchar(63) not null,
-  owner_id integer not null,
-  policy_type varchar(31) not null,
-  file_content SQL_TEXT null,
-  version integer not null,
   guid varchar(36) not null,
+  owner_id integer not null,
+  policy_name varchar(63) not null,
+  policy_type varchar(31) not null,
+  version integer not null,
+  flags integer not null,
+  file_content SQL_TEXT null,
   PRIMARY KEY(guid)
 ) TABLE_TYPE;
 
-
-/*
-** Default SNMP v3 USM credentials
-*/
+/**
+ * Default SNMP v3 USM credentials
+ */
 CREATE TABLE usm_credentials
 (
   id integer not null,
