@@ -296,7 +296,7 @@ public class AlarmList extends CompositeWithMessageBar
             switch(n.getCode())
             {
                case SessionNotification.NEW_ALARM:
-                  synchronized(alarmList)
+                  synchronized(newAlarmList)
                   {
                      newAlarmList.add((Alarm)n.getObject());// Add to this list only new alarms to be able to notify with sound
                   }
@@ -976,16 +976,19 @@ public class AlarmList extends CompositeWithMessageBar
          }
       });
 
-      if (!AlarmNotifier.isGlobalSoundEnabled() && viewPart.getSite().getPage().isPartVisible(viewPart)
-            && isLocalNotificationsEnabled)
+      synchronized(newAlarmList)
       {
-         for(Alarm a : newAlarmList)
+         if (!AlarmNotifier.isGlobalSoundEnabled() && viewPart.getSite().getPage().isPartVisible(viewPart)
+               && isLocalNotificationsEnabled)
          {
-            if (filteredAlarms.contains(a))
-               AlarmNotifier.playSounOnAlarm(a);
+            for(Alarm a : newAlarmList)
+            {
+               if (filteredAlarms.contains(a))
+                  AlarmNotifier.playSounOnAlarm(a);
+            }
          }
+         newAlarmList.clear();
       }
-      newAlarmList.clear();
    }
 
    /**

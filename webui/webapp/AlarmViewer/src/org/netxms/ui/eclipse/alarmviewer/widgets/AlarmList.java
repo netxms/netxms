@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IAction;
@@ -255,9 +257,9 @@ public class AlarmList extends CompositeWithMessageBar
             switch(n.getCode())
             {
                case SessionNotification.NEW_ALARM:
-                  synchronized(alarmList)
+                  synchronized(newAlarmList)
                   {
-                     newAlarmList.add((Alarm)n.getObject());// Add to this list only new alarms to be able to notify with sound
+                     newAlarmList.add((Alarm)n.getObject()); // Add to this list only new alarms to be able to notify with sound
                   }
                case SessionNotification.ALARM_CHANGED:
                   synchronized(alarmList)
@@ -846,12 +848,14 @@ public class AlarmList extends CompositeWithMessageBar
                hideMessage();
             }
 
-               if(!notifier.isGlobalSoundEnabled() && viewPart.getSite().getPage().isPartVisible(viewPart) && isLocalNotificationsEnabled)
+            synchronized(newAlarmList)
+            {
+               if (!notifier.isGlobalSoundEnabled() && viewPart.getSite().getPage().isPartVisible(viewPart) && isLocalNotificationsEnabled)
                {
                   for(Alarm a : newAlarmList)
                   {
                      if (filteredAlarmList.contains(a))
-                     	notifier.processNewAlarm(a);
+                        notifier.processNewAlarm(a);
                   }
                }
                newAlarmList.clear();
