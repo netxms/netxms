@@ -269,9 +269,9 @@ static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    if ((argc < 1) || (argc > 4))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   NXSL_Object *object = NULL;
-   const TCHAR *name = NULL;
-   const TCHAR *displayName = NULL;
+   NXSL_Object *object = nullptr;
+   const TCHAR *name = nullptr;
+   const TCHAR *displayName = nullptr;
 
    for(int i = 0; i < argc; i++)
    {
@@ -281,13 +281,13 @@ static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
             return NXSL_ERR_NOT_STRING;
          name = argv[i]->getValueAsCString();
       }
-      if(!stricmp(argv[i]->getName(), "displayName"))
+      else if (!stricmp(argv[i]->getName(), "displayName"))
       {
          if(!argv[i]->isString())
             return NXSL_ERR_NOT_STRING;
          displayName = argv[i]->getValueAsCString();
       }
-      if(!stricmp(argv[i]->getName(), "object"))
+      else if (!stricmp(argv[i]->getName(), "object"))
       {
          if(!argv[i]->isObject(_T("NetObj")))
             return NXSL_ERR_NOT_OBJECT;
@@ -297,9 +297,9 @@ static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
 
    NXSL_Array *list = new NXSL_Array(vm);
    list->set(list->size(), vm->createValue(true));
-   list->set(list->size(), name != NULL ? vm->createValue(name) : vm->createValue());
-   list->set(list->size(), displayName != NULL ? vm->createValue(displayName) : vm->createValue());
-   list->set(list->size(), object != NULL ? vm->createValue(new NXSL_Object(object)) : vm->createValue());
+   list->set(list->size(), (name != nullptr) ? vm->createValue(name) : vm->createValue());
+   list->set(list->size(), (displayName != nullptr) ? vm->createValue(displayName) : vm->createValue());
+   list->set(list->size(), (object != nullptr) ? vm->createValue(new NXSL_Object(object)) : vm->createValue());
    *ppResult = vm->createValue(list);
    return 0;
 }

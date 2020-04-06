@@ -353,17 +353,19 @@ void Template::createExportRecord(StringBuffer &xml)
       m_dcObjects->get(i)->createExportRecord(xml);
    unlockDciAccess();
 
-   xml.append(_T("\t\t\t</dataCollection>\n"));
+   xml.append(_T("\t\t\t</dataCollection>\n\t\t\t<agentPolicies>\n"));
 
    lockProperties();
    Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
+   uint32_t id = 1;
    while(it->hasNext())
    {
-      GenericAgentPolicy *object = it->next();
-      object->createExportRecord(xml);
+      it->next()->createExportRecord(xml, id++);
    }
    delete it;
    unlockProperties();
+
+   xml.append(_T("\t\t\t</agentPolicies>\n"));
 
    AutoBindTarget::createExportRecord(xml);
    xml.append(_T("\t\t</template>\n"));
@@ -460,19 +462,22 @@ void Template::updateFromImport(ConfigEntry *config)
    lockProperties();
 
    m_policyList->clear();
-   ObjectArray<ConfigEntry> *policies = config->getSubEntries(_T("agentPolicy#*"));
-   for(int i = 0; i < policies->size(); i++)
+   ConfigEntry *policyRoot = config->findEntry(_T("agentPolicies"));
+   if (policyRoot != nullptr)
    {
-      ConfigEntry *e = policies->get(i);
-      uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-      GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("policyType")), m_id);
-      curr->updateFromImport(e);
-      m_policyList->set(guid, curr);
+      ObjectArray<ConfigEntry> *policies = policyRoot->getSubEntries(_T("agentPolicy#*"));
+      for(int i = 0; i < policies->size(); i++)
+      {
+         ConfigEntry *e = policies->get(i);
+         uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
+         GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("type"), 0, _T("Unknown")), m_id);
+         curr->updateFromImport(e);
+         m_policyList->set(guid, curr);
+      }
+      delete policies;
    }
-   delete policies;
 
    setModified(MODIFY_ALL);
-
    unlockProperties();
 }
 

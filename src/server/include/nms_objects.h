@@ -1269,8 +1269,8 @@ protected:
    GenericAgentPolicy(const GenericAgentPolicy *src);
 
 public:
-   GenericAgentPolicy(const uuid& guid, const TCHAR *type, UINT32 ownerId);
-   GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId);
+   GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId);
+   GenericAgentPolicy(const TCHAR *name, const TCHAR *type, uint32_t ownerId);
    virtual ~GenericAgentPolicy();
 
    virtual GenericAgentPolicy *clone() const;
@@ -1284,12 +1284,12 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb);
 
-   virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   virtual void fillMessage(NXCPMessage *msg, uint32_t baseId);
    virtual void fillUpdateMessage(NXCPMessage *msg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *request);
+   virtual uint32_t modifyFromMessage(const NXCPMessage *request);
 
-   virtual void updateFromImport(ConfigEntry *config);
-   virtual void createExportRecord(StringBuffer &str);
+   virtual void updateFromImport(const ConfigEntry *config);
+   virtual void createExportRecord(StringBuffer &xml, uint32_t recordId);
 
    virtual json_t *toJson();
 
@@ -1306,12 +1306,12 @@ protected:
    FileDeliveryPolicy(const FileDeliveryPolicy *src) : GenericAgentPolicy(src) { }
 
 public:
-   FileDeliveryPolicy(const uuid& guid, UINT32 ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
-   FileDeliveryPolicy(const TCHAR *name, UINT32 ownerId) : GenericAgentPolicy(name, _T("FileDelivery"), ownerId) { }
+   FileDeliveryPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
+   FileDeliveryPolicy(const TCHAR *name, uint32_t ownerId) : GenericAgentPolicy(name, _T("FileDelivery"), ownerId) { }
    virtual ~FileDeliveryPolicy() { }
 
    virtual GenericAgentPolicy *clone() const override;
-   virtual UINT32 modifyFromMessage(NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessage(const NXCPMessage *request) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual UINT32 deploy(AgentConnectionEx *conn, bool newTypeFormatSupported, const TCHAR *debugId) override;

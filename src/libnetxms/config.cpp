@@ -1408,7 +1408,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       {
          TCHAR entryName[MAX_PATH];
 
-         UINT32 id = XMLGetAttrUINT32(attrs, "id", 0);
+         uint32_t id = XMLGetAttrUINT32(attrs, "id", 0);
 #ifdef UNICODE
          if (id != 0)
          {

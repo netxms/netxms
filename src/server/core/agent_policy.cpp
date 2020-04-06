@@ -27,7 +27,7 @@
 /**
  * Constructor for user-initiated object creation
  */
-GenericAgentPolicy::GenericAgentPolicy(const uuid& guid, const TCHAR *type, UINT32 ownerId)
+GenericAgentPolicy::GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId)
 {
    m_name[0] = 0;
    _tcslcpy(m_type, type, MAX_POLICY_TYPE_LEN);
@@ -53,7 +53,7 @@ GenericAgentPolicy::GenericAgentPolicy(const GenericAgentPolicy *src)
 /**
  * Constructor for user-initiated object creation
  */
-GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId)
+GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, uint32_t ownerId)
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    _tcslcpy(m_type, type, MAX_POLICY_TYPE_LEN);
@@ -145,7 +145,7 @@ bool GenericAgentPolicy::loadFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with policy data
  */
-void GenericAgentPolicy::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void GenericAgentPolicy::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {
    msg->setField(baseId, m_guid);
    msg->setField(baseId + 1, m_type);
@@ -167,7 +167,7 @@ void GenericAgentPolicy::fillUpdateMessage(NXCPMessage *msg)
 /**
  * Modify policy from message
  */
-UINT32 GenericAgentPolicy::modifyFromMessage(NXCPMessage *msg)
+UINT32 GenericAgentPolicy::modifyFromMessage(const NXCPMessage *msg)
 {
    msg->getFieldAsString(VID_NAME, m_name, MAX_DB_STRING);
    if (msg->isFieldExist(VID_CONFIG_FILE_DATA))
@@ -225,7 +225,7 @@ UINT32 GenericAgentPolicy::deploy(AgentConnectionEx *conn, bool newTypeFormatSup
 json_t *GenericAgentPolicy::toJson()
 {
    json_t *root = json_object();
-   json_object_set_new(root, "guid", json_string_t((const TCHAR *)m_guid.toString()));
+   json_object_set_new(root, "guid", json_string_t(m_guid.toString()));
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "type", json_string_t(m_type));
    json_object_set_new(root, "content", json_string(CHECK_NULL_EX_A(m_content)));
@@ -235,10 +235,10 @@ json_t *GenericAgentPolicy::toJson()
 /**
  * Update policy from imported configuration
  */
-void GenericAgentPolicy::updateFromImport(ConfigEntry *config)
+void GenericAgentPolicy::updateFromImport(const ConfigEntry *config)
 {
    _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed")), MAX_OBJECT_NAME);
-   _tcslcpy(m_type, config->getSubEntryValue(_T("type"), 0, _T("None")), MAX_POLICY_TYPE_LEN);
+   _tcslcpy(m_type, config->getSubEntryValue(_T("type"), 0, _T("Unknown")), MAX_POLICY_TYPE_LEN);
    const TCHAR *content = config->getSubEntryValue(_T("content"), 0, _T(""));
    MemFree(m_content);
    m_content = UTF8StringFromTString(content);
@@ -247,21 +247,22 @@ void GenericAgentPolicy::updateFromImport(ConfigEntry *config)
 /**
  * Create export record
  */
-void GenericAgentPolicy::createExportRecord(StringBuffer &str)
+void GenericAgentPolicy::createExportRecord(StringBuffer &xml, uint32_t recordId)
 {
-   str.append(_T("\t\t\t<agentPolicy id=\""));
-   str.append(m_guid);
-   str.append(_T("\">\n"));
-   str.append(_T("\t\t\t\t<name>"));
-   str.append(m_name);
-   str.append(_T("</name>\n"));
-   str.append(_T("\t\t\t\t<policyType>"));
-   str.append(m_type);
-   str.append(_T("</policyType>\n"));
-   str.append(_T("\t\t\t\t<fileContent>"));
-   str.appendPreallocated(TStringFromUTF8String(CHECK_NULL_EX_A(m_content)));
-   str.append(_T("</fileContent>\n"));
-   str.append(_T("</agentPolicy>\n"));
+   xml.append(_T("\t\t\t\t<agentPolicy id=\""));
+   xml.append(recordId);
+   xml.append(_T("\">\n\t\t\t\t\t<guid>"));
+   xml.append(m_guid);
+   xml.append(_T("</guid>\n\t\t\t\t\t<name>"));
+   xml.append(EscapeStringForXML2(m_name));
+   xml.append(_T("</name>\n\t\t\t\t\t<type>"));
+   xml.append(m_type);
+   xml.append(_T("</type>\n\t\t\t\t\t<content>"));
+   TCHAR *content = TStringFromUTF8String(CHECK_NULL_EX_A(m_content));
+   xml.append(EscapeStringForXML2(content));
+   MemFree(content);
+   xml.append(_T("</content>\n"));
+   xml.append(_T("\t\t\t\t</agentPolicy>\n"));
 }
 
 /**
@@ -338,7 +339,7 @@ GenericAgentPolicy *FileDeliveryPolicy::clone() const
 /**
  * Modify from message and in case of duplicate - duplicate all physical files and update GUID
  */
-UINT32 FileDeliveryPolicy::modifyFromMessage(NXCPMessage *request)
+UINT32 FileDeliveryPolicy::modifyFromMessage(const NXCPMessage *request)
 {
    UINT32 result = GenericAgentPolicy::modifyFromMessage(request);
    if (result != RCC_SUCCESS)
