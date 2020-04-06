@@ -431,6 +431,7 @@ public class NXCSession
    {
       ReceiverThread()
       {
+         super("Network Message Receiver");
          setDaemon(true);
          start();
       }
