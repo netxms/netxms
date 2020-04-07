@@ -272,19 +272,22 @@ static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
 
    for(int i = 0; i < argc; i++)
    {
-      if (!stricmp(argv[i]->getName(), "name"))
+      if (argv[i]->getName() == nullptr)
+         continue;
+
+      if (!strcmp(argv[i]->getName(), "name"))
       {
          if (!argv[i]->isString())
             return NXSL_ERR_NOT_STRING;
          name = argv[i]->getValueAsCString();
       }
-      else if (!stricmp(argv[i]->getName(), "displayName"))
+      else if (!strcmp(argv[i]->getName(), "displayName"))
       {
          if (!argv[i]->isString())
             return NXSL_ERR_NOT_STRING;
          displayName = argv[i]->getValueAsCString();
       }
-      else if (!stricmp(argv[i]->getName(), "object"))
+      else if (!strcmp(argv[i]->getName(), "object"))
       {
          if (!argv[i]->isObject(_T("NetObj")))
             return NXSL_ERR_NOT_OBJECT;
