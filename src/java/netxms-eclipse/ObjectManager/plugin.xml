@@ -919,9 +919,6 @@
 	                           <instanceof
 	                                 value="org.netxms.client.objects.BusinessServiceRoot">
 	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.PolicyRoot">
-	                           </instanceof>
 	                        </or>
 	                     </not>
 	                  </and>
@@ -960,15 +957,6 @@
 	                           </instanceof>
 	                           <instanceof
 	                                 value="org.netxms.client.objects.DashboardRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.PolicyRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.PolicyGroup">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.AgentPolicy">
 	                           </instanceof>
                             <instanceof
                                   value="org.netxms.client.objects.DashboardGroup">
@@ -1011,15 +999,6 @@
 	                           </instanceof>
 	                           <instanceof
 	                                 value="org.netxms.client.objects.DashboardRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.PolicyRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.PolicyGroup">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.AgentPolicy">
 	                           </instanceof>
                             <instanceof
                                   value="org.netxms.client.objects.DashboardGroup">
@@ -1067,15 +1046,6 @@
                                        value="org.netxms.client.objects.DashboardRoot">
                                  </instanceof>
                                  <instanceof
-                                       value="org.netxms.client.objects.PolicyRoot">
-                                 </instanceof>
-                                 <instanceof
-                                       value="org.netxms.client.objects.PolicyGroup">
-                                 </instanceof>
-                                 <instanceof
-                                       value="org.netxms.client.objects.AgentPolicy">
-                                 </instanceof>
-                                 <instanceof
                                        value="org.netxms.client.objects.DashboardGroup">
                                  </instanceof>
                               </or>
@@ -1116,15 +1086,6 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardRoot">
-                                 </instanceof>
-                                 <instanceof
-                                       value="org.netxms.client.objects.PolicyRoot">
-                                 </instanceof>
-                                 <instanceof
-                                       value="org.netxms.client.objects.PolicyGroup">
-                                 </instanceof>
-                                 <instanceof
-                                       value="org.netxms.client.objects.AgentPolicy">
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardGroup">
@@ -1170,15 +1131,6 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardRoot">
-                                 </instanceof>
-                                 <instanceof
-                                       value="org.netxms.client.objects.PolicyRoot">
-                                 </instanceof>
-                                 <instanceof
-                                       value="org.netxms.client.objects.PolicyGroup">
-                                 </instanceof>
-                                 <instanceof
-                                       value="org.netxms.client.objects.AgentPolicy">
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardGroup">

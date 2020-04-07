@@ -62,7 +62,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
-import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.AccessListElement;
@@ -95,7 +94,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Editor for object tools
  */
-@SuppressWarnings("restriction")
 public class ObjectToolsEditor extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"; //$NON-NLS-1$
@@ -781,7 +779,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
-   private boolean showObjectToolPropertyPages(ObjectToolDetails objectTool)
+   private boolean showObjectToolPropertyPages(final ObjectToolDetails objectTool)
    {
       PreferenceManager pm = new PreferenceManager();    
       pm.addToRoot(new PreferenceNode("general", new General(objectTool)));

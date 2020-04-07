@@ -140,7 +140,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          Activator.showTrayIcon();
       
       session.addListener(new SessionListener() {
-         
+         @SuppressWarnings("deprecation")
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -148,7 +148,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
             {
                case SessionNotification.OBJECTS_OUT_OF_SYNC:
                   activator.getWorkbench().getDisplay().asyncExec(new Runnable() {
-                     
                      @Override
                      public void run()
                      {

@@ -310,15 +310,5 @@
             class="org.netxms.ui.eclipse.perfview.LoginListener">
       </loginlistener>
    </extension>
-   <extension
-         point="org.eclipse.core.expressions.propertyTesters">
-      <propertyTester
-            class="org.netxms.ui.eclipse.perfview.GraphTemplatePropertyTester"
-            id="org.netxms.ui.eclipse.perfview.GraphTemplatePropertyTester"
-            namespace="org.netxms.ui.eclipse.perfview"
-            properties="isTemplateGraph"
-            type="org.netxms.client.datacollection.GraphSettings">
-      </propertyTester>
-   </extension>
 
 </plugin>

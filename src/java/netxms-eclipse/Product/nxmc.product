@@ -41,7 +41,6 @@ Copyright (c) 2003-2020 Raden Solutions
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
@@ -53,6 +52,7 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.annotation"/>
       <plugin id="javax.inject"/>
+      <plugin id="javax.servlet"/>
       <plugin id="javax.transaction" fragment="true"/>
       <plugin id="javax.xml"/>
       <plugin id="org.apache.batik.constants"/>
@@ -63,8 +63,19 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.apache.commons.io"/>
       <plugin id="org.apache.commons.jxpath"/>
       <plugin id="org.apache.commons.logging"/>
+      <plugin id="org.apache.felix.gogo.runtime"/>
       <plugin id="org.apache.felix.scr"/>
+      <plugin id="org.apache.log4j"/>
       <plugin id="org.apache.xmlgraphics"/>
+      <plugin id="org.eclipse.ant.core"/>
+      <plugin id="org.eclipse.ant.core.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.ant.core.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.ant.core.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.ant.core.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.ant.core.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.ant.core.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.ant.core.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.ant.core.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.birt.chart.device.extension"/>
       <plugin id="org.eclipse.birt.chart.device.swt"/>
       <plugin id="org.eclipse.birt.chart.engine"/>
@@ -134,14 +145,6 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.eclipse.core.expressions.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.core.expressions.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem"/>
-      <plugin id="org.eclipse.core.filesystem.linux.x86.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.x86.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.x86.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.x86.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.x86.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.x86.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.x86.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.linux.x86.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86_64" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86_64.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86_64.nl_cs" fragment="true"/>
@@ -167,14 +170,6 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.eclipse.core.filesystem.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.win32.x86_64.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.win32.x86_64.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.win32.x86_64.nl_de" fragment="true"/>
@@ -201,14 +196,6 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.eclipse.core.resources.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.core.resources.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.core.resources.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.resources.win32.x86_64.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.core.resources.win32.x86_64.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.core.resources.win32.x86_64.nl_de" fragment="true"/>
@@ -337,6 +324,15 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.eclipse.e4.ui.di.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.di.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.di.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.e4.ui.dialogs"/>
+      <plugin id="org.eclipse.e4.ui.dialogs.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.e4.ui.dialogs.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.e4.ui.dialogs.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.e4.ui.dialogs.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.e4.ui.dialogs.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.e4.ui.dialogs.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.e4.ui.dialogs.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.e4.ui.dialogs.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.model.workbench"/>
       <plugin id="org.eclipse.e4.ui.model.workbench.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.model.workbench.nl_cs" fragment="true"/>
@@ -442,6 +438,15 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.eclipse.help.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.help.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.help.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.jdt.annotation"/>
+      <plugin id="org.eclipse.jdt.annotation.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.jdt.annotation.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.jdt.annotation.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.jdt.annotation.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.jdt.annotation.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.jdt.annotation.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.jdt.annotation.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.jdt.annotation.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.jface"/>
       <plugin id="org.eclipse.jface.databinding"/>
       <plugin id="org.eclipse.jface.databinding.nl_ar" fragment="true"/>
