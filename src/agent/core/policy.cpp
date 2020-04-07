@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ static void UpdateEnvironment(CommSession *session)
  */
 static void CheckEnvSectionAndReload(CommSession *session, const char *configContent)
 {
-   if(configContent != NULL)
+   if (configContent != nullptr)
    {
       Config config;
       config.setTopLevelTag(_T("config"));
@@ -91,7 +91,7 @@ static void CheckEnvSectionAndReload(CommSession *session, const char *configCon
       if (validConfig)
       {
          ObjectArray<ConfigEntry> *entrySet = config.getSubEntries(_T("/ENV"), _T("*"));
-         if (entrySet != NULL)
+         if (entrySet != nullptr)
          {
             session->debugPrintf(7, _T("CheckEnvSectionAndReload(): ENV section exists"));
             UpdateEnvironment(session);
@@ -207,22 +207,19 @@ static const String GetPolicyType(const uuid& guid)
 /**
  * Deploy policy file
  */
-static UINT32 DeployPolicy(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg, const TCHAR *policyPath)
+static uint32_t DeployPolicy(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg, const TCHAR *policyPath)
 {
    TCHAR path[MAX_PATH], name[64];
-   int fh;
-   UINT32 rcc;
-
    _sntprintf(path, MAX_PATH, _T("%s%s.xml"), policyPath, guid.toString(name));
 
-   fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   uint32_t rcc;
+   int fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
    if (fh != -1)
    {
-      size_t size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
-      BYTE *data = (BYTE *)malloc(size);
-      if (data != NULL)
+      size_t size;
+      const BYTE *data = msg->getBinaryFieldPtr(VID_CONFIG_FILE_DATA, &size);
+      if (data != nullptr)
       {
-         msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
          if (_write(fh, data, static_cast<unsigned int>(size)) == static_cast<int>(size))
          {
             session->debugPrintf(3, _T("Policy file %s saved successfully"), path);
@@ -232,7 +229,6 @@ static UINT32 DeployPolicy(AbstractCommSession *session, const uuid& guid, NXCPM
          {
             rcc = ERR_IO_FAILURE;
          }
-         free(data);
       }
       else
       {
@@ -254,7 +250,7 @@ static UINT32 DeployPolicy(AbstractCommSession *session, const uuid& guid, NXCPM
  */
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 {
-	UINT32 rcc;
+	uint32_t rcc;
 
    TCHAR type[32];
    if (!_tcscmp(request->getFieldAsString(VID_POLICY_TYPE, type, 32), _T("")))
@@ -335,14 +331,13 @@ static UINT32 RemovePolicy(UINT32 session, const uuid& guid, TCHAR *dir)
    UINT32 rcc;
 
    _sntprintf(path, MAX_PATH, _T("%s%s.xml"), dir, guid.toString(name));
-
-   if (_tremove(path) != 0)
+   if (_tremove(path) == 0)
    {
-      rcc = (errno == ENOENT) ? ERR_SUCCESS : ERR_IO_FAILURE;
+      rcc = ERR_SUCCESS;
    }
    else
    {
-      rcc = ERR_SUCCESS;
+      rcc = (errno == ENOENT) ? ERR_SUCCESS : ERR_IO_FAILURE;
    }
    return rcc;
 }
@@ -371,6 +366,10 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
    else if (!_tcscmp(type, _T("SupportApplicationConfig")))
    {
       rcc = RemovePolicy(session->getIndex(), guid, g_userAgentPolicyDirectory);
+      if (rcc == RCC_SUCCESS)
+      {
+         UpdateUserAgentsConfiguration();
+      }
    }
    else
    {
