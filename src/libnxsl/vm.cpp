@@ -2400,11 +2400,11 @@ void NXSL_VM::callFunction(int nArgCount)
       for(i = nArgCount; i > 0; i--)
       {
          pValue = m_dataStack->pop();
-         if (pValue != NULL)
+         if (pValue != nullptr)
          {
             snprintf(varName, MAX_IDENTIFIER_LENGTH, "$%d", i);
             m_localVariables->create(varName, pValue);
-				if (pValue->getName() != NULL)
+				if (pValue->getName() != nullptr)
 				{
 					// Named parameter
 					snprintf(varName, MAX_IDENTIFIER_LENGTH, "$%s", pValue->getName());
