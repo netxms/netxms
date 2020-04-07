@@ -14,7 +14,7 @@
 
 	<groupId>com.netxms.nxmc</groupId>
 	<artifactId>org.netxms.webui.product</artifactId>
-	<version>3.0.0</version>
+	<version>3.3.0</version>
 	<packaging>eclipse-repository</packaging>
 
 	<properties>
