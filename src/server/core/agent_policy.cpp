@@ -36,8 +36,7 @@ GenericAgentPolicy::GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint
    m_content = nullptr;
    m_version = 1;
    m_flags = 0;
-   m_expandedPolicyHashes = new HashMap<UINT32, BYTE>();
-   m_contentLock = new Mutex();
+   m_contentLock = MutexCreateFast();
 }
 
 /**
@@ -52,8 +51,7 @@ GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, uin
    m_content = nullptr;
    m_version = 1;
    m_flags = 0;
-   m_expandedPolicyHashes = new HashMap<UINT32, BYTE>();
-   m_contentLock = new Mutex();
+   m_contentLock = MutexCreateFast();
 }
 
 /**
@@ -61,7 +59,7 @@ GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, uin
  */
 GenericAgentPolicy::~GenericAgentPolicy()
 {
-   delete m_contentLock;
+   MutexDestroy(m_contentLock);
    MemFree(m_content);
 }
 
@@ -159,7 +157,7 @@ void GenericAgentPolicy::fillUpdateMessage(NXCPMessage *msg)
  */
 UINT32 GenericAgentPolicy::modifyFromMessage(const NXCPMessage *msg)
 {
-   m_contentLock->lock();
+   MutexLock(m_contentLock);
    msg->getFieldAsString(VID_NAME, m_name, MAX_DB_STRING);
    if (msg->isFieldExist(VID_CONFIG_FILE_DATA))
    {
@@ -171,7 +169,7 @@ UINT32 GenericAgentPolicy::modifyFromMessage(const NXCPMessage *msg)
       m_flags = msg->getFieldAsUInt32(VID_FLAGS);
    }
    m_version++;
-   m_contentLock->unlock();
+   MutexUnlock(m_contentLock);
    return RCC_SUCCESS;
 }
 
@@ -219,7 +217,7 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 
    StringBuffer expandedContent;
    bool sendUpdate = true;
-   m_contentLock->lock();
+   MutexLock(m_contentLock);
 
    if (!data->forceInstall && data->currVersion >= m_version && (m_flags & EXPAND_MACRO) == 0)
    {
@@ -250,7 +248,7 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    {
       content = MemCopyStringA(m_content);
    }
-   m_contentLock->unlock();
+   MutexUnlock(m_contentLock);
 
    if (sendUpdate)
    {
@@ -406,7 +404,7 @@ UINT32 FileDeliveryPolicy::modifyFromMessage(const NXCPMessage *request)
 
    if (request->getFieldAsBoolean(VID_DUPLICATE))
    {
-      m_contentLock->lock();
+      MutexLock(m_contentLock);
       ObjectArray<FileInfo> files(64, 64, Ownership::True);
       Config data;
       data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
@@ -423,7 +421,7 @@ UINT32 FileDeliveryPolicy::modifyFromMessage(const NXCPMessage *request)
       MemFree(m_content);
       data.setTopLevelTag(_T("FileDeliveryPolicy"));
       m_content = data.createXml().getUTF8String();
-      m_contentLock->unlock();
+      MutexUnlock(m_contentLock);
 
       for(int i = 0; i < files.size(); i++)
       {
@@ -497,11 +495,11 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       return;
    }
 
-   m_contentLock->lock();
+   MutexLock(m_contentLock);
    if (m_content == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): empty content)"), data->debugId);
-      m_contentLock->unlock();
+      MutexUnlock(m_contentLock);
       return;
    }
 
@@ -509,7 +507,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    ObjectArray<FileInfo> files(64, 64, Ownership::True);
    Config content;
    content.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
-   m_contentLock->unlock();
+   MutexUnlock(m_contentLock);
 
    ObjectArray<ConfigEntry> *rootElements = content.getSubEntries(_T("/elements"), _T("*"));
    if (rootElements != nullptr)

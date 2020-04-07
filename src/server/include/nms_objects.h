@@ -1338,8 +1338,7 @@ protected:
    char *m_content;
    uint32_t m_version;
    uint32_t m_flags;
-   HashMap<UINT32, BYTE> *m_expandedPolicyHashes;
-   Mutex *m_contentLock;
+   MUTEX m_contentLock;
 
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
 
