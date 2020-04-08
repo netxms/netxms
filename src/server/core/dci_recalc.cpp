@@ -56,7 +56,7 @@ ServerJobResult DCIRecalculationJob::run()
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata_sc_%s WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp"),
+         _sntprintf(query, 256, _T("SELECT date_part('epoch',idata_timestamp)::int,raw_value FROM idata_sc_%s WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp"),
                   DCObject::getStorageClassName(m_dci->getStorageClass()), m_object->getId(), m_dci->getId());
       }
       else
@@ -87,7 +87,7 @@ ServerJobResult DCIRecalculationJob::run()
          if (g_dbSyntax == DB_SYNTAX_TSDB)
          {
             TCHAR query[256];
-            _sntprintf(query, 256, _T("UPDATE idata_sc_%s SET idata_value=? WHERE node_id=? AND item_id=? AND idata_timestamp=?"),
+            _sntprintf(query, 256, _T("UPDATE idata_sc_%s SET idata_value=? WHERE node_id=? AND item_id=? AND idata_timestamp=to_timestamp(?)"),
                      DCObject::getStorageClassName(m_dci->getStorageClass()));
             hStmt = DBPrepare(hdb, query);
          }

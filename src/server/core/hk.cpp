@@ -199,8 +199,8 @@ struct CutoffTimes
 static void DropChunksForStorageClass(DB_HANDLE hdb, time_t cutoffTime, TCHAR objectType, DCObjectStorageClass storageClass)
 {
    TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT drop_chunks(") INT64_FMT _T(", '%cdata_sc_%s')"),
-            static_cast<INT64>(cutoffTime), objectType, DCObject::getStorageClassName(storageClass));
+   _sntprintf(query, 256, _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), '%cdata_sc_%s')"),
+            static_cast<int64_t>(cutoffTime), objectType, DCObject::getStorageClassName(storageClass));
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing query \"%s\""), query);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != NULL)

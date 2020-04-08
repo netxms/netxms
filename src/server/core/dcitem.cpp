@@ -1253,27 +1253,27 @@ void DCItem::reloadCache(bool forceReload)
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
-                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
+                              _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_id, m_requiredCacheSize);
          }
          else
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
+                              _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
       case DB_SYNTAX_TSDB:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_sc_%s ")
-                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
+            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,date_part('epoch',idata_timestamp)::int FROM idata_sc_%s ")
+                              _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     getStorageClassName(getStorageClass()), m_id, m_requiredCacheSize);
          }
          else
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
+                              _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
@@ -1281,13 +1281,13 @@ void DCItem::reloadCache(bool forceReload)
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
-               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC FETCH FIRST %u ROWS ONLY"),
                m_id, m_requiredCacheSize);
          }
          else
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC FETCH FIRST %u ROWS ONLY"),
                m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
@@ -1295,12 +1295,12 @@ void DCItem::reloadCache(bool forceReload)
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
-                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"), m_id);
+                              _T("WHERE item_id=%u ORDER BY idata_timestamp DESC"), m_id);
          }
          else
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
+                              _T("WHERE item_id=%u ORDER BY idata_timestamp DESC"),
                     m_ownerId, m_id);
          }
          break;
@@ -1582,7 +1582,7 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
       else if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
          _sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata_sc_%s ")
-            _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+            _T("WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?) AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
             functions[func], getStorageClassName(getStorageClass()));
       }
       else
@@ -1655,13 +1655,13 @@ bool DCItem::deleteAllData()
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
-         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%d"), getStorageClassName(getStorageClass()), m_id);
+         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%u"), getStorageClassName(getStorageClass()), m_id);
       else
-         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d"), m_id);
+         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%u"), m_id);
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_ownerId, m_id);
+      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%u"), m_ownerId, m_id);
    }
 	bool success = DBQuery(hdb, query);
 	clearCache();
@@ -1685,17 +1685,18 @@ bool DCItem::deleteEntry(time_t timestamp)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%d AND idata_timestamp=%d"),
-                  getStorageClassName(getStorageClass()), m_id, (int)timestamp);
+         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%u AND idata_timestamp=to_timestamp(") UINT64_FMT _T(")"),
+                  getStorageClassName(getStorageClass()), m_id, static_cast<uint64_t>(timestamp));
       }
       else
       {
-         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=%d"), m_id, (int)timestamp);
+         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=") UINT64_FMT, m_id, static_cast<uint64_t>(timestamp));
       }
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=%d"), m_ownerId, m_id, (int)timestamp);
+      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=") UINT64_FMT,
+               m_ownerId, m_id, static_cast<uint64_t>(timestamp));
    }
    unlock();
 

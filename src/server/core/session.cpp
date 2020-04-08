@@ -4130,7 +4130,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
                      tablePrefix, condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+            _sntprintf(query, 512, _T("SELECT date_part('epoch',%s_timestamp)::int,%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
                      tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, DCObject::getStorageClassName(storageClass), condition, tablePrefix, (int)maxRows);
             break;
@@ -4149,27 +4149,27 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
       switch(g_dbSyntax)
       {
          case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
+            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
                      (int)maxRows, tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, (int)nodeId, condition, tablePrefix);
+                     tablePrefix, nodeId, condition, tablePrefix);
             break;
          case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
                      tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+                     tablePrefix, nodeId, condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_MYSQL:
          case DB_SYNTAX_PGSQL:
          case DB_SYNTAX_SQLITE:
          case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
                      tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+                     tablePrefix, nodeId, condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
                      tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+                     tablePrefix, nodeId, condition, tablePrefix, (int)maxRows);
             break;
          default:
             DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
@@ -4359,10 +4359,20 @@ read_from_db:
    debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %d)"), maxRows);
 
 	TCHAR condition[256] = _T("");
-	if (timeFrom != 0)
-		_tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=?") : _T(" AND idata_timestamp>=?"));
-	if (timeTo != 0)
-		_tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp<=?") : _T(" AND idata_timestamp<=?"));
+	if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+	{
+      if (timeFrom != 0)
+         _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=to_timestamp(?)") : _T(" AND idata_timestamp>=to_timestamp(?)"));
+      if (timeTo != 0)
+         _tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp<=to_timestamp(?)") : _T(" AND idata_timestamp<=to_timestamp(?)"));
+	}
+	else
+	{
+      if (timeFrom != 0)
+         _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=?") : _T(" AND idata_timestamp>=?"));
+      if (timeTo != 0)
+         _tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp<=?") : _T(" AND idata_timestamp<=?"));
+	}
 
 	bool success = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

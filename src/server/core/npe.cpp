@@ -122,7 +122,7 @@ StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciI
          break;
       case DB_SYNTAX_TSDB:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_sc_%s WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"),
+            _sntprintf(query, 1024, _T("SELECT date_part('epoch',idata_timestamp)::int,idata_value FROM idata_sc_%s WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"),
                      DCObject::getStorageClassName(storageClass), nodeId, dciId, maxRows);
          else
             _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);

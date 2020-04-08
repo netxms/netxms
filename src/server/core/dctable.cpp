@@ -317,17 +317,17 @@ bool DCTable::deleteEntry(time_t timestamp)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u AND tdata_timestamp=%u"),
-                  getStorageClassName(getStorageClass()), m_id, (UINT32)timestamp);
+         _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u AND tdata_timestamp=to_timestamp(")  UINT64_FMT _T(")"),
+                  getStorageClassName(getStorageClass()), m_id, static_cast<uint64_t>(timestamp));
       }
       else
       {
-         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=%u"), m_id, (UINT32)timestamp);
+         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=") UINT64_FMT, m_id, static_cast<uint64_t>(timestamp));
       }
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=%u"), m_ownerId, m_id, (UINT32)timestamp);
+      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=") UINT64_FMT, m_ownerId, m_id, static_cast<uint64_t>(timestamp));
    }
    bool success = DBQuery(hdb, query);
    unlock();
@@ -406,7 +406,7 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
 	      if (g_dbSyntax == DB_SYNTAX_TSDB)
 	      {
 	         TCHAR query[256];
-	         _sntprintf(query, 256, _T("INSERT INTO tdata_sc_%s (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"),
+	         _sntprintf(query, 256, _T("INSERT INTO tdata_sc_%s (item_id,tdata_timestamp,tdata_value) VALUES (?,to_timestamp(?),?)"),
 	                  getStorageClassName(getStorageClass()));
             hStmt = DBPrepare(hdb, query);
 	      }

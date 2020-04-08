@@ -466,9 +466,9 @@ static bool MigrateDataToSingleTable_TSDB(UINT32 nodeId, bool tdata)
       StringBuffer& query = queries[sclass];
       query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
       query.append(dciId);
-      query.append(_T(','));
+      query.append(_T(",to_timestamp("));
       query.append(DBGetFieldULong(hResult, 1));
-      query.append(_T(','));
+      query.append(_T("),"));
       TCHAR *value = DBGetField(hResult, 2, NULL, 0);
       query.append(DBPrepareString(g_dbHandle, value));
       MemFree(value);
@@ -582,9 +582,9 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
       StringBuffer& query = queries[sclass];
       query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
       query.append(dciId);
-      query.append(_T(','));
+      query.append(_T(",to_timestamp("));
       query.append(DBGetFieldULong(hResult, 1));
-      query.append(_T(','));
+      query.append(_T("),"));
       TCHAR *value = DBGetField(hResult, 2, NULL, 0);
       query.append(DBPrepareString(g_dbHandle, value));
       MemFree(value);
@@ -708,8 +708,16 @@ static bool MigrateDataFromSingleTable(UINT32 nodeId, bool tdata)
 
    bool success = false;
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
-   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s WHERE node_id=%u"),
-            prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
+   if (s_sourceSyntax == DB_SYNTAX_TSDB)
+   {
+      _sntprintf(buffer, 256, _T("SELECT item_id,date_part('epoch',%s_timestamp)::int,%s_value%s FROM %s WHERE node_id=%u"),
+               prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
+   }
+   else
+   {
+      _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s WHERE node_id=%u"),
+               prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
+   }
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
    if (hResult == NULL)
    {

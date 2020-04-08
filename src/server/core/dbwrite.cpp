@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -418,11 +418,18 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
    ThreadSetName("DBWriter/IData");
    IDataWriter *writer = static_cast<IDataWriter*>(arg);
 
+   bool convertTimestamps;
    TCHAR queryBase[256];
-   if (writer->storageClass != NULL)
+   if (writer->storageClass != nullptr)   // TimescaleDB
+   {
       _sntprintf(queryBase, 256, _T("INSERT INTO idata_sc_%s (item_id,idata_timestamp,idata_value,raw_value) VALUES"), writer->storageClass);
+      convertTimestamps = true;
+   }
    else
+   {
       _tcscpy(queryBase, _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES"));
+      convertTimestamps = false;
+   }
 
    int maxRecordsPerTxn = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    int maxRecordsPerStmt = ConfigReadInt(_T("DBWriter.MaxRecordsPerStatement"), 100);
@@ -445,7 +452,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
          int countTxn = 0, countStmt = 0;
          while(true)
          {
-            _sntprintf(data, 1024, _T("%c(%u,%u,%s,%s)"),
+            _sntprintf(data, 1024, convertTimestamps ? _T("%c(%u,to_timestamp(%u),%s,%s)") : _T("%c(%u,%u,%s,%s)"),
                        (countStmt > 0) ? _T(',') : _T(' '),
                        rq->dciId, (unsigned int)rq->timestamp,
                        (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),

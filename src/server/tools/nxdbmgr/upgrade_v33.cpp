@@ -24,6 +24,68 @@
 #include <nxevent.h>
 
 /**
+ * Alter TimescaleDB table
+ */
+static bool AlterTSDBTable(const TCHAR *table, bool tableData)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("ALTER TABLE %s RENAME TO v33_5_%s"), table, table);
+   if (!SQLQuery(query))
+      return false;
+
+   if (tableData)
+   {
+      _sntprintf(query, 256,
+            _T("CREATE TABLE %s (")
+            _T("item_id integer not null,")
+            _T("tdata_timestamp timestamptz not null,")
+            _T("tdata_value text null,")
+            _T("PRIMARY KEY(item_id,tdata_timestamp))"), table);
+   }
+   else
+   {
+      _sntprintf(query, 256,
+            _T("CREATE TABLE %s (")
+            _T("item_id integer not null,")
+            _T("idata_timestamp timestamptz not null,")
+            _T("idata_value varchar(255) null,")
+            _T("raw_value varchar(255) null,")
+            _T("PRIMARY KEY(item_id,idata_timestamp))"), table);
+   }
+   if (!SQLQuery(query))
+      return false;
+
+   _sntprintf(query, 256, _T("SELECT create_hypertable('%s', '%s', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);"),
+            table, tableData ? _T("tdata_timestamp") : _T("idata_timestamp"));
+   return SQLQuery(query);
+}
+
+/**
+ * Upgrade from 32.5 to 32.6
+ */
+static bool H_UpgradeFromV5()
+{
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(AlterTSDBTable(_T("idata_sc_default"), false));
+      CHK_EXEC(AlterTSDBTable(_T("idata_sc_7"), false));
+      CHK_EXEC(AlterTSDBTable(_T("idata_sc_30"), false));
+      CHK_EXEC(AlterTSDBTable(_T("idata_sc_90"), false));
+      CHK_EXEC(AlterTSDBTable(_T("idata_sc_180"), false));
+      CHK_EXEC(AlterTSDBTable(_T("idata_sc_other"), false));
+      CHK_EXEC(AlterTSDBTable(_T("tdata_sc_default"), true));
+      CHK_EXEC(AlterTSDBTable(_T("tdata_sc_7"), true));
+      CHK_EXEC(AlterTSDBTable(_T("tdata_sc_30"), true));
+      CHK_EXEC(AlterTSDBTable(_T("tdata_sc_90"), true));
+      CHK_EXEC(AlterTSDBTable(_T("tdata_sc_180"), true));
+      CHK_EXEC(AlterTSDBTable(_T("tdata_sc_other"), true));
+      RegisterOnlineUpgrade(33, 6);
+   }
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 32.4 to 32.5
  */
 static bool H_UpgradeFromV4()
@@ -127,6 +189,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 5,  33, 6,  H_UpgradeFromV5  },
    { 4,  33, 5,  H_UpgradeFromV4  },
    { 3,  33, 4,  H_UpgradeFromV3  },
    { 2,  33, 3,  H_UpgradeFromV2  },

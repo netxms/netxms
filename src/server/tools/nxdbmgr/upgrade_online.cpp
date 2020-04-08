@@ -341,7 +341,7 @@ static bool Upgrade_30_87()
    {
       TCHAR query[1024];
       _sntprintf(query, 1024,
-               _T("SELECT item_id,tdata_timestamp,tdata_value FROM tdata_old WHERE (tdata_timestamp=%u AND item_id>%u) OR tdata_timestamp>%u ORDER BY tdata_timestamp,item_id LIMIT 10000"),
+               _T("SELECT item_id,tdata_timestamp,tdata_value FROM tdata_old WHERE (tdata_timestamp=%u AND item_id>%u) OR tdata_timestamp>%u ORDER BY tdata_timestamp,item_id LIMIT 1000"),
                static_cast<UINT32>(currTime), currId, static_cast<UINT32>(currTime));
       DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(query);
       if (hResult == NULL)
@@ -366,11 +366,11 @@ static bool Upgrade_30_87()
          currId = DBGetFieldULong(hResult, 0);
          currTime = DBGetFieldULong(hResult, 1);
 
-         TCHAR query[1024], buffer[256];
-         _sntprintf(query, 1024, _T("(%u,%u,%s)"),
-                  currId, static_cast<UINT32>(currTime),
-                  (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 2, buffer, 256)));
-         data.get(GetDCObjectStorageClass(currId))->add(query);
+         _sntprintf(query, 1024, _T("(%u,%u,'"), currId, static_cast<UINT32>(currTime));
+         StringBuffer dataQuery(query);
+         dataQuery.appendPreallocated(DBGetField(hResult, 2, nullptr, 0));
+         dataQuery.append(_T("')"));
+         data.get(GetDCObjectStorageClass(currId))->add(dataQuery);
 
          if (currTime != nextCutoffTime)
          {
@@ -415,6 +415,122 @@ static bool Upgrade_30_87()
 }
 
 /**
+ * Copy data from old format idata_sc_* or tdata_dc_* table to new format
+ */
+static bool CopyDataTable_V33_6(const TCHAR *table, bool tableData)
+{
+   WriteToTerminalEx(_T("Converting table \x1b[1m%s\x1b[0m\n"), table);
+
+   int totalCount = 0;
+   time_t cutoffTime = 0, nextCutoffTime = 0, currTime = 0;
+   uint32_t currId = 0;
+   TCHAR query[1024];
+   StringBuffer insertQuery;
+   while(true)
+   {
+      if (tableData)
+      {
+         _sntprintf(query, 1024,
+                  _T("SELECT item_id,tdata_timestamp,tdata_value FROM v33_5_%s WHERE (tdata_timestamp=%u AND item_id>%u) OR tdata_timestamp>%u ORDER BY tdata_timestamp,item_id LIMIT 1000"),
+                  table, static_cast<uint32_t>(currTime), currId, static_cast<uint32_t>(currTime));
+      }
+      else
+      {
+         _sntprintf(query, 1024,
+                  _T("SELECT item_id,idata_timestamp,idata_value,raw_value FROM v33_5_%s WHERE (idata_timestamp=%u AND item_id>%u) OR idata_timestamp>%u ORDER BY idata_timestamp,item_id LIMIT 10000"),
+                  table, static_cast<uint32_t>(currTime), currId, static_cast<uint32_t>(currTime));
+      }
+      DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(query);
+      if (hResult == nullptr)
+      {
+         if (g_ignoreErrors)
+            continue;
+         return false;
+      }
+
+      insertQuery = _T("INSERT INTO ");
+      insertQuery.append(table);
+      insertQuery.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES"));
+      int count = 0;
+      while(DBFetch(hResult))
+      {
+         currId = DBGetFieldULong(hResult, 0);
+         currTime = DBGetFieldULong(hResult, 1);
+
+         insertQuery.append((count == 0) ? _T(' ') : _T(','));
+         if (tableData)
+         {
+            _sntprintf(query, 1024, _T("(%u,%u,'"), currId, static_cast<uint32_t>(currTime));
+            insertQuery.append(query);
+            insertQuery.appendPreallocated(DBGetField(hResult, 2, nullptr, 0));
+            insertQuery.append(_T("')"));
+         }
+         else
+         {
+            TCHAR buffer1[256], buffer2[256];
+            _sntprintf(query, 1024, _T("(%u,%u,%s,%s)"),
+                     currId, static_cast<uint32_t>(currTime),
+                     (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 2, buffer1, 256)),
+                     (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 3, buffer2, 256)));
+            insertQuery.append(query);
+         }
+
+         if (currTime != nextCutoffTime)
+         {
+            cutoffTime = nextCutoffTime;
+            nextCutoffTime = currTime;
+         }
+         count++;
+      }
+      DBFreeResult(hResult);
+
+      if (count == 0)
+         break;   // End of data
+
+      CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
+      CHK_EXEC(SQLQuery(insertQuery, false));
+      if (cutoffTime != 0)
+      {
+         _sntprintf(query, 256, _T("SELECT drop_chunks(%u, 'v33_5_%s')"), static_cast<uint32_t>(cutoffTime), table);
+         CHK_EXEC(SQLQuery(query));
+         cutoffTime = 0;
+      }
+      CHK_EXEC_NO_SP(DBCommit(g_dbHandle));
+
+      totalCount += count;
+      WriteToTerminalEx(_T("   %d records processed\n"), totalCount);
+   }
+
+   _sntprintf(query, 1024, _T("DROP TABLE v33_5_%s CASCADE"), table);
+   CHK_EXEC_NO_SP(SQLQuery(query));
+   return true;
+}
+
+/**
+ * Online upgrade for version 33.6
+ */
+static bool Upgrade_33_6()
+{
+   if (g_dbSyntax != DB_SYNTAX_TSDB)
+      return true;   // not needed
+
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("idata_sc_default"), false));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("idata_sc_7"), false));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("idata_sc_30"), false));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("idata_sc_90"), false));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("idata_sc_180"), false));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("idata_sc_other"), false));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("tdata_sc_default"), true));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("tdata_sc_7"), true));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("tdata_sc_30"), true));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("tdata_sc_90"), true));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("tdata_sc_180"), true));
+   CHK_EXEC_NO_SP(CopyDataTable_V33_6(_T("tdata_sc_other"), true));
+
+   return true;
+}
+
+/**
  * Online upgrade registry
  */
 struct
@@ -424,6 +540,7 @@ struct
    bool (*handler)();
 } s_handlers[] =
 {
+   { 33, 6,  Upgrade_33_6  },
    { 30, 87, Upgrade_30_87 },
    { 22, 21, Upgrade_22_21 },
    { 0, 411, Upgrade_0_411 },
@@ -452,7 +569,7 @@ void RunPendingOnlineUpgrades()
       int minor = id & 0xFFFF;
       if ((major != 0) || (minor != 0))
       {
-         bool (*handler)() = NULL;
+         bool (*handler)() = nullptr;
          for(int j = 0; (s_handlers[j].major != 0) || (s_handlers[j].minor != 0); j++)
          {
             if ((s_handlers[j].major == major) && (s_handlers[j].minor == minor))
@@ -461,7 +578,7 @@ void RunPendingOnlineUpgrades()
                break;
             }
          }
-         if (handler != NULL)
+         if (handler != nullptr)
          {
             _tprintf(_T("Running background upgrade procedure for version %d.%d\n"), major, minor);
             if (!handler())

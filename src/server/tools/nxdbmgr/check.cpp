@@ -782,7 +782,7 @@ static void CheckCollectedDataSingleTable_TSDB(bool isTable)
    for(int sc = 0; sc < 6; sc++)
    {
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_sc_%s WHERE %s_timestamp>") TIME_T_FMT,
+      _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_sc_%s WHERE %s_timestamp > to_timestamp(") TIME_T_FMT _T(")"),
                isTable ? _T("tdata") : _T("idata"), sclasses[sc], isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
       DB_RESULT hResult = SQLSelect(query);
       if (hResult != NULL)
@@ -792,7 +792,7 @@ static void CheckCollectedDataSingleTable_TSDB(bool isTable)
             g_dbCheckErrors++;
             if (GetYesNoEx(_T("Found collected data with timestamp in the future. Delete invalid records?")))
             {
-               _sntprintf(query, 1024, _T("DELETE FROM %s_sc_%s WHERE %s_timestamp>") TIME_T_FMT,
+               _sntprintf(query, 1024, _T("DELETE FROM %s_sc_%s WHERE %s_timestamp > to_timestamp(") TIME_T_FMT _T(")"),
                         isTable ? _T("tdata") : _T("idata"), sclasses[sc], isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
                if (SQLQuery(query))
                   g_dbCheckFixes++;

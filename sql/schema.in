@@ -974,7 +974,7 @@ CREATE TABLE dci_access
 CREATE TABLE idata_sc_default
 (
    item_id integer not null,
-   idata_timestamp integer not null,
+   idata_timestamp timestamptz not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
    PRIMARY KEY(item_id,idata_timestamp)
@@ -983,7 +983,7 @@ CREATE TABLE idata_sc_default
 CREATE TABLE idata_sc_7
 (
    item_id integer not null,
-   idata_timestamp integer not null,
+   idata_timestamp timestamptz not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
    PRIMARY KEY(item_id,idata_timestamp)
@@ -992,7 +992,7 @@ CREATE TABLE idata_sc_7
 CREATE TABLE idata_sc_30
 (
    item_id integer not null,
-   idata_timestamp integer not null,
+   idata_timestamp timestamptz not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
    PRIMARY KEY(item_id,idata_timestamp)
@@ -1001,7 +1001,7 @@ CREATE TABLE idata_sc_30
 CREATE TABLE idata_sc_90
 (
    item_id integer not null,
-   idata_timestamp integer not null,
+   idata_timestamp timestamptz not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
    PRIMARY KEY(item_id,idata_timestamp)
@@ -1010,7 +1010,7 @@ CREATE TABLE idata_sc_90
 CREATE TABLE idata_sc_180
 (
    item_id integer not null,
-   idata_timestamp integer not null,
+   idata_timestamp timestamptz not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
    PRIMARY KEY(item_id,idata_timestamp)
@@ -1019,18 +1019,18 @@ CREATE TABLE idata_sc_180
 CREATE TABLE idata_sc_other
 (
    item_id integer not null,
-   idata_timestamp integer not null,
+   idata_timestamp timestamptz not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
    PRIMARY KEY(item_id,idata_timestamp)
 ) TABLE_TYPE;
 
-SELECT create_hypertable('idata_sc_default', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('idata_sc_7', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('idata_sc_30', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('idata_sc_90', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('idata_sc_180', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('idata_sc_other', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('idata_sc_default', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('idata_sc_7', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('idata_sc_30', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('idata_sc_90', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('idata_sc_180', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('idata_sc_other', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
 
 CREATE VIEW idata AS
    SELECT * FROM idata_sc_default
@@ -1066,7 +1066,7 @@ CREATE TABLE idata
 CREATE TABLE tdata_sc_default
 (
    item_id integer not null,
-   tdata_timestamp integer not null,
+   tdata_timestamp timestamptz not null,
    tdata_value SQL_TEXT null,
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
@@ -1074,7 +1074,7 @@ CREATE TABLE tdata_sc_default
 CREATE TABLE tdata_sc_7
 (
    item_id integer not null,
-   tdata_timestamp integer not null,
+   tdata_timestamp timestamptz not null,
    tdata_value SQL_TEXT null,
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
@@ -1082,7 +1082,7 @@ CREATE TABLE tdata_sc_7
 CREATE TABLE tdata_sc_30
 (
    item_id integer not null,
-   tdata_timestamp integer not null,
+   tdata_timestamp timestamptz not null,
    tdata_value SQL_TEXT null,
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
@@ -1090,7 +1090,7 @@ CREATE TABLE tdata_sc_30
 CREATE TABLE tdata_sc_90
 (
    item_id integer not null,
-   tdata_timestamp integer not null,
+   tdata_timestamp timestamptz not null,
    tdata_value SQL_TEXT null,
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
@@ -1098,7 +1098,7 @@ CREATE TABLE tdata_sc_90
 CREATE TABLE tdata_sc_180
 (
    item_id integer not null,
-   tdata_timestamp integer not null,
+   tdata_timestamp timestamptz not null,
    tdata_value SQL_TEXT null,
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
@@ -1106,17 +1106,17 @@ CREATE TABLE tdata_sc_180
 CREATE TABLE tdata_sc_other
 (
    item_id integer not null,
-   tdata_timestamp integer not null,
+   tdata_timestamp timestamptz not null,
    tdata_value SQL_TEXT null,
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
 
-SELECT create_hypertable('tdata_sc_default', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('tdata_sc_7', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('tdata_sc_30', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('tdata_sc_90', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('tdata_sc_180', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
-SELECT create_hypertable('tdata_sc_other', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('tdata_sc_default', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('tdata_sc_7', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('tdata_sc_30', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('tdata_sc_90', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('tdata_sc_180', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
+SELECT create_hypertable('tdata_sc_other', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds', number_partitions => 100);
 
 CREATE VIEW tdata AS
    SELECT * FROM tdata_sc_default

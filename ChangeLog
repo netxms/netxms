@@ -15,6 +15,7 @@
 	NX-1788 (NXSL: add support for ranges in switch/case)
 	NX-1793 (Out of range error)
 	NX-1806 (Change order in which ping3.ndd is used during discovery or allow unloading/blacklist)
+	NX-1807 (TimescaleDB continuous aggregates, retention policies, etc.)
 	NX-1671 (Title from Object Tool's properties is not used anywhere)
 	NX-1820 (Object deletion and negative reference count)
 
