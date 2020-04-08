@@ -102,27 +102,27 @@ public class AlarmTab extends ObjectTab
       alarmList.enableFilter(initShowFilter);
 	}
 	
-	/**
-	 * Get configuration prefix for alarm list.
-	 * 
-	 * @return
-	 */
-	protected String getConfigPrefix()
-	{
-		return "AlarmTab"; //$NON-NLS-1$
-	}
+   /**
+    * Get configuration prefix for alarm list.
+    *
+    * @return configuration prefix for alarm list
+    */
+   protected String getConfigPrefix()
+   {
+      return "AlarmTab"; //$NON-NLS-1$
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	public void objectChanged(AbstractObject object)
-	{
-		if ((object != null) && isActive())
-			alarmList.setRootObject(object.getObjectId());
-	}
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   public void objectChanged(AbstractObject object)
+   {
+      if (object != null)
+         alarmList.setRootObject(object.getObjectId());
+   }
 
-	/* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
     */
    @Override
@@ -132,9 +132,9 @@ public class AlarmTab extends ObjectTab
       alarmList.doPendingUpdates();
    }
 
-   /* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+    */
 	@Override
 	public void refresh()
 	{
