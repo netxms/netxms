@@ -875,6 +875,9 @@ public class AlarmList extends CompositeWithMessageBar
     */
    public void doPendingUpdates()
    {
+      if ((visibilityValidator != null) && !visibilityValidator.isVisible())
+         return;
+
       if (needInitialRefresh)
       {
          needInitialRefresh = false;
