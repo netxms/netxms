@@ -116,22 +116,22 @@ StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciI
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);
          else
             _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);
          break;
       case DB_SYNTAX_TSDB:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_sc_%s WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"),
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_sc_%s WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"),
                      DCObject::getStorageClassName(storageClass), nodeId, dciId, maxRows);
          else
             _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);
          break;
       case DB_SYNTAX_DB2:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
          else
-            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
          break;
       default:
          nxlog_debug(1, _T("INTERNAL ERROR: unsupported database in PredictionEngine::getDciValues"));
