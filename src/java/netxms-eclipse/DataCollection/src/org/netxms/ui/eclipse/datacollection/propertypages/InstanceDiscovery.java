@@ -79,6 +79,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkValues);
       discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkOids);
       discoveryMethod.add(Messages.get().InstanceDiscovery_Script);
+      discoveryMethod.add("Windows Performance Counters");
       discoveryMethod.select(dco.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
@@ -185,7 +186,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Get label for data field
 	 * 
@@ -207,10 +208,12 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 				return Messages.get().InstanceDiscovery_BaseOid;
 			case DataCollectionObject.IDM_SCRIPT:
 			   return "Script name";
+         case DataCollectionObject.IDM_WINPERF:
+            return "Object name";
 		}
 		return ""; //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 

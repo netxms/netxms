@@ -7,7 +7,9 @@
 - Value ranges in NXSL switch/case statement
 - New attributes "instanceColumns" and "instanceColumnIndexes" in NXSL class "Table"
 - Implemented instance discovery method "Agent Table"
+- Implemented instance discovery method "Windows Performance Counters"
 - Fixed issues:
+	NX-392 (Use object names from Windows performance counters for instance discovery)
 	NX-713 (Scheduled DCI will not work with offline DCI functionality)
 	NX-806 (NXSL: add method to lookup table row by instance)
 	NX-807 (NXSL: add method to lookup instance column ID without iterating over Table::columns)

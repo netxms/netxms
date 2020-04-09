@@ -69,6 +69,7 @@ public abstract class DataCollectionObject
    public static final int IDM_SNMP_WALK_VALUES = 3;
    public static final int IDM_SNMP_WALK_OIDS = 4;
    public static final int IDM_SCRIPT = 5;
+   public static final int IDM_WINPERF = 6;
    
    // Polling schedule types
    public static final int POLLING_SCHEDULE_DEFAULT  = 0;

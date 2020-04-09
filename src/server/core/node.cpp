@@ -5155,6 +5155,11 @@ StringMap *Node::getInstanceList(DCObject *dco)
       case IDM_SNMP_WALK_OIDS:
          node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap);
          break;
+      case IDM_WINPERF:
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("PDH.ObjectInstances(\"%s\")"), EscapeStringForAgent(dco->getInstanceDiscoveryData()).cstr());
+         node->getListFromAgent(query, &instances);
+         break;
       default:
          instances = nullptr;
          break;
