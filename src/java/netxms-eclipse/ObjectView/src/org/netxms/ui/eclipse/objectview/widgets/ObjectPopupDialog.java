@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.ElementForPhysicalPlacment;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
@@ -62,7 +61,7 @@ public class ObjectPopupDialog extends PopupDialog
     */
    public ObjectPopupDialog(Shell parent, Object object, Point location)
    {
-      super(parent, HOVER_SHELLSTYLE, true, false, false, false, false, object instanceof ElementForPhysicalPlacment ? ((AbstractObject)object).getObjectName() : ((PassiveRackElement)object).getType().toString(), null);
+      super(parent, HOVER_SHELLSTYLE, true, false, false, false, false, getObjectDisplayName(object), null);
       this.object = object;
       this.location = (location != null) ? location : Display.getCurrent().getCursorLocation();
       labelProvider = new WorkbenchLabelProvider();
@@ -95,7 +94,7 @@ public class ObjectPopupDialog extends PopupDialog
       return location;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.PopupDialog#createTitleControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -104,8 +103,8 @@ public class ObjectPopupDialog extends PopupDialog
       CLabel title = new CLabel(parent, SWT.NONE);
       GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).span(2, 1).applyTo(title);
       title.setImage(labelProvider.getImage(object));
-      title.setText(object instanceof ElementForPhysicalPlacment ? ((AbstractObject)object).getObjectName() : ((PassiveRackElement)object).getType().toString());
-      
+      title.setText(getObjectDisplayName(object));
+
       FontData fd = title.getFont().getFontData()[0];
       fd.setStyle(SWT.BOLD);
       boldFont = new Font(title.getDisplay(), fd);
@@ -122,7 +121,7 @@ public class ObjectPopupDialog extends PopupDialog
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-      if (object instanceof ElementForPhysicalPlacment)
+      if (object instanceof AbstractObject)
       {
          AbstractObject abstractObject = (AbstractObject)object;
          statusLabel = new CLabel(dialogArea, SWT.NONE);
@@ -199,7 +198,7 @@ public class ObjectPopupDialog extends PopupDialog
             new CLabel(dialogArea, SWT.MULTI).setText(abstractObject.getComments());
          }
       }
-      else
+      else if (object instanceof PassiveRackElement)
       {
          StringBuilder sb = new StringBuilder();
          PassiveRackElement el = (PassiveRackElement)object;
@@ -210,8 +209,8 @@ public class ObjectPopupDialog extends PopupDialog
       
       return dialogArea;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.dialogs.PopupDialog#getForegroundColorExclusions()
     */
    @Override
@@ -220,6 +219,21 @@ public class ObjectPopupDialog extends PopupDialog
       List<Control> e = super.getForegroundColorExclusions();
       e.add(statusLabel);
       return e;
+   }
+
+   /**
+    * Get display name for object
+    *
+    * @param object
+    * @return
+    */
+   private static String getObjectDisplayName(Object object)
+   {
+      if (object instanceof AbstractObject)
+         return ((AbstractObject)object).getObjectName();
+      if (object instanceof PassiveRackElement)
+         return ((PassiveRackElement)object).getType().toString();
+      return object.toString();
    }
 
    /**

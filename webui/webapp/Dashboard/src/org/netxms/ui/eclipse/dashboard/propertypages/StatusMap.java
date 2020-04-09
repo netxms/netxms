@@ -43,6 +43,7 @@ public class StatusMap extends PropertyPage
 	private LabeledText title;
 	private Button[] checkSeverity;
    private Button checkGroupObjects;
+   private Button checkHideObjectsInMaintenance;
 	private Button checkShowFilter;
    private Button checkRadial;
    private Button checkFitToScreen;
@@ -113,6 +114,10 @@ public class StatusMap extends PropertyPage
       checkGroupObjects.setText(Messages.get().StatusMap_Group);
       checkGroupObjects.setSelection(config.isGroupObjects());
 
+      checkHideObjectsInMaintenance = new Button(optionsGroup, SWT.CHECK);
+      checkHideObjectsInMaintenance.setText("Hide objects in &maintenance mode");
+      checkHideObjectsInMaintenance.setSelection(config.isHideObjectsInMaintenance());
+
 		checkShowFilter = new Button(optionsGroup, SWT.CHECK);
 		checkShowFilter.setText(Messages.get().StatusMap_ShowFilter);
 		checkShowFilter.setSelection(config.isShowTextFilter());
@@ -128,25 +133,26 @@ public class StatusMap extends PropertyPage
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
 		config.setObjectId(objectSelector.getObjectId());
 		config.setTitle(title.getText());
-		
+
 		int severityFilter = 0;
 		for(int i = 0; i < checkSeverity.length; i++)
 			if (checkSeverity[i].getSelection())
 				severityFilter |= (1 << i);
 		config.setSeverityFilter(severityFilter);
 		config.setGroupObjects(checkGroupObjects.getSelection());
+      config.setHideObjectsInMaintenance(checkHideObjectsInMaintenance.getSelection());
 		config.setShowTextFilter(checkShowFilter.getSelection());
       config.setShowRadial(checkRadial.getSelection());
       config.setFitToScreen(checkFitToScreen.getSelection());
-		
+
 		return true;
 	}
 }

@@ -325,9 +325,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
       
       return objectCount;
    }
-   
 
-   
    /**
     * Calculate optimal font size
     * 

@@ -47,6 +47,7 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 		this.object = object;
 		addPaintListener(this);
 		setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+      setToolTipText(getObjectDisplayName());
 	}
 
 	/* (non-Javadoc)
@@ -58,7 +59,7 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 		Rectangle rect = getClientArea();
 		rect.width--;
 		rect.height--;
-		
+
 		e.gc.setAntialias(SWT.ON);
 		e.gc.setTextAntialias(SWT.ON);
 		e.gc.setForeground(SharedColors.getColor(SharedColors.TEXT_NORMAL, getDisplay()));
@@ -69,11 +70,11 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 		e.gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		e.gc.setAlpha(255);
 		e.gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-		
+
 		final String text = (object instanceof AbstractNode) ?
-		      (object.getObjectName() + "\n" + ((AbstractNode)object).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
-		      object.getObjectName();
-		
+            (getObjectDisplayName() + "\n" + ((AbstractNode)object).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
+            getObjectDisplayName();
+
 		rect.x += 4;
 		rect.y += 4;
 		rect.width -= 8;
@@ -83,9 +84,19 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 		e.gc.drawText(text, rect.x, rect.y + (rect.height - h) / 2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+   /**
+    * Get display name for current object
+    *
+    * @return display name for current object
+    */
+   private String getObjectDisplayName()
+   {
+      return object.isInMaintenanceMode() ? (object.getObjectName() + " [Maintenance]") : object.getObjectName();
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
@@ -102,5 +113,6 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 	{
 		this.object = object;
 		redraw();
+      setToolTipText(getObjectDisplayName());
 	}
 }

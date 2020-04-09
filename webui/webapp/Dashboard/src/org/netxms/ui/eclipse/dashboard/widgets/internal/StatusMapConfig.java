@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,9 @@ public class StatusMapConfig extends DashboardElementConfig
 	@Element(required=false)
 	private int severityFilter = 0xFF;
 	
+   @Element(required = false)
+   private boolean hideObjectsInMaintenance = false;
+
 	@Element(required=false)
 	private boolean groupObjects = false;
 
@@ -159,6 +162,22 @@ public class StatusMapConfig extends DashboardElementConfig
 	{
 		this.groupObjects = groupObjects;
 	}
+
+   /**
+    * @return the hideObjectsInMaintenance
+    */
+   public boolean isHideObjectsInMaintenance()
+   {
+      return hideObjectsInMaintenance;
+   }
+
+   /**
+    * @param hideObjectsInMaintenance the hideObjectsInMaintenance to set
+    */
+   public void setHideObjectsInMaintenance(boolean hideObjectsInMaintenance)
+   {
+      this.hideObjectsInMaintenance = hideObjectsInMaintenance;
+   }
 
    /**
     * @return the showTextFilter

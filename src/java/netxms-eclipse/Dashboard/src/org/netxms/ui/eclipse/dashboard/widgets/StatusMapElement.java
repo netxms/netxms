@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ public class StatusMapElement extends ElementWidget
 		if (config.getTitle().trim().isEmpty())
 		{
 			setLayout(new FillLayout());
-			if(config.isShowRadial())
+         if (config.isShowRadial())
             map = new ObjectStatusMapRadial(viewPart, this, SWT.NONE, false);			   
 			else
 			   map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
@@ -79,15 +79,16 @@ public class StatusMapElement extends ElementWidget
 			title.setFont(JFaceResources.getBannerFont());
 			title.setBackground(getBackground());			
 
-         if(config.isShowRadial())
+         if (config.isShowRadial())
             map = new ObjectStatusMapRadial(viewPart, this, SWT.NONE, false);          
          else
             map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
 			((Composite)map).setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		}
       map.setFitToScreen(config.isFitToScreen());
-		if(!config.isShowRadial())
+      if (!config.isShowRadial())
 		   ((ObjectStatusMap)map).setGroupObjects(config.isGroupObjects());
+      map.setHideObjectsInMaintenance(config.isHideObjectsInMaintenance());
 		map.setSeverityFilter(config.getSeverityFilter());
 		map.enableFilter(config.isShowTextFilter());
 		map.setRootObject(config.getObjectId());

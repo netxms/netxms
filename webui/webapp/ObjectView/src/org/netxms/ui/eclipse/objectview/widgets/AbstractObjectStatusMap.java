@@ -84,6 +84,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    protected boolean filterEnabled = true;
    protected int severityFilter = 0xFF;
    protected String textFilter = "";
+   protected boolean hideObjectsInMaintenance = false;
    protected SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
    protected Set<Runnable> refreshListeners = new HashSet<Runnable>();
    protected RefreshTimer refreshTimer;
@@ -235,6 +236,9 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       if (((1 << object.getStatus().getValue()) & severityFilter) == 0)
          return false;
       
+      if (hideObjectsInMaintenance && object.isInMaintenanceMode())
+         return false;
+
       if (!textFilter.isEmpty())
       {
          boolean match = false;
@@ -260,7 +264,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    protected void filterObjects(Collection<AbstractObject> objects)
    {
-      if (((severityFilter & 0x3F) == 0x3F) && textFilter.isEmpty())
+      if (((severityFilter & 0x3F) == 0x3F) && !hideObjectsInMaintenance && textFilter.isEmpty())
          return;  // filter is not set
       
       Iterator<AbstractObject> it = objects.iterator();
@@ -375,7 +379,23 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    {
       this.severityFilter = severityFilter;
    }
-   
+
+   /**
+    * @return the hideObjectsInMaintenance
+    */
+   public boolean isHideObjectsInMaintenance()
+   {
+      return hideObjectsInMaintenance;
+   }
+
+   /**
+    * @param hideObjectsInMaintenance the hideObjectsInMaintenance to set
+    */
+   public void setHideObjectsInMaintenance(boolean hideObjectsInMaintenance)
+   {
+      this.hideObjectsInMaintenance = hideObjectsInMaintenance;
+   }
+
    /**
     * @param listener
     */

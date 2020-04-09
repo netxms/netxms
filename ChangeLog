@@ -21,6 +21,7 @@
 	NX-1807 (TimescaleDB continuous aggregates, retention policies, etc.)
 	NX-1671 (Title from Object Tool's properties is not used anywhere)
 	NX-1820 (Object deletion and negative reference count)
+	NX-1827 (Maintenance mode filter in dashboard element "Status Map")
 
 
 *
