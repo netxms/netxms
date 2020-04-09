@@ -21,6 +21,48 @@
 **/
 
 #include "wmi.h"
+#include <netfw.h>
+
+/**
+ * Get state of Windows Firewall
+ */
+static int GetWindowsFirewallState()
+{
+   HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+   if ((hr != S_OK) && (hr != S_FALSE))
+      return -1;
+
+   INetFwPolicy2 *fwPolicy;
+   hr = CoCreateInstance(__uuidof(NetFwPolicy2), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2), (void**)&fwPolicy);
+   if (hr != S_OK)
+   {
+      AgentWriteDebugLog(6, _T("WMI: call to CoCreateInstance(NetFwPolicy2) failed"));
+      CoUninitialize();
+      return -1;
+   }
+
+   long profiles;
+   fwPolicy->get_CurrentProfileTypes(&profiles);
+
+   bool enabled = false;
+   for (int i = 1; i < 8; i = i << 1)
+   {
+      if ((profiles & i) == 0)
+         continue;
+
+      VARIANT_BOOL v = FALSE;
+      fwPolicy->get_FirewallEnabled((NET_FW_PROFILE_TYPE2)i, &v);
+      if (v)
+      {
+         enabled = true;
+         break;
+      }
+   }
+
+   fwPolicy->Release();
+   CoUninitialize();
+   return enabled ? 1 : 0;
+}
 
 /**
  * Handler for System.*Product.DisplayName parameters
@@ -42,8 +84,7 @@ LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *valu
 	{
 	   IWbemClassObject *pClassObject = NULL;
       ULONG uRet;
-		while((pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK) &&
-			   (rc != SYSINFO_RC_SUCCESS))
+		if (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
 		{
 			VARIANT v;
 
@@ -54,7 +95,7 @@ LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *valu
             if (str != NULL)
             {
                ret_string(value, str);
-               free(str);
+               MemFree(str);
 				   rc = SYSINFO_RC_SUCCESS;
             }
 			}
@@ -65,6 +106,19 @@ LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *valu
 			}
 			pClassObject->Release();
 		}
+      else
+      {
+         AgentWriteDebugLog(6, _T("WMI: H_SecurityCenterProductState: no objects of class \"%s\""), arg);
+         if (!_tcscmp(arg, _T("FirewallProduct")))
+         {
+            ret_string(value, _T("Windows Firewall"));
+            rc = SYSINFO_RC_SUCCESS;
+         }
+         else
+         {
+            rc = SYSINFO_RC_UNSUPPORTED;
+         }
+      }
 		pEnumObject->Release();
 		CloseWMIQuery(&ctx);
 	}
@@ -91,8 +145,7 @@ LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *val
 	{
 	   IWbemClassObject *pClassObject = NULL;
       ULONG uRet;
-		while((pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK) &&
-			   (rc != SYSINFO_RC_SUCCESS))
+		if (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
 		{
 			VARIANT v;
 
@@ -109,8 +162,37 @@ LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *val
 			}
 			pClassObject->Release();
 		}
+      else
+      {
+         AgentWriteDebugLog(6, _T("WMI: H_SecurityCenterProductState: no objects of class \"%s\""), &arg[1]);
+         rc = SYSINFO_RC_UNSUPPORTED;
+      }
 		pEnumObject->Release();
 		CloseWMIQuery(&ctx);
 	}
+
+   if ((rc != SYSINFO_RC_SUCCESS) && !_tcscmp(&arg[1], _T("FirewallProduct")))
+   {
+      // WMI only provides information about 3rd party firewall products
+      // If none available check Windows Firewall state
+      if (arg[0] == 'R')
+      {
+         int fwState = GetWindowsFirewallState();
+         if (fwState >= 0)
+         {
+            ret_int(value, fwState);
+            rc = SYSINFO_RC_SUCCESS;
+         }
+         else
+         {
+            rc = SYSINFO_RC_ERROR;
+         }
+      }
+      else
+      {
+         rc = SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
    return rc;
 }
