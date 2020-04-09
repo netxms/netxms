@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -276,6 +276,30 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       for(int i = 0; i < cd->size(); i++)
       {
          columns->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslTableColumnClass, new TableColumnDefinition(cd->get(i)))));
+      }
+      value = vm->createValue(columns);
+   }
+   else if (!strcmp(attr, "instanceColumns"))
+   {
+      NXSL_Array *columns = new NXSL_Array(vm);
+      ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
+      for(int i = 0, j = 0; i < cd->size(); i++)
+      {
+         auto column = cd->get(i);
+         if (column->isInstanceColumn())
+            columns->set(j++, vm->createValue(new NXSL_Object(vm, &g_nxslTableColumnClass, new TableColumnDefinition(column))));
+      }
+      value = vm->createValue(columns);
+   }
+   else if (!strcmp(attr, "instanceColumnIndexes"))
+   {
+      NXSL_Array *columns = new NXSL_Array(vm);
+      ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
+      for(int i = 0, j = 0; i < cd->size(); i++)
+      {
+         auto column = cd->get(i);
+         if (column->isInstanceColumn())
+            columns->set(j++, vm->createValue(i));
       }
       value = vm->createValue(columns);
    }

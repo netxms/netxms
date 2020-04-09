@@ -5,9 +5,11 @@
 - Option for blacklisting network device drivers
 - Option for switching SNMP probing during configuration poll into single OID per request mode
 - Value ranges in NXSL switch/case statement
+- New attributes "instanceColumns" and "instanceColumnIndexes" in NXSL class "Table"
 - Fixed issues:
 	NX-713 (Scheduled DCI will not work with offline DCI functionality)
 	NX-806 (NXSL: add method to lookup table row by instance)
+	NX-807 (NXSL: add method to lookup instance column ID without iterating over Table::columns)
 	NX-814 (NXSL: add new node attribute – isRemotelyManaged)
 	NX-1362 (Pattern matching for command output in SSH.Command parameter)
 	NX-1699 (Allow user turn on "Prevent automatic SNMP configuration changes" when creating node)
