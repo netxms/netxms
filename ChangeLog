@@ -6,6 +6,7 @@
 - Option for switching SNMP probing during configuration poll into single OID per request mode
 - Value ranges in NXSL switch/case statement
 - New attributes "instanceColumns" and "instanceColumnIndexes" in NXSL class "Table"
+- Implemented instance discovery method "Agent Table"
 - Fixed issues:
 	NX-713 (Scheduled DCI will not work with offline DCI functionality)
 	NX-806 (NXSL: add method to lookup table row by instance)
