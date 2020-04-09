@@ -460,7 +460,7 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
       return nullptr;
 
    shared_ptr<NetObj> proxyNode;
-   DataCollectionTarget *object;
+   DataCollectionTarget *dataSourceObject;
    if (dco->getSourceNode() != 0)
    {
       proxyNode = FindObjectById(dco->getSourceNode(), OBJECT_NODE);
@@ -469,31 +469,49 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
          DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
          return nullptr;
       }
-      object = static_cast<DataCollectionTarget*>(proxyNode.get());
-      if (!object->isTrustedNode(m_id))
+      dataSourceObject = static_cast<DataCollectionTarget*>(proxyNode.get());
+      if (!dataSourceObject->isTrustedNode(m_id))
       {
          DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source sensor %s [%d]"),
-                  dco->getName().cstr(), dco->getId(), m_name, m_id, object->getName(), object->getId());
+                  dco->getName().cstr(), dco->getId(), m_name, m_id, dataSourceObject->getName(), dataSourceObject->getId());
          return nullptr;
       }
    }
    else
    {
-      object = this;
+      dataSourceObject = this;
    }
 
    StringList *instances = nullptr;
    StringMap *instanceMap = nullptr;
+   Table *instanceTable = nullptr;
    switch(dco->getInstanceDiscoveryMethod())
    {
       case IDM_AGENT_LIST:
-         if (object->getObjectClass() == OBJECT_NODE)
-            static_cast<Node*>(object)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
-         else if (object->getObjectClass() == OBJECT_SENSOR)
-            static_cast<Sensor*>(object)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         if (dataSourceObject->getObjectClass() == OBJECT_NODE)
+            static_cast<Node*>(dataSourceObject)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         else if (dataSourceObject->getObjectClass() == OBJECT_SENSOR)
+            static_cast<Sensor*>(dataSourceObject)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         break;
+      case IDM_AGENT_TABLE:
+         if (dataSourceObject->getObjectClass() == OBJECT_NODE)
+            static_cast<Node*>(dataSourceObject)->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+         else if (dataSourceObject->getObjectClass() == OBJECT_SENSOR)
+            static_cast<Sensor*>(dataSourceObject)->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+         if (instanceTable != nullptr)
+         {
+            TCHAR buffer[1024];
+            instances = new StringList();
+            for(int i = 0; i < instanceTable->getNumRows(); i++)
+            {
+               instanceTable->buildInstanceString(i, buffer, 1024);
+               instances->add(buffer);
+            }
+            delete instanceTable;
+         }
          break;
       case IDM_SCRIPT:
-         object->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
+         dataSourceObject->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
          break;
       default:
          instances = nullptr;
@@ -552,9 +570,10 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
       }
       if ((m_state & SSF_PROVISIONED) && (m_deviceAddress == nullptr))
       {
-         getItemFromAgent(_T("LoraWAN.DevAddr(*)"), 0, m_deviceAddress);
-         if (m_deviceAddress != nullptr)
+         TCHAR buffer[MAX_RESULT_LENGTH];
+         if (getItemFromAgent(_T("LoraWAN.DevAddr(*)"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
          {
+            m_deviceAddress = MemCopyString(buffer);
             nxlog_debug(6, _T("ConfPoll(%s [%d}): sensor DevAddr[%s] successfully obtained"), m_name, m_id, m_deviceAddress);
             hasChanges = true;
          }
@@ -657,7 +676,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
             lockProperties();
             TCHAR lastValue[MAX_DCI_STRING_VALUE] = { 0 };
             time_t now;
-            getItemFromAgent(_T("LoraWAN.LastContact(*)"), MAX_DCI_STRING_VALUE, lastValue);
+            getItemFromAgent(_T("LoraWAN.LastContact(*)"), lastValue, MAX_DCI_STRING_VALUE);
             time_t lastConnectionTime = _tcstol(lastValue, nullptr, 0);
             if (lastConnectionTime != 0)
             {
@@ -687,11 +706,11 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
                   // FIXME: modify runtime if needed
                   m_state |= SSF_ACTIVE;
                   nxlog_debug(6, _T("StatusPoll(%s [%d]): Status set to ACTIVE"), m_name, m_id);
-                  getItemFromAgent(_T("LoraWAN.RSSI(*)"), MAX_DCI_STRING_VALUE, lastValue);
+                  getItemFromAgent(_T("LoraWAN.RSSI"), lastValue, MAX_DCI_STRING_VALUE);
                   m_signalStrenght = _tcstol(lastValue, nullptr, 10);
-                  getItemFromAgent(_T("LoraWAN.SNR(*)"), MAX_DCI_STRING_VALUE, lastValue);
+                  getItemFromAgent(_T("LoraWAN.SNR"), lastValue, MAX_DCI_STRING_VALUE);
                   m_signalNoise = static_cast<INT32>(_tcstod(lastValue, nullptr) * 10);
-                  getItemFromAgent(_T("LoraWAN.Frequency(*)"), MAX_DCI_STRING_VALUE, lastValue);
+                  getItemFromAgent(_T("LoraWAN.Frequency"), lastValue, MAX_DCI_STRING_VALUE);
                   m_frequency = static_cast<UINT32>(_tcstod(lastValue, nullptr) * 10);
                }
             }
@@ -810,7 +829,7 @@ void Sensor::prepareDlmsDciParameters(StringBuffer &parameter)
 /**
  * Get item's value via native agent
  */
-DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
+DataCollectionError Sensor::getItemFromAgent(const TCHAR *name, TCHAR *buffer, size_t bufferSize)
 {
    if (m_state & DCSF_UNREACHABLE)
       return DCE_COMM_ERROR;
@@ -819,29 +838,29 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
    DataCollectionError dwResult = DCE_COMM_ERROR;
    int retry = 3;
 
-   nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, szParam);
+   nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s)"), m_name, name);
    // Establish connection if needed
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
       return dwResult;
 
-   StringBuffer parameter(szParam);
+   StringBuffer parameter(name);
    switch(m_commProtocol)
    {
       case COMM_LORAWAN:
          prepareLoraDciParameters(parameter);
          break;
       case COMM_DLMS:
-         if(parameter.find(_T("Sensor")) != -1)
+         if (parameter.find(_T("Sensor")) != -1)
             prepareDlmsDciParameters(parameter);
          break;
    }
-   nxlog_debug(3, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, parameter.getBuffer());
+   nxlog_debug(3, _T("Sensor(%s)->getItemFromAgent(%s)"), m_name, parameter.getBuffer());
 
    // Get parameter from agent
    while(retry-- > 0)
    {
-      dwError = conn->getParameter(parameter, dwBufSize, szBuffer);
+      dwError = conn->getParameter(parameter, bufferSize, buffer);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -858,10 +877,10 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
             break;
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
-            nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
+            nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
             if (getAgentConnection() == nullptr)
                break;
-            nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
+            nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
             dwResult = DCE_COLLECTION_ERROR;
@@ -869,7 +888,7 @@ DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufS
       }
    }
 
-   nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, dwResult);
+   nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
    return dwResult;
 }
 
@@ -887,7 +906,7 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
    if (m_state & DCSF_UNREACHABLE) //removed disable agent usage for all polls
       return DCE_COMM_ERROR;
 
-   nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, name);
+   nxlog_debug(7, _T("Sensor(%s)->getListFromAgent(%s)"), m_name, name);
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
       return dwResult;
@@ -899,11 +918,11 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
          prepareLoraDciParameters(parameter);
          break;
       case COMM_DLMS:
-         if(parameter.find(_T("Sensor")) != -1)
+         if (parameter.find(_T("Sensor")) != -1)
             prepareDlmsDciParameters(parameter);
          break;
    }
-   nxlog_debug(3, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, parameter.getBuffer());
+   nxlog_debug(3, _T("Sensor(%s)->getListFromAgent(%s)"), m_name, parameter.getBuffer());
 
    // Get parameter from agent
    while(dwTries-- > 0)
@@ -936,6 +955,72 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
    }
 
    DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
+   return dwResult;
+}
+
+/**
+ * Get table from agent
+ */
+DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, Table **table)
+{
+   UINT32 dwError = ERR_NOT_CONNECTED;
+   DataCollectionError dwResult = DCE_COMM_ERROR;
+   UINT32 dwTries = 3;
+
+   *table = nullptr;
+
+   if (m_state & DCSF_UNREACHABLE) //removed disable agent usage for all polls
+      return DCE_COMM_ERROR;
+
+   nxlog_debug(7, _T("Sensor(%s)->getTableFromAgent(%s)"), m_name, name);
+   shared_ptr<AgentConnectionEx> conn = getAgentConnection();
+   if (conn == nullptr)
+      return dwResult;
+
+   StringBuffer parameter(name);
+   switch(m_commProtocol)
+   {
+      case COMM_LORAWAN:
+         prepareLoraDciParameters(parameter);
+         break;
+      case COMM_DLMS:
+         if (parameter.find(_T("Sensor")) != -1)
+            prepareDlmsDciParameters(parameter);
+         break;
+   }
+   nxlog_debug(3, _T("Sensor(%s)->getTableFromAgent(%s)"), m_name, parameter.getBuffer());
+
+   // Get parameter from agent
+   while(dwTries-- > 0)
+   {
+      dwError = conn->getTable(parameter, table);
+      switch(dwError)
+      {
+         case ERR_SUCCESS:
+            dwResult = DCE_SUCCESS;
+            break;
+         case ERR_UNKNOWN_PARAMETER:
+            dwResult = DCE_NOT_SUPPORTED;
+            break;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
+            break;
+         case ERR_NOT_CONNECTED:
+         case ERR_CONNECTION_BROKEN:
+         case ERR_REQUEST_TIMEOUT:
+            // Reset connection to agent after timeout
+            DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
+            if (getAgentConnection() == nullptr)
+               break;
+            DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
+            break;
+         case ERR_INTERNAL_ERROR:
+            dwResult = DCE_COLLECTION_ERROR;
+            break;
+      }
+   }
+
+   DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
    return dwResult;
 }
 

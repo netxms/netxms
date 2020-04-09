@@ -2483,8 +2483,9 @@ public:
    const TCHAR *getDescription() const { return m_description; }
    uint32_t getFrameCount() const { return m_frameCount; }
 
-   DataCollectionError getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   DataCollectionError getItemFromAgent(const TCHAR *naram, TCHAR *buffer, size_t bufferSize);
    DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
+   DataCollectionError getTableFromAgent(const TCHAR *name, Table **table);
 
    void setProvisoned() { m_state |= SSF_PROVISIONED; }
 

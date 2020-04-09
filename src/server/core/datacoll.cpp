@@ -88,7 +88,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 	            *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
 			   else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
-               *error = ((Sensor *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+               *error = ((Sensor *)dcTarget)->getItemFromAgent(pItem->getName(), pBuffer, MAX_LINE_SIZE);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
