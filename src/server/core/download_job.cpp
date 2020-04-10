@@ -31,8 +31,6 @@ FileDownloadJob::FileDownloadJob(const shared_ptr<Node>& node, const TCHAR *remo
 	m_session = session;
 	session->incRefCount();
 
-	m_agentConnection = nullptr;
-
 	m_requestId = requestId;
 
 	m_remoteFile = MemCopyString(remoteFile);
