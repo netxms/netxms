@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SMS driver for MyMobile API gateways
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -82,8 +82,8 @@ MyMobileDriver::MyMobileDriver(Config *config)
 
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("username"), CT_MB_STRING, 0, 0, sizeof(m_username), 0, m_username },	
-		{ _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	
+		{ _T("Username"), CT_MB_STRING, 0, 0, sizeof(m_username), 0, m_username },
+		{ _T("Password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
@@ -95,10 +95,10 @@ MyMobileDriver::MyMobileDriver(Config *config)
  */
 static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-   RequestData *data = (RequestData *)userdata;
+   RequestData *data = static_cast<RequestData*>(userdata);
    if ((data->allocated - data->size) < (size * nmemb))
    {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
+      char *newData = MemRealloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
       if (newData == NULL)
       {
          return 0;
@@ -151,19 +151,17 @@ bool MyMobileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", body=\"%s\""), recipient, body);
 
    CURL *curl = curl_easy_init();
-   if (curl != NULL)
+   if (curl != nullptr)
    {
 #if HAVE_DECL_CURLOPT_NOSIGNAL
       curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
 
-      curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1); // do not install signal handlers or send signals
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
 
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
+      RequestData *data = MemAllocStruct<RequestData>();
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
 
 #ifdef UNICODE
@@ -171,8 +169,8 @@ bool MyMobileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
       char *mbmsg = MBStringFromWideString(body);
       char *phone = curl_easy_escape(curl, mbphone, 0);
       char *msg = curl_easy_escape(curl, mbmsg, 0);
-      free(mbphone);
-      free(mbmsg);
+      MemFree(mbphone);
+      MemFree(mbmsg);
 #else
       char *phone = curl_easy_escape(curl, recipient, 0);
       char *msg = curl_easy_escape(curl, body, 0);
@@ -212,7 +210,7 @@ bool MyMobileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
       	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
       MemFree(data->data);
-      free(data);
+      MemFree(data);
       curl_easy_cleanup(curl);
    }
    else
@@ -226,12 +224,12 @@ bool MyMobileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(MyMobile, NULL)
+DECLARE_NCD_ENTRY_POINT(MyMobile, nullptr)
 {
    if (!InitializeLibCURL())
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
-      return NULL;
+      return nullptr;
    }
    return new MyMobileDriver(config);
 }
