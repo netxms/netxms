@@ -443,6 +443,12 @@ AC_ARG_WITH(curl,
 [
 	if test "x$withval" = "xno"; then
 		DISABLE_CURL="yes"
+	else
+		if test "x$withval" != "xyes"; then
+			CPPFLAGS="$CPPFLAGS -I$withval/include"
+			LDFLAGS="$LDFLAGS -L$withval/lib"
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		fi
 	fi
 ])
 
