@@ -5290,7 +5290,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          }
       }
       m_agentConnection->enableTraps();
-      setFileUpdateConnection(shared_ptr<AgentConnection>());
+      clearFileUpdateConnection();
       setLastAgentCommTime();
       CALL_ALL_MODULES(pfOnConnectToAgent, (self(), m_agentConnection));
    }
@@ -7216,7 +7216,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
       {
          nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::createAgentConnection(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
                   (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
-         return nullptr;
+         return shared_ptr<AgentConnectionEx>();
       }
       conn = AgentConnectionEx::create(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
       if (!setAgentProxy(conn.get()))
@@ -7463,6 +7463,17 @@ void Node::setFileUpdateConnection(const shared_ptr<AgentConnection>& connection
    nxlog_debug(6, _T("Changing file tracking connection for node %s [%d]"), m_name, m_id);
    lockProperties();
    m_fileUpdateConnection = connection;
+   unlockProperties();
+}
+
+/**
+ * Clear connection for file update messages
+ */
+void Node::clearFileUpdateConnection()
+{
+   nxlog_debug(6, _T("Changing file tracking connection for node %s [%d]"), m_name, m_id);
+   lockProperties();
+   m_fileUpdateConnection.reset();
    unlockProperties();
 }
 
@@ -8017,7 +8028,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
    if (m_zoneUIN != 0)
    {
       shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-      shared_ptr<AgentConnectionEx> conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : nullptr;
+      shared_ptr<AgentConnectionEx> conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : shared_ptr<AgentConnectionEx>();
       if (conn != nullptr)
       {
          nameResolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);

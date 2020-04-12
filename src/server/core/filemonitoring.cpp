@@ -129,8 +129,8 @@ bool FileMonitoringList::removeFile(MONITORED_FILE *file)
    if (deleted && nodeConnectionCount == 1)
    {
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(file->nodeID, OBJECT_NODE));
-      if (node != NULL)
-         node->setFileUpdateConnection(NULL);
+      if (node != nullptr)
+         node->clearFileUpdateConnection();
    }
    unlock();
    return deleted;

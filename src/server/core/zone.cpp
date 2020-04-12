@@ -562,7 +562,7 @@ shared_ptr<AgentConnectionEx> Zone::acquireConnectionToProxy(bool validate)
    if (nodeId == 0)
    {
       nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 7, _T("Zone::acquireConnectionToProxy: no active proxy in zone %s [uin=%u]"), m_name, m_uin);
-      return nullptr;
+      return shared_ptr<AgentConnectionEx>();
    }
 
    shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
