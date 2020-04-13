@@ -44,7 +44,8 @@ assert(a3[0] == 500);
 assert(a3[1] == 2);
 
 a2->pop();
-assert(a3->size == a2->size);
+assert(a3->size == 5);
+assert(a2->size == 4);
 
 a5 = %(1, 2, 3, 4, 5, 6, 7);
 i = 1;
