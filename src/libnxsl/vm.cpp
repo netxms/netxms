@@ -1259,6 +1259,7 @@ void NXSL_VM::execute()
             }
             else if (pValue->getDataType() == NXSL_DT_ARRAY)
             {
+               pValue->copyOnWrite();  // All array methods can cause content change
                NXSL_Array *array = pValue->getValueAsArray();
                NXSL_Value *result;
                nRet = array->callMethod(*cp->m_operand.m_identifier, cp->m_stackItems,
