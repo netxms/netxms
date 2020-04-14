@@ -150,7 +150,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       return false;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#onMapLoad()
     */
    @Override

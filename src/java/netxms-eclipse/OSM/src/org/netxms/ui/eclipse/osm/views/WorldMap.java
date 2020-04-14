@@ -169,9 +169,6 @@ public class WorldMap extends AbstractGeolocationView
 		super.createActions();
 		
 		actionPlaceObject = new Action(Messages.get().WorldMap_PlaceObject) {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -180,9 +177,6 @@ public class WorldMap extends AbstractGeolocationView
 		};
 		
       actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
-         /* (non-Javadoc)
-          * @see org.eclipse.jface.action.Action#run()
-          */
          @Override
          public void run()
          {

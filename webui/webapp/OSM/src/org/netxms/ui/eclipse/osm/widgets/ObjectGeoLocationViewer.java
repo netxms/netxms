@@ -148,7 +148,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
       return false;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#onMapLoad()
     */
    @Override
