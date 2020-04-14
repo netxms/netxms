@@ -29,7 +29,10 @@ public class LoginListener implements ConsoleLoginListener
 			{
 				final UUID guid = (UUID)n.getObject();
 				final ImageProvider imageProvider = ImageProvider.getInstance(display);
-				imageProvider.invalidateImage(guid, n.getSubCode() == SessionNotification.IMAGE_DELETED);
+            if (n.getSubCode() == SessionNotification.IMAGE_DELETED)
+               imageProvider.deleteImage(guid);
+            else
+               imageProvider.updateImage(guid);
 			}
 		}
 	}

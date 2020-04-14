@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
@@ -248,20 +250,53 @@ public class ImageProvider
 	}
 
    /**
-    * Invalidate image
+    * Update image
     * 
-    * @param guid
-    * @param removed
+    * @param guid image GUID
     */
-	public void invalidateImage(UUID guid, boolean removed)
+   public void updateImage(final UUID guid)
 	{
       Image image = cache.remove(guid);
 		if (image != null && image != missingImage)
 			image.dispose();
 
-		if (removed)
-			libraryIndex.remove(guid);
+      ConsoleJob job = new ConsoleJob("Update library image", null, Activator.PLUGIN_ID, null, display) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            LibraryImage imageHandle = session.getImage(guid);
+            libraryIndex.put(guid, imageHandle);
+            notifySubscribers(guid);
+         }
 
-		notifySubscribers(guid);
+         @Override
+         protected IStatus createFailureStatus(Exception e)
+         {
+            return Status.OK_STATUS;
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setUser(false);
+      job.setSystem(true);
+      job.start();
 	}
+
+   /**
+    * Delete image
+    * 
+    * @param guid image GUID
+    */
+   public void deleteImage(UUID guid)
+   {
+      Image image = cache.remove(guid);
+      if (image != null && image != missingImage)
+         image.dispose();
+      libraryIndex.remove(guid);
+      notifySubscribers(guid);
+   }
 }
