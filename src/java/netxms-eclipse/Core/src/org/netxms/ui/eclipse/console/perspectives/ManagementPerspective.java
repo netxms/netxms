@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.console.perspectives;
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
-import org.eclipse.ui.IPlaceholderFolderLayout;
 
 /**
  * Default perspective
@@ -36,25 +35,29 @@ public class ManagementPerspective implements IPerspectiveFactory
 	public void createInitialLayout(IPageLayout layout)
 	{
 		layout.setEditorAreaVisible(false);
+
       layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.ManagementPerspective"); //$NON-NLS-1$
       layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective"); //$NON-NLS-1$
       layout.addPerspectiveShortcut("org.netxms.ui.eclipse.reporter.ReportPerspective"); //$NON-NLS-1$
 
-		final IFolderLayout navigationFolder = layout.createFolder("org.netxms.ui.eclipse.folders.navigation", IPageLayout.LEFT, 0.20f, layout.getEditorArea()); //$NON-NLS-1$ //$NON-NLS-2$
+		final IFolderLayout navigationFolder = layout.createFolder("org.netxms.ui.eclipse.folders.navigation", IPageLayout.LEFT, 0.20f, ""); //$NON-NLS-1$ //$NON-NLS-2$
 		navigationFolder.addView("org.netxms.ui.eclipse.view.navigation.objectbrowser"); //$NON-NLS-1$
 		navigationFolder.addView("org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"); //$NON-NLS-1$
 		navigationFolder.addPlaceholder("org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"); //$NON-NLS-1$
 
-      final IFolderLayout mainFolder = layout.createFolder(IPageLayout.ID_EDITOR_AREA, IPageLayout.RIGHT, 0.20f, "org.netxms.ui.eclipse.folders.navigation"); //$NON-NLS-1$ //$NON-NLS-2$
-		mainFolder.addView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view"); //$NON-NLS-1$
-		mainFolder.addView("org.netxms.ui.eclipse.alarmviewer.view.alarm_browser"); //$NON-NLS-1$
-		mainFolder.addPlaceholder("*"); //$NON-NLS-1$
+      final IFolderLayout mainFolder = layout.createFolder("org.netxms.ui.eclipse.folders.main", IPageLayout.RIGHT, 0.20f, "org.netxms.ui.eclipse.folders.navigation"); //$NON-NLS-1$ //$NON-NLS-2$
+      mainFolder.addView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view"); //$NON-NLS-1$
+      mainFolder.addView("org.netxms.ui.eclipse.alarmviewer.view.alarm_browser"); //$NON-NLS-1$
+      mainFolder.addPlaceholder("*"); //$NON-NLS-1$
 
+      // This layout no longer working in Eclipse 4.x
+      /*
       final IPlaceholderFolderLayout statusFolder = layout.createPlaceholderFolder("org.netxms.ui.eclipse.folders.status", IPageLayout.BOTTOM, 0.75f, "org.netxms.ui.eclipse.folders.main"); //$NON-NLS-1$ //$NON-NLS-2$
       statusFolder.addPlaceholder("org.eclipse.ui.views.ProgressView"); //$NON-NLS-1$
       statusFolder.addPlaceholder("org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"); //$NON-NLS-1$
 
       final IPlaceholderFolderLayout propertiesFolder = layout.createPlaceholderFolder("org.netxms.ui.eclipse.folders.properties", IPageLayout.RIGHT, 0.75f, "org.netxms.ui.eclipse.folders.main"); //$NON-NLS-1$ //$NON-NLS-2$
       propertiesFolder.addPlaceholder("org.netxms.ui.eclipse.alarmviewer.views.AlarmComments:*"); //$NON-NLS-1$
+      */
 	}
 }
