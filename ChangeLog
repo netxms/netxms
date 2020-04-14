@@ -8,6 +8,7 @@
 - New attributes "instanceColumns" and "instanceColumnIndexes" in NXSL class "Table"
 - Implemented instance discovery method "Agent Table"
 - Implemented instance discovery method "Windows Performance Counters"
+- Added option for discarding collected performance data when database writer queue grows beyond limit
 - Fixed issues:
 	NX-392 (Use object names from Windows performance counters for instance discovery)
 	NX-713 (Scheduled DCI will not work with offline DCI functionality)
@@ -16,6 +17,7 @@
 	NX-814 (NXSL: add new node attribute – isRemotelyManaged)
 	NX-1362 (Pattern matching for command output in SSH.Command parameter)
 	NX-1699 (Allow user turn on "Prevent automatic SNMP configuration changes" when creating node)
+	NX-1732 (Option for discarding collected performance data when database writer queue grows beyond limit)
 	NX-1765 (HTML codes visible in cell when viewing Table DCI last values in web management console)
 	NX-1788 (NXSL: add support for ranges in switch/case)
 	NX-1793 (Out of range error)

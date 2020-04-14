@@ -1064,14 +1064,16 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData);
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
-void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass);
-void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
-void QueueRawDciDataDelete(UINT32 dciId);
-INT64 GetIDataWriterQueueSize();
-INT64 GetRawDataWriterQueueSize();
-UINT64 GetRawDataWriterMemoryUsage();
+void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass);
+void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
+void QueueRawDciDataDelete(uint32_t dciId);
+int64_t GetIDataWriterQueueSize();
+int64_t GetRawDataWriterQueueSize();
+uint64_t GetRawDataWriterMemoryUsage();
 void StartDBWriter();
 void StopDBWriter();
+void OnDBWriterMaxQueueSizeChange();
+void ClearDBWriterData(ServerConsole *console, const TCHAR *component);
 
 void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value);
 void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
@@ -1417,9 +1419,9 @@ extern TCHAR g_szDbName[];
 extern TCHAR g_szDbSchema[];
 extern DB_DRIVER g_dbDriver;
 extern Queue *g_dbWriterQueue;
-extern UINT64 g_idataWriteRequests;
-extern UINT64 g_rawDataWriteRequests;
-extern UINT64 g_otherWriteRequests;
+extern VolatileCounter64 g_idataWriteRequests;
+extern uint64_t g_rawDataWriteRequests;
+extern VolatileCounter64 g_otherWriteRequests;
 
 extern NXCORE_EXPORTABLE_VAR(int g_dbSyntax);
 extern FileMonitoringList g_monitoringList;

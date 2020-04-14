@@ -1263,6 +1263,24 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Parameters:' CONCAT CRLF CONCAT
 		'   No message-specific parameters'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DBWRITER_QUEUE_OVERFLOW, 'SYS_DBWRITER_QUEUE_OVERFLOW', 'fba287e7-a8ea-4503-a494-3d6e5a3d83df',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Size of background database writer queue exceeds threshold (new performance data will be discarded)',
+		'Generated when background database writer queue size exceeds threshold.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DBWRITER_QUEUE_NORMAL, 'SYS_DBWRITER_QUEUE_NORMAL', '73950d5f-37c0-4b87-9467-c83d7e662401',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Size of background database writer queue is below threshold',
+		'Generated when background database writer queue size drops below threshold.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   No message-specific parameters'
+	);
 
 /*
 ** SNMP traps

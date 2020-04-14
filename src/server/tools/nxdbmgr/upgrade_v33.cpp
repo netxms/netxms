@@ -24,6 +24,34 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.6 to 32.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.MaxQueueSize"), _T("0"),
+            _T("Maximum size for DCI data writer queue (0 to disable size limit). If writer queue size grows above that threshold any new data will be dropped until queue size drops below threshold again."),
+            _T("elements"), 'I', true, false, false, false));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_DBWRITER_QUEUE_OVERFLOW, _T("SYS_DBWRITER_QUEUE_OVERFLOW"),
+            SEVERITY_MAJOR, EF_LOG, _T("fba287e7-a8ea-4503-a494-3d6e5a3d83df"),
+            _T("Size of background database writer queue exceeds threshold (new performance data will be discarded)"),
+            _T("Generated when background database writer queue size exceeds threshold.\r\n")
+            _T("Parameters:\r\n")
+            _T("   No message-specific parameters")
+            ));
+   CHK_EXEC(CreateEventTemplate(EVENT_DBWRITER_QUEUE_NORMAL, _T("SYS_DBWRITER_QUEUE_NORMAL"),
+            SEVERITY_NORMAL, EF_LOG, _T("73950d5f-37c0-4b87-9467-c83d7e662401"),
+            _T("Size of background database writer queue is below threshold"),
+            _T("Generated when background database writer queue size drops below threshold.\r\n")
+            _T("Parameters:\r\n")
+            _T("   No message-specific parameters")
+            ));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Alter TimescaleDB table
  */
 static bool AlterTSDBTable(const TCHAR *table, bool tableData)
@@ -189,6 +217,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 6,  33, 7,  H_UpgradeFromV6  },
    { 5,  33, 6,  H_UpgradeFromV5  },
    { 4,  33, 5,  H_UpgradeFromV4  },
    { 3,  33, 4,  H_UpgradeFromV3  },

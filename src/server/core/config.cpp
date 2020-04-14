@@ -464,6 +464,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       CASReadSettings();
    }
+   else if (!_tcscmp(name, _T("DBWriter.MaxQueueSize")))
+   {
+      OnDBWriterMaxQueueSizeChange();
+   }
    else if (!_tcscmp(name, _T("DefaultDCIPollingInterval")))
    {
       DCObject::m_defaultPollingInterval = _tcstol(value, NULL, 0);

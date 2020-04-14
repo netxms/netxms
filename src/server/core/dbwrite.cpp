@@ -89,27 +89,35 @@ static IDataWriter s_idataWriters[MAX_IDATA_WRITERS];
 /**
  * Generic DB writer queue
  */
-Queue *g_dbWriterQueue = NULL;
+Queue *g_dbWriterQueue = nullptr;
 
 /**
  * Raw DCI data writer queue
  */
-static DELAYED_RAW_DATA_UPDATE *s_rawDataWriterQueue = NULL;
+static DELAYED_RAW_DATA_UPDATE *s_rawDataWriterQueue = nullptr;
 static Mutex s_rawDataWriterLock;
 static int s_batchSize = 0;
 
 /**
  * Performance counters
  */
-UINT64 g_idataWriteRequests = 0;
-UINT64 g_rawDataWriteRequests = 0;
-UINT64 g_otherWriteRequests = 0;
+VolatileCounter64 g_idataWriteRequests = 0;
+uint64_t g_rawDataWriteRequests = 0;
+VolatileCounter64 g_otherWriteRequests = 0;
+
+/**
+ * Queue monitor data
+ */
+static bool s_queueMonitorDiscardFlag = false;  // true when new data should be discarded
+static Mutex s_queueMonitorStateLock(true);
+static Condition s_queueMonitorStopCondition(true);
 
 /**
  * Static data
  */
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static THREAD s_rawDataWriterThread = INVALID_THREAD_HANDLE;
+static THREAD s_queueMonitorThread = INVALID_THREAD_HANDLE;
 
 /**
  * Put SQL request into queue for later execution
@@ -121,8 +129,8 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 	_tcscpy(rq->query, query);
 	rq->bindCount = 0;
    g_dbWriterQueue->put(rq);
-	DbgPrintf(8, _T("SQL request queued: %s"), query);
-	g_otherWriteRequests++;
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("SQL request queued: %s"), query);
+	InterlockedIncrement64(&g_otherWriteRequests);
 }
 
 /**
@@ -170,15 +178,18 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 	}
 
    g_dbWriterQueue->put(rq);
-	DbgPrintf(8, _T("SQL request queued: %s"), query);
-   g_otherWriteRequests++;
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("SQL request queued: %s"), query);
+   InterlockedIncrement64(&g_otherWriteRequests);
 }
 
 /**
  * Queue INSERT request for idata_xxx table
  */
-void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass)
+void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass)
 {
+   if (s_queueMonitorDiscardFlag)
+      return;
+
 	DELAYED_IDATA_INSERT *rq = MemAllocStruct<DELAYED_IDATA_INSERT>();
 	rq->timestamp = timestamp;
 	rq->nodeId = nodeId;
@@ -198,18 +209,18 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
    {
       s_idataWriters[0].queue->put(rq);
    }
-	g_idataWriteRequests++;
+	InterlockedIncrement64(&g_idataWriteRequests);
 }
 
 /**
  * Queue UPDATE request for raw_dci_values table
  */
-void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue)
+void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue)
 {
    s_rawDataWriterLock.lock();
    DELAYED_RAW_DATA_UPDATE *rq;
    HASH_FIND_INT(s_rawDataWriterQueue, &dciId, rq);
-   if (rq == NULL)
+   if (rq == nullptr)
    {
       rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
       rq->dciId = dciId;
@@ -219,33 +230,33 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
 	rq->timestamp = timestamp;
 	_tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
 	_tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
+   g_rawDataWriteRequests++;
    s_rawDataWriterLock.unlock();
-	g_rawDataWriteRequests++;
 }
 
 /**
  * Queue DELETE request for raw_dci_values table
  */
-void QueueRawDciDataDelete(UINT32 dciId)
+void QueueRawDciDataDelete(uint32_t dciId)
 {
    s_rawDataWriterLock.lock();
    DELAYED_RAW_DATA_UPDATE *rq;
    HASH_FIND_INT(s_rawDataWriterQueue, &dciId, rq);
-   if (rq == NULL)
+   if (rq == nullptr)
    {
       rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
       rq->dciId = dciId;
       HASH_ADD_INT(s_rawDataWriterQueue, dciId, rq);
    }
    rq->deleteFlag = true;
-   s_rawDataWriterLock.unlock();
    g_rawDataWriteRequests++;
+   s_rawDataWriterLock.unlock();
 }
 
 /**
  * Database "lazy" write thread
  */
-static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
+static void DBWriteThread()
 {
    ThreadSetName("DBWriter");
    while(true)
@@ -277,8 +288,6 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 
       DBConnectionPoolReleaseConnection(hdb);
    }
-
-   return THREAD_OK;
 }
 
 /**
@@ -644,7 +653,7 @@ static void SaveRawData(int maxRecords)
 /**
  * Database "lazy" write thread for raw_dci_values UPDATEs
  */
-static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
+static void RawDataWriteThread()
 {
    ThreadSetName("DBWriter/RData");
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
@@ -656,7 +665,52 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 	}
    SaveRawData(maxRecords);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Raw DCI data writer stopped"));
-   return THREAD_OK;
+}
+
+/**
+ * Queue monitor thread
+ */
+static void QueueMonitorThread()
+{
+   ThreadSetName("DBQueueMonitor");
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Queue monitor started"));
+   while(!s_queueMonitorStopCondition.wait(5000))
+   {
+      int64_t maxQueueSize = ConfigReadULong(_T("DBWriter.MaxQueueSize"), 0);
+      if (maxQueueSize == 0)
+      {
+         s_queueMonitorDiscardFlag = false;
+         break;
+      }
+
+      int64_t currentQueueSize = GetIDataWriterQueueSize();
+      if (currentQueueSize > maxQueueSize)
+      {
+         if (!s_queueMonitorDiscardFlag)
+         {
+            s_queueMonitorDiscardFlag = true;
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Background database writer queue size for DCI data exceeds threshold (current=") INT64_FMT _T(", threshold=") INT64_FMT _T(")"),
+                     currentQueueSize, maxQueueSize);
+            PostSystemEvent(EVENT_DBWRITER_QUEUE_OVERFLOW, g_dwMgmtNode, nullptr);
+         }
+      }
+      else if (s_queueMonitorDiscardFlag)
+      {
+         s_queueMonitorDiscardFlag = false;
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Background database writer queue size for DCI data is below threshold (current=") INT64_FMT _T(", threshold=") INT64_FMT _T(")"),
+                  currentQueueSize, maxQueueSize);
+         PostSystemEvent(EVENT_DBWRITER_QUEUE_NORMAL, g_dwMgmtNode, nullptr);
+      }
+   }
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Queue monitor stopped"));
+}
+
+/**
+ * Custom destructor for queued requests
+ */
+static void QueuedRequestDestructor(void *object, Queue *queue)
+{
+   MemFree(object);
 }
 
 /**
@@ -664,8 +718,8 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
  */
 void StartDBWriter()
 {
-   s_writerThread = ThreadCreateEx(DBWriteThread, 0, NULL);
-	s_rawDataWriterThread = ThreadCreateEx(RawDataWriteThread, 0, NULL);
+   s_writerThread = ThreadCreateEx(DBWriteThread);
+	s_rawDataWriterThread = ThreadCreateEx(RawDataWriteThread);
 
 	if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
 	{
@@ -673,13 +727,13 @@ void StartDBWriter()
       switch(g_dbSyntax)
       {
          case DB_SYNTAX_ORACLE:
-            s_idataWriters[0].storageClass = NULL;
-            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
+            s_idataWriters[0].storageClass = nullptr;
+            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Oracle, 0, &s_idataWriters[0]);
             break;
          case DB_SYNTAX_PGSQL:
-            s_idataWriters[0].storageClass = NULL;
-            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
+            s_idataWriters[0].storageClass = nullptr;
+            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, 0, &s_idataWriters[0]);
             break;
          case DB_SYNTAX_TSDB:
@@ -687,13 +741,13 @@ void StartDBWriter()
             for(int i = 0; i < s_idataWriterCount; i++)
             {
                s_idataWriters[i].storageClass = DCObject::getStorageClassName(static_cast<DCObjectStorageClass>(i));
-               s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
+               s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
                s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, 0, &s_idataWriters[i]);
             }
             break;
          default:
-            s_idataWriters[0].storageClass = NULL;
-            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
+            s_idataWriters[0].storageClass = nullptr;
+            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Generic, 0, &s_idataWriters[0]);
             break;
       }
@@ -705,14 +759,17 @@ void StartDBWriter()
          s_idataWriterCount = 1;
       else if (s_idataWriterCount > MAX_IDATA_WRITERS)
          s_idataWriterCount = MAX_IDATA_WRITERS;
-      nxlog_debug(1, _T("Using %d DCI data write queues"), s_idataWriterCount);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Using %d DCI data write queues"), s_idataWriterCount);
       for(int i = 0; i < s_idataWriterCount; i++)
       {
-         s_idataWriters[i].storageClass = NULL;
-         s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
+         s_idataWriters[i].storageClass = nullptr;
+         s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
          s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, 0, &s_idataWriters[i]);
       }
 	}
+
+	if (ConfigReadULong(_T("DBWriter.MaxQueueSize"), 0) > 0)
+	   s_queueMonitorThread = ThreadCreateEx(QueueMonitorThread);
 }
 
 /**
@@ -720,8 +777,15 @@ void StartDBWriter()
  */
 void StopDBWriter()
 {
+   if (s_queueMonitorThread != INVALID_THREAD_HANDLE)
+   {
+      s_queueMonitorStopCondition.set();
+      ThreadJoin(s_queueMonitorThread);
+   }
+
    g_dbWriterQueue->put(INVALID_POINTER_VALUE);
    ThreadJoin(s_writerThread);
+
    for(int i = 0; i < s_idataWriterCount; i++)
    {
       s_idataWriters[i].queue->put(INVALID_POINTER_VALUE);
@@ -729,15 +793,39 @@ void StopDBWriter()
       delete s_idataWriters[i].queue;
    }
    ThreadJoin(s_rawDataWriterThread);
+
    nxlog_debug_tag(DEBUG_TAG, 1, _T("All background database writers stopped"));
+}
+
+/**
+ * Handle changes in writer queue size threshold
+ */
+void OnDBWriterMaxQueueSizeChange()
+{
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Threshold for background database writer queue size changed"));
+   s_queueMonitorStateLock.lock();
+   if (ConfigReadULong(_T("DBWriter.MaxQueueSize"), 0) > 0)
+   {
+      if (s_queueMonitorThread == INVALID_THREAD_HANDLE)
+         s_queueMonitorThread = ThreadCreateEx(QueueMonitorThread);
+   }
+   else if (s_queueMonitorThread != INVALID_THREAD_HANDLE)
+   {
+      s_queueMonitorStopCondition.set();
+      ThreadJoin(s_queueMonitorThread);
+      s_queueMonitorThread = INVALID_THREAD_HANDLE;
+      s_queueMonitorStopCondition.reset();
+      s_queueMonitorDiscardFlag = false;
+   }
+   s_queueMonitorStateLock.unlock();
 }
 
 /**
  * Get size of IData writer queue
  */
-INT64 GetIDataWriterQueueSize()
+int64_t GetIDataWriterQueueSize()
 {
-   size_t size = 0;
+   int64_t size = 0;
    for(int i = 0; i < s_idataWriterCount; i++)
       size += s_idataWriters[i].queue->size();
    return size;
@@ -746,10 +834,10 @@ INT64 GetIDataWriterQueueSize()
 /**
  * Get size of raw data writer queue
  */
-INT64 GetRawDataWriterQueueSize()
+int64_t GetRawDataWriterQueueSize()
 {
    s_rawDataWriterLock.lock();
-   INT64 size = HASH_COUNT(s_rawDataWriterQueue);
+   int64_t size = HASH_COUNT(s_rawDataWriterQueue);
    s_rawDataWriterLock.unlock();
    return size + s_batchSize;
 }
@@ -757,10 +845,36 @@ INT64 GetRawDataWriterQueueSize()
 /**
  * Get memory consumption by raw DCI data write cache
  */
-UINT64 GetRawDataWriterMemoryUsage()
+uint64_t GetRawDataWriterMemoryUsage()
 {
    s_rawDataWriterLock.lock();
-   UINT64 size = (HASH_COUNT(s_rawDataWriterQueue) + s_batchSize) * sizeof(DELAYED_RAW_DATA_UPDATE);
+   uint64_t size = (HASH_COUNT(s_rawDataWriterQueue) + s_batchSize) * sizeof(DELAYED_RAW_DATA_UPDATE);
    s_rawDataWriterLock.unlock();
    return size;
+}
+
+/**
+ * Clear DB writer data from debug console
+ */
+void ClearDBWriterData(ServerConsole *console, const TCHAR *component)
+{
+   if (!_tcsicmp(component, _T("Counters")))
+   {
+      g_idataWriteRequests = 0;
+      g_rawDataWriteRequests = 0;
+      g_otherWriteRequests = 0;
+      console->print(_T("Database writer counters cleared\n"));
+   }
+   else if (!_tcsicmp(component, _T("DataQueue")))
+   {
+      for(int i = 0; i < s_idataWriterCount; i++)
+      {
+         s_idataWriters[i].queue->clear();
+      }
+      console->print(_T("Database writer data queue cleared\n"));
+   }
+   else
+   {
+      console->print(_T("Invalid DB writer component"));
+   }
 }

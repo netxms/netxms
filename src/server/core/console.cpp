@@ -220,6 +220,27 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          AddRecurrentScheduledTask(_T("Execute.Script"), szBuffer, pArg, nullptr, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
+   else if (IsCommand(_T("CLEAR"), szBuffer, 5))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (IsCommand(_T("DBWRITER"), szBuffer, 8))
+      {
+         ExtractWord(pArg, szBuffer);
+         ClearDBWriterData(pCtx, szBuffer);
+      }
+      else if (szBuffer[0] == 0)
+      {
+         ConsoleWrite(pCtx,
+                  _T("Valid components:\n")
+                  _T("   DBWriter Counters\n")
+                  _T("   DBWriter DataQueue\n")
+                  _T("\n"));
+      }
+      else
+      {
+         ConsoleWrite(pCtx, _T("Invalid component name\n"));
+      }
+   }
    else if (IsCommand(_T("DBCP"), szBuffer, 3))
    {
       ExtractWord(pArg, szBuffer);
@@ -1596,6 +1617,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("Valid commands are:\n")
             _T("   at +<sec> <script> [<params>]     - Schedule one time script execution task\n")
             _T("   at <schedule> <script> [<params>] - Schedule repeated script execution task\n")
+            _T("   clear <component>                 - Clear internal data or queue for given component\n")
             _T("   dbcp reset                        - Reset database connection pool\n")
             _T("   debug [<level>|off]               - Set debug level (valid range is 0..9)\n")
             _T("   debug [<debug tag> <level>|off|default]\n")
