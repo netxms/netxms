@@ -383,7 +383,9 @@ void AgentConnection::receiverThread()
                   if (g_agentConnectionThreadPool != NULL)
                   {
                      incInternalRefCount();
-                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onTrapCallback, msg);
+                     TCHAR key[64];
+                     _sntprintf(key, 64, _T("EventProc_%p"), this);
+                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, this, &AgentConnection::onTrapCallback, msg);
                   }
                   else
                   {
@@ -394,7 +396,9 @@ void AgentConnection::receiverThread()
                   if (g_agentConnectionThreadPool != NULL)
                   {
                      incInternalRefCount();
-                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSyslogMessageCallback, msg);
+                     TCHAR key[64];
+                     _sntprintf(key, 64, _T("Syslog_%p"), this);
+                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, this, &AgentConnection::onSyslogMessageCallback, msg);
                   }
                   else
                   {
@@ -434,7 +438,9 @@ void AgentConnection::receiverThread()
                   if (g_agentConnectionThreadPool != NULL)
                   {
                      incInternalRefCount();
-                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSnmpTrapCallback, msg);
+                     TCHAR key[64];
+                     _sntprintf(key, 64, _T("SNMPTrap_%p"), this);
+                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, this, &AgentConnection::onSnmpTrapCallback, msg);
                   }
                   else
                   {
