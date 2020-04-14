@@ -69,8 +69,7 @@ public class GeoLocationCache implements SessionListener
 	void initialize(NXCSession session)
 	{
 		this.session = session;
-		if (session.isObjectsSynchronized())
-			internalInitialize();
+      internalInitialize();
 		session.addListener(this);
 	}
 	
