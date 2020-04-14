@@ -333,7 +333,9 @@ void AgentConnectionReceiver::run()
                case CMD_TRAP:
                   if (g_agentConnectionThreadPool != nullptr)
                   {
-                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onTrapCallback, msg);
+                     TCHAR key[64];
+                     _sntprintf(key, 64, _T("EventProc_%p"), this);
+                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onTrapCallback, msg);
                   }
                   else
                   {
@@ -343,7 +345,9 @@ void AgentConnectionReceiver::run()
                case CMD_SYSLOG_RECORDS:
                   if (g_agentConnectionThreadPool != nullptr)
                   {
-                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onSyslogMessageCallback, msg);
+                     TCHAR key[64];
+                     _sntprintf(key, 64, _T("Syslog_%p"), this);
+                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onSyslogMessageCallback, msg);
                   }
                   else
                   {
@@ -380,7 +384,9 @@ void AgentConnectionReceiver::run()
                case CMD_SNMP_TRAP:
                   if (g_agentConnectionThreadPool != nullptr)
                   {
-                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onSnmpTrapCallback, msg);
+                     TCHAR key[64];
+                     _sntprintf(key, 64, _T("SNMPTrap_%p"), this);
+                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onSnmpTrapCallback, msg);
                   }
                   else
                   {
