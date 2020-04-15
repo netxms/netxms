@@ -96,7 +96,7 @@ static const TCHAR *s_dbInitQueries[] =
    _T("CREATE TABLE dc_schedules (")
    _T("  server_id number(20) not null,")
    _T("  dci_id integer not null,")
-   _T("  schedule varchar(255) not null"),
+   _T("  schedule varchar(255) not null)"),
 
    _T("CREATE INDEX idx_dc_schedules ON dc_schedules(server_id,dci_id)"),
 
