@@ -1367,6 +1367,7 @@ typedef struct
 #define VID_SCREEN_HEIGHT           ((UINT32)697)
 #define VID_SCREEN_BPP              ((UINT32)698)
 #define VID_EXTENDED_DCI_DATA       ((UINT32)699)
+#define VID_HARDWARE_ID             ((UINT32)700)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

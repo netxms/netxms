@@ -120,7 +120,7 @@ void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state)
 /**
  * Append data to MD5 hash
  */
-void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const BYTE *data, size_t size)
+void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const void *data, size_t size)
 {
    I_md5_append((md5_state_t *)state, (const md5_byte_t *)data, (int)size);
 }
@@ -136,7 +136,7 @@ void LIBNETXMS_EXPORTABLE MD5Finish(MD5_STATE *state, BYTE *hash)
 /**
  * Calculate MD5 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const BYTE *data, size_t nbytes, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const void *data, size_t nbytes, BYTE *hash)
 {
 	md5_state_t state;
 
@@ -148,7 +148,7 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const BYTE *data, size_t nbytes, BYTE
 /**
  * Calculate MD5 hash for repeated pattern in virtual buffer
  */
-void LIBNETXMS_EXPORTABLE MD5HashForPattern(const BYTE *data, size_t patternSize, size_t fullSize, BYTE *hash)
+void LIBNETXMS_EXPORTABLE MD5HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
 	md5_state_t state;
 	int count, patternIndex;
@@ -156,7 +156,7 @@ void LIBNETXMS_EXPORTABLE MD5HashForPattern(const BYTE *data, size_t patternSize
 	BYTE *dst, patternBuffer[64];
 
 	I_md5_init(&state);
-	for(count = 0, src = data, patternIndex = 0; count < (int)fullSize; count += 64)
+	for(count = 0, src = static_cast<const unsigned char*>(data), patternIndex = 0; count < (int)fullSize; count += 64)
 	{
 		dst = patternBuffer;
 		for(int i = 0; i < 64; i++)
@@ -166,7 +166,7 @@ void LIBNETXMS_EXPORTABLE MD5HashForPattern(const BYTE *data, size_t patternSize
 			if (patternIndex >= (int)patternSize)
 			{
 				patternIndex = 0;
-				src = data;
+				src = static_cast<const unsigned char*>(data);
 			}
 		}
 		I_md5_append(&state, (const md5_byte_t *)patternBuffer, 64);
@@ -179,15 +179,15 @@ void LIBNETXMS_EXPORTABLE MD5HashForPattern(const BYTE *data, size_t patternSize
  */
 void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state)
 {
-   I_SHA1Init((SHA1_CTX *)state);
+   I_SHA1Init(reinterpret_cast<SHA1_CTX*>(state));
 }
 
 /**
  * Append data to SHA1 hash
  */
-void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const BYTE *data, size_t size)
+void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t size)
 {
-   I_SHA1Update((SHA1_CTX *)state, data, (uint32)size);
+   I_SHA1Update(reinterpret_cast<SHA1_CTX*>(state), static_cast<const unsigned char*>(data), static_cast<uint32>(size));
 }
 
 /**
@@ -195,25 +195,25 @@ void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const BYTE *data, size_t
  */
 void LIBNETXMS_EXPORTABLE SHA1Finish(SHA1_STATE *state, BYTE *hash)
 {
-   I_SHA1Final(hash, (SHA1_CTX *)state);
+   I_SHA1Final(hash, reinterpret_cast<SHA1_CTX*>(state));
 }
 
 /**
  * Calculate SHA1 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const BYTE *data, size_t nbytes, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const void *data, size_t nbytes, BYTE *hash)
 {
    SHA1_CTX context;
 
    I_SHA1Init(&context);
-   I_SHA1Update(&context, data, (uint32)nbytes);
+   I_SHA1Update(&context, static_cast<const unsigned char*>(data), (uint32)nbytes);
    I_SHA1Final(hash, &context);
 }
 
 /**
  * Calculate SHA1 hash for repeated pattern in virtual buffer
  */
-void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const BYTE *data, size_t patternSize, size_t fullSize, BYTE *hash)
+void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
    SHA1_CTX context;
 	int count, patternIndex;
@@ -221,7 +221,7 @@ void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const BYTE *data, size_t patternSiz
 	BYTE *dst, patternBuffer[64];
 
    I_SHA1Init(&context);
-	for(count = 0, src = data, patternIndex = 0; count < (int)fullSize; count += 64)
+	for(count = 0, src = static_cast<const unsigned char*>(data), patternIndex = 0; count < (int)fullSize; count += 64)
 	{
 		dst = patternBuffer;
 		for(int i = 0; i < 64; i++)
@@ -231,7 +231,7 @@ void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const BYTE *data, size_t patternSiz
 			if (patternIndex >= (int)patternSize)
 			{
 				patternIndex = 0;
-				src = data;
+				src = static_cast<const unsigned char*>(data);
 			}
 		}
 	   I_SHA1Update(&context, patternBuffer, 64);
@@ -308,15 +308,15 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *
  */
 void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state)
 {
-   I_sha256_init((sha256_ctx *)state);
+   I_sha256_init(reinterpret_cast<sha256_ctx*>(state));
 }
 
 /**
  * Append data to SHA1 hash
  */
-void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const BYTE *data, size_t size)
+void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const void *data, size_t size)
 {
-   I_sha256_update((sha256_ctx *)state, data, (unsigned int)size);
+   I_sha256_update(reinterpret_cast<sha256_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
 }
 
 /**
@@ -324,19 +324,19 @@ void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const BYTE *data, si
  */
 void LIBNETXMS_EXPORTABLE SHA256Finish(SHA256_STATE *state, BYTE *hash)
 {
-   I_sha256_final((sha256_ctx *)state, hash);
+   I_sha256_final(reinterpret_cast<sha256_ctx*>(state), hash);
 }
 
 
 /**
  * Calculate SHA2-256 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const BYTE *data, size_t len, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const void *data, size_t len, BYTE *hash)
 {
    sha256_ctx ctx;
 
    I_sha256_init(&ctx);
-   I_sha256_update(&ctx, data, (unsigned int)len);
+   I_sha256_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(len));
    I_sha256_final(&ctx, hash);
 }
 

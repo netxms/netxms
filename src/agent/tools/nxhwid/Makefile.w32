@@ -1,0 +1,7 @@
+TARGET = nxhwid.exe
+TYPE = exe
+SOURCES = nxhwid.cpp
+
+LIBS = libnxagent.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

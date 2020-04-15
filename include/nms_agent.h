@@ -1092,6 +1092,7 @@ bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareManufacturer();
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct();
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareSerialNumber();
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetBaseboardSerialNumber();
 LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings();
 bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t*));
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -1100,6 +1101,8 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+
+bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid);
 
 #ifdef _WIN32
 ObjectArray<ProcessInformation> LIBNXAGENT_EXPORTABLE *GetProcessListForUserSession(DWORD sessionId);

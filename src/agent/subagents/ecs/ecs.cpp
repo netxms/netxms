@@ -158,7 +158,7 @@ static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Ab
 	char szArg[256];
 
 	int digetSize;
-	void (*hashFunction)(const BYTE *, size_t, BYTE *) = NULL;
+	void (*hashFunction)(const void *, size_t, BYTE *) = NULL;
 	if (CAST_FROM_POINTER(pArg, int) == 1)
 	{
 		digetSize = SHA1_DIGEST_SIZE;

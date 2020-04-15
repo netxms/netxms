@@ -152,6 +152,7 @@ target
 /src/agent/subagents/ubntlw/.settings
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
+/src/agent/tools/nxhwid/nxhwid
 /src/client/install/Output
 /src/client/java/netxms-client/.classpath
 /src/client/java/netxms-client/.project
