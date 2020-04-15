@@ -1091,6 +1091,7 @@ bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
 
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareManufacturer();
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct();
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareSerialNumber();
 LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings();
 bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t*));
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);

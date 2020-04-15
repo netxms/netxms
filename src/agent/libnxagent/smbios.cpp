@@ -245,6 +245,14 @@ const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct()
 }
 
 /**
+ * Get hardware product name
+ */
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareSerialNumber()
+{
+   return s_hardwareSerialNumber;
+}
+
+/**
  * Get OEM strings
  */
 LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings()
