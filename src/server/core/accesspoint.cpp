@@ -39,7 +39,7 @@ AccessPoint::AccessPoint() : super(), m_macAddr(MacAddress::ZERO)
 /**
  * Constructor for creating new access point object
  */
-AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) : super(name), m_macAddr(macAddr, MAC_ADDR_LENGTH)
+AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr) : super(name), m_macAddr(macAddr)
 {
 	m_nodeId = 0;
    m_index = index;

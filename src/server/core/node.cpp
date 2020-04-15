@@ -3740,18 +3740,39 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"),
                m_name, m_id, (m_driver != nullptr) ? m_driver->getName() : _T("(not set)"));
 
-      // Assume physical device if it supports SNMP and driver is not "GENERIC" nor "NET-SNMP"
-      // FIXME: add driver method to determine node type
-      if ((m_driver != nullptr) && _tcscmp(m_driver->getName(), _T("GENERIC")) && _tcscmp(m_driver->getName(), _T("NET-SNMP")))
+      bool vtypeReportedByDevice = false;
+      if (m_driver != nullptr)
       {
-         type = NODE_TYPE_PHYSICAL;
-      }
-      else
-      {
-         if (m_capabilities & NC_IS_PRINTER)
+         SNMP_Transport *snmp = createSnmpTransport();
+         if (snmp != nullptr)
          {
-            // Assume that printers are physical devices
+            VirtualizationType vt;
+            vtypeReportedByDevice = m_driver->getVirtualizationType(snmp, this, m_driverData, &vt);
+            delete snmp;
+            if (vtypeReportedByDevice)
+            {
+               if (vt != VTYPE_NONE)
+                  type = (vt == VTYPE_FULL) ? NODE_TYPE_VIRTUAL : NODE_TYPE_CONTAINER;
+               else
+                 type = NODE_TYPE_PHYSICAL;
+            }
+         }
+      }
+
+      if (!vtypeReportedByDevice)
+      {
+         // Assume physical device if it supports SNMP and driver is not "GENERIC" nor "NET-SNMP"
+         if ((m_driver != nullptr) && _tcscmp(m_driver->getName(), _T("GENERIC")) && _tcscmp(m_driver->getName(), _T("NET-SNMP")))
+         {
             type = NODE_TYPE_PHYSICAL;
+         }
+         else
+         {
+            if (m_capabilities & NC_IS_PRINTER)
+            {
+               // Assume that printers are physical devices
+               type = NODE_TYPE_PHYSICAL;
+            }
          }
       }
    }
@@ -4523,9 +4544,25 @@ bool Node::confPollSnmp(uint32_t rqId)
                adopted++;
 
             bool newAp = false;
-            shared_ptr<AccessPoint> ap = (clusterMode == CLUSTER_MODE_STANDALONE) ?
-                     findAccessPointByMAC(MacAddress(info->getMacAddr(), MAC_ADDR_LENGTH)) :
-                     FindAccessPointByMAC(info->getMacAddr());
+            shared_ptr<AccessPoint> ap;
+            if (info->getMacAddr().isValid())
+            {
+               ap = (clusterMode == CLUSTER_MODE_STANDALONE) ?
+                        findAccessPointByMAC(info->getMacAddr()) : FindAccessPointByMAC(info->getMacAddr());
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): Invalid MAC address on access point %s"), m_name, info->getName());
+               if (clusterMode == CLUSTER_MODE_STANDALONE)
+               {
+                  ap = static_pointer_cast<AccessPoint>(findChildObject(info->getName(), OBJECT_ACCESSPOINT));
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): Cannot find access point in cluster mode without MAC address"), m_name);
+                  continue;   // Ignore this record
+               }
+            }
             if (ap == nullptr)
             {
                StringBuffer name;
@@ -4556,6 +4593,32 @@ bool Node::confPollSnmp(uint32_t rqId)
             }
             ap->unhide();
             ap->updateState(info->getState());
+         }
+
+         if (clusterMode == CLUSTER_MODE_STANDALONE)
+         {
+            // Delete access points no longer reported by controller
+            SharedObjectArray<NetObj> *apList = getChildren(OBJECT_ACCESSPOINT);
+            for(int i = 0; i < apList->size(); i++)
+            {
+               auto ap = static_cast<AccessPoint*>(apList->get(i));
+               bool found = false;
+               for(int j = 0; j < aps->size(); j++)
+               {
+                  AccessPointInfo *info = aps->get(j);
+                  if (ap->getMacAddr().equals(info->getMacAddr()) && !_tcscmp(ap->getName(), info->getName()))
+                  {
+                     found = true;
+                     break;
+                  }
+               }
+               if (!found)
+               {
+                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): deleting non-existent access point %s [%d]"),
+                           m_name, ap->getName(), ap->getId());
+                  ap->deleteObject();
+               }
+            }
          }
 
          lockProperties();

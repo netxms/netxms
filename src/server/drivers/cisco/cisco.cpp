@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Generic driver for Cisco devices
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
  */
 const TCHAR *CiscoDeviceDriver::getVersion()
 {
-   return NETXMS_BUILD_TAG;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -238,6 +238,7 @@ NDD_DRIVER(Cat2900Driver)
 NDD_DRIVER(CiscoEswDriver)
 NDD_DRIVER(CiscoNexusDriver)
 NDD_DRIVER(CiscoSbDriver)
+NDD_DRIVER(CiscoWirelessControllerDriver)
 NDD_DRIVER(GenericCiscoDriver)
 NDD_END_DRIVER_LIST
 DECLARE_NDD_MODULE_ENTRY_POINT

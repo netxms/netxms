@@ -82,50 +82,6 @@ bool UbiquityNetworksDriver::isWirelessController(SNMP_Transport *snmp, NObject 
 }
 
 /**
- * Parse MAC address. Could be without separators or with any separator char.
- */
-static bool ParseMACAddress(const TCHAR *text, BYTE *mac)
-{
-   bool withSeparator = false;
-   char separator = 0;
-   int p = 0;
-   bool hi = true;
-   int length = (int)_tcslen(text);
-   for(int i = 0; (i < length) && (p < MAC_ADDR_LENGTH); i++)
-   {
-      char c = toupper((char)text[i]); // use (char) here because we expect only ASCII characters
-      if ((i % 3 == 2) && withSeparator)
-      {
-         if (c != separator)
-            return false;
-         continue;
-      }
-      if (!isdigit(c) && ((c < 'A') || (c > 'F')))
-      {
-         if (i == 2)
-         {
-            withSeparator = true;
-            separator = c;
-            continue;
-         }
-         return false;
-      }
-      if (hi)
-      {
-         mac[p] = (isdigit(c) ? (c - '0') : (c - 'A' + 10)) << 4;
-         hi = false;
-      }
-      else
-      {
-         mac[p] |= (isdigit(c) ? (c - '0') : (c - 'A' + 10));
-         p++;
-         hi = true;
-      }
-   }
-   return true;
-}
-
-/**
  * Handler for access point enumeration
  */
 static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
@@ -160,9 +116,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
          TCHAR macAddrText[32];
          var->getValueAsString(macAddrText, 32);
          
-         BYTE macAddr[16];
-         memset(macAddr, 0, sizeof(macAddr));
-         ParseMACAddress(macAddrText, macAddr);
+         MacAddress macAddr = MacAddress::parse(macAddrText);
 
          TCHAR name[MAX_OBJECT_NAME];
          AccessPointInfo *ap = new AccessPointInfo(apIndex, macAddr, InetAddress::INVALID, AP_ADOPTED, response->getVariable(0)->getValueAsString(name, MAX_OBJECT_NAME), NULL, NULL, NULL);
@@ -173,7 +127,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
          response->getVariable(2)->getRawValue(radio.macAddr, MAC_ADDR_LENGTH);
          radio.index = apIndex;
 
-         ap->addRadioInterface(&radio);
+         ap->addRadioInterface(radio);
          apList->add(ap);
       }
       delete response;

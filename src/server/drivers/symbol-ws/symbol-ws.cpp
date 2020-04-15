@@ -164,7 +164,7 @@ static UINT32 HandlerAccessPointListUnadopted(SNMP_Variable *var, SNMP_Transport
          break;
    }
 
-   AccessPointInfo *info = new AccessPointInfo(apIndex, var->getValue(), InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, model, NULL);
+   AccessPointInfo *info = new AccessPointInfo(apIndex, var->getValueAsMACAddr(), InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, model, NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -256,7 +256,7 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
    AccessPointInfo *info;
    if (ret == SNMP_ERR_SUCCESS)
    {
-      info = new AccessPointInfo(apIndex, (BYTE *)var->getValue(), InetAddress::INVALID, AP_ADOPTED, NULL, NULL, model, serial);
+      info = new AccessPointInfo(apIndex, var->getValueAsMACAddr(), InetAddress::INVALID, AP_ADOPTED, NULL, NULL, model, serial);
       apList->add(info);
    }
 
@@ -273,48 +273,45 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
       currentPowerDbOid[(sizeof(currentPowerDbOid) / sizeof(UINT32)) - 1] = radioIndex[i];
       currentPowerMwOid[(sizeof(currentPowerMwOid) / sizeof(UINT32)) - 1] = radioIndex[i];
 
-      RadioInterfaceInfo *radioInfo = new RadioInterfaceInfo;
-      radioInfo->index = radioIndex[i];
+      RadioInterfaceInfo radioInfo;
+      memset(&radioInfo, 0, sizeof(radioInfo));
+      radioInfo.index = radioIndex[i];
       
       // MAC
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, macOid, sizeof(macOid) / sizeof(macOid[0]), &radioInfo->macAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT, NULL);
+         ret = SnmpGetEx(transport, NULL, macOid, sizeof(macOid) / sizeof(macOid[0]), &radioInfo.macAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT, NULL);
       }
 
       // Name
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, descOid, sizeof(descOid) / sizeof(descOid[0]), &radioInfo->name, sizeof(radioInfo->name), SG_STRING_RESULT, NULL);
+         ret = SnmpGetEx(transport, NULL, descOid, sizeof(descOid) / sizeof(descOid[0]), &radioInfo.name, sizeof(radioInfo.name), SG_STRING_RESULT, NULL);
       }
 
       // Channel
       if (ret == SNMP_ERR_SUCCESS)
       {
-         ret = SnmpGetEx(transport, NULL, channelOid, sizeof(channelOid) / sizeof(channelOid[0]), &radioInfo->channel, sizeof(radioInfo->channel), 0, NULL);
+         ret = SnmpGetEx(transport, NULL, channelOid, sizeof(channelOid) / sizeof(channelOid[0]), &radioInfo.channel, sizeof(radioInfo.channel), 0, NULL);
       }
 
       // Transmitting power (in dBm)
       if (ret == SNMP_ERR_SUCCESS)
       {
          ret = SnmpGetEx(transport, NULL, currentPowerDbOid, sizeof(currentPowerDbOid) / sizeof(currentPowerDbOid[0]),
-                         &radioInfo->powerDBm, sizeof(radioInfo->powerDBm), 0, NULL);
+                         &radioInfo.powerDBm, sizeof(radioInfo.powerDBm), 0, NULL);
       }
 
       // Transmitting power (in mW)
       if (ret == SNMP_ERR_SUCCESS)
       {
          ret = SnmpGetEx(transport, NULL, currentPowerMwOid, sizeof(currentPowerMwOid) / sizeof(currentPowerMwOid[0]),
-                         &radioInfo->powerMW, sizeof(radioInfo->powerMW), 0, NULL);
+                         &radioInfo.powerMW, sizeof(radioInfo.powerMW), 0, NULL);
       }
 
       if (ret == SNMP_ERR_SUCCESS)
       {
          info->addRadioInterface(radioInfo);
-      }
-      else
-      {
-         delete radioInfo;
       }
    }
 

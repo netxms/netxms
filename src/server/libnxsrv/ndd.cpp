@@ -43,16 +43,15 @@ json_t *RadioInterfaceInfo::toJson() const
 /**
  * Access point info constructor
  */
-AccessPointInfo::AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAddress& ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial)
+AccessPointInfo::AccessPointInfo(uint32_t index, const MacAddress& macAddr, const InetAddress& ipAddr, AccessPointState state,
+         const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial) : m_macAddr(macAddr), m_ipAddr(ipAddr)
 {
    m_index = index;
-	memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
-   m_ipAddr = ipAddr;
 	m_state = state;
-	m_name = (name != NULL) ? _tcsdup(name) : NULL;
-	m_vendor = (vendor != NULL) ? _tcsdup(vendor) : NULL;
-	m_model = (model != NULL) ? _tcsdup(model) : NULL;
-	m_serial = (serial != NULL) ? _tcsdup(serial) : NULL;
+	m_name = MemCopyString(name);
+	m_vendor = MemCopyString(vendor);
+	m_model = MemCopyString(model);
+	m_serial = MemCopyString(serial);
 	m_radioInterfaces = new ObjectArray<RadioInterfaceInfo>(4, 4, Ownership::True);
 }
 
@@ -71,10 +70,10 @@ AccessPointInfo::~AccessPointInfo()
 /**
  * Add radio interface
  */
-void AccessPointInfo::addRadioInterface(RadioInterfaceInfo *iface)
+void AccessPointInfo::addRadioInterface(const RadioInterfaceInfo& iface)
 {
 	RadioInterfaceInfo *r = new RadioInterfaceInfo;
-	memcpy(r, iface, sizeof(RadioInterfaceInfo));
+	memcpy(r, &iface, sizeof(RadioInterfaceInfo));
 	m_radioInterfaces->add(r);
 }
 
@@ -197,6 +196,20 @@ void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
  * @return true if hardware information is available
  */
 bool NetworkDeviceDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   return false;
+}
+
+/**
+ * Get device virtualization type.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param vtype pointer to virtualization type enum to fill
+ * @return true if virtualization type is known
+ */
+bool NetworkDeviceDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype)
 {
    return false;
 }

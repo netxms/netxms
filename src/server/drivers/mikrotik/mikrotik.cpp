@@ -219,19 +219,17 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
    {
       if (response->getNumVariables() == 4)
       {
-         BYTE macAddr[16];
-         memset(macAddr, 0, sizeof(macAddr));
-         response->getVariable(0)->getRawValue(macAddr, sizeof(macAddr));
+         MacAddress macAddr = response->getVariable(0)->getValueAsMACAddr();
 
          // At least some Mikrotik devices returns empty BSSID - use radio interface MAC in that case
-         if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
-            response->getVariable(3)->getRawValue(macAddr, MAC_ADDR_LENGTH);
+         if (!macAddr.isValid())
+            macAddr = response->getVariable(3)->getValueAsMACAddr();
 
          TCHAR name[MAX_OBJECT_NAME];
          AccessPointInfo *ap = new AccessPointInfo(apIndex, macAddr, InetAddress::INVALID, AP_ADOPTED, var->getValueAsString(name, MAX_OBJECT_NAME), NULL, NULL, NULL);
 
          TCHAR macAddrText[64];
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("AP: index=%d name=%s macAddr=%s"), apIndex, name, MACToStr(macAddr, macAddrText));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("AP: index=%d name=%s macAddr=%s"), apIndex, name, macAddr.toString(macAddrText));
 
          RadioInterfaceInfo radio;
          memset(&radio, 0, sizeof(RadioInterfaceInfo));
@@ -249,7 +247,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
             }
          }
 
-         ap->addRadioInterface(&radio);
+         ap->addRadioInterface(radio);
          apList->add(ap);
       }
       delete response;
@@ -272,7 +270,7 @@ ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *sn
                 HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
    {
       delete apList;
-      return NULL;
+      return nullptr;
    }
    return apList;
 }

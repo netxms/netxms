@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NDDRV_API_VERSION           7
+#define NDDRV_API_VERSION           8
 
 /**
  * Begin driver list
@@ -168,8 +168,8 @@ struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
 class LIBNXSRV_EXPORTABLE AccessPointInfo
 {
 private:
-   UINT32 m_index;
-   BYTE m_macAddr[MAC_ADDR_LENGTH];
+   uint32_t m_index;
+   MacAddress m_macAddr;
    InetAddress m_ipAddr;
    AccessPointState m_state;
    TCHAR *m_name;
@@ -179,20 +179,21 @@ private:
 	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
 
 public:
-   AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAddress& ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial);
+   AccessPointInfo(uint32_t index, const MacAddress& macAddr, const InetAddress& ipAddr, AccessPointState state,
+            const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial);
    ~AccessPointInfo();
 
-	void addRadioInterface(RadioInterfaceInfo *iface);
+	void addRadioInterface(const RadioInterfaceInfo& iface);
 
-   UINT32 getIndex() { return m_index; }
-	const BYTE *getMacAddr() { return m_macAddr; }
-   const InetAddress& getIpAddr() { return m_ipAddr; }
-	AccessPointState getState() { return m_state; }
-	const TCHAR *getName() { return m_name; }
-	const TCHAR *getVendor() { return m_vendor; }
-	const TCHAR *getModel() { return m_model; }
-	const TCHAR *getSerial() { return m_serial; }
-	const ObjectArray<RadioInterfaceInfo> *getRadioInterfaces() { return m_radioInterfaces; }
+	uint32_t getIndex() const { return m_index; }
+	const MacAddress& getMacAddr() const { return m_macAddr; }
+   const InetAddress& getIpAddr() const { return m_ipAddr; }
+	AccessPointState getState() const { return m_state; }
+	const TCHAR *getName() const { return m_name; }
+	const TCHAR *getVendor() const { return m_vendor; }
+	const TCHAR *getModel() const { return m_model; }
+	const TCHAR *getSerial() const { return m_serial; }
+	const ObjectArray<RadioInterfaceInfo> *getRadioInterfaces() const { return m_radioInterfaces; }
 };
 
 /**
@@ -325,6 +326,7 @@ public:
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
    virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo);
+   virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype);
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
                                   int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);

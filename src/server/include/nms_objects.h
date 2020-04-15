@@ -2216,7 +2216,7 @@ protected:
 
 public:
    AccessPoint();
-   AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr);
+   AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr);
    virtual ~AccessPoint();
 
    shared_ptr<AccessPoint> self() const { return static_pointer_cast<AccessPoint>(NObject::self()); }
@@ -4204,7 +4204,7 @@ shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetByIP(UINT32 zoneUIN, const InetAd
 shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(UINT32 zoneUIN, const InetAddress& nodeAddr);
 bool AdjustSubnetBaseAddress(InetAddress& baseAddr, UINT32 zoneUIN);
 shared_ptr<MobileDevice> NXCORE_EXPORTABLE FindMobileDeviceByDeviceID(const TCHAR *deviceId);
-shared_ptr<AccessPoint> NXCORE_EXPORTABLE FindAccessPointByMAC(const BYTE *macAddr);
+shared_ptr<AccessPoint> NXCORE_EXPORTABLE FindAccessPointByMAC(const MacAddress& macAddr);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(uint32_t zoneUIN);
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId);

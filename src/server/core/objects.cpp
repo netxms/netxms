@@ -596,11 +596,8 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 /**
  * Find access point by MAC address
  */
-shared_ptr<AccessPoint> NXCORE_EXPORTABLE FindAccessPointByMAC(const BYTE *macAddr)
+shared_ptr<AccessPoint> NXCORE_EXPORTABLE FindAccessPointByMAC(const MacAddress& macAddr)
 {
-	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
-		return shared_ptr<AccessPoint>();
-
 	shared_ptr<NetObj> object = MacDbFind(macAddr);
 	if ((object == nullptr) || (object->getObjectClass() != OBJECT_ACCESSPOINT))
 	   return shared_ptr<AccessPoint>();
@@ -781,9 +778,6 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByMAC(const BYTE *macAddr)
  */
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const BYTE *macAddr)
 {
-	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
-		return shared_ptr<Interface>();
-
 	shared_ptr<NetObj> object = MacDbFind(macAddr);
 	if ((object == nullptr) || (object->getObjectClass() != OBJECT_INTERFACE))
 	   return shared_ptr<Interface>();
@@ -795,9 +789,6 @@ shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const BYTE *macAddr)
  */
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const MacAddress& macAddr)
 {
-   if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast())
-      return shared_ptr<Interface>();
-
    shared_ptr<NetObj> object = MacDbFind(macAddr);
    if ((object == nullptr) || (object->getObjectClass() != OBJECT_INTERFACE))
       return shared_ptr<Interface>();

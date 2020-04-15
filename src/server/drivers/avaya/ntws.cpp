@@ -103,7 +103,7 @@ static UINT32 HandlerAccessPointListUnadopted(SNMP_Variable *var, SNMP_Transport
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
    TCHAR model[128];
-   AccessPointInfo *info = new AccessPointInfo(0, (const BYTE *)"\x00\x00\x00\x00\x00\x00", InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, var->getValueAsString(model, 128), NULL);
+   AccessPointInfo *info = new AccessPointInfo(0, MacAddress::ZERO, InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, var->getValueAsString(model, 128), NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -157,7 +157,7 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
          AccessPointInfo *ap = 
             new AccessPointInfo(
                response->getVariable(4)->getValueAsUInt(),
-               var->getValue(),
+               var->getValueAsMACAddr(),
                ntohl(_t_inet_addr(response->getVariable(2)->getValueAsString(ipAddr, 32))), 
                AP_ADOPTED, 
                response->getVariable(1)->getValueAsString(name, 256),
@@ -207,7 +207,7 @@ static UINT32 HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, vo
          rif.powerDBm = response->getVariable(0)->getValueAsInt();
          rif.powerMW = (int)pow(10.0, (double)rif.powerDBm / 10.0);
          rif.channel = response->getVariable(1)->getValueAsUInt();
-         ap->addRadioInterface(&rif);
+         ap->addRadioInterface(rif);
       }
       delete response;
    }

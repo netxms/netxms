@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for Cisco 4400 (former Airespace) wireless switches
+** Driver for Cisco (former Airespace) wireless switches
 ** Copyright (C) 2013-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,25 +17,25 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: airespace.cpp
+** File: wlc.cpp
 **/
 
-#include "airespace.h"
+#include "cisco.h"
 
-#define DEBUG_TAG _T("ndd.airespace")
+#define DEBUG_TAG DEBUG_TAG_CISCO _T(".wlc")
 
 /**
  * Get driver name
  */
-const TCHAR *AirespaceDriver::getName()
+const TCHAR *CiscoWirelessControllerDriver::getName()
 {
-   return _T("AIRESPACE");
+   return _T("CISCO-WLC");
 }
 
 /**
  * Get driver version
  */
-const TCHAR *AirespaceDriver::getVersion()
+const TCHAR *CiscoWirelessControllerDriver::getVersion()
 {
    return NETXMS_VERSION_STRING;
 }
@@ -45,10 +45,10 @@ const TCHAR *AirespaceDriver::getVersion()
  *
  * @param oid Device OID
  */
-int AirespaceDriver::isPotentialDevice(const TCHAR *oid)
+int CiscoWirelessControllerDriver::isPotentialDevice(const TCHAR *oid)
 {
    return ((_tcsncmp(oid, _T(".1.3.6.1.4.1.14179."), 19) == 0) ||
-           (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) == 0)) ? 127 : 0;
+           (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) == 0)) ? 128 : 0;
 }
 
 /**
@@ -57,7 +57,7 @@ int AirespaceDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool AirespaceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CiscoWirelessControllerDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
    // read agentInventoryMachineModel
    TCHAR buffer[1024];
@@ -67,7 +67,95 @@ bool AirespaceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
    nxlog_debug_tag(DEBUG_TAG, 5, _T("agentInventoryMachineModel=\"%s\""), buffer);
 
    // model must start with AIR-WLC44 (like AIR-WLC4402-50-K9) or AIR-CT55 (like AIR-CT5508-K90)
-   return (_tcsncmp(buffer, _T("AIR-WLC44"), 9) == 0) || (_tcsncmp(buffer, _T("AIR-CT55"), 8) == 0);
+   return (_tcsncmp(buffer, _T("AIR-WLC44"), 9) == 0) || (_tcsncmp(buffer, _T("AIR-CT55"), 8) == 0) || (_tcsncmp(buffer, _T("AIR-CTVM"), 8) == 0);
+}
+
+/**
+ * Get hardware information from device.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool CiscoWirelessControllerDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.3.0")));  // agentInventoryMachineModel (product code)
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.13.0"))); // agentInventoryProductName (product name)
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.14.0"))); // agentInventoryProductVersion (firmware version)
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.4.0")));  // agentInventorySerialNumber (serial number)
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.12.0"))); // agentInventoryManufacturerName (vendor)
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   {
+      TCHAR buffer[256];
+
+      const SNMP_Variable *v = response->getVariable(0);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productCode, v->getValueAsString(buffer, 256), 32);
+      }
+
+      v = response->getVariable(1);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
+      }
+      else
+      {
+         // Use product code as product name if product name OID is not supported
+         _tcscpy(hwInfo->productName, hwInfo->productCode);
+      }
+
+      v = response->getVariable(2);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+      }
+
+      v = response->getVariable(3);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 32);
+      }
+
+      v = response->getVariable(4);
+      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->vendor, v->getValueAsString(buffer, 256), 128);
+      }
+      else
+      {
+         _tcscpy(hwInfo->vendor, _T("Cisco Systems Inc."));
+      }
+
+      delete response;
+   }
+   return true;
+}
+
+/**
+ * Get device virtualization type.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param vtype pointer to virtualization type enum to fill
+ * @return true if virtualization type is known
+ */
+bool CiscoWirelessControllerDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype)
+{
+   TCHAR buffer[1024];
+   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT, NULL) != SNMP_ERR_SUCCESS)
+      return false;
+   if (_tcsncmp(buffer, _T("AIR-CTVM"), 8) == 0)
+      *vtype = VTYPE_FULL;
+   else
+      *vtype = VTYPE_NONE;
+   return true;
 }
 
 /**
@@ -77,7 +165,7 @@ bool AirespaceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int AirespaceDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int CiscoWirelessControllerDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    /* TODO: check if other cluster modes possible */
    return CLUSTER_MODE_STANDALONE;
@@ -90,7 +178,7 @@ int AirespaceDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverD
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool AirespaceDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool CiscoWirelessControllerDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -145,19 +233,15 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
    {
       if (response->getNumVariables() == 8)
       {
-         BYTE macAddr[16];
-         memset(macAddr, 0, sizeof(macAddr));
-         var->getRawValue(macAddr, sizeof(macAddr));
-
          TCHAR ipAddr[32], name[MAX_OBJECT_NAME], model[MAX_OBJECT_NAME], serial[MAX_OBJECT_NAME];
          AccessPointInfo *ap = 
             new AccessPointInfo(
                0,
-               macAddr,
+               var->getValueAsMACAddr(),
                InetAddress::parse(response->getVariable(1)->getValueAsString(ipAddr, 32)),
                (response->getVariable(2)->getValueAsInt() == 1) ? AP_ADOPTED : AP_UNADOPTED,
                response->getVariable(3)->getValueAsString(name, MAX_OBJECT_NAME),
-               _T("Cisco"),   // vendor
+               _T("Cisco Systems Inc."),   // vendor
                response->getVariable(4)->getValueAsString(model, MAX_OBJECT_NAME),
                response->getVariable(5)->getValueAsString(serial, MAX_OBJECT_NAME));
 
@@ -167,14 +251,14 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
          radio.index = 0;
          response->getVariable(0)->getRawValue(radio.macAddr, MAC_ADDR_LENGTH);
          radio.channel = response->getVariable(6)->getValueAsInt();
-         ap->addRadioInterface(&radio);
+         ap->addRadioInterface(radio);
 
          if ((response->getVariable(7)->getType() != ASN_NO_SUCH_INSTANCE) && (response->getVariable(7)->getType() != ASN_NO_SUCH_OBJECT))
          {
             _tcscpy(radio.name, _T("slot1"));
             radio.index = 1;
             radio.channel = response->getVariable(7)->getValueAsInt();
-            ap->addRadioInterface(&radio);
+            ap->addRadioInterface(radio);
          }
 
          apList->add(ap);
@@ -192,7 +276,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *AirespaceDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AccessPointInfo> *CiscoWirelessControllerDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
 
@@ -268,7 +352,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
 
@@ -294,9 +378,8 @@ ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Tran
  * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState AirespaceDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
-                                                      UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
-                                                      const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+AccessPointState CiscoWirelessControllerDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
+         UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
    if ((radioInterfaces == NULL) || radioInterfaces->isEmpty())
       return AP_UNKNOWN;
@@ -319,25 +402,3 @@ AccessPointState AirespaceDriver::getAccessPointState(SNMP_Transport *snmp, NObj
          return AP_UNKNOWN;
    }
 }
-
-/**
- * Driver entry point
- */
-DECLARE_NDD_ENTRY_POINT(AirespaceDriver);
-
-/**
- * DLL entry point
- */
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-   if (dwReason == DLL_PROCESS_ATTACH)
-   {
-      DisableThreadLibraryCalls(hInstance);
-   }
-
-   return TRUE;
-}
-
-#endif
