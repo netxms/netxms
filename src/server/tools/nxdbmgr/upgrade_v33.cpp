@@ -31,8 +31,8 @@ static bool H_UpgradeFromV7()
    CHK_EXEC(CreateTable(
          _T("CREATE TABLE snmp_ports (")
          _T("id integer not null,")
-         _T("port integer null,")
-         _T("zone integer null,")
+         _T("port integer not null,")
+         _T("zone integer not null,")
          _T("PRIMARY KEY(id,zone))")));
 
    //get default ports
@@ -94,6 +94,10 @@ static bool H_UpgradeFromV7()
 
    CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='SNMPPorts'")));
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("zones"), _T("snmp_ports")));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("snmp_communities"), _T("zone")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("usm_credentials"), _T("zone")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("shared_secrets"), _T("zone")));
 
    CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("snmp_communities")));
    CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("usm_credentials")));

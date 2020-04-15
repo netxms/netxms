@@ -1705,7 +1705,7 @@ CREATE TABLE snmp_communities
 (
   id integer not null,
   community varchar(255) null,
-  zone integer null,
+  zone integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1735,7 +1735,7 @@ CREATE TABLE usm_credentials
   priv_method integer not null,
   auth_password varchar(255) null,
   priv_password varchar(255) null,
-  zone integer null,
+  zone integer not null,
   comments varchar(255) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
@@ -1746,8 +1746,8 @@ CREATE TABLE usm_credentials
 CREATE TABLE snmp_ports 
 (
    id integer not null,
-   port integer null,
-   zone integer null,
+   port integer not null,
+   zone integer not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -2274,6 +2274,6 @@ CREATE TABLE shared_secrets
 (
    id integer not null,
    secret varchar(88) null,
-   zone integer null,
+   zone integer not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
