@@ -1751,21 +1751,6 @@ CREATE TABLE snmp_ports
    PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
-/*
-** Agent policies - common attributes
-*/
-CREATE TABLE ap_common
-(
-  policy_name varchar(63) not null,
-  owner_id integer not null,
-  policy_type varchar(31) not null,
-  file_content SQL_TEXT null,
-  version integer not null,
-  guid varchar(36) not null,
-  PRIMARY KEY(guid)
-) TABLE_TYPE;
-
 /*
 ** Network maps
 */
