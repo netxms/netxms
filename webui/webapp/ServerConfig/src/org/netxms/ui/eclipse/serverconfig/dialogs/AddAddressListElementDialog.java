@@ -201,7 +201,7 @@ public class AddAddressListElementDialog extends Dialog
 	{
 		try
 		{
-		   long zoneUIN = (zoneSelector != null) ? zoneSelector.getZoneUIN() : 0;
+		   int zoneUIN = (zoneSelector != null) ? zoneSelector.getZoneUIN() : 0;
 		   if (zoneUIN == -1)
 		      zoneUIN = 0;
 		   long proxyId = (proxySelector != null) ? proxySelector.getObjectId() : 0;

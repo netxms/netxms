@@ -34,7 +34,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 	private int clusterType;
 	private List<InetAddressEx> syncNetworks = new ArrayList<InetAddressEx>(1);
 	private List<ClusterResource> resources = new ArrayList<ClusterResource>();
-	private long zoneId;
+	private int zoneId;
 	private int flags;
 	
 	/**
@@ -47,7 +47,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 		
       flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		clusterType = msg.getFieldAsInt32(NXCPCodes.VID_CLUSTER_TYPE);
-		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
+		zoneId = msg.getFieldAsInt32(NXCPCodes.VID_ZONE_UIN);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SYNC_SUBNETS);
       long fieldId = NXCPCodes.VID_SYNC_SUBNETS_BASE;
@@ -116,7 +116,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
     * @see org.netxms.client.objects.ZoneMember#getZoneId()
     */
    @Override
-   public long getZoneId()
+   public int getZoneId()
    {
       return zoneId;
    }

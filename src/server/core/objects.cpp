@@ -627,7 +627,7 @@ shared_ptr<MobileDevice> NXCORE_EXPORTABLE FindMobileDeviceByDeviceID(const TCHA
 /**
  * Find node by IP address - internal implementation
  */
-static shared_ptr<Node> FindNodeByIPInternal(uint32_t zoneUIN, const InetAddress& ipAddr)
+static shared_ptr<Node> FindNodeByIPInternal(int32_t zoneUIN, const InetAddress& ipAddr)
 {
    shared_ptr<Zone> zone = IsZoningEnabled() ? FindZoneByUIN(zoneUIN) : shared_ptr<Zone>();
 
@@ -695,7 +695,7 @@ static bool NodeFindCB(NetObj *zone, NodeFindCBData *data)
 /**
  * Find node by IP address
  */
-shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
       return shared_ptr<Node>();
@@ -715,7 +715,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, const InetAddres
 /**
  * Find node by IP address
  */
-shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, bool allZones, const InetAddress& ipAddr)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, bool allZones, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
       return shared_ptr<Node>();
@@ -729,7 +729,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, bool allZones, c
 /**
  * Find node by IP address using first match from IP address list
  */
-shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, const InetAddressList *ipAddrList)
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddressList *ipAddrList)
 {
    for(int i = 0; i < ipAddrList->size(); i++)
    {
@@ -743,7 +743,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, const InetAddres
 /**
  * Find interface by IP address
  */
-shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
+shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByIP(int32_t zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
       return shared_ptr<Interface>();
@@ -800,7 +800,7 @@ shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const MacAddress& mac
  */
 struct NodeFindHostnameData
 {
-   uint32_t zoneUIN;
+   int32_t zoneUIN;
    TCHAR hostname[MAX_DNS_NAME];
 };
 
@@ -821,7 +821,7 @@ static bool HostnameComparator(NetObj *object, NodeFindHostnameData *data)
 /**
  * Find a list of nodes that contain the hostname
  */
-SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindNodesByHostname(uint32_t zoneUIN, const TCHAR *hostname)
+SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindNodesByHostname(int32_t zoneUIN, const TCHAR *hostname)
 {
    NodeFindHostnameData data;
    data.zoneUIN = zoneUIN;
@@ -908,7 +908,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByBridgeId(const BYTE *bridgeId)
 /**
  * Find subnet by IP address
  */
-shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
+shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetByIP(int32_t zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
       return shared_ptr<Subnet>();
@@ -964,7 +964,7 @@ static void SubnetMatchCallback(const InetAddress& addr, NetObj *object, void *c
 /**
  * Find subnet for given IP address
  */
-shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(UINT32 zoneUIN, const InetAddress& nodeAddr)
+shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(int32_t zoneUIN, const InetAddress& nodeAddr)
 {
    if (!nodeAddr.isValidUnicast())
       return shared_ptr<Subnet>();
@@ -989,7 +989,7 @@ shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(UINT32 zoneUIN, const Ine
  * Adjust base address for new subnet to avoid overlapping with existing subnet objects.
  * Returns false if new subnet cannot be created.
  */
-bool AdjustSubnetBaseAddress(InetAddress& baseAddr, UINT32 zoneUIN)
+bool AdjustSubnetBaseAddress(InetAddress& baseAddr, int32_t zoneUIN)
 {
    InetAddress addr = baseAddr.getSubnetAddress();
    while(FindSubnetByIP(zoneUIN, addr) != nullptr)
@@ -1209,7 +1209,7 @@ shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *name)
 struct __cluster_ip_data
 {
 	InetAddress ipAddr;
-	UINT32 zoneUIN;
+	int32_t zoneUIN;
 };
 
 /**
@@ -1228,7 +1228,7 @@ static bool ClusterIPComparator(NetObj *object, void *data)
  * Check if given IP address is used by cluster (it's either
  * resource IP or located on one of sync subnets)
  */
-bool NXCORE_EXPORTABLE IsClusterIP(uint32_t zoneUIN, const InetAddress& ipAddr)
+bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr)
 {
 	struct __cluster_ip_data data;
 	data.zoneUIN = zoneUIN;
@@ -1239,7 +1239,7 @@ bool NXCORE_EXPORTABLE IsClusterIP(uint32_t zoneUIN, const InetAddress& ipAddr)
 /**
  * Find zone object by UIN (unique identification number)
  */
-shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(uint32_t uin)
+shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(int32_t uin)
 {
 	return static_pointer_cast<Zone>(g_idxZoneByUIN.get(uin));
 }
@@ -1264,14 +1264,14 @@ shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId)
  * Zone ID selector data
  */
 static Mutex s_zoneUinSelectorLock;
-static IntegerArray<UINT32> s_zoneUinSelectorHistory;
+static IntegerArray<int32_t> s_zoneUinSelectorHistory;
 
 /**
  * Find unused zone UIN
  */
-UINT32 FindUnusedZoneUIN()
+int32_t FindUnusedZoneUIN()
 {
-   UINT32 uin = 0;
+   int32_t uin = 0;
    s_zoneUinSelectorLock.lock();
    for(UINT32 i = 1; i < 0x7FFFFFFF; i++)
    {

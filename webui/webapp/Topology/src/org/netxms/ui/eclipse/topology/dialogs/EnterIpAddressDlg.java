@@ -102,7 +102,7 @@ public class EnterIpAddressDlg extends Dialog
 	      IDialogSettings settings = Activator.getDefault().getDialogSettings();
 	      try
 	      {
-   	      long uin = settings.getLong("IPAddressSelection.ZoneUIN");
+   	      int uin = settings.getInt("IPAddressSelection.ZoneUIN");
    	      if (ConsoleSharedData.getSession().findZone(uin) != null)
    	         zoneSelector.setZoneUIN(uin);
 	      }

@@ -59,7 +59,7 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
 /**
  * Constructor for "fake" interface object
  */
-Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSyntheticMask) : super(), m_macAddr(MacAddress::ZERO)
+Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask) : super(), m_macAddr(MacAddress::ZERO)
 {
    m_parentInterfaceId = 0;
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -100,7 +100,7 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSynt
 /**
  * Constructor for normal interface object
  */
-Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneUIN)
+Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, int32_t zoneUIN)
           : super(), m_macAddr(MacAddress::ZERO)
 {
    if ((ifType == IFTYPE_SOFTWARE_LOOPBACK) || addrList.isLoopbackOnly())
@@ -1093,7 +1093,7 @@ void Interface::updateZoneUIN()
    if (zone != nullptr)
       zone->removeFromIndex(*this);
 
-   UINT32 newZoneUIN = node->getZoneUIN();
+   int32_t newZoneUIN = node->getZoneUIN();
    lockProperties();
    m_zoneUIN = newZoneUIN;
    setModified(MODIFY_INTERFACE_PROPERTIES);

@@ -43,7 +43,7 @@ static bool s_proxyConnectionCheckScheduled = false;
 /**
  * Create new zone configuration object
  */
-ZoneConfiguration::ZoneConfiguration(UINT64 serverId, UINT32 thisNodeId, UINT32 zoneUin, BYTE *sharedSecret)
+ZoneConfiguration::ZoneConfiguration(UINT64 serverId, UINT32 thisNodeId, int32_t zoneUin, BYTE *sharedSecret)
 {
    m_serverId = serverId;
    m_thisNodeId = thisNodeId;

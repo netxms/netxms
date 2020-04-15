@@ -141,7 +141,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	protected int vrrpVersion;
 	protected String driverName;
 	protected String driverVersion;
-	protected long zoneId;
+	protected int zoneId;
 	protected MacAddress bridgeBaseAddress;
 	protected int ifXTablePolicy;
 	protected Date bootTime;
@@ -240,7 +240,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 		vrrpVersion = msg.getFieldAsInt32(NXCPCodes.VID_VRRP_VERSION);
 		driverName = msg.getFieldAsString(NXCPCodes.VID_DRIVER_NAME);
 		driverVersion = msg.getFieldAsString(NXCPCodes.VID_DRIVER_VERSION);
-		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
+		zoneId = msg.getFieldAsInt32(NXCPCodes.VID_ZONE_UIN);
 		bridgeBaseAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
 		ifXTablePolicy = msg.getFieldAsInt32(NXCPCodes.VID_USE_IFXTABLE);
 		physicalContainerId = msg.getFieldAsInt64(NXCPCodes.VID_PHYSICAL_CONTAINER_ID);
@@ -722,7 +722,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	 * @see org.netxms.client.objects.ZoneMember#getZoneId()
 	 */
 	@Override
-	public long getZoneId()
+	public int getZoneId()
 	{
 		return zoneId;
 	}

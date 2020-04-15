@@ -93,7 +93,7 @@ protected:
    MsgWaitQueue m_queue;
    VolatileCounter m_requestId;
    UINT32 m_nodeId;
-   UINT32 m_zoneUIN;
+   int32_t m_zoneUIN;
    AgentTunnelState m_state;
    time_t m_startTime;
    TCHAR *m_systemName;
@@ -128,7 +128,7 @@ protected:
    void setup(const NXCPMessage *request);
 
 public:
-   AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId, UINT32 zoneUIN);
+   AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId, int32_t zoneUIN);
    
    void start();
    void shutdown();
@@ -148,7 +148,7 @@ public:
    const TCHAR *getAgentVersion() const { return CHECK_NULL_EX(m_agentVersion); }
    const TCHAR *getAgentBuildTag() const { return CHECK_NULL_EX(m_agentBuildTag); }
    const uuid& getAgentId() const { return m_agentId; }
-   UINT32 getZoneUIN() const { return m_zoneUIN; }
+   int32_t getZoneUIN() const { return m_zoneUIN; }
    bool isBound() const { return m_nodeId != 0; }
    UINT32 getNodeId() const { return m_nodeId; }
    UINT32 getState() const { return m_state; }

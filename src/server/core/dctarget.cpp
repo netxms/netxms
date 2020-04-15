@@ -2205,7 +2205,7 @@ UINT64 DataCollectionTarget::getCacheMemoryUsage()
 uint32_t DataCollectionTarget::getEffectiveWebServiceProxy()
 {
    uint32_t webServiceProxy = 0;
-   uint32_t zoneUIN = getZoneUIN();
+   int32_t zoneUIN = getZoneUIN();
    if (IsZoningEnabled() && (webServiceProxy == 0) && (zoneUIN != 0))
    {
       // Use zone default proxy if set

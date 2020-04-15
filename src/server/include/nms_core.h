@@ -249,7 +249,7 @@ enum DiscoveredAddressSourceType
 struct DiscoveredAddress
 {
    InetAddress ipAddr;
-	UINT32 zoneUIN;
+   int32_t zoneUIN;
 	bool ignoreFilter;
 	BYTE bMacAddr[MAC_ADDR_LENGTH];
 	DiscoveredAddressSourceType sourceType;
@@ -294,7 +294,7 @@ class NXCORE_EXPORTABLE InetAddressListElement
 {
 private:
    AddressListElementType m_type;
-   UINT32 m_zoneUIN;
+   int32_t m_zoneUIN;
    UINT32 m_proxyId;
    InetAddress m_baseAddress;
    InetAddress m_endAddress;
@@ -304,7 +304,7 @@ public:
    InetAddressListElement(NXCPMessage *msg, UINT32 baseId);
    InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr);
    InetAddressListElement(const InetAddress& baseAddr, int maskBits);
-   InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr, UINT32 zoneUIN, UINT32 proxyId);
+   InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr, int32_t zoneUIN, UINT32 proxyId);
    InetAddressListElement(DB_RESULT hResult, int row);
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
@@ -314,7 +314,7 @@ public:
    AddressListElementType getType() const { return m_type; }
    const InetAddress& getBaseAddress() const { return m_baseAddress; }
    const InetAddress& getEndAddress() const { return m_endAddress; }
-   UINT32 getZoneUIN() const { return m_zoneUIN; }
+   int32_t getZoneUIN() const { return m_zoneUIN; }
    UINT32 getProxyId() const { return m_proxyId; }
    const TCHAR *getComments() const { return m_comments; }
 
@@ -684,8 +684,8 @@ private:
    void queryInternalCommunicationTopology(NXCPMessage *pRequest);
    void getDependentNodes(NXCPMessage *request);
 	void sendNotification(NXCPMessage *pRequest);
-	void SendCommunityList(UINT32 dwRqId);
-	void UpdateCommunityList(NXCPMessage *pRequest);
+	void sendNetworkCredList(NXCPMessage *request);
+	void updateCommunityList(NXCPMessage *pRequest);
 	void getPersistantStorage(UINT32 dwRqId);
 	void setPstorageValue(NXCPMessage *pRequest);
 	void deletePstorageValue(NXCPMessage *pRequest);
@@ -706,7 +706,6 @@ private:
 	void closeServerLog(NXCPMessage *request);
 	void queryServerLog(NXCPMessage *request);
 	void getServerLogQueryData(NXCPMessage *request);
-	void sendUsmCredentials(UINT32 dwRqId);
 	void updateUsmCredentials(NXCPMessage *pRequest);
 	void sendDCIThresholds(NXCPMessage *request);
 	void addClusterNode(NXCPMessage *request);
@@ -799,8 +798,8 @@ private:
    void getWebServices(NXCPMessage *request);
    void modifyWebService(NXCPMessage *request);
    void deleteWebService(NXCPMessage *request);
-   void sendSharedSecretList(UINT32 requestId);
    void updateSharedSecretList(NXCPMessage *request);
+   void updateSNMPPortList(NXCPMessage *pRequest);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
@@ -1083,7 +1082,7 @@ void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *psz
 bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool separateRequests);
 SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,
          uint16_t originalPort, SNMP_SecurityContext *originalContext, const StringList &customTestOids,
-         uint32_t zoneUIN);
+         int32_t zoneUIN);
 
 void InitLocalNetInfo();
 
@@ -1114,7 +1113,7 @@ bool DeleteNotificationChannel(const TCHAR *name);
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 
 void CheckForMgmtNode();
-void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId);
+void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId);
 shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData);
 INT64 GetDiscoveryPollerQueueSize();
 
@@ -1142,7 +1141,7 @@ void CloseOtherSessions(UINT32 userId, session_id_t thisSession);
 void GetSysInfoStr(TCHAR *buffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
 
-InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneUIN, const TCHAR *hostname);
+InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname);
 
 BOOL ExecCommand(TCHAR *pszCommand);
 bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
@@ -1183,6 +1182,16 @@ UINT32 DeleteSummaryTable(LONG tableId);
 Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc);
 bool CreateSummaryTableExportRecord(INT32 id, StringBuffer &xml);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite);
+
+void GetFullComunityList(NXCPMessage *msg);
+void GetZoneComunityList(NXCPMessage *msg, int32_t zoneUIN);
+void GetFullUsmCredList(NXCPMessage *msg);
+void GetZoneUsmCredList(NXCPMessage *msg, int32_t zoneUIN);
+void GetFullSnmpPortList(NXCPMessage *msg);
+void GetZoneSnmpPortList(NXCPMessage *msg, int32_t zoneUIN);
+void GetFullAgentSecretList(NXCPMessage *msg);
+void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN);
+
 
 void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
@@ -1306,7 +1315,7 @@ UINT32 DeleteScript(const NXCPMessage *request);
 /**
  * ICMP scan
  */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, uint32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
+void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
 
 /**
  * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence

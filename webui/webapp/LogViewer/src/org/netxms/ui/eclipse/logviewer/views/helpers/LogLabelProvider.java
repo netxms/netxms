@@ -246,7 +246,7 @@ public class LogLabelProvider implements ITableLabelProvider
          case LogColumn.LC_ZONE_UIN:
             try
             {
-               long uin = Long.parseLong(value);
+               int uin = Integer.parseInt(value);
                Zone zone = session.findZone(uin);
                return (zone != null) ? zone.getObjectName() : "[" + uin + "]";
             }

@@ -651,6 +651,8 @@ typedef struct
 #define CMD_UPDATE_ENVIRONMENT            0x0197
 #define CMD_GET_SHARED_SECRET_LIST        0x0198
 #define CMD_UPDATE_SHARED_SECRET_LIST     0x0199
+#define CMD_GET_SNMP_PORT_LIST            0x019A
+#define CMD_UPDATE_SNMP_PORT_LIST         0x019B
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

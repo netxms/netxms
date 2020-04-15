@@ -33,7 +33,7 @@ public class InetAddressListElement
 	private InetAddress baseAddress;
 	private InetAddress endAddress;
 	private int maskBits;
-	private long zoneUIN;
+	private int zoneUIN;
 	private long proxyId;
 	private String comment;
 	
@@ -46,7 +46,7 @@ public class InetAddressListElement
 	 * @param proxyId proxy node ID
 	 * @param comment element comment
 	 */
-	public InetAddressListElement(InetAddress baseAddress, InetAddress endAddress, long zoneUIN, long proxyId, String comment)
+	public InetAddressListElement(InetAddress baseAddress, InetAddress endAddress, int zoneUIN, long proxyId, String comment)
 	{
 		this.type = RANGE;
 		this.baseAddress = baseAddress;
@@ -66,7 +66,7 @@ public class InetAddressListElement
     * @param proxyId proxy node ID
     * @param comment element comment
     */
-   public InetAddressListElement(InetAddress baseAddress, int maskBits, long zoneUIN, long proxyId, String comment)
+   public InetAddressListElement(InetAddress baseAddress, int maskBits, int zoneUIN, long proxyId, String comment)
    {
       this.type = SUBNET;
       this.baseAddress = baseAddress;
@@ -86,7 +86,7 @@ public class InetAddressListElement
     * @param proxyId proxy node ID
     * @param comment element comment
     */
-   public void update(InetAddress baseAddress, InetAddress endAddress, long zoneUIN, long proxyId, String comment)
+   public void update(InetAddress baseAddress, InetAddress endAddress, int zoneUIN, long proxyId, String comment)
    {
       this.type = RANGE;
       this.baseAddress = baseAddress;
@@ -106,7 +106,7 @@ public class InetAddressListElement
     * @param proxyId proxy node ID
     * @param comment element comment
     */
-   public void update(InetAddress baseAddress, int maskBits, long zoneUIN, long proxyId, String comment)
+   public void update(InetAddress baseAddress, int maskBits, int zoneUIN, long proxyId, String comment)
    {
       this.type = SUBNET;
       this.baseAddress = baseAddress;
@@ -137,7 +137,7 @@ public class InetAddressListElement
 		   endAddress = msg.getFieldAsInetAddress(baseId + 2);
 		   maskBits = 0;
 		}
-      zoneUIN = msg.getFieldAsInt64(baseId + 3);
+      zoneUIN = msg.getFieldAsInt32(baseId + 3);
       proxyId = msg.getFieldAsInt64(baseId + 4);
       comment = msg.getFieldAsString(baseId + 5);
 	}
@@ -196,7 +196,7 @@ public class InetAddressListElement
    /**
     * @return the zoneUIN
     */
-   public long getZoneUIN()
+   public int getZoneUIN()
    {
       return zoneUIN;
    }

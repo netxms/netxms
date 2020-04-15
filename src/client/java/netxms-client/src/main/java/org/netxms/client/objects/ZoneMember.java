@@ -28,7 +28,7 @@ public interface ZoneMember
     * 
     * @return zone ID
     */
-   abstract public long getZoneId();
+   abstract public int getZoneId();
    
    /**
     * Get name of the zone this object belongs to

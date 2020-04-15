@@ -91,7 +91,7 @@ private:
    UINT32 m_flags;
    EventOrigin m_origin;
    UINT32 m_sourceId;
-   UINT32 m_zoneUIN;
+   int32_t m_zoneUIN;
    UINT32 m_dciId;
 	TCHAR m_name[MAX_EVENT_NAME];
    TCHAR *m_messageText;
@@ -120,7 +120,7 @@ public:
    UINT32 getFlags() const { return m_flags; }
    EventOrigin getOrigin() const { return m_origin; }
    UINT32 getSourceId() const { return m_sourceId; }
-   UINT32 getZoneUIN() const { return m_zoneUIN; }
+   int32_t getZoneUIN() const { return m_zoneUIN; }
    UINT32 getDciId() const { return m_dciId; }
 	const TCHAR *getName() const { return m_name; }
    const TCHAR *getMessage() const { return m_messageText; }

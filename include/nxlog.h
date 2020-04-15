@@ -59,7 +59,7 @@ typedef struct
    int32_t nFacility;
    int32_t nSeverity;
    uint32_t dwSourceObject;
-   uint32_t zoneUIN;
+   int32_t zoneUIN;
    char szHostName[MAX_SYSLOG_HOSTNAME_LEN];
    char szTag[MAX_SYSLOG_TAG_LEN];
    char szMessage[MAX_LOG_MSG_LENGTH];

@@ -73,15 +73,15 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
          case ObjectFinder.COL_ZONE:
             if (object instanceof AbstractNode)
             {
-               long zoneId = ((AbstractNode)object).getZoneId();
+               int zoneId = ((AbstractNode)object).getZoneId();
                Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
-               return (zone != null) ? zone.getObjectName() + " (" + Long.toString(zoneId) + ")" : Long.toString(zoneId); 
+               return (zone != null) ? zone.getObjectName() + " (" + Integer.toString(zoneId) + ")" : Integer.toString(zoneId); 
             }
             else if (object instanceof Interface)
             {
-               long zoneId = ((Interface)object).getZoneId();
+               int zoneId = ((Interface)object).getZoneId();
                Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
-               return (zone != null) ? zone.getObjectName() + " (" + Long.toString(zoneId) + ")" : Long.toString(zoneId); 
+               return (zone != null) ? zone.getObjectName() + " (" + Integer.toString(zoneId) + ")" : Integer.toString(zoneId); 
             }
             return null;
       }

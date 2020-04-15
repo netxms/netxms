@@ -252,7 +252,7 @@ static bool PollerQueueElementComparator(const InetAddress *key, const Discovere
 /**
  * Check potential new node from sysog, SNMP trap, or address range scan
  */
-void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
+void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
 {
 	TCHAR buffer[64];
 	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d (source: %s)"),
@@ -493,7 +493,7 @@ void DiscoveryPoller(PollerInfo *poller)
 /**
  * Callback for address range scan
  */
-void RangeScanCallback(const InetAddress& addr, uint32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context)
+void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context)
 {
    TCHAR ipAddrText[64];
    if (proxy != nullptr)
@@ -512,7 +512,7 @@ void RangeScanCallback(const InetAddress& addr, uint32_t zoneUIN, const Node *pr
 /**
  * Check given address range with ICMP ping for new nodes
  */
-void CheckRange(const InetAddressListElement& range, void (*callback)(const InetAddress&, uint32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
+void CheckRange(const InetAddressListElement& range, void (*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context)
 {
    if (range.getBaseAddress().getFamily() != AF_INET)
    {

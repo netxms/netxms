@@ -33,7 +33,7 @@ Subnet::Subnet() : super()
 /**
  * Subnet class constructor
  */
-Subnet::Subnet(const InetAddress& addr, UINT32 zoneUIN, bool bSyntheticMask) : super()
+Subnet::Subnet(const InetAddress& addr, int32_t zoneUIN, bool bSyntheticMask) : super()
 {
    TCHAR szBuffer[64];
    _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), addr.toString(szBuffer), addr.getMaskBits());

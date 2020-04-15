@@ -78,8 +78,7 @@ public class SnmpUsmCredential
 		msg.setFieldInt16(baseId + 2, privMethod);
 		msg.setField(baseId + 3, authPassword);
 		msg.setField(baseId + 4, privPassword);
-      msg.setFieldInt32(baseId + 5, zoneId);
-      msg.setField(baseId + 6, comment);
+      msg.setField(baseId + 5, comment);
 	}
 
 	/**

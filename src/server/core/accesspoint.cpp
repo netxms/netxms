@@ -541,7 +541,7 @@ NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm) const
 /**
  * Get access point's zone UIN
  */
-uint32_t AccessPoint::getZoneUIN() const
+int32_t AccessPoint::getZoneUIN() const
 {
    shared_ptr<Node> node = getParentNode();
    return (node != nullptr) ? node->getZoneUIN() : 0;

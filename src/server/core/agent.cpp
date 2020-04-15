@@ -26,8 +26,8 @@
 /**
  * Externals
  */
-void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
-void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneUIN, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen);
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
+void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen);
 
 /**
  * Create normal agent connection
@@ -176,7 +176,7 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
    TCHAR buffer[64];
    debugPrintf(3, _T("AgentConnectionEx::onSyslogMessage(): Received message from agent at %s, node ID %d"), getIpAddr().toString(buffer), m_nodeId);
 
-   UINT32 zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
+   int32_t zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
    shared_ptr<Node> node;
    if (m_nodeId != 0)
       node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
@@ -444,7 +444,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          InetAddress originSenderIP = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
          size_t pduLenght;
          const BYTE *pduBytes = msg->getBinaryFieldPtr(VID_PDU, &pduLenght);
-         UINT32 zoneUIN = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_UIN) : 0;
+         int32_t zoneUIN = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_UIN) : 0;
          shared_ptr<Node> originNode = FindNodeByIP(zoneUIN, originSenderIP);
          if ((originNode != nullptr) || ConfigReadBoolean(_T("LogAllSNMPTraps"), false))
          {

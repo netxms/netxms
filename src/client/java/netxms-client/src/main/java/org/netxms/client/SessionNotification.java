@@ -81,7 +81,10 @@ public class SessionNotification
    public static final int USER_AGENT_MESSAGE_CHANGED = 1041;
    public static final int NOTIFICATION_CHANNEL_CHANGED = 1042;
    public static final int PHYSICAL_LINK_UPDATE = 1043;
-   public static final int PHYSICAL_LINK_DELETE = 1044;
+   public static final int COMMUNITIES_CONFIG_CHANGED = 1044;
+   public static final int USM_CONFIG_CHANGED = 1045;
+   public static final int PORTS_CONFIG_CHANGED = 1046;
+   public static final int SECRET_CONFIG_CHANGED = 1047;
 	
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

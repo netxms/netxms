@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ZoneSelector extends AbstractSelector
 {
-   private long zoneUIN = -1;
+   private int zoneUIN = -1;
    private String emptySelectionName = "<none>";
    
    /**
@@ -75,7 +75,7 @@ public class ZoneSelector extends AbstractSelector
     * 
     * @return selected zone UIN
     */
-   public long getZoneUIN()
+   public int getZoneUIN()
    {
       return zoneUIN;
    }
@@ -95,7 +95,7 @@ public class ZoneSelector extends AbstractSelector
     * 
     * @param zoneUIN new zone UIN
     */
-   public void setZoneUIN(long zoneUIN)
+   public void setZoneUIN(int zoneUIN)
    {
       this.zoneUIN = zoneUIN;
       if (zoneUIN == -1)

@@ -24,6 +24,90 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.7 to 32.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE snmp_ports (")
+         _T("id integer not null,")
+         _T("port integer null,")
+         _T("zone integer null,")
+         _T("PRIMARY KEY(id,zone))")));
+
+   //get default ports
+   TCHAR ports[2000];
+   ports[0] = 0;
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='SNMPPorts'"));
+   if (hResult != NULL)
+   {
+      if(DBGetNumRows(hResult) > 0)
+      {
+         DBGetField(hResult, 0, 0, ports, 2000);
+      }
+      DBFreeResult(hResult);
+   }
+
+   int id = 1;
+   if (ports[0] != 0)
+   {
+      Trim(ports);
+      StringList portList(ports, _T(","));
+      for (int i = 0; i < portList.size(); i++)
+      {
+         UINT16 port = (UINT16)_tcstoul(portList.get(i), NULL, 10);
+         if (port == 0)
+            continue;
+
+         TCHAR query[1024];
+         _sntprintf(query, 1024, _T("INSERT INTO snmp_ports (id,port,zone) VALUES(%d,%d,-1)"), id++, port);
+         CHK_EXEC(SQLQuery(query));
+      }
+   }
+
+   //collect zone ports
+   hResult = SQLSelect(_T("SELECT zone_guid,snmp_ports FROM zones"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for (int j = 0; j < count; j++)
+      {
+         ports[0] = 0;
+         int zoneId = DBGetFieldULong(hResult, j, 0);
+         DBGetField(hResult, j, 1, ports, 2000);
+
+         Trim(ports);
+         StringList portList(ports, _T(","));
+         for (int i = 0; i < portList.size(); i++)
+         {
+            UINT16 port = (UINT16)_tcstoul(portList.get(i), NULL, 10);
+            if (port == 0)
+               continue;
+
+            TCHAR query[1024];
+            _sntprintf(query, 1024, _T("INSERT INTO snmp_ports (id,port,zone) VALUES(%d,%d,%d)"), id++, port, zoneId);
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='SNMPPorts'")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("zones"), _T("snmp_ports")));
+
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("snmp_communities")));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("usm_credentials")));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("shared_secrets")));
+
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("snmp_communities"), _T("id,zone")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("usm_credentials"), _T("id,zone")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("shared_secrets"),  _T("id,zone")));
+
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 32.6 to 32.7
  */
 static bool H_UpgradeFromV6()
@@ -217,8 +301,10 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 7,  33, 8,  H_UpgradeFromV7  },
    { 6,  33, 7,  H_UpgradeFromV6  },
    { 5,  33, 6,  H_UpgradeFromV5  },
+   { 5,  34, 6,  H_UpgradeFromV5  },
    { 4,  33, 5,  H_UpgradeFromV4  },
    { 3,  33, 4,  H_UpgradeFromV3  },
    { 2,  33, 3,  H_UpgradeFromV2  },

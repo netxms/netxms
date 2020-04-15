@@ -617,7 +617,7 @@ struct ProxyMsg
    UINT64 serverId;
    UINT32 proxyIdDest;
    UINT32 proxyIdSelf;
-   UINT32 zoneUin;
+   int32_t zoneUin;
    BYTE hmac[SHA256_DIGEST_SIZE];
 };
 
@@ -635,18 +635,18 @@ class ZoneConfiguration
 private:
    UINT64 m_serverId;
    UINT32 m_thisNodeId;
-   UINT32 m_zoneUin;
+   int32_t m_zoneUin;
    BYTE m_sharedSecret[ZONE_PROXY_KEY_LENGTH];
 
 public:
-   ZoneConfiguration(UINT64 serverId, UINT32 thisNodeId, UINT32 zoneUin, BYTE *sharedSecret);
+   ZoneConfiguration(UINT64 serverId, UINT32 thisNodeId, int32_t zoneUin, BYTE *sharedSecret);
    ZoneConfiguration(const ZoneConfiguration *cfg);
 
    void update(const ZoneConfiguration *cfg);
 
    UINT64 getServerId() const { return m_serverId; }
    UINT32 getThisNodeId() const { return m_thisNodeId; }
-   UINT32 getZoneUIN() const { return m_zoneUin; }
+   int32_t getZoneUIN() const { return m_zoneUin; }
    const BYTE *getSharedSecret() const { return m_sharedSecret; }
 };
 
@@ -867,7 +867,7 @@ extern UINT32 g_snmpTimeout;
 extern UINT16 g_snmpTrapPort;
 extern UINT32 g_longRunningQueryThreshold;
 extern UINT16 g_sessionAgentPort;
-extern UINT32 g_zoneUIN;
+extern int32_t g_zoneUIN;
 extern UINT32 g_tunnelKeepaliveInterval;
 extern UINT16 g_syslogListenPort;
 extern shared_ptr_store<Config> g_config;

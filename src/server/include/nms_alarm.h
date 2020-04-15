@@ -42,7 +42,7 @@ private:
    time_t m_lastChangeTime;  // Alarm's last change time in UNIX time format
    uuid m_rule;              // GUID of EPP rule that generates this alarm
    UINT32 m_sourceObject;    // Source object ID
-   UINT32 m_zoneUIN;         // Zone UIN for source object
+   int32_t m_zoneUIN;        // Zone UIN for source object
    UINT32 m_sourceEventCode; // Originating event code
    TCHAR *m_eventTags;       // Tags of originating event
    UINT32 m_dciId;           // related DCI ID

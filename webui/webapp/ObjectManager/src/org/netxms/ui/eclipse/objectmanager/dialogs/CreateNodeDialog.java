@@ -81,7 +81,7 @@ public class CreateNodeDialog extends Dialog
    private long etherNetIpProxy = 0;
    private long icmpProxy = 0;
    private long sshProxy = 0;
-	private long zoneUIN = 0;
+	private int zoneUIN = 0;
 	private int agentPort = 4700;
 	private int snmpPort = 161;
    private int etherNetIpPort = 44818;
@@ -465,7 +465,7 @@ public class CreateNodeDialog extends Dialog
    /**
 	 * @return the zoneId
 	 */
-	public long getZoneUIN()
+	public int getZoneUIN()
 	{
 		return zoneUIN;
 	}
@@ -475,7 +475,7 @@ public class CreateNodeDialog extends Dialog
 	 * 
     * @param zoneUIN zone UIN
     */
-   public void setZoneUIN(long zoneUIN)
+   public void setZoneUIN(int zoneUIN)
    {
       this.zoneUIN = zoneUIN;
    }

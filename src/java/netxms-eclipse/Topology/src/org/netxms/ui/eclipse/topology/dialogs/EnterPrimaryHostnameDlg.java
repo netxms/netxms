@@ -96,7 +96,7 @@ public class EnterPrimaryHostnameDlg extends Dialog
          IDialogSettings settings = Activator.getDefault().getDialogSettings();
          try
          {
-            long uin = settings.getLong("HostNameSelection.ZoneUIN");
+            int uin = settings.getInt("HostNameSelection.ZoneUIN");
             if (ConsoleSharedData.getSession().findZone(uin) != null)
                zoneSelector.setZoneUIN(uin);
          }

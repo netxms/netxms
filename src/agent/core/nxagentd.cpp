@@ -94,7 +94,7 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection);
 void InitSessionList();
 void DestroySessionList();
 
-BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN);
+BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN);
 
 void UpdatePolicyInventory();
 
@@ -205,7 +205,7 @@ UINT32 g_dcWriterFlushInterval = 5000;
 UINT32 g_dcWriterMaxTransactionSize = 10000;
 UINT32 g_dcMaxCollectorPoolSize = 64;
 UINT32 g_dcOfflineExpirationTime = 10; // 10 days
-UINT32 g_zoneUIN = 0;
+int32_t g_zoneUIN = 0;
 UINT32 g_tunnelKeepaliveInterval = 30;
 UINT16 g_syslogListenPort = 514;
 #ifdef _WIN32
@@ -1690,7 +1690,7 @@ int main(int argc, char *argv[])
       {
          case 'B':  //zone UIN
          {
-            UINT32 zoneUIN = strtoul(optarg, &eptr, 0);
+            int32_t zoneUIN = strtol(optarg, &eptr, 0);
             if ((*eptr != 0))
             {
                fprintf(stderr, "Invalid zone UIN: %s\n", optarg);

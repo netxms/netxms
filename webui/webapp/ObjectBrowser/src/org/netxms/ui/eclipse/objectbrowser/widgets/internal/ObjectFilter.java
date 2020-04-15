@@ -130,7 +130,7 @@ public class ObjectFilter extends ViewerFilter
 			case ZONE:
 			   if (object instanceof AbstractNode)
 			   {
-			      long zoneUIN = ((AbstractNode)object).getZoneId();
+			      int zoneUIN = ((AbstractNode)object).getZoneId();
 			      if (String.valueOf(zoneUIN).startsWith(filterString))
 			         return true;
 			      else

@@ -1037,19 +1037,19 @@ void ClientSession::processRequest(NXCPMessage *request)
          sendNotification(request);
          break;
       case CMD_GET_COMMUNITY_LIST:
-         SendCommunityList(request->getId());
+      case CMD_GET_USM_CREDENTIALS:
+      case CMD_GET_SNMP_PORT_LIST:
+      case CMD_GET_SHARED_SECRET_LIST:
+         sendNetworkCredList(request);
          break;
       case CMD_UPDATE_COMMUNITY_LIST:
-         UpdateCommunityList(request);
-         break;
-      case CMD_GET_SHARED_SECRET_LIST:
-         sendSharedSecretList(request->getId());
+         updateCommunityList(request);
          break;
       case CMD_UPDATE_SHARED_SECRET_LIST:
          updateSharedSecretList(request);
          break;
-      case CMD_GET_USM_CREDENTIALS:
-         sendUsmCredentials(request->getId());
+      case CMD_UPDATE_SNMP_PORT_LIST:
+         updateSNMPPortList(request);
          break;
       case CMD_UPDATE_USM_CREDENTIALS:
          updateUsmCredentials(request);
@@ -2830,7 +2830,7 @@ void ClientSession::notify(UINT32 dwCode, UINT32 dwData)
 /**
  * Set information about conflicting nodes to VID_VALUE field
  */
-static void SetNodesConflictString(NXCPMessage *msg, uint32_t zoneUIN, const InetAddress& ipAddr)
+static void SetNodesConflictString(NXCPMessage *msg, int32_t zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValid())
       return;
@@ -5149,7 +5149,7 @@ void ClientSession::createObject(NXCPMessage *request)
    msg.setId(request->getId());
 
    int objectClass = request->getFieldAsUInt16(VID_OBJECT_CLASS);
-	UINT32 zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
+   int32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
 
    // Find parent object
    shared_ptr<NetObj> parent = FindObjectById(request->getFieldAsUInt32(VID_PARENT_ID));
@@ -7565,7 +7565,7 @@ void ClientSession::changeObjectZone(NXCPMessage *pRequest)
       {
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-				UINT32 zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
+			   int32_t zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
 				shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
 				if (zone != nullptr)
 				{
@@ -8877,8 +8877,7 @@ void ClientSession::DeleteAgentConfig(NXCPMessage *pRequest)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            _sntprintf(szQuery, 256, _T("DELETE FROM agent_configs WHERE config_id=%d"), dwCfgId);
-            if (DBQuery(hdb, szQuery))
+            if (ExecuteQueryOnObject(hdb, dwCfgId, _T("DELETE FROM agent_configs WHERE config_id=?")))
             {
                msg.setField(VID_RCC, RCC_SUCCESS);
             }
@@ -9968,8 +9967,7 @@ void ClientSession::deleteCertificate(NXCPMessage *pRequest)
 #ifdef _WITH_ENCRYPTION
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		dwCertId = pRequest->getFieldAsUInt32(VID_CERTIFICATE_ID);
-		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM certificates WHERE cert_id=%d"), dwCertId);
-		if (DBQuery(hdb, szQuery))
+		if (ExecuteQueryOnObject(hdb, dwCertId, _T("DELETE FROM certificates WHERE cert_id=?")))
 		{
 			msg.setField(VID_RCC, RCC_SUCCESS);
 			NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
@@ -10310,38 +10308,60 @@ void ClientSession::sendNotification(NXCPMessage *pRequest)
 /**
  * Send SNMP community list
  */
-void ClientSession::SendCommunityList(UINT32 dwRqId)
+void ClientSession::sendNetworkCredList(NXCPMessage *request)
 {
    NXCPMessage msg;
-	TCHAR buffer[256];
-	DB_RESULT hResult;
-
-	msg.setId(dwRqId);
+	msg.setId(request->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, _T("SELECT community,zone FROM snmp_communities ORDER BY zone DESC, id ASC"));
-		if (hResult != nullptr)
-		{
-			int count = DBGetNumRows(hResult);
-			UINT32 stringBase = VID_COMMUNITY_STRING_LIST_BASE, zoneBase = VID_COMMUNITY_STRING_ZONE_LIST_BASE;
-			msg.setField(VID_NUM_STRINGS, (UINT32)count);
-			for(int i = 0; i < count; i++)
-			{
-				DBGetField(hResult, i, 0, buffer, 256);
-				msg.setField(stringBase++, buffer);
-				msg.setField(zoneBase++, DBGetFieldULong(hResult, i, 1));
-			}
-			DBFreeResult(hResult);
-			msg.setField(VID_RCC, RCC_SUCCESS);
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_DB_FAILURE);
-		}
-      DBConnectionPoolReleaseConnection(hdb);
+	   bool allZones = !request->isFieldExist(VID_ZONE_UIN);
+	   if (allZones)
+	   {
+	      switch (request->getCode())
+	      {
+	         case CMD_GET_COMMUNITY_LIST:
+	            GetFullComunityList(&msg);
+	            break;
+	         case CMD_GET_USM_CREDENTIALS:
+	            GetFullUsmCredList(&msg);
+               break;
+	         case CMD_GET_SNMP_PORT_LIST:
+	            GetFullSnmpPortList(&msg);
+	            break;
+	         case CMD_GET_SHARED_SECRET_LIST:
+	            GetFullAgentSecretList(&msg);
+	            break;
+	      }
+	   }
+	   else
+	   {
+	      int32_t zoneUIN = request->getFieldAsInt32(VID_ZONE_UIN);
+	      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+	      if (zone == nullptr && zoneUIN != SNMP_CONFIG_GLOBAL)
+	      {
+	         msg.setField(VID_RCC, RCC_INVALID_ZONE_ID);
+	      }
+	      else
+	      {
+	         switch(request->getCode())
+	         {
+               case CMD_GET_COMMUNITY_LIST:
+                  GetZoneComunityList(&msg, zoneUIN);
+                  break;
+               case CMD_GET_USM_CREDENTIALS:
+                  GetZoneUsmCredList(&msg, zoneUIN);
+                  break;
+               case CMD_GET_SNMP_PORT_LIST:
+                  GetZoneSnmpPortList(&msg, zoneUIN);
+                  break;
+               case CMD_GET_SHARED_SECRET_LIST:
+                  GetZoneAgentSecretList(&msg, zoneUIN);
+                  break;
+	         }
+	      }
+	   }
 	}
 	else
 	{
@@ -10354,7 +10374,7 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 /**
  * Update SNMP community list
  */
-void ClientSession::UpdateCommunityList(NXCPMessage *pRequest)
+void ClientSession::updateCommunityList(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 	UINT32 rcc = RCC_SUCCESS;
@@ -10364,39 +10384,49 @@ void ClientSession::UpdateCommunityList(NXCPMessage *pRequest)
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		if (DBBegin(hdb))
-		{
-			DBQuery(hdb, _T("DELETE FROM snmp_communities"));
-         UINT32 stringBase = VID_COMMUNITY_STRING_LIST_BASE, zoneBase = VID_COMMUNITY_STRING_ZONE_LIST_BASE;
-			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_communities (id,community,zone) VALUES(?,?,?)"));
-			if (hStmt != nullptr)
-			{
-	         int count = pRequest->getFieldAsUInt32(VID_NUM_STRINGS);
-	         for(int i = 0; i < count; i++)
-	         {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-	            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(stringBase++), DB_BIND_DYNAMIC);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pRequest->getFieldAsUInt32(zoneBase++));
-	            if (!DBExecute(hStmt))
-	            {
-	               rcc = RCC_DB_FAILURE;
-	               break;
-	            }
-	         }
-			   DBFreeStatement(hStmt);
-			}
-			else
-			   rcc = RCC_DB_FAILURE;
+      int32_t zoneUIN = pRequest->getFieldAsInt32(VID_ZONE_UIN);
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zoneUIN == -1 || zone != nullptr)
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         if (DBBegin(hdb))
+         {
+            ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM snmp_communities WHERE zone=?"));
+            UINT32 stringBase = VID_COMMUNITY_STRING_LIST_BASE;
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_communities (id,community,zone) VALUES(?,?,?)"), true);
+            if (hStmt != nullptr)
+            {
+               int count = pRequest->getFieldAsUInt32(VID_NUM_STRINGS);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
+               for(int i = 0; i < count; i++)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(stringBase++), DB_BIND_DYNAMIC);
+                  if (!DBExecute(hStmt))
+                  {
+                     rcc = RCC_DB_FAILURE;
+                     break;
+                  }
+               }
+               DBFreeStatement(hStmt);
+            }
+            else
+               rcc = RCC_DB_FAILURE;
 
-			if (rcc == RCC_SUCCESS)
-				DBCommit(hdb);
-			else
-				DBRollback(hdb);
-		}
-		else
-		   rcc = RCC_DB_FAILURE;
-      DBConnectionPoolReleaseConnection(hdb);
+            if (rcc == RCC_SUCCESS)
+            {
+               DBCommit(hdb);
+               NotifyClientSessions(NX_NOTIFY_COMMUNITIES_CONFIG_CHANGED, zoneUIN);
+            }
+            else
+               DBRollback(hdb);
+         }
+         else
+            rcc = RCC_DB_FAILURE;
+         DBConnectionPoolReleaseConnection(hdb);
+      }
+      else
+         rcc = RCC_INVALID_ZONE_ID;
 	}
 	else
 		rcc = RCC_ACCESS_DENIED;
@@ -10488,7 +10518,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
 
 	if (ConfigReadBoolean(_T("EnableAgentRegistration"), false))
 	{
-	   UINT32 zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
+	   int32_t zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
       shared_ptr<Node> node = FindNodeByIP(zoneUIN, m_clientAddr);
       if (node != nullptr)
       {
@@ -11308,64 +11338,6 @@ void ClientSession::getServerLogQueryData(NXCPMessage *request)
 }
 
 /**
- * Send SNMP v3 USM credentials
- */
-void ClientSession::sendUsmCredentials(UINT32 dwRqId)
-{
-   NXCPMessage msg;
-	int i, count;
-	UINT32 id;
-	TCHAR buffer[MAX_DB_STRING];
-	DB_RESULT hResult;
-
-	msg.setId(dwRqId);
-	msg.setCode(CMD_REQUEST_COMPLETED);
-
-	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
-	{
-	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone,comments FROM usm_credentials ORDER BY zone"));
-		if (hResult != nullptr)
-		{
-			count = DBGetNumRows(hResult);
-			msg.setField(VID_NUM_RECORDS, (UINT32)count);
-			for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 3)
-			{
-				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// security name
-				msg.setField(id++, buffer);
-
-				msg.setField(id++, (WORD)DBGetFieldLong(hResult, i, 1));	// auth method
-				msg.setField(id++, (WORD)DBGetFieldLong(hResult, i, 2));	// priv method
-
-				DBGetField(hResult, i, 3, buffer, MAX_DB_STRING);	// auth password
-				msg.setField(id++, buffer);
-
-				DBGetField(hResult, i, 4, buffer, MAX_DB_STRING);	// priv password
-				msg.setField(id++, buffer);
-
-				msg.setField(id++, DBGetFieldULong(hResult, i, 5)); // zone ID
-
-				TCHAR comments[256];
-				msg.setField(id++, DBGetField(hResult, i, 6, comments, 256)); //comment
-			}
-			DBFreeResult(hResult);
-			msg.setField(VID_RCC, RCC_SUCCESS);
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_DB_FAILURE);
-		}
-		DBConnectionPoolReleaseConnection(hdb);
-	}
-	else
-	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
-
-	sendMessage(&msg);
-}
-
-/**
  * Update SNMP v3 USM credentials
  */
 void ClientSession::updateUsmCredentials(NXCPMessage *request)
@@ -11378,55 +11350,62 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		if (DBBegin(hdb))
-		{
-
-			if (DBQuery(hdb, _T("DELETE FROM usm_credentials")))
-			{
-			   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password,zone,comments) VALUES(?,?,?,?,?,?,?,?)"));
-			   if (hStmt != nullptr)
-			   {
-		         UINT32 id = VID_USM_CRED_LIST_BASE;
-		         int count = (int)request->getFieldAsUInt32(VID_NUM_RECORDS);
-               for(int i = 0; i < count; i++, id += 3)
+      int32_t zoneUIN = request->getFieldAsInt32(VID_ZONE_UIN);
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zoneUIN == -1 || zone != nullptr)
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         if (DBBegin(hdb))
+         {
+            if (ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM usm_credentials WHERE zone=?")))
+            {
+               DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password,comments,zone) VALUES(?,?,?,?,?,?,?,?)"), true);
+               if (hStmt != nullptr)
                {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
-                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Auth method
-                  DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Priv method
-                  DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
-                  DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
-                  DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt32(id++));
-                  DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
-                  if (!DBExecute(hStmt))
+                  UINT32 id = VID_USM_CRED_LIST_BASE;
+                  int count = (int)request->getFieldAsUInt32(VID_NUM_RECORDS);
+                  DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, zoneUIN);
+                  for(int i = 0; i < count; i++, id += 4)
                   {
-                     rcc = RCC_DB_FAILURE;
-                     break;
+                     DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
+                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
+                     DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Auth method
+                     DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Priv method
+                     DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
+                     DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
+                     DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
+                     if (!DBExecute(hStmt))
+                     {
+                        rcc = RCC_DB_FAILURE;
+                        break;
+                     }
                   }
+                  DBFreeStatement(hStmt);
                }
-               DBFreeStatement(hStmt);
-			   }
-	         else
-	         {
-	            rcc = RCC_DB_FAILURE;
-	         }
-			}
+               else
+               {
+                  rcc = RCC_DB_FAILURE;
+               }
+            }
+            else
+            {
+               rcc = RCC_DB_FAILURE;
+            }
+
+            if (rcc == RCC_SUCCESS)
+            {
+               DBCommit(hdb);
+               NotifyClientSessions(NX_NOTIFY_USM_CONFIG_CHANGED, zoneUIN);
+            }
+            else
+               DBRollback(hdb);
+         }
          else
          {
             rcc = RCC_DB_FAILURE;
          }
-
-			if (rcc == RCC_SUCCESS)
-            DBCommit(hdb);
-         else
-            DBRollback(hdb);
-		}
-      else
-      {
-         rcc = RCC_DB_FAILURE;
+         DBConnectionPoolReleaseConnection(hdb);
       }
-		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
       rcc = RCC_ACCESS_DENIED;
@@ -11617,7 +11596,7 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 
 	MacAddress macAddr;
 	bool found = false;
-	uint32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
+	int32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
 	InetAddress ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
 	shared_ptr<Interface> iface = FindInterfaceByIP(zoneUIN, ipAddr);
 	if ((iface != nullptr) && iface->getMacAddr().isValid())
@@ -11719,7 +11698,7 @@ void ClientSession::findHostname(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setField(VID_RCC, RCC_SUCCESS);
 
-   uint32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
+   int32_t zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
    TCHAR hostname[MAX_DNS_NAME];
    request->getFieldAsString(VID_HOSTNAME, hostname, MAX_DNS_NAME);
 
@@ -15104,47 +15083,6 @@ void ClientSession::deleteWebService(NXCPMessage *request)
 }
 
 /**
- * Send shared secret list
- */
-void ClientSession::sendSharedSecretList(UINT32 dwRqId)
-{
-   NXCPMessage msg;
-   msg.setId(dwRqId);
-   msg.setCode(CMD_REQUEST_COMPLETED);
-
-   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
-   {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT secret,zone FROM shared_secrets ORDER BY zone DESC, id ASC"));
-      if (hResult != nullptr)
-      {
-         int count = DBGetNumRows(hResult);
-         UINT32 baseId = VID_SHARED_SECRET_LIST_BASE;
-         msg.setField(VID_NUM_ELEMENTS, (UINT32)count);
-         for(int i = 0; i < count; i++, baseId +=8)
-         {
-            TCHAR buffer[MAX_SECRET_LENGTH];
-            msg.setField(baseId++, DBGetField(hResult, i, 0, buffer, MAX_SECRET_LENGTH));
-            msg.setField(baseId++, DBGetFieldULong(hResult, i, 1));
-         }
-         DBFreeResult(hResult);
-         msg.setField(VID_RCC, RCC_SUCCESS);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   sendMessage(&msg);
-}
-
-/**
  * Update shared secret list
  */
 void ClientSession::updateSharedSecretList(NXCPMessage *pRequest)
@@ -15157,39 +15095,49 @@ void ClientSession::updateSharedSecretList(NXCPMessage *pRequest)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      if (DBBegin(hdb))
+      int32_t zoneUIN = pRequest->getFieldAsInt32(VID_ZONE_UIN);
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zoneUIN == -1 || zone != nullptr)
       {
-         DBQuery(hdb, _T("DELETE FROM shared_secrets"));
-         UINT32 baseId = VID_SHARED_SECRET_LIST_BASE;
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO shared_secrets (id,secret,zone) VALUES(?,?,?)"));
-         if (hStmt != nullptr)
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         if (DBBegin(hdb))
          {
-            int count = pRequest->getFieldAsUInt32(VID_NUM_ELEMENTS);
-            for(int i = 0; i < count; i++, baseId += 8)
+            ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM shared_secrets WHERE zone=?"));
+            UINT32 baseId = VID_SHARED_SECRET_LIST_BASE;
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO shared_secrets (id,secret,zone) VALUES(?,?,?)"), true);
+            if (hStmt != nullptr)
             {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(baseId++), DB_BIND_DYNAMIC);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pRequest->getFieldAsUInt32(baseId++));
-               if (!DBExecute(hStmt))
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
+               int count = pRequest->getFieldAsUInt32(VID_NUM_ELEMENTS);
+               for(int i = 0; i < count; i++)
                {
-                  rcc = RCC_DB_FAILURE;
-                  break;
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(baseId++), DB_BIND_DYNAMIC);
+                  if (!DBExecute(hStmt))
+                  {
+                     rcc = RCC_DB_FAILURE;
+                     break;
+                  }
                }
+               DBFreeStatement(hStmt);
             }
-            DBFreeStatement(hStmt);
+            else
+               rcc = RCC_DB_FAILURE;
+
+            if (rcc == RCC_SUCCESS)
+            {
+               DBCommit(hdb);
+               NotifyClientSessions(NX_NOTIFY_SECRET_CONFIG_CHANGED, zoneUIN);
+            }
+            else
+               DBRollback(hdb);
          }
          else
             rcc = RCC_DB_FAILURE;
-
-         if (rcc == RCC_SUCCESS)
-            DBCommit(hdb);
-         else
-            DBRollback(hdb);
+         DBConnectionPoolReleaseConnection(hdb);
       }
       else
-         rcc = RCC_DB_FAILURE;
-      DBConnectionPoolReleaseConnection(hdb);
+         rcc = RCC_INVALID_ZONE_ID;
    }
    else
       rcc = RCC_ACCESS_DENIED;
@@ -15197,6 +15145,71 @@ void ClientSession::updateSharedSecretList(NXCPMessage *pRequest)
    msg.setField(VID_RCC, rcc);
    sendMessage(&msg);
 }
+
+/**
+ * Update SNMP port list
+ */
+void ClientSession::updateSNMPPortList(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+   UINT32 rcc = RCC_SUCCESS;
+
+   msg.setId(pRequest->getId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      int32_t zoneUIN = pRequest->getFieldAsInt32(VID_ZONE_UIN);
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zoneUIN == -1 || zone != nullptr)
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         if (DBBegin(hdb))
+         {
+            ExecuteQueryOnObject(hdb, zoneUIN, _T("DELETE FROM snmp_ports WHERE zone=?"));
+            UINT32 baseId = VID_ZONE_SNMP_PORT_LIST_BASE;
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_ports (id,port,zone) VALUES(?,?,?)"), true);
+            if (hStmt != nullptr)
+            {
+               int count = pRequest->getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
+               for(int i = 0; i < count; i++)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pRequest->getFieldAsUInt16(baseId++));
+                  if (!DBExecute(hStmt))
+                  {
+                     rcc = RCC_DB_FAILURE;
+                     break;
+                  }
+               }
+               DBFreeStatement(hStmt);
+            }
+            else
+               rcc = RCC_DB_FAILURE;
+
+            if (rcc == RCC_SUCCESS)
+            {
+               DBCommit(hdb);
+               NotifyClientSessions(NX_NOTIFY_PORTS_CONFIG_CHANGED, zoneUIN);
+            }
+            else
+               DBRollback(hdb);
+         }
+         else
+            rcc = RCC_DB_FAILURE;
+         DBConnectionPoolReleaseConnection(hdb);
+      }
+      else
+         rcc = RCC_INVALID_ZONE_ID;
+   }
+   else
+      rcc = RCC_ACCESS_DENIED;
+
+   msg.setField(VID_RCC, rcc);
+   sendMessage(&msg);
+}
+
 
 #ifdef WITH_ZMQ
 /**

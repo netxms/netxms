@@ -214,7 +214,6 @@ CREATE TABLE zones
 (
   id integer not null,    // Zone object ID
   zone_guid integer not null, // Globally unique ID for zone
-  snmp_ports varchar(512) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1739,6 +1738,32 @@ CREATE TABLE usm_credentials
   zone integer null,
   comments varchar(255) null,
   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/*
+** Default SNMP ports
+*/
+CREATE TABLE snmp_ports 
+(
+   id integer not null,
+   port integer null,
+   zone integer null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Agent policies - common attributes
+*/
+CREATE TABLE ap_common
+(
+  policy_name varchar(63) not null,
+  owner_id integer not null,
+  policy_type varchar(31) not null,
+  file_content SQL_TEXT null,
+  version integer not null,
+  guid varchar(36) not null,
+  PRIMARY KEY(guid)
 ) TABLE_TYPE;
 
 /*

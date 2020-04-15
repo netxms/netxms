@@ -30,7 +30,7 @@ import org.netxms.client.NXCSession;
  */
 public class Subnet extends GenericObject implements ZoneMember
 {
-	private long zoneId;
+	private int zoneId;
 	private InetAddressEx networkAddress;
 
 	/**
@@ -40,7 +40,7 @@ public class Subnet extends GenericObject implements ZoneMember
 	{
 		super(msg, session);
 		
-		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
+		zoneId = msg.getFieldAsInt32(NXCPCodes.VID_ZONE_UIN);
       networkAddress = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
 	}
 	
@@ -111,7 +111,7 @@ public class Subnet extends GenericObject implements ZoneMember
     * @see org.netxms.client.objects.ZoneMember#getZoneId()
     */
    @Override
-	public long getZoneId()
+	public int getZoneId()
 	{
 		return zoneId;
 	}

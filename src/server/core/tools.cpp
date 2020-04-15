@@ -384,7 +384,7 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 /**
  * Resolve host name using zone if needed
  */
-InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneUIN, const TCHAR *hostname)
+InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname)
 {
    InetAddress ipAddr = InetAddress::parse(hostname);
    if (!ipAddr.isValid() && IsZoningEnabled() && (zoneUIN != 0))

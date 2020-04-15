@@ -49,7 +49,7 @@ public class ZoneConditionEditor extends ConditionEditor
 	private static final String EMPTY_SELECTION_TEXT = Messages.get().ObjectConditionEditor_None;
 	
 	private WorkbenchLabelProvider labelProvider;
-	private long zoneUin = 0;
+	private int zoneUin = 0;
 	private CLabel objectName;
 	
 	/**
@@ -122,7 +122,7 @@ public class ZoneConditionEditor extends ConditionEditor
          if (initialFilter.getType() == ColumnFilterType.EQUALS)
          {
             setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
-            zoneUin = initialFilter.getNumericValue();
+            zoneUin = (int)initialFilter.getNumericValue();
          }
          
          if (zoneUin != 0)

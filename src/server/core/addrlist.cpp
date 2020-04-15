@@ -71,7 +71,7 @@ InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, int 
 /**
  * Create new "range" type address list element with zone and proxy id
  */
-InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr, UINT32 zoneUIN, UINT32 proxyId)
+InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr, int32_t zoneUIN, UINT32 proxyId)
 {
    m_type = InetAddressListElement_RANGE;
    m_baseAddress = baseAddr;

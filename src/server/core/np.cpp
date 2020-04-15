@@ -233,7 +233,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
  *
  * @return pointer to existing interface object with given MAC address or nullptr if no such interface found
  */
-static shared_ptr<Interface> GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN, BYTE *bMacAddr)
+static shared_ptr<Interface> GetOldNodeWithNewIP(const InetAddress& ipAddr, int32_t zoneUIN, BYTE *bMacAddr)
 {
 	BYTE nodeMacAddr[MAC_ADDR_LENGTH];
 	TCHAR szIpAddr[64], szMacAddr[64];
@@ -276,7 +276,7 @@ static shared_ptr<Interface> GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT
 /**
  * Check if host at given IP address is reachable by NetXMS server
  */
-static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool fullCheck, SNMP_Transport **transport, shared_ptr<AgentConnection> *agentConn)
+static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool fullCheck, SNMP_Transport **transport, shared_ptr<AgentConnection> *agentConn)
 {
 	bool reachable = false;
 
@@ -353,11 +353,10 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
       {
          StringList secrets;
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=? ORDER BY zone DESC, id ASC"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
          if (hStmt != NULL)
          {
            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (proxyNode != nullptr) ? proxyNode->getZoneUIN() : 0);
-           DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, SNMP_CONFIG_GLOBAL);
 
            DB_RESULT hResult = DBSelectPrepared(hStmt);
            if (hResult != NULL)
@@ -428,7 +427,7 @@ public:
    NetworkDeviceDriver *driver;
    DriverData *driverData;
    InterfaceList *ifList;
-   UINT32 zoneUIN;
+   int32_t zoneUIN;
    UINT32 flags;
    SNMP_Version snmpVersion;
    bool dnsNameResolved;
@@ -437,7 +436,7 @@ public:
    TCHAR agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR platform[MAX_PLATFORM_NAME_LEN];
 
-   DiscoveryFilterData(const InetAddress& _ipAddr, UINT32 _zoneUIN) : NObject(), ipAddr(_ipAddr)
+   DiscoveryFilterData(const InetAddress& _ipAddr, int32_t _zoneUIN) : NObject(), ipAddr(_ipAddr)
    {
       driver = nullptr;
       driverData = nullptr;

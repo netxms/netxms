@@ -131,7 +131,7 @@ bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool sepa
  * Check SNMP v3 connectivity
  */
 static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext,
-         const StringList &testOids, const TCHAR *id, UINT32 zoneUIN, bool separateRequests)
+         const StringList &testOids, const TCHAR *id, int32_t zoneUIN, bool separateRequests)
 {
    pTransport->setSnmpVersion(SNMP_VERSION_3);
 
@@ -150,11 +150,10 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
 
 	// Try pre-configured SNMP v3 USM credentials
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials WHERE zone=? OR zone=? ORDER BY zone DESC, id ASC"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, SNMP_CONFIG_GLOBAL);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != NULL)
       {
@@ -218,7 +217,7 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
  * On failure, returns NULL
  */
 SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version, uint16_t originalPort,
-         SNMP_SecurityContext *originalContext, const StringList &testOids, uint32_t zoneUIN)
+         SNMP_SecurityContext *originalContext, const StringList &testOids, int32_t zoneUIN)
 {
    TCHAR ipAddrText[64];
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): starting check (proxy=%d, originalPort=%d)"), ipAddr.toString(ipAddrText), snmpProxy, (int)originalPort);
@@ -226,19 +225,33 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
    SNMP_Transport *pTransport = NULL;
    StringList *communities = NULL;
 
-   TCHAR portList[MAX_CONFIG_VALUE];
-	ConfigReadStr(_T("SNMPPorts"), portList, MAX_CONFIG_VALUE, _T("161"));
-	Trim(portList);
-	if (portList[0] == 0)
-	   _tcscpy(portList, _T("161"));
-   nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): global port list: %s)"), ipAddrText, portList);
-   StringList ports(portList, _T(","));
 
    bool separateRequests = ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false);
 
-   shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
-   if (zone != nullptr)
-      ports.insertAll(0, zone->getSnmpPortList()); // Port list defined at zone level has priority
+   IntegerArray<uint16_t> ports;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port FROM snmp_ports WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+
+            ports.add(DBGetFieldLong(hResult, i, 0));
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+
+   if (ports.size() == 0)
+      ports.add(161);
 
    for(int j = -1; (j < ports.size()) && !IsShutdownInProgress(); j++)
    {
@@ -251,8 +264,8 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
       }
       else
       {
-         port = (UINT16)_tcstoul(ports.get(j), NULL, 10);
-         if ((port == originalPort) || (port == 0))
+         port = ports.get(j);
+         if (port == originalPort)
             continue;
       }
 
@@ -313,11 +326,10 @@ restart_check:
       {
          communities = new StringList();
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? OR zone=? ORDER BY zone DESC, id ASC"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, SNMP_CONFIG_GLOBAL);
 
             DB_RESULT hResult = DBSelectPrepared(hStmt);
             if (hResult != NULL)

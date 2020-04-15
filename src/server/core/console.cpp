@@ -42,8 +42,8 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 INT64 GetEventLogWriterQueueSize();
 void DiscoveryPoller(PollerInfo *poller);
-void RangeScanCallback(const InetAddress& addr, uint32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context);
-void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, uint32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
+void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context);
+void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
 void ShowSyncerStats(ServerConsole *console);
 
 /**
@@ -159,7 +159,7 @@ static int CompareDebugTags(const DebugTagInfo **t1, const DebugTagInfo **t2)
 /**
  * Callback for address scan
  */
-static void PrintScanCallback(const InetAddress& addr, UINT32 zoneUIN, const Node *proxy, UINT32 rtt, ServerConsole *console, void *context)
+static void PrintScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, UINT32 rtt, ServerConsole *console, void *context)
 {
    TCHAR ipAddrText[64];
    if (proxy != nullptr)
@@ -600,7 +600,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             InetAddress start = InetAddress::parse(szBuffer);
             InetAddress end = InetAddress::parse(addr2);
             pArg = ExtractWord(pArg, szBuffer);
-            UINT32 zoneUIN = 0;
+            int32_t zoneUIN = 0;
             UINT32 proxyId = 0;
             bool doDiscovery = false;
             bool syntaxError = false;
@@ -615,7 +615,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                else if (IsCommand(_T("PROXY"), szBuffer, 1))
                {
                   pArg = ExtractWord(pArg, szBuffer);
-                  zoneUIN = _tcstoul(szBuffer, nullptr, 0);
+                  zoneUIN = _tcstol(szBuffer, nullptr, 0);
                   ExtractWord(pArg, szBuffer);  // Extract next word if it is discovery
                }
                else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))

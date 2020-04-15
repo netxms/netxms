@@ -40,7 +40,7 @@ public class CreateZoneDialog extends Dialog
 	private LabeledText uinField;
 	
 	private String name;
-	private long zoneUIN;
+	private int zoneUIN;
 	
 	/**
 	 * @param parentShell
@@ -85,7 +85,7 @@ public class CreateZoneDialog extends Dialog
 		
 		uinField = new LabeledText(dialogArea, SWT.NONE);
 		uinField.setLabel(Messages.get().CreateZoneDialog_ZoneId);
-		uinField.getTextControl().setTextLimit(12);
+		uinField.getTextControl().setTextLimit(10);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -105,7 +105,7 @@ public class CreateZoneDialog extends Dialog
 	   {
    		try
    		{
-   			zoneUIN = Long.parseLong(uinField.getText());
+   			zoneUIN = Integer.parseInt(uinField.getText());
    		}
    		catch(NumberFormatException e)
    		{
@@ -146,7 +146,7 @@ public class CreateZoneDialog extends Dialog
 	 * 
 	 * @return zone UIN
 	 */
-	public long getZoneUIN()
+	public int getZoneUIN()
 	{
 		return zoneUIN;
 	}

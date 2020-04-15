@@ -303,7 +303,7 @@ public class GeneralInfo extends TableElement
 	 * @param zoneId
 	 * @return
 	 */
-	private String getZoneName(long zoneId)
+	private String getZoneName(int zoneId)
 	{
 	   Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
 	   if (zone == null)

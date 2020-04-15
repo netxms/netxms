@@ -39,7 +39,7 @@ class QueuedSyslogMessage
 public:
    InetAddress sourceAddr;
    time_t timestamp;
-   UINT32 zoneUIN;
+   int32_t zoneUIN;
    UINT32 nodeId;
    char *message;
    int messageLength;
@@ -285,7 +285,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, time_t receiverTime, NX
 /**
  * Find node by host name
  */
-static shared_ptr<Node> FindNodeByHostname(const char *hostName, UINT32 zoneUIN)
+static shared_ptr<Node> FindNodeByHostname(const char *hostName, int32_t zoneUIN)
 {
    if (hostName[0] == 0)
       return shared_ptr<Node>();
@@ -315,7 +315,7 @@ static shared_ptr<Node> FindNodeByHostname(const char *hostName, UINT32 zoneUIN)
  * Bind syslog message to NetXMS node object
  * sourceAddr is an IP address from which we receive message
  */
-static shared_ptr<Node> BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, uint32_t zoneUIN, uint32_t nodeId)
+static shared_ptr<Node> BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, int32_t zoneUIN, uint32_t nodeId)
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: addr=%s zoneUIN=%d"), (const TCHAR *)sourceAddr.toString(), zoneUIN);
 
@@ -530,7 +530,7 @@ static void QueueSyslogMessage(char *msg, int msgLen, const InetAddress& sourceA
 /**
  * Queue proxied syslog message for processing
  */
-void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneUIN, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen)
+void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen)
 {
    g_syslogProcessingQueue.put(new QueuedSyslogMessage(addr, timestamp, zoneUIN, nodeId, msg, msgLen));
 }

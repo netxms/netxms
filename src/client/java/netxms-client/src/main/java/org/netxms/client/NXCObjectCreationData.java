@@ -60,7 +60,7 @@ public class NXCObjectCreationData
    private long sshProxyId;
 	private int mapType;
 	private List<Long> seedObjectIds;
-	private long zoneUIN;
+	private int zoneUIN;
 	private int serviceType;
 	private int ipProtocol;
 	private int ipPort;
@@ -365,7 +365,7 @@ public class NXCObjectCreationData
 	/**
 	 * @return the zoneId
 	 */
-	public long getZoneUIN()
+	public int getZoneUIN()
 	{
 		return zoneUIN;
 	}
@@ -373,7 +373,7 @@ public class NXCObjectCreationData
 	/**
 	 * @param zoneUIN the zoneId to set
 	 */
-	public void setZoneUIN(long zoneUIN)
+	public void setZoneUIN(int zoneUIN)
 	{
 		this.zoneUIN = zoneUIN;
 	}

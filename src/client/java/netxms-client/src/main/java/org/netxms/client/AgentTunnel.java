@@ -37,7 +37,7 @@ public class AgentTunnel
    private String systemInformation;
    private String platformName;
    private String agentVersion;
-   private long zoneUIN;
+   private int zoneUIN;
    private int activeChannelCount;
    private String hostname;
    private boolean agentProxy;
@@ -62,7 +62,7 @@ public class AgentTunnel
       platformName = msg.getFieldAsString(baseId + 6);
       agentVersion = msg.getFieldAsString(baseId + 7);
       activeChannelCount = msg.getFieldAsInt32(baseId + 8);
-      zoneUIN = msg.getFieldAsInt64(baseId + 9);
+      zoneUIN = msg.getFieldAsInt32(baseId + 9);
       hostname = msg.getFieldAsString(baseId + 10);
       agentId = msg.getFieldAsUUID(baseId + 11);
       userAgentInstalled = msg.getFieldAsBoolean(baseId + 12);
@@ -167,7 +167,7 @@ public class AgentTunnel
     * 
     * @return zone UIN for this agent
     */
-   public long getZoneUIN()
+   public int getZoneUIN()
    {
       return zoneUIN;
    }

@@ -424,6 +424,8 @@ public class NXCPCodes
    public static final int CMD_UPDATE_ENVIRONMENT = 0x0197;
    public static final int CMD_GET_SHARED_SECRET_LIST = 0x0198;
    public static final int CMD_UPDATE_SHARED_SECRET_LIST = 0x0199;
+   public static final int CMD_GET_SNMP_PORT_LIST = 0x019A;
+   public static final int CMD_UPDATE_SNMP_PORT_LIST = 0x019B;
    
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

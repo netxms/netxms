@@ -795,6 +795,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
          if (node != nullptr)
             array->append(node->createNXSLObject(vm));
       }
+      delete proxies;
       value = vm->createValue(array);
       delete proxies;
    }
@@ -810,10 +811,6 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "uin"))
    {
       value = vm->createValue(zone->getUIN());
-   }
-   else if (!strcmp(attr, "snmpPorts"))
-   {
-      value = vm->createValue(new NXSL_Array(vm, zone->getSnmpPortList()));
    }
    return value;
 }

@@ -778,7 +778,7 @@ public class ObjectFinder extends ViewPart
       for(Object o : classList.getCheckedElements())
          classFilter.add(((ObjectClass)o).classId);
       
-      List<Long> zoneFilter = new ArrayList<Long>();
+      List<Integer> zoneFilter = new ArrayList<Integer>();
       if (session.isZoningEnabled())
       {
          for(Object o : zoneList.getCheckedElements())
@@ -800,7 +800,7 @@ public class ObjectFinder extends ViewPart
     * @param addrEnd 
     * @param addrStart 
     */
-   private void doSearch(final String searchString, final int mode, final List<Integer> classFilter, final List<Long> zoneFilter, final InetAddress addrStart, final InetAddress addrEnd)
+   private void doSearch(final String searchString, final int mode, final List<Integer> classFilter, final List<Integer> zoneFilter, final InetAddress addrStart, final InetAddress addrEnd)
    {
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Find objects", this, Activator.PLUGIN_ID, null) {

@@ -143,6 +143,14 @@
       </loginlistener>
    </extension>
    <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.snmp.context.SNMP"
+            name="SNMP"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.snmp.commands.showFilter"
@@ -152,12 +160,27 @@
       </key>
    </extension>
    <extension
-         point="org.eclipse.ui.contexts">
-      <context
-            id="org.netxms.ui.eclipse.snmp.context.SNMP"
-            name="SNMP"
-            parentId="org.eclipse.ui.contexts.window">
-      </context>
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConziguration"
+            id="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConziguration"
+            name="SNMP Configuration">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Zone">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConziguration"
+            id="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConziguration"
+            name="Agent Shared Secrets">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Zone">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
 
 </plugin>

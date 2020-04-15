@@ -251,7 +251,7 @@ static VolatileCounter s_nextTunnelId = 0;
  * Agent tunnel constructor
  */
 AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
-         UINT32 nodeId, UINT32 zoneUIN) : RefCountObject(), m_channels(Ownership::True)
+         UINT32 nodeId, int32_t zoneUIN) : RefCountObject(), m_channels(Ownership::True)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -1029,7 +1029,7 @@ static void SetupTunnel(void *arg)
    AgentTunnel *tunnel = nullptr;
    int rc;
    UINT32 nodeId = 0;
-   UINT32 zoneUIN = 0;
+   int32_t zoneUIN = 0;
    X509 *cert = nullptr;
 
    // Setup secure connection

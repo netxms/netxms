@@ -713,7 +713,7 @@ struct NXCORE_EXPORTABLE NewNodeData
    TCHAR sshLogin[MAX_SSH_LOGIN_LEN];
    TCHAR sshPassword[MAX_SSH_PASSWORD_LEN];
    shared_ptr<Cluster> cluster;
-   uint32_t zoneUIN;
+   int32_t zoneUIN;
    bool doConfPoll;
    NodeOrigin origin;
    SNMP_SecurityContext *snmpSecurity;
@@ -960,7 +960,7 @@ public:
    const char *getObjectClassName() const { return getObjectClassNameA(); }
 #endif
 
-   virtual uint32_t getZoneUIN() const { return 0; }
+   virtual int32_t getZoneUIN() const { return 0; }
 
    virtual InetAddress getPrimaryIpAddress() const { return InetAddress::INVALID; }
 
@@ -1472,7 +1472,7 @@ protected:
 	int m_statusPollCount;
 	int m_operStatePollCount;
 	int m_requiredPollCount;
-   UINT32 m_zoneUIN;
+	int32_t m_zoneUIN;
    int m_ifTableSuffixLen;
    UINT32 *m_ifTableSuffix;
    IntegerArray<UINT32> *m_vlans;
@@ -1491,8 +1491,8 @@ protected:
 
 public:
    Interface();
-   Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSyntheticMask);
-   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneUIN);
+   Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask);
+   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, int32_t zoneUIN);
    virtual ~Interface();
 
    shared_ptr<Interface> self() const { return static_pointer_cast<Interface>(NObject::self()); }
@@ -1506,7 +1506,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
 
-   virtual uint32_t getZoneUIN() const override { return m_zoneUIN; }
+   virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
    virtual json_t *toJson() override;
 
@@ -2230,7 +2230,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
 
-   virtual uint32_t getZoneUIN() const override;
+   virtual int32_t getZoneUIN() const override;
 
    virtual json_t *toJson() override;
 
@@ -2273,7 +2273,7 @@ protected:
    ObjectArray<InetAddress> *m_syncNetworks;
 	UINT32 m_dwNumResources;
 	CLUSTER_RESOURCE *m_pResourceList;
-	UINT32 m_zoneUIN;
+	int32_t m_zoneUIN;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
@@ -2287,7 +2287,7 @@ protected:
 
 public:
 	Cluster();
-   Cluster(const TCHAR *pszName, UINT32 zoneUIN);
+   Cluster(const TCHAR *pszName, int32_t zoneUIN);
 	virtual ~Cluster();
 
    shared_ptr<Cluster> self() const { return static_pointer_cast<Cluster>(NObject::self()); }
@@ -2304,7 +2304,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
 
-   virtual uint32_t getZoneUIN() const override { return m_zoneUIN; }
+   virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
    virtual json_t *toJson() override;
 
@@ -2651,7 +2651,7 @@ protected:
 	uint32_t m_pollCountEtherNetIP;
 	uint32_t m_pollCountAllDown;
 	uint32_t m_requiredPollCount;
-	uint32_t m_zoneUIN;
+	int32_t m_zoneUIN;
    uint16_t m_agentPort;
    int16_t m_agentCacheMode;
    int16_t m_agentCompressionMode;  // agent compression mode (enabled/disabled/default)
@@ -2855,7 +2855,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
 
-   virtual uint32_t getZoneUIN() const override { return m_zoneUIN; }
+   virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
    virtual json_t *toJson() override;
 
@@ -3198,7 +3198,7 @@ private:
 
 protected:
    InetAddress m_ipAddress;
-   UINT32 m_zoneUIN;
+   int32_t m_zoneUIN;
 	bool m_bSyntheticMask;
 
    virtual void prepareForDeletion() override;
@@ -3209,7 +3209,7 @@ protected:
 
 public:
    Subnet();
-   Subnet(const InetAddress& addr, UINT32 zoneUIN, bool bSyntheticMask);
+   Subnet(const InetAddress& addr, int32_t zoneUIN, bool bSyntheticMask);
    virtual ~Subnet();
 
    shared_ptr<Subnet> self() const { return static_pointer_cast<Subnet>(NObject::self()); }
@@ -3223,7 +3223,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
 
-   virtual uint32_t getZoneUIN() const override { return m_zoneUIN; }
+   virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
    virtual json_t *toJson() override;
 
@@ -3525,7 +3525,6 @@ protected:
 	InetAddressIndex *m_idxNodeByAddr;
 	InetAddressIndex *m_idxInterfaceByAddr;
 	InetAddressIndex *m_idxSubnetByAddr;
-	StringList m_snmpPorts;
 	time_t m_lastHealthCheck;
 	bool m_lockedForHealthCheck;
 
@@ -3555,7 +3554,6 @@ public:
    virtual json_t *toJson() override;
 
    UINT32 getUIN() const { return m_uin; }
-   const StringList *getSnmpPortList() const { return &m_snmpPorts; }
 
    UINT32 getProxyNodeId(NetObj *object, bool backup = false);
 	bool isProxyNode(UINT32 nodeId) const;
@@ -4188,28 +4186,28 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (* comparator)(NetObj *, vo
 SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass = -1);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
 shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *pszName);
-shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr);
-shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, bool allZones, const InetAddress& ipAddr);
-shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(UINT32 zoneUIN, const InetAddressList *ipAddrList);
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddress& ipAddr);
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, bool allZones, const InetAddress& ipAddr);
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddressList *ipAddrList);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByMAC(const BYTE *macAddr);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByBridgeId(const BYTE *bridgeId);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByLLDPId(const TCHAR *lldpId);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeBySysName(const TCHAR *sysName);
-SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindNodesByHostname(uint32_t zoneUIN, const TCHAR *hostname);
-shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr);
+SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindNodesByHostname(int32_t zoneUIN, const TCHAR *hostname);
+shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByIP(int32_t zoneUIN, const InetAddress& ipAddr);
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const BYTE *macAddr);
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const MacAddress& macAddr);
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByDescription(const TCHAR *description);
-shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetByIP(UINT32 zoneUIN, const InetAddress& ipAddr);
-shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(UINT32 zoneUIN, const InetAddress& nodeAddr);
-bool AdjustSubnetBaseAddress(InetAddress& baseAddr, UINT32 zoneUIN);
+shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetByIP(int32_t zoneUIN, const InetAddress& ipAddr);
+shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(int32_t zoneUIN, const InetAddress& nodeAddr);
+bool AdjustSubnetBaseAddress(InetAddress& baseAddr, int32_t zoneUIN);
 shared_ptr<MobileDevice> NXCORE_EXPORTABLE FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 shared_ptr<AccessPoint> NXCORE_EXPORTABLE FindAccessPointByMAC(const MacAddress& macAddr);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
-shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(uint32_t zoneUIN);
+shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(int32_t zoneUIN);
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId);
-UINT32 FindUnusedZoneUIN();
-bool NXCORE_EXPORTABLE IsClusterIP(uint32_t zoneUIN, const InetAddress& ipAddr);
+int32_t FindUnusedZoneUIN();
+bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2);
 ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage,
          size_t errorMessageLen, const StringList *fields = nullptr, const StringList *orderBy = nullptr,

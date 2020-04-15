@@ -159,5 +159,28 @@
             sequence="M1+F2">
       </key>
    </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConziguration"
+            id="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConziguration"
+            name="SNMP Configuration">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Zone">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConziguration"
+            id="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConziguration"
+            name="Agent Shared Secrets">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Zone">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
 
 </plugin>

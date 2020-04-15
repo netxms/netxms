@@ -543,7 +543,7 @@ static StringBuffer BuildVarbindList(SNMP_PDU *pdu)
 /**
  * Process trap
  */
-void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
    StringBuffer varbinds;
    TCHAR buffer[4096];

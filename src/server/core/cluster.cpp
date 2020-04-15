@@ -37,7 +37,7 @@ Cluster::Cluster() : super()
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, UINT32 zoneUIN) : super(pszName)
+Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName)
 {
 	m_dwClusterType = 0;
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);

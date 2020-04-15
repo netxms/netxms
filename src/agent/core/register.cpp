@@ -35,7 +35,7 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 /**
  * Register agent on management server
  */
-BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
+BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN)
 {
    SOCKET hSocket;
    BOOL bRet = FALSE;
