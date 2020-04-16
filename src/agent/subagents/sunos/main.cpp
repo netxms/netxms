@@ -61,19 +61,19 @@ LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 
+#ifdef __sparc
+LONG H_SystemHardwareInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+#endif
 
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 BOOL g_bShutdown = FALSE;
 DWORD g_flags = 0;
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static THREAD s_cpuStatThread = INVALID_THREAD_HANDLE;
 static THREAD s_ioStatThread = INVALID_THREAD_HANDLE;
 static MUTEX s_kstatLock = INVALID_MUTEX_HANDLE;
@@ -117,7 +117,7 @@ static BYTE *BIOSReader(size_t *biosSize)
    if (memcmp(data, "_SM_", 4))
    {
       nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS header (anchor string not found)"));
-      free(data);
+      MemFree(data);
       return NULL;  // not a valid SMBIOS signature
    }
 
@@ -127,13 +127,13 @@ static BYTE *BIOSReader(size_t *biosSize)
    {
       nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS header (offset=%08X data_size=%04X file_size=%04X)"),
             offset, dataSize, fileSize);
-      free(data);
+      MemFree(data);
       return NULL;
    }
 
    BYTE *biosData = (BYTE *)malloc(dataSize);
    memcpy(biosData, data + offset, dataSize);
-   free(data);
+   MemFree(data);
    *biosSize = dataSize;
    return biosData;
 }
@@ -230,6 +230,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.UsedInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDINODESPERC },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
+#ifdef __sparc
+   { _T("Hardware.System.Manufacturer"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_HW_PROVIDER, TCHAR*), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
+   { _T("Hardware.System.Product"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_PLATFORM, TCHAR*), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
+   { _T("Hardware.System.SerialNumber"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_HW_SERIAL, TCHAR*), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
+#else
    { _T("Hardware.Baseboard.Manufacturer"), SMBIOS_ParameterHandler, _T("bM"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER },
    { _T("Hardware.Baseboard.Product"), SMBIOS_ParameterHandler, _T("bP"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_PRODUCT },
    { _T("Hardware.Baseboard.SerialNumber"), SMBIOS_ParameterHandler, _T("bS"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_SERIALNUMBER },
@@ -270,6 +275,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Hardware.System.SerialNumber"), SMBIOS_ParameterHandler, _T("HS"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
    { _T("Hardware.System.Version"), SMBIOS_ParameterHandler, _T("HV"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_VERSION },
    { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
+#endif
 
    { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
    { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },

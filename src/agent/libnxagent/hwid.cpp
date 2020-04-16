@@ -26,8 +26,161 @@
 #include <intrin.h>
 #elif defined(_AIX)
 #include <sys/utsname.h>
+#elif defined(__sun)
+#include <sys/systeminfo.h>
 #elif HAVE_CPUID_H
 #include <cpuid.h>
+#endif
+
+#define INTERNAL_BUFFER_SIZE	256
+
+#if defined(_WIN32)
+
+/**
+ * Get hardware serial number - Windows
+ */
+static bool GetHardwareSerialNumber(char *buffer)
+{
+   const char *hwSerial = SMBIOS_GetHardwareSerialNumber();
+   if (*hwSerial == 0)
+      return false;
+   strlcpy(buffer, hwSerial, INTERNAL_BUFFER_SIZE);
+   return true;
+}
+
+/**
+ * Get hardware product - Windows
+ */
+static bool GetHardwareProduct(char *buffer)
+{
+   const char *hwProduct = SMBIOS_GetHardwareProduct();
+   if (*hwProduct == 0)
+      return false;
+   strlcpy(buffer, hwProduct, INTERNAL_BUFFER_SIZE);
+   return true;
+}
+
+#elif defined(_AIX)
+
+/**
+ * Get hardware serial number - AIX
+ */
+static bool GetHardwareSerialNumber(char *buffer)
+{
+   struct utsname un;
+   if (uname(&un) != 0)
+      return false;
+   strlcpy(buffer, un.machine, INTERNAL_BUFFER_SIZE);
+   return true;
+}
+
+/**
+ * Get hardware product - AIX
+ */
+static bool GetHardwareProduct(char *buffer)
+{
+   return false;
+}
+
+#elif defined(__sun)
+
+/**
+ * Get hardware serial number - Solaris
+ */
+static bool GetHardwareSerialNumber(char *buffer)
+{
+#ifndef __sparc
+   const char *hwSerial = SMBIOS_GetHardwareSerialNumber();
+   if (*hwSerial != 0)
+   {
+      strlcpy(buffer, hwSerial, INTERNAL_BUFFER_SIZE);
+      return true;
+   }
+#endif
+
+   return sysinfo(SI_HW_SERIAL, buffer, INTERNAL_BUFFER_SIZE) > 0;
+}
+
+/**
+ * Get hardware product - Solaris
+ */
+static bool GetHardwareProduct(char *buffer)
+{
+#ifndef __sparc
+   const char *hwProduct = SMBIOS_GetHardwareProduct();
+   if (*hwProduct != 0)
+   {
+      strlcpy(buffer, hwProduct, INTERNAL_BUFFER_SIZE);
+      return true;
+   }
+#endif
+
+   int len = sysinfo(SI_HW_PROVIDER, buffer, INTERNAL_BUFFER_SIZE);
+   if (len > 0)
+      buffer[len++] = ' ';
+   else
+      len = 0;
+   return sysinfo(SI_PLATFORM, &buffer[len], INTERNAL_BUFFER_SIZE - len) > 0;
+}
+
+#else
+
+/**
+ * Get hardware serial number - other platforms
+ */
+static bool GetHardwareSerialNumber(char *buffer)
+{
+   const char *hwSerial = SMBIOS_GetHardwareSerialNumber();
+   if (*hwSerial != 0)
+   {
+      strlcpy(buffer, hwSerial, INTERNAL_BUFFER_SIZE);
+      return true;
+   }
+
+   // Attempt to read serial number from file (works on Raspberry Pi)
+   bool success = false;
+   int fh = _open("/sys/firmware/devicetree/base/serial-number", O_RDONLY);
+   if (fh != -1)
+   {
+      int bytes = _read(fh, buffer, INTERNAL_BUFFER_SIZE - 1);
+      if (bytes > 0)
+      {
+         buffer[bytes] = 0;
+         success = true;
+      }
+      _close(fh);
+   }
+   return success;
+}
+
+/**
+ * Get hardware product - other platforms
+ */
+static bool GetHardwareProduct(char *buffer)
+{
+   const char *hwProduct = SMBIOS_GetHardwareProduct();
+   if (*hwProduct != 0)
+   {
+      strlcpy(buffer, hwProduct, INTERNAL_BUFFER_SIZE);
+      return true;
+   }
+
+   // Attempt to read model from file (works on Raspberry Pi)
+   bool success = false;
+   int fh = _open("/sys/firmware/devicetree/base/model", O_RDONLY);
+   if (fh != -1)
+   {
+      int bytes = _read(fh, buffer, 128);
+      if (bytes > 0)
+      {
+         buffer[bytes] = 0;
+         success = true;
+      }
+      _close(fh);
+   }
+   return success;
+}
+
 #endif
 
 /**
@@ -54,61 +207,17 @@ bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid)
 #endif
 
    // Add hardware serial number
-#if defined(_AIX)
-   struct utsname un;
-   if (uname(&un) == 0)
+   char buffer[INTERNAL_BUFFER_SIZE];
+   if (GetHardwareSerialNumber(buffer))
    {
-      SHA1Update(&ctx, un.machine, strlen(un.machine));
+      SHA1Update(&ctx, buffer, strlen(buffer));
       success = true;
    }
-#else
-   const char *hwSerial = SMBIOS_GetHardwareSerialNumber();
-#ifndef _WIN32
-   char buffer[128];
-   if (*hwSerial == 0)
-   {
-      // Attempt to read serial number from file (works on Raspberry Pi)
-      int fh = _open("/sys/firmware/devicetree/base/serial-number", O_RDONLY);
-      if (fh != -1)
-      {
-         char buffer[128];
-         int bytes = _read(fh, buffer, 127);
-         if (bytes > 0)
-         {
-            buffer[bytes] = 0;
-            hwSerial = buffer;
-         }
-         _close(fh);
-      }
-   }
-#endif
-   if (*hwSerial != 0)
-   {
-      SHA1Update(&ctx, hwSerial, strlen(hwSerial));
-      success = true;
-   }
-#endif
 
    // Add hardware product
-   const char *hwProduct = SMBIOS_GetHardwareProduct();
-   if (*hwProduct != 0)
+   if (GetHardwareProduct(buffer))
    {
-      SHA1Update(&ctx, hwProduct, strlen(hwProduct));
-   }
-   else
-   {
-      // Attempt to read model from file (works on Raspberry Pi)
-      int fh = _open("/sys/firmware/devicetree/base/model", O_RDONLY);
-      if (fh != -1)
-      {
-         char buffer[128];
-         int bytes = _read(fh, buffer, 128);
-         if (bytes > 0)
-         {
-            SHA1Update(&ctx, buffer, bytes);
-         }
-         _close(fh);
-      }
+      SHA1Update(&ctx, buffer, strlen(buffer));
    }
 
    // Add baseboard serial number

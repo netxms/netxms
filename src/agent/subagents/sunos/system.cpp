@@ -526,3 +526,21 @@ LONG H_SysMsgQueue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    }
    return SYSINFO_RC_SUCCESS;
 }
+
+#ifdef __sparc
+
+/**
+ * Handler for hardware information parameters available via sysinfo on Sparc platform
+ */
+LONG H_SystemHardwareInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char buffer[256];
+   if (sysinfo(CAST_FROM_POINTER(arg, int), buffer, 256) >= 0)
+   {
+      ret_mbstring(value, buffer);
+      return SYSINFO_RC_SUCCESS;
+   }
+   return SYSINFO_RC_UNSUPPORTED;
+}
+
+#endif
