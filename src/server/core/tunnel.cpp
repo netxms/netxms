@@ -251,7 +251,7 @@ static VolatileCounter s_nextTunnelId = 0;
  * Agent tunnel constructor
  */
 AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
-         UINT32 nodeId, int32_t zoneUIN) : RefCountObject(), m_channels(Ownership::True)
+         uint32_t nodeId, int32_t zoneUIN, time_t certificateExpirationTime) : RefCountObject(), m_channels(Ownership::True)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -263,7 +263,9 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_requestId = 0;
    m_nodeId = nodeId;
    m_zoneUIN = zoneUIN;
+   m_certificateExpirationTime = certificateExpirationTime;
    m_state = AGENT_TUNNEL_INIT;
+   memset(m_hardwareId, 0, HARDWARE_ID_LENGTH);
    m_systemName = nullptr;
    m_platformName = nullptr;
    m_systemInfo = nullptr;
@@ -459,7 +461,7 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
    }
    NXCP_MESSAGE *data = msg->serialize(true);
    bool success = (sslWrite(data, ntohl(data->size)) == static_cast<int>(ntohl(data->size)));
-   free(data);
+   MemFree(data);
    return success;
 }
 
@@ -514,6 +516,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
          if (p != nullptr)
             *p = 0;  // Remove git commit hash from version string
       }
+      request->getFieldAsBinary(VID_HARDWARE_ID, m_hardwareId, HARDWARE_ID_LENGTH);
 
       m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
       response.setField(VID_RCC, ERR_SUCCESS);
@@ -523,21 +526,24 @@ void AgentTunnel::setup(const NXCPMessage *request)
       if (m_state != AGENT_TUNNEL_BOUND)
          m_zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
 
+      TCHAR hardwareId[HARDWARE_ID_LENGTH * 2 + 1];
       debugPrintf(3, _T("%s tunnel initialized"), (m_state == AGENT_TUNNEL_BOUND) ? _T("Bound") : _T("Unbound"));
-      debugPrintf(4, _T("   System name:        %s"), m_systemName);
-      debugPrintf(4, _T("   Hostname:           %s"), m_hostname);
-      debugPrintf(4, _T("   System information: %s"), m_systemInfo);
-      debugPrintf(4, _T("   Platform name:      %s"), m_platformName);
-      debugPrintf(4, _T("   Agent ID:           %s"), (const TCHAR *)m_agentId.toString());
-      debugPrintf(4, _T("   Agent version:      %s"), m_agentVersion);
-      debugPrintf(4, _T("   Zone UIN:           %u"), m_zoneUIN);
-      debugPrintf(4, _T("   Agent proxy:        %s"), m_agentProxy ? _T("YES") : _T("NO"));
-      debugPrintf(4, _T("   SNMP proxy:         %s"), m_snmpProxy ? _T("YES") : _T("NO"));
-      debugPrintf(4, _T("   SNMP trap proxy:    %s"), m_snmpTrapProxy ? _T("YES") : _T("NO"));
-      debugPrintf(4, _T("   User agent:         %s"), m_userAgentInstalled ? _T("YES") : _T("NO"));
+      debugPrintf(4, _T("   System name..............: %s"), m_systemName);
+      debugPrintf(4, _T("   Hostname.................: %s"), m_hostname);
+      debugPrintf(4, _T("   System information.......: %s"), m_systemInfo);
+      debugPrintf(4, _T("   Platform name............: %s"), m_platformName);
+      debugPrintf(4, _T("   Hardware ID..............: %s"), BinToStr(m_hardwareId, HARDWARE_ID_LENGTH, hardwareId));
+      debugPrintf(4, _T("   Agent ID.................: %s"), m_agentId.toString().cstr());
+      debugPrintf(4, _T("   Agent version............: %s"), m_agentVersion);
+      debugPrintf(4, _T("   Zone UIN.................: %d"), m_zoneUIN);
+      debugPrintf(4, _T("   Agent proxy..............: %s"), m_agentProxy ? _T("YES") : _T("NO"));
+      debugPrintf(4, _T("   SNMP proxy...............: %s"), m_snmpProxy ? _T("YES") : _T("NO"));
+      debugPrintf(4, _T("   SNMP trap proxy..........: %s"), m_snmpTrapProxy ? _T("YES") : _T("NO"));
+      debugPrintf(4, _T("   User agent...............: %s"), m_userAgentInstalled ? _T("YES") : _T("NO"));
 
       if (m_state == AGENT_TUNNEL_BOUND)
       {
+         debugPrintf(4, _T("   Certificate expires at...: %s"), FormatTimestamp(m_certificateExpirationTime).cstr());
          PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
                   m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
                   m_agentVersion, &m_agentId);
@@ -631,8 +637,8 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
             char *ou = m_bindGuid.toString().getUTF8String();
             char *cn = m_guid.toString().getUTF8String();
             X509 *cert = IssueCertificate(certRequest, ou, cn, 365);
-            free(ou);
-            free(cn);
+            MemFree(ou);
+            MemFree(cn);
             if (cert != nullptr)
             {
                LogCertificateAction(ISSUE_CERTIFICATE, m_bindUserId, m_nodeId, m_bindGuid, CERT_TYPE_AGENT, cert);
@@ -790,6 +796,8 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 13, m_agentProxy);
    msg->setField(baseId + 14, m_snmpProxy);
    msg->setField(baseId + 15, m_snmpTrapProxy);
+   msg->setFieldFromTime(baseId + 16, m_certificateExpirationTime);
+   msg->setField(baseId + 17, m_hardwareId, HARDWARE_ID_LENGTH);
 }
 
 /**
@@ -1028,9 +1036,10 @@ static void SetupTunnel(void *arg)
    SSL *ssl = nullptr;
    AgentTunnel *tunnel = nullptr;
    int rc;
-   UINT32 nodeId = 0;
+   uint32_t nodeId = 0;
    int32_t zoneUIN = 0;
    X509 *cert = nullptr;
+   time_t certExpTime = 0;
 
    // Setup secure connection
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
@@ -1097,6 +1106,7 @@ retry:
    cert = SSL_get_peer_certificate(ssl);
    if (cert != nullptr)
    {
+      certExpTime = GetCertificateExpirationTime(cert);
       if (ValidateAgentCertificate(cert))
       {
          TCHAR ou[256], cn[256];
@@ -1155,7 +1165,7 @@ retry:
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate not provided"), (const TCHAR *)request->addr.toString());
    }
 
-   tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN);
+   tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN, certExpTime);
    RegisterTunnel(tunnel);
    tunnel->start();
    tunnel->decRefCount();

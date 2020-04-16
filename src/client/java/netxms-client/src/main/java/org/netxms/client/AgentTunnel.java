@@ -19,6 +19,7 @@
 package org.netxms.client;
 
 import java.net.InetAddress;
+import java.util.Date;
 import java.util.UUID;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCommon;
@@ -31,13 +32,15 @@ public class AgentTunnel
    private int id;
    private UUID guid;
    private InetAddress address;
-   private long nodeId;
    private UUID agentId;
+   private byte[] hardwareId;
    private String systemName;
    private String systemInformation;
    private String platformName;
    private String agentVersion;
+   private long nodeId;
    private int zoneUIN;
+   private Date certificateExpirationTime;
    private int activeChannelCount;
    private String hostname;
    private boolean agentProxy;
@@ -69,6 +72,8 @@ public class AgentTunnel
       agentProxy = msg.getFieldAsBoolean(baseId + 13);
       snmpProxy = msg.getFieldAsBoolean(baseId + 14);
       snmpTrapProxy = msg.getFieldAsBoolean(baseId + 15);
+      certificateExpirationTime = msg.getFieldAsDate(baseId + 16);
+      hardwareId = msg.getFieldAsBinary(baseId + 17);
    }
    
    /**
@@ -123,6 +128,40 @@ public class AgentTunnel
    public UUID getAgentId()
    {
       return (agentId != null) ? agentId : NXCommon.EMPTY_GUID;
+   }
+
+   /**
+    * @return the hardwareId
+    */
+   public byte[] getHardwareId()
+   {
+      return hardwareId;
+   }
+
+   /**
+    * @return the hardwareId
+    */
+   public String getHardwareIdAsText()
+   {
+      if (hardwareId == null)
+         return "";
+      StringBuilder sb = new StringBuilder();
+      for(byte b : hardwareId)
+      {
+         int i = Byte.toUnsignedInt(b);
+         if (i < 10)
+            sb.append('0');
+         sb.append(Integer.toString(i, 16));
+      }
+      return sb.toString();
+   }
+
+   /**
+    * @return the certificateExpirationTime
+    */
+   public Date getCertificateExpirationTime()
+   {
+      return certificateExpirationTime;
    }
 
    /**

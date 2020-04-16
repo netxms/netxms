@@ -1132,6 +1132,12 @@ public class NXCPCodes
    public static final long VID_CIP_STATE_TEXT = 692;
    public static final long VID_DUPLICATE = 693;
    public static final long VID_TASK_IS_DISABLED = 694;
+   public static final long VID_PROCESS_ID = 695;
+   public static final long VID_SCREEN_WIDTH = 696;
+   public static final long VID_SCREEN_HEIGHT = 697;
+   public static final long VID_SCREEN_BPP = 698;
+   public static final long VID_EXTENDED_DCI_DATA = 699;
+   public static final long VID_HARDWARE_ID = 700;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

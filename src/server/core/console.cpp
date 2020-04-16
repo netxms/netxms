@@ -776,15 +776,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          for(int i = 0; i < list->size(); i++)
          {
             PoolConnectionInfo *c = list->get(i);
-#if HAVE_LOCALTIME_R
-            struct tm tmbuffer;
-            struct tm *ltm = localtime_r(&c->lastAccessTime, &tmbuffer);
-#else
-            struct tm *ltm = localtime(&c->lastAccessTime);
-#endif
             TCHAR accessTime[64];
-            _tcsftime(accessTime, 64, _T("%d.%b.%Y %H:%M:%S"), ltm);
-            ConsolePrintf(pCtx, _T("%p %s %hs:%d\n"), c->handle, accessTime, c->srcFile, c->srcLine);
+            ConsolePrintf(pCtx, _T("%p %s %hs:%d\n"), c->handle, FormatTimestamp(c->lastAccessTime, accessTime), c->srcFile, c->srcLine);
          }
          ConsolePrintf(pCtx, _T("%d database connections in use\n\n"), list->size());
          delete list;

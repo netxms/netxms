@@ -82,7 +82,7 @@ enum AgentTunnelState
 class AgentTunnel : public RefCountObject
 {
 protected:
-   INT32 m_id;
+   uint32_t m_id;
    uuid m_guid;
    InetAddress m_address;
    SOCKET m_socket;
@@ -92,10 +92,12 @@ protected:
    MUTEX m_writeLock;
    MsgWaitQueue m_queue;
    VolatileCounter m_requestId;
-   UINT32 m_nodeId;
+   uint32_t m_nodeId;
    int32_t m_zoneUIN;
+   time_t m_certificateExpirationTime;
    AgentTunnelState m_state;
    time_t m_startTime;
+   BYTE m_hardwareId[HARDWARE_ID_LENGTH];
    TCHAR *m_systemName;
    TCHAR m_hostname[MAX_DNS_NAME];
    TCHAR *m_platformName;
@@ -105,7 +107,7 @@ protected:
    uuid m_agentId;
    UINT32 m_bindRequestId;
    uuid m_bindGuid;
-   UINT32 m_bindUserId;
+   uint32_t m_bindUserId;
    bool m_userAgentInstalled;
    bool m_agentProxy;
    bool m_snmpProxy;
@@ -128,18 +130,19 @@ protected:
    void setup(const NXCPMessage *request);
 
 public:
-   AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId, int32_t zoneUIN);
+   AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN, time_t certificateExpirationTime);
    
    void start();
    void shutdown();
-   UINT32 bind(UINT32 nodeId, UINT32 userId);
+   UINT32 bind(uint32_t nodeId, uint32_t userId);
    AgentTunnelCommChannel *createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);
    ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
    void resetStartTime() { m_startTime = time(NULL); }
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
    const InetAddress& getAddress() const { return m_address; }
+   const BYTE *getHardwareId() const { return m_hardwareId; }
    const TCHAR *getSystemName() const { return CHECK_NULL_EX(m_systemName); }
    const TCHAR *getHostname() const { return m_hostname; }
    const TCHAR *getDisplayName() const { return (m_hostname[0] != 0) ? m_hostname : CHECK_NULL_EX(m_systemName); }
@@ -150,8 +153,9 @@ public:
    const uuid& getAgentId() const { return m_agentId; }
    int32_t getZoneUIN() const { return m_zoneUIN; }
    bool isBound() const { return m_nodeId != 0; }
-   UINT32 getNodeId() const { return m_nodeId; }
-   UINT32 getState() const { return m_state; }
+   uint32_t getNodeId() const { return m_nodeId; }
+   time_t getCertificateExpirationTime() const { return m_certificateExpirationTime; }
+   AgentTunnelState getState() const { return m_state; }
    time_t getStartTime() const { return m_startTime; }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;

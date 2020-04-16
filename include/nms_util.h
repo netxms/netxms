@@ -3924,6 +3924,9 @@ String LIBNETXMS_EXPORTABLE GenerateLineDiff(const String& left, const String& r
 bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outputFile = NULL);
 int LIBNETXMS_EXPORTABLE DeflateFileStream(FILE *source, FILE *dest, bool gzipFormat);
 
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
+String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
+
 #endif
 
 #endif   /* _nms_util_h_ */

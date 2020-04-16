@@ -59,6 +59,7 @@
 #define MAX_SUBAGENT_NAME        64
 #define MAX_INSTANCE_COLUMNS     8
 #define ZONE_PROXY_KEY_LENGTH    16
+#define HARDWARE_ID_LENGTH       SHA1_DIGEST_SIZE
 
 /**
  * Agent policy types
@@ -414,6 +415,7 @@ struct PolicyChangeNotification
 #define DCIDESC_SYSTEM_CURRENTTIME                   _T("Current system time")
 #define DCIDESC_SYSTEM_FQDN                          _T("Fully qualified domain name")
 #define DCIDESC_SYSTEM_HANDLECOUNT                   _T("Total number of handles")
+#define DCIDESC_SYSTEM_HARDWAREID                    _T("Hardware ID")
 #define DCIDESC_SYSTEM_HOSTNAME                      _T("Host name")
 #define DCIDESC_SYSTEM_IS_VIRTUAL                    _T("Virtual system indicator")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE     _T("Available physical memory")

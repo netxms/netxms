@@ -361,6 +361,18 @@ static LONG H_AgentHeapMapped(const TCHAR *param, const TCHAR *arg, TCHAR *value
 }
 
 /**
+ * Handler for System.HardwareId
+ */
+static LONG H_SystemHardwareId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   BYTE hwid[HARDWARE_ID_LENGTH];
+   if (!GetSystemHardwareId(hwid))
+      return SYSINFO_RC_ERROR;
+   BinToStr(hwid, HARDWARE_ID_LENGTH, value);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Standard agent's parameters
  */
 static NETXMS_SUBAGENT_PARAM m_stdParams[] =
@@ -449,6 +461,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, NULL, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
    { _T("System.CurrentTime"), H_SystemTime, NULL, DCI_DT_INT64, DCIDESC_SYSTEM_CURRENTTIME },
    { _T("System.FQDN"), H_HostName, _T("FQDN"), DCI_DT_STRING, DCIDESC_SYSTEM_FQDN },
+   { _T("System.HardwareId"), H_SystemHardwareId, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HARDWAREID },
    { _T("System.Hostname"), H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { _T("System.PlatformName"), H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
 

@@ -125,15 +125,15 @@ static BYTE *BIOSReader(size_t *size)
  */
 int main(int argc, char *argv[])
 {
-	InitNetXMSProcess(true);
+   InitNetXMSProcess(true);
    SMBIOS_Parse(BIOSReader);
    
    int rc;
-   BYTE hwid[SHA1_DIGEST_SIZE];
+   BYTE hwid[HARDWARE_ID_LENGTH];
    if (GetSystemHardwareId(hwid))
    {
       TCHAR buffer[128];
-      _tprintf(_T("%s\n"), BinToStr(hwid, SHA1_DIGEST_SIZE, buffer));
+      _tprintf(_T("%s\n"), BinToStr(hwid, sizeof(hwid), buffer));
       rc = 0;
    }
    else

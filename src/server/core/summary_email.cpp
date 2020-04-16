@@ -31,21 +31,6 @@ static const TCHAR *s_states[4] = { _T("<td style=\"background:gold\">Outstandin
          _T("<td style=\"background:green\">Resolved</td>"), _T("<td style=\"background:darkred\">Terminated</td>") };
 
 /**
- * Formats time in seconds into date - dd.mm.yy HH:MM:SS
- */
-static TCHAR *FormatDate(time_t t, TCHAR *buffer, size_t bufferSize)
-{
-#if HAVE_LOCALTIME_R
-   struct tm ltmBuffer;
-   struct tm *loc = localtime_r(&t, &ltmBuffer);
-#else
-   struct tm *loc = localtime(&t);
-#endif
-   _tcsftime(buffer, bufferSize, _T("%d.%m.%y %H:%M:%S"), loc);
-   return buffer;
-}
-
-/**
  * Creates a HTML formated alarm summary to be used in an email
  */
 static StringBuffer CreateAlarmSummary()
@@ -99,10 +84,10 @@ static StringBuffer CreateAlarmSummary()
       summary.append(alarms->get(i)->getResolvedByUser());
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
-      summary.append(FormatDate(alarms->get(i)->getCreationTime(), timeFmt, 128));
+      summary.append(FormatTimestamp(alarms->get(i)->getCreationTime(), timeFmt));
       summary.append(_T("</td>\n"));
       summary.append(_T("<td>"));
-      summary.append(FormatDate(alarms->get(i)->getLastChangeTime(), timeFmt, 128));
+      summary.append(FormatTimestamp(alarms->get(i)->getLastChangeTime(), timeFmt));
       summary.append(_T("</td>\n"));
       summary.append(_T("</tr>\n"));
    }
@@ -146,7 +131,7 @@ void SendAlarmSummaryEmail(const shared_ptr<ScheduledTaskParameters>& parameters
    TCHAR timeFmt[128], subject[64];
 
    time(&currTime);
-   FormatDate(currTime, timeFmt, 128);
+   FormatTimestamp(currTime, timeFmt);
    _sntprintf(subject, 64, _T("NetXMS Alarm Summary for %s"), timeFmt);
 
    TCHAR *next, *curr;

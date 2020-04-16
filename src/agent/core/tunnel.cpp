@@ -691,7 +691,7 @@ bool Tunnel::connectToServer()
    if (GetParameterValue(_T("System.UName"), buffer, &session) == ERR_SUCCESS)
       msg.setField(VID_SYS_DESCRIPTION, buffer);
 
-   BYTE hwid[SHA1_DIGEST_SIZE];
+   BYTE hwid[HARDWARE_ID_LENGTH];
    if (GetSystemHardwareId(hwid))
       msg.setField(VID_HARDWARE_ID, hwid, sizeof(hwid));
 

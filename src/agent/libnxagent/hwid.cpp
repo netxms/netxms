@@ -184,7 +184,7 @@ static bool GetHardwareProduct(char *buffer)
 #endif
 
 /**
- * Get hardware ID for local system. Provided buffer should be at least SHA1_DIGEST_SIZE bytes long.
+ * Get hardware ID for local system. Provided buffer should be at least HARDWARE_ID_LENGTH bytes long.
  */
 bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid)
 {

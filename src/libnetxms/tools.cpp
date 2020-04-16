@@ -884,6 +884,38 @@ int64_t LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
 }
 
 /**
+ * Format timestamp as dd.mm.yy HH:MM:SS.
+ * Provided buffer should be at least 21 characters long.
+ */
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer)
+{
+   if (t != 0)
+   {
+#if HAVE_LOCALTIME_R
+      struct tm ltmBuffer;
+      struct tm *loc = localtime_r(&t, &ltmBuffer);
+#else
+      struct tm *loc = localtime(&t);
+#endif
+      _tcsftime(buffer, 21, _T("%d.%b.%Y %H:%M:%S"), loc);
+   }
+   else
+   {
+      _tcscpy(buffer, _T("never"));
+   }
+   return buffer;
+}
+
+/**
+ * Format timestamp as dd.mm.yy HH:MM:SS.
+ */
+String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t)
+{
+   TCHAR buffer[64];
+   return String(FormatTimestamp(t, buffer));
+}
+
+/**
  * Extract word from line (UNICODE version). Extracted word will be placed in buffer.
  * Returns pointer to the next word or to the null character if end
  * of line reached.

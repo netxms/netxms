@@ -1240,9 +1240,9 @@ BOOL Initialize()
          MemFree(s_appAgentsList);
       }
 
-	   BYTE hwid[SHA1_DIGEST_SIZE];
+	   BYTE hwid[HARDWARE_ID_LENGTH];
 	   if (GetSystemHardwareId(hwid))
-	      nxlog_write(NXLOG_INFO, _T("System hardware ID is %s"), BinToStr(hwid, SHA1_DIGEST_SIZE, agentIdText));
+	      nxlog_write(NXLOG_INFO, _T("System hardware ID is %s"), BinToStr(hwid, HARDWARE_ID_LENGTH, agentIdText));
 	   else
          nxlog_write(NXLOG_INFO, _T("System hardware ID is unknown"));
    }

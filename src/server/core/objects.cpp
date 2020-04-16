@@ -2155,15 +2155,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
                  object.dbgGetParentList().cstr(), object.dbgGetChildList().cstr());
 
    TCHAR buffer[256];
-   time_t t = object.getTimeStamp();
-#if HAVE_LOCALTIME_R
-   struct tm tmbuffer;
-   struct tm *ltm = localtime_r(&t, &tmbuffer);
-#else
-   struct tm *ltm = localtime(&t);
-#endif
-   _tcsftime(buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
-   ConsolePrintf(console, _T("   Last change.........: %s\n"), buffer);
+   ConsolePrintf(console, _T("   Last change.........: %s\n"), FormatTimestamp(object.getTimeStamp(), buffer));
 
    if (object.isDataCollectionTarget())
    {

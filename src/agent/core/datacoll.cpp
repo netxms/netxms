@@ -1654,15 +1654,8 @@ static void LoadState()
          s_serverSyncStatus.set(serverId, s);
          nxlog_debug_tag(DEBUG_TAG, 2, _T("%d elements in queue for server ID ") UINT64X_FMT(_T("016")), s->queueSize, serverId);
 
-#if HAVE_LOCALTIME_R
-         struct tm tbuffer;
-         struct tm *ltm = localtime_r(&s->lastSync, &tbuffer);
-#else
-         struct tm *ltm = localtime(&s->lastSync);
-#endif
          TCHAR ts[64];
-         _tcsftime(ts, 64, _T("%Y.%m.%d %H:%M:%S"), ltm);
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Oldest timestamp is %s for server ID ") UINT64X_FMT(_T("016")), ts, serverId);
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Oldest timestamp is %s for server ID ") UINT64X_FMT(_T("016")), FormatTimestamp(s->lastSync, ts), serverId);
       }
       DBFreeResult(hResult);
    }

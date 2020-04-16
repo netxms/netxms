@@ -2475,14 +2475,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
    if (textTemplate == nullptr)
       return StringBuffer();
 
-   struct tm *lt;
-#if HAVE_LOCALTIME_R
-   struct tm tmbuffer;
-#endif
    TCHAR buffer[256];
    char entryPoint[MAX_IDENTIFIER_LENGTH];
    int i;
-   time_t t;
 
    DbgPrintf(8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
              m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId());
@@ -2555,7 +2550,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                case 's':   // Severity code
                   if (event != nullptr)
                   {
-                     output.append(static_cast<INT32>(event->getSeverity()));
+                     output.append(static_cast<int32_t>(event->getSeverity()));
                   }
                   break;
                case 'S':   // Severity text
@@ -2565,17 +2560,10 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case 't':   // Event's timestamp
-                  t = (event != nullptr) ? event->getTimestamp() : time(NULL);
-#if HAVE_LOCALTIME_R
-                  lt = localtime_r(&t, &tmbuffer);
-#else
-                  lt = localtime(&t);
-#endif
-                  _tcsftime(buffer, 32, _T("%d-%b-%Y %H:%M:%S"), lt);
-                  output.append(buffer);
+                  output.append(FormatTimestamp((event != nullptr) ? event->getTimestamp() : time(nullptr), buffer));
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
-                  output.append(static_cast<INT64>((event != nullptr) ? event->getTimestamp() : time(nullptr)));
+                  output.append(static_cast<int64_t>((event != nullptr) ? event->getTimestamp() : time(nullptr)));
                   break;
                case 'U':   // User name
                   output.append(userName);

@@ -83,29 +83,15 @@ int64_t GetSyncerRunTime(StatisticType statType)
  */
 void ShowSyncerStats(ServerConsole *console)
 {
-   s_syncerGaugeLock.lock();
    TCHAR runTime[128];
-   if (s_lastRunTime > 0)
-   {
-#if HAVE_LOCALTIME_R
-      struct tm tmbuf;
-      struct tm *ltm = localtime_r(&s_lastRunTime, &tmbuf);
-#else
-      struct tm *ltm = localtime(&s_lastRunTime);
-#endif
-      _tcsftime(runTime, 128, _T("%Y.%b.%d %H:%M:%S"), ltm);
-   }
-   else
-   {
-      _tcscpy(runTime, _T("never"));
-   }
+   s_syncerGaugeLock.lock();
    console->printf(
             _T("Last run at .........: %s\n")
             _T("Average run time ....: %d ms\n")
             _T("Last run time .......: %d ms\n")
             _T("Max run time ........: %d ms\n")
             _T("Min run time ........: %d ms\n")
-            _T("\n"), runTime,
+            _T("\n"), FormatTimestamp(s_lastRunTime, runTime),
             s_syncerRunTime.getCurrent(), s_syncerRunTime.getAverage(),
             s_syncerRunTime.getMax(), s_syncerRunTime.getMin());
    s_syncerGaugeLock.unlock();
