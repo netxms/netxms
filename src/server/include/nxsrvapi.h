@@ -787,6 +787,10 @@ public:
  */
 class AgentConnectionReceiver;
 
+#ifdef _WIN32
+template class LIBNXSRV_EXPORTABLE shared_ptr<AgentConnectionReceiver>;
+#endif
+
 /**
  * Agent connection
  */
@@ -964,6 +968,10 @@ public:
    void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
    uint32_t cancelFileDownload();
 };
+
+#ifdef _WIN32
+template class LIBNXSRV_EXPORTABLE shared_ptr<AgentConnection>;
+#endif
 
 /**
  * Proxy SNMP transport

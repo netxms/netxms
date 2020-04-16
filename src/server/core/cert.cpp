@@ -38,24 +38,24 @@
 #endif
 
 #if OPENSSL_VERSION_NUMBER < 0x10000000L
-inline int EVP_PKEY_id(EVP_PKEY *key)
+static inline int EVP_PKEY_id(EVP_PKEY *key)
 {
    return key->type;
 }
 #endif
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-inline ASN1_TIME *X509_getm_notBefore(const X509 *x)
+static inline ASN1_TIME *X509_getm_notBefore(const X509 *x)
 {
    return X509_get_notBefore(x);
 }
 
-inline ASN1_TIME *X509_getm_notAfter(const X509 *x)
+static inline ASN1_TIME *X509_getm_notAfter(const X509 *x)
 {
    return X509_get_notAfter(x);
 }
 
-inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
+static inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
 {
    return X509_get_notAfter(x);
 }
@@ -341,9 +341,17 @@ String GetCertificateSubjectString(X509 *cert)
  */
 time_t GetCertificateExpirationTime(const X509 *cert)
 {
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
+   ASN1_TIME epoch;
+   ASN1_TIME_set(&epoch, static_cast<time_t>(0));
+   int days, seconds;
+   ASN1_TIME_diff(&days, &seconds, &epoch, X509_get0_notAfter(cert));
+   return static_cast<time_t>(days) * 86400 + seconds;
+#else
    struct tm expTime;
    ASN1_TIME_to_tm(X509_get0_notAfter(cert), &expTime);
    return timegm(&expTime);
+#endif
 }
 
 /**

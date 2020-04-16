@@ -293,6 +293,7 @@
     <ClCompile Include="netmap_objlist.cpp" />
     <ClCompile Include="netobj.cpp" />
     <ClCompile Include="netsrv.cpp" />
+    <ClCompile Include="network_cred.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="nodelink.cpp" />
     <ClCompile Include="notification_channel.cpp" />

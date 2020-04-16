@@ -152,6 +152,10 @@ public:
    void setTcpProxySession(ClientSession *session);
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<AgentConnectionEx>;
+#endif
+
 /**
  * Poller types
  */
