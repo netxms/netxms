@@ -209,7 +209,7 @@ inline void *InterlockedExchangePointer(void *volatile *target, void *value)
 #endif
 }
 
-#elif defined(__IBMC__) || defined(__IBMCPP__) || defined(__ibmxl__)
+#elif defined(_AIX)
 
 typedef volatile INT32 VolatileCounter;
 typedef volatile INT64 VolatileCounter64;

@@ -736,7 +736,7 @@ typedef int BOOL;
 
 // on AIX open_memstream only declared if _XOPEN_SOURCE >= 700
 // which is incompatible with other parts of code
-#if defined(__IBMC__) || defined(__IBMCPP__)
+#ifdef _AIX
 #ifdef __cplusplus
 extern "C"
 #endif

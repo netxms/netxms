@@ -24,6 +24,8 @@
 
 #if defined(_WIN32)
 #include <intrin.h>
+#elif defined(_AIX)
+#include <sys/utsname.h>
 #elif HAVE_CPUID_H
 #include <cpuid.h>
 #endif
@@ -52,7 +54,7 @@ bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid)
 #endif
 
    // Add hardware serial number
-#if defined(__IBMCPP__) || defined(__ibmxl__)
+#if defined(_AIX)
    struct utsname un;
    if (uname(&un) == 0)
    {
