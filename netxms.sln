@@ -350,6 +350,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libethernetip", "src\ethern
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxethernetip", "src\ethernetip\nxethernetip\nxethernetip.vcxproj", "{114CD471-021A-A216-21CF-1F2FA75815EA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxhwid", "src\agent\tools\nxhwid\nxhwid.vcxproj", "{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1462,6 +1464,14 @@ Global
 		{114CD471-021A-A216-21CF-1F2FA75815EA}.Release|Win32.Build.0 = Release|Win32
 		{114CD471-021A-A216-21CF-1F2FA75815EA}.Release|x64.ActiveCfg = Release|x64
 		{114CD471-021A-A216-21CF-1F2FA75815EA}.Release|x64.Build.0 = Release|x64
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}.Debug|Win32.Build.0 = Debug|Win32
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}.Debug|x64.ActiveCfg = Debug|x64
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}.Debug|x64.Build.0 = Debug|x64
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}.Release|Win32.ActiveCfg = Release|Win32
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}.Release|Win32.Build.0 = Release|Win32
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}.Release|x64.ActiveCfg = Release|x64
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1613,6 +1623,7 @@ Global
 		{2AC3C9D1-E311-F327-AE19-014CE97C6812} = {64482674-7B36-4A14-A612-247333174315}
 		{11A90214-E31C-5F19-8F0E-81F10E1091FB} = {B5794570-4B2F-422E-881D-3ADB85587D8E}
 		{114CD471-021A-A216-21CF-1F2FA75815EA} = {B5794570-4B2F-422E-881D-3ADB85587D8E}
+		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E} = {896A7CDA-423A-460A-83E2-6ED37DAE187C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
