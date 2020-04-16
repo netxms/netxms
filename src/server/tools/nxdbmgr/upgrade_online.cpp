@@ -460,7 +460,7 @@ static bool CopyDataTable_V33_6(const TCHAR *table, bool tableData)
          insertQuery.append((count == 0) ? _T(' ') : _T(','));
          if (tableData)
          {
-            _sntprintf(query, 1024, _T("(%u,%u,'"), currId, static_cast<uint32_t>(currTime));
+            _sntprintf(query, 1024, _T("(%u,to_timestamp(%u),'"), currId, static_cast<uint32_t>(currTime));
             insertQuery.append(query);
             insertQuery.appendPreallocated(DBGetField(hResult, 2, nullptr, 0));
             insertQuery.append(_T("')"));
@@ -468,7 +468,7 @@ static bool CopyDataTable_V33_6(const TCHAR *table, bool tableData)
          else
          {
             TCHAR buffer1[256], buffer2[256];
-            _sntprintf(query, 1024, _T("(%u,%u,%s,%s)"),
+            _sntprintf(query, 1024, _T("(%u,to_timestamp(%u),%s,%s)"),
                      currId, static_cast<uint32_t>(currTime),
                      (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 2, buffer1, 256)),
                      (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 3, buffer2, 256)));
