@@ -4618,6 +4618,7 @@ bool Node::confPollSnmp(uint32_t rqId)
                   ap->deleteObject();
                }
             }
+            delete apList;
          }
 
          lockProperties();
