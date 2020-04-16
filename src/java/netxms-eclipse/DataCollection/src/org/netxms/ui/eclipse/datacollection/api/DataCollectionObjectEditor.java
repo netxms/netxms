@@ -72,7 +72,9 @@ public class DataCollectionObjectEditor
 				final boolean isNewObj = object.isNewItem();
 				synchronized(DataCollectionObjectEditor.this)
 				{
-					object.getOwner().modifyObject(object);
+				   long itemId = object.getOwner().modifyObject(object);
+				   if(object.isNewItem())
+				      object.setId(itemId);
 				}
 				runInUIThread(new Runnable() {
 					@Override
