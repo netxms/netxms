@@ -26,6 +26,8 @@
 #include <intrin.h>
 #elif defined(_AIX)
 #include <sys/utsname.h>
+#include <sys/cfgodm.h>
+#include <odmi.h>
 #elif defined(__sun)
 #include <sys/systeminfo.h>
 #elif HAVE_CPUID_H
@@ -63,10 +65,38 @@ static bool GetHardwareProduct(char *buffer)
 #elif defined(_AIX)
 
 /**
+ * Read attribute from sys0 device using ODM
+ */
+static bool ReadAttributeFromSysDevice(const char *attribute, char *buffer)
+{
+   char query[256];
+   snprintf(query, 256, "name='sys0' and attribute='%s'", attribute);
+
+   bool success = false;
+   struct CuAt object;
+   long rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, query, &object, ODM_FIRST), long);
+   while((rc != 0) && (rc != -1))
+   {
+      // Sanity check - some versions of AIX return all attributes despite filter in odm_get_obj
+      if (!strcmp(attribute, object.attribute))
+      {
+         strlcpy(buffer, object.value, INTERNAL_BUFFER_SIZE);
+         success = true;
+         break;
+      }
+      rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, query, &object, ODM_NEXT), long);
+   }
+   return success;
+}
+
+/**
  * Get hardware serial number - AIX
  */
 static bool GetHardwareSerialNumber(char *buffer)
 {
+   if (ReadAttributeFromSysDevice("systemid", buffer))
+      return true;
+
    struct utsname un;
    if (uname(&un) != 0)
       return false;
@@ -79,7 +109,7 @@ static bool GetHardwareSerialNumber(char *buffer)
  */
 static bool GetHardwareProduct(char *buffer)
 {
-   return false;
+   return ReadAttributeFromSysDevice("modelname", buffer);
 }
 
 #elif defined(__sun)

@@ -27,6 +27,8 @@
 #include <sys/msg.h>
 #include <nlist.h>
 #include <utmp.h>
+#include <sys/cfgodm.h>
+#include <odmi.h>
 
 /**
  * Hander for System.CPU.Count parameter
@@ -302,5 +304,82 @@ LONG H_SysMsgQueue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
       default:
          return SYSINFO_RC_UNSUPPORTED;
    }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Read attribute from sys0 device using ODM
+ */
+static bool ReadAttributeFromSysDevice(const char *attribute, char *buffer)
+{
+   char query[256];
+   snprintf(query, 256, "name='sys0' and attribute='%s'", attribute);
+
+   bool success = false;
+   struct CuAt object;
+   long rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, query, &object, ODM_FIRST), long);
+   while((rc != 0) && (rc != -1))
+   {
+      // Sanity check - some versions of AIX return all attributes despite filter in odm_get_obj
+      if (!strcmp(attribute, object.attribute))
+      {
+         strlcpy(buffer, object.value, MAX_RESULT_LENGTH);
+         success = true;
+         break;
+      }
+      rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, query, &object, ODM_NEXT), long);
+   }
+   return success;
+}
+
+/**
+ * Handler for Hardware.System.Manufacturer
+ */
+LONG H_HardwareManufacturer(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char buffer[MAX_RESULT_LENGTH];
+   if (!ReadAttributeFromSysDevice("modelname", buffer))
+      return SYSINFO_RC_ERROR;
+   char *s = strchr(buffer, ',');
+   if (s == nullptr)
+      return SYSINFO_RC_UNSUPPORTED;
+   *s = 0;
+   ret_mbstring(value, buffer);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Hardware.System.Product
+ */
+LONG H_HardwareProduct(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char buffer[MAX_RESULT_LENGTH];
+   if (!ReadAttributeFromSysDevice("modelname", buffer))
+      return SYSINFO_RC_ERROR;
+   char *s = strchr(buffer, ',');
+   if (s != nullptr)
+   {
+      s++;
+      ret_mbstring(value, s);
+   }
+   else
+   {
+      ret_mbstring(value, buffer);
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Hardware.System.SerialNumber
+ */
+LONG H_HardwareSerialNumber(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char buffer[MAX_RESULT_LENGTH];
+   if (!ReadAttributeFromSysDevice("systemid", buffer))
+      return SYSINFO_RC_ERROR;
+   if (!strncmp(buffer, "IBM,02", 6))
+      ret_mbstring(value, &buffer[6]);
+   else
+      ret_mbstring(value, buffer);
    return SYSINFO_RC_SUCCESS;
 }
