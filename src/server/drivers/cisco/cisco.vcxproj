@@ -148,6 +148,7 @@
     <ClCompile Include="generic.cpp" />
     <ClCompile Include="nexus.cpp" />
     <ClCompile Include="sb.cpp" />
+    <ClCompile Include="wlc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\libnetxms\libnetxms.vcxproj">
