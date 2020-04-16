@@ -896,7 +896,7 @@
 				<dci id="40">
 					<guid>85e957ae-06b4-4f9e-8946-3d47c8968b6b</guid>
 					<name>Server.ThreadPool.Load(AGENT)</name>
-					<description>Server thread pool AGENT: current load</description>
+					<description>Server thread pool AGENT: current load (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -974,7 +974,7 @@
 				<dci id="43">
 					<guid>31d3e3d2-59ba-4fb8-a63f-2e4208a0085a</guid>
 					<name>Server.ThreadPool.Usage(AGENT)</name>
-					<description>Server thread pool AGENT: usage</description>
+					<description>Server thread pool AGENT: usage (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -996,7 +996,7 @@
 				<dci id="44">
 					<guid>e44e1093-fe7e-4962-9a77-f7d2ebdc61eb</guid>
 					<name>Server.ThreadPool.Load(CLIENT)</name>
-					<description>Server thread pool CLIENT: current load</description>
+					<description>Server thread pool CLIENT: current load (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1074,7 +1074,7 @@
 				<dci id="47">
 					<guid>1d194162-e484-459d-aff7-0ef679e55ee8</guid>
 					<name>Server.ThreadPool.Usage(CLIENT)</name>
-					<description>Server thread pool CLIENT: usage</description>
+					<description>Server thread pool CLIENT: usage (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1096,7 +1096,7 @@
 				<dci id="48">
 					<guid>fd9c9735-3702-4dfb-864f-d0522ab0cd6c</guid>
 					<name>Server.ThreadPool.Load(DATACOLL)</name>
-					<description>Server thread pool DATACOLL: current load</description>
+					<description>Server thread pool DATACOLL: current load (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1174,7 +1174,7 @@
 				<dci id="51">
 					<guid>b4bac85e-2fb7-4121-b263-d086a5c5b62e</guid>
 					<name>Server.ThreadPool.Usage(DATACOLL)</name>
-					<description>Server thread pool DATACOLL: usage</description>
+					<description>Server thread pool DATACOLL: usage (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1196,7 +1196,7 @@
 				<dci id="52">
 					<guid>d1a28a73-bb81-4522-b0ff-b5a33cd929fc</guid>
 					<name>Server.ThreadPool.Load(DISCOVERY)</name>
-					<description>Server thread pool DISCOVERY: current load</description>
+					<description>Server thread pool DISCOVERY: current load (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1274,7 +1274,7 @@
 				<dci id="55">
 					<guid>ae7dfe10-2739-4eb9-aa3a-2f9cd2004f06</guid>
 					<name>Server.ThreadPool.Usage(DISCOVERY)</name>
-					<description>Server thread pool DISCOVERY: usage</description>
+					<description>Server thread pool DISCOVERY: usage (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1296,7 +1296,7 @@
 				<dci id="56">
 					<guid>57901dd6-f984-4656-9f4c-03b9fed86275</guid>
 					<name>Server.ThreadPool.Load(MAIN)</name>
-					<description>Server thread pool MAIN: current load</description>
+					<description>Server thread pool MAIN: current load (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1374,7 +1374,7 @@
 				<dci id="59">
 					<guid>5baca456-009e-4833-a6d7-2d6942e1597f</guid>
 					<name>Server.ThreadPool.Usage(MAIN)</name>
-					<description>Server thread pool MAIN: usage</description>
+					<description>Server thread pool MAIN: usage (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1396,7 +1396,7 @@
 				<dci id="60">
 					<guid>d56d7bda-dbb0-4ec2-84ab-5368fd6636b5</guid>
 					<name>Server.ThreadPool.Load(POLLERS)</name>
-					<description>Server thread pool POLLERS: current load</description>
+					<description>Server thread pool POLLERS: current load (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1474,7 +1474,7 @@
 				<dci id="63">
 					<guid>57012544-d655-4fb6-83b5-e62aeab1d9ee</guid>
 					<name>Server.ThreadPool.Usage(POLLERS)</name>
-					<description>Server thread pool POLLERS: usage</description>
+					<description>Server thread pool POLLERS: usage (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1496,7 +1496,7 @@
 				<dci id="64">
 					<guid>fd169c7a-171a-46ce-8b01-a28762f7e85f</guid>
 					<name>Server.ThreadPool.Load(SCHEDULER)</name>
-					<description>Server thread pool SCHEDULER: current load</description>
+					<description>Server thread pool SCHEDULER: current load (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1574,7 +1574,7 @@
 				<dci id="67">
 					<guid>cb274777-23b1-4b0b-aa6a-d190656557de</guid>
 					<name>Server.ThreadPool.Usage(SCHEDULER)</name>
-					<description>Server thread pool SCHEDULER: usage</description>
+					<description>Server thread pool SCHEDULER: usage (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1596,7 +1596,7 @@
 				<dci id="68">
 					<guid>091302c9-f71a-464e-8569-ef9084d75322</guid>
 					<name>Server.ThreadPool.Load(SYNCER)</name>
-					<description>Server thread pool SYNCER: current load</description>
+					<description>Server thread pool SYNCER: current load (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -1674,7 +1674,7 @@
 				<dci id="71">
 					<guid>987db6c2-e54b-4b78-aad2-c0a22371a000</guid>
 					<name>Server.ThreadPool.Usage(SYNCER)</name>
-					<description>Server thread pool SYNCER: usage</description>
+					<description>Server thread pool SYNCER: usage (%)</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -2010,7 +2010,7 @@
 				<dci id="268">
 					<guid>3b946576-d8fe-4f86-ad98-b5f023c2c118</guid>
 					<name>Server.Heap.Active</name>
-					<description>Server: Active server heap memory</description>
+					<description>Server: Active server heap memory (jemalloc build only)</description>
 					<dataType>3</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -2032,7 +2032,7 @@
 				<dci id="269">
 					<guid>ebd67dfa-3d76-4213-a26b-acec2517b793</guid>
 					<name>Server.Heap.Allocated</name>
-					<description>Server: Allocated server heap memory</description>
+					<description>Server: Allocated server heap memory (jemalloc build only)</description>
 					<dataType>3</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -2054,7 +2054,7 @@
 				<dci id="270">
 					<guid>225f554f-98b1-4c74-8194-a15fbfd6bea6</guid>
 					<name>Server.Heap.Mapped</name>
-					<description>Server: Mapped server heap memory</description>
+					<description>Server: Mapped server heap memory (jemalloc build only)</description>
 					<dataType>3</dataType>
 					<samples>0</samples>
 					<origin>0</origin>

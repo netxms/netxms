@@ -85,7 +85,7 @@
 				<dci id="8">
 					<guid>fcbc2d2a-5991-420f-bd9e-6f5e22448e34</guid>
 					<name>System.CPU.Usage.User</name>
-					<description>CPU: usage (user)</description>
+					<description>CPU: usage (user) (%)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
@@ -106,7 +106,7 @@
 				<dci id="7">
 					<guid>b8296d2f-9b04-4ae5-a6eb-6e065ba2f999</guid>
 					<name>System.CPU.Usage.System</name>
-					<description>CPU: usage (system)</description>
+					<description>CPU: usage (system) (%)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
@@ -148,7 +148,7 @@
 				<dci id="5">
 					<guid>46b64804-8cfb-44ab-a5f1-b95bd3b55099</guid>
 					<name>System.CPU.Usage.Irq</name>
-					<description>CPU: usage (interrupts)</description>
+					<description>CPU: usage (interrupts) (%)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
@@ -169,7 +169,7 @@
 				<dci id="4">
 					<guid>ac9d0c02-756c-45b4-b88f-cb156bc6b5c5</guid>
 					<name>System.CPU.Usage.IoWait</name>
-					<description>CPU: usage (I/O wait)</description>
+					<description>CPU: usage (I/O wait) (%)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
@@ -202,7 +202,7 @@
 				<dci id="3">
 					<guid>3febe585-f432-4750-825c-764b5706b634</guid>
 					<name>System.IO.DiskTime</name>
-					<description>I/O: percent of CPU time spent on I/O</description>
+					<description>I/O: average disk busy time for last minute (%)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>

@@ -74,7 +74,7 @@
 				<dci id="181">
 					<guid>98bfe0c0-112b-4586-b7ed-af12f2c4ac94</guid>
 					<name>System.CPU.Usage</name>
-					<description>CPU: usage</description>
+					<description>CPU: usage (%)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
@@ -318,7 +318,7 @@
 				<dci id="91">
 					<guid>5647149c-f9b7-4008-8fc4-9b98f9c703eb</guid>
 					<name>FileSystem.FreePerc({instance})</name>
-					<description>File system: free space on {instance}</description>
+					<description>File system: free space on {instance} (%)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
@@ -362,7 +362,7 @@
 				<dci id="93">
 					<guid>d1b18436-c28c-4d41-a909-b2107f7f2201</guid>
 					<name>FileSystem.UsedPerc({instance})</name>
-					<description>File system: used space on {instance}</description>
+					<description>File system: used space on {instance} (%)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
