@@ -1785,3 +1785,14 @@ int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    *result = vm->createValue(y);
    return 0;
 }
+
+/**
+ * Get names of all thread pools
+ */
+int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   StringList *pools = ThreadPoolGetAllPools();
+   *result = vm->createValue(new NXSL_Array(vm, pools));
+   delete pools;
+   return 0;
+}

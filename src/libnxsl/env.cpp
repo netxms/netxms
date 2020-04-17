@@ -42,6 +42,7 @@ int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -184,6 +185,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "ArrayToString", F_ArrayToString, 2 },
    { "Base64Decode", F_Base64Decode, -1 },
    { "Base64Encode", F_Base64Encode, -1 },
+   { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },
    { "JsonParse", F_JsonParse, 1 },
    { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },
 	{ "SecondsToUptime", F_SecondsToUptime, 1 },
