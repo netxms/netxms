@@ -341,7 +341,46 @@ String GetCertificateSubjectString(X509 *cert)
  */
 time_t GetCertificateExpirationTime(const X509 *cert)
 {
-#if OPENSSL_VERSION_NUMBER < 0x10101000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+   struct tm expTime;
+   memset(&expTime, 0, sizeof(expTime));
+
+   const ASN1_TIME *atime = X509_get0_notAfter(cert);
+
+   size_t i = 0;
+   const char *s = reinterpret_cast<const char*>(atime->data);
+   if (atime->type == V_ASN1_UTCTIME) /* two digit year */
+   {
+      if (atime->length < 12)
+         return 0;  // Invalid format
+      expTime.tm_year = (s[i] - '0') * 10 + (s[i + 1] - '0');
+      if (expTime.tm_year < 70)
+         expTime.tm_year += 100;
+      i += 2;
+   }
+   else if (atime->type == V_ASN1_GENERALIZEDTIME) /* four digit year */
+   {
+      if (atime->length < 14)
+         return 0;  // Invalid format
+      expTime.tm_year = (s[i] - '0') * 1000 + (s[i + 1] - '0') * 100 + (s[i + 2] - '0') * 10 + (s[i + 3] - '0');
+      expTime.tm_year -= 1900;
+      i += 4;
+   }
+   else
+   {
+      return 0;  // Unknown type
+   }
+   expTime.tm_mon = (s[i] - '0') * 10 + (s[i + 1] - '0') - 1; // -1 since January is 0 not 1.
+   i += 2;
+   expTime.tm_mday = (s[i] - '0') * 10 + (s[i + 1] - '0');
+   i += 2;
+   expTime.tm_hour = (s[i] - '0') * 10 + (s[i + 1] - '0');
+   i += 2;
+   expTime.tm_min  = (s[i] - '0') * 10 + (s[i + 1] - '0');
+   i += 2;
+   expTime.tm_sec  = (s[i] - '0') * 10 + (s[i + 1] - '0');
+   return timegm(&expTime);
+#elif OPENSSL_VERSION_NUMBER < 0x10101000L
    ASN1_TIME epoch;
    ASN1_TIME_set(&epoch, static_cast<time_t>(0));
    int days, seconds;
