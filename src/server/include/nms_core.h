@@ -1183,15 +1183,14 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
 bool CreateSummaryTableExportRecord(INT32 id, StringBuffer &xml);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite);
 
-void GetFullComunityList(NXCPMessage *msg);
-void GetZoneComunityList(NXCPMessage *msg, int32_t zoneUIN);
-void GetFullUsmCredList(NXCPMessage *msg);
-void GetZoneUsmCredList(NXCPMessage *msg, int32_t zoneUIN);
+void GetFullCommunityList(NXCPMessage *msg);
+void GetZoneCommunityList(NXCPMessage *msg, int32_t zoneUIN);
+void GetFullUsmCredentialList(NXCPMessage *msg);
+void GetZoneUsmCredentialList(NXCPMessage *msg, int32_t zoneUIN);
 void GetFullSnmpPortList(NXCPMessage *msg);
 void GetZoneSnmpPortList(NXCPMessage *msg, int32_t zoneUIN);
 void GetFullAgentSecretList(NXCPMessage *msg);
 void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN);
-
 
 void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();

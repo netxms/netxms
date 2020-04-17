@@ -22,8 +22,10 @@
 
 #include "nxcore.h"
 
-
-void GetZoneComunityList(NXCPMessage *msg, int32_t zoneUIN)
+/**
+ * Get list of configured SNMP communities for given zone into NXCP message
+ */
+void GetZoneCommunityList(NXCPMessage *msg, int32_t zoneUIN)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    TCHAR query[256];
@@ -48,10 +50,12 @@ void GetZoneComunityList(NXCPMessage *msg, int32_t zoneUIN)
       msg->setField(VID_RCC, RCC_DB_FAILURE);
    }
    DBConnectionPoolReleaseConnection(hdb);
-
 }
 
-void GetFullComunityList(NXCPMessage *msg)
+/**
+ * Get list of configured SNMP communities for all zones into NXCP message
+ */
+void GetFullCommunityList(NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT community,zone FROM snmp_communities ORDER BY zone DESC, id ASC"));
@@ -77,9 +81,10 @@ void GetFullComunityList(NXCPMessage *msg)
    DBConnectionPoolReleaseConnection(hdb);
 }
 
-
-
-void GetZoneUsmCredList(NXCPMessage *msg, int32_t zoneUIN)
+/**
+ * Get list of configured SNMP USM credentials for given zone into NXCP message
+ */
+void GetZoneUsmCredentialList(NXCPMessage *msg, int32_t zoneUIN)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    TCHAR query[256];
@@ -119,7 +124,10 @@ void GetZoneUsmCredList(NXCPMessage *msg, int32_t zoneUIN)
    DBConnectionPoolReleaseConnection(hdb);
 }
 
-void GetFullUsmCredList(NXCPMessage *msg)
+/**
+ * Get list of configured SNMP USM credentials for all zones into NXCP message
+ */
+void GetFullUsmCredentialList(NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone,comments FROM usm_credentials ORDER BY zone DESC, id ASC"));
@@ -157,6 +165,9 @@ void GetFullUsmCredList(NXCPMessage *msg)
    DBConnectionPoolReleaseConnection(hdb);
 }
 
+/**
+ * Get list of configured SNMP ports for all zones into NXCP message
+ */
 void GetFullSnmpPortList(NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -181,6 +192,9 @@ void GetFullSnmpPortList(NXCPMessage *msg)
    DBConnectionPoolReleaseConnection(hdb);
 }
 
+/**
+ * Get list of configured SNMP ports for given zone into NXCP message
+ */
 void GetZoneSnmpPortList(NXCPMessage *msg, int32_t zoneUIN)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -207,6 +221,9 @@ void GetZoneSnmpPortList(NXCPMessage *msg, int32_t zoneUIN)
 
 }
 
+/**
+ * Get list of configured agent secrets for all zones into NXCP message
+ */
 void GetFullAgentSecretList(NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -232,6 +249,9 @@ void GetFullAgentSecretList(NXCPMessage *msg)
    DBConnectionPoolReleaseConnection(hdb);
 }
 
+/**
+ * Get list of configured agent secrets for all zones into NXCP message
+ */
 void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

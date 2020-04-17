@@ -10322,10 +10322,10 @@ void ClientSession::sendNetworkCredList(NXCPMessage *request)
 	      switch (request->getCode())
 	      {
 	         case CMD_GET_COMMUNITY_LIST:
-	            GetFullComunityList(&msg);
+	            GetFullCommunityList(&msg);
 	            break;
 	         case CMD_GET_USM_CREDENTIALS:
-	            GetFullUsmCredList(&msg);
+	            GetFullUsmCredentialList(&msg);
                break;
 	         case CMD_GET_SNMP_PORT_LIST:
 	            GetFullSnmpPortList(&msg);
@@ -10348,10 +10348,10 @@ void ClientSession::sendNetworkCredList(NXCPMessage *request)
 	         switch(request->getCode())
 	         {
                case CMD_GET_COMMUNITY_LIST:
-                  GetZoneComunityList(&msg, zoneUIN);
+                  GetZoneCommunityList(&msg, zoneUIN);
                   break;
                case CMD_GET_USM_CREDENTIALS:
-                  GetZoneUsmCredList(&msg, zoneUIN);
+                  GetZoneUsmCredentialList(&msg, zoneUIN);
                   break;
                case CMD_GET_SNMP_PORT_LIST:
                   GetZoneSnmpPortList(&msg, zoneUIN);
