@@ -786,7 +786,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
       pm.addToRoot(new PreferenceNode("access_control", new AccessControl(objectTool)));
       pm.addToRoot(new PreferenceNode("filter", new Filter(objectTool)));
       pm.addToRoot(new PreferenceNode("input_fields", new InputFields(objectTool)));
-      if (objectTool.getToolType() == ObjectTool.TYPE_AGENT_LIST || objectTool.getToolType() == ObjectTool.TYPE_AGENT_TABLE)
+      if (objectTool.getToolType() == ObjectTool.TYPE_AGENT_LIST || objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE)
          pm.addToRoot(new PreferenceNode("columns", new Columns(objectTool)));
       
       PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
