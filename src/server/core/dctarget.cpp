@@ -1041,6 +1041,7 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
       StringBuffer value = expandText(h->second, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, &args);
       headers.set(h->first, value);
    }
+   delete it;
 
    StringList parameters;
    parameters.add(path);
