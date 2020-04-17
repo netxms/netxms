@@ -7,7 +7,7 @@
 - Automatic agent certificate renewal
 - Value ranges in NXSL switch/case statement
 - New attributes "instanceColumns" and "instanceColumnIndexes" in NXSL class "Table"
-- New NXSL function GetThreadPoolNames
+- New NXSL functions: GetThreadPoolNames, sqrt
 - Implemented instance discovery method "Agent Table"
 - Implemented instance discovery method "Windows Performance Counters"
 - Added option for discarding collected performance data when database writer queue grows beyond limit
@@ -30,6 +30,7 @@
 	NX-1827 (Maintenance mode filter in dashboard element "Status Map")
 	NX-1828 (Windows agent returns error for parameters System.FirewallProduct.* if built-in Windows Firewall is used)
 	NX-1830 (Some events sent by agent may be lost if multiple events sent almost simultaneously)
+	NX-1834 (Add NXSL function "sqrt")
 
 
 *

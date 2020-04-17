@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -71,6 +71,7 @@ int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_sinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_sqrt(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -168,6 +169,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "sin", F_sin, 1 },
    { "sinh", F_sinh, 1 },
 	{ "sleep", F_sleep, 1 },
+   { "sqrt", F_sqrt, 1 },
 	{ "strftime", F_strftime, -1 },
 	{ "substr", F_substr, -1 },
 	{ "sys", F_sys, 1 },
