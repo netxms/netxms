@@ -153,6 +153,49 @@ static bool GetHardwareProduct(char *buffer)
    return sysinfo(SI_PLATFORM, &buffer[len], INTERNAL_BUFFER_SIZE - len) > 0;
 }
 
+#elif defined(__APPLE__)
+
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
+
+/**
+ * Get hardware serial number - macOS
+ */
+static bool GetHardwareSerialNumber(char *buffer)
+{
+   CFStringRef serial;
+   io_service_t platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
+   if (platformExpert) {
+      CFTypeRef serialNumberAsCFString = IORegistryEntryCreateCFProperty(platformExpert, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
+      if (serialNumberAsCFString) {
+         serial = (CFStringRef)serialNumberAsCFString;
+      }
+      if (CFStringGetCString(serial, buffer, INTERNAL_BUFFER_SIZE, kCFStringEncodingUTF8)) {
+         IOObjectRelease(platformExpert);
+         return true;
+      }
+      IOObjectRelease(platformExpert);
+   }
+   return false;
+}
+
+#include <sys/types.h>
+#include <sys/sysctl.h>
+
+/**
+ * Get hardware product - macOS
+ */
+static bool GetHardwareProduct(char *buffer)
+{
+   size_t len = INTERNAL_BUFFER_SIZE;
+
+   int ret = sysctlbyname("hw.model", buffer, &len, NULL, 0);
+   if (ret == 0 || errno == ENOMEM) {
+      return true;
+   }
+   return false;
+}
+
 #else
 
 /**
