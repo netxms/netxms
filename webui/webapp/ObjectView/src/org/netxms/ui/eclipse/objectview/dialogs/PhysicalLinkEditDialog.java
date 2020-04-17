@@ -22,6 +22,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectview.widgets.PatchPanelSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -269,6 +270,20 @@ public class PhysicalLinkEditDialog extends Dialog
    @Override
    protected void okPressed()
    {
+      if(objectSelectorLeft.getObject() == null || objectSelectorRight.getObject() == null)
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Please select objects for both sides of the link");
+         return;
+      }
+      
+      if((objectSelectorLeft.getObject() instanceof Rack  && patchPanelSelectorLeft.getPatchPanelId() == 0) ||
+           (objectSelectorRight.getObject() instanceof Rack  && patchPanelSelectorRight.getPatchPanelId() == 0))
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Please select patch panel(s) for rack(s)");
+         return;
+      }
+         
+      
       link.setDescription(description.getText());
       link.setLeftObjectId(objectSelectorLeft.getObjectId());
       if (objectSelectorLeft.getObject() instanceof Rack)

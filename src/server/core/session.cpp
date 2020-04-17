@@ -14929,16 +14929,19 @@ void ClientSession::getPhysicalLinks(NXCPMessage *request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    bool success = true;
    shared_ptr<NetObj> object = FindObjectById(request->getFieldAsInt32(VID_OBJECT_ID));
-   if (object == nullptr)
+   if(request->isFieldExist(VID_OBJECT_ID)) //Field won't exist if we need full list
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      success = false;
-   }
-   else if (!object->checkAccessRights(getUserId(), OBJECT_ACCESS_READ))
-   {
-      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on object read"));
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      success = false;
+      if (object == nullptr)
+      {
+         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         success = false;
+      }
+      else if (!object->checkAccessRights(getUserId(), OBJECT_ACCESS_READ))
+      {
+         WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on object read"));
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         success = false;
+      }
    }
 
    if (success)
