@@ -86,6 +86,7 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
 void MaintenanceModeEnter(const shared_ptr<ScheduledTaskParameters>& parameters);
 void MaintenanceModeLeave(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters);
+void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1109,24 +1110,13 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
    RegisterSchedulerTaskHandler(ALARM_SUMMARY_EMAIL_TASK_ID, SendAlarmSummaryEmail, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
    InitializeTaskScheduler();
 
-   // Schedule unbound agent tunnel processing
-   ScheduledTask *task = FindScheduledTaskByHandlerId(UNBOUND_TUNNEL_PROCESSOR_TASK_ID);
-   if (task != NULL)
-   {
-      // Make sure task is marked as system
-      if (!task->isSystem())
-      {
-         task->setSystem();
-         task->saveToDatabase(false);
-      }
-   }
-   else
-   {
-      AddRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
-   }
+   // Schedule unbound agent tunnel processing and automatic agent certificate renewal
+   AddUniqueRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
+   AddUniqueRecurrentScheduledTask(RENEW_AGENT_CERTIFICATES_TASK_ID, _T("0 12 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
 
    // Send summary emails
    if (ConfigReadBoolean(_T("EnableAlarmSummaryEmails"), false))

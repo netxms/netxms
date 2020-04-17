@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,8 +53,17 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_AGENT_VERSION:
             result = t1.getAgentVersion().compareToIgnoreCase(t2.getAgentVersion());
             break;
+         case TunnelManager.COL_CERTIFICATE_EXPIRATION:
+            result = (t1.getCertificateExpirationTime() != null) ? 
+                  ((t2.getCertificateExpirationTime() != null) ? 
+                        t1.getCertificateExpirationTime().compareTo(t2.getCertificateExpirationTime()) : 1) :
+                           ((t2 == null) ? 0 : -1);
+            break;
          case TunnelManager.COL_CHANNELS:
             result = t1.getActiveChannelCount() - t2.getActiveChannelCount();
+            break;
+         case TunnelManager.COL_HARDWARE_ID:
+            result = t1.getHardwareIdAsText().compareTo(t2.getHardwareIdAsText());
             break;
          case TunnelManager.COL_ID:
             result = t1.getId() - t2.getId();

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.AgentTunnel;
 import org.netxms.ui.eclipse.agentmanager.views.TunnelManager;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -61,8 +62,14 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.isAgentProxy() ? "Yes" : "No";
          case TunnelManager.COL_AGENT_VERSION:
             return t.getAgentVersion();
+         case TunnelManager.COL_CERTIFICATE_EXPIRATION:
+            if ((t.getCertificateExpirationTime() == null) || (t.getCertificateExpirationTime().getTime() == 0))
+               return "";
+            return RegionalSettings.getDateTimeFormat().format(t.getCertificateExpirationTime());
          case TunnelManager.COL_CHANNELS:
             return t.isBound() ? Integer.toString(t.getActiveChannelCount()) : "";
+         case TunnelManager.COL_HARDWARE_ID:
+            return t.getHardwareIdAsText();
          case TunnelManager.COL_ID:
             return Integer.toString(t.getId());
          case TunnelManager.COL_IP_ADDRESS:

@@ -392,8 +392,17 @@ uint32_t NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *taskHand
          ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
          const TCHAR *comments, const TCHAR *key, bool systemTask)
 {
-   if (FindScheduledTaskByHandlerId(taskHandlerId) != NULL)
+   ScheduledTask *task = FindScheduledTaskByHandlerId(taskHandlerId);
+   if (task != nullptr)
+   {
+      // Make sure that existing task marked as system if requested
+      if (!task->isSystem() && systemTask)
+      {
+         task->setSystem();
+         task->saveToDatabase(false);
+      }
       return RCC_SUCCESS;
+   }
    return AddRecurrentScheduledTask(taskHandlerId, schedule, persistentData, transientData, owner, objectId, systemRights, comments, key, systemTask);
 }
 

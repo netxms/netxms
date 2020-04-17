@@ -487,6 +487,21 @@ void AgentTunnel::shutdown()
 }
 
 /**
+ * Background certificate renewal
+ */
+static void BackgroundRenewCertificate(AgentTunnel *tunnel)
+{
+   uint32_t rcc = tunnel->renewCertificate();
+   if (rcc == RCC_SUCCESS)
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Agent certificate successfully renewed for %s (%s)"),
+               tunnel->getDisplayName(), tunnel->getAddress().toString().cstr());
+   else
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Agent certificate renewal failed for %s (%s) with error %u"),
+               tunnel->getDisplayName(), tunnel->getAddress().toString().cstr(), rcc);
+   tunnel->decRefCount();
+}
+
+/**
  * Process setup request
  */
 void AgentTunnel::setup(const NXCPMessage *request)
@@ -547,6 +562,12 @@ void AgentTunnel::setup(const NXCPMessage *request)
          PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
                   m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
                   m_agentVersion, &m_agentId);
+         if (m_certificateExpirationTime - time(nullptr) <= 2592000) // 30 days
+         {
+            debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
+            incRefCount();
+            ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, this);
+         }
       }
    }
    else
@@ -560,7 +581,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
 /**
  * Bind tunnel to node
  */
-UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
+uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
 {
    if ((m_state != AGENT_TUNNEL_UNBOUND) || (m_bindRequestId != 0))
       return RCC_OUT_OF_STATE_REQUEST;
@@ -578,11 +599,38 @@ UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
                m_agentVersion, &static_cast<Node&>(*node).getAgentId(), &m_agentId);
    }
 
+   uint32_t rcc = initiateCertificateRequest(node->getGuid(), userId);
+   if (rcc == RCC_SUCCESS)
+   {
+      debugPrintf(4, _T("Bind successful, resetting tunnel"));
+      static_cast<Node&>(*node).setNewTunnelBindFlag();
+      NXCPMessage msg(CMD_RESET_TUNNEL, InterlockedIncrement(&m_requestId));
+      sendMessage(&msg);
+   }
+   return AgentErrorToRCC(rcc);
+}
+
+/**
+ * Renew agent certificate
+ */
+uint32_t AgentTunnel::renewCertificate()
+{
+   shared_ptr<NetObj> node = FindObjectById(m_nodeId, OBJECT_NODE);
+   if (node == nullptr)
+      return RCC_INTERNAL_ERROR;  // Cannot reissue certificate because node object is not found
+   return initiateCertificateRequest(node->getGuid(), 0);
+}
+
+/**
+ * Initiate certificate request by agent. This method will return when certificate issuing process is completed.
+ */
+uint32_t AgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId)
+{
    NXCPMessage msg;
    msg.setCode(CMD_BIND_AGENT_TUNNEL);
    msg.setId(InterlockedIncrement(&m_requestId));
    msg.setField(VID_SERVER_ID, g_serverId);
-   msg.setField(VID_GUID, node->getGuid());
+   msg.setField(VID_GUID, nodeGuid);
    m_guid = uuid::generate();
    msg.setField(VID_TUNNEL_GUID, m_guid);
 
@@ -593,7 +641,7 @@ UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
       msg.setField(VID_ORGANIZATION, buffer);
 
    m_bindRequestId = msg.getId();
-   m_bindGuid = node->getGuid();
+   m_bindGuid = nodeGuid;
    m_bindUserId = userId;
    sendMessage(&msg);
 
@@ -601,19 +649,15 @@ UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
    if (response == nullptr)
       return RCC_TIMEOUT;
 
-   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
    delete response;
    if (rcc == ERR_SUCCESS)
    {
-      debugPrintf(4, _T("Bind successful, resetting tunnel"));
-      static_cast<Node&>(*node).setNewTunnelBindFlag();
-      msg.setCode(CMD_RESET_TUNNEL);
-      msg.setId(InterlockedIncrement(&m_requestId));
-      sendMessage(&msg);
+      debugPrintf(4, _T("Certificate successfully issued and transferred to agent"));
    }
    else
    {
-      debugPrintf(4, _T("Bind failed: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+      debugPrintf(4, _T("Certificate cannot be issued: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
    }
    return AgentErrorToRCC(rcc);
 }
@@ -625,7 +669,7 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
 {
    NXCPMessage response(CMD_NEW_CERTIFICATE, request->getId());
 
-   if ((request->getId() == m_bindRequestId) && (m_bindRequestId != 0) && (m_state == AGENT_TUNNEL_UNBOUND))
+   if ((request->getId() == m_bindRequestId) && (m_bindRequestId != 0))
    {
       size_t certRequestLen;
       const BYTE *certRequestData = request->getBinaryFieldPtr(VID_CERTIFICATE, &certRequestLen);
@@ -650,7 +694,7 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
                   response.setField(VID_RCC, ERR_SUCCESS);
                   response.setField(VID_CERTIFICATE, buffer, len);
                   OPENSSL_free(buffer);
-                  debugPrintf(4, _T("Certificate issued"));
+                  debugPrintf(4, _T("New certificate issued"));
 
                   shared_ptr<NetObj> node = FindObjectByGUID(m_bindGuid, OBJECT_NODE);
                   if (node != nullptr)
@@ -1122,7 +1166,8 @@ retry:
                {
                   if (tunnelGuid.equals(static_cast<Node&>(*node).getTunnelId()))
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), request->addr.toString().cstr(), node->getName(), node->getId());
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"),
+                              request->addr.toString().cstr(), node->getName(), node->getId());
                      if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
                      {
                         static_cast<Node&>(*node).clearNewTunnelBindFlag();
@@ -1135,34 +1180,34 @@ retry:
                   else
                   {
                      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel ID %s is not valid for node %s [%d]"),
-                              (const TCHAR *)request->addr.toString(), (const TCHAR *)tunnelGuid.toString(),
-                              node->getName(), node->getId());
+                              request->addr.toString().cstr(), tunnelGuid.toString().cstr(), node->getName(), node->getId());
                   }
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Node with GUID %s not found"), (const TCHAR *)request->addr.toString(), (const TCHAR *)nodeGuid.toString());
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Node with GUID %s not found"),
+                           request->addr.toString().cstr(), nodeGuid.toString().cstr());
                }
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Certificate OU or CN is not a valid GUID"), (const TCHAR *)request->addr.toString());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Certificate OU or CN is not a valid GUID"), request->addr.toString().cstr());
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Cannot get certificate OU and CN"), (const TCHAR *)request->addr.toString());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Cannot get certificate OU and CN"), request->addr.toString().cstr());
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate validation failed"), (const TCHAR *)request->addr.toString());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate validation failed"), request->addr.toString().cstr());
       }
       X509_free(cert);
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate not provided"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate not provided"), request->addr.toString().cstr());
    }
 
    tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN, certExpTime);
@@ -1411,7 +1456,8 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
    for(int i = 0; i < processingList.size(); i++)
    {
       AgentTunnel *t = processingList.get(i);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Processing timeout for unbound tunnel from %s (%s) - action=%d"), t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), action);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Processing timeout for unbound tunnel from %s (%s) - action=%d"),
+               t->getDisplayName(), t->getAddress().toString().cstr(), action);
       switch(action)
       {
          case RESET:
@@ -1468,6 +1514,51 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             }
             break;
       }
+      t->decRefCount();
+   }
+}
+
+/**
+ * Scheduled task for automatic renewal of agent certificates
+ */
+void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameters)
+{
+   ObjectRefArray<AgentTunnel> processingList(16, 16);
+
+   s_tunnelListLock.lock();
+   time_t now = time(nullptr);
+   auto it = s_boundTunnels.iterator();
+   while(it->hasNext())
+   {
+      AgentTunnel *t = it->next();
+      if (t->getCertificateExpirationTime() - now <= 2592000)  // 30 days
+      {
+         t->incRefCount();
+         processingList.add(t);
+      }
+   }
+   delete it;
+   s_tunnelListLock.unlock();
+
+   if (processingList.isEmpty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("No tunnel requires certificate renewal"));
+      return;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("%d tunnels selected for certificate renewal"), processingList.size());
+
+   for(int i = 0; i < processingList.size(); i++)
+   {
+      AgentTunnel *t = processingList.get(i);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Renewing certificate for tunnel from %s (%s)"), t->getDisplayName(), t->getAddress().toString().cstr());
+      uint32_t rcc = t->renewCertificate();
+      if (rcc == RCC_SUCCESS)
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Agent certificate successfully renewed for %s (%s)"),
+                  t->getDisplayName(), t->getAddress().toString().cstr());
+      else
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Agent certificate renewal failed for %s (%s) with error %u"),
+                  t->getDisplayName(), t->getAddress().toString().cstr(), rcc);
       t->decRefCount();
    }
 }

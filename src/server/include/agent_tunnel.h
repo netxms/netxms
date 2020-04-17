@@ -27,6 +27,7 @@
 #include <nms_util.h>
 
 #define UNBOUND_TUNNEL_PROCESSOR_TASK_ID _T("AgentTunnels.ProcessUnbound")
+#define RENEW_AGENT_CERTIFICATES_TASK_ID _T("AgentTunnels.RenewCertificates")
 
 class AgentTunnel;
 
@@ -128,13 +129,15 @@ protected:
    void processChannelClose(UINT32 channelId);
 
    void setup(const NXCPMessage *request);
+   uint32_t initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId);
 
 public:
    AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN, time_t certificateExpirationTime);
    
    void start();
    void shutdown();
-   UINT32 bind(uint32_t nodeId, uint32_t userId);
+   uint32_t bind(uint32_t nodeId, uint32_t userId);
+   uint32_t renewCertificate();
    AgentTunnelCommChannel *createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);
    ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
