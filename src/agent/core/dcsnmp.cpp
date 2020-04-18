@@ -148,7 +148,7 @@ uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, c
 {
    s_snmpTargetsLock.lock();
    shared_ptr<SNMPTarget> t = s_snmpTargets.getShared(target.getValue());
-   if (t == nullptr)
+   if (!t) // cannot use t == nullptr because of HP aCC issues
    {
       s_snmpTargetsLock.unlock();
 
@@ -287,7 +287,7 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
 {
    s_snmpTargetsLock.lock();
    shared_ptr<SNMPTarget> t = s_snmpTargets.getShared(target.getValue());
-   if (t == nullptr)
+   if (!t)  // cannot use t == nullptr because of HP aCC issues
    {
       s_snmpTargetsLock.unlock();
 

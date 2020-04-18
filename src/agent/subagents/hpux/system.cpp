@@ -520,3 +520,38 @@ LONG H_SysMsgQueue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    }
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Handler for Hardware.System.Manufacturer
+ */
+LONG H_HardwareManufacturer(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_string(value, _T("Hewlett-Packard"));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Hardware.System.Product
+ */
+LONG H_HardwareProduct(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char buffer[MAX_RESULT_LENGTH];
+   int rc = confstr(_CS_MACHINE_MODEL, buffer, MAX_RESULT_LENGTH);
+   if (rc <= 0)
+      return SYSINFO_RC_ERROR;
+   ret_mbstring(value, buffer);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Hardware.System.SerialNumber
+ */
+LONG H_HardwareSerialNumber(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char buffer[MAX_RESULT_LENGTH];
+   int rc = confstr(_CS_MACHINE_SERIAL, buffer, MAX_RESULT_LENGTH);
+   if (rc <= 0)
+      return SYSINFO_RC_ERROR;
+   ret_mbstring(value, buffer);
+   return SYSINFO_RC_SUCCESS;
+}

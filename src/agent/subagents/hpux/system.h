@@ -56,6 +56,9 @@ LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSessi
 LONG H_ConnectedUsers(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_OpenFiles(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_SysMsgQueue(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_HardwareManufacturer(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_HardwareProduct(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_HardwareSerialNumber(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();

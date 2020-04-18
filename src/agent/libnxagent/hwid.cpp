@@ -157,6 +157,24 @@ static bool GetHardwareProduct(char *buffer)
    return sysinfo(SI_PLATFORM, &buffer[len], INTERNAL_BUFFER_SIZE - len) > 0;
 }
 
+#elif defined(_HPUX)
+
+/**
+ * Get hardware serial number - HP-UX
+ */
+static bool GetHardwareSerialNumber(char *buffer)
+{
+   return confstr(_CS_MACHINE_MODEL, buffer, INTERNAL_BUFFER_SIZE) > 0;
+}
+
+/**
+ * Get hardware product - Solaris
+ */
+static bool GetHardwareProduct(char *buffer)
+{
+   return confstr(_CS_MACHINE_SERIAL, buffer, INTERNAL_BUFFER_SIZE) > 0;
+}
+
 #elif defined(__APPLE__)
 
 /**
