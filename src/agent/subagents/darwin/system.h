@@ -46,7 +46,9 @@ enum
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
 
-
+LONG H_HardwareManufacturer(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_HardwareProduct(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_HardwareSerialNumber(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
@@ -55,6 +57,5 @@ LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 #endif // __SYSTEM_H__

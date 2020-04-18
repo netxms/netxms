@@ -1,6 +1,6 @@
 /* 
-** netxms subagent for darwin
-** copyright (c) 2012 alex kirhenshtein
+** NetXMS subagent for Darwin (Mac OS X)
+** Copyright (c) 2012 Alex Kirhenshtein
 **
 ** this program is free software; you can redistribute it and/or modify
 ** it under the terms of the gnu general public license as published by
@@ -22,12 +22,15 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
-
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
 #include "system.h"
 
+/**
+ * Handler for System.Uptime
+ */
 LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int mib[2] = { CTL_KERN, KERN_BOOTTIME };
@@ -56,6 +59,9 @@ LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractC
    return nUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
+/**
+ * Handler for System.Uname
+ */
 LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct utsname utsName;
@@ -139,12 +145,42 @@ LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 	return nRet;
 }
 
-
-//
-// stub
-//
-LONG H_SourcePkgSupport(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+/**
+ * Handler for Hardware.System.Manufacturer
+ */
+LONG H_HardwareManufacturer(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	ret_int(pValue, 1);
-	return SYSINFO_RC_SUCCESS;
+   ret_string(value, _T("Apple Inc."));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Hardware.System.Product
+ */
+LONG H_HardwareProduct(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   size_t len = MAX_RESULT_LENGTH;
+   int ret = sysctlbyname("hw.model", value, &len, NULL, 0);
+   return ((ret == 0) || (errno == ENOMEM)) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
+ * Handler for Hardware.System.SerialNumber
+ */
+LONG H_HardwareSerialNumber(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   LONG rc = SYSINFO_RC_ERROR;
+   io_service_t platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
+   if (platformExpert)
+   {
+      CFTypeRef serial = IORegistryEntryCreateCFProperty(platformExpert, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
+      if (serial != NULL)
+      {
+         if (CFStringGetCString((CFStringRef)serial, buffer, INTERNAL_BUFFER_SIZE, kCFStringEncodingUTF8))
+            rc = SYSINFO_RC_SUCCESS;
+         CFRelease(serial);
+      }
+      IOObjectRelease(platformExpert);
+   }
+   return rc;
 }

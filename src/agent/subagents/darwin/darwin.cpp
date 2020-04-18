@@ -44,10 +44,9 @@ static void SubAgentShutdown()
    ShutdownCpuUsageCollector();
 }
 
-//
-// Subagent information
-//
-
+/**
+ * List of parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("Disk.Avail(*)"),                H_DiskInfo,        (const TCHAR *)DISK_AVAIL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
@@ -65,6 +64,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.Total(*)"),          H_DiskInfo,        (const TCHAR *)DISK_TOTAL,        DCI_DT_UINT64, DCIDESC_FS_TOTAL },
    { _T("FileSystem.Used(*)"),           H_DiskInfo,        (const TCHAR *)DISK_USED,         DCI_DT_UINT64, DCIDESC_FS_USED },
    { _T("FileSystem.UsedPerc(*)"),       H_DiskInfo,        (const TCHAR *)DISK_USED_PERC,    DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
+
+   { _T("Hardware.System.Manufacturer"), H_HardwareManufacturer, NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
+   { _T("Hardware.System.Product"),      H_HardwareProduct,      NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
+   { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
 
    { _T("System.Uname"),                 H_Uname,           NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
    { _T("System.Uptime"),                H_Uptime,          NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },

@@ -30,6 +30,10 @@
 #include <odmi.h>
 #elif defined(__sun)
 #include <sys/systeminfo.h>
+#elif defined(__APPLE__)
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
+#include <sys/sysctl.h>
 #elif HAVE_CPUID_H
 #include <cpuid.h>
 #endif
@@ -155,9 +159,6 @@ static bool GetHardwareProduct(char *buffer)
 
 #elif defined(__APPLE__)
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <IOKit/IOKitLib.h>
-
 /**
  * Get hardware serial number - macOS
  */
@@ -165,9 +166,11 @@ static bool GetHardwareSerialNumber(char *buffer)
 {
    bool success = false;
    io_service_t platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
-   if (platformExpert) {
+   if (platformExpert)
+   {
       CFTypeRef serial = IORegistryEntryCreateCFProperty(platformExpert, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
-      if (serial != NULL) {
+      if (serial != NULL)
+      {
          success = CFStringGetCString((CFStringRef)serial, buffer, INTERNAL_BUFFER_SIZE, kCFStringEncodingUTF8);
          CFRelease(serial);
       }
@@ -176,21 +179,14 @@ static bool GetHardwareSerialNumber(char *buffer)
    return success;
 }
 
-#include <sys/types.h>
-#include <sys/sysctl.h>
-
 /**
  * Get hardware product - macOS
  */
 static bool GetHardwareProduct(char *buffer)
 {
    size_t len = INTERNAL_BUFFER_SIZE;
-
    int ret = sysctlbyname("hw.model", buffer, &len, NULL, 0);
-   if (ret == 0 || errno == ENOMEM) {
-      return true;
-   }
-   return false;
+   return (ret == 0) || (errno == ENOMEM);
 }
 
 #else
