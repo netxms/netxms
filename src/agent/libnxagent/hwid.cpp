@@ -163,20 +163,17 @@ static bool GetHardwareProduct(char *buffer)
  */
 static bool GetHardwareSerialNumber(char *buffer)
 {
-   CFStringRef serial;
+   bool success = false;
    io_service_t platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
    if (platformExpert) {
-      CFTypeRef serialNumberAsCFString = IORegistryEntryCreateCFProperty(platformExpert, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
-      if (serialNumberAsCFString) {
-         serial = (CFStringRef)serialNumberAsCFString;
-      }
-      if (CFStringGetCString(serial, buffer, INTERNAL_BUFFER_SIZE, kCFStringEncodingUTF8)) {
-         IOObjectRelease(platformExpert);
-         return true;
+      CFTypeRef serial = IORegistryEntryCreateCFProperty(platformExpert, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
+      if (serial != NULL) {
+         success = CFStringGetCString((CFStringRef)serial, buffer, INTERNAL_BUFFER_SIZE, kCFStringEncodingUTF8);
+         CFRelease(serial);
       }
       IOObjectRelease(platformExpert);
    }
-   return false;
+   return success;
 }
 
 #include <sys/types.h>
