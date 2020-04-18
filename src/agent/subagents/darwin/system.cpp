@@ -159,9 +159,15 @@ LONG H_HardwareManufacturer(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
  */
 LONG H_HardwareProduct(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
+   char buffer[MAX_RESULT_LENGTH] = "";
    size_t len = MAX_RESULT_LENGTH;
-   int ret = sysctlbyname("hw.model", value, &len, NULL, 0);
-   return ((ret == 0) || (errno == ENOMEM)) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+   int ret = sysctlbyname("hw.model", buffer, &len, NULL, 0);
+   if ((ret == 0) || (errno == ENOMEM))
+   {
+      ret_mbstring(value, buffer);
+      return SYSINFO_RC_SUCCESS;
+   }
+   return SYSINFO_RC_ERROR;
 }
 
 /**
@@ -176,8 +182,12 @@ LONG H_HardwareSerialNumber(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
       CFTypeRef serial = IORegistryEntryCreateCFProperty(platformExpert, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
       if (serial != NULL)
       {
-         if (CFStringGetCString((CFStringRef)serial, buffer, INTERNAL_BUFFER_SIZE, kCFStringEncodingUTF8))
+         char buffer[MAX_RESULT_LENGTH];
+         if (CFStringGetCString((CFStringRef)serial, buffer, MAX_RESULT_LENGTH, kCFStringEncodingUTF8))
+         {
+            ret_mbstring(value, buffer);
             rc = SYSINFO_RC_SUCCESS;
+         }
          CFRelease(serial);
       }
       IOObjectRelease(platformExpert);
