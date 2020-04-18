@@ -30,6 +30,7 @@
 	NX-1827 (Maintenance mode filter in dashboard element "Status Map")
 	NX-1828 (Windows agent returns error for parameters System.FirewallProduct.* if built-in Windows Firewall is used)
 	NX-1830 (Some events sent by agent may be lost if multiple events sent almost simultaneously)
+	NX-1831 (Template path in node data collection configuration is incorrect)
 	NX-1834 (Add NXSL function "sqrt")
 
 

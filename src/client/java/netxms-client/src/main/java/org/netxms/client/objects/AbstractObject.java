@@ -20,6 +20,7 @@ package org.netxms.client.objects;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -669,11 +670,13 @@ public abstract class AbstractObject
    }
 
 	/**
-	 * Internal worker function for getAllParents
-	 * @param classFilter class filter
-	 * @param set result set
-	 */
-	private void getAllParentsInternal(int[] classFilter, Set<AbstractObject> set)
+    * Internal worker function for getAllParents
+    * 
+    * @param classFilter class filter
+    * @param result result set
+    * @param chain set to true if parent chain is requested
+    */
+   private void getAllParentsInternal(int[] classFilter, Collection<AbstractObject> result, boolean chain)
 	{
 		for (Long parent : parents)
 		{
@@ -682,9 +685,15 @@ public abstract class AbstractObject
 			{
 				if (matchClassFilter(classFilter, obj.getObjectClass()))
 				{
-					set.add(obj);
+					result.add(obj);
+               obj.getAllParentsInternal(classFilter, result, chain);
+               if (chain)
+                  break;
 				}
-				obj.getAllParentsInternal(classFilter, set);
+            else
+            {
+               obj.getAllParentsInternal(classFilter, result, chain);
+            }
 			}
 		}
 	}
@@ -698,7 +707,7 @@ public abstract class AbstractObject
 	public Set<AbstractObject> getAllParents(int classFilter)
 	{
 		Set<AbstractObject> result = new HashSet<AbstractObject>();
-		getAllParentsInternal((classFilter < 0) ? null : new int[] { classFilter }, result);
+      getAllParentsInternal((classFilter < 0) ? null : new int[] { classFilter }, result, false);
 		return result;
 	}
 
@@ -711,8 +720,21 @@ public abstract class AbstractObject
    public Set<AbstractObject> getAllParents(int[] classFilter)
    {
       Set<AbstractObject> result = new HashSet<AbstractObject>();
-      getAllParentsInternal(classFilter, result);
+      getAllParentsInternal(classFilter, result, false);
       return result;
+   }
+
+   /**
+    * Get chain of parent objects. Only one possible chain is returned.
+    * 
+    * @param classFilter null to get any parent chain, or NetXMS class id(s) to retrieve objects of given class(es)
+    * @return chain of parent objects, with topmost object at the end of the list
+    */
+   public List<AbstractObject> getParentChain(int[] classFilter)
+   {
+      List<AbstractObject> chain = new ArrayList<AbstractObject>();
+      getAllParentsInternal(classFilter, chain, true);
+      return chain;
    }
 
 	/**

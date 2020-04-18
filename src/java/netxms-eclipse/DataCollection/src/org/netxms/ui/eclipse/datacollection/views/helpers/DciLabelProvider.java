@@ -19,9 +19,9 @@
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -174,9 +174,10 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 				   return Messages.get().DciLabelProvider_Unknown;
 				if (!(object instanceof Template))
 				   return object.getObjectName();
-				Set<AbstractObject> parents = object.getAllParents(null);
+            List<AbstractObject> parents = object.getParentChain(null);
+            Collections.reverse(parents);
 				StringBuilder sb = new StringBuilder();
-				for(AbstractObject parent : parents)
+            for(AbstractObject parent : parents)
 				{
 				   sb.append(parent.getObjectName());
 				   sb.append("/"); //$NON-NLS-1$
