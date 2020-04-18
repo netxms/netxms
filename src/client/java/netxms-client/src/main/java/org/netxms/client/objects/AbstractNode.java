@@ -125,6 +125,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	protected String agentSharedSecret;
 	protected String agentVersion;
 	protected String platformName;
+   protected byte[] hardwareId;
 	protected String snmpAuthName;
 	protected String snmpAuthPassword;
 	protected String snmpPrivPassword;
@@ -223,6 +224,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 		agentVersion = msg.getFieldAsString(NXCPCodes.VID_AGENT_VERSION);
 		agentId = msg.getFieldAsUUID(NXCPCodes.VID_AGENT_ID);
 		platformName = msg.getFieldAsString(NXCPCodes.VID_PLATFORM_NAME);
+      hardwareId = msg.getFieldAsBinary(NXCPCodes.VID_HARDWARE_ID);
 		snmpAuthName = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_OBJECT);
 		snmpAuthPassword = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_PASSWORD);
 		snmpPrivPassword = msg.getFieldAsString(NXCPCodes.VID_SNMP_PRIV_PASSWORD);
@@ -475,10 +477,40 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	}
 
 	/**
-	 * Get SNMP authentication name - community string for version 1 and 2c, or user name for version 3.
-	 * 
-	 * @return SNMP authentication name
-	 */
+    * Get node's hardware ID.
+    * 
+    * @return node's hardware ID
+    */
+   public byte[] getHardwareId()
+   {
+      return hardwareId;
+   }
+
+   /**
+    * Get node's hardware ID in text form.
+    * 
+    * @return node's hardware ID in text form
+    */
+   public String getHardwareIdAsText()
+   {
+      if (hardwareId == null)
+         return "";
+      StringBuilder sb = new StringBuilder();
+      for(byte b : hardwareId)
+      {
+         int i = Byte.toUnsignedInt(b);
+         if (i < 10)
+            sb.append('0');
+         sb.append(Integer.toString(i, 16));
+      }
+      return sb.toString();
+   }
+
+   /**
+    * Get SNMP authentication name - community string for version 1 and 2c, or user name for version 3.
+    * 
+    * @return SNMP authentication name
+    */
 	public String getSnmpAuthName()
 	{
 		return snmpAuthName;

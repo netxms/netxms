@@ -1233,6 +1233,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_VLANS) ? 1 : 0);
    }
+   else if (!strcmp(attr, "hardwareId"))
+   {
+      TCHAR buffer[HARDWARE_ID_LENGTH * 2 + 1];
+      value = vm->createValue(BinToStr(node->getHardwareId(), HARDWARE_ID_LENGTH, buffer));
+   }
    else if (!strcmp(attr, "hasWinPDH"))
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_WINPDH) ? 1 : 0);

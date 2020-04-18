@@ -321,9 +321,9 @@ CREATE TABLE chassis
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Nodes information
-*/
+/**
+ * Nodes information
+ */
 CREATE TABLE nodes
 (
   id integer not null,
@@ -343,6 +343,7 @@ CREATE TABLE nodes
   status_poll_type integer not null,
   agent_version varchar(63) null,
   agent_id varchar(36) null,
+  hardware_id varchar(40) null,
   platform_name varchar(63) null,
   poller_node_id integer not null,
   zone_guid integer not null,

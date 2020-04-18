@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.8 to 32.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD hardware_id varchar(40)")));
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 32.7 to 32.8
  */
 static bool H_UpgradeFromV7()
@@ -305,6 +315,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 8,  33, 9,  H_UpgradeFromV8  },
    { 7,  33, 8,  H_UpgradeFromV7  },
    { 6,  33, 7,  H_UpgradeFromV6  },
    { 5,  33, 6,  H_UpgradeFromV5  },

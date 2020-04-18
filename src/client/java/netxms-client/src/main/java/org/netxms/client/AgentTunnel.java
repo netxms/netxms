@@ -131,7 +131,9 @@ public class AgentTunnel
    }
 
    /**
-    * @return the hardwareId
+    * Get node's hardware ID.
+    * 
+    * @return node's hardware ID
     */
    public byte[] getHardwareId()
    {
@@ -139,7 +141,9 @@ public class AgentTunnel
    }
 
    /**
-    * @return the hardwareId
+    * Get node's hardware ID in text form.
+    * 
+    * @return node's hardware ID in text form
     */
    public String getHardwareIdAsText()
    {

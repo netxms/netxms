@@ -742,29 +742,27 @@ MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int iRow, int
 /**
  * Get field's value as integer array from byte array encoded in hex
  */
-bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
-                                            int *pnArray, int nSize, int nDefault)
+bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn, int *pnArray, size_t size, int defaultValue)
 {
-   char pbBytes[128];
+   char pbBytes[2048];
    bool bResult;
-   int i, nLen;
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   TCHAR szBuffer[4096];
+   TCHAR *pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 4096);
    if (pszVal != NULL)
    {
-      StrToBin(pszVal, (BYTE *)pbBytes, 128);
-      nLen = (int)_tcslen(pszVal) / 2;
-      for(i = 0; (i < nSize) && (i < nLen); i++)
+      StrToBin(pszVal, (BYTE *)pbBytes, 2048);
+      size_t nLen = _tcslen(pszVal) / 2;
+      size_t i;
+      for(i = 0; (i < size) && (i < nLen); i++)
          pnArray[i] = pbBytes[i];
-      for(; i < nSize; i++)
-         pnArray[i] = nDefault;
+      for(; i < size; i++)
+         pnArray[i] = defaultValue;
       bResult = true;
    }
    else
    {
-      for(i = 0; i < nSize; i++)
-         pnArray[i] = nDefault;
+      for(size_t i = 0; i < size; i++)
+         pnArray[i] = defaultValue;
       bResult = false;
    }
    return bResult;
@@ -773,26 +771,24 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
 /**
  * Get field's value as integer array from byte array encoded in hex
  */
-bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn,
-                                             BYTE *data, int nSize, int nDefault)
+bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn, BYTE *data, size_t size, BYTE defaultValue)
 {
-   bool bResult;
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   if (pszVal != NULL)
+   bool success;
+   TCHAR buffer[4096];
+   TCHAR *value = DBGetField(hResult, iRow, iColumn, buffer, 4096);
+   if (value != nullptr)
    {
-      int bytes = (int)StrToBin(pszVal, data, nSize);
-		if (bytes < nSize)
-			memset(&data[bytes], 0, nSize - bytes);
-      bResult = true;
+      size_t bytes = StrToBin(value, data, size);
+		if (bytes < size)
+			memset(&data[bytes], defaultValue, size - bytes);
+		success = true;
    }
    else
    {
-		memset(data, nDefault, nSize);
-      bResult = false;
+		memset(data, defaultValue, size);
+		success = false;
    }
-   return bResult;
+   return success;
 }
 
 /**
