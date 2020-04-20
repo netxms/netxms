@@ -66,6 +66,18 @@ static bool GetHardwareProduct(char *buffer)
    return true;
 }
 
+/**
+ * Get unique machine ID - Windows
+ */
+static bool GetUniqueMachineId(char *buffer)
+{
+   uuid machineId = SMBIOS_GetHardwareUUID();
+   if (machineId.isNull())
+      return false;
+   machineId.toStringA(buffer);
+   return true;
+}
+
 #elif defined(_AIX)
 
 /**
@@ -98,14 +110,7 @@ static bool ReadAttributeFromSysDevice(const char *attribute, char *buffer)
  */
 static bool GetHardwareSerialNumber(char *buffer)
 {
-   if (ReadAttributeFromSysDevice("systemid", buffer))
-      return true;
-
-   struct utsname un;
-   if (uname(&un) != 0)
-      return false;
-   strlcpy(buffer, un.machine, INTERNAL_BUFFER_SIZE);
-   return true;
+   return ReadAttributeFromSysDevice("systemid", buffer);
 }
 
 /**
@@ -114,6 +119,18 @@ static bool GetHardwareSerialNumber(char *buffer)
 static bool GetHardwareProduct(char *buffer)
 {
    return ReadAttributeFromSysDevice("modelname", buffer);
+}
+
+/**
+ * Get unique machine ID - AIX
+ */
+static bool GetUniqueMachineId(char *buffer)
+{
+   struct utsname un;
+   if (uname(&un) != 0)
+      return false;
+   strlcpy(buffer, un.machine, INTERNAL_BUFFER_SIZE);
+   return true;
 }
 
 #elif defined(__sun)
@@ -157,6 +174,23 @@ static bool GetHardwareProduct(char *buffer)
    return sysinfo(SI_PLATFORM, &buffer[len], INTERNAL_BUFFER_SIZE - len) > 0;
 }
 
+
+/**
+ * Get unique machine ID - Solaris
+ */
+static bool GetUniqueMachineId(char *buffer)
+{
+#ifndef __sparc
+   uuid machineId = SMBIOS_GetHardwareUUID();
+   if (!machineId.isNull())
+   {
+      machineId.toStringA(buffer);
+      return true;
+   }
+#endif
+   return false;
+}
+
 #elif defined(_HPUX)
 
 /**
@@ -168,11 +202,19 @@ static bool GetHardwareSerialNumber(char *buffer)
 }
 
 /**
- * Get hardware product - Solaris
+ * Get hardware product - HP-UX
  */
 static bool GetHardwareProduct(char *buffer)
 {
    return confstr(_CS_MACHINE_SERIAL, buffer, INTERNAL_BUFFER_SIZE) > 0;
+}
+
+/**
+ * Get unique machine ID - HP-UX
+ */
+static bool GetUniqueMachineId(char *buffer)
+{
+   return confstr(_CS_PARTITION_IDENT, buffer, INTERNAL_BUFFER_SIZE) > 0;
 }
 
 #elif defined(__APPLE__)
@@ -205,6 +247,14 @@ static bool GetHardwareProduct(char *buffer)
    size_t len = INTERNAL_BUFFER_SIZE;
    int ret = sysctlbyname("hw.model", buffer, &len, NULL, 0);
    return (ret == 0) || (errno == ENOMEM);
+}
+
+/**
+ * Get unique machine ID - macOS
+ */
+static bool GetUniqueMachineId(char *buffer)
+{
+   return false;
 }
 
 #else
@@ -265,6 +315,18 @@ static bool GetHardwareProduct(char *buffer)
    return success;
 }
 
+/**
+ * Get unique machine ID - other platforms
+ */
+static bool GetUniqueMachineId(char *buffer)
+{
+   uuid machineId = SMBIOS_GetHardwareUUID();
+   if (machineId.isNull())
+      return false;
+   machineId.toStringA(buffer);
+   return true;
+}
+
 #endif
 
 /**
@@ -302,6 +364,13 @@ bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid)
    if (GetHardwareProduct(buffer))
    {
       SHA1Update(&ctx, buffer, strlen(buffer));
+   }
+
+   // Add unique machine ID
+   if (GetUniqueMachineId(buffer))
+   {
+      SHA1Update(&ctx, buffer, strlen(buffer));
+      success = true;
    }
 
    // Add baseboard serial number

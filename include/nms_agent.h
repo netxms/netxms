@@ -325,6 +325,7 @@ struct PolicyChangeNotification
 #define DCIDESC_HARDWARE_STORAGEDEVICE_SIZE          _T("Hardware: storage device {instance} size")
 #define DCIDESC_HARDWARE_STORAGEDEVICE_TYPE          _T("Hardware: storage device {instance} type")
 #define DCIDESC_HARDWARE_STORAGEDEVICE_TYPEDESCR     _T("Hardware: storage device {instance} type description")
+#define DCIDESC_HARDWARE_SYSTEM_MACHINEID            _T("Hardware: unique machine identifier")
 #define DCIDESC_HARDWARE_SYSTEM_MANUFACTURER         _T("Hardware: system manufacturer")
 #define DCIDESC_HARDWARE_SYSTEM_PRODUCT              _T("Hardware: product name")
 #define DCIDESC_HARDWARE_SYSTEM_PRODUCTCODE          _T("Hardware: product code")
@@ -1094,6 +1095,7 @@ bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareManufacturer();
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct();
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareSerialNumber();
+uuid LIBNXAGENT_EXPORTABLE SMBIOS_GetHardwareUUID();
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetBaseboardSerialNumber();
 LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings();
 bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t*));

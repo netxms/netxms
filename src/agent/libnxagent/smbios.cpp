@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -213,7 +213,7 @@ static char s_baseboardProduct[128] = "";
 static char s_baseboardSerialNumber[128] = "";
 static char s_baseboardType[32] = "";
 static char s_baseboardVersion[64] = "";
-static WORD s_biosAddress = 0;
+static uint16_t s_biosAddress = 0;
 static char s_biosDate[16] = "";
 static char s_biosVendor[128] = "";
 static char s_biosVersion[64] = "";
@@ -221,6 +221,7 @@ static char s_hardwareManufacturer[128] = "";
 static char s_hardwareProduct[128] = "";
 static char s_hardwareProductCode[128] = "";
 static char s_hardwareSerialNumber[128] = "";
+static uuid s_hardwareUUID;
 static char s_hardwareVersion[64] = "";
 static char s_systemWakeUpEvent[32] = "Unknown";
 static char *s_oemStrings[64];
@@ -250,6 +251,14 @@ const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct()
 const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareSerialNumber()
 {
    return s_hardwareSerialNumber;
+}
+
+/**
+ * Get hardware product name
+ */
+uuid LIBNXAGENT_EXPORTABLE SMBIOS_GetHardwareUUID()
+{
+   return s_hardwareUUID;
 }
 
 /**
@@ -486,6 +495,11 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR
             case 'S':
                RETURN_BIOS_DATA(s_hardwareSerialNumber);
                break;
+            case 'U':
+               if (s_hardwareUUID.isNull())
+                  return SYSINFO_RC_UNSUPPORTED;
+               ret_string(value, s_hardwareUUID.toString());
+               break;
             case 'V':
                RETURN_BIOS_DATA(s_hardwareVersion);
                break;
@@ -639,9 +653,9 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
  */
 struct TableHeader
 {
-   BYTE type;
-   BYTE fixedLength;
-   WORD handle;
+   uint8_t type;
+   uint8_t fixedLength;
+   uint16_t handle;
 };
 
 #if defined(__HP_aCC)
@@ -663,7 +677,7 @@ static const char *GetStringByIndex(TableHeader *t, int index, char *buffer, siz
       return NULL;
 
    char *s = (char *)t + t->fixedLength;
-   if (*((WORD*)s) == 0)
+   if (*((uint16_t*)s) == 0)
       return NULL;   // empty variable part
    
    while(index > 1)
@@ -671,20 +685,20 @@ static const char *GetStringByIndex(TableHeader *t, int index, char *buffer, siz
       char *p = s;
       while(*p != 0)
          p++;
-      if (*((WORD*)p) == 0)
-         return NULL;   // encounter end of table, string not found
+      if (*((uint16_t*)p) == 0)
+         return nullptr;   // encounter end of table, string not found
       index--;
       s = p + 1;
    }
 
-   if (buffer != NULL)
+   if (buffer != nullptr)
       strlcpy(buffer, s, size);
    return s;
 }
 
 #define BYTE_AT(t, a)  (*(reinterpret_cast<BYTE*>(t) + a))
-#define WORD_AT(t, a)  (*(reinterpret_cast<WORD*>(reinterpret_cast<BYTE*>(t) + a)))
-#define DWORD_AT(t, a) (*(reinterpret_cast<DWORD*>(reinterpret_cast<BYTE*>(t) + a)))
+#define WORD_AT(t, a)  (*(reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(t) + a)))
+#define DWORD_AT(t, a) (*(reinterpret_cast<uint32_t*>(reinterpret_cast<BYTE*>(t) + a)))
 
 /**
  * Parse BIOS information (table type 0)
@@ -708,6 +722,20 @@ static void ParseSystemInformation(TableHeader *t)
    GetStringByIndex(t, BYTE_AT(t, 0x07), s_hardwareSerialNumber, sizeof(s_hardwareSerialNumber));
    GetStringByIndex(t, BYTE_AT(t, 0x19), s_hardwareProductCode, sizeof(s_hardwareProductCode));
    
+   uuid_t guid;
+   memcpy(&guid, reinterpret_cast<BYTE*>(t) + 0x08, 16);
+   if (memcmp(&guid, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 16))
+   {
+      // Swap bytes in UUID elements. SMBIOS spec says:
+      // Although RFC4122 recommends network byte order for all fields, the PC industry (including the ACPI,
+      // UEFI, and Microsoft specifications) has consistently used little-endian byte encoding for the first three
+      // fields: time_low, time_mid, time_hi_and_version.
+      *reinterpret_cast<uint32_t*>(&guid) = htonl(*reinterpret_cast<uint32_t*>(&guid));
+      *reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 4) = htonl(*reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 4));
+      *reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 6) = htonl(*reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 6));
+      s_hardwareUUID = uuid(guid);
+   }
+
    switch(BYTE_AT(t, 0x18))
    {
       case 1:
@@ -1003,17 +1031,19 @@ bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
       }
       // Scan for 0x00 0x00 after fixed part
       BYTE *p = (BYTE *)curr + curr->fixedLength;
-      while(*((WORD*)p) != 0)
+      while(*((uint16_t*)p) != 0)
          p++;
       curr = (TableHeader *)(p + 2);
    }
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("System manufacturer: %hs"), s_hardwareManufacturer);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("System product name: %hs"), s_hardwareProduct);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("System serial number: %hs"), s_hardwareSerialNumber);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("System UUID: %s"), s_hardwareUUID.toString().cstr());
    nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS vendor: %hs"), s_biosVendor);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS version: %hs"), s_biosVersion);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS address: %04X"), s_biosAddress);
 
-   free(bios);
+   MemFree(bios);
    return true;
 }
