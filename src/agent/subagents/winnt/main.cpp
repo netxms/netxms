@@ -268,6 +268,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("Hardware.StorageDevice.Size(*)"), H_StorageDeviceSize, NULL, DCI_DT_UINT64, DCIDESC_HARDWARE_STORAGEDEVICE_SIZE },
    { _T("Hardware.StorageDevice.Type(*)"), H_StorageDeviceInfo, _T("T"), DCI_DT_INT, DCIDESC_HARDWARE_STORAGEDEVICE_TYPE },
    { _T("Hardware.StorageDevice.TypeDescription(*)"), H_StorageDeviceInfo, _T("t"), DCI_DT_STRING, DCIDESC_HARDWARE_STORAGEDEVICE_TYPEDESCR },
+   { _T("Hardware.System.MachineId"), SMBIOS_ParameterHandler, _T("HU"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MACHINEID },
    { _T("Hardware.System.Manufacturer"), SMBIOS_ParameterHandler, _T("HM"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"), SMBIOS_ParameterHandler, _T("HP"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
    { _T("Hardware.System.ProductCode"), SMBIOS_ParameterHandler, _T("HC"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCTCODE },
