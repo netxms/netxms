@@ -797,8 +797,8 @@ void Zone::healthCheck(PollerInfo *poller)
 
    unlockProperties();
 
-   delete poller;
    nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): completed"), m_name, m_uin);
+   delete poller;
 }
 
 /**
