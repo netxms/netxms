@@ -93,6 +93,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.UsedInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDINODESPERC },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
+   { _T("Hardware.System.MachineId"), H_HardwareMachineId, NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MACHINEID },
    { _T("Hardware.System.Manufacturer"), H_HardwareManufacturer, NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"), H_HardwareProduct, NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
    { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },

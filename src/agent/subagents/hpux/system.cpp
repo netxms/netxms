@@ -555,3 +555,16 @@ LONG H_HardwareSerialNumber(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
    ret_mbstring(value, buffer);
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Handler for Hardware.System.MachineId
+ */
+LONG H_HardwareMachineId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char buffer[MAX_RESULT_LENGTH];
+   int rc = confstr(_CS_PARTITION_IDENT, buffer, MAX_RESULT_LENGTH);
+   if (rc <= 0)
+      return SYSINFO_RC_ERROR;
+   ret_mbstring(value, buffer);
+   return SYSINFO_RC_SUCCESS;
+}
