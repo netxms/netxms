@@ -700,6 +700,7 @@ void NetworkMap::updateContent()
    if (m_mapType != MAP_TYPE_CUSTOM)
    {
       NetworkMapObjectList objects;
+      bool topologyRecieved = true;
       for(int i = 0; i < m_seedObjects->size(); i++)
       {
          shared_ptr<Node> seed = static_pointer_cast<Node>(FindObjectById(m_seedObjects->get(i), OBJECT_NODE));
@@ -729,7 +730,9 @@ void NetworkMap::updateContent()
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): cannot get topology information for node %s [%d]"), m_name, m_id, seed->getName(), seed->getId());
+               nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): cannot get topology information for node %s [%d], map won't be updated"), m_name, m_id, seed->getName(), seed->getId());
+               topologyRecieved = false;
+               break;
             }
          }
          else
@@ -737,7 +740,7 @@ void NetworkMap::updateContent()
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object %d cannot be found"), m_name, m_id, m_seedObjects->get(i));
          }
       }
-      if (!IsShutdownInProgress())
+      if (!IsShutdownInProgress() && topologyRecieved)
       {
          updateObjects(&objects);
       }
