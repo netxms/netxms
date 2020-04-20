@@ -213,6 +213,8 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<DataCollectionTar
    if (filter == nullptr)
       return result;
 
+   filter->setGlobalVariable("$container", m_this->createNXSLObject(filter));
+   filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
    if (filter->run())
    {
       NXSL_Value *value = filter->getResult();

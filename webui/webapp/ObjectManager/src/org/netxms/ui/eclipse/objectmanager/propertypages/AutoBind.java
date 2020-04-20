@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Auto Bind" property page
- *
  */
 public class AutoBind extends PropertyPage
 {
@@ -53,13 +52,13 @@ public class AutoBind extends PropertyPage
    private boolean initialUnbind;
 	private String initialAutoBindFilter;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		Composite dialogArea = new Composite(parent, SWT.NONE);
+      Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		object = (Container)getElement().getAdapter(Container.class);
 		if (object == null)	// Paranoid check
@@ -107,19 +106,20 @@ public class AutoBind extends PropertyPage
       checkboxEnableUnbind.setText(Messages.get().AutoBind_AUtoUnbind);
       checkboxEnableUnbind.setSelection(object.isAutoUnbindEnabled());
       checkboxEnableUnbind.setEnabled(object.isAutoBindEnabled());
-      
+
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText(Messages.get().AutoBind_Script);
 
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
-		label.setLayoutData(gd);
-      
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, "Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\r\nReturn value: true to bind node to this container, false to unbind, null to make no changes.");
-		filterSource.setText(object.getAutoBindFilter());
-		filterSource.setEnabled(object.isAutoBindEnabled());
-		
+      label.setLayoutData(gd);
+
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
+            "Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$container\tthis container object.\r\n\r\nReturn value: true to bind node to this container, false to unbind, null to make no changes.");
+      filterSource.setText(object.getAutoBindFilter());
+      filterSource.setEnabled(object.isAutoBindEnabled());
+
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.grabExcessVerticalSpace = true;
@@ -128,10 +128,10 @@ public class AutoBind extends PropertyPage
 		gd.widthHint = 0;
       gd.heightHint = 0;
 		filterSource.setLayoutData(gd);
-		
+
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 

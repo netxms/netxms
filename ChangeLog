@@ -32,6 +32,7 @@
 	NX-1830 (Some events sent by agent may be lost if multiple events sent almost simultaneously)
 	NX-1831 (Template path in node data collection configuration is incorrect)
 	NX-1834 (Add NXSL function "sqrt")
+	NX-1836 (Access attributes of template in auto-bind script)
 
 
 *

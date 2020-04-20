@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,13 +53,13 @@ public class AutoApply extends PropertyPage
    private boolean initialUnbind;
 	private String initialApplyFilter;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		Composite dialogArea = new Composite(parent, SWT.NONE);
+      Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		object = (Template)getElement().getAdapter(Template.class);
 		if (object == null)	// Paranoid check
@@ -116,11 +116,12 @@ public class AutoApply extends PropertyPage
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
 		label.setLayoutData(gd);
-      
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, "Variables:\r\n\t$node\tnode being tested.\r\n\r\nReturn value: true to apply this template to node, false to remove, null to make no changes.");
+
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
+            "Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$template\tthis template object.\r\n\r\nReturn value: true to apply this template to node, false to remove, null to make no changes.");
 		filterSource.setText(object.getAutoApplyFilter());
 		filterSource.setEnabled(object.isAutoApplyEnabled());
-		
+
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.grabExcessVerticalSpace = true;
@@ -129,10 +130,10 @@ public class AutoApply extends PropertyPage
 		gd.widthHint = 0;
       gd.heightHint = 0;
 		filterSource.setLayoutData(gd);
-		
+
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
