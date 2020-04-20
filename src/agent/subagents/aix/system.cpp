@@ -53,25 +53,17 @@ LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 /**
  * Handler for System.Uname parameter
  */
-LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_Uname(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	LONG nRet;
-	struct utsname un;
-
-	if (uname(&un) == 0)
-	{
+   struct utsname un;
+   if (uname(&un) != 0)
+      return SYSINFO_RC_ERROR;
 #ifdef UNICODE
-		swprintf(pValue, MAX_RESULT_LENGTH, L"%hs %hs %hs %hs %hs", un.sysname, un.nodename, un.release, un.version, un.machine);
+   swprintf(value, MAX_RESULT_LENGTH, L"%hs %hs %hs %hs %hs", un.sysname, un.nodename, un.release, un.version, un.machine);
 #else
-		snprintf(pValue, MAX_RESULT_LENGTH, "%s %s %s %s %s", un.sysname, un.nodename, un.release, un.version, un.machine);
+   snprintf(value, MAX_RESULT_LENGTH, "%s %s %s %s %s", un.sysname, un.nodename, un.release, un.version, un.machine);
 #endif
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-	else
-	{
-		nRet = SYSINFO_RC_ERROR;
-	}
-	return nRet;
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -381,5 +373,17 @@ LONG H_HardwareSerialNumber(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Ab
       ret_mbstring(value, &buffer[6]);
    else
       ret_mbstring(value, buffer);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Hardware.System.MachineId parameter
+ */
+LONG H_HardwareMachineId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   struct utsname un;
+   if (uname(&un) != 0)
+      return SYSINFO_RC_ERROR;
+   ret_mbstring(value, un.machine);
    return SYSINFO_RC_SUCCESS;
 }

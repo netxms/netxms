@@ -30,6 +30,7 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
+LONG H_HardwareMachineId(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_HardwareManufacturer(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_HardwareProduct(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_HardwareSerialNumber(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
@@ -137,6 +138,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.UsedInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDINODESPERC },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
+   { _T("Hardware.System.MachineId"), H_HardwareMachineId, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MACHINEID },
    { _T("Hardware.System.Manufacturer"), H_HardwareManufacturer, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"), H_HardwareProduct, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
    { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
