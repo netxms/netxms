@@ -373,7 +373,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("GPS"), NETXMS_VERSION_STRING,
@@ -391,7 +391,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(GPS)
 {
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	return true;
 }
 

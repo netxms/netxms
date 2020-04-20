@@ -8,6 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = smbios libnxagent libnxappc @AGENT_DIRS@ subagents core install tools
-
-EXTRA_DIST = Makefile.w32
+EXTRA_DIST = freebsd.cpp linux.cpp solaris.cpp windows.cpp

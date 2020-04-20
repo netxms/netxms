@@ -23,6 +23,8 @@
 #include "winnt_subagent.h"
 #include "lm.h"
 
+#include "../../smbios/windows.cpp"
+
 /**
  * Externlals
  */
@@ -126,15 +128,14 @@ static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 	if (!LookupPrivilegeValue(NULL, pszPrivilege, &luid))
 		return FALSE;
 
-	if(!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES, &hToken))
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES, &hToken))
 		return FALSE;
 
 	tp.PrivilegeCount = 1;
 	tp.Privileges[0].Luid = luid;
 	tp.Privileges[0].Attributes = 0;
 
-	if (AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES),
-				&tpPrevious, &cbPrevious))
+	if (AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), &tpPrevious, &cbPrevious))
 	{
 		tpPrevious.PrivilegeCount = 1;
 		tpPrevious.Privileges[0].Luid = luid;
@@ -184,54 +185,12 @@ static LONG H_ChangeUserPassword(const TCHAR *action, const StringList *args, co
 }
 
 /**
- * BIOS header
- */
-struct BiosHeader
-{
-   BYTE used20CallingMethod;
-   BYTE majorVersion;
-   BYTE minorVersion;
-   BYTE dmiRevision;
-   DWORD length;
-   BYTE tables[1];
-};
-
-/**
- * BIOS reader
- */
-static BYTE *BIOSReader(size_t *size)
-{
-   BYTE *buffer = (BYTE *)MemAlloc(16384);
-   UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
-   if (rc > 16384)
-   {
-      buffer = (BYTE *)realloc(buffer, rc);
-      rc = GetSystemFirmwareTable('RSMB', 0, buffer, rc);
-   }
-   if (rc == 0)
-   {
-      TCHAR errorText[1024];
-      nxlog_debug_tag(_T("smbios"), 3, _T("Call to GetSystemFirmwareTable failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-      free(buffer);
-      return NULL;
-   }
-
-   BiosHeader *header = reinterpret_cast<BiosHeader*>(buffer);
-   BYTE *bios = (BYTE *)MemAlloc(header->length);
-   memcpy(bios, header->tables, header->length);
-   *size = header->length;
-   MemFree(buffer);
-
-   return bios;
-}
-
-/**
  * Subagent initialization
  */
 static bool SubAgentInit(Config *config)
 {
    ReadCPUVendorId();
-   SMBIOS_Parse(BIOSReader);
+   SMBIOS_Parse(SMBIOS_Reader);
    StartCPUStatCollector();
    StartIOStatCollector();
    return true;

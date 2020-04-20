@@ -25,6 +25,8 @@
 #include <sys/reboot.h>
 #endif
 
+#include "../../smbios/linux.cpp"
+
 #if HAVE_REBOOT
 
 /**
@@ -94,23 +96,12 @@ static LONG H_SoftShutdown(const TCHAR *pszAction, const StringList *pArgList, c
 }
 
 /**
- * SMBIOS reader
- */
-static BYTE *BIOSReader(size_t *size)
-{
-   UINT32 fsize;
-   BYTE *bios = LoadFileA("/sys/firmware/dmi/tables/DMI", &fsize);
-   *size = fsize;
-   return bios;
-}
-
-/**
- * Initalization callback
+ * Initialization callback
  */
 static bool SubAgentInit(Config *config)
 {
    ReadCPUVendorId();
-   SMBIOS_Parse(BIOSReader);
+   SMBIOS_Parse(SMBIOS_Reader);
 	StartCpuUsageCollector();
 	StartIoStatCollector();
 	InitDrbdCollector();
@@ -535,14 +526,14 @@ static NETXMS_SUBAGENT_ACTION m_actions[] =
 /**
  * Subagent info
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("Linux"), NETXMS_VERSION_STRING,
 	SubAgentInit,     /* initialization handler */
 	SubAgentShutdown, /* unload handler */
-	NULL,             /* command handler */
-	NULL,             /* notification handler */
+	nullptr,          /* command handler */
+	nullptr,          /* notification handler */
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -551,7 +542,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_tables,
 	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
 	m_actions,
-	0, NULL	// push parameters
+	0, nullptr	// push parameters
 };
 
 /**
@@ -559,7 +550,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(LINUX)
 {
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	return true;
 }
 

@@ -24,101 +24,31 @@
 
 NETXMS_EXECUTABLE_HEADER(nxhwid)
 
-#ifdef _WIN32
-
-/**
- * SMBIOS header
- */
-struct BiosHeader
-{
-   BYTE used20CallingMethod;
-   BYTE majorVersion;
-   BYTE minorVersion;
-   BYTE dmiRevision;
-   DWORD length;
-   BYTE tables[1];
-};
-
-/**
- * SMBIOS reader - Windows
- */
-static BYTE *BIOSReader(size_t *size)
-{
-   BYTE *buffer = (BYTE *)MemAlloc(16384);
-   UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
-   if (rc > 16384)
-   {
-      buffer = (BYTE *)realloc(buffer, rc);
-      rc = GetSystemFirmwareTable('RSMB', 0, buffer, rc);
-   }
-   if (rc == 0)
-   {
-      TCHAR errorText[1024];
-      nxlog_debug_tag(_T("smbios"), 3, _T("Call to GetSystemFirmwareTable failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-      free(buffer);
-      return NULL;
-   }
-
-   BiosHeader *header = reinterpret_cast<BiosHeader*>(buffer);
-   BYTE *bios = (BYTE *)MemAlloc(header->length);
-   memcpy(bios, header->tables, header->length);
-   *size = header->length;
-   MemFree(buffer);
-
-   return bios;
-}
-
+#if defined(__FreeBSD__)
+#include "../../smbios/freebsd.cpp"
+#elif defined(__linux__)
+#include "../../smbios/linux.cpp"
 #elif defined(__sun)
-
-/**
- * SMBIOS reader - Solaris
- */
-static BYTE *BIOSReader(size_t *biosSize)
-{
-   UINT32 fileSize;
-   BYTE *data = LoadFileA("/dev/smbios", &fileSize);
-   if (data == NULL)
-      return NULL;
-
-   // Check SMBIOS header
-   if (memcmp(data, "_SM_", 4))
-   {
-      nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS header (anchor string not found)"));
-      free(data);
-      return NULL;  // not a valid SMBIOS signature
-   }
-
-   UINT32 offset = *reinterpret_cast<UINT32*>(data + 0x18);
-   UINT32 dataSize = *reinterpret_cast<UINT16*>(data + 0x16);
-   if (dataSize + offset > fileSize)
-   {
-      nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS header (offset=%08X data_size=%04X file_size=%04X)"),
-            offset, dataSize, fileSize);
-      free(data);
-      return NULL;
-   }
-
-   BYTE *biosData = (BYTE *)malloc(dataSize);
-   memcpy(biosData, data + offset, dataSize);
-   free(data);
-   *biosSize = dataSize;
-   return biosData;
-}
-
+#include "../../smbios/solaris.cpp"
+#elif defined(_WIN32)
+#include "../../smbios/windows.cpp"
 #else
+static BYTE *SMBIOS_Reader(size_t *size)
+{
+   return nullptr;
+}
+#endif
 
 /**
- * SMBIOS reader - Linux
+ * Debug writer
  */
-static BYTE *BIOSReader(size_t *size)
+static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   UINT32 fsize;
-   BYTE *bios = LoadFileA("/sys/firmware/dmi/tables/DMI", &fsize);
-   *size = fsize;
-   return bios;
+   if (tag != nullptr)
+      _tprintf(_T("%s: "), tag);
+   _vtprintf(format, args);
+   _tprintf(_T("\n"));
 }
-
-#endif
 
 /**
  * Entry point
@@ -126,8 +56,24 @@ static BYTE *BIOSReader(size_t *size)
 int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
-   SMBIOS_Parse(BIOSReader);
-   
+
+   int ch;
+   while((ch = getopt(argc, argv, "Dh")) != -1)
+   {
+      if (ch == 'D')
+      {
+         nxlog_set_debug_level(9);
+         nxlog_set_debug_writer(DebugWriter);
+      }
+      else
+      {
+         _tprintf(_T("Usage: nxhwid [-D]\n"));
+         return 1;
+      }
+   }
+
+   SMBIOS_Parse(SMBIOS_Reader);
+
    int rc;
    BYTE hwid[HARDWARE_ID_LENGTH];
    if (GetSystemHardwareId(hwid))

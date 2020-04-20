@@ -27,6 +27,7 @@
 #include <zone.h>
 #endif
 
+#include "../../smbios/solaris.cpp"
 
 //
 // Hanlder functions
@@ -104,41 +105,6 @@ static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 }
 
 /**
- * BIOS reader
- */
-static BYTE *BIOSReader(size_t *biosSize)
-{
-   UINT32 fileSize;
-   BYTE *data = LoadFileA("/dev/smbios", &fileSize);
-   if (data == NULL)
-      return NULL;
-
-   // Check SMBIOS header
-   if (memcmp(data, "_SM_", 4))
-   {
-      nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS header (anchor string not found)"));
-      MemFree(data);
-      return NULL;  // not a valid SMBIOS signature
-   }
-
-   UINT32 offset = *reinterpret_cast<UINT32*>(data + 0x18);
-   UINT32 dataSize = *reinterpret_cast<UINT16*>(data + 0x16);
-   if (dataSize + offset > fileSize)
-   {
-      nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS header (offset=%08X data_size=%04X file_size=%04X)"),
-            offset, dataSize, fileSize);
-      MemFree(data);
-      return NULL;
-   }
-
-   BYTE *biosData = (BYTE *)malloc(dataSize);
-   memcpy(biosData, data + offset, dataSize);
-   MemFree(data);
-   *biosSize = dataSize;
-   return biosData;
-}
-
-/**
  * Configuration file template
  */
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
@@ -179,7 +145,7 @@ static bool SubAgentInit(Config *config)
    }
 
    ReadCPUVendorId();
-   SMBIOS_Parse(BIOSReader);
+   SMBIOS_Parse(SMBIOS_Reader);
 
    s_cpuStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
    s_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
