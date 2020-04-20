@@ -32,7 +32,7 @@
 /**
  * Maximum identifier name length
  */
-#define MAX_IDENTIFIER_LENGTH 63
+#define MAX_IDENTIFIER_LENGTH    127
 
 /**
  * Script execution errors

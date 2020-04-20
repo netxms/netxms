@@ -223,14 +223,36 @@ bool NXSL_Program::addFunction(const NXSL_Identifier& name, UINT32 dwAddr, char 
 /**
  * Add required module name (must be dynamically allocated).
  */
-void NXSL_Program::addRequiredModule(const char *name, int lineNumber)
+void NXSL_Program::addRequiredModule(const char *name, int lineNumber, bool removeLastElement)
 {
-   NXSL_ModuleImport *module = new NXSL_ModuleImport();
 #ifdef UNICODE
-   MultiByteToWideChar(CP_UTF8, 0, name, -1, module->name, MAX_PATH - 1);
+   WCHAR mname[MAX_PATH];
+   int cch = MultiByteToWideChar(CP_UTF8, 0, name, -1, mname, MAX_PATH - 1);
 #else
-   nx_strncpy(module->name, name, MAX_PATH);
+   char mname[MAX_PATH];
+   size_t cch = utf8_to_mb(mname, -1, name, MAX_PATH);;
 #endif
+   mname[cch] = 0;
+
+   if (removeLastElement)
+   {
+      TCHAR *s = mname;
+      TCHAR *p = _tcsstr(s, _T("::"));
+      while(p != nullptr)
+      {
+         s = p;
+         p = _tcsstr(s + 2, _T("::"));
+      }
+      *s = 0;
+   }
+
+   // Check if module already added
+   for(int i = 0; i < m_requiredModules->size(); i++)
+      if (!_tcscmp(m_requiredModules->get(i)->name, mname))
+         return;
+
+   NXSL_ModuleImport *module = new NXSL_ModuleImport();
+   _tcslcpy(module->name, mname, MAX_PATH);
    module->lineNumber = lineNumber;
    m_requiredModules->add(module);
 }

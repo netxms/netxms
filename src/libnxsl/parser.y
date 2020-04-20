@@ -206,7 +206,7 @@ ConstDefinition:
 UseStatement:
 	T_USE AnyIdentifier ';'
 {
-	pScript->addRequiredModule($2.v, pLexer->getCurrLine());
+	pScript->addRequiredModule($2.v, pLexer->getCurrLine(), false);
 }
 ;
 
@@ -1243,6 +1243,11 @@ FunctionName:
 	T_IDENTIFIER '('
 {
 	$$ = $1;
+}
+|	T_COMPOUND_IDENTIFIER '('
+{
+	$$ = $1;
+	pScript->addRequiredModule($1.v, pLexer->getCurrLine(), true);
 }
 ;
 

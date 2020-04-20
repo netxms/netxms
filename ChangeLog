@@ -6,6 +6,7 @@
 - Option for switching SNMP probing during configuration poll into single OID per request mode
 - Automatic agent certificate renewal
 - Value ranges in NXSL switch/case statement
+- Explicit call of library functions in NXSL without "use" statement
 - New attributes "instanceColumns" and "instanceColumnIndexes" in NXSL class "Table"
 - New NXSL functions: GetThreadPoolNames, sqrt
 - Implemented instance discovery method "Agent Table"

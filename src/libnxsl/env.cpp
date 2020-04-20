@@ -304,10 +304,10 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
    bool bRet = false;
 
    // First, try to find module in library
-   if (m_library != NULL)
+   if (m_library != nullptr)
    {
       pScript = m_library->findNxslProgram(importInfo->name);
-      if (pScript != NULL)
+      if (pScript != nullptr)
       {
          vm->loadModule(pScript, importInfo);
          bRet = true;

@@ -919,7 +919,7 @@ public:
    void addPushVariableInstruction(const NXSL_Identifier& name, int line);
    void resolveLastJump(int opcode, int offset = 0);
 	void createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr);
-   void addRequiredModule(const char *name, int lineNumber);
+   void addRequiredModule(const char *name, int lineNumber, bool removeLastElement);
 	void optimize();
 	void removeInstructions(UINT32 start, int count);
    bool addConstant(const NXSL_Identifier& name, NXSL_Value *value);

@@ -250,7 +250,7 @@ bool NXSL_VM::load(const NXSL_Program *program)
    m_constants->create("NXSL::version", createValue(NETXMS_VERSION_STRING));
 
    // Load modules
-   m_modules = new ObjectArray<NXSL_Module>(4, 4, Ownership::True);
+   m_modules = new ObjectArray<NXSL_Module>(0, 8, Ownership::True);
    for(i = 0; i < program->m_requiredModules->size(); i++)
    {
       const NXSL_ModuleImport *importInfo = program->m_requiredModules->get(i);
@@ -1188,7 +1188,7 @@ void NXSL_VM::execute()
          break;
       case OPCODE_CALL_EXTERNAL:
          pFunc = m_env->findFunction(*cp->m_operand.m_identifier);
-         if (pFunc != NULL)
+         if (pFunc != nullptr)
          {
             // convert to direct call using pointer
             cp->m_opCode = OPCODE_CALL_EXTPTR;
@@ -1200,7 +1200,7 @@ void NXSL_VM::execute()
          }
          else
          {
-            UINT32 addr = getFunctionAddress(*cp->m_operand.m_identifier);
+            uint32_t addr = getFunctionAddress(*cp->m_operand.m_identifier);
             if (addr != INVALID_ADDRESS)
             {
                // convert to CALL
@@ -2329,9 +2329,25 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    relocateCode(start, module->m_instructionSet->size(), start);
    
    // Add function names from module
+   char fname[MAX_IDENTIFIER_LENGTH];
+#ifdef UNICODE
+   WideCharToMultiByte(CP_UTF8, 0, importInfo->name, -1, fname, MAX_IDENTIFIER_LENGTH - 1, nullptr, nullptr);
+   fname[MAX_IDENTIFIER_LENGTH - 1] = 0;
+#else
+   strlcpy(fname, importInfo->name, MAX_IDENTIFIER_LENGTH);
+#endif
+   strlcat(fname, "::", MAX_IDENTIFIER_LENGTH);
+   size_t fnpos = strlen(fname);
    for(i = 0; i < module->m_functions->size(); i++)
    {
       NXSL_Function *mf = module->m_functions->get(i);
+      if (mf->m_name.length < MAX_IDENTIFIER_LENGTH - fnpos)
+      {
+         // Add fully qualified function name (module::function)
+         strcpy(&fname[fnpos], mf->m_name.value);
+         NXSL_Function *f = new NXSL_Function(fname, mf->m_dwAddr + start);
+         m_functions->add(f);
+      }
       if (!strcmp(mf->m_name.value, "main") || !strcmp(mf->m_name.value, "$main"))
          continue;
       NXSL_Function *f = new NXSL_Function(mf);
