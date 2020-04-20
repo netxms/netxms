@@ -52,17 +52,17 @@ struct Action
 //
 bool LoadActions();
 void CleanupActions();
-BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm);
-UINT32 CreateAction(const TCHAR *pszName, UINT32 *pdwId);
-UINT32 DeleteAction(UINT32 dwActionId);
-UINT32 ModifyActionFromMessage(NXCPMessage *pMsg);
-void UpdateChannelNameInActions(std::pair<TCHAR *, TCHAR *> *names);
+bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm);
+uint32_t CreateAction(const TCHAR *name, uint32_t *id);
+uint32_t DeleteAction(uint32_t actionId);
+uint32_t ModifyActionFromMessage(const NXCPMessage *msg);
+void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names);
 bool CheckChannelIsUsedInAction(TCHAR *name);
-void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId);
-void CreateActionExportRecord(StringBuffer &xml, UINT32 id);
+void SendActionsToClient(ClientSession *session, uint32_t requestId);
+void CreateActionExportRecord(StringBuffer &xml, uint32_t id);
 bool ImportAction(ConfigEntry *config, bool overwrite);
-bool IsValidActionId(UINT32 id);
-uuid GetActionGUID(UINT32 id);
-UINT32 FindActionByGUID(const uuid& guid);
+bool IsValidActionId(uint32_t id);
+uuid GetActionGUID(uint32_t id);
+uint32_t FindActionByGUID(const uuid& guid);
 
 #endif   /* _nms_actions_ */

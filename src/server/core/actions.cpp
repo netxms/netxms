@@ -354,11 +354,11 @@ static bool ExecuteActionScript(const TCHAR *scriptName, const Event *event)
 /**
  * Execute action on specific event
  */
-BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
+bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 {
    static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND NOTIFICATION"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
 
-   BOOL bSuccess = FALSE;
+   bool success = false;
 
    shared_ptr<Action> action = s_actions.getShared(actionId);
    if (action != NULL)
@@ -366,7 +366,7 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
       if (action->isDisabled)
       {
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Action %d (%s) is disabled and will not be executed"), actionId, action->name);
-         bSuccess = TRUE;
+         success = true;
       }
       else
       {
@@ -390,7 +390,7 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty command - nothing to execute"));
                }
-					bSuccess = TRUE;
+					success = true;
                break;
             case ACTION_SEND_EMAIL:
                if (!expandedRcpt.isEmpty())
@@ -412,7 +412,7 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty recipients list - mail will not be sent"));
                }
-               bSuccess = TRUE;
+               success = true;
                break;
             case ACTION_NOTIFICATION:
                if (action->channelName[0] != 0)
@@ -429,7 +429,7 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty channel name - notification will not be sent"));
                }
-               bSuccess = TRUE;
+               success = true;
                break;
             case ACTION_XMPP_MESSAGE:
                if (!expandedRcpt.isEmpty())
@@ -454,42 +454,42 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty recipients list - XMPP message will not be sent"));
                }
-               bSuccess = TRUE;
+               success = true;
                break;
             case ACTION_REMOTE:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing on \"%s\": \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
-                  bSuccess = ExecuteRemoteAction(expandedRcpt, expandedData);
+                  success = ExecuteRemoteAction(expandedRcpt, expandedData);
                }
                else
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty target list - remote action will not be executed"));
-                  bSuccess = TRUE;
+                  success = true;
                }
                break;
 				case ACTION_FORWARD_EVENT:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), (const TCHAR *)expandedRcpt);
-                  bSuccess = ForwardEvent(expandedRcpt, event);
+                  success = ForwardEvent(expandedRcpt, event);
                }
                else
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty destination - event will not be forwarded"));
-                  bSuccess = TRUE;
+                  success = true;
                }
 					break;
 				case ACTION_NXSL_SCRIPT:
                if (!expandedRcpt.isEmpty())
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), (const TCHAR *)expandedRcpt);
-                  bSuccess = ExecuteActionScript(expandedRcpt, event);
+                  success = ExecuteActionScript(expandedRcpt, event);
                }
                else
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty script name - nothing to execute"));
-                  bSuccess = TRUE;
+                  success = true;
                }
 					break;
             default:
@@ -497,7 +497,7 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
          }
       }
    }
-   return bSuccess;
+   return success;
 }
 
 /**
@@ -511,7 +511,7 @@ static bool ActionNameComparator(const UINT32 *id, const Action *action, const T
 /**
  * Create new action
  */
-UINT32 CreateAction(const TCHAR *name, UINT32 *id)
+uint32_t CreateAction(const TCHAR *name, uint32_t *id)
 {
    // Check for duplicate name
    if (s_actions.findElement(ActionNameComparator, name) != NULL)
@@ -531,12 +531,12 @@ UINT32 CreateAction(const TCHAR *name, UINT32 *id)
 /**
  * Delete action
  */
-UINT32 DeleteAction(UINT32 actionId)
+uint32_t DeleteAction(uint32_t actionId)
 {
-   UINT32 dwResult = RCC_SUCCESS;
+   uint32_t dwResult = RCC_SUCCESS;
 
    shared_ptr<Action> action = s_actions.getShared(actionId);
-   if (action != NULL)
+   if (action != nullptr)
    {
       m_dwUpdateCode = NX_NOTIFY_ACTION_DELETED;
       EnumerateClientSessions(SendActionDBUpdate, action.get());
@@ -559,28 +559,25 @@ UINT32 DeleteAction(UINT32 actionId)
 /**
  * Modify action record from message
  */
-UINT32 ModifyActionFromMessage(NXCPMessage *pMsg)
+uint32_t ModifyActionFromMessage(const NXCPMessage *msg)
 {
-   UINT32 dwResult = RCC_INVALID_ACTION_ID;
-	TCHAR name[MAX_OBJECT_NAME];
+   uint32_t dwResult = RCC_INVALID_ACTION_ID;
 
-   pMsg->getFieldAsString(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
-	if (!IsValidObjectName(name, TRUE))
-		return RCC_INVALID_OBJECT_NAME;
-
-   UINT32 actionId = pMsg->getFieldAsUInt32(VID_ACTION_ID);
+   TCHAR name[MAX_OBJECT_NAME];
+   msg->getFieldAsString(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
+   uint32_t actionId = msg->getFieldAsUInt32(VID_ACTION_ID);
 
    shared_ptr<Action> tmp = s_actions.getShared(actionId);
-   if (tmp != NULL)
+   if (tmp != nullptr)
    {
       Action *action = new Action(tmp.get());
-      action->isDisabled = pMsg->getFieldAsBoolean(VID_IS_DISABLED);
-      action->type = pMsg->getFieldAsUInt16(VID_ACTION_TYPE);
-      free(action->data);
-      action->data = pMsg->getFieldAsString(VID_ACTION_DATA);
-      pMsg->getFieldAsString(VID_EMAIL_SUBJECT, action->emailSubject, MAX_EMAIL_SUBJECT_LEN);
-      pMsg->getFieldAsString(VID_RCPT_ADDR, action->rcptAddr, MAX_RCPT_ADDR_LEN);
-      pMsg->getFieldAsString(VID_CHANNEL_NAME, action->channelName, MAX_OBJECT_NAME);
+      action->isDisabled = msg->getFieldAsBoolean(VID_IS_DISABLED);
+      action->type = msg->getFieldAsUInt16(VID_ACTION_TYPE);
+      MemFree(action->data);
+      action->data = msg->getFieldAsString(VID_ACTION_DATA);
+      msg->getFieldAsString(VID_EMAIL_SUBJECT, action->emailSubject, MAX_EMAIL_SUBJECT_LEN);
+      msg->getFieldAsString(VID_RCPT_ADDR, action->rcptAddr, MAX_RCPT_ADDR_LEN);
+      msg->getFieldAsString(VID_CHANNEL_NAME, action->channelName, MAX_OBJECT_NAME);
       _tcscpy(action->name, name);
 
       action->saveToDatabase();
@@ -600,11 +597,11 @@ UINT32 ModifyActionFromMessage(NXCPMessage *pMsg)
  * first - old name
  * second - new name
  */
-static EnumerationCallbackResult RenameChannel(const UINT32 *id, const Action *action, std::pair<TCHAR *, TCHAR *> *names)
+static EnumerationCallbackResult RenameChannel(const UINT32 *id, const Action *action, std::pair<TCHAR*, TCHAR*> *names)
 {
    if (!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME) && action->type == ACTION_NOTIFICATION)
    {
-      _tcsncpy(const_cast<TCHAR *>(action->channelName), names->second, MAX_OBJECT_NAME);
+      _tcsncpy(const_cast<TCHAR*>(action->channelName), names->second, MAX_OBJECT_NAME);
       m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
       EnumerateClientSessions(SendActionDBUpdate, const_cast<Action *>(action));
    }
@@ -616,7 +613,7 @@ static EnumerationCallbackResult RenameChannel(const UINT32 *id, const Action *a
  * first - old name
  * second - new name
  */
-void UpdateChannelNameInActions(std::pair<TCHAR *, TCHAR *> *names)
+void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names)
 {
    s_actions.forEach(RenameChannel, names);
 }
@@ -665,7 +662,7 @@ static EnumerationCallbackResult SendAction(const UINT32 *id, const Action *acti
 /**
  * Send all actions to client
  */
-void SendActionsToClient(ClientSession *session, UINT32 requestId)
+void SendActionsToClient(ClientSession *session, uint32_t requestId)
 {
    NXCPMessage msg(CMD_ACTION_DATA, requestId);
 
@@ -682,7 +679,7 @@ void SendActionsToClient(ClientSession *session, UINT32 requestId)
 /**
  * Export action configuration
  */
-void CreateActionExportRecord(StringBuffer &xml, UINT32 id)
+void CreateActionExportRecord(StringBuffer &xml, uint32_t id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,")
@@ -728,7 +725,7 @@ void CreateActionExportRecord(StringBuffer &xml, UINT32 id)
 /**
  * Check if given action ID is valid
  */
-bool IsValidActionId(UINT32 id)
+bool IsValidActionId(uint32_t id)
 {
    return s_actions.getShared(id) != NULL;
 }
@@ -736,7 +733,7 @@ bool IsValidActionId(UINT32 id)
 /**
  * Get GUID of given action
  */
-uuid GetActionGUID(UINT32 id)
+uuid GetActionGUID(uint32_t id)
 {
    shared_ptr<Action> action = s_actions.getShared(id);
    uuid guid = (action != NULL) ? action->guid : uuid::NULL_UUID;
@@ -754,10 +751,10 @@ static bool ActionGUIDComparator(const UINT32 *id, const Action *action, const u
 /**
  * Find action by GUID
  */
-UINT32 FindActionByGUID(const uuid& guid)
+uint32_t FindActionByGUID(const uuid& guid)
 {
    shared_ptr<Action> action = s_actions.findElement(ActionGUIDComparator, &guid);
-   UINT32 id = (action != NULL) ? action->id : 0;
+   uint32_t id = (action != nullptr) ? action->id : 0;
    return id;
 }
 
