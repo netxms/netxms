@@ -705,6 +705,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 					setAutomaticLayout();
 				}
 				setChecked(automaticLayoutEnabled);
+				saveLayout();
 			}
 		};
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
