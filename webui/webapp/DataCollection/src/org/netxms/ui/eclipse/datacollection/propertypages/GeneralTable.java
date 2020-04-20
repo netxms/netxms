@@ -33,7 +33,6 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -89,13 +88,10 @@ public class GeneralTable extends DCIPropertyPageDialog
 	private LabeledText pollingInterval;
 	private LabeledText retentionTime;
 	private Combo clusterResource;
-	private Button statusActive;
-	private Button statusDisabled;
-	private Button statusUnsupported;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -403,29 +399,6 @@ public class GeneralTable extends DCIPropertyPageDialog
 	      clusterResource.setEnabled(false);
       }
       	
-      /** status **/
-      Group groupStatus = new Group(dialogArea, SWT.NONE);
-      groupStatus.setText(Messages.get().GeneralTable_Status);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.FILL;
-      groupStatus.setLayoutData(gd);
-      RowLayout statusLayout = new RowLayout();
-      statusLayout.type = SWT.VERTICAL;
-      groupStatus.setLayout(statusLayout);
-      
-      statusActive = new Button(groupStatus, SWT.RADIO);
-      statusActive.setText(Messages.get().GeneralTable_Active);
-      statusActive.setSelection(dci.getStatus() == DataCollectionObject.ACTIVE);
-      
-      statusDisabled = new Button(groupStatus, SWT.RADIO);
-      statusDisabled.setText(Messages.get().GeneralTable_Disabled);
-      statusDisabled.setSelection(dci.getStatus() == DataCollectionObject.DISABLED);
-      
-      statusUnsupported = new Button(groupStatus, SWT.RADIO);
-      statusUnsupported.setText(Messages.get().GeneralTable_NotSupported);
-      statusUnsupported.setSelection(dci.getStatus() == DataCollectionObject.NOT_SUPPORTED);
-      
       /** storage **/
       Group groupStorage = new Group(dialogArea, SWT.NONE);
       groupStorage.setText(Messages.get().GeneralTable_Storage);
@@ -619,13 +592,6 @@ public class GeneralTable extends DCIPropertyPageDialog
          dci.setSnmpVersion(SnmpVersion.DEFAULT);
       }
 
-		if (statusActive.getSelection())
-			dci.setStatus(DataCollectionObject.ACTIVE);
-		else if (statusDisabled.getSelection())
-			dci.setStatus(DataCollectionObject.DISABLED);
-		else if (statusUnsupported.getSelection())
-			dci.setStatus(DataCollectionObject.NOT_SUPPORTED);
-		
 		if (cluster != null)
 		{
 			dci.setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
@@ -635,27 +601,27 @@ public class GeneralTable extends DCIPropertyPageDialog
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
 		return applyChanges(false);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
@@ -665,9 +631,6 @@ public class GeneralTable extends DCIPropertyPageDialog
       
 		schedulingMode.select(0);
       pollingInterval.setText(Integer.toString(session.getDefaultDciPollingInterval()));
-		statusActive.setSelection(true);
-		statusDisabled.setSelection(false);
-		statusUnsupported.setSelection(false);
       retentionMode.select(0);
       retentionTime.setText(Integer.toString(session.getDefaultDciRetentionTime()));
 		checkUseCustomSnmpPort.setSelection(false);

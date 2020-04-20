@@ -29,7 +29,6 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -97,13 +96,10 @@ public class General extends DCIPropertyPageDialog
 	private LabeledText pollingInterval;
 	private LabeledText retentionTime;
 	private LabeledSpinner sampleCount;
-	private Button statusActive;
-	private Button statusDisabled;
-	private Button statusUnsupported;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{		
@@ -413,29 +409,6 @@ public class General extends DCIPropertyPageDialog
       fd.top = new FormAttachment(0, 0);
       pollingInterval.setLayoutData(fd);
       
-      /** status **/
-      Group groupStatus = new Group(dialogArea, SWT.NONE);
-      groupStatus.setText(Messages.get().General_Status);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.FILL;
-      groupStatus.setLayoutData(gd);
-      RowLayout statusLayout = new RowLayout();
-      statusLayout.type = SWT.VERTICAL;
-      groupStatus.setLayout(statusLayout);
-      
-      statusActive = new Button(groupStatus, SWT.RADIO);
-      statusActive.setText(Messages.get().General_Active);
-      statusActive.setSelection(dci.getStatus() == DataCollectionItem.ACTIVE);
-      
-      statusDisabled = new Button(groupStatus, SWT.RADIO);
-      statusDisabled.setText(Messages.get().General_Disabled);
-      statusDisabled.setSelection(dci.getStatus() == DataCollectionItem.DISABLED);
-      
-      statusUnsupported = new Button(groupStatus, SWT.RADIO);
-      statusUnsupported.setText(Messages.get().General_NotSupported);
-      statusUnsupported.setSelection(dci.getStatus() == DataCollectionItem.NOT_SUPPORTED);
-      
       /** storage **/
       Group groupStorage = new Group(dialogArea, SWT.NONE);
       groupStorage.setText(Messages.get().General_Storage);
@@ -651,38 +624,31 @@ public class General extends DCIPropertyPageDialog
          dci.setSnmpVersion(SnmpVersion.DEFAULT);
       }
 		
-		if (statusActive.getSelection())
-			dci.setStatus(DataCollectionItem.ACTIVE);
-		else if (statusDisabled.getSelection())
-			dci.setStatus(DataCollectionItem.DISABLED);
-		else if (statusUnsupported.getSelection())
-			dci.setStatus(DataCollectionItem.NOT_SUPPORTED);
-		
 		editor.modify();
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
 		return applyChanges(false);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
@@ -692,9 +658,6 @@ public class General extends DCIPropertyPageDialog
 		
 		schedulingMode.select(0);
 		pollingInterval.setText(Integer.toString(session.getDefaultDciPollingInterval()));
-		statusActive.setSelection(true);
-		statusDisabled.setSelection(false);
-		statusUnsupported.setSelection(false);
 		retentionMode.select(0);
 		retentionTime.setText(Integer.toString(session.getDefaultDciRetentionTime()));
 		checkInterpretRawSnmpValue.setSelection(false);
