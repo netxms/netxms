@@ -74,6 +74,7 @@ Source: "..\..\..\Release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversi
 Source: "..\..\..\Release\nxcsum.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxethernetip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\Release\nxhwid.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

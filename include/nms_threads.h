@@ -272,7 +272,8 @@ inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
 
 inline void MutexUnlock(MUTEX mutex)
 {
-   UnlockMutex(mutex);
+   if (mutex != INVALID_MUTEX_HANDLE)
+      UnlockMutex(mutex);
 }
 
 inline CONDITION ConditionCreate(bool broadcast)
