@@ -77,6 +77,8 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { _T("Agent.SourcePackageSupport"),   H_SourcePkgSupport,NULL,				DCI_DT_INT,	DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+
    { _T("Disk.Avail(*)"),                H_DiskInfo, (const TCHAR *)DISK_AVAIL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
    { _T("Disk.AvailPerc(*)"),            H_DiskInfo, (const TCHAR *)DISK_AVAIL_PERC,	DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
    { _T("Disk.Free(*)"),                 H_DiskInfo, (const TCHAR *)DISK_FREE,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
@@ -290,9 +292,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.ProcessCount"),          H_ProcessCount,    _T("S"),			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.ThreadCount"),           H_ProcessCount,    _T("T"),			DCI_DT_UINT,	DCIDESC_SYSTEM_THREADCOUNT },
 	{ _T("System.Uname"),                 H_Uname,           NULL,				DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
-	{ _T("System.Uptime"),                H_Uptime,          NULL,				DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
-
-	{ _T("Agent.SourcePackageSupport"),   H_SourcePkgSupport,NULL,				DCI_DT_INT,	DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+	{ _T("System.Uptime"),                H_Uptime,          NULL,				DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME }
 };
 
 /**

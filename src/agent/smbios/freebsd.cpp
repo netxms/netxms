@@ -30,13 +30,13 @@ static off_t ScanMemory()
    int fd = _open("/dev/mem", O_RDONLY);
    if (fd == -1)
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot open /dev/mem (%s)"), _tcserror(errno));
+      nxlog_debug_tag(_T("smbios"), 3, _T("Cannot open /dev/mem (%s)"), _tcserror(errno));
       return -1;
    }
 
    if (_lseek(fd, 0xF0000, SEEK_SET) == -1)
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot seek /dev/mem to beginning of BIOS memory (%s)"), _tcserror(errno));
+      nxlog_debug_tag(_T("smbios"), 3, _T("Cannot seek /dev/mem to beginning of BIOS memory (%s)"), _tcserror(errno));
       close(fd);
       return -1;
    }
@@ -69,29 +69,29 @@ static BYTE *SMBIOS_Reader(size_t *size)
    if (kenv(KENV_GET, "hint.smbios.0.mem", addrstr, sizeof(addrstr)) > 0)
    {
       offset = static_cast<off_t>(strtoull(addrstr, nullptr, 0));
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("SMBIOS offset obtained from kernel environment: %lld"), static_cast<long long>(offset));
+      nxlog_debug_tag(_T("smbios"), 5, _T("SMBIOS offset obtained from kernel environment: %lld"), static_cast<long long>(offset));
    }
    else
    {
       offset = ScanMemory();
       if (offset == -1)
       {
-         nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("SMBIOS offset not found"));
+         nxlog_debug_tag(_T("smbios"), 5, _T("SMBIOS offset not found"));
          return nullptr;
       }
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("SMBIOS offset obtained from memory scan: %lld"), static_cast<long long>(offset));
+      nxlog_debug_tag(_T("smbios"), 5, _T("SMBIOS offset obtained from memory scan: %lld"), static_cast<long long>(offset));
    }
 
    int fd = _open("/dev/mem", O_RDONLY);
    if (fd == -1)
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot open /dev/mem (%s)"), _tcserror(errno));
+      nxlog_debug_tag(_T("smbios"), 3, _T("Cannot open /dev/mem (%s)"), _tcserror(errno));
       return nullptr;
    }
 
    if (_lseek(fd, offset, SEEK_SET) == -1)
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot seek /dev/mem to offset %lld (%s)"),
+      nxlog_debug_tag(_T("smbios"), 3, _T("Cannot seek /dev/mem to offset %lld (%s)"),
             static_cast<long long>(offset), _tcserror(errno));
       _close(fd);
       return nullptr;
@@ -100,7 +100,7 @@ static BYTE *SMBIOS_Reader(size_t *size)
    BYTE biosHeader[32];
    if (_read(fd, biosHeader, 32) < 20)
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot read at least 20 bytes from /dev/mem at offset %lld (%s)"),
+      nxlog_debug_tag(_T("smbios"), 3, _T("Cannot read at least 20 bytes from /dev/mem at offset %lld (%s)"),
             static_cast<long long>(offset), _tcserror(errno));
       _close(fd);
       return nullptr;
@@ -119,14 +119,14 @@ static BYTE *SMBIOS_Reader(size_t *size)
    }
    else
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Invalid SMBIOS signature at offset %lld"), static_cast<long long>(offset));
+      nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS signature at offset %lld"), static_cast<long long>(offset));
       _close(fd);
       return nullptr;
    }
 
    if (_lseek(fd, offset, SEEK_SET) == -1)
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot seek /dev/mem to offset %lld (%s)"),
+      nxlog_debug_tag(_T("smbios"), 3, _T("Cannot seek /dev/mem to offset %lld (%s)"),
             static_cast<long long>(offset), _tcserror(errno));
       _close(fd);
       return nullptr;
@@ -136,13 +136,13 @@ static BYTE *SMBIOS_Reader(size_t *size)
    ssize_t bytes = _read(fd, bios, dataSize);
    if (bytes <= 0)
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 3, _T("Cannot read SMBIOS structures from /dev/mem at offset %lld (%s)"),
+      nxlog_debug_tag(_T("smbios"), 3, _T("Cannot read SMBIOS structures from /dev/mem at offset %lld (%s)"),
             static_cast<long long>(offset), _tcserror(errno));
       MemFreeAndNull(bios);
    }
    else
    {
-      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("Read %lld bytes of SMBIOS tables from /dev/mem"), static_cast<long long>(bytes));
+      nxlog_debug_tag(_T("smbios"), 5, _T("Read %lld bytes of SMBIOS tables from /dev/mem"), static_cast<long long>(bytes));
    }
    _close(fd);
    
