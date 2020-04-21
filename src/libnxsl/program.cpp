@@ -230,7 +230,7 @@ void NXSL_Program::addRequiredModule(const char *name, int lineNumber, bool remo
    int cch = MultiByteToWideChar(CP_UTF8, 0, name, -1, mname, MAX_PATH - 1);
 #else
    char mname[MAX_PATH];
-   size_t cch = utf8_to_mb(mname, -1, name, MAX_PATH);;
+   size_t cch = utf8_to_mb(name, -1, mname, MAX_PATH);
 #endif
    mname[cch] = 0;
 
