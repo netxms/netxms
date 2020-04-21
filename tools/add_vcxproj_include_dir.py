@@ -40,4 +40,4 @@ def main():
 if len(sys.argv) == 2:
     main()
 else:
-    print("Usage: ./sync_message_files.py <include dir>")
+    print("Usage: add_vcxproj_include_dir.py <include dir>")
