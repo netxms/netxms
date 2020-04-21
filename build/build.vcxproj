@@ -106,7 +106,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl netxms NETXMS $(SolutionDir)build\netxms-build-tag.h $(SolutionDir)build\netxms-build-tag.iss $(SolutionDir)build\netxms-build-tag.properties</Command>
+      <Command>perl updatetag.pl netxms NETXMS $(SolutionDir)build\netxms-build-tag.h $(SolutionDir)build\netxms-build-tag.iss $(SolutionDir)build\netxms-build-tag.properties</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <ClCompile>

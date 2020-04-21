@@ -206,7 +206,7 @@
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">tables.cpp;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating list of database tables</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\..\..\tools\create_table_list.pl ..\..\..\..\sql\schema.in &gt; tables.cpp
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl ..\..\..\..\tools\create_table_list.pl ..\..\..\..\sql\schema.in &gt; tables.cpp
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">tables.cpp;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating list of database tables</Message>
