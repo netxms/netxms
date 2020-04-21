@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IncludePath>C:\SDK\OpenSSL\x86\include;C:\Program Files (x86)\Java\jdk1.8.0_144\include;C:\Program Files (x86)\Java\jdk1.8.0_144\include\win32;C:\SDK\VSSSDK72\inc;C:\SDK\cURL\x86\include;C:\SDK\libssh\include;$(IncludePath);C:\SDK\WINDDK\inc\wnet;C:\SDK\Informix\x86\incl\cli;C:\SDK\Oracle\instantclient_12_1.x86\sdk\include;C:\SDK\mysql\x86\include;C:\SDK\XFS\INCLUDE;C:\SDK\OpenCV\include;C:\SDK\DSVCAP\include;C:\SDK\WinSDK-Extras\include;C:\Program Files\Microsoft SQL Server\110\SDK\Include;C:\SDK\MariaDB\x86\include;C:\SDK\DB2\x86\include;C:\SDK\IBM-MQ\include;C:\SDK\PostgreSQL\x86\include;C:\SDK\libmp4\include;C:\SDK\OpenH264\include;C:\SDK\libmosquitto\include;C:\Program Files (x86)\Python37-32\include;C:\SDK\PCRE\x86\include</IncludePath>
+    <LibraryPath>C:\SDK\OpenSSL\x86\lib;C:\SDK\cURL\x86\lib;C:\SDK\libssh\lib\x86;$(LibraryPath);C:\SDK\WINDDK\lib\wnet\i386;C:\SDK\Informix\x86\lib;C:\SDK\Oracle\instantclient_12_1.x86\sdk\lib\msvc;C:\SDK\mysql\x86\lib;C:\SDK\XFS\LIB;C:\SDK\OpenCV\lib;C:\SDK\DSVCAP\lib;C:\Program Files\Microsoft SQL Server\110\SDK\Lib\x86;C:\SDK\MariaDB\x86\lib;C:\SDK\DB2\x86\lib;C:\SDK\MSVCRT\x86;C:\SDK\IrisGuard;C:\SDK\IBM-MQ\lib\x86;C:\SDK\PostgreSQL\x86\lib;C:\SDK\libmp4\lib\x86;C:\SDK\OpenH264\lib;C:\SDK\libmosquitto\x86\lib;C:\Program Files (x86)\Python37-32\libs;C:\SDK\PCRE\x86\lib</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\SDK\OpenSSL\x86\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>C:\SDK\OpenSSL\x86\lib</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

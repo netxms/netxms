@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IncludePath>C:\SDK\OpenSSL\x64\include;C:\SDK\PostgreSQL\x64\include;C:\SDK\mysql\x64\include;C:\Program Files\Java\jdk1.8.0_144\include;C:\Program Files\Java\jdk1.8.0_144\include\win32;C:\SDK\VSSSDK72\inc;C:\SDK\cURL\x64\include;C:\SDK\libssh\include;$(IncludePath);C:\SDK\WINDDK\inc\wnet;C:\SDK\Informix\x64\incl\cli;C:\SDK\Oracle\instantclient_12_1.x64\sdk\include;C:\Program Files\Microsoft SQL Server\110\SDK\Include;C:\SDK\MariaDB\x64\include;C:\SDK\DB2\x64\include;C:\Oracle\tuxedo12.2.2.0.0_VS2015\include;C:\SDK\IBM-MQ\include;C:\SDK\libmosquitto\include;C:\Program Files\Python37\include;C:\SDK\PCRE\x64\include</IncludePath>
+    <LibraryPath>C:\SDK\OpenSSL\x64\lib;C:\SDK\mysql\x64\lib;C:\SDK\PostgreSQL\x64\lib;C:\SDK\cURL\x64\lib;C:\SDK\libssh\lib\x64;$(LibraryPath);C:\SDK\WINDDK\lib\wnet\amd64;C:\SDK\Informix\x64\lib;C:\SDK\Oracle\instantclient_12_1.x64\sdk\lib\msvc;C:\Program Files\Microsoft SQL Server\110\SDK\Lib\x64;C:\SDK\MariaDB\x64\lib;C:\SDK\DB2\x64\lib;C:\SDK\MSVCRT\x64;C:\Oracle\tuxedo12.2.2.0.0_VS2015\lib;C:\SDK\IBM-MQ\lib\x64;C:\SDK\libmosquitto\x64\lib;C:\Program Files\Python37\libs;C:\SDK\PCRE\x64\lib</LibraryPath>
+    <ExecutablePath>C:\SDK\PCRE\x64\bin;C:\SDK\cURL\x64\bin;$(ExecutablePath)</ExecutablePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\SDK\OpenSSL\x64\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>C:\SDK\OpenSSL\x64\lib</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>
