@@ -147,7 +147,6 @@ static bool SetValueFromJson(json_t *json, UINT32 fieldId, NXCPMessage *response
    return !skip;
 }
 
-
 /**
  * Get parameters from JSON cached data
  */

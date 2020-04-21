@@ -569,8 +569,8 @@ static bool RotateLog(bool needLock)
 			{
             if (_tunlink(oldName) != 0)
             {
-               TCHAR buffer[1024];
-               _sntprintf(buffer, 1024, _T("Rotation error: cannot delete file \"%s\" (%s)"), oldName, _tcserror(errno));
+               TCHAR buffer[MAX_PATH + 256];
+               _sntprintf(buffer, MAX_PATH + 256, _T("Rotation error: cannot delete file \"%s\" (%s)"), oldName, _tcserror(errno));
                rotationErrors.add(buffer);
             }
 			}
@@ -580,12 +580,15 @@ static bool RotateLog(bool needLock)
 		for(; i >= 0; i--)
 		{
 			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), s_logFileName, i);
-			_sntprintf(newName, MAX_PATH, _T("%s.%d"), s_logFileName, i + 1);
-			if (_trename(oldName, newName) != 0)
+         if (_taccess(oldName, 0) == 0)
          {
-            TCHAR buffer[1024];
-            _sntprintf(buffer, 1024, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), oldName, newName, _tcserror(errno));
-            rotationErrors.add(buffer);
+            _sntprintf(newName, MAX_PATH, _T("%s.%d"), s_logFileName, i + 1);
+            if (_trename(oldName, newName) != 0)
+            {
+               TCHAR buffer[MAX_PATH * 2 + 256];
+               _sntprintf(buffer, MAX_PATH * 2 + 256, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), oldName, newName, _tcserror(errno));
+               rotationErrors.add(buffer);
+            }
          }
 		}
 
@@ -593,8 +596,8 @@ static bool RotateLog(bool needLock)
 		_sntprintf(newName, MAX_PATH, _T("%s.0"), s_logFileName);
 		if (_trename(s_logFileName, newName) != 0)
 		{
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), s_logFileName, newName, _tcserror(errno));
+         TCHAR buffer[MAX_PATH * 2 + 256];
+         _sntprintf(buffer, MAX_PATH * 2 + 256, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), s_logFileName, newName, _tcserror(errno));
          rotationErrors.add(buffer);
 		}
 	}
@@ -614,8 +617,8 @@ static bool RotateLog(bool needLock)
 		_sntprintf(newName, MAX_PATH, _T("%s.%s"), s_logFileName, buffer);
 		if (_trename(s_logFileName, newName) != 0)
 		{
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), s_logFileName, newName, _tcserror(errno));
+         TCHAR buffer[MAX_PATH * 2 + 256];
+         _sntprintf(buffer, MAX_PATH * 2 + 256, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), s_logFileName, newName, _tcserror(errno));
          rotationErrors.add(buffer);
 		}
 
@@ -631,7 +634,7 @@ static bool RotateLog(bool needLock)
       TCHAR timestamp[32];
       if (s_flags & NXLOG_JSON_FORMAT)
       {
-         char message[1024];
+         char message[MAX_PATH * 2 + 1024];
 #ifdef UNICODE
 #define TIMESTAMP_FORMAT_SPECIFIER  "%ls"
 #else
@@ -639,13 +642,13 @@ static bool RotateLog(bool needLock)
 #endif
          if (rotationErrors.isEmpty())
          {
-            snprintf(message, 1024, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"info\",\"tag\":\"logger\",\"message\":\"Log file truncated\"}\n",
+            snprintf(message, sizeof(message), "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"info\",\"tag\":\"logger\",\"message\":\"Log file truncated\"}\n",
                    FormatLogTimestamp(timestamp));
             _write(s_logFileHandle, message, strlen(message));
          }
          else
          {
-            snprintf(message, 1024, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"Log file cannot be rotated (detailed error list is following)\"}\n",
+            snprintf(message, sizeof(message), "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"Log file cannot be rotated (detailed error list is following)\"}\n",
                    FormatLogTimestamp(timestamp));
             _write(s_logFileHandle, message, strlen(message));
             for(int i = 0; i < rotationErrors.size(); i++)
@@ -653,7 +656,7 @@ static bool RotateLog(bool needLock)
                TCHAR escapedTextBuffer[LOCAL_MSG_BUFFER_SIZE];
                size_t textLen;
                TCHAR *escapedText = EscapeForJSON(rotationErrors.get(i), escapedTextBuffer, &textLen);
-               snprintf(message, 1024, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"" TIMESTAMP_FORMAT_SPECIFIER "\"}\n",
+               snprintf(message, sizeof(message), "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"" TIMESTAMP_FORMAT_SPECIFIER "\"}\n",
                       timestamp, escapedText);
                FreeStringBuffer(escapedText, escapedTextBuffer);
                _write(s_logFileHandle, message, strlen(message));
