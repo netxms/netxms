@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\netxms-build-tag.h">
+    <ClInclude Include="netxms-build-tag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

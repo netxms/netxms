@@ -18,6 +18,9 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="netxms-build-tag.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4923F11B-0196-4847-9EC1-ACD00B699B45}</ProjectGuid>
     <RootNamespace>build</RootNamespace>
@@ -84,7 +87,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl netxms NETXMS $(SolutionDir)include\netxms-build-tag.h $(SolutionDir)include\netxms-build-tag.iss</Command>
+      <Command>updatetag.pl netxms NETXMS $(SolutionDir)build\netxms-build-tag.h $(SolutionDir)build\netxms-build-tag.iss $(SolutionDir)build\netxms-build-tag.properties</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <ClCompile>
@@ -103,7 +106,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl netxms NETXMS $(SolutionDir)include\netxms-build-tag.h $(SolutionDir)include\netxms-build-tag.iss</Command>
+      <Command>updatetag.pl netxms NETXMS $(SolutionDir)build\netxms-build-tag.h $(SolutionDir)build\netxms-build-tag.iss $(SolutionDir)build\netxms-build-tag.properties</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <ClCompile>
@@ -121,7 +124,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl netxms NETXMS $(SolutionDir)include\netxms-build-tag.h $(SolutionDir)include\netxms-build-tag.iss</Command>
+      <Command>updatetag.pl netxms NETXMS $(SolutionDir)build\netxms-build-tag.h $(SolutionDir)build\netxms-build-tag.iss $(SolutionDir)build\netxms-build-tag.properties</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <Midl>
@@ -143,7 +146,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl netxms NETXMS $(SolutionDir)include\netxms-build-tag.h $(SolutionDir)include\netxms-build-tag.iss</Command>
+      <Command>updatetag.pl netxms NETXMS $(SolutionDir)build\netxms-build-tag.h $(SolutionDir)build\netxms-build-tag.iss $(SolutionDir)build\netxms-build-tag.properties</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <Midl>
@@ -161,9 +164,6 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\include\netxms-build-tag.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
