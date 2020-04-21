@@ -369,6 +369,7 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
                char *text = MBStringFromUTF8String((char *)data.buffer(&size));
                m_responseData.appendPreallocated(text);
 #endif
+               m_responseData.trim();
                if(m_responseData.startsWith(_T("<")))
                {
                   m_type = TextType::XML;
