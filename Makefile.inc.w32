@@ -6,11 +6,21 @@
 CC = cl
 CXX = cl
 LD = link
-SIGNTOOL = signtool
 PERL = perl
 LEX = flex
 YACC = bison
 MC = mc
+
+# Test or release build
+# Only sign executables for release build
+!ifndef RELEASE_BUILD
+RELEASE_BUILD = no
+!endif
+!if "$(RELEASE_BUILD)" == "yes"
+SIGNTOOL = signtool
+!else
+SIGNTOOL = cmd /c rem
+!endif
 
 # Source base path
 # Default location is C:\Source\NetXMS
