@@ -1085,6 +1085,7 @@ enum AggregationFunction
 #define NXC_NCF_AS_ZONE_PROXY        0x0020
 #define NXC_NCF_DISABLE_ETHERNET_IP  0x0040
 #define NXC_NCF_SNMP_SETTINGS_LOCKED 0x0080
+#define NXC_NCF_REMOTE_MANAGEMENT_NODE 0x0100
 
 /**
  * Agent data cache modes

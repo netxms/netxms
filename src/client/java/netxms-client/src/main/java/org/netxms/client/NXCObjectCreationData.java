@@ -42,6 +42,7 @@ public class NXCObjectCreationData
    public static int CF_AS_ZONE_PROXY        = 0x0020;
    public static int CF_DISABLE_ETHERNET_IP  = 0x0040;
    public static int CF_SNMP_SETTINGS_LOCKED = 0x0080;
+   public static int CF_REMOTE_MANAGEMENT_NODE = 0x0100;
 	
 	private int objectClass;
 	private String name;

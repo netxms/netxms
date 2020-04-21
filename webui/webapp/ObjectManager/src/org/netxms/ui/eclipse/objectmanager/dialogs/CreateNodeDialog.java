@@ -66,6 +66,7 @@ public class CreateNodeDialog extends Dialog
 	private Button checkDisablePing;
 	private Button checkCreateAnother;
 	private Button checkDisableAutomaticSNMPConfig;
+   private Button checkRemoteManagementNode;
 	private ObjectSelector agentProxySelector;
 	private ObjectSelector snmpProxySelector;
    private ObjectSelector etherNetIpProxySelector;
@@ -201,6 +202,10 @@ public class CreateNodeDialog extends Dialog
 		gd.horizontalSpan = 2;
 		optionsGroup.setLayoutData(gd);
 		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
+		
+		checkRemoteManagementNode = new Button(optionsGroup, SWT.CHECK);
+		checkRemoteManagementNode.setText("Primary IP address is an address of remote management node");
+      checkRemoteManagementNode.setSelection((creationFlags & NXCObjectCreationData.CF_REMOTE_MANAGEMENT_NODE) != 0);
 		
 		checkUnmanaged = new Button(optionsGroup, SWT.CHECK);
 		checkUnmanaged.setText(Messages.get().CreateNodeDialog_CreateUnmanaged);
@@ -369,6 +374,8 @@ public class CreateNodeDialog extends Dialog
          creationFlags |= NXCObjectCreationData.CF_DISABLE_ETHERNET_IP;
       if (checkDisableAutomaticSNMPConfig.getSelection())
          creationFlags |= NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED;
+      if(checkRemoteManagementNode.getSelection())
+         creationFlags |=  NXCObjectCreationData.CF_REMOTE_MANAGEMENT_NODE;
 		
 		agentPort = agentPortField.getSelection();
 		snmpPort = snmpPortField.getSelection();

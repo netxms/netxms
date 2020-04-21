@@ -136,8 +136,9 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
                                                (int)newNodeData->zoneUIN);
 
    // Check for node existence
-   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr) ||
-       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr))
+   if ((newNodeData->creationFlags & NXC_NCF_REMOTE_MANAGEMENT_NODE) == 0 &&
+       ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr) ||
+       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr)))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: Node %s already exist in database"), ipAddrText);
       return shared_ptr<Node>();
@@ -154,6 +155,8 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
       flags |= NF_DISABLE_NXCP;
    if (newNodeData->creationFlags & NXC_NCF_SNMP_SETTINGS_LOCKED)
       flags |= NF_SNMP_SETTINGS_LOCKED;
+   if (newNodeData->creationFlags & NXC_NCF_REMOTE_MANAGEMENT_NODE)
+      flags |= NF_REMOTE_AGENT;
    shared_ptr<Node> node = MakeSharedNObject<Node>(newNodeData, flags);
    NetObjInsert(node, true, false);
 
