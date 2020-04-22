@@ -9590,7 +9590,7 @@ void Node::onDataCollectionChangeAsyncCallback()
 {
    if (InterlockedIncrement(&m_pendingDataConfigurationSync) == 1)
    {
-      ThreadSleep(30);  // wait for possible subsequent update requests within 30 seconds
+      SleepAndCheckForShutdown(30);  // wait for possible subsequent update requests within 30 seconds
       InterlockedDecrement(&m_pendingDataConfigurationSync);
 
       agentLock();
