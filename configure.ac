@@ -4236,6 +4236,8 @@ if test "x$ENABLE_SANITIZER" = "xyes"; then
 	AC_CPP_CHECK_OPTION(-fsanitize=undefined)
 	AC_CPP_CHECK_OPTION(-fstack-protector)
 	AC_CPP_CHECK_OPTION(-fno-omit-frame-pointer)
+	AC_CPP_CHECK_OPTION(-funwind-tables)
+	AC_CPP_CHECK_OPTION(-fasynchronous-unwind-tables)
 	AC_LD_CHECK_OPTION(-fsanitize=address)
 	AC_LD_CHECK_OPTION(-fsanitize=leak)
 	AC_LD_CHECK_OPTION(-fsanitize=undefined)
