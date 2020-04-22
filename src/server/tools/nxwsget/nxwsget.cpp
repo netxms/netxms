@@ -40,6 +40,7 @@ static TCHAR s_password[MAX_CRED_LEN] = _T("");
 static WebServiceAuthType s_authType = WebServiceAuthType::NONE;
 static StringMap s_headers;
 static bool s_verifyCert = true;
+static bool s_verifyHost = true;
 
 /**
  * Callback for printing results
@@ -58,7 +59,7 @@ static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const Strin
    StringMap results;
    UINT32 rcc = pConn->queryWebService(url, s_retentionTime,
             (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
-            s_authType, s_headers, parameters, s_verifyCert, &results);
+            s_authType, s_headers, parameters, s_verifyCert, s_verifyHost, &results);
    if (rcc == ERR_SUCCESS)
    {
       results.forEach(PrintResults, NULL);
@@ -86,6 +87,9 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
    {
       case 'c':   // disable certificate check
          s_verifyCert = false;
+         break;
+      case 'C':   // disable certificate's host check
+         s_verifyHost = false;
          break;
       case 'D':   // debug level
          nxlog_set_debug_level((int)strtol(optarg, NULL, 0));
@@ -237,6 +241,7 @@ int main(int argc, char *argv[])
    tool.mainHelpText = _T("Usage: Usage: nxwsget [<options>] <host> <URL> <path> [<path> ...]\n\n")
                        _T("Tool specific options:\n")
                        _T("   -c           : Do not verify service certificate.\n")
+                       _T("   -C           : Do not verify certificate's name against host.\n")
                        _T("   -H header    : HTTP header (can be used multiple times).\n")
                        _T("   -i seconds   : Query service continuously with given interval.\n")
                        _T("   -L login     : Web service login name.\n")
@@ -244,7 +249,7 @@ int main(int argc, char *argv[])
                        _T("   -r seconds   : Cache retention time.\n")
                        _T("   -t auth      : HTTP authentication type. Valid methods are \"none\", \"basic\", \"digest\",\n")
                        _T("                  \"ntlm\", \"bearer\", \"any\", or \"anysafe\". Default is \"none\".\n");
-   tool.additionalOptions = "cH:i:L:P:r:t:";
+   tool.additionalOptions = "cCH:i:L:P:r:t:";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

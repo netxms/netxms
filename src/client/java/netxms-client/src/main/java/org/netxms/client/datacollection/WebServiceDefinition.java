@@ -31,6 +31,7 @@ import org.netxms.client.constants.WebServiceAuthType;
 public class WebServiceDefinition
 {
    private final int FLAG_VERIFY_CERTIFICATE = 1;
+   private final int FLAG_VERIFY_HOST = 2;
    
    private int id;
    private UUID guid;
@@ -63,7 +64,7 @@ public class WebServiceDefinition
       cacheRetentionTime = 0;
       requestTimeout = 0;
       headers = new HashMap<String, String>();
-      flags = FLAG_VERIFY_CERTIFICATE;
+      flags = FLAG_VERIFY_CERTIFICATE | FLAG_VERIFY_HOST;
    }
 
    /**
@@ -341,6 +342,26 @@ public class WebServiceDefinition
          flags |= FLAG_VERIFY_CERTIFICATE;
       else
          flags &= ~FLAG_VERIFY_CERTIFICATE;
+         
+   }
+
+   /**
+    * @return the verifyCertificate
+    */
+   public boolean isVerifyHost()
+   {
+      return (flags & FLAG_VERIFY_HOST) > 0;
+   }
+
+   /**
+    * @param verifyCertificate the verifyCertificate to set
+    */
+   public void setVerifyHost(boolean verifyHost)
+   {
+      if(verifyHost)
+         flags |= FLAG_VERIFY_HOST;
+      else
+         flags &= ~FLAG_VERIFY_HOST;
          
    }
 }

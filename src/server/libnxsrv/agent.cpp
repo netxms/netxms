@@ -1009,7 +1009,8 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
  * Query web service
  */
 UINT32 AgentConnection::queryWebService(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringMap& headers, const StringList& parameters, bool verifyCert, StringMap *results)
+         WebServiceAuthType authType, const StringMap& headers, const StringList& parameters, bool verifyCert, bool verifyHost,
+         StringMap *results)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1024,6 +1025,7 @@ UINT32 AgentConnection::queryWebService(const TCHAR *url, UINT32 retentionTime, 
    msg.setField(VID_PASSWORD, password);
    msg.setField(VID_AUTH_TYPE, (INT16)authType);
    msg.setField(VID_VERIFY_CERT, verifyCert);
+   msg.setField(VID_VERIFY_HOST, verifyHost);
    headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
    parameters.fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
 

@@ -27,6 +27,7 @@
  * Web service flags
  */
 #define WS_FLAG_VERIFY_CERTIFICATE  1
+#define WS_FLAG_VERIFY_HOST         2
 
 /**
  * Web service definition
@@ -70,6 +71,7 @@ public:
    uint32_t getRequestTimeout() const { return m_requestTimeout; }
    const StringMap& getHeaders() const { return m_headers; }
    bool isVerifyCertificate() const { return (m_flags & WS_FLAG_VERIFY_CERTIFICATE) > 0; }
+   bool isVerifyHost() const { return (m_flags & WS_FLAG_VERIFY_HOST) > 0; }
    uint32_t getFlags() const { return m_flags; }
 };
 

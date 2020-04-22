@@ -43,6 +43,7 @@ public class WebServiceGeneral extends PreferencePage
    private LabeledText name;
    private LabeledText url;
    private Button checkVerifyCert;
+   private Button checkVerifyHost;
    private Combo authType;
    private LabeledText login;
    private LabeledText password;
@@ -103,6 +104,15 @@ public class WebServiceGeneral extends PreferencePage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       checkVerifyCert.setLayoutData(gd);
+      
+      checkVerifyHost = new Button(dialogArea, SWT.CHECK);
+      checkVerifyHost.setText("Verify the certificate's name against host");
+      checkVerifyHost.setSelection(definition.isVerifyHost());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkVerifyHost.setLayoutData(gd);
 
       /* authentication group */
       Group groupAuth = new Group(dialogArea, SWT.NONE);
@@ -199,6 +209,7 @@ public class WebServiceGeneral extends PreferencePage
       definition.setName(svcName);
       definition.setUrl(url.getText().trim());
       definition.setVerifyCertificate(checkVerifyCert.getSelection());
+      definition.setVerifyHost(checkVerifyHost.getSelection());
       definition.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
       definition.setLogin(login.getText().trim());
       definition.setPassword(password.getText());

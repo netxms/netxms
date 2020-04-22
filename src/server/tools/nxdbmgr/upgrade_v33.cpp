@@ -30,7 +30,7 @@ static bool H_UpgradeFromV9()
 {
    static const TCHAR *batch =
       _T("ALTER TABLE websvc_definitions ADD flags integer\n")
-      _T("UPDATE websvc_definitions SET flags=0\n")
+      _T("UPDATE websvc_definitions SET flags=2\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("websvc_definitions"), _T("flags")));
