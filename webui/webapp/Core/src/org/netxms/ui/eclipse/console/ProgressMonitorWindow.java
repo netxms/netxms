@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Synchronizer;
 import org.netxms.base.VersionInfo;
+import org.netxms.ui.eclipse.console.dialogs.DefaultLoginForm;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.ColorCache;
 
@@ -47,10 +48,6 @@ import org.netxms.ui.eclipse.tools.ColorCache;
  */
 public class ProgressMonitorWindow extends Window
 {
-   private static final RGB DEFAULT_SCREEN_BACKGROUND_COLOR = new RGB(255, 255, 255);
-   private static final RGB DEFAULT_FORM_BACKGROUND_COLOR = new RGB(255, 255, 255);
-   private static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(16, 16, 16);
-
    private ColorCache colors;
    private ProgressBar progressBar;
    private Label progressMessage;
@@ -90,7 +87,7 @@ public class ProgressMonitorWindow extends Window
    {
       colors = new ColorCache(parent);
       
-      RGB screenBkgnd = BrandingManager.getInstance().getLoginScreenBackgroundColor(DEFAULT_SCREEN_BACKGROUND_COLOR);
+      RGB screenBkgnd = BrandingManager.getInstance().getLoginScreenBackgroundColor(DefaultLoginForm.DEFAULT_SCREEN_BACKGROUND_COLOR);
       parent.setBackground(colors.create(screenBkgnd));
       
       Composite fillerTop = new Composite(parent, SWT.NONE);
@@ -103,8 +100,8 @@ public class ProgressMonitorWindow extends Window
       gd.heightHint = 100;
       fillerTop.setLayoutData(gd);
 
-      RGB formBkgnd = BrandingManager.getInstance().getLoginFormBackgroundColor(DEFAULT_FORM_BACKGROUND_COLOR);
-      
+      RGB formBkgnd = BrandingManager.getInstance().getLoginFormBackgroundColor(DefaultLoginForm.DEFAULT_FORM_BACKGROUND_COLOR);
+
       final Canvas content = new Canvas(parent, SWT.BORDER | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
       GridLayout layout = new GridLayout();
       layout.numColumns = 1;
@@ -121,17 +118,19 @@ public class ProgressMonitorWindow extends Window
       content.setLayoutData(gd);
       content.setBackground(colors.create(formBkgnd));
       content.setData(RWT.CUSTOM_VARIANT, "LoginForm");
-      
+
       progressBar = new ProgressBar(content, SWT.SMOOTH | SWT.HORIZONTAL);
       gd = new GridData();
       gd.widthHint = 800;
       progressBar.setLayoutData(gd);
+      progressBar.setData(RWT.CUSTOM_VARIANT, "login");
 
       progressMessage = new Label(content, SWT.NONE);
       progressMessage.setBackground(colors.create(formBkgnd));
       gd = new GridData();
       gd.widthHint = 800;
       progressMessage.setLayoutData(gd);
+      progressMessage.setData(RWT.CUSTOM_VARIANT, "login");
       
       Composite fillerBottom = new Composite(parent, SWT.NONE);
       fillerBottom.setBackground(colors.create(screenBkgnd));
@@ -140,7 +139,7 @@ public class ProgressMonitorWindow extends Window
       Label version = new Label(parent, SWT.NONE);
       version.setText(String.format(Messages.get().LoginForm_Version, VersionInfo.version()));
       version.setBackground(parent.getBackground());
-      version.setForeground(colors.create(BrandingManager.getInstance().getLoginScreenTextColor(DEFAULT_SCREEN_TEXT_COLOR)));
+      version.setForeground(colors.create(BrandingManager.getInstance().getLoginScreenTextColor(DefaultLoginForm.DEFAULT_SCREEN_TEXT_COLOR)));
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       gd.verticalAlignment = SWT.BOTTOM;

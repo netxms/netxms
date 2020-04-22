@@ -2106,6 +2106,7 @@ Label.gray {
 
 Label.login {
    color: #ffffff;
+   background-color: #97988f;
    font: 14px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
@@ -2138,7 +2139,21 @@ Link.login {
   font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
+ProgressBar.login {
+   background-color: #232426;
+   border: none;
+   border-radius: 4px;
+}
+
+ProgressBar-Indicator.login {
+   background-color: #ff7201;
+   background-image: none;
+   border: none;
+   opacity: 1;
+}
+
 Composite.LoginForm {
+  background-color: #97988f;
   border: none;
   border-radius: 8px;
   box-shadow: 4px 4px 3px 0px #808080; 

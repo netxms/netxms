@@ -60,9 +60,9 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class DefaultLoginForm extends Window implements LoginForm
 {
-   private static final RGB DEFAULT_SCREEN_BACKGROUND_COLOR = new RGB(240, 240, 240);
-   private static final RGB DEFAULT_FORM_BACKGROUND_COLOR =  new RGB(0x97, 0x98, 0x8F);
-   private static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(0x29, 0x2A, 0x30);
+   public static final RGB DEFAULT_SCREEN_BACKGROUND_COLOR = new RGB(240, 240, 240);
+   public static final RGB DEFAULT_FORM_BACKGROUND_COLOR =  new RGB(0x97, 0x98, 0x8F);
+   public static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(0x29, 0x2A, 0x30);
 
 	private AppPropertiesLoader properties;
 	private boolean advancedSettingsEnabled;
