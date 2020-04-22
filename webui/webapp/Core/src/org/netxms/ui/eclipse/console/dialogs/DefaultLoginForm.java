@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,9 +60,9 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class DefaultLoginForm extends Window implements LoginForm
 {
-   private static final RGB DEFAULT_SCREEN_BACKGROUND_COLOR = new RGB(255, 255, 255);
-   private static final RGB DEFAULT_FORM_BACKGROUND_COLOR = new RGB(255, 255, 255);
-   private static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(16, 16, 16);
+   private static final RGB DEFAULT_SCREEN_BACKGROUND_COLOR = new RGB(240, 240, 240);
+   private static final RGB DEFAULT_FORM_BACKGROUND_COLOR =  new RGB(0x97, 0x98, 0x8F);
+   private static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(0x29, 0x2A, 0x30);
 
 	private AppPropertiesLoader properties;
 	private boolean advancedSettingsEnabled;
@@ -121,8 +121,9 @@ public class DefaultLoginForm extends Window implements LoginForm
 		layout.numColumns = 1;
 		layout.marginWidth = 10;
 		layout.marginHeight = 10;
+		layout.marginTop = 20;
 		layout.horizontalSpacing = 10;
-		layout.verticalSpacing = 10;
+		layout.verticalSpacing = 15;
 		content.setLayout(layout);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -132,7 +133,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		content.setLayoutData(gd);
 		content.setBackground(colors.create(formBkgnd));
 		content.setData(RWT.CUSTOM_VARIANT, "LoginForm");
-		
+
 		final Image userImage = (properties.getProperty("loginFormImage") != null) ? loadUserImage() : null;		
 		final ImageDescriptor customImage = BrandingManager.getInstance().getLoginTitleImage();
 		final Image loginImage = (userImage != null) ? userImage : ((customImage != null) ? customImage.createImage() : Activator.getImageDescriptor("icons/login.png").createImage()); //$NON-NLS-1$
@@ -144,9 +145,12 @@ public class DefaultLoginForm extends Window implements LoginForm
 		Composite loginArea = new Composite(content, SWT.NONE);
 		loginArea.setBackground(colors.create(formBkgnd));
 		layout = new GridLayout();
+		layout.verticalSpacing = 20;
+		layout.marginWidth = 20;
+		layout.marginHeight = 20;
 		loginArea.setLayout(layout);
 		gd = new GridData();
-		gd.widthHint = 300;
+		gd.widthHint = 400;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		loginArea.setLayoutData(gd);
@@ -154,6 +158,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		textLogin = new LabeledText(loginArea, SWT.NONE);
 		textLogin.setBackground(colors.create(formBkgnd));
 		textLogin.setLabel(Messages.get().LoginForm_UserName);
+		textLogin.getLabelControl().setData(RWT.CUSTOM_VARIANT, "login");
       textLogin.getTextControl().setData(RWT.CUSTOM_VARIANT, "login");
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -163,6 +168,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		textPassword = new LabeledText(loginArea, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
 		textPassword.setBackground(colors.create(formBkgnd));
 		textPassword.setLabel(Messages.get().LoginForm_Password);
+		textPassword.getLabelControl().setData(RWT.CUSTOM_VARIANT, "login");
 		textPassword.getTextControl().setData(RWT.CUSTOM_VARIANT, "login");
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -171,7 +177,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		
 		Button okButton = new Button(loginArea, SWT.PUSH);
 		okButton.setText(Messages.get().LoginForm_LoginButton);
-		//okButton.setData(RWT.CUSTOM_VARIANT, "login");
+		okButton.setData(RWT.CUSTOM_VARIANT, "login");
 		okButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -186,9 +192,9 @@ public class DefaultLoginForm extends Window implements LoginForm
 			}
 		});
 		gd = new GridData();
-		gd.horizontalAlignment = SWT.RIGHT;
-		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-		gd.verticalIndent = 5;
+		gd.horizontalAlignment = SWT.CENTER;
+		gd.widthHint = WidgetHelper.WIDE_BUTTON_WIDTH_HINT;
+		gd.verticalIndent = 15;
 		okButton.setLayoutData(gd);
 
 		if (advancedSettingsEnabled)

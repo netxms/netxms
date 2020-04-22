@@ -160,6 +160,16 @@ public abstract class LabeledControl extends Composite
 	}
 	
 	/**
+	 * Get label control
+	 * 
+	 * @return label control
+	 */
+	public Label getLabelControl()
+	{
+	   return label;
+	}
+
+	/**
 	 * Set text in control
 	 * 
 	 * @param newText
