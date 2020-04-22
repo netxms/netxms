@@ -22,6 +22,7 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -41,6 +42,7 @@ public class WebServiceGeneral extends PreferencePage
    private WebServiceDefinition definition;
    private LabeledText name;
    private LabeledText url;
+   private Button checkVerifyCert;
    private Combo authType;
    private LabeledText login;
    private LabeledText password;
@@ -92,6 +94,15 @@ public class WebServiceGeneral extends PreferencePage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       url.setLayoutData(gd);
+      
+      checkVerifyCert = new Button(dialogArea, SWT.CHECK);
+      checkVerifyCert.setText("Verify the peer's SSL certificate");
+      checkVerifyCert.setSelection(definition.isVerifyCertificate());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkVerifyCert.setLayoutData(gd);
 
       /* authentication group */
       Group groupAuth = new Group(dialogArea, SWT.NONE);
@@ -187,6 +198,7 @@ public class WebServiceGeneral extends PreferencePage
       }
       definition.setName(svcName);
       definition.setUrl(url.getText().trim());
+      definition.setVerifyCertificate(checkVerifyCert.getSelection());
       definition.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
       definition.setLogin(login.getText().trim());
       definition.setPassword(password.getText());

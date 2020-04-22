@@ -45,12 +45,13 @@ WebServiceDefinition::WebServiceDefinition(const NXCPMessage *msg)
    m_cacheRetentionTime = msg->getFieldAsUInt32(VID_RETENTION_TIME);
    m_requestTimeout = msg->getFieldAsUInt32(VID_TIMEOUT);
    m_headers.loadMessage(msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   m_flags = msg->getFieldAsUInt32(VID_VERIFY_CERT);
 }
 
 /**
  * Create web service definition from database record.
  * Expected field order:
- *    id,guid,name,url,auth_type,login,password,cache_retention_time,request_timeout,description
+ *    id,guid,name,url,auth_type,login,password,cache_retention_time,request_timeout,description,flags
  */
 WebServiceDefinition::WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row)
 {
@@ -64,6 +65,8 @@ WebServiceDefinition::WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int
    m_cacheRetentionTime = DBGetFieldULong(hResult, row, 7);
    m_requestTimeout = DBGetFieldULong(hResult, row, 8);
    m_description = DBGetField(hResult, row, 9, NULL, 0);
+   m_flags = DBGetFieldULong(hResult, row, 10);
+
 
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT name,value FROM websvc_headers WHERE websvc_id=%u"), m_id);
@@ -139,7 +142,7 @@ UINT32 WebServiceDefinition::query(DataCollectionTarget *object, const TCHAR *pa
    attributes.add(path);
 
    StringMap resultSet;
-   UINT32 rcc = conn->queryWebService(url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, attributes, false, &resultSet);
+   UINT32 rcc = conn->queryWebService(url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, attributes, isVerifyCertificate(), &resultSet);
    if (rcc == ERR_SUCCESS)
    {
       const TCHAR *value = resultSet.get(path);
@@ -167,6 +170,7 @@ void WebServiceDefinition::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_RETENTION_TIME, m_cacheRetentionTime);
    msg->setField(VID_TIMEOUT, m_requestTimeout);
    m_headers.fillMessage(msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   msg->setField(VID_VERIFY_CERT, m_flags);
 }
 
 /**
@@ -197,7 +201,9 @@ void WebServiceDefinition::createExportRecord(StringBuffer &xml) const
    xml.append(EscapeStringForXML2(m_description));
    xml.append(_T("</description>\n\t\t\t<url>"));
    xml.append(EscapeStringForXML2(m_url));
-   xml.append(_T("</url>\n\t\t\t<authType>"));
+   xml.append(_T("</url>\n\t\t\t<flags>"));
+   xml.append(m_flags);
+   xml.append(_T("</flags>\n\t\t\t<authType>"));
    xml.append(static_cast<int32_t>(m_authType));
    xml.append(_T("</authType>\n\t\t\t<login>"));
    xml.append(EscapeStringForXML2(m_login));
@@ -235,6 +241,7 @@ json_t *WebServiceDefinition::toJson() const
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "url", json_string_t(m_url));
+   json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "authType", json_integer(static_cast<int32_t>(m_authType)));
    json_object_set_new(root, "login", json_string_t(m_login));
    json_object_set_new(root, "password", json_string_t(m_password));
@@ -261,7 +268,7 @@ void LoadWebServiceDefinitions()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,guid,name,url,auth_type,login,password,cache_retention_time,request_timeout FROM websvc_definitions"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,guid,name,url,auth_type,login,password,cache_retention_time,request_timeout,description,flags FROM websvc_definitions"));
    if (hResult == NULL)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -347,7 +354,8 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
       bool success = false;
 
       static const TCHAR *columns[] = { _T("guid"), _T("name"), _T("description"), _T("url"),
-               _T("auth_type"), _T("login"), _T("password"), _T("cache_retention_time"), _T("request_timeout"), nullptr };
+               _T("auth_type"), _T("login"), _T("password"), _T("cache_retention_time"),
+               _T("request_timeout"), _T("flags"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("websvc_definitions"), _T("id"), definition->getId(), columns);
       if (hStmt != nullptr)
       {
@@ -360,7 +368,8 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, definition->getPassword(), DB_BIND_STATIC);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, definition->getCacheRetentionTime());
          DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, definition->getRequestTimeout());
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, definition->getId());
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, definition->getFlags());
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, definition->getId());
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }

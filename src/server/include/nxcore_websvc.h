@@ -24,6 +24,11 @@
 #define _nxcore_websvc_h_
 
 /**
+ * Web service flags
+ */
+#define WS_FLAG_VERIFY_CERTIFICATE  1
+
+/**
  * Web service definition
  */
 class WebServiceDefinition
@@ -40,6 +45,7 @@ private:
    uint32_t m_cacheRetentionTime;  // milliseconds
    uint32_t m_requestTimeout;      // milliseconds
    StringMap m_headers;
+   uint32_t m_flags;
 
 public:
    WebServiceDefinition(const NXCPMessage *msg);
@@ -63,6 +69,8 @@ public:
    uint32_t getCacheRetentionTime() const { return m_cacheRetentionTime; }
    uint32_t getRequestTimeout() const { return m_requestTimeout; }
    const StringMap& getHeaders() const { return m_headers; }
+   bool isVerifyCertificate() const { return (m_flags & WS_FLAG_VERIFY_CERTIFICATE) > 0; }
+   uint32_t getFlags() const { return m_flags; }
 };
 
 void LoadWebServiceDefinitions();

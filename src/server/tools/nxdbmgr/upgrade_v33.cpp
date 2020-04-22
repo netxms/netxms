@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.9 to 32.10
+ */
+static bool H_UpgradeFromV9()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE websvc_definitions ADD flags integer\n")
+      _T("UPDATE websvc_definitions SET flags=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("websvc_definitions"), _T("flags")));
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 32.8 to 32.9
  */
 static bool H_UpgradeFromV8()
@@ -315,6 +331,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 9,  33, 10,  H_UpgradeFromV9  },
    { 8,  33, 9,  H_UpgradeFromV8  },
    { 7,  33, 8,  H_UpgradeFromV7  },
    { 6,  33, 7,  H_UpgradeFromV6  },

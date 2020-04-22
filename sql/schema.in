@@ -2234,6 +2234,7 @@ CREATE TABLE websvc_definitions
    name varchar(63) not null,
    description varchar(2000) null,
    url varchar(4000) null,
+   flags integer not null,
    auth_type integer not null,
    login varchar(255) null,
    password varchar(255) null,

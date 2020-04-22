@@ -30,6 +30,8 @@ import org.netxms.client.constants.WebServiceAuthType;
  */
 public class WebServiceDefinition
 {
+   private final int FLAG_VERIFY_CERTIFICATE = 1;
+   
    private int id;
    private UUID guid;
    private String name;
@@ -41,6 +43,7 @@ public class WebServiceDefinition
    private int cacheRetentionTime;
    private int requestTimeout;
    private Map<String, String> headers;
+   private int flags;
 
    /**
     * Create new definition. Definition object will be created with random GUID and ID 0.
@@ -60,6 +63,7 @@ public class WebServiceDefinition
       cacheRetentionTime = 0;
       requestTimeout = 0;
       headers = new HashMap<String, String>();
+      flags = FLAG_VERIFY_CERTIFICATE;
    }
 
    /**
@@ -80,6 +84,7 @@ public class WebServiceDefinition
       cacheRetentionTime = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TIME);
       requestTimeout = msg.getFieldAsInt32(NXCPCodes.VID_TIMEOUT);
       headers = msg.getStringMapFromFields(NXCPCodes.VID_HEADERS_BASE, NXCPCodes.VID_NUM_HEADERS);
+      flags = msg.getFieldAsInt32(NXCPCodes.VID_VERIFY_CERT);
    }
 
    /**
@@ -100,6 +105,7 @@ public class WebServiceDefinition
       msg.setFieldInt32(NXCPCodes.VID_RETENTION_TIME, cacheRetentionTime);
       msg.setFieldInt32(NXCPCodes.VID_TIMEOUT, requestTimeout);
       msg.setFieldsFromStringMap(headers, NXCPCodes.VID_HEADERS_BASE, NXCPCodes.VID_NUM_HEADERS);
+      msg.setFieldInt32(NXCPCodes.VID_VERIFY_CERT, flags);
    }
 
    /**
@@ -316,5 +322,25 @@ public class WebServiceDefinition
    public void setRequestTimeout(int requestTimeout)
    {
       this.requestTimeout = requestTimeout;
+   }
+
+   /**
+    * @return the verifyCertificate
+    */
+   public boolean isVerifyCertificate()
+   {
+      return (flags & FLAG_VERIFY_CERTIFICATE) > 0;
+   }
+
+   /**
+    * @param verifyCertificate the verifyCertificate to set
+    */
+   public void setVerifyCertificate(boolean verifyCertificate)
+   {
+      if(verifyCertificate)
+         flags |= FLAG_VERIFY_CERTIFICATE;
+      else
+         flags &= ~FLAG_VERIFY_CERTIFICATE;
+         
    }
 }
