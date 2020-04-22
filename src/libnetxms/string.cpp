@@ -646,10 +646,10 @@ void StringBuffer::appendWideString(const WCHAR *str, size_t len)
 /**
  * Append integer
  */
-void StringBuffer::append(INT32 n, const TCHAR *format)
+void StringBuffer::append(int32_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   if (format != NULL)
+   if (format != nullptr)
    {
       _sntprintf(buffer, 64, format, n);
       append(buffer);
@@ -663,30 +663,30 @@ void StringBuffer::append(INT32 n, const TCHAR *format)
 /**
  * Append integer
  */
-void StringBuffer::append(UINT32 n, const TCHAR *format)
+void StringBuffer::append(uint32_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != NULL) ? format : _T("%u"), n);
+   _sntprintf(buffer, 64, (format != nullptr) ? format : _T("%u"), n);
    append(buffer);
 }
 
 /**
  * Append integer
  */
-void StringBuffer::append(INT64 n, const TCHAR *format)
+void StringBuffer::append(int64_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != NULL) ? format : INT64_FMT, n);
+   _sntprintf(buffer, 64, (format != nullptr) ? format : INT64_FMT, n);
    append(buffer);
 }
 
 /**
  * Append integer
  */
-void StringBuffer::append(UINT64 n, const TCHAR *format)
+void StringBuffer::append(uint64_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != NULL) ? format : UINT64_FMT, n);
+   _sntprintf(buffer, 64, (format != nullptr) ? format : UINT64_FMT, n);
    append(buffer);
 }
 
@@ -696,7 +696,7 @@ void StringBuffer::append(UINT64 n, const TCHAR *format)
 void StringBuffer::append(double d, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != NULL) ? format : _T("%f"), d);
+   _sntprintf(buffer, 64, (format != nullptr) ? format : _T("%f"), d);
    append(buffer);
 }
 

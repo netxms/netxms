@@ -433,7 +433,7 @@ void InitDataCollector()
    g_dataCollectorThreadPool = ThreadPoolCreate(_T("DATACOLL"),
             ConfigReadInt(_T("ThreadPool.DataCollector.BaseSize"), 10),
             ConfigReadInt(_T("ThreadPool.DataCollector.MaxSize"), 250),
-            128 * 1024);
+            256 * 1024);
 
    s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, nullptr);
    s_cacheLoaderThread = ThreadCreateEx(CacheLoader, 0, nullptr);

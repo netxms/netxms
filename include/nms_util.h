@@ -1025,17 +1025,17 @@ public:
    StringBuffer& operator +=(const String &str) { append(str.cstr()); return *this; }
    StringBuffer& operator +=(const SharedString &str) { append(str.cstr()); return *this; }
 
-   void append(const TCHAR *str) { if (str != NULL) append(str, _tcslen(str)); }
+   void append(const TCHAR *str) { if (str != nullptr) append(str, _tcslen(str)); }
    void append(const TCHAR *str, size_t len);
    void append(const TCHAR c) { append(&c, 1); }
-   void append(INT32 n, const TCHAR *format = NULL);
-   void append(UINT32 n, const TCHAR *format = NULL);
-   void append(INT64 n, const TCHAR *format = NULL);
-   void append(UINT64 n, const TCHAR *format = NULL);
-   void append(double d, const TCHAR *format = NULL);
+   void append(int32_t n, const TCHAR *format = nullptr);
+   void append(uint32_t n, const TCHAR *format = nullptr);
+   void append(int64_t n, const TCHAR *format = nullptr);
+   void append(uint64_t n, const TCHAR *format = nullptr);
+   void append(double d, const TCHAR *format = nullptr);
    void append(const uuid& guid);
 
-   void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); MemFree(str); } }
+   void appendPreallocated(TCHAR *str) { if (str != nullptr) { append(str); MemFree(str); } }
 
    void appendMBString(const char *str, size_t len, int nCodePage);
    void appendWideString(const WCHAR *str, size_t len);

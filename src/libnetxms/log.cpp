@@ -555,22 +555,25 @@ static bool RotateLog(bool needLock)
 		s_flags &= ~NXLOG_IS_OPEN;
 	}
 
+	const size_t bufferSize = MAX_PATH * 2 + 256;
+	TCHAR *buffer = MemAllocString(bufferSize);
 	StringList rotationErrors;
 	if (s_rotationMode == NXLOG_ROTATION_BY_SIZE)
 	{
-	   TCHAR oldName[MAX_PATH], newName[MAX_PATH];
+	   StringBuffer oldName, newName;
 
 		// Delete old files
-	   int i;
+	   int32_t i;
 		for(i = MAX_LOG_HISTORY_SIZE; i >= s_logHistorySize; i--)
 		{
-			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), s_logFileName, i);
+		   oldName = s_logFileName;
+		   oldName.append(_T('.'));
+		   oldName.append(i);
 			if (_taccess(oldName, 0) == 0)
 			{
             if (_tunlink(oldName) != 0)
             {
-               TCHAR buffer[MAX_PATH + 256];
-               _sntprintf(buffer, MAX_PATH + 256, _T("Rotation error: cannot delete file \"%s\" (%s)"), oldName, _tcserror(errno));
+               _sntprintf(buffer, bufferSize, _T("Rotation error: cannot delete file \"%s\" (%s)"), oldName.cstr(), _tcserror(errno));
                rotationErrors.add(buffer);
             }
 			}
@@ -579,25 +582,30 @@ static bool RotateLog(bool needLock)
 		// Shift file names
 		for(; i >= 0; i--)
 		{
-			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), s_logFileName, i);
+         oldName = s_logFileName;
+         oldName.append(_T('.'));
+         oldName.append(i);
          if (_taccess(oldName, 0) == 0)
          {
-            _sntprintf(newName, MAX_PATH, _T("%s.%d"), s_logFileName, i + 1);
+            newName = s_logFileName;
+            newName.append(_T('.'));
+            newName.append(i + 1);
             if (_trename(oldName, newName) != 0)
             {
-               TCHAR buffer[MAX_PATH * 2 + 256];
-               _sntprintf(buffer, MAX_PATH * 2 + 256, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), oldName, newName, _tcserror(errno));
+               _sntprintf(buffer, bufferSize, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"),
+                        oldName.cstr(), newName.cstr(), _tcserror(errno));
                rotationErrors.add(buffer);
             }
          }
 		}
 
 		// Rename current log to name.0
-		_sntprintf(newName, MAX_PATH, _T("%s.0"), s_logFileName);
+      newName = s_logFileName;
+      newName.append(_T(".0"));
 		if (_trename(s_logFileName, newName) != 0)
 		{
-         TCHAR buffer[MAX_PATH * 2 + 256];
-         _sntprintf(buffer, MAX_PATH * 2 + 256, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), s_logFileName, newName, _tcserror(errno));
+         _sntprintf(buffer, bufferSize, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"),
+                  s_logFileName, newName.cstr(), _tcserror(errno));
          rotationErrors.add(buffer);
 		}
 	}
@@ -609,16 +617,16 @@ static bool RotateLog(bool needLock)
 #else
       struct tm *loc = localtime(&s_currentDayStart);
 #endif
-		TCHAR buffer[64];
-      _tcsftime(buffer, 64, s_dailyLogSuffixTemplate, loc);
+      _tcsftime(buffer, bufferSize, s_dailyLogSuffixTemplate, loc);
 
 		// Rename current log to name.suffix
-      TCHAR newName[MAX_PATH];
-		_sntprintf(newName, MAX_PATH, _T("%s.%s"), s_logFileName, buffer);
+      StringBuffer newName(s_logFileName);
+      newName.append(_T('.'));
+      newName.append(buffer);
 		if (_trename(s_logFileName, newName) != 0)
 		{
-         TCHAR buffer[MAX_PATH * 2 + 256];
-         _sntprintf(buffer, MAX_PATH * 2 + 256, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"), s_logFileName, newName, _tcserror(errno));
+         _sntprintf(buffer, bufferSize, _T("Rotation error: cannot rename file \"%s\" to \"%s\" (%s)"),
+                  s_logFileName, newName.cstr(), _tcserror(errno));
          rotationErrors.add(buffer);
 		}
 
@@ -634,7 +642,11 @@ static bool RotateLog(bool needLock)
       TCHAR timestamp[32];
       if (s_flags & NXLOG_JSON_FORMAT)
       {
-         char message[MAX_PATH * 2 + 1024];
+#ifdef UNICODE
+         char *message = reinterpret_cast<char*>(buffer);
+#else
+         char *message = buffer;
+#endif
 #ifdef UNICODE
 #define TIMESTAMP_FORMAT_SPECIFIER  "%ls"
 #else
@@ -642,13 +654,13 @@ static bool RotateLog(bool needLock)
 #endif
          if (rotationErrors.isEmpty())
          {
-            snprintf(message, sizeof(message), "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"info\",\"tag\":\"logger\",\"message\":\"Log file truncated\"}\n",
+            snprintf(message, bufferSize, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"info\",\"tag\":\"logger\",\"message\":\"Log file truncated\"}\n",
                    FormatLogTimestamp(timestamp));
             _write(s_logFileHandle, message, strlen(message));
          }
          else
          {
-            snprintf(message, sizeof(message), "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"Log file cannot be rotated (detailed error list is following)\"}\n",
+            snprintf(message, bufferSize, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"Log file cannot be rotated (detailed error list is following)\"}\n",
                    FormatLogTimestamp(timestamp));
             _write(s_logFileHandle, message, strlen(message));
             for(int i = 0; i < rotationErrors.size(); i++)
@@ -656,7 +668,7 @@ static bool RotateLog(bool needLock)
                TCHAR escapedTextBuffer[LOCAL_MSG_BUFFER_SIZE];
                size_t textLen;
                TCHAR *escapedText = EscapeForJSON(rotationErrors.get(i), escapedTextBuffer, &textLen);
-               snprintf(message, sizeof(message), "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"" TIMESTAMP_FORMAT_SPECIFIER "\"}\n",
+               snprintf(message, bufferSize, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"" TIMESTAMP_FORMAT_SPECIFIER "\"}\n",
                       timestamp, escapedText);
                FreeStringBuffer(escapedText, escapedTextBuffer);
                _write(s_logFileHandle, message, strlen(message));
@@ -696,6 +708,7 @@ static bool RotateLog(bool needLock)
 	if (needLock)
 		MutexUnlock(s_mutexLogAccess);
 
+	MemFree(buffer);
 	return (s_flags & NXLOG_IS_OPEN) ? true : false;
 }
 
