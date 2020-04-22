@@ -84,7 +84,7 @@ public class WebServiceDefinition
       cacheRetentionTime = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TIME);
       requestTimeout = msg.getFieldAsInt32(NXCPCodes.VID_TIMEOUT);
       headers = msg.getStringMapFromFields(NXCPCodes.VID_HEADERS_BASE, NXCPCodes.VID_NUM_HEADERS);
-      flags = msg.getFieldAsInt32(NXCPCodes.VID_VERIFY_CERT);
+      flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
    }
 
    /**
@@ -105,7 +105,7 @@ public class WebServiceDefinition
       msg.setFieldInt32(NXCPCodes.VID_RETENTION_TIME, cacheRetentionTime);
       msg.setFieldInt32(NXCPCodes.VID_TIMEOUT, requestTimeout);
       msg.setFieldsFromStringMap(headers, NXCPCodes.VID_HEADERS_BASE, NXCPCodes.VID_NUM_HEADERS);
-      msg.setFieldInt32(NXCPCodes.VID_VERIFY_CERT, flags);
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
    }
 
    /**

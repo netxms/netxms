@@ -45,7 +45,7 @@ WebServiceDefinition::WebServiceDefinition(const NXCPMessage *msg)
    m_cacheRetentionTime = msg->getFieldAsUInt32(VID_RETENTION_TIME);
    m_requestTimeout = msg->getFieldAsUInt32(VID_TIMEOUT);
    m_headers.loadMessage(msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
-   m_flags = msg->getFieldAsUInt32(VID_VERIFY_CERT);
+   m_flags = msg->getFieldAsUInt32(VID_FLAGS);
 }
 
 /**
@@ -170,7 +170,7 @@ void WebServiceDefinition::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_RETENTION_TIME, m_cacheRetentionTime);
    msg->setField(VID_TIMEOUT, m_requestTimeout);
    m_headers.fillMessage(msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
-   msg->setField(VID_VERIFY_CERT, m_flags);
+   msg->setField(VID_FLAGS, m_flags);
 }
 
 /**
