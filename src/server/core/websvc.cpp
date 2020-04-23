@@ -142,7 +142,8 @@ UINT32 WebServiceDefinition::query(DataCollectionTarget *object, const TCHAR *pa
    attributes.add(path);
 
    StringMap resultSet;
-   UINT32 rcc = conn->queryWebService(url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, attributes, isVerifyCertificate(), isVerifyHost(), &resultSet);
+   UINT32 rcc = conn->queryWebServiceParameters(url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, attributes,
+         isVerifyCertificate(), isVerifyHost(), &resultSet);
    if (rcc == ERR_SUCCESS)
    {
       const TCHAR *value = resultSet.get(path);

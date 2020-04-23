@@ -131,6 +131,18 @@ void StringList::add(const TCHAR *value)
    m_values[m_count++] = m_pool.copyString(value);
 }
 
+/**
+ * Add UTF8 string to list
+ */
+void StringList::addUTF8String(const char *value)
+{
+#ifdef UNICODE
+   addPreallocated(WideStringFromUTF8String(value));
+#else
+   addPreallocated(MBStringFromUTF8String(value));
+#endif
+}
+
 #ifdef UNICODE
 
 /**
@@ -462,6 +474,19 @@ void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) co
    for(int i = 0; i < m_count; i++)
    {
       msg->setField(fieldId++, CHECK_NULL_EX(m_values[i]));
+   }
+}
+
+/**
+ * Load data from NXCP message
+ */
+void StringList::loadMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
+{
+   int count = msg->getFieldAsInt32(countId);
+   UINT32 id = baseId;
+   for(int i = 0; i < count; i++)
+   {
+      addPreallocated(msg->getFieldAsString(id++));
    }
 }
 

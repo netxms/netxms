@@ -41,11 +41,12 @@ static WebServiceAuthType s_authType = WebServiceAuthType::NONE;
 static StringMap s_headers;
 static bool s_verifyCert = true;
 static bool s_verifyHost = true;
+static WebServiceRequestType s_requestType = WebServiceRequestType::PARAMETER;
 
 /**
  * Callback for printing results
  */
-static EnumerationCallbackResult PrintResults(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult PrintParameterResults(const TCHAR *key, const void *value, void *data)
 {
    WriteToTerminalEx(_T("%s = %s\n"), key, value);
    return _CONTINUE;
@@ -56,15 +57,41 @@ static EnumerationCallbackResult PrintResults(const TCHAR *key, const void *valu
  */
 static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const StringList& parameters)
 {
-   StringMap results;
-   UINT32 rcc = pConn->queryWebService(url, s_retentionTime,
-            (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
-            s_authType, s_headers, parameters, s_verifyCert, s_verifyHost, &results);
-   if (rcc == ERR_SUCCESS)
+   UINT32 rcc = ERR_SUCCESS;
+   switch (s_requestType)
    {
-      results.forEach(PrintResults, NULL);
+      case WebServiceRequestType::PARAMETER:
+      {
+         StringMap results;
+         rcc = pConn->queryWebServiceParameters(url, s_retentionTime,
+                  (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
+                  s_authType, s_headers, parameters, s_verifyCert, s_verifyHost, &results);
+
+         if (rcc == ERR_SUCCESS)
+         {
+            results.forEach(PrintParameterResults, NULL);
+         }
+         break;
+      }
+      case WebServiceRequestType::LIST:
+      {
+
+         StringList results;
+         rcc = pConn->queryWebServiceList(url, s_retentionTime,
+                  (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
+                  s_authType, s_headers, parameters.get(0), s_verifyCert, s_verifyHost, &results);
+
+         if (rcc == ERR_SUCCESS)
+         {
+            for (int i = 0; i < results.size(); i++)
+               WriteToTerminalEx(_T("%s\n"), results.get(i));
+
+         }
+         break;
+      }
    }
-   else
+
+   if (rcc != ERR_SUCCESS)
    {
       WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
@@ -129,6 +156,9 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          {
             s_headers.set(header, _T(""));
          }
+         break;
+      case 'l':
+         s_requestType = WebServiceRequestType::LIST;
          break;
       case 'L':   // Login
 #ifdef UNICODE
@@ -244,12 +274,13 @@ int main(int argc, char *argv[])
                        _T("   -C           : Do not verify certificate's name against host.\n")
                        _T("   -H header    : HTTP header (can be used multiple times).\n")
                        _T("   -i seconds   : Query service continuously with given interval.\n")
+                       _T("   -l           : Requested parameter is a list.\n")
                        _T("   -L login     : Web service login name.\n")
                        _T("   -P passwod   : Web service password.\n")
                        _T("   -r seconds   : Cache retention time.\n")
                        _T("   -t auth      : HTTP authentication type. Valid methods are \"none\", \"basic\", \"digest\",\n")
                        _T("                  \"ntlm\", \"bearer\", \"any\", or \"anysafe\". Default is \"none\".\n");
-   tool.additionalOptions = "cCH:i:L:P:r:t:";
+   tool.additionalOptions = "cCH:i:lL:P:r:t:";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

@@ -170,6 +170,15 @@ enum class WebServiceAuthType
 };
 
 /**
+ * Web service куйгуые ензу
+ */
+enum class WebServiceRequestType
+{
+   PARAMETER = 0,
+   LIST = 1
+};
+
+/**
  * Safely get authentication type from integer value
  */
 inline WebServiceAuthType WebServiceAuthTypeFromInt(int type)

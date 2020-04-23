@@ -1006,11 +1006,12 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 }
 
 /**
- * Query web service
+ * Method is used for both - to get parameters and to get list.
+ * For list first element form parameters list will be used. If parameters list is empty:
+ * "/" will be used for XML and JSOn types and "(*)" will be used for text type.
  */
-UINT32 AgentConnection::queryWebService(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringMap& headers, const StringList& parameters, bool verifyCert, bool verifyHost,
-         StringMap *results)
+UINT32 AgentConnection::queryWebServiceList(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
+         WebServiceAuthType authType, const StringMap& headers, const TCHAR *path, bool verifyCert, bool verifyHost, StringList *results)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1026,6 +1027,65 @@ UINT32 AgentConnection::queryWebService(const TCHAR *url, UINT32 retentionTime, 
    msg.setField(VID_AUTH_TYPE, (INT16)authType);
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
+   msg.setField(VID_REQUEST_TYPE, static_cast<uint32_t>(WebServiceRequestType::LIST));
+   headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   msg.setField(VID_PATH, path);
+
+   UINT32 dwRetCode;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      if (response != nullptr)
+      {
+         dwRetCode = response->getFieldAsUInt32(VID_RCC);
+         if (dwRetCode == ERR_SUCCESS)
+         {
+            if (response->isFieldExist(VID_NUM_ELEMENTS))
+            {
+               results->loadMessage(response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+            }
+            else
+            {
+               dwRetCode = ERR_MALFORMED_RESPONSE;
+               debugPrintf(3, _T("Malformed response to CMD_QUERY_WEB_SERVICE list"));
+            }
+         }
+         delete response;
+      }
+      else
+      {
+         dwRetCode = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      dwRetCode = ERR_CONNECTION_BROKEN;
+   }
+   return dwRetCode;
+}
+
+
+/**
+ * Query web service for parameters
+ */
+UINT32 AgentConnection::queryWebServiceParameters(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
+         WebServiceAuthType authType, const StringMap& headers, const StringList& parameters, bool verifyCert, bool verifyHost, StringMap *results)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId = generateRequestId();
+   msg.setCode(CMD_QUERY_WEB_SERVICE);
+   msg.setId(dwRqId);
+   msg.setField(VID_URL, url);
+   msg.setField(VID_RETENTION_TIME, retentionTime);
+   msg.setField(VID_LOGIN_NAME, login);
+   msg.setField(VID_PASSWORD, password);
+   msg.setField(VID_AUTH_TYPE, (INT16)authType);
+   msg.setField(VID_VERIFY_CERT, verifyCert);
+   msg.setField(VID_VERIFY_HOST, verifyHost);
+   msg.setField(VID_REQUEST_TYPE, static_cast<uint32_t>(WebServiceRequestType::PARAMETER));
    headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
    parameters.fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
 
@@ -1045,7 +1105,7 @@ UINT32 AgentConnection::queryWebService(const TCHAR *url, UINT32 retentionTime, 
             else
             {
                dwRetCode = ERR_MALFORMED_RESPONSE;
-               debugPrintf(3, _T("Malformed response to CMD_QUERY_WEB_SERVICE"));
+               debugPrintf(3, _T("Malformed response to CMD_QUERY_WEB_SERVICE parameters"));
             }
          }
          delete response;

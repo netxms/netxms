@@ -1047,7 +1047,7 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, in
    StringList parameters;
    parameters.add(path);
    StringMap results;
-   uint32_t agentStatus = conn->queryWebService(url, d->getCacheRetentionTime(), d->getLogin(), d->getPassword(), d->getAuthType(),
+   uint32_t agentStatus = conn->queryWebServiceParameters(url, d->getCacheRetentionTime(), d->getLogin(), d->getPassword(), d->getAuthType(),
          headers, parameters, d->isVerifyCertificate(), d->isVerifyHost(), &results);
 
    DataCollectionError rc;

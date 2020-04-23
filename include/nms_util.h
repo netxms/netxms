@@ -1720,6 +1720,7 @@ public:
 	void replace(int index, const TCHAR *value);
 	void addOrReplace(int index, const TCHAR *value);
 	void addOrReplacePreallocated(int index, TCHAR *value);
+	void addUTF8String(const char *value);
 #ifdef UNICODE
    void addMBString(const char *value);
 #else
@@ -1753,6 +1754,7 @@ public:
    TCHAR *join(const TCHAR *separator);
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
+   void loadMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId);
    json_t *toJson() const;
 };
 

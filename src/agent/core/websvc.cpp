@@ -58,13 +58,18 @@ private:
    void getParamsFromJSON(StringList *params, NXCPMessage *response);
    void getParamsFromText(StringList *params, NXCPMessage *response);
 
+   void getListFromXML(const TCHAR *path, StringList *result);
+   void getListFromJSON(const TCHAR *path, StringList *result);
+   uint32_t getListFromText(const TCHAR *pattern, StringList *result);
+
 public:
-   ServiceEntry() { m_lastRequestTime = 0; m_type = TextType::Text; m_json = NULL; }
+   ServiceEntry() { m_lastRequestTime = 0; m_type = TextType::Text; m_json = nullptr; }
    ~ServiceEntry();
 
    void getParams(StringList *params, NXCPMessage *response);
-   bool isDataExpired(UINT32 retentionTime) { return (time(NULL) - m_lastRequestTime) >= retentionTime; }
-   UINT32 updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
+   uint32_t getList(SharedString path, NXCPMessage *response);
+   bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
+   uint32_t updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
             struct curl_slist *headers, bool peerVerify, bool hostVerify, const char *topLevelName);
 
    void lock() { m_lock.lock(); }
@@ -82,7 +87,7 @@ StringObjectMap<ServiceEntry> s_sericeCache(Ownership::True);
  */
 ServiceEntry::~ServiceEntry()
 {
-   if (m_json != NULL)
+   if (m_json != nullptr)
       json_decref(m_json);
 }
 
@@ -91,14 +96,14 @@ ServiceEntry::~ServiceEntry()
  */
 void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
 {
-   UINT32 fieldId = VID_PARAM_LIST_BASE;
+   uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
    nxlog_debug_tag(DEBUG_TAG, 9, _T("XML: %s"), (const TCHAR *)m_xml.createXml());
    for (int i = 0; i < params->size(); i++)
    {
       nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromXML(): Get parameter \"%s\" form XML"), params->get(i));
-      const TCHAR *result = m_xml.getValue(params->get(i), NULL);
-      if (result != NULL)
+      const TCHAR *result = m_xml.getValue(params->get(i), nullptr);
+      if (result != nullptr)
       {
          response->setField(fieldId++, params->get(i));
          response->setField(fieldId++, result);
@@ -111,7 +116,7 @@ void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
 /**
  * Create NXSL value from json_t
  */
-static bool SetValueFromJson(json_t *json, UINT32 fieldId, NXCPMessage *response)
+static bool SetValueFromJson(json_t *json, uint32_t fieldId, NXCPMessage *response)
 {
    bool skip = false;
    TCHAR result[MAX_RESULT_LENGTH];
@@ -152,7 +157,7 @@ static bool SetValueFromJson(json_t *json, UINT32 fieldId, NXCPMessage *response
  */
 void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
 {
-   UINT32 fieldId = VID_PARAM_LIST_BASE;
+   uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
    for (int i = 0; i < params->size(); i++)
    {
@@ -164,21 +169,21 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
       char *copy = UTF8StringFromMBString(params->get(i));
 #endif
       char *item = copy;
-      char *separator = NULL;
+      char *separator = nullptr;
       if (!strncmp(item, "/", 1))
          item++;
       do
       {
          separator = strchr(item, '/');
-         if(separator != NULL)
+         if(separator != nullptr)
             *separator = 0;
 
          lastObj = json_object_get(lastObj, item);
-         if(separator != NULL)
+         if(separator != nullptr)
             item = separator+1;
-      } while (separator != NULL && *item != 0 && lastObj != NULL);
+      } while (separator != nullptr && *item != 0 && lastObj != nullptr);
       MemFree(copy);
-      if (lastObj != NULL)
+      if (lastObj != nullptr)
       {
          response->setField(fieldId++, params->get(i));
          if(SetValueFromJson(lastObj, fieldId, response))
@@ -201,7 +206,7 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
 void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
 {
    StringList *dataLines = m_responseData.split(_T("\n"));
-   UINT32 fieldId = VID_PARAM_LIST_BASE;
+   uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
    for (int i = 0; i < params->size(); i++)
    {
@@ -210,17 +215,20 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
 
       const char *eptr;
       int eoffset;
-      PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
-      if (compiledPattern == NULL)
+      PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
+      if (compiledPattern == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ServiceEntry::getListFromText(): \"%s\" pattern compilation failure: %hs at offset %d"), pattern, eptr, eoffset);
          continue;
+      }
 
-      TCHAR *matchedString = NULL;
+      TCHAR *matchedString = nullptr;
       for (int j = 0; j < dataLines->size(); j++)
       {
          const TCHAR *dataLine = dataLines->get(j);
          nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): checking data line \"%s\""), dataLine);
          int fields[30];
-         int result = _pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
+         int result = _pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
          if (result >= 0)
          {
             if ((result >=2 || result == 0) && fields[2] != -1)
@@ -236,7 +244,7 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
 
       _pcre_free_t(compiledPattern);
 
-      if (matchedString != NULL)
+      if (matchedString != nullptr)
       {
          response->setField(fieldId++, pattern);
          response->setField(fieldId++, matchedString);
@@ -268,6 +276,141 @@ void ServiceEntry::getParams(StringList *params, NXCPMessage *response)
          getParamsFromText(params, response);
          break;
    }
+}
+
+
+/**
+ * Get list from XML cached data
+ */
+void ServiceEntry::getListFromXML(const TCHAR *path, StringList *result)
+{
+   uint32_t fieldId = VID_PARAM_LIST_BASE;
+   nxlog_debug_tag(DEBUG_TAG, 9, _T("XML: %s"), (const TCHAR *)m_xml.createXml());
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromXML(): Get child tag list for \"%s\" path"), path);
+   ConfigEntry *entry = m_xml.getEntry(path);
+   ObjectArray<ConfigEntry> *elements = entry != nullptr ? entry->getSubEntries(_T("*")) : nullptr;
+   if (elements != nullptr)
+   {
+      for(int i = 0; i < elements->size(); i++)
+      {
+         result->add(elements->get(i)->getName());
+      }
+   }
+}
+
+/**
+ * Get list from JSON cached data
+ */
+void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *result)
+{
+   uint32_t fieldId = VID_PARAM_LIST_BASE;
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): Get child object list for \"%s\" JSON path"), path);
+   json_t *lastObj = m_json;
+#ifdef UNICODE
+   char *copy = UTF8StringFromWideString(path);
+#else
+   char *copy = UTF8StringFromMBString(path);
+#endif
+   char *item = copy;
+   if (!strncmp(item, "/", 1))
+      item++;
+
+   char *separator = strchr(item, '/');
+   if(separator != nullptr)
+      *separator = 0;
+   while (separator != nullptr && *item != 0 && lastObj != nullptr)
+   {
+      lastObj = json_object_get(lastObj, item);
+      if(separator != nullptr)
+         item = separator+1;
+   }
+   MemFree(copy);
+   int resultCount = 0;
+   if (lastObj != nullptr)
+   {
+      void *it = json_object_iter(lastObj);
+      while(it != nullptr)
+      {
+         result->addUTF8String(json_object_iter_key(it));
+         it = json_object_iter_next(lastObj, it);
+         resultCount++;
+      }
+   }
+}
+
+/**
+ * Get list from Text cached data
+ */
+uint32_t ServiceEntry::getListFromText(const TCHAR *pattern, StringList *resultList)
+{
+   uint32_t retVal = ERR_SUCCESS;
+   StringList *dataLines = m_responseData.split(_T("\n"));
+   uint32_t fieldId = VID_PARAM_LIST_BASE;
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromText(): get list of matched lines for pattern \"%s\""), pattern);
+
+   const char *eptr;
+   int eoffset;
+   PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
+   if (compiledPattern != nullptr)
+   {
+      TCHAR *matchedString = nullptr;
+      for (int j = 0; j < dataLines->size(); j++)
+      {
+         const TCHAR *dataLine = dataLines->get(j);
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromText(): checking data line \"%s\""), dataLine);
+         int fields[30];
+         int result = _pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
+         if (result >= 0)
+         {
+            if ((result >=2 || result == 0) && fields[2] != -1)
+            {
+               matchedString = MemAllocString(fields[3] + 1 - fields[2]);
+               memcpy(matchedString, &dataLine[fields[2]], (fields[3] - fields[2]) * sizeof(TCHAR));
+               matchedString[fields[3] - fields[2]] = 0;
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromText(): data match: \"%s\""), matchedString);
+               resultList->add(matchedString);
+            }
+         }
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ServiceEntry::getListFromText(): \"%s\" pattern compilation failure: %hs at offset %d"), pattern, eptr, eoffset);
+      retVal = ERR_MALFORMED_COMMAND;
+   }
+
+   _pcre_free_t(compiledPattern);
+
+   delete dataLines;
+   return retVal;
+}
+
+/**
+ * Get list from cached data
+ * If path is empty: "/" will be used for XML and JSOn types and "(*)" will be used for text type
+ */
+uint32_t ServiceEntry::getList(SharedString path, NXCPMessage *response)
+{
+   uint32_t result = RCC_SUCCESS;
+   StringList list;
+   const TCHAR *correctPath = path[0] != 0 ? path.cstr() : m_type == TextType::Text ? _T("(.*)") : _T("/");
+   switch(m_type)
+   {
+      case TextType::XML:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get list from XML"));
+         getListFromXML(correctPath, &list);
+         break;
+      case TextType::JSON:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get list from JSON"));
+         getListFromJSON(correctPath, &list);
+         break;
+      default:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get list from Text"));
+         result = getListFromText(correctPath, &list);
+         break;
+   }
+   list.fillMessage(response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+   return result;
 }
 
 /**
@@ -304,12 +447,12 @@ static long CurlAuthType(WebServiceAuthType authType)
 /**
  * Update cached data
  */
-UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
+uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
          struct curl_slist *headers, bool peerVerify, bool hostVerify, const char *topLevelName)
 {
-   UINT32 rcc = ERR_SUCCESS;
+   uint32_t rcc = ERR_SUCCESS;
    CURL *curl = curl_easy_init();
-   if (curl != NULL)
+   if (curl != nullptr)
    {
       char errbuf[CURL_ERROR_SIZE];
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
@@ -375,7 +518,7 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
                   m_type = TextType::XML;
                   char *content = m_responseData.getUTF8String();
                   nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::updateData(): XML top level tag: %hs"), topLevelName);
-                  if (!m_xml.loadXmlConfigFromMemory(content, static_cast<int>(strlen(content)), NULL, "*", false))
+                  if (!m_xml.loadXmlConfigFromMemory(content, static_cast<int>(strlen(content)), nullptr, "*", false))
                      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to load XML"));
                   MemFree(content);
                }
@@ -384,7 +527,7 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
                   m_type = TextType::JSON;
                   char *content = m_responseData.getUTF8String();
                   json_error_t error;
-                  if (m_json != NULL)
+                  if (m_json != nullptr)
                   {
                      json_decref(m_json);
                   }
@@ -395,7 +538,7 @@ UINT32 ServiceEntry::updateData(const TCHAR *url, const char *userName, const ch
                {
                   m_type = TextType::Text;
                }
-               m_lastRequestTime = time(NULL);
+               m_lastRequestTime = time(nullptr);
                nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::updateData(): response data type: %d"), m_type);
                nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::updateData(): response data: %s"), (const TCHAR *)m_responseData);
                nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::updateData(): response data length: %d"), m_responseData.length());
@@ -438,7 +581,7 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
 
    s_serviceCacheLock.lock();
    ServiceEntry *cachedEntry = s_sericeCache.get(url);
-   if (cachedEntry == NULL)
+   if (cachedEntry == nullptr)
    {
       cachedEntry = new ServiceEntry();
       s_sericeCache.set(url, cachedEntry);
@@ -447,23 +590,24 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
    s_serviceCacheLock.unlock();
 
    cachedEntry->lock();
-   UINT32 retentionTime = request->getFieldAsUInt32(VID_RETENTION_TIME);
-   UINT32 result = ERR_SUCCESS;
+   uint32_t retentionTime = request->getFieldAsUInt32(VID_RETENTION_TIME);
+   WebServiceRequestType requestType = static_cast<WebServiceRequestType>(request->getFieldAsUInt32(VID_REQUEST_TYPE));
+   uint32_t result = ERR_SUCCESS;
    if (cachedEntry->isDataExpired(retentionTime))
    {
-      char *topLevelName = request->getFieldAsUtf8String(VID_PARAM_LIST_BASE);
-      char *separator = strchr(topLevelName+1, '/');
-      if(separator != NULL)
+      char *topLevelName = requestType == WebServiceRequestType::PARAMETER ? request->getFieldAsUtf8String(VID_PARAM_LIST_BASE) : request->getFieldAsUtf8String(VID_PATH);
+      char *separator = strlen(topLevelName) > 0 ? strchr(topLevelName+1, '/') : nullptr;
+      if(separator != nullptr)
          *separator = 0;
 
       char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
       char *password = request->getFieldAsUtf8String(VID_PASSWORD);
-      struct curl_slist *headers = NULL;
-      UINT32 headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
-      UINT32 fieldId = VID_HEADERS_BASE;
+      struct curl_slist *headers = nullptr;
+      uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
+      uint32_t fieldId = VID_HEADERS_BASE;
       char header[CURL_MAX_HTTP_HEADER];
       bool verifyHost = request->isFieldExist(VID_VERIFY_HOST) ? request->getFieldAsBoolean(VID_VERIFY_HOST) : true;
-      for(UINT32 i = 0; i < headerCount; i++)
+      for(uint32_t i = 0; i < headerCount; i++)
       {
          request->getFieldAsUtf8String(fieldId++, header, 256);
          size_t len = strlen(header);
@@ -485,8 +629,20 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
 
    if (result == ERR_SUCCESS)
    {
-      StringList params(request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
-      cachedEntry->getParams(&params, response);
+      switch (requestType)
+      {
+         case WebServiceRequestType::PARAMETER:
+         {
+            StringList params(request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
+            cachedEntry->getParams(&params, response);
+            break;
+         }
+         case WebServiceRequestType::LIST:
+         {
+            result = cachedEntry->getList(request->getFieldAsSharedString(VID_PATH), response);
+            break;
+         }
+      }
    }
    cachedEntry->unlock();
 
