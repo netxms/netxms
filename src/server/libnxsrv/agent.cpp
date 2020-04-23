@@ -1006,12 +1006,15 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 }
 
 /**
- * Method is used for both - to get parameters and to get list.
- * For list first element form parameters list will be used. If parameters list is empty:
- * "/" will be used for XML and JSOn types and "(*)" will be used for text type.
+ * Query web service. Request type determines if parameter or list mode will be used.
+ * Only first element of "pathList" will be used for list request.
+ * "results" argument should point to StringMap for parameters request and to StringList for list request.
+ * For list first element form parameters list will be used. If parameters list is empty
+ * "/" will be used for XML and JSON types and "(*)" will be used for text type.
  */
-UINT32 AgentConnection::queryWebServiceList(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringMap& headers, const TCHAR *path, bool verifyCert, bool verifyHost, StringList *results)
+uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, const TCHAR *url, uint32_t retentionTime,
+         const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
+         const StringList& pathList, bool verifyCert, bool verifyHost, void *results)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1027,9 +1030,9 @@ UINT32 AgentConnection::queryWebServiceList(const TCHAR *url, UINT32 retentionTi
    msg.setField(VID_AUTH_TYPE, (INT16)authType);
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
-   msg.setField(VID_REQUEST_TYPE, static_cast<uint32_t>(WebServiceRequestType::LIST));
    headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
-   msg.setField(VID_PATH, path);
+   msg.setField(VID_REQUEST_TYPE, static_cast<uint16_t>(requestType));
+   pathList.fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
 
    UINT32 dwRetCode;
    if (sendMessage(&msg))
@@ -1040,14 +1043,18 @@ UINT32 AgentConnection::queryWebServiceList(const TCHAR *url, UINT32 retentionTi
          dwRetCode = response->getFieldAsUInt32(VID_RCC);
          if (dwRetCode == ERR_SUCCESS)
          {
-            if (response->isFieldExist(VID_NUM_ELEMENTS))
+            if ((requestType == WebServiceRequestType::PARAMETER) && response->isFieldExist(VID_NUM_PARAMETERS))
             {
-               results->loadMessage(response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+               static_cast<StringMap*>(results)->loadMessage(response, VID_NUM_PARAMETERS, VID_PARAM_LIST_BASE);
+            }
+            else if ((requestType == WebServiceRequestType::LIST) && response->isFieldExist(VID_NUM_ELEMENTS))
+            {
+               static_cast<StringList*>(results)->loadMessage(response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
             }
             else
             {
                dwRetCode = ERR_MALFORMED_RESPONSE;
-               debugPrintf(3, _T("Malformed response to CMD_QUERY_WEB_SERVICE list"));
+               debugPrintf(4, _T("Malformed response to CMD_QUERY_WEB_SERVICE"));
             }
          }
          delete response;
@@ -1064,62 +1071,26 @@ UINT32 AgentConnection::queryWebServiceList(const TCHAR *url, UINT32 retentionTi
    return dwRetCode;
 }
 
+/**
+ * Method is used for both - to get parameters and to get list.
+ * For list first element form parameters list will be used. If parameters list is empty:
+ * "/" will be used for XML and JSOn types and "(*)" will be used for text type.
+ */
+uint32_t AgentConnection::queryWebServiceList(const TCHAR *url, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
+         WebServiceAuthType authType, const StringMap& headers, const TCHAR *path, bool verifyCert, bool verifyHost, StringList *results)
+{
+   StringList pathList;
+   pathList.add(path);
+   return queryWebService(WebServiceRequestType::LIST, url, retentionTime, login, password, authType, headers, pathList, verifyCert, verifyHost, results);
+}
 
 /**
  * Query web service for parameters
  */
-UINT32 AgentConnection::queryWebServiceParameters(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringMap& headers, const StringList& parameters, bool verifyCert, bool verifyHost, StringMap *results)
+uint32_t AgentConnection::queryWebServiceParameters(const TCHAR *url, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
+         WebServiceAuthType authType, const StringMap& headers, const StringList& pathList, bool verifyCert, bool verifyHost, StringMap *results)
 {
-   if (!m_isConnected)
-      return ERR_NOT_CONNECTED;
-
-   NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId = generateRequestId();
-   msg.setCode(CMD_QUERY_WEB_SERVICE);
-   msg.setId(dwRqId);
-   msg.setField(VID_URL, url);
-   msg.setField(VID_RETENTION_TIME, retentionTime);
-   msg.setField(VID_LOGIN_NAME, login);
-   msg.setField(VID_PASSWORD, password);
-   msg.setField(VID_AUTH_TYPE, (INT16)authType);
-   msg.setField(VID_VERIFY_CERT, verifyCert);
-   msg.setField(VID_VERIFY_HOST, verifyHost);
-   msg.setField(VID_REQUEST_TYPE, static_cast<uint32_t>(WebServiceRequestType::PARAMETER));
-   headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
-   parameters.fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
-
-   UINT32 dwRetCode;
-   if (sendMessage(&msg))
-   {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
-      if (response != nullptr)
-      {
-         dwRetCode = response->getFieldAsUInt32(VID_RCC);
-         if (dwRetCode == ERR_SUCCESS)
-         {
-            if (response->isFieldExist(VID_NUM_PARAMETERS))
-            {
-               results->loadMessage(response, VID_NUM_PARAMETERS, VID_PARAM_LIST_BASE);
-            }
-            else
-            {
-               dwRetCode = ERR_MALFORMED_RESPONSE;
-               debugPrintf(3, _T("Malformed response to CMD_QUERY_WEB_SERVICE parameters"));
-            }
-         }
-         delete response;
-      }
-      else
-      {
-         dwRetCode = ERR_REQUEST_TIMEOUT;
-      }
-   }
-   else
-   {
-      dwRetCode = ERR_CONNECTION_BROKEN;
-   }
-   return dwRetCode;
+   return queryWebService(WebServiceRequestType::PARAMETER, url, retentionTime, login, password, authType, headers, pathList, verifyCert, verifyHost, results);
 }
 
 /**

@@ -1976,7 +1976,7 @@ protected:
    void applyUserTemplates();
    void updateContainerMembership();
 
-   DataCollectionError queryWebService(const TCHAR *param, int queryType, TCHAR *buffer, size_t bufSize, StringList **list);
+   DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
 
    void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
    void getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);

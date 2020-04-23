@@ -126,29 +126,29 @@ static EnumerationCallbackResult ExpandHeaders(const TCHAR *key, const TCHAR *va
 /**
  * Query web service using this definition. Returns agent RCC.
  */
-UINT32 WebServiceDefinition::query(DataCollectionTarget *object, const TCHAR *path,
-         const StringList *args, AgentConnection *conn, TCHAR *result) const
+uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceRequestType requestType, const TCHAR *path,
+         const StringList& args, AgentConnection *conn, void *result) const
 {
-   StringBuffer url = object->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, args);
+   StringBuffer url = object->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, &args);
 
    StringMap headers;
    ExpandHeadersContext context;
    context.headers = &headers;
    context.object = object;
-   context.args = args;
+   context.args = &args;
    m_headers.forEach(ExpandHeaders, &context);
 
-   StringList attributes;
-   attributes.add(path);
+   StringList pathList;
+   pathList.add(path);
 
    StringMap resultSet;
-   UINT32 rcc = conn->queryWebServiceParameters(url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, attributes,
-         isVerifyCertificate(), isVerifyHost(), &resultSet);
-   if (rcc == ERR_SUCCESS)
+   UINT32 rcc = conn->queryWebService(requestType, url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, pathList,
+         isVerifyCertificate(), isVerifyHost(), (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
+   if ((rcc == ERR_SUCCESS) && (requestType == WebServiceRequestType::PARAMETER))
    {
       const TCHAR *value = resultSet.get(path);
       if (value != NULL)
-         ret_string(result, value);
+         ret_string(static_cast<TCHAR*>(result), value);
       else
          rcc = ERR_UNKNOWN_PARAMETER;
    }

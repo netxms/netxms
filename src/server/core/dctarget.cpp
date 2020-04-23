@@ -972,7 +972,8 @@ static bool ParseCallArgumensList(TCHAR *input, StringList *args)
  * Get item or list from web service
  * Parameter is expected in form service:path or service(arguments):path
  */
-DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, int queryType, TCHAR *buffer, size_t bufSize, StringList **list)
+DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer,
+         size_t bufSize, StringList *list)
 {
    uint32_t proxyId = getEffectiveWebServiceProxy();
    shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
@@ -1043,19 +1044,19 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, in
    }
    delete it;
 
-   // TODO: list implementation
-   StringList parameters;
-   parameters.add(path);
+   StringList pathList;
+   pathList.add(path);
    StringMap results;
-   uint32_t agentStatus = conn->queryWebServiceParameters(url, d->getCacheRetentionTime(), d->getLogin(), d->getPassword(), d->getAuthType(),
-         headers, parameters, d->isVerifyCertificate(), d->isVerifyHost(), &results);
+   uint32_t agentStatus = conn->queryWebService(queryType, url, d->getCacheRetentionTime(), d->getLogin(), d->getPassword(), d->getAuthType(),
+         headers, pathList, d->isVerifyCertificate(), d->isVerifyHost(),
+         (queryType == WebServiceRequestType::PARAMETER) ? static_cast<void*>(&results) : static_cast<void*>(list));
 
    DataCollectionError rc;
    if (agentStatus == ERR_SUCCESS)
    {
-      if (queryType == 0)
+      if (queryType == WebServiceRequestType::PARAMETER)
       {
-         const TCHAR *value = results.get(parameters.get(0));
+         const TCHAR *value = results.get(pathList.get(0));
          if (value != nullptr)
          {
             _tcslcpy(buffer, value, bufSize);
@@ -1066,9 +1067,9 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, in
             rc = DCE_NO_SUCH_INSTANCE;
          }
       }
-      else // TODO:list implementation
+      else
       {
-         rc = DCE_NOT_SUPPORTED;
+         rc = DCE_SUCCESS;
       }
    }
    else
@@ -1085,7 +1086,7 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, in
  */
 DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize)
 {
-   return queryWebService(param, 0, buffer, bufSize, nullptr);
+   return queryWebService(param, WebServiceRequestType::PARAMETER, buffer, bufSize, nullptr);
 }
 
 /**
@@ -1094,7 +1095,14 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
  */
 DataCollectionError DataCollectionTarget::getListFromWebService(const TCHAR *param, StringList **list)
 {
-   return queryWebService(param, 1, nullptr, 0, list);
+   *list = new StringList();
+   DataCollectionError rc = queryWebService(param, WebServiceRequestType::LIST, nullptr, 0, *list);
+   if (rc != DCE_SUCCESS)
+   {
+      delete *list;
+      *list = nullptr;
+   }
+   return rc;
 }
 
 /**

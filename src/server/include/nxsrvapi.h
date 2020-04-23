@@ -924,10 +924,13 @@ public:
    UINT32 getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer);
    UINT32 getList(const TCHAR *param, StringList **list);
    UINT32 getTable(const TCHAR *param, Table **table);
-   UINT32 queryWebServiceParameters(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
+   uint32_t queryWebService(WebServiceRequestType requestType, const TCHAR *url, uint32_t retentionTime,
+            const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
+            const StringList& pathList, bool verifyCert, bool verifyHost, void *results);
+   uint32_t queryWebServiceParameters(const TCHAR *url, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
             WebServiceAuthType authType, const StringMap& headers, const StringList& parameters, bool verifyCert,
             bool verifyHost, StringMap *results);
-   UINT32 queryWebServiceList(const TCHAR *url, UINT32 retentionTime, const TCHAR *login, const TCHAR *password,
+   uint32_t queryWebServiceList(const TCHAR *url, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
             WebServiceAuthType authType, const StringMap& headers, const TCHAR *path, bool verifyCert,
             bool verifyHost, StringList *results);
    UINT32 nop();

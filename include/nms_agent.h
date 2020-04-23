@@ -170,7 +170,7 @@ enum class WebServiceAuthType
 };
 
 /**
- * Web service куйгуые ензу
+ * Web service request type
  */
 enum class WebServiceRequestType
 {

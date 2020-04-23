@@ -34,7 +34,10 @@
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
 #endif
 
-enum class TextType
+/**
+ * Document type
+ */
+enum class DocumentType
 {
    XML = 0,
    JSON = 1,
@@ -50,7 +53,7 @@ private:
    time_t m_lastRequestTime;
    StringBuffer m_responseData;
    Mutex m_lock;
-   TextType m_type;
+   DocumentType m_type;
    Config m_xml;
    json_t *m_json;
 
@@ -63,11 +66,11 @@ private:
    uint32_t getListFromText(const TCHAR *pattern, StringList *result);
 
 public:
-   ServiceEntry() { m_lastRequestTime = 0; m_type = TextType::Text; m_json = nullptr; }
+   ServiceEntry() { m_lastRequestTime = 0; m_type = DocumentType::Text; m_json = nullptr; }
    ~ServiceEntry();
 
    void getParams(StringList *params, NXCPMessage *response);
-   uint32_t getList(SharedString path, NXCPMessage *response);
+   uint32_t getList(const TCHAR *path, NXCPMessage *response);
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
    uint32_t updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
             struct curl_slist *headers, bool peerVerify, bool hostVerify, const char *topLevelName);
@@ -263,11 +266,11 @@ void ServiceEntry::getParams(StringList *params, NXCPMessage *response)
 {
    switch(m_type)
    {
-      case TextType::XML:
+      case DocumentType::XML:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from XML"));
          getParamsFromXML(params, response);
          break;
-      case TextType::JSON:
+      case DocumentType::JSON:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from JSON"));
          getParamsFromJSON(params, response);
          break;
@@ -277,7 +280,6 @@ void ServiceEntry::getParams(StringList *params, NXCPMessage *response)
          break;
    }
 }
-
 
 /**
  * Get list from XML cached data
@@ -295,6 +297,7 @@ void ServiceEntry::getListFromXML(const TCHAR *path, StringList *result)
       {
          result->add(elements->get(i)->getName());
       }
+      delete elements;
    }
 }
 
@@ -305,34 +308,41 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *result)
 {
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): Get child object list for \"%s\" JSON path"), path);
-   json_t *lastObj = m_json;
+
 #ifdef UNICODE
    char *copy = UTF8StringFromWideString(path);
 #else
    char *copy = UTF8StringFromMBString(path);
 #endif
    char *item = copy;
-   if (!strncmp(item, "/", 1))
+   if (*item == '/')
       item++;
 
    char *separator = strchr(item, '/');
-   if(separator != nullptr)
+   if (separator != nullptr)
       *separator = 0;
-   while (separator != nullptr && *item != 0 && lastObj != nullptr)
+   json_t *object = m_json;
+   while (*item != 0)
    {
-      lastObj = json_object_get(lastObj, item);
-      if(separator != nullptr)
-         item = separator+1;
+      object = json_object_get(object, item);
+      if ((separator == nullptr) || (object == nullptr))
+         break;
+
+      item = separator + 1;
+      separator = strchr(item, '/');
+      if (separator != nullptr)
+         *separator = 0;
    }
    MemFree(copy);
+
    int resultCount = 0;
-   if (lastObj != nullptr)
+   if (object != nullptr)
    {
-      void *it = json_object_iter(lastObj);
+      void *it = json_object_iter(object);
       while(it != nullptr)
       {
          result->addUTF8String(json_object_iter_key(it));
-         it = json_object_iter_next(lastObj, it);
+         it = json_object_iter_next(object, it);
          resultCount++;
       }
    }
@@ -389,23 +399,23 @@ uint32_t ServiceEntry::getListFromText(const TCHAR *pattern, StringList *resultL
  * Get list from cached data
  * If path is empty: "/" will be used for XML and JSOn types and "(*)" will be used for text type
  */
-uint32_t ServiceEntry::getList(SharedString path, NXCPMessage *response)
+uint32_t ServiceEntry::getList(const TCHAR *path, NXCPMessage *response)
 {
    uint32_t result = RCC_SUCCESS;
    StringList list;
-   const TCHAR *correctPath = path[0] != 0 ? path.cstr() : m_type == TextType::Text ? _T("(.*)") : _T("/");
+   const TCHAR *correctPath = (path[0] != 0) ? path : ((m_type == DocumentType::Text) ? _T("(.*)") : _T("/"));
    switch(m_type)
    {
-      case TextType::XML:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get list from XML"));
+      case DocumentType::XML:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): get list from XML"));
          getListFromXML(correctPath, &list);
          break;
-      case TextType::JSON:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get list from JSON"));
+      case DocumentType::JSON:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): get list from JSON"));
          getListFromJSON(correctPath, &list);
          break;
       default:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get list from Text"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): get list from Text"));
          result = getListFromText(correctPath, &list);
          break;
    }
@@ -500,7 +510,7 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            if(data.size() > 0)
+            if (data.size() > 0)
             {
                data.write('\0');
                size_t size;
@@ -513,18 +523,18 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                m_responseData.appendPreallocated(text);
 #endif
                m_responseData.trim();
-               if(m_responseData.startsWith(_T("<")))
+               if (m_responseData.startsWith(_T("<")))
                {
-                  m_type = TextType::XML;
+                  m_type = DocumentType::XML;
                   char *content = m_responseData.getUTF8String();
                   nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::updateData(): XML top level tag: %hs"), topLevelName);
                   if (!m_xml.loadXmlConfigFromMemory(content, static_cast<int>(strlen(content)), nullptr, "*", false))
                      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to load XML"));
                   MemFree(content);
                }
-               else if(m_responseData.startsWith(_T("{")))
+               else if (m_responseData.startsWith(_T("{")))
                {
-                  m_type = TextType::JSON;
+                  m_type = DocumentType::JSON;
                   char *content = m_responseData.getUTF8String();
                   json_error_t error;
                   if (m_json != nullptr)
@@ -536,7 +546,7 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                }
                else
                {
-                  m_type = TextType::Text;
+                  m_type = DocumentType::Text;
                }
                m_lastRequestTime = time(nullptr);
                nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::updateData(): response data type: %d"), m_type);
@@ -591,13 +601,13 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
 
    cachedEntry->lock();
    uint32_t retentionTime = request->getFieldAsUInt32(VID_RETENTION_TIME);
-   WebServiceRequestType requestType = static_cast<WebServiceRequestType>(request->getFieldAsUInt32(VID_REQUEST_TYPE));
+   WebServiceRequestType requestType = static_cast<WebServiceRequestType>(request->getFieldAsUInt16(VID_REQUEST_TYPE));
    uint32_t result = ERR_SUCCESS;
    if (cachedEntry->isDataExpired(retentionTime))
    {
-      char *topLevelName = requestType == WebServiceRequestType::PARAMETER ? request->getFieldAsUtf8String(VID_PARAM_LIST_BASE) : request->getFieldAsUtf8String(VID_PATH);
-      char *separator = strlen(topLevelName) > 0 ? strchr(topLevelName+1, '/') : nullptr;
-      if(separator != nullptr)
+      char *topLevelName = request->getFieldAsUtf8String(VID_PARAM_LIST_BASE);
+      char *separator = strlen(topLevelName) > 0 ? strchr(topLevelName + 1, '/') : nullptr;
+      if (separator != nullptr)
          *separator = 0;
 
       char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
@@ -639,7 +649,9 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
          }
          case WebServiceRequestType::LIST:
          {
-            result = cachedEntry->getList(request->getFieldAsSharedString(VID_PATH), response);
+            TCHAR path[1024];
+            request->getFieldAsString(VID_PARAM_LIST_BASE, path, 1024);
+            result = cachedEntry->getList(path, response);
             break;
          }
       }

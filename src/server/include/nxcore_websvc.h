@@ -53,8 +53,8 @@ public:
    WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~WebServiceDefinition();
 
-   uint32_t query(DataCollectionTarget *object, const TCHAR *path, const StringList *args,
-            AgentConnection *conn, TCHAR *result) const;
+   uint32_t query(DataCollectionTarget *object, WebServiceRequestType requestType, const TCHAR *path,
+            const StringList& args, AgentConnection *conn, void *result) const;
    void fillMessage(NXCPMessage *msg) const;
    void createExportRecord(StringBuffer &xml) const;
    json_t *toJson() const;
