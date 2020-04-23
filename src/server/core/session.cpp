@@ -12535,7 +12535,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
    bool musicFiles = (length > 0);
 	for(int i = 0; i < length; i++)
    {
-      extensionList.add(request->getFieldAsString(varId++));
+      extensionList.addPreallocated(request->getFieldAsString(varId++));
       for(int j = 0; j < m_musicTypeList.size(); j++)
       {
          if(_tcscmp(extensionList.get(i), m_musicTypeList.get(j)))
