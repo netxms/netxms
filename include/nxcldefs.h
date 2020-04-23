@@ -994,6 +994,7 @@ enum AggregationFunction
 #define IDM_SNMP_WALK_OIDS              4
 #define IDM_SCRIPT                      5
 #define IDM_WINPERF                     6
+#define IDM_WEB_SERVICE                 7
 
 /**
  * Event policy rule flags

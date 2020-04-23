@@ -1976,6 +1976,8 @@ protected:
    void applyUserTemplates();
    void updateContainerMembership();
 
+   DataCollectionError queryWebService(const TCHAR *param, int queryType, TCHAR *buffer, size_t bufSize, StringList **list);
+
    void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
    void getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
 
@@ -2003,18 +2005,20 @@ public:
    virtual void leaveMaintenanceMode() override;
 
    virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
-   virtual DataCollectionError getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);
-   virtual DataCollectionError getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
-   virtual DataCollectionError getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize);
+
+   DataCollectionError getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);
+   DataCollectionError getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
+   DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
+   DataCollectionError getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
+
+   DataCollectionError getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize);
+   DataCollectionError getListFromWebService(const TCHAR *param, StringList **list);
 
    virtual uint32_t getEffectiveSourceNode(DCObject *dco);
 
    virtual json_t *toJson() override;
 
    NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
-
-   DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
-   DataCollectionError getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
    UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);

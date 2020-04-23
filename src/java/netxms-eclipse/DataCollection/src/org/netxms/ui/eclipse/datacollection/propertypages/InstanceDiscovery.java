@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkOids);
       discoveryMethod.add(Messages.get().InstanceDiscovery_Script);
       discoveryMethod.add("Windows Performance Counters");
+      discoveryMethod.add("Web Service");
       discoveryMethod.select(dco.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
@@ -92,14 +93,14 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
             instanceRetentionMode.setEnabled(method != DataCollectionObject.IDM_NONE);
 		      instanceRetentionTime.setEnabled(method != DataCollectionObject.IDM_NONE && instanceRetentionMode.getSelectionIndex() > 0);
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
 		});
-      
+
       discoveryData = new LabeledText(dialogArea, SWT.NONE);
       discoveryData.setLabel(getDataLabel(dco.getInstanceDiscoveryMethod()));
       discoveryData.setText(dco.getInstanceDiscoveryData());
@@ -108,7 +109,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       gd.grabExcessHorizontalSpace = true;
       discoveryData.setLayoutData(gd);
       discoveryData.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
-      
+
       groupRetention = new Group(dialogArea, SWT.NONE);
       groupRetention.setText("Instance retention");
       gd = new GridData();
@@ -121,7 +122,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       retentionLayout.numColumns = 2;
       retentionLayout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
       groupRetention.setLayout(retentionLayout);
-      
+
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -131,31 +132,26 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       instanceRetentionMode.select(dco.getInstanceRetentionTime() == -1 ? 0 : 1);
       instanceRetentionMode.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
       instanceRetentionMode.addSelectionListener(new SelectionListener() {
-          /* (non-Javadoc)
-          * @see org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-          */
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             instanceRetentionTime.setEnabled(instanceRetentionMode.getSelectionIndex() == 1);
          }
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.SelectionListener#widgetDefaultSelected(org.eclipse.swt.events.SelectionEvent)
-          */
+
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
            widgetSelected(e); 
          }
       });
-      
+
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       instanceRetentionTime = WidgetHelper.createLabeledSpinner(groupRetention, SWT.BORDER, "Instance retention time (days)", 0, 100,  new GridData());
       instanceRetentionTime.setSelection(dco.getInstanceRetentionTime());
       instanceRetentionTime.setEnabled(instanceRetentionMode.getSelectionIndex() > 0);
-      
+
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -172,7 +168,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 			}
       };
       filterScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,
-                                                                             factory, Messages.get().InstanceDiscovery_FilterScript, gd);
+            factory, Messages.get().InstanceDiscovery_FilterScript, gd);
       filterScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       filterScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();
@@ -183,7 +179,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       filterScript.setLayoutData(gd);
       filterScript.setText(dco.getInstanceDiscoveryFilter());
       filterScript.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
-      
+
 		return dialogArea;
 	}
 
@@ -208,6 +204,8 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 				return Messages.get().InstanceDiscovery_BaseOid;
 			case DataCollectionObject.IDM_SCRIPT:
 			   return "Script name";
+         case DataCollectionObject.IDM_WEB_SERVICE:
+            return "Web service request";
          case DataCollectionObject.IDM_WINPERF:
             return "Object name";
 		}
@@ -231,9 +229,9 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 		editor.modify();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -241,18 +239,18 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{

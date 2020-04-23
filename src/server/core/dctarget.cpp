@@ -969,16 +969,16 @@ static bool ParseCallArgumensList(TCHAR *input, StringList *args)
 }
 
 /**
- * Get item from web service
+ * Get item or list from web service
  * Parameter is expected in form service:path or service(arguments):path
  */
-DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize)
+DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, int queryType, TCHAR *buffer, size_t bufSize, StringList **list)
 {
    uint32_t proxyId = getEffectiveWebServiceProxy();
    shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
    if (proxyNode == nullptr)
    {
-      nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): cannot find proxy node [%u]"), m_name, param, proxyId);
+      nxlog_debug(7, _T("DataCollectionTarget(%s)->queryWebService(%s): cannot find proxy node [%u]"), m_name, param, proxyId);
       return DCE_COMM_ERROR;
    }
 
@@ -989,7 +989,7 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
    TCHAR *path = _tcsrchr(name, _T(':'));
    if (path == nullptr)
    {
-      nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): missing parameter path"), m_name, param);
+      nxlog_debug(7, _T("DataCollectionTarget(%s)->queryWebService(%s): missing parameter path"), m_name, param);
       return DCE_NOT_SUPPORTED;
    }
    *path = 0;
@@ -1003,7 +1003,7 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
       size_t l = _tcslen(name) - 1;
       if (name[l] != _T(')'))
       {
-         nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): error parsing argument list"), m_name, param);
+         nxlog_debug(7, _T("DataCollectionTarget(%s)->queryWebService(%s): error parsing argument list"), m_name, param);
          return DCE_NOT_SUPPORTED;
       }
       name[l] = 0;
@@ -1011,7 +1011,7 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
       p++;
       if (!ParseCallArgumensList(p, &args))
       {
-         nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): error parsing argument list"), m_name, param);
+         nxlog_debug(7, _T("DataCollectionTarget(%s)->queryWebService(%s): error parsing argument list"), m_name, param);
          return DCE_NOT_SUPPORTED;
       }
       Trim(name);
@@ -1020,14 +1020,14 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
    shared_ptr<WebServiceDefinition> d = FindWebServiceDefinition(name);
    if (d == nullptr)
    {
-      nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): cannot find web service definition"), m_name, param);
+      nxlog_debug(7, _T("DataCollectionTarget(%s)->queryWebService(%s): cannot find web service definition"), m_name, param);
       return DCE_NOT_SUPPORTED;
    }
 
    shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(WEB_SERVICE_PROXY);
    if (conn == nullptr)
    {
-      nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): cannot acquire proxy connection"), m_name, param);
+      nxlog_debug(7, _T("DataCollectionTarget(%s)->queryWebService(%s): cannot acquire proxy connection"), m_name, param);
       return DCE_COMM_ERROR;
    }
 
@@ -1043,6 +1043,7 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
    }
    delete it;
 
+   // TODO: list implementation
    StringList parameters;
    parameters.add(path);
    StringMap results;
@@ -1052,23 +1053,48 @@ DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, 
    DataCollectionError rc;
    if (agentStatus == ERR_SUCCESS)
    {
-      const TCHAR *value = results.get(parameters.get(0));
-      if (value != nullptr)
+      if (queryType == 0)
       {
-         _tcslcpy(buffer, value, bufSize);
-         rc = DCE_SUCCESS;
+         const TCHAR *value = results.get(parameters.get(0));
+         if (value != nullptr)
+         {
+            _tcslcpy(buffer, value, bufSize);
+            rc = DCE_SUCCESS;
+         }
+         else
+         {
+            rc = DCE_NO_SUCH_INSTANCE;
+         }
       }
-      else
+      else // TODO:list implementation
       {
-         rc = DCE_NO_SUCH_INSTANCE;
+         rc = DCE_NOT_SUPPORTED;
       }
    }
    else
    {
       rc = DCE_COMM_ERROR;
    }
-   nxlog_debug(7, _T("DataCollectionTarget(%s)->getWebServiceItem(%s): rc=%d"), m_name, param, rc);
+   nxlog_debug(7, _T("DataCollectionTarget(%s)->queryWebService(%s): rc=%d"), m_name, param, rc);
    return rc;
+}
+
+/**
+ * Get item from web service
+ * Parameter is expected in form service:path or service(arguments):path
+ */
+DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize)
+{
+   return queryWebService(param, 0, buffer, bufSize, nullptr);
+}
+
+/**
+ * Get list from library script
+ * Parameter is expected in form service:path or service(arguments):path
+ */
+DataCollectionError DataCollectionTarget::getListFromWebService(const TCHAR *param, StringList **list)
+{
+   return queryWebService(param, 1, nullptr, 0, list);
 }
 
 /**
