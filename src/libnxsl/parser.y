@@ -860,9 +860,9 @@ SimpleStatementKeyword:
 }
 |	T_RETURN
 {
-   if (pCompiler->getForEachLevel() > 0)
+   if (pCompiler->getTemporaryStackItems() > 0)
    {
-	   pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (INT16)pCompiler->getForEachLevel()));
+	   pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (int16_t)pCompiler->getTemporaryStackItems()));
    }
 	$$ = new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_RETURN);
 }
@@ -944,7 +944,7 @@ ForStatement:
 ;
 
 ForEachStatement:
-	ForEach { pCompiler->newForEachLevel(); } ForEachBody { pCompiler->closeForEachLevel(); }
+	ForEach { pCompiler->incTemporaryStackItems(); } ForEachBody { pCompiler->decTemporaryStackItems(); }
 ;
 
 ForEach:
@@ -1014,10 +1014,15 @@ SwitchStatement:
 { 
 	pCompiler->newBreakLevel();
 }
-	'(' Expression ')' '{' CaseList Default '}'
+	'(' Expression ')'
+{
+	pCompiler->incTemporaryStackItems();
+}
+	'{' CaseList Default '}'
 {
 	pCompiler->closeBreakLevel(pScript);
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (INT16)1));
+	pCompiler->decTemporaryStackItems();
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (int16_t)1));
 }
 ;
 
