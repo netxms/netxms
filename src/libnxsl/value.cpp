@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -114,7 +114,7 @@ NXSL_Value::NXSL_Value()
  */
 NXSL_Value::NXSL_Value(const NXSL_Value *value)
 {
-   if (value != NULL)
+   if (value != nullptr)
    {
       m_dataType = value->m_dataType;
       if (m_dataType == NXSL_DT_OBJECT)
@@ -147,7 +147,7 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
          if (m_length < NXSL_SHORT_STRING_LENGTH)
          {
             memcpy(m_stringValue, value->m_stringValue, (m_length + 1) * sizeof(TCHAR));
-            m_stringPtr = NULL;
+            m_stringPtr = nullptr;
          }
          else
          {
@@ -156,18 +156,18 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
       }
       else
       {
-         m_stringPtr = NULL;
+         m_stringPtr = nullptr;
       }
 		m_name = MemCopyStringA(value->m_name);
    }
    else
    {
       m_dataType = NXSL_DT_NULL;
-      m_stringPtr = NULL;
-		m_name = NULL;
+      m_stringPtr = nullptr;
+		m_name = nullptr;
    }
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
 }
 
@@ -178,13 +178,13 @@ NXSL_Value::NXSL_Value(NXSL_Object *object)
 {
    m_dataType = NXSL_DT_OBJECT;
    m_value.object = object;
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
@@ -195,13 +195,13 @@ NXSL_Value::NXSL_Value(NXSL_Array *array)
    m_dataType = NXSL_DT_ARRAY;
    m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(array);
 	m_value.arrayHandle->incRefCount();
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
@@ -212,13 +212,13 @@ NXSL_Value::NXSL_Value(NXSL_HashMap *hashMap)
    m_dataType = NXSL_DT_HASHMAP;
    m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(hashMap);
 	m_value.hashMapHandle->incRefCount();
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
@@ -518,57 +518,72 @@ void NXSL_Value::updateNumber()
  */
 void NXSL_Value::updateString()
 {
-   TCHAR szBuffer[64];
-
    MemFree(m_stringPtr);
 #ifdef UNICODE
    MemFreeAndNull(m_mbString);
 #endif
-   switch(m_dataType)
+
+   if (m_dataType == NXSL_DT_ARRAY)
    {
-      case NXSL_DT_INT32:
-         _sntprintf(szBuffer, 64, _T("%d"), m_value.int32);
-         break;
-      case NXSL_DT_UINT32:
-         _sntprintf(szBuffer, 64, _T("%u"), m_value.uint32);
-         break;
-      case NXSL_DT_INT64:
-         _sntprintf(szBuffer, 64, INT64_FMT, m_value.int64);
-         break;
-      case NXSL_DT_UINT64:
-         _sntprintf(szBuffer, 64, UINT64_FMT, m_value.uint64);
-         break;
-      case NXSL_DT_REAL:
-         _sntprintf(szBuffer, 64, _T("%f"), m_value.real);
-         break;
-      case NXSL_DT_NULL:
-         _tcscpy(szBuffer, _T(""));
-         break;
-      case NXSL_DT_OBJECT:
-         _sntprintf(szBuffer, 64, _T("%s@%p"), m_value.object->getClass()->getName(), m_value.object);
-         break;
-      case NXSL_DT_ARRAY:
-         _sntprintf(szBuffer, 64, _T("[A@%p]"), m_value.arrayHandle->getObject());
-         break;
-      case NXSL_DT_HASHMAP:
-         _sntprintf(szBuffer, 64, _T("[M@%p]"), m_value.hashMapHandle->getObject());
-         break;
-      case NXSL_DT_ITERATOR:
-         _sntprintf(szBuffer, 64, _T("[I@%p]"), m_value.iterator);
-         break;
-      default:
-         szBuffer[0] = 0;
-         break;
-   }
-   m_length = (UINT32)_tcslen(szBuffer);
-   if (m_length < NXSL_SHORT_STRING_LENGTH)
-   {
-      _tcscpy(m_stringValue, szBuffer);
-      m_stringPtr = NULL;
+      StringBuffer sb;
+      m_value.arrayHandle->getObject()->toString(&sb, _T(", "), true);
+      m_length = (UINT32)sb.length();
+      if (m_length < NXSL_SHORT_STRING_LENGTH)
+      {
+         _tcscpy(m_stringValue, sb.cstr());
+         m_stringPtr = nullptr;
+      }
+      else
+      {
+         m_stringPtr = MemCopyString(sb.cstr());
+      }
    }
    else
    {
-      m_stringPtr = _tcsdup(szBuffer);
+      TCHAR szBuffer[64];
+      switch(m_dataType)
+      {
+         case NXSL_DT_INT32:
+            _sntprintf(szBuffer, 64, _T("%d"), m_value.int32);
+            break;
+         case NXSL_DT_UINT32:
+            _sntprintf(szBuffer, 64, _T("%u"), m_value.uint32);
+            break;
+         case NXSL_DT_INT64:
+            _sntprintf(szBuffer, 64, INT64_FMT, m_value.int64);
+            break;
+         case NXSL_DT_UINT64:
+            _sntprintf(szBuffer, 64, UINT64_FMT, m_value.uint64);
+            break;
+         case NXSL_DT_REAL:
+            _sntprintf(szBuffer, 64, _T("%f"), m_value.real);
+            break;
+         case NXSL_DT_NULL:
+            _tcscpy(szBuffer, _T(""));
+            break;
+         case NXSL_DT_OBJECT:
+            _sntprintf(szBuffer, 64, _T("%s@%p"), m_value.object->getClass()->getName(), m_value.object);
+            break;
+         case NXSL_DT_HASHMAP:
+            _sntprintf(szBuffer, 64, _T("[M@%p]"), m_value.hashMapHandle->getObject());
+            break;
+         case NXSL_DT_ITERATOR:
+            _sntprintf(szBuffer, 64, _T("[I@%p]"), m_value.iterator);
+            break;
+         default:
+            szBuffer[0] = 0;
+            break;
+      }
+      m_length = (UINT32)_tcslen(szBuffer);
+      if (m_length < NXSL_SHORT_STRING_LENGTH)
+      {
+         _tcscpy(m_stringValue, szBuffer);
+         m_stringPtr = nullptr;
+      }
+      else
+      {
+         m_stringPtr = _tcsdup(szBuffer);
+      }
    }
    m_stringIsValid = TRUE;
 }
@@ -578,10 +593,10 @@ void NXSL_Value::updateString()
  */
 bool NXSL_Value::convert(int nDataType)
 {
-   INT32 nInt32;
-   UINT32 uInt32;
-   INT64 nInt64;
-   UINT64 uInt64;
+   int32_t nInt32;
+   uint32_t uInt32;
+   int64_t nInt64;
+   uint64_t uInt64;
    double dReal;
    bool bRet = true;
 
@@ -590,6 +605,32 @@ bool NXSL_Value::convert(int nDataType)
 
 	if ((nDataType == NXSL_DT_STRING) && isString())
 		return true;
+
+   if ((nDataType == NXSL_DT_STRING) && isArray())
+   {
+      StringBuffer sb;
+      m_value.arrayHandle->getObject()->toString(&sb, _T(", "), true);
+      m_value.arrayHandle->decRefCount();
+      if (m_value.arrayHandle->isUnused())
+         delete m_value.arrayHandle;
+      m_dataType = NXSL_DT_STRING;
+      m_length = (UINT32)sb.length();
+      if (m_length < NXSL_SHORT_STRING_LENGTH)
+      {
+         _tcscpy(m_stringValue, sb.cstr());
+         m_stringPtr = nullptr;
+      }
+      else
+      {
+         m_stringPtr = MemCopyString(sb.cstr());
+      }
+#ifdef UNICODE
+      m_mbString = nullptr;
+#endif
+      m_stringIsValid = TRUE;
+      updateNumber();
+      return true;
+   }
 
    switch(nDataType)
    {
@@ -654,9 +695,6 @@ bool NXSL_Value::convert(int nDataType)
  */
 const TCHAR *NXSL_Value::getValueAsCString()
 {
-   if (isNull() || isObject() || isArray())
-      return NULL;
-
    if (!m_stringIsValid)
       updateString();
    return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr;
@@ -669,10 +707,7 @@ const TCHAR *NXSL_Value::getValueAsCString()
 
 const char *NXSL_Value::getValueAsMBString()
 {
-   if (isNull() || isObject() || isArray())
-      return NULL;
-
-	if (m_mbString != NULL)
+	if (m_mbString != nullptr)
 		return m_mbString;
 
    if (!m_stringIsValid)

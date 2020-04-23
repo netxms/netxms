@@ -294,6 +294,7 @@ public:
    int getMaxIndex() const { return (m_size > 0) ? m_data[m_size - 1].index : 0; }
 
    StringList *toStringList() const;
+   void toString(StringBuffer *stringBuffer, const TCHAR *separator, bool withBrackets) const;
 
    NXSL_Value *get(int index) const;
    NXSL_Value *getByPosition(int position) const;

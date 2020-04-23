@@ -1101,7 +1101,7 @@ void NXSL_VM::execute()
          break;
       case OPCODE_CAST:
          pValue = m_dataStack->peek();
-         if (pValue != NULL)
+         if (pValue != nullptr)
          {
             if (!pValue->convert(cp->m_stackItems))
             {
@@ -1115,7 +1115,7 @@ void NXSL_VM::execute()
          break;
 		case OPCODE_NAME:
          pValue = m_dataStack->peek();
-         if (pValue != NULL)
+         if (pValue != nullptr)
          {
 				pValue->setName(cp->m_operand.m_identifier->value);
          }
@@ -1331,8 +1331,9 @@ void NXSL_VM::execute()
          break;
       case OPCODE_PRINT:
          pValue = m_dataStack->pop();
-         if (pValue != NULL)
+         if (pValue != nullptr)
          {
+            pValue->convert(NXSL_DT_STRING);
 				m_env->print(pValue);
             destroyValue(pValue);
          }
@@ -2147,15 +2148,9 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   pRes = createValue((nOpCode == OPCODE_NE) ? !nResult : nResult);
                   break;
                case OPCODE_CONCAT:
-                  if (pVal1->isString())
-                  {
-                     pRes = pVal1;
-                     pVal1 = NULL;
-                  }
-                  else
-                  {
-                     pRes = createValue(_T(""));
-                  }
+                  pRes = pVal1;
+                  pVal1 = NULL;
+                  pRes->convert(NXSL_DT_STRING);
                   pszText2 = pVal2->getValueAsString(&dwLen2);
                   pRes->concatenate(pszText2, dwLen2);
                   break;

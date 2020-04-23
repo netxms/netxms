@@ -9,6 +9,7 @@
 - Explicit call of library functions in NXSL without "use" statement
 - New attributes "instanceColumns" and "instanceColumnIndexes" in NXSL class "Table"
 - New NXSL functions: GetThreadPoolNames, sqrt
+- NXSL arrays can be implicitly converted to strings
 - Implemented instance discovery method "Agent Table"
 - Implemented instance discovery method "Windows Performance Counters"
 - Added option for discarding collected performance data when database writer queue grows beyond limit

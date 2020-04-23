@@ -1526,27 +1526,6 @@ int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM 
 }
 
 /**
- * Convert array to string (recursively for array values)
- */
-static void ArrayToString(NXSL_Array *a, StringBuffer& s, const TCHAR *separator)
-{
-   for(int i = 0; i < a->size(); i++)
-   {
-      if (!s.isEmpty())
-         s.append(separator);
-      NXSL_Value *e = a->getByPosition(i);
-      if (e->isArray())
-      {
-         ArrayToString(e->getValueAsArray(), s, separator);
-      }
-      else
-      {
-         s.append(e->getValueAsCString());
-      }
-   }
-}
-
-/**
  * Convert array to string
  */
 int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
@@ -1558,8 +1537,7 @@ int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
       return NXSL_ERR_NOT_STRING;
 
    StringBuffer s;
-   NXSL_Array *a = argv[0]->getValueAsArray();
-   ArrayToString(a, s, argv[1]->getValueAsCString());
+   argv[0]->getValueAsArray()->toString(&s, argv[1]->getValueAsCString(), false);
    *result = vm->createValue(s);
    return 0;
 }

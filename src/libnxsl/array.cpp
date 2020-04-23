@@ -296,3 +296,28 @@ bool NXSL_Array::contains(NXSL_Value *value)
    }
    return false;
 }
+
+/**
+ * Convert array to string (recursively for array values)
+ */
+void NXSL_Array::toString(StringBuffer *stringBuffer, const TCHAR *separator, bool withBrackets) const
+{
+   if (withBrackets)
+      stringBuffer->append(_T("["));
+   for(int i = 0; i < m_size; i++)
+   {
+      if (!stringBuffer->isEmpty() && (!withBrackets || (i > 0)))
+         stringBuffer->append(separator);
+      NXSL_Value *e = m_data[i].value;
+      if (e->isArray())
+      {
+         e->getValueAsArray()->toString(stringBuffer, separator, withBrackets);
+      }
+      else
+      {
+         stringBuffer->append(e->getValueAsCString());
+      }
+   }
+   if (withBrackets)
+      stringBuffer->append(_T("]"));
+}
