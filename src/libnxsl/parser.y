@@ -1026,13 +1026,13 @@ SwitchStatement:
 CaseList:
 	Case
 { 
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JMP, pScript->getCodeSize() + 5));
 	pScript->resolveLastJump(OPCODE_JZ);
 }
 	CaseList
 |	RangeCase
 { 
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JMP, pScript->getCodeSize() + 5));
 	pScript->resolveLastJump(OPCODE_JNZ);
 	pScript->resolveLastJump(OPCODE_JNZ);
 }
@@ -1053,7 +1053,8 @@ Case:
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CASE, $2));
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
-	pScript->resolveLastJump(OPCODE_JMP);
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_NOP));	// Needed to match number of instructions in case and rage case
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_NOP));
 	$2 = nullptr;
 } 
 	':' StatementList
@@ -1061,7 +1062,8 @@ Case:
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CASE_CONST, $2));
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
-	pScript->resolveLastJump(OPCODE_JMP);
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_NOP));	// Needed to match number of instructions in case and rage case
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_NOP));
 } 
 	':' StatementList
 ;
@@ -1074,7 +1076,6 @@ RangeCase:
 T_RANGE CaseRangeRight 
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_JNZ, INVALID_ADDRESS));
-	pScript->resolveLastJump(OPCODE_JMP);
 }
 	':' StatementList
 ;
