@@ -174,7 +174,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
 	m_console = nullptr;
    m_loginTime = time(nullptr);
-   m_musicTypeList.add(_T("wav"));
+   m_soundFileTypes.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
    m_serverCommands = new HashMap<UINT32, ProcessExecutor>(Ownership::True);
    m_downloadFileMap = new HashMap<UINT32, ServerDownloadFileInfo>(Ownership::True);
@@ -218,7 +218,7 @@ ClientSession::~ClientSession()
 
 	delete m_console;
 
-   m_musicTypeList.clear();
+   m_soundFileTypes.clear();
 
    delete m_serverCommands;
    delete m_downloadFileMap;
@@ -10526,53 +10526,40 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
 /**
  * Get file from server
  */
-void ClientSession::getServerFile(NXCPMessage *pRequest)
+void ClientSession::getServerFile(NXCPMessage *request)
 {
-   NXCPMessage msg;
-	TCHAR name[MAX_PATH], fname[MAX_PATH];
-	bool musicFile = false;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-   pRequest->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
-   for(int i = 0; i < m_musicTypeList.size(); i++)
-   {
-      TCHAR *extension = _tcsrchr(name, _T('.'));
-      if (extension != nullptr)
-      {
-         extension++;
-         if(!_tcscmp(extension, m_musicTypeList.get(i)))
-         {
-            musicFile = true;
-            break;
-         }
-      }
-   }
+   TCHAR name[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
+   TCHAR *extension = _tcsrchr(name, _T('.'));
+   bool soundFile = (extension != nullptr) && m_soundFileTypes.contains(extension);
 
-	if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFile)
+	if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || soundFile)
 	{
-      _tcscpy(fname, g_netxmsdDataDir);
-      _tcscat(fname, DDIR_FILES);
-      _tcscat(fname, FS_PATH_SEPARATOR);
-      _tcscat(fname, GetCleanFileName(name));
-		debugPrintf(4, _T("Requested file %s"), fname);
+	   TCHAR fname[MAX_PATH];
+      _tcslcpy(fname, g_netxmsdDataDir, MAX_PATH);
+      _tcslcat(fname, DDIR_FILES, MAX_PATH);
+      _tcslcat(fname, FS_PATH_SEPARATOR, MAX_PATH);
+      _tcslcat(fname, GetCleanFileName(name), MAX_PATH);
+		debugPrintf(4, _T("getServerFile: Requested file: %s"), fname);
 		if (_taccess(fname, 0) == 0)
 		{
-			debugPrintf(5, _T("Sending file %s"), fname);
-			if (SendFileOverNXCP(m_hSocket, pRequest->getId(), fname, m_pCtx, 0, nullptr, nullptr, m_mutexSocketWrite))
+			debugPrintf(5, _T("getServerFile: Sending file %s"), fname);
+			if (SendFileOverNXCP(m_hSocket, request->getId(), fname, m_pCtx, 0, nullptr, nullptr, m_mutexSocketWrite))
 			{
-				debugPrintf(5, _T("File %s was succesfully sent"), fname);
+				debugPrintf(5, _T("getServerFile: File %s was successfully sent"), fname);
 		      msg.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				debugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), fname);
+				debugPrintf(5, _T("getServerFile: Unable to send file %s: SendFileOverNXCP() failed"), fname);
 		      msg.setField(VID_RCC, RCC_IO_ERROR);
 			}
 		}
 		else
 		{
-			debugPrintf(5, _T("Unable to send file %s: access() failed"), fname);
+			debugPrintf(5, _T("getServerFile: Unable to send file %s: access() failed"), fname);
 	      msg.setField(VID_RCC, RCC_IO_ERROR);
 		}
 	}
@@ -12195,34 +12182,29 @@ void ClientSession::uploadFileToAgent(NXCPMessage *request)
 void ClientSession::listServerFileStore(NXCPMessage *request)
 {
 	NXCPMessage msg;
-	TCHAR path[MAX_PATH];
-	StringList extensionList;
-
 	msg.setId(request->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
 	int length = (int)request->getFieldAsUInt32(VID_EXTENSION_COUNT);
-	DbgPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d."), length);
+	debugPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d."), length);
 
-   UINT32 varId = VID_EXTENSION_LIST_BASE;
-
-   bool musicFiles = (length > 0);
+   uint32_t varId = VID_EXTENSION_LIST_BASE;
+   StringList extensionList;
+   bool soundFiles = (length > 0);
 	for(int i = 0; i < length; i++)
    {
-      extensionList.add(request->getFieldAsString(varId++));
-      for(int j = 0; j < m_musicTypeList.size(); j++)
-      {
-         if(_tcscmp(extensionList.get(i), m_musicTypeList.get(j)))
-         {
-            musicFiles = false;
-         }
-      }
+	   TCHAR ext[256];
+	   request->getFieldAsString(varId++, ext, 256);
+	   if (!m_soundFileTypes.contains(ext))
+	      soundFiles = false;;
+      extensionList.add(ext);
    }
 
-	if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFiles)
+	if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || soundFiles)
 	{
-      _tcscpy(path, g_netxmsdDataDir);
-      _tcscat(path, DDIR_FILES);
+	   TCHAR path[MAX_PATH];
+      _tcslcpy(path, g_netxmsdDataDir, MAX_PATH);
+      _tcslcat(path, DDIR_FILES, MAX_PATH);
       _TDIR *dir = _topendir(path);
       if (dir != nullptr)
       {
@@ -12257,14 +12239,14 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
                      continue;
                   }
                }
-               nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
+               _tcslcpy(&path[pos], d->d_name, MAX_PATH - pos);
                if (CALL_STAT(path, &st) == 0)
                {
                   if (S_ISREG(st.st_mode))
                   {
                      msg.setField(varId++, d->d_name);
-                     msg.setField(varId++, (QWORD)st.st_size);
-                     msg.setField(varId++, (QWORD)st.st_mtime);
+                     msg.setField(varId++, (uint64_t)st.st_size);
+                     msg.setField(varId++, (uint64_t)st.st_mtime);
                      varId += 7;
                      count++;
                   }
@@ -12284,7 +12266,6 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
 	{
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	extensionList.clear();
 
 	sendMessage(&msg);
 }

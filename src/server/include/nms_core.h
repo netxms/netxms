@@ -509,7 +509,7 @@ private:
    UINT32 m_dwEncryptionResult;
    CONDITION m_condEncryptionSetup;
 	ClientSessionConsole *m_console;			// Server console context
-	StringList m_musicTypeList;
+	StringList m_soundFileTypes;
 	SharedPointerIndex<AgentConnection> m_agentConnections;
 	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
