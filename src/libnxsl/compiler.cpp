@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -36,14 +36,14 @@ int yylex_destroy(yyscan_t);
  */
 NXSL_Compiler::NXSL_Compiler()
 {
-   m_errorText = NULL;
+   m_errorText = nullptr;
    m_errorLineNumber = 0;
    m_lexer = NULL;
    m_addrStack = new NXSL_Stack;
 	m_breakStack = new NXSL_Stack;
    m_selectStack = new NXSL_Stack;
 	m_idOpCode = 0;
-	m_foreachLevel = 0;
+	m_temporaryStackItems = 0;
 }
 
 /**
@@ -51,16 +51,16 @@ NXSL_Compiler::NXSL_Compiler()
  */
 NXSL_Compiler::~NXSL_Compiler()
 {
-   free(m_errorText);
+   MemFree(m_errorText);
    delete m_lexer;
    delete m_addrStack;
 
    Queue *q;
-   while((q = static_cast<Queue*>(m_breakStack->pop())) != NULL)
+   while((q = static_cast<Queue*>(m_breakStack->pop())) != nullptr)
       delete q;
    delete m_breakStack;
 
-   while((q = static_cast<Queue*>(m_selectStack->pop())) != NULL)
+   while((q = static_cast<Queue*>(m_selectStack->pop())) != nullptr)
       delete q;
    delete m_selectStack;
 }
