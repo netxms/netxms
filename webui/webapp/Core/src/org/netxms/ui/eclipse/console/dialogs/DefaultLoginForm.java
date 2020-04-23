@@ -20,10 +20,12 @@ package org.netxms.ui.eclipse.console.dialogs;
 
 import java.io.IOException;
 import java.io.InputStream;
+import javax.servlet.http.Cookie;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -32,7 +34,9 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -41,6 +45,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
@@ -61,8 +67,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class DefaultLoginForm extends Window implements LoginForm
 {
    public static final RGB DEFAULT_SCREEN_BACKGROUND_COLOR = new RGB(240, 240, 240);
-   public static final RGB DEFAULT_FORM_BACKGROUND_COLOR =  new RGB(0x97, 0x98, 0x8F);
-   public static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(0x29, 0x2A, 0x30);
+   public static final RGB DEFAULT_FORM_BACKGROUND_COLOR =  new RGB(0xD8, 0xE3, 0xE9);
+   public static final RGB DEFAULT_SCREEN_TEXT_COLOR = new RGB(0x33, 0x33, 0x33);
 
 	private AppPropertiesLoader properties;
 	private boolean advancedSettingsEnabled;
@@ -93,7 +99,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		newShell.setFullScreen(true);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.window.Window#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -113,11 +119,71 @@ public class DefaultLoginForm extends Window implements LoginForm
       gd.verticalAlignment = SWT.FILL;
       gd.heightHint = 100;
       fillerTop.setLayoutData(gd);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      fillerTop.setLayout(layout);
+
+      final Button themeButton = new Button(fillerTop, SWT.PUSH);
+      final Image themeImage = Activator.getImageDescriptor("icons/theme.png").createImage();
+      themeButton.setImage(themeImage);
+      themeButton.setData(RWT.CUSTOM_VARIANT, "loginSelector");
+      themeButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            selectTheme(themeButton);
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      themeButton.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent event)
+         {
+            themeImage.dispose();
+         }
+      });
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      gd.grabExcessHorizontalSpace = true;
+      themeButton.setLayoutData(gd);
+
+      final Button languageButton = new Button(fillerTop, SWT.PUSH);
+      final Image languageImage = Activator.getImageDescriptor("icons/language.png").createImage();
+      languageButton.setImage(languageImage);
+      languageButton.setData(RWT.CUSTOM_VARIANT, "loginSelector");
+      languageButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            selectLanguage(languageButton);
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      languageButton.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent event)
+         {
+            languageImage.dispose();
+         }
+      });
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      languageButton.setLayoutData(gd);
 
       RGB formBkgnd = BrandingManager.getInstance().getLoginFormBackgroundColor(DEFAULT_FORM_BACKGROUND_COLOR);
 
 		final Canvas content = new Canvas(parent, SWT.BORDER | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
-		GridLayout layout = new GridLayout();
+		layout = new GridLayout();
 		layout.numColumns = 1;
 		layout.marginWidth = 10;
 		layout.marginHeight = 10;
@@ -303,7 +369,7 @@ public class DefaultLoginForm extends Window implements LoginForm
       return img;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.window.Window#getLayout()
 	 */
 	@Override
@@ -325,8 +391,131 @@ public class DefaultLoginForm extends Window implements LoginForm
 		setReturnCode(OK);
 		close();
 	}
+	
+	/**
+	 * Select theme
+	 * 
+	 * @param button selector button
+	 */
+	private void selectTheme(Button button)
+	{
+	   Menu menu = new Menu(getShell(), SWT.POP_UP);
+      menu.setData(RWT.CUSTOM_VARIANT, "login");
 
-	/* (non-Javadoc)
+	   MenuItem item = new MenuItem(menu, SWT.PUSH);
+	   item.setText("Clarity");
+	   item.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            switchTheme("clarity");
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+	   
+      item = new MenuItem(menu, SWT.PUSH);
+      item.setText("Classic");
+      item.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            switchTheme("classic");
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
+	   Point loc = button.getLocation();
+      Rectangle rect = button.getBounds();
+      menu.setLocation(getShell().getDisplay().map(button.getParent(), null, new Point(loc.x - 1, loc.y + rect.height + 1)));
+      menu.setVisible(true);
+	}
+	
+	/**
+	 * Switch to new theme
+	 * 
+	 * @param theme new theme
+	 */
+	private void switchTheme(String theme)
+	{
+	   RWT.getResponse().addCookie(new Cookie("netxms.nxmc.theme", theme));
+	   final JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+	   executor.execute("parent.window.location.href=\"../nxmc-" + theme + "\";");
+	}
+
+   /**
+    * Select language
+    * 
+    * @param button selector button
+    */
+   private void selectLanguage(Button button)
+   {
+      Menu menu = new Menu(getShell(), SWT.POP_UP);
+      menu.setData(RWT.CUSTOM_VARIANT, "login");
+
+      addLanguage(menu, "اللغة العربية", "ar");
+      addLanguage(menu, "Český", "cs");
+      addLanguage(menu, "English", "en");
+      addLanguage(menu, "Française", "fr");
+      addLanguage(menu, "Deutsche", "de");
+      addLanguage(menu, "Português (brasileiro)", "pt_BR");
+      addLanguage(menu, "Русский", "ru");
+      addLanguage(menu, "Española", "es");
+
+      Point loc = button.getLocation();
+      Rectangle rect = button.getBounds();
+      menu.setLocation(getShell().getDisplay().map(button.getParent(), null, new Point(loc.x - 1, loc.y + rect.height + 1)));
+      menu.setVisible(true);
+   }
+
+   /**
+    * Add language to menu
+    *
+    * @param menu
+    * @param name
+    * @param code
+    */
+   private void addLanguage(Menu menu, String name, String code)
+   {
+      MenuItem item = new MenuItem(menu, SWT.PUSH);
+      item.setText(name);
+      item.setData("language", code);
+      item.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            switchLanguage(e.widget.getData("language").toString());
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+   }
+
+   /**
+    * Switch to new language
+    * 
+    * @param lang language code
+    */
+   private void switchLanguage(String lang)
+   {
+      final JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      executor.execute("window.location.href = window.location.href.replace( /[\\\\?#].*|$/, \"?lang=" + lang + "\" );");
+   }
+
+	/**
 	 * @see org.netxms.ui.eclipse.console.api.LoginForm#getLogin()
 	 */
 	@Override
@@ -335,7 +524,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		return login;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.ui.eclipse.console.api.LoginForm#getPassword()
 	 */
 	@Override

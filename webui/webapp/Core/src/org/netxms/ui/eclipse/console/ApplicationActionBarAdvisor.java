@@ -265,6 +265,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
       IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
       toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       coolBar.add(new ToolBarContributionItem(toolbar, id));
+      coolBar.setLockLayout(true);
 	}
 
 	/* (non-Javadoc)

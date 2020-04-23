@@ -11,10 +11,10 @@
  ******************************************************************************/
 
 * {
-  color: #4a4a4a;
+  color: #333333;
   background-color: white;
   background-image: none;
-  font: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 14px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
 *:disabled {
@@ -23,11 +23,11 @@
 
 Widget-ToolTip {
   padding: 1px 3px 2px 3px;
-  background-color: #dae9f7;
-  border: 1px solid #00589f;
+  background-color: #E3F5FC;
+  border: 1px solid #B3B3B3;
   border-radius: 2px 2px 2px 2px;
-  font: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  color: #4a4a4a;
+  font: 13px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+  color: #666666;
   opacity: 1;
   animation: fadeIn 200ms linear, fadeOut 600ms ease-out;
   box-shadow: 3px 4px 2px rgba( 0, 0, 0, 0.3 );
@@ -43,17 +43,18 @@ Display {
   rwt-selectionmarker-color: #fec83c;
   rwt-infobackground-color: #fbeaa0;
 
-  rwt-error-image: url( theme/classic.resources/dialog/error.png );
-  rwt-information-image: url( theme/classic.resources/dialog/information.png );
-  rwt-question-image: url( theme/classic.resources/dialog/question.png );
-  rwt-warning-image: url( theme/classic.resources/dialog/warning.png );
-  rwt-working-image: url( theme/classic.resources/dialog/information.png );
+  rwt-error-image: url( theme/clarity.resources/dialog/error.png );
+  rwt-information-image: url( theme/clarity.resources/dialog/information.png );
+  rwt-question-image: url( theme/clarity.resources/dialog/question.png );
+  rwt-warning-image: url( theme/clarity.resources/dialog/warning.png );
+  rwt-working-image: url( theme/clarity.resources/dialog/information.png );
   
-  rwt-fontlist: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, "Liberation Mono", "Courier New";
+  rwt-fontlist: 14px "Metropolis Regular", "Metropolis Medium", "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, "Liberation Mono", "Courier New";
   
-  background-image: none; /* url( theme/classic.resources/display/browser_bg.png ); */
+  background-image: none; /* url( theme/clarity.resources/display/browser_bg.png ); */
   background-color: #ffffff;
-  font: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  color: #333333;
+  font: 14px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
 /* Default theme for all controls */
@@ -64,7 +65,8 @@ Display {
 }
 
 *[BORDER] {
-  border: 1px solid #828790;
+  border: 1px solid #B3B3B3;
+  border-radius: 2px;
 }
 
 /* Default theme for all composites */
@@ -72,58 +74,40 @@ Display {
 Composite {
   padding: 0px;
   opacity: 1;
-  background-color: #f0f0f0;
+  background-color: #ffffff;
   background-image: none;
   border: none;
   box-shadow: none;
-}
-
-Composite[BORDER] {
-  background-color: #f0f0f0;
-  background-image: none;
-  border: 1px solid #828790;
 }
 
 /* Button default theme */
 
 Button {
   background-image: none;
-  padding: 4px 5px;
+  padding: 4px 8px;
   spacing: 2px;
   cursor: default;
   animation: none;
-  color: #4a4a4a;
-  background-color: #f0f0f0;
+  color: #0072A3;
+  background-color: #ffffff;
   opacity: 1;
   text-shadow: none;
 }
 
 Button[PUSH], Button[TOGGLE], Button[BORDER] {
-  border: 1px solid #A4A4A4;
-  /* border-radius: 3px; */
-  padding: 2px 5px;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    color-stop( 48%, #f0f0f0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #ffffff )
-  );
+  border: 1px solid #0072A3;
+  border-radius: 4px;
+  padding: 4px 8px;
+  background-image: none;
   animation: hoverOut 500ms ease-out;
   cursor: pointer;
 }
 
 Button[ARROW], Button[ARROW][BORDER] {
-  border: 1px solid #A4A4A4;
-  /* border-radius: 3px; */
+  border: 1px solid #0072A3;
+  border-radius: 4px;
   padding: 4px;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    color-stop( 48%, #f0f0f0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #ffffff )
-  );
+  background-image: none;
   animation: hoverOut 500ms ease-out;
   cursor: pointer;
 }
@@ -131,40 +115,30 @@ Button[ARROW], Button[ARROW][BORDER] {
 Button[ARROW]:default,
 Button[PUSH]:default,
 Button[TOGGLE]:default {
-  background-color: #f0f0f0;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    color-stop( 48%, #f0f0f0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #ffffff )
-  );
-  border: 1px solid #A4A4A4;
+  color: #ffffff;
+  background-color: #0072A3;
+  background-image: none;
+  border: 1px solid #0072A3;
 }
 
 Button[ARROW]:disabled, Button[PUSH]:disabled, Button[TOGGLE]:disabled {
   cursor: default;
 }
 
+Button[ARROW]:default:hover, Button[PUSH]:default:hover, Button[TOGGLE]:default:hover {
+   background-color: #00567A;
+}
+
 Button[ARROW]:hover, Button[PUSH]:hover, Button[TOGGLE]:hover {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    color-stop( 48%, #f0f0f0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #cccccc )
-  );
+   background-color: #E3F5FC;
+}
+
+Button[ARROW]:default:pressed, Button[PUSH]:default:pressed, Button[TOGGLE]:default:pressed {
+   background-color: #00567A;
 }
 
 Button[ARROW]:pressed, Button[PUSH]:pressed, Button[TOGGLE]:pressed {
-  animation: none;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e0e0e0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #b0b0b0 )
-  );
-  padding: 4px 5px 2px 7px;
+   background-color: #E3F5FC;
 }
 
 Button[TOGGLE]:selected {
@@ -187,7 +161,8 @@ Button[TOGGLE]:selected:hover {
 }
 
 Button[CHECK], Button[RADIO] {
-  spacing: 4px;
+   color: #333333;
+   spacing: 4px;
 }
 
 Button[CHECK][BORDER], Button[RADIO][BORDER] {
@@ -195,59 +170,59 @@ Button[CHECK][BORDER], Button[RADIO][BORDER] {
 }
 
 Button-CheckIcon {
-  background-image: url( theme/classic.resources/button/check-unselected.png );
+  background-image: url( theme/clarity.resources/button/check-unselected.png );
 }
 
 Button-CheckIcon:hover {
-  background-image: url( theme/classic.resources/button/check-unselected-hover.png );
+  background-image: url( theme/clarity.resources/button/check-unselected-hover.png );
 }
 
 Button-CheckIcon:selected {
-  background-image: url( theme/classic.resources/button/check-selected.png );
+  background-image: url( theme/clarity.resources/button/check-selected.png );
 }
 
 Button-CheckIcon:selected:hover {
-  background-image: url( theme/classic.resources/button/check-selected-hover.png );
+  background-image: url( theme/clarity.resources/button/check-selected-hover.png );
 }
 
 Button-CheckIcon:selected:grayed {
-  background-image: url( theme/classic.resources/button/check-grayed.png );
+  background-image: url( theme/clarity.resources/button/check-grayed.png );
 }
 
 Button-CheckIcon:selected:grayed:hover {
-  background-image: url( theme/classic.resources/button/check-grayed-hover.png );
+  background-image: url( theme/clarity.resources/button/check-grayed-hover.png );
 }
 
 Button-RadioIcon {
-  background-image: url( theme/classic.resources/button/radio-unselected.png );
+  background-image: url( theme/clarity.resources/button/radio-unselected.png );
 }
 
 Button-RadioIcon:hover {
-  background-image: url( theme/classic.resources/button/radio-unselected-hover.png );
+  background-image: url( theme/clarity.resources/button/radio-unselected-hover.png );
 }
 
 Button-RadioIcon:selected {
-  background-image: url( theme/classic.resources/button/radio-selected.png );
+  background-image: url( theme/clarity.resources/button/radio-selected.png );
 }
 
 Button-RadioIcon:selected:hover {
-  background-image: url( theme/classic.resources/button/radio-selected-hover.png );
+  background-image: url( theme/clarity.resources/button/radio-selected-hover.png );
 }
 
 Button-ArrowIcon[UP] {
-  background-image: url( theme/classic.resources/button/arrow-up.png );
+  background-image: url( theme/clarity.resources/button/arrow-up.png );
 }
 
 Button-ArrowIcon[DOWN] {
-  background-image: url( theme/classic.resources/button/arrow-down.png );
+  background-image: url( theme/clarity.resources/button/arrow-down.png );
 }
 
 Button-ArrowIcon[LEFT] {
-  background-image: url( theme/classic.resources/button/arrow-left.png );
+  background-image: url( theme/clarity.resources/button/arrow-left.png );
 }
 
 Button-ArrowIcon[RIGHT] {
-  background-image: url( theme/classic.resources/button/arrow-right.png );
+  background-image: url( theme/clarity.resources/button/arrow-right.png );
 }
 
 Button-FocusIndicator[ARROW], Button-FocusIndicator[PUSH], Button-FocusIndicator[TOGGLE] {
@@ -269,23 +244,22 @@ Button-FocusIndicator[CHECK], Button-FocusIndicator[RADIO] {
 /* Combo default theme */
 
 Combo {
-  border: 1px solid #828790;
-  font: 11px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+   border: 1px solid #B3B3B3;
+   border-radius: 2px;
   background-color: white;
-  color: #464a4e;
+  color: #333333;
   text-shadow: none;
   box-shadow: none;
 }
 
 Combo[BORDER] {
-  border: 1px solid #828790;
-  border-radius: 0px;
-  box-shadow: none;
+   box-shadow: none;
+   border: 1px solid #B3B3B3;
 }
-
-Combo[BORDER]:focused {
+ 
+ Combo[BORDER]:focused {
   box-shadow: none;
-  border: 1px solid #828790;
+  border: 1px solid #B3B3B3;
 }
 
 Combo-Button {
@@ -314,16 +288,16 @@ Combo-Button:pressed {
 }
 
 Combo-Button-Icon {
-  background-image: url( theme/classic.resources/ccombo/down.png );
+  background-image: url( theme/clarity.resources/ccombo/down.png );
 } 
 
 Combo-Button-Icon:hover {
-  background-image: url( theme/classic.resources/ccombo/down-hover.png );
+  background-image: url( theme/clarity.resources/ccombo/down-hover.png );
 }
 
 Combo-List {
-  border: 1px solid #828790;
-/*  border-radius: 0px 0px 2px 2px; */
+  border: 1px solid #B3B3B3;
+  border-radius: 0px 0px 2px 2px;
   box-shadow: 3px 3px 3px rgba( 0, 0, 0, 0.4 );
 }
 
@@ -342,75 +316,74 @@ Combo-FocusIndicator {
 
 CoolBar {
   background-image: none;
-  background-color: #f0f0f0;
+  background-color: #ffffff;
+  padding: 20px 10px;
 }
 
 CoolItem-Handle {
-  background-color: #f0f0f0;
-  border: 1px outset;
-  width: 1px;
+  background-color: #b3b3b3;
+  border: 1px solid #b3b3b3;
+  width: 2px;
 }
 
 /* CTabFolder default theme */
 
 CTabFolder {
-  background-color: #f0f0f0;
-  border-color: #A4A4A4;
-  border-radius: 2px;
-  border: 1px;
+  background-color: #ffffff;
+  border-color: #B3B3B3;
+  border-radius: 4px;
+  border: none;
 }
 
 CTabItem {
-  font: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  color: #4a4a4a;
+  font: 14px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+  color: #333333;
   background-color: transparent;
   background-image: none;
-  padding: 3px 6px 3px 5px;
-  spacing: 4px;
+  padding: 8px 8px 8px 8px;
+  spacing: 6px;
   text-shadow: none;
 }
 
 CTabItem:selected {
   background-color: white;
-  border-top-color: #00589f;
-  border-bottom-color: #00589f;
+  border-bottom: 1px;
+  border-bottom-color: #00567A;
   background-image: none;
 }
 
 /* Do not gray out disabled CTabItems, this is SWT behavior */
 CTabItem:disabled {
-  color: black;
+  color: #333333;
 }
 
 CTabFolder-DropDownButton-Icon {
-  background-image: url( theme/classic.resources/ctabfolder/ctabfolder-dropdown.png );
+  background-image: url( theme/clarity.resources/ctabfolder/ctabfolder-dropdown.png );
 }
 
 CTabFolder-DropDownButton-Icon:hover {
-  background-image: url( theme/classic.resources/ctabfolder/ctabfolder-dropdown-hover.png );
+  background-image: url( theme/clarity.resources/ctabfolder/ctabfolder-dropdown-hover.png );
 }
 
 /* Group default theme */
 
 Group {
-  color: #4a4a4a;
-  background-color: #f0f0f0;  
+  color: #333333;
+  background-color: #ffffff;  
 }
 
 Group-Frame {
   margin: 8px 0px 0px;
   padding: 8px 2px 2px;
-  border: 1px solid #828790;
-/*  border-radius: 2px 2px 2px 2px; */
+  border: 1px solid #B3B3B3;
+  border-radius: 2px;
 }
 
 Group-Label {
   padding: 0px 3px 0px 4px;
-  font: 11px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: transparent;
   border: none;
-  border-radius: 0;
-  color: #464a4e;
+  color: #333333;
   margin: 1px 10px;
   text-shadow: none;
 }
@@ -418,8 +391,8 @@ Group-Label {
 /* Label default theme */
 
 Label {
-  color: #4a4a4a;
-  background-color: #f0f0f0;
+  color: #333333;
+  background-color: #ffffff;
   background-image: none;
   border: none;
   text-decoration: none;
@@ -428,14 +401,9 @@ Label {
   text-shadow: none;
 }
 
-Label[BORDER] {
-  border: 1px solid #828790;
-  border-radius: 0px;
-}
-
 Label-SeparatorLine {
   background-image: none;
-  background-color: #828790;
+  background-color: #B3B3B3;
   border: 0px;
   border-radius: 0px;
   width: 1px;
@@ -467,11 +435,7 @@ Link-Hyperlink:disabled {
 List {
   background-color: white;
   border: none;
-  color: #4a4a4a;
-}
-
-List[BORDER] {
-  border: 1px solid #828790;
+  color: #333333;
 }
 
 List-Item {
@@ -483,32 +447,15 @@ List-Item {
 }
 
 List-Item:hover {
-  background-color: #dae9f7;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #dae9f7 ),
-    to( #d2e0ee )
-  );
+  background-color: #E8E8E8;
 }
 
 List-Item:selected {
-  color: white;
-  background-color: #00589f;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #0078Bf ),
-    to( #00589f )
-  );
+  background-color: #D8E3E9;
 }
 
 List-Item:selected:unfocused {
-  background-color: #959595;
-  color: white;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #A5A5A5 ),
-    to( #858585 )
-  );
+  background-color: #E8E8E8;
 }
 
 List-Item:even {
@@ -516,75 +463,74 @@ List-Item:even {
 }
 
 List-Item:even:hover {
-  background-color: #dae9f7;
+  background-color: #E8E8E8;
 }
 
 List-Item:even:selected {
-  color: white;
-  background-color: #00589f;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #0078Bf ),
-    to( #00589f )
-  );
+  background-color: #D8E3E9;
 }
 
 List-Item:even:selected:unfocused {
-  background-color: #959595;
-  color: white;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #A5A5A5 ),
-    to( #858585 )
-  );
+  background-color: #E8E8E8;
 }
 
 /* Menu default theme */
 
 Menu {
   background-image: none;
-  padding: 2px 0px;
+  padding: 6px 12px;
   opacity: 1;
   animation: none;
-  color: #0059a5;
-  background-color: #f0f0f0;
-  border: 1px #828790;
+  color: #333333;
+  background-color: #ffffff;
+  border: 1px #B3B3B3;
+  border-radius: 4px;
   box-shadow: 2px 2px 2px rgba( 0, 0, 0, 0.5 );
 }
 
 MenuItem {
   background-image: none;
-  color: black;
+  color: #333333;
   background-color: transparent;
   opacity: 1;
   text-shadow: none;
-  padding: 2px 4px;
+  padding: 4px 10px;
 }
 
+MenuItem:onMenuBar {
+   font: 22px "Metropolis Medium", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+   background-image: none;
+   color: #f0f0f0;
+   background-color: #00364D;
+   opacity: 1;
+   text-shadow: none;
+   padding: 16px 12px;
+ }
+ 
 MenuItem[SEPARATOR] {
-  padding: 0px 3px;
+  padding: 4px 4px;
 }
 
 MenuItem:hover {
-  background-color: #dae9f7;
-  color: #4a4a4a;
+  background-color: #E8E8E8;
+  color: black;
 }
 
 MenuItem:pressed {
-  background-color: #00589f;
-  color: white;
+  background-color: #D8E3E9;
+  color: black;
 }
 
 MenuItem-CheckIcon {
-  background-image: url( theme/classic.resources/menu/checkbox.gif );
+  background-image: url( theme/clarity.resources/menu/checkbox.gif );
 }
 
 MenuItem-RadioIcon {
-  background-image: url( theme/classic.resources/menu/radiobutton.gif );
+  background-image: url( theme/clarity.resources/menu/radiobutton.gif );
 }
 
 MenuItem-CascadeIcon {
-  background-image: url( theme/classic.resources/menu/arrow.gif );
+  background-image: url( theme/clarity.resources/menu/arrow.gif );
 }
 
 /* ProgressBar default theme */
@@ -592,30 +538,31 @@ MenuItem-CascadeIcon {
 ProgressBar {
   background-color: #ffffff;
   background-image: none;
-  border: 1px solid #828790;
+  border: 1px solid #B3B3B3;
 }
 
 ProgressBar-Indicator {
-  background-color: #00589f;
+  background-color: #0072A3;
   background-image: none;
   border: none;
   opacity: 1;
 }
 
 ProgressBar-Indicator:paused {
-  background-color: #ebebeb;
+  background-color: #FFF4C7;
 }
 
 ProgressBar-Indicator:error {
-  background-color: #cb2020;
+  background-color: #DB2100;
 }
 
 /* Shell default theme */
 
 Shell {
   animation: none;
-  border: 1px black;
-  background-color: #f0f0f0;
+  border: 1px solid #B3B3B3;
+  border-radius: 4px;
+  background-color: #ffffff;
   padding: 0px;
   background-image: none;
   opacity: 1;
@@ -623,18 +570,18 @@ Shell {
 }
 
 Shell.PopupWindow {
-  border: 1px solid black;
+   border: 1px solid #B3B3B3;
 }
 
 Shell[TITLE], Shell[BORDER] {
   box-shadow: 5px 5px 3px rgba( 0, 0, 0, 0.5 );
-  border: 2px solid #005092;
+  border: 1px solid #B3B3B3;
   padding: 5px;
 }
 
 Shell[BORDER]:inactive, Shell[TITLE]:inactive {
-  border: 2px solid #4b4b4b;
-  box-shadow: none;
+   border: 1px solid #B3B3B3;
+   box-shadow: none;
 }
 
 Shell:maximized, Shell:maximized:inactive {
@@ -646,32 +593,28 @@ Shell:maximized, Shell:maximized:inactive {
 Shell-DisplayOverlay {
   animation: fadeIn 200ms linear, fadeOut 400ms ease-out;
   background-image: none;
-  background-color: #808080;
+  background-color: #666666;
   opacity: 0.5;
 }
 
 /* Shell titlebar */
 
 Shell-Titlebar {
-  background-color: #0080c0;
-  background-gradient-color: #0080c0;
-  color: white;
-  background-image: gradient( linear, left top, left bottom, from( #005fac ), to( #005092 ) );
-  padding: 2px 5px 4px;
+  background-color: #ffffff;
+  background-gradient-color: #ffffff;
+  color: #000000;
+  background-image: none;
+  padding: 12px 10px 8px;
   margin: 0px;
-  height: 22px;
-  font: bold 14px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  height: 30px;
+  font: 22px "Metropolis Light", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
   border: none;
-  /*border-radius: 1px 1px 0px 0px;*/
+  border-bottom: solid 1px #B3B3B3;
   text-shadow: none;
 }
 
 Shell-Titlebar:inactive {
-  background-color: #7996a5;
-  background-gradient-color: #7996a5;
-  color: #aaaaaa;
-  background-image: gradient( linear, left top, left bottom,
-                              from( #595959 ), to( #4b4b4b ) );
+  color: #666666;
 }
 
 /* Shell buttons */
@@ -679,79 +622,79 @@ Shell-Titlebar:inactive {
 /* Minimize button */
 
 Shell-MinButton {
-  background-image: url( theme/classic.resources/window/shell-min.png );
+  background-image: url( theme/clarity.resources/window/shell-min.png );
   margin: 0px 6px 0px 0px;
 }
 
 Shell-MinButton:hover {
-  background-image: url( theme/classic.resources/window/shell-min-hover.png );
+  background-image: url( theme/clarity.resources/window/shell-min-hover.png );
 }
 
 Shell-MinButton:inactive {
-  background-image: url( theme/classic.resources/window/shell-min.png );
+  background-image: url( theme/clarity.resources/window/shell-min.png );
   margin: 0px 6px 0px 0px;
 }
 
 Shell-MinButton:inactive:hover {
-  background-image: url( theme/classic.resources/window/shell-min-hover.png );
+  background-image: url( theme/clarity.resources/window/shell-min-hover.png );
 }
 
 /* Maximize button */
 
 Shell-MaxButton {
-  background-image: url( theme/classic.resources/window/shell-max.png );
+  background-image: url( theme/clarity.resources/window/shell-max.png );
   margin: 0px 6px 0px 0px;
 }
 
 Shell-MaxButton:hover {
-  background-image: url( theme/classic.resources/window/shell-max-hover.png );
+  background-image: url( theme/clarity.resources/window/shell-max-hover.png );
 }
 
 Shell-MaxButton:inactive {
-  background-image: url( theme/classic.resources/window/shell-max.png );
+  background-image: url( theme/clarity.resources/window/shell-max.png );
   margin: 0px 6px 0px 0px;
 }
 
 Shell-MaxButton:inactive:hover {
-  background-image: url( theme/classic.resources/window/shell-max-hover.png );
+  background-image: url( theme/clarity.resources/window/shell-max-hover.png );
 }
 
 /* Restore button */
 
 Shell-MaxButton:maximized {
-  background-image: url( theme/classic.resources/window/shell-restore.png );
+  background-image: url( theme/clarity.resources/window/shell-restore.png );
 }
 
 Shell-MaxButton:maximized:hover {
-  background-image: url( theme/classic.resources/window/shell-restore-hover.png );
+  background-image: url( theme/clarity.resources/window/shell-restore-hover.png );
 }
 
 Shell-MaxButton:maximized:inactive {
-  background-image: url( theme/classic.resources/window/shell-restore.png );
+  background-image: url( theme/clarity.resources/window/shell-restore.png );
 }
 
 Shell-MaxButton:maximized:inactive:hover {
-  background-image: url( theme/classic.resources/window/shell-restore-hover.png );
+  background-image: url( theme/clarity.resources/window/shell-restore-hover.png );
 }
 
 /* Close button */
 
 Shell-CloseButton {
-  background-image: url( theme/classic.resources/window/shell-close.png );
+  background-image: url( theme/clarity.resources/window/shell-close.png );
   margin: 0px 5px 0px 0px;
 }
 
 Shell-CloseButton:hover {
-  background-image: url( theme/classic.resources/window/shell-close-hover.png );
+  background-image: url( theme/clarity.resources/window/shell-close-hover.png );
 }
 
 Shell-CloseButton:inactive {
-  background-image: url( theme/classic.resources/window/shell-close.png );
+  background-image: url( theme/clarity.resources/window/shell-close.png );
   margin: 0px 5px 0px 0px;
 }
 
 Shell-CloseButton:inactive:hover {
-  background-image: url( theme/classic.resources/window/shell-close-hover.png );
+  background-image: url( theme/clarity.resources/window/shell-close-hover.png );
 }
 
 /* Spinner default theme */
@@ -799,11 +742,11 @@ Spinner-UpButton:pressed {
 }
 
 Spinner-UpButton-Icon {
-  background-image: url( theme/classic.resources/spinner/up.png );
+  background-image: url( theme/clarity.resources/spinner/up.png );
 }
 
 Spinner-UpButton-Icon:hover {
-  background-image: url( theme/classic.resources/spinner/up-hover.png );
+  background-image: url( theme/clarity.resources/spinner/up-hover.png );
 }
 
 Spinner-DownButton {
@@ -830,11 +773,11 @@ Spinner-DownButton:pressed {
 }
 
 Spinner-DownButton-Icon {
-  background-image: url( theme/classic.resources/spinner/down.png );
+  background-image: url( theme/clarity.resources/spinner/down.png );
 }
 
 Spinner-DownButton-Icon:hover {
-  background-image: url( theme/classic.resources/spinner/down-hover.png );
+  background-image: url( theme/clarity.resources/spinner/down-hover.png );
 }
 
 /* TabFolder default theme */
@@ -843,29 +786,22 @@ TabFolder {
   border: none;
 }
 
-TabFolder[BORDER] {
-  border: 1px solid #828790;
-}
-
 TabFolder-ContentContainer {
-  border: 1px solid #828790;
+  border: 1px solid #B3B3B3;
 }
 
 TabItem {
   background-color: white;
-  border-top-color: white;
-  border-bottom-color: white;
+  border: none;
+  border-bottom: 1px solid #B3B3B3;
   background-image: none;
   text-shadow: none;
-  padding : 2px 6px 2px 5px;
+  padding: 8px 8px 8px 8px;
+  spacing: 6px;
 }
 
 TabItem:selected {
-  background-color: white;
-  border-top-color: #00589f;
-  border-bottom-color: #00589f;
-  background-image: none;
-  padding : 2px 8px 3px 7px;
+  border-bottom: 1px solid #00567A;
 }
 
 TabItem:hover {
@@ -878,12 +814,9 @@ TabItem:hover {
 Table {
   background-color: white;
   background-image: none;
-  color: #4a4a4a;
+  color: #333333;
+  font: 13px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
   border: none;
-}
-
-Table[BORDER] {
-  border: 1px solid #828790;
 }
 
 TableItem {
@@ -901,40 +834,28 @@ Table-RowOverlay {
 }
 
 Table-RowOverlay:hover {
-  background-color: #dae9f7;
+  background-color: #E8E8E8;
 }
 
 Table-RowOverlay:selected {
-  color: white;
-  background-color: #00589f;
+  background-color: #D8E3E9;
 }
 
 Table-RowOverlay:selected:unfocused {
-  background-color: #959595;
-  color: #ffffff;
+  background-color: #E8E8E8;
 }
 
 TableColumn {
-  background-color: #f8f8ff;
-  padding: 4px 2px;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #fbfcfd ),
-    to( #ececec )
-  );
-  color: #666666;
-  font: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  border-bottom:none;
-  text-shadow: none;
+   background-color: #F0F0F0;
+   padding: 6px 3px;
+   color: #333333;
+   border: 1px solid #E8E8E8;
+   font: 14px "Metropolis Medium", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+   text-shadow: none;
 }
 
 TableColumn:hover {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #f4f5f6 ),
-    to( #e6e6e6 )
-  );
-  border-bottom: none;
+   background-color: #F0F0F0;
 }
 
 TableColumn-SortIndicator {
@@ -942,16 +863,16 @@ TableColumn-SortIndicator {
 }
 
 TableColumn-SortIndicator:up {
-  background-image: url( theme/classic.resources/column/sort-indicator-up.png );
+  background-image: url( theme/clarity.resources/column/sort-indicator-up.png );
 }
 
 TableColumn-SortIndicator:down {
-  background-image: url( theme/classic.resources/column/sort-indicator-down.png );
+  background-image: url( theme/clarity.resources/column/sort-indicator-down.png );
 }
 
 Table-Cell {
-  spacing: 3px;
-  padding: 3px 3px 2px 3px;
+   spacing: 3px;
+   padding: 4px 3px;
 }
 
 Table-GridLine {
@@ -965,27 +886,27 @@ Table-Checkbox {
   */
   width: 21px;
   margin: 0px;
-  background-image: url( theme/classic.resources/button/check-unselected.png );
+  background-image: url( theme/clarity.resources/button/check-unselected.png );
 }
 
 Table-Checkbox:hover {
-  background-image: url( theme/classic.resources/button/check-unselected-hover.png );
+  background-image: url( theme/clarity.resources/button/check-unselected-hover.png );
 }
 
 Table-Checkbox:checked {
-  background-image: url( theme/classic.resources/button/check-selected.png );
+  background-image: url( theme/clarity.resources/button/check-selected.png );
 }
 
 Table-Checkbox:checked:hover {
-  background-image: url( theme/classic.resources/button/check-selected-hover.png );
+  background-image: url( theme/clarity.resources/button/check-selected-hover.png );
 }
 
 Table-Checkbox:checked:grayed {
-  background-image: url( theme/classic.resources/button/check-grayed.png );
+  background-image: url( theme/clarity.resources/button/check-grayed.png );
 }
 
 Table-Checkbox:checked:grayed:hover {
-  background-image: url( theme/classic.resources/button/check-grayed-hover.png );
+  background-image: url( theme/clarity.resources/button/check-grayed-hover.png );
 }
 
 /* Table with individual cell selection */
@@ -1016,17 +937,6 @@ Text {
   box-shadow: none
 }
 
-Text[BORDER] {
-  border: 1px solid #828790;
-  box-shadow: none;
-}
-
-Text[BORDER]:read-only,
-Text[MULTI][BORDER]:read-only {
-  box-shadow: none;
-  border: 1px solid #828790;
-}
-
 Text[SINGLE] {
   /* padding: 2px 3px; */
 }
@@ -1034,22 +944,6 @@ Text[SINGLE] {
 Text[MULTI] {
   /* padding: 0px 0px 0px 3px; */
   background-image: none;
-}
-
-Text[MULTI][BORDER] {
-  /* padding: 0px 0px 0px 4px; */
-  box-shadow: none;
-}
-
-Text[BORDER]:focused,
-Text[MULTI][BORDER]:focused {
-  border: 1px solid #828790;
-  box-shadow: none;
-}
-
-Text[MULTI]:focused {
-  border: none;
-  box-shadow: none;
 }
 
 Text-Message {
@@ -1060,28 +954,19 @@ Text-Message {
 /* Text with monospace font */
 
 Text.monospace {
-  font: 12px "Liberation Mono", "Liberation Sans Mono", "Courier New";
+  font: 14px "Liberation Mono", "Liberation Sans Mono", "Courier New";
 }
 
 /* ToolBar default theme */
 
 ToolBar {
-  color: black;
-  padding: 0px;
-  spacing: 0px;
-  background-color: #f0f0f0;
+  color: #333333;
+  padding: 2px 0px 6px;
+  spacing: 2px;
+  background-color: #ffffff;
   background-image: none;
   border: none;
   opacity: 1;
-}
-
-ToolBar.menuBar {
-  box-shadow: 0px 1px 1px 0px #a4a4a4;
-}
-
-ToolBar[BORDER] {
-  border: 1px solid #828790;
-  border-radius: 2px;
 }
 
 ToolItem {
@@ -1090,8 +975,8 @@ ToolItem {
   background-image: none;
   border: none;
   border-radius: 0px;
-  padding: 2px 3px;
-  spacing: 4px;
+  padding: 0px 4px;
+  spacing: 2px;
   opacity: 1;
   animation: none;
   text-shadow: none;
@@ -1099,25 +984,25 @@ ToolItem {
 
 ToolItem[FLAT] {
   border: none;
-  padding: 3px 4px;
+  padding: 0px 4px;
 }
 
 ToolItem:hover {
   background-color: white;
-  border: 1px solid #a4a4a4;
-  border-radius: 2px 2px 2px 2px;
+  border: 1px solid #B3B3B3;
+  border-radius: 2px;
   padding: 2px 3px;
 }
 
 ToolItem:pressed, ToolItem:selected {
-  border: 1px solid #a4a4a4;
+  border: 1px solid #B3B3B3;
   border-radius: 2px;
   padding: 3px 2px 1px 4px;
-  background-image: url( theme/classic.resources/toolbar/dotted_white.gif );
+  background-image: url( theme/clarity.resources/toolbar/dotted_white.gif );
 }
 
 ToolItem-DropDownIcon {
-  background-image: url( theme/classic.resources/arrows/down.gif );
+  background-image: url( theme/clarity.resources/arrows/down.gif );
   border: none;
 }
 
@@ -1126,7 +1011,9 @@ ToolItem-DropDownIcon:hover {
 }
 
 ToolItem-Separator {
-  width: 4px;
+  width: 1px;
+  border: none;
+  background-color: #B3B3B3;
 }
 
 /* Tree default theme */
@@ -1134,11 +1021,8 @@ ToolItem-Separator {
 Tree {
   background-color: white;
   border: none;
-  color: #4a4a4a;
-}
-
-Tree[BORDER] {
-  border: 1px solid #828790;
+  color: #333333;
+  font: 13px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
 TreeItem {
@@ -1156,40 +1040,30 @@ Tree-RowOverlay {
 }
 
 Tree-RowOverlay:hover {
-  background-color: #dae9f7;
+  background-color: #E8E8E8;
 }
 
 Tree-RowOverlay:selected {
-  background-color: #00589f;
-  color: #ffffff;
+  background-color: #D8E3E9;
+  color: #333333;
 }
 
 Tree-RowOverlay:selected:unfocused {
-  background-color: #959595;
-  color: #ffffff;
+  background-color: #E8E8E8;
+  color: #333333;
 }
 
 TreeColumn {
-  background-color: #f8f8ff;
-  padding: 4px 2px;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #fbfcfd ),
-    to( #ececec )
-  );
-  color: #666666;
-  font: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  border-bottom:none;
+  background-color: #F0F0F0;
+  padding: 6px 3px;
+  color: #333333;
+  border: 1px solid #E8E8E8;
+  font: 14px "Metropolis Medium", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
   text-shadow: none;
 }
 
 TreeColumn:hover {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #f4f5f6 ),
-    to( #e6e6e6 )
-  );
-  border-bottom:none;
+   background-color: #E8E8E8;
 }
 
 TreeColumn-SortIndicator {
@@ -1197,16 +1071,16 @@ TreeColumn-SortIndicator {
 }
 
 TreeColumn-SortIndicator:up {
-  background-image: url( theme/classic.resources/column/sort-indicator-up.png );
+  background-image: url( theme/clarity.resources/column/sort-indicator-up.png );
 }
 
 TreeColumn-SortIndicator:down {
-  background-image: url( theme/classic.resources/column/sort-indicator-down.png );
+  background-image: url( theme/clarity.resources/column/sort-indicator-down.png );
 }
 
 Tree-Cell {
   spacing: 3px;
-  padding: 2px 3px 2px 3px;
+  padding: 4px 3px;
 }
 
 Tree-GridLine {
@@ -1215,27 +1089,27 @@ Tree-GridLine {
 
 Tree-Checkbox {
   margin: 0px 2px 0px 0px;
-  background-image: url( theme/classic.resources/button/check-unselected.png );
+  background-image: url( theme/clarity.resources/button/check-unselected.png );
 }
 
 Tree-Checkbox:hover {
-  background-image: url( theme/classic.resources/button/check-unselected-hover.png );
+  background-image: url( theme/clarity.resources/button/check-unselected-hover.png );
 }
 
 Tree-Checkbox:checked {
-  background-image: url( theme/classic.resources/button/check-selected.png );
+  background-image: url( theme/clarity.resources/button/check-selected.png );
 }
 
 Tree-Checkbox:checked:hover {
-  background-image: url( theme/classic.resources/button/check-selected-hover.png );
+  background-image: url( theme/clarity.resources/button/check-selected-hover.png );
 }
 
 Tree-Checkbox:checked:grayed {
-  background-image: url( theme/classic.resources/button/check-grayed.png );
+  background-image: url( theme/clarity.resources/button/check-grayed.png );
 }
 
 Tree-Checkbox:checked:grayed:hover {
-  background-image: url( theme/classic.resources/button/check-grayed-hover.png );
+  background-image: url( theme/clarity.resources/button/check-grayed-hover.png );
 }
 
 Tree-Indent {
@@ -1244,19 +1118,19 @@ Tree-Indent {
 }
 
 Tree-Indent:collapsed {
-  background-image: url( theme/classic.resources/tree/tree-collapsed.png );
+  background-image: url( theme/clarity.resources/tree/tree-collapsed.png );
 }
 
 Tree-Indent:collapsed:hover {
-  background-image: url( theme/classic.resources/tree/tree-collapsed-hover.png );
+  background-image: url( theme/clarity.resources/tree/tree-collapsed-hover.png );
 }
 
 Tree-Indent:expanded {
-  background-image: url( theme/classic.resources/tree/tree-expanded.png );
+  background-image: url( theme/clarity.resources/tree/tree-expanded.png );
 }
 
 Tree-Indent:expanded:hover {
-  background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
+  background-image: url( theme/clarity.resources/tree/tree-expanded-hover.png );
 }
 
 Tree-Indent:line {
@@ -1268,19 +1142,19 @@ Tree-Indent:first {
 }
 
 Tree-Indent:first:collapsed {
-  background-image: url( theme/classic.resources/tree/tree-collapsed.png );
+  background-image: url( theme/clarity.resources/tree/tree-collapsed.png );
 }
 
 Tree-Indent:first:collapsed:hover {
-  background-image: url( theme/classic.resources/tree/tree-collapsed-hover.png );
+  background-image: url( theme/clarity.resources/tree/tree-collapsed-hover.png );
 }
 
 Tree-Indent:first:expanded {
-  background-image: url( theme/classic.resources/tree/tree-expanded.png );
+  background-image: url( theme/clarity.resources/tree/tree-expanded.png );
 }
 
 Tree-Indent:first:expanded:hover {
-  background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
+  background-image: url( theme/clarity.resources/tree/tree-expanded-hover.png );
 }
 
 Tree-Indent:last {
@@ -1288,19 +1162,19 @@ Tree-Indent:last {
 }
 
 Tree-Indent:last:collapsed {
-  background-image: url( theme/classic.resources/tree/tree-collapsed.png );
+  background-image: url( theme/clarity.resources/tree/tree-collapsed.png );
 }
 
 Tree-Indent:last:collapsed:hover {
-  background-image: url( theme/classic.resources/tree/tree-collapsed-hover.png );
+  background-image: url( theme/clarity.resources/tree/tree-collapsed-hover.png );
 }
 
 Tree-Indent:last:expanded {
-  background-image: url( theme/classic.resources/tree/tree-expanded.png );
+  background-image: url( theme/clarity.resources/tree/tree-expanded.png );
 }
 
 Tree-Indent:last:expanded:hover {
-  background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
+  background-image: url( theme/clarity.resources/tree/tree-expanded-hover.png );
 }
 
 Tree-Indent:first:last {
@@ -1308,32 +1182,32 @@ Tree-Indent:first:last {
 }
 
 Tree-Indent:first:last:collapsed {
-  background-image: url( theme/classic.resources/tree/tree-collapsed.png );
+  background-image: url( theme/clarity.resources/tree/tree-collapsed.png );
 }
 
 Tree-Indent:first:last:collapsed:hover {
-  background-image: url( theme/classic.resources/tree/tree-collapsed-hover.png );
+  background-image: url( theme/clarity.resources/tree/tree-collapsed-hover.png );
 }
 
 Tree-Indent:first:last:expanded {
-  background-image: url( theme/classic.resources/tree/tree-expanded.png );
+  background-image: url( theme/clarity.resources/tree/tree-expanded.png );
 }
 
 Tree-Indent:first:last:expanded:hover {
-  background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
+  background-image: url( theme/clarity.resources/tree/tree-expanded-hover.png );
 }
 
 /* Scale default theme */
 
 Scale {
   background-color: white;
-  border-radius: 0;
+  border-radius: 2px;
 }
 
 Scale-Thumb {
   background-color: #00589f;
   border: 1px solid #a4a4a4;
-  border-radius: 2px 2px 2px 2px;
+  border-radius: 2px;
 }
 
 /* DateTime default theme */
@@ -1351,21 +1225,6 @@ DateTime {
 DateTime-Field {
   padding: 2px 3px;
   text-shadow: none;
-}
-
-DateTime[BORDER] {
-  border: 1px solid #828790;
-  /* border-radius: 2px 2px 2px 2px; */
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e2e2e2 ),
-    color-stop( 15%, #f8f8f8 ),
-    to( #fbfbfb )
-  );
-}
-
-DateTime[BORDER]:focused {
-  border: 1px solid #828790;
 }
 
 DateTime-Calendar-Day {
@@ -1406,39 +1265,39 @@ DateTime-Calendar-Navbar {
 }
 
 DateTime-Calendar-PreviousMonthButton {
-  background-image: url( theme/classic.resources/calendar/lastMonth.png );
+  background-image: url( theme/clarity.resources/calendar/lastMonth.png );
   cursor: default;
 }
 
 DateTime-Calendar-PreviousMonthButton:hover {
-  background-image: url( theme/classic.resources/calendar/lastMonth-hover.png );
+  background-image: url( theme/clarity.resources/calendar/lastMonth-hover.png );
 }
 
 DateTime-Calendar-NextMonthButton {
-  background-image: url( theme/classic.resources/calendar/nextMonth.png );
+  background-image: url( theme/clarity.resources/calendar/nextMonth.png );
   cursor: default;
 }
 
 DateTime-Calendar-NextMonthButton:hover {
-  background-image: url( theme/classic.resources/calendar/nextMonth-hover.png );
+  background-image: url( theme/clarity.resources/calendar/nextMonth-hover.png );
 }
 
 DateTime-Calendar-PreviousYearButton {
-  background-image: url( theme/classic.resources/calendar/lastYear.png );
+  background-image: url( theme/clarity.resources/calendar/lastYear.png );
   cursor: default;
 }
 
 DateTime-Calendar-PreviousYearButton:hover {
-  background-image: url( theme/classic.resources/calendar/lastYear-hover.png );
+  background-image: url( theme/clarity.resources/calendar/lastYear-hover.png );
 }
 
 DateTime-Calendar-NextYearButton {
-  background-image: url( theme/classic.resources/calendar/nextYear.png );
+  background-image: url( theme/clarity.resources/calendar/nextYear.png );
   cursor: default;
 }
 
 DateTime-Calendar-NextYearButton:hover {
-  background-image: url( theme/classic.resources/calendar/nextYear-hover.png );
+  background-image: url( theme/clarity.resources/calendar/nextYear-hover.png );
 }
 
 DateTime-UpButton {
@@ -1465,11 +1324,11 @@ DateTime-UpButton:pressed {
 }
 
 DateTime-UpButton-Icon {
-  background-image: url( theme/classic.resources/spinner/up.png );
+  background-image: url( theme/clarity.resources/spinner/up.png );
 }
 
 DateTime-UpButton-Icon:hover {
-  background-image: url( theme/classic.resources/spinner/up-hover.png );
+  background-image: url( theme/clarity.resources/spinner/up-hover.png );
 }
 
 DateTime-DownButton {
@@ -1512,19 +1371,19 @@ DateTime-DropDownButton {
 }
 
 DateTime-DropDownButton-Icon {
-  background-image: url( theme/classic.resources/spinner/down.png );
+  background-image: url( theme/clarity.resources/spinner/down.png );
 }
 
 DateTime-DropDownButton-Icon:hover {
-  background-image: url( theme/classic.resources/spinner/down-hover.png );
+  background-image: url( theme/clarity.resources/spinner/down-hover.png );
 }
 
 DateTime-DownButton-Icon {
-  background-image: url( theme/classic.resources/spinner/down.png );
+  background-image: url( theme/clarity.resources/spinner/down.png );
 }
 
 DateTime-DownButton-Icon:hover {
-  background-image: url( theme/classic.resources/spinner/down-hover.png );
+  background-image: url( theme/clarity.resources/spinner/down-hover.png );
 }
 
 
@@ -1537,11 +1396,6 @@ DateTime-DropDownCalendar {
 ExpandBar {
   color: #4a4a4a;
   background-color: white;
-}
-
-ExpandBar[BORDER] {
-  border: 1px solid #C1C1C1;
-  border-radius: 0;
 }
 
 ExpandItem {
@@ -1567,19 +1421,19 @@ ExpandItem-Header:disabled {
 }
 
 ExpandItem-Button {
-  background-image: url( theme/classic.resources/expanditem/expanditem-expand.png );
+  background-image: url( theme/clarity.resources/expanditem/expanditem-expand.png );
 }
 
 ExpandItem-Button:hover {
-  background-image: url( theme/classic.resources/expanditem/expanditem-expand-hover.png );
+  background-image: url( theme/clarity.resources/expanditem/expanditem-expand-hover.png );
 }
 
 ExpandItem-Button:expanded {
-  background-image: url( theme/classic.resources/expanditem/expanditem-collapse.png );
+  background-image: url( theme/clarity.resources/expanditem/expanditem-collapse.png );
 }
 
 ExpandItem-Button:expanded:hover {
-  background-image: url( theme/classic.resources/expanditem/expanditem-collapse-hover.png );
+  background-image: url( theme/clarity.resources/expanditem/expanditem-collapse-hover.png );
 }
 
 /* Sash default theme */
@@ -1587,11 +1441,7 @@ ExpandItem-Button:expanded:hover {
 Sash {
   border: none;
   background-image: none;
-  background-color: #f0f0f0;
-}
-
-Sash[BORDER] {
-  border: 1px solid #828790;
+  background-color: #ffffff;
 }
 
 Sash:hover {
@@ -1725,35 +1575,35 @@ Slider-DownButton[VERTICAL] {
 /* Button Icons */
 
 Slider-UpButton-Icon[HORIZONTAL] {
-  background-image: url( theme/classic.resources/slider/right.png );
+  background-image: url( theme/clarity.resources/slider/right.png );
 }
 
 Slider-UpButton-Icon[HORIZONTAL]:hover {
-  background-image: url( theme/classic.resources/slider/right-hover.png );
+  background-image: url( theme/clarity.resources/slider/right-hover.png );
 }
 
 Slider-UpButton-Icon[VERTICAL] {
-  background-image: url( theme/classic.resources/spinner/down.png );
+  background-image: url( theme/clarity.resources/spinner/down.png );
 }
 
 Slider-UpButton-Icon[VERTICAL]:hover {
-  background-image: url( theme/classic.resources/spinner/down-hover.png );
+  background-image: url( theme/clarity.resources/spinner/down-hover.png );
 }
 
 Slider-DownButton-Icon[HORIZONTAL] {
-  background-image: url( theme/classic.resources/slider/left.png );
+  background-image: url( theme/clarity.resources/slider/left.png );
 }
 
 Slider-DownButton-Icon[HORIZONTAL]:hover {
-  background-image: url( theme/classic.resources/slider/left-hover.png );
+  background-image: url( theme/clarity.resources/slider/left-hover.png );
 }
 
 Slider-DownButton-Icon[VERTICAL] {
-  background-image: url( theme/classic.resources/spinner/up.png );
+  background-image: url( theme/clarity.resources/spinner/up.png );
 }
 
 Slider-DownButton-Icon[VERTICAL]:hover {
-  background-image: url( theme/classic.resources/spinner/up-hover.png );
+  background-image: url( theme/clarity.resources/spinner/up-hover.png );
 }
 
 /* ToolTip default theme */
@@ -1777,15 +1627,15 @@ ToolTip {
 }
 
 ToolTip-Image[ICON_ERROR] {
-  background-image: url( theme/classic.resources/tooltip/error.png );
+  background-image: url( theme/clarity.resources/tooltip/error.png );
 }
 
 ToolTip-Image[ICON_INFORMATION] {
-  background-image: url( theme/classic.resources/tooltip/information.png );
+  background-image: url( theme/clarity.resources/tooltip/information.png );
 }
 
 ToolTip-Image[ICON_WARNING] {
-  background-image: url( theme/classic.resources/tooltip/warning.png );
+  background-image: url( theme/clarity.resources/tooltip/warning.png );
 }
 
 ToolTip-Text {
@@ -1804,18 +1654,11 @@ ToolTip-Message {
 
 CCombo {
   border: none;
-  font: 11px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: white;
-  color: #464a4e;
-  border-radius: 0;
+  color: #333333;
+  border-radius: 2px;
   background-image: none;
   text-shadow: none;
-  box-shadow: none;
-}
-
-CCombo[BORDER] {
-  border: 1px solid #828790;
-  /* border-radius: 2px; */
   box-shadow: none;
 }
 
@@ -1845,11 +1688,11 @@ CCombo-Button:pressed {
 }
 
 CCombo-Button-Icon {
-  background-image: url( theme/classic.resources/ccombo/down.png );
+  background-image: url( theme/clarity.resources/ccombo/down.png );
 } 
 
 CCombo-Button-Icon:hover {
-  background-image: url( theme/classic.resources/ccombo/down-hover.png );
+  background-image: url( theme/clarity.resources/ccombo/down-hover.png );
 }
 
 CCombo-Button[FLAT] {
@@ -1861,8 +1704,8 @@ CCombo-Button[FLAT]:hover {
 }
 
 CCombo-List {
-  border: 1px solid #c1c1c1;
-  /* border-radius: 0px 0px 2px 2px; */
+  border: 1px solid #B3B3B3;
+  border-radius: 0px 0px 2px 2px;
   box-shadow: 3px 3px 3px rgba( 0, 0, 0, 0.4 );
 }
 
@@ -1880,8 +1723,8 @@ CCombo-FocusIndicator {
 /* CLabel default theme */
 
 CLabel {
-  color: #4a4a4a;
-  background-color: #f0f0f0;
+  color: #333333;
+  background-color: #ffffff;
   background-image: none;
   border: none;
   padding: 3px;
@@ -1895,18 +1738,10 @@ CLabel.SelectorWidget {
   background-color: white;
 }
 
-CLabel[BORDER] {
-  border: 1px solid #828790;
-}
-
 /* Browser default theme */
 
 Browser {
   border: none;
-}
-
-Browser[BORDER] {
-  border: 1px solid #828790;
 }
 
 /* ScrollBar default theme */
@@ -1958,43 +1793,43 @@ ScrollBar-DownButton[VERTICAL] {
 /* Icons */
 
 ScrollBar-Thumb-Icon[VERTICAL] {
-  background-image: url( theme/classic.resources/scrollbar/v-knob.png );
+  background-image: url( theme/clarity.resources/scrollbar/v-knob.png );
 }
 
 ScrollBar-Thumb-Icon[HORIZONTAL] {
-  background-image: url( theme/classic.resources/scrollbar/h-knob.png );
+  background-image: url( theme/clarity.resources/scrollbar/h-knob.png );
 }
 
 ScrollBar-UpButton-Icon[VERTICAL] {
-  background-image: url( theme/classic.resources/spinner/down.png );
+  background-image: url( theme/clarity.resources/spinner/down.png );
 }
 
 ScrollBar-UpButton-Icon[VERTICAL]:hover {
-  background-image: url( theme/classic.resources/spinner/down-hover.png );
+  background-image: url( theme/clarity.resources/spinner/down-hover.png );
 }
 
 ScrollBar-UpButton-Icon[HORIZONTAL] {
-  background-image: url( theme/classic.resources/scrollbar/right.png );
+  background-image: url( theme/clarity.resources/scrollbar/right.png );
 }
 
 ScrollBar-UpButton-Icon[HORIZONTAL]:hover {
-  background-image: url( theme/classic.resources/scrollbar/right-hover.png );
+  background-image: url( theme/clarity.resources/scrollbar/right-hover.png );
 }
 
 ScrollBar-DownButton-Icon[VERTICAL] {
-  background-image: url( theme/classic.resources/spinner/up.png );
+  background-image: url( theme/clarity.resources/spinner/up.png );
 }
 
 ScrollBar-DownButton-Icon[VERTICAL]:hover {
-  background-image: url( theme/classic.resources/spinner/up-hover.png );
+  background-image: url( theme/clarity.resources/spinner/up-hover.png );
 }
 
 ScrollBar-DownButton-Icon[HORIZONTAL] {
-  background-image: url( theme/classic.resources/scrollbar/left.png );
+  background-image: url( theme/clarity.resources/scrollbar/left.png );
 }
 
 ScrollBar-DownButton-Icon[HORIZONTAL]:hover {
-  background-image: url( theme/classic.resources/scrollbar/left-hover.png );
+  background-image: url( theme/clarity.resources/scrollbar/left-hover.png );
 }
 
 /* Gradients */
@@ -2094,26 +1929,59 @@ Label.standaloneView {
 
 /* Custom Variants */
 
-Composite.gray {
-  background-color: #f0f0f0;
-}
-
-Label.gray {
-  background-color: #f0f0f0;
+Label.login {
+   color: #00364D;
+   background-color: #D8E3E9;
+   font: 16px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
 Text.login {
-  font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 18px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+  background-color: #D8E3E9;
+  color: #00364D;
 }
 
-Button.login {
-  font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+Text.login[BORDER] {
+   border: none;
+   border-bottom: 2px solid #00364D;
 }
 
-Button.login[PUSH], Button.login[TOGGLE], Button.login[BORDER] {
-  background-image: none;
-  background-color: #b0b0b0;
-  color: #ffffff;
+Button.login[PUSH] {
+   padding: 12px 14px;
+   spacing: 4px;
+   font: 18px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+   background-image: none;
+   color: #D8E3E9;
+   background-color: #00364D;
+   border-radius: 4px;
+   border: 4px solid #D8E3E9;
+}
+
+Button.login[PUSH]:default {
+   padding: 12px 14px;
+   spacing: 4px;
+   font: 18px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+   background-image: none;
+   color: #D8E3E9;
+   background-color: #00364D;
+   border-radius: 4px;
+   border: none;
+}
+
+Button.login[PUSH]:hover {
+   background-color: #79C6E6;
+}
+
+Button.login[PUSH]:hover:default {
+   background-color: #79C6E6;
+}
+
+Button.login[PUSH]:pressed {
+   background-color: #79C6E6;
+}
+
+Button.login[PUSH]:pressed:default {
+   background-color: #79C6E6;
 }
 
 Button.loginSelector[PUSH] {
@@ -2158,11 +2026,29 @@ Link.login {
   font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
-Composite.LoginForm {
-  border: 1px solid #303030;
-  /*border-radius: 8px;*/
+ProgressBar.login {
+   background-color: #00364D;
+   border: none;
+   border-radius: 4px;
 }
 
+ProgressBar-Indicator.login {
+   background-color: #ff7201;
+   background-image: none;
+   border: none;
+   opacity: 1;
+}
+
+Composite.LoginForm {
+  background-color: #D8E3E9;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 4px 4px 3px 0px #808080; 
+}
+
+ToolBar.menuBar {
+   background-color: #00364D;
+}
 
 /* FileUpload */
 
@@ -2220,10 +2106,9 @@ FileUpload-FocusIndicator {
   opacity: 1;
 }
 
-
 /* Wait indicator */
 
 SystemMessage-DisplayOverlay {
   background-color: rgba( 224, 224, 224, 0.0 );
-  /*background-image: url( theme/classic.resources/display/loading.gif );*/
+  /*background-image: url( theme/clarity.resources/display/loading.gif );*/
 }

@@ -188,14 +188,14 @@
    <extension
          point="org.eclipse.ui.presentationFactories">
       <factory
-            class="org.netxms.ui.eclipse.console.themes.classic.ClassicPresentationFactory"
+            class="org.netxms.ui.eclipse.console.themes.ClassicPresentationFactory"
             id="org.netxms.ui.eclipse.console.factory.classic"
             name="Classic Presentation Factory">
       </factory>
       <factory
-            class="org.netxms.ui.eclipse.console.themes.material.MaterialPresentationFactory"
-            id="org.netxms.ui.eclipse.console.factory.material"
-            name="Material Presentation Factory">
+            class="org.netxms.ui.eclipse.console.themes.ClarityPresentationFactory"
+            id="org.netxms.ui.eclipse.console.factory.clarity"
+            name="Clarity Presentation Factory">
       </factory>
    </extension>
    <extension
@@ -423,9 +423,9 @@
             name="Classic Theme">
       </theme>
       <theme
-            file="theme/material.css"
-            id="org.netxms.webui.design.theme.material"
-            name="Material Theme">
+            file="theme/clarity.css"
+            id="org.netxms.webui.design.theme.clarity"
+            name="Clarity Theme">
       </theme>
    </extension>
    <extension
@@ -470,17 +470,5 @@
       <initializer
             class="org.netxms.ui.eclipse.console.PreferenceInitializer">
       </initializer>
-   </extension>
-   <extension
-         point="org.eclipse.rap.ui.layouts">
-      <layout
-            id="org.netxms.ui.eclipse.console.layouts.material"
-            name="Material Layout">
-         <layoutSet
-               class="org.netxms.ui.eclipse.console.themes.material.layout.Header"
-               id="org.netxms.ui.eclipse.console.themes.material.layout.Header"
-               name="Header">
-         </layoutSet>
-      </layout>
    </extension>
 </plugin>

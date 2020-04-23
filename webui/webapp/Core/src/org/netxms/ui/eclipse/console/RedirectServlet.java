@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,13 +35,13 @@ public class RedirectServlet extends HttpServlet
 	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
-		final String path = req.getRequestURI().substring(req.getContextPath().length());
+		final String path = request.getRequestURI().substring(request.getContextPath().length());
 		if (path == null || path.isEmpty() || "/".equals(path))  //$NON-NLS-1$
 		{
 			BrandingManager.create();
-			resp.sendRedirect(resp.encodeRedirectURL(BrandingManager.getInstance().getRedirectionURL()));
+			response.sendRedirect(response.encodeRedirectURL(BrandingManager.getInstance().getRedirectionURL(request)));
 		}
 	}
 }

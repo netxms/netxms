@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.console.api;
 
+import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
@@ -122,7 +123,8 @@ public interface BrandingProvider
 	/**
 	 * Get redirection URL for web console. Has no effect on RCP console.
 	 * 
+	 * @param httpRequest original HTTP request
 	 * @return redirection URL or null to use default
 	 */
-	public String getRedirectionURL();
+	public String getRedirectionURL(HttpServletRequest httpRequest);
 }

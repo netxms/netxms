@@ -24,9 +24,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CBanner;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
@@ -37,6 +34,7 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.internal.keys.BindingService;
 import org.eclipse.ui.keys.IBindingService;
 import org.eclipse.ui.part.ViewPart;
@@ -125,25 +123,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		{
 			e.printStackTrace();
 		}
-		
-		final Shell shell = getWindowConfigurer().getWindow().getShell(); 
+
+		final Shell shell = getWindowConfigurer().getWindow().getShell();
 		shell.setMaximized(true);
-		
-		for(Control ctrl : shell.getChildren())
-		{
-			ctrl.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
-			if (ctrl instanceof CBanner)
-			{
-				for(Control cc : ((CBanner)ctrl).getChildren())
-					cc.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
-			}
-			else if (ctrl.getClass().getName().equals("org.eclipse.swt.widgets.Composite")) //$NON-NLS-1$
-			{
-				for(Control cc : ((Composite)ctrl).getChildren())
-					cc.setData(RWT.CUSTOM_VARIANT, "gray"); //$NON-NLS-1$
-			}
-		}
-		
+
 		Menu menuBar = shell.getMenuBar();
 		if (menuBar != null)
 		   menuBar.setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
@@ -155,6 +138,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
    public void postWindowOpen()
    {
+	   ((WorkbenchWindow)getWindowConfigurer().getWindow()).getCoolBarManager2().setLockLayout(true);
       String dashboardId = Application.getParameter("dashboard"); //$NON-NLS-1$
       if (dashboardId != null)
       {

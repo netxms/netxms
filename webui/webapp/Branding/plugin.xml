@@ -18,9 +18,15 @@
          point="org.eclipse.rap.ui.entrypoint">
       <entrypoint
             applicationId="org.netxms.ui.eclipse.branding.nxmc"
+            brandingId="org.netxms.webui.design.branding.clarity"
+            id="org.netxms.webui.entrypoint.clarity"
+            path="/nxmc-clarity">
+      </entrypoint>
+      <entrypoint
+            applicationId="org.netxms.ui.eclipse.branding.nxmc"
             brandingId="org.netxms.webui.design.branding.classic"
-            id="org.netxms.webui.entrypoint"
-            path="/nxmc">
+            id="org.netxms.webui.entrypoint.classic"
+            path="/nxmc-classic">
       </entrypoint>
    </extension>
    <extension
@@ -45,6 +51,16 @@
             title="NetXMS Management Console">
          <presentationFactory
                id="org.netxms.ui.eclipse.console.factory.classic"
+               viewActionsVisible="true">
+         </presentationFactory>
+      </branding>
+      <branding
+            favicon="icons/favicon.png"
+            id="org.netxms.webui.design.branding.clarity"
+            themeId="org.netxms.webui.design.theme.clarity"
+            title="NetXMS Management Console">
+         <presentationFactory
+               id="org.netxms.ui.eclipse.console.factory.clarity"
                viewActionsVisible="true">
          </presentationFactory>
       </branding>

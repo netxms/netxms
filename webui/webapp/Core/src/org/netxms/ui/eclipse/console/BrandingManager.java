@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.console;
 
 import java.util.Map;
 import java.util.TreeMap;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -303,16 +305,27 @@ public class BrandingManager
 	/**
 	 * Get redirection URL for web console.
 	 * 
+	 * @param httpRequest original HTTP request
 	 * @return redirection URL for web console
 	 */
-	public String getRedirectionURL()
+	public String getRedirectionURL(HttpServletRequest httpRequest)
 	{
 		for(BrandingProvider p : providers.values())
 		{
-			String t = p.getRedirectionURL();
+			String t = p.getRedirectionURL(httpRequest);
 			if (t != null)
 				return t;
 		}
-		return "nxmc"; //$NON-NLS-1$
+		
+		String theme = "clarity";
+		for(Cookie c : httpRequest.getCookies())
+		{
+		   if ("netxms.nxmc.theme".equals(c.getName()))
+		   {
+		      theme = c.getValue();
+		      break;
+		   }
+		}
+		return "nxmc-" + theme; //$NON-NLS-1$
 	}
 }
