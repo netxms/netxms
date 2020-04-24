@@ -733,7 +733,7 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
    DataCollectionTarget *dct = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
 
    TCHAR value[MAX_RESULT_LENGTH];
-   DataCollectionError rc = dct->getInternalItem(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, value);
+   DataCollectionError rc = dct->getInternalMetric(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, value);
    *result = (rc == DCE_SUCCESS) ? object->vm()->createValue(value) : object->vm()->createValue();
    return 0;
 }
@@ -1017,7 +1017,7 @@ NXSL_METHOD_DEFINITION(Node, readAgentParameter)
       return NXSL_ERR_NOT_STRING;
 
    TCHAR buffer[MAX_RESULT_LENGTH];
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getItemFromAgent(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromAgent(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }
@@ -1038,20 +1038,6 @@ NXSL_METHOD_DEFINITION(Node, readAgentList)
 }
 
 /**
- * Node::readDriverParameter(name) method
- */
-NXSL_METHOD_DEFINITION(Node, readDriverParameter)
-{
-   if (!argv[0]->isString())
-      return NXSL_ERR_NOT_STRING;
-
-   TCHAR buffer[MAX_RESULT_LENGTH];
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getItemFromDeviceDriver(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
-   return 0;
-}
-
-/**
  * Node::readAgentTable(name) method
  */
 NXSL_METHOD_DEFINITION(Node, readAgentTable)
@@ -1062,6 +1048,49 @@ NXSL_METHOD_DEFINITION(Node, readAgentTable)
    Table *table;
    UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[0]->getValueAsCString(), &table);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::readDriverParameter(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readDriverParameter)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromDeviceDriver(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::readWebServiceParameter(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readWebServiceParameter)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromWebService(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::readAgentList(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readWebServiceList)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   StringList *list;
+   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromWebService(argv[0]->getValueAsCString(), &list);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
+   delete list;
    return 0;
 }
 
@@ -1090,6 +1119,8 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, readAgentParameter, 1);
    NXSL_REGISTER_METHOD(Node, readAgentTable, 1);
    NXSL_REGISTER_METHOD(Node, readDriverParameter, 1);
+   NXSL_REGISTER_METHOD(Node, readWebServiceList, 1);
+   NXSL_REGISTER_METHOD(Node, readWebServiceParameter, 1);
 }
 
 /**

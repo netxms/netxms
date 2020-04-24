@@ -65,12 +65,12 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
       switch(pItem->getDataSource())
       {
          case DS_INTERNAL:    // Server internal parameters (like status)
-            *error = dcTarget->getInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+            *error = dcTarget->getInternalMetric(pItem->getName(), MAX_LINE_SIZE, pBuffer);
             break;
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
-				   *error = static_cast<Node*>(dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getSnmpVersion(), pItem->getName(), MAX_LINE_SIZE,
+				   *error = static_cast<Node*>(dcTarget)->getMetricFromSNMP(pItem->getSnmpPort(), pItem->getSnmpVersion(), pItem->getName(), MAX_LINE_SIZE,
 					   pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
 			   }
 			   else
@@ -80,15 +80,15 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             break;
          case DS_DEVICE_DRIVER:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
-               *error = ((Node *)dcTarget)->getItemFromDeviceDriver(pItem->getName(), pBuffer, MAX_LINE_SIZE);
+               *error = ((Node *)dcTarget)->getMetricFromDeviceDriver(pItem->getName(), pBuffer, MAX_LINE_SIZE);
             else
                *error = DCE_NOT_SUPPORTED;
             break;
          case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
-	            *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+	            *error = ((Node *)dcTarget)->getMetricFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
 			   else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
-               *error = ((Sensor *)dcTarget)->getItemFromAgent(pItem->getName(), pBuffer, MAX_LINE_SIZE);
+               *error = ((Sensor *)dcTarget)->getMetricFromAgent(pItem->getName(), pBuffer, MAX_LINE_SIZE);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
@@ -97,7 +97,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 			   {
 				   TCHAR name[MAX_PARAM_NAME];
 				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), (const TCHAR *)EscapeStringForAgent(pItem->getName()), pItem->getSampleCount());
-	            *error = ((Node *)dcTarget)->getItemFromAgent(name, MAX_LINE_SIZE, pBuffer);
+	            *error = ((Node *)dcTarget)->getMetricFromAgent(name, MAX_LINE_SIZE, pBuffer);
 			   }
 			   else
 			   {
@@ -116,7 +116,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
                              (const TCHAR *)EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()),
                              (const TCHAR *)EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshPassword()),
                              (const TCHAR *)EscapeStringForAgent(pItem->getName()));
-                  *error = proxy->getItemFromAgent(name, MAX_LINE_SIZE, pBuffer);
+                  *error = proxy->getMetricFromAgent(name, MAX_LINE_SIZE, pBuffer);
                }
                else
                {
@@ -131,7 +131,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_SMCLP:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-	            *error = static_cast<Node*>(dcTarget)->getItemFromSMCLP(pItem->getName(), pBuffer, MAX_LINE_SIZE);
+	            *error = static_cast<Node*>(dcTarget)->getMetricFromSMCLP(pItem->getName(), pBuffer, MAX_LINE_SIZE);
             }
             else
             {
@@ -139,10 +139,10 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer, static_cast<DataCollectionTarget*>(pItem->getOwner().get()));
+            *error = dcTarget->getMetricFromScript(pItem->getName(), pBuffer, MAX_LINE_SIZE, static_cast<DataCollectionTarget*>(pItem->getOwner().get()));
             break;
          case DS_WEB_SERVICE:
-            *error = dcTarget->getWebServiceItem(pItem->getName(), pBuffer, MAX_LINE_SIZE);
+            *error = dcTarget->getMetricFromWebService(pItem->getName(), pBuffer, MAX_LINE_SIZE);
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
@@ -198,7 +198,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getScriptTable(table->getName(), &result, static_cast<DataCollectionTarget*>(table->getOwner().get()));
+            *error = dcTarget->getTableFromScript(table->getName(), &result, static_cast<DataCollectionTarget*>(table->getOwner().get()));
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;

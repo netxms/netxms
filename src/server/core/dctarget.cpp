@@ -692,7 +692,7 @@ shared_ptr<NetObj> DataCollectionTarget::objectFromParameter(const TCHAR *param)
 /**
  * Get value for server's internal parameter
  */
-DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
    DataCollectionError error = DCE_SUCCESS;
 
@@ -1084,7 +1084,7 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, We
  * Get item from web service
  * Parameter is expected in form service:path or service(arguments):path
  */
-DataCollectionError DataCollectionTarget::getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize)
+DataCollectionError DataCollectionTarget::getMetricFromWebService(const TCHAR *param, TCHAR *buffer, size_t bufSize)
 {
    return queryWebService(param, WebServiceRequestType::PARAMETER, buffer, bufSize, nullptr);
 }
@@ -1108,7 +1108,7 @@ DataCollectionError DataCollectionTarget::getListFromWebService(const TCHAR *par
 /**
  * Get parameter value from NXSL script
  */
-DataCollectionError DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
@@ -1169,7 +1169,7 @@ DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, 
 /**
  * Get table from NXSL script
  */
-DataCollectionError DataCollectionTarget::getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param, Table **result, DataCollectionTarget *targetObject)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);

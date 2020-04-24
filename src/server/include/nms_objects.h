@@ -2006,14 +2006,14 @@ public:
    virtual void enterMaintenanceMode(const TCHAR *comments) override;
    virtual void leaveMaintenanceMode() override;
 
-   virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+   virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
-   DataCollectionError getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);
-   DataCollectionError getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
+   DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject);
+   DataCollectionError getTableFromScript(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
    DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
    DataCollectionError getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
-   DataCollectionError getWebServiceItem(const TCHAR *param, TCHAR *buffer, size_t bufSize);
+   DataCollectionError getMetricFromWebService(const TCHAR *param, TCHAR *buffer, size_t bufSize);
    DataCollectionError getListFromWebService(const TCHAR *param, StringList **list);
 
    virtual uint32_t getEffectiveSourceNode(DCObject *dco);
@@ -2194,7 +2194,7 @@ public:
 	const TCHAR *getUserId() { return CHECK_NULL_EX(m_userId); }
 	LONG getBatteryLevel() { return m_batteryLevel; }
 
-	virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
+	virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
 
 	virtual bool lockForStatusPoll() override { return false; }
 	virtual bool lockForConfigurationPoll() override { return false; }
@@ -2493,7 +2493,7 @@ public:
    const TCHAR *getDescription() const { return m_description; }
    uint32_t getFrameCount() const { return m_frameCount; }
 
-   DataCollectionError getItemFromAgent(const TCHAR *naram, TCHAR *buffer, size_t bufferSize);
+   DataCollectionError getMetricFromAgent(const TCHAR *naram, TCHAR *buffer, size_t bufferSize);
    DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
    DataCollectionError getTableFromAgent(const TCHAR *name, Table **table);
 
@@ -3021,17 +3021,17 @@ public:
 
    bool connectToSMCLP();
 
-   virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
+   virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
 
-   DataCollectionError getItemFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
+   DataCollectionError getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
    DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table);
    DataCollectionError getListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringList **list);
    DataCollectionError getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringMap **values);
-   DataCollectionError getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   DataCollectionError getMetricFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
    DataCollectionError getTableFromAgent(const TCHAR *name, Table **table);
    DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
-   DataCollectionError getItemFromSMCLP(const TCHAR *param, TCHAR *buffer, size_t size);
-   DataCollectionError getItemFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromSMCLP(const TCHAR *param, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size);
 
    double getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue = 0);
    INT32 getMetricFromAgentAsInt32(const TCHAR *name, INT32 defaultValue = 0);

@@ -2443,12 +2443,12 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE))
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getItemFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          m_bootTime = time(nullptr) - _tcstol(buffer, nullptr, 0);
          DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
       }
-      else if (getItemFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+      else if (getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
          m_bootTime = time(nullptr) - _tcstol(buffer, nullptr, 0) / 100;   // sysUpTime is in hundredths of a second
          DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
@@ -2467,7 +2467,7 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getItemFromAgent(_T("Agent.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Agent.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          time_t oldAgentuptime = m_agentUpTime;
          m_agentUpTime = _tcstol(buffer, nullptr, 0);
@@ -2493,7 +2493,7 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getItemFromAgent(_T("GPS.LocationData"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("GPS.LocationData"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          GeoLocation loc = GeoLocation::parseAgentData(buffer);
          if (loc.getType() != GL_UNSET)
@@ -2512,7 +2512,7 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getItemFromAgent(_T("Agent.LogFile.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Agent.LogFile.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, nullptr, 0);
          if (status != 0)
@@ -2523,7 +2523,7 @@ restart_agent_check:
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get agent log status"), m_name, m_id);
       }
 
-      if (getItemFromAgent(_T("Agent.LocalDatabase.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Agent.LocalDatabase.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, nullptr, 0);
          const TCHAR *statusDescription[3]= {
@@ -2544,7 +2544,7 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getItemFromAgent(_T("Agent.IsUserAgentInstalled"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Agent.IsUserAgentInstalled"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, nullptr, 0);
          if (status != 0)
@@ -3012,7 +3012,7 @@ static int ReadBaseboardInformation(Node *node, ObjectArray<HardwareComponent> *
    int readCount = 0;
    for(int i = 0; i < 4; i++)
    {
-      if (node->getItemFromAgent(metrics[i], 256, &buffer[i * 256]) == ERR_SUCCESS)
+      if (node->getMetricFromAgent(metrics[i], 256, &buffer[i * 256]) == ERR_SUCCESS)
          readCount++;
    }
 
@@ -3092,15 +3092,15 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId)
    bool success = false;
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      if (getItemFromAgent(_T("Hardware.System.Manufacturer"), 128, hwInfo.vendor) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.Manufacturer"), 128, hwInfo.vendor) == DCE_SUCCESS)
          success = true;
-      if (getItemFromAgent(_T("Hardware.System.Product"), 128, hwInfo.productName) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.Product"), 128, hwInfo.productName) == DCE_SUCCESS)
          success = true;
-      if (getItemFromAgent(_T("Hardware.System.ProductCode"), 32, hwInfo.productCode) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.ProductCode"), 32, hwInfo.productCode) == DCE_SUCCESS)
          success = true;
-      if (getItemFromAgent(_T("Hardware.System.Version"), 16, hwInfo.productVersion) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.Version"), 16, hwInfo.productVersion) == DCE_SUCCESS)
          success = true;
-      if (getItemFromAgent(_T("Hardware.System.SerialNumber"), 32, hwInfo.serialNumber) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.SerialNumber"), 32, hwInfo.serialNumber) == DCE_SUCCESS)
          success = true;
    }
 
@@ -5411,7 +5411,7 @@ inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
 /**
  * Get DCI value via SNMP
  */
-DataCollectionError Node::getItemFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
+DataCollectionError Node::getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
 {
    UINT32 dwResult;
 
@@ -5473,7 +5473,7 @@ DataCollectionError Node::getItemFromSNMP(UINT16 port, SNMP_Version version, con
          dwResult = SNMP_ERR_COMM;
       }
    }
-   DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_name, param, dwResult);
+   DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): dwResult=%d"), m_name, param, dwResult);
    return DCErrorFromSNMPError(dwResult);
 }
 
@@ -5686,7 +5686,7 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version ver
 /**
  * Get item's value via native agent
  */
-DataCollectionError Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
+DataCollectionError Node::getMetricFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
    if ((m_state & NSF_AGENT_UNREACHABLE) ||
        (m_state & DCSF_UNREACHABLE) ||
@@ -5735,7 +5735,7 @@ DataCollectionError Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSiz
    }
 
 end_loop:
-   nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, rc);
+   nxlog_debug(7, _T("Node(%s)->getMetricFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, rc);
    return rc;
 }
 
@@ -5745,7 +5745,7 @@ end_loop:
 double Node::getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5759,7 +5759,7 @@ double Node::getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue)
 INT32 Node::getMetricFromAgentAsInt32(const TCHAR *name, INT32 defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5773,7 +5773,7 @@ INT32 Node::getMetricFromAgentAsInt32(const TCHAR *name, INT32 defaultValue)
 UINT32 Node::getMetricFromAgentAsUInt32(const TCHAR *name, UINT32 defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5787,7 +5787,7 @@ UINT32 Node::getMetricFromAgentAsUInt32(const TCHAR *name, UINT32 defaultValue)
 INT64 Node::getMetricFromAgentAsInt64(const TCHAR *name, INT64 defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5801,7 +5801,7 @@ INT64 Node::getMetricFromAgentAsInt64(const TCHAR *name, INT64 defaultValue)
 UINT64 Node::getMetricFromAgentAsUInt64(const TCHAR *name, UINT64 defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5928,7 +5928,7 @@ end_loop:
 /**
  * Get item's value via SM-CLP protocol
  */
-DataCollectionError Node::getItemFromSMCLP(const TCHAR *param, TCHAR *buffer, size_t size)
+DataCollectionError Node::getMetricFromSMCLP(const TCHAR *param, TCHAR *buffer, size_t size)
 {
    DataCollectionError result = DCE_COMM_ERROR;
    int tries = 3;
@@ -5980,7 +5980,7 @@ end_loop:
 /**
  * Get metric value from network device driver
  */
-DataCollectionError Node::getItemFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size)
+DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size)
 {
    lockProperties();
    NetworkDeviceDriver *driver = m_driver;
@@ -6009,9 +6009,9 @@ static void DciCountCallback(NetObj *object, void *data)
 /**
  * Get value for server's internal parameter
  */
-DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
-   DataCollectionError rc = super::getInternalItem(param, bufSize, buffer);
+   DataCollectionError rc = super::getInternalMetric(param, bufSize, buffer);
    if (rc != DCE_NOT_SUPPORTED)
       return rc;
    rc = DCE_SUCCESS;
@@ -6533,19 +6533,19 @@ UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam,
    {
       case DS_INTERNAL:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ))
-            rc = getInternalItem(pszParam, dwBufSize, pszBuffer);
+            rc = getInternalMetric(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_NATIVE_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
-            rc = getItemFromAgent(pszParam, dwBufSize, pszBuffer);
+            rc = getMetricFromAgent(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_SNMP_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            rc = getItemFromSNMP(0, SNMP_VERSION_DEFAULT, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
+            rc = getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
          break;
       case DS_DEVICE_DRIVER:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            rc = getItemFromDeviceDriver(pszParam, pszBuffer, dwBufSize);
+            rc = getMetricFromDeviceDriver(pszParam, pszBuffer, dwBufSize);
          break;
       default:
          return RCC_INVALID_ARGUMENT;
@@ -7078,7 +7078,7 @@ void Node::getInterfaceStatusFromAgent(UINT32 index, InterfaceAdminState *adminS
 
    // Get administrative status
    _sntprintf(szParam, 128, _T("Net.Interface.AdminStatus(%u)"), index);
-   if (getItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
+   if (getMetricFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
    {
       *adminState = (InterfaceAdminState)_tcstol(szBuffer, nullptr, 0);
 
@@ -7093,7 +7093,7 @@ void Node::getInterfaceStatusFromAgent(UINT32 index, InterfaceAdminState *adminS
             break;
          case IF_ADMIN_STATE_UP:     // Interface administratively up, check link state
             _sntprintf(szParam, 128, _T("Net.Interface.Link(%u)"), index);
-            if (getItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
+            if (getMetricFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
             {
                UINT32 dwLinkState = _tcstoul(szBuffer, nullptr, 0);
                *operState = (dwLinkState == 0) ? IF_OPER_STATE_DOWN : IF_OPER_STATE_UP;
@@ -8167,7 +8167,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
       if (!(bSuccess || useOnlyDNS))
       {
          DbgPrintf(4, _T("Resolving name for node %d [%s] via agent"), m_id, m_name);
-         if (getItemFromAgent(_T("System.Hostname"), 256, szBuffer) == DCE_SUCCESS)
+         if (getMetricFromAgent(_T("System.Hostname"), 256, szBuffer) == DCE_SUCCESS)
          {
             StrStrip(szBuffer);
             if (szBuffer[0] != 0)
@@ -8182,7 +8182,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
       if (!(bSuccess || useOnlyDNS))
       {
          DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP"), m_id, m_name);
-         if (getItemFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
             StrStrip(szBuffer);
             if (szBuffer[0] != 0)

@@ -269,9 +269,9 @@ void MobileDevice::updateStatus(NXCPMessage *msg)
 /**
  * Get value for server's internal parameter
  */
-DataCollectionError MobileDevice::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+DataCollectionError MobileDevice::getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
-   DataCollectionError rc = super::getInternalItem(param, bufSize, buffer);
+   DataCollectionError rc = super::getInternalMetric(param, bufSize, buffer);
 	if (rc != DCE_NOT_SUPPORTED)
 		return rc;
 	rc = DCE_SUCCESS;

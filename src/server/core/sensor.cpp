@@ -571,7 +571,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
       if ((m_state & SSF_PROVISIONED) && (m_deviceAddress == nullptr))
       {
          TCHAR buffer[MAX_RESULT_LENGTH];
-         if (getItemFromAgent(_T("LoraWAN.DevAddr(*)"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
+         if (getMetricFromAgent(_T("LoraWAN.DevAddr(*)"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
          {
             m_deviceAddress = MemCopyString(buffer);
             nxlog_debug(6, _T("ConfPoll(%s [%d}): sensor DevAddr[%s] successfully obtained"), m_name, m_id, m_deviceAddress);
@@ -676,7 +676,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
             lockProperties();
             TCHAR lastValue[MAX_DCI_STRING_VALUE] = { 0 };
             time_t now;
-            getItemFromAgent(_T("LoraWAN.LastContact(*)"), lastValue, MAX_DCI_STRING_VALUE);
+            getMetricFromAgent(_T("LoraWAN.LastContact(*)"), lastValue, MAX_DCI_STRING_VALUE);
             time_t lastConnectionTime = _tcstol(lastValue, nullptr, 0);
             if (lastConnectionTime != 0)
             {
@@ -706,11 +706,11 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
                   // FIXME: modify runtime if needed
                   m_state |= SSF_ACTIVE;
                   nxlog_debug(6, _T("StatusPoll(%s [%d]): Status set to ACTIVE"), m_name, m_id);
-                  getItemFromAgent(_T("LoraWAN.RSSI"), lastValue, MAX_DCI_STRING_VALUE);
+                  getMetricFromAgent(_T("LoraWAN.RSSI"), lastValue, MAX_DCI_STRING_VALUE);
                   m_signalStrenght = _tcstol(lastValue, nullptr, 10);
-                  getItemFromAgent(_T("LoraWAN.SNR"), lastValue, MAX_DCI_STRING_VALUE);
+                  getMetricFromAgent(_T("LoraWAN.SNR"), lastValue, MAX_DCI_STRING_VALUE);
                   m_signalNoise = static_cast<INT32>(_tcstod(lastValue, nullptr) * 10);
-                  getItemFromAgent(_T("LoraWAN.Frequency"), lastValue, MAX_DCI_STRING_VALUE);
+                  getMetricFromAgent(_T("LoraWAN.Frequency"), lastValue, MAX_DCI_STRING_VALUE);
                   m_frequency = static_cast<UINT32>(_tcstod(lastValue, nullptr) * 10);
                }
             }
@@ -829,7 +829,7 @@ void Sensor::prepareDlmsDciParameters(StringBuffer &parameter)
 /**
  * Get item's value via native agent
  */
-DataCollectionError Sensor::getItemFromAgent(const TCHAR *name, TCHAR *buffer, size_t bufferSize)
+DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer, size_t bufferSize)
 {
    if (m_state & DCSF_UNREACHABLE)
       return DCE_COMM_ERROR;
