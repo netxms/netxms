@@ -1429,6 +1429,8 @@ public:
    virtual void updateFromImport(ConfigEntry *config) override;
    virtual json_t *toJson() override;
 
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+
    void createExportRecord(StringBuffer &xml);
 
    bool hasPolicy(const uuid& guid);

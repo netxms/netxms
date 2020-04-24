@@ -136,6 +136,17 @@ public:
 };
 
 /**
+ * NXSL "Template" class
+ */
+class NXSL_TemplateClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_TemplateClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+};
+
+/**
  * NXSL "Zone" class
  */
 class NXSL_ZoneClass : public NXSL_NetObjClass
@@ -411,6 +422,7 @@ extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 extern NXSL_SubnetClass g_nxslSubnetClass;
+extern NXSL_TemplateClass g_nxslTemplateClass;
 extern NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 extern NXSL_UserClass g_nxslUserClass;
 extern NXSL_UserGroupClass g_nxslUserGroupClass;

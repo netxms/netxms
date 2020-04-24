@@ -2171,7 +2171,7 @@ NXSL_ContainerClass::NXSL_ContainerClass() : NXSL_NetObjClass()
 }
 
 /**
- * NXSL class "Cluster" attributes
+ * NXSL class "Container" attributes
  */
 NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const char *attr)
 {
@@ -2193,6 +2193,74 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "isAutoUnbindEnabled"))
    {
       value = vm->createValue(container->isAutoUnbindEnabled() ? 1 : 0);
+   }
+   return value;
+}
+
+/**
+ * Template::setAutoApplyMode() method
+ */
+NXSL_METHOD_DEFINITION(Template, setAutoApplyMode)
+{
+   if (!argv[0]->isInteger() || !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Template::setAutoApplyScript() method
+ */
+NXSL_METHOD_DEFINITION(Template, setAutoApplyScript)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindFilter(argv[0]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NXSL class "Template" constructor
+ */
+NXSL_TemplateClass::NXSL_TemplateClass() : NXSL_NetObjClass()
+{
+   setName(_T("Template"));
+
+   NXSL_REGISTER_METHOD(Template, setAutoApplyMode, 2);
+   NXSL_REGISTER_METHOD(Template, setAutoApplyScript, 1);
+}
+
+/**
+ * NXSL class "Template" attributes
+ */
+NXSL_Value *NXSL_TemplateClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   Template *tmpl = static_cast<shared_ptr<Template>*>(object->getData())->get();
+   if (!strcmp(attr, "autoApplyScript"))
+   {
+      const TCHAR *script = tmpl->getAutoBindScriptSource();
+      value = vm->createValue(CHECK_NULL_EX(script));
+   }
+   else if (!strcmp(attr, "isAutoApplyEnabled"))
+   {
+      value = vm->createValue(tmpl->isAutoBindEnabled() ? 1 : 0);
+   }
+   else if (!strcmp(attr, "isAutoRemoveEnabled"))
+   {
+      value = vm->createValue(tmpl->isAutoUnbindEnabled() ? 1 : 0);
+   }
+   else if (!strcmp(attr, "version"))
+   {
+      value = vm->createValue(tmpl->getVersion());
    }
    return value;
 }
@@ -3616,6 +3684,7 @@ NXSL_SensorClass g_nxslSensorClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 NXSL_SubnetClass g_nxslSubnetClass;
+NXSL_TemplateClass g_nxslTemplateClass;
 NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 NXSL_UserClass g_nxslUserClass;
 NXSL_UserGroupClass g_nxslUserGroupClass;

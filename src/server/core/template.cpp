@@ -775,3 +775,11 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
    }
    unlockProperties();
 }
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Template::createNXSLObject(NXSL_VM *vm) const
+{
+   return vm->createValue(new NXSL_Object(vm, &g_nxslTemplateClass, new shared_ptr<Template>(self())));
+}
