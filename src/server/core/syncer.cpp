@@ -160,7 +160,9 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
          {
             nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 4, _T("Object %d \"%s\" deleted from database"), object->getId(), object->getName());
             DBCommit(hdb);
-            NetObjDelete(object);
+
+            // Remove object from global object index by ID
+            g_idxObjectById.remove(object->getId());
          }
          else
          {

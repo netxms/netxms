@@ -4178,7 +4178,6 @@ void ObjectsInit();
 
 void NXCORE_EXPORTABLE NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importedObject);
 void NetObjDeleteFromIndexes(const NetObj& object);
-void NetObjDelete(NetObj *object);
 
 void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, const shared_ptr<Interface>& iface);
 void UpdateNodeIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, const shared_ptr<Node>& node);

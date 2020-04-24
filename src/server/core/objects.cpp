@@ -450,6 +450,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
  */
 void NetObjDeleteFromIndexes(const NetObj& object)
 {
+   g_idxObjectByGUID.remove(object.getGuid());
    switch(object.getObjectClass())
    {
       case OBJECT_GENERIC:
@@ -2374,20 +2375,6 @@ bool IsValidParentClass(int childClass, int parentClass)
 	}
 
    return false;
-}
-
-/**
- * Delete object (final step)
- * This function should be called ONLY from syncer thread
- * Object will be removed from index by ID and destroyed.
- */
-void NetObjDelete(NetObj *object)
-{
-	DbgPrintf(4, _T("Final delete step for object %s [%u]"), object->getName(), object->getId());
-
-   // Delete object from index by ID and object itself
-	g_idxObjectById.remove(object->getId());
-	g_idxObjectByGUID.remove(object->getGuid());
 }
 
 /**

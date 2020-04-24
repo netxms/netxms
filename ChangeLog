@@ -30,6 +30,7 @@
 	NX-1806 (Change order in which ping3.ndd is used during discovery or allow unloading/blacklist)
 	NX-1807 (TimescaleDB continuous aggregates, retention policies, etc.)
 	NX-1671 (Title from Object Tool's properties is not used anywhere)
+	NX-1808 (Template may not appear in object tree on import)
 	NX-1820 (Object deletion and negative reference count)
 	NX-1824 (Physical links - access denied)
 	NX-1827 (Maintenance mode filter in dashboard element "Status Map")
