@@ -206,7 +206,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
    s_cryptoMutexList = (MUTEX *)malloc(sizeof(MUTEX) * CRYPTO_num_locks());
-   for(i = 0; i < CRYPTO_num_locks(); i++)
+   for (i = 0; i < CRYPTO_num_locks(); i++)
       s_cryptoMutexList[i] = MutexCreate();
    CRYPTO_set_locking_callback(CryptoLockingCallback);
 #ifndef _WIN32
@@ -218,7 +218,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    nxlog_debug(1, _T("Validating ciphers"));
    s_supportedCiphers &= dwEnabledCiphers;
    UINT32 cipherBit = 1;
-   for(i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
+   for (i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
       if ((s_supportedCiphers & cipherBit) == 0)
       {
@@ -238,7 +238,12 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
       }
    }
 
-   nxlog_debug(1, _T("Crypto library initialized"));
+   nxlog_debug(1, _T("Crypto library initialized (%hs)"), OpenSSL_version(OPENSSL_VERSION));
+   if (OpenSSL_version_num() != OPENSSL_VERSION_NUMBER)
+   {
+      nxlog_write(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
+         OPENSSL_VERSION_NUMBER, OpenSSL_version_num());
+   }
 #else
    nxlog_debug(1, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
 #endif   /* _WITH_ENCRYPTION */
