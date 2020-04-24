@@ -25,6 +25,7 @@
 	NX-1729 (L2 maps get broken after server restart - all icons get coordinates (0, 0))
 	NX-1732 (Option for discarding collected performance data when database writer queue grows beyond limit)
 	NX-1765 (HTML codes visible in cell when viewing Table DCI last values in web management console)
+	NX-1771 (Add NXSL constants)
 	NX-1788 (NXSL: add support for ranges in switch/case)
 	NX-1793 (Out of range error)
 	NX-1806 (Change order in which ping3.ndd is used during discovery or allow unloading/blacklist)

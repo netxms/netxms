@@ -1763,7 +1763,25 @@ void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
 
    vm->setStorage(&g_nxslPstorage);
 
-   // Add DCI data types
+   // Severity codes
+   vm->addConstant("Severity::NORMAL", vm->createValue(SEVERITY_NORMAL));
+   vm->addConstant("Severity::WARNING", vm->createValue(SEVERITY_WARNING));
+   vm->addConstant("Severity::MINOR", vm->createValue(SEVERITY_MINOR));
+   vm->addConstant("Severity::MAJOR", vm->createValue(SEVERITY_MAJOR));
+   vm->addConstant("Severity::CRITICAL", vm->createValue(SEVERITY_CRITICAL));
+
+   // Object status codes
+   vm->addConstant("Status::NORMAL", vm->createValue(STATUS_NORMAL));
+   vm->addConstant("Status::WARNING", vm->createValue(STATUS_WARNING));
+   vm->addConstant("Status::MINOR", vm->createValue(STATUS_MINOR));
+   vm->addConstant("Status::MAJOR", vm->createValue(STATUS_MAJOR));
+   vm->addConstant("Status::CRITICAL", vm->createValue(STATUS_CRITICAL));
+   vm->addConstant("Status::UNKNOWN", vm->createValue(STATUS_UNKNOWN));
+   vm->addConstant("Status::UNMANAGED", vm->createValue(STATUS_UNMANAGED));
+   vm->addConstant("Status::DISABLED", vm->createValue(STATUS_DISABLED));
+   vm->addConstant("Status::TESTING", vm->createValue(STATUS_TESTING));
+
+   // DCI data types
    vm->addConstant("DCI::INT32", vm->createValue(DCI_DT_INT));
    vm->addConstant("DCI::UINT32", vm->createValue(DCI_DT_UINT));
    vm->addConstant("DCI::COUNTER32", vm->createValue(DCI_DT_COUNTER32));
@@ -1772,8 +1790,27 @@ void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
    vm->addConstant("DCI::COUNTER64", vm->createValue(DCI_DT_COUNTER64));
    vm->addConstant("DCI::FLOAT", vm->createValue(DCI_DT_FLOAT));
    vm->addConstant("DCI::STRING", vm->createValue(DCI_DT_STRING));
-   vm->addConstant("DCI::nullptr", vm->createValue(DCI_DT_NULL));
+   vm->addConstant("DCI::NULL", vm->createValue(DCI_DT_NULL));
 
+   // DCI states
+   vm->addConstant("DCI::ACTIVE", vm->createValue(ITEM_STATUS_ACTIVE));
+   vm->addConstant("DCI::DISABLED", vm->createValue(ITEM_STATUS_DISABLED));
+   vm->addConstant("DCI::UNSUPPORTED", vm->createValue(ITEM_STATUS_NOT_SUPPORTED));
+
+   // DCI data source (origin)
+   vm->addConstant("DataSource::AGENT", vm->createValue(DS_NATIVE_AGENT));
+   vm->addConstant("DataSource::DEVICE_DRIVER", vm->createValue(DS_DEVICE_DRIVER));
+   vm->addConstant("DataSource::INTERNAL", vm->createValue(DS_INTERNAL));
+   vm->addConstant("DataSource::MQTT", vm->createValue(DS_MQTT));
+   vm->addConstant("DataSource::PUSH", vm->createValue(DS_PUSH_AGENT));
+   vm->addConstant("DataSource::SCRIPT", vm->createValue(DS_SCRIPT));
+   vm->addConstant("DataSource::SMCLP", vm->createValue(DS_SMCLP));
+   vm->addConstant("DataSource::SNMP", vm->createValue(DS_SNMP_AGENT));
+   vm->addConstant("DataSource::SSH", vm->createValue(DS_SSH));
+   vm->addConstant("DataSource::WEB_SERVICE", vm->createValue(DS_WEB_SERVICE));
+   vm->addConstant("DataSource::WINPERF", vm->createValue(DS_WINPERF));
+
+   // Node state flags
    vm->addConstant("NodeState::Unreachable", vm->createValue(DCSF_UNREACHABLE));
    vm->addConstant("NodeState::NetworkPathProblem", vm->createValue(DCSF_NETWORK_PATH_PROBLEM));
    vm->addConstant("NodeState::AgentUnreachable", vm->createValue(NSF_AGENT_UNREACHABLE));
@@ -1781,10 +1818,12 @@ void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
    vm->addConstant("NodeState::SNMPUnreachable", vm->createValue(NSF_SNMP_UNREACHABLE));
    vm->addConstant("NodeState::CacheModeNotSupported", vm->createValue(NSF_CACHE_MODE_NOT_SUPPORTED));
 
+   // Cluster state flags
    vm->addConstant("ClusterState::Unreachable", vm->createValue(DCSF_UNREACHABLE));
    vm->addConstant("ClusterState::NetworkPathProblem", vm->createValue(DCSF_NETWORK_PATH_PROBLEM));
    vm->addConstant("ClusterState::Down", vm->createValue(CLSF_DOWN));
 
+   // Sensor state flags
    vm->addConstant("SensorState::Unreachable", vm->createValue(DCSF_UNREACHABLE));
    vm->addConstant("SensorState::NetworkPathProblem", vm->createValue(DCSF_NETWORK_PATH_PROBLEM));
    vm->addConstant("SensorState::Provisioned", vm->createValue(SSF_PROVISIONED));
