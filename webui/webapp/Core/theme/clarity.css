@@ -539,6 +539,7 @@ ProgressBar {
   background-color: #ffffff;
   background-image: none;
   border: 1px solid #B3B3B3;
+  border-radius: 2px;
 }
 
 ProgressBar-Indicator {
@@ -2053,58 +2054,39 @@ ToolBar.menuBar {
 /* FileUpload */
 
 FileUpload {
-  font: 12px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
-  border: 1px solid #828790;
-  /* border-radius: 3px; */
-  padding: 2px 5px;
-  spacing: 2px;
-  color: #4a4a4a;
-  background-color: #ffffff;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    color-stop( 48%, #f0f0f0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #ffffff )
-  );
-  animation: hoverOut 500ms ease-out;
-  cursor: pointer;
-  text-shadow: none;
-  opacity: 1;
-}
+   background-image: none;
+   padding: 4px 8px;
+   spacing: 2px;
+   animation: none;
+   color: #0072A3;
+   background-color: #ffffff;
+   opacity: 1;
+   text-shadow: none;
+   border: 1px solid #0072A3;
+   border-radius: 4px;
+   animation: hoverOut 500ms ease-out;
+   cursor: pointer;
+ }
 
 FileUpload:disabled {
   cursor: default;
 }
 
 FileUpload:hover {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    color-stop( 48%, #f0f0f0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #cccccc )
-  );
+   background-color: #E3F5FC;
 }
 
 FileUpload:pressed {
-  animation: none;
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e0e0e0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #b0b0b0 )
-  );
-  padding: 4px 5px 2px 7px;
+   background-color: #E3F5FC;
 }
 
 FileUpload-FocusIndicator {
-  background-color: transparent; 
-  border: 1px dotted #b8b8b8;
-  margin: 2px;
-  padding: 0px;
-  opacity: 1;
-}
+   background-color: transparent; 
+   border: 1px dotted #b8b8b8;
+   margin: 2px;
+   padding: 0px;
+   opacity: 1;
+  }
 
 /* Wait indicator */
 

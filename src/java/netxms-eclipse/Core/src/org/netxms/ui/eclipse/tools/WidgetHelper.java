@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -190,22 +191,39 @@ public class WidgetHelper
 	 */
 	public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText, Object layoutData)
 	{
-		return createLabeledCombo(parent, flags, labelText, layoutData, null);
+      return createLabeledCombo(parent, flags, labelText, layoutData, null, null);
 	}
-	
+
+   /**
+    * Create pair of label and combo box, with label above
+    * 
+    * @param parent Parent composite
+    * @param flags Flags for Text creation
+    * @param labelText Label's text
+    * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
+    * @param toolkit form toolkit to be used for control creation. May be null.
+    * @return Created Combo object
+    */
+   public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText, Object layoutData, FormToolkit toolkit)
+   {
+      return createLabeledCombo(parent, flags, labelText, layoutData, toolkit, null);
+   }
+
 	/**
     * Create pair of label and combo box, with label above
-	 * 
-	 * @param parent Parent composite
-	 * @param flags Flags for Text creation
-	 * @param labelText Label's text
-	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
-	 * @param toolkit form toolkit to be used for control creation. May be null.
-	 * @return Created Combo object
-	 */
-	public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText, Object layoutData, FormToolkit toolkit)
-	{
-		Composite group = (toolkit != null) ? toolkit.createComposite(parent) : new Composite(parent, SWT.NONE);
+    * 
+    * @param parent Parent composite
+    * @param flags Flags for Text creation
+    * @param labelText Label's text
+    * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
+    * @param toolkit form toolkit to be used for control creation. May be null.
+    * @param backgroundColor background color for surrounding composite and label (null for default)
+    * @return Created Combo object
+    */
+   public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText, Object layoutData,
+         FormToolkit toolkit, Color backgroundColor)
+   {
+      Composite group = (toolkit != null) ? toolkit.createComposite(parent) : new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = INNER_SPACING;
 		layout.horizontalSpacing = 0;
@@ -214,7 +232,10 @@ public class WidgetHelper
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		group.setLayout(layout);
-		
+
+      if (backgroundColor != null)
+         group.setBackground(backgroundColor);
+
 		if (layoutData != DEFAULT_LAYOUT_DATA)
 		{
 			group.setLayoutData(layoutData);
@@ -227,15 +248,18 @@ public class WidgetHelper
 			group.setLayoutData(gridData);
 		}
 		
+      Label label;
 		if (toolkit != null)
 		{
-			toolkit.createLabel(group, labelText);
+         label = toolkit.createLabel(group, labelText);
 		}
 		else
 		{
-			Label label = new Label(group, SWT.NONE);
+         label = new Label(group, SWT.NONE);
 			label.setText(labelText);
 		}
+      if (backgroundColor != null)
+         label.setBackground(backgroundColor);
 
 		Combo combo = new Combo(group, flags);
 		GridData gridData = new GridData();
@@ -248,7 +272,7 @@ public class WidgetHelper
 		
 		return combo;
 	}
-	
+
 	/**
     * Create pair of label and spinner, with label above
 	 * 

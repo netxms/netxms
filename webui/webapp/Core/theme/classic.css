@@ -2158,6 +2158,17 @@ Link.login {
   font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
+ProgressBar.login {
+   border: none;
+}
+
+ProgressBar-Indicator.login {
+   background-color: #ff7201;
+   background-image: none;
+   border: none;
+   opacity: 1;
+}
+
 Composite.LoginForm {
   border: 1px solid #303030;
   /*border-radius: 8px;*/
