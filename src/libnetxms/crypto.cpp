@@ -239,14 +239,14 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    }
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   nxlog_debug(1, _T("Crypto library initialized (%hs)"), OpenSSL_version(OPENSSL_VERSION));
+   nxlog_write(NXLOG_INFO, _T("Crypto library initialized (%hs)"), OpenSSL_version(OPENSSL_VERSION));
    if (OpenSSL_version_num() != OPENSSL_VERSION_NUMBER)
    {
       nxlog_write(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
             OPENSSL_VERSION_NUMBER, OpenSSL_version_num());
    }
 #else
-   nxlog_debug(1, _T("Crypto library initialized (%hs)"), SSLeay_version(SSLEAY_VERSION));
+   nxlog_write(NXLOG_INFO, _T("Crypto library initialized (%hs)"), SSLeay_version(SSLEAY_VERSION));
    if (SSLeay() != SSLEAY_VERSION_NUMBER)
    {
       nxlog_write(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
@@ -254,7 +254,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    }
 #endif
 #else
-   nxlog_debug(1, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
+   nxlog_write(NXLOG_WARNING, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
 #endif   /* _WITH_ENCRYPTION */
    return true;
 }
