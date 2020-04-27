@@ -1988,7 +1988,7 @@ Button.login[PUSH]:pressed:default {
 Button.loginSelector[PUSH] {
    padding: 4px 8px;
    spacing: 2px;
-   cursor: hand;
+   cursor: pointer;
    animation: none;
    color: #0072A3;
    background-color: #f0f0f0;
