@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -239,22 +239,22 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    }
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   nxlog_write(NXLOG_INFO, _T("Crypto library initialized (%hs)"), OpenSSL_version(OPENSSL_VERSION));
+   nxlog_write_generic(NXLOG_INFO, _T("Crypto library initialized (%hs)"), OpenSSL_version(OPENSSL_VERSION));
    if (OpenSSL_version_num() != OPENSSL_VERSION_NUMBER)
    {
-      nxlog_write(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
+      nxlog_write_generic(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
             OPENSSL_VERSION_NUMBER, OpenSSL_version_num());
    }
 #else
-   nxlog_write(NXLOG_INFO, _T("Crypto library initialized (%hs)"), SSLeay_version(SSLEAY_VERSION));
+   nxlog_write_generic(NXLOG_INFO, _T("Crypto library initialized (%hs)"), SSLeay_version(SSLEAY_VERSION));
    if (SSLeay() != SSLEAY_VERSION_NUMBER)
    {
-      nxlog_write(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
+      nxlog_write_generic(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
             SSLEAY_VERSION_NUMBER, SSLeay());
    }
 #endif
 #else
-   nxlog_write(NXLOG_WARNING, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
+   nxlog_write_generic(NXLOG_WARNING, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
 #endif   /* _WITH_ENCRYPTION */
    return true;
 }
