@@ -161,7 +161,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
    NetObjInsert(node, true, false);
 
    if (newNodeData->creationFlags & NXC_NCF_ENTER_MAINTENANCE)
-      node->enterMaintenanceMode(_T("Automatic maintenance for new node"));
+      node->enterMaintenanceMode(0, _T("Automatic maintenance for new node"));
 
 	// Use DNS name as primary name if required
 	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadBoolean(_T("UseDNSNameForDiscoveredNodes"), false))

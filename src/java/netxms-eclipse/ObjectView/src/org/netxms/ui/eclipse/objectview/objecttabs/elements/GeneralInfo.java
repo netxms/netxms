@@ -36,6 +36,7 @@ import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectview.Messages;
@@ -74,9 +75,27 @@ public class GeneralInfo extends TableElement
 			addPair(Messages.get().GeneralInfo_GUID, object.getGuid().toString());
 		addPair(Messages.get().GeneralInfo_Class, object.getObjectClassName());
 		if (object.isInMaintenanceMode())
+      {
          addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()) + Messages.get().GeneralInfo_Maintenance);
+         AbstractUserObject user = session.findUserDBObjectById(object.getMaintenanceInitiatorId(), new Runnable() {
+            @Override
+            public void run()
+            {
+               getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     onObjectChange(); // will cause refresh of table content
+                  }
+               });
+            }
+         });
+         addPair("Maintenance initiator", (user != null) ? user.getName() : "[" + object.getMaintenanceInitiatorId() + "]");
+      }
 		else
+      {
 		   addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
+      }
       if ((object instanceof AbstractNode) && ((((AbstractNode)object).getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0))
       {
          addPair("Device state", ((AbstractNode)object).getCipStateText(), false);

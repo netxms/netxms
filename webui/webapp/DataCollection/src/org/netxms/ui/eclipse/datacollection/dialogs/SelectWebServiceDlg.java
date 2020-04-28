@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
@@ -53,6 +54,10 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
    private TableViewer viewer;
    private List<WebServiceDefinition> selection;
 
+   /**
+    * @param parentShell
+    * @param multiSelection
+    */
    public SelectWebServiceDlg(Shell parentShell, boolean multiSelection)
    {
       super(parentShell);
@@ -66,18 +71,16 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
    private void saveSettings()
    {
       Point size = getShell().getSize();
-      Point pleace = getShell().getLocation();
+      Point location = getShell().getLocation();
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
 
-      settings.put("SelectWebServiceDlg.cx", pleace.x); //$NON-NLS-1$
-      settings.put("SelectWebServiceDlg.cy", pleace.y); //$NON-NLS-1$
+      settings.put("SelectWebServiceDlg.cx", location.x); //$NON-NLS-1$
+      settings.put("SelectWebServiceDlg.cy", location.y); //$NON-NLS-1$
       settings.put("SelectWebServiceDlg.width", size.x); //$NON-NLS-1$
-      settings.put("SelectWebServiceDlg.hight", size.y); //$NON-NLS-1$
+      settings.put("SelectWebServiceDlg.height", size.y); //$NON-NLS-1$
    }
-   
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
@@ -88,7 +91,7 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       try
       {
-         newShell.setSize(settings.getInt("SelectWebServiceDlg.width"), settings.getInt("SelectWebServiceDlg.hight")); //$NON-NLS-1$ //$NON-NLS-2$
+         newShell.setSize(settings.getInt("SelectWebServiceDlg.width"), settings.getInt("SelectWebServiceDlg.height")); //$NON-NLS-1$ //$NON-NLS-2$
          newShell.setLocation(settings.getInt("SelectWebServiceDlg.cx"), settings.getInt("SelectWebServiceDlg.cy")); //$NON-NLS-1$ //$NON-NLS-2$
       }
       catch(NumberFormatException e)
@@ -98,7 +101,7 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -171,7 +174,7 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
       job.start();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
     */
    @Override
@@ -181,18 +184,23 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
       super.cancelPressed();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override
    protected void okPressed()
    {
-      selection = ((IStructuredSelection)viewer.getSelection()).toList();    
-      if (selection.isEmpty())
+      IStructuredSelection viewerSelection = (IStructuredSelection)viewer.getSelection();
+      if (viewerSelection.isEmpty())
       {
-         MessageDialogHelper.openWarning(getShell(), "Warrning", "Web Service Definition should be selected");
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Web service definition should be selected");
          return;
-      }  
+      }
+
+      selection = new ArrayList<WebServiceDefinition>();
+      for(Object o : viewerSelection.toList())
+         selection.add((WebServiceDefinition)o);
+
       saveSettings();
       super.okPressed();
    }
@@ -202,33 +210,44 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
     * 
     * @return
     */
-   public List<WebServiceDefinition> getSelectionList()
+   public List<WebServiceDefinition> getSelection()
    {      
       return selection;
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterName()
+    */
    @Override
    public String getParameterName()
    {
       return selection.get(0).getName() + ":";
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDescription()
+    */
    @Override
    public String getParameterDescription()
    {      
       return selection.get(0).getName();
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
+    */
    @Override
    public DataType getParameterDataType()
    {
       return DataType.STRING;
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+    */
    @Override
    public String getInstanceColumn()
    {
       return "";
    }
-
 }

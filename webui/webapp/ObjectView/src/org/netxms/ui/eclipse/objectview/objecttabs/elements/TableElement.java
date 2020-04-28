@@ -135,9 +135,9 @@ public abstract class TableElement extends OverviewPageElement
 		addPair(attr, value, true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
+    */
 	@Override
 	protected void onObjectChange()
 	{

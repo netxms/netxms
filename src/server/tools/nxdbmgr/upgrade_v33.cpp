@@ -24,6 +24,40 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.11 to 32.12
+ */
+static bool H_UpgradeFromV11()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE object_properties ADD maint_initiator integer\n")
+      _T("UPDATE object_properties SET maint_initiator=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("maint_initiator")));
+
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE event_cfg SET description=? WHERE guid=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_TEXT, _T("Generated when node, cluster, or mobile device entered maintenance mode.\r\nParameters:\r\n   1) Comments\r\n   2) Initiating user ID\r\n   3) Initiating user name"), DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, _T("5f6c8b1c-f162-413e-8028-80e7ad2c362d"), DB_BIND_STATIC);
+      CHK_EXEC(SQLExecute(hStmt));
+
+      DBBind(hStmt, 1, DB_SQLTYPE_TEXT, _T("Generated when node, cluster, or mobile device left maintenance mode.\r\nParameters:\r\n   1) Initiating user ID\r\n   2) Initiating user name"), DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, _T("cab06848-a622-430d-8b4c-addeea732657"), DB_BIND_STATIC);
+      CHK_EXEC(SQLExecute(hStmt));
+
+      DBFreeStatement(hStmt);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 32.10 to 32.11
  */
 static bool H_UpgradeFromV10()
@@ -385,6 +419,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 11, 33, 12, H_UpgradeFromV11 },
    { 10, 33, 11, H_UpgradeFromV10 },
    { 9,  33, 10, H_UpgradeFromV9  },
    { 8,  33, 9,  H_UpgradeFromV8  },

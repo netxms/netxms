@@ -392,12 +392,12 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
                break;
             case 'd':
                buffer = MemAllocString(16);
-               _sntprintf(buffer, 16, _T("%d"), va_arg(args, LONG));
+               _sntprintf(buffer, 16, _T("%d"), va_arg(args, int32_t));
 					m_parameters.add(buffer);
                break;
             case 'D':
                buffer = MemAllocString(32);
-               _sntprintf(buffer, 32, INT64_FMT, va_arg(args, INT64));
+               _sntprintf(buffer, 32, INT64_FMT, va_arg(args, int64_t));
 					m_parameters.add(buffer);
                break;
             case 't':
@@ -408,7 +408,7 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
             case 'x':
             case 'i':
                buffer = MemAllocString(16);
-               _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, UINT32));
+               _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, uint32_t));
 					m_parameters.add(buffer);
                break;
             case 'a':   // IPv4 address

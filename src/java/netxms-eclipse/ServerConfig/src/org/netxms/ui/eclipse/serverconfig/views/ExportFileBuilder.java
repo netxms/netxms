@@ -1481,7 +1481,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       SelectWebServiceDlg dlg = new SelectWebServiceDlg(getSite().getShell(), true);
       if (dlg.open() == Window.OK)
       {
-         for(WebServiceDefinition service : dlg.getSelectionList())
+         for(WebServiceDefinition service : dlg.getSelection())
             webServices.put(service.getId(), service);
          webServiceViewer.setInput(webServices.values().toArray());
          setModified();

@@ -3298,7 +3298,7 @@ void ClientSession::enterMaintenanceMode(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_SENSOR))
          {
             TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
-            object->enterMaintenanceMode(comments);
+            object->enterMaintenanceMode(m_dwUserId, comments);
             MemFree(comments);
             msg.setField(VID_RCC, RCC_SUCCESS);
             WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(),
@@ -3351,7 +3351,7 @@ void ClientSession::leaveMaintenanceMode(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_SERVICEROOT) ||
              (object->getObjectClass() == OBJECT_SENSOR))
          {
-            object->leaveMaintenanceMode();
+            object->leaveMaintenanceMode(m_dwUserId);
             msg.setField(VID_RCC, RCC_SUCCESS);
             WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(),
                _T("Requested maintenance mode exit for object %s [%d]"), object->getName(), object->getId());

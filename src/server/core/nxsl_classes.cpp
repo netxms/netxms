@@ -162,7 +162,7 @@ NXSL_METHOD_DEFINITION(NetObj, enterMaintenance)
    if ((argc != 0) && !argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->enterMaintenanceMode((argc != 0) ? argv[0]->getValueAsCString() : nullptr);
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->enterMaintenanceMode(0, (argc != 0) ? argv[0]->getValueAsCString() : nullptr);
    *result = vm->createValue();
    return 0;
 }
@@ -198,7 +198,7 @@ NXSL_METHOD_DEFINITION(NetObj, getCustomAttribute)
  */
 NXSL_METHOD_DEFINITION(NetObj, leaveMaintenance)
 {
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->leaveMaintenanceMode();
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->leaveMaintenanceMode(0);
    *result = vm->createValue();
    return 0;
 }
@@ -590,6 +590,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (!strcmp(attr, "isInMaintenanceMode"))
    {
       value = vm->createValue(object->isInMaintenanceMode());
+   }
+   else if (!strcmp(attr, "maintenanceInitiator"))
+   {
+      value = vm->createValue(object->getMaintenanceInitiator());
    }
    else if (!strcmp(attr, "mapImage"))
    {

@@ -176,6 +176,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		createToolsSection();
       createSummaryTablesSection();
       createActionsSection();
+      createWebServiceSection();
 		
 		form.reflow(true);
 		
@@ -1001,7 +1002,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
                      throw new Exception("Unsupported URL type");
                   }
                   ((HttpURLConnection)conn).setRequestMethod("POST");
-                  ((HttpURLConnection)conn).setRequestProperty("User-Agent", "nxmc/" + VersionInfo.version());
+                  ((HttpURLConnection)conn).setRequestProperty("User-Agent", "NetXMS Console/" + VersionInfo.version());
                   ((HttpURLConnection)conn).setRequestProperty("Content-Type", "application/xml; charset=utf-8");
                   ((HttpURLConnection)conn).setDoOutput(true);
                   ((HttpURLConnection)conn).setAllowUserInteraction(false);
@@ -1154,7 +1155,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       			}
       		}.start();
          }
-	   });
+      });
 	}
 
 	/* (non-Javadoc)
@@ -1473,7 +1474,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       SelectWebServiceDlg dlg = new SelectWebServiceDlg(getSite().getShell(), true);
       if (dlg.open() == Window.OK)
       {
-         for(WebServiceDefinition service : dlg.getSelectionList())
+         for(WebServiceDefinition service : dlg.getSelection())
             webServices.put(service.getId(), service);
          webServiceViewer.setInput(webServices.values().toArray());
          setModified();

@@ -22,6 +22,7 @@
 	NX-807 (NXSL: add method to lookup instance column ID without iterating over Table::columns)
 	NX-814 (NXSL: add new node attribute – isRemotelyManaged)
 	NX-1362 (Pattern matching for command output in SSH.Command parameter)
+	NX-1511 (Save and display user ID of maintenance mode initiator)
 	NX-1699 (Allow user turn on "Prevent automatic SNMP configuration changes" when creating node)
 	NX-1729 (L2 maps get broken after server restart - all icons get coordinates (0, 0))
 	NX-1732 (Option for discarding collected performance data when database writer queue grows beyond limit)

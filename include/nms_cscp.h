@@ -1370,6 +1370,7 @@ typedef struct
 #define VID_HARDWARE_ID             ((UINT32)700)
 #define VID_VERIFY_HOST             ((UINT32)701)
 #define VID_WEB_SERVICE_DEF_COUNT   ((UINT32)702)
+#define VID_MAINTENANCE_INITIATOR   ((UINT32)703)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

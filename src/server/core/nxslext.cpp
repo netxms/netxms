@@ -868,7 +868,7 @@ static int F_EnterMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->enterMaintenanceMode((argc > 1) ? argv[1]->getValueAsCString() : nullptr);
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->enterMaintenanceMode(0, (argc > 1) ? argv[1]->getValueAsCString() : nullptr);
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -892,7 +892,7 @@ static int F_LeaveMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->leaveMaintenanceMode();
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->leaveMaintenanceMode(0);
 
 	*ppResult = vm->createValue();
 	return 0;

@@ -177,6 +177,7 @@ CREATE TABLE object_properties
   postcode varchar(31) null,
   state_before_maint integer not null,
   maint_event_id SQL_INT64 not null,
+  maint_initiator integer not null,
   creation_time integer not null,
   PRIMARY KEY(object_id)
 ) TABLE_TYPE;

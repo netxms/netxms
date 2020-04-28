@@ -1436,10 +1436,13 @@ void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Enter maintenance mode
  */
-void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
+void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *comments)
 {
-   DbgPrintf(4, _T("Entering maintenance mode for %s [%d]"), m_name, m_id);
-   UINT64 eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "s", CHECK_NULL_EX(comments));
+   TCHAR userName[MAX_USER_NAME];
+   ResolveUserId(userId, userName, true);
+
+   DbgPrintf(4, _T("Entering maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
+   UINT64 eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "sds", CHECK_NULL_EX(comments), userId, userName);
 
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -1454,6 +1457,7 @@ void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
 
    lockProperties();
    m_maintenanceEventId = eventId;
+   m_maintenanceInitiator = userId;
    m_stateBeforeMaintenance = m_state;
    setModified(MODIFY_COMMON_PROPERTIES | MODIFY_DATA_COLLECTION);
    unlockProperties();
@@ -1462,10 +1466,13 @@ void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
 /**
  * Leave maintenance mode
  */
-void DataCollectionTarget::leaveMaintenanceMode()
+void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
 {
-   DbgPrintf(4, _T("Leaving maintenance mode for %s [%d]"), m_name, m_id);
-   PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, nullptr);
+   TCHAR userName[MAX_USER_NAME];
+   ResolveUserId(userId, userName, true);
+
+   DbgPrintf(4, _T("Leaving maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
+   PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, "ds", userId, userName);
 
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -1482,6 +1489,7 @@ void DataCollectionTarget::leaveMaintenanceMode()
 
    lockProperties();
    m_maintenanceEventId = 0;
+   m_maintenanceInitiator = 0;
    bool forcePoll = m_state != m_stateBeforeMaintenance;
    m_state = m_stateBeforeMaintenance;
    setModified(MODIFY_COMMON_PROPERTIES);

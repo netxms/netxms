@@ -65,17 +65,18 @@ NetObj::NetObj() : NObject()
    m_mutexACL = MutexCreate();
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
-   m_comments = NULL;
+   m_comments = nullptr;
    m_modified = 0;
    m_isDeleted = false;
    m_isDeleteInitiated = false;
    m_isHidden = false;
 	m_isSystem = false;
 	m_maintenanceEventId = 0;
+	m_maintenanceInitiator = 0;
    m_accessList = new AccessList();
    m_inheritAccessRights = true;
-	m_trustedNodes = NULL;
-   m_pollRequestor = NULL;
+	m_trustedNodes = nullptr;
+   m_pollRequestor = nullptr;
    m_statusCalcAlg = SA_CALCULATE_DEFAULT;
    m_statusPropAlg = SA_PROPAGATE_DEFAULT;
    m_fixedStatus = STATUS_WARNING;
@@ -308,7 +309,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 									  _T("location_type,latitude,longitude,location_accuracy,")
 									  _T("location_timestamp,guid,image,submap_id,country,city,")
                              _T("street_address,postcode,maint_event_id,state_before_maint,")
-                             _T("state,flags,creation_time FROM object_properties ")
+                             _T("maint_initiator,state,flags,creation_time FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -362,11 +363,12 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 
             m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 26);
             m_stateBeforeMaintenance = DBGetFieldULong(hResult, 0, 27);
+            m_maintenanceInitiator = DBGetFieldULong(hResult, 0, 28);
 
-            m_state = DBGetFieldULong(hResult, 0, 28);
+            m_state = DBGetFieldULong(hResult, 0, 29);
             m_runtimeFlags = 0;
-            m_flags = DBGetFieldULong(hResult, 0, 29);
-            m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 30));
+            m_flags = DBGetFieldULong(hResult, 0, 30);
+            m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 31));
 
 				success = true;
 			}
@@ -564,7 +566,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
       _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("image"), _T("submap_id"), _T("country"), _T("city"),
       _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
-      _T("creation_time"), NULL
+      _T("creation_time"), _T("maint_initiator"), nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -611,7 +613,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_state);
 	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)m_creationTime);
-	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
+	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_id);
 
    success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1175,6 +1178,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
    pMsg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
+   pMsg->setField(VID_MAINTENANCE_INITIATOR, m_maintenanceInitiator);
    pMsg->setField(VID_FLAGS, m_flags);
    pMsg->setField(VID_PRIMARY_ZONE_PROXY_ID, m_primaryZoneProxyId);
    pMsg->setField(VID_BACKUP_ZONE_PROXY_ID, m_backupZoneProxyId);
@@ -2321,7 +2325,7 @@ void NetObj::setGeoLocation(const GeoLocation& geoLocation)
 /**
  * Enter maintenance mode
  */
-void NetObj::enterMaintenanceMode(const TCHAR *comments)
+void NetObj::enterMaintenanceMode(uint32_t userId, const TCHAR *comments)
 {
    DbgPrintf(4, _T("Entering maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
@@ -2330,7 +2334,7 @@ void NetObj::enterMaintenanceMode(const TCHAR *comments)
    {
       NetObj *object = getChildList().get(i);
       if (object->getStatus() != STATUS_UNMANAGED)
-         object->enterMaintenanceMode(comments);
+         object->enterMaintenanceMode(userId, comments);
    }
    unlockChildList();
 }
@@ -2338,7 +2342,7 @@ void NetObj::enterMaintenanceMode(const TCHAR *comments)
 /**
  * Leave maintenance mode
  */
-void NetObj::leaveMaintenanceMode()
+void NetObj::leaveMaintenanceMode(uint32_t userId)
 {
    DbgPrintf(4, _T("Leaving maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
@@ -2347,7 +2351,7 @@ void NetObj::leaveMaintenanceMode()
    {
       NetObj *object = getChildList().get(i);
       if (object->getStatus() != STATUS_UNMANAGED)
-         object->leaveMaintenanceMode();
+         object->leaveMaintenanceMode(userId);
    }
    unlockChildList();
 }
@@ -2423,6 +2427,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "statusThresholds", json_integer_array(m_statusThresholds, 4));
    json_object_set_new(root, "isSystem", json_boolean(m_isSystem));
    json_object_set_new(root, "maintenanceEventId", json_integer(m_maintenanceEventId));
+   json_object_set_new(root, "maintenanceInitiator", json_integer(m_maintenanceInitiator));
    json_object_set_new(root, "image", m_image.toJson());
    json_object_set_new(root, "geoLocation", m_geoLocation.toJson());
    json_object_set_new(root, "postalAddress", m_postalAddress->toJson());

@@ -40,11 +40,11 @@ static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& para
       {
          if (enter)
          {
-            object->enterMaintenanceMode(parameters->m_comments);
+            object->enterMaintenanceMode(parameters->m_userId, parameters->m_comments);
          }
          else
          {
-            object->leaveMaintenanceMode();
+            object->leaveMaintenanceMode(parameters->m_userId);
          }
       }
       else

@@ -127,6 +127,7 @@ public abstract class AbstractObject
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
 	protected boolean inMaintenanceMode = false;
+   protected long maintenanceInitiatorId = 0;
 	protected long primaryZoneProxyId = 0;
    protected long backupZoneProxyId = 0;
 	protected String comments;
@@ -210,6 +211,7 @@ public abstract class AbstractObject
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
 		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);
+      maintenanceInitiatorId = msg.getFieldAsInt64(NXCPCodes.VID_MAINTENANCE_INITIATOR);
 		primaryZoneProxyId = msg.getFieldAsInt64(NXCPCodes.VID_PRIMARY_ZONE_PROXY_ID);
       backupZoneProxyId = msg.getFieldAsInt64(NXCPCodes.VID_BACKUP_ZONE_PROXY_ID);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
@@ -1006,7 +1008,17 @@ public abstract class AbstractObject
    {
       return inMaintenanceMode;
    }
-   
+
+   /**
+    * Get ID of the user that initiated maintenance mode for this object.
+    *
+    * @return ID of the user that initiated maintenance mode for this object
+    */
+   public long getMaintenanceInitiatorId()
+   {
+      return maintenanceInitiatorId;
+   }
+
    /**
     * Get primary zone proxy ID
     * 

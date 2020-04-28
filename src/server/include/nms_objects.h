@@ -880,12 +880,13 @@ protected:
    UINT32 m_runtimeFlags;
    UINT32 m_state;
    UINT32 m_stateBeforeMaintenance;
+   uint64_t m_maintenanceEventId;
+   uint32_t m_maintenanceInitiator;
    VolatileCounter m_modified;
    bool m_isDeleted;
    bool m_isDeleteInitiated;
    bool m_isHidden;
 	bool m_isSystem;
-	UINT64 m_maintenanceEventId;
 	uuid m_image;
    MUTEX m_mutexProperties;         // Object data access mutex
 	GeoLocation m_geoLocation;
@@ -1033,9 +1034,10 @@ public:
    time_t getCreationTime() { return m_creationTime; }
 
    bool isInMaintenanceMode() const { return m_maintenanceEventId != 0; }
-   UINT64 getMaintenanceEventId() const { return m_maintenanceEventId; }
-   virtual void enterMaintenanceMode(const TCHAR *comments);
-   virtual void leaveMaintenanceMode();
+   uint64_t getMaintenanceEventId() const { return m_maintenanceEventId; }
+   uint32_t getMaintenanceInitiator() const { return m_maintenanceInitiator; }
+   virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments);
+   virtual void leaveMaintenanceMode(uint32_t userId);
 
    void fillMessage(NXCPMessage *msg, UINT32 userId);
    UINT32 modifyFromMessage(NXCPMessage *msg);
@@ -2003,8 +2005,8 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
    virtual bool isDataCollectionTarget() const override;
 
-   virtual void enterMaintenanceMode(const TCHAR *comments) override;
-   virtual void leaveMaintenanceMode() override;
+   virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
+   virtual void leaveMaintenanceMode(uint32_t userId) override;
 
    virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
