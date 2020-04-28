@@ -150,7 +150,7 @@ static bool ConvertDCObjectFlags(const TCHAR *table)
             table, (flags & 1) ? _T('2') : ((pollingInterval <= 0) ? _T('0') : _T('1')),
             (flags & 0x200) ? _T('2') : (retentionTime <= 0) ? _T('0') : _T('1'),
             flags & ~0x201, id);
-         CHK_EXEC(SQLQuery(query));
+         CHK_EXEC_NO_SP(SQLQuery(query));
       }
    }
 
