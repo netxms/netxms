@@ -301,31 +301,34 @@ public class BrandingManager
 		}
 		return null;
 	}
-	
-	/**
-	 * Get redirection URL for web console.
-	 * 
-	 * @param httpRequest original HTTP request
-	 * @return redirection URL for web console
-	 */
-	public String getRedirectionURL(HttpServletRequest httpRequest)
-	{
-		for(BrandingProvider p : providers.values())
-		{
-			String t = p.getRedirectionURL(httpRequest);
-			if (t != null)
-				return t;
-		}
-		
-		String theme = "clarity";
-		for(Cookie c : httpRequest.getCookies())
-		{
-		   if ("netxms.nxmc.theme".equals(c.getName()))
-		   {
-		      theme = c.getValue();
-		      break;
-		   }
-		}
-		return "nxmc-" + theme; //$NON-NLS-1$
-	}
+
+   /**
+    * Get redirection URL for web console.
+    *
+    * @param httpRequest original HTTP request
+    * @return redirection URL for web console
+    */
+   public String getRedirectionURL(HttpServletRequest httpRequest)
+   {
+      for(BrandingProvider p : providers.values())
+      {
+         String t = p.getRedirectionURL(httpRequest);
+         if (t != null)
+            return t;
+      }
+
+      String theme = "clarity";
+      if (httpRequest.getCookies() != null)
+      {
+         for(Cookie c : httpRequest.getCookies())
+         {
+            if ("netxms.nxmc.theme".equals(c.getName()))
+            {
+               theme = c.getValue();
+               break;
+            }
+         }
+      }
+      return "nxmc-" + theme; //$NON-NLS-1$
+   }
 }
