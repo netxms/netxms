@@ -18,8 +18,6 @@
  */
 package org.netxms.agent;
 
-import org.netxms.agent.ParameterType;
-
 /**
  * Push parameter
  */

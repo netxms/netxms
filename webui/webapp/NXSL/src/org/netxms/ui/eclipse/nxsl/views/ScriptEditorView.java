@@ -365,14 +365,13 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       });
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.part.WorkbenchPart#getAdapter(java.lang.Class)
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getAdapter(Class adapter)
+	public <T> T getAdapter(Class<T> adapter)
 	{
-		Object object = super.getAdapter(adapter);
+		T object = super.getAdapter(adapter);
 		if (object != null)
 		{
 			return object;
