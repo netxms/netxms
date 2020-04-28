@@ -421,85 +421,16 @@ static bool CopyDataTable_V33_6(const TCHAR *table, bool tableData)
 {
    WriteToTerminalEx(_T("Converting table \x1b[1m%s\x1b[0m\n"), table);
 
-   int totalCount = 0;
-   time_t cutoffTime = 0, nextCutoffTime = 0, currTime = 0;
-   uint32_t currId = 0;
    TCHAR query[1024];
-   StringBuffer insertQuery;
-   while(true)
+   if (tableData)
    {
-      if (tableData)
-      {
-         _sntprintf(query, 1024,
-                  _T("SELECT item_id,tdata_timestamp,tdata_value FROM v33_5_%s WHERE (tdata_timestamp=%u AND item_id>%u) OR tdata_timestamp>%u ORDER BY tdata_timestamp,item_id LIMIT 1000"),
-                  table, static_cast<uint32_t>(currTime), currId, static_cast<uint32_t>(currTime));
-      }
-      else
-      {
-         _sntprintf(query, 1024,
-                  _T("SELECT item_id,idata_timestamp,idata_value,raw_value FROM v33_5_%s WHERE (idata_timestamp=%u AND item_id>%u) OR idata_timestamp>%u ORDER BY idata_timestamp,item_id LIMIT 10000"),
-                  table, static_cast<uint32_t>(currTime), currId, static_cast<uint32_t>(currTime));
-      }
-      DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(query);
-      if (hResult == nullptr)
-      {
-         if (g_ignoreErrors)
-            continue;
-         return false;
-      }
-
-      insertQuery = _T("INSERT INTO ");
-      insertQuery.append(table);
-      insertQuery.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES"));
-      int count = 0;
-      while(DBFetch(hResult))
-      {
-         currId = DBGetFieldULong(hResult, 0);
-         currTime = DBGetFieldULong(hResult, 1);
-
-         insertQuery.append((count == 0) ? _T(' ') : _T(','));
-         if (tableData)
-         {
-            _sntprintf(query, 1024, _T("(%u,to_timestamp(%u),'"), currId, static_cast<uint32_t>(currTime));
-            insertQuery.append(query);
-            insertQuery.appendPreallocated(DBGetField(hResult, 2, nullptr, 0));
-            insertQuery.append(_T("')"));
-         }
-         else
-         {
-            TCHAR buffer1[256], buffer2[256];
-            _sntprintf(query, 1024, _T("(%u,to_timestamp(%u),%s,%s)"),
-                     currId, static_cast<uint32_t>(currTime),
-                     (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 2, buffer1, 256)),
-                     (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 3, buffer2, 256)));
-            insertQuery.append(query);
-         }
-
-         if (currTime != nextCutoffTime)
-         {
-            cutoffTime = nextCutoffTime;
-            nextCutoffTime = currTime;
-         }
-         count++;
-      }
-      DBFreeResult(hResult);
-
-      if (count == 0)
-         break;   // End of data
-
-      CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
-      CHK_EXEC(SQLQuery(insertQuery, false));
-      if (cutoffTime != 0)
-      {
-         _sntprintf(query, 256, _T("SELECT drop_chunks(%u, 'v33_5_%s')"), static_cast<uint32_t>(cutoffTime), table);
-         CHK_EXEC(SQLQuery(query));
-         cutoffTime = 0;
-      }
-      CHK_EXEC_NO_SP(DBCommit(g_dbHandle));
-
-      totalCount += count;
-      WriteToTerminalEx(_T("   %d records processed\n"), totalCount);
+      _sntprintf(query, 1024, _T("INSERT INTO %s (item_id,tdata_timestamp,tdata_value) SELECT item_id,to_timestamp(tdata_timestamp),tdata_value FROM v33_5_%s"), table, table);
    }
+   else
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO %s (item_id,idata_timestamp,idata_value,raw_value) SELECT item_id,to_timestamp(idata_timestamp),idata_value,raw_value"), table, table);
+   }
+   CHK_EXEC_NO_SP(SQLQuery(query));
 
    _sntprintf(query, 1024, _T("DROP TABLE v33_5_%s CASCADE"), table);
    CHK_EXEC_NO_SP(SQLQuery(query));
