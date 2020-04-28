@@ -1281,6 +1281,24 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Parameters:' CONCAT CRLF CONCAT
 		'   No message-specific parameters'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_HOUSEKEEPER_STARTED, 'SYS_HOUSEKEEPER_STARTED', 'cbbf0da4-1784-49a5-af9b-e8c59451d3ce',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Housekeeper task started',
+		'Generated when internal housekeeper task starts.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_HOUSEKEEPER_COMPLETED, 'SYS_HOUSEKEEPER_COMPLETED', '69743397-6f2b-4777-8bde-879a6e3e47f9',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Housekeeper task completed in %1 seconds',
+		'Generated when internal housekeeper task completes.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Housekeeper execution time in seconds'
+	);
 
 /*
 ** SNMP traps

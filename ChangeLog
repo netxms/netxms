@@ -42,6 +42,7 @@
 	NX-1834 (Add NXSL function "sqrt")
 	NX-1836 (Access attributes of template in auto-bind script)
 	NX-1840 (Ability to set communication option "this is address of remote management node" during node creation)
+	NX-1842 (Generate event when housekeeper process has started and finished)
 
 
 *

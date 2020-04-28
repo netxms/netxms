@@ -320,6 +320,8 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          break;
 
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup"));
+      time_t cycleStartTime = time(nullptr);
+      PostSystemEvent(EVENT_HOUSEKEEPER_STARTED, g_dwMgmtNode, nullptr);
 
       s_throttlingHighWatermark = ConfigReadInt(_T("Housekeeper.Throttle.HighWatermark"), 250000);
       s_throttlingLowWatermark = ConfigReadInt(_T("Housekeeper.Throttle.LowWatermark"), 50000);
@@ -328,8 +330,6 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		CleanAlarmHistory(hdb);
 
-      time_t currTime = time(NULL);
-
 		// Remove outdated event log records
 		UINT32 dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
 		if (dwRetentionTime > 0)
@@ -337,7 +337,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing event log (retention time %d days)"), dwRetentionTime);
 			dwRetentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), (long)(cycleStartTime - dwRetentionTime));
 			DBQuery(hdb, query);
 			if (!ThrottleHousekeeper())
 			   break;
@@ -350,7 +350,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing syslog (retention time %d days)"), dwRetentionTime);
 			dwRetentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), (long)(cycleStartTime - dwRetentionTime));
 			DBQuery(hdb, query);
          if (!ThrottleHousekeeper())
             break;
@@ -363,7 +363,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing audit log (retention time %d days)"), dwRetentionTime);
 			dwRetentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(cycleStartTime - dwRetentionTime));
 			DBQuery(hdb, query);
          if (!ThrottleHousekeeper())
             break;
@@ -376,7 +376,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing SNMP trap log (retention time %d days)"), dwRetentionTime);
 			dwRetentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<%ld"), (long)(cycleStartTime - dwRetentionTime));
 			DBQuery(hdb, query);
          if (!ThrottleHousekeeper())
             break;
@@ -453,6 +453,8 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		// Run training on prediction engines
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue prediction engines training"));
 		g_idxObjectById.forEach(QueuePredictionEngineTraining, NULL);
+
+      PostSystemEvent(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode, "t", time(nullptr) - cycleStartTime);
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
       sleepTime = GetSleepTime(hour, minute, 0);

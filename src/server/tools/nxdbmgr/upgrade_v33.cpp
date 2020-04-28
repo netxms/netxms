@@ -24,6 +24,29 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 32.10 to 32.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_HOUSEKEEPER_STARTED, _T("SYS_HOUSEKEEPER_STARTED"),
+            SEVERITY_NORMAL, EF_LOG, _T("cbbf0da4-1784-49a5-af9b-e8c59451d3ce"),
+            _T("Housekeeper task started"),
+            _T("Generated when internal housekeeper task starts.\r\n")
+            _T("Parameters:\r\n")
+            _T("   No message-specific parameters")
+            ));
+   CHK_EXEC(CreateEventTemplate(EVENT_HOUSEKEEPER_COMPLETED, _T("SYS_HOUSEKEEPER_COMPLETED"),
+            SEVERITY_NORMAL, EF_LOG, _T("69743397-6f2b-4777-8bde-879a6e3e47f9"),
+            _T("Housekeeper task completed in %1 seconds"),
+            _T("Generated when internal housekeeper task completes.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Housekeeper execution time in seconds")
+            ));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 32.9 to 32.10
  */
 static bool H_UpgradeFromV9()
@@ -362,7 +385,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 9,  33, 10,  H_UpgradeFromV9  },
+   { 10, 33, 11, H_UpgradeFromV10 },
+   { 9,  33, 10, H_UpgradeFromV9  },
    { 8,  33, 9,  H_UpgradeFromV8  },
    { 7,  33, 8,  H_UpgradeFromV7  },
    { 6,  33, 7,  H_UpgradeFromV6  },
