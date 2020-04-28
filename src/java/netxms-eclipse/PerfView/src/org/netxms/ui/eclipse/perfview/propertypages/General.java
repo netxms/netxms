@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,8 +69,7 @@ public class General extends PreferencePage
 	private Spinner refreshIntervalSpinner;
 	private TimePeriodSelector timeSelector;
 	private YAxisRangeEditor yAxisRange;
-   
-   
+
    /**
     * Constructor
     * @param settings
@@ -81,9 +80,9 @@ public class General extends PreferencePage
       config = settings;     
    }
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{		
@@ -133,7 +132,7 @@ public class General extends PreferencePage
       gd.verticalAlignment = SWT.TOP;
       gd.verticalSpan = 2;
       lineWidth.setLayoutData(gd);
-            
+
       checkStacked = new Button(optionsGroup, SWT.CHECK);
       checkStacked.setText(Messages.get().General_Stacked);
       checkStacked.setSelection(config.isStacked());
