@@ -39,7 +39,10 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -66,6 +69,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.market.Repository;
@@ -76,6 +80,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.actionmanager.dialogs.ActionSelectionDialog;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.ui.eclipse.epp.dialogs.RuleSelectionDialog;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -121,6 +126,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
    private TableViewer toolsViewer;
    private TableViewer summaryTableViewer;
    private TableViewer actionViewer;
+   private TableViewer webServiceViewer;
 	private Action actionSave;
 	private Action actionPublish;
 	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
@@ -131,6 +137,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
    private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<Integer, DciSummaryTableDescriptor>();
    private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
+   private Map<Integer, WebServiceDefinition> webServices = new HashMap<Integer, WebServiceDefinition>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
@@ -169,6 +176,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		createToolsSection();
       createSummaryTablesSection();
       createActionsSection();
+      createWebServiceSection();
 		
 		form.reflow(true);
 		
@@ -778,6 +786,84 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          }
       });
    }
+   
+   /**
+    * Create "Actions" section
+    */
+   private void createWebServiceSection()
+   {
+      Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("Web Service Definitions");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      section.setLayoutData(td);
+      
+      Composite clientArea = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+      
+      webServiceViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      toolkit.adapt(ruleViewer.getTable());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      webServiceViewer.getTable().setLayoutData(gd);
+      webServiceViewer.setContentProvider(new ArrayContentProvider());
+      webServiceViewer.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((WebServiceDefinition)element).getName();
+         }
+      });
+      webServiceViewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((WebServiceDefinition)e1).getName().compareToIgnoreCase(((WebServiceDefinition)e2).getName());
+         }
+      });
+      webServiceViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(Messages.get().ExportFileBuilder_Add);
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addWebServiceDefinitions();
+         }
+      });
+      
+      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            IStructuredSelection selection = (IStructuredSelection)webServiceViewer.getSelection();
+            if (selection.size() > 0)
+            {
+               removeObjects(webServiceViewer, webServices);
+            }
+         }
+      });
+   }
 
 	/**
 	 * Create actions
@@ -998,13 +1084,18 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       for(ServerAction a : actions.values())
          actionList[i++] = a.getId();
       
+      final long[] webServiceList = new long[webServices.size()];
+      i = 0;
+      for(WebServiceDefinition a : webServices.values())
+         webServiceList[i++] = a.getId();
+      
       final String descriptionText = description.getText();
       
       new ConsoleJob(Messages.get().ExportFileBuilder_ExportJobName, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList);
+            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -1144,6 +1235,8 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	      return ((EventProcessingPolicyRule)o).getGuid();
 	   if (o instanceof DciSummaryTableDescriptor)
 	      return ((DciSummaryTableDescriptor)o).getId();
+      if (o instanceof WebServiceDefinition)
+         return ((WebServiceDefinition)o).getId();
 	   return 0L;
 	}
 	
@@ -1376,6 +1469,21 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          for(ServerAction a : dlg.getSelection())
             actions.put(a.getId(), a);
          actionViewer.setInput(actions.values().toArray());
+         setModified();
+      }
+   }
+   
+   /**
+    * Add web service definitions to list
+    */
+   private void addWebServiceDefinitions()
+   {
+      SelectWebServiceDlg dlg = new SelectWebServiceDlg(getSite().getShell(), true);
+      if (dlg.open() == Window.OK)
+      {
+         for(WebServiceDefinition service : dlg.getSelectionList())
+            webServices.put(service.getId(), service);
+         webServiceViewer.setInput(webServices.values().toArray());
          setModified();
       }
    }

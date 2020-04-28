@@ -50,6 +50,7 @@ private:
 
 public:
    WebServiceDefinition(const NXCPMessage *msg);
+   WebServiceDefinition(const ConfigEntry *config, uint32_t id);
    WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~WebServiceDefinition();
 
@@ -80,5 +81,7 @@ SharedObjectArray<WebServiceDefinition> *GetWebServiceDefinitions();
 shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name);
 uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition);
 uint32_t DeleteWebServiceDefinition(uint32_t id);
+void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, uint32_t *list);
+bool ImportWebServiceDefinition(ConfigEntry *config, bool overwrite);
 
 #endif

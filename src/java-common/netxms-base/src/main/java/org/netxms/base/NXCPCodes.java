@@ -1138,6 +1138,8 @@ public class NXCPCodes
    public static final long VID_SCREEN_BPP = 698;
    public static final long VID_EXTENDED_DCI_DATA = 699;
    public static final long VID_HARDWARE_ID = 700;
+   public static final long VID_VERIFY_HOST = 701;
+   public static final long VID_WEB_SERVICE_DEF_COUNT = 702;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1246,4 +1248,5 @@ public class NXCPCodes
    public static final long VID_NOTIFICATION_DRIVER_BASE = 0x10000000L;
    public static final long VID_HEADERS_BASE = 0x20000000L;
    public static final long VID_SHARED_SECRET_LIST_BASE = 0x10000000L;
+   public static final long VID_WEB_SERVICE_DEF_LIST_BASE = 0x10000000L;
 }

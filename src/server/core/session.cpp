@@ -9614,6 +9614,15 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          MemFree(pdwList);
          xml.append(_T("\t</actions>\n"));
 
+         // Write web service definition
+         xml.append(_T("\t<webServiceDefinitions>\n"));
+         count = pRequest->getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
+         pdwList = MemAllocArray<UINT32>(count);
+         pRequest->getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST_BASE, count, pdwList);
+         CreateWebServiceDefinitionExportRecord(xml, count, pdwList);
+         MemFree(pdwList);
+         xml.append(_T("\t</webServiceDefinitions>\n"));
+
 			// Close document
 			xml += _T("</configuration>\n");
 
@@ -15000,15 +15009,25 @@ void ClientSession::modifyWebService(NXCPMessage *request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
    {
-      auto definition = make_shared<WebServiceDefinition>(request);
-      uint32_t rcc = ModifyWebServiceDefinition(definition);
-      response.setField(VID_RCC, rcc);
-      if (rcc == RCC_SUCCESS)
+      SharedString name = request->getFieldAsSharedString(VID_NAME);
+      uint32_t rcc;
+      auto existing = FindWebServiceDefinition(name);
+      if (existing != nullptr && request->getFieldAsUInt32(VID_WEBSVC_ID) != existing->getId()) //Prevent new web service definition creation with the same name
       {
-         response.setField(VID_WEBSVC_ID, definition->getId());
-         WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Web service definition \"%s\" [%u] modified"),
-                  definition->getName(), definition->getId());
+         rcc = RCC_NAME_ALEARDY_EXISTS;
       }
+      else
+      {
+         auto definition = make_shared<WebServiceDefinition>(request);
+         rcc = ModifyWebServiceDefinition(definition);
+         if (rcc == RCC_SUCCESS)
+         {
+            response.setField(VID_WEBSVC_ID, definition->getId());
+            WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Web service definition \"%s\" [%u] modified"),
+                     definition->getName(), definition->getId());
+         }
+      }
+      response.setField(VID_RCC, rcc);
    }
    else
    {

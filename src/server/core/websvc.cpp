@@ -49,6 +49,41 @@ WebServiceDefinition::WebServiceDefinition(const NXCPMessage *msg)
 }
 
 /**
+ * Create web service definition from config file
+ */
+WebServiceDefinition::WebServiceDefinition(const ConfigEntry *config, uint32_t id)
+{
+   m_id = id;
+   if (m_id == 0)
+      m_id = CreateUniqueId(IDG_WEBSVC_DEFINITION);
+   m_guid = config->getSubEntryValueAsUUID(_T("guid"));
+   if (m_guid.isNull())
+      m_guid = uuid::generate();
+   m_name = MemCopyString(config->getSubEntryValue(_T("name")));
+   m_description = MemCopyString(config->getSubEntryValue(_T("description")));
+   m_url = MemCopyString(config->getSubEntryValue(_T("url")));
+   m_authType = WebServiceAuthTypeFromInt(config->getSubEntryValueAsInt(_T("authType")));
+   m_login = MemCopyString(config->getSubEntryValue(_T("login")));
+   m_password = MemCopyString(config->getSubEntryValue(_T("password")));
+   m_cacheRetentionTime = config->getSubEntryValueAsInt(_T("retentionTime"));
+   m_requestTimeout = config->getSubEntryValueAsInt(_T("timeout"));
+   m_flags = config->getSubEntryValueAsInt(_T("flags"));
+
+   ConfigEntry *headerRoot = config->findEntry(_T("headers"));
+   if (headerRoot != nullptr)
+   {
+     ObjectArray<ConfigEntry> *headers = headerRoot->getSubEntries(_T("header*"));
+     for(int i = 0; i < headers->size(); i++)
+     {
+        ConfigEntry *e = headers->get(i);
+        m_headers.set(e->getSubEntryValue(_T("name")), e->getSubEntryValue(_T("value")));
+     }
+     delete headers;
+   }
+
+}
+
+/**
  * Create web service definition from database record.
  * Expected field order:
  *    id,guid,name,url,auth_type,login,password,cache_retention_time,request_timeout,description,flags
@@ -183,7 +218,7 @@ static EnumerationCallbackResult CreateHeaderExportRecord(const TCHAR *key, cons
    xml->append(EscapeStringForXML2(key));
    xml->append(_T("</name>\n\t\t\t\t\t<value>"));
    xml->append(EscapeStringForXML2(value));
-   xml->append(_T("</value>\n\t\t\t\t</header>"));
+   xml->append(_T("</value>\n\t\t\t\t</header>\n"));
    return _CONTINUE;
 }
 
@@ -214,9 +249,9 @@ void WebServiceDefinition::createExportRecord(StringBuffer &xml) const
    xml.append(m_cacheRetentionTime);
    xml.append(_T("</retentionTime>\n\t\t\t<timeout>"));
    xml.append(m_requestTimeout);
-   xml.append(_T("</timeout>\n\t\t\t<headers>"));
+   xml.append(_T("</timeout>\n\t\t\t<headers>\n"));
    m_headers.forEach(CreateHeaderExportRecord, &xml);
-   xml.append(_T("</headers>\n\t\t</webServiceDefinition>"));
+   xml.append(_T("\t\t\t</headers>\n\t\t</webServiceDefinition>\n"));
 }
 
 /**
@@ -299,6 +334,26 @@ void LoadWebServiceDefinitions()
       DBCloseInMemoryDatabase(cachedb);
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("%d web service definitions loaded"), count);
+}
+
+/**
+ * Find web service definition by UUID
+ */
+shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const uuid guid)
+{
+   shared_ptr<WebServiceDefinition> result;
+   s_webServiceDefinitionLock.lock();
+   for(int i = 0; i < s_webServiceDefinitions.size(); i++)
+   {
+      auto d = s_webServiceDefinitions.getShared(i);
+      if (guid.equals(d->getGuid()))
+      {
+         result = d;
+         break;
+      }
+   }
+   s_webServiceDefinitionLock.unlock();
+   return result;
 }
 
 /**
@@ -481,4 +536,73 @@ uint32_t DeleteWebServiceDefinition(uint32_t id)
    }
 
    return rcc;
+}
+
+/**
+ * Create XML web service
+ */
+void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, uint32_t *list)
+{
+   SharedObjectArray<WebServiceDefinition> *definitions = GetWebServiceDefinitions();
+
+   for(int j = 0; j < count; j++)
+   {
+      for(int i = 0; i < definitions->size(); i++)
+      {
+         if(list[j] == definitions->get(i)->getId())
+            definitions->get(i)->createExportRecord(xml);
+      }
+   }
+
+   delete definitions;
+
+}
+
+
+
+/**
+ * Import web service definition configuration
+ */
+bool ImportWebServiceDefinition(ConfigEntry *config, bool overwrite)
+{
+   if (config->getSubEntryValue(_T("name")) == NULL)
+   {
+      nxlog_debug_tag(_T("import"), 4, _T("ImportAction: no name specified"));
+      return false;
+   }
+
+   uint32_t rcc = RCC_ALREADY_EXIST;
+   const uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
+   auto service = FindWebServiceDefinition(guid);
+   TCHAR guidText[64];
+   if(service == nullptr)
+   {
+      // Check for duplicate name
+      const TCHAR *name = config->getSubEntryValue(_T("name"));
+      if (FindWebServiceDefinition(name) != nullptr)
+      {
+         nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: name \"%s\" already exists"), name);
+      }
+      else
+      {
+         auto definition = make_shared<WebServiceDefinition>(config, 0);
+         rcc = ModifyWebServiceDefinition(definition);
+         if (rcc == RCC_SUCCESS)
+            nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: \"%s\" web service created"), name);
+      }
+   }
+   else if (overwrite)
+   {
+      auto definition = make_shared<WebServiceDefinition>(config,service->getId());
+      rcc = ModifyWebServiceDefinition(definition);
+      nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: found existing action \"%s\" with GUID %s (overwrite)"),
+            service->getName(), guid.toString(guidText));
+   }
+   else
+   {
+      nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: found existing action \"%s\" with GUID %s (skipping)"),
+            service->getName(), guid.toString(guidText));
+   }
+
+   return rcc == RCC_SUCCESS;
 }

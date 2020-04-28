@@ -52,6 +52,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.WinPerfCounterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -571,6 +572,9 @@ public class General extends DCIPropertyPageDialog
 				break;
          case DataCollectionItem.SCRIPT:
             dlg = new SelectParameterScriptDialog(getShell());
+            break;
+         case DataCollectionItem.WEB_SERVICE:
+            dlg = new SelectWebServiceDlg(getShell(), false);
             break;
 			default:
 				dlg = null;

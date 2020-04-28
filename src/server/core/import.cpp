@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include "nxcore_websvc.h"
 
 #define DEBUG_TAG _T("import")
 
@@ -475,9 +476,9 @@ static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
 UINT32 ImportConfig(Config *config, UINT32 flags)
 {
 	ObjectArray<ConfigEntry> *events = nullptr, *traps = nullptr, *templates = nullptr, *rules = nullptr,
-	                         *scripts = nullptr, *objectTools = nullptr, *summaryTables = nullptr, *actions = nullptr;
+	                         *scripts = nullptr, *objectTools = nullptr, *webServiceDef = nullptr, *actions = nullptr;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot,
-	            *scriptsRoot, *objectToolsRoot, *summaryTablesRoot, *actionsRoot;
+	            *scriptsRoot, *objectToolsRoot, *webServiceDefRoot, *actionsRoot;
 	UINT32 rcc = RCC_SUCCESS;
 	int i;
 
@@ -649,16 +650,28 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
 	// Import summary tables
-	summaryTablesRoot = config->getEntry(_T("/dciSummaryTables"));
-	if (summaryTablesRoot != nullptr)
+	webServiceDefRoot = config->getEntry(_T("/dciSummaryTables"));
+	if (webServiceDefRoot != nullptr)
 	{
-		summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
-		for(i = 0; i < summaryTables->size(); i++)
+		webServiceDef = webServiceDefRoot->getSubEntries(_T("table#*"));
+		for(i = 0; i < webServiceDef->size(); i++)
 		{
-         ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0);
+         ImportSummaryTable(webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0);
 		}
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): DCI summary tables imported"));
 	}
+
+	//Import web service definitions
+   webServiceDefRoot = config->getEntry(_T("/webServiceDefinitions"));
+   if (webServiceDefRoot != nullptr)
+   {
+      webServiceDef = webServiceDefRoot->getSubEntries(_T("webServiceDefinition#*"));
+      for(i = 0; i < webServiceDef->size(); i++)
+      {
+         ImportWebServiceDefinition(webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0);
+      }
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): DCI summary tables imported"));
+   }
 
 stop_processing:
 	delete events;
@@ -667,7 +680,7 @@ stop_processing:
    delete rules;
    delete scripts;
    delete objectTools;
-   delete summaryTables;
+   delete webServiceDef;
    delete actions;
 
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() finished, rcc = %d"), rcc);

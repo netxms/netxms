@@ -54,6 +54,7 @@ public class ConfigurationImportDialog extends Dialog
    private Button replaceSummaryTables;
    private Button replaceObjectTools;
    private Button replaceRules;
+   private Button replaceWebServiceDefinitions;
 	
 	private String fileName;
 	private int flags;
@@ -147,6 +148,9 @@ public class ConfigurationImportDialog extends Dialog
       removeEmptyTemplateGroups = new Button(options, SWT.CHECK);
       removeEmptyTemplateGroups.setText("Remove empty template groups after import");
       
+      replaceWebServiceDefinitions = new Button(options, SWT.CHECK);
+      replaceWebServiceDefinitions.setText("Replace web service definitions");
+      
       return dialogArea;
 	}
 
@@ -179,6 +183,8 @@ public class ConfigurationImportDialog extends Dialog
          flags |= NXCSession.CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS;
       if (replaceTraps.getSelection())
          flags |= NXCSession.CFG_IMPORT_REPLACE_TRAPS;
+      if (replaceWebServiceDefinitions.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS;
 		
 		super.okPressed();
 	}

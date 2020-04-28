@@ -1369,6 +1369,7 @@ typedef struct
 #define VID_EXTENDED_DCI_DATA       ((UINT32)699)
 #define VID_HARDWARE_ID             ((UINT32)700)
 #define VID_VERIFY_HOST             ((UINT32)701)
+#define VID_WEB_SERVICE_DEF_COUNT   ((UINT32)702)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1598,6 +1599,8 @@ typedef struct
 #define VID_HEADERS_BASE             ((UINT32)0x20000000)
 
 #define VID_SHARED_SECRET_LIST_BASE ((UINT32)0x10000000)
+
+#define VID_WEB_SERVICE_DEF_LIST_BASE ((UINT32)0x10000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

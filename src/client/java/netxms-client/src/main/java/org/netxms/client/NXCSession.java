@@ -232,6 +232,7 @@ public class NXCSession
    public static final int CFG_IMPORT_REPLACE_EPP_RULES                 = 0x0080;
    public static final int CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS  = 0x0100;
    public static final int CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS      = 0x0200;
+   public static final int CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS = 0x0400;
 
    // Address list IDs
    public static final int ADDRESS_LIST_DISCOVERY_TARGETS = 1;
@@ -7872,13 +7873,14 @@ public class NXCSession
     * @param scripts          List of library script identifiers
     * @param objectTools      List of object tool identifiers
     * @param dciSummaryTables List of DCI summary table identifiers
-    * @param actions          TODO
+    * @param actions          List of action codes
+    * @param webService       List of web service definition id's
     * @return resulting XML document
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
-         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions) throws IOException, NXCException
+         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webService) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -7896,6 +7898,8 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_SUMMARY_TABLE_LIST, dciSummaryTables);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ACTIONS, actions.length);
       msg.setField(NXCPCodes.VID_ACTION_LIST, actions);
+      msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_DEF_COUNT, webService.length);
+      msg.setField(NXCPCodes.VID_WEB_SERVICE_DEF_LIST_BASE, webService);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.length);
       long varId = NXCPCodes.VID_RULE_LIST_BASE;
