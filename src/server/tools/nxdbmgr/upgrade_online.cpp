@@ -428,7 +428,7 @@ static bool CopyDataTable_V33_6(const TCHAR *table, bool tableData)
    }
    else
    {
-      _sntprintf(query, 1024, _T("INSERT INTO %s (item_id,idata_timestamp,idata_value,raw_value) SELECT item_id,to_timestamp(idata_timestamp),idata_value,raw_value"), table, table);
+      _sntprintf(query, 1024, _T("INSERT INTO %s (item_id,idata_timestamp,idata_value,raw_value) SELECT item_id,to_timestamp(idata_timestamp),idata_value,raw_value FROM v33_5_%s"), table, table);
    }
    CHK_EXEC_NO_SP(SQLQuery(query));
 
