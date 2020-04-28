@@ -1026,6 +1026,18 @@ enum WatchdogState
 };
 
 /**
+ * Shutdown reasons
+ */
+enum class ShutdownReason
+{
+   OTHER                = 0,
+   FROM_LOCAL_CONSOLE   = 1,
+   FROM_REMOTE_CONSOLE  = 2,
+   BY_SIGNAL            = 3,
+   BY_SERVICE_MANAGER   = 4
+};
+
+/**
  * Functions
  */
 void ConfigPreLoad();
@@ -1059,11 +1071,11 @@ bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, INT32 value);
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
 void NXCORE_EXPORTABLE Shutdown();
-void NXCORE_EXPORTABLE FastShutdown();
+void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason);
 BOOL NXCORE_EXPORTABLE Initialize();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDB();
-void InitiateShutdown();
+void InitiateShutdown(ShutdownReason reason);
 
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 

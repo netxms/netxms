@@ -51,13 +51,6 @@
 #endif
 
 /**
- * Shutdown reasons
- */
-#define SHUTDOWN_DEFAULT      0
-#define SHUTDOWN_FROM_CONSOLE 1
-#define SHUTDOWN_BY_SIGNAL    2
-
-/**
  * Externals
  */
 extern ThreadPool *g_clientThreadPool;
@@ -179,7 +172,7 @@ static THREAD s_mobileDeviceListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_tunnelListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_eventProcessorThread = INVALID_THREAD_HANDLE;
 static THREAD s_statCollectorThread = INVALID_THREAD_HANDLE;
-static int m_nShutdownReason = SHUTDOWN_DEFAULT;
+static ShutdownReason s_shutdownReason = ShutdownReason::OTHER;
 static StringSet s_components;
 
 #ifndef _WIN32
@@ -1181,6 +1174,11 @@ retry_db_lock:
 }
 
 /**
+ * Shutdown reason texts
+ */
+static const TCHAR *s_shutdownReasonText[] = { _T("due to unknown reason"), _T("from local console"), _T("from remote console"), _T("by signal"), _T("by service manager") };
+
+/**
  * Server shutdown
  */
 void NXCORE_EXPORTABLE Shutdown()
@@ -1188,7 +1186,7 @@ void NXCORE_EXPORTABLE Shutdown()
    // Notify clients
    NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
-   nxlog_write(NXLOG_INFO, _T("NetXMS Server stopped"));
+   nxlog_write(NXLOG_INFO, _T("NetXMS Server stopped %s"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
    g_flags |= AF_SHUTDOWN;     // Set shutdown flag
    InitiateProcessShutdown();
 
@@ -1305,9 +1303,9 @@ void NXCORE_EXPORTABLE Shutdown()
 /**
  * Fast server shutdown - normally called only by Windows service on system shutdown
  */
-void NXCORE_EXPORTABLE FastShutdown()
+void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason)
 {
-   DbgPrintf(1, _T("Using fast shutdown procedure"));
+   nxlog_write(NXLOG_INFO, _T("NetXMS Server stopped %s using fast shutdown procedure"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
 
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	InitiateProcessShutdown();
@@ -1382,7 +1380,8 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 				   // avoid repeat Shutdown() call
 				   if (!(g_flags & AF_SHUTDOWN))
 				   {
-                  m_nShutdownReason = SHUTDOWN_BY_SIGNAL;
+				      if (s_shutdownReason == ShutdownReason::OTHER)
+				         s_shutdownReason = ShutdownReason::BY_SIGNAL;
                   if (IsStandalone())
                   {
                      Shutdown(); // will never return
@@ -1501,7 +1500,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 #endif
    		if (!(g_flags & AF_SHUTDOWN))
    		{
-            m_nShutdownReason = SHUTDOWN_FROM_CONSOLE;
+   		   s_shutdownReason = ShutdownReason::FROM_LOCAL_CONSOLE;
             Shutdown();
    		}
       }
@@ -1538,8 +1537,9 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 /**
  * Initiate server shutdown
  */
-void InitiateShutdown()
+void InitiateShutdown(ShutdownReason reason)
 {
+   s_shutdownReason = reason;
 #ifdef _WIN32
 	Shutdown();
 #else
