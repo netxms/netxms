@@ -797,7 +797,7 @@ SharedString NXCPMessage::getFieldAsSharedString(UINT32 fieldId, size_t maxSize)
       getFieldAsString(fieldId, NULL, buffer, maxSize);
       return SharedString(buffer);
    }
-   return SharedString(getFieldAsString(fieldId, NULL, NULL, 0));
+   return SharedString(getFieldAsString(fieldId, NULL, NULL, 0), Ownership::True);
 }
 
 /**
