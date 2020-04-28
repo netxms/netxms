@@ -967,10 +967,11 @@ public class WidgetHelper
          Activator.logError("Resource " + resource + " not found");
 	      return null;
 	   }
-	   
+
+	   BufferedReader reader = null;
 	   try
 	   {
-   	   BufferedReader reader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
+   	   reader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
    	   StringBuilder builder = new StringBuilder();
    	   String line = reader.readLine();
    	   while(line != null)
@@ -990,7 +991,10 @@ public class WidgetHelper
 	   {
 	      try
          {
-            input.close();
+	         if (reader != null)
+	            reader.close();
+	         else
+	            input.close();
          }
          catch(IOException e)
          {
