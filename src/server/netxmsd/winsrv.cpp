@@ -51,9 +51,9 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
          SetServiceStatus(s_serviceHandle, &status);
 
          if (ctrlCode == SERVICE_CONTROL_SHUTDOWN)
-            FastShutdown();
+            FastShutdown(ShutdownReason::BY_SERVICE_MANAGER);
          else
-            Shutdown();
+            InitiateShutdown(ShutdownReason::BY_SERVICE_MANAGER);
 
          status.dwCurrentState = SERVICE_STOPPED;
          status.dwWaitHint = 0;

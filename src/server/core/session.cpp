@@ -12346,7 +12346,7 @@ void ClientSession::processConsoleCommand(NXCPMessage *request)
       switch(rc)
       {
          case CMD_EXIT_SHUTDOWN:
-            InitiateShutdown();
+            InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
             break;
          case CMD_EXIT_CLOSE_SESSION:
 				msg.setEndOfSequence();

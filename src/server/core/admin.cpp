@@ -72,7 +72,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
          switch(exitCode)
          {
             case CMD_EXIT_SHUTDOWN:
-               InitiateShutdown();
+               InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
                break;
             case CMD_EXIT_CLOSE_SESSION:
                delete request;
