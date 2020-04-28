@@ -209,6 +209,9 @@ static bool H_UpgradeFromV5()
 {
    if (g_dbSyntax == DB_SYNTAX_TSDB)
    {
+      CHK_EXEC(SQLQuery(_T("DROP VIEW idata CASCADE")));
+      CHK_EXEC(SQLQuery(_T("DROP VIEW tdata CASCADE")));
+
       CHK_EXEC(AlterTSDBTable(_T("idata_sc_default"), false));
       CHK_EXEC(AlterTSDBTable(_T("idata_sc_7"), false));
       CHK_EXEC(AlterTSDBTable(_T("idata_sc_30"), false));
@@ -221,6 +224,34 @@ static bool H_UpgradeFromV5()
       CHK_EXEC(AlterTSDBTable(_T("tdata_sc_90"), true));
       CHK_EXEC(AlterTSDBTable(_T("tdata_sc_180"), true));
       CHK_EXEC(AlterTSDBTable(_T("tdata_sc_other"), true));
+
+      CHK_EXEC(SQLQuery(
+            _T("CREATE VIEW idata AS")
+            _T("   SELECT * FROM idata_sc_default")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_7")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_30")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_90")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_180")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_other")));
+      CHK_EXEC(SQLQuery(
+            _T("CREATE VIEW tdata AS")
+            _T("   SELECT * FROM tdata_sc_default")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_7")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_30")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_90")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_180")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_other")));
+
       RegisterOnlineUpgrade(33, 6);
    }
    CHK_EXEC(SetMinorSchemaVersion(6));
