@@ -93,10 +93,11 @@ typedef int SOCKET;
 #define closesocket(x) _close(x)
 #define WSAGetLastError() (errno)
 
-#define WSAEINTR        EINTR
-#define WSAEWOULDBLOCK  EWOULDBLOCK
+#define WSAECONNREFUSED ECONNREFUSED
 #define WSAEINPROGRESS  EINPROGRESS
+#define WSAEINTR        EINTR
 #define WSAESHUTDOWN    ESHUTDOWN
+#define WSAEWOULDBLOCK  EWOULDBLOCK
 #define INVALID_SOCKET  (-1)
 #define SELECT_NFDS(x)  (x)
 
