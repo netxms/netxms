@@ -655,7 +655,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	if (summaryTablesRoot != nullptr)
 	{
 	   summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
-		for(i = 0; i < webServiceDef->size(); i++)
+		for(i = 0; i < summaryTables->size(); i++)
 		{
          ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0);
 		}
