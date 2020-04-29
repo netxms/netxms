@@ -1075,7 +1075,7 @@ void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason);
 BOOL NXCORE_EXPORTABLE Initialize();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDB();
-void InitiateShutdown(ShutdownReason reason);
+void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason);
 
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 

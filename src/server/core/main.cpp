@@ -1537,7 +1537,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 /**
  * Initiate server shutdown
  */
-void InitiateShutdown(ShutdownReason reason)
+void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason)
 {
    s_shutdownReason = reason;
 #ifdef _WIN32
