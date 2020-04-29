@@ -940,7 +940,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_MAINTENANCE_MODE_LEFT, 'SYS_MAINTENANCE_MODE_LEFT', 'cab06848-a622-430d-8b4c-addeea732657',
       EVENT_SEVERITY_NORMAL, 1,
       'Left maintenance mode',
-      'Generated when node, cluster, or mobile device left maintenance mode.'
+      'Generated when node, cluster, or mobile device left maintenance mode.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
       '   1) Initiating user ID' CONCAT CRLF CONCAT
       '   2) Initiating user name'
