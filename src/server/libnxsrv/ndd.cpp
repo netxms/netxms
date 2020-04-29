@@ -252,7 +252,7 @@ static UINT32 HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, voi
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		TCHAR buffer[1024];
-		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"), 
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"),
 			pTransport, SNMPConvertOIDToText(nameLen, oidName, buffer, 1024), (int)dwResult);
 		// Continue walk even if we get error for some IP address
 		// For example, some Cisco ASA versions reports IP when walking, but does not
@@ -274,7 +274,7 @@ static UINT32 HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, voi
 	else
 	{
 		TCHAR buffer[1024];
-		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"), 
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"),
 			pTransport, SNMPConvertOIDToText(nameLen, oidName, buffer, 1024), (int)dwResult);
 		dwResult = SNMP_ERR_SUCCESS;	// continue walk
 	}
