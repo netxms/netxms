@@ -335,9 +335,9 @@ void Template::createExportRecord(StringBuffer &xml)
  */
 bool Template::applyToTarget(const shared_ptr<DataCollectionTarget>& target)
 {
-   //Print in log that policies will be installed
-   nxlog_debug_tag(_T("obj.dc"), 2, _T("Apply %d policy items from template \"%s\" to target \"%s\""),
-                   m_policyList->size(), m_name, target->getName());
+   // Print in log that policies will be installed
+   nxlog_debug_tag(_T("obj.dc"), 4, _T("Apply %d policy items from template \"%s\" to target \"%s\""),
+            m_policyList->size(), m_name, target->getName());
 
    if (target->getObjectClass() == OBJECT_NODE)
       forceDeployPolicies(static_pointer_cast<Node>(target));

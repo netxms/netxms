@@ -727,6 +727,26 @@ NXSL_Value *NXSL_SubnetClass::getAttr(NXSL_Object *object, const char *attr)
 }
 
 /**
+ * DataCollectionTarget::applyTemplate(object)
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, applyTemplate)
+{
+   shared_ptr<DataCollectionTarget> thisObject = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *nxslTemplate = argv[0]->getValueAsObject();
+   if (!nxslTemplate->getClass()->instanceOf(g_nxslTemplateClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   static_cast<shared_ptr<Template>*>(nxslTemplate->getData())->get()->applyToTarget(thisObject);
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * readInternalParameter(name) method
  */
 NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
@@ -743,13 +763,38 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
 }
 
 /**
+ * DataCollectionTarget::removeTemplate(object)
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, removeTemplate)
+{
+   shared_ptr<DataCollectionTarget> thisObject = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *nxslTemplate = argv[0]->getValueAsObject();
+   if (!nxslTemplate->getClass()->instanceOf(g_nxslTemplateClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   auto tmpl = *static_cast<shared_ptr<Template>*>(nxslTemplate->getData());
+   tmpl->deleteChild(*thisObject);
+   thisObject->deleteParent(*tmpl);
+   tmpl->queueRemoveFromTarget(thisObject->getId(), true);
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class DataCollectionTarget: constructor
  */
 NXSL_DCTargetClass::NXSL_DCTargetClass() : NXSL_NetObjClass()
 {
    setName(_T("DataCollectionTarget"));
 
+   NXSL_REGISTER_METHOD(DataCollectionTarget, applyTemplate, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, readInternalParameter, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, removeTemplate, 1);
 }
 
 /**
@@ -2233,6 +2278,49 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const char *attr)
 }
 
 /**
+ * Template::applyTo(object)
+ */
+NXSL_METHOD_DEFINITION(Template, applyTo)
+{
+   shared_ptr<Template> thisObject = *static_cast<shared_ptr<Template>*>(object->getData());
+
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *nxslTarget = argv[0]->getValueAsObject();
+   if (!nxslTarget->getClass()->instanceOf(_T("DataCollectionTarget")))
+      return NXSL_ERR_BAD_CLASS;
+
+   thisObject->applyToTarget(*static_cast<shared_ptr<DataCollectionTarget>*>(nxslTarget->getData()));
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Template::removeFrom(object)
+ */
+NXSL_METHOD_DEFINITION(Template, removeFrom)
+{
+   shared_ptr<Template> thisObject = *static_cast<shared_ptr<Template>*>(object->getData());
+
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *nxslTarget = argv[0]->getValueAsObject();
+   if (!nxslTarget->getClass()->instanceOf(_T("DataCollectionTarget")))
+      return NXSL_ERR_BAD_CLASS;
+
+   auto target = *static_cast<shared_ptr<DataCollectionTarget>*>(nxslTarget->getData());
+   thisObject->deleteChild(*target);
+   target->deleteParent(*thisObject);
+   thisObject->queueRemoveFromTarget(target->getId(), true);
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Template::setAutoApplyMode() method
  */
 NXSL_METHOD_DEFINITION(Template, setAutoApplyMode)
@@ -2265,6 +2353,8 @@ NXSL_TemplateClass::NXSL_TemplateClass() : NXSL_NetObjClass()
 {
    setName(_T("Template"));
 
+   NXSL_REGISTER_METHOD(Template, applyTo, 1);
+   NXSL_REGISTER_METHOD(Template, removeFrom, 1);
    NXSL_REGISTER_METHOD(Template, setAutoApplyMode, 2);
    NXSL_REGISTER_METHOD(Template, setAutoApplyScript, 1);
 }

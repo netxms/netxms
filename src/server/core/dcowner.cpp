@@ -806,7 +806,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
    }
 
    pdwItemList = MemAllocArray<UINT32>(m_dcObjects->size());
-   nxlog_debug_tag(_T("obj.dc"), 2, _T("Apply %d metric items from template \"%s\" to target \"%s\""),
+   nxlog_debug_tag(_T("obj.dc"), 4, _T("Apply %d metric items from template \"%s\" to target \"%s\""),
                    m_dcObjects->size(), m_name, target->getName());
 
    // Copy items
