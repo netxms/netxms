@@ -240,45 +240,40 @@ static UINT32 HandlerIndexIfXTable(SNMP_Variable *pVar, SNMP_Transport *pTranspo
 /**
  * Handler for enumerating IP addresses via ipAddrTable
  */
-static UINT32 HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerIpAddr(SNMP_Variable *var, SNMP_Transport *snmp, void *context)
 {
-   UINT32 index, dwNetMask, dwResult;
-   UINT32 oidName[MAX_OID_LEN];
-
-   size_t nameLen = pVar->getName().length();
-   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
-   oidName[nameLen - 5] = 3;  // Retrieve network mask for this IP
-   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &dwNetMask, sizeof(UINT32), 0, NULL);
-   if (dwResult != SNMP_ERR_SUCCESS)
-	{
-		TCHAR buffer[1024];
-		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"),
-			pTransport, SNMPConvertOIDToText(nameLen, oidName, buffer, 1024), (int)dwResult);
-		// Continue walk even if we get error for some IP address
-		// For example, some Cisco ASA versions reports IP when walking, but does not
-		// allow to SNMP GET appropriate entry
-      return SNMP_ERR_SUCCESS;
-	}
-
-   oidName[nameLen - 5] = 2;  // Retrieve interface index for this IP
-   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &index, sizeof(UINT32), 0, NULL);
-   if (dwResult == SNMP_ERR_SUCCESS)
+   // Get address type and prefix
+   SNMP_ObjectId oid = var->getName();
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   oid.changeElement(9, 3); // ipAdEntNetMask
+   request.bindVariable(new SNMP_Variable(oid));
+   oid.changeElement(9, 2); // ipAdEntIfIndex
+   request.bindVariable(new SNMP_Variable(oid));
+   SNMP_PDU *response;
+   uint32_t rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   if (rc == SNMP_ERR_SUCCESS)
    {
-		InterfaceList *ifList = (InterfaceList *)pArg;
-      InterfaceInfo *iface = ifList->findByIfIndex(index);
-      if (iface != NULL)
+      // check number of varbinds and address type (1 = unicast)
+      if ((response->getErrorCode() == SNMP_PDU_ERR_SUCCESS) && (response->getNumVariables() == 2))
       {
-         iface->ipAddrList.add(InetAddress(ntohl(pVar->getValueAsUInt()), dwNetMask));
-		}
+         InterfaceList *ifList = static_cast<InterfaceList*>(context);
+         InterfaceInfo *iface = ifList->findByIfIndex(response->getVariable(1)->getValueAsUInt());
+         if (iface != nullptr)
+         {
+            iface->ipAddrList.add(InetAddress(ntohl(var->getValueAsUInt()), ntohl(response->getVariable(0)->getValueAsUInt())));
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), snmp, SNMPGetProtocolErrorText(response->getErrorCode()));
+      }
+      delete response;
    }
-	else
-	{
-		TCHAR buffer[1024];
-		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"),
-			pTransport, SNMPConvertOIDToText(nameLen, oidName, buffer, 1024), (int)dwResult);
-		dwResult = SNMP_ERR_SUCCESS;	// continue walk
-	}
-   return dwResult;
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), snmp, SNMPGetErrorText(rc));
+   }
+   return rc;
 }
 
 /**
@@ -288,32 +283,37 @@ static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, vo
 {
    InterfaceList *ifList = (InterfaceList *)arg;
 
-   UINT32 oid[128];
+   uint32_t oid[128];
    size_t oidLen = var->getName().length();
-   memcpy(oid, var->getName().value(), oidLen * sizeof(UINT32));
+   memcpy(oid, var->getName().value(), oidLen * sizeof(uint32_t));
 
    // Check address family (1 = ipv4, 2 = ipv6)
    if ((oid[10] != 1) && (oid[10] != 2))
       return SNMP_ERR_SUCCESS;
 
-   UINT32 ifIndex = var->getValueAsUInt();
+   uint32_t ifIndex = var->getValueAsUInt();
    InterfaceInfo *iface = ifList->findByIfIndex(ifIndex);
-   if (iface == NULL)
+   if (iface == nullptr)
       return SNMP_ERR_SUCCESS;
 
    // Build IP address from OID
    InetAddress addr;
-   if (oid[10] == 1)
+   if (((oid[10] == 1) && (oid[11] == 4)) || ((oid[10] == 3) && (oid[11] == 8))) // ipv4 and ipv4z
    {
-      addr = InetAddress((UINT32)((oid[12] << 24) | (oid[13] << 16) | (oid[14] << 8) | oid[15]));
+      addr = InetAddress((uint32_t)((oid[12] << 24) | (oid[13] << 16) | (oid[14] << 8) | oid[15]));
    }
-   else
+   else if (((oid[10] == 2) && (oid[11] == 16)) || ((oid[10] == 4) && (oid[11] == 20))) // ipv6 and ipv6z
    {
       BYTE bytes[16];
       for(int i = 12, j = 0; j < 16; i++, j++)
          bytes[j] = (BYTE)oid[i];
       addr = InetAddress(bytes);
    }
+   else
+   {
+      return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format
+   }
+
    if (iface->hasAddress(addr))
       return SNMP_ERR_SUCCESS;   // This IP already set from ipAddrTable
 
@@ -416,7 +416,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 	   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): invalid interface count %d received from device"), snmp, interfaceCount);
 		interfaceCount = 64;
 	}
-      
+
    // Create empty list
 	InterfaceList *ifList = new InterfaceList(interfaceCount);
 
@@ -540,7 +540,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
             _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.5.%d"), iface->index);  // ifSpeed
             if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &speed, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
             {
-               iface->speed = (UINT64)speed;
+               iface->speed = speed;
             }
             else
             {
@@ -549,7 +549,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
          }
          else
          {
-            iface->speed = (UINT64)speed * _ULL(1000000);
+            iface->speed = static_cast<uint64_t>(speed) * _ULL(1000000);
          }
 
          // MAC address
@@ -566,7 +566,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 			}
       }
 
-      // Interface IP address'es and netmasks
+      // Interface IP addresses and netmasks
 		UINT32 error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, ifList);
       if (error == SNMP_ERR_SUCCESS)
       {

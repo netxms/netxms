@@ -28,7 +28,7 @@
 InterfaceList::InterfaceList(int initialAlloc)
 {
 	m_interfaces = new ObjectArray<InterfaceInfo>(initialAlloc, 32, Ownership::True);
-	m_data = NULL;
+	m_data = nullptr;
    m_needPrefixWalk = false;
 }
 
@@ -43,18 +43,18 @@ InterfaceList::~InterfaceList()
 /**
  * Find interface entry by ifIndex
  */
-InterfaceInfo *InterfaceList::findByIfIndex(UINT32 ifIndex)
+InterfaceInfo *InterfaceList::findByIfIndex(uint32_t ifIndex) const
 {
    for(int i = 0; i < m_interfaces->size(); i++)
       if (m_interfaces->get(i)->index == ifIndex)
 			return m_interfaces->get(i);
-	return NULL;
+	return nullptr;
 }
 
 /**
  * Find interface entry by physical position
  */
-InterfaceInfo *InterfaceList::findByPhysicalLocation(const InterfacePhysicalLocation& location)
+InterfaceInfo *InterfaceList::findByPhysicalLocation(const InterfacePhysicalLocation& location) const
 {
    for(int i = 0; i < m_interfaces->size(); i++)
    {
@@ -62,5 +62,5 @@ InterfaceInfo *InterfaceList::findByPhysicalLocation(const InterfacePhysicalLoca
       if (iface->isPhysicalPort && iface->location.equals(location))
          return iface;
    }
-   return NULL;
+   return nullptr;
 }

@@ -353,16 +353,16 @@ public:
    void add(InterfaceInfo *iface) { m_interfaces->add(iface); }
    void remove(int index) { m_interfaces->remove(index); }
 
-	int size() { return m_interfaces->size(); }
-	InterfaceInfo *get(int index) { return m_interfaces->get(index); }
-	InterfaceInfo *findByIfIndex(UINT32 ifIndex);
-   InterfaceInfo *findByPhysicalLocation(const InterfacePhysicalLocation &loc);
-   InterfaceInfo *findByPhysicalLocation(int chassis, int module, int pic, int port) { return findByPhysicalLocation(InterfacePhysicalLocation(chassis, module, pic, port)); }
+	int size() const { return m_interfaces->size(); }
+	InterfaceInfo *get(int index) const { return m_interfaces->get(index); }
+	InterfaceInfo *findByIfIndex(uint32_t ifIndex) const;
+   InterfaceInfo *findByPhysicalLocation(const InterfacePhysicalLocation &loc) const;
+   InterfaceInfo *findByPhysicalLocation(int chassis, int module, int pic, int port) const { return findByPhysicalLocation(InterfacePhysicalLocation(chassis, module, pic, port)); }
 
 	void setData(void *data) { m_data = data; }
-	void *getData() { return m_data; }
+	void *getData() const { return m_data; }
 
-   bool isPrefixWalkNeeded() { return m_needPrefixWalk; }
+   bool isPrefixWalkNeeded() const { return m_needPrefixWalk; }
    void setPrefixWalkNeeded() { m_needPrefixWalk = true; }
 };
 
