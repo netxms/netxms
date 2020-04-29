@@ -476,9 +476,10 @@ static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
 UINT32 ImportConfig(Config *config, UINT32 flags)
 {
 	ObjectArray<ConfigEntry> *events = nullptr, *traps = nullptr, *templates = nullptr, *rules = nullptr,
-	                         *scripts = nullptr, *objectTools = nullptr, *webServiceDef = nullptr, *actions = nullptr;
+	                         *scripts = nullptr, *objectTools = nullptr, *summaryTables = nullptr,
+	                         *webServiceDef = nullptr, *actions = nullptr;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot,
-	            *scriptsRoot, *objectToolsRoot, *webServiceDefRoot, *actionsRoot;
+	            *scriptsRoot, *objectToolsRoot, *summaryTablesRoot, *webServiceDefRoot, *actionsRoot;
 	UINT32 rcc = RCC_SUCCESS;
 	int i;
 
@@ -650,13 +651,13 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
 	// Import summary tables
-	webServiceDefRoot = config->getEntry(_T("/dciSummaryTables"));
-	if (webServiceDefRoot != nullptr)
+	summaryTablesRoot = config->getEntry(_T("/dciSummaryTables"));
+	if (summaryTablesRoot != nullptr)
 	{
-		webServiceDef = webServiceDefRoot->getSubEntries(_T("table#*"));
+	   summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
 		for(i = 0; i < webServiceDef->size(); i++)
 		{
-         ImportSummaryTable(webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0);
+         ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0);
 		}
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): DCI summary tables imported"));
 	}
@@ -680,6 +681,7 @@ stop_processing:
    delete rules;
    delete scripts;
    delete objectTools;
+   delete summaryTables;
    delete webServiceDef;
    delete actions;
 
