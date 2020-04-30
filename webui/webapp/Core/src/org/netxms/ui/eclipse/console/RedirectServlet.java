@@ -31,7 +31,7 @@ public class RedirectServlet extends HttpServlet
 {
 	private static final long serialVersionUID = 1L;
 	
-	/* (non-Javadoc)
+	/**
 	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	@Override

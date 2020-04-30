@@ -54,7 +54,7 @@
          <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
-<repositories>
+    <repositories>
         <repository>
             <id>Babel-project</id>
             <url>https://download.eclipse.org/technology/babel/update-site/R0.17.1/2019-12/</url>

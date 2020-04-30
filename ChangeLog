@@ -16,6 +16,7 @@
 - Implemented instance discovery method "Agent Table"
 - Implemented instance discovery method "Windows Performance Counters"
 - Added option for discarding collected performance data when database writer queue grows beyond limit
+- Using timestamptz instead of integer for timestamp column in data collection tables on TimescaleDB
 - Fixed issues:
 	NX-392 (Use object names from Windows performance counters for instance discovery)
 	NX-713 (Scheduled DCI will not work with offline DCI functionality)

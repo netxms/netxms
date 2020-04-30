@@ -55,7 +55,7 @@
         <replacer.version>1.4.1</replacer.version>
     </properties>
 
-  <repositories>     
+    <repositories>     
         <repository>
           <id>orbit latest</id>
           <layout>p2</layout>
