@@ -72,7 +72,7 @@ void UnregisterJob(UINT32 jobId)
 /**
  * Data for job enumeration callback
  */
-struct __job_callback_data
+struct JobListCallbackData
 {
 	NXCPMessage *msg;
 	uint32_t jobCount;
@@ -80,12 +80,11 @@ struct __job_callback_data
 };
 
 /**
- * Callback for job enumeration
+ * Callback for job enumeration in GetJobList
  */
-static void JobListCallback(ServerJobQueue *queue, void *data)
+static void JobListCallback(ServerJobQueue *queue, JobListCallbackData *context)
 {
-	struct __job_callback_data *jcb = (struct __job_callback_data *)data;
-	jcb->jobCount += queue->fillMessage(jcb->msg, &jcb->baseId);
+   context->jobCount += queue->fillMessage(context->msg, &context->baseId);
 }
 
 /**
@@ -93,13 +92,44 @@ static void JobListCallback(ServerJobQueue *queue, void *data)
  */
 void GetJobList(NXCPMessage *msg)
 {
-	struct __job_callback_data jcb;
-
+   JobListCallbackData jcb;
 	jcb.msg = msg;
 	jcb.jobCount = 0;
 	jcb.baseId = VID_JOB_LIST_BASE;
+   s_indexLock.lock();
 	s_jobQueues.forEach(JobListCallback, &jcb);
+   s_indexLock.unlock();
 	msg->setField(VID_JOB_COUNT, jcb.jobCount);
+}
+
+/**
+ * Callback for job enumeration in GetJobCount
+ */
+static void JobCountCallback(ServerJobQueue *queue, std::pair<int*, const TCHAR*> *context)
+{
+   *context->first += queue->getJobCount(context->second);
+}
+
+/**
+ * Get number of jobs
+ */
+int NXCORE_EXPORTABLE GetJobCount(uint32_t objectId, const TCHAR *type)
+{
+   int count;
+   s_indexLock.lock();
+   if (objectId != 0)
+   {
+      ServerJobQueue *queue = s_jobQueues.get(objectId);
+      count = (queue != nullptr) ? queue->getJobCount(type) : 0;
+   }
+   else
+   {
+      count = 0;
+      std::pair<int*, const TCHAR*> context(&count, type);
+      s_jobQueues.forEach(JobCountCallback, &context);
+   }
+   s_indexLock.unlock();
+   return count;
 }
 
 /**

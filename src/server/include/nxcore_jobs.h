@@ -179,6 +179,7 @@ public:
  */
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job);
 void GetJobList(NXCPMessage *msg);
+int NXCORE_EXPORTABLE GetJobCount(uint32_t objectId = 0, const TCHAR *type = nullptr);
 UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, NXCPMessage *msg);
 UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, NXCPMessage *msg);
 UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, NXCPMessage *msg);
