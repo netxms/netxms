@@ -38,7 +38,7 @@ public class RedirectServlet extends HttpServlet
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
 		final String path = request.getRequestURI().substring(request.getContextPath().length());
-		if ((path == null) || path.isEmpty() || "/".equals(path))  //$NON-NLS-1$
+		if ((path == null) || path.isEmpty() || "/".equals(path) || "/nxmc".equals(path)) //$NON-NLS-1$ //$NON-NLS-2$
 		{
 			BrandingManager.create();
 			response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/" + BrandingManager.getInstance().getRedirectionURL(request)));
