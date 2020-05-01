@@ -1,4 +1,4 @@
-#include "..\..\..\include\netxms-build-tag.iss"
+#include "..\..\..\build\netxms-build-tag.iss"
 
 AppName=NetXMS Agent
 AppVerName=NetXMS Agent {#VersionString}

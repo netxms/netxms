@@ -1,6 +1,6 @@
 ; Installation script for NetXMS Server / Windows x64
 
-#include "..\..\..\include\netxms-build-tag.iss"
+#include "..\..\..\build\netxms-build-tag.iss"
 
 [Setup]
 AppName=NetXMS
