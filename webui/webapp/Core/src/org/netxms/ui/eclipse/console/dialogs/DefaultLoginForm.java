@@ -448,8 +448,9 @@ public class DefaultLoginForm extends Window implements LoginForm
 	private void switchTheme(String theme)
 	{
 	   RWT.getResponse().addCookie(new Cookie("netxms.nxmc.theme", theme));
+	   String context = RWT.getRequest().getServletContext().getContextPath();
 	   final JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-	   executor.execute("parent.window.location.href=\"../nxmc-" + theme + "\";");
+	   executor.execute("parent.window.location.href=\"" + context + "/nxmc-" + theme + "\";");
 	}
 
    /**
