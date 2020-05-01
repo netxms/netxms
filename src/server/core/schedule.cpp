@@ -699,11 +699,11 @@ ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
 /**
  * Delayed scheduled task delete
  */
-static void DelayedTaskDelete(ScheduledTask *task)
+static void DelayedTaskDelete(void *taskId)
 {
-   while(task->isRunning())
+   while(IsScheduledTaskRunning(CAST_FROM_POINTER(taskId, uint32_t)))
       ThreadSleep(10);
-   DeleteScheduledTask(task->getId(), 0, SYSTEM_ACCESS_FULL);
+   DeleteScheduledTask(CAST_FROM_POINTER(taskId, uint32_t), 0, SYSTEM_ACCESS_FULL);
 }
 
 /**
@@ -726,7 +726,7 @@ static void DeleteScheduledTaskByHandlerId(ObjectArray<ScheduledTask> *category,
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Delete of scheduled task [%u] delayed because task is still running"), task->getId());
             task->disable();  // Prevent re-run
-            ThreadPoolExecuteSerialized(g_schedulerThreadPool, _T("DeleteTask"), DelayedTaskDelete, task);
+            ThreadPoolExecuteSerialized(g_schedulerThreadPool, _T("DeleteTask"), DelayedTaskDelete, CAST_TO_POINTER(task->getId(), void*));
          }
       }
    }
@@ -756,7 +756,7 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId
 }
 
 /**
- * Delete scheduled task(s) by task key from gien task category
+ * Delete scheduled task(s) by task key from given task category
  */
 static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const TCHAR *taskKey, IntegerArray<uint32_t> *deleteList)
 {
@@ -775,7 +775,7 @@ static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Delete of scheduled task [%u] delayed because task is still running"), task->getId());
             task->disable();  // Prevent re-run
-            ThreadPoolExecuteSerialized(g_schedulerThreadPool, _T("DeleteTask"), DelayedTaskDelete, task);
+            ThreadPoolExecuteSerialized(g_schedulerThreadPool, _T("DeleteTask"), DelayedTaskDelete, CAST_TO_POINTER(task->getId(), void*));
          }
       }
    }
@@ -834,6 +834,44 @@ int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey)
    s_cronScheduleLock.unlock();
 
    return count;
+}
+
+/**
+ * Check if scheduled task with given ID is currently running
+ */
+bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint32_t taskId)
+{
+   bool found = false, running = false;
+
+   s_oneTimeScheduleLock.lock();
+   for (int i = 0; i < s_oneTimeSchedules.size(); i++)
+   {
+      ScheduledTask *task = s_oneTimeSchedules.get(i);
+      if (task->getId() == taskId)
+      {
+         found = true;
+         running = task->isRunning();
+         break;
+      }
+   }
+   s_oneTimeScheduleLock.unlock();
+
+   if (found)
+      return running;
+
+   s_cronScheduleLock.lock();
+   for (int i = 0; i < s_cronSchedules.size(); i++)
+   {
+      ScheduledTask *task = s_cronSchedules.get(i);
+      if (task->getId() == taskId)
+      {
+         running = task->isRunning();
+         break;
+      }
+   }
+   s_cronScheduleLock.unlock();
+
+   return running;
 }
 
 /**

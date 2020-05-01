@@ -233,6 +233,7 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint32_t taskId, uint32_t userId,
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey);
 int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey);
+bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint32_t taskId);
 ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights);
 void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights);
