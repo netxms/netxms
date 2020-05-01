@@ -1,4 +1,12 @@
 *
+* 3.3.285
+* 
+
+- Fixed server crash after scheduled task delete
+- Fixed web UI login screen issues
+
+
+*
 * 3.3.277
 * 
 
