@@ -26,6 +26,7 @@
 #include <nxstat.h>
 #include <entity_mib.h>
 #include <nxcore_websvc.h>
+#include <nxcore_logs.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -584,6 +585,8 @@ void ClientSession::readThread()
          ThreadSleep(1);
       } while(m_refCount > 0);
    }
+
+   CloseAllLogsForSession(m_id);
 
    if (m_dwFlags & CSF_AUTHENTICATED)
    {
@@ -11548,7 +11551,7 @@ void ClientSession::getServerLogQueryData(NXCPMessage *request)
 		INT64 startRow = request->getFieldAsUInt64(VID_START_ROW);
 		INT64 numRows = request->getFieldAsUInt64(VID_NUM_ROWS);
 		bool refresh = request->getFieldAsUInt16(VID_FORCE_RELOAD) ? true : false;
-		data = log->getData(startRow, numRows, refresh, getUserId()); // pass user id from session
+		data = log->getData(startRow, numRows, refresh, m_dwUserId); // pass user id from session
 		log->release();
 		if (data != NULL)
 		{

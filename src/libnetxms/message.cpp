@@ -1240,8 +1240,8 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
  */
 void NXCPMessage::deleteAllFields()
 {
-   m_fields = NULL;
-   m_data = NULL;
+   m_fields = nullptr;
+   m_data = nullptr;
    m_dataSize = 0;
    m_pool.clear();
 }

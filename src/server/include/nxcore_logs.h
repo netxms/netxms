@@ -197,8 +197,8 @@ public:
 
 void InitLogAccess();
 int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc);
-UINT32 CloseLog(ClientSession *session, int logHandle);
+uint32_t CloseLog(ClientSession *session, int logHandle);
+void CloseAllLogsForSession(session_id_t sessionId);
 LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle);
-
 
 #endif
