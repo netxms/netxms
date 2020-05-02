@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -31,7 +31,7 @@ MemoryPool::MemoryPool(size_t regionSize)
       m_headerSize += 16 - m_headerSize % 16;
    m_regionSize = regionSize;
    m_currentRegion = MemAlloc(m_regionSize);
-   *((void **)m_currentRegion) = NULL; // pointer to previous region
+   *((void **)m_currentRegion) = nullptr; // pointer to previous region
    m_allocated = m_headerSize;
 }
 
@@ -41,7 +41,7 @@ MemoryPool::MemoryPool(size_t regionSize)
 MemoryPool::~MemoryPool()
 {
    void *r = m_currentRegion;
-   while(r != NULL)
+   while(r != nullptr)
    {
       void *n = *((void **)r);
       MemFree(r);
@@ -77,8 +77,8 @@ void *MemoryPool::allocate(size_t size)
  */
 TCHAR *MemoryPool::copyString(const TCHAR *s)
 {
-   if (s == NULL)
-      return NULL;
+   if (s == nullptr)
+      return nullptr;
    size_t l = _tcslen(s) + 1;
    TCHAR *p = static_cast<TCHAR*>(allocate(l * sizeof(TCHAR)));
    memcpy(p, s, l * sizeof(TCHAR));
@@ -91,12 +91,12 @@ TCHAR *MemoryPool::copyString(const TCHAR *s)
 void MemoryPool::clear()
 {
    void *r = *((void **)m_currentRegion);
-   while(r != NULL)
+   while(r != nullptr)
    {
       void *n = *((void **)r);
       MemFree(r);
       r = n;
    }
-   *((void **)m_currentRegion) = NULL;
+   *((void **)m_currentRegion) = nullptr;
    m_allocated = m_headerSize;
 }

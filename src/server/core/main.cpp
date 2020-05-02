@@ -26,6 +26,7 @@
 #include <hdlink.h>
 #include <agent_tunnel.h>
 #include <nxcore_websvc.h>
+#include <nxcore_logs.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>

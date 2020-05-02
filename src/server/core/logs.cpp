@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_logs.h>
 
 /**
  * Defined logs
@@ -118,10 +119,10 @@ static NXCORE_LOG s_logs[] =
 struct LOG_HANDLE_REGISTRATION
 {
 	LogHandle *handle;
-	int sessionId;
+	session_id_t sessionId;
 };
 int s_regListSize = 0;
-LOG_HANDLE_REGISTRATION *s_regList = NULL;
+LOG_HANDLE_REGISTRATION *s_regList = nullptr;
 MUTEX s_regListMutex = INVALID_MUTEX_HANDLE;
 
 /**
@@ -142,7 +143,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 	MutexLock(s_regListMutex);
 
 	for(i = 0; i < s_regListSize; i++)
-		if (s_regList[i].handle == NULL)
+		if (s_regList[i].handle == nullptr)
 			break;
 	if (i == s_regListSize)
 	{
@@ -166,7 +167,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
  */
 static int OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *session, UINT32 *rcc)
 {
-	for(int i = 0; logs[i].name != NULL; i++)
+	for(int i = 0; logs[i].name != nullptr; i++)
 	{
 		if (!_tcsicmp(name, logs[i].name))
 		{
@@ -210,9 +211,9 @@ int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc)
 /**
  * Close log
  */
-UINT32 CloseLog(ClientSession *session, int logHandle)
+uint32_t CloseLog(ClientSession *session, int logHandle)
 {
-	UINT32 rcc = RCC_INVALID_LOG_HANDLE;
+   uint32_t rcc = RCC_INVALID_LOG_HANDLE;
    LogHandle *log = NULL;
 
    DbgPrintf(6, _T("CloseLog: close request from session %d for handle %d"), session->getId(), logHandle);
@@ -220,15 +221,15 @@ UINT32 CloseLog(ClientSession *session, int logHandle)
 
 	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
 	    (s_regList[logHandle].sessionId == session->getId()) &&
-		 (s_regList[logHandle].handle != NULL))
+		 (s_regList[logHandle].handle != nullptr))
 	{
       log = s_regList[logHandle].handle;
-      s_regList[logHandle].handle = NULL;
+      s_regList[logHandle].handle = nullptr;
 	}
 
 	MutexUnlock(s_regListMutex);
 
-   if (log != NULL)
+   if (log != nullptr)
    {
       log->decRefCount();
       rcc = RCC_SUCCESS;
@@ -237,12 +238,30 @@ UINT32 CloseLog(ClientSession *session, int logHandle)
 }
 
 /**
+ * Close log
+ */
+void CloseAllLogsForSession(session_id_t sessionId)
+{
+   nxlog_debug(6, _T("Closing all logs for session %d"), sessionId);
+   MutexLock(s_regListMutex);
+   for(int i = 0; i < s_regListSize; i++)
+   {
+      if ((s_regList[i].sessionId == sessionId) && (s_regList[i].handle != nullptr))
+      {
+         s_regList[i].handle->decRefCount();
+         s_regList[i].handle = nullptr;
+      }
+   }
+   MutexUnlock(s_regListMutex);
+}
+
+/**
  * Acquire log handle object
  * Caller must call LogHandle::unlock() when it finish work with acquired object
  */
 LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
 {
-	LogHandle *object = NULL;
+	LogHandle *object = nullptr;
 
    DbgPrintf(6, _T("AcquireLogHandleObject: request from session %d for handle %d"), session->getId(), logHandle);
 	MutexLock(s_regListMutex);
@@ -255,8 +274,9 @@ LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
       object->incRefCount();
 	}
 
-	MutexUnlock(s_regListMutex);
-   if (object != NULL)
+	if (object != nullptr)
       object->lock();
+
+	MutexUnlock(s_regListMutex);
 	return object;
 }

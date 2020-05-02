@@ -21,13 +21,14 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_logs.h>
 
 /**
  * Create column filter object from NXCP message
  */
 ColumnFilter::ColumnFilter(NXCPMessage *msg, const TCHAR *column, UINT32 baseId)
 {
-	UINT32 varId;
+	uint32_t varId;
 
 	m_column = _tcsdup(column);
 	m_type = (int)msg->getFieldAsUInt16(baseId);

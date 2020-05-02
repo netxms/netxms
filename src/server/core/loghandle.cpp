@@ -21,7 +21,7 @@
 **/
 
 #include "nxcore.h"
-
+#include <nxcore_logs.h>
 
 /**
  * Constructor
@@ -71,10 +71,10 @@ void LogHandle::getColumnInfo(NXCPMessage &msg)
  */
 void LogHandle::deleteQueryResults()
 {
-	if (m_resultSet != NULL)
+	if (m_resultSet != nullptr)
 	{
 		DBFreeResult(m_resultSet);
-		m_resultSet = NULL;
+		m_resultSet = nullptr;
 	}
 }
 
@@ -86,7 +86,7 @@ void LogHandle::buildQueryColumnList()
 	m_queryColumns = _T("");
 	LOG_COLUMN *column = m_log->columns;
 	bool first = true;
-	while(column->name != NULL)
+	while(column->name != nullptr)
 	{
 	   if (!IsZoningEnabled() && (column->type == LC_ZONE_UIN))
 	   {
@@ -123,7 +123,7 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount, const UINT32 userId)
 	_sntprintf(query, 256, _T("SELECT coalesce(max(%s),0) FROM %s"), m_log->idColumn, m_log->table);
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_RESULT hResult = DBSelect(hdb, query);
-	if (hResult != NULL)
+	if (hResult != nullptr)
 	{
 		if (DBGetNumRows(hResult) > 0)
 			m_maxRecordId = DBGetFieldInt64(hResult, 0, 0);
@@ -333,7 +333,7 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh, const UIN
 	DbgPrintf(4, _T("Log data request: startRow=%d, numRows=%d, refresh=%s, userId=%d"),
 	          (int)startRow, (int)numRows, refresh ? _T("true") : _T("false"), userId);
 
-	if (m_resultSet == NULL)
+	if (m_resultSet == nullptr)
 		return createTable();	// send empty table to indicate end of data
 
 	int resultSize = DBGetNumRows(m_resultSet);
@@ -353,7 +353,7 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh, const UIN
 			deleteQueryResults();
 			INT64 rowCount;
 			if (!queryInternal(&rowCount, userId))
-				return NULL;
+				return nullptr;
 			resultSize = DBGetNumRows(m_resultSet);
 		}
 	}

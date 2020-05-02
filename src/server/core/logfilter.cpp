@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_logs.h>
 
 /**
  * Create log filter object from NXCP message
