@@ -3112,6 +3112,32 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId)
          success = m_driver->getHardwareInformation(snmp, this, m_driverData, &hwInfo);
          delete snmp;
       }
+      if (!success && (m_capabilities & NC_HAS_ENTITY_MIB))
+      {
+         // Try to get hardware information from ENTITY MIB
+         lockProperties();
+         if (m_components != nullptr)
+         {
+            const Component *root = m_components->getRoot();
+            if (root != nullptr)
+            {
+               // Device could be reported as but consist from single chassis only
+               if ((root->getClass() == 11) && (root->getChildren()->size() == 1) && (root->getChildren()->get(0)->getClass() == 3))
+               {
+                  root = root->getChildren()->get(0);
+               }
+               if ((root->getClass() == 3) || (root->getClass() == 11)) // Chassis or stack
+               {
+                  _tcslcpy(hwInfo.vendor, root->getVendor(), 128);
+                  _tcslcpy(hwInfo.productName, (*root->getModel() != 0) ? root->getModel() : root->getDescription(), 128);
+                  _tcslcpy(hwInfo.productVersion, root->getFirmware(), 16);
+                  _tcslcpy(hwInfo.serialNumber, root->getSerial(), 32);
+               }
+               success = (hwInfo.vendor[0] != 0) || (hwInfo.productName[0] != 0) || (hwInfo.productVersion[0] != 0) || (hwInfo.serialNumber[0] != 0);
+            }
+         }
+         unlockProperties();
+      }
    }
 
    bool modified = false;
