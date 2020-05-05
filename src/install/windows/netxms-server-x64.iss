@@ -226,6 +226,8 @@ Source: "..\..\..\x64\Release\juniper.ndd"; DestDir: "{app}\lib\ndd"; Flags: ign
 Source: "..\..\..\x64\Release\juniper.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\mikrotik.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\mikrotik.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\moxa.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\moxa.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\net-snmp.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\net-snmp.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\netonix.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
