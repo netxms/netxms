@@ -3520,6 +3520,11 @@ if test $? = 0; then
 
 	AC_CHECK_FUNCS(mysql_real_escape_string)
 
+	AC_CHECK_TYPES([my_bool],,,
+		[
+#include <mysql.h>
+		])
+
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LD_RUN_PATH="$OLD_LD_RUN_PATH"
