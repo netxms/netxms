@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,6 +34,9 @@
 #endif
 
 #define _CRT_NONSTDC_NO_WARNINGS
+
+// The following line should be removed for client version 8
+#define HAVE_MY_BOOL 1
 
 #include <winsock2.h>
 #include <windows.h>
