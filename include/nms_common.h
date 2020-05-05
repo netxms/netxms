@@ -160,6 +160,11 @@ typedef int bool;
 #define JAVA_CLASSPATH_SEPARATOR   _T(':')
 #endif
 
+/**
+ * Hint for zlib to use "const" qualifier
+ */
+#define ZLIB_CONST
+
 
 /***** Platform dependent includes and defines *****/
 

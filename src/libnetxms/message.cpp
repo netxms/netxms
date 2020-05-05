@@ -32,6 +32,24 @@
 #include <uthash.h>
 
 /**
+ * ZLib custom alloc
+ */
+static voidpf ZLibAlloc(voidpf pool, uInt items, uInt size)
+{
+   size_t allocationSize = items * size;
+   void *p = static_cast<MemoryPool*>(pool)->allocate(allocationSize);
+   memset(p, 0, allocationSize);
+   return p;
+}
+
+/**
+ * ZLib custom free
+ */
+static void ZLibFree(voidpf pool, voidpf address)
+{
+}
+
+/**
  * Calculate field size
  */
 static size_t CalculateFieldSize(const NXCP_MESSAGE_FIELD *field, bool networkByteOrder)
@@ -74,7 +92,7 @@ static size_t CalculateFieldSize(const NXCP_MESSAGE_FIELD *field, bool networkBy
 struct MessageField
 {
    UT_hash_handle hh;
-   UINT32 id;
+   uint32_t id;
    size_t size;
    NXCP_MESSAGE_FIELD data;
 };
@@ -168,7 +186,10 @@ NXCPMessage *NXCPMessage::deserialize(const NXCP_MESSAGE *rawMsg, int version)
  */
 inline size_t SizeHint(const NXCP_MESSAGE *msg)
 {
-   size_t size = ntohl(msg->size);
+   bool compressed = (ntohs(msg->flags) & MF_COMPRESSED) != 0;
+   size_t size = ntohl(msg->size) + 1024;
+   if (compressed)
+      size += ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) - NXCP_HEADER_SIZE;
    return size + 4096 - (size % 4096);
 }
 
@@ -194,9 +215,9 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          m_flags &= ~MF_COMPRESSED; // clear "compressed" flag so it will not be mistakenly re-sent
 
          z_stream stream;
-         stream.zalloc = Z_NULL;
-         stream.zfree = Z_NULL;
-         stream.opaque = Z_NULL;
+         stream.zalloc = ZLibAlloc;
+         stream.zfree = ZLibFree;
+         stream.opaque = &m_pool;
          stream.avail_in = (UINT32)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
          stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
          if (inflateInit(&stream) != Z_OK)
@@ -235,14 +256,14 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
       if ((m_flags & MF_COMPRESSED) && (m_version >= 4))
       {
          m_flags &= ~MF_COMPRESSED; // clear "compressed" flag so it will not be mistakenly re-sent
-         msgDataSize = (size_t)ntohl(*((UINT32 *)((BYTE *)msg + NXCP_HEADER_SIZE))) - NXCP_HEADER_SIZE;
+         msgDataSize = ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) - NXCP_HEADER_SIZE;
 
          z_stream stream;
-         stream.zalloc = Z_NULL;
-         stream.zfree = Z_NULL;
-         stream.opaque = Z_NULL;
-         stream.avail_in = (UINT32)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
-         stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
+         stream.zalloc = ZLibAlloc;
+         stream.zfree = ZLibFree;
+         stream.opaque = &m_pool;
+         stream.avail_in = ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
+         stream.next_in = reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4;
          if (inflateInit(&stream) != Z_OK)
          {
             nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
@@ -1193,9 +1214,9 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
    if ((m_version >= 4) && allowCompression && (size > 128) && !(m_flags & (MF_STREAM | MF_DONT_COMPRESS)))
    {
       z_stream stream;
-      stream.zalloc = Z_NULL;
-      stream.zfree = Z_NULL;
-      stream.opaque = Z_NULL;
+      stream.zalloc = ZLibAlloc;
+      stream.zfree = ZLibFree;
+      stream.opaque = (void*)&m_pool;
       stream.avail_in = 0;
       stream.next_in = Z_NULL;
       if (deflateInit(&stream, 9) == Z_OK)

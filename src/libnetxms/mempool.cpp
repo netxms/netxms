@@ -80,7 +80,7 @@ TCHAR *MemoryPool::copyString(const TCHAR *s)
    if (s == nullptr)
       return nullptr;
    size_t l = _tcslen(s) + 1;
-   TCHAR *p = static_cast<TCHAR*>(allocate(l * sizeof(TCHAR)));
+   TCHAR *p = allocateString(l);
    memcpy(p, s, l * sizeof(TCHAR));
    return p;
 }
