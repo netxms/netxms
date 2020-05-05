@@ -665,15 +665,14 @@ public:
    SNMP_Transport();
    virtual ~SNMP_Transport();
 
-   virtual int readMessage(SNMP_PDU **data, UINT32 timeout = INFINITE,
-                           struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
-	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) = 0;
-   virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) = 0;
+   virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
+            socklen_t *addrSize = nullptr, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) = 0;
+   virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) = 0;
    virtual InetAddress getPeerIpAddress() = 0;
    virtual uint16_t getPort() = 0;
    virtual bool isProxyTransport() = 0;
 
-   UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout = INFINITE, int numRetries = 1);
+   uint32_t doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
 	SNMP_SecurityContext *getSecurityContext() { return m_securityContext; }
@@ -714,10 +713,9 @@ public:
    SNMP_UDPTransport(SOCKET hSocket);
    virtual ~SNMP_UDPTransport();
 
-   virtual int readMessage(SNMP_PDU **data, UINT32 timeout = INFINITE,
-                           struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
-	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) override;
-   virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) override;
+   virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
+            socklen_t *addrSize = nullptr, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) override;
+   virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override;
    virtual InetAddress getPeerIpAddress() override;
    virtual uint16_t getPort() override;
    virtual bool isProxyTransport() override;

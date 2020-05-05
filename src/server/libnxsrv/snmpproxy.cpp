@@ -26,10 +26,9 @@
 /**
  * Constructor
  */
-SNMP_ProxyTransport::SNMP_ProxyTransport(const shared_ptr<AgentConnection>& conn, const InetAddress& ipAddr, uint16_t port) : m_agentConnection(conn)
+SNMP_ProxyTransport::SNMP_ProxyTransport(const shared_ptr<AgentConnection>& conn, const InetAddress& ipAddr, uint16_t port) : m_agentConnection(conn), m_ipAddr(ipAddr)
 {
    m_reliable = true;   // no need for retries on server side, agent will do retry if needed
-	m_ipAddr = ipAddr;
 	m_port = port;
 	m_response = nullptr;
 	m_waitForResponse = true;
@@ -46,27 +45,27 @@ SNMP_ProxyTransport::~SNMP_ProxyTransport()
 /**
  * Send PDU
  */
-int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, UINT32 timeout)
+int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
 {
    int nRet = -1;
 	NXCPMessage msg(m_agentConnection->getProtocolVersion());
 
-   BYTE *pBuffer;
-   size_t size = pdu->encode(&pBuffer, m_securityContext);
+   BYTE *encodedPDU;
+   size_t size = pdu->encode(&encodedPDU, m_securityContext);
    if (size != 0)
    {
 		msg.setCode(CMD_SNMP_REQUEST);
 		msg.setField(VID_IP_ADDRESS, m_ipAddr);
 		msg.setField(VID_PORT, m_port);
 		msg.setField(VID_PDU_SIZE, (UINT32)size);
-		msg.setField(VID_PDU, pBuffer, size);
+		msg.setField(VID_PDU, encodedPDU, size);
 		msg.setField(VID_TIMEOUT, timeout);
-      MemFree(pBuffer);
+      MemFree(encodedPDU);
 
       if (m_waitForResponse)
       {
          m_response = m_agentConnection->customRequest(&msg);
-         if (m_response != NULL)
+         if (m_response != nullptr)
          {
             nRet = 1;
          }
@@ -83,47 +82,41 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, UINT32 timeout)
 /**
  * Receive PDU
  */
-int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 timeout,
-                                     struct sockaddr *pSender, socklen_t *piAddrSize,
-                                     SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
+int SNMP_ProxyTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender,
+         socklen_t *addrSize, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
-	int nRet;
-	BYTE *pBuffer;
-	UINT32 dwSize;
-
-	if (m_response == NULL)
+	if (m_response == nullptr)
 		return -1;
 
+	int rc;
 	UINT32 rcc = m_response->getFieldAsUInt32(VID_RCC);
 	if (rcc == ERR_SUCCESS)
 	{
-		dwSize = m_response->getFieldAsUInt32(VID_PDU_SIZE);
-		pBuffer = MemAllocArrayNoInit<BYTE>(dwSize);
-		m_response->getFieldAsBinary(VID_PDU, pBuffer, dwSize);
+	   size_t size;
+		const BYTE *encodedPDU = m_response->getBinaryFieldPtr(VID_PDU, &size);
 
-		if (contextFinder != NULL)
-			setSecurityContext(contextFinder(pSender, *piAddrSize));
+		if (contextFinder != nullptr)
+			setSecurityContext(contextFinder(sender, *addrSize));
 
-		*ppData = new SNMP_PDU;
-		if (!(*ppData)->parse(pBuffer, dwSize, m_securityContext, m_enableEngineIdAutoupdate))
+		*pdu = new SNMP_PDU;
+		if (!(*pdu)->parse(encodedPDU, size, m_securityContext, m_enableEngineIdAutoupdate))
 		{
-			delete *ppData;
-			*ppData = NULL;
+			delete *pdu;
+			*pdu = nullptr;
 		}
-		MemFree(pBuffer);
-		nRet = (int)dwSize;
+		rc = static_cast<int>(size);
 	}
 	else if (rcc == ERR_REQUEST_TIMEOUT)
 	{
-	   nRet = 0;
+	   rc = 0;
 	}
 	else
 	{
-		nRet = -1;
+		rc = -1;
 	}
 
 	delete_and_null(m_response);
-	return nRet;
+	return rc;
 }
 
 /**

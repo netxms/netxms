@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -49,9 +49,9 @@ static struct
  */
 SNMP_Transport::SNMP_Transport()
 {
-	m_authoritativeEngine = NULL;
-	m_contextEngine = NULL;
-	m_securityContext = NULL;
+	m_authoritativeEngine = nullptr;
+	m_contextEngine = nullptr;
+	m_securityContext = nullptr;
 	m_enableEngineIdAutoupdate = false;
 	m_updatePeerOnRecv = false;
 	m_reliable = false;
@@ -85,11 +85,8 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 /**
  * Send a request and wait for response with respect for timeouts and retransmissions
  */
-UINT32 SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout, int numRetries)
+uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout, int numRetries)
 {
-   UINT32 rc, remainingWaitTime;
-   int bytes;
-
    if ((request == NULL) || (response == NULL) || (numRetries <= 0))
       return SNMP_ERR_PARAM;
 
@@ -108,6 +105,7 @@ UINT32 SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 
 		}
 	}
 
+   uint32_t rc;
 	if (m_reliable)
 	   numRetries = 1;   // Don't do retry on reliable transport
    while(--numRetries >= 0)
@@ -122,13 +120,13 @@ retry:
          break;
       }
 
-      remainingWaitTime = timeout;
+      uint32_t remainingWaitTime = timeout;
 
 retry_wait:
 		delete *response;
-		*response = NULL;
-		INT64 startTime = GetCurrentTimeMs();
-      bytes = readMessage(response, remainingWaitTime);
+		*response = nullptr;
+		int64_t startTime = GetCurrentTimeMs();
+      int bytes = readMessage(response, remainingWaitTime);
       if (bytes > 0)
       {
          if (*response != NULL)
@@ -437,16 +435,12 @@ size_t SNMP_UDPTransport::preParsePDU()
 /**
  * Read PDU from socket
  */
-int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
-                                   struct sockaddr *pSender, socklen_t *piAddrSize,
-                                   SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
+int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender,
+         socklen_t *addrSize, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
-   int bytes;
-   size_t pduLength;
-
    if (m_dwBytesInBuffer < 2)
    {
-      bytes = recvData(dwTimeout, pSender, piAddrSize);
+      int bytes = recvData(timeout, sender, addrSize);
       if (bytes <= 0)
       {
          clearBuffer();
@@ -455,7 +449,7 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
       m_dwBytesInBuffer += bytes;
    }
 
-   pduLength = preParsePDU();
+   size_t pduLength = preParsePDU();
    if (pduLength == 0)
    {
       // Clear buffer
@@ -473,7 +467,7 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
    // Read entire PDU into buffer
    while(m_dwBytesInBuffer < pduLength)
    {
-      bytes = recvData(dwTimeout, pSender, piAddrSize);
+      int bytes = recvData(timeout, sender, addrSize);
       if (bytes <= 0)
       {
          clearBuffer();
@@ -483,17 +477,17 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
    }
 
 	// Change security context if needed
-	if (contextFinder != NULL)
+	if (contextFinder != nullptr)
 	{
-		setSecurityContext(contextFinder(pSender, *piAddrSize));
+		setSecurityContext(contextFinder(sender, *addrSize));
 	}
 
    // Create new PDU object and remove parsed data from buffer
-   *ppData = new SNMP_PDU;
-   if (!(*ppData)->parse(&m_pBuffer[m_dwBufferPos], pduLength, m_securityContext, m_enableEngineIdAutoupdate))
+   *pdu = new SNMP_PDU;
+   if (!(*pdu)->parse(&m_pBuffer[m_dwBufferPos], pduLength, m_securityContext, m_enableEngineIdAutoupdate))
    {
-      delete *ppData;
-      *ppData = NULL;
+      delete *pdu;
+      *pdu = nullptr;
    }
    m_dwBytesInBuffer -= pduLength;
    if (m_dwBytesInBuffer == 0)
@@ -505,7 +499,7 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 /**
  * Send PDU to socket
  */
-int SNMP_UDPTransport::sendMessage(SNMP_PDU *pdu, UINT32 timeout)
+int SNMP_UDPTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
 {
    int bytes = 0;
    BYTE *buffer;

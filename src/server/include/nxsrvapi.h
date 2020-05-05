@@ -996,10 +996,9 @@ public:
 	SNMP_ProxyTransport(const shared_ptr<AgentConnection>& conn, const InetAddress& ipAddr, uint16_t port);
 	virtual ~SNMP_ProxyTransport();
 
-   virtual int readMessage(SNMP_PDU **ppData, UINT32 timeout = INFINITE,
-                           struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL,
-	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) override;
-   virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) override;
+   virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
+            socklen_t *addrSize = nullptr, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) override;
+   virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override;
    virtual InetAddress getPeerIpAddress() override;
    virtual uint16_t getPort() override;
    virtual bool isProxyTransport() override;
