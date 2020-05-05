@@ -700,7 +700,11 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 
 		MYSQL_BIND b;
 		unsigned long l = 0;
+#if HAVE_MY_BOOL
 		my_bool isNull;
+#else
+		bool isNull;
+#endif
 
 		memset(&b, 0, sizeof(MYSQL_BIND));
 #if HAVE_ALLOCA
@@ -1060,7 +1064,11 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
    {
       MYSQL_BIND b;
       unsigned long l = 0;
+#if HAVE_MY_BOOL
       my_bool isNull;
+#else
+      bool isNull;
+#endif
 
       memset(&b, 0, sizeof(MYSQL_BIND));
 #if HAVE_ALLOCA
