@@ -4614,6 +4614,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/ignitenet/Makefile
 	src/server/drivers/juniper/Makefile
 	src/server/drivers/mikrotik/Makefile
+	src/server/drivers/moxa/Makefile
 	src/server/drivers/net-snmp/Makefile
 	src/server/drivers/netonix/Makefile
 	src/server/drivers/ping3/Makefile

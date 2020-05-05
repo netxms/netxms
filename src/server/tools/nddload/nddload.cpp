@@ -30,18 +30,24 @@ NETXMS_EXECUTABLE_HEADER(nddload)
 /**
  * Driver data
  */
-static DriverData *s_driverData = NULL;
+static DriverData *s_driverData = nullptr;
 static NObject s_object;
-static TCHAR *s_driverName = NULL;
-static ObjectArray<NetworkDeviceDriver> *s_drivers = NULL;
+static TCHAR *s_driverName = nullptr;
+static ObjectArray<NetworkDeviceDriver> *s_drivers = nullptr;
+
+/**
+ * Options
+ */
+static bool s_showInterfaces = false;
+static bool s_showVLANs = false;
 
 /**
  * Print access points reported by wireless switch
  */
 void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   ObjectArray<AccessPointInfo> *apInfo = driver->getAccessPoints(transport, NULL, NULL);
-   if (apInfo != NULL)
+   ObjectArray<AccessPointInfo> *apInfo = driver->getAccessPoints(transport, nullptr, nullptr);
+   if (apInfo != nullptr)
    {
       _tprintf(_T("\nAccessPoints:\n"));
       for (int i = 0; i < apInfo->size(); i++)
@@ -146,6 +152,138 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
 }
 
 /**
+ * Print device information
+ */
+static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *transport)
+{
+   if (driver->isWirelessController(transport, &s_object, s_driverData))
+   {
+      _tprintf(_T("Device is a wireless controller\n"));
+      _tprintf(_T("Cluster Mode: %d\n"), driver->getClusterMode(transport, NULL, NULL));
+
+      PrintAccessPoints(driver, transport);
+      PrintMobileUnits(driver, transport);
+   }
+   else
+   {
+      _tprintf(_T("Device is not a wireless controller\n"));
+   }
+
+   DeviceHardwareInfo hwInfo;
+   memset(&hwInfo, 0, sizeof(hwInfo));
+   if (driver->getHardwareInformation(transport, &s_object, s_driverData, &hwInfo))
+   {
+      _tprintf(_T("\nDevice hardware information:\n")
+               _T("   Vendor ...........: %s\n")
+               _T("   Product name .....: %s\n")
+               _T("   Product code .....: %s\n")
+               _T("   Product version ..: %s\n")
+               _T("   Serial number ....: %s\n"),
+               hwInfo.vendor, hwInfo.productName, hwInfo.productCode, hwInfo.productVersion, hwInfo.serialNumber);
+   }
+   else
+   {
+      _tprintf(_T("\nDevice hardware information is not available\n"));
+   }
+
+   if (s_showInterfaces)
+   {
+      InterfaceList *ifList = driver->getInterfaces(transport, &s_object, s_driverData, 0, true);
+      if (ifList != nullptr)
+      {
+         if (ifList->size() > 0)
+         {
+            _tprintf(_T("\nInterfaces:\n"));
+            for(int i = 0; i < ifList->size(); i++)
+            {
+               InterfaceInfo *iface = ifList->get(i);
+               TCHAR macAddrText[64];
+               _tprintf(_T("   %s\n")
+                        _T("      Index ..........: %u\n")
+                        _T("      Bridge port ....: %u\n")
+                        _T("      Alias ..........: %s\n")
+                        _T("      Type ...........: %u\n")
+                        _T("      Speed ..........: ") UINT64_FMT _T("\n")
+                        _T("      MAC address ....: %s\n")
+                        _T("      Is physical ....: %s\n"),
+                     iface->name, iface->index, iface->bridgePort, iface->alias, iface->type, iface->speed,
+                     MACToStr(iface->macAddr, macAddrText), iface->isPhysicalPort ? _T("yes") : _T("no"));
+               if (iface->isPhysicalPort)
+               {
+                  TCHAR location[64];
+                  _tprintf(_T("      Location .......: %s\n"), iface->location.toString(location, 64));
+               }
+               if (!iface->ipAddrList.isEmpty())
+               {
+                  _tprintf(_T("      IP address list:\n"));
+                  for(int j = 0; j < iface->ipAddrList.size(); j++)
+                  {
+                     const InetAddress& ipAddr = iface->ipAddrList.get(j);
+                     _tprintf(_T("         %s/%d\n"), ipAddr.toString().cstr(), ipAddr.getMaskBits());
+                  }
+               }
+            }
+         }
+         else
+         {
+            _tprintf(_T("\nInterface list is empty\n"));
+         }
+         delete ifList;
+      }
+      else
+      {
+         _tprintf(_T("\nInterface list is not available\n"));
+      }
+   }
+
+   if (s_showVLANs)
+   {
+      VlanList *vlanList = driver->getVlans(transport, &s_object, s_driverData);
+      if (vlanList != nullptr)
+      {
+         if (vlanList->size() > 0)
+         {
+            _tprintf(_T("\nVLANs:\n"));
+            for(int i = 0; i < vlanList->size(); i++)
+            {
+               VlanInfo *vlan = vlanList->get(i);
+
+               StringBuffer portList;
+               TCHAR locationBuffer[64];
+               for(int j = 0; j < vlan->getNumPorts(); j++)
+               {
+                  VlanPortInfo *port = &(vlan->getPorts()[j]);
+                  if (!portList.isEmpty())
+                     portList.append(_T(", "));
+                  switch(vlan->getPortReferenceMode())
+                  {
+                     case VLAN_PRM_IFINDEX:
+                     case VLAN_PRM_BPORT:
+                        portList.append(port->portId);
+                        break;
+                     case VLAN_PRM_PHYLOC:
+                        portList.append(port->location.toString(locationBuffer, 64));
+                        break;
+                  }
+               }
+
+               _tprintf(_T("   %4d \"%s\" (%s)\n"), vlan->getVlanId(), vlan->getName(), portList.cstr());
+            }
+         }
+         else
+         {
+            _tprintf(_T("\nVLAN list is empty\n"));
+         }
+         delete vlanList;
+      }
+      else
+      {
+         _tprintf(_T("\nVLAN list is not available\n"));
+      }
+   }
+}
+
+/**
  * Load driver and execute probes
  */
 static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVersion, int snmpPort, const char *community)
@@ -193,35 +331,7 @@ static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVe
 
             if (ConnectToDevice(driver, transport))
             {
-               if (driver->isWirelessController(transport, &s_object, s_driverData))
-               {
-                  _tprintf(_T("Device is a wireless controller\n"));
-                  _tprintf(_T("Cluster Mode: %d\n"), driver->getClusterMode(transport, NULL, NULL));
-
-                  PrintAccessPoints(driver, transport);
-                  PrintMobileUnits(driver, transport);
-               }
-               else
-               {
-                  _tprintf(_T("Device is not a wireless controller\n"));
-               }
-
-               DeviceHardwareInfo hwInfo;
-               memset(&hwInfo, 0, sizeof(hwInfo));
-               if (driver->getHardwareInformation(transport, &s_object, s_driverData, &hwInfo))
-               {
-                  _tprintf(_T("\nDevice hardware information:\n")
-                           _T("   Vendor ...........: %s\n")
-                           _T("   Product name .....: %s\n")
-                           _T("   Product code .....: %s\n")
-                           _T("   Product version ..: %s\n")
-                           _T("   Serial number ....: %s\n"),
-                           hwInfo.vendor, hwInfo.productName, hwInfo.productCode, hwInfo.productVersion, hwInfo.serialNumber);
-               }
-               else
-               {
-                  _tprintf(_T("\nDevice hardware information is not available\n"));
-               }
+               PrintDeviceInformation(driver, transport);
             }
          }
          else
@@ -259,18 +369,21 @@ int main(int argc, char *argv[])
    opterr = 1;
    int ch;
    char *eptr;
-   while((ch = getopt(argc, argv, "c:n:p:v:")) != -1)
+   while((ch = getopt(argc, argv, "c:in:p:v:V")) != -1)
    {
       switch(ch)
       {
          case 'c':
             community = optarg;
             break;
+         case 'i':   // Show interfaces
+            s_showInterfaces = true;
+            break;
          case 'n':
 #ifdef UNICODE
             s_driverName = WideStringFromMBStringSysLocale(optarg);
 #else
-            s_driverName = strdup(optarg);
+            s_driverName = MemCopyStringA(optarg);
 #endif
             break;
          case 'p':   // Port number
@@ -300,6 +413,9 @@ int main(int argc, char *argv[])
                return 1;
             }
             break;
+         case 'V':   // Show VLANs
+            s_showVLANs = true;
+            break;
          case '?':
             return 1;
          default:
@@ -309,7 +425,7 @@ int main(int argc, char *argv[])
 
    if (argc - optind < 2)
    {
-      _tprintf(_T("Usage: nddload [-c community] [-n driverName] [-p port] [-v snmpVersion] driver device\n"));
+      _tprintf(_T("Usage: nddload [-c community] [-i] [-n driverName] [-p port] [-v snmpVersion] [-V] driver device\n"));
       return 1;
    }
 

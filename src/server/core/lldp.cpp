@@ -138,14 +138,24 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, UINT32 idType, BYTE
 			}
 #endif
 			ifc = node->findInterfaceByName(ifName);	/* TODO: find by cached ifName value */
-			if ((ifc == nullptr) && !_tcsncmp(node->getSNMPObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19))
+			if (ifc == nullptr)
 			{
-				// Hack for Extreme Networks switches
-				// Must be moved into driver
-				memmove(&ifName[2], ifName, (_tcslen(ifName) + 1) * sizeof(TCHAR));
-				ifName[0] = _T('1');
-				ifName[1] = _T(':');
-				ifc = node->findInterfaceByName(ifName);
+			   // Hacks for various buggy devices - should be moved into drivers
+            if (!_tcsncmp(node->getSNMPObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19)) // Extreme Networks switches
+            {
+               memmove(&ifName[2], ifName, (_tcslen(ifName) + 1) * sizeof(TCHAR));
+               ifName[0] = _T('1');
+               ifName[1] = _T(':');
+               ifc = node->findInterfaceByName(ifName);
+            }
+            else if (!_tcsncmp(node->getSNMPObjectId(), _T(".1.3.6.1.4.1.8691.6."), 20)) // Moxa routers
+            {
+               // Device could present string like "PORTn" or just "n" where n is port number (same as interface index)
+               TCHAR *eptr;
+               uint32_t portId = !_tcsncmp(ifName, _T("PORT"), 4) ? _tcstoul(&ifName[4], &eptr, 10) : _tcstoul(ifName, &eptr, 10);
+               if ((portId != 0) && (*eptr == 0))
+                  ifc = node->findInterfaceByIndex(portId);
+            }
 			}
 			return ifc;
 		case 7:	// local identifier

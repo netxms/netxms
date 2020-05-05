@@ -1381,7 +1381,7 @@ inline WCHAR *MemCopyStringW(const WCHAR *src)
 /**
  * delete object and nullify pointer
  */
-#define delete_and_null(x) do { delete x; x = NULL; } while(0)
+#define delete_and_null(x) do { delete x; x = nullptr; } while(0)
 
 /**
  * Convert half-byte's value to hex digit and vice versa

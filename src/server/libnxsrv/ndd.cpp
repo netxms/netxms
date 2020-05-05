@@ -760,7 +760,7 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, Dri
 	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"), HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
 		goto failure;
 
-   if (list->getData() == NULL)
+   if (list->getData() == nullptr)
    {
       // Some devices does not return anything under dot1qVlanCurrentEgressPorts.
       // In that case we use dot1qVlanStaticEgressPorts
@@ -772,7 +772,7 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, Dri
 
 failure:
    delete list;
-   return NULL;
+   return nullptr;
 }
 
 /** 

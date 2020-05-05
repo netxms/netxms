@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Huawei Optix devices
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
  */
 const TCHAR *OptixDriver::getName()
 {
-	return _T("OPTIX");
+   return _T("OPTIX");
 }
 
 /**
@@ -37,7 +37,7 @@ const TCHAR *OptixDriver::getName()
  */
 const TCHAR *OptixDriver::getVersion()
 {
-	return NETXMS_BUILD_TAG;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
