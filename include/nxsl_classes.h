@@ -627,8 +627,8 @@ public:
    UINT32 m_dwAddr;
 
    NXSL_Function() : m_name() { m_dwAddr = INVALID_ADDRESS; }
-   NXSL_Function(NXSL_Function *src) { m_name = src->m_name; m_dwAddr = src->m_dwAddr; }
-   NXSL_Function(const char *name, UINT32 addr) : m_name(name) { m_dwAddr = addr; }
+   NXSL_Function(const NXSL_Function *src) { m_name = src->m_name; m_dwAddr = src->m_dwAddr; }
+   NXSL_Function(const char *name, uint32_t addr) : m_name(name) { m_dwAddr = addr; }
 };
 
 /**

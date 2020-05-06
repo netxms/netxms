@@ -1123,7 +1123,7 @@ DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param
       else
       {
          const TCHAR *dciValue = value->getValueAsCString();
-         nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
+         _tcslcpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
          rc = DCE_SUCCESS;
       }
       delete vm;

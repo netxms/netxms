@@ -147,31 +147,31 @@ bool NXSL_SecurityContext::validateAccess(int accessType, const void *object)
  */
 NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager()
 {
-   m_instructionSet = NULL;
+   m_instructionSet = nullptr;
    m_cp = INVALID_ADDRESS;
-   m_dataStack = NULL;
-   m_codeStack = NULL;
-   m_catchStack = NULL;
+   m_dataStack = nullptr;
+   m_codeStack = nullptr;
+   m_catchStack = nullptr;
    m_errorCode = 0;
    m_errorLine = 0;
-   m_errorText = NULL;
+   m_errorText = nullptr;
    m_constants = new NXSL_VariableSystem(this, NXSL_VariableSystemType::CONSTANT);
    m_globalVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::GLOBAL);
    m_localVariables = nullptr;
-   m_expressionVariables = NULL;
-   m_exportedExpressionVariables = NULL;
-   m_context = NULL;
-   m_securityContext = NULL;
-   m_functions = NULL;
+   m_expressionVariables = nullptr;
+   m_exportedExpressionVariables = nullptr;
+   m_context = nullptr;
+   m_securityContext = nullptr;
+   m_functions = nullptr;
    m_modules = new ObjectArray<NXSL_Module>(4, 4, Ownership::True);
    m_dwSubLevel = 0;    // Level of current subroutine
-   m_env = (env != NULL) ? env : new NXSL_Environment;
-   m_pRetValue = NULL;
-	m_userData = NULL;
+   m_env = (env != nullptr) ? env : new NXSL_Environment;
+   m_pRetValue = nullptr;
+	m_userData = nullptr;
 	m_nBindPos = 0;
-	if (storage != NULL)
+	if (storage != nullptr)
 	{
-      m_localStorage = NULL;
+      m_localStorage = nullptr;
 	   m_storage = storage;
 	}
 	else
@@ -231,16 +231,14 @@ bool NXSL_VM::load(const NXSL_Program *program)
    delete m_functions;
    delete m_modules;
 
-   int i;
-
    // Copy instructions
    m_instructionSet = new ObjectArray<NXSL_Instruction>(program->m_instructionSet->size(), 32, Ownership::True);
-   for(i = 0; i < program->m_instructionSet->size(); i++)
+   for(int i = 0; i < program->m_instructionSet->size(); i++)
       m_instructionSet->add(new NXSL_Instruction(this, program->m_instructionSet->get(i)));
 
    // Copy function information
    m_functions = new ObjectArray<NXSL_Function>(program->m_functions->size(), 8, Ownership::True);
-   for(i = 0; i < program->m_functions->size(); i++)
+   for(int i = 0; i < program->m_functions->size(); i++)
       m_functions->add(new NXSL_Function(program->m_functions->get(i)));
 
    // Set constants
@@ -251,7 +249,7 @@ bool NXSL_VM::load(const NXSL_Program *program)
 
    // Load modules
    m_modules = new ObjectArray<NXSL_Module>(0, 8, Ownership::True);
-   for(i = 0; i < program->m_requiredModules->size(); i++)
+   for(int i = 0; i < program->m_requiredModules->size(); i++)
    {
       const NXSL_ModuleImport *importInfo = program->m_requiredModules->get(i);
       if (!m_env->loadModule(this, importInfo))
@@ -2324,6 +2322,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    relocateCode(start, module->m_instructionSet->size(), start);
    
    // Add function names from module
+   int fnstart = m_functions->size();
    char fname[MAX_IDENTIFIER_LENGTH];
 #ifdef UNICODE
    WideCharToMultiByte(CP_UTF8, 0, importInfo->name, -1, fname, MAX_IDENTIFIER_LENGTH - 1, nullptr, nullptr);
@@ -2340,8 +2339,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
       {
          // Add fully qualified function name (module::function)
          strcpy(&fname[fnpos], mf->m_name.value);
-         NXSL_Function *f = new NXSL_Function(fname, mf->m_dwAddr + start);
-         m_functions->add(f);
+         m_functions->add(new NXSL_Function(fname, mf->m_dwAddr + start));
       }
       if (!strcmp(mf->m_name.value, "main") || !strcmp(mf->m_name.value, "$main"))
          continue;
@@ -2358,8 +2356,8 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    _tcslcpy(m->m_name, importInfo->name, MAX_PATH);
    m->m_codeStart = (UINT32)start;
    m->m_codeSize = module->m_instructionSet->size();
-   m->m_functionStart = m_functions->size() - module->m_functions->size();
-   m->m_numFunctions = module->m_functions->size();
+   m->m_functionStart = fnstart;
+   m->m_numFunctions = m_functions->size() - fnstart;
    m_modules->add(m);
 }
 
