@@ -2285,10 +2285,10 @@ void NXSL_VM::doUnaryOperation(int nOpCode)
 /**
  * Relocate code block
  */
-void NXSL_VM::relocateCode(UINT32 dwStart, UINT32 dwLen, UINT32 dwShift)
+void NXSL_VM::relocateCode(uint32_t start, uint32_t len, uint32_t shift)
 {
-   UINT32 dwLast = std::min(dwStart + dwLen, (UINT32)m_instructionSet->size());
-   for(UINT32 i = dwStart; i < dwLast; i++)
+   uint32_t last = std::min(start + len, static_cast<uint32_t>(m_instructionSet->size()));
+   for(uint32_t i = start; i < last; i++)
 	{
       NXSL_Instruction *instr = m_instructionSet->get(i);
       if ((instr->m_opCode == OPCODE_JMP) ||
@@ -2298,7 +2298,7 @@ void NXSL_VM::relocateCode(UINT32 dwStart, UINT32 dwLen, UINT32 dwShift)
           (instr->m_opCode == OPCODE_JNZ_PEEK) ||
           (instr->m_opCode == OPCODE_CALL))
       {
-         instr->m_operand.m_addr += dwShift;
+         instr->m_operand.m_addr += shift;
       }
 	}
 }
@@ -2308,16 +2308,14 @@ void NXSL_VM::relocateCode(UINT32 dwStart, UINT32 dwLen, UINT32 dwShift)
  */
 void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo)
 {
-   int i;
-
    // Check if module already loaded
-   for(i = 0; i < m_modules->size(); i++)
+   for(int i = 0; i < m_modules->size(); i++)
       if (!_tcsicmp(importInfo->name, m_modules->get(i)->m_name))
          return;  // Already loaded
 
    // Add code from module
    int start = m_instructionSet->size();
-   for(i = 0; i < module->m_instructionSet->size(); i++)
+   for(int i = 0; i < module->m_instructionSet->size(); i++)
       m_instructionSet->add(new NXSL_Instruction(this, module->m_instructionSet->get(i)));
    relocateCode(start, module->m_instructionSet->size(), start);
    
@@ -2332,19 +2330,19 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
 #endif
    strlcat(fname, "::", MAX_IDENTIFIER_LENGTH);
    size_t fnpos = strlen(fname);
-   for(i = 0; i < module->m_functions->size(); i++)
+   for(int i = 0; i < module->m_functions->size(); i++)
    {
       NXSL_Function *mf = module->m_functions->get(i);
       if (mf->m_name.length < MAX_IDENTIFIER_LENGTH - fnpos)
       {
          // Add fully qualified function name (module::function)
          strcpy(&fname[fnpos], mf->m_name.value);
-         m_functions->add(new NXSL_Function(fname, mf->m_dwAddr + start));
+         m_functions->add(new NXSL_Function(fname, mf->m_addr + start));
       }
       if (!strcmp(mf->m_name.value, "main") || !strcmp(mf->m_name.value, "$main"))
          continue;
       NXSL_Function *f = new NXSL_Function(mf);
-      f->m_dwAddr += (UINT32)start;
+      f->m_addr += static_cast<uint32_t>(start);
       m_functions->add(f);
    }
 
@@ -2459,13 +2457,13 @@ void NXSL_VM::callFunction(int nArgCount)
 /**
  * Find function address by name
  */
-UINT32 NXSL_VM::getFunctionAddress(const NXSL_Identifier& name)
+uint32_t NXSL_VM::getFunctionAddress(const NXSL_Identifier& name)
 {
    for(int i = 0; i < m_functions->size(); i++)
    {
       NXSL_Function *f = m_functions->get(i);
       if (name.equals(f->m_name))
-         return f->m_dwAddr;
+         return f->m_addr;
    }
    return INVALID_ADDRESS;
 }
@@ -2759,7 +2757,7 @@ void NXSL_VM::dump(FILE *fp)
       for(int i = 0; i < m_functions->size(); i++)
       {
          NXSL_Function *f = m_functions->get(i);
-         _ftprintf(fp, _T("  %04X %hs\n"), f->m_dwAddr, f->m_name.value);
+         _ftprintf(fp, _T("  %04X %hs\n"), f->m_addr, f->m_name.value);
       }
    }
 }

@@ -190,13 +190,13 @@ void NXSL_Program::resolveLastJump(int opcode, int offset)
 /**
  * Create jump at given address replacing another instruction (usually NOP)
  */
-void NXSL_Program::createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr)
+void NXSL_Program::createJumpAt(uint32_t opAddr, uint32_t jumpAddr)
 {
-	if (dwOpAddr >= (UINT32)m_instructionSet->size())
+	if (opAddr >= (uint32_t)m_instructionSet->size())
 		return;
 
-	int nLine = m_instructionSet->get(dwOpAddr)->m_sourceLine;
-   m_instructionSet->set(dwOpAddr, new NXSL_Instruction(this, nLine, OPCODE_JMP, dwJumpAddr));
+	int nLine = m_instructionSet->get(opAddr)->m_sourceLine;
+   m_instructionSet->set(opAddr, new NXSL_Instruction(this, nLine, OPCODE_JMP, jumpAddr));
 }
 
 /**
@@ -204,18 +204,18 @@ void NXSL_Program::createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr)
  * Will use first free address if dwAddr == INVALID_ADDRESS
  * Name must be in UTF-8
  */
-bool NXSL_Program::addFunction(const NXSL_Identifier& name, UINT32 dwAddr, char *pszError)
+bool NXSL_Program::addFunction(const NXSL_Identifier& name, uint32_t addr, char *errorText)
 {
    // Check for duplicate function names
    for(int i = 0; i < m_functions->size(); i++)
       if (name.equals(m_functions->get(i)->m_name))
       {
-         sprintf(pszError, "Duplicate function name: \"%s\"", name.value);
+         sprintf(errorText, "Duplicate function name: \"%s\"", name.value);
          return false;
       }
    NXSL_Function *f = new NXSL_Function;
 	f->m_name = name;
-   f->m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_instructionSet->size() : dwAddr;
+   f->m_addr = (addr == INVALID_ADDRESS) ? m_instructionSet->size() : addr;
    m_functions->add(f);
    return true;
 }
@@ -273,7 +273,7 @@ void NXSL_Program::resolveFunctions()
             if (instr->m_operand.m_identifier->equals(f->m_name))
             {
                delete instr->m_operand.m_identifier;
-               instr->m_operand.m_addr = f->m_dwAddr;
+               instr->m_operand.m_addr = f->m_addr;
                instr->m_opCode = OPCODE_CALL;
                break;
             }
@@ -468,9 +468,9 @@ void NXSL_Program::optimize()
  * @param start start offset
  * @param count number of instructions to remove
  */
-void NXSL_Program::removeInstructions(UINT32 start, int count)
+void NXSL_Program::removeInstructions(uint32_t start, int count)
 {
-	if ((count <= 0) || (start + (UINT32)count >= (UINT32)m_instructionSet->size()))
+	if ((count <= 0) || (start + (uint32_t)count >= (uint32_t)m_instructionSet->size()))
 		return;
 
    int i;
@@ -502,9 +502,9 @@ void NXSL_Program::removeInstructions(UINT32 start, int count)
    for(i = 0; i < m_functions->size(); i++)
    {
       NXSL_Function *f = m_functions->get(i);
-      if (f->m_dwAddr > start)
+      if (f->m_addr > start)
       {
-         f->m_dwAddr -= count;
+         f->m_addr -= count;
       }
    }
 }
@@ -607,7 +607,7 @@ void NXSL_Program::serialize(ByteStream& s)
    {
       NXSL_Function *f = m_functions->get(i);
       s.writeStringUtf8(f->m_name.value);
-      s.write(f->m_dwAddr);
+      s.write(f->m_addr);
    }
 
    // update header

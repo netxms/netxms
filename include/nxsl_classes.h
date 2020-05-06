@@ -33,7 +33,7 @@
 //
 
 #define MAX_CLASS_NAME     64
-#define INVALID_ADDRESS    ((UINT32)0xFFFFFFFF)
+#define INVALID_ADDRESS    ((uint32_t)0xFFFFFFFF)
 
 /**
  * NXSL data types
@@ -624,11 +624,11 @@ class NXSL_Function
 {
 public:
    NXSL_Identifier m_name;
-   UINT32 m_dwAddr;
+   uint32_t m_addr;
 
-   NXSL_Function() : m_name() { m_dwAddr = INVALID_ADDRESS; }
-   NXSL_Function(const NXSL_Function *src) { m_name = src->m_name; m_dwAddr = src->m_dwAddr; }
-   NXSL_Function(const char *name, uint32_t addr) : m_name(name) { m_dwAddr = addr; }
+   NXSL_Function() : m_name() { m_addr = INVALID_ADDRESS; }
+   NXSL_Function(const NXSL_Function *src) { m_name = src->m_name; m_addr = src->m_addr; }
+   NXSL_Function(const char *name, uint32_t addr) : m_name(name) { m_addr = addr; }
 };
 
 /**
@@ -907,28 +907,28 @@ protected:
    ObjectArray<NXSL_Function> *m_functions;
    ObjectArray<NXSL_IdentifierLocation> *m_expressionVariables;
 
-	UINT32 getFinalJumpDestination(UINT32 dwAddr, int srcJump);
-   UINT32 getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
+   uint32_t getFinalJumpDestination(uint32_t addr, int srcJump);
+   uint32_t getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
 
 public:
    NXSL_Program();
    virtual ~NXSL_Program();
 
-   bool addFunction(const NXSL_Identifier& name, UINT32 dwAddr, char *pszError);
+   bool addFunction(const NXSL_Identifier& name, uint32_t addr, char *errorText);
    void resolveFunctions();
    void addInstruction(NXSL_Instruction *pInstruction) { m_instructionSet->add(pInstruction); }
    void addPushVariableInstruction(const NXSL_Identifier& name, int line);
    void resolveLastJump(int opcode, int offset = 0);
-	void createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr);
+	void createJumpAt(uint32_t opAddr, uint32_t jumpAddr);
    void addRequiredModule(const char *name, int lineNumber, bool removeLastElement);
 	void optimize();
-	void removeInstructions(UINT32 start, int count);
+	void removeInstructions(uint32_t start, int count);
    bool addConstant(const NXSL_Identifier& name, NXSL_Value *value);
    void enableExpressionVariables();
    void disableExpressionVariables(int line);
    void registerExpressionVariable(const NXSL_Identifier& identifier);
 
-   UINT32 getCodeSize() const { return m_instructionSet->size(); }
+   uint32_t getCodeSize() const { return m_instructionSet->size(); }
    bool isEmpty() const { return m_instructionSet->isEmpty() || ((m_instructionSet->size() == 1) && (m_instructionSet->get(0)->m_opCode == 28)); }
 
    void dump(FILE *fp) { dump(fp, m_instructionSet); }
@@ -1111,8 +1111,8 @@ protected:
    NXSL_Variable *findOrCreateVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = NULL);
 	NXSL_Variable *createVariable(const NXSL_Identifier& name);
 
-   void relocateCode(UINT32 dwStartOffset, UINT32 dwLen, UINT32 dwShift);
-   UINT32 getFunctionAddress(const NXSL_Identifier& name);
+   void relocateCode(uint32_t startOffset, uint32_t len, uint32_t shift);
+   uint32_t getFunctionAddress(const NXSL_Identifier& name);
 
 public:
    NXSL_VM(NXSL_Environment *env = NULL, NXSL_Storage *storage = NULL);

@@ -786,7 +786,7 @@ int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, calloc(1, sizeof(struct tm))));
+   *result = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, MemAllocStruct<struct tm>()));
    return 0;
 }
 
