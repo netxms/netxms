@@ -10181,11 +10181,11 @@ void ClientSession::queryInternalCommunicationTopology(NXCPMessage *pRequest)
          NetworkMapObjectList *topology = nullptr;
          if (object->getObjectClass() == OBJECT_NODE)
          {
-            NetworkMapObjectList *topology = static_cast<Node&>(*object).buildInternalConnectionTopology();
+            topology = static_cast<Node&>(*object).buildInternalConnectionTopology();
          }
          else if (object->getObjectClass() == OBJECT_SENSOR)
          {
-            NetworkMapObjectList *topology = static_cast<Sensor&>(*object).buildInternalConnectionTopology();
+            topology = static_cast<Sensor&>(*object).buildInternalConnectionTopology();
          }
 
          if (topology != nullptr)
