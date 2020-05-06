@@ -951,6 +951,10 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
       success = (pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts) == 0);
 #endif
    }
+   else
+   {
+      success = TRUE;
+   }
 #ifdef _WIN32
    LeaveCriticalSection(&m_bufferLock);
 #else
