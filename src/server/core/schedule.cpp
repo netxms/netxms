@@ -350,8 +350,7 @@ bool ScheduledTask::canAccess(uint32_t userId, uint64_t systemAccess) const
       result = (userId == m_parameters->m_userId);
       unlock();
    }
-
-   return false;
+   return result;
 }
 
 /**
