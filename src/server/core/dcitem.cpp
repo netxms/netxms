@@ -1594,7 +1594,6 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
    }
    else
    {
-      uint32_t ownerId = m_owner.lock()->getId();
       if (g_dbSyntax == DB_SYNTAX_ORACLE)
       {
          _sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")

@@ -189,13 +189,13 @@ private:
    time_t m_tLastCheck;
 
 public:
-   DataCollectionItem(UINT64 serverId, NXCPMessage *msg, uint32_t baseId, uint32_t extBaseId, bool hasExtraData);
+   DataCollectionItem(uint64_t serverId, NXCPMessage *msg, uint32_t baseId, uint32_t extBaseId, bool hasExtraData);
    DataCollectionItem(DB_RESULT hResult, int row);
    DataCollectionItem(const DataCollectionItem *item);
    virtual ~DataCollectionItem();
 
-   UINT32 getId() const { return m_id; }
-   UINT64 getServerId() const { return m_serverId; }
+   uint32_t getId() const { return m_id; }
+   uint64_t getServerId() const { return m_serverId; }
    ServerObjectKey getKey() const { return ServerObjectKey(m_serverId, m_id); }
    const TCHAR *getName() const { return m_name; }
    int getType() const { return (int)m_type; }
@@ -204,9 +204,9 @@ public:
    UINT16 getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
-   UINT32 getPollingInterval() const { return (UINT32)m_pollingInterval; }
+   uint32_t getPollingInterval() const { return static_cast<uint32_t>(m_pollingInterval); }
    time_t getLastPollTime() { return m_lastPollTime; }
-   UINT32 getBackupProxyId() const { return m_backupProxyId; }
+   uint32_t getBackupProxyId() const { return m_backupProxyId; }
    const ObjectArray<SNMPTableColumnDefinition> *getColumns() const { return m_tableColumns; }
 
    bool updateAndSave(const DataCollectionItem *item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements);
@@ -285,7 +285,7 @@ static bool UsesSeconds(const TCHAR *schedule)
 /**
  * Create data collection item from NXCP mesage
  */
-DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32 baseId, uint32_t extBaseId, bool hasExtraData) : RefCountObject()
+DataCollectionItem::DataCollectionItem(uint64_t serverId, NXCPMessage *msg, UINT32 baseId, uint32_t extBaseId, bool hasExtraData) : RefCountObject()
 {
    m_serverId = serverId;
    m_id = msg->getFieldAsInt32(baseId);
@@ -314,7 +314,6 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
             m_tableColumns->add(new SNMPTableColumnDefinition(msg, fieldId));
             fieldId += 10;
          }
-         fieldId += (99 - count) * 10;
       }
       else
       {

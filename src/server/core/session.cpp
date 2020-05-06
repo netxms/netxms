@@ -7008,11 +7008,12 @@ void ClientSession::deployPackage(NXCPMessage *request)
    UINT32 dwNumObjects, *pdwObjectList;
    TCHAR szQuery[256], szPkgFile[MAX_PATH];
    TCHAR szVersion[MAX_AGENT_VERSION_LEN], szPlatform[MAX_PLATFORM_NAME_LEN];
-   BOOL bSuccess = TRUE;
    PackageDeploymentTask *task = nullptr;
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
+      bool success = true;
+
       // Get package ID
       uint32_t dwPkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
       if (IsValidPackageId(dwPkgId))
@@ -7062,14 +7063,14 @@ void ClientSession::deployPackage(NXCPMessage *request)
                      else
                      {
                         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-                        bSuccess = FALSE;
+                        success = false;
                         break;
                      }
                   }
                   else
                   {
                      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-                     bSuccess = FALSE;
+                     success = false;
                      break;
                   }
                }
@@ -7078,25 +7079,25 @@ void ClientSession::deployPackage(NXCPMessage *request)
             else
             {
                msg.setField(VID_RCC, RCC_DB_FAILURE);
-               bSuccess = FALSE;
+               success = false;
             }
             DBFreeResult(hResult);
          }
          else
          {
             msg.setField(VID_RCC, RCC_DB_FAILURE);
-            bSuccess = FALSE;
+            success = false;
          }
          DBConnectionPoolReleaseConnection(hdb);
       }
       else
       {
          msg.setField(VID_RCC, RCC_INVALID_PACKAGE_ID);
-         bSuccess = FALSE;
+         success = false;
       }
 
       // On success, start upgrade thread
-      if (bSuccess)
+      if (success)
       {
          InterlockedIncrement(&m_refCount);
          ThreadCreate(DeploymentManager, 0, task);
@@ -7110,7 +7111,6 @@ void ClientSession::deployPackage(NXCPMessage *request)
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      bSuccess = FALSE;
    }
 
    // Send response
