@@ -844,7 +844,6 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
          if (node != nullptr)
             array->append(node->createNXSLObject(vm));
       }
-      delete proxies;
       value = vm->createValue(array);
       delete proxies;
    }

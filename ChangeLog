@@ -1,10 +1,11 @@
 
 *
-* 3.3.302
+* 3.3.305
 * 
 
 - Added driver for Moxa industrial routers
 - Fixed server crash when receiving ill-formed SNMP response
+- Fixed server crash when accessing zone object attributes from NXSL
 - Fixed issues:
 	NX-1849 (Agent policy schema sqlite error in 3.3.285)
 
