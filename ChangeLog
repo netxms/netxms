@@ -4,6 +4,7 @@
 * 
 
 - Added driver for Moxa industrial routers
+- Fixed server crash when receiving ill-formed SNMP response
 - Fixed issues:
 	NX-1849 (Agent policy schema sqlite error in 3.3.285)
 

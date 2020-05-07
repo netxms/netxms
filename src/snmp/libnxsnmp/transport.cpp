@@ -151,15 +151,18 @@ retry_wait:
 
                   if ((*response)->getCommand() == SNMP_REPORT)
                   {
-                     SNMP_Variable *var = (*response)->getVariable(0);
                      rc = SNMP_ERR_AGENT;
-                     const SNMP_ObjectId& oid = var->getName();
-                     for(int i = 0; s_oidToErrorMap[i].oidLen != 0; i++)
+                     SNMP_Variable *var = (*response)->getVariable(0);
+                     if (var != nullptr)
                      {
-                        if (oid.compare(s_oidToErrorMap[i].oid, s_oidToErrorMap[i].oidLen) == OID_EQUAL)
+                        const SNMP_ObjectId& oid = var->getName();
+                        for(int i = 0; s_oidToErrorMap[i].oidLen != 0; i++)
                         {
-                           rc = s_oidToErrorMap[i].errorCode;
-                           break;
+                           if (oid.compare(s_oidToErrorMap[i].oid, s_oidToErrorMap[i].oidLen) == OID_EQUAL)
+                           {
+                              rc = s_oidToErrorMap[i].errorCode;
+                              break;
+                           }
                         }
                      }
 
@@ -211,7 +214,7 @@ retry_wait:
                }
                else  // message ID do not match
                {
-                  UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
+                  uint32_t elapsedTime = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
                   if (elapsedTime < remainingWaitTime)
                   {
                      remainingWaitTime -= elapsedTime;
@@ -225,7 +228,7 @@ retry_wait:
                if ((*response)->getRequestId() == request->getRequestId())
                   break;
 
-               UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
+               uint32_t elapsedTime = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
                if (elapsedTime < remainingWaitTime)
                {
                   remainingWaitTime -= elapsedTime;
@@ -261,7 +264,7 @@ SNMP_UDPTransport::SNMP_UDPTransport() : SNMP_Transport()
    m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
    m_dwBufferPos = 0;
    m_dwBytesInBuffer = 0;
-   m_pBuffer = (BYTE *)malloc(m_dwBufferSize);
+   m_pBuffer = (BYTE *)MemAlloc(m_dwBufferSize);
 	m_connected = false;
 }
 
@@ -275,7 +278,7 @@ SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
    m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
    m_dwBufferPos = 0;
    m_dwBytesInBuffer = 0;
-   m_pBuffer = (BYTE *)malloc(m_dwBufferSize);
+   m_pBuffer = (BYTE *)MemAlloc(m_dwBufferSize);
 	m_connected = false;
 }
 
