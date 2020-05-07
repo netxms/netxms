@@ -39,6 +39,7 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
@@ -130,6 +131,7 @@ public class AlarmDetails extends ViewPart
 	private CLabel alarmState;
 	private CLabel alarmSource;
    private CLabel alarmDCI;
+   private CLabel alarmKey;
 	private Text alarmText;
 	private Composite editorsArea;
 	private ImageHyperlink linkAddComment;
@@ -333,6 +335,23 @@ public class AlarmDetails extends ViewPart
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.TOP;
       alarmDCI.setLayoutData(gd);
+
+      alarmKey = new CLabel(clientArea, SWT.NONE);
+      toolkit.adapt(alarmKey);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
+      alarmKey.setLayoutData(gd);
+
+      final Image keyImage = Activator.getImageDescriptor("icons/key.png").createImage();
+      alarmKey.setImage(keyImage);
+      alarmKey.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            keyImage.dispose();
+         }
+      });
 	}
 	
 	/**
@@ -769,6 +788,8 @@ public class AlarmDetails extends ViewPart
 		alarmSource.setImage((object != null) ? wbLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);
 		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]")); //$NON-NLS-1$ //$NON-NLS-2$
 		
+      alarmKey.setText(alarm.getKey());
+
 		alarmText.setText(alarm.getMessage());
 	}
 
