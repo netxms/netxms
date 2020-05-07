@@ -1,3 +1,10 @@
+*
+* 3.3-CURRENT
+*
+
+- Fixed issues:
+	NX-1845 (Context menu for Service Root shows Create sensor twice)
+
 
 *
 * 3.3.305
