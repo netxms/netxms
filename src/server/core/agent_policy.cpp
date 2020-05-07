@@ -215,7 +215,6 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       return;
    }
 
-   StringBuffer expandedContent;
    bool sendUpdate = true;
    MutexLock(m_contentLock);
 
@@ -228,9 +227,9 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    if (m_flags & EXPAND_MACRO)
    {
 #ifdef UNICODE
-      WCHAR *tmp = WideStringFromMBString(m_content);
+      WCHAR *tmp = WideStringFromUTF8String(m_content);
       StringBuffer expanded = data->object->expandText(tmp, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
-      content = MBStringFromWideString(expanded.cstr());
+      content = UTF8StringFromWideString(expanded.cstr());
       MemFree(tmp);
 #else
       StringBuffer expanded = data->object->expandText(m_content, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
