@@ -32,6 +32,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -59,6 +60,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -79,6 +81,7 @@ public class UserSessionsTab extends ObjectTab
    private AbstractObject object;
    private Table sessionsTable = null;
    private boolean initShowFilter = true;
+   private CompositeWithMessageBar viewerContainer;
    private SortableTableViewer viewer;
    private FilterText filterText;
    private AgentSessionFilter filter;
@@ -86,21 +89,29 @@ public class UserSessionsTab extends ObjectTab
    private Action actionExportToCsv;
    private Action actionTakeScreenshot;
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected void createTabContent(Composite parent)
    {
-      parent.setLayout(new FormLayout());
+      parent.setLayout(new FillLayout());
       session = ConsoleSharedData.getSession();
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       initShowFilter = safeCast(settings.get("UserSessionsTab.showFilter"), settings.getBoolean("UserSessionsTab.showFilter"), initShowFilter);
 
+      viewerContainer = new CompositeWithMessageBar(parent, SWT.NONE) {
+         @Override
+         protected Composite createContent(Composite parent)
+         {
+            Composite content = super.createContent(parent);
+            content.setLayout(new FormLayout());
+            return content;
+         }
+      };
+
       // Create filter area
-      filterText = new FilterText(parent, SWT.NONE, null, true);
+      filterText = new FilterText(viewerContainer.getContent(), SWT.NONE, null, true);
       filterText.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -118,7 +129,7 @@ public class UserSessionsTab extends ObjectTab
 
       final String[] names = { "Session id", "Session", "User", "Client", "State", "Agent type" };
       final int[] widths = { 150, 150, 100, 150, 150, 100 };
-      viewer = new SortableTableViewer(parent, names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer = new SortableTableViewer(viewerContainer.getContent(), names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setLabelProvider(new UserSessionLabelProvider(this));
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(new UserSessionComparator(this));
@@ -283,7 +294,7 @@ public class UserSessionsTab extends ObjectTab
       filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getControl().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-      viewer.getTable().getParent().layout();
+      viewerContainer.layout();
       if (enable)
          filterText.setFocus();
       else
@@ -321,9 +332,7 @@ public class UserSessionsTab extends ObjectTab
       return (s != null) ? b : defval;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -334,9 +343,7 @@ public class UserSessionsTab extends ObjectTab
          refresh();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -345,9 +352,7 @@ public class UserSessionsTab extends ObjectTab
       return object instanceof Node && ((Node)object).hasAgent();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
     */
    @Override
@@ -356,18 +361,34 @@ public class UserSessionsTab extends ObjectTab
       if (!isActive())
          return;
       
-      new ConsoleJob("Get list of agent sessions", getViewPart(), Activator.PLUGIN_ID) {
+      ConsoleJob job = new ConsoleJob("Get list of agent sessions", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            sessionsTable = session.queryAgentTable(object.getObjectId(), "Agent.SessionAgents");
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(sessionsTable.getAllRows());
-               }
-            });
+            try
+            {
+               sessionsTable = session.queryAgentTable(object.getObjectId(), "Agent.SessionAgents");
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.setInput(sessionsTable.getAllRows());
+                     viewerContainer.hideMessage();
+                  }
+               });
+            }
+            catch(Exception e)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.setInput(new Object[0]);
+                     viewerContainer.showMessage(CompositeWithMessageBar.ERROR,
+                           String.format("Cannot get user sessions (%s)", e.getLocalizedMessage()));
+                  }
+               });
+            }
          }
 
          @Override
@@ -375,12 +396,12 @@ public class UserSessionsTab extends ObjectTab
          {
             return "Cannot get list of user agent sessions";
          }
-      }.start();
+      };
+      job.setUser(false);
+      job.start();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
     */
    @Override

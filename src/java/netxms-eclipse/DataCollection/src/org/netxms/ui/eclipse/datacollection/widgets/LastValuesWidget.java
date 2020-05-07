@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -149,7 +149,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
          }
       });
 		
-		getContent().setLayout(new FormLayout());
+      getContent().setLayout(new FormLayout());
 		
 		// Create filter area
 		filterText = new FilterText(getContent(), SWT.NONE);
