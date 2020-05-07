@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
-   tool.mainHelpText = _T("Usage: Usage: nxwsget [<options>] <host> <URL> <path> [<path> ...]\n\n")
+   tool.mainHelpText = _T("Usage: nxwsget [<options>] <host> <URL> <path> [<path> ...]\n\n")
                        _T("Tool specific options:\n")
                        _T("   -c           : Do not verify service certificate.\n")
                        _T("   -C           : Do not verify certificate's name against host.\n")
