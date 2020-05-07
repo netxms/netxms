@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Dummy SMS driver for debugging
-** Copyright (C) 2012-2019 Raden Solutions
+** Copyright (C) 2012-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,13 +27,10 @@
 #define DEBUG_TAG _T("ncd.dummy")
 
 /**
- * Text driver class
+ * Dummy driver class
  */
 class DummyDriver : public NCDriver
 {
-private:
-   TCHAR m_fileName[MAX_PATH];
-
 public:
    DummyDriver(); 
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
@@ -44,7 +41,7 @@ public:
  */
 DummyDriver::DummyDriver()
 {
-	nxlog_debug_tag(DEBUG_TAG, 1, _T("Dummy SMS Driver loaded, set debug=6 or higher to see actual messages"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Dummy SMS Driver loaded, set debug=6 or higher to see actual messages"));
 }
 
 /**
@@ -64,8 +61,6 @@ DECLARE_NCD_ENTRY_POINT(Dummy, NULL)
    return new DummyDriver();
 }
 
-
-
 #ifdef _WIN32
 
 /**
@@ -73,9 +68,9 @@ DECLARE_NCD_ENTRY_POINT(Dummy, NULL)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
 }
 
 #endif

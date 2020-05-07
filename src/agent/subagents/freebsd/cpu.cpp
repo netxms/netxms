@@ -142,8 +142,6 @@ void StartCpuUsageCollector()
    if (ExecSysctl("hw.ncpu", &m_cpuCount, size) != SYSINFO_RC_SUCCESS)
       return;
 
-   int i, j;
-
    m_cpuUsageMutex = MutexCreate();
 
 #define SIZE sizeof(float) * CPU_USAGE_SLOTS * m_cpuCount
@@ -165,7 +163,7 @@ void StartCpuUsageCollector()
 
    // fill all slots with current cpu usage
 #define FILL(x) memcpy(x + i, x, sizeof(float));
-   for (i = 0; i < (CPU_USAGE_SLOTS * m_cpuCount) - 1; i++)
+   for (int i = 0; i < (CPU_USAGE_SLOTS * m_cpuCount) - 1; i++)
    {
          FILL(m_cpuUsage);
          FILL(m_cpuUsageUser);
@@ -241,11 +239,13 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
    ret_double(value, usage);
 }
 
-LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+/**
+ * Handler for global CPU usage parameters
+ */
+LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int count;
-
-   switch(CPU_USAGE_PARAM_INTERVAL(pArg))
+   switch(CPU_USAGE_PARAM_INTERVAL(arg))
    {
       case INTERVAL_5MIN:
          count = 5 * 60;
@@ -258,15 +258,26 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
          break;
    }
 
-   GetUsage(CPU_USAGE_PARAM_SOURCE(pArg), 0, count, pValue);
+   GetUsage(CPU_USAGE_PARAM_SOURCE(arg), 0, count, value);
    return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+/**
+ * Handler for per-CPU usage parameters
+ */
+LONG H_CpuUsageEx(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   int count, cpu;
+   TCHAR buffer[64];
+   if (!AgentGetParameterArg(param, 1, buffer, 64))
+      return SYSINFO_RC_UNSUPPORTED;
 
-   switch(CPU_USAGE_PARAM_INTERVAL(pArg))
+   TCHAR *eptr;
+   int cpu = _tcstoul(buffer, &eptr, 0);
+   if (*eptr != 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   int count;
+   switch(CPU_USAGE_PARAM_INTERVAL(arg))
    {
       case INTERVAL_5MIN:
          count = 5 * 60;
@@ -279,8 +290,7 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          break;
    }
 
-   GetUsage(CPU_USAGE_PARAM_SOURCE(pArg), cpu + 1, count, pValue);
-
+   GetUsage(CPU_USAGE_PARAM_SOURCE(arg), cpu + 1, count, value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -318,33 +328,29 @@ LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
    return ret;
 }
 
+/**
+ * Handler for System.CPU.LoadAvg parameters
+ */
 LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   int nRet = SYSINFO_RC_ERROR;
-   char szArg[128] = {0};
-   FILE *hFile;
-   double dLoad[3];
-
    struct loadavg sysload;
    size_t size = sizeof(loadavg);
    if (ExecSysctl("vm.loadavg", &sysload, size) != SYSINFO_RC_SUCCESS)
-      return nRet;
+      return SYSINFO_RC_ERROR;
 
    switch (pszParam[18])
    {
-   case '1': // 15 min
-      ret_double(pValue, (float)sysload.ldavg[2] / sysload.fscale);
-      break;
-   case '5': // 5 min
-      ret_double(pValue, (float)sysload.ldavg[1] / sysload.fscale);
-      break;
-   default: // 1 min
-      ret_double(pValue, (float)sysload.ldavg[0] / sysload.fscale);
-      break;
+      case '1': // 15 min
+         ret_double(pValue, (float)sysload.ldavg[2] / sysload.fscale);
+         break;
+      case '5': // 5 min
+         ret_double(pValue, (float)sysload.ldavg[1] / sysload.fscale);
+         break;
+      default: // 1 min
+         ret_double(pValue, (float)sysload.ldavg[0] / sysload.fscale);
+         break;
    }
-   nRet = SYSINFO_RC_SUCCESS;
-
-   return nRet;
+   return SYSINFO_RC_SUCCESS;
 }
 
 /*

@@ -53,27 +53,22 @@
 #define PNAME p->kp_proc.p_comm
 #endif
 
-
-//
-// Build process command line
-//
-
+/**
+ * Build process command line
+ */
 static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLine, size_t maxSize)
 {
-	char **argv;
-	int i, pos, len;
-
 	*cmdLine = 0;
-	argv = kvm_getargv(kd, p, 0);
-	if (argv != NULL)
+	char **argv = kvm_getargv(kd, p, 0);
+	if (argv != nullptr)
 	{
-		if (argv[0] != NULL)
+		if (argv[0] != nullptr)
 		{
-			for(i = 0, pos = 0; (argv[i] != NULL) && (pos < maxSize); i++)
+			for(int i = 0, pos = 0; (argv[i] != nullptr) && (pos < maxSize); i++)
 			{
 				if (i > 0)
 					cmdLine[pos++] = ' ';
-				strncpy(&cmdLine[pos], argv[i], maxSize - pos);
+				strlcpy(&cmdLine[pos], argv[i], maxSize - pos);
 				pos += strlen(argv[i]);
 			}
 		}
@@ -81,7 +76,7 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLi
 		{
 			// Use process name if command line is empty
 			cmdLine[0] = '[';
-			strncpy(&cmdLine[1], PNAME, maxSize - 2);
+			strlcpy(&cmdLine[1], PNAME, maxSize - 2);
 			strcat(cmdLine, "]");
 		}
 	}
@@ -89,16 +84,14 @@ static void BuildProcessCommandLine(kvm_t *kd, struct kinfo_proc *p, char *cmdLi
 	{
 		// Use process name if command line cannot be obtained
 		cmdLine[0] = '[';
-		strncpy(&cmdLine[1], PNAME, maxSize - 2);
+		strlcpy(&cmdLine[1], PNAME, maxSize - 2);
 		strcat(cmdLine, "]");
 	}
 }
 
-
-//
-// Check if given process matches filter
-//
-
+/**
+ * Check if given process matches filter
+ */
 static BOOL MatchProcess(kvm_t *kd, struct kinfo_proc *p, BOOL extMatch, const char *name, const char *cmdLine)
 {
 	char processCmdLine[32768];

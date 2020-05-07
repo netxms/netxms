@@ -222,7 +222,6 @@ LONG H_NetIfOperStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, A
 LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	FILE *hFile;
 	int mib[6] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO };
 	size_t nNeeded;
 	char *pNext, *pBuff;
@@ -464,7 +463,6 @@ static LONG GetInterfaceList(StringList *value, bool namesOnly)
 	if (getifaddrs(&pIfAddr) == 0)
 	{
 		char *pName = NULL;
-		int nIndex, nMask, i;
 		int nIfCount = 0;
 		IFLIST *pList = NULL;
 
@@ -551,22 +549,18 @@ static LONG GetInterfaceList(StringList *value, bool namesOnly)
             DumpInterfaceInfo(pList, nIfCount, value);
 		}
 
-		for (i = 0; i < nIfCount; i++)
+		for (int i = 0; i < nIfCount; i++)
 		{
-			if (pList[i].addr != NULL)
+			if (pList[i].addr != nullptr)
 			{
 				MemFree(pList[i].addr);
-				pList[i].addr = NULL;
+				pList[i].addr = nullptr;
 				pList[i].addrCount = 0;
 			}
 		}
-		if (pList != NULL)
-		{
-			MemFree(pList);
-			pList = NULL;
-		}
 
-		freeifaddrs(pIfAddr);
+      MemFreeAndNull(pList);
+      freeifaddrs(pIfAddr);
 	}
 	else
 	{

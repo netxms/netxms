@@ -110,9 +110,9 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
  * Create DCObject from another DCObject
  */
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
-         m_name(src->m_name), m_description(src->m_description), m_systemTag(src->m_systemTag),
-         m_instanceDiscoveryData(src->m_instanceDiscoveryData), m_instance(src->m_instance),
-         m_owner(src->m_owner)
+         m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description),
+         m_systemTag(src->m_systemTag), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
+         m_instance(src->m_instance)
 {
    m_id = src->m_id;
    m_guid = src->m_guid;
@@ -166,9 +166,8 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
  */
 DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingInterval, const TCHAR *retentionTime,
          const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag) :
-         m_name(name), m_description(description), m_systemTag(systemTag),
-         m_instanceDiscoveryData(_T("")), m_instance(_T("")),
-         m_owner(owner)
+         m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
+         m_instanceDiscoveryData(_T("")), m_instance(_T(""))
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -182,17 +181,17 @@ DCObject::DCObject(UINT32 id, const TCHAR *name, int source, const TCHAR *pollin
    m_retentionTimeSrc = MemCopyString(retentionTime);
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
-	m_scheduledForDeletion = 0;
+   m_scheduledForDeletion = 0;
    m_lastPoll = 0;
    m_hMutex = MutexCreateRecursive();
    m_flags = 0;
    m_schedules = nullptr;
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
-	m_dwResourceId = 0;
-	m_sourceNode = 0;
-	m_pszPerfTabSettings = nullptr;
-	m_snmpPort = 0;	// use default
+   m_dwResourceId = 0;
+   m_sourceNode = 0;
+   m_pszPerfTabSettings = nullptr;
+   m_snmpPort = 0;	// use default
    m_snmpVersion = SNMP_VERSION_DEFAULT;
    m_transformationScriptSource = nullptr;
    m_transformationScript = nullptr;
@@ -227,10 +226,10 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_name = config->getSubEntryValue(_T("name"), 0, _T("unnamed"));
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
-	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
+   m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
-   if(config->findEntry(_T("scheduleType")) != nullptr)
+   if (config->findEntry(_T("scheduleType")) != nullptr)
    {
       m_pollingScheduleType = config->getSubEntryValueAsInt(_T("scheduleType"));
    }
@@ -241,7 +240,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
          m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
    }
    m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
-   if(config->findEntry(_T("retentionType")) != nullptr)
+   if (config->findEntry(_T("retentionType")) != nullptr)
    {
       m_retentionType = config->getSubEntryValueAsInt(_T("retentionType"));
    }
@@ -253,43 +252,43 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    }
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
-	m_scheduledForDeletion = 0;
+   m_scheduledForDeletion = 0;
    m_lastPoll = 0;
    m_hMutex = MutexCreateRecursive();
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
-	m_dwResourceId = 0;
-	m_sourceNode = 0;
+   m_dwResourceId = 0;
+   m_sourceNode = 0;
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_pszPerfTabSettings = MemCopyString(perfTabSettings);
-	m_snmpPort = static_cast<UINT16>(config->getSubEntryValueAsInt(_T("snmpPort")));
+   m_snmpPort = static_cast<UINT16>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
    m_schedules = nullptr;
 
-	m_transformationScriptSource = nullptr;
-	m_transformationScript = nullptr;
+   m_transformationScriptSource = nullptr;
+   m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
    m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
    m_doForcePoll = false;
    m_pollingSession = nullptr;
-	setTransformationScript(config->getSubEntryValue(_T("transformation")));
+   setTransformationScript(config->getSubEntryValue(_T("transformation")));
 
    // for compatibility with old format
-	if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
+   if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
       m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
 
-	ConfigEntry *schedules = config->findEntry(_T("schedules"));
-	if (schedules != nullptr)
-		schedules = schedules->findEntry(_T("schedule"));
-	if ((schedules != nullptr) && (schedules->getValueCount() > 0))
-	{
-	   m_schedules = new StringList();
-	   int count = schedules->getValueCount();
+   ConfigEntry *schedules = config->findEntry(_T("schedules"));
+   if (schedules != nullptr)
+      schedules = schedules->findEntry(_T("schedule"));
+   if ((schedules != nullptr) && (schedules->getValueCount() > 0))
+   {
+      m_schedules = new StringList();
+      int count = schedules->getValueCount();
       for(int i = 0; i < count; i++)
       {
          m_schedules->add(schedules->getValue(i));
       }
-	}
+   }
 
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
    m_instanceDiscoveryData = config->getSubEntryValue(_T("instanceDiscoveryData"));
@@ -561,7 +560,6 @@ String DCObject::expandSchedule(const TCHAR *schedule)
       TCHAR *scriptName = _tcsdup(schedule + 2);
       if (scriptName != nullptr)
       {
-         bool success = false;
          TCHAR *closingBracker = _tcschr(scriptName, _T(']'));
          if (closingBracker != nullptr)
          {

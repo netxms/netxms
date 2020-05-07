@@ -288,8 +288,7 @@ void MobileDeviceSession::processingThread()
 {
    NXCPMessage *msg;
    TCHAR szBuffer[128];
-   UINT32 i;
-	int status;
+   int status;
 
    while(1)
    {

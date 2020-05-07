@@ -1317,7 +1317,6 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
    }
    else //insert new rule
    {
-      bool foundPreviousIndex = true;
       if (ruleOrdering != nullptr)
       {
          int newRulePrevIndex = -1;

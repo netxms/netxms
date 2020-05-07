@@ -9945,7 +9945,6 @@ void ClientSession::deleteCertificate(NXCPMessage *pRequest)
    NXCPMessage msg;
 #ifdef _WITH_ENCRYPTION
 	UINT32 dwCertId;
-	TCHAR szQuery[256];
 #endif
 
 	msg.setId(pRequest->getId());

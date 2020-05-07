@@ -41,19 +41,15 @@ static StringBuffer CreateNCDrvConfig_GSM(TCHAR *portName)
 {
    StringBuffer config;
    TCHAR *p;
-   int parity = NOPARITY;
-   int stopBits = ONESTOPBIT;
-   int blockSize = 8;
-   int writeDelay = 100;
 
    if ((p = _tcschr(portName, _T(','))) != NULL)
    {
       *p = 0; p++;
-      config.appendFormattedString(_T("portname=%s\n"),portName);
+      config.appendFormattedString(_T("PortName=%s\n"), portName);
       int tmp = _tcstol(p, NULL, 10);
       if (tmp != 0)
       {
-         config.appendFormattedString(_T("speed=%d\n"),tmp);
+         config.appendFormattedString(_T("Speed=%d\n"), tmp);
 
          if ((p = _tcschr(p, _T(','))) != NULL)
          {
@@ -61,27 +57,27 @@ static StringBuffer CreateNCDrvConfig_GSM(TCHAR *portName)
             tmp = _tcstol(p, NULL, 10);
             if (tmp >= 5 && tmp <= 8)
             {
-               config.appendFormattedString(_T("databits=%d\n"),tmp);
+               config.appendFormattedString(_T("DataBits=%d\n"), tmp);
 
                // parity
                if ((p = _tcschr(p, _T(','))) != NULL)
                {
                   *p = 0; p++;
-                  config.append(_T("parity="));
+                  config.append(_T("Parity="));
                   config.append(p, 1);
 
                   // stop bits
                   if ((p = _tcschr(p, _T(','))) != NULL)
                   {
                      *p = 0; p++;
-                     config.append(_T("\nstopbits="));
+                     config.append(_T("\nStopBits="));
                      config.append(p, 1);
 
                      // Text or PDU mode
                      if ((p = _tcschr(p, _T(','))) != NULL)
                      {
                         *p = 0; p++;
-                        config.append(_T("\ntextMode="));
+                        config.append(_T("\nTextMode="));
                         if (*p == _T('T'))
                         {
                            config.append(_T("yes"));
@@ -95,7 +91,7 @@ static StringBuffer CreateNCDrvConfig_GSM(TCHAR *portName)
                         if ((p = _tcschr(p, _T(','))) != NULL)
                         {
                            *p = 0; p++;
-                           config.append(_T("\nuseQuotes="));
+                           config.append(_T("\nUseQuotes="));
                            if (*p == _T('N'))
                            {
                               config.append(_T("no"));
@@ -109,19 +105,19 @@ static StringBuffer CreateNCDrvConfig_GSM(TCHAR *portName)
                            if ((p = _tcschr(p, _T(','))) != NULL)
                            {
                               *p = 0; p++;
-                              blockSize = _tcstol(p, NULL, 10);
+                              int blockSize = _tcstol(p, NULL, 10);
                               if ((blockSize < 1) || (blockSize > 256))
                                  blockSize = 8;
-                              config.appendFormattedString(_T("\nblocksize=%d\n"),blockSize);
+                              config.appendFormattedString(_T("\nBlockSize=%d\n"), blockSize);
 
                               // write delay
                               if ((p = _tcschr(p, _T(','))) != NULL)
                               {
                                  *p = 0; p++;
-                                 writeDelay = _tcstol(p, NULL, 10);
+                                 int writeDelay = _tcstol(p, NULL, 10);
                                  if ((writeDelay < 1) || (writeDelay > 10000))
                                     writeDelay = 100;
-                                 config.appendFormattedString(_T("\nwritedelay=%d"),writeDelay);
+                                 config.appendFormattedString(_T("\nWriteDelay=%d"), writeDelay);
                               }
                            }
                         }
@@ -134,7 +130,7 @@ static StringBuffer CreateNCDrvConfig_GSM(TCHAR *portName)
    }
    else
    {
-      config.appendFormattedString(_T("portname=%s\n"),portName);
+      config.appendFormattedString(_T("PortName=%s\n"), portName);
    }
    return config;
 }

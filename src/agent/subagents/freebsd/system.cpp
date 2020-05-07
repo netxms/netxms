@@ -79,14 +79,11 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCo
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	FILE *hFile;
 	int nPageCount, nFreeCount, nCacheCount, nInactiveCount;
 	int64_t nSwapTotal, nSwapUsed;
-	char *pTag;
 	int mib[4];
 	size_t nSize;
 	int i;
-	char *pOid;
 	int nPageSize;
 	kvm_t *kd;
 	int type = CAST_FROM_POINTER(pArg, int);

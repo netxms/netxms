@@ -44,7 +44,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
 {
    char *eptr;
    bool start = true, useProxy = false;
-   int i, ch, iExitCode = 3, iInterval = 0;
+   int i, ch, iExitCode = 3;
 #ifdef _WITH_ENCRYPTION
    int iEncryptionPolicy = ENCRYPTION_PREFERRED;
 #else
@@ -53,9 +53,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    WORD agentPort = AGENT_LISTEN_PORT, proxyPort = AGENT_LISTEN_PORT;
    TCHAR *secret = nullptr;
    UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwError;
-   TCHAR szRequest[MAX_DB_STRING] = _T("");
    TCHAR keyFile[MAX_PATH];
-   TCHAR szResponse[MAX_DB_STRING] = _T("");
    char szProxy[MAX_OBJECT_NAME] = "";
    TCHAR *proxySecret = nullptr;
    RSA *serverKey = NULL;

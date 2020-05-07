@@ -362,7 +362,7 @@ static long IPVersionFromOptions(uint32_t options)
 /**
  * Get proxy protocol code from name
  */
-int16_t ProxyProtocolCodeFromName(const char *protocolName)
+uint16_t ProxyProtocolCodeFromName(const char *protocolName)
 {
    if (!stricmp(protocolName, "http"))
       return CURLPROXY_HTTP;
@@ -378,7 +378,7 @@ int16_t ProxyProtocolCodeFromName(const char *protocolName)
       return CURLPROXY_SOCKS5;
    if (!stricmp(protocolName, "socks5h"))
       return CURLPROXY_SOCKS5_HOSTNAME;
-   return -1;
+   return 0xFFFF;
 }
 
 /**
@@ -408,27 +408,27 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 	};
 
-	if (!config->parseTemplate(_T("Telegram"), configTemplate))
-	{
-	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
-	   return NULL;
-	}
+   if (!config->parseTemplate(_T("Telegram"), configTemplate))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
+      return nullptr;
+   }
 
    if (connType == (DISABLE_IP_V4 | DISABLE_IP_V6))
    {
-	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Inconsistent configuration - both IPv4 and IPv6 are disabled"));
-	   return NULL;
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Inconsistent configuration - both IPv4 and IPv6 are disabled"));
+      return nullptr;
    }
 
    proxy.protocol = ProxyProtocolCodeFromName(protocol);
-   if (proxy.protocol == -1)
+   if (proxy.protocol == 0xFFFF)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unsupported proxy type %hs"), protocol);
-      return NULL;
+      return nullptr;
    }
 
-   TelegramDriver *driver = NULL;
-	json_t *info = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(connType), "getMe", NULL);
+   TelegramDriver *driver = nullptr;
+   json_t *info = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(connType), "getMe", nullptr);
 	if (info != NULL)
 	{
 	   json_t *ok = json_object_get(info, "ok");
@@ -480,7 +480,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 	{
 	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Telegram API call failed, driver configuration could be incorrect"));
 	}
-	return driver;
+   return driver;
 }
 
 /**

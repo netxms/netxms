@@ -803,7 +803,7 @@ private:
 public:
    ObjectLock() : m_mutex(true) { }
    ObjectLock(const T& object) : m_mutex(true), m_object(object) { }
-   ObjectLock(const ObjectLock<T> &src) : m_object(src.m_object), m_mutex(src.m_mutex) { }
+   ObjectLock(const ObjectLock<T> &src) : m_mutex(src.m_mutex), m_object(src.m_object) { }
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }

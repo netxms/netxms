@@ -641,7 +641,6 @@ bool Template::removePolicy(const uuid& guid)
    lockProperties();
    bool success = false;
    shared_ptr<GenericAgentPolicy> policy;
-   int index = -1;
    for (int i = 0; i < m_policyList->size(); i++)
    {
       if (m_policyList->get(i)->getGuid().equals(guid))

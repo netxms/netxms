@@ -966,8 +966,6 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
    if (!m_active)
       return -1;
 
-   int rc = 0;
-
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
 #else
