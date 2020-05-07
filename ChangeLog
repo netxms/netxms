@@ -1,9 +1,11 @@
 
 *
-* 3.3-CURRENT
+* 3.3.302
 * 
 
 - Added driver for Moxa industrial routers
+- Fixed issues:
+	NX-1849 (Agent policy schema sqlite error in 3.3.285)
 
 
 *
