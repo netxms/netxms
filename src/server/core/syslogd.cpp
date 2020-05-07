@@ -879,7 +879,7 @@ int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
       }
       else
       {
-         ((NetObj *)argv[1]->getValueAsObject()->getData())->getId();
+         objectId = ((NetObj *)argv[1]->getValueAsObject()->getData())->getId();
       }
    }
 
@@ -916,7 +916,7 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
       }
       else
       {
-         ((NetObj *)argv[1]->getValueAsObject()->getData())->getId();
+         objectId = ((NetObj *)argv[1]->getValueAsObject()->getData())->getId();
       }
    }
 

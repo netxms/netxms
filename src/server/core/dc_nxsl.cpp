@@ -367,7 +367,7 @@ static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
- * Get average of DCI values for a period
+ * Get sum of DCI values for a period
  */
 static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
