@@ -106,6 +106,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                uint32_t serverTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
                uint32_t timeout = (g_snmpTimeout != 0) ? g_snmpTimeout : ((serverTimeout != 0) ? serverTimeout : 1000);   // 1 second if not set
 
+               uint32_t rcc = ERR_REQUEST_TIMEOUT;
                int nRetries;
                for(nRetries = 0; nRetries < 3; nRetries++)
                {
@@ -118,6 +119,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                         InterlockedIncrement64(&s_snmpResponses);
                         response.setField(VID_PDU_SIZE, dwSizeOut);
                         response.setField(VID_PDU, pduOut, dwSizeOut);
+                        rcc = ERR_SUCCESS;
                         break;
                      }
                      else
@@ -126,7 +128,10 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                         TCHAR buffer[1024];
                         debugPrintf(7, _T("proxySnmpRequest(%d): read failure or timeout (%d: %s)"), requestId, error, GetLastSocketErrorText(buffer, 1024));
                         if (error == WSAECONNREFUSED)
+                        {
+                           rcc = ERR_SOCKET_ERROR;
                            break; // No point retrying after ECONNREFUSED
+                        }
                      }
                   }
                   else
@@ -137,7 +142,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                   }
                }
                MemFree(pduOut);
-               response.setField(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
+               response.setField(VID_RCC, rcc);
                debugPrintf(7, _T("proxySnmpRequest(%d, %s): %s (%d retries)"), requestId, addr.toString().cstr(), (nRetries == 3) ? _T("failure") : _T("success"), nRetries);
             }
             else

@@ -94,17 +94,27 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct so
 	{
 	   size_t size;
 		const BYTE *encodedPDU = m_response->getBinaryFieldPtr(VID_PDU, &size);
-
-		if (contextFinder != nullptr)
-			setSecurityContext(contextFinder(sender, *addrSize));
-
-		*pdu = new SNMP_PDU;
-		if (!(*pdu)->parse(encodedPDU, size, m_securityContext, m_enableEngineIdAutoupdate))
+		if (encodedPDU != nullptr)
 		{
-			delete *pdu;
-			*pdu = nullptr;
+         if (contextFinder != nullptr)
+            setSecurityContext(contextFinder(sender, *addrSize));
+
+         *pdu = new SNMP_PDU;
+         if ((*pdu)->parse(encodedPDU, size, m_securityContext, m_enableEngineIdAutoupdate))
+         {
+            rc = static_cast<int>(size);
+         }
+         else
+         {
+            delete *pdu;
+            *pdu = nullptr;
+            rc = -1; // Malformed PDU
+         }
 		}
-		rc = static_cast<int>(size);
+		else
+		{
+		   rc = -1; // Malformed agent response
+		}
 	}
 	else if (rcc == ERR_REQUEST_TIMEOUT)
 	{

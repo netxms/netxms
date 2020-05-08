@@ -11,6 +11,7 @@
 * 3.3-CURRENT
 *
 
+- Fixed server crash when proxied SNMP device responds with "UDP port unreachable"
 - Fixed issues:
 	NX-1575 (Ability to duplicate event configuration)
 	NX-1839 (Show alarm key in Alarm Details)
