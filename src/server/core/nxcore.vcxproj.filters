@@ -144,9 +144,6 @@
     <ClCompile Include="dfile_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="download_job.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -466,6 +463,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="network_cred.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="download_task.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

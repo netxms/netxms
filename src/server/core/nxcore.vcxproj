@@ -242,7 +242,7 @@
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="devdb.cpp" />
     <ClCompile Include="dfile_info.cpp" />
-    <ClCompile Include="download_job.cpp" />
+    <ClCompile Include="download_task.cpp" />
     <ClCompile Include="ef.cpp" />
     <ClCompile Include="email.cpp" />
     <ClCompile Include="entirenet.cpp" />
