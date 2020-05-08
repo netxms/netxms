@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ public class EditEventTemplateDialog extends Dialog
 	private EventTemplate eventTemplate;
 	private boolean isNew;
 	private LabeledText id;
+   private LabeledText guid;
 	private LabeledText name;
 	private LabeledText message;
    private LabeledText tags;
@@ -76,7 +77,7 @@ public class EditEventTemplateDialog extends Dialog
 		GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      layout.numColumns = 2;
+      layout.numColumns = 3;
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING * 2;
       dialogArea.setLayout(layout);
       
@@ -85,8 +86,16 @@ public class EditEventTemplateDialog extends Dialog
       id.setText(Long.toString(eventTemplate.getCode()));
       id.getTextControl().setEditable(false);
       
+      guid = new LabeledText(dialogArea, SWT.NONE);
+      guid.setLabel("GUID");
+      guid.setText(eventTemplate.getGuid().toString());
+      guid.getTextControl().setEditable(false);
       GridData gd = new GridData();
-      //gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      guid.setLayoutData(gd);
+
+      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       severity = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().EditEventTemplateDialog_Severity, gd);
       severity.add(StatusDisplayInfo.getStatusText(Severity.NORMAL));
@@ -100,6 +109,7 @@ public class EditEventTemplateDialog extends Dialog
       name.setLabel(Messages.get().EditEventTemplateDialog_EventName);
       name.setText(eventTemplate.getName());
       gd = new GridData();
+      gd.horizontalSpan = 2;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       name.setLayoutData(gd);
@@ -117,7 +127,7 @@ public class EditEventTemplateDialog extends Dialog
       message.setLabel(Messages.get().EditEventTemplateDialog_Message);
       message.setText(eventTemplate.getMessage());
       gd = new GridData();
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.widthHint = 450;

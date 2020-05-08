@@ -20,8 +20,10 @@ package org.netxms.client.events;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
 import org.netxms.client.constants.Severity;
 
 /**
@@ -32,6 +34,7 @@ public class EventTemplate
    public static final int FLAG_WRITE_TO_LOG = 0x0001;
    
    private long code;
+   private UUID guid;
    private String name;
    private String message;
    private String description;
@@ -48,6 +51,7 @@ public class EventTemplate
 	public EventTemplate(long code)
 	{
       this.code = code;
+      guid = NXCommon.EMPTY_GUID;
       name = "";
       message = "";
       description = "";
@@ -79,8 +83,12 @@ public class EventTemplate
 		   for(String s : tagList.split(","))
 		      tags.add(s);
 		}
+
+      guid = msg.getFieldAsUUID(baseId + 8);
+      if (guid == null)
+         guid = NXCommon.EMPTY_GUID;
 	}
-	
+
 	/**
 	 * Copy constructor.
 	 * 
@@ -89,6 +97,7 @@ public class EventTemplate
 	public EventTemplate(final EventTemplate src)
 	{
       code = src.code;
+      guid = src.guid;
       name = src.name;
       description = src.description;
       severity = ((EventTemplate)src).severity;
@@ -130,6 +139,7 @@ public class EventTemplate
 	public void setAll(final EventTemplate src)
 	{
       code = src.code;
+      guid = src.guid;
       name = src.name;
       message = src.message;
       description = src.description;
@@ -225,6 +235,14 @@ public class EventTemplate
    public long getCode()
    {
       return code;
+   }
+
+   /**
+    * @return the guid
+    */
+   public UUID getGuid()
+   {
+      return guid;
    }
 
    /**

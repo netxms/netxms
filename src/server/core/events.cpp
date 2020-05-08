@@ -151,6 +151,7 @@ void EventTemplate::fillMessage(NXCPMessage *msg, UINT32 base) const
    msg->setField(base + 5, m_flags);
    msg->setField(base + 6, m_messageTemplate);
    msg->setField(base + 7, m_tags);
+   msg->setField(base + 8, m_guid);
 }
 
 /**

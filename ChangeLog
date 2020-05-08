@@ -1,4 +1,12 @@
 *
+* 3.4-CURRENT
+*
+
+- Fixed issues:
+	NX-1848 (Add getGuid method to org.netxms.client.events.EventTemplate class in Java API)
+
+
+*
 * 3.3-CURRENT
 *
 
