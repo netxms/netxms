@@ -34,6 +34,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 #include <sys/sysctl.h>
+#include <cpuid.h>
 #elif HAVE_CPUID_H
 #include <cpuid.h>
 #endif
