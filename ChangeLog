@@ -3,6 +3,7 @@
 *
 
 - Fixed issues:
+	NX-1575 (Ability to duplicate event configuration)
 	NX-1839 (Show alarm key in Alarm Details)
 	NX-1844 ('Get list of agent sessions' error in nxmc and webui)
 	NX-1845 (Context menu for Service Root shows Create sensor twice)

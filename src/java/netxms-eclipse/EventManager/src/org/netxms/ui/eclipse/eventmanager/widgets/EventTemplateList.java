@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,6 +87,7 @@ public class EventTemplateList extends Composite implements SessionListener
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
+   private Action actionDuplicate;
    private Action actionShowFilter;
    private Action actionRefresh;
    private NXCSession session;
@@ -261,10 +262,13 @@ public class EventTemplateList extends Composite implements SessionListener
    @Override
    public void notificationHandler(final SessionNotification n)
    {
+      if (isDisposed())
+         return;
+
       switch(n.getCode())
       {
          case SessionNotification.EVENT_TEMPLATE_MODIFIED:
-            viewer.getControl().getDisplay().asyncExec(new Runnable() {
+            getDisplay().asyncExec(new Runnable() {
                @Override
                public void run()
                {
@@ -283,7 +287,7 @@ public class EventTemplateList extends Composite implements SessionListener
             });
             break;
          case SessionNotification.EVENT_TEMPLATE_DELETED:
-            viewer.getControl().getDisplay().asyncExec(new Runnable() {
+            getDisplay().asyncExec(new Runnable() {
                @Override
                public void run()
                {
@@ -326,6 +330,14 @@ public class EventTemplateList extends Composite implements SessionListener
          }
       };
       actionDelete.setEnabled(false);
+
+      actionDuplicate = new Action("D&uplicate...") {
+         @Override
+         public void run()
+         {
+            duplicateEventTemplate();
+         }
+      };
 
       actionShowFilter = new Action(Messages.get().EventConfigurator_ShowFilter, Action.AS_CHECK_BOX) {
          @Override
@@ -402,6 +414,7 @@ public class EventTemplateList extends Composite implements SessionListener
    {
       mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       mgr.add(actionNew);
+      mgr.add(actionDuplicate);
       mgr.add(actionDelete);
       mgr.add(new Separator());
       mgr.add(actionEdit);
@@ -420,6 +433,25 @@ public class EventTemplateList extends Composite implements SessionListener
       }
    }
    
+   /**
+    * Create copy of existing template
+    */
+   protected void duplicateEventTemplate()
+   {
+      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+
+      final EventTemplate tmpl = new EventTemplate((EventTemplate)selection.getFirstElement());
+      tmpl.setCode(0);
+      tmpl.setName(tmpl.getName() + "_COPY");
+      EditEventTemplateDialog dlg = new EditEventTemplateDialog(getShell().getShell(), tmpl, true);
+      if (dlg.open() == Window.OK)
+      {
+         modifyEventTemplate(tmpl);
+      }
+   }
+
    /**
     * Modify event object in server
     * 
@@ -525,8 +557,8 @@ public class EventTemplateList extends Composite implements SessionListener
       viewer.refresh();
    }
    
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
     */
    @Override
    public void dispose()
