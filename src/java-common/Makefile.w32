@@ -1,3 +1,0 @@
-SUBDIRS = netxms-base
-
-include ..\..\Makefile.inc.w32

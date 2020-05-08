@@ -1,3 +1,0 @@
-SUBDIRS=build src
-
-!INCLUDE .\Makefile.inc.w32

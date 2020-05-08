@@ -1,9 +1,0 @@
-TARGET = nxshell.exe
-TYPE = exe
-SOURCES = nxshell.cpp
-
-LIBS = libnxjava.lib libnetxms.lib
-
-SUBDIRS = java
-	  
-include ..\..\..\Makefile.inc.w32

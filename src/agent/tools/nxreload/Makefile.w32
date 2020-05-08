@@ -1,9 +1,0 @@
-TARGET = nxreload.exe
-TYPE = exe
-CRT_TYPE = static
-SOURCES = nxreload.cpp
-
-CPPFLAGS = /GS-
-LIBS = psapi.lib
-	  
-include ..\..\..\..\Makefile.inc.w32

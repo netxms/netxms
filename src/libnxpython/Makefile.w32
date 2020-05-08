@@ -1,8 +1,0 @@
-TARGET = libnxpython.dll
-TYPE = dll
-SOURCES = extensions.cpp main.cpp manager.cpp
-
-CPPFLAGS = /DLIBNXPYTHON_EXPORTS
-LIBS = libnetxms.lib
-	  
-include ..\..\Makefile.inc.w32

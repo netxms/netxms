@@ -1,3 +1,0 @@
-SUBDIRS = dummy
-
-include ..\..\..\Makefile.inc.w32

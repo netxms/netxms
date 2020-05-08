@@ -1,3 +1,0 @@
-SUBDIRS = libexpat
-
-include ../../Makefile.inc.w32

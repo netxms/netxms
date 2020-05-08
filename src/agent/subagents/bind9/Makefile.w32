@@ -1,4 +1,0 @@
-TARGET = bind9.jar
-TYPE = jar
-
-include ..\..\..\..\Makefile.inc.w32

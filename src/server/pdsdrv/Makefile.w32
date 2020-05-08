@@ -1,3 +1,0 @@
-SUBDIRS = influxdb
-
-include ..\..\..\Makefile.inc.w32

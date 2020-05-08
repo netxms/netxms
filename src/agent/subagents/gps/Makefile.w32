@@ -1,7 +1,0 @@
-TARGET = gps.nsm
-TYPE = nsm
-SOURCES = main.cpp nmea.c
-
-LIBS = libnxagent.lib libnetxms.lib
-	  
-include ..\..\..\..\Makefile.inc.w32

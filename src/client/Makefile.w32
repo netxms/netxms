@@ -1,3 +1,0 @@
-SUBDIRS = java libnxclient nxalarm nxevent nxpush nxshell nxnotify
-
-include ..\..\Makefile.inc.w32

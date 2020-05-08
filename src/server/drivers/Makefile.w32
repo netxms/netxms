@@ -1,5 +1,0 @@
-SUBDIRS = at avaya cisco dell-pwc dlink extreme hpe \
-          huawei ignitenet juniper mikrotik net-snmp netonix \
-          ping3 qtech-olt rittal symbol-ws tb ubnt
-
-include ..\..\..\Makefile.inc.w32

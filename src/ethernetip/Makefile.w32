@@ -1,3 +1,0 @@
-SUBDIRS = libethernetip nxethernetip
-
-include ..\..\Makefile.inc.w32

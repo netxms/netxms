@@ -1,8 +1,0 @@
-TARGET = textfile.ncd
-TYPE = ncd
-COMPONENT = server
-SOURCES = textfile.cpp
-
-LIBS = libnetxms.lib
-	  
-include ..\..\..\Makefile.inc.w32

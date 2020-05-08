@@ -1,3 +1,0 @@
-SUBDIRS = netxms-client
-
-include ..\..\..\Makefile.inc.w32

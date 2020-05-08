@@ -1,3 +1,0 @@
-SUBDIRS = nxappget nxapush nxhwid nxreload
-
-include ..\..\..\Makefile.inc.w32

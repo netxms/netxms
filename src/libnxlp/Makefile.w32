@@ -1,8 +1,0 @@
-TARGET = libnxlp.dll
-TYPE = dll
-SOURCES = eventlog.cpp file.cpp main.cpp parser.cpp rule.cpp vss.cpp wevt.cpp
-
-CPPFLAGS = /I$(NETXMS_BASE)\src\libexpat\libexpat /DLIBNXLP_EXPORTS
-LIBS = libnetxms.lib libexpat.lib pcre.lib pcre16.lib vssapi.lib
-	  
-include ..\..\Makefile.inc.w32

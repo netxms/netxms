@@ -1,5 +1,0 @@
-SUBDIRS = jansson java-common libexpat sqlite zlib libnetxms libnxlp libnxmb \
-          libnxjava libnxpython libnxsl libpng libstrophe nxscript db snmp \
-          ethernetip appagent agent client server tools
-
-include ..\Makefile.inc.w32

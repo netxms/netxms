@@ -1,3 +1,0 @@
-SUBDIRS = libnxdb dbdrv
-
-include ..\..\Makefile.inc.w32

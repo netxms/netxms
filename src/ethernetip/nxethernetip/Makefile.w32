@@ -1,7 +1,0 @@
-TARGET = nxethernetip.exe
-TYPE = exe
-SOURCES = nxethernetip.cpp
-
-LIBS = libethernetip.lib libnetxms.lib ws2_32.lib
-	  
-include ..\..\..\Makefile.inc.w32

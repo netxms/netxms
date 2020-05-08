@@ -1,7 +1,0 @@
-TARGET = python.nsm
-TYPE = nsm
-SOURCES = bridge.cpp main.cpp plugin.cpp
-
-LIBS = libnxagent.lib libnxpython.lib libnetxms.lib
-	  
-include ..\..\..\..\Makefile.inc.w32

@@ -1,3 +1,0 @@
-SUBDIRS = libnxsrv core drivers hdlink netxmsd pdsdrv spe tools
-
-include ..\..\Makefile.inc.w32
