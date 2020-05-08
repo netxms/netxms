@@ -882,7 +882,7 @@ public class NXCSession
                file = new NXCReceivedFile(id);
                receivedFiles.put(id, file);
             }
-            file.abortTransfer(msg.getFieldAsBoolean(NXCPCodes.VID_JOB_CANCELED));
+            file.abortTransfer(msg.getFieldAsBoolean(NXCPCodes.VID_JOB_CANCELLED));
             receivedFiles.notifyAll();
          }
       }

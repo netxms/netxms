@@ -2243,7 +2243,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
    pRequest->setId(dwRqId);
 	if (recvFile != nullptr)
 	{
-		rcc = prepareFileDownload(recvFile, dwRqId, append, downloadProgressCallback, fileResendCallback,cbArg);
+		rcc = prepareFileDownload(recvFile, dwRqId, append, downloadProgressCallback, fileResendCallback, cbArg);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message

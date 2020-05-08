@@ -1006,6 +1006,34 @@ public:
 };
 
 /**
+ * File download task
+ */
+class FileDownloadTask
+{
+private:
+   shared_ptr<Node> m_node;
+   ClientSession *m_session;
+   shared_ptr<AgentConnection> m_agentConnection;
+   uint32_t m_requestId;
+   TCHAR *m_localFile;
+   TCHAR *m_remoteFile;
+   uint64_t m_fileSize;
+   uint64_t m_currentSize;
+   uint64_t m_maxFileSize;
+   bool m_monitor;
+   bool m_allowExpansion;
+
+   static void fileResendCallback(NXCP_MESSAGE *msg, void *arg);
+   static TCHAR *buildServerFileName(uint32_t nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
+
+public:
+   FileDownloadTask(const shared_ptr<Node>& node, ClientSession *session, uint32_t requestId, const TCHAR *remoteName, bool allowExpansion, uint64_t maxFileSize, bool monitor);
+   ~FileDownloadTask();
+
+   void run();
+};
+
+/**
  * Watchdog thread state codes
  */
 enum WatchdogState

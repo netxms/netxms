@@ -10602,31 +10602,36 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
 				request->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
-			   StringMap inputFields;
-			   inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
-            Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
-            if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+            bool monitor = request->getFieldAsBoolean(VID_FILE_FOLLOW);
+            shared_ptr<FileDownloadTask> task;
+            if (request->getFieldAsBoolean(VID_EXPAND_STRING))
             {
-               msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-               sendMessage(&msg);
+               StringMap inputFields;
+               inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
+               Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+               if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+               {
+                  msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+               }
+               else
+               {
+                  task = make_shared<FileDownloadTask>(static_pointer_cast<Node>(object), this, request->getId(),
+                           object->expandText(remoteFile, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr),
+                           true, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), monitor);
+                  success = true;
+               }
                delete alarm;
-               return;
             }
-            bool expand = request->getFieldAsBoolean(VID_EXPAND_STRING);
-            bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
-				FileDownloadJob *job = new FileDownloadJob(static_pointer_cast<Node>(object),
-				         expand ? object->expandText(remoteFile, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr) : remoteFile,
-				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId(), expand);
-				delete alarm;
-				if (AddJob(job))
+            else
+            {
+               task = make_shared<FileDownloadTask>(static_pointer_cast<Node>(object), this, request->getId(),
+                        remoteFile, false, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), monitor);
+               success = true;
+            }
+
+				if (success)
 				{
-				   success = true;
-	            msg.setField(VID_RCC, RCC_SUCCESS);
-				}
-				else
-				{
-				   delete job;
-	            msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+				   ThreadPoolExecute(g_clientThreadPool, task, &FileDownloadTask::run);
 				}
 			}
 			else
@@ -10644,7 +10649,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	if(!success) //In case of success job will send response message with all required information
+	if (!success) // In case of success download task will send response message with all required information
 	   sendMessage(&msg);
 }
 
@@ -10655,7 +10660,6 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
 {
    NXCPMessage msg;
    NXCPMessage* response;
-	TCHAR remoteFile[MAX_PATH];
 	UINT32 rcc = 0xFFFFFFFF;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -10666,17 +10670,14 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
 	{
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         request->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
-
-         MONITORED_FILE * newFile = new MONITORED_FILE();
-         _tcscpy(newFile->fileName, remoteFile);
-         newFile->nodeID = object->getId();
-         newFile->session = this;
-         g_monitoringList.removeFile(newFile);
-         delete newFile;
+         MONITORED_FILE file;
+         request->getFieldAsString(VID_FILE_NAME, file.fileName, MAX_PATH);
+         file.nodeID = object->getId();
+         file.session = this;
+         g_monitoringList.removeFile(&file);
 
          shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
-         debugPrintf(6, _T("Cancel file monitoring %s"), remoteFile);
+         debugPrintf(6, _T("Cancel file monitoring for %s"), file.fileName);
          if (conn != nullptr)
          {
             request->setProtocolVersion(conn->getProtocolVersion());
@@ -10688,12 +10689,12 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
                if (rcc == ERR_SUCCESS)
                {
                   msg.setField(VID_RCC, rcc);
-                  debugPrintf(6, _T("File monitoring cancelled successfully"));
+                  debugPrintf(6, _T("cancelFileMonitoring(%s): success"), file.fileName);
                }
                else
                {
                   msg.setField(VID_RCC, AgentErrorToRCC(rcc));
-                  debugPrintf(6, _T("Error on agent: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+                  debugPrintf(6, _T("cancelFileMonitoring(%s): agent error %d (%s)"), file.fileName, rcc, AgentErrorCodeToText(rcc));
                }
                delete response;
             }
@@ -10705,7 +10706,7 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
          else
          {
             msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
-            debugPrintf(6, _T("Connection with node have been lost"));
+            debugPrintf(6, _T("cancelFileMonitoring(%s): connection with node have been lost"), file.fileName);
          }
       }
       else

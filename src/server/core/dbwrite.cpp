@@ -124,7 +124,7 @@ static THREAD s_queueMonitorThread = INVALID_THREAD_HANDLE;
  */
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 {
-	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)malloc(sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR));
+	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)MemAlloc(sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR));
 	rq->query = (TCHAR *)&rq->bindings[0];
 	_tcscpy(rq->query, query);
 	rq->bindCount = 0;
@@ -141,10 +141,10 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 	int size = sizeof(DELAYED_SQL_REQUEST) + ((int)_tcslen(query) + 1) * sizeof(TCHAR) + bindCount * sizeof(TCHAR *) + bindCount;
 	for(int i = 0; i < bindCount; i++)
 	{
-	   if (values[i] != NULL)
+	   if (values[i] != nullptr)
 	      size += ((int)_tcslen(values[i]) + 1) * sizeof(TCHAR) + sizeof(TCHAR *);
 	}
-	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)malloc(size);
+	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)MemAlloc(size);
 
 	BYTE *base = (BYTE *)&rq->bindings[bindCount];
 	int pos = 0;
@@ -173,7 +173,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 		}
 		else
 		{
-		   rq->bindings[i] = NULL;
+		   rq->bindings[i] = nullptr;
 		}
 	}
 

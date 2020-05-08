@@ -64,7 +64,7 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 /**
  * Unregister job from job manager
  */
-void UnregisterJob(UINT32 jobId)
+void UnregisterJob(uint32_t jobId)
 {
    s_jobQueueIndex.remove(jobId);
 }

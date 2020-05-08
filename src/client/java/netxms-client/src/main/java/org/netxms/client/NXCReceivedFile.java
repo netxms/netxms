@@ -34,7 +34,7 @@ final class NXCReceivedFile
 	public static final int OPEN = 0;
 	public static final int RECEIVED = 1;
 	public static final int FAILED = 2;
-   public static final int CANCELED = 3;
+   public static final int CANCELLED = 3;
 	
 	private long id;
 	private File file;
@@ -154,7 +154,7 @@ final class NXCReceivedFile
 	/**
 	 * Abort file transfer
 	 */
-	protected void abortTransfer(boolean isCanceled)
+	protected void abortTransfer(boolean isCancelled)
 	{
 		if (status == OPEN)
 		{
@@ -168,10 +168,7 @@ final class NXCReceivedFile
 			}
 		}
 		timestamp = System.currentTimeMillis();
-		if(isCanceled)
-		   status = CANCELED;
-		else
-		   status = FAILED;
+      status = isCancelled ? CANCELLED : FAILED;
 		exception = new IOException();
 	}
 

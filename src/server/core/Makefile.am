@@ -14,7 +14,7 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			dc_nxsl.cpp dci_recalc.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 			dcobject.cpp dcowner.cpp dcst.cpp dctable.cpp dctarget.cpp \
 			dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp dfile_info.cpp \
-			download_job.cpp ef.cpp email.cpp entirenet.cpp \
+			download_task.cpp ef.cpp email.cpp entirenet.cpp \
 			epp.cpp events.cpp evproc.cpp fdb.cpp filemonitoring.cpp \
 			graph.cpp hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
 			icmpstat.cpp id.cpp import.cpp inaddr_index.cpp index.cpp interface.cpp \

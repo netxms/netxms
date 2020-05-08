@@ -220,40 +220,6 @@ public:
 };
 
 /**
- * File download job
- */
-class FileDownloadJob : public ServerJob
-{
-private:
-	ClientSession *m_session;
-	shared_ptr<AgentConnection> m_agentConnection;
-	UINT32 m_requestId;
-	TCHAR *m_localFile;
-	TCHAR *m_remoteFile;
-	TCHAR *m_info;
-	INT64 m_fileSize;
-	INT64 m_currentSize;
-	UINT32 m_maxFileSize;
-	bool m_follow;
-	bool m_allowExpansion;
-
-protected:
-	virtual ServerJobResult run();
-	virtual bool onCancel();
-	virtual const TCHAR *getAdditionalInfo();
-
-	static void progressCallback(size_t size, void *arg);
-	static void fileResendCallback(NXCP_MESSAGE *msg, void *arg);
-	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
-
-public:
-	FileDownloadJob(const shared_ptr<Node>& node, const TCHAR *remoteName, uint32_t maxFileSize, bool follow, ClientSession *session, uint32_t requestId, bool allowExpansion);
-	virtual ~FileDownloadJob();
-
-	const TCHAR *getLocalFileName();
-};
-
-/**
  * DCI recalculation job
  */
 class DCIRecalculationJob : public ServerJob

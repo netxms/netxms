@@ -1276,7 +1276,7 @@ typedef struct
 #define VID_ACTION_LIST             ((UINT32)606)
 #define VID_ZONE_SNMP_PORT_COUNT    ((UINT32)607)
 #define VID_HISTORICAL_DATA_TYPE    ((UINT32)608)
-#define VID_JOB_CANCELED            ((UINT32)609)
+#define VID_JOB_CANCELLED           ((UINT32)609)
 #define VID_INSTANCE_RETENTION      ((UINT32)610)
 #define VID_RACK_ORIENTATION        ((UINT32)611)
 #define VID_PASSIVE_ELEMENTS        ((UINT32)612)
