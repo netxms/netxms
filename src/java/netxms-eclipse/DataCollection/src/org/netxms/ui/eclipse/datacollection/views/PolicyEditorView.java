@@ -36,6 +36,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
+import org.netxms.base.NXCommon;
 import org.netxms.client.AgentPolicy;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -68,7 +69,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    private AbstractPolicyEditor editor = null;
    private NXCSession session;
    private long templateId;
-   private UUID policyGUID;
+   private UUID policyGUID = NXCommon.EMPTY_GUID;
    private AgentPolicy policy;
    private FindReplaceAction actionFindReplace; 
    private boolean throwExceptionOnSave;
@@ -473,7 +474,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       switch(n.getCode())
       {
          case SessionNotification.POLICY_MODIFIED: 
-            if (n.getSubCode() != templateId || !((AgentPolicy)n.getObject()).getGuid().equals(policyGUID))
+            if ((n.getSubCode() != templateId) || !((AgentPolicy)n.getObject()).getGuid().equals(policyGUID))
                return;
 
             display.asyncExec(new Runnable() {
