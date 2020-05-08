@@ -8,12 +8,13 @@
 
 
 *
-* 3.3-CURRENT
+* 3.3.314
 *
 
 - Fixed server crash when proxied SNMP device responds with "UDP port unreachable"
 - Fixed issues:
 	NX-1575 (Ability to duplicate event configuration)
+	NX-1780 (Unable to add file to file delivery policy in management console on MacOS)
 	NX-1839 (Show alarm key in Alarm Details)
 	NX-1844 ('Get list of agent sessions' error in nxmc and webui)
 	NX-1845 (Context menu for Service Root shows Create sensor twice)
