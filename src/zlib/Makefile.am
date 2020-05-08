@@ -37,6 +37,5 @@ libnxzlib_la_SOURCES = \
 EXTRA_DIST = \
 	ChangeLog \
 	README \
-	Makefile.w32 \
 	nxzlib.def \
 	nxzlib.vcxproj nxzlib.vcxproj.filters

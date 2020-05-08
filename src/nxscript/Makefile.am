@@ -14,4 +14,4 @@ nxscript_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxscript_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
 nxscript_LDADD = ../libnetxms/libnetxms.la ../libnxsl/libnxsl.la @EXEC_LIBS@
 
-EXTRA_DIST = Makefile.w32 nxscript.vcxproj nxscript.vcxproj.filters nxscript.h
+EXTRA_DIST = nxscript.vcxproj nxscript.vcxproj.filters nxscript.h

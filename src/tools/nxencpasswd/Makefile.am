@@ -5,5 +5,4 @@ nxencpasswd_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
 nxencpasswd_LDADD = ../../libnetxms/libnetxms.la @EXEC_LIBS@
 
 EXTRA_DIST = \
-	nxencpasswd.vcxproj nxencpasswd.vcxproj.filters \
-	Makefile.w32
+	nxencpasswd.vcxproj nxencpasswd.vcxproj.filters

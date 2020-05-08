@@ -20,5 +20,4 @@ EXTRA_DIST = \
 	prod.cpp \
 	system.cpp \
 	winnt.vcxproj winnt.vcxproj.filters \
-	winnt_subagent.h \
-	Makefile.w32
+	winnt_subagent.h

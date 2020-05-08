@@ -8,6 +8,5 @@ libethernetip_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libethernetip_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	libethernetip.vcxproj libethernetip.vcxproj.filters \
 	libethernetip.h

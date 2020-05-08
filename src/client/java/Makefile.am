@@ -9,4 +9,3 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = netxms-client
-EXTRA_DIST = Makefile.w32

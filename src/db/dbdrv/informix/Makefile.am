@@ -7,7 +7,6 @@ informix_la_LDFLAGS = -module -avoid-version @INFORMIX_LDFLAGS@
 informix_la_LIBADD = ../../../libnetxms/libnetxms.la @INFORMIX_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	informix.vcxproj informix.vcxproj.filters informixdrv.h
 
 install-exec-hook:

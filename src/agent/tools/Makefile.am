@@ -10,4 +10,3 @@
 
 SUBDIRS = nxappget nxapush nxhwid nxreload
 
-EXTRA_DIST = Makefile.w32

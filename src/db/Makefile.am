@@ -10,4 +10,3 @@
 
 SUBDIRS = libnxdb dbdrv
 
-EXTRA_DIST = Makefile.w32

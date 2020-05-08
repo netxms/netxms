@@ -6,5 +6,4 @@ nddload_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../..
 	      @SERVER_LIBS@ @EXEC_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	nddload.vcxproj nddload.vcxproj.filters

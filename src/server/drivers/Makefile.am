@@ -12,4 +12,3 @@ SUBDIRS = at avaya cisco dell-pwc dlink extreme hpe huawei \
           ignitenet juniper mikrotik moxa net-snmp netonix ping3 qtech-olt \
           rittal symbol-ws tb ubnt
 
-EXTRA_DIST = Makefile.w32

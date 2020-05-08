@@ -6,7 +6,7 @@ lorawan_la_CPPFLAGS=-I@top_srcdir@/include @MQTT_CPPFLAGS@ -I@top_srcdir@/build
 lorawan_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @MQTT_LDFLAGS@
 lorawan_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../libnxmb/libnxmb.la -lcurl @MQTT_LIBS@
 
-EXTRA_DIST = lorawan.h Makefile.w32
+EXTRA_DIST = lorawan.h
 
 if !STATIC_BUILD
 install-exec-hook:

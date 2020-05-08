@@ -7,7 +7,6 @@ db2_la_LDFLAGS = -module -avoid-version @DB2_LDFLAGS@
 db2_la_LIBADD = ../../../libnetxms/libnetxms.la @DB2_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	db2.vcxproj db2.vcxproj.filters db2drv.h
 
 install-exec-hook:

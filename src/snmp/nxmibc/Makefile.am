@@ -14,7 +14,7 @@ nxmibc_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxmibc_LDFLAGS = @EXEC_LDFLAGS@
 nxmibc_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la @EXEC_LIBS@
 
-EXTRA_DIST = Makefile.w32 nxmibc.vcxproj nxmibc.vcxproj.filters nxmibc.h mibparse.h parser.l parser.y parser.tab.hpp
+EXTRA_DIST = nxmibc.vcxproj nxmibc.vcxproj.filters nxmibc.h mibparse.h parser.l parser.y parser.tab.hpp
 
 lex.parser.cpp: parser.l parser.tab.cpp parser.tab.hpp
 	$(LEX) -Pmp -B -f -olex.parser.cpp parser.l

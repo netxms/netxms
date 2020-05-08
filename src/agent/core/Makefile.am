@@ -37,7 +37,6 @@ static_subagents.cpp: @top_srcdir@/config.h Makefile
 	@top_builddir@/tools/create_ssa_list.sh "@STATIC_SUBAGENT_LIST@" > static_subagents.cpp
 
 EXTRA_DIST = \
-    Makefile.w32 \
     localdb.h \
     messages.mc \
     nxagentd.vcxproj nxagentd.vcxproj.filters \

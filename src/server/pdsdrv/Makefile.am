@@ -10,4 +10,4 @@
 
 SUBDIRS = ${PDSDRV_DIRS}
 
-EXTRA_DIST = Makefile.w32
+

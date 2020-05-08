@@ -10,4 +10,3 @@
 
 SUBDIRS = smbios libnxagent libnxappc @AGENT_DIRS@ subagents core install tools
 
-EXTRA_DIST = Makefile.w32

@@ -10,8 +10,7 @@ netonix_la_LIBADD = ../../../libnetxms/libnetxms.la \
 
 EXTRA_DIST = \
 	netonix.vcxproj netonix.vcxproj.filters \
-	netonix.h \
-	Makefile.w32
+	netonix.h
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(DRIVER).a $(DESTDIR)$(pkglibdir)/$(DRIVER)@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).a ; fi

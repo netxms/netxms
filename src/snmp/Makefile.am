@@ -10,4 +10,3 @@
 
 SUBDIRS = libnxsnmp nxmibc nxsnmpget nxsnmpset nxsnmpwalk
 
-EXTRA_DIST = Makefile.w32

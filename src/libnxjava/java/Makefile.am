@@ -9,4 +9,4 @@ netxms-java-bridge.jar: pom.xml
 clean-local:
 	rm -rf netxms-java-bridge.jar
 
-EXTRA_DIST = Makefile.w32 pom.xml netxms-java-bridge.jar
+EXTRA_DIST = pom.xml netxms-java-bridge.jar

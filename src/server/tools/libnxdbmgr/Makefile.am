@@ -8,5 +8,4 @@ libnxdbmgr_la_LIBADD = \
 
 EXTRA_DIST = \
 	libnxdbmgr.h \
-	libnxdbmgr.vcxproj libnxdbmgr.vcxproj.filters \
-	Makefile.w32
+	libnxdbmgr.vcxproj libnxdbmgr.vcxproj.filters

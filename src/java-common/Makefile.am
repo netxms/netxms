@@ -9,4 +9,3 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = lib netxms-base
-EXTRA_DIST = Makefile.w32

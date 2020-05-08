@@ -9,5 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-    acpi.cpp net.cpp sc.cpp wmi.cpp wmi.h wmi.vcxproj wmi.vcxproj.filters \
-    Makefile.w32
+    acpi.cpp net.cpp sc.cpp wmi.cpp wmi.h wmi.vcxproj wmi.vcxproj.filters

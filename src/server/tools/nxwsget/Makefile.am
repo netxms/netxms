@@ -10,5 +10,4 @@ nxwsget_LDADD = \
 	      @EXEC_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	nxwsget.vcxproj nxwsget.vcxproj.filters

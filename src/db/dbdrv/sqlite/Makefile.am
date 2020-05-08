@@ -14,7 +14,6 @@ sqlite_la_LIBADD += -lsqlite3
 endif
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	sqlite.vcxproj sqlite.vcxproj.filters \
 	sqlitedrv.h
 

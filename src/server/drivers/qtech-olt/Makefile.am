@@ -10,8 +10,7 @@ qtech_olt_la_LIBADD = ../../../libnetxms/libnetxms.la \
 
 EXTRA_DIST = \
 	qtech-olt.vcxproj qtech-olt.vcxproj.filters \
-	qtech-olt.h \
-	Makefile.w32
+	qtech-olt.h
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(DRIVER).a $(DESTDIR)$(pkglibdir)/$(DRIVER)@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).a ; fi

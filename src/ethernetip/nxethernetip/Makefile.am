@@ -5,5 +5,4 @@ nxethernetip_LDFLAGS = @EXEC_LDFLAGS@
 nxethernetip_LDADD = ../libethernetip/libethernetip.la ../../libnetxms/libnetxms.la @EXEC_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	nxethernetip.vcxproj nxethernetip.vcxproj.filters

@@ -5,5 +5,4 @@ libnxdb_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxdb_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	libnxdb.vcxproj libnxdb.vcxproj.filters libnxdb.h

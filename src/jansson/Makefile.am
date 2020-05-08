@@ -16,7 +16,6 @@ libnxjansson_la_LDFLAGS = -no-undefined -export-symbols-regex '^json_' -version-
 libnxjansson_la_LIBADD = -lm
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	hashtable.h \
 	jansson.def \
 	jansson.vcxproj jansson.vcxproj.filters \

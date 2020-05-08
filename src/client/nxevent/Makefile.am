@@ -14,4 +14,4 @@ nxevent_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxevent_LDFLAGS = @EXEC_LDFLAGS@
 nxevent_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la @EXEC_LIBS@
 
-EXTRA_DIST = Makefile.w32 nxevent.vcxproj nxevent.vcxproj.filters nxevent.h
+EXTRA_DIST = nxevent.vcxproj nxevent.vcxproj.filters nxevent.h

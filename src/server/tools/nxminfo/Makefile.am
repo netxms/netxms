@@ -11,5 +11,4 @@ nxminfo_LDADD = \
 	@EXEC_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	nxminfo.vcxproj nxminfo.vcxproj.filters

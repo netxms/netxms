@@ -6,7 +6,6 @@ libnxjava_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxjava_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	libnxjava.vcxproj libnxjava.vcxproj.filters \
 	libnxjava.h
 

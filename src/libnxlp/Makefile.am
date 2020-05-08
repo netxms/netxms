@@ -13,7 +13,6 @@ libnxlp_la_LIBADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
 endif
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	eventlog.cpp vss.cpp wevt.cpp \
 	libnxlp.vcxproj libnxlp.vcxproj.filters \
 	libnxlp.h

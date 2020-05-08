@@ -10,4 +10,3 @@
 
 SUBDIRS = @SERVER_INCLUDE@ libnxsrv core netxmsd tools drivers hdlink pdsdrv spe
 
-EXTRA_DIST = Makefile.w32

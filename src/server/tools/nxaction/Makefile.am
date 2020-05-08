@@ -10,5 +10,4 @@ nxaction_LDADD = \
 		 @EXEC_LIBS@
 
 EXTRA_DIST = \
-	nxaction.vcxproj nxaction.vcxproj.filters \
-	Makefile.w32
+	nxaction.vcxproj nxaction.vcxproj.filters

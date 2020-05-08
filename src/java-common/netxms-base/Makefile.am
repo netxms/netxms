@@ -8,7 +8,7 @@ $(JAR): pom.xml
 	mvn -Dmaven.test.skip=true install -Ppkg-build
 	mv target/$(JAR) .
 
-EXTRA_DIST = $(JAR) pom.xml Makefile.w32
+EXTRA_DIST = $(JAR) pom.xml 
 
 clean-local:
 	rm -f $(JAR)

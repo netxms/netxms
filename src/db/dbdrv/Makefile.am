@@ -10,4 +10,3 @@
 
 SUBDIRS = @DB_DRIVERS@
 
-EXTRA_DIST = Makefile.w32

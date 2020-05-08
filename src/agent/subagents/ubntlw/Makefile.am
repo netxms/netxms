@@ -9,4 +9,4 @@ ubntlw.jar: pom.xml
 clean-local:
 	rm -rf target ubntlw.jar
 
-EXTRA_DIST = Makefile.w32 pom.xml ubntlw.jar LICENSE README
+EXTRA_DIST = pom.xml ubntlw.jar LICENSE README

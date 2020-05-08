@@ -10,5 +10,4 @@ nxap_LDADD = \
 	     @EXEC_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	nxap.vcxproj nxap.vcxproj.filters

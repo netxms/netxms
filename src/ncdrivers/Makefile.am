@@ -10,4 +10,3 @@
 
 SUBDIRS = dbtable dummy gsm portech textfile ${NCDRV_DIRS}
 
-EXTRA_DIST = Makefile.w32

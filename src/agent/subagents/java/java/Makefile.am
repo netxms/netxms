@@ -9,4 +9,4 @@ netxms-agent.jar: pom.xml
 clean-local:
 	rm -rf netxms-agent.jar
 
-EXTRA_DIST = Makefile.w32 pom.xml netxms-agent.jar
+EXTRA_DIST = pom.xml netxms-agent.jar

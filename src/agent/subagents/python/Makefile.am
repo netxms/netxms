@@ -13,7 +13,6 @@ python_la_LIBADD = @top_srcdir@/src/agent/libnxagent/libnxagent.la \
 	@PYTHON_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	python.vcxproj python.vcxproj.filters \
 	python_subagent.h
 

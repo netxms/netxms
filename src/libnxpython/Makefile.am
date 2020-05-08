@@ -8,6 +8,5 @@ libnxpython_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @PYTHON_LDFLAGS
 libnxpython_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la @PYTHON_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	libnxpython.vcxproj libnxpython.vcxproj.filters \
 	libnxpython.h

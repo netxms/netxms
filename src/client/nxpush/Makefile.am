@@ -14,4 +14,4 @@ nxpush_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxpush_LDFLAGS = @EXEC_LDFLAGS@
 nxpush_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la @EXEC_LIBS@
 
-EXTRA_DIST = Makefile.w32 nxpush.vcxproj nxpush.vcxproj.filters
+EXTRA_DIST = nxpush.vcxproj nxpush.vcxproj.filters

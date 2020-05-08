@@ -5,5 +5,4 @@ nxsnmpget_LDFLAGS = @EXEC_LDFLAGS@
 nxsnmpget_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la @EXEC_LIBS@
 
 EXTRA_DIST = \
-	Makefile.w32 \
 	nxsnmpget.vcxproj nxsnmpget.vcxproj.filters

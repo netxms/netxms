@@ -15,7 +15,6 @@ BUILT_SOURCES = netxms-build-tag.iss netxms-build-tag.h netxms-build-tag.propert
 EXTRA_DIST = \
 	build.vcxproj \
 	build.vcxproj.filters \
-	Makefile.w32 \
 	msvc_setenv_x64.cmd \
 	msvc_setenv_x86.cmd \
 	updatetag.pl

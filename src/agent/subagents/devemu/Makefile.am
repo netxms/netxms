@@ -6,7 +6,7 @@ devemu_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 devemu_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 devemu_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = devemu.vcxproj devemu.vcxproj.filters Makefile.w32
+EXTRA_DIST = devemu.vcxproj devemu.vcxproj.filters 
 
 if !STATIC_BUILD
 install-exec-hook:

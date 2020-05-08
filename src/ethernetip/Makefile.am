@@ -10,4 +10,3 @@
 
 SUBDIRS = libethernetip nxethernetip
 
-EXTRA_DIST = Makefile.w32

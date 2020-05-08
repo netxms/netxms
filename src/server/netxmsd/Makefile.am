@@ -17,5 +17,4 @@ netxmsd_LDADD = \
 EXTRA_DIST = \
 	netxmsd.vcxproj netxmsd.vcxproj.filters \
 	netxmsd.h \
-	winsrv.cpp \
-	Makefile.w32
+	winsrv.cpp
