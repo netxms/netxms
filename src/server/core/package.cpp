@@ -26,122 +26,96 @@
 /**
  * Check if package with specific parameters already installed
  */
-BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform)
+bool IsPackageInstalled(const TCHAR *name, const TCHAR *version, const TCHAR *platform)
 {
-   DB_RESULT hResult;
-   TCHAR szQuery[1024], *pszEscName, *pszEscVersion, *pszEscPlatform;
-   BOOL bResult = FALSE;
-
-   pszEscName = EncodeSQLString(pszName);
-   pszEscVersion = EncodeSQLString(pszVersion);
-   pszEscPlatform = EncodeSQLString(pszPlatform);
-   _sntprintf(szQuery, 1024, _T("SELECT pkg_id FROM agent_pkg WHERE ")
-                             _T("pkg_name='%s' AND version='%s' AND platform='%s'"),
-              pszEscName, pszEscVersion, pszEscPlatform);
-   free(pszEscName);
-   free(pszEscVersion);
-   free(pszEscPlatform);
-
+   bool result = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != nullptr)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT pkg_id FROM agent_pkg WHERE pkg_name=? AND version=? AND platform=?"));
+   if (hStmt != nullptr)
    {
-      bResult = (DBGetNumRows(hResult) > 0);
-      DBFreeResult(hResult);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, version, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, platform, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         result = (DBGetNumRows(hResult) > 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
-   return bResult;
+   return result;
 }
 
-
-//
-// Check if given package ID is valid
-//
-
-BOOL IsValidPackageId(UINT32 dwPkgId)
+/**
+ * Check if given package ID is valid
+ */
+bool IsValidPackageId(uint32_t packageId)
 {
-   DB_RESULT hResult;
-   TCHAR szQuery[256];
-   BOOL bResult = FALSE;
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   _sntprintf(szQuery, 256, _T("SELECT pkg_name FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != nullptr)
-   {
-      bResult = (DBGetNumRows(hResult) > 0);
-      DBFreeResult(hResult);
-   }
+   bool result = IsDatabaseRecordExist(hdb, _T("agent_pkg"), _T("pkg_id"), packageId);
    DBConnectionPoolReleaseConnection(hdb);
-   return bResult;
+   return result;
 }
 
-
-//
-// Check if package file with given name exist
-//
-
-BOOL IsPackageFileExist(const TCHAR *pszFileName)
+/**
+ * Check if package file with given name exist
+ */
+bool IsPackageFileExist(const TCHAR *fileName)
 {
-   TCHAR szFullPath[MAX_PATH];
-
-   _tcscpy(szFullPath, g_netxmsdDataDir);
-   _tcscat(szFullPath, DDIR_PACKAGES);
-   _tcscat(szFullPath, FS_PATH_SEPARATOR);
-   _tcscat(szFullPath, pszFileName);
-   return (_taccess(szFullPath, 0) == 0);
+   StringBuffer fullPath = g_netxmsdDataDir;
+   fullPath.append(DDIR_PACKAGES);
+   fullPath.append(FS_PATH_SEPARATOR);
+   fullPath.append(fileName);
+   return (_taccess(fullPath, 0) == 0);
 }
 
-
-//
-// Uninstall (remove) package from server
-//
-
-UINT32 UninstallPackage(UINT32 dwPkgId)
+/**
+ * Uninstall (remove) package from server
+ */
+uint32_t UninstallPackage(uint32_t packageId)
 {
-   TCHAR szQuery[256], szFileName[MAX_PATH], szBuffer[MAX_DB_STRING];
-   DB_RESULT hResult;
-   UINT32 dwResult;
+   uint32_t rcc;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   _sntprintf(szQuery, 256, _T("SELECT pkg_file FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
-   hResult = DBSelect(hdb, szQuery);
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT pkg_file FROM agent_pkg WHERE pkg_id=%u"), packageId);
+   DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
          // Delete file from directory
-         _tcscpy(szFileName, g_netxmsdDataDir);
-         _tcscat(szFileName, DDIR_PACKAGES);
-         _tcscat(szFileName, FS_PATH_SEPARATOR);
-         _tcscat(szFileName, CHECK_NULL_EX(DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING)));
-         if ((_taccess(szFileName, 0) == -1) || (_tunlink(szFileName) == 0))
+         StringBuffer fileName = g_netxmsdDataDir;
+         fileName.append(DDIR_PACKAGES);
+         fileName.append(FS_PATH_SEPARATOR);
+         fileName.appendPreallocated(DBGetField(hResult, 0, 0, nullptr, 0));
+         if ((_taccess(fileName, 0) == -1) || (_tunlink(fileName) == 0))
          {
             // Delete record from database
-            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
-            DBQuery(hdb, szQuery);
-            dwResult = RCC_SUCCESS;
+            ExecuteQueryOnObject(hdb, packageId, _T("DELETE FROM agent_pkg WHERE pkg_id=?"));
+            rcc = RCC_SUCCESS;
          }
          else
          {
-            dwResult = RCC_IO_ERROR;
+            rcc = RCC_IO_ERROR;
          }
       }
       else
       {
-         dwResult = RCC_INVALID_PACKAGE_ID;
+         rcc = RCC_INVALID_PACKAGE_ID;
       }
       DBFreeResult(hResult);
    }
    else
    {
-      dwResult = RCC_DB_FAILURE;
+      rcc = RCC_DB_FAILURE;
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -185,7 +159,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
          shared_ptr<AgentConnectionEx> agentConn = node->createAgentConnection();
          if (agentConn != nullptr)
          {
-            BOOL bCheckOK = FALSE;
+            bool targetCheckOK = false;
             TCHAR szBuffer[MAX_PATH];
 
             // Check if package can be deployed on target node
@@ -195,7 +169,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
                // supports source packages
                if (agentConn->getParameter(_T("Agent.SourcePackageSupport"), 32, szBuffer) == ERR_SUCCESS)
                {
-                  bCheckOK = (_tcstol(szBuffer, nullptr, 0) != 0);
+                  targetCheckOK = (_tcstol(szBuffer, nullptr, 0) != 0);
                }
             }
             else
@@ -203,11 +177,11 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
                // Binary package, check target platform
                if (agentConn->getParameter(_T("System.PlatformName"), MAX_PATH, szBuffer) == ERR_SUCCESS)
                {
-                  bCheckOK = !_tcsicmp(szBuffer, task->platform);
+                  targetCheckOK = (_tcsicmp(szBuffer, task->platform) == 0);
                }
             }
 
-            if (bCheckOK)
+            if (targetCheckOK)
             {
                // Change deployment status to "File Transfer"
                msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
@@ -222,7 +196,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
                {
                   if (agentConn->startUpgrade(task->packageFile) == ERR_SUCCESS)
                   {
-                     BOOL bConnected = FALSE;
+                     bool connected = false;
 
                      // Delete current connection
                      agentConn.reset();
@@ -239,20 +213,20 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
                         agentConn = node->createAgentConnection();
                         if (agentConn != nullptr)
                         {
-                           bConnected = TRUE;
+                           connected = true;
                            break;   // Connected successfully
                         }
                      }
 
                      // Last attempt to reconnect
-                     if (!bConnected)
+                     if (!connected)
                      {
                         agentConn = node->createAgentConnection();
                         if (agentConn != nullptr)
-                           bConnected = TRUE;
+                           connected = true;
                      }
 
-                     if (bConnected)
+                     if (connected)
                      {
                         // Check version
                         if (agentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
@@ -303,7 +277,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
 
       // Finish node processing
       msg.setField(VID_DEPLOYMENT_STATUS, 
-         success ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
+         success ? static_cast<uint16_t>(DEPLOYMENT_STATUS_COMPLETED) : static_cast<uint16_t>(DEPLOYMENT_STATUS_FAILED));
       msg.setField(VID_ERROR_MESSAGE, errorMessage);
       task->session->sendMessage(&msg);
    }
@@ -313,14 +287,8 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
 /**
  * Package deployment thread
  */
-THREAD_RESULT THREAD_CALL DeploymentManager(void *arg)
+void DeploymentManager(PackageDeploymentTask *task)
 {
-   PackageDeploymentTask *task = static_cast<PackageDeploymentTask*>(arg);
-
-   // Wait for parent initialization completion
-   MutexLock(task->mutex);
-   MutexUnlock(task->mutex);
-
    // Read number of upgrade threads
    int numThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
    if (numThreads > task->nodeList.size())
@@ -335,7 +303,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *arg)
       Node *node = task->nodeList.get(i);
       task->queue.put(node);
       msg.setField(VID_OBJECT_ID, node->getId());
-      msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
+      msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_PENDING));
       task->session->sendMessage(&msg);
       msg.deleteAllFields();
    }
@@ -350,12 +318,10 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *arg)
       ThreadJoin(threadList[i]);
 
    // Send final notification to client
-   msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_FINISHED);
+   msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_FINISHED));
    task->session->sendMessage(&msg);
 
    // Cleanup
    delete task;
    MemFree(threadList);
-
-   return THREAD_OK;
 }

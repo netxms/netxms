@@ -1195,6 +1195,7 @@ static inline THREAD ThreadCreateEx(void (*function)(), int stackSize = 0)
  */
 template<typename R> class ThreadCreate_WrapperData_1
 {
+public:
    void (*function)(R);
    R arg;
 
@@ -1244,6 +1245,7 @@ template<typename R> THREAD ThreadCreateEx(void (*function)(R), R arg, int stack
  */
 template<typename R1, typename R2> class ThreadCreate_WrapperData_2
 {
+public:
    void (*function)(R1, R2);
    R1 arg1;
    R2 arg2;

@@ -24,7 +24,16 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 32.11 to 32.12
+ * Upgrade from 33.12 to 34.0
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(SetMajorSchemaVersion(34, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 33.11 to 33.12
  */
 static bool H_UpgradeFromV11()
 {
@@ -58,7 +67,7 @@ static bool H_UpgradeFromV11()
 }
 
 /**
- * Upgrade from 32.10 to 32.11
+ * Upgrade from 33.10 to 33.11
  */
 static bool H_UpgradeFromV10()
 {
@@ -81,7 +90,7 @@ static bool H_UpgradeFromV10()
 }
 
 /**
- * Upgrade from 32.9 to 32.10
+ * Upgrade from 33.9 to 33.10
  */
 static bool H_UpgradeFromV9()
 {
@@ -97,7 +106,7 @@ static bool H_UpgradeFromV9()
 }
 
 /**
- * Upgrade from 32.8 to 32.9
+ * Upgrade from 33.8 to 33.9
  */
 static bool H_UpgradeFromV8()
 {
@@ -107,7 +116,7 @@ static bool H_UpgradeFromV8()
 }
 
 /**
- * Upgrade from 32.7 to 32.8
+ * Upgrade from 33.7 to 33.8
  */
 static bool H_UpgradeFromV7()
 {
@@ -195,7 +204,7 @@ static bool H_UpgradeFromV7()
 }
 
 /**
- * Upgrade from 32.6 to 32.7
+ * Upgrade from 33.6 to 33.7
  */
 static bool H_UpgradeFromV6()
 {
@@ -260,7 +269,7 @@ static bool AlterTSDBTable(const TCHAR *table, bool tableData)
 }
 
 /**
- * Upgrade from 32.5 to 32.6
+ * Upgrade from 33.5 to 33.6
  */
 static bool H_UpgradeFromV5()
 {
@@ -316,7 +325,7 @@ static bool H_UpgradeFromV5()
 }
 
 /**
- * Upgrade from 32.4 to 32.5
+ * Upgrade from 33.4 to 33.5
  */
 static bool H_UpgradeFromV4()
 {
@@ -329,7 +338,7 @@ static bool H_UpgradeFromV4()
 }
 
 /**
- * Upgrade from 32.3 to 32.4
+ * Upgrade from 33.3 to 33.4
  */
 static bool H_UpgradeFromV3()
 {
@@ -366,7 +375,7 @@ static bool H_UpgradeFromV3()
 }
 
 /**
- * Upgrade from 32.2 to 32.3
+ * Upgrade from 33.2 to 33.3
  */
 static bool H_UpgradeFromV2()
 {
@@ -382,7 +391,7 @@ static bool H_UpgradeFromV2()
 }
 
 /**
- * Upgrade from 32.1 to 32.2
+ * Upgrade from 33.1 to 33.2
  */
 static bool H_UpgradeFromV1()
 {
@@ -419,6 +428,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 12, 34, 0,  H_UpgradeFromV12 },
    { 11, 33, 12, H_UpgradeFromV11 },
    { 10, 33, 11, H_UpgradeFromV10 },
    { 9,  33, 10, H_UpgradeFromV9  },
@@ -444,7 +454,7 @@ bool MajorSchemaUpgrade_V33()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while((major == 33) && (minor < DB_SCHEMA_VERSION_V33_MINOR))
+   while(major == 33)
    {
       // Find upgrade procedure
       int i;

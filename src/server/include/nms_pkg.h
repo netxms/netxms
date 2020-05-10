@@ -28,7 +28,6 @@
  */
 struct PackageDeploymentTask
 {
-   MUTEX mutex;    // Synchronization mutex
 	SharedObjectArray<Node> nodeList;
    ClientSession *session;
    uint32_t requestId;
@@ -41,7 +40,6 @@ struct PackageDeploymentTask
    PackageDeploymentTask(ClientSession *_session, uint32_t _requestId, uint32_t _packageId,
             const TCHAR *_platform, const TCHAR *_packageFile, const TCHAR *_version)
    {
-      mutex = MutexCreate();
       session = _session;
       requestId = _requestId;
       packageId = _packageId;
@@ -52,7 +50,6 @@ struct PackageDeploymentTask
 
    ~PackageDeploymentTask()
    {
-      MutexDestroy(mutex);
       session->decRefCount();
       MemFree(platform);
       MemFree(packageFile);
@@ -63,10 +60,10 @@ struct PackageDeploymentTask
 /**
  * Package functions
  */
-BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform);
-BOOL IsPackageFileExist(const TCHAR *pszFileName);
-BOOL IsValidPackageId(UINT32 dwPkgId);
-UINT32 UninstallPackage(UINT32 dwPkgId);
-THREAD_RESULT THREAD_CALL DeploymentManager(void *arg);
+bool IsPackageInstalled(const TCHAR *name, const TCHAR *version, const TCHAR *platform);
+bool IsPackageFileExist(const TCHAR *fileName);
+bool IsValidPackageId(uint32_t packageId);
+uint32_t UninstallPackage(uint32_t packageId);
+void DeploymentManager(PackageDeploymentTask *task);
 
 #endif   /* _nms_pkg_h_ */

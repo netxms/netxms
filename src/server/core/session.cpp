@@ -6893,7 +6893,7 @@ void ClientSession::installPackage(NXCPMessage *request)
                ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullFileName, CMD_INSTALL_PACKAGE);
                if (fInfo->open())
                {
-                  UINT32 uploadData = CreateUniqueId(IDG_PACKAGE);
+                  uint32_t uploadData = CreateUniqueId(IDG_PACKAGE);
                   fInfo->setUploadData(uploadData);
                   m_downloadFileMap->set(request->getId(), fInfo);
                   msg.setField(VID_RCC, RCC_SUCCESS);
@@ -7005,9 +7005,6 @@ void ClientSession::getParametersList(NXCPMessage *request)
 void ClientSession::deployPackage(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 dwNumObjects, *pdwObjectList;
-   TCHAR szQuery[256], szPkgFile[MAX_PATH];
-   TCHAR szVersion[MAX_AGENT_VERSION_LEN], szPlatform[MAX_PLATFORM_NAME_LEN];
    PackageDeploymentTask *task = nullptr;
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
@@ -7015,30 +7012,31 @@ void ClientSession::deployPackage(NXCPMessage *request)
       bool success = true;
 
       // Get package ID
-      uint32_t dwPkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
-      if (IsValidPackageId(dwPkgId))
+      uint32_t packageId = request->getFieldAsUInt32(VID_PACKAGE_ID);
+      if (IsValidPackageId(packageId))
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
          // Read package information
-         _sntprintf(szQuery, 256, _T("SELECT platform,pkg_file,version FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
-         DB_RESULT hResult = DBSelect(hdb, szQuery);
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("SELECT platform,pkg_file,version FROM agent_pkg WHERE pkg_id=%u"), packageId);
+         DB_RESULT hResult = DBSelect(hdb, query);
          if (hResult != nullptr)
          {
             if (DBGetNumRows(hResult) > 0)
             {
+               TCHAR szPkgFile[MAX_PATH], szVersion[MAX_AGENT_VERSION_LEN], szPlatform[MAX_PLATFORM_NAME_LEN];
                DBGetField(hResult, 0, 0, szPlatform, MAX_PLATFORM_NAME_LEN);
                DBGetField(hResult, 0, 1, szPkgFile, MAX_PATH);
                DBGetField(hResult, 0, 2, szVersion, MAX_AGENT_VERSION_LEN);
 
                // Create list of nodes to be upgraded
-               dwNumObjects = request->getFieldAsUInt32(VID_NUM_OBJECTS);
-               pdwObjectList = MemAllocArray<UINT32>(dwNumObjects);
-               request->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
-		         task = new PackageDeploymentTask(this, request->getId(), dwPkgId, szPlatform, szPkgFile, szVersion);
-               for(uint32_t i = 0; i < dwNumObjects; i++)
+               IntegerArray<uint32_t> objectList;
+               request->getFieldAsInt32Array(VID_OBJECT_LIST, &objectList);
+		         task = new PackageDeploymentTask(this, request->getId(), packageId, szPlatform, szPkgFile, szVersion);
+               for(int i = 0; i < objectList.size(); i++)
                {
-                  shared_ptr<NetObj> object = FindObjectById(pdwObjectList[i]);
+                  shared_ptr<NetObj> object = FindObjectById(objectList.get(i));
                   if (object != nullptr)
                   {
                      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -7048,7 +7046,7 @@ void ClientSession::deployPackage(NXCPMessage *request)
                            // Check if this node already in the list
 									int j;
                            for(j = 0; j < task->nodeList.size(); j++)
-                              if (task->nodeList.get(j)->getId() == pdwObjectList[i])
+                              if (task->nodeList.get(j)->getId() == objectList.get(i))
                                  break;
                            if (j == task->nodeList.size())
                            {
@@ -7074,7 +7072,6 @@ void ClientSession::deployPackage(NXCPMessage *request)
                      break;
                   }
                }
-               MemFree(pdwObjectList);
             }
             else
             {
@@ -7099,8 +7096,6 @@ void ClientSession::deployPackage(NXCPMessage *request)
       // On success, start upgrade thread
       if (success)
       {
-         InterlockedIncrement(&m_refCount);
-         ThreadCreate(DeploymentManager, 0, task);
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
       else
@@ -7116,9 +7111,12 @@ void ClientSession::deployPackage(NXCPMessage *request)
    // Send response
    sendMessage(&msg);
 
-   // Allow deployment thread to run
+   // Start deployment thread
    if (task != nullptr)
-      MutexUnlock(task->mutex);
+   {
+      InterlockedIncrement(&m_refCount);
+      ThreadCreate(DeploymentManager, task);
+   }
 }
 
 /**
