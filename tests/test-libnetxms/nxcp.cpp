@@ -123,6 +123,7 @@ void TestMessageClass()
 
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("NXCP message compression performance"));
    INT64 start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
@@ -131,4 +132,5 @@ void TestMessageClass()
       MemFree(binMsg);
    }
    EndTest(GetCurrentTimeMs() - start);
+#endif
 }

@@ -27,8 +27,10 @@ void TestProcessExecutorWorker();
 void TestSubProcess(const char *procname);
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
+#if !WITH_ADDRESS_SANITIZER
 static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+#endif
 static char mbTextShort[] = "Lorem ipsum";
 static UCS2CHAR ucs2TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's', 'u', 'm', 0 };
 static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
@@ -59,6 +61,7 @@ static void TestStringConversion()
    AssertTrue(!strcmp(mbBuffer, mbTextShort));
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("ANSI to UCS-2 conversion performance"));
    INT64 start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
@@ -97,6 +100,7 @@ static void TestStringConversion()
    }
    EndTest(GetCurrentTimeMs() - start);
 #endif
+#endif   /* !WITH_ADDRESS_SANITIZER */
 
    StartTest(_T("UCS-2 to UCS-4 conversion"));
    UCS4CHAR ucs4buffer[1024];
@@ -111,6 +115,7 @@ static void TestStringConversion()
    AssertTrue(!memcmp(ucs2buffer, ucs2TextSurrogates, 14 * sizeof(UCS2CHAR)));
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("UCS-2 to UCS-4 conversion performance"));
 #ifdef UNICODE_UCS4
    mb_to_ucs2(mbText, -1, ucs2buffer, 1024);
@@ -142,6 +147,7 @@ static void TestStringConversion()
 #endif
    }
    EndTest(GetCurrentTimeMs() - start);
+#endif
 
    StartTest(_T("ucs2_utf8len"));
    AssertEquals(ucs2_utf8len(ucs2TextSurrogates, -1), 18);  // ucs2_utf8len includes trailing 0 into length
@@ -164,6 +170,7 @@ static void TestStringConversion()
    AssertTrue(!memcmp(ucs2buffer, ucs2TextSurrogates, 14 * sizeof(UCS2CHAR)));
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("UCS-2 to UTF-8 conversion performance"));
    mb_to_ucs2(mbText, -1, ucs2buffer, 1024);
    start = GetCurrentTimeMs();
@@ -182,6 +189,7 @@ static void TestStringConversion()
       utf8_to_ucs2(mbText, -1, buffer, 1024);
    }
    EndTest(GetCurrentTimeMs() - start);
+#endif
 
    StartTest(_T("ucs4_utf8len"));
    AssertEquals(ucs4_utf8len(ucs4TextSurrogatesTest, -1), 18);  // ucs4_utf8len includes trailing 0 into length
@@ -203,6 +211,7 @@ static void TestStringConversion()
    AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogatesTest, 13 * sizeof(UCS2CHAR)));
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("UCS-4 to UTF-8 conversion performance"));
    mb_to_ucs4(mbText, -1, ucs4buffer, 1024);
    start = GetCurrentTimeMs();
@@ -221,6 +230,7 @@ static void TestStringConversion()
       utf8_to_ucs4(mbText, -1, buffer, 1024);
    }
    EndTest(GetCurrentTimeMs() - start);
+#endif
 
 #if UNICODE_UCS4
 #define ucs4TextISO8859_1 wcTextISO8859_1
@@ -322,6 +332,7 @@ static void TestStringList()
    delete s3;
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("String list - performance"));
    INT64 startTime = GetCurrentTimeMs();
    StringList *s4 = new StringList();
@@ -337,6 +348,7 @@ static void TestStringList()
    AssertEquals(s4->size(), 100000);
    delete s4;
    EndTest(GetCurrentTimeMs() - startTime);
+#endif
 }
 
 /**
@@ -1044,6 +1056,7 @@ static void TestQueue()
    AssertEquals(q->allocated(), 16);
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("Queue: performance"));
    delete q;
    q = new Queue();
@@ -1060,6 +1073,7 @@ static void TestQueue()
       AssertEquals(q->size(), 0);
    }
    EndTest(GetCurrentTimeMs() - startTime);
+#endif
 
    delete q;
 }
@@ -1866,11 +1880,13 @@ static void TestDebugLevel()
    AssertEquals(nxlog_get_debug_level(), 0);
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("nxlog_get_debug_level() performance"));
    UINT64 startTime = GetCurrentTimeMs();
    for(int i = 0; i < 1000000; i++)
       nxlog_get_debug_level();
    EndTest(GetCurrentTimeMs() - startTime);
+#endif
 }
 
 /**
@@ -2027,6 +2043,7 @@ static void TestDebugTags()
    AssertEquals(nxlog_get_debug_level_tag(_T("db.local.sql.server.status")), nxlog_get_debug_level());
    EndTest();
 
+#if !WITH_ADDRESS_SANITIZER
    StartTest(_T("nxlog_get_debug_level performance with multiple tags"));
    TCHAR tag[64];
    for(int i = 0; i < 1000; i++)
@@ -2038,6 +2055,7 @@ static void TestDebugTags()
    for(int i = 0; i < 1000000; i++)
       nxlog_get_debug_level();
    EndTest(GetCurrentTimeMs() - startTime);
+#endif
 
    StartTest(_T("Debug tags: reset"));
    nxlog_reset_debug_level_tags();

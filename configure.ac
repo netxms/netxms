@@ -4246,6 +4246,7 @@ if test "x$ENABLE_SANITIZER" = "xyes"; then
 	AC_LD_CHECK_OPTION(-fsanitize=address)
 	AC_LD_CHECK_OPTION(-fsanitize=leak)
 	AC_LD_CHECK_OPTION(-fsanitize=undefined)
+	AC_DEFINE(WITH_ADDRESS_SANITIZER,1,Define to 1 if address sanitizer is enabled)
 fi
 
 
