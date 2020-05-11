@@ -1031,14 +1031,67 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
 }
 
 /**
- * Node::getInterface(ifIndex) method
+ * Node::getInterface(interfaceId) method
+ * Interface ID could be ifIndex, name, or MAC address
  */
 NXSL_METHOD_DEFINITION(Node, getInterface)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   shared_ptr<Interface> iface;
+   if (argv[0]->isInteger())  // Assume interface index
+   {
+      iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByIndex(argv[0]->getValueAsUInt32());
+   }
+   else
+   {
+      MacAddress macAddr = MacAddress::parse(argv[0]->getValueAsCString());
+      if (macAddr.isValid() && macAddr.length() >= 6)
+         iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByMAC(macAddr);
+      else
+         iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByName(argv[0]->getValueAsCString());
+   }
+   *result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::getInterfaceByIndex(ifIndex) method
+ */
+NXSL_METHOD_DEFINITION(Node, getInterfaceByIndex)
 {
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
    shared_ptr<Interface> iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByIndex(argv[0]->getValueAsUInt32());
+   *result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::getInterfaceByMACAddress(macAddress) method
+ */
+NXSL_METHOD_DEFINITION(Node, getInterfaceByMACAddress)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   MacAddress macAddr = MacAddress::parse(argv[0]->getValueAsCString());
+   shared_ptr<Interface> iface = macAddr.isValid() ? static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByMAC(macAddr) : shared_ptr<Interface>();
+   *result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::getInterfaceByName(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, getInterfaceByName)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   shared_ptr<Interface> iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByName(argv[0]->getValueAsCString());
    *result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
    return 0;
 }
@@ -1162,6 +1215,9 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
+   NXSL_REGISTER_METHOD(Node, getInterfaceByIndex, 1);
+   NXSL_REGISTER_METHOD(Node, getInterfaceByMACAddress, 1);
+   NXSL_REGISTER_METHOD(Node, getInterfaceByName, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceName, 1);
    NXSL_REGISTER_METHOD(Node, readAgentList, 1);
    NXSL_REGISTER_METHOD(Node, readAgentParameter, 1);
