@@ -32,10 +32,13 @@ LD_PRELOAD="$LIBASAN"
 # Remove binary name from argument list
 shift
 
-# Check for DB driver
-CONFIG="$SYSCONFDIR/netxmsd.conf"
-if [ ! -f "$CONFIG" ]; then
-	CONFIG="/etc/netxmsd.conf"
+# Check for config specified with -c
+CONFIG=`getopt -q -- c: "$@" | sed -e 's,--.*,,' | cut -d "'" -f 2 | xargs`
+if [ "x$CONFIG" == "x" ]; then
+	CONFIG="$SYSCONFDIR/netxmsd.conf"
+	if [ ! -f "$CONFIG" ]; then
+		CONFIG="/etc/netxmsd.conf"
+	fi
 fi
 
 if [ -f "$CONFIG" ]; then
