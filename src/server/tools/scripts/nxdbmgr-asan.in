@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ "x$NETXMS_HOME" != "x" ]; then
+	BINDIR="$NETXMS_HOME/bin"
+else
+	BINDIR="~BINDIR~"
+fi
+
+. $BINDIR/nx-run-asan-binary nxdbmgr "$@"

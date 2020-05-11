@@ -1,4 +1,4 @@
-# Copyright (C) 2004-2019 NetXMS Team <bugs@netxms.org>
+# Copyright (C) 2004-2020 NetXMS Team <bugs@netxms.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -8,13 +8,24 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-bin_SCRIPTS = nx-collect-server-diag
-EXTRA_DIST = nx-collect-server-diag.in nx-collect-server-diag.cmd zip.ps1
+bin_SCRIPTS = netxmsd-asan nx-collect-server-diag nx-run-asan-binary nxdbmgr-asan
+EXTRA_DIST = netxmsd-asan.in nx-collect-server-diag.in \
+	     nx-collect-server-diag.cmd nx-run-asan-binary.in \
+	     nxdbmgr-asan.in zip.ps1
 
-REPLACE_CMD = sed "s,~BINDIR~,@NETXMS_BINDIR@,g" < $@.in > $@
+REPLACE_CMD = sed -e "s,~BINDIR~,@NETXMS_BINDIR@,g" -e "s,~PKGLIBDIR~,@NETXMS_PKGLIBDIR@,g" -e "s,~SYSCONFDIR~,@NETXMS_SYSCONFDIR@,g" < $@.in > $@
+
+netxmsd-asan: netxmsd-asan.in
+	$(REPLACE_CMD)
 
 nx-collect-server-diag: nx-collect-server-diag.in
 	$(REPLACE_CMD)
 
+nx-run-asan-binary: nx-run-asan-binary.in
+	$(REPLACE_CMD)
+
+nxdbmgr-asan: nxdbmgr-asan.in
+	$(REPLACE_CMD)
+
 clean-local:
-	rm -f nx-collect-server-diag
+	rm -f netxmsd-asan nx-collect-server-diag nx-run-asan-binary nxdbmgr-asan

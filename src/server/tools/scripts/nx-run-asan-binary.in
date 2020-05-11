@@ -1,0 +1,65 @@
+#!/bin/bash
+#
+# Start binary with address sanitizer
+# Copyright (c) 2020 Raden Solutions
+#
+# Usage: nx-run-asan-binary [-ndd] binary [arguments]
+#
+
+if [ "x$NETXMS_HOME" != "x" ]; then
+	BINDIR="$NETXMS_HOME/bin"
+	PKGLIBDIR="$NETXMS_HOME/lib/netxms"
+	SYSCONFDIR="$NETXMS_HOME/etc"
+else
+	BINDIR="~BINDIR~"
+	PKGLIBDIR="~PKGLIBDIR~"
+	SYSCONFDIR="~SYSCONFDIR~"
+fi
+
+if [ "$1" == "-ndd" ]; then
+	shift
+	NDDS=`ls $PKGLIBDIR/ndd/*.ndd -1 | xargs`
+fi
+
+BINARY="$BINDIR/$1"
+LIBASAN=`ldd $BINARY | grep libasan | cut -d '>' -f 2 | cut -d '(' -f 1 | xargs`
+if [ "x$LIBASAN" == "x" ]; then
+	echo "*** $BINARY was built without address sanitizer support"
+	exit 1
+fi
+LD_PRELOAD="$LIBASAN"
+
+# Remove binary name from argument list
+shift
+
+# Check for DB driver
+CONFIG="$SYSCONFDIR/netxmsd.conf"
+if [ ! -f "$CONFIG" ]; then
+	CONFIG="/etc/netxmsd.conf"
+fi
+
+if [ -f "$CONFIG" ]; then
+	echo "*** Using configuration file $CONFIG"
+
+	DRIVERS=`cat $CONFIG | grep -v '#' | grep DBDriver | cut -d '=' -f 2 | xargs`
+	for DRIVER in $DRIVERS; do
+		LD_PRELOAD="$LD_PRELOAD:$PKGLIBDIR/dbdrv/$DRIVER"
+	done
+
+	MODULES=`cat $CONFIG | grep -v '#' | grep Module | cut -d '=' -f 2 | xargs`
+	for MODULE in $MODULES; do
+		MODULE=`echo $MODULE | cut -d ',' -f 1`
+		LD_PRELOAD="$LD_PRELOAD:$PKGLIBDIR/$MODULE"
+	done
+
+	for NDD in $NDDS; do
+		LD_PRELOAD="$LD_PRELOAD:$NDD"
+	done
+fi
+
+echo "*** Starting $BINARY"
+echo "*** $LD_PRELOAD"
+
+export LD_PRELOAD
+$BINARY "$@"
+exit $?

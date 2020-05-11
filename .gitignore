@@ -243,7 +243,10 @@ target
 /src/server/tools/nxminfo/nxminfo
 /src/server/tools/nxupload/nxupload
 /src/server/tools/nxwsget/nxwsget
+/src/server/tools/scripts/netxmsd-asan
 /src/server/tools/scripts/nx-collect-server-diag
+/src/server/tools/scripts/nx-run-asan-binary
+/src/server/tools/scripts/nxdbmgr-asan
 /src/snmp/nxmibc/lex.mp.c
 /src/snmp/nxmibc/lex.parser.cpp
 /src/snmp/nxmibc/nxmibc
