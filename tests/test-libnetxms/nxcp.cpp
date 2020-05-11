@@ -128,6 +128,13 @@ void TestMessageClass()
    INT64 start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
    {
+      // We should call deleteAllFields() because NXCPMessage
+      // uses internal allocate-only memory pool. Normally it
+      // is not a problem because messages usually serialized only once.
+      // In this case deleteAllFields() will clean internal memory pool
+      // so it will not consume too much memory.
+      msg.deleteAllFields();
+      msg.setField(100, longText);
       NXCP_MESSAGE *binMsg = msg.serialize(true);
       MemFree(binMsg);
    }
