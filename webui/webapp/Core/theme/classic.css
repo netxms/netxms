@@ -2174,6 +2174,25 @@ Composite.LoginForm {
   /*border-radius: 8px;*/
 }
 
+Composite.DashboardComposite {
+   background-color: #ffffff;
+}
+
+Composite.DashboardComposite[BORDER] {
+   border: 1px solid #828790;
+   border-radius: 2px;
+}
+
+Composite.CardHeader {
+   background-color: #ffffff;
+   border-bottom: 1px solid #828790;
+}
+
+Label.CardHeader {
+   background-color: #ffffff;
+   font: bold 14px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+}
+
 
 /* FileUpload */
 

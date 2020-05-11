@@ -2051,6 +2051,25 @@ ToolBar.menuBar {
    background-color: #00364D;
 }
 
+Composite.DashboardComposite {
+   background-color: #ffffff;
+}
+
+Composite.DashboardComposite[BORDER] {
+   border: 1px solid #b3b3b3;
+   border-radius: 2px;
+}
+
+Composite.CardHeader {
+   background-color: #ffffff;
+   border-bottom: 1px solid #b3b3b3;
+}
+
+Label.CardHeader {
+   background-color: #ffffff;
+   font: bold 16px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
 /* FileUpload */
 
 FileUpload {

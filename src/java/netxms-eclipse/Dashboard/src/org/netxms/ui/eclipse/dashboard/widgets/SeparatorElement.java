@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,9 +72,9 @@ public class SeparatorElement extends ElementWidget
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.DashboardComposite#paintControl(org.eclipse.swt.events.PaintEvent)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.DashboardComposite#paintControl(org.eclipse.swt.events.PaintEvent)
+    */
 	@Override
 	public void paintControl(PaintEvent e)
 	{
@@ -92,9 +92,9 @@ public class SeparatorElement extends ElementWidget
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{

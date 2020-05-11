@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.AvailabilityChart;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Commands;
@@ -72,7 +73,7 @@ public class ObjectOverview extends ObjectTab
 		});
 		
 		viewArea = new Composite(scroller, SWT.NONE);
-		viewArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+      viewArea.setBackground(SharedColors.getColor(SharedColors.DASHBOARD_BACKGROUND, parent.getDisplay()));
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		viewArea.setLayout(layout);

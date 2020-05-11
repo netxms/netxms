@@ -46,7 +46,7 @@ import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.CGroup;
+import org.netxms.ui.eclipse.widgets.Card;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -123,11 +123,11 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       });
 		
-		final CGroup condition = new CGroup(this, Messages.get().LogParserRuleEditor_Condition) {
+		final Card condition = new Card(this, Messages.get().LogParserRuleEditor_Condition) {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
-				setBorderColor(CONDITION_BORDER_COLOR);
+				setTitleBackground(CONDITION_BORDER_COLOR);
 				setTitleColor(TITLE_COLOR);
 				return createMatchingArea(parent);
 			}
@@ -139,11 +139,11 @@ public class LogParserRuleEditor extends DashboardComposite
 		gd.grabExcessVerticalSpace = true;
 		condition.setLayoutData(gd);
 
-		final CGroup action = new CGroup(this, Messages.get().LogParserRuleEditor_Action) {
+		final Card action = new Card(this, Messages.get().LogParserRuleEditor_Action) {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
-				setBorderColor(ACTION_BORDER_COLOR);
+				setTitleBackground(ACTION_BORDER_COLOR);
 				setTitleColor(TITLE_COLOR);
 				return createActionArea(parent);
 			}

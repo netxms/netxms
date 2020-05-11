@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -33,7 +34,7 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 /**
  * Dashboard separator element
  */
-public class SeparatorElement extends ElementWidget
+public class SeparatorElement extends ElementWidget implements PaintListener
 {
 	private SeparatorConfig config;
 	private Color bkColor;
@@ -62,6 +63,8 @@ public class SeparatorElement extends ElementWidget
 		
 		setBackground(bkColor);
 		
+		addPaintListener(this);
+		
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -72,14 +75,12 @@ public class SeparatorElement extends ElementWidget
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.DashboardComposite#paintControl(org.eclipse.swt.events.PaintEvent)
+	/**
+	 * @see org.eclipse.swt.events.PaintListener#paintControl(PaintEvent)
 	 */
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		super.paintControl(e);
-		
 		if (config.getLineWidth() > 0)
 		{
 			e.gc.setForeground(fgColor);
@@ -92,7 +93,7 @@ public class SeparatorElement extends ElementWidget
 		}
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
 	 */
 	@Override

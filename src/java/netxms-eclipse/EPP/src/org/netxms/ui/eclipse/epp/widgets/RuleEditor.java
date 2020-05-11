@@ -78,7 +78,7 @@ import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.widgets.CGroup;
+import org.netxms.ui.eclipse.widgets.Card;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
@@ -101,8 +101,8 @@ public class RuleEditor extends Composite
    private Composite header;
    private Label headerLabel;
    private Composite mainArea;
-   private CGroup condition;
-   private CGroup action;
+   private Card condition;
+   private Card action;
    private Label expandButton;
    private Label editButton;
    private boolean modified = false;
@@ -173,11 +173,11 @@ public class RuleEditor extends Composite
 
       createPopupMenu(new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
 
-      condition = new CGroup(mainArea, Messages.get().RuleEditor_Filter) {
+      condition = new Card(mainArea, Messages.get().RuleEditor_Filter) {
          @Override
          protected Control createClientArea(Composite parent)
          {
-            setBorderColor(SharedColors.getColor(SharedColors.RULE_EDITOR_CONDITION_BORDER, getDisplay()));
+            setTitleBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_CONDITION_BORDER, getDisplay()));
             setTitleColor(SharedColors.getColor(SharedColors.RULE_EDITOR_TITLE_TEXT, getDisplay()));
             return createConditionControl(parent, RuleEditor.this.rule);
          }
@@ -194,11 +194,11 @@ public class RuleEditor extends Composite
             editRuleCondition));
       condition.setDoubleClickAction(editRuleCondition);
 
-      action = new CGroup(mainArea, Messages.get().RuleEditor_Action) {
+      action = new Card(mainArea, Messages.get().RuleEditor_Action) {
          @Override
          protected Control createClientArea(Composite parent)
          {
-            setBorderColor(SharedColors.getColor(SharedColors.RULE_EDITOR_ACTION_BORDER, getDisplay()));
+            setTitleBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_ACTION_BORDER, getDisplay()));
             setTitleColor(SharedColors.getColor(SharedColors.RULE_EDITOR_TITLE_TEXT, getDisplay()));
             return createActionControl(parent, RuleEditor.this.rule);
          }
@@ -250,7 +250,7 @@ public class RuleEditor extends Composite
    private void createMainArea()
    {
       mainArea = new Composite(this, SWT.NONE);
-      mainArea.setBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_BACKGROUND, getDisplay()));
+      mainArea.setBackground(SharedColors.getColor(SharedColors.DASHBOARD_BACKGROUND, getDisplay()));
 
       GridLayout layout = new GridLayout();
       layout.numColumns = verticalLayout ? 1 : 2;

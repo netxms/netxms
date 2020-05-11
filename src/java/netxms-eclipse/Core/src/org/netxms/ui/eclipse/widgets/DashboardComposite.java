@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,9 +58,9 @@ public class DashboardComposite extends Canvas implements PaintListener
 		setBackground(backgroundColor);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Scrollable#computeTrim(int, int, int, int)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Scrollable#computeTrim(int, int, int, int)
+    */
 	@Override
 	public Rectangle computeTrim(int x, int y, int width, int height)
 	{
@@ -75,9 +75,9 @@ public class DashboardComposite extends Canvas implements PaintListener
 		return trim;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Scrollable#getClientArea()
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Scrollable#getClientArea()
+    */
 	@Override
 	public Rectangle getClientArea()
 	{
@@ -92,37 +92,63 @@ public class DashboardComposite extends Canvas implements PaintListener
 		return area;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#getBorderWidth()
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Control#getBorderWidth()
+    */
 	@Override
 	public int getBorderWidth()
 	{
 		return hasBorder ? 2 : 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
+    */
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		if (hasBorder)
-		{
-			Point size = getSize();
-			Rectangle rect = new Rectangle(0, 0, size.x, size.y);
-			
-			rect.width--;
-			rect.height--;
-			e.gc.setForeground(borderOuterColor);
-			e.gc.drawRectangle(rect);
-			
-			rect.x++;
-			rect.y++;
-			rect.width -= 2;
-			rect.height -= 2;
-			e.gc.setForeground(borderInnerColor);
-			e.gc.drawRectangle(rect);
-		}
+      if (!hasBorder)
+         return;
+
+      Point size = getSize();
+      Rectangle rect = new Rectangle(0, 0, size.x, size.y);
+
+      rect.width--;
+      rect.height--;
+      e.gc.setForeground(borderOuterColor);
+      e.gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 2, 2);
+
+      rect.x++;
+      rect.y++;
+      rect.width -= 2;
+      rect.height -= 2;
+      e.gc.setForeground(borderInnerColor);
+      e.gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 2, 2);
 	}
+
+   /**
+    * Get full client area (including border)
+    * 
+    * @return full client area
+    */
+   protected Rectangle getFullClientArea()
+   {
+      return super.getClientArea();
+   }
+
+   /**
+    * @return the borderOuterColor
+    */
+   protected Color getBorderOuterColor()
+   {
+      return borderOuterColor;
+   }
+
+   /**
+    * @return the borderInnerColor
+    */
+   protected Color getBorderInnerColor()
+   {
+      return borderInnerColor;
+   }
 }

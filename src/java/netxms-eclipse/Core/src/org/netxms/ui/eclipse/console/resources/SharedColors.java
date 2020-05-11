@@ -35,8 +35,8 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 public class SharedColors
 {
 	public static final String BORDER = "Border";  //$NON-NLS-1$
-	public static final String CGROUP_BORDER = "CGroup.Border";  //$NON-NLS-1$
-	public static final String CGROUP_TITLE = "CGroup.Title";  //$NON-NLS-1$
+   public static final String CARD_TITLE_BACKGROUND = "Card.Title.Background"; //$NON-NLS-1$
+   public static final String CARD_TITLE_TEXT = "Card.Title.Text"; //$NON-NLS-1$
 	public static final String DASHBOARD_BACKGROUND = "Dashboard.Background";  //$NON-NLS-1$
 	public static final String ERROR_BACKGROUND = "ErrorBackground";  //$NON-NLS-1$
 	public static final String GEOMAP_TITLE = "GeoMap.Title";  //$NON-NLS-1$
@@ -85,9 +85,9 @@ public class SharedColors
 	static
 	{
 		defaultColors.put(BORDER, new RGB(153, 180, 209));
-		defaultColors.put(CGROUP_BORDER, new RGB(153, 180, 209));
-		defaultColors.put(CGROUP_TITLE, new RGB(0, 0, 0));
-		defaultColors.put(DASHBOARD_BACKGROUND, new RGB(240, 240, 240));
+		defaultColors.put(CARD_TITLE_BACKGROUND, new RGB(153, 180, 209));
+		defaultColors.put(CARD_TITLE_TEXT, new RGB(0, 0, 0));
+      defaultColors.put(DASHBOARD_BACKGROUND, new RGB(240, 240, 240));
 		defaultColors.put(ERROR_BACKGROUND, new RGB(255, 0, 0));
 		defaultColors.put(GEOMAP_TITLE, new RGB(0, 0, 0));
 		defaultColors.put(MAP_GROUP_BOX_TITLE, new RGB(255, 255, 255));
@@ -103,7 +103,7 @@ public class SharedColors
       defaultColors.put(RACK_BORDER, new RGB(92, 92, 92));
       defaultColors.put(RACK_EMPTY_SPACE, new RGB(224, 224, 224));
       defaultColors.put(RACK_TEXT, new RGB(0, 0, 0));
-		defaultColors.put(RULE_EDITOR_BACKGROUND, new RGB(255, 255, 255));
+      defaultColors.put(RULE_EDITOR_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(RULE_EDITOR_NORMAL_TITLE_BACKGROUND, new RGB(225, 233, 241));
 		defaultColors.put(RULE_EDITOR_DISABLED_TITLE_BACKGROUND, new RGB(202, 227, 206));
 		defaultColors.put(RULE_EDITOR_SELECTED_TITLE_BACKGROUND, new RGB(245, 249, 104));

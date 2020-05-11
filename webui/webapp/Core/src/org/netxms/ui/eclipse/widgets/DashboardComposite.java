@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,8 @@
  */
 package org.netxms.ui.eclipse.widgets;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -31,14 +28,12 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 /**
  * Composite with lightweight border (Windows 7 style)
  */
-public class DashboardComposite extends Canvas implements PaintListener
+public class DashboardComposite extends Canvas
 {
 	protected ColorCache colors;
 	
 	private Color borderOuterColor;
 	private Color borderInnerColor;
-	private Color backgroundColor;
-	private boolean hasBorder = true;
 	
 	/**
 	 * @param parent
@@ -47,82 +42,35 @@ public class DashboardComposite extends Canvas implements PaintListener
 	public DashboardComposite(Composite parent, int style)
 	{
 		super(parent, style);
-		
+		setData(RWT.CUSTOM_VARIANT, "DashboardComposite");
 		colors = new ColorCache(this);
 		borderOuterColor = colors.create(171, 173, 179);
 		borderInnerColor = colors.create(255, 255, 255);
-		backgroundColor = colors.create(255, 255, 255);
-		
-		hasBorder = ((style & SWT.BORDER) != 0);
-		addPaintListener(this);
-		setBackground(backgroundColor);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Scrollable#computeTrim(int, int, int, int)
-	 */
-	@Override
-	public Rectangle computeTrim(int x, int y, int width, int height)
-	{
-		Rectangle trim = super.computeTrim(x, y, width, height);
-		if (hasBorder)
-		{
-			trim.x -= 2;
-			trim.y -= 2;
-			trim.width += 4;
-			trim.height += 4;
-		}
-		return trim;
-	}
+   /**
+    * Get full client area (including border)
+    * 
+    * @return full client area
+    */
+   protected Rectangle getFullClientArea()
+   {
+      return super.getClientArea();
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Scrollable#getClientArea()
-	 */
-	@Override
-	public Rectangle getClientArea()
-	{
-		Rectangle area = super.getClientArea();
-		if (hasBorder)
-		{
-			area.x += 2;
-			area.y += 2;
-			area.width -= 4;
-			area.height -= 4;
-		}
-		return area;
-	}
+   /**
+    * @return the borderOuterColor
+    */
+   protected Color getBorderOuterColor()
+   {
+      return borderOuterColor;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#getBorderWidth()
-	 */
-	@Override
-	public int getBorderWidth()
-	{
-		return hasBorder ? 2 : 0;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
-	 */
-	@Override
-	public void paintControl(PaintEvent e)
-	{
-		if (hasBorder)
-		{
-			Point size = getSize();
-			Rectangle rect = new Rectangle(0, 0, size.x, size.y);
-			
-			rect.width--;
-			rect.height--;
-			e.gc.setForeground(borderOuterColor);
-			e.gc.drawRectangle(rect);
-			
-			rect.x++;
-			rect.y++;
-			rect.width -= 2;
-			rect.height -= 2;
-			e.gc.setForeground(borderInnerColor);
-			e.gc.drawRectangle(rect);
-		}
-	}
+   /**
+    * @return the borderInnerColor
+    */
+   protected Color getBorderInnerColor()
+   {
+      return borderInnerColor;
+   }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
@@ -33,31 +32,31 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
  * Instances of this class provide a custom-drawn border with an optional title bar and buttons.
  */
-public abstract class CGroup extends Canvas
+public abstract class Card extends DashboardComposite
 {
-	private static final int BORDER_WIDTH = 3;
+   private static final int HEADER_MARGIN_HEIGHT = 6;
+   private static final int HEADER_MARGIN_WIDTH = 8;
 	
 	private String text;
 	private Control clientArea;
 	private Font titleFont;
-	private Color borderColor;
+   private Color titleBackground = null;
 	private Color titleColor;
 	private Point headerSize;
 	private Action doubleClickAction = null;
@@ -67,24 +66,19 @@ public abstract class CGroup extends Canvas
 	 * @param parent
 	 * @param style
 	 */
-	public CGroup(Composite parent, String text)
+	public Card(Composite parent, String text)
 	{
-		super(parent, SWT.NONE);
+      super(parent, SWT.BORDER);
 		this.text = text;
-		
-		setBackground(getParent().getBackground());
-		
-		borderColor = SharedColors.getColor(SharedColors.CGROUP_BORDER, getDisplay());
-		titleColor = SharedColors.getColor(SharedColors.CGROUP_TITLE, getDisplay());
-		
-		FontData fd = JFaceResources.getDefaultFont().getFontData()[0];
-		fd.setStyle(SWT.BOLD);
-		titleFont = new Font(getDisplay(), fd);
+
+		titleColor = SharedColors.getColor(SharedColors.CARD_TITLE_TEXT, getDisplay());
+
+      titleFont = FontTools.createTitleFont();
 		setFont(titleFont);
-		
+
 		headerSize = WidgetHelper.getTextExtent(this, text);
-		headerSize.y += 5;
-		
+      headerSize.y += HEADER_MARGIN_HEIGHT * 2 + getBorderWidth();
+
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -94,15 +88,15 @@ public abstract class CGroup extends Canvas
       });
 		
       GridLayout layout = new GridLayout();
-      layout.marginWidth = BORDER_WIDTH;
-      layout.marginHeight = BORDER_WIDTH;
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
       layout.verticalSpacing = 3;
       layout.marginTop = headerSize.y + 2;
       layout.marginBottom = 2;
       setLayout(layout);
-		
-		clientArea = createClientAreaInternal();
-		
+
+      clientArea = createClientAreaInternal();
+
 		addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e)
@@ -136,7 +130,7 @@ public abstract class CGroup extends Canvas
          {
             layoutButtons();
          }
-		
+         
          @Override
          public void controlMoved(ControlEvent e)
          {
@@ -162,45 +156,39 @@ public abstract class CGroup extends Canvas
 	}
 	
 	/**
-	 * Paint border and other elements
-	 * @param gc graphics context
-	 */
+    * Paint header and footer
+    * 
+    * @param gc graphics context
+    */
 	private void doPaint(GC gc)
 	{
-      Rectangle rect = getClientArea();
-      rect.x += BORDER_WIDTH / 2;
-      rect.y += BORDER_WIDTH / 2;
-      rect.width -= BORDER_WIDTH;
-      rect.height -= BORDER_WIDTH;
-      
+      Rectangle rect = getFullClientArea();
 	   gc.setAntialias(SWT.ON);
+      gc.setForeground(getBorderOuterColor());
+      gc.drawLine(rect.x, headerSize.y, rect.x + rect.width, headerSize.y);
 
-	   gc.setAlpha(127);
-      gc.setBackground(borderColor);
-      gc.fillRoundRectangle(rect.x, rect.y, rect.width, headerSize.y, 4, 4);
-      gc.setAlpha(255);
-	   
-		gc.setForeground(borderColor);
-		gc.setLineWidth(BORDER_WIDTH);
-		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
-		gc.setLineWidth(1);
-		gc.drawLine(rect.x, headerSize.y, rect.x + rect.width, headerSize.y);
-		
+      if (titleBackground != null)
+      {
+         rect = getClientArea();
+         gc.setBackground(titleBackground);
+         gc.fillRectangle(rect.x, rect.y, rect.width, headerSize.y - getBorderWidth() - 1);
+      }
+
 		gc.setForeground(titleColor);
-		gc.drawText(text, 10, BORDER_WIDTH, SWT.DRAW_TRANSPARENT);
+      gc.drawText(text, HEADER_MARGIN_WIDTH, HEADER_MARGIN_HEIGHT + getBorderWidth(), SWT.DRAW_TRANSPARENT);
 	}
 
 	/**
-	 * Create client area for dashboard element.
-	 * 
-	 * @param parent parent composite
-	 * @return client area control
-	 */
+    * Create client area for card.
+    * 
+    * @param parent parent composite
+    * @return client area control
+    */
 	abstract protected Control createClientArea(Composite parent);
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#setFocus()
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#setFocus()
+    */
 	@Override
 	public boolean setFocus()
 	{
@@ -224,21 +212,23 @@ public abstract class CGroup extends Canvas
 	}
 
 	/**
-	 * @return the borderColor
-	 */
-	protected Color getBorderColor()
+    * @return title background color
+    */
+	protected Color getTitleBackground()
 	{
-		return borderColor;
+		return titleBackground;
 	}
 
 	/**
-	 * @param borderColor the borderColor to set
-	 */
-	protected void setBorderColor(Color borderColor)
+    * Set title background color
+    * 
+    * @param backgroundColor new title background color
+    */
+	protected void setTitleBackground(Color backgroundColor)
 	{
-		this.borderColor = borderColor;
+		this.titleBackground = backgroundColor;
 		for(DashboardElementButton b : buttons)
-			b.getControl().setBackground(borderColor);
+			b.getControl().setBackground(backgroundColor);
 	}
 
 	/**
@@ -250,8 +240,10 @@ public abstract class CGroup extends Canvas
 	}
 
 	/**
-	 * @param titleColor the titleColor to set
-	 */
+    * Set title text color
+    * 
+    * @param titleColor the titleColor to set
+    */
 	protected void setTitleColor(Color titleColor)
 	{
 		this.titleColor = titleColor;
@@ -265,7 +257,7 @@ public abstract class CGroup extends Canvas
 	public void addButton(final DashboardElementButton button)
 	{
 		final Label l = new Label(this, SWT.NONE);
-		l.setBackground(getBorderColor());
+		l.setBackground(getTitleBackground());
 		l.setImage(button.getImage());
 		l.setToolTipText(button.getName());
 		l.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -328,13 +320,13 @@ public abstract class CGroup extends Canvas
 	 */
 	private void layoutButtons()
 	{
-	   int pos = getSize().x - 12;
+      int pos = getSize().x - HEADER_MARGIN_WIDTH - getBorderWidth();
 	   for(int i = buttons.size() - 1; i >= 0; i--)
 	   {
 	      Control c = buttons.get(i).getControl();
 	      c.setSize(c.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 	      Point cs = c.getSize();
-	      c.setLocation(pos - cs.x, headerSize.y / 2 + BORDER_WIDTH - cs.y / 2 - 1);
+         c.setLocation(pos - cs.x, headerSize.y / 2 - cs.y / 2);
 	      pos -= cs.x + 4;
 	   }
 	}

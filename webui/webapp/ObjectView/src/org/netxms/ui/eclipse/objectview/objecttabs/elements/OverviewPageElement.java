@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
-import org.netxms.ui.eclipse.widgets.CGroup;
+import org.netxms.ui.eclipse.widgets.Card;
 
 /**
  * Abstract element of "Object Overview" tab
@@ -35,7 +35,7 @@ public abstract class OverviewPageElement
 {
 	private AbstractObject object = null;
 	private Composite parent;
-	private CGroup widget = null;
+	private Card widget = null;
 	private OverviewPageElement anchor;
 	private ObjectTab objectTab;
 	
@@ -67,7 +67,7 @@ public abstract class OverviewPageElement
 		this.object = object;
 		if ((widget == null) || widget.isDisposed())
 		{
-			widget = new CGroup(parent, getTitle()) {
+			widget = new Card(parent, getTitle()) {
 				@Override
 				protected Control createClientArea(Composite parent)
 				{
