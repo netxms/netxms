@@ -4665,6 +4665,7 @@ AC_CONFIG_FILES([
 	sql/Makefile
 	tests/Makefile
 	tests/include/Makefile
+	tests/suite/Makefile
 	tests/test-libnetxms/Makefile
 	tests/test-libnxcc/Makefile
 	tests/test-libnxdb/Makefile

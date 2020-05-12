@@ -264,6 +264,7 @@ target
 /src/tools/nxlptest/nxlptest
 /stamp-h1
 /status
+/tests/suite/netxms-test-suite
 /tests/test-libnetxms/test-libnetxms
 /tests/test-libnxcc/test-libnxcc
 /tests/test-libnxdb/test-libnxdb

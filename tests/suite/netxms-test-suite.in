@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# Run NetXMS test suite
+# Copyright (c) 2020 Raden Solutions
+#
+
+if [ "x$NETXMS_HOME" != "x" ]; then
+	BINDIR="$NETXMS_HOME/bin"
+	DATADIR="$NETXMS_HOME/share/netxms"
+	PKGLIBDIR="$NETXMS_HOME/lib/netxms"
+	SYSCONFDIR="$NETXMS_HOME/etc"
+else
+	BINDIR="~BINDIR~"
+	DATADIR="~DATADIR~"
+	PKGLIBDIR="~PKGLIBDIR~"
+	SYSCONFDIR="~SYSCONFDIR~"
+fi
+
+echo ""
+echo "********** test-libnetxms **********"
+$BINDIR/test-libnetxms || exit 1
+
+echo ""
+echo "********** test-libnxsnmp **********"
+$BINDIR/test-libnxsnmp || exit 1
+
+echo ""
+echo "********** test-libnxsl **********"
+$BINDIR/test-libnxsl || exit 1
+
+exit 0
