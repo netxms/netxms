@@ -8,15 +8,21 @@ if test "x$BUILD_PREFIX" = "x"; then
 fi
 
 if ps cax | grep [n]etxmsd; then
-    $BUILD_PREFIX/bin/nxadm -c down
+    if test -x $BUILD_PREFIX/bin/nxadm; then
+        $BUILD_PREFIX/bin/nxadm -c down
+    else
+        pid=`ps cax | grep [n]etxmsd | xargs | cut -d ' ' -f 1`
+        kill $pid
+    fi
 fi
 
-if ps cax | grep [n]xagentd && [ -f $BUILD_PREFIX/agent.pid ]; then
-    kill `cat $BUILD_PREFIX/agent.pid`
-else
-    if ps cax | grep [n]xagentd; then
-        pkill $command
+if ps cax | grep [n]xagentd; then
+    if [ -f $BUILD_PREFIX/agent.pid ]; then
+        pid=`cat $BUILD_PREFIX/agent.pid`
+    else
+        pid=`ps cax | grep [n]xagentd | xargs | cut -d ' ' -f 1`
     fi
+    kill $pid
 fi
 
 sleep 30
