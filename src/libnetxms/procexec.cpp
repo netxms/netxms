@@ -565,7 +565,7 @@ bool ProcessExecutor::waitForCompletion(UINT32 timeout)
 /**
  * Get process ID
  */
-pid_t ProcessExecutor::getProcessId()
+pid_t ProcessExecutor::getProcessId() const
 {
 #ifdef _WIN32
    return GetProcessId(m_phandle);

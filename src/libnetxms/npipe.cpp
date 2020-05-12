@@ -74,14 +74,3 @@ THREAD_RESULT THREAD_CALL NamedPipeListener::serverThreadStarter(void *arg)
    static_cast<NamedPipeListener*>(arg)->serverThread();
    return THREAD_OK;
 }
-
-/**
- * Named pipe constructor
- */
-NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user)
-{
-   _tcslcpy(m_name, name, MAX_PIPE_NAME_LEN);
-   m_handle = handle;
-   m_writeLock = MutexCreate();
-   _tcslcpy(m_user, CHECK_NULL_EX(user), 64);
-}
