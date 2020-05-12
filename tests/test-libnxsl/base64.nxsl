@@ -9,12 +9,18 @@ s1 = Base64Decode(e1);
 assert(s1 == "test string 1");
 
 e2 = Base64Encode("test string 2", "UCS-4");
-assert(e2 == "dAAAAGUAAABzAAAAdAAAACAAAABzAAAAdAAAAHIAAABpAAAAbgAAAGcAAAAgAAAAMgAAAA==");
+if (NXSL::SystemIsBigEndian)
+   assert(e2 == "AAAAdAAAAGUAAABzAAAAdAAAACAAAABzAAAAdAAAAHIAAABpAAAAbgAAAGcAAAAgAAAAMg==");
+else
+   assert(e2 == "dAAAAGUAAABzAAAAdAAAACAAAABzAAAAdAAAAHIAAABpAAAAbgAAAGcAAAAgAAAAMgAAAA==");
 s2 = Base64Decode(e2, "UCS-4");
 assert(s2 == "test string 2");
 
 e3 = Base64Encode("test string 3", "UCS-2");
-assert(e3 == "dABlAHMAdAAgAHMAdAByAGkAbgBnACAAMwA=");
+if (NXSL::SystemIsBigEndian)
+   assert(e3 == "AHQAZQBzAHQAIABzAHQAcgBpAG4AZwAgADM=");
+else
+   assert(e3 == "dABlAHMAdAAgAHMAdAByAGkAbgBnACAAMwA=");
 s3 = Base64Decode(e3, "UCS-2");
 assert(s3 == "test string 3");
 
