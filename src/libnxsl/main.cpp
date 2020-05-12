@@ -67,54 +67,19 @@ NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *e
 }
 
 /**
- * Load file into memory
+ * Load NXSL source file into memory
  */
-TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize)
+TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName)
 {
-   int fd, iBufPos, iNumBytes, iBytesRead;
-   char *pBuffer = NULL;
-   struct stat fs;
-
-   fd = _topen(pszFileName, O_RDONLY | O_BINARY);
-   if (fd != -1)
-   {
-      if (fstat(fd, &fs) != -1)
-      {
-         pBuffer = (char *)MemAlloc(fs.st_size + 1);
-         if (pBuffer != NULL)
-         {
-            *pdwFileSize = fs.st_size;
-            for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
-            {
-               iNumBytes = std::min(16384, (int)fs.st_size - iBufPos);
-               if ((iBytesRead = _read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
-               {
-                  free(pBuffer);
-                  pBuffer = NULL;
-                  break;
-               }
-            }
-				if (pBuffer != NULL)
-				{
-					for(iBufPos = 0; iBufPos < fs.st_size; iBufPos++)
-						if (pBuffer[iBufPos] == 0)
-							pBuffer[iBufPos] = ' ';
-					pBuffer[fs.st_size] = 0;
-				}
-         }
-      }
-      _close(fd);
-   }
-
+   char *content = LoadFileAsUTF8String(fileName);
+   if (content == nullptr)
+      return nullptr;
 #ifdef UNICODE
-	if (pBuffer == NULL)
-		return NULL;
-
-	WCHAR *ucBuffer = WideStringFromUTF8String(pBuffer);
-	MemFree(pBuffer);
-	return ucBuffer;
+	WCHAR *wContent = WideStringFromUTF8String(content);
+	MemFree(content);
+	return wContent;
 #else
-   return pBuffer;
+   return content;
 #endif
 }
 

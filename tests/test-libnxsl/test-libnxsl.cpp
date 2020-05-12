@@ -53,8 +53,7 @@ static void RunTestScript(const TCHAR *name)
    _tcslcat(path, FS_PATH_SEPARATOR _T("nxsltest") FS_PATH_SEPARATOR, MAX_PATH);
    _tcslcat(path, name, MAX_PATH);
 
-   UINT32 size;
-   TCHAR *source = NXSLLoadFile(path, &size);
+   TCHAR *source = NXSLLoadFile(path);
    AssertNotNull(source);
 
    NXSL_Environment *env = new NXSL_Environment();
@@ -80,6 +79,10 @@ static void RunTestScript(const TCHAR *name)
 int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
+
+#ifndef UNICODE
+   SetDefaultCodepage("CP1251"); // Some tests contain cyrillic symbols
+#endif
 
    TestCompiler();
    RunTestScript(_T("arrays.nxsl"));

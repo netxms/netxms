@@ -298,15 +298,12 @@ void NXSL_Environment::registerSelectorSet(size_t count, const NXSL_ExtSelector 
  */
 bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importInfo)
 {
-   TCHAR *pData, szBuffer[MAX_PATH];
-   UINT32 dwSize;
-   NXSL_Program *pScript;
    bool bRet = false;
 
    // First, try to find module in library
    if (m_library != nullptr)
    {
-      pScript = m_library->findNxslProgram(importInfo->name);
+      NXSL_Program *pScript = m_library->findNxslProgram(importInfo->name);
       if (pScript != nullptr)
       {
          vm->loadModule(pScript, importInfo);
@@ -317,18 +314,19 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
    // If failed, try to load it from file
    if (!bRet)
    {
-      _sntprintf(szBuffer, MAX_PATH, _T("%s.nxsl"), importInfo->name);
-      pData = NXSLLoadFile(szBuffer, &dwSize);
-      if (pData != NULL)
+      TCHAR fileName[MAX_PATH];
+      _sntprintf(fileName, MAX_PATH, _T("%s.nxsl"), importInfo->name);
+      TCHAR *source = NXSLLoadFile(fileName);
+      if (source != nullptr)
       {
-         pScript = NXSLCompile(pData, NULL, 0, NULL);
-         if (pScript != NULL)
+         NXSL_Program *pScript = NXSLCompile(source, nullptr, 0, nullptr);
+         if (pScript != nullptr)
          {
             vm->loadModule(pScript, importInfo);
             delete pScript;
             bRet = true;
          }
-         MemFree(pData);
+         MemFree(source);
       }
    }
 

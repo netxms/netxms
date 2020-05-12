@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 #else
       ByteStream *s = ByteStream::load(argv[optind]);
 #endif
-      if (s == NULL)
+      if (s == nullptr)
       {
 		   _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
          return 1;
@@ -157,12 +157,12 @@ int main(int argc, char *argv[])
    {
 #ifdef UNICODE
 	   WCHAR *ucName = WideStringFromMBString(argv[optind]);
-      pszSource = NXSLLoadFile(ucName, &dwSize);
-	   free(ucName);
+      pszSource = NXSLLoadFile(ucName);
+	   MemFree(ucName);
 #else
-      pszSource = NXSLLoadFile(argv[optind], &dwSize);
+      pszSource = NXSLLoadFile(argv[optind]);
 #endif
-	   if (pszSource == NULL)
+	   if (pszSource == nullptr)
 	   {
 		   _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
          return 1;

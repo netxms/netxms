@@ -79,7 +79,7 @@ void NXSL_Compiler::error(const char *pszMsg)
 #ifdef UNICODE
 		m_errorText = WideStringFromMBString(szText);
 #else
-      m_errorText = strdup(szText);
+      m_errorText = MemCopyStringA(szText);
 #endif
    }
 }

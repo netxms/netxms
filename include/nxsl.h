@@ -135,7 +135,7 @@ extern "C" {
 
 NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, int *errorLineNumber);
 NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, NXSL_Environment *env);
-TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName, UINT32 *fileSize);
+TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName);
 
 #ifdef __cplusplus
 }

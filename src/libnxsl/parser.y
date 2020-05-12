@@ -1268,7 +1268,13 @@ StorageItem:
 Constant:
 	T_STRING
 {
+#ifdef UNICODE
 	$$ = pScript->createValue($1);
+#else
+	char *mbString = MBStringFromUTF8String($1);
+	$$ = pScript->createValue(mbString);
+	MemFree(mbString);
+#endif
 	MemFreeAndNull($1);
 }
 |	T_INT32

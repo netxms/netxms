@@ -32,7 +32,7 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
 #ifdef UNICODE
 	m_pszSourceCode = UTF8StringFromWideString(pszCode);
 #else
-   m_pszSourceCode = strdup(pszCode);
+   m_pszSourceCode = MemCopyStringA(pszCode);
 #endif
    m_nSourceSize = (int)strlen(m_pszSourceCode);
    m_nCurrLine = 1;
