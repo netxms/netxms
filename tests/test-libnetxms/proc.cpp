@@ -95,10 +95,10 @@ void TestSubProcess(const char *procname)
    EndTest();
 
    StartTest(_T("Sub-process executor - execute request"));
-   void *response = NULL;
+   void *response = nullptr;
    size_t responseLen = 0;
    AssertTrue(e.sendRequest(SPC_USER, "ECHO", 4, &response, &responseLen, 5000));
-   free(response);
+   MemFree(response);
    EndTest();
 
    StartTest(_T("Sub-process executor - request timeout"));
@@ -107,6 +107,7 @@ void TestSubProcess(const char *procname)
 
    StartTest(_T("Sub-process executor - background restart"));
 #ifdef _WIN32
+   TerminateProcess(e.getProcessHandle(), 127);
 #else
    kill(e.getProcessId(), SIGKILL);
 #endif
