@@ -36,7 +36,6 @@ int g_traceLevel = 0;
 int main(int argc, char *argv[])
 {
    TCHAR *pszSource, szError[1024];
-   UINT32 dwSize;
    NXSL_Program *pScript;
    NXSL_Value **ppArgs;
    int i, ch;
@@ -99,16 +98,16 @@ int main(int argc, char *argv[])
 
 #ifdef UNICODE
 	WCHAR *ucName = WideStringFromMBString(argv[optind]);
-   pszSource = NXSLLoadFile(ucName, &dwSize);
-	free(ucName);
+   pszSource = NXSLLoadFile(ucName);
+	MemFree(ucName);
 #else
-   pszSource = NXSLLoadFile(argv[optind], &dwSize);
+   pszSource = NXSLLoadFile(argv[optind]);
 #endif
-	if (pszSource != NULL)
+	if (pszSource != nullptr)
 	{
-		pScript = NXSLCompile(pszSource, szError, 1024, NULL);
-		free(pszSource);
-		if (pScript != NULL)
+		pScript = NXSLCompile(pszSource, szError, 1024, nullptr);
+		MemFree(pszSource);
+		if (pScript != nullptr)
 		{
 			if (dump)
 				pScript->dump(stdout);
@@ -125,14 +124,14 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				ppArgs = NULL;
+				ppArgs = nullptr;
 			}
 
 			if (vm->load(pScript) && vm->run(argc - optind - 1, ppArgs))
 			{
 				NXSL_Value *result = vm->getResult();
 				if (printResult)
-					_tprintf(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
+					_tprintf(_T("Result = %s\n"), (result != nullptr) ? result->getValueAsCString() : _T("(null)"));
 			}
 			else
 			{
@@ -149,7 +148,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		printf("Error: cannot load input file \"%s\"\n", argv[optind]);
+		_tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
 		return 1;
 	}
    return 0;
