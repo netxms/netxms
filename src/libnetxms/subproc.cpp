@@ -172,7 +172,7 @@ void SubProcessExecutor::shutdown()
    m_monitorThread = INVALID_THREAD_HANDLE;
 
    MutexLock(m_registryLock);
-   if (m_registry != NULL)
+   if (m_registry != nullptr)
    {
       for(int i = 0; i < m_registry->size(); i++)
       {
@@ -239,7 +239,7 @@ bool SubProcessExecutor::execute()
    do
    {
       m_pipe = NamedPipe::connect(pipeName, 5000);
-      if (m_pipe == NULL)
+      if (m_pipe == nullptr)
       {
          if (--retryCount > 0)
          {
@@ -252,7 +252,7 @@ bool SubProcessExecutor::execute()
             return false;
          }
       }
-   } while(m_pipe == NULL);
+   } while(m_pipe == nullptr);
 
    m_state = SP_RUNNING;
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Sub-process %s (%u) started and connected"), m_name, getProcessId());
@@ -307,21 +307,21 @@ void SubProcessExecutor::receiverThread()
  */
 bool SubProcessExecutor::sendCommand(UINT16 command, const void *data, size_t dataSize, UINT32 *requestId)
 {
-   if (m_pipe == NULL)
+   if (m_pipe == nullptr)
       return false;
 
-   UINT32 rid = InterlockedIncrement(&m_requestId);
+   uint32_t rid = InterlockedIncrement(&m_requestId);
 
    NXCP_MESSAGE msg;
    msg.code = htons(command);
    msg.id = htonl(rid);
    msg.flags = htons((data != NULL) ? MF_BINARY : MF_CONTROL);
    msg.numFields = htonl((UINT32)dataSize);
-   UINT32 padding = (8 - (dataSize % 8)) & 7;
-   msg.size = htonl(NXCP_HEADER_SIZE + static_cast<UINT32>(dataSize) + padding);
+   uint32_t padding = (8 - (dataSize % 8)) & 7;
+   msg.size = htonl(NXCP_HEADER_SIZE + static_cast<uint32_t>(dataSize) + padding);
    if (!m_pipe->write(&msg, NXCP_HEADER_SIZE))
       return false;
-   if (data != NULL)
+   if (data != nullptr)
    {
       if (!m_pipe->write(data, dataSize))
          return false;
@@ -333,7 +333,7 @@ bool SubProcessExecutor::sendCommand(UINT16 command, const void *data, size_t da
       }
    }
 
-   if (requestId != NULL)
+   if (requestId != nullptr)
       *requestId = rid;
 
    return true;
@@ -349,10 +349,10 @@ bool SubProcessExecutor::sendRequest(UINT16 command, const void *data, size_t da
       return false;
 
    NXCPMessage *rmsg = m_messageQueue->waitForMessage(SPC_REQUEST_COMPLETED, requestId, timeout);
-   if (rmsg == NULL)
+   if (rmsg == nullptr)
       return false;
 
-   if ((response != NULL) && (rspSize != NULL))
+   if ((response != nullptr) && (rspSize != nullptr))
    {
       if (rmsg->isBinary())
       {
@@ -361,7 +361,7 @@ bool SubProcessExecutor::sendRequest(UINT16 command, const void *data, size_t da
       }
       else
       {
-         *response = NULL;
+         *response = nullptr;
          *rspSize = 0;
       }
    }

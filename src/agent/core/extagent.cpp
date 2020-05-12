@@ -67,7 +67,7 @@ void ExternalSubagent::startListener()
    _sntprintf(name, MAX_PIPE_NAME_LEN, _T("nxagentd.subagent.%s"), m_name);
    m_listener = NamedPipeListener::create(name, RequestHandler, this,
             (m_user[0] != 0) && _tcscmp(m_user, _T("*")) ? m_user : NULL);
-   if (m_listener != NULL)
+   if (m_listener != nullptr)
       m_listener->start();
 }
 
@@ -88,8 +88,8 @@ bool ExternalSubagent::sendMessage(const NXCPMessage *msg)
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
 
 	NXCP_MESSAGE *rawMsg = msg->serialize();
-	bool success = (m_pipe != NULL) ? m_pipe->write(rawMsg, ntohl(rawMsg->size)) : false;
-	free(rawMsg);
+	bool success = (m_pipe != nullptr) ? m_pipe->write(rawMsg, ntohl(rawMsg->size)) : false;
+	MemFree(rawMsg);
 	return success;
 }
 

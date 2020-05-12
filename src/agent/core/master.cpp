@@ -114,7 +114,7 @@ void ExecuteAction(const TCHAR *cmd, const StringList *args)
 /**
  * Pipe to master agent
  */
-static NamedPipe *s_pipe = NULL;
+static NamedPipe *s_pipe = nullptr;
 
 /**
  * Listener thread for master agent commands
@@ -127,7 +127,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
       _sntprintf(pipeName, MAX_PIPE_NAME_LEN, _T("nxagentd.subagent.%s"), g_masterAgent);
       s_pipe = NamedPipe::connect(pipeName, 5000);
 
-      if (s_pipe != NULL)
+      if (s_pipe != nullptr)
       {
 			AgentWriteDebugLog(1, _T("Connected to master agent"));
 
@@ -136,7 +136,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 			{
             MessageReceiverResult result;
 				NXCPMessage *msg = receiver.readMessage(5000, &result);
-				if (msg == NULL)
+				if (msg == nullptr)
             {
 				   if (result == MSGRECV_TIMEOUT)
 				      continue;
@@ -207,7 +207,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 				// Send response to pipe
 				NXCP_MESSAGE *rawMsg = response.serialize();
             bool sendSuccess = s_pipe->write(rawMsg, ntohl(rawMsg->size));
-            free(rawMsg);
+            MemFree(rawMsg);
             if (!sendSuccess)
                break;
 			}
@@ -231,7 +231,7 @@ bool SendMessageToMasterAgent(NXCPMessage *msg)
 {
    NXCP_MESSAGE *rawMsg = msg->serialize();
    bool success = SendRawMessageToMasterAgent(rawMsg);
-   free(rawMsg);
+   MemFree(rawMsg);
    return success;
 }
 
@@ -240,7 +240,7 @@ bool SendMessageToMasterAgent(NXCPMessage *msg)
  */
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg)
 {
-   if (s_pipe == NULL)
+   if (s_pipe == nullptr)
       return false;
    return s_pipe->write(msg, ntohl(msg->size));
 }
