@@ -188,10 +188,23 @@ void NamedPipeListener::serverThread()
 }
 
 /**
+ * Named pipe constructor
+ */
+NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user)
+{
+   _tcslcpy(m_name, name, MAX_PIPE_NAME_LEN);
+   m_handle = handle;
+   m_writeLock = MutexCreate();
+   _tcslcpy(m_user, CHECK_NULL_EX(user), 64);
+   m_writeEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+}
+
+/**
  * Pipe destructor
  */
 NamedPipe::~NamedPipe()
 {
+   CancelIo(m_handle);  // Cancel any pending I/O operations
    DWORD flags = 0;
    GetNamedPipeInfo(m_handle, &flags, NULL, NULL, NULL);
    if (flags & PIPE_SERVER_END)
@@ -199,6 +212,7 @@ NamedPipe::~NamedPipe()
    else
       CloseHandle(m_handle);
    MutexDestroy(m_writeLock);
+   CloseHandle(m_writeEvent);
 }
 
 /**
@@ -210,7 +224,7 @@ NamedPipe *NamedPipe::connect(const TCHAR *name, UINT32 timeout)
    _sntprintf(path, MAX_PATH, _T("\\\\.\\pipe\\%s"), name);
 
 reconnect:
-   HANDLE h = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+   HANDLE h = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
 	if (h == INVALID_HANDLE_VALUE)
 	{
 		if (GetLastError() == ERROR_PIPE_BUSY)
@@ -218,11 +232,11 @@ reconnect:
 			if (WaitNamedPipe(path, timeout))
 				goto reconnect;
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	DWORD pipeMode = PIPE_READMODE_MESSAGE;
-	SetNamedPipeHandleState(h, &pipeMode, NULL, NULL);
+	SetNamedPipeHandleState(h, &pipeMode, nullptr, nullptr);
    return new NamedPipe(name, h, false);
 }
 
@@ -231,10 +245,23 @@ reconnect:
  */
 bool NamedPipe::write(const void *data, size_t size)
 {
-	DWORD bytes;
-	if (!WriteFile(m_handle, data, (DWORD)size, &bytes, NULL))
-		return false;
-   return bytes == (DWORD)size;
+   MutexLock(m_writeLock);
+   OVERLAPPED ov;
+   memset(&ov, 0, sizeof(OVERLAPPED));
+   ov.hEvent = m_writeEvent;
+   ResetEvent(m_writeEvent);
+   BOOL success = WriteFile(m_handle, data, (DWORD)size, nullptr, &ov);
+   if (!success && (GetLastError() == ERROR_IO_PENDING))
+      success = (WaitForSingleObject(m_writeEvent, 10000) == WAIT_OBJECT_0);
+   if (success)
+   {
+      DWORD bytes;
+      success = GetOverlappedResult(m_handle, &ov, &bytes, FALSE);
+      if (bytes != static_cast<DWORD>(size))
+         success = FALSE;
+   }
+   MutexUnlock(m_writeLock);
+   return success ? true : false;
 }
 
 /**

@@ -27,6 +27,9 @@ private:
    HPIPE m_handle;
    MUTEX m_writeLock;
    TCHAR m_user[64];
+#ifdef _WIN32
+   HANDLE m_writeEvent;
+#endif
 
    NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user);
 
@@ -123,7 +126,10 @@ public:
 
    UINT32 getStreamId() const { return m_streamId; }
    const TCHAR *getCommand() const { return m_cmd; }
-   pid_t getProcessId();
+   pid_t getProcessId() const;
+#ifdef _WIN32
+   HANDLE getProcessHandle() const { return m_phandle; }
+#endif
 
    virtual bool execute();
    virtual void stop();
