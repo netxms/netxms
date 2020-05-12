@@ -43,7 +43,7 @@ void TestGauge64()
    AssertEquals(2, gauge3.getMax());
    AssertEquals(1, gauge3.getMin());
    AssertEquals(sample3[SAMPLE3_LEN - 1], gauge3.getCurrent());
-   AssertEquals(154150, (uint64_t)(gauge3.getAverage()*100000));
+   AssertEquals(154150, static_cast<uint64_t>(gauge3.getAverage() * 100000));
 
    EndTest();
 }
