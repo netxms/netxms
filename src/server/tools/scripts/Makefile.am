@@ -9,11 +9,12 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_SCRIPTS = netxmsd-asan nx-collect-server-diag nx-run-asan-binary nxdbmgr-asan
-EXTRA_DIST = netxmsd-asan.in nx-collect-server-diag.in \
+pkgdata_DATA = lsan-suppressions.txt
+EXTRA_DIST = lsan-suppressions.txt netxmsd-asan.in nx-collect-server-diag.in \
 	     nx-collect-server-diag.cmd nx-run-asan-binary.in \
 	     nxdbmgr-asan.in zip.ps1
 
-REPLACE_CMD = sed -e "s,~BINDIR~,@NETXMS_BINDIR@,g" -e "s,~PKGLIBDIR~,@NETXMS_PKGLIBDIR@,g" -e "s,~SYSCONFDIR~,@NETXMS_SYSCONFDIR@,g" < $@.in > $@
+REPLACE_CMD = sed -e "s,~BINDIR~,@NETXMS_BINDIR@,g" -e "s,~DATADIR~,@NETXMS_DATADIR@,g" -e "s,~PKGLIBDIR~,@NETXMS_PKGLIBDIR@,g" -e "s,~SYSCONFDIR~,@NETXMS_SYSCONFDIR@,g" < $@.in > $@
 
 netxmsd-asan: netxmsd-asan.in
 	$(REPLACE_CMD)
