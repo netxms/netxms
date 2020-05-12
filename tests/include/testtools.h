@@ -10,7 +10,16 @@
 
 inline void ExitTestProcess()
 {
-   if (ptrace(PT_TRACE_ME, 0, NULL, 0) == -1)
+#ifdef _AIX
+#ifdef __64BIT__
+   int rc = ptrace64(PT_TRACE_ME, 0, 0, 0, nullptr);
+#else
+   int rc = ptrace(PT_TRACE_ME, 0, nullptr, 0, nullptr);
+#endif
+#else
+   int rc = ptrace(PT_TRACE_ME, 0, nullptr, 0);
+#endif
+   if (rc == -1)
       abort();
    else
       exit(1);

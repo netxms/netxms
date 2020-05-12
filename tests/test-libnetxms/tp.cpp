@@ -46,7 +46,9 @@ void TestThreadPool()
    AssertTrue(info.averageWaitTime > 0);
    EndTest();
 
+   StartTest(_T("Thread pool - destroy"));
    ThreadPoolDestroy(p);
+   EndTest();
 }
 
 static Mutex s_waitTimeTestLock1;
