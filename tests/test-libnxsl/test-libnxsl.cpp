@@ -3,6 +3,8 @@
 #include <nxsl.h>
 #include <testtools.h>
 
+static TCHAR *s_testScriptDirectory = nullptr;
+
 static const TCHAR *s_prog1 = _T("a = 1;\nb = 2;\nreturn a + b;");
 static const TCHAR *s_prog2 = _T("a = 1;\nb = {;\nreturn a + b;");
 
@@ -49,8 +51,17 @@ static void RunTestScript(const TCHAR *name)
    StartTest(name);
 
    TCHAR path[MAX_PATH];
-   GetNetXMSDirectory(nxDirShare, path);
-   _tcslcat(path, FS_PATH_SEPARATOR _T("nxsltest") FS_PATH_SEPARATOR, MAX_PATH);
+   if (s_testScriptDirectory != nullptr)
+   {
+      _tcslcpy(path, s_testScriptDirectory, MAX_PATH);
+      if (path[_tcslen(path) - 1] != FS_PATH_SEPARATOR_CHAR)
+         _tcslcat(path, FS_PATH_SEPARATOR, MAX_PATH);
+   }
+   else
+   {
+      GetNetXMSDirectory(nxDirShare, path);
+      _tcslcat(path, FS_PATH_SEPARATOR _T("nxsltest") FS_PATH_SEPARATOR, MAX_PATH);
+   }
    _tcslcat(path, name, MAX_PATH);
 
    TCHAR *source = NXSLLoadFile(path);
@@ -84,6 +95,15 @@ int main(int argc, char *argv[])
    SetDefaultCodepage("CP1251"); // Some tests contain cyrillic symbols
 #endif
 
+   if (argc > 1)
+   {
+#ifdef UNICODE
+      s_testScriptDirectory = WideStringFromMBStringSysLocale(argv[1]);
+#else
+      s_testScriptDirectory = argv[1];
+#endif
+   }
+
    TestCompiler();
    RunTestScript(_T("arrays.nxsl"));
    RunTestScript(_T("base64.nxsl"));
@@ -96,5 +116,10 @@ int main(int argc, char *argv[])
    RunTestScript(_T("try-catch.nxsl"));
    RunTestScript(_T("types.nxsl"));
    RunTestScript(_T("with.nxsl"));
+
+#ifdef UNICODE
+   MemFree(s_testScriptDirectory);
+#endif
+
    return 0;
 }
