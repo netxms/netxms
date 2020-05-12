@@ -1350,60 +1350,45 @@ retry:
  * @param data data buffer
  * @param len buffer length in bytes
  * @param flags flags to be passed to recv() call
- * @param timeout waiting timeout in milliseconds
+ * @param timeout waiting timeout in milliseconds or INFINITE
  * @return number of bytes read on success, 0 if socket was closed, -1 on error, -2 on timeout
  */
 ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket)
 {
-	if (hSocket == INVALID_SOCKET)
-		return -1;
+   if (hSocket == INVALID_SOCKET)
+      return -1;
 
-	int rc;
-   if (timeout != INFINITE)
+   SocketPoller sp;
+   sp.add(hSocket);
+   sp.add(controlSocket);
+   int rc = sp.poll(timeout);
+   if (rc > 0)
    {
-      SocketPoller sp;
-      sp.add(hSocket);
-      sp.add(controlSocket);
-      rc = sp.poll(timeout);
-      if (rc > 0)
+      if ((controlSocket != INVALID_SOCKET) && sp.isSet(controlSocket))
       {
-         if ((controlSocket != INVALID_SOCKET) && sp.isSet(controlSocket))
-         {
-            char data;
+         char data;
 #ifdef _WIN32
-            recv(controlSocket, &data, 1, 0);
+         recv(controlSocket, &data, 1, 0);
 #else
-            _read(controlSocket, &data, 1);
+         _read(controlSocket, &data, 1);
 #endif
-            rc = 0;  // Cancel signal
-         }
-         else
-         {
-#ifdef _WIN32
-            rc = recv(hSocket, (char *)data, (int)len, flags);
-#else
-            do
-            {
-               rc = recv(hSocket, (char *)data, len, flags);
-            } while((rc == -1) && (errno == EINTR));
-#endif
-         }
+         rc = 0;  // Cancel signal
       }
       else
       {
-         rc = -2;
+#ifdef _WIN32
+         rc = recv(hSocket, (char *)data, (int)len, flags);
+#else
+         do
+         {
+            rc = recv(hSocket, (char *)data, len, flags);
+         } while((rc == -1) && (errno == EINTR));
+#endif
       }
    }
    else
    {
-#ifdef _WIN32
-      rc = recv(hSocket, (char *)data, (int)len, flags);
-#else
-      do
-      {
-         rc = recv(hSocket, (char *)data, (int)len, flags);
-      } while((rc == -1) && (errno == EINTR));
-#endif
+      rc = -2;
    }
    return rc;
 }
