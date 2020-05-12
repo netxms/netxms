@@ -255,7 +255,7 @@ bool SubProcessExecutor::execute()
    } while(m_pipe == NULL);
 
    m_state = SP_RUNNING;
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Sub-process %s started and connected"), m_name);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Sub-process %s (%u) started and connected"), m_name, getProcessId());
 
    m_receiverThread = ThreadCreateEx(SubProcessExecutor::receiverThreadStarter, 0, this);
    return true;
@@ -295,7 +295,7 @@ void SubProcessExecutor::receiverThread()
       else if (result == MSGRECV_CLOSED)
       {
          m_state = SP_COMM_FAILURE;
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Communication channel with sub-process %s closed"), m_name);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Communication channel with sub-process %s (%u) closed"), m_name, getProcessId());
          break;
       }
    }
