@@ -27,8 +27,7 @@ BINARY="$BINDIR/$1"
 LIBASAN=`ldd $BINARY | grep libasan | cut -d '>' -f 2 | cut -d '(' -f 1 | xargs`
 if [ "x$LIBASAN" == "x" ]; then
 	echo "*** $BINARY was built without address sanitizer support"
-	$BINARY "$@"
-	exit $?
+	exit 1
 fi
 LD_PRELOAD="$LIBASAN"
 
