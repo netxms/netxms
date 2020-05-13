@@ -7,17 +7,15 @@ if test "x$BUILD_PREFIX" = "x"; then
 	exit 1
 fi
 
-if test "$DISABLE_ASAN" = "0"; then
-   $BUILD_PREFIX/bin/nxdbmgr-asan -f unlock
-   $BUILD_PREFIX/bin/nxdbmgr-asan upgrade
-   $BUILD_PREFIX/bin/netxmsd-asan -d -D6
-   $BUILD_PREFIX/bin/nxagentd -d -D6 -p $BUILD_PREFIX/agent.pid
+if test "x$DISABLE_ASAN" = "x0" -a "x$DISABLE_ASAN_ON_NODE" = "x0"; then
+	SUFFIX="-asan"
 else
-   $BUILD_PREFIX/bin/nxdbmgr -f unlock
-   $BUILD_PREFIX/bin/nxdbmgr upgrade
-   $BUILD_PREFIX/bin/netxmsd -d -D6
-   $BUILD_PREFIX/bin/nxagentd -d -D6 -p $BUILD_PREFIX/agent.pid
+	SUFFIX=""
 fi
+$BUILD_PREFIX/bin/nxdbmgr$SUFFIX -f unlock
+$BUILD_PREFIX/bin/nxdbmgr$SUFFIX upgrade
+$BUILD_PREFIX/bin/netxmsd$SUFFIX -d -D6
+$BUILD_PREFIX/bin/nxagentd -d -D6 -p $BUILD_PREFIX/agent.pid
 
 #Wait process to start
 sleep 60
