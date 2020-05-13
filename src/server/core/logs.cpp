@@ -62,9 +62,9 @@ static NXCORE_LOG s_logs[] =
          { _T("session_id"), _T("Session"), LC_INTEGER },
 			{ _T("workstation"), _T("Workstation"), LC_TEXT },
 			{ _T("message"), _T("Message"), LC_TEXT },
-         { _T("old_value"), _T("Old value"), LC_TEXT },
-         { _T("new_value"), _T("New value"), LC_TEXT },
-         { _T("value_diff"), _T("Changes"), LC_TEXT },
+         { _T("old_value"), _T("Old value"), LC_TEXT_DETAILS },
+         { _T("new_value"), _T("New value"), LC_TEXT_DETAILS },
+         { _T("value_diff"), _T("Changes"), LC_TEXT_DETAILS },
 			{ NULL, NULL, 0 }
 		}
 	},
@@ -82,7 +82,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("event_message"), _T("Message"), LC_TEXT },
 			{ _T("event_tags"), _T("Event tags"), LC_TEXT },
          { _T("root_event_id"), _T("Root ID"), LC_INTEGER },
-         { _T("raw_data"), _T("Raw data"), LC_TEXT },
+         { _T("raw_data"), _T("Raw data"), LC_JSON_DETAILS },
 			{ NULL, NULL, 0 }
 		}
 	},

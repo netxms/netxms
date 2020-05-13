@@ -24,6 +24,14 @@
 #include <nxcore_logs.h>
 
 /**
+ * Check if given column type should be ignored in query
+ */
+static inline bool IsIgnoredColumn(int type)
+{
+   return (type == LC_TEXT_DETAILS) || (type == LC_JSON_DETAILS) || (!IsZoningEnabled() && (type == LC_ZONE_UIN));
+}
+
+/**
  * Constructor
  */
 LogHandle::LogHandle(NXCORE_LOG *info) : RefCountObject()
@@ -55,7 +63,7 @@ void LogHandle::getColumnInfo(NXCPMessage &msg)
 	UINT32 varId = VID_COLUMN_INFO_BASE;
 	for(int i = 0; m_log->columns[i].name != NULL; i++)
 	{
-	   if (!IsZoningEnabled() && (m_log->columns[i].type == LC_ZONE_UIN))
+	   if (IsIgnoredColumn(m_log->columns[i].type))
 	      continue;   // ignore zone columns if zoning is disabled
 		msg.setField(varId++, m_log->columns[i].name);
 		msg.setField(varId++, (WORD)m_log->columns[i].type);
@@ -88,10 +96,10 @@ void LogHandle::buildQueryColumnList()
 	bool first = true;
 	while(column->name != nullptr)
 	{
-	   if (!IsZoningEnabled() && (column->type == LC_ZONE_UIN))
+	   if (IsIgnoredColumn(column->type))
 	   {
 	      column++;
-	      continue;   // ignore zone columns if zoning is disabled
+	      continue;
 	   }
 
 		if (!first)
@@ -312,13 +320,8 @@ Table *LogHandle::createTable()
 	LOG_COLUMN *column = m_log->columns;
 	while(column->name != NULL)
 	{
-      if (!IsZoningEnabled() && (column->type == LC_ZONE_UIN))
-      {
-         column++;
-         continue;   // ignore zone columns if zoning is disabled
-      }
-
-		table->addColumn(column->name);
+      if (!IsIgnoredColumn(column->type))
+         table->addColumn(column->name);
 		column++;
 	}
 

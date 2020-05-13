@@ -39,6 +39,8 @@
 #define LC_ALARM_HD_STATE  8
 #define LC_ZONE_UIN        9
 #define LC_EVENT_ORIGIN    10
+#define LC_TEXT_DETAILS    11
+#define LC_JSON_DETAILS    12
 
 /**
  * Column filter types
@@ -76,7 +78,7 @@ struct NXCORE_LOG
 	const TCHAR *table;
 	const TCHAR *idColumn;
 	const TCHAR *relatedObjectIdColumn;
-	UINT32 requiredAccess;
+	uint64_t requiredAccess;
 	LOG_COLUMN columns[32];
 };
 
