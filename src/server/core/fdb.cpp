@@ -25,7 +25,7 @@
 /**
  * Constructor
  */
-ForwardingDatabase::ForwardingDatabase(UINT32 nodeId)
+ForwardingDatabase::ForwardingDatabase(uint32_t nodeId)
 {
    m_nodeId = nodeId;
 	m_fdb = nullptr;
@@ -64,7 +64,7 @@ void ForwardingDatabase::addPortMapping(PORT_MAPPING_ENTRY *entry)
 /**
  * Get interface index for given port number
  */
-UINT32 ForwardingDatabase::ifIndexFromPort(UINT32 port)
+uint32_t ForwardingDatabase::ifIndexFromPort(uint32_t port)
 {
 	for(int i = 0; i < m_pmSize; i++)
 		if (m_portMap[i].port == port)
@@ -117,7 +117,7 @@ static int EntryComparator(const void *p1, const void *p2)
  * Find MAC address
  * Returns interface index or 0 if MAC address not found
  */
-UINT32 ForwardingDatabase::findMacAddress(const BYTE *macAddr, bool *isStatic)
+uint32_t ForwardingDatabase::findMacAddress(const BYTE *macAddr, bool *isStatic)
 {
 	FDB_ENTRY key;
 	memcpy(key.macAddr, macAddr, MAC_ADDR_LENGTH);
@@ -132,7 +132,7 @@ UINT32 ForwardingDatabase::findMacAddress(const BYTE *macAddr, bool *isStatic)
  * If macAddr parameter is not nullptr, MAC address found on port
  * copied into provided buffer
  */
-bool ForwardingDatabase::isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr)
+bool ForwardingDatabase::isSingleMacOnPort(uint32_t ifIndex, BYTE *macAddr)
 {
 	int count = 0;
 	for(int i = 0; i < m_fdbSize; i++)
@@ -151,7 +151,7 @@ bool ForwardingDatabase::isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr)
 /**
  * Get number of MAC addresses on given port
  */
-int ForwardingDatabase::getMacCountOnPort(UINT32 ifIndex)
+int ForwardingDatabase::getMacCountOnPort(uint32_t ifIndex)
 {
 	int count = 0;
 	for(int i = 0; i < m_fdbSize; i++)

@@ -33,11 +33,22 @@ class Interface;
  */
 struct LLDP_LOCAL_PORT_INFO
 {
-   UINT32 portNumber;
-   UINT32 localIdSubtype;
+   uint32_t portNumber;
+   uint32_t localIdSubtype;
 	BYTE localId[256];
 	size_t localIdLen;
 	TCHAR ifDescr[192];
+};
+
+/**
+ * Network path element type
+ */
+enum class NetworkPathElementType
+{
+   ROUTE = 0,
+   VPN = 1,
+   PROXY = 2,
+   DUMMY = 3
 };
 
 /**
@@ -45,11 +56,11 @@ struct LLDP_LOCAL_PORT_INFO
  */
 struct NetworkPathElement
 {
-   InetAddress nextHop;          // Next hop address
+   NetworkPathElementType type;
    shared_ptr<NetObj> object;    // Current hop object
-   uint32_t ifIndex;             // Interface index or VPN connector object ID
-   bool isVpn;                   // TRUE if next hop is behind VPN tunnel
+   InetAddress nextHop;          // Next hop address
    InetAddress route;            // Route used (UNSPEC for VPN connectors and direct access)
+   uint32_t ifIndex;             // Interface index or object ID
    TCHAR name[MAX_OBJECT_NAME];
 };
 
@@ -67,7 +78,8 @@ public:
 	NetworkPath(const InetAddress& srcAddr);
 	~NetworkPath();
 
-	void addHop(const InetAddress& nextHop, const InetAddress& route, const shared_ptr<NetObj>& currentObject, uint32_t ifIndex, bool isVpn, const TCHAR *name);
+	void addHop(const shared_ptr<NetObj>& currentObject, const InetAddress& nextHop, const InetAddress& route, uint32_t ifIndex, const TCHAR *name);
+   void addHop(const shared_ptr<NetObj>& currentObject, NetworkPathElementType type, uint32_t nextHopId, const TCHAR *name);
 	void setComplete() { m_complete = true; }
 
    const InetAddress& getSourceAddress() const { return m_sourceAddress; }
@@ -83,12 +95,12 @@ public:
  */
 struct FDB_ENTRY
 {
-	UINT32 port;                    // Port number
-	UINT32 ifIndex;                 // Interface index
+	uint32_t port;                    // Port number
+	uint32_t ifIndex;                 // Interface index
 	BYTE macAddr[MAC_ADDR_LENGTH]; // MAC address
-	UINT32 nodeObject;              // ID of node object or 0 if not found
-   UINT16 vlanId;
-   UINT16 type;
+	uint32_t nodeObject;              // ID of node object or 0 if not found
+	uint16_t vlanId;
+	uint16_t type;
 };
 
 /**
@@ -96,8 +108,8 @@ struct FDB_ENTRY
  */
 struct PORT_MAPPING_ENTRY
 {
-	UINT32 port;
-	UINT32 ifIndex;
+   uint32_t port;
+   uint32_t ifIndex;
 };
 
 /**
@@ -106,7 +118,7 @@ struct PORT_MAPPING_ENTRY
 class ForwardingDatabase : public RefCountObject
 {
 private:
-   UINT32 m_nodeId;
+   uint32_t m_nodeId;
 	int m_fdbSize;
 	int m_fdbAllocated;
 	FDB_ENTRY *m_fdb;
@@ -114,12 +126,12 @@ private:
 	int m_pmAllocated;
 	PORT_MAPPING_ENTRY *m_portMap;
 	time_t m_timestamp;
-   UINT16 m_currentVlanId;
+	uint16_t m_currentVlanId;
 
-	UINT32 ifIndexFromPort(UINT32 port);
+	uint32_t ifIndexFromPort(uint32_t port);
 
 public:
-	ForwardingDatabase(UINT32 nodeId);
+	ForwardingDatabase(uint32_t nodeId);
 	virtual ~ForwardingDatabase();
 
 	void addEntry(FDB_ENTRY *entry);
@@ -134,9 +146,9 @@ public:
    void setCurrentVlanId(UINT16 vlanId) { m_currentVlanId = vlanId; }
    UINT16 getCurrentVlanId() { return m_currentVlanId; }
 
-	UINT32 findMacAddress(const BYTE *macAddr, bool *isStatic);
-	bool isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr = NULL);
-	int getMacCountOnPort(UINT32 ifIndex);
+   uint32_t findMacAddress(const BYTE *macAddr, bool *isStatic);
+	bool isSingleMacOnPort(uint32_t ifIndex, BYTE *macAddr = NULL);
+	int getMacCountOnPort(uint32_t ifIndex);
 
    void print(CONSOLE_CTX ctx, Node *owner);
    void fillMessage(NXCPMessage *msg);

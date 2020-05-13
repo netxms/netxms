@@ -171,6 +171,7 @@ static void C_SysNodeDown(const shared_ptr<Node>& pNode, Event *pEvent)
 		return;
 	}
 
+	bool stop = false;
    for(int i = 0; i < trace->getHopCount(); i++)
    {
 		NetworkPathElement *hop = trace->getHopInfo(i);
@@ -185,26 +186,25 @@ static void C_SysNodeDown(const shared_ptr<Node>& pNode, Event *pEvent)
 			break;
       }
 
-      if (hop->isVpn)
-      {
-         // Next hop is behind VPN tunnel
-         shared_ptr<VPNConnector> vpnConn = static_pointer_cast<VPNConnector>(FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR));
-         if ((vpnConn != nullptr) && (vpnConn->getStatus() == STATUS_CRITICAL))
-         {
-            /* TODO: set root id */
-         }
-      }
-      else
+      if (hop->type == NetworkPathElementType::ROUTE)
       {
          iface = static_cast<Node&>(*hop->object).findInterfaceByIndex(hop->ifIndex);
          if ((iface != nullptr) &&
              ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
               (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
          {
-				nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
-				            iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
+            nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
+                        iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
             pEvent->setRootId(iface->getLastDownEventId());
-				break;
+            break;
+         }
+      }
+      else if (hop->type == NetworkPathElementType::VPN)
+      {
+         auto vpnConn = static_pointer_cast<VPNConnector>(FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR));
+         if ((vpnConn != nullptr) && (vpnConn->getStatus() == STATUS_CRITICAL))
+         {
+            /* TODO: set root id */
          }
       }
    }

@@ -2993,8 +2993,8 @@ public:
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
    LinkLayerNeighbors *getLinkLayerNeighbors();
    shared_ptr<VlanList> getVlans();
-   bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
-   bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
+   bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
+   bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex);
    shared_ptr<ComponentTree> getComponents();
    bool getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
    void showLLDPInfo(CONSOLE_CTX console);

@@ -1533,15 +1533,41 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                            pObject1->getName(), pObject2->getName(), pTrace->getHopCount(),
                            pTrace->isComplete() ? _T("complete") : _T("incomplete"),
                            pTrace->getSourceAddress().toString(sourceIp));
+                     shared_ptr<Interface> iface;
                      for(i = 0; i < pTrace->getHopCount(); i++)
                      {
                         NetworkPathElement *hop = pTrace->getHopInfo(i);
-                        ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),
-                              hop->object->getId(),
-                              hop->object->getName(),
-                              hop->nextHop.toString(szNextHop),
-                              hop->isVpn ? _T("VPN Connector ID:") : _T("Interface Index: "),
-                              hop->ifIndex);
+                        switch(hop->type)
+                        {
+                           case NetworkPathElementType::DUMMY:
+                              ConsolePrintf(pCtx, _T("[%u] %s\n"),
+                                    hop->object->getId(),
+                                    hop->object->getName());
+                              break;
+                           case NetworkPathElementType::PROXY:
+                              ConsolePrintf(pCtx, _T("[%u] %s ==> proxy link via %s [%u]\n"),
+                                    hop->object->getId(),
+                                    hop->object->getName(),
+                                    GetObjectName(hop->ifIndex, _T("(unknown)")),
+                                    hop->ifIndex);
+                              break;
+                           case NetworkPathElementType::ROUTE:
+                              iface = static_cast<Node&>(*hop->object).findInterfaceByIndex(hop->ifIndex);
+                              ConsolePrintf(pCtx, _T("[%u] %s ==> %s via %s [%u]\n"),
+                                    hop->object->getId(),
+                                    hop->object->getName(),
+                                    hop->nextHop.toString(szNextHop),
+                                    (iface != nullptr) ? iface->getName() : _T("unknown"),
+                                    hop->ifIndex);
+                              break;
+                           case NetworkPathElementType::VPN:
+                              ConsolePrintf(pCtx, _T("[%u] %s ==> VPN via %u\n"),
+                                    hop->object->getId(),
+                                    hop->object->getName(),
+                                    GetObjectName(hop->ifIndex, _T("(unknown)")),
+                                    hop->ifIndex);
+                              break;
+                        }
                      }
                      delete pTrace;
                      ConsolePrintf(pCtx, _T("\n"));

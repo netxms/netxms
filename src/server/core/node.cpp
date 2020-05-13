@@ -2846,16 +2846,7 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
          break;
       }
 
-      if (hop->isVpn)
-      {
-         // Next hop is behind VPN tunnel
-         shared_ptr<VPNConnector> vpnConn = static_pointer_cast<VPNConnector>(FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR));
-         if ((vpnConn != nullptr) && (vpnConn->getStatus() == STATUS_CRITICAL))
-         {
-            /* TODO: mark as path problem */
-         }
-      }
-      else
+      if (hop->type == NetworkPathElementType::ROUTE)
       {
          shared_ptr<Interface> iface = static_cast<Node&>(*hop->object).findInterfaceByIndex(hop->ifIndex);
          if ((iface != nullptr) && (iface->getExpectedState() != IF_EXPECTED_STATE_IGNORE) &&
@@ -2866,6 +2857,15 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
                         m_name, m_id, iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId());
             sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), iface->getName(), hop->object->getName());
             break;
+         }
+      }
+      else if (hop->type == NetworkPathElementType::VPN)
+      {
+         // Next hop is behind VPN tunnel
+         shared_ptr<VPNConnector> vpnConn = static_pointer_cast<VPNConnector>(FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR));
+         if ((vpnConn != nullptr) && (vpnConn->getStatus() == STATUS_CRITICAL))
+         {
+            /* TODO: mark as path problem */
          }
       }
    }
@@ -7643,7 +7643,7 @@ ROUTING_TABLE *Node::getRoutingTable()
 /**
  * Get outward interface for routing to given destination address
  */
-bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex)
+bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex)
 {
    bool found = false;
    routingTableLock();
@@ -7679,7 +7679,7 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
 /**
  * Get next hop for given destination address
  */
-bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, UINT32 *ifIndex, bool *isVpn, TCHAR *name)
+bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name)
 {
    bool nextHopFound = false;
    *name = 0;

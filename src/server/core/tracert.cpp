@@ -38,16 +38,29 @@ NetworkPath::~NetworkPath()
 }
 
 /**
- * Add hop to path
+ * Add routing hop to path
  */
-void NetworkPath::addHop(const InetAddress& nextHop, const InetAddress& route, const shared_ptr<NetObj>& currentObject, uint32_t ifIndex, bool isVpn, const TCHAR *name)
+void NetworkPath::addHop(const shared_ptr<NetObj>& currentObject, const InetAddress& nextHop, const InetAddress& route, uint32_t ifIndex, const TCHAR *name)
 {
-   NetworkPathElement *element = new NetworkPathElement();
+   auto element = new NetworkPathElement();
+   element->type = NetworkPathElementType::ROUTE;
    element->nextHop = nextHop;
    element->route = route;
    element->object = currentObject;
    element->ifIndex = ifIndex;
-   element->isVpn = isVpn;
+   _tcslcpy(element->name, name, MAX_OBJECT_NAME);
+   m_path.add(element);
+}
+
+/**
+ * Add VPM/proxy hop to path
+ */
+void NetworkPath::addHop(const shared_ptr<NetObj>& currentObject, NetworkPathElementType type, uint32_t nextHopId, const TCHAR *name)
+{
+   auto element = new NetworkPathElement();
+   element->type = type;
+   element->object = currentObject;
+   element->ifIndex = nextHopId;
    _tcslcpy(element->name, name, MAX_OBJECT_NAME);
    m_path.add(element);
 }
@@ -66,7 +79,7 @@ void NetworkPath::fillMessage(NXCPMessage *msg) const
 		msg->setField(fieldId++, e->object->getId());
 		msg->setField(fieldId++, e->nextHop);
 		msg->setField(fieldId++, e->ifIndex);
-		msg->setField(fieldId++, e->isVpn);
+		msg->setField(fieldId++, static_cast<uint16_t>(e->type));
 		msg->setField(fieldId++, e->name);
 	}
 }
@@ -76,7 +89,7 @@ void NetworkPath::fillMessage(NXCPMessage *msg) const
  */
 NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest)
 {
-   UINT32 srcIfIndex;
+   uint32_t srcIfIndex;
    InetAddress srcAddr;
    if (!src->getOutwardInterface(dest->getIpAddress(), &srcAddr, &srcIfIndex))
       srcAddr = src->getIpAddress();
@@ -85,17 +98,37 @@ NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& des
 
    int hopCount = 0;
    shared_ptr<Node> curr(src), next;
+
+   // Check if source node is NetXMS server itself - then check for proxy settings on destination
+   if ((curr->getId() == g_dwMgmtNode) && IsZoningEnabled() && (dest->getZoneUIN() != 0))
+   {
+      shared_ptr<Zone> zone = FindZoneByUIN(dest->getZoneUIN());
+      if ((zone != nullptr) && !zone->isProxyNode(dest->getId()))
+      {
+         uint32_t proxyId = zone->getProxyNodeId(dest.get(), false);
+         shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+         if (proxy != nullptr)
+         {
+            path->addHop(curr, NetworkPathElementType::PROXY, proxy->getId(), proxy->getName());
+            curr = proxy;
+         }
+      }
+   }
+
    for(; (curr != dest) && (curr != nullptr) && (hopCount < 30); curr = next, hopCount++)
    {
-      UINT32 dwIfIndex;
+      uint32_t ifIndex;
       InetAddress nextHop;
       InetAddress route;
       bool isVpn;
       TCHAR name[MAX_OBJECT_NAME];
-      if (curr->getNextHop(srcAddr, dest->getIpAddress(), &nextHop, &route, &dwIfIndex, &isVpn, name))
+      if (curr->getNextHop(srcAddr, dest->getIpAddress(), &nextHop, &route, &ifIndex, &isVpn, name))
       {
-			next = FindNodeByIP(dest->getZoneUIN(), nextHop);
-			path->addHop(nextHop, route, curr, dwIfIndex, isVpn, name);
+         next = FindNodeByIP(dest->getZoneUIN(), nextHop);
+         if (isVpn)
+            path->addHop(curr, NetworkPathElementType::VPN, ifIndex, name);
+         else
+            path->addHop(curr, nextHop, route, ifIndex, name);
          if ((next == curr) || !nextHop.isValid())
             next.reset();     // Directly connected subnet or too many hops, stop trace
       }
@@ -106,7 +139,7 @@ NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& des
    }
    if (curr == dest)
    {
-      path->addHop(InetAddress::INVALID, InetAddress::INVALID, curr, 0, false, _T(""));
+      path->addHop(curr, NetworkPathElementType::DUMMY, 0, _T(""));
       path->setComplete();
    }
 
