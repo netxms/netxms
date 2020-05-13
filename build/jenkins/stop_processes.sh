@@ -7,27 +7,31 @@ if test "x$BUILD_PREFIX" = "x"; then
 	exit 1
 fi
 
-if ps cax | grep [n]etxmsd; then
-    if test -x $BUILD_PREFIX/bin/nxadm; then
-        $BUILD_PREFIX/bin/nxadm -c down
-    else
-        pid=`ps cax | grep [n]etxmsd | xargs | cut -d ' ' -f 1`
-        kill $pid
-    fi
+BINDIR="$BUILD_PREFIX/bin"
+USER=`whoami`
+NEED_SLEEP=no
+
+if ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd; then
+    pid=`ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd | xargs | cut -d ' ' -f 1`
+    kill $pid
+    NEED_SLEEP=yes
 fi
 
-if ps cax | grep [n]xagentd; then
+if ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/nxagentd; then
     if [ -f $BUILD_PREFIX/agent.pid ]; then
         pid=`cat $BUILD_PREFIX/agent.pid`
     else
-        pid=`ps cax | grep [n]xagentd | xargs | cut -d ' ' -f 1`
+        pid=`ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/nxagentd | xargs | cut -d ' ' -f 1`
     fi
     kill $pid
+    NEED_SLEEP=yes
 fi
 
-sleep 30
+if test "x$NEED_SLEEP" = "xyes"; then
+    sleep 30
+fi
 
-if ps cax | grep [n]etxmsd; then
+if ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd; then
     echo "Command netxmsd is running, but should be already stopped"
     exit 1
 fi
