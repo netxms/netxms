@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cc.cpp" />
     <ClCompile Include="gauge64.cpp" />
     <ClCompile Include="mempool.cpp" />
     <ClCompile Include="nxcp.cpp" />

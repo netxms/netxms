@@ -36,6 +36,9 @@
     <ClCompile Include="gauge64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\testtools.h">

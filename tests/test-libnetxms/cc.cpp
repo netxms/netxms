@@ -407,7 +407,7 @@ void TestStringConversion()
 #if UNICODE_UCS4
    AssertTrue(!wcscmp(wcTextTest, ucs4TextSurrogates));
 #else
-   AssertTrue(!wcscmp(wcTextTest, ucs2TextSurrogatesTest));
+   AssertTrue(!wcscmp(wcTextTest, ucs2TextSurrogates));
 #endif
    MemFree(wcTextTest);
    EndTest();
