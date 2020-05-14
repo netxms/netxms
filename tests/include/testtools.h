@@ -4,7 +4,7 @@
 /**
  * Exit test process
  */
-#if HAVE_SYS_PTRACE_H
+#if HAVE_SYS_PTRACE_H && !defined(WITH_ADDRESS_SANITIZER)
 
 #include <sys/ptrace.h>
 
