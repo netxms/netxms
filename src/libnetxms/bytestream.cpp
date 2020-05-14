@@ -259,11 +259,11 @@ TCHAR *ByteStream::readString()
    if (m_size - m_pos < len)
       return NULL;
 
-   TCHAR *s = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+   TCHAR *s = MemAllocString(len + 1);
 #ifdef UNICODE
-   MultiByteToWideChar(CP_UTF8, 0, (char *)&m_data[m_pos], (int)len, s, (int)len + 1);
+   utf8_to_wchar(reinterpret_cast<char*>(&m_data[m_pos]), len, s, len + 1);
 #else
-   utf8_to_mb((char *)&m_data[m_pos], (int)len, s, (int)len + 1);
+   utf8_to_mb(reinterpret_cast<char*>(&m_data[m_pos]), len, s, len + 1);
 #endif
    s[len] = 0;
    m_pos += len;

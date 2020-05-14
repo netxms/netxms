@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2018 Raden Solutions
+ ** Copyright (C) 2003-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -26,10 +26,10 @@
 /**
  * Convert UCS-4 to UCS-2
  */
-int LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen)
 {
-   int len = static_cast<int>((srcLen == -1) ? ucs4_strlen(src) : srcLen);
-   int scount = 0, dcount = 0;
+   size_t len = (srcLen == -1) ? ucs4_strlen(src) + 1 : srcLen;
+   size_t scount = 0, dcount = 0;
    const UCS4CHAR *s = src;
    UCS2CHAR *d = dst;
    while((scount < len) && (dcount < dstLen))
@@ -52,21 +52,18 @@ int LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, int srcLen, UCS2CHAR 
       }
    }
 
-   if (srcLen != -1)
-      return dcount;
-   if (dcount == dstLen)
-      dcount--;
-   dst[dcount] = 0;
+   if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
+      dst[dcount - 1] = 0;
    return dcount;
 }
 
 /**
- * Calculate length in characters of given UCS-4 string in UCS-2 encoding (including terminating 0 byte)
+ * Calculate length in characters of given UCS-4 string in UCS-2 encoding
  */
-int LIBNETXMS_EXPORTABLE ucs4_ucs2len(const UCS4CHAR *src, int srcLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_ucs2len(const UCS4CHAR *src, ssize_t srcLen)
 {
-   int len = static_cast<int>((srcLen == -1) ? ucs4_strlen(src) : srcLen);
-   int dcount = len + 1;
+   size_t len = (srcLen == -1) ? ucs4_strlen(src) + 1 : srcLen;
+   size_t dcount = len;
    const UCS4CHAR *s = src;
    while(len-- > 0)
    {
@@ -80,10 +77,10 @@ int LIBNETXMS_EXPORTABLE ucs4_ucs2len(const UCS4CHAR *src, int srcLen)
 /**
  * Convert UCS-4 to UTF-8
  */
-int LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int len = static_cast<int>((srcLen == -1) ? ucs4_strlen(src) : srcLen);
-   int scount = 0, dcount = 0;
+   size_t len = (srcLen == -1) ? ucs4_strlen(src) + 1 : srcLen;
+   size_t scount = 0, dcount = 0;
    const UCS4CHAR *s = src;
    char *d = dst;
    while((scount < len) && (dcount < dstLen))
@@ -124,21 +121,18 @@ int LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, int srcLen, char *dst
       }
    }
 
-   if (srcLen != -1)
-      return dcount;
-   if (dcount == dstLen)
-      dcount--;
-   dst[dcount] = 0;
+   if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
+      dst[dcount - 1] = 0;
    return dcount;
 }
 
 /**
- * Calculate length in bytes of given UCS-4 string in UTF-8 encoding (including terminating 0 byte)
+ * Calculate length in bytes of given UCS-4 string in UTF-8 encoding
  */
-int LIBNETXMS_EXPORTABLE ucs4_utf8len(const UCS4CHAR *src, int srcLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_utf8len(const UCS4CHAR *src, ssize_t srcLen)
 {
-   int len = static_cast<int>((srcLen == -1) ? ucs4_strlen(src) : srcLen);
-   int dcount = 1;
+   size_t len = (srcLen == -1) ? ucs4_strlen(src) + 1 : srcLen;
+   int dcount = 0;
    const UCS4CHAR *s = src;
    while(len-- > 0)
    {
@@ -168,12 +162,12 @@ int LIBNETXMS_EXPORTABLE ucs4_utf8len(const UCS4CHAR *src, int srcLen)
 /**
  * Convert UCS-4 to multibyte
  */
-int LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int len = (srcLen < 0) ? (int)ucs4_strlen(src) + 1 : srcLen;
+   size_t len = (srcLen == -1) ? ucs4_strlen(src) + 1 : srcLen;
    WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)MemAlloc(len * sizeof(WCHAR));
-   ucs4_to_ucs2(src, srcLen, buffer, len);
-   int ret = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, srcLen, dst, dstLen, NULL, NULL);
+   size_t ucs2Len = ucs4_to_ucs2(src, srcLen, buffer, len);
+   size_t ret = ucs2_to_mb(buffer, ucs2Len, dst, dstLen);
    if (len > 32768)
       MemFree(buffer);
    return ret;
@@ -184,7 +178,7 @@ int LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, int srcLen, char *dst, 
 /**
  * Convert UCS-4 to multibyte
  */
-int LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
    if (g_defaultCodePageType == CodePageType::ASCII)
       return ucs4_to_ASCII(src, srcLen, dst, dstLen);
@@ -203,11 +197,11 @@ int LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, int srcLen, char *dst, 
       return ucs4_to_ASCII(src, srcLen, dst, dstLen);
    }
 
-   inbuf = (const char *) src;
-   inbytes = ((srcLen == -1) ? ucs4_strlen(src) + 1 : (size_t) srcLen) * sizeof(UCS4CHAR);
-   outbuf = (char *) dst;
-   outbytes = (size_t) dstLen;
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   inbuf = reinterpret_cast<const char*>(src);
+   inbytes = ((srcLen == -1) ? ucs4_strlen(src) + 1 : srcLen) * sizeof(UCS4CHAR);
+   outbuf = reinterpret_cast<char*>(dst);
+   outbytes = dstLen;
+   count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
    if (count == (size_t) - 1)
@@ -226,7 +220,7 @@ int LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, int srcLen, char *dst, 
       *((char *) outbuf) = 0;
    }
 
-   return (int)count;
+   return count;
 #else
    return ucs4_to_ASCII(src, srcLen, dst, dstLen);
 #endif
@@ -237,17 +231,16 @@ int LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, int srcLen, char *dst, 
 /**
  * Convert UCS-4 to ASCII (also used as fallback if iconv_open fails)
  */
-int LIBNETXMS_EXPORTABLE ucs4_to_ASCII(const UCS4CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_to_ASCII(const UCS4CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(ucs4_strlen(src)) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
+   size_t size = (srcLen == -1) ? ucs4_strlen(src) + 1 : srcLen;
+   if (size > dstLen)
+      size = dstLen;
 
    const UCS4CHAR *psrc = src;
    char *pdst = dst;
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
       *pdst = (*psrc < 128) ? static_cast<char>(*psrc) : '?';
-   *pdst = 0;
 
    return size;
 }
@@ -255,17 +248,16 @@ int LIBNETXMS_EXPORTABLE ucs4_to_ASCII(const UCS4CHAR *src, int srcLen, char *ds
 /**
  * Convert UCS-4 to ISO8859-1
  */
-int LIBNETXMS_EXPORTABLE ucs4_to_ISO8859_1(const UCS4CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_to_ISO8859_1(const UCS4CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(ucs4_strlen(src)) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
+   size_t size = (srcLen == -1) ? ucs4_strlen(src) + 1 : srcLen;
+   if (size > dstLen)
+      size = dstLen;
 
    const UCS4CHAR *psrc = src;
    BYTE *pdst = reinterpret_cast<BYTE*>(dst);
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
       *pdst = ((*psrc < 128) || ((*psrc >= 160) && (*psrc <= 255))) ? static_cast<BYTE>(*psrc) : '?';
-   *pdst = 0;
 
    return size;
 }

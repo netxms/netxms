@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ void AsteriskSystem::processRTCP(AmiMessage *msg)
 
 #ifdef UNICODE
    WCHAR channelKey[256];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, channel, -1, channelKey, 256);
+   mb_to_wchar(channel, -1, channelKey, 256);
 #else
 #define channelKey channel
 #endif
@@ -94,7 +94,7 @@ void AsteriskSystem::updateRTCPStatistic(const char *channel, const TCHAR *peer)
 {
 #ifdef UNICODE
    WCHAR channelKey[256];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, channel, -1, channelKey, 256);
+   mb_to_wchar(channel, -1, channelKey, 256);
 #else
 #define channelKey channel
 #endif

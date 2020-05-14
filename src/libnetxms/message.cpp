@@ -433,17 +433,15 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
 #if defined(UNICODE_UCS2) && defined(UNICODE)
             UCS2CHAR localBuffer[256];
             UCS2CHAR *___buffer = (length < 256) ? localBuffer : m_pool.allocateArray<UCS2CHAR>(length + 1);
-            utf8_to_ucs2(static_cast<const char*>(value), -1, ___buffer, length + 1);
-            entry = CreateMessageField(m_pool, 12 + length * 2);
-            entry->data.df_string.length = (UINT32)(length * 2);
-            memcpy(entry->data.df_string.value, ___buffer, entry->data.df_string.length);
+            size_t ucs2length = utf8_to_ucs2(static_cast<const char*>(value), -1, ___buffer, length + 1);
 #else
             __buffer = (length < 256) ? localBuffer : m_pool.allocateArray<UCS2CHAR>(length + 1);
-            utf8_to_ucs2(static_cast<const char*>(value), -1, __buffer, length + 1);
-            entry = CreateMessageField(m_pool, 12 + length * 2);
-            entry->data.df_string.length = (UINT32)(length * 2);
-            memcpy(entry->data.df_string.value, __buffer, entry->data.df_string.length);
+            size_t ucs2length = utf8_to_ucs2(static_cast<const char*>(value), -1, __buffer, length + 1);
 #endif
+            ucs2length--;  // Do not count terminating 0
+            entry = CreateMessageField(m_pool, 12 + ucs2length * 2);
+            entry->data.df_string.length = (UINT32)(ucs2length * 2);
+            memcpy(entry->data.df_string.value, __buffer, entry->data.df_string.length);
          }
          else
          {
@@ -453,14 +451,14 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
 #ifdef UNICODE         
 #ifndef UNICODE_UCS2 /* assume UNICODE_UCS4 */
             __buffer = (length < 256) ? localBuffer : m_pool.allocateArray<UCS2CHAR>(length + 1);
-            ucs4_to_ucs2(static_cast<const WCHAR*>(value), length, __buffer, length + 1);
+            size_t ucs2length = ucs4_to_ucs2(static_cast<const WCHAR*>(value), length, __buffer, length + 1);
 #endif         
 #else		/* not UNICODE */
             __buffer = (length < 256) ? localBuffer : m_pool.allocateArray<UCS2CHAR>(length + 1);
-            mb_to_ucs2(static_cast<const char*>(value), length, __buffer, length + 1);
+            size_t ucs2length = mb_to_ucs2(static_cast<const char*>(value), length, __buffer, length + 1);
 #endif
-            entry = CreateMessageField(m_pool, 12 + length * 2);
-            entry->data.df_string.length = (UINT32)(length * 2);
+            entry = CreateMessageField(m_pool, 12 + ucs2length * 2);
+            entry->data.df_string.length = (UINT32)(ucs2length * 2);
             memcpy(entry->data.df_string.value, __buffer, entry->data.df_string.length);
          }
          break;
@@ -491,12 +489,12 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
             entry = CreateMessageField(m_pool, 12 + bufferLength);
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-            entry->data.df_utf8string.length = (UINT32)ucs4_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, bufferLength);
+            entry->data.df_utf8string.length = (UINT32)ucs4_to_utf8(static_cast<const WCHAR*>(value), length, entry->data.df_utf8string.value, bufferLength);
 #else
-            entry->data.df_utf8string.length = (UINT32)ucs2_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, bufferLength);
+            entry->data.df_utf8string.length = (UINT32)ucs2_to_utf8(static_cast<const WCHAR*>(value), length, entry->data.df_utf8string.value, bufferLength);
 #endif
 #else    /* not UNICODE */
-            entry->data.df_utf8string.length = (UINT32)mb_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, (int)bufferLength);
+            entry->data.df_utf8string.length = (UINT32)mb_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, bufferLength);
 #endif
          }
          break;
@@ -830,21 +828,21 @@ SharedString NXCPMessage::getFieldAsSharedString(UINT32 fieldId, size_t maxSize)
  */
 TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *buffer, size_t bufferSize) const
 {
-   if ((buffer != NULL) && (bufferSize == 0))
-      return NULL;   // non-sense combination
+   if ((buffer != nullptr) && (bufferSize == 0))
+      return nullptr;   // non-sense combination
 
-   if (buffer != NULL)
+   if (buffer != nullptr)
       *buffer = 0;
 
    BYTE type;
    void *value = get(fieldId, 0xFF, &type);
-   if (value == NULL)
-      return NULL;
+   if (value == nullptr)
+      return nullptr;
 
-   TCHAR *str = NULL;
+   TCHAR *str = nullptr;
    if (type == NXCP_DT_STRING)
    {
-      if (buffer == NULL)
+      if (buffer == nullptr)
       {
 #if defined(UNICODE) && defined(UNICODE_UCS4)
          size_t bytes = *((UINT32 *)value) * 2 + 4;
@@ -853,30 +851,30 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *bu
 #else
          size_t bytes = *((UINT32 *)value) / 2 + 1;
 #endif
-         str = static_cast<TCHAR*>((pool != NULL) ? pool->allocate(bytes) : MemAlloc(bytes));
+         str = static_cast<TCHAR*>((pool != nullptr) ? pool->allocate(bytes) : MemAlloc(bytes));
       }
       else
       {
          str = buffer;
       }
 
-      size_t length = (buffer == NULL) ? 
-            static_cast<size_t>(*static_cast<UINT32*>(value) / 2) :
-            std::min(static_cast<size_t>(*static_cast<UINT32*>(value) / 2), bufferSize - 1);
+      size_t length = (buffer == nullptr) ?
+            static_cast<size_t>(*static_cast<uint32_t*>(value) / 2) :
+            std::min(static_cast<size_t>(*static_cast<uint32_t*>(value) / 2), bufferSize - 1);
 #if defined(UNICODE) && defined(UNICODE_UCS4)
-		ucs2_to_ucs4((UCS2CHAR *)((BYTE *)value + 4), length, str, length + 1);
+		ucs2_to_ucs4((UCS2CHAR *)((BYTE *)value + 4), length, str, length);
 #elif defined(UNICODE) && defined(UNICODE_UCS2)
       memcpy(str, (BYTE *)value + 4, length * 2);
 #else
-		ucs2_to_mb((UCS2CHAR *)((BYTE *)value + 4), length, str, length + 1);
+		ucs2_to_mb((UCS2CHAR *)((BYTE *)value + 4), length, str, length);
 #endif
       str[length] = 0;
    }
    else if (type == NXCP_DT_UTF8_STRING)
    {
-      size_t length = static_cast<size_t>(*static_cast<UINT32*>(value));
+      size_t length = static_cast<size_t>(*static_cast<uint32_t*>(value));
 #ifdef UNICODE
-      if (buffer != NULL)
+      if (buffer != nullptr)
       {
          size_t outlen = utf8_to_wchar(static_cast<char*>(value) + 4, length, buffer, bufferSize - 1);
          buffer[outlen] = 0;
@@ -884,25 +882,25 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *bu
       else
       {
          size_t outlen = utf8_wcharlen(static_cast<char*>(value) + 4, length);
-         str = (pool != NULL) ? pool->allocateStringW(outlen + 1) : MemAllocStringW(outlen + 1);
+         str = (pool != nullptr) ? pool->allocateStringW(outlen + 1) : MemAllocStringW(outlen + 1);
          outlen = utf8_to_wchar(static_cast<char*>(value) + 4, length, str, outlen);
          str[outlen] = 0;
       }
 #else
-      if (buffer != NULL)
+      if (buffer != nullptr)
       {
          size_t outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, buffer, bufferSize - 1);
          buffer[outlen] = 0;
       }
       else
       {
-         str = (pool != NULL) ? pool->allocateStringA(length + 1) : MemAllocStringA(length + 1);
+         str = (pool != nullptr) ? pool->allocateStringA(length + 1) : MemAllocStringA(length + 1);
          size_t outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, str, length);
          str[outlen] = 0;
       }
 #endif
    }
-   return (str != NULL) ? str : buffer;
+   return (str != nullptr) ? str : buffer;
 }
 
 #ifdef UNICODE
@@ -985,13 +983,13 @@ char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t buffe
  */
 char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t bufferSize) const
 {
-   if ((buffer != NULL) && (bufferSize == 0))
-      return NULL;   // non-sense combination
+   if ((buffer != nullptr) && (bufferSize == 0))
+      return nullptr;   // non-sense combination
 
-   char *str = NULL;
+   char *str = nullptr;
    BYTE type;
    void *value = get(fieldId, 0xFF, &type);
-   if (value != NULL)
+   if (value != nullptr)
    {
       if (type == NXCP_DT_STRING)
       {
@@ -1016,7 +1014,7 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
       else if (type == NXCP_DT_UTF8_STRING)
       {
          size_t srcLen = *static_cast<UINT32*>(value);
-         if (buffer == NULL)
+         if (buffer == nullptr)
          {
             str = MemAllocStringA(srcLen + 1);
             memcpy(str, static_cast<BYTE*>(value) + 4, srcLen);
@@ -1024,17 +1022,19 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
          }
          else
          {
-            strlcpy(buffer, static_cast<char*>(value) + 4, std::min(srcLen + 1, bufferSize));
+            size_t dstLen = std::min(srcLen, bufferSize - 1);
+            strncpy(buffer, static_cast<char*>(value) + 4, dstLen);
+            buffer[dstLen] = 0;
             str = buffer;
          }
       }
-      else if (buffer != NULL)
+      else if (buffer != nullptr)
       {
          str = buffer;
          str[0] = 0;
       }
    }
-   else if (buffer != NULL)
+   else if (buffer != nullptr)
    {
       str = buffer;
       str[0] = 0;
@@ -1627,7 +1627,7 @@ void NXCPMessage::setProtocolVersion(int version)
    if ((m_version >= 5) && (version < 5))
    {
       // Convert all UTF8-STRING fields to STRING
-      IntegerArray<UINT32> stringFields(256, 256);
+      IntegerArray<uint32_t> stringFields(256, 256);
       MessageField *entry, *tmp;
       HASH_ITER(hh, m_fields, entry, tmp)
       {
@@ -1638,9 +1638,9 @@ void NXCPMessage::setProtocolVersion(int version)
       char localBuffer[4096];
       for(int i = 0; i < stringFields.size(); i++)
       {
-         UINT32 fieldId = stringFields.get(i);
+         uint32_t fieldId = stringFields.get(i);
          void *value = get(fieldId, NXCP_DT_UTF8_STRING);
-         size_t len = *static_cast<UINT32*>(value);
+         size_t len = *static_cast<uint32_t*>(value);
          char *buffer = (len < 4096) ? localBuffer : static_cast<char*>(m_pool.allocate(len + 1));
          memcpy(buffer, static_cast<char*>(value) + 4, len);
          buffer[len] = 0;

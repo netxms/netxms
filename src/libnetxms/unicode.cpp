@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2019 Raden Solutions
+ ** Copyright (C) 2003-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -193,8 +193,8 @@ WCHAR LIBNETXMS_EXPORTABLE *wcsncpy(WCHAR *dest, const WCHAR *src, size_t n)
 /**
  * Convert UNICODE string to single-byte string using iconv
  */
-static int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, int cchWideChar,
-                                    char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
+static int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
+         int cchWideChar, char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
    iconv_t cd;
    int nRet;
@@ -250,20 +250,20 @@ static int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *p
 #endif
 
 /**
- * Convert UNICODE string to single-byte string
+ * Convert UNICODE string to single-byte string (Windows compatibility layer)
  */
-int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, int cchWideChar,
-                                             char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
+int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
+         int cchWideChar, char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
    if (iCodePage == CP_UTF8)
    {
 #ifdef UNICODE_UCS4
       if (cchByteChar == 0)
-         return ucs4_utf8len(pWideCharStr, (cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar);
+         return ucs4_utf8len(pWideCharStr, cchWideChar);
       return ucs4_to_utf8(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
 #else
       if (cchByteChar == 0)
-         return ucs2_utf8len(pWideCharStr, (cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar);
+         return ucs2_utf8len(pWideCharStr, cchWideChar);
       return ucs2_to_utf8(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
 #endif
    }
@@ -370,7 +370,7 @@ static int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pB
 #endif   /* __DISABLE_ICONV */
 
 /**
- * Convert single-byte to UNICODE string
+ * Convert single-byte to UNICODE string (Windows compatibility layer)
  */
 int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
 {
@@ -419,21 +419,21 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const
  * Convert multibyte string to wide string using current LC_CTYPE setting and
  * allocating wide string dynamically
  */
-WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *pszString)
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *src)
 {
 #ifdef _WIN32
-   return WideStringFromMBString(pszString);
+   return WideStringFromMBString(src);
 #else
-   if (pszString == NULL)
-      return NULL;
-   int nLen = (int)strlen(pszString) + 1;
-   WCHAR *pwszOut = MemAllocArrayNoInit<WCHAR>(nLen);
+   if (src == nullptr)
+      return nullptr;
+   size_t len = strlen(src) + 1;
+   WCHAR *out = MemAllocStringW(len);
 #if HAVE_MBSTOWCS
-   mbstowcs(pwszOut, pszString, nLen);
+   mbstowcs(out, src, len);
 #else
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszString, -1, pwszOut, nLen);
+   mb_to_wchar(src, -1, out, len);
 #endif
-   return pwszOut;
+   return out;
 #endif
 }
 
@@ -443,58 +443,58 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *pszStrin
  */
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *src)
 {
-   if (src == NULL)
-      return NULL;
-   int len = (int)strlen(src) + 1;
-   WCHAR *out = MemAllocArrayNoInit<WCHAR>(len);
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, -1, out, len);
+   if (src == nullptr)
+      return nullptr;
+   size_t len = strlen(src) + 1;
+   WCHAR *out = MemAllocStringW(len);
+   mb_to_wchar(src, -1, out, len);
    return out;
 }
 
 /**
  * Convert wide string to UTF8 string allocating wide string dynamically
  */
-WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *src)
 {
-   if (pszString == NULL)
-      return NULL;
-   int nLen = (int)strlen(pszString) + 1;
-   WCHAR *pwszOut = MemAllocArrayNoInit<WCHAR>(nLen);
-   MultiByteToWideChar(CP_UTF8, 0, pszString, -1, pwszOut, nLen);
-   return pwszOut;
+   if (src == nullptr)
+      return nullptr;
+   size_t len = strlen(src) + 1;
+   WCHAR *out = MemAllocStringW(len);
+   utf8_to_wchar(src, -1, out, len);
+   return out;
 }
 
 /**
  * Convert wide string to multibyte string using current codepage and
  * allocating multibyte string dynamically
  */
-char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
+char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *src)
 {
-   if (pwszString == NULL)
-      return NULL;
-   int nLen = (int)wcslen(pwszString) + 1;
-   char *pszOut = (char *)MemAlloc(nLen);
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, pszOut, nLen, NULL, NULL);
-   return pszOut;
+   if (src == nullptr)
+      return nullptr;
+   size_t len = wcslen(src) + 1;
+   char *out = MemAllocStringA(len);
+   wchar_to_mb(src, -1, out, len);
+   return out;
 }
 
 /**
  * Convert wide string to multibyte string using current LC_CTYPE setting and
  * allocating multibyte string dynamically
  */
-char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *pwszString)
+char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *src)
 {
 #ifdef _WIN32
-   return MBStringFromWideString(pwszString);
+   return MBStringFromWideString(src);
 #else
-   if (pwszString == NULL)
-      return NULL;
-   size_t len = wcslen(pwszString) * 3 + 1;  // add extra bytes in case of UTF-8 as target encoding
-   char *out = (char *)MemAlloc(len);
+   if (src == nullptr)
+      return nullptr;
+   size_t len = wcslen(src) * 3 + 1;  // add extra bytes in case of UTF-8 as target encoding
+   char *out = MemAllocStringA(len);
 #if HAVE_WCSTOMBS
-   wcstombs(out, pwszString, len);
+   wcstombs(out, src, len);
 #else
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, out, (int)len, NULL, NULL);
+   wchar_to_mb(src, -1, out, len);
 #endif
    return out;
 #endif
@@ -505,9 +505,9 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *pwszStri
  */
 char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *src)
 {
-   int len = WideCharToMultiByte(CP_UTF8, 0, src, -1, NULL, 0, NULL, NULL);
+   int len = WideCharToMultiByte(CP_UTF8, 0, src, -1, nullptr, 0, nullptr, nullptr);
    char *out = (char *)MemAlloc(len);
-   WideCharToMultiByte(CP_UTF8, 0, src, -1, out, len, NULL, NULL);
+   WideCharToMultiByte(CP_UTF8, 0, src, -1, out, len, nullptr, nullptr);
    return out;
 }
 
@@ -517,8 +517,8 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *src)
  */
 char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s)
 {
-   int len = (int)strlen(s) + 1;
-   char *out = (char *)MemAlloc(len);
+   size_t len = strlen(s) + 1;
+   char *out = MemAllocStringA(len);
    utf8_to_mb(s, -1, out, len);
    return out;
 }
@@ -528,8 +528,8 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s)
  */
 char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s)
 {
-   int len = (int)strlen(s) * 3 + 1;   // assume worst case - 3 bytes per character
-   char *out = (char *)MemAlloc(len);
+   size_t len = strlen(s) * 3 + 1;   // assume worst case - 3 bytes per character
+   char *out = MemAllocStringA(len);
    mb_to_utf8(s, -1, out, len);
    return out;
 }
@@ -539,7 +539,7 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s)
  */
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const UCS4CHAR *src)
 {
-   int len = ucs4_ucs2len(src, -1);
+   size_t len = ucs4_ucs2len(src, -1);
    UCS2CHAR *out = MemAllocArrayNoInit<UCS2CHAR>(len);
    ucs4_to_ucs2(src, -1, out, len);
    return out;
@@ -563,11 +563,11 @@ UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *src)
  */
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUTF8String(const char *utf8String)
 {
-   if (utf8String == NULL)
-      return NULL;
-   int nLen = (int)strlen(utf8String) + 1;
-   UCS2CHAR *out = MemAllocArrayNoInit<UCS2CHAR>(nLen);
-   utf8_to_ucs2(utf8String, -1, out, nLen);
+   if (utf8String == nullptr)
+      return nullptr;
+   size_t len = strlen(utf8String) + 1;
+   UCS2CHAR *out = MemAllocArrayNoInit<UCS2CHAR>(len);
+   utf8_to_ucs2(utf8String, -1, out, len);
    return out;
 }
 
@@ -576,8 +576,8 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUTF8String(const char *utf8String)
  */
 char LIBNETXMS_EXPORTABLE *UTF8StringFromUCS2String(const UCS2CHAR *src)
 {
-   int len = ucs2_utf8len(src, -1);
-   char *out = (char *)MemAlloc(len);
+   size_t len = ucs2_utf8len(src, -1);
+   char *out = MemAllocStringA(len);
    ucs2_to_utf8(src, -1, out, len);
    return out;
 }
@@ -587,7 +587,7 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromUCS2String(const UCS2CHAR *src)
  */
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *src)
 {
-   int len = (int)strlen(src) + 1;
+   size_t len = strlen(src) + 1;
    UCS2CHAR *out = MemAllocArrayNoInit<UCS2CHAR>(len);
    mb_to_ucs2(src, -1, out, len);
    return out;
@@ -598,8 +598,8 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *src)
  */
 char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *src)
 {
-   int len = (int)ucs2_strlen(src) + 1;
-   char *out = (char *)MemAlloc(len);
+   size_t len = ucs2_strlen(src) + 1;
+   char *out = MemAllocStringA(len);
    ucs2_to_mb(src, -1, out, len);
    return out;
 }
@@ -613,7 +613,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *src)
  */
 UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromMBString(const char *src)
 {
-   int len = (int)strlen(src) + 1;
+   size_t len = strlen(src) + 1;
    UCS4CHAR *out = MemAllocArrayNoInit<UCS4CHAR>(len);
    mb_to_ucs4(src, -1, out, len);
    return out;
@@ -624,8 +624,8 @@ UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromMBString(const char *src)
  */
 char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src)
 {
-   int len = (int)ucs4_strlen(src) + 1;
-   char *out = (char *)MemAlloc(len);
+   size_t len = ucs4_strlen(src) + 1;
+   char *out = MemAllocStringA(len);
    ucs4_to_mb(src, -1, out, len);
    return out;
 }

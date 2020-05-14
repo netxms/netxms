@@ -318,33 +318,33 @@ Table *Table::createFromXML(const char *xml)
  */
 Table *Table::createFromPackedXML(const char *packedXml)
 {
-   char *compressedXml = NULL;
+   char *compressedXml = nullptr;
    size_t compressedSize = 0;
    base64_decode_alloc(packedXml, strlen(packedXml), &compressedXml, &compressedSize);
-   if (compressedXml == NULL)
-      return NULL;
+   if (compressedXml == nullptr)
+      return nullptr;
 
-   size_t xmlSize = (size_t)ntohl(*((UINT32 *)compressedXml));
-   char *xml = (char *)malloc(xmlSize + 1);
+   size_t xmlSize = ntohl(*reinterpret_cast<uint32_t*>(compressedXml));
+   char *xml = MemAllocStringA(xmlSize + 1);
    uLongf uncompSize = (uLongf)xmlSize;
    if (uncompress((BYTE *)xml, &uncompSize, (BYTE *)&compressedXml[4], (uLong)compressedSize - 4) != Z_OK)
    {
-      free(xml);
-      free(compressedXml);
-      return NULL;
+      MemFree(xml);
+      MemFree(compressedXml);
+      return nullptr;
    }
    xml[xmlSize] = 0;
-   free(compressedXml);
+   MemFree(compressedXml);
 
    Table *table = new Table();
    if (table->parseXML(xml))
    {
-      free(xml);
+      MemFree(xml);
       return table;
    }
-   free(xml);
+   MemFree(xml);
    delete table;
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -366,7 +366,7 @@ TCHAR *Table::createXML() const
    xml.append(_T("<data>\r\n"));
    for(i = 0; i < m_data->size(); i++)
    {
-      UINT32 objectId = m_data->get(i)->getObjectId();
+      uint32_t objectId = m_data->get(i)->getObjectId();
       int baseRow = m_data->get(i)->getBaseRow();
       if (objectId != DEFAULT_OBJECT_ID)
       {
@@ -402,7 +402,7 @@ TCHAR *Table::createXML() const
    }
    xml.append(_T("</data>\r\n"));
    xml.append(_T("</table>"));
-   return _tcsdup(xml);
+   return MemCopyString(xml);
 }
 
 /**
@@ -411,24 +411,24 @@ TCHAR *Table::createXML() const
 char *Table::createPackedXML() const
 {
    TCHAR *xml = createXML();
-   if (xml == NULL)
-      return NULL;
+   if (xml == nullptr)
+      return nullptr;
    char *utf8xml = UTF8StringFromTString(xml);
-   free(xml);
+   MemFree(xml);
    size_t len = strlen(utf8xml);
    uLongf buflen = compressBound((uLong)len);
-   BYTE *buffer = (BYTE *)malloc(buflen + 4);
+   BYTE *buffer = MemAllocArrayNoInit<BYTE>(buflen + 4);
    if (compress(&buffer[4], &buflen, (BYTE *)utf8xml, (uLong)len) != Z_OK)
    {
-      free(utf8xml);
-      free(buffer);
-      return NULL;
+      MemFree(utf8xml);
+      MemFree(buffer);
+      return nullptr;
    }
-   free(utf8xml);
-   char *encodedBuffer = NULL;
-   *((UINT32 *)buffer) = htonl((UINT32)len);
-   base64_encode_alloc((char *)buffer, buflen + 4, &encodedBuffer);
-   free(buffer);
+   MemFree(utf8xml);
+   char *encodedBuffer = nullptr;
+   *reinterpret_cast<uint32_t*>(buffer) = htonl(static_cast<uint32_t>(len));
+   base64_encode_alloc(reinterpret_cast<char*>(buffer), buflen + 4, &encodedBuffer);
+   MemFree(buffer);
    return encodedBuffer;
 }
 
@@ -438,7 +438,7 @@ char *Table::createPackedXML() const
 void Table::createFromMessage(NXCPMessage *msg)
 {
 	int i;
-	UINT32 dwId;
+	uint32_t dwId;
 
 	int rows = msg->getFieldAsUInt32(VID_TABLE_NUM_ROWS);
 	int columns = msg->getFieldAsUInt32(VID_TABLE_NUM_COLS);

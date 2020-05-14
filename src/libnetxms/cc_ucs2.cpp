@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2019 Raden Solutions
+ ** Copyright (C) 2003-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -28,7 +28,7 @@
  */
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen)
 {
-   size_t len = (srcLen == -1) ? ucs2_strlen(src) : srcLen;
+   size_t len = (srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen;
    size_t scount = 0, dcount = 0;
    const UCS2CHAR *s = src;
    UCS4CHAR *d = dst;
@@ -58,11 +58,8 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, ssize_t srcLen, UC
       }
    }
 
-   if (srcLen != -1)
-      return dcount;
-   if (dcount == dstLen)
-      dcount--;
-   dst[dcount] = 0;
+   if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
+      dst[dcount - 1] = 0;
    return dcount;
 }
 
@@ -71,7 +68,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, ssize_t srcLen, UC
  */
 size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   size_t len = (srcLen == -1) ? ucs2_strlen(src) : srcLen;
+   size_t len = (srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen;
    size_t scount = 0, dcount = 0;
    const UCS2CHAR *s = src;
    char *d = dst;
@@ -138,11 +135,8 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, ch
       }
    }
 
-   if (srcLen != -1)
-      return dcount;
-   if (dcount == dstLen)
-      dcount--;
-   dst[dcount] = 0;
+   if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
+      dst[dcount - 1] = 0;
    return dcount;
 }
 
@@ -151,8 +145,8 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, ch
  */
 size_t LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, ssize_t srcLen)
 {
-   size_t len = (srcLen == -1) ? ucs2_strlen(src) : srcLen;
-   size_t scount = 0, dcount = 1;
+   size_t len = (srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen;
+   size_t scount = 0, dcount = 0;
    const UCS2CHAR *s = src;
    while(scount < len)
    {
@@ -227,10 +221,10 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, ssize_t srcLen, char
       return ucs2_to_ASCII(src, srcLen, dst, dstLen);
    }
 
-   inbuf = (const char *) src;
-   inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : (size_t) srcLen) * sizeof(UCS2CHAR);
-   outbuf = (char *) dst;
-   outbytes = (size_t) dstLen;
+   inbuf = reinterpret_cast<const char*>(src);
+   inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen) * sizeof(UCS2CHAR);
+   outbuf = reinterpret_cast<char*>(dst);
+   outbytes = dstLen;
    count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
@@ -263,9 +257,9 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, ssize_t srcLen, char
  */
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   size_t size = (srcLen == -1) ? static_cast<int>(ucs2_strlen(src)) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
+   size_t size = (srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen;
+   if (size > dstLen)
+      size = dstLen;
 
    const UCS2CHAR *psrc = src;
    char *pdst = dst;
@@ -275,7 +269,6 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, ssize_t srcLen, c
          continue;
       *pdst = (*psrc < 128) ? static_cast<char>(*psrc) : '?';
    }
-   *pdst = 0;
 
    return size;
 }
@@ -285,9 +278,9 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, ssize_t srcLen, c
  */
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ISO8859_1(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   size_t size = (srcLen == -1) ? static_cast<int>(ucs2_strlen(src)) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
+   size_t size = (srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen;
+   if (size > dstLen)
+      size = dstLen;
 
    const UCS2CHAR *psrc = src;
    BYTE *pdst = reinterpret_cast<BYTE*>(dst);
@@ -297,7 +290,6 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ISO8859_1(const UCS2CHAR *src, ssize_t srcLe
          continue;
       *pdst = ((*psrc < 128) || ((*psrc >= 160) && (*psrc <= 255))) ? static_cast<BYTE>(*psrc) : '?';
    }
-   *pdst = 0;
 
    return size;
 }

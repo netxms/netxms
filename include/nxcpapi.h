@@ -151,11 +151,11 @@ public:
    size_t getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const;
    size_t getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const;
    const BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size) const;
-   TCHAR *getFieldAsString(UINT32 fieldId, MemoryPool *pool) const { return getFieldAsString(fieldId, pool, NULL, 0); }
-   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = NULL, size_t bufferSize = 0) const { return getFieldAsString(fieldId, NULL, buffer, bufferSize); }
-   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR **buffer) const { MemFree(*buffer); *buffer = getFieldAsString(fieldId, NULL, NULL, 0); return *buffer; }
-	char *getFieldAsMBString(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
-	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
+   TCHAR *getFieldAsString(UINT32 fieldId, MemoryPool *pool) const { return getFieldAsString(fieldId, pool, nullptr, 0); }
+   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = nullptr, size_t bufferSize = 0) const { return getFieldAsString(fieldId, nullptr, buffer, bufferSize); }
+   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR **buffer) const { MemFree(*buffer); *buffer = getFieldAsString(fieldId, nullptr, nullptr, 0); return *buffer; }
+	char *getFieldAsMBString(UINT32 fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
+	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
    SharedString getFieldAsSharedString(UINT32 fieldId, size_t maxSize = 0) const;
    size_t getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize) const;
    InetAddress getFieldAsInetAddress(UINT32 fieldId) const;

@@ -124,8 +124,7 @@ bool EIP_Message::readDataAsLengthPrefixString(size_t offset, int prefixSize, TC
    if (len >= bufferSize)
       len = bufferSize - 1;
 #ifdef UNICODE
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, reinterpret_cast<char*>(&m_data[offset + prefixSize]),
-         static_cast<int>(len), buffer, static_cast<int>(bufferSize));
+   mb_to_wchar(reinterpret_cast<char*>(&m_data[offset + prefixSize]), len, buffer, bufferSize);
 #else
    memcpy(buffer, &m_data[offset + prefixSize], len);
 #endif

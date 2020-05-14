@@ -47,7 +47,7 @@ struct dirent_w *wreaddir(DIRW *dirp)
 	struct dirent *d = readdir(dirp->dir);
 	if (d == NULL)
 		return NULL;
-	MultiByteToWideChar(CP_UTF8, 0, d->d_name, -1, dirp->dirstr.d_name, 257);
+	utf8_to_wchar(d->d_name, -1, dirp->dirstr.d_name, 257);
 	dirp->dirstr.d_name[256] = 0;
 	dirp->dirstr.d_ino = d->d_ino;
 #if HAVE_DIRENT_D_TYPE

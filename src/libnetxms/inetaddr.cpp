@@ -427,7 +427,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
       return NULL;
 
 #ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, buffer, (int)buflen);
+	mb_to_wchar(hs->h_name, -1, buffer, buflen);
 	buffer[buflen - 1] = 0;
 #else
    strlcpy(buffer, hs->h_name, buflen);

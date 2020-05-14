@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2019 Raden Solutions
+ ** Copyright (C) 2003-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -23,6 +23,9 @@
 #include "libnetxms.h"
 #include "unicode_cc.h"
 
+/**
+ * Convert UTF-8 character to UNICODE code point
+ */
 inline UCS4CHAR CodePointFromUTF8(const BYTE*& s, size_t& len)
 {
    BYTE b = *s++;
@@ -61,7 +64,7 @@ inline UCS4CHAR CodePointFromUTF8(const BYTE*& s, size_t& len)
  */
 size_t LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen)
 {
-   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   size_t len = (srcLen == -1) ? strlen(src) + 1 : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
    UCS4CHAR *d = dst;
    size_t dcount = 0;
@@ -71,11 +74,8 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, ssize_t srcLen, UCS4CH
       dcount++;
    }
 
-   if (srcLen != -1)
-      return dcount;
-   if (dcount == dstLen)
-      dcount--;
-   dst[dcount] = 0;
+   if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
+      dst[dcount - 1] = 0;
    return dcount;
 }
 
@@ -84,9 +84,9 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, ssize_t srcLen, UCS4CH
  */
 size_t LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, ssize_t srcLen)
 {
-   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   size_t len = (srcLen == -1) ? strlen(src) + 1 : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
-   size_t dcount = 1;
+   size_t dcount = 0;
    while(len > 0)
    {
       CodePointFromUTF8(s, len);
@@ -100,7 +100,7 @@ size_t LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, ssize_t srcLen)
  */
 size_t LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen)
 {
-   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   size_t len = (srcLen == -1) ? strlen(src) + 1 : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
    UCS2CHAR *d = dst;
    size_t dcount = 0;
@@ -123,22 +123,19 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, ssize_t srcLen, UCS2CH
       }
    }
 
-   if (srcLen != -1)
-      return dcount;
-   if (dcount == dstLen)
-      dcount--;
-   dst[dcount] = 0;
+   if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
+      dst[dcount - 1] = 0;
    return dcount;
 }
 
 /**
- * Calculate length of given UTF-8 string in UCS-2 characters (including terminator)
+ * Calculate length of given UTF-8 string in UCS-2 characters (including terminator if srcLen == -1)
  */
 size_t LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, ssize_t srcLen)
 {
-   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   size_t len = (srcLen == -1) ? strlen(src) + 1 : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
-   size_t dcount = 1;
+   size_t dcount = 0;
    while(len > 0)
    {
       UCS4CHAR ch = CodePointFromUTF8(s, len);
@@ -229,7 +226,7 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *ds
  */
 size_t LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   size_t len = (srcLen == -1) ? strlen(src) + 1 : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
    char *d = dst;
    size_t dcount = 0;
@@ -240,11 +237,8 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, ssize_t srcLen, char 
       dcount++;
    }
 
-   if (srcLen != -1)
-      return dcount;
-   if (dcount == dstLen)
-      dcount--;
-   dst[dcount] = 0;
+   if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
+      dst[dcount - 1] = 0;
    return dcount;
 }
 
@@ -253,7 +247,7 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, ssize_t srcLen, char 
  */
 size_t LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   size_t len = (srcLen == -1) ? strlen(src) + 1 : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
    BYTE *d = reinterpret_cast<BYTE*>(dst);
    size_t dcount = 0;
@@ -264,10 +258,7 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, ssize_t srcLen, c
       dcount++;
    }
 
-   if (srcLen != -1)
-      return dcount;
-   if (dcount == dstLen)
-      dcount--;
-   dst[dcount] = 0;
+   if ((srcLen == -1) && (dcount == dstLen) && (dstLen > 0))
+      dst[dcount - 1] = 0;
    return dcount;
 }

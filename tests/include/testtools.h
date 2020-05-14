@@ -77,17 +77,17 @@ inline void ExitTestProcess()
 /**
  * Assert that value is NULL
  */
-#define AssertNull(x) Assert((x) == NULL)
+#define AssertNull(x) Assert((x) == nullptr)
 
 /**
  * Assert that value is not NULL
  */
-#define AssertNotNull(x) Assert((x) != NULL)
+#define AssertNotNull(x) Assert((x) != nullptr)
 
 /**
  * Assert that value is not NULL with message
  */
-#define AssertNotNullEx(x, m) AssertEx((x) != NULL, (m))
+#define AssertNotNullEx(x, m) AssertEx((x) != nullptr, (m))
 
 /**
  * Show test start mark
@@ -131,9 +131,9 @@ static inline void EndTest()
 /**
  * Show test end with timimg
  */
-static inline void EndTest(INT64 ms)
+static inline void EndTest(int64_t ms)
 {
-   _tprintf(_T("%d ms\n"), (int)ms);
+   _tprintf(INT64_FMT _T(" ms\n"), ms);
 }
 
 #endif
