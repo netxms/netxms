@@ -50,15 +50,33 @@ static char mbTextASCII[] = "Lorem ipsum dolor sit amet, ? 10, ? 20, ? 50, b?nne
 static void TestStringConversion()
 {
    StartTest(_T("ANSI to UCS-2 conversion"));
+
    UCS2CHAR ucs2buffer[1024];
-   mb_to_ucs2(mbTextShort, -1, ucs2buffer, 1024);
+   size_t len = mb_to_ucs2(mbTextShort, -1, ucs2buffer, 1024);
+   AssertEquals(len, 12);
    AssertTrue(!memcmp(ucs2buffer, ucs2TextShort, sizeof(UCS2CHAR) * 12));
+
+   memset(ucs2buffer, 0x7F, sizeof(ucs2buffer));
+   len = mb_to_ucs2(mbTextShort, 11, ucs2buffer, 1024);
+   AssertEquals(len, 11);
+   AssertTrue(!memcmp(ucs2buffer, ucs2TextShort, sizeof(UCS2CHAR) * 11));
+   AssertTrue(ucs2buffer[11] == 0x7F7F);
+
    EndTest();
 
    StartTest(_T("UCS-2 to ANSI conversion"));
+
    char mbBuffer[1024];
-   ucs2_to_mb(ucs2TextShort, -1, mbBuffer, 1024);
+   len = ucs2_to_mb(ucs2TextShort, -1, mbBuffer, 1024);
+   AssertEquals(len, 12);
    AssertTrue(!strcmp(mbBuffer, mbTextShort));
+
+   memset(mbBuffer, 0x7F, sizeof(mbBuffer));
+   len = ucs2_to_mb(ucs2TextShort, 11, mbBuffer, 1024);
+   AssertEquals(len, 11);
+   AssertTrue(!memcmp(mbBuffer, mbTextShort, 11));
+   AssertTrue(mbBuffer[11] == 0x7F);
+
    EndTest();
 
 #if !WITH_ADDRESS_SANITIZER
@@ -104,7 +122,7 @@ static void TestStringConversion()
 
    StartTest(_T("UCS-2 to UCS-4 conversion"));
    UCS4CHAR ucs4buffer[1024];
-   size_t len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
+   len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
    AssertEquals(len, 13);
    AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogatesTest, 13 * sizeof(UCS4CHAR)));
    EndTest();
