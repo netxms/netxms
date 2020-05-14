@@ -28,10 +28,15 @@ if ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/nxagentd; 
 fi
 
 if test "x$NEED_SLEEP" = "xyes"; then
-    sleep 30
+    count=1
+    while ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd; do
+        if test $count -gt 20; then
+            echo "netxmsd is running, but should be already stopped"
+            exit 1
+        fi
+	count=$((count+1))
+        sleep 5
+    done
 fi
 
-if ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd; then
-    echo "Command netxmsd is running, but should be already stopped"
-    exit 1
-fi
+exit 0
