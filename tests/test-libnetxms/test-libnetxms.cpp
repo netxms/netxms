@@ -32,6 +32,7 @@ static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 #endif
 static char mbTextShort[] = "Lorem ipsum";
+static WCHAR wcTextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's', 'u', 'm', 0 };
 static UCS2CHAR ucs2TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's', 'u', 'm', 0 };
 static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static UCS4CHAR ucs4TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
@@ -49,10 +50,44 @@ static char mbTextASCII[] = "Lorem ipsum dolor sit amet, ? 10, ? 20, ? 50, b?nne
  */
 static void TestStringConversion()
 {
+   StartTest(_T("MultiByteToWideChar"));
+
+   WCHAR wcBuffer[1024];
+   size_t len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbTextShort, -1, wcBuffer, 1024);
+   AssertEquals(len, 12);
+   AssertTrue(!memcmp(wcBuffer, wcTextShort, sizeof(WCHAR) * 12));
+
+   memset(wcBuffer, 0x7F, sizeof(wcBuffer));
+   len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbTextShort, 11, wcBuffer, 1024);
+   AssertEquals(len, 11);
+   AssertTrue(!memcmp(wcBuffer, wcTextShort, sizeof(WCHAR) * 11));
+#ifdef UNICODE_UCS4
+   AssertTrue(wcBuffer[11] == 0x7F7F7F7F);
+#else
+   AssertTrue(wcBuffer[11] == 0x7F7F);
+#endif
+
+   EndTest();
+
+   StartTest(_T("WideCharToMultiByte"));
+
+   char mbBuffer[1024];
+   len = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, wcTextShort, -1, mbBuffer, 1024, NULL, NULL);
+   AssertEquals(len, 12);
+   AssertTrue(!strcmp(mbBuffer, mbTextShort));
+
+   memset(mbBuffer, 0x7F, sizeof(mbBuffer));
+   len = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, wcTextShort, 11, mbBuffer, 1024, NULL, NULL);
+   AssertEquals(len, 11);
+   AssertTrue(!memcmp(mbBuffer, mbTextShort, 11));
+   AssertTrue(mbBuffer[11] == 0x7F);
+
+   EndTest();
+
    StartTest(_T("ANSI to UCS-2 conversion"));
 
    UCS2CHAR ucs2buffer[1024];
-   size_t len = mb_to_ucs2(mbTextShort, -1, ucs2buffer, 1024);
+   len = mb_to_ucs2(mbTextShort, -1, ucs2buffer, 1024);
    AssertEquals(len, 12);
    AssertTrue(!memcmp(ucs2buffer, ucs2TextShort, sizeof(UCS2CHAR) * 12));
 
@@ -66,7 +101,6 @@ static void TestStringConversion()
 
    StartTest(_T("UCS-2 to ANSI conversion"));
 
-   char mbBuffer[1024];
    len = ucs2_to_mb(ucs2TextShort, -1, mbBuffer, 1024);
    AssertEquals(len, 12);
    AssertTrue(!strcmp(mbBuffer, mbTextShort));
