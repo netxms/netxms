@@ -37,7 +37,7 @@ fi
 if test "x$NEED_SLEEP" = "xyes"; then
     count=1
     while ps $PS_OPTIONS -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd; do
-        if test $count -gt 20; then
+        if test $count -gt 120; then
             echo "netxmsd is running, but should be already stopped"
             exit 1
         fi
