@@ -1,4 +1,4 @@
-DBDriver = pgsql.ddr
+DBDriver = ~DB_DRIVER~
 DBServer = ~DB_SERVER~
 DBName = ~DB_NAME~
 DBLogin = ~DB_LOGIN~
