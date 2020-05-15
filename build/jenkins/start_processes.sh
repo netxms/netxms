@@ -8,10 +8,10 @@ if test "x$BUILD_PREFIX" = "x"; then
 fi
 
 OS=`uname -s`
-if test "$OS" = "SunOS" -o "$OS" = "AIX"; then
-    PS_OPTIONS="-ae"
-else
+if test "$OS" = "FreeBSD"; then
     PS_OPTIONS="-aex"
+else
+    PS_OPTIONS="-ae"
 fi
 
 BINDIR="$BUILD_PREFIX/bin"
@@ -23,10 +23,17 @@ else
     SUFFIX=""
 fi
 
-$BINDIR/nxdbmgr$SUFFIX -f unlock
-$BINDIR/nxdbmgr$SUFFIX upgrade
-$BINDIR/netxmsd$SUFFIX -d -D6
-$BINDIR/nxagentd -d -D6 -p $BUILD_PREFIX/agent.pid
+if test -f "$BUILD_PREFIX/etc/jenkins/netxmsd.conf"; then
+	NETXMSD_CONFIG="-c $BUILD_PREFIX/etc/jenkins/netxmsd.conf"
+fi
+if test -f "$BUILD_PREFIX/etc/jenkins/nxagentd.conf"; then
+	NXAGENTD_CONFIG="-c $BUILD_PREFIX/etc/jenkins/nxagentd.conf"
+fi
+
+$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -f unlock
+$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG upgrade
+$BINDIR/netxmsd$SUFFIX $NETXMSD_CONFIG -d -D6
+$BINDIR/nxagentd $NXAGENTD_CONFIG -d -D6 -p $BUILD_PREFIX/agent.pid
 
 # Wait for processes to start
 sleep 60

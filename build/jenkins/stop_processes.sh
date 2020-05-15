@@ -8,23 +8,23 @@ if test "x$BUILD_PREFIX" = "x"; then
 fi
 
 OS=`uname -s`
-if test "$OS" = "SunOS" -o "$OS" = "AIX"; then
-    PS_OPTIONS="-ae"
-else
+if test "$OS" = "FreeBSD"; then
     PS_OPTIONS="-aex"
+else
+    PS_OPTIONS="-ae"
 fi
 
 BINDIR="$BUILD_PREFIX/bin"
 USER=`whoami`
 NEED_SLEEP=no
 
-if ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd; then
+if ps $PS_OPTIONS -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd; then
     pid=`ps $PS_OPTIONS -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/netxmsd | xargs | cut -d ' ' -f 1`
     kill $pid
     NEED_SLEEP=yes
 fi
 
-if ps -ae -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/nxagentd; then
+if ps $PS_OPTIONS -o pid,user,args | grep -v grep | grep $USER | grep $BINDIR/nxagentd; then
     if [ -f $BUILD_PREFIX/agent.pid ]; then
         pid=`cat $BUILD_PREFIX/agent.pid`
     else

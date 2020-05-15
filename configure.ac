@@ -4664,6 +4664,7 @@ AC_CONFIG_FILES([
 	src/zlib/Makefile
 	sql/Makefile
 	tests/Makefile
+	tests/config/Makefile
 	tests/include/Makefile
 	tests/suite/Makefile
 	tests/test-libnetxms/Makefile

@@ -1,0 +1,8 @@
+MasterServers = 127.0.0.1
+MasterServers = ~MASTER_SERVERS~
+ListenPort = ~LISTEN_PORT~
+LogFile = ~STATEDIR~/nxagentd.log
+SubAgent = filemgr.nsm
+
+[FileMgr]
+RootFolder = /

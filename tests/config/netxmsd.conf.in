@@ -1,0 +1,6 @@
+DBDriver = pgsql.ddr
+DBServer = ~DB_SERVER~
+DBName = ~DB_NAME~
+DBLogin = ~DB_LOGIN~
+DBPassword = ~DB_PASSWORD~
+LogFile = ~STATEDIR~/netxmsd.log
