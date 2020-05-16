@@ -31,6 +31,8 @@ if [ "x$LIBASAN" == "x" ]; then
 fi
 LD_PRELOAD="$LIBASAN"
 
+ASAN_OPTIONS="detect_odr_violation=1${ASAN_OPTIONS:+:}${ASAN_OPTIONS}"
+
 # Remove binary name from argument list
 shift
 
@@ -70,8 +72,10 @@ if [ -f "$LSAN_SUPPRESSIONS_FILE" ]; then
 fi
 
 echo "*** Starting $BINARY"
+echo "*** Options: $ASAN_OPTIONS"
 echo "*** $LD_PRELOAD"
 
+export ASAN_OPTIONS
 export LD_PRELOAD
 $BINARY "$@"
 exit $?
