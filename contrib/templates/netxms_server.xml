@@ -1042,7 +1042,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isLocalMgmt;</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isLocalMgmt;</filter>
 		</template>
 		<template id="119">
 			<guid>3677cb73-d121-4d48-b529-37a276f592be</guid>
@@ -1135,7 +1135,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isLocalMgmt;</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isLocalMgmt;</filter>
 		</template>
 		<template id="121">
 			<guid>d00799c6-4dc3-4f4e-8d67-b7e0714ff4f5</guid>
@@ -1203,7 +1203,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isLocalMgmt &amp;&amp; ($node-&gt;platformName like &quot;windows-*&quot;);</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isLocalMgmt &amp;&amp; ($node-&gt;platformName like &quot;windows-*&quot;);</filter>
 		</template>
 		<template id="122">
 			<guid>2b34394a-bef7-4cec-9cb6-70de8c6b7ed6</guid>
@@ -1245,7 +1245,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isLocalMgmt &amp;&amp; !($node-&gt;platformName like &quot;windows-*&quot;);</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isLocalMgmt &amp;&amp; !($node-&gt;platformName like &quot;windows-*&quot;);</filter>
 		</template>
 		<template id="666">
 			<guid>39021586-80ad-4d9e-9ec8-628a863a82a8</guid>
@@ -1338,7 +1338,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isLocalMgmt &amp;&amp; ($node-&gt;readInternalParameter(&quot;Server.Heap.Active&quot;) != null);</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isLocalMgmt &amp;&amp; ($node-&gt;readInternalParameter(&quot;Server.Heap.Active&quot;) != null);</filter>
 		</template>
 		<template id="123">
 			<guid>22a93d86-a72b-47e7-8178-0040548a3a47</guid>
@@ -1665,7 +1665,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isLocalMgmt;</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isLocalMgmt;</filter>
 		</template>
 		<template id="667">
 			<guid>989f562b-f3c6-452c-b3de-55107456d784</guid>
@@ -1796,7 +1796,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isLocalMgmt;</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isLocalMgmt;</filter>
 		</template>
 	</templates>
 	<traps>

@@ -287,7 +287,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="true" autoRemove="false">return $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;Linux-*&quot;;</filter>
+			<filter autoBind="true" autoRemove="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;Linux-*&quot;;</filter>
 		</template>
 	</templates>
 	<traps>

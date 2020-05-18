@@ -59,7 +59,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.SyslogProxy.IsEnabled&quot;);</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.SyslogProxy.IsEnabled&quot;);</filter>
 		</template>
 		<template id="326">
 			<guid>aee25b6b-45ed-449a-b916-f257e42cb740</guid>
@@ -115,7 +115,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="1" autoUnbind="0">$node-&gt;isAgent &amp;&amp; $node-&gt;zoneProxyStatus</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;zoneProxyStatus</filter>
 		</template>
 		<template id="327">
 			<guid>b33a2d86-75c3-4987-a45a-8f4cdb9da783</guid>
@@ -435,7 +435,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isAgent;</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
 		</template>
 		<template id="328">
 			<guid>d9069036-9fd0-4778-8831-ec22b0abd3bb</guid>
@@ -601,7 +601,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isAgent;</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
 		</template>
 		<template id="329">
 			<guid>3485c77b-c3ab-41f5-a17c-fd43be9efdc9</guid>
@@ -679,7 +679,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.Proxy.IsEnabled&quot;);</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.Proxy.IsEnabled&quot;);</filter>
 		</template>
 		<template id="330">
 			<guid>2013cac1-cae2-42c0-821e-1b831733b8d4</guid>
@@ -823,7 +823,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.SNMP.IsProxyEnabled&quot;);&#x0A;</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp;&#x0A;&#x09;AgentReadParameter($node, &quot;Agent.SNMP.IsProxyEnabled&quot;);&#x0A;</filter>
 		</template>
 		<template id="331">
 			<guid>8e05f18c-2275-46c6-9e24-0e7c409bda44</guid>
@@ -923,7 +923,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="1" autoUnbind="0">return $node-&gt;isAgent;</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent;</filter>
 		</template>
 	</templates>
 	<traps>
