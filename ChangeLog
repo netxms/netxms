@@ -1,4 +1,18 @@
 *
+* 3.3.321
+*
+
+- Fixed bug in template import on server startup
+
+
+*
+* 3.3.315
+*
+
+- Fixed server crash on agent certificate renewal
+
+
+*
 * 3.3.314
 *
 
