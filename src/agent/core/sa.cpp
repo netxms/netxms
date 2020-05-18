@@ -400,7 +400,7 @@ void SessionAgentConnector::updateUserAgentConfig()
          config.addSubTree(_T("/"), e);
       }
 
-      NXCPMessage msg(CMD_UPDATE_AGENT_CONFIG, nextRequestId());
+      NXCPMessage msg(CMD_WRITE_AGENT_CONFIG_FILE, nextRequestId());
       msg.setField(VID_CONFIG_FILE_DATA, config.createXml());
       msg.setField(VID_FILE_STORE, g_szFileStore);
       sendMessage(&msg);

@@ -39,16 +39,6 @@
 #include "zeromq.h"
 #endif
 
-// WARNING! this hack works only for d2i_X509(); be careful when adding new code
-#ifdef OPENSSL_CONST
-# undef OPENSSL_CONST
-#endif
-#if OPENSSL_VERSION_NUMBER >= 0x0090800fL
-# define OPENSSL_CONST const
-#else
-# define OPENSSL_CONST
-#endif
-
 /**
  * Constants
  */
@@ -889,11 +879,11 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_REQUEST_ENCRYPTION:
          setupEncryption(request);
          break;
-      case CMD_GET_AGENT_CONFIG:
-         getAgentConfig(request);
+      case CMD_READ_AGENT_CONFIG_FILE:
+         readAgentConfigFile(request);
          break;
-      case CMD_UPDATE_AGENT_CONFIG:
-         updateAgentConfig(request);
+      case CMD_WRITE_AGENT_CONFIG_FILE:
+         writeAgentConfigFile(request);
          break;
       case CMD_EXECUTE_ACTION:
          executeAction(request);
@@ -970,23 +960,23 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_PUSH_DCI_DATA:
          pushDCIData(request);
          break;
-      case CMD_GET_AGENT_CFG_LIST:
-         sendAgentCfgList(request->getId());
+      case CMD_GET_AGENT_CONFIGURATION_LIST:
+         getAgentConfigurationList(request->getId());
          break;
-      case CMD_OPEN_AGENT_CONFIG:
-         OpenAgentConfig(request);
+      case CMD_GET_AGENT_CONFIGURATION:
+         getAgentConfiguration(request);
          break;
-      case CMD_SAVE_AGENT_CONFIG:
-         SaveAgentConfig(request);
+      case CMD_UPDATE_AGENT_CONFIGURATION:
+         updateAgentConfiguration(request);
          break;
-      case CMD_DELETE_AGENT_CONFIG:
-         DeleteAgentConfig(request);
+      case CMD_DELETE_AGENT_CONFIGURATION:
+         deleteAgentConfiguration(request);
          break;
-      case CMD_SWAP_AGENT_CONFIGS:
-         SwapAgentConfigs(request);
+      case CMD_SWAP_AGENT_CONFIGURATIONS:
+         swapAgentConfigurations(request);
          break;
       case CMD_GET_OBJECT_COMMENTS:
-         SendObjectComments(request);
+         getObjectComments(request);
          break;
       case CMD_UPDATE_OBJECT_COMMENTS:
          updateObjectComments(request);
@@ -6822,9 +6812,7 @@ void ClientSession::getInstalledPackages(UINT32 requestId)
             msg.setField(VID_PLATFORM_NAME, DBGetField(hResult, 2, szBuffer, MAX_DB_STRING));
             msg.setField(VID_FILE_NAME, DBGetField(hResult, 3, szBuffer, MAX_DB_STRING));
             msg.setField(VID_PACKAGE_NAME, DBGetField(hResult, 4, szBuffer, MAX_DB_STRING));
-            DBGetField(hResult, 5, szBuffer, MAX_DB_STRING);
-            DecodeSQLString(szBuffer);
-            msg.setField(VID_DESCRIPTION, szBuffer);
+            msg.setField(VID_DESCRIPTION, DBGetField(hResult, 5, szBuffer, MAX_DB_STRING));
             sendMessage(&msg);
             msg.deleteAllFields();
          }
@@ -7172,15 +7160,9 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
  */
 void ClientSession::getUserVariable(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 dwUserId;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
+   uint32_t dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -7191,34 +7173,39 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_NAME, nullptr, 0), DB_BIND_DYNAMIC);
-         hResult = DBSelectPrepared(hStmt);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != nullptr)
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               TCHAR *pszData;
-               pszData = DBGetField(hResult, 0, 0, nullptr, 0);
-               DecodeSQLString(pszData);
+               TCHAR *value = DBGetField(hResult, 0, 0, nullptr, 0);
                msg.setField(VID_RCC, RCC_SUCCESS);
-               msg.setField(VID_VALUE, pszData);
-               free(pszData);
+               msg.setField(VID_VALUE, value);
+               MemFree(value);
             }
             else
+            {
                msg.setField(VID_RCC, RCC_VARIABLE_NOT_FOUND);
+            }
             DBFreeResult(hResult);
          }
          else
+         {
             msg.setField(VID_RCC, RCC_DB_FAILURE);
+         }
          DBFreeStatement(hStmt);
       }
       else
+      {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
+      }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
+   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
 
-   // Send response
    sendMessage(&msg);
 }
 
@@ -7462,7 +7449,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                if (bExist)
                   hStmt = DBPrepare(hdb, _T("UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?"));
                else
-                  hStmt = DBPrepare(hdb, _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (?,?,?)"));
+                  hStmt = DBPrepare(hdb, _T("INSERT INTO user_profiles (var_value,user_id,var_name) VALUES (?,?,?)"));
 
                if (hStmt != nullptr)
                {
@@ -7622,12 +7609,12 @@ void ClientSession::setupEncryption(NXCPMessage *request)
 /**
  * Get agent's configuration file
  */
-void ClientSession::getAgentConfig(NXCPMessage *pRequest)
+void ClientSession::readAgentConfigFile(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get object id and check prerequisites
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
@@ -7637,15 +7624,15 @@ void ClientSession::getAgentConfig(NXCPMessage *pRequest)
             shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
             if (pConn != nullptr)
             {
-               TCHAR *pszConfig;
-               uint32_t size;
-               uint32_t dwResult = pConn->getConfigFile(&pszConfig, &size);
+               TCHAR *content;
+               size_t size;
+               uint32_t dwResult = pConn->readConfigFile(&content, &size);
                switch(dwResult)
                {
                   case ERR_SUCCESS:
                      msg.setField(VID_RCC, RCC_SUCCESS);
-                     msg.setField(VID_CONFIG_FILE, pszConfig);
-                     free(pszConfig);
+                     msg.setField(VID_CONFIG_FILE, content);
+                     MemFree(content);
                      break;
                   case ERR_ACCESS_DENIED:
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -7680,20 +7667,14 @@ void ClientSession::getAgentConfig(NXCPMessage *pRequest)
 }
 
 /**
- * Update agent's configuration file
+ * Write agent's configuration file
  */
-void ClientSession::updateAgentConfig(NXCPMessage *pRequest)
+void ClientSession::writeAgentConfigFile(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   UINT32 dwResult;
-   TCHAR *pszConfig;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get object id and check prerequisites
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
@@ -7703,18 +7684,17 @@ void ClientSession::updateAgentConfig(NXCPMessage *pRequest)
             shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
             if (pConn != nullptr)
             {
-               pszConfig = pRequest->getFieldAsString(VID_CONFIG_FILE);
-               dwResult = pConn->updateConfigFile(pszConfig);
-               free(pszConfig);
+               TCHAR *content = request->getFieldAsString(VID_CONFIG_FILE);
+               uint32_t agentRCC = pConn->writeConfigFile(content);
+               MemFree(content);
 
-               if ((pRequest->getFieldAsUInt16(VID_APPLY_FLAG) != 0) &&
-                   (dwResult == ERR_SUCCESS))
+               if ((request->getFieldAsUInt16(VID_APPLY_FLAG) != 0) && (agentRCC == ERR_SUCCESS))
                {
                   StringList list;
-                  dwResult = pConn->execAction(_T("Agent.Restart"), list);
+                  agentRCC = pConn->execAction(_T("Agent.Restart"), list);
                }
 
-               switch(dwResult)
+               switch(agentRCC)
                {
                   case ERR_SUCCESS:
                      msg.setField(VID_RCC, RCC_SUCCESS);
@@ -8626,34 +8606,28 @@ void ClientSession::resolveDCINames(NXCPMessage *pRequest)
 }
 
 /**
- * Send list of available agent configs to client
+ * Get list of available agent configurations
  */
-void ClientSession::sendAgentCfgList(UINT32 dwRqId)
+void ClientSession::getAgentConfigurationList(uint32_t requestId)
 {
-   NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 i, dwId, dwNumRows;
-   TCHAR szText[MAX_DB_STRING];
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      hResult = DBSelect(hdb, _T("SELECT config_id,config_name,sequence_number FROM agent_configs"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT config_id,config_name,sequence_number FROM agent_configs"));
       if (hResult != nullptr)
       {
-         dwNumRows = DBGetNumRows(hResult);
+         int count = DBGetNumRows(hResult);
          msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setField(VID_NUM_RECORDS, dwNumRows);
-         for(i = 0, dwId = VID_AGENT_CFG_LIST_BASE; i < dwNumRows; i++, dwId += 7)
+         msg.setField(VID_NUM_RECORDS, count);
+         uint32_t fieldId = VID_AGENT_CFG_LIST_BASE;
+         for(int i = 0; i < count; i++, fieldId += 7)
          {
-            msg.setField(dwId++, DBGetFieldULong(hResult, i, 0));
-            DBGetField(hResult, i, 1, szText, MAX_DB_STRING);
-            DecodeSQLString(szText);
-            msg.setField(dwId++, szText);
-            msg.setField(dwId++, DBGetFieldULong(hResult, i, 2));
+            msg.setField(fieldId++, DBGetFieldULong(hResult, i, 0));
+            TCHAR name[MAX_DB_STRING];
+            msg.setField(fieldId++, DBGetField(hResult, i, 1, name, MAX_DB_STRING));
+            msg.setField(fieldId++, DBGetFieldULong(hResult, i, 2));
          }
          DBFreeResult(hResult);
       }
@@ -8671,39 +8645,38 @@ void ClientSession::sendAgentCfgList(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
 /**
- *  Open (get all data) server-stored agent's config
+ *  Get server-stored agent's configuration file
  */
-void ClientSession::OpenAgentConfig(NXCPMessage *pRequest)
+void ClientSession::getAgentConfiguration(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 dwCfgId;
-   TCHAR *pszStr, szQuery[256], szBuffer[MAX_DB_STRING];
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
-      _sntprintf(szQuery, 256, _T("SELECT config_name,config_file,config_filter,sequence_number FROM agent_configs WHERE config_id=%d"), dwCfgId);
-      hResult = DBSelect(hdb, szQuery);
+      uint32_t configId = request->getFieldAsUInt32(VID_CONFIG_ID);
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT config_name,config_file,config_filter,sequence_number FROM agent_configs WHERE config_id=%u"), configId);
+      DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
          {
             msg.setField(VID_RCC, RCC_SUCCESS);
-            msg.setField(VID_CONFIG_ID, dwCfgId);
-            DecodeSQLStringAndSetVariable(&msg, VID_NAME, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING));
-            pszStr = DBGetField(hResult, 0, 1, nullptr, 0);
-            DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, pszStr);
-            free(pszStr);
-            pszStr = DBGetField(hResult, 0, 2, nullptr, 0);
-            DecodeSQLStringAndSetVariable(&msg, VID_FILTER, pszStr);
-            free(pszStr);
+            msg.setField(VID_CONFIG_ID, configId);
+
+            TCHAR name[MAX_DB_STRING];
+            msg.setField(VID_NAME, DBGetField(hResult, 0, 0, name, MAX_DB_STRING));
+
+            TCHAR *text = DBGetField(hResult, 0, 1, nullptr, 0);
+            msg.setField(VID_CONFIG_FILE, text);
+            MemFree(text);
+
+            text = DBGetField(hResult, 0, 2, nullptr, 0);
+            msg.setField(VID_FILTER, text);
+            MemFree(text);
+
             msg.setField(VID_SEQUENCE_NUMBER, DBGetFieldULong(hResult, 0, 3));
          }
          else
@@ -8726,88 +8699,63 @@ void ClientSession::OpenAgentConfig(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
 /**
- *  Save changes to server-stored agent's configuration
+ * Update server-stored agent's configuration
  */
-void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
+void ClientSession::updateAgentConfiguration(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 dwCfgId, dwSeqNum;
-   TCHAR szQuery[256], szName[MAX_DB_STRING], *pszFilter, *pszText;
-   TCHAR *pszQuery, *pszEscFilter, *pszEscText, *pszEscName;
-   BOOL bCreate;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
-      _sntprintf(szQuery, 256, _T("SELECT config_name FROM agent_configs WHERE config_id=%d"), dwCfgId);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != nullptr)
+      uint32_t configId = request->getFieldAsUInt32(VID_CONFIG_ID);
+
+      uint32_t sequence;
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("agent_configs"), _T("config_id"), configId))
       {
-         bCreate = (DBGetNumRows(hResult) == 0);
-         DBFreeResult(hResult);
-
-         pRequest->getFieldAsString(VID_NAME, szName, MAX_DB_STRING);
-         pszEscName = EncodeSQLString(szName);
-
-         pszFilter = pRequest->getFieldAsString(VID_FILTER);
-         pszEscFilter = EncodeSQLString(pszFilter);
-         free(pszFilter);
-
-         pszText = pRequest->getFieldAsString(VID_CONFIG_FILE);
-         pszEscText = EncodeSQLString(pszText);
-         free(pszText);
-
-			size_t qlen = _tcslen(pszEscText) + _tcslen(pszEscFilter) + _tcslen(pszEscName) + 256;
-         pszQuery = (TCHAR *)MemAlloc(qlen * sizeof(TCHAR));
-         if (bCreate)
+         hStmt = DBPrepare(hdb, _T("UPDATE agent_configs SET config_name=?,config_filter=?,config_file=?,sequence_number=? WHERE config_id=?"));
+         sequence = request->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
+      }
+      else
+      {
+         if (configId == 0)
          {
-            if (dwCfgId == 0)
-            {
-               // Request for new ID creation
-               dwCfgId = CreateUniqueId(IDG_AGENT_CONFIG);
-               msg.setField(VID_CONFIG_ID, dwCfgId);
+            // Request for new ID creation
+            configId = CreateUniqueId(IDG_AGENT_CONFIG);
+            msg.setField(VID_CONFIG_ID, configId);
 
-               // Request sequence number
-               hResult = DBSelect(hdb, _T("SELECT max(sequence_number) FROM agent_configs"));
-               if (hResult != nullptr)
-               {
-                  if (DBGetNumRows(hResult) > 0)
-                     dwSeqNum = DBGetFieldULong(hResult, 0, 0) + 1;
-                  else
-                     dwSeqNum = 1;
-                  DBFreeResult(hResult);
-               }
+            // Request sequence number
+            DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(sequence_number) FROM agent_configs"));
+            if (hResult != nullptr)
+            {
+               if (DBGetNumRows(hResult) > 0)
+                  sequence = DBGetFieldULong(hResult, 0, 0) + 1;
                else
-               {
-                  dwSeqNum = 1;
-               }
-               msg.setField(VID_SEQUENCE_NUMBER, dwSeqNum);
+                  sequence = 1;
+               DBFreeResult(hResult);
             }
             else
             {
-               dwSeqNum = pRequest->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
+               sequence = 1;
             }
-            _sntprintf(pszQuery, qlen, _T("INSERT INTO agent_configs (config_id,config_name,config_filter,config_file,sequence_number) VALUES (%d,'%s','%s','%s',%d)"),
-                      dwCfgId, pszEscName, pszEscFilter, pszEscText, dwSeqNum);
+            msg.setField(VID_SEQUENCE_NUMBER, sequence);
          }
          else
          {
-            _sntprintf(pszQuery, qlen, _T("UPDATE agent_configs SET config_name='%s',config_filter='%s',config_file='%s',sequence_number=%d WHERE config_id=%d"),
-                      pszEscName, pszEscFilter, pszEscText,
-                      pRequest->getFieldAsUInt32(VID_SEQUENCE_NUMBER), dwCfgId);
+            sequence = request->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
          }
-         free(pszEscName);
-         free(pszEscText);
-         free(pszEscFilter);
-
-         if (DBQuery(hdb, pszQuery))
+         hStmt = DBPrepare(hdb,  _T("INSERT INTO agent_configs (config_name,config_filter,config_file,sequence_number,config_id) VALUES (?,?,?,?,?)"));
+      }
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, request->getFieldAsString(VID_NAME), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, request->getFieldAsString(VID_FILTER), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_TEXT, request->getFieldAsString(VID_CONFIG_FILE), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, sequence);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, configId);
+         if (DBExecute(hStmt))
          {
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
@@ -8815,7 +8763,6 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
          {
             msg.setField(VID_RCC, RCC_DB_FAILURE);
          }
-         free(pszQuery);
       }
       else
       {
@@ -8830,49 +8777,32 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
 
    sendMessage(&msg);
 }
-
 
 /**
  * Delete agent's configuration
  */
-void ClientSession::DeleteAgentConfig(NXCPMessage *pRequest)
+void ClientSession::deleteAgentConfiguration(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 dwCfgId;
-   TCHAR szQuery[256];
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
-      _sntprintf(szQuery, 256, _T("SELECT config_name FROM agent_configs WHERE config_id=%d"), dwCfgId);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != nullptr)
+      uint32_t configId = request->getFieldAsUInt32(VID_CONFIG_ID);
+      if (IsDatabaseRecordExist(hdb, _T("agent_configs"), _T("config_id"), configId))
       {
-         if (DBGetNumRows(hResult) > 0)
+         if (ExecuteQueryOnObject(hdb, configId, _T("DELETE FROM agent_configs WHERE config_id=?")))
          {
-            if (ExecuteQueryOnObject(hdb, dwCfgId, _T("DELETE FROM agent_configs WHERE config_id=?")))
-            {
-               msg.setField(VID_RCC, RCC_SUCCESS);
-            }
-            else
-            {
-               msg.setField(VID_RCC, RCC_DB_FAILURE);
-            }
+            msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INVALID_CONFIG_ID);
+            msg.setField(VID_RCC, RCC_DB_FAILURE);
          }
-         DBFreeResult(hResult);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         msg.setField(VID_RCC, RCC_INVALID_CONFIG_ID);
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
@@ -8884,44 +8814,38 @@ void ClientSession::DeleteAgentConfig(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
 /**
  * Swap sequence numbers of two agent configs
  */
-void ClientSession::SwapAgentConfigs(NXCPMessage *pRequest)
+void ClientSession::swapAgentConfigurations(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   DB_RESULT hResult;
-   TCHAR szQuery[256];
-   BOOL bRet;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      _sntprintf(szQuery, 256, _T("SELECT config_id,sequence_number FROM agent_configs WHERE config_id=%d OR config_id=%d"),
-                 pRequest->getFieldAsUInt32(VID_CONFIG_ID), pRequest->getFieldAsUInt32(VID_CONFIG_ID_2));
-      hResult = DBSelect(hdb, szQuery);
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT config_id,sequence_number FROM agent_configs WHERE config_id=%d OR config_id=%d"),
+                 request->getFieldAsUInt32(VID_CONFIG_ID), request->getFieldAsUInt32(VID_CONFIG_ID_2));
+      DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) >= 2)
          {
             if (DBBegin(hdb))
             {
-               _sntprintf(szQuery, 256, _T("UPDATE agent_configs SET sequence_number=%d WHERE config_id=%d"),
+               _sntprintf(query, 256, _T("UPDATE agent_configs SET sequence_number=%d WHERE config_id=%d"),
                           DBGetFieldULong(hResult, 1, 1), DBGetFieldULong(hResult, 0, 0));
-               bRet = DBQuery(hdb, szQuery);
-               if (bRet)
+               bool success = DBQuery(hdb, query);
+               if (success)
                {
-                  _sntprintf(szQuery, 256, _T("UPDATE agent_configs SET sequence_number=%d WHERE config_id=%d"),
+                  _sntprintf(query, 256, _T("UPDATE agent_configs SET sequence_number=%d WHERE config_id=%d"),
                              DBGetFieldULong(hResult, 0, 1), DBGetFieldULong(hResult, 1, 0));
-                  bRet = DBQuery(hdb, szQuery);
+                  success = DBQuery(hdb, query);
                }
 
-               if (bRet)
+               if (success)
                {
                   DBCommit(hdb);
                   msg.setField(VID_RCC, RCC_SUCCESS);
@@ -8960,41 +8884,35 @@ void ClientSession::SwapAgentConfigs(NXCPMessage *pRequest)
 /**
  * Send config to agent on request
  */
-void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
+void ClientSession::sendConfigForAgent(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   TCHAR szPlatform[MAX_DB_STRING], szError[256], szBuffer[256], *pszText;
-   WORD wMajor, wMinor, wRelease;
-   int i, nNumRows;
-   DB_RESULT hResult;
-   UINT32 dwCfgId;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   pRequest->getFieldAsString(VID_PLATFORM_NAME, szPlatform, MAX_DB_STRING);
-   wMajor = pRequest->getFieldAsUInt16(VID_VERSION_MAJOR);
-   wMinor = pRequest->getFieldAsUInt16(VID_VERSION_MINOR);
-   wRelease = pRequest->getFieldAsUInt16(VID_VERSION_RELEASE);
-   DbgPrintf(3, _T("Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\""),
-             m_clientAddr.toString(szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
+   TCHAR platform[MAX_DB_STRING];
+   request->getFieldAsString(VID_PLATFORM_NAME, platform, MAX_DB_STRING);
+   uint16_t versionMajor = request->getFieldAsUInt16(VID_VERSION_MAJOR);
+   uint16_t versionMinor = request->getFieldAsUInt16(VID_VERSION_MINOR);
+   uint16_t versionRelease = request->getFieldAsUInt16(VID_VERSION_RELEASE);
+   debugPrintf(3, _T("Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\""),
+            m_clientAddr.toString().cstr(), platform, (int)versionMajor, (int)versionMinor, (int)versionRelease);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number"));
    if (hResult != nullptr)
    {
-      nNumRows = DBGetNumRows(hResult);
+      int nNumRows = DBGetNumRows(hResult);
+      int i;
       for(i = 0; i < nNumRows; i++)
       {
-         dwCfgId = DBGetFieldULong(hResult, i, 0);
+         uint32_t configId = DBGetFieldULong(hResult, i, 0);
 
          // Compile script
-         pszText = DBGetField(hResult, i, 2, nullptr, 0);
-         DecodeSQLString(pszText);
-         NXSL_VM *vm = NXSLCompileAndCreateVM(pszText, szError, 256, new NXSL_ServerEnv());
-         free(pszText);
+         TCHAR *filterSource = DBGetField(hResult, i, 2, nullptr, 0);
+         TCHAR errorMessage[256];
+         NXSL_VM *filter = NXSLCompileAndCreateVM(filterSource, errorMessage, 256, new NXSL_ServerEnv());
+         MemFree(filterSource);
 
-         if (vm != nullptr)
+         if (filter != nullptr)
          {
             // Set arguments:
             // $1 - IP address
@@ -9002,57 +8920,56 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
             // $3 - major version number
             // $4 - minor version number
             // $5 - release number
-            NXSL_Value *ppArgList[5];
-            ppArgList[0] = vm->createValue(m_clientAddr.toString(szBuffer));
-            ppArgList[1] = vm->createValue(szPlatform);
-            ppArgList[2] = vm->createValue((LONG)wMajor);
-            ppArgList[3] = vm->createValue((LONG)wMinor);
-            ppArgList[4] = vm->createValue((LONG)wRelease);
+            NXSL_Value *args[5];
+            args[0] = filter->createValue(m_clientAddr.toString());
+            args[1] = filter->createValue(platform);
+            args[2] = filter->createValue((LONG)versionMajor);
+            args[3] = filter->createValue((LONG)versionMinor);
+            args[4] = filter->createValue((LONG)versionRelease);
 
             // Run script
-            DbgPrintf(3, _T("Running configuration matching script %d"), dwCfgId);
-            if (vm->run(5, ppArgList))
+            DbgPrintf(3, _T("Running configuration matching script %d"), configId);
+            if (filter->run(5, args))
             {
-               NXSL_Value *pValue = vm->getResult();
+               NXSL_Value *pValue = filter->getResult();
                if (pValue->isTrue())
                {
-                  DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"),
-                            dwCfgId, m_clientAddr.toString(szBuffer));
+                  DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"), configId, m_clientAddr.toString().cstr());
                   msg.setField(VID_RCC, (WORD)0);
-                  pszText = DBGetField(hResult, i, 1, nullptr, 0);
-                  DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, pszText);
-                  msg.setField(VID_CONFIG_ID, dwCfgId);
-                  free(pszText);
-                  delete vm;
+                  TCHAR *content = DBGetField(hResult, i, 1, nullptr, 0);
+                  msg.setField(VID_CONFIG_FILE, content);
+                  msg.setField(VID_CONFIG_ID, configId);
+                  MemFree(content);
+                  delete filter;
                   break;
                }
                else
                {
-                  DbgPrintf(3, _T("Configuration script %d not matched for agent %s"),
-                            dwCfgId, m_clientAddr.toString(szBuffer));
+                  DbgPrintf(3, _T("Configuration script %d not matched for agent %s"), configId, m_clientAddr.toString().cstr());
                }
             }
             else
             {
-               _sntprintf(szError, 256, _T("AgentCfg::%d"), dwCfgId);
-               PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError, vm->getErrorText(), 0);
+               _sntprintf(errorMessage, 256, _T("AgentCfg::%d"), configId);
+               PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", errorMessage, filter->getErrorText(), 0);
             }
-            delete vm;
+            delete filter;
          }
          else
          {
-            _sntprintf(szBuffer, 256, _T("AgentCfg::%d"), dwCfgId);
-            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, szError, 0);
+            TCHAR scriptName[256];
+            _sntprintf(scriptName, 256, _T("AgentCfg::%d"), configId);
+            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, errorMessage, 0);
          }
       }
       DBFreeResult(hResult);
 
       if (i == nNumRows)
-         msg.setField(VID_RCC, (WORD)1);  // No matching configs found
+         msg.setField(VID_RCC, (uint16_t)1);  // No matching configs found
    }
    else
    {
-      msg.setField(VID_RCC, (WORD)1);  // DB Failure
+      msg.setField(VID_RCC, (uint16_t)1);  // DB Failure
    }
    DBConnectionPoolReleaseConnection(hdb);
 
@@ -9062,11 +8979,11 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
 /**
  * Send object comments to client
  */
-void ClientSession::SendObjectComments(NXCPMessage *pRequest)
+void ClientSession::getObjectComments(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -9851,73 +9768,63 @@ void ClientSession::sendPerfTabDCIList(NXCPMessage *pRequest)
 /**
  * Add CA certificate
  */
-void ClientSession::addCACertificate(NXCPMessage *pRequest)
+void ClientSession::addCACertificate(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
-
-#ifdef _WITH_ENCRYPTION
-	UINT32 dwCertId;
-	BYTE *pData;
-	OPENSSL_CONST BYTE *p;
-	X509 *pCert;
-	TCHAR *pszQuery, *pszEscSubject, *pszComments, *pszEscComments;
-#endif
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
 	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
-		size_t len = pRequest->getFieldAsBinary(VID_CERTIFICATE, nullptr, 0);
-		if (len > 0)
-		{
-			pData = (BYTE *)MemAlloc(len);
-			pRequest->getFieldAsBinary(VID_CERTIFICATE, pData, len);
-
+	   size_t len = 0;
+	   const BYTE *certData = request->getBinaryFieldPtr(VID_CERTIFICATE, &len);
+	   if ((certData != nullptr) && (len > 0))
+	   {
 			// Validate certificate
-			p = pData;
-			pCert = d2i_X509(nullptr, &p, (long)len);
-			if (pCert != nullptr)
+			X509 *cert = d2i_X509(nullptr, &certData, (long)len);
+			if (cert != nullptr)
 			{
-            char subjectName[1024];
-            X509_NAME_oneline(X509_get_subject_name(pCert), subjectName, 1024);
-#ifdef UNICODE
-				WCHAR *wname = WideStringFromMBString(subjectName);
-				pszEscSubject = EncodeSQLString(wname);
-				free(wname);
-#else
-				pszEscSubject = EncodeSQLString(subjectName);
-#endif
-				X509_free(pCert);
-				pszComments = pRequest->getFieldAsString(VID_COMMENTS);
-				pszEscComments = EncodeSQLString(pszComments);
-				free(pszComments);
-				dwCertId = CreateUniqueId(IDG_CERTIFICATE);
-				size_t qlen = len * 2 + _tcslen(pszEscComments) + _tcslen(pszEscSubject) + 256;
-				pszQuery = (TCHAR *)MemAlloc(qlen * sizeof(TCHAR));
-				_sntprintf(pszQuery, qlen, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
-				           dwCertId, CERT_TYPE_TRUSTED_CA, pszEscSubject, pszEscComments);
-				free(pszEscSubject);
-				free(pszEscComments);
-				BinToStr(pData, len, &pszQuery[_tcslen(pszQuery)]);
-				_tcscat(pszQuery, _T("')"));
-				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-				if (DBQuery(hdb, pszQuery))
-				{
-               NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
-					msg.setField(VID_RCC, RCC_SUCCESS);
-					ReloadCertificates();
-				}
-				else
-				{
-					msg.setField(VID_RCC, RCC_DB_FAILURE);
-				}
+			   String subject = GetCertificateSubjectString(cert);
+				X509_free(cert);
+
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (?,0,?,?,?)")); // 0 for CERT_TYPE_TRUSTED_CA
+            if (hStmt != nullptr)
+            {
+               uint32_t certId = CreateUniqueId(IDG_CERTIFICATE);
+
+               TCHAR *hexData = MemAllocString(len * 2 + 1);
+               BinToStr(certData, len, hexData);
+
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, certId);
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, request->getFieldAsString(VID_COMMENTS), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, hexData, DB_BIND_DYNAMIC);
+
+               if (DBExecute(hStmt))
+               {
+                  NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, certId);
+                  msg.setField(VID_RCC, RCC_SUCCESS);
+                  ReloadCertificates();
+               }
+               else
+               {
+                  msg.setField(VID_RCC, RCC_DB_FAILURE);
+               }
+
+               DBFreeStatement(hStmt);
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_DB_FAILURE);
+            }
+
 				DBConnectionPoolReleaseConnection(hdb);
-				free(pszQuery);
 			}
 			else
 			{
 				msg.setField(VID_RCC, RCC_BAD_CERTIFICATE);
 			}
-			free(pData);
 		}
 		else
 		{
@@ -9938,25 +9845,19 @@ void ClientSession::addCACertificate(NXCPMessage *pRequest)
 /**
  * Delete certificate
  */
-void ClientSession::deleteCertificate(NXCPMessage *pRequest)
+void ClientSession::deleteCertificate(NXCPMessage *request)
 {
-   NXCPMessage msg;
-#ifdef _WITH_ENCRYPTION
-	UINT32 dwCertId;
-#endif
-
-	msg.setId(pRequest->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage msg(request->getId(), CMD_REQUEST_COMPLETED);
 
 	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		dwCertId = pRequest->getFieldAsUInt32(VID_CERTIFICATE_ID);
-		if (ExecuteQueryOnObject(hdb, dwCertId, _T("DELETE FROM certificates WHERE cert_id=?")))
+		uint32_t certId = request->getFieldAsUInt32(VID_CERTIFICATE_ID);
+		if (ExecuteQueryOnObject(hdb, certId, _T("DELETE FROM certificates WHERE cert_id=?")))
 		{
 			msg.setField(VID_RCC, RCC_SUCCESS);
-			NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
+			NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, certId);
 			ReloadCertificates();
 		}
 		else
@@ -9979,56 +9880,45 @@ void ClientSession::deleteCertificate(NXCPMessage *pRequest)
 /**
  * Update certificate's comments
  */
-void ClientSession::updateCertificateComments(NXCPMessage *pRequest)
+void ClientSession::updateCertificateComments(NXCPMessage *request)
 {
-	UINT32 dwCertId, qlen;
-	TCHAR *pszQuery, *pszComments, *pszEscComments;
-	DB_RESULT hResult;
-   NXCPMessage msg;
-
-	msg.setId(pRequest->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage msg(request->getId(), CMD_REQUEST_COMPLETED);
 
 	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
-		dwCertId = pRequest->getFieldAsUInt32(VID_CERTIFICATE_ID);
-		pszComments= pRequest->getFieldAsString(VID_COMMENTS);
-		if (pszComments != nullptr)
+		uint32_t certId = request->getFieldAsUInt32(VID_CERTIFICATE_ID);
+		TCHAR *comments= request->getFieldAsString(VID_COMMENTS);
+		if (comments != nullptr)
 		{
 		   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-			pszEscComments = EncodeSQLString(pszComments);
-			free(pszComments);
-			qlen = (UINT32)_tcslen(pszEscComments) + 256;
-			pszQuery = (TCHAR *)MemAlloc(qlen * sizeof(TCHAR));
-			_sntprintf(pszQuery, qlen, _T("SELECT subject FROM certificates WHERE cert_id=%d"), dwCertId);
-			hResult = DBSelect(hdb, pszQuery);
-			if (hResult != nullptr)
-			{
-				if (DBGetNumRows(hResult) > 0)
-				{
-					_sntprintf(pszQuery, qlen, _T("UPDATE certificates SET comments='%s' WHERE cert_id=%d"), pszEscComments, dwCertId);
-					if (DBQuery(hdb, pszQuery))
-					{
-                  NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
-						msg.setField(VID_RCC, RCC_SUCCESS);
-					}
-					else
-					{
-						msg.setField(VID_RCC, RCC_DB_FAILURE);
-					}
-				}
-				else
-				{
-					msg.setField(VID_RCC, RCC_INVALID_CERT_ID);
-				}
-				DBFreeResult(hResult);
-			}
-			else
-			{
-				msg.setField(VID_RCC, RCC_DB_FAILURE);
-			}
-			free(pszEscComments);
-			free(pszQuery);
+		   if (IsDatabaseRecordExist(hdb, _T("certificates"), _T("cert_id"), certId))
+		   {
+		      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE certificates SET comments=? WHERE cert_id=?"));
+		      if (hStmt != nullptr)
+		      {
+		         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, certId);
+               DBBind(hStmt, 2, DB_SQLTYPE_TEXT, comments, DB_BIND_STATIC);
+               if (DBExecute(hStmt))
+               {
+                  NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, certId);
+                  msg.setField(VID_RCC, RCC_SUCCESS);
+               }
+               else
+               {
+                  msg.setField(VID_RCC, RCC_DB_FAILURE);
+               }
+		         DBFreeStatement(hStmt);
+		      }
+		      else
+		      {
+               msg.setField(VID_RCC, RCC_DB_FAILURE);
+		      }
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INVALID_CERT_ID);
+         }
+		   MemFree(comments);
 			DBConnectionPoolReleaseConnection(hdb);
 		}
 		else
@@ -10047,52 +9937,32 @@ void ClientSession::updateCertificateComments(NXCPMessage *pRequest)
 /**
  * Send list of installed certificates to client
  */
-void ClientSession::getCertificateList(UINT32 dwRqId)
+void ClientSession::getCertificateList(uint32_t requestId)
 {
-   NXCPMessage msg;
-	DB_RESULT hResult;
-	int i, nRows;
-	UINT32 dwId;
-	TCHAR *pszText;
-
-	msg.setId(dwRqId);
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage msg(requestId, CMD_REQUEST_COMPLETED);
 
 	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, _T("SELECT cert_id,cert_type,comments,subject FROM certificates"));
+		DB_RESULT hResult = DBSelect(hdb, _T("SELECT cert_id,cert_type,comments,subject FROM certificates"));
 		if (hResult != nullptr)
 		{
-			nRows = DBGetNumRows(hResult);
+			int count = DBGetNumRows(hResult);
 			msg.setField(VID_RCC, RCC_SUCCESS);
-			msg.setField(VID_NUM_CERTIFICATES, (UINT32)nRows);
-			for(i = 0, dwId = VID_CERT_LIST_BASE; i < nRows; i++, dwId += 6)
+			msg.setField(VID_NUM_CERTIFICATES, static_cast<uint32_t>(count));
+			uint32_t fieldId = VID_CERT_LIST_BASE;
+			for(int i = 0; i < count; i++, fieldId += 6)
 			{
-				msg.setField(dwId++, DBGetFieldULong(hResult, i, 0));
-				msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, i, 1));
+				msg.setField(fieldId++, DBGetFieldULong(hResult, i, 0));
+				msg.setField(fieldId++, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 1)));
 
-				pszText = DBGetField(hResult, i, 2, nullptr, 0);
-				if (pszText != nullptr)
-				{
-					DecodeSQLString(pszText);
-					msg.setField(dwId++, pszText);
-				}
-				else
-				{
-					msg.setField(dwId++, _T(""));
-				}
+				TCHAR *text = DBGetField(hResult, i, 2, nullptr, 0);
+            msg.setField(fieldId++, CHECK_NULL_EX(text));
+            MemFree(text);
 
-				pszText = DBGetField(hResult, i, 3, nullptr, 0);
-				if (pszText != nullptr)
-				{
-					DecodeSQLString(pszText);
-					msg.setField(dwId++, pszText);
-				}
-				else
-				{
-					msg.setField(dwId++, _T(""));
-				}
+            text = DBGetField(hResult, i, 3, nullptr, 0);
+            msg.setField(fieldId++, CHECK_NULL_EX(text));
+            MemFree(text);
 			}
 			DBFreeResult(hResult);
 		}

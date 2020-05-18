@@ -361,8 +361,8 @@ typedef struct
 #define CMD_GET_SELECTED_USERS            0x0071
 #define CMD_ABORT_FILE_TRANSFER           0x0072
 #define CMD_CHECK_NETWORK_SERVICE         0x0073
-#define CMD_GET_AGENT_CONFIG              0x0074
-#define CMD_UPDATE_AGENT_CONFIG           0x0075
+#define CMD_READ_AGENT_CONFIG_FILE        0x0074
+#define CMD_WRITE_AGENT_CONFIG_FILE       0x0075
 #define CMD_GET_PARAMETER_LIST            0x0076
 #define CMD_DEPLOY_PACKAGE                0x0077
 #define CMD_INSTALLER_INFO                0x0078
@@ -421,11 +421,11 @@ typedef struct
 #define CMD_COPY_USER_VARIABLE            0x00AD
 #define CMD_RESOLVE_DCI_NAMES             0x00AE
 #define CMD_GET_MY_CONFIG                 0x00AF
-#define CMD_GET_AGENT_CFG_LIST            0x00B0
-#define CMD_OPEN_AGENT_CONFIG             0x00B1
-#define CMD_SAVE_AGENT_CONFIG             0x00B2
-#define CMD_DELETE_AGENT_CONFIG           0x00B3
-#define CMD_SWAP_AGENT_CONFIGS            0x00B4
+#define CMD_GET_AGENT_CONFIGURATION_LIST  0x00B0
+#define CMD_GET_AGENT_CONFIGURATION       0x00B1
+#define CMD_UPDATE_AGENT_CONFIGURATION    0x00B2
+#define CMD_DELETE_AGENT_CONFIGURATION    0x00B3
+#define CMD_SWAP_AGENT_CONFIGURATIONS     0x00B4
 #define CMD_TERMINATE_ALARM               0x00B5
 #define CMD_GET_NXCP_CAPS                 0x00B6
 #define CMD_NXCP_CAPS                     0x00B7

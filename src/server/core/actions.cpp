@@ -106,7 +106,7 @@ void Action::saveToDatabase() const
 
    static const TCHAR *columns[] = { _T("guid"), _T("action_name"), _T("action_type"),
             _T("is_disabled"), _T("rcpt_addr"), _T("email_subject"), _T("action_data"),
-            _T("channel_name"), NULL };
+            _T("channel_name"), nullptr };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("actions"), _T("action_id"), id, columns);
    if (hStmt != NULL)
    {

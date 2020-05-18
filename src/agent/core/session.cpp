@@ -607,10 +607,10 @@ void CommSession::processingThread()
                response.setField(VID_RCC, ERR_SUCCESS);
                GetTableList(&response);
                break;
-            case CMD_GET_AGENT_CONFIG:
+            case CMD_READ_AGENT_CONFIG_FILE:
                getConfig(&response);
                break;
-            case CMD_UPDATE_AGENT_CONFIG:
+            case CMD_WRITE_AGENT_CONFIG_FILE:
                updateConfig(request, &response);
                break;
             case CMD_ENABLE_AGENT_TRAPS:

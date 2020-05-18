@@ -396,3 +396,31 @@ bool LIBNXDBMGR_EXPORTABLE CreateLibraryScript(UINT32 id, const TCHAR *guid, con
    DBFreeStatement(hStmt);
    return success;
 }
+
+/**
+ * Restore characters encoded by EncodeSQLString()
+ * Characters are decoded "in place"
+ */
+void LIBNXDBMGR_EXPORTABLE DecodeSQLString(TCHAR *str)
+{
+   if (str == nullptr)
+      return;
+
+   int posOut = 0;
+   for(int posIn = 0; str[posIn] != 0; posIn++)
+   {
+      if (str[posIn] == _T('#'))
+      {
+         posIn++;
+         str[posOut] = hex2bin(str[posIn]) << 4;
+         posIn++;
+         str[posOut] |= hex2bin(str[posIn]);
+         posOut++;
+      }
+      else
+      {
+         str[posOut++] = str[posIn];
+      }
+   }
+   str[posOut] = 0;
+}

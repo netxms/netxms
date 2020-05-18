@@ -620,12 +620,12 @@ void ReloadCertificates()
 				if (certData != nullptr)
 				{
 					size_t len = _tcslen(certData);
-					BYTE *binCert = (BYTE *)malloc(len);
+					BYTE *binCert = MemAllocArray<BYTE>(len);
 					StrToBin(certData, binCert, len);
-					free(certData);
+					MemFree(certData);
                OPENSSL_CONST BYTE *p = binCert;
 					X509 *cert = d2i_X509(nullptr, &p, (long)len);
-					free(binCert);
+					MemFree(binCert);
 					if (cert != nullptr)
 					{
 						if (X509_STORE_add_cert(s_trustedCertificateStore, cert))

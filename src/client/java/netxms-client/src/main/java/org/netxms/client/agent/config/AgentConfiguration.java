@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,59 +22,61 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
- * Agent configuration file content
+ * Agent configuration defined on server
  */
-public class ConfigContent
+public class AgentConfiguration
 {
    private long id;
-   private String config;
-   private String filter;
    private String name;
    private long sequenceNumber;
+   private String filter;
+   private String content;
 
    /**
-    * Default constructior
+    * Default constructor
     */
-   public ConfigContent()
+   public AgentConfiguration()
    {
       id = 0;
-      config = "";
-      filter = "";
-      name = "New config";
+      name = "New configuration";
       sequenceNumber = -1;
+      filter = "";
+      content = "";
    }
 
    /**
     * Constructs object from incoming message
     *
-    * @param id Configuration policy ID
+    * @param id Configuration object ID
     * @param msg Incoming message to be parsed
     */
-   public ConfigContent(long id, NXCPMessage msg)
+   public AgentConfiguration(long id, NXCPMessage msg)
    {
       this.id = id;
-      name = msg.getFieldAsString(NXCPCodes.VID_NAME) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_NAME);
-      config = msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
-      filter = msg.getFieldAsString(NXCPCodes.VID_FILTER) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_FILTER);
+      name = msg.getFieldAsString(NXCPCodes.VID_NAME);
       sequenceNumber = msg.getFieldAsInt64(NXCPCodes.VID_SEQUENCE_NUMBER);
+      filter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
+      content = msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
    }
 
    /**
-    * TODO
+    * Fill NXCP message with object data
     *
-    * @param message TODO
+    * @param message NXCP message
     */
    public void fillMessage(NXCPMessage message)
    {
       message.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
       message.setField(NXCPCodes.VID_NAME, name);
-      message.setField(NXCPCodes.VID_CONFIG_FILE, config);
+      message.setField(NXCPCodes.VID_CONFIG_FILE, content);
       message.setField(NXCPCodes.VID_FILTER, filter);
       message.setFieldInt32(NXCPCodes.VID_SEQUENCE_NUMBER, (int)sequenceNumber);
    }
 
    /**
-    * @return the id
+    * Get configuration ID
+    * 
+    * @return configuration ID
     */
    public long getId()
    {
@@ -82,7 +84,9 @@ public class ConfigContent
    }
 
    /**
-    * @param id the id to set
+    * Set configuration ID.
+    * 
+    * @param id new configuration ID
     */
    public void setId(long id)
    {
@@ -90,31 +94,39 @@ public class ConfigContent
    }
 
    /**
-    * @return the config
+    * Get configuration file content
+    * 
+    * @return configuration file content
     */
-   public String getConfig()
+   public String getContent()
    {
-      return config;
+      return (content != null) ? content : "";
    }
 
    /**
-    * @param config the config to set
+    * Set configuration file content.
+    * 
+    * @param content new configuration file content
     */
-   public void setConfig(String config)
+   public void setContent(String content)
    {
-      this.config = config;
+      this.content = content;
    }
 
    /**
-    * @return the filter
+    * Get filter script.
+    * 
+    * @return filter script
     */
    public String getFilter()
    {
-      return filter;
+      return (filter != null) ? filter : "";
    }
 
    /**
-    * @param filter the filter to set
+    * Set filter script
+    * 
+    * @param filter new filter script
     */
    public void setFilter(String filter)
    {
@@ -122,15 +134,19 @@ public class ConfigContent
    }
 
    /**
-    * @return the name
+    * Get configuration name.
+    * 
+    * @return configuration name
     */
    public String getName()
    {
-      return name;
+      return (name != null) ? name : "";
    }
 
    /**
-    * @param name the name to set
+    * Set configuration name.
+    * 
+    * @param name new configuration name
     */
    public void setName(String name)
    {
@@ -138,7 +154,9 @@ public class ConfigContent
    }
 
    /**
-    * @return the sequenceNumber
+    * Get configuration sequence number (priority).
+    * 
+    * @return configuration sequence number
     */
    public long getSequenceNumber()
    {
@@ -146,11 +164,12 @@ public class ConfigContent
    }
 
    /**
-    * @param sequenceNumber the sequenceNumber to set
+    * Set configuration sequence number (priority).
+    * 
+    * @param sequenceNumber new configuration sequence number
     */
    public void setSequenceNumber(long sequenceNumber)
    {
       this.sequenceNumber = sequenceNumber;
    }
-
 }

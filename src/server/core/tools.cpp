@@ -346,15 +346,6 @@ bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int c
 }
 
 /**
- * Decode SQL string and set as NXCP variable's value
- */
-void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr)
-{
-   DecodeSQLString(pszStr);
-   pMsg->setField(dwVarId, pszStr);
-}
-
-/**
  * Escape string
  */
 void EscapeString(StringBuffer &str)

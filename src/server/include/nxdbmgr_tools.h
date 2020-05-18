@@ -94,6 +94,8 @@ bool LIBNXDBMGR_EXPORTABLE AddEventToEPPRule(const TCHAR *guid, UINT32 eventCode
 
 bool LIBNXDBMGR_EXPORTABLE CreateLibraryScript(UINT32 id, const TCHAR *guid, const TCHAR *name, const TCHAR *code);
 
+void LIBNXDBMGR_EXPORTABLE DecodeSQLString(TCHAR *str);
+
 // Check tools
 void LIBNXDBMGR_EXPORTABLE StartStage(const TCHAR *pszMsg, int workTotal = 1);
 void LIBNXDBMGR_EXPORTABLE SetStageWorkTotal(int workTotal);

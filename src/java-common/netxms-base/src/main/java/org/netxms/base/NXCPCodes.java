@@ -139,8 +139,8 @@ public class NXCPCodes
    public static final int CMD_GET_SELECTED_USERS = 0x0071;
 	public static final int CMD_ABORT_FILE_TRANSFER = 0x0072;
 	public static final int CMD_CHECK_NETWORK_SERVICE = 0x0073;
-	public static final int CMD_GET_AGENT_CONFIG = 0x0074;
-	public static final int CMD_UPDATE_AGENT_CONFIG = 0x0075;
+   public static final int CMD_READ_AGENT_CONFIG_FILE = 0x0074;
+   public static final int CMD_WRITE_AGENT_CONFIG_FILE = 0x0075;
 	public static final int CMD_GET_PARAMETER_LIST = 0x0076;
 	public static final int CMD_DEPLOY_PACKAGE = 0x0077;
 	public static final int CMD_INSTALLER_INFO = 0x0078;
@@ -199,11 +199,11 @@ public class NXCPCodes
 	public static final int CMD_COPY_USER_VARIABLE = 0x00AD;
 	public static final int CMD_RESOLVE_DCI_NAMES = 0x00AE;
 	public static final int CMD_GET_MY_CONFIG = 0x00AF;
-	public static final int CMD_GET_AGENT_CFG_LIST = 0x00B0;
-	public static final int CMD_OPEN_AGENT_CONFIG = 0x00B1;
-	public static final int CMD_SAVE_AGENT_CONFIG = 0x00B2;
-	public static final int CMD_DELETE_AGENT_CONFIG = 0x00B3;
-	public static final int CMD_SWAP_AGENT_CONFIGS = 0x00B4;
+	public static final int CMD_GET_AGENT_CONFIGURATION_LIST = 0x00B0;
+   public static final int CMD_GET_AGENT_CONFIGURATION = 0x00B1;
+   public static final int CMD_UPDATE_AGENT_CONFIGURATION = 0x00B2;
+   public static final int CMD_DELETE_AGENT_CONFIGURATION = 0x00B3;
+   public static final int CMD_SWAP_AGENT_CONFIGURATIONS = 0x00B4;
 	public static final int CMD_TERMINATE_ALARM = 0x00B5;
 	public static final int CMD_GET_NXCP_CAPS = 0x00B6;
 	public static final int CMD_NXCP_CAPS = 0x00B7;

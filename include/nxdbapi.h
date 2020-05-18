@@ -220,8 +220,6 @@ StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str,
 #endif
 StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_HANDLE conn, const char *str, int maxSize = -1);
 StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_DRIVER drv, const char *str, int maxSize = -1);
-TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
-void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
 																const TCHAR *login, const TCHAR *password, const TCHAR *schema,

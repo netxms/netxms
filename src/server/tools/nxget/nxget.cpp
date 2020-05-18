@@ -181,17 +181,16 @@ static int ListParameters(AgentConnection *pConn)
  */
 static int GetConfig(AgentConnection *pConn)
 {
-   UINT32 dwError, dwSize;
-   TCHAR *pszFile;
-
-   dwError = pConn->getConfigFile(&pszFile, &dwSize);
-   if (dwError == ERR_SUCCESS)
+   TCHAR *content;
+   size_t size;
+   uint32_t rcc = pConn->readConfigFile(&content, &size);
+   if (rcc == ERR_SUCCESS)
    {
-      TranslateStr(pszFile, _T("\r\n"), _T("\n"));
-      _fputts(pszFile, stdout);
-      if (dwSize > 0)
+      TranslateStr(content, _T("\r\n"), _T("\n"));
+      _fputts(content, stdout);
+      if (size > 0)
       {
-         if (pszFile[dwSize - 1] != _T('\n'))
+         if (content[size - 1] != _T('\n'))
             fputc('\n', stdout);
       }
       else
@@ -201,9 +200,9 @@ static int GetConfig(AgentConnection *pConn)
    }
    else
    {
-      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
-   return (dwError == ERR_SUCCESS) ? 0 : 1;
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
 /**

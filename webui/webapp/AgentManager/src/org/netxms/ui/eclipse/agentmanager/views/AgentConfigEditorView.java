@@ -130,8 +130,6 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void run()
 			{
@@ -194,12 +192,12 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		try
 		{
 	      saveData = editor.getText();
-			session.updateAgentConfig(nodeId, saveData, saveAndApply);
-			actionSave.setEnabled(false);
-         saveAndApply = false;
-         dirty = false;
-         modified = false;
-         firePropertyChange(PROP_DIRTY);
+			session.writeAgentConfigurationFile(nodeId, saveData, saveAndApply);
+	      actionSave.setEnabled(false);
+	      saveAndApply = false;
+	      dirty = false;
+	      modified = false;
+	      firePropertyChange(PROP_DIRTY);
 		}
 		catch(Exception e)
 		{

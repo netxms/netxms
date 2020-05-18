@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,51 +20,52 @@ package org.netxms.client.agent.config;
 
 import org.netxms.base.NXCPMessage;
 
-
-public class ConfigListElement implements Comparable<ConfigListElement>
+/**
+ * Handle for server side agent configuration (contains only metadata without actual content).
+ */
+public class AgentConfigurationHandle implements Comparable<AgentConfigurationHandle>
 {
    private long id;
    private String name;
    private long sequenceNumber;
-   
+
    /**
-    * Create from message 
-    * 
-    * @param base base id for fields
-    * @param response response message 
+    * Create empty handle
     */
-   public ConfigListElement(long base,  NXCPMessage response)
-   {
-      this.id = response.getFieldAsInt64(base);
-      this.name = response.getFieldAsString(base+1);
-      this.sequenceNumber = response.getFieldAsInt64(base+2);
-   }
-   
-   public ConfigListElement()
+   public AgentConfigurationHandle()
    {
       id = 0;
-      name = "New config";
+      name = "New configuration";
       sequenceNumber = -1;
    }
-   
+
    /**
-    * @return the id
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param baseId ID of first field
+    */
+   public AgentConfigurationHandle(NXCPMessage msg, long baseId)
+   {
+      this.id = msg.getFieldAsInt64(baseId);
+      this.name = msg.getFieldAsString(baseId + 1);
+      this.sequenceNumber = msg.getFieldAsInt64(baseId + 2);
+   }
+
+   /**
+    * Get configuration ID.
+    * 
+    * @return configuration ID
     */
    public long getId()
    {
       return id;
    }
-   
-   /**
-    * @param id the id to set
-    */
-   public void setId(long id)
-   {
-      this.id = id;
-   }
 
    /**
-    * @return the name
+    * Get configuration name.
+    * 
+    * @return configuration name
     */
    public String getName()
    {
@@ -72,21 +73,9 @@ public class ConfigListElement implements Comparable<ConfigListElement>
    }
 
    /**
-    * @param name the name to set
-    */
-   public void setName(String name)
-   {
-      this.name = name;
-   }
-   
-   @Override
-   public String toString()
-   {
-      return name;
-   }
-
-   /**
-    * @return the sequenceNumber
+    * Get configuration sequence number (priority).
+    *
+    * @return configuration sequence number
     */
    public long getSequenceNumber()
    {
@@ -94,20 +83,11 @@ public class ConfigListElement implements Comparable<ConfigListElement>
    }
 
    /**
-    * @param sequenceNumber the sequenceNumber to set
-    */
-   public void setSequenceNumber(long sequenceNumber)
-   {
-      this.sequenceNumber = sequenceNumber;
-   } 
-
-   /* (non-Javadoc)
     * @see java.lang.Comparable#compareTo(java.lang.Object)
     */
    @Override
-   public int compareTo(ConfigListElement e)
+   public int compareTo(AgentConfigurationHandle e)
    {
       return Long.signum(sequenceNumber - e.sequenceNumber);
    }
-   
 }

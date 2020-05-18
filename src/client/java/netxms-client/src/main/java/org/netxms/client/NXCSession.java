@@ -68,8 +68,8 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.VersionInfo;
-import org.netxms.client.agent.config.ConfigContent;
-import org.netxms.client.agent.config.ConfigListElement;
+import org.netxms.client.agent.config.AgentConfiguration;
+import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.DataType;
@@ -7717,9 +7717,9 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String getAgentConfig(long nodeId) throws IOException, NXCException
+   public String readAgentConfigurationFile(long nodeId) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CONFIG);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_READ_AGENT_CONFIG_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -7736,9 +7736,9 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateAgentConfig(long nodeId, String config, boolean apply) throws IOException, NXCException
+   public void writeAgentConfigurationFile(long nodeId, String config, boolean apply) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_CONFIG);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_WRITE_AGENT_CONFIG_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_CONFIG_FILE, config);
       msg.setFieldInt16(NXCPCodes.VID_APPLY_FLAG, apply ? 1 : 0);
@@ -10729,82 +10729,82 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<ConfigListElement> getConfigList() throws NXCException, IOException
+   public List<AgentConfigurationHandle> getAgentConfigurations() throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CFG_LIST);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CONFIGURATION_LIST);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
-      int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
-      List<ConfigListElement> elements = new ArrayList<ConfigListElement>(size);
-      long i, base;
-      for(i = 0, base = NXCPCodes.VID_AGENT_CFG_LIST_BASE; i < size; i++, base += 10)
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
+      List<AgentConfigurationHandle> elements = new ArrayList<AgentConfigurationHandle>(count);
+      long fieldId = NXCPCodes.VID_AGENT_CFG_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
       {
-         elements.add(new ConfigListElement(base, response));
+         elements.add(new AgentConfigurationHandle(response, fieldId));
       }
       Collections.sort(elements);
       return elements;
    }
 
    /**
-    * Saves existing config
+    * Get server side agent configuration
     *
-    * @param id config id
-    * @return content of requested by id configurations file
-    * @throws IOException  if socket I/O error occurs
+    * @param id configuration object ID
+    * @return agent configuration object
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public ConfigContent getConfigContent(long id) throws NXCException, IOException
+   public AgentConfiguration getAgentConfiguration(long id) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_AGENT_CONFIG);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CONFIGURATION);
       msg.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
       sendMessage(msg);
 
       NXCPMessage response = waitForRCC(msg.getMessageId());
-      ConfigContent content = new ConfigContent(id, response);
+      AgentConfiguration content = new AgentConfiguration(id, response);
       return content;
    }
 
    /**
-    * Saves or creates new agent's config
+    * Update server side agent configuration
     *
-    * @param conf contents of config
-    * @throws IOException  if socket I/O error occurs
+    * @param configuration agent configuration object
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void saveAgentConfig(ConfigContent conf) throws NXCException, IOException
+   public void saveAgentConfig(AgentConfiguration configuration) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_AGENT_CONFIG);
-      conf.fillMessage(msg);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_CONFIGURATION);
+      configuration.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
 
    /**
-    * Delete config with given id. Does not change sequence number of following elements.
+    * Delete server side agent configuration. This call will not change sequence numbers of other configurations.
     *
     * @param id agent configuration ID
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deleteAgentConfig(long id) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AGENT_CONFIG);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AGENT_CONFIGURATION);
       msg.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
 
    /**
-    * Swaps 2 configs sequence numbers
+    * Swap sequence numbers of two server side agent configurations.
     *
-    * @param id1 The id of first config
-    * @param id2 The id of second config
-    * @throws IOException  if socket I/O error occurs
+    * @param id1 first agent configuration ID
+    * @param id2 second agent configuration ID
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void swapAgentConfigs(long id1, long id2) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SWAP_AGENT_CONFIGS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SWAP_AGENT_CONFIGURATIONS);
       msg.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id1);
       msg.setFieldInt32(NXCPCodes.VID_CONFIG_ID_2, (int)id2);
       sendMessage(msg);

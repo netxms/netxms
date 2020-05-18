@@ -946,8 +946,8 @@ public:
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
    UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
-   UINT32 getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize);
-   UINT32 updateConfigFile(const TCHAR *pszConfig);
+   uint32_t readConfigFile(TCHAR **content, size_t *size);
+   uint32_t writeConfigFile(const TCHAR *content);
    UINT32 enableTraps();
    UINT32 enableFileUpdates();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);

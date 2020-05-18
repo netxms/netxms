@@ -106,7 +106,6 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_activeStatus = DBGetFieldLong(hResult, 0, 3);
    m_inactiveStatus = DBGetFieldLong(hResult, 0, 4);
    m_scriptSource = DBGetField(hResult, 0, 5, nullptr, 0);
-   DecodeSQLString(m_scriptSource);
 
    DBFreeResult(hResult);
 
@@ -144,64 +143,57 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
 {
-   TCHAR *pszEscScript, *pszQuery;
-   DB_RESULT hResult;
-   BOOL bNewObject = TRUE;
-
    lockProperties();
 
    bool success = saveCommonProperties(hdb);
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_scriptSource));
-      size_t qlen = _tcslen(pszEscScript) + 1024;
-      pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
-
-      // Check for object's existence in database
-      _sntprintf(pszQuery, qlen, _T("SELECT id FROM conditions WHERE id=%d"), m_id);
-      hResult = DBSelect(hdb, pszQuery);
-      if (hResult != nullptr)
+      static const TCHAR *columns[] = { _T("activation_event"), _T("deactivation_event"),
+               _T("source_object"), _T("active_status"), _T("inactive_status"), _T("script"), nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("conditions"), _T("id"), m_id, columns);
+      if (hStmt != nullptr)
       {
-         if (DBGetNumRows(hResult) > 0)
-            bNewObject = FALSE;
-         DBFreeResult(hResult);
-      }
-
-      // Form and execute INSERT or UPDATE query
-      if (bNewObject)
-      {
-         _sntprintf(pszQuery, qlen,
-                             _T("INSERT INTO conditions (id,activation_event,")
-                             _T("deactivation_event,source_object,active_status,")
-                             _T("inactive_status,script) VALUES (%d,%d,%d,%d,%d,%d,'%s')"),
-                   m_id, m_activationEventCode, m_deactivationEventCode,
-                   m_sourceObject, m_activeStatus, m_inactiveStatus, pszEscScript);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_activationEventCode);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deactivationEventCode);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_sourceObject);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_activeStatus);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_inactiveStatus);
+         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_scriptSource, DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
       }
       else
       {
-         _sntprintf(pszQuery, qlen,
-                             _T("UPDATE conditions SET activation_event=%d,")
-                             _T("deactivation_event=%d,source_object=%d,active_status=%d,")
-                             _T("inactive_status=%d,script='%s' WHERE id=%d"),
-                   m_activationEventCode, m_deactivationEventCode, m_sourceObject,
-                   m_activeStatus, m_inactiveStatus, pszEscScript, m_id);
+         success = false;
       }
-      free(pszEscScript);
-      DBQuery(hdb, pszQuery);
 
-      // Save DCI mapping
-      _sntprintf(pszQuery, qlen, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_id);
-      DBQuery(hdb, pszQuery);
-      for(int i = 0; i < m_dciCount; i++)
+      if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM cond_dci_map WHERE condition_id=?"));
+
+      if (success && (m_dciCount > 0))
       {
-         _sntprintf(pszQuery, qlen, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,")
-                                    _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
-                   m_id, i, m_dciList[i].id, m_dciList[i].nodeId,
-                   m_dciList[i].function, m_dciList[i].polls);
-         DBQuery(hdb, pszQuery);
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,dci_func,num_polls) VALUES (?,?,?,?,?,?)"));
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_dciCount) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dciList[i].id);
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dciList[i].nodeId);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_dciList[i].function);
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_dciList[i].polls);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
       }
-      free(pszQuery);
    }
 
    // Save access list

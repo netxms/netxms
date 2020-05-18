@@ -1902,32 +1902,32 @@ UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
 /**
  * Get configuration file from agent
  */
-UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
+uint32_t AgentConnection::readConfigFile(TCHAR **content, size_t *sizeptr)
 {
-   *ppszConfig = nullptr;
-   *pdwSize = 0;
+   *content = nullptr;
+   *sizeptr = 0;
 
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   UINT32 dwResult;
-   UINT32 dwRqId = generateRequestId();
+   uint32_t rcc;
+   uint32_t requestId = generateRequestId();
 
    NXCPMessage msg(m_nProtocolVersion);
-   msg.setCode(CMD_GET_AGENT_CONFIG);
-   msg.setId(dwRqId);
+   msg.setCode(CMD_READ_AGENT_CONFIG_FILE);
+   msg.setId(requestId);
 
    if (sendMessage(&msg))
    {
-      NXCPMessage *pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
-      if (pResponse != nullptr)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
       {
-         dwResult = pResponse->getFieldAsUInt32(VID_RCC);
-         if (dwResult == ERR_SUCCESS)
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
          {
-            size_t size = pResponse->getFieldAsBinary(VID_CONFIG_FILE, nullptr, 0);
+            size_t size = response->getFieldAsBinary(VID_CONFIG_FILE, nullptr, 0);
             BYTE *utf8Text = (BYTE *)malloc(size + 1);
-            pResponse->getFieldAsBinary(VID_CONFIG_FILE, (BYTE *)utf8Text, size);
+            response->getFieldAsBinary(VID_CONFIG_FILE, (BYTE *)utf8Text, size);
 
             // We expect text file, so replace all non-printable characters with spaces
             for(size_t i = 0; i < size; i++)
@@ -1939,68 +1939,61 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
             utf8Text[size] = 0;
 
 #ifdef UNICODE
-            *ppszConfig = WideStringFromUTF8String((char *)utf8Text);
+            *content = WideStringFromUTF8String((char *)utf8Text);
 #else
-            *ppszConfig = MBStringFromUTF8String((char *)utf8Text);
+            *content = MBStringFromUTF8String((char *)utf8Text);
 #endif
-            free(utf8Text);
-            *pdwSize = (UINT32)_tcslen(*ppszConfig);
+            MemFree(utf8Text);
+            *sizeptr = _tcslen(*content);
          }
-         delete pResponse;
+         delete response;
       }
       else
       {
-         dwResult = ERR_REQUEST_TIMEOUT;
+         rcc = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwResult = ERR_CONNECTION_BROKEN;
+      rcc = ERR_CONNECTION_BROKEN;
    }
 
-   return dwResult;
+   return rcc;
 }
 
 /**
  * Update configuration file on agent
  */
-UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
+uint32_t AgentConnection::writeConfigFile(const TCHAR *content)
 {
-   UINT32 dwRqId, dwResult;
    NXCPMessage msg(m_nProtocolVersion);
-#ifdef UNICODE
-   int nChars;
-   BYTE *pBuffer;
-#endif
 
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
 
-   msg.setCode(CMD_UPDATE_AGENT_CONFIG);
-   msg.setId(dwRqId);
+   msg.setCode(CMD_WRITE_AGENT_CONFIG_FILE);
+   msg.setId(requestId);
 #ifdef UNICODE
-   nChars = (int)_tcslen(pszConfig);
-   pBuffer = (BYTE *)malloc(nChars + 1);
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       pszConfig, nChars, (char *)pBuffer, nChars + 1, nullptr, nullptr);
-   msg.setField(VID_CONFIG_FILE, pBuffer, nChars);
-   free(pBuffer);
+   char *utf8content = UTF8StringFromWideString(content);
+   msg.setField(VID_CONFIG_FILE, (BYTE *)utf8content, strlen(utf8content));
+   MemFree(utf8content);
 #else
-   msg.setField(VID_CONFIG_FILE, (BYTE *)pszConfig, (UINT32)strlen(pszConfig));
+   msg.setField(VID_CONFIG_FILE, (const BYTE *)content, strlen(content));
 #endif
 
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
-      dwResult = waitForRCC(dwRqId, m_commandTimeout);
+      rcc = waitForRCC(requestId, m_commandTimeout);
    }
    else
    {
-      dwResult = ERR_CONNECTION_BROKEN;
+      rcc = ERR_CONNECTION_BROKEN;
    }
 
-   return dwResult;
+   return rcc;
 }
 
 /**

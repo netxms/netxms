@@ -631,8 +631,8 @@ private:
    void enumUserVariables(NXCPMessage *pRequest);
    void deleteUserVariable(NXCPMessage *pRequest);
    void changeObjectZone(NXCPMessage *pRequest);
-   void getAgentConfig(NXCPMessage *pRequest);
-   void updateAgentConfig(NXCPMessage *pRequest);
+   void readAgentConfigFile(NXCPMessage *request);
+   void writeAgentConfigFile(NXCPMessage *request);
    void executeAction(NXCPMessage *pRequest);
    void getObjectTools(UINT32 requestId);
    void getObjectToolDetails(NXCPMessage *request);
@@ -652,15 +652,15 @@ private:
    void KillSession(NXCPMessage *pRequest);
    void StartSnmpWalk(NXCPMessage *pRequest);
    void resolveDCINames(NXCPMessage *pRequest);
-   UINT32 resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszName);
+   uint32_t resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszName);
    void sendConfigForAgent(NXCPMessage *pRequest);
-   void sendAgentCfgList(UINT32 dwRqId);
-   void OpenAgentConfig(NXCPMessage *pRequest);
-   void SaveAgentConfig(NXCPMessage *pRequest);
-   void DeleteAgentConfig(NXCPMessage *pRequest);
-   void SwapAgentConfigs(NXCPMessage *pRequest);
-   void SendObjectComments(NXCPMessage *pRequest);
-   void updateObjectComments(NXCPMessage *pRequest);
+   void getAgentConfigurationList(uint32_t requestId);
+   void getAgentConfiguration(NXCPMessage *request);
+   void updateAgentConfiguration(NXCPMessage *request);
+   void deleteAgentConfiguration(NXCPMessage *request);
+   void swapAgentConfigurations(NXCPMessage *request);
+   void getObjectComments(NXCPMessage *request);
+   void updateObjectComments(NXCPMessage *request);
    void pushDCIData(NXCPMessage *pRequest);
    void getAddrList(NXCPMessage *request);
    void setAddrList(NXCPMessage *request);
@@ -675,10 +675,10 @@ private:
 	void sendGraphList(NXCPMessage *request);
 	void saveGraph(NXCPMessage *pRequest);
 	void deleteGraph(NXCPMessage *pRequest);
-	void addCACertificate(NXCPMessage *pRequest);
-	void deleteCertificate(NXCPMessage *pRequest);
-	void updateCertificateComments(NXCPMessage *pRequest);
-	void getCertificateList(UINT32 dwRqId);
+	void addCACertificate(NXCPMessage *request);
+	void deleteCertificate(NXCPMessage *request);
+	void updateCertificateComments(NXCPMessage *request);
+	void getCertificateList(uint32_t requestId);
 	void queryL2Topology(NXCPMessage *pRequest);
    void queryInternalCommunicationTopology(NXCPMessage *pRequest);
    void getDependentNodes(NXCPMessage *request);
@@ -1115,8 +1115,6 @@ void ClearDBWriterData(ServerConsole *console, const TCHAR *component);
 
 void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value);
 void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
-
-void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
 bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool separateRequests);
 SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,

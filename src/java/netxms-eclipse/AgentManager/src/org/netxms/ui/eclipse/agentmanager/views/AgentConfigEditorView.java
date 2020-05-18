@@ -215,7 +215,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		try
 		{
 	      saveData = editor.getText();
-			session.updateAgentConfig(nodeId, saveData, saveAndApply);
+			session.writeAgentConfigurationFile(nodeId, saveData, saveAndApply);
 	      actionSave.setEnabled(false);
 	      saveAndApply = false;
 	      dirty = false;

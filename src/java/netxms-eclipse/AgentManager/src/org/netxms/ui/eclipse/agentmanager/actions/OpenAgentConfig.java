@@ -69,7 +69,7 @@ public class OpenAgentConfig implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					final String config = session.getAgentConfig(nodeId);
+					final String config = session.readAgentConfigurationFile(nodeId);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()

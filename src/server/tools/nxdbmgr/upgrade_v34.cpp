@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.1 to 34.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(ConvertStrings(_T("conditions"), _T("id"), _T("script")));
+   CHK_EXEC(ConvertStrings(_T("agent_configs"), _T("config_id"), _T("config_name")));
+   CHK_EXEC(ConvertStrings(_T("agent_configs"), _T("config_id"), _T("config_file")));
+   CHK_EXEC(ConvertStrings(_T("agent_configs"), _T("config_id"), _T("config_filter")));
+   CHK_EXEC(ConvertStrings(_T("certificates"), _T("cert_id"), _T("subject")));
+   CHK_EXEC(ConvertStrings(_T("certificates"), _T("cert_id"), _T("comments")));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 34.0 to 34.1
  */
 static bool H_UpgradeFromV0()
@@ -44,6 +59,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 1,  34, 2,  H_UpgradeFromV1  },
    { 0,  34, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };

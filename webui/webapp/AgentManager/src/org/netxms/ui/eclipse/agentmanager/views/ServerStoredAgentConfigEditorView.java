@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -53,8 +54,8 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.agent.config.ConfigContent;
-import org.netxms.client.agent.config.ConfigListElement;
+import org.netxms.client.agent.config.AgentConfiguration;
+import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
@@ -68,7 +69,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 
 /**
- * Sored on server agent's configuration editor
+ * Editor for server side agent configurations
  */
 public class ServerStoredAgentConfigEditorView extends ViewPart implements ISaveablePart2
 {
@@ -79,7 +80,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
    private boolean reselection = false;
 
    private ScrolledForm form;
-   private AgentConfigEditor configEditor;
+   private AgentConfigEditor contentEditor;
    private ScriptEditor filterEditor;
    private Text nameField;
    private TableViewer configList;
@@ -89,13 +90,11 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
    private Action actionDelete;
    private Action actionMoveUp;
    private Action actionMoveDown;
-   private List<ConfigListElement> elements;
-   private ConfigContent content;
+   private List<AgentConfigurationHandle> elements;
+   private AgentConfiguration configuration;
    private IStructuredSelection previousSelection;
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -105,9 +104,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       session = (NXCSession)ConsoleSharedData.getSession();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -128,6 +125,13 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       configList = new TableViewer(listContainer, SWT.FULL_SELECTION | SWT.SINGLE);
       configList.setContentProvider(new ArrayContentProvider());
+      configList.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((AgentConfigurationHandle)element).getName();
+         }
+      });
       configList.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -136,7 +140,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       });
       configList.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      
+
       new Label(listContainer, SWT.SEPARATOR | SWT.VERTICAL).setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, true));
 
       /**** editor section ****/
@@ -227,9 +231,9 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
       
-      configEditor = new AgentConfigEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 0);
-      section.setClient(configEditor);
-      configEditor.getTextWidget().addModifyListener(new ModifyListener() {
+      contentEditor = new AgentConfigEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 0);
+      section.setClient(contentEditor);
+      contentEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
@@ -241,7 +245,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessHorizontalSpace = true;
       gridData.verticalAlignment = SWT.FILL;
       gridData.grabExcessVerticalSpace = true;
-      configEditor.setLayoutData(gridData);
+      contentEditor.setLayoutData(gridData);
 
       createActions();
       contributeToActionBars();
@@ -287,7 +291,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       if (selection == null)
          return;
 
-      final ConfigListElement element = (ConfigListElement)selection.getFirstElement();
+      final AgentConfigurationHandle element = (AgentConfigurationHandle)selection.getFirstElement();
 
       new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobTitle_GetContent, this, Activator.PLUGIN_ID, null) {
          @Override
@@ -295,7 +299,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          {
             if (element != null)
             {
-               content = session.getConfigContent(element.getId());
+               configuration = session.getAgentConfiguration(element.getId());
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -430,13 +434,13 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       if (selection == null)
          return;
 
-      final ConfigListElement element1 = (ConfigListElement)selection.getFirstElement();
+      final AgentConfigurationHandle element1 = (AgentConfigurationHandle)selection.getFirstElement();
 
       int index = elements.indexOf(element1);
       if (index <= 0)
          return;
 
-      final ConfigListElement element2 = elements.get(index - 1);
+      final AgentConfigurationHandle element2 = elements.get(index - 1);
 
       new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobMoveUp, this, Activator.PLUGIN_ID, null) {
          @Override
@@ -470,13 +474,13 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       if (selection == null)
          return;
 
-      final ConfigListElement element1 = (ConfigListElement)selection.getFirstElement();
+      final AgentConfigurationHandle element1 = (AgentConfigurationHandle)selection.getFirstElement();
 
       int index = elements.indexOf(element1);
       if (index >= (elements.size() - 1))
          return;
 
-      final ConfigListElement elemen2 = elements.get(index + 1);
+      final AgentConfigurationHandle elemen2 = elements.get(index + 1);
 
       new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobMoveDown, this, Activator.PLUGIN_ID, null) {
          @Override
@@ -510,7 +514,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       if (selection == null)
          return;
 
-      final ConfigListElement element = (ConfigListElement)selection.getFirstElement();
+      final AgentConfigurationHandle element = (AgentConfigurationHandle)selection.getFirstElement();
 
       new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobDelete, this, Activator.PLUGIN_ID, null) {
          @Override
@@ -523,7 +527,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
                public void run()
                {
                   elements.remove(element);
-                  configList.setInput(elements.toArray(new ConfigListElement[elements.size()]));
+                  configList.setInput(elements.toArray(new AgentConfigurationHandle[elements.size()]));
                }
             });
          }
@@ -555,15 +559,15 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       firePropertyChange(PROP_DIRTY);
       actionSave.setEnabled(true);
 
-      ConfigListElement newElement = new ConfigListElement();
+      AgentConfigurationHandle newElement = new AgentConfigurationHandle();
       elements.add(newElement);
-      configList.setInput(elements.toArray(new ConfigListElement[elements.size()]));
+      configList.setInput(elements.toArray(new AgentConfigurationHandle[elements.size()]));
 
       reselection = true;
       StructuredSelection selection = new StructuredSelection(newElement);
       previousSelection = selection;
       configList.setSelection(selection);
-      content = new ConfigContent();
+      configuration = new AgentConfiguration();
       updateContent();
    }
 
@@ -572,10 +576,10 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
     */
    private void updateContent()
    {
-      form.setText(content.getName());
-      nameField.setText(content.getName());
-      configEditor.setText(content.getConfig());
-      filterEditor.setText(content.getFilter());
+      form.setText(configuration.getName());
+      nameField.setText(configuration.getName());
+      contentEditor.setText(configuration.getContent());
+      filterEditor.setText(configuration.getFilter());
       modified = false;
       firePropertyChange(PROP_DIRTY);
       actionSave.setEnabled(false);
@@ -617,10 +621,10 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
    {
       try
       {
-         content.setConfig(configEditor.getText());
-         content.setFilter(filterEditor.getText());
-         content.setName(nameField.getText());
-         session.saveAgentConfig(content);
+         configuration.setContent(contentEditor.getText());
+         configuration.setFilter(filterEditor.getText());
+         configuration.setName(nameField.getText());
+         session.saveAgentConfig(configuration);
       }
       catch(Exception e)
       {
@@ -634,17 +638,17 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
     */
    public void intermediateSave()
    {
-      if (content == null)
+      if (configuration == null)
          return;
-      content.setConfig(configEditor.getText());
-      content.setFilter(filterEditor.getText());
-      content.setName(nameField.getText());
+      configuration.setContent(contentEditor.getText());
+      configuration.setFilter(filterEditor.getText());
+      configuration.setName(nameField.getText());
 
       new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobSave, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.saveAgentConfig(content);
+            session.saveAgentConfig(configuration);
 
             runInUIThread(new Runnable() {
                @Override
@@ -726,19 +730,19 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
    public void getConfigList()
    {
       IStructuredSelection selection = (IStructuredSelection)configList.getSelection();
-      final ConfigListElement element = selection == null ? null : (ConfigListElement)selection.getFirstElement();
+      final AgentConfigurationHandle element = selection == null ? null : (AgentConfigurationHandle)selection.getFirstElement();
 
       new ConsoleJob(Messages.get().PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            elements = session.getConfigList();
+            elements = session.getAgentConfigurations();
 
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  configList.setInput(elements.toArray(new ConfigListElement[elements.size()]));
+                  configList.setInput(elements.toArray(new AgentConfigurationHandle[elements.size()]));
 
                   if (element == null && elements.size() > 0)
                   {
