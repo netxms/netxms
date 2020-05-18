@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -45,8 +43,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.forms.widgets.Form;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
 import org.netxms.certificate.manager.CertificateManager;
 import org.netxms.certificate.subject.Subject;
@@ -64,7 +60,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class LoginDialog extends Dialog
 {
-   private FormToolkit toolkit;
    private ImageDescriptor loginImage;
    private Combo comboServer;
    private LabeledText textLogin;
@@ -75,8 +70,6 @@ public class LoginDialog extends Dialog
    private String password;
    private Button checkSlowLink;
    private Certificate certificate;
-   private Color backgroundColor;
-   private Color labelColor;
    private final CertificateManager certMgr;
    private AuthenticationType authMethod = AuthenticationType.PASSWORD; 
 
@@ -127,9 +120,7 @@ public class LoginDialog extends Dialog
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
 
-      backgroundColor = new Color(parent.getDisplay(), 0xD8, 0xE3, 0xE9);
-      toolkit = new FormToolkit(parent.getDisplay());
-      Form dialogArea = toolkit.createForm(parent);
+      Composite dialogArea = new Composite(parent, SWT.NONE);
       dialogArea.setLayoutData(new GridData(GridData.FILL_BOTH));
       applyDialogFont(dialogArea);
 
@@ -138,23 +129,10 @@ public class LoginDialog extends Dialog
       dialogLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       dialogLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING * 2;
-      dialogArea.getBody().setLayout(dialogLayout);
-
-      dialogArea.getBody().setBackground(backgroundColor);
-
-      RGB customColor = BrandingManager.getInstance().getLoginTitleColor();
-      labelColor = (customColor != null) ? new Color(dialogArea.getDisplay(), customColor) : new Color(dialogArea.getDisplay(), dialogArea.getBody().getBackground().getRGB());
-      dialogArea.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            labelColor.dispose();
-         }
-      });
+      dialogArea.setLayout(dialogLayout);
 
       // Login image
-      Label label = new Label(dialogArea.getBody(), SWT.NONE);
-      label.setBackground(labelColor);
+      Label label = new Label(dialogArea, SWT.NONE);
       label.setImage(loginImage.createImage());
       label.addDisposeListener(new DisposeListener() {
          @Override
@@ -169,9 +147,7 @@ public class LoginDialog extends Dialog
       gd.grabExcessVerticalSpace = true;
       label.setLayoutData(gd);
 
-      final Composite fields = toolkit.createComposite(dialogArea.getBody());
-      fields.setBackground(backgroundColor);
-      fields.setBackgroundMode(SWT.INHERIT_DEFAULT);
+      final Composite fields = new Composite(dialogArea, SWT.NONE);
       GridLayout fieldsLayout = new GridLayout();
       fieldsLayout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       fieldsLayout.marginHeight = 0;
@@ -187,7 +163,7 @@ public class LoginDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboServer = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN, Messages.get().LoginDialog_server, gd, toolkit, backgroundColor);
+      comboServer = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN, Messages.get().LoginDialog_server, gd);
 
       checkSlowLink = new Button(fields, SWT.CHECK);
       checkSlowLink.setText(Messages.get().LoginDialog_SlowLinkConnection);
@@ -195,9 +171,8 @@ public class LoginDialog extends Dialog
       gd.horizontalIndent = 8;
       checkSlowLink.setLayoutData(gd);
       
-      textLogin = new LabeledText(fields, SWT.NONE, SWT.SINGLE | SWT.BORDER, toolkit);
+      textLogin = new LabeledText(fields, SWT.NONE, SWT.SINGLE | SWT.BORDER);
       textLogin.setLabel(Messages.get().LoginDialog_login);
-      textLogin.setBackground(backgroundColor);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -207,8 +182,7 @@ public class LoginDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().LoginDialog_Auth, gd,
-            toolkit, backgroundColor);
+      comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().LoginDialog_Auth, gd);
       comboAuth.add(Messages.get().LoginDialog_Passwd);
       comboAuth.add(Messages.get().LoginDialog_Cert);
       comboAuth.select(authMethod.getValue());
@@ -220,17 +194,14 @@ public class LoginDialog extends Dialog
 			}
 		});
 
-      authEntryFields = toolkit.createComposite(fields);
-      authEntryFields.setBackground(backgroundColor);
+      authEntryFields = new Composite(fields, SWT.NONE);
       authEntryFields.setLayout(new StackLayout());
       authEntryFields.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      textPassword = new LabeledText(authEntryFields, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, toolkit);
+      textPassword = new LabeledText(authEntryFields, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
       textPassword.setLabel(Messages.get().LoginDialog_Passwd);
-      textPassword.setBackground(backgroundColor);
       
-      comboCert = WidgetHelper.createLabeledCombo(authEntryFields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().LoginDialog_Cert,
-            null, toolkit, backgroundColor);
+      comboCert = WidgetHelper.createLabeledCombo(authEntryFields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().LoginDialog_Cert, null);
       comboCert.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
