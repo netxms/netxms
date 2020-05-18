@@ -8715,8 +8715,8 @@ void ClientSession::updateAgentConfiguration(NXCPMessage *request)
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("agent_configs"), _T("config_id"), configId))
       {
-         hStmt = DBPrepare(hdb, _T("UPDATE agent_configs SET config_name=?,config_filter=?,config_file=?,sequence_number=? WHERE config_id=?"));
          sequence = request->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
+         hStmt = DBPrepare(hdb, _T("UPDATE agent_configs SET config_name=?,config_filter=?,config_file=?,sequence_number=? WHERE config_id=?"));
       }
       else
       {
@@ -8763,6 +8763,7 @@ void ClientSession::updateAgentConfiguration(NXCPMessage *request)
          {
             msg.setField(VID_RCC, RCC_DB_FAILURE);
          }
+         DBFreeStatement(hStmt);
       }
       else
       {
