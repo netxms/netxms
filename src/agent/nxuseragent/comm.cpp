@@ -191,7 +191,7 @@ static void ProcessRequest(NXCPMessage *request)
       case CMD_GET_SCREEN_INFO:
          GetScreenInfo(&msg);
          break;
-      case CMD_UPDATE_AGENT_CONFIG:
+      case CMD_WRITE_AGENT_CONFIG_FILE:
          UpdateConfig(request);
          break;
       case CMD_UPDATE_ENVIRONMENT:
