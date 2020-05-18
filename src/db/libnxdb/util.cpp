@@ -293,7 +293,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback)
 	TCHAR syntaxId[256] = _T("");
 	bool read = false;
 
-	if (s_syntaxReader != NULL)
+	if (s_syntaxReader != nullptr)
 	{
 	   read = s_syntaxReader(conn, syntaxId);
 	}
@@ -302,7 +302,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback)
 	if (!read)
 	{
       DB_RESULT hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='Syntax'"));
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
          {

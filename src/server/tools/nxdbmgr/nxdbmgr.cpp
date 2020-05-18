@@ -558,7 +558,7 @@ stop_search:
                return 7;
             }
             const char *dbType = SelectDatabaseType(driver);
-            if (dbType == NULL)
+            if (dbType == nullptr)
             {
                _tprintf(_T("Database initialization aborted\n"));
                return 8;
@@ -579,7 +579,7 @@ stop_search:
          InitDatabase(initFileUtf8);
          MemFree(initFileUtf8);
       }
-      else if (strchr(argv[optind + 1], FS_PATH_SEPARATOR_CHAR_A) == NULL)
+      else if (strchr(argv[optind + 1], FS_PATH_SEPARATOR_CHAR_A) == nullptr)
       {
          TCHAR shareDir[MAX_PATH];
          GetNetXMSDirectory(nxDirShare, shareDir);
@@ -595,6 +595,15 @@ stop_search:
       }
       else
       {
+         if (_isatty(_fileno(stdin)))
+         {
+            WriteToTerminal(_T("\x1b[1mWARNING:\x1b[0m Under normal circumstances you should not specify full path to database initialization script.\n"));
+            if (!GetYesNo(_T("Do you really want to continue")))
+            {
+               _tprintf(_T("Database initialization aborted\n"));
+               return 8;
+            }
+         }
          InitDatabase(argv[optind + 1]);
       }
    }
