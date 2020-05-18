@@ -578,8 +578,8 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
             shared_ptr<NetObj> parent = FindTemplateRoot(tc);
             object = MakeSharedNObject<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), tc->getSubEntryValueAsUUID(_T("guid")));
-            object->updateFromImport(tc);
             NetObjInsert(object, true, true);
+            object->updateFromImport(tc);
             object->addParent(parent);
             parent->addChild(object);
             object->unhide();

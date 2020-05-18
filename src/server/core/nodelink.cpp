@@ -196,9 +196,9 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 	if (check == NULL)
 	{
 		check = MakeSharedNObject<SlmCheck>(tmpl);
+      NetObjInsert(check, true, false);
 		check->addParent(self());
 		addChild(check);
-		NetObjInsert(check, true, false);
 		check->unhide();
 	}
 	else
