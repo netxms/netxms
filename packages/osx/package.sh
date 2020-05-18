@@ -2,8 +2,8 @@
 
 set -e
 
-if [ ! -r zulu11.33.15-ca-jre11.0.4-macosx_x64.zip ]; then
-   echo zulu11.33.15-ca-jre11.0.4-macosx_x64.zip is missing, download from 'https://www.azul.com/downloads/zulu-community/?&version=java-11-lts&os=macos&os-details=macOS&architecture=x86-64-bit&package=jre'
+if [ ! -r zulu11.39.15-ca-jre11.0.7-macosx_x64.zip ]; then
+   echo zulu11.39.15-ca-jre11.0.7-macosx_x64.zip is missing, download from 'https://www.azul.com/downloads/zulu-community/?&version=java-11-lts&os=macos&os-details=macOS&architecture=x86-64-bit&package=jre'
    exit 1
 fi
 
@@ -22,8 +22,8 @@ rm -rf dist/NetXMS\ Console.app/Contents/Eclipse/p2/org.eclipse.equinox.p2.*
 
 cat Info.plist | sed "s,@version@,${version},g" > "dist/NetXMS Console.app/Contents/Info.plist"
 cd dist/NetXMS\ Console.app/Contents/
-unzip -x ../../../zulu11.33.15-ca-jre11.0.4-macosx_x64.zip >/dev/null
-mv zulu11.33.15-ca-jre11.0.4-macosx_x64 jre
+unzip -x ../../../zulu11.39.15-ca-jre11.0.7-macosx_x64.zip >/dev/null
+mv zulu11.39.15-ca-jre11.0.7-macosx_x64 jre
 cd - >/dev/null
 
 find dist/NetXMS\ Console.app -name \*.so -print0 | xargs -0 codesign --options=runtime --deep --force -s "Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)" -v --entitlements entitlements.plist
