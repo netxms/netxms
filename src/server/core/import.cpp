@@ -232,7 +232,8 @@ static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
 	   DB_RESULT hResult = DBSelectPrepared(hStmt);
 	   if (hResult != nullptr)
 	   {
-	      code = DBGetFieldULong(hResult, 0, 0);
+	      if (DBGetNumRows(hResult) > 0)
+	         code = DBGetFieldULong(hResult, 0, 0);
 	      DBFreeResult(hResult);
 	   }
 	   DBFreeStatement(hStmt);
