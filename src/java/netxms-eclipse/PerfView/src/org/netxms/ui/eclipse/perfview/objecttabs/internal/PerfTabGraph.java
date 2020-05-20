@@ -419,7 +419,8 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
          sb.append(chart.getItemStyles().get(i).getType());
          sb.append("@");
          sb.append(chart.getItemStyles().get(i).getColor());
-
+         sb.append("@");
+         sb.append(settings.isStacked());
 	   }
 	   
 	   IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();

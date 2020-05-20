@@ -186,6 +186,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                      dci.area = Integer.parseInt(subfields[7]) == GraphItemStyle.AREA ? true : false;
                   if (subfields.length >= 9)
                      dci.color = "0x" + Integer.toHexString(Integer.parseInt(subfields[8]));
+                  if (subfields.length >= 10)
+                     settings.setStacked(Boolean.parseBoolean(subfields[9]));
                   
                   items.add(dci);
                }
