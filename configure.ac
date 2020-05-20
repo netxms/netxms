@@ -2423,10 +2423,11 @@ else
 		AC_MSG_CHECKING(whether z_stream.next_in is a pointer to const)
 		AC_LANG_PUSH([C++])
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#define ZLIB_CONST
 #include <zlib.h>
+static const unsigned char *data = (const unsigned char *)"1 2 3";
 			]],[[
 				z_stream s;
-				const unsigneg char *data = (const unsigned char *)argv[0];
 				s.next_in = data;
 				return 0;
 			]])
