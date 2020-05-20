@@ -2419,9 +2419,30 @@ else
 	if test "x$HAVE_ZLIB" = "xyes"; then
 		AC_CHECK_LIB(z, deflate, [], [ HAVE_ZLIB=no ])
 	fi
+	if test "x$HAVE_ZLIB" = "xyes"; then
+		AC_MSG_CHECKING(whether z_stream.next_in is a pointer to const)
+		AC_LANG_PUSH([C++])
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <zlib.h>
+			]],[[
+				z_stream s;
+				const unsigneg char *data = (const unsigned char *)argv[0];
+				s.next_in = data;
+				return 0;
+			]])
+			],[
+			        AC_MSG_RESULT(yes)
+			        AC_DEFINE(ZLIB_CONST_INPUT,1,Define to 1 if zlib accepts const pointer as z_stream input)
+			],[
+			        AC_MSG_RESULT(no)
+			        AC_DEFINE(ZLIB_CONST_INPUT,0,Define to 1 if zlib accepts const pointer as z_stream input)
+			])
+		AC_LANG_POP([C++])
+	fi
 fi
 if test "x$HAVE_ZLIB" = "xno"; then
 	MODULES="zlib $MODULES"
+        AC_DEFINE(ZLIB_CONST_INPUT,1,Define to 1 if zlib accepts const pointer as z_stream input)
 fi
 
 if test "x$FORCE_INTERNAL_EXPAT" = "xyes"; then

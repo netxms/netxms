@@ -219,7 +219,11 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          stream.zfree = ZLibFree;
          stream.opaque = &m_pool;
          stream.avail_in = (UINT32)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
-         stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
+#if ZLIB_CONST_INPUT
+         stream.next_in = reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4;
+#else
+         stream.next_in = const_cast<BYTE*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4);
+#endif
          if (inflateInit(&stream) != Z_OK)
          {
             nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
@@ -263,7 +267,11 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          stream.zfree = ZLibFree;
          stream.opaque = &m_pool;
          stream.avail_in = ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
+#if ZLIB_CONST_INPUT
          stream.next_in = reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4;
+#else
+         stream.next_in = const_cast<BYTE*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4);
+#endif
          if (inflateInit(&stream) != Z_OK)
          {
             nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
@@ -1217,7 +1225,7 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
       {
          size_t compBufferSize = deflateBound(&stream, (unsigned long)(size - NXCP_HEADER_SIZE));
          BYTE *compressedMsg = (BYTE *)MemAlloc(compBufferSize + NXCP_HEADER_SIZE + 4);
-         stream.next_in = (BYTE *)msg->fields;
+         stream.next_in = reinterpret_cast<BYTE*>(msg->fields);
          stream.avail_in = (UINT32)(size - NXCP_HEADER_SIZE);
          stream.next_out = compressedMsg + NXCP_HEADER_SIZE + 4;
          stream.avail_out = (UINT32)compBufferSize;
@@ -1485,7 +1493,11 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       stream.zfree = Z_NULL;
       stream.opaque = Z_NULL;
       stream.avail_in = size - NXCP_HEADER_SIZE - 4;
-      stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
+#if ZLIB_CONST_INPUT
+      stream.next_in = reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4;
+#else
+      stream.next_in = const_cast<BYTE*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4);
+#endif
       if (inflateInit(&stream) != Z_OK)
       {
          out.append(_T("Cannot decompress message"));
