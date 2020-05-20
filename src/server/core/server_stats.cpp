@@ -98,7 +98,7 @@ inline void AddQueueToCollector(const TCHAR *name, INT64 (*function)())
  */
 static INT64 GetTotalDBWriterQueueSize()
 {
-   return GetIDataWriterQueueSize() + GetRawDataWriterQueueSize() + g_dbWriterQueue->size();
+   return GetIDataWriterQueueSize() + GetRawDataWriterQueueSize() + g_dbWriterQueue.size();
 }
 
 /**
@@ -120,7 +120,7 @@ THREAD_RESULT THREAD_CALL ServerStatCollector(void *arg)
    s_queuesLock.lock();
    AddQueueToCollector(_T("DataCollector"), g_dataCollectorThreadPool);
    AddQueueToCollector(_T("DBWriter.IData"), GetIDataWriterQueueSize);
-   AddQueueToCollector(_T("DBWriter.Other"), g_dbWriterQueue);
+   AddQueueToCollector(_T("DBWriter.Other"), &g_dbWriterQueue);
    AddQueueToCollector(_T("DBWriter.RawData"), GetRawDataWriterQueueSize);
    AddQueueToCollector(_T("DBWriter.Total"), GetTotalDBWriterQueueSize);
    AddQueueToCollector(_T("EventLogWriter"), GetEventLogWriterQueueSize);

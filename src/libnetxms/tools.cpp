@@ -145,6 +145,8 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 #endif
 #endif
 
+   json_set_alloc_funcs(MemAlloc, MemFree);
+
 #ifdef NETXMS_MEMORY_DEBUG
    InitMemoryDebugger();
 #endif

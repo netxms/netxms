@@ -1686,7 +1686,8 @@ CREATE TABLE audit_log
   message SQL_TEXT null,
   old_value SQL_TEXT null,
   new_value SQL_TEXT null,
-  value_diff SQL_TEXT null,
+  value_type char(1) null,
+  hmac varchar(64) null,
   PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 

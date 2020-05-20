@@ -252,11 +252,11 @@ void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, UINT32 obje
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, const TCHAR *format, ...)
+void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   WriteAuditLogWithValues2(subsys, success, m_dwUserId, m_workstation, m_id, objectId, oldValue, newValue, format, args);
+   WriteAuditLogWithValues2(subsys, success, m_dwUserId, m_workstation, m_id, objectId, oldValue, newValue, valueType, format, args);
    va_end(args);
 }
 
@@ -2505,7 +2505,7 @@ void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
       if (ConfigWriteStr(name, newValue, true))
       {
          msg.setField(VID_RCC, RCC_SUCCESS);
-         writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue,
+         writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, 'T',
                                  _T("Server configuration variable \"%s\" changed from \"%s\" to \"%s\""), name, oldValue, newValue);
       }
       else
@@ -2626,7 +2626,7 @@ void ClientSession::setConfigCLOB(NXCPMessage *pRequest)
 			if (ConfigWriteCLOB(name, newValue, TRUE))
 			{
 				msg.setField(VID_RCC, RCC_SUCCESS);
-				writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue,
+				writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, 'T',
 								            _T("Server configuration variable (long) \"%s\" changed"), name);
 			}
 			else
@@ -8204,10 +8204,10 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
    ThreadPoolGetInfo(g_dataCollectorThreadPool, &poolInfo);
 	msg.setField(VID_QSIZE_DCI_POLLER, (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0);
 
-	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, static_cast<UINT32>(g_dciCacheLoaderQueue.size()));
-	msg.setField(VID_QSIZE_DBWRITER, static_cast<UINT32>(g_dbWriterQueue->size()));
-	msg.setField(VID_QSIZE_EVENT, static_cast<UINT32>(g_eventQueue.size()));
-	msg.setField(VID_QSIZE_NODE_POLLER, static_cast<UINT32>(GetDiscoveryPollerQueueSize()));
+	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, static_cast<uint32_t>(g_dciCacheLoaderQueue.size()));
+	msg.setField(VID_QSIZE_DBWRITER, static_cast<uint32_t>(g_dbWriterQueue.size()));
+	msg.setField(VID_QSIZE_EVENT, static_cast<uint32_t>(g_eventQueue.size()));
+	msg.setField(VID_QSIZE_NODE_POLLER, static_cast<uint32_t>(GetDiscoveryPollerQueueSize()));
 
    // Send response
    sendMessage(&msg);
@@ -10690,7 +10690,7 @@ void ClientSession::executeScript(NXCPMessage *request)
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   sendMessage(&msg);
                   success = true;
-                  writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), _T(""), script, _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
+                  writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
                }
                else
                {
@@ -10705,7 +10705,7 @@ void ClientSession::executeScript(NXCPMessage *request)
          }
          else  // User doesn't have READ rights on object
          {
-            writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), _T(""), script, _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
+            writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script, 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
          MemFree(script);

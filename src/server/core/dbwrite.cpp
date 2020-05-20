@@ -87,9 +87,17 @@ static int s_idataWriterCount = 1;
 static IDataWriter s_idataWriters[MAX_IDATA_WRITERS];
 
 /**
+ * Custom destructor for writer queue
+ */
+static void WriterQueueElementDestructor(void *element, Queue *queue)
+{
+   MemFree(element);
+}
+
+/**
  * Generic DB writer queue
  */
-Queue *g_dbWriterQueue = nullptr;
+ObjectQueue<DELAYED_SQL_REQUEST> g_dbWriterQueue(1024, Ownership::True, WriterQueueElementDestructor);
 
 /**
  * Raw DCI data writer queue
@@ -124,11 +132,11 @@ static THREAD s_queueMonitorThread = INVALID_THREAD_HANDLE;
  */
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 {
-	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)MemAlloc(sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR));
+	DELAYED_SQL_REQUEST *rq = static_cast<DELAYED_SQL_REQUEST*>(MemAlloc(sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR)));
 	rq->query = (TCHAR *)&rq->bindings[0];
 	_tcscpy(rq->query, query);
 	rq->bindCount = 0;
-   g_dbWriterQueue->put(rq);
+   g_dbWriterQueue.put(rq);
    nxlog_debug_tag(DEBUG_TAG, 8, _T("SQL request queued: %s"), query);
 	InterlockedIncrement64(&g_otherWriteRequests);
 }
@@ -138,17 +146,17 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
  */
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values)
 {
-	int size = sizeof(DELAYED_SQL_REQUEST) + ((int)_tcslen(query) + 1) * sizeof(TCHAR) + bindCount * sizeof(TCHAR *) + bindCount;
+	size_t size = sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR) + bindCount * sizeof(TCHAR *) + bindCount;
 	for(int i = 0; i < bindCount; i++)
 	{
 	   if (values[i] != nullptr)
-	      size += ((int)_tcslen(values[i]) + 1) * sizeof(TCHAR) + sizeof(TCHAR *);
+	      size += (_tcslen(values[i]) + 1) * sizeof(TCHAR) + sizeof(TCHAR *);
 	}
-	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)MemAlloc(size);
+	DELAYED_SQL_REQUEST *rq = static_cast<DELAYED_SQL_REQUEST*>(MemAlloc(size));
 
 	BYTE *base = (BYTE *)&rq->bindings[bindCount];
-	int pos = 0;
-	int align = sizeof(TCHAR *);
+	size_t pos = 0;
+	size_t align = sizeof(TCHAR *);
 
 	rq->query = (TCHAR *)base;
 	_tcscpy(rq->query, query);
@@ -163,11 +171,11 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 	for(int i = 0; i < bindCount; i++)
 	{
 		rq->sqlTypes[i] = (BYTE)sqlTypes[i];
-		if (values[i] != NULL)
+		if (values[i] != nullptr)
 		{
          rq->bindings[i] = (TCHAR *)&base[pos];
          _tcscpy(rq->bindings[i], values[i]);
-         pos += ((int)_tcslen(values[i]) + 1) * sizeof(TCHAR);
+         pos += (_tcslen(values[i]) + 1) * sizeof(TCHAR);
          if (pos % align != 0)
             pos += align - pos % align;
 		}
@@ -177,7 +185,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 		}
 	}
 
-   g_dbWriterQueue->put(rq);
+   g_dbWriterQueue.put(rq);
    nxlog_debug_tag(DEBUG_TAG, 8, _T("SQL request queued: %s"), query);
    InterlockedIncrement64(&g_otherWriteRequests);
 }
@@ -261,7 +269,7 @@ static void DBWriteThread()
    ThreadSetName("DBWriter");
    while(true)
    {
-      DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)g_dbWriterQueue->getOrBlock();
+      DELAYED_SQL_REQUEST *rq = g_dbWriterQueue.getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -783,7 +791,7 @@ void StopDBWriter()
       ThreadJoin(s_queueMonitorThread);
    }
 
-   g_dbWriterQueue->put(INVALID_POINTER_VALUE);
+   g_dbWriterQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_writerThread);
 
    for(int i = 0; i < s_idataWriterCount; i++)

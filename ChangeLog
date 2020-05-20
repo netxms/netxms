@@ -7,6 +7,7 @@
 - Added built-in NXSL constant NXSL::SystemIsBigEndian
 - Fixed issues:
 	NX-763 (File Tail/Show should not access database directly)
+	NX-1556 (Add HMAC to every record in audit log table)
 	NX-1848 (Add getGuid method to org.netxms.client.events.EventTemplate class in Java API)
 
 

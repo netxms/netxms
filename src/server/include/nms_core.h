@@ -827,7 +827,7 @@ public:
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset, bool allowCompression = true);
 
    void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, const TCHAR *format, ...);
+   void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...);
    void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...);
 
    session_id_t getId() const { return m_id; }
@@ -1236,26 +1236,26 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 void EscapeString(StringBuffer &str);
 
 void InitAuditLog();
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                     const TCHAR *workstation, int sessionId, UINT32 objectId,
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                     const TCHAR *workstation, int sessionId, uint32_t objectId,
                                      const TCHAR *format, ...);
-void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
+void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                      const TCHAR *workstation, int sessionId, uint32_t objectId,
                                       const TCHAR *format, va_list args);
-void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                               const TCHAR *workstation, int sessionId, UINT32 objectId,
-                                               const TCHAR *oldValue, const TCHAR *newValue,
+void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                               const TCHAR *workstation, int sessionId, uint32_t objectId,
+                                               const TCHAR *oldValue, const TCHAR *newValue, char valueType,
                                                const TCHAR *format, ...);
-void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                                   const TCHAR *workstation, int sessionId, UINT32 objectId,
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                                   const TCHAR *workstation, int sessionId, uint32_t objectId,
                                                    json_t *oldValue, json_t *newValue,
                                                    const TCHAR *format, ...);
-void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                                const TCHAR *workstation, int sessionId, UINT32 objectId,
-                                                const TCHAR *oldValue, const TCHAR *newValue,
+void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                                const TCHAR *workstation, int sessionId, uint32_t objectId,
+                                                const TCHAR *oldValue, const TCHAR *newValue, char valueType,
                                                 const TCHAR *format, va_list args);
-void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                                    const TCHAR *workstation, int sessionId, UINT32 objectId,
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                                    const TCHAR *workstation, int sessionId, uint32_t objectId,
                                                     json_t *oldValue, json_t *newValue,
                                                     const TCHAR *format, va_list args);
 
@@ -1464,10 +1464,12 @@ extern TCHAR g_szDbPassword[];
 extern TCHAR g_szDbName[];
 extern TCHAR g_szDbSchema[];
 extern DB_DRIVER g_dbDriver;
-extern Queue *g_dbWriterQueue;
 extern VolatileCounter64 g_idataWriteRequests;
 extern uint64_t g_rawDataWriteRequests;
 extern VolatileCounter64 g_otherWriteRequests;
+
+struct DELAYED_SQL_REQUEST;
+extern ObjectQueue<DELAYED_SQL_REQUEST> g_dbWriterQueue;
 
 extern NXCORE_EXPORTABLE_VAR(int g_dbSyntax);
 extern FileMonitoringList g_monitoringList;

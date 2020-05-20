@@ -143,7 +143,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
          json_t *json = pEvent->toJson();
          char *jsonText = json_dumps(json, JSON_INDENT(3) | JSON_EMBED);
          query.append(DBPrepareStringUTF8(hdb, jsonText));
-         json_free(jsonText);
+         MemFree(jsonText);
          json_decref(json);
          query.append(_T(')'));
 

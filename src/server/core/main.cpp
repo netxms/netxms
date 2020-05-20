@@ -728,9 +728,6 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	InitLocalNetInfo();
 
-	// Create queue for delayed SQL queries
-	g_dbWriterQueue = new Queue(1024, Ownership::False);
-
 	// Initialize database driver and connect to database
 	if (!DBInit())
 		return FALSE;

@@ -487,7 +487,7 @@ void ZmqPublishEvent(const Event *event)
             DbgPrintf(7, _T("ZeroMQ: publish event failed (%d)"), errno);
          }
          MutexUnlock(m_socketLock);
-         json_free(message);
+         MemFree(message);
       }
    }
 }
@@ -526,7 +526,7 @@ void ZmqPublishData(UINT32 objectId, UINT32 dciId, const TCHAR *dciName, const T
             DbgPrintf(7, _T("ZeroMQ: publish collected data failed (%d)"), errno);
          }
          MutexUnlock(m_socketLock);
-         json_free(message);
+         MemFree(message);
       }
    }
 }

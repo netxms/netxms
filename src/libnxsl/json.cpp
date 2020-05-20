@@ -149,7 +149,7 @@ NXSL_METHOD_DEFINITION(JsonObject, serialize)
 {
    char *s = json_dumps(static_cast<json_t*>(object->getData()), JSON_INDENT(3));
    *result = vm->createValue(s);
-   json_free(s);
+   MemFree(s);
    return 0;
 }
 
@@ -246,7 +246,7 @@ NXSL_METHOD_DEFINITION(JsonArray, serialize)
 {
    char *s = json_dumps(static_cast<json_t*>(object->getData()), JSON_INDENT(3));
    *result = vm->createValue(s);
-   json_free(s);
+   MemFree(s);
    return 0;
 }
 

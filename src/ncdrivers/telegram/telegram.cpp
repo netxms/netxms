@@ -231,10 +231,10 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, long ipVersion, const char *method, json_t *data)
 {
    CURL *curl = curl_easy_init();
-   if (curl == NULL)
+   if (curl == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
-      return NULL;
+      return nullptr;
    }
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
@@ -277,9 +277,9 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
       }
    }
 
-   struct curl_slist *headers = NULL;
+   struct curl_slist *headers = nullptr;
    char *json;
-   if (data != NULL)
+   if (data != nullptr)
    {
       json = json_dumps(data, 0);
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
@@ -288,10 +288,10 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
    }
    else
    {
-      json = NULL;
+      json = nullptr;
    }
 
-   json_t *response = NULL;
+   json_t *response = nullptr;
 
    char url[256];
    snprintf(url, 256, "https://api.telegram.org/bot%s/%s", token, method);
@@ -305,7 +305,7 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
             responseData->data[responseData->size] = 0;
             json_error_t error;
             response = json_loads(responseData->data, 0, &error);
-            if (response == NULL)
+            if (response == nullptr)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse API response (%hs)"), error.text);
             }
@@ -324,7 +324,7 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
    MemFree(responseData);
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
-   json_free(json);
+   MemFree(json);
    return response;
 }
 

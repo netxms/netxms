@@ -24,6 +24,30 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.2 to 34.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("audit_log"), _T("value_diff")));
+
+   if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE audit_log ADD (value_type char(1), hmac varchar(64))")));
+   }
+   else
+   {
+      static const TCHAR *batch =
+         _T("ALTER TABLE audit_log ADD value_type char(1)\n")
+         _T("ALTER TABLE audit_log ADD hmac varchar(64)\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 34.1 to 34.2
  */
 static bool H_UpgradeFromV1()
@@ -59,6 +83,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 2,  34, 3,  H_UpgradeFromV2  },
    { 1,  34, 2,  H_UpgradeFromV1  },
    { 0,  34, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }

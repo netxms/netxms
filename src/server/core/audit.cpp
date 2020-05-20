@@ -21,17 +21,23 @@
 **/
 
 #include "nxcore.h"
+#include <openssl/hmac.h>
+
+/**
+ * Audit log HMAC key
+ */
+char g_auditLogKey[128] = "";
 
 /**
  * Static data
  */
-static VolatileCounter m_recordId = 1;
-static InetAddress m_auditServerAddr;
-static WORD m_auditServerPort;
-static int m_auditFacility;
-static int m_auditSeverity;
-static char m_auditTag[MAX_SYSLOG_TAG_LEN];
-static char m_localHostName[256];
+static VolatileCounter s_recordId = 1;
+static InetAddress s_auditServerAddr;
+static uint16_t s_auditServerPort;
+static int s_auditFacility;
+static int s_auditSeverity;
+static char s_auditTag[MAX_SYSLOG_TAG_LEN];
+static char s_localHostName[256];
 
 /**
  * Send syslog record to audit server
@@ -41,10 +47,10 @@ static void SendSyslogRecord(const TCHAR *text)
    static char month[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
                                 "May ", "Jun ", "Jul ", "Aug ",
                                 "Sep ", "Oct ", "Nov ", "Dec " };
-	if (!m_auditServerAddr.isValidUnicast())
+	if (!s_auditServerAddr.isValidUnicast())
 		return;
 
-	time_t ts = time(NULL);
+	time_t ts = time(nullptr);
 #if HAVE_LOCALTIME_R
 	struct tm tmbuffer;
    struct tm *now = localtime_r(&ts, &tmbuffer);
@@ -55,20 +61,20 @@ static void SendSyslogRecord(const TCHAR *text)
    char message[1025];
 #ifdef UNICODE
 	char *mbText = MBStringFromWideString(text);
-	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (m_auditFacility << 3) + m_auditSeverity, month[now->tm_mon],
-	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, m_localHostName, m_auditTag, mbText);
-	free(mbText);
+	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (s_auditFacility << 3) + s_auditSeverity, month[now->tm_mon],
+	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, s_localHostName, s_auditTag, mbText);
+	MemFree(mbText);
 #else
-	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (m_auditFacility << 3) + m_auditSeverity, month[now->tm_mon],
-	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, m_localHostName, m_auditTag, text);
+	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (s_auditFacility << 3) + s_auditSeverity, month[now->tm_mon],
+	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, s_localHostName, s_auditTag, text);
 #endif
 	message[1024] = 0;
 
-   SOCKET hSocket = CreateSocket(m_auditServerAddr.getFamily(), SOCK_DGRAM, 0);
+   SOCKET hSocket = CreateSocket(s_auditServerAddr.getFamily(), SOCK_DGRAM, 0);
    if (hSocket != INVALID_SOCKET)
 	{
 		SockAddrBuffer addr;
-		m_auditServerAddr.fillSockAddr(&addr, m_auditServerPort);
+		s_auditServerAddr.fillSockAddr(&addr, s_auditServerPort);
 		sendto(hSocket, message, (int)strlen(message), 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
 		shutdown(hSocket, SHUT_RDWR);
 		closesocket(hSocket);
@@ -84,10 +90,10 @@ void InitAuditLog()
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM audit_log"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         m_recordId = DBGetFieldULong(hResult, 0, 0) + 1;
+         s_recordId = DBGetFieldULong(hResult, 0, 0) + 1;
       DBFreeResult(hResult);
    }
 
@@ -96,21 +102,21 @@ void InitAuditLog()
 	ConfigReadStr(_T("ExternalAuditServer"), temp, 256, _T("none"));
 	if (_tcscmp(temp, _T("none")))
 	{
-		m_auditServerAddr = InetAddress::resolveHostName(temp);
-		m_auditServerPort = (WORD)ConfigReadInt(_T("ExternalAuditPort"), 514);
-		m_auditFacility = ConfigReadInt(_T("ExternalAuditFacility"), 13);  // default is log audit facility
-		m_auditSeverity = ConfigReadInt(_T("ExternalAuditSeverity"), SYSLOG_SEVERITY_NOTICE);
-		ConfigReadStrA(_T("ExternalAuditTag"), m_auditTag, MAX_SYSLOG_TAG_LEN, "netxmsd-audit");
+		s_auditServerAddr = InetAddress::resolveHostName(temp);
+		s_auditServerPort = (WORD)ConfigReadInt(_T("ExternalAuditPort"), 514);
+		s_auditFacility = ConfigReadInt(_T("ExternalAuditFacility"), 13);  // default is log audit facility
+		s_auditSeverity = ConfigReadInt(_T("ExternalAuditSeverity"), SYSLOG_SEVERITY_NOTICE);
+		ConfigReadStrA(_T("ExternalAuditTag"), s_auditTag, MAX_SYSLOG_TAG_LEN, "netxmsd-audit");
 
 		// Get local host name
 #ifdef _WIN32
 		DWORD size = 256;
-		GetComputerNameA(m_localHostName, &size);
+		GetComputerNameA(s_localHostName, &size);
 #else
-		gethostname(m_localHostName, 256);
-		m_localHostName[255] = 0;
-		char *ptr = strchr(m_localHostName, '.');
-		if (ptr != NULL)
+		gethostname(s_localHostName, 256);
+		s_localHostName[255] = 0;
+		char *ptr = strchr(s_localHostName, '.');
+		if (ptr != nullptr)
 			*ptr = 0;
 #endif
 
@@ -131,45 +137,45 @@ static void SendNewRecord(ClientSession *session, void *arg)
 /**
  * Write audit record
  */
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                     const TCHAR *workstation, int sessionId, UINT32 objectId,
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                     const TCHAR *workstation, int sessionId, uint32_t objectId,
                                      const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, NULL, NULL, format, args);
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, nullptr, nullptr, 0, format, args);
    va_end(args);
 }
 
 /**
  * Write audit record
  */
-void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
+void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                      const TCHAR *workstation, int sessionId, uint32_t objectId,
                                       const TCHAR *format, va_list args)
 {
-   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, NULL, NULL, format, args);
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, nullptr, nullptr, 0, format, args);
 }
 
 /**
  * Write audit record with old and new values
  */
-void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                               const TCHAR *workstation, int sessionId, UINT32 objectId,
-                                               const TCHAR *oldValue, const TCHAR *newValue,
+void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                               const TCHAR *workstation, int sessionId, uint32_t objectId,
+                                               const TCHAR *oldValue, const TCHAR *newValue, char valueType,
                                                const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, oldValue, newValue, format, args);
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, oldValue, newValue, valueType, format, args);
    va_end(args);
 }
 
 /**
  * Write audit record with old and new values in JSON format
  */
-void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                               const TCHAR *workstation, int sessionId, UINT32 objectId,
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                               const TCHAR *workstation, int sessionId, uint32_t objectId,
                                                json_t *oldValue, json_t *newValue,
                                                const TCHAR *format, ...)
 {
@@ -182,47 +188,114 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isS
 /**
  * Write audit record with old and new values
  */
-void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                                const TCHAR *workstation, int sessionId, UINT32 objectId,
-                                                const TCHAR *oldValue, const TCHAR *newValue,
+void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
+                                                const TCHAR *workstation, int sessionId, uint32_t objectId,
+                                                const TCHAR *oldValue, const TCHAR *newValue, char valueType,
                                                 const TCHAR *format, va_list args)
 {
-	StringBuffer text;
-	text.appendFormattedStringV(format, args);
+   StringBuffer text;
+   text.appendFormattedStringV(format, args);
 
-	TCHAR recordId[16], _time[32], success[2], _userId[16], _sessionId[16], _objectId[16];
-   const TCHAR *values[12] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, (const TCHAR *)text, oldValue, newValue, NULL };
-   _sntprintf(recordId, 16, _T("%d"), InterlockedIncrement(&m_recordId));
-   _sntprintf(_time, 32, _T("%d"), (UINT32)time(NULL));
+	TCHAR recordId[16], _time[32], success[2], _userId[16], _sessionId[16], _objectId[16], _valueType[2], _hmac[SHA256_DIGEST_SIZE * 2 + 1];
+   const TCHAR *values[13] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, text.cstr(), nullptr, nullptr, nullptr, nullptr };
+   static int sqlTypes[13] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT, -1, -1, -1, -1 };
+   _sntprintf(recordId, 16, _T("%d"), InterlockedIncrement(&s_recordId));
+   _sntprintf(_time, 32, INT64_FMT, static_cast<int64_t>(time(nullptr)));
    _sntprintf(success, 2, _T("%d"), isSuccess ? 1 : 0);
    _sntprintf(_userId, 16, _T("%d"), userId);
    _sntprintf(_sessionId, 16, _T("%d"), sessionId);
    _sntprintf(_objectId, 16, _T("%d"), objectId);
+   _valueType[0] = valueType;
+   _valueType[1] = 0;
 
-   static int sqlTypes[12] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT };
-   if ((oldValue != NULL) && (newValue != NULL))
+   int bindCount = 9;
+   StringBuffer query = _T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message");
+   if (oldValue != nullptr)
    {
-      String diff = GenerateLineDiff(oldValue, newValue);
-      values[11] = (const TCHAR *)diff;
-      QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message,old_value,new_value,value_diff) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), 12, sqlTypes, values);
+      query.append(_T(",old_value"));
+      values[bindCount] = oldValue;
+      sqlTypes[bindCount] = DB_SQLTYPE_TEXT;
+      bindCount++;
    }
-   else
+   if (newValue != nullptr)
    {
-      QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES (?,?,?,?,?,?,?,?,?)"), 9, sqlTypes, values);
+      query.append(_T(",new_value"));
+      values[bindCount] = oldValue;
+      sqlTypes[bindCount] = DB_SQLTYPE_TEXT;
+      bindCount++;
    }
+   if ((oldValue != nullptr) || (newValue != nullptr))
+   {
+      query.append(_T(",value_type"));
+      values[bindCount] = oldValue;
+      sqlTypes[bindCount] = DB_SQLTYPE_VARCHAR;
+      bindCount++;
+   }
+
+   // Calculate HMAC
+   if (g_auditLogKey[0] != 0)
+   {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+      HMAC_CTX *ctx = HMAC_CTX_new();
+#else
+      HMAC_CTX _ctx;
+      HMAC_CTX *ctx = &_ctx;
+#endif
+      if (ctx != nullptr)
+      {
+         if (HMAC_Init_ex(ctx, g_auditLogKey, static_cast<int>(strlen(g_auditLogKey)), EVP_sha256(), nullptr))
+         {
+            char localBuffer[4096];
+            for(int i = 0; i < bindCount; i++)
+            {
+               if (_tcslen(values[i]) < 1024)
+               {
+                  wchar_to_utf8(values[i], -1, localBuffer, 4096);
+                  HMAC_Update(ctx, reinterpret_cast<BYTE*>(localBuffer), strlen(localBuffer));
+               }
+               else
+               {
+                  char *v = UTF8StringFromWideString(values[i]);
+                  HMAC_Update(ctx, reinterpret_cast<BYTE*>(v), strlen(v));
+                  MemFree(v);
+               }
+            }
+            BYTE hmac[SHA256_DIGEST_SIZE];
+            HMAC_Final(ctx, hmac, nullptr);
+
+            BinToStr(hmac, SHA256_DIGEST_SIZE, _hmac);
+            query.append(_T(",hmac"));
+            values[bindCount] = _hmac;
+            sqlTypes[bindCount] = DB_SQLTYPE_VARCHAR;
+            bindCount++;
+         }
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+         HMAC_CTX_free(ctx);
+#else
+         HMAC_CTX_cleanup(ctx);
+#endif
+      }
+   }
+
+   query.append(_T(") VALUES (?,?,?,?,?,?,?,?,?"));
+   for(int i = 9; i < bindCount; i++)
+      query.append(_T(",?"));
+   query.append(_T(")"));
+
+   QueueSQLRequest(query, bindCount, sqlTypes, values);
 
 	NXCPMessage msg;
 	msg.setCode(CMD_AUDIT_RECORD);
 	msg.setField(VID_SUBSYSTEM, subsys);
-	msg.setField(VID_SUCCESS_AUDIT, (WORD)isSuccess);
+	msg.setField(VID_SUCCESS_AUDIT, isSuccess);
 	msg.setField(VID_USER_ID, userId);
 	msg.setField(VID_WORKSTATION, workstation);
    msg.setField(VID_SESSION_ID, sessionId);
 	msg.setField(VID_OBJECT_ID, objectId);
-	msg.setField(VID_MESSAGE, (const TCHAR *)text);
+	msg.setField(VID_MESSAGE, text);
 	EnumerateClientSessions(SendNewRecord, &msg);
 
-	if (m_auditServerAddr.isValidUnicast())
+	if (s_auditServerAddr.isValidUnicast())
 	{
 		StringBuffer extText = _T("[");
 		TCHAR buffer[MAX_USER_NAME];
@@ -243,17 +316,17 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
                                                     json_t *oldValue, json_t *newValue,
                                                     const TCHAR *format, va_list args)
 {
-   char *js1 = (oldValue != nullptr) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : _strdup("");
-   char *js2 = (newValue != nullptr) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : _strdup("");
+   char *js1 = (oldValue != nullptr) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : MemCopyStringA("");
+   char *js2 = (newValue != nullptr) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : MemCopyStringA("");
 #ifdef UNICODE
    WCHAR *js1w = WideStringFromUTF8String(js1);
    WCHAR *js2w = WideStringFromUTF8String(js2);
-   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1w, js2w, format, args);
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1w, js2w, 'J', format, args);
    MemFree(js1w);
    MemFree(js2w);
 #else
-   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1, js2, format, args);
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1, js2, 'J', format, args);
 #endif
-   json_free(js1);
-   json_free(js2);
+   MemFree(js1);
+   MemFree(js2);
 }

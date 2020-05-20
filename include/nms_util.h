@@ -2656,19 +2656,6 @@ inline INT64 json_object_get_integer(json_t *object, const char *tag, INT64 defv
 }
 
 /**
- * Free libjansson-allocated memory
- */
-inline void json_free(void *data)
-{
-#if FREE_IS_NULL_SAFE
-   free(data);
-#else
-   if (data != nullptr)
-      free(data);
-#endif
-}
-
-/**
  * sockaddr buffer
  */
 union SockAddrBuffer
