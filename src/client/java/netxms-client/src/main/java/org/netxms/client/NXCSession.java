@@ -7074,7 +7074,7 @@ public class NXCSession
     *
     * @param logName Log name
     * @return Log object
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public Log openServerLog(final String logName) throws IOException, NXCException

@@ -24,11 +24,19 @@
 #include <nxcore_logs.h>
 
 /**
+ * Check if given column should be read for "get detains" request only
+ */
+static inline bool IsDetailsColumn(int type)
+{
+   return (type == LC_TEXT_DETAILS) || (type == LC_JSON_DETAILS);
+}
+
+/**
  * Check if given column type should be ignored in query
  */
 static inline bool IsIgnoredColumn(int type)
 {
-   return (type == LC_TEXT_DETAILS) || (type == LC_JSON_DETAILS) || (!IsZoningEnabled() && (type == LC_ZONE_UIN));
+   return IsDetailsColumn(type) || (!IsZoningEnabled() && (type == LC_ZONE_UIN));
 }
 
 /**
@@ -37,9 +45,9 @@ static inline bool IsIgnoredColumn(int type)
 LogHandle::LogHandle(NXCORE_LOG *info) : RefCountObject()
 {
 	m_log = info;
-	m_filter = NULL;
+	m_filter = nullptr;
 	m_lock = MutexCreate();
-	m_resultSet = NULL;
+	m_resultSet = nullptr;
 	m_rowCountLimit = 1000;
 	m_maxRecordId = 0;
 }
@@ -57,21 +65,21 @@ LogHandle::~LogHandle()
 /**
  * Get column information
  */
-void LogHandle::getColumnInfo(NXCPMessage &msg)
+void LogHandle::getColumnInfo(NXCPMessage *msg)
 {
-	UINT32 count = 0;
-	UINT32 varId = VID_COLUMN_INFO_BASE;
-	for(int i = 0; m_log->columns[i].name != NULL; i++)
+	uint32_t count = 0;
+	uint32_t fieldId = VID_COLUMN_INFO_BASE;
+	for(int i = 0; m_log->columns[i].name != nullptr; i++)
 	{
 	   if (IsIgnoredColumn(m_log->columns[i].type))
 	      continue;   // ignore zone columns if zoning is disabled
-		msg.setField(varId++, m_log->columns[i].name);
-		msg.setField(varId++, (WORD)m_log->columns[i].type);
-		msg.setField(varId++, m_log->columns[i].description);
-      varId += 7;
+		msg->setField(fieldId++, m_log->columns[i].name);
+		msg->setField(fieldId++, static_cast<uint16_t>(m_log->columns[i].type));
+		msg->setField(fieldId++, m_log->columns[i].description);
+      fieldId += 7;
 		count++;
 	}
-	msg.setField(VID_NUM_COLUMNS, count);
+	msg->setField(VID_NUM_COLUMNS, count);
 }
 
 /**
@@ -91,7 +99,7 @@ void LogHandle::deleteQueryResults()
  */
 void LogHandle::buildQueryColumnList()
 {
-	m_queryColumns = _T("");
+	m_queryColumns.clear();
 	LOG_COLUMN *column = m_log->columns;
 	bool first = true;
 	while(column->name != nullptr)
@@ -118,7 +126,7 @@ void LogHandle::buildQueryColumnList()
 /**
  * Do query according to filter
  */
-bool LogHandle::query(LogFilter *filter, INT64 *rowCount, const UINT32 userId)
+bool LogHandle::query(LogFilter *filter, int64_t *rowCount, uint32_t userId)
 {
 	deleteQueryResults();
 	delete m_filter;
@@ -147,12 +155,12 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount, const UINT32 userId)
 /**
  * Creates a SQL WHERE clause for restricting log to only objects accessible by given user.
  */
-StringBuffer LogHandle::buildObjectAccessConstraint(const UINT32 userId)
+StringBuffer LogHandle::buildObjectAccessConstraint(uint32_t userId)
 {
    StringBuffer constraint;
 	SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
-   IntegerArray<UINT32> *allowed = new IntegerArray<UINT32>(objects->size());
-   IntegerArray<UINT32> *restricted = new IntegerArray<UINT32>(objects->size());
+   IntegerArray<uint32_t> allowed(objects->size());
+   IntegerArray<uint32_t> restricted(objects->size());
 	for(int i = 0; i < objects->size(); i++)
 	{
 		NetObj *object = objects->get(i);
@@ -160,34 +168,34 @@ StringBuffer LogHandle::buildObjectAccessConstraint(const UINT32 userId)
       {
 		   if (object->checkAccessRights(userId, OBJECT_ACCESS_READ))
 		   {
-            allowed->add(object->getId());
+            allowed.add(object->getId());
 		   }
          else
          {
-            restricted->add(object->getId());
+            restricted.add(object->getId());
          }
       }
 	}
    delete objects;
 
-   if (restricted->size() == 0)
+   if (restricted.isEmpty())
    {
       // no restriction
    }
-   else if (allowed->size() == 0)
+   else if (allowed.isEmpty())
    {
-      constraint += _T("1=0");   // always false
+      constraint.append(_T("1=0"));   // always false
    }
    else
    {
-      IntegerArray<UINT32> *list;
-      if (allowed->size() < restricted->size())
+      IntegerArray<uint32_t> *list;
+      if (allowed.size() < restricted.size())
       {
-         list = allowed;
+         list = &allowed;
       }
       else
       {
-         list = restricted;
+         list = &restricted;
          constraint += _T("NOT (");
       }
 
@@ -213,40 +221,38 @@ StringBuffer LogHandle::buildObjectAccessConstraint(const UINT32 userId)
          }
          constraint.shrink(2);
       }
-      if (allowed->size() >= restricted->size())
+      if (allowed.size() >= restricted.size())
       {
          constraint += _T(")");
       }
    }
-   delete allowed;
-   delete restricted;
 	return constraint;
 }
 
 /**
  * Do query with current filter and column set
  */
-bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
+bool LogHandle::queryInternal(int64_t *rowCount, uint32_t userId)
 {
 	QWORD qwTimeStart = GetCurrentTimeMs();
 	StringBuffer query;
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			query.appendFormattedString(_T("SELECT TOP %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
+			query.appendFormattedString(_T("SELECT TOP %u %s FROM %s "), m_rowCountLimit, m_queryColumns.cstr(), m_log->table);
 			break;
 		case DB_SYNTAX_INFORMIX:
-			query.appendFormattedString(_T("SELECT FIRST %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
+			query.appendFormattedString(_T("SELECT FIRST %u %s FROM %s "), m_rowCountLimit, m_queryColumns.cstr(), m_log->table);
 			break;
 		case DB_SYNTAX_ORACLE:
-			query.appendFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
+			query.appendFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), m_queryColumns.cstr(), m_log->table);
 			break;
       case DB_SYNTAX_DB2:
 		case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
       case DB_SYNTAX_TSDB:
-			query.appendFormattedString(_T("SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
+			query.appendFormattedString(_T("SELECT %s FROM %s"), m_queryColumns.cstr(), m_log->table);
 			break;
 	}
 
@@ -331,10 +337,10 @@ Table *LogHandle::createTable()
 /**
  * Get data from query result
  */
-Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh, const UINT32 userId)
+Table *LogHandle::getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId)
 {
-	DbgPrintf(4, _T("Log data request: startRow=%d, numRows=%d, refresh=%s, userId=%d"),
-	          (int)startRow, (int)numRows, refresh ? _T("true") : _T("false"), userId);
+	nxlog_debug(4, _T("Log data request: startRow=") INT64_FMT _T(", numRows=") INT64_FMT _T(", refresh=%s, userId=%u"),
+	         startRow, numRows, refresh ? _T("true") : _T("false"), userId);
 
 	if (m_resultSet == nullptr)
 		return createTable();	// send empty table to indicate end of data
@@ -350,11 +356,11 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh, const UIN
 		else
 		{
 			// possibly we have more rows or refresh was requested
-			UINT32 newLimit = (UINT32)(startRow + numRows);
+			uint32_t newLimit = (UINT32)(startRow + numRows);
 			if (newLimit > m_rowCountLimit)
 				m_rowCountLimit = (newLimit - m_rowCountLimit < 1000) ? (m_rowCountLimit + 1000) : newLimit;
 			deleteQueryResults();
-			INT64 rowCount;
+			int64_t rowCount;
 			if (!queryInternal(&rowCount, userId))
 				return nullptr;
 			resultSize = DBGetNumRows(m_resultSet);
@@ -373,4 +379,69 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh, const UIN
 	}
 
 	return table;
+}
+
+/**
+ * Get details for specific record
+ */
+void LogHandle::getRecordDetails(int64_t recordId, NXCPMessage *msg)
+{
+   StringBuffer query(_T("SELECT "));
+
+   int count = 0;
+   uint32_t fieldId = VID_COLUMN_INFO_BASE;
+   for(int i = 0; m_log->columns[i].name != nullptr; i++)
+   {
+      if (!IsDetailsColumn(m_log->columns[i].type))
+         continue;
+      if (count > 0)
+         query.append(_T(","));
+      query.append(m_log->columns[i].name);
+      msg->setField(fieldId++, m_log->columns[i].name);
+      msg->setField(fieldId++, m_log->columns[i].type);
+      msg->setField(fieldId++, m_log->columns[i].description);
+      fieldId += 7;
+      count++;
+   }
+
+   if (count == 0)
+   {
+      msg->setField(VID_RCC, RCC_RECORD_DETAILS_UNAVAILABLE);
+      return;
+   }
+   msg->setField(VID_NUM_COLUMNS, count);
+
+   query.append(_T(" FROM "));
+   query.append(m_log->table);
+   query.append(_T(" WHERE "));
+   query.append(m_log->idColumn);
+   query.append(_T("="));
+   query.append(recordId);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         fieldId = VID_TABLE_DATA_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR *v = DBGetField(hResult, 0, i, nullptr, 0);
+            msg->setField(fieldId++, v);
+            MemFree(v);
+         }
+         msg->setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg->setField(VID_RCC, RCC_NO_SUCH_RECORD);
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      msg->setField(VID_RCC, RCC_DB_FAILURE);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 }

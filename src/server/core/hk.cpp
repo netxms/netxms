@@ -331,7 +331,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		CleanAlarmHistory(hdb);
 
 		// Remove outdated event log records
-		UINT32 dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
+		uint32_t dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
 		if (dwRetentionTime > 0)
 		{
 	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing event log (retention time %d days)"), dwRetentionTime);

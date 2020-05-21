@@ -170,14 +170,14 @@ private:
 	LogFilter *m_filter;
 	MUTEX m_lock;
    StringBuffer m_queryColumns;
-	UINT32 m_rowCountLimit;
-	INT64 m_maxRecordId;
+	uint32_t m_rowCountLimit;
+	int64_t m_maxRecordId;
 	DB_RESULT m_resultSet;
 
 	void buildQueryColumnList();
-	StringBuffer buildObjectAccessConstraint(const UINT32 userId);
+	StringBuffer buildObjectAccessConstraint(uint32_t userId);
 	void deleteQueryResults();
-	bool queryInternal(INT64 *rowCount, const UINT32 userId);
+	bool queryInternal(int64_t *rowCount, uint32_t userId);
 	Table *createTable();
 
 public:
@@ -187,20 +187,17 @@ public:
 	void lock() { MutexLock(m_lock); }
 	void release() { MutexUnlock(m_lock); decRefCount(); }
 
-	bool query(LogFilter *filter, INT64 *rowCount, const UINT32 userId);
-	Table *getData(INT64 startRow, INT64 numRows, bool refresh, const UINT32 userId);
-	void getColumnInfo(NXCPMessage &msg);
+	bool query(LogFilter *filter, int64_t *rowCount, uint32_t userId);
+	Table *getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId);
+	void getRecordDetails(int64_t recordId, NXCPMessage *msg);
+	void getColumnInfo(NXCPMessage *msg);
 };
 
-
-//
 // API functions
-//
-
 void InitLogAccess();
-int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc);
-uint32_t CloseLog(ClientSession *session, int logHandle);
+int32_t OpenLog(const TCHAR *name, ClientSession *session, uint32_t *rcc);
+uint32_t CloseLog(ClientSession *session, int32_t logHandle);
 void CloseAllLogsForSession(session_id_t sessionId);
-LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle);
+LogHandle *AcquireLogHandleObject(ClientSession *session, int32_t logHandle);
 
 #endif

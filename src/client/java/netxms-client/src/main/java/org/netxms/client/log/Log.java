@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,9 +30,6 @@ import org.netxms.client.Table;
 
 /**
  * Log handle for accessing log on management server
- *
- * @author Victor Kirhenshtein
- *
  */
 public class Log
 {
@@ -143,8 +140,8 @@ public class Log
     * @param rowCount number of rows to retrieve
     * @param refresh if set to true, server will reload data from database instead of using cache
     * @return data set
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public Table retrieveData(long startRow, long rowCount, boolean refresh) throws IOException, NXCException
    {
@@ -169,6 +166,24 @@ public class Log
    }
 
    /**
+    * Get details for specific log record. Details object will contain values for all columns marked as "details column".
+    * 
+    * @param recordId log record ID
+    * @return log record details
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public LogRecordDetails getRecordDetails(long recordId) throws IOException, NXCException
+   {
+      NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_LOG_RECORD_DETAILS);
+      msg.setFieldInt32(NXCPCodes.VID_LOG_HANDLE, handle);
+      msg.setFieldInt64(NXCPCodes.VID_RECORD_ID, recordId);
+      session.sendMessage(msg);
+      NXCPMessage response = session.waitForRCC(msg.getMessageId());
+      return new LogRecordDetails(recordId, response);
+   }
+
+   /**
     * Close log
     *
     * @throws IOException if socket I/O error occurs
@@ -183,7 +198,7 @@ public class Log
       handle = -1;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#finalize()
     */
    @Override
@@ -194,7 +209,7 @@ public class Log
       super.finalize();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override

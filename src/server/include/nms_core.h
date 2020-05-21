@@ -705,6 +705,7 @@ private:
 	void closeServerLog(NXCPMessage *request);
 	void queryServerLog(NXCPMessage *request);
 	void getServerLogQueryData(NXCPMessage *request);
+   void getServerLogRecordDetails(NXCPMessage *request);
 	void updateUsmCredentials(NXCPMessage *pRequest);
 	void sendDCIThresholds(NXCPMessage *request);
 	void addClusterNode(NXCPMessage *request);

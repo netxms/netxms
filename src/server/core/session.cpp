@@ -1107,6 +1107,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_LOG_DATA:
          getServerLogQueryData(request);
          break;
+      case CMD_GET_LOG_RECORD_DETAILS:
+         getServerLogRecordDetails(request);
+         break;
       case CMD_FIND_NODE_CONNECTION:
          findNodeConnection(request);
          break;
@@ -11070,15 +11073,15 @@ void ClientSession::openServerLog(NXCPMessage *request)
 	TCHAR name[256];
 	request->getFieldAsString(VID_LOG_NAME, name, 256);
 
-	UINT32 rcc;
-	int handle = OpenLog(name, this, &rcc);
+	uint32_t rcc;
+	int32_t handle = OpenLog(name, this, &rcc);
 	if (handle != -1)
 	{
 		msg.setField(VID_RCC, RCC_SUCCESS);
-		msg.setField(VID_LOG_HANDLE, (UINT32)handle);
+		msg.setField(VID_LOG_HANDLE, handle);
 
 		LogHandle *log = AcquireLogHandleObject(this, handle);
-		log->getColumnInfo(msg);
+		log->getColumnInfo(&msg);
 		log->release();
 	}
 	else
@@ -11115,13 +11118,13 @@ void ClientSession::queryServerLog(NXCPMessage *request)
 	msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setId(request->getId());
 
-	int handle = (int)request->getFieldAsUInt32(VID_LOG_HANDLE);
+	int32_t handle = request->getFieldAsInt32(VID_LOG_HANDLE);
 	LogHandle *log = AcquireLogHandleObject(this, handle);
 	if (log != nullptr)
 	{
 		INT64 rowCount;
 		msg.setField(VID_RCC, log->query(new LogFilter(request), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
-		msg.setField(VID_NUM_ROWS, (QWORD)rowCount);
+		msg.setField(VID_NUM_ROWS, rowCount);
 		log->release();
 	}
 	else
@@ -11143,7 +11146,7 @@ void ClientSession::getServerLogQueryData(NXCPMessage *request)
 	msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setId(request->getId());
 
-	int handle = (int)request->getFieldAsUInt32(VID_LOG_HANDLE);
+	int32_t handle = (int)request->getFieldAsUInt32(VID_LOG_HANDLE);
 	LogHandle *log = AcquireLogHandleObject(this, handle);
 	if (log != nullptr)
 	{
@@ -11180,6 +11183,31 @@ void ClientSession::getServerLogQueryData(NXCPMessage *request)
 		} while(offset < data->getNumRows());
 		delete data;
 	}
+}
+
+/**
+ * Get details for server log record
+ */
+void ClientSession::getServerLogRecordDetails(NXCPMessage *request)
+{
+   NXCPMessage msg;
+
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   int32_t handle = request->getFieldAsInt32(VID_LOG_HANDLE);
+   LogHandle *log = AcquireLogHandleObject(this, handle);
+   if (log != nullptr)
+   {
+      log->getRecordDetails(request->getFieldAsInt64(VID_RECORD_ID), &msg);
+      log->release();
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
+   }
+
+   sendMessage(&msg);
 }
 
 /**

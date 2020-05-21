@@ -220,14 +220,14 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
    if (newValue != nullptr)
    {
       query.append(_T(",new_value"));
-      values[bindCount] = oldValue;
+      values[bindCount] = newValue;
       sqlTypes[bindCount] = DB_SQLTYPE_TEXT;
       bindCount++;
    }
    if ((oldValue != nullptr) || (newValue != nullptr))
    {
       query.append(_T(",value_type"));
-      values[bindCount] = oldValue;
+      values[bindCount] = _valueType;
       sqlTypes[bindCount] = DB_SQLTYPE_VARCHAR;
       bindCount++;
    }
@@ -250,12 +250,12 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
             {
                if (_tcslen(values[i]) < 1024)
                {
-                  wchar_to_utf8(values[i], -1, localBuffer, 4096);
+                  tchar_to_utf8(values[i], -1, localBuffer, 4096);
                   HMAC_Update(ctx, reinterpret_cast<BYTE*>(localBuffer), strlen(localBuffer));
                }
                else
                {
-                  char *v = UTF8StringFromWideString(values[i]);
+                  char *v = UTF8StringFromTString(values[i]);
                   HMAC_Update(ctx, reinterpret_cast<BYTE*>(v), strlen(v));
                   MemFree(v);
                }
@@ -316,8 +316,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
                                                     json_t *oldValue, json_t *newValue,
                                                     const TCHAR *format, va_list args)
 {
-   char *js1 = (oldValue != nullptr) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : MemCopyStringA("");
-   char *js2 = (newValue != nullptr) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : MemCopyStringA("");
+   char *js1 = (oldValue != nullptr) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3)) : MemCopyStringA("");
+   char *js2 = (newValue != nullptr) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3)) : MemCopyStringA("");
 #ifdef UNICODE
    WCHAR *js1w = WideStringFromUTF8String(js1);
    WCHAR *js2w = WideStringFromUTF8String(js2);

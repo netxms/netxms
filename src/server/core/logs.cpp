@@ -137,7 +137,7 @@ void InitLogAccess()
 /**
  * Register log handle
  */
-static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
+static int32_t RegisterLogHandle(LogHandle *handle, ClientSession *session)
 {
 	int i;
 
@@ -149,7 +149,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 	if (i == s_regListSize)
 	{
 		s_regListSize += 10;
-		s_regList = (LOG_HANDLE_REGISTRATION *)realloc(s_regList, sizeof(LOG_HANDLE_REGISTRATION) * s_regListSize);
+		s_regList = MemReallocArray(s_regList, s_regListSize);
       memset(&s_regList[i], 0, sizeof(LOG_HANDLE_REGISTRATION) * (s_regListSize - i));
 	}
 
@@ -166,7 +166,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
  *
  * @return log handle on success, -1 on error, -2 if log not found
  */
-static int OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *session, UINT32 *rcc)
+static int32_t OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *session, uint32_t *rcc)
 {
 	for(int i = 0; logs[i].name != nullptr; i++)
 	{
@@ -191,9 +191,9 @@ static int OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *s
 /**
  * Open log by name
  */
-int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc)
+int32_t OpenLog(const TCHAR *name, ClientSession *session, uint32_t *rcc)
 {
-   int rc = OpenLogInternal(s_logs, name, session, rcc);
+   int32_t rc = OpenLogInternal(s_logs, name, session, rcc);
    if (rc != -2)
       return rc;
 
@@ -212,7 +212,7 @@ int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc)
 /**
  * Close log
  */
-uint32_t CloseLog(ClientSession *session, int logHandle)
+uint32_t CloseLog(ClientSession *session, int32_t logHandle)
 {
    uint32_t rcc = RCC_INVALID_LOG_HANDLE;
    LogHandle *log = NULL;
@@ -260,7 +260,7 @@ void CloseAllLogsForSession(session_id_t sessionId)
  * Acquire log handle object
  * Caller must call LogHandle::unlock() when it finish work with acquired object
  */
-LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
+LogHandle *AcquireLogHandleObject(ClientSession *session, int32_t logHandle)
 {
 	LogHandle *object = nullptr;
 
@@ -269,7 +269,7 @@ LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
 
 	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
 	    (s_regList[logHandle].sessionId == session->getId()) &&
-		 (s_regList[logHandle].handle != NULL))
+		 (s_regList[logHandle].handle != nullptr))
 	{
 		object = s_regList[logHandle].handle;
       object->incRefCount();

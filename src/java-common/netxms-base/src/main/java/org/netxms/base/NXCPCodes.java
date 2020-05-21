@@ -426,7 +426,8 @@ public class NXCPCodes
    public static final int CMD_UPDATE_SHARED_SECRET_LIST = 0x0199;
    public static final int CMD_GET_SNMP_PORT_LIST = 0x019A;
    public static final int CMD_UPDATE_SNMP_PORT_LIST = 0x019B;
-   
+   public static final int CMD_GET_LOG_RECORD_DETAILS = 0x019C;
+
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
 	public static final int CMD_RS_GET_REPORT_DEFINITION = 0x1101;
@@ -1141,6 +1142,7 @@ public class NXCPCodes
    public static final long VID_VERIFY_HOST = 701;
    public static final long VID_WEB_SERVICE_DEF_COUNT = 702;
    public static final long VID_MAINTENANCE_INITIATOR = 703;
+   public static final long VID_RECORD_ID = 704;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

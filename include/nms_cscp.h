@@ -653,6 +653,7 @@ typedef struct
 #define CMD_UPDATE_SHARED_SECRET_LIST     0x0199
 #define CMD_GET_SNMP_PORT_LIST            0x019A
 #define CMD_UPDATE_SNMP_PORT_LIST         0x019B
+#define CMD_GET_LOG_RECORD_DETAILS        0x019C
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1371,6 +1372,7 @@ typedef struct
 #define VID_VERIFY_HOST             ((UINT32)701)
 #define VID_WEB_SERVICE_DEF_COUNT   ((UINT32)702)
 #define VID_MAINTENANCE_INITIATOR   ((UINT32)703)
+#define VID_RECORD_ID               ((UINT32)704)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
