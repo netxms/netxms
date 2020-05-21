@@ -177,7 +177,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
       if (!_tcscmp(pszQuery, _T("<END>")))
          break;
 
-      if (_stscanf(pszQuery, _T("ALTER TABLE %128s DROP COLUMN %128s"), table, column) == 2)
+      if (_stscanf(pszQuery, _T("ALTER TABLE %127s DROP COLUMN %127s"), table, column) == 2)
       {
          if (!DBDropColumn(g_dbHandle, table, column))
          {
