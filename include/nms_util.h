@@ -376,6 +376,14 @@ size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, ssize_t srcLen, U
 #define mb_to_wchar     mb_to_ucs2
 #endif
 
+#ifdef UNICODE
+#define utf8_to_tchar   utf8_to_wchar
+#define tchar_to_utf8   wchar_to_utf8
+#else
+#define utf8_to_tchar   utf8_to_mb
+#define tchar_to_utf8   mb_to_utf8
+#endif
+
 // Conversion helpers
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *src);
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *src);
