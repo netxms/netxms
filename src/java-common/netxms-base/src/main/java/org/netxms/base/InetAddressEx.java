@@ -31,7 +31,9 @@ public class InetAddressEx
    protected int mask;
    
    /**
-    * @param address
+    * Create from InetAddress object with default network mask (/32 for IPv4 and /128 for IPv6).
+    *
+    * @param address IP address
     */
    public InetAddressEx(InetAddress address)
    {
@@ -40,8 +42,10 @@ public class InetAddressEx
    }
 
    /**
-    * @param address
-    * @param mask
+    * Create from InetAddress with given network mask.
+    *
+    * @param address IP address
+    * @param mask network mask bits
     */
    public InetAddressEx(InetAddress address, int mask)
    {
@@ -50,8 +54,10 @@ public class InetAddressEx
    }
 
    /**
-    * @param address
-    * @param mask
+    * Create from InetAddress with given network mask.
+    *
+    * @param address IP address
+    * @param mask network mask
     */
    public InetAddressEx(InetAddress address, InetAddress mask)
    {
@@ -62,7 +68,7 @@ public class InetAddressEx
    /**
     * Copy constructor
     * 
-    * @param src
+    * @param src source object
     */
    public InetAddressEx(InetAddressEx src)
    {

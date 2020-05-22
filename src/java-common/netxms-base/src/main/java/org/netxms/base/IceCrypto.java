@@ -134,7 +134,7 @@ public class IceCrypto
    /**
     * Create a new ICE key with the specified level.
     * 
-    * @param level
+    * @param level key level
     */
    public IceCrypto(int level)
    {
@@ -197,7 +197,7 @@ public class IceCrypto
    /**
     * Set the key schedule of an ICE key.
     * 
-    * @param key
+    * @param key new key
     */
    public void set(byte key[])
    {
@@ -265,6 +265,9 @@ public class IceCrypto
 
    /**
     * Encrypt a block of 8 bytes of data.
+    *
+    * @param plaintext unencrypted data
+    * @param ciphertext buffer for encrypted data
     */
    public void encryptBlock(byte plaintext[], byte ciphertext[])
    {
@@ -295,6 +298,9 @@ public class IceCrypto
 
    /**
     * Decrypt a block of 8 bytes of data.
+    *
+    * @param ciphertext encrypted data
+    * @param plaintext buffer for decrypted data
     */
    public void decryptBlock(byte ciphertext[], byte plaintext[])
    {
@@ -325,6 +331,8 @@ public class IceCrypto
 
    /**
     * Return the key size, in bytes.
+    *
+    * @return key size in bytes
     */
    public int keySize()
    {
@@ -333,6 +341,8 @@ public class IceCrypto
 
    /**
     * Return the block size, in bytes.
+    *
+    * @return block size in bytes
     */
    public int blockSize()
    {
@@ -342,11 +352,11 @@ public class IceCrypto
    /**
     * Copy bytes from source array to destination
     * 
-    * @param src
-    * @param srcStart
-    * @param length
-    * @param dst
-    * @param dstStart
+    * @param src source array
+    * @param srcStart start index in source array
+    * @param length length of data block
+    * @param dst destination array
+    * @param dstStart start index in destination array
     */
    private static void copyBytes(byte[] src, int srcStart, int length, byte[] dst, int dstStart)
    {

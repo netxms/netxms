@@ -122,6 +122,7 @@ public class NXCPMessageReceiver
     * Receive NXCP message from input stream
     * 
     * @param in input stream
+    * @param ectx encryption context
     * @return message object
     * @throws IOException if read from input stream fails
     * @throws NXCPException if message is too large or if communication session is closed

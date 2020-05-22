@@ -52,7 +52,7 @@ public class NXCPDataInputStream extends DataInputStream
 	 * Read unsigned 32-bit integer from input stream
 	 * 
 	 * @return unsigned 32-bit integer converted into signed 64 bit integer
-	 * @throws IOException 
+	 * @throws IOException if I/O error occurs
 	 */
 	public long readUnsignedInt() throws IOException
 	{
@@ -63,7 +63,7 @@ public class NXCPDataInputStream extends DataInputStream
 		return (b1 << 24) + (b2 << 16) + (b3 << 8) + b4;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see java.io.FilterInputStream#close()
     */
    @Override

@@ -127,6 +127,7 @@ public class NXCPMsgWaitQueue
 	 * @param code	Message code
 	 * @param id Message id
 	 * @param timeout Wait timeout in milliseconds
+    * @return received NXCP message or null if message was not received before timeout
 	 */
 	public NXCPMessage waitForMessage(final int code, final long id, final int timeout)
 	{
@@ -172,6 +173,7 @@ public class NXCPMsgWaitQueue
     * 
     * @param code Message code
     * @param id Message id
+    * @return received NXCP message or null if message was not received before timeout
     */
 	public NXCPMessage waitForMessage(final int code, final long id)
 	{

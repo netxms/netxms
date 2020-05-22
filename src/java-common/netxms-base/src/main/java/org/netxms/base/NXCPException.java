@@ -34,7 +34,9 @@ public class NXCPException extends Exception
 	private int errorCode;
 	
 	/**
-	 * @param errorCode
+	 * Create new exception with given error code.
+	 *
+	 * @param errorCode NetXMS API error code (RCC)
 	 */
 	public NXCPException(int errorCode)
 	{
@@ -43,7 +45,10 @@ public class NXCPException extends Exception
 	}
 
 	/**
-	 * @param errorCode
+	 * Create new exception with given error code and root cause.
+	 *
+	 * @param errorCode NetXMS API error code (RCC)
+	 * @param cause root cause
 	 */
 	public NXCPException(int errorCode, Throwable cause)
 	{
@@ -52,14 +57,16 @@ public class NXCPException extends Exception
 	}
 
 	/**
-	 * @return the errorCode
+	 * Get NetXMS API error code (RCC).
+	 *
+	 * @return NetXMS API error code
 	 */
 	public int getErrorCode()
 	{
 		return errorCode;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see java.lang.Throwable#getMessage()
 	 */
 	@Override

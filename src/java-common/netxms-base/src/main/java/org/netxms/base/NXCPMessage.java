@@ -66,9 +66,11 @@ public class NXCPMessage
 	private byte[] binaryData = null;
 	private long controlData = 0;
 
-	/**
-	 * @param msgCode
-	 */
+   /**
+     * Create new message with given code and ID 0.
+     *
+     * @param msgCode message code
+     */
 	public NXCPMessage(final int msgCode)
 	{
 		this.messageCode = msgCode;
@@ -76,10 +78,12 @@ public class NXCPMessage
 		messageFlags = 0;
 	}
 
-	/**
-	 * @param msgCode
-	 * @param msgId
-	 */
+   /**
+     * Create new message with given code and ID.
+     *
+     * @param msgCode message code
+     * @param msgId message ID
+     */
 	public NXCPMessage(final int msgCode, final long msgId)
 	{
 		this.messageCode = msgCode;
@@ -302,6 +306,7 @@ public class NXCPMessage
 	 * Find field by ID
 	 * 
 	 * @param fieldId field ID to find
+	 * @return field with given ID or null
 	 */
 	public NXCPMessageField findField(final long fieldId)
 	{
@@ -682,6 +687,7 @@ public class NXCPMessage
 	/**
     * Create binary NXCP message
     * 
+    * @param allowCompression true if message compression is allowed
     * @return byte stream ready to send
     * @throws IOException if write to underlying data output stream fails
     */
@@ -796,7 +802,7 @@ public class NXCPMessage
 	/**
 	 * Set data for raw message.
 	 * 
-	 * @param binaryData
+	 * @param binaryData data to set
 	 */
 	public void setBinaryData(final byte[] binaryData)
 	{
@@ -804,7 +810,7 @@ public class NXCPMessage
 	}
 	
 	/**
-	 * Return true if message is a raw message
+	 * Return true if message contains raw (binary) data
 	 * @return raw message flag
 	 */
 	public boolean isBinaryMessage()
@@ -814,7 +820,7 @@ public class NXCPMessage
 
 	/**
 	 * Set or clear raw (binary) message flag
-	 * @param isRaw
+	 * @param isRaw true if message contains raw (binary) data
 	 */
 	public void setBinaryMessage(boolean isRaw)
 	{

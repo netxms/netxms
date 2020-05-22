@@ -102,9 +102,9 @@ public class NXCPMessageField
 	/**
     * Create numeric or string field (actual type determined by fieldType parameter)
     *
-    * @param fieldId
-    * @param fieldType
-    * @param value
+    * @param fieldId field ID
+    * @param fieldType field type
+    * @param value value to set
     */
 	public NXCPMessageField(final long fieldId, final int fieldType, final Long value)
 	{

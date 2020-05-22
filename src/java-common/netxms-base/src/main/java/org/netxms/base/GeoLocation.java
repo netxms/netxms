@@ -411,7 +411,9 @@ public class GeoLocation
 	}
 
    /**
-    * @return the end_timestamp
+    * Get end timestamp
+    *
+    * @return end timestamp
     */
    public Date getEndTimestamp()
    {
@@ -419,14 +421,16 @@ public class GeoLocation
    }
 
    /**
-    * @param endTimestamp
+    * Set end timestamp
+    *
+    * @param endTimestamp end timestamp
     */
    public void setEndTimestamp(Date endTimestamp)
    {
       this.endTimestamp = endTimestamp;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#hashCode()
     */
    @Override

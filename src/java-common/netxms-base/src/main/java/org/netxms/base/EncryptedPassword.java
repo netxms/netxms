@@ -39,8 +39,8 @@ public class EncryptedPassword
     * @param login login name
     * @param password plain text password
     * @return password obfuscated wiht ICE algorithm
-    * @throws NoSuchAlgorithmException
-    * @throws UnsupportedEncodingException
+    * @throws NoSuchAlgorithmException if any of required encryption algorithms are not available
+    * @throws UnsupportedEncodingException if UTF-8 encoding is not supported
     */
    public static String encrypt(String login, String password) throws NoSuchAlgorithmException, UnsupportedEncodingException
    {
@@ -53,8 +53,8 @@ public class EncryptedPassword
     * @param login login name
     * @param password ICE-obfuscated password
     * @return clear-text password
-    * @throws NoSuchAlgorithmException
-    * @throws IOException
+    * @throws NoSuchAlgorithmException if any of required encryption algorithms are not available
+    * @throws IOException if I/O error occurs
     */
    public static String decrypt(String login, String password) throws NoSuchAlgorithmException, IllegalArgumentException, IOException
    {

@@ -56,7 +56,7 @@ public final class EncryptionContext
 	private IvParameterSpec iv;
 	private PublicKey serverPublicKey;
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -95,7 +95,7 @@ public final class EncryptionContext
 	 * 
 	 * @param bs output stream
 	 * @param bytes byte array
-	 * @throws IOException
+	 * @throws IOException if I/O error occurs
 	 */
 	private static void safeWriteBytes(ByteArrayOutputStream bs, byte[] bytes) throws IOException
 	{
@@ -106,7 +106,7 @@ public final class EncryptionContext
 	/**
 	 * Test cipher with given ID
 	 * 
-	 * @param cipherId
+	 * @param cipherId cipher ID
 	 * @return true if cipher is available and working correctly
 	 */
 	public static boolean testCipher(int cipherId)
@@ -200,6 +200,8 @@ public final class EncryptionContext
 	 * Internal constructor
 	 * 
 	 * @param cipher cipher to use
+	 * @param request NXCP message with key exchange request
+	 * @throws GeneralSecurityException if any of underlying crypto functions fails
 	 */
 	protected EncryptionContext(int cipher, NXCPMessage request) throws GeneralSecurityException
 	{
@@ -230,7 +232,7 @@ public final class EncryptionContext
 	 * Encrypt session key with public key from encryption setup message.
 	 * 
 	 * @return encrypted session key
-	 * @throws GeneralSecurityException 
+	 * @throws GeneralSecurityException if any of underlying crypto functions fail
 	 */
 	public byte[] getEncryptedSessionKey() throws GeneralSecurityException
 	{
@@ -243,7 +245,7 @@ public final class EncryptionContext
 	 * Encrypt initialization vector with public key from encryption setup message.
 	 * 
 	 * @return encrypted initialization vector
-	 * @throws GeneralSecurityException 
+	 * @throws GeneralSecurityException if any of underlying crypto functions fail
 	 */
 	public byte[] getEncryptedIv() throws GeneralSecurityException
 	{
@@ -257,7 +259,7 @@ public final class EncryptionContext
 	 * 
 	 * @param msgBytes original message
 	 * @return encrypted data block or null if there are not enough data to produce complete encrypted block
-	 * @throws IOException
+	 * @throws IOException if I/O error occurs
 	 */
 	private byte[] encryptPayloadHeader(byte[] msgBytes) throws IOException
 	{
@@ -278,9 +280,9 @@ public final class EncryptionContext
 	 * @param msg message to encrypt
 	 * @param allowCompression true if payload compression is allowed
 	 * @return encrypted message as sequence of bytes, ready to send over the network
-	 * @throws IOException 
-	 * @throws GeneralSecurityException 
-	 * @throws InvalidKeyException 
+	 * @throws IOException if I/O error occurs
+	 * @throws GeneralSecurityException if any of underlying crypto functions fails
+	 * @throws InvalidKeyException if encryption key is invalid
 	 */
 	public byte[] encryptMessage(NXCPMessage msg, boolean allowCompression) throws IOException, GeneralSecurityException
 	{
@@ -327,8 +329,8 @@ public final class EncryptionContext
 	 * @param inputStream input stream
 	 * @param length length of encrypted message
 	 * @return decrypted message
-	 * @throws GeneralSecurityException
-	 * @throws IOException
+	 * @throws GeneralSecurityException if any of underlying crypto functions fails
+	 * @throws IOException if I/O error occurs
 	 */
 	public byte[] decryptMessage(NXCPDataInputStream inputStream, int length) throws GeneralSecurityException, IOException
 	{

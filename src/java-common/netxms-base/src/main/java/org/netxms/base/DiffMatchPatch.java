@@ -898,7 +898,7 @@ public class DiffMatchPatch
   /**
    * Look for single edits surrounded on both sides by equalities
    * which can be shifted sideways to align the edit to a word boundary.
-   * e.g: The c<ins>at c</ins>ame. -> The <ins>cat </ins>came.
+   * e.g: The {@code c<ins>at c</ins>ame. -> The <ins>cat </ins>came}.
    * @param diffs LinkedList of Diff objects.
    */
   public void diff_cleanupSemanticLossless(LinkedList<Diff> diffs) {
@@ -1297,7 +1297,7 @@ public class DiffMatchPatch
   /**
    * loc is a location in text1, compute and return the equivalent location in
    * text2.
-   * e.g. "The cat" vs "The big cat", 1->1, 5->8
+   * e.g. {@code "The cat" vs "The big cat", 1->1, 5->8}
    * @param diffs List of Diff objects.
    * @param loc Location within text1.
    * @return Location within text2.
@@ -1423,7 +1423,7 @@ public class DiffMatchPatch
   /**
    * Crush the diff into an encoded string which describes the operations
    * required to transform text1 into text2.
-   * E.g. =3\t-2\t+ing  -> Keep 3 chars, delete 2 chars, insert 'ing'.
+   * E.g. {@code =3\t-2\t+ing  -> Keep 3 chars, delete 2 chars, insert 'ing'}.
    * Operations are tab-separated.  Inserted text is escaped using %xx notation.
    * @param diffs List of Diff objects.
    * @return Delta text.
@@ -1802,7 +1802,7 @@ public class DiffMatchPatch
    * @param text2 Ignored.
    * @param diffs Array of Diff objects for text1 to text2.
    * @return LinkedList of Patch objects.
-   * @deprecated Prefer patch_make(String text1, LinkedList<Diff> diffs).
+   * @deprecated Prefer {@code patch_make(String text1, LinkedList<Diff> diffs)}.
    */
   @Deprecated public LinkedList<Patch> patch_make(String text1, String text2,
       LinkedList<Diff> diffs) {
