@@ -1143,6 +1143,8 @@ public class NXCPCodes
    public static final long VID_WEB_SERVICE_DEF_COUNT = 702;
    public static final long VID_MAINTENANCE_INITIATOR = 703;
    public static final long VID_RECORD_ID = 704;
+   public static final long VID_RECORD_ID_COLUMN = 705;
+   public static final long VID_OBJECT_ID_COLUMN = 706;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

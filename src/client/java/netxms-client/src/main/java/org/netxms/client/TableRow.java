@@ -61,15 +61,91 @@ public class TableRow
    }
    
    /**
-    * @param column The column ID
-    * @return The TableCell
+    * Get table cell object for given column.
+    *
+    * @param column Column index
+    * @return table Cell at given index
     * @throws ArrayIndexOutOfBoundsException If the index is out of bounds
     */
    public TableCell get(int column) throws ArrayIndexOutOfBoundsException
    {
       return cells.get(column);
    }
-   
+
+   /**
+    * Get value for given column as string. If column index is out of range returns null.
+    *
+    * @param column column index
+    * @return column value or null
+    */
+   public String getValue(int column)
+   {
+      try
+      {
+         return cells.get(column).getValue();
+      }
+      catch(ArrayIndexOutOfBoundsException e)
+      {
+         return null;
+      }
+   }
+
+   /**
+    * Get value for given column as long integer. If column index is out of range or cannot be interpreted as long integer returns
+    * 0.
+    *
+    * @param column column index
+    * @return column value interpreted as long integer or 0
+    */
+   public long getValueAsLong(int column)
+   {
+      try
+      {
+         return cells.get(column).getValueAsLong();
+      }
+      catch(ArrayIndexOutOfBoundsException e)
+      {
+         return 0;
+      }
+   }
+
+   /**
+    * Get value for given column as integer. If column index is out of range or cannot be interpreted as integer returns 0.
+    *
+    * @param column column index
+    * @return column value interpreted as integer or 0
+    */
+   public int getValueAsInteger(int column)
+   {
+      try
+      {
+         return cells.get(column).getValueAsInteger();
+      }
+      catch(ArrayIndexOutOfBoundsException e)
+      {
+         return 0;
+      }
+   }
+
+   /**
+    * Get value for given column as floating point number. If column index is out of range or cannot be interpreted as floating
+    * point number returns 0.
+    *
+    * @param column column index
+    * @return column value interpreted as floating point number or 0
+    */
+   public double getValueAsDouble(int column)
+   {
+      try
+      {
+         return cells.get(column).getValueAsDouble();
+      }
+      catch(ArrayIndexOutOfBoundsException e)
+      {
+         return 0;
+      }
+   }
+
    /**
     * @return The amount of cells
     */
@@ -77,7 +153,7 @@ public class TableRow
    {
       return cells.size();
    }
-   
+
    /**
     * @param msg The NXCPMessage
     * @param baseId The base ID
@@ -107,7 +183,9 @@ public class TableRow
    }
 
    /**
-    * @return the objectId
+    * Get associated object ID.
+    * 
+    * @return associated object ID
     */
    public long getObjectId()
    {
@@ -115,7 +193,9 @@ public class TableRow
    }
 
    /**
-    * @param objectId the objectId to set
+    * Set associated object ID.
+    * 
+    * @param objectId associated object ID to set
     */
    public void setObjectId(long objectId)
    {

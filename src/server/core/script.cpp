@@ -191,20 +191,49 @@ void ReloadScript(UINT32 id)
 /**
  * Check if script ID is valid
  */
-bool IsValidScriptId(UINT32 id)
+bool IsValidScriptId(uint32_t id)
 {
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   bool valid = IsDatabaseRecordExist(hdb, _T("script_library"), _T("script_id"), id);
-   DBConnectionPoolReleaseConnection(hdb);
+   s_scriptLibrary.lock();
+   bool valid = (s_scriptLibrary.findScript(id) != nullptr);
+   s_scriptLibrary.unlock();
    return valid;
+}
+
+/**
+ * Get script name by ID
+ */
+bool GetScriptName(uint32_t scriptId, TCHAR *buffer, size_t size)
+{
+   bool success = false;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT script_name FROM script_library WHERE script_id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, scriptId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            DBGetField(hResult, 0, 0, buffer, size);
+            success = true;
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
 }
 
 /**
  * Resolve script name to ID
  */
-UINT32 ResolveScriptName(const TCHAR *name)
+uint32_t ResolveScriptName(const TCHAR *name)
 {
-   UINT32 id = 0;
+   uint32_t id = 0;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -229,9 +258,9 @@ UINT32 ResolveScriptName(const TCHAR *name)
 /**
  * Resolve script GUID to ID
  */
-UINT32 ResolveScriptGuid(const uuid& guid)
+static uint32_t ResolveScriptGuid(const uuid& guid)
 {
-   UINT32 id = 0;
+   uint32_t id = 0;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -256,42 +285,58 @@ UINT32 ResolveScriptGuid(const uuid& guid)
 /**
  * Update or create new script
  */
-UINT32 UpdateScript(const NXCPMessage *request, UINT32 *scriptId)
+uint32_t UpdateScript(const NXCPMessage *request, uint32_t *scriptId, ClientSession *session)
 {
-   UINT32 rcc = RCC_DB_FAILURE;
+   TCHAR *scriptSource = request->getFieldAsString(VID_SCRIPT_CODE);
+   if (scriptSource == nullptr)
+      return RCC_INVALID_REQUEST;
 
    TCHAR scriptName[MAX_DB_STRING];
    request->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
-   TCHAR *scriptSource = request->getFieldAsString(VID_SCRIPT_CODE);
 
-   if (scriptSource == NULL)
-      return RCC_INVALID_REQUEST;
-
+   uint32_t rcc = RCC_DB_FAILURE;
    if (IsValidScriptName(scriptName))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt;
 
-      UINT32 id = ResolveScriptName(scriptName);
-      uuid guid;
+      uint32_t id = ResolveScriptName(scriptName);
+
+      bool newScript;
+      TCHAR *oldSource;
+      DB_STATEMENT hStmt;
       if (id == 0) // Create new script
       {
-         guid = uuid::generate();
+         newScript = true;
          id = CreateUniqueId(IDG_SCRIPT);
          hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id,guid) VALUES (?,?,?,?)"));
       }
       else // Update existing script
       {
+         newScript = false;
+
+         hStmt = DBPrepare(hdb, _T("SELECT script_code FROM script_library WHERE script_id=?"));
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+            DB_RESULT hResult = DBSelectPrepared(hStmt);
+            if (hResult != nullptr)
+            {
+               oldSource = DBGetField(hResult, 0, 0, nullptr, 0);
+               DBFreeResult(hResult);
+            }
+            DBFreeStatement(hStmt);
+         }
+
          hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
       }
 
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, scriptName, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_TEXT, scriptSource, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, id);
-         if (!guid.isNull())
-            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (const TCHAR *)guid.toString(), DB_BIND_STATIC);
+         if (newScript)
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, uuid::generate());
 
          if (DBExecute(hStmt))
          {
@@ -302,39 +347,42 @@ UINT32 UpdateScript(const NXCPMessage *request, UINT32 *scriptId)
          DBFreeStatement(hStmt);
       }
       DBConnectionPoolReleaseConnection(hdb);
+
+      if (rcc == RCC_SUCCESS)
+      {
+         session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldSource, scriptSource, 'T',
+                  _T("Library script %s [%u] %s"), scriptName, id, newScript ? _T("created") : _T("modified"));
+      }
    }
    else
    {
       rcc = RCC_INVALID_SCRIPT_NAME;
    }
 
-   free(scriptSource);
+   MemFree(scriptSource);
    return rcc;
 }
 
 /*
  * Rename script
  */
-UINT32 RenameScript(const NXCPMessage *request)
+uint32_t RenameScript(uint32_t scriptId, const TCHAR *newName)
 {
-   UINT32 rcc = RCC_DB_FAILURE;
-   UINT32 id = request->getFieldAsUInt32(VID_SCRIPT_ID);
-
-   if (IsValidScriptId(id))
+   uint32_t rcc;
+   if (IsValidScriptId(scriptId))
    {
-      TCHAR scriptName[MAX_DB_STRING];
-      request->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
-      if (IsValidScriptName(scriptName))
+      if (IsValidScriptName(newName))
       {
+         rcc = RCC_DB_FAILURE;
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=? WHERE script_id=?"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
-            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, scriptName, DB_BIND_STATIC);
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id);
+            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, newName, DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, scriptId);
             if (DBExecute(hStmt))
             {
-               ReloadScript(id);
+               ReloadScript(scriptId);
                rcc = RCC_SUCCESS;
             }
             DBFreeStatement(hStmt);
@@ -356,32 +404,29 @@ UINT32 RenameScript(const NXCPMessage *request)
 /**
  * Delete script
  */
-UINT32 DeleteScript(const NXCPMessage *request)
+uint32_t DeleteScript(uint32_t scriptId)
 {
-   UINT32 rcc = RCC_DB_FAILURE;
-   UINT32 id = request->getFieldAsUInt32(VID_SCRIPT_ID);
-
-   if (IsValidScriptId(id))
+   uint32_t rcc;
+   if (IsValidScriptId(scriptId))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM script_library WHERE script_id=?"));
-      if (hStmt != NULL)
+      if (ExecuteQueryOnObject(hdb, scriptId, _T("DELETE FROM script_library WHERE script_id=?")))
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-         if (DBExecute(hStmt))
-         {
-            s_scriptLibrary.lock();
-            s_scriptLibrary.deleteScript(id);
-            s_scriptLibrary.unlock();
-            rcc = RCC_SUCCESS;
-         }
-         DBFreeStatement(hStmt);
+         s_scriptLibrary.lock();
+         s_scriptLibrary.deleteScript(scriptId);
+         s_scriptLibrary.unlock();
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_DB_FAILURE;
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
+   {
       rcc = RCC_INVALID_SCRIPT_ID;
-
+   }
    return rcc;
 }
 

@@ -105,7 +105,7 @@ NXSL_LibraryScript *NXSL_Library::findScript(UINT32 id)
          return script;
       }
    }
-   return NULL;
+   return nullptr;
 }
 
 /**

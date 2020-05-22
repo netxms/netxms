@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,9 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
@@ -55,14 +58,18 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
+import org.netxms.client.TableRow;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
+import org.netxms.client.log.LogRecordDetails;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.logviewer.Activator;
+import org.netxms.ui.eclipse.logviewer.LogRecordDetailsViewer;
+import org.netxms.ui.eclipse.logviewer.LogRecordDetailsViewerRegistry;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.logviewer.widgets.FilterBuilder;
@@ -85,6 +92,7 @@ public class LogViewer extends ViewPart
 	private Log logHandle;
 	private LogFilter filter;
    private LogFilter delayedQueryFilter = null;
+   private LogRecordDetailsViewer recordDetailsViewer;
    private Image titleImage = null;
 	private Table resultSet;
 	private boolean noData = false;
@@ -96,10 +104,11 @@ public class LogViewer extends ViewPart
    private Action actionCopyToClipboard;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
+   private Action actionShowDetails;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -115,13 +124,15 @@ public class LogViewer extends ViewPart
 		}
 		filter = new LogFilter();
 
+      recordDetailsViewer = LogRecordDetailsViewerRegistry.get(logName);
+
 		// Initiate loading of user manager plugin if it was not loaded before
 		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -146,6 +157,13 @@ public class LogViewer extends ViewPart
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		viewer.getControl().setLayoutData(gd);
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            showRecordDetails();
+         }
+      });
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -213,7 +231,7 @@ public class LogViewer extends ViewPart
 			}
 		});
 	}
-	
+
 	/**
 	 * Activate context
 	 */
@@ -247,7 +265,7 @@ public class LogViewer extends ViewPart
 				return 100;
 		}
 	}
-	
+
 	/**
 	 * Setup log viewer after successful log open
 	 */
@@ -271,7 +289,7 @@ public class LogViewer extends ViewPart
 		filterBuilder.setLogHandle(logHandle);
 		filter = filterBuilder.createFilter();
 	}
-	
+
 	/**
 	 * Create label provider
 	 * 
@@ -360,6 +378,11 @@ public class LogViewer extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
+      if (recordDetailsViewer != null)
+      {
+         mgr.add(actionShowDetails);
+         mgr.add(new Separator());
+      }
 		mgr.add(actionCopyToClipboard);
 		mgr.add(actionExportToCsv);
 		mgr.add(new Separator());
@@ -434,6 +457,14 @@ public class LogViewer extends ViewPart
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+
+      actionShowDetails = new Action("Show &details") {
+         @Override
+         public void run()
+         {
+            showRecordDetails();
+         }
+      };
 	}
 	
 	/**
@@ -550,18 +581,55 @@ public class LogViewer extends ViewPart
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * Show details for selected record
+    */
+   private void showRecordDetails()
+   {
+      if (recordDetailsViewer == null)
+         return;
+
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final TableRow record = (TableRow)selection.getFirstElement();
+      final long recordId = record.getValueAsLong(logHandle.getRecordIdColumnIndex());
+
+      new ConsoleJob("Get log record details", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final LogRecordDetails recordDetails = logHandle.getRecordDetails(recordId);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  recordDetailsViewer.showRecordDetails(recordDetails, record, logHandle, LogViewer.this);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get details for selected record";
+         }
+      }.start();
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
 		viewer.getControl().setFocus();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -569,7 +637,7 @@ public class LogViewer extends ViewPart
 			titleImage.dispose();
 		super.dispose();
 	}
-	
+
 	/**
 	 * @param show
 	 */

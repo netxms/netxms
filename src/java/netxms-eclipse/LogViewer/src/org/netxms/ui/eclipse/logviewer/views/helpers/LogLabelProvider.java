@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,13 +75,13 @@ public class LogLabelProvider implements ITableLabelProvider
 		wbLabelProvider = new WorkbenchLabelProvider();
 	}
 	
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		final String value = ((TableRow)element).get(columnIndex).getValue();
+      final String value = ((TableRow)element).get(columnIndex).getValue();
 		switch(columns[columnIndex].getType())
 		{
          case LogColumn.LC_ALARM_STATE:
@@ -131,9 +131,9 @@ public class LogLabelProvider implements ITableLabelProvider
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -242,17 +242,17 @@ public class LogLabelProvider implements ITableLabelProvider
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
+    */
 	@Override
 	public void addListener(ILabelProviderListener listener)
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -261,18 +261,18 @@ public class LogLabelProvider implements ITableLabelProvider
 				alarmStateImages[i].dispose();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
+    */
 	@Override
 	public boolean isLabelProperty(Object element, String property)
 	{
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
+    */
 	@Override
 	public void removeListener(ILabelProviderListener listener)
 	{

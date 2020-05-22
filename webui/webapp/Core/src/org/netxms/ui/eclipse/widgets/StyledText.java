@@ -108,7 +108,7 @@ public class StyledText extends Composite
          refreshContent = true;
       refreshTimer.execute();
    }
-   
+
    /**
     * @return Char count of text
     */
@@ -181,6 +181,16 @@ public class StyledText extends Composite
          sb.append(range.foreground.getBlue());
          sb.append(");");
       }
+      if (range.background != null)
+      {
+         sb.append("background-color:rgb(");
+         sb.append(range.background.getRed());
+         sb.append(',');
+         sb.append(range.background.getGreen());
+         sb.append(',');
+         sb.append(range.background.getBlue());
+         sb.append(");");
+      }
       if (range.fontStyle == SWT.BOLD)
       {
          sb.append("font:bold;");
@@ -222,7 +232,7 @@ public class StyledText extends Composite
       result.append(WidgetHelper.escapeText(content.substring(currPos), true, true));
       return result.toString();
    }
-   
+
    /**
     * refresh widget
     */
@@ -262,7 +272,7 @@ public class StyledText extends Composite
          refreshTimer.execute();
       }
    }
-   
+
    /**
     * @param listener
     */
@@ -270,7 +280,7 @@ public class StyledText extends Composite
    {
       lineStyleListeners.add(listener);
    }
-   
+
    /**
     * @param listener
     */
@@ -278,7 +288,7 @@ public class StyledText extends Composite
    {
       lineStyleListeners.remove(listener);
    }
-   
+
    /**
     * @param line
     * @param lineStartPos

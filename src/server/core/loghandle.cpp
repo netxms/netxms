@@ -80,6 +80,8 @@ void LogHandle::getColumnInfo(NXCPMessage *msg)
 		count++;
 	}
 	msg->setField(VID_NUM_COLUMNS, count);
+	msg->setField(VID_RECORD_ID_COLUMN, m_log->idColumn);
+   msg->setField(VID_OBJECT_ID_COLUMN, m_log->relatedObjectIdColumn);
 }
 
 /**

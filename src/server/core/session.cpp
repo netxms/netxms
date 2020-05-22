@@ -8260,21 +8260,25 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
 /**
  * Update script in library
  */
-void ClientSession::updateScript(NXCPMessage *pRequest)
+void ClientSession::updateScript(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   UINT32 scriptId = 0;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      msg.setField(VID_RCC, UpdateScript(pRequest, &scriptId));
+      uint32_t scriptId = 0;
+      msg.setField(VID_RCC, UpdateScript(request, &scriptId, this));
       msg.setField(VID_SCRIPT_ID, scriptId);
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      TCHAR scriptName[MAX_DB_STRING];
+      request->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
+      uint32_t scriptId = ResolveScriptName(scriptName);
+      if (scriptId == 0)
+         writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on creating library script %s"), scriptName);
+      else
+         writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating library script %s [%u]"), scriptName, scriptId);
    }
    sendMessage(&msg);
 }
@@ -8282,19 +8286,39 @@ void ClientSession::updateScript(NXCPMessage *pRequest)
 /**
  * Rename script
  */
-void ClientSession::renameScript(NXCPMessage *pRequest)
+void ClientSession::renameScript(NXCPMessage *request)
 {
    NXCPMessage msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      msg.setField(VID_RCC, RenameScript(pRequest));
+      uint32_t scriptId = request->getFieldAsUInt32(VID_SCRIPT_ID);
+      TCHAR oldName[MAX_DB_STRING];
+      if (GetScriptName(scriptId, oldName, MAX_DB_STRING))
+      {
+         TCHAR newName[MAX_DB_STRING];
+         request->getFieldAsString(VID_NAME, newName, MAX_DB_STRING);
+         uint32_t rcc = RenameScript(scriptId, newName);
+         msg.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+         {
+            TCHAR scriptName[MAX_DB_STRING];
+            writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Library script with ID %u renamed from %s to %s"), scriptId, oldName, newName);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
+      }
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      TCHAR newName[MAX_DB_STRING];
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on renaming library script with ID %u to %s"),
+               request->getFieldAsUInt32(VID_SCRIPT_ID), request->getFieldAsString(VID_NAME, newName, MAX_DB_STRING));
    }
    sendMessage(&msg);
 }
@@ -8302,19 +8326,34 @@ void ClientSession::renameScript(NXCPMessage *pRequest)
 /**
  * Delete script from library
  */
-void ClientSession::deleteScript(NXCPMessage *pRequest)
+void ClientSession::deleteScript(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   uint32_t scriptId = request->getFieldAsUInt32(VID_SCRIPT_ID);
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      msg.setField(VID_RCC, DeleteScript(pRequest));
+      TCHAR scriptName[MAX_DB_STRING];
+      if (GetScriptName(scriptId, scriptName, MAX_DB_STRING))
+      {
+         uint32_t rcc = DeleteScript(scriptId);
+         msg.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+         {
+            writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Library script [%u] deleted"), scriptId);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
+      }
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      TCHAR scriptName[MAX_DB_STRING];
+      if (!GetScriptName(scriptId, scriptName, MAX_DB_STRING))
+         _tcscpy(scriptName, _T("<unknown>"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting library script %s [%u]"), scriptName, scriptId);
    }
    sendMessage(&msg);
 }

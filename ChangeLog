@@ -8,6 +8,7 @@
 - Fixed issues:
 	NX-763 (File Tail/Show should not access database directly)
 	NX-1556 (Add HMAC to every record in audit log table)
+	NX-1846 (Server crash when querying Audit Log)
 	NX-1848 (Add getGuid method to org.netxms.client.events.EventTemplate class in Java API)
 	NX-1854 (When double-clicking a stacked graph in performance tab, it opens in a new view as non-stacked)
 

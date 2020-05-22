@@ -37,6 +37,8 @@ public class Log
    private int handle;
    private String name;
    private LinkedHashMap<String, LogColumn> columns;
+   private String recordIdColumn;
+   private String objectIdColumn;
    private long numRecords;   // Number of records ready after successful query()
 
    /**
@@ -50,6 +52,8 @@ public class Log
       this.session = session;
       this.name = name;
       handle = msg.getFieldAsInt32(NXCPCodes.VID_LOG_HANDLE);
+      recordIdColumn = msg.getFieldAsString(NXCPCodes.VID_RECORD_ID_COLUMN);
+      objectIdColumn = msg.getFieldAsString(NXCPCodes.VID_OBJECT_ID_COLUMN);
 
       int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
       columns = new LinkedHashMap<String, LogColumn>(count);
@@ -87,7 +91,7 @@ public class Log
     * @param columnName Column name
     * @return Column description or null if column with given name does not exist
     */
-   public String getColumnDescription(final String columnName)
+   public String getColumnDescription(String columnName)
    {
       LogColumn col = columns.get(columnName);
       return (col != null) ? col.getDescription() : null;
@@ -99,9 +103,67 @@ public class Log
     * @param columnName Column name
     * @return Column object or null if column with given name does not exist
     */
-   public LogColumn getColumn(final String columnName)
+   public LogColumn getColumn(String columnName)
    {
       return columns.get(columnName);
+   }
+
+   /**
+    * Get index of given column
+    * 
+    * @param columnName column name
+    * @return index of given column or -1 if such column does not exist
+    */
+   public int getColumnIndex(String columnName)
+   {
+      int index = 0;
+      for(LogColumn c : columns.values())
+      {
+         if (c.getName().equals(columnName))
+            return index;
+         index++;
+      }
+      return -1;
+   }
+
+   /**
+    * Get name of column holding unique record ID.
+    * 
+    * @return name of column holding unique record ID
+    */
+   public String getRecordIdColumnName()
+   {
+      return recordIdColumn;
+   }
+
+   /**
+    * Get index of column holding unique record ID.
+    * 
+    * @return index of column holding unique record ID
+    */
+   public int getRecordIdColumnIndex()
+   {
+      return getColumnIndex(recordIdColumn);
+   }
+
+   /**
+    * Get name of column holding ID of related NetXMS object.
+    * 
+    * @return name of column holding ID of related NetXMS object or null
+    */
+   public String getObjectIdColumnName()
+   {
+      return objectIdColumn;
+   }
+
+   /**
+    * Get index of column holding ID of related NetXMS object.
+    * 
+    * @return index of column holding ID of related NetXMS object or -1 if this log does not have related objects
+    */
+   public int getObjectIdColumnIndex()
+   {
+      return (objectIdColumn != null) ? getColumnIndex(objectIdColumn) : -1;
    }
 
    /**

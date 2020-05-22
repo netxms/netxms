@@ -67,6 +67,57 @@ public class TableCell
    }
 
    /**
+    * Get value interpreted as long integer
+    * 
+    * @return value interpreted as long integer or 0 if it cannot be interpreted as such
+    */
+   public long getValueAsLong()
+   {
+      try
+      {
+         return Long.parseLong(value);
+      }
+      catch(NumberFormatException e)
+      {
+         return 0;
+      }
+   }
+
+   /**
+    * Get value interpreted as integer
+    * 
+    * @return value interpreted as integer or 0 if it cannot be interpreted as such
+    */
+   public int getValueAsInteger()
+   {
+      try
+      {
+         return Integer.parseInt(value);
+      }
+      catch(NumberFormatException e)
+      {
+         return 0;
+      }
+   }
+
+   /**
+    * Get value interpreted as floating point number
+    * 
+    * @return value interpreted as floating point number or 0 if it cannot be interpreted as such
+    */
+   public double getValueAsDouble()
+   {
+      try
+      {
+         return Double.parseDouble(value);
+      }
+      catch(NumberFormatException e)
+      {
+         return 0;
+      }
+   }
+
+   /**
     * @param value the value to set
     */
    public void setValue(String value)

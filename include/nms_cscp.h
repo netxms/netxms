@@ -1373,6 +1373,8 @@ typedef struct
 #define VID_WEB_SERVICE_DEF_COUNT   ((UINT32)702)
 #define VID_MAINTENANCE_INITIATOR   ((UINT32)703)
 #define VID_RECORD_ID               ((UINT32)704)
+#define VID_RECORD_ID_COLUMN        ((UINT32)705)
+#define VID_OBJECT_ID_COLUMN        ((UINT32)706)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

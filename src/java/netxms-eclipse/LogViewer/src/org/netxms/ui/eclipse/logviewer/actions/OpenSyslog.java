@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,9 @@ public class OpenSyslog implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
+    */
 	@Override
 	public void dispose()
 	{

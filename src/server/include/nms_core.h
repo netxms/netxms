@@ -1346,9 +1346,9 @@ void RunHouseKeeper();
 /**
  * NXSL script functions
  */
-UINT32 UpdateScript(const NXCPMessage *request, UINT32 *scriptId);
-UINT32 RenameScript(const NXCPMessage *request);
-UINT32 DeleteScript(const NXCPMessage *request);
+uint32_t UpdateScript(const NXCPMessage *request, uint32_t *scriptId, ClientSession *session);
+uint32_t RenameScript(uint32_t scriptId, const TCHAR *newName);
+uint32_t DeleteScript(uint32_t scriptId);
 
 /**
  * ICMP scan
