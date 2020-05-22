@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.3 to 34.4
+ */
+static bool H_UpgradeFromV3()
+{
+   //Recreate index for those who initialized database with an incorrect init script
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("snmp_communities")));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("usm_credentials")));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("shared_secrets")));
+
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("snmp_communities"), _T("id,zone")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("usm_credentials"), _T("id,zone")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("shared_secrets"),  _T("id,zone")));
+
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 34.2 to 34.3
  */
 static bool H_UpgradeFromV2()
@@ -83,6 +101,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 3,  34, 4,  H_UpgradeFromV3  },
    { 2,  34, 3,  H_UpgradeFromV2  },
    { 1,  34, 2,  H_UpgradeFromV1  },
    { 0,  34, 1,  H_UpgradeFromV0  },

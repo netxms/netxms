@@ -1709,7 +1709,7 @@ CREATE TABLE snmp_communities
   id integer not null,
   community varchar(255) null,
   zone integer not null,
-  PRIMARY KEY(id)
+  PRIMARY KEY(id,zone)
 ) TABLE_TYPE;
 
 /**
@@ -1740,7 +1740,7 @@ CREATE TABLE usm_credentials
   priv_password varchar(255) null,
   zone integer not null,
   comments varchar(255) null,
-  PRIMARY KEY(id)
+  PRIMARY KEY(id,zone)
 ) TABLE_TYPE;
 
 /*
@@ -2264,5 +2264,5 @@ CREATE TABLE shared_secrets
    id integer not null,
    secret varchar(88) null,
    zone integer not null,
-   PRIMARY KEY(id)
+   PRIMARY KEY(id,zone)
 ) TABLE_TYPE;
