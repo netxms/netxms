@@ -263,7 +263,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          stream.zfree = ZLibFree;
          stream.opaque = &m_pool;
          stream.avail_in = ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
-         stream.next_in = reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4;
+         stream.next_in = (BYTE*)msg + NXCP_HEADER_SIZE + 4;
          if (inflateInit(&stream) != Z_OK)
          {
             nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
