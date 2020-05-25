@@ -294,6 +294,24 @@ public class NetworkMapPage
 		}
 		return list;
 	}
+   
+   /**
+    * Get all object used as status source for links
+    * 
+    * @return list of status source objects
+    */
+   public List<Long> getAllLinkStatusObjects()
+   {
+      List<Long> list = new ArrayList<Long>();
+      for(NetworkMapLink l : links)
+      {
+         for(Long obj : l.getStatusObjects())
+         {
+            list.add(obj);
+         }
+      }
+      return list;
+   }
 	
 	/**
 	 * Checks if two objects are connected

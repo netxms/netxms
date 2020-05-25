@@ -291,7 +291,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private void syncObjects()
 	{
       mapPage = mapObject.createMapPage();
-	   final List<Long> mapObjectIds = mapPage.getObjectIds();	   
+	   final List<Long> mapObjectIds = mapPage.getObjectIds();	  
+	   mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
 
 	   ConsoleJob job = new ConsoleJob(String.format(Messages.get().PredefinedMap_SaveJobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID)
       {
