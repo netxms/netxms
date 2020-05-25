@@ -214,8 +214,8 @@ UINT64 HostConnections::getLibraryVersion()
 }
 
 /**---------
- * Donamins
- *----------/
+ * Domains
+ *----------*/
 
 /**
  * List running VMs(domains)
@@ -223,7 +223,7 @@ UINT64 HostConnections::getLibraryVersion()
 const StringObjectMap<NXvirDomain> *HostConnections::getDomainListAndLock()
 {
    m_domains.lock();
-   if(m_domains.shouldUpdate())
+   if (m_domains.shouldUpdate())
    {
       int numActiveDomains = virConnectNumOfDomains(m_connection);
       int numInactiveDomains = virConnectNumOfDefinedDomains(m_connection);
@@ -275,11 +275,11 @@ void HostConnections::unlockDomainList()
 /**
  * Returns domain definition in XML format
  */
-const char *HostConnections::getDomainDefenitionAndLock(const TCHAR *name, NXvirDomain *vm)
+const char *HostConnections::getDomainDefinitionAndLock(const TCHAR *name, NXvirDomain *vm)
 {
    MutexLock(m_vmXMLMutex);
-   Cashe<char> *xmlChase = m_vmXMLs.get(name);
-   if (xmlChase == NULL || xmlChase->shouldUpdate())
+   Cache<char> *xmlCache = m_vmXMLs.get(name);
+   if (xmlCache == NULL || xmlCache->shouldUpdate())
    {
       bool getDomain = vm == NULL;
       if(getDomain)
@@ -290,36 +290,36 @@ const char *HostConnections::getDomainDefenitionAndLock(const TCHAR *name, NXvir
       if(vm != NULL)
       {
          char *xml = virDomainGetXMLDesc(*vm, VIR_DOMAIN_XML_SECURE | VIR_DOMAIN_XML_INACTIVE);
-         if(xmlChase == NULL)
+         if(xmlCache == NULL)
          {
-            xmlChase = new Cashe<char>();
-            m_vmXMLs.set(name, xmlChase);
+            xmlCache = new Cache<char>();
+            m_vmXMLs.set(name, xmlCache);
          }
-         xmlChase->update(xml);
+         xmlCache->update(xml);
 
       }
       else
       {
          m_vmXMLs.remove(name);
-         xmlChase = NULL;
+         xmlCache = NULL;
       }
 
       if(getDomain)
          unlockDomainList();
    }
 /*
-   if(xmlChase != NULL)
-      AgentWriteLog(6, _T("VMGR: ******Domain defenition: %hs"), xmlChase->getData());
+   if(xmlCache != NULL)
+      AgentWriteLog(6, _T("VMGR: ******Domain definition: %hs"), xmlCache->getData());
    else
-      AgentWriteLog(6, _T("VMGR: ******Domain defenition: NULL"));
+      AgentWriteLog(6, _T("VMGR: ******Domain definition: NULL"));
 */
-   return xmlChase != NULL ? xmlChase->getData() : NULL;
+   return xmlCache != NULL ? xmlCache->getData() : NULL;
 }
 
 /**
  * Unlocks domain definition
  */
-void HostConnections::unlockDomainDefenition()
+void HostConnections::unlockDomainDefinition()
 {
    MutexUnlock(m_vmXMLMutex);
 }
@@ -330,8 +330,8 @@ void HostConnections::unlockDomainDefenition()
 const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainName, NXvirDomain *vm)
 {
    MutexLock(m_vmInfoMutex);
-   Cashe<virDomainInfo> *infoChase = m_vmInfo.get(domainName);
-   if (infoChase == NULL || infoChase->shouldUpdate())
+   Cache<virDomainInfo> *infoCache = m_vmInfo.get(domainName);
+   if (infoCache == NULL || infoCache->shouldUpdate())
    {
       bool getDomain = vm == NULL;
       if(getDomain)
@@ -344,12 +344,12 @@ const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainNa
          virDomainInfo *info = new virDomainInfo();
          if(virDomainGetInfo(*vm, info) == 0)
          {
-            if(infoChase == NULL)
+            if(infoCache == NULL)
             {
-               infoChase = new Cashe<virDomainInfo>();
-               m_vmInfo.set(domainName, infoChase);
+               infoCache = new Cache<virDomainInfo>();
+               m_vmInfo.set(domainName, infoCache);
             }
-            infoChase->update(info);
+            infoCache->update(info);
          }
          else
          {
@@ -359,14 +359,14 @@ const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainNa
       else
       {
          m_vmInfo.remove(domainName);
-         infoChase = NULL;
+         infoCache = NULL;
       }
 
       if(getDomain)
          unlockDomainList();
    }
 
-   return infoChase != NULL ? infoChase->getData() : NULL;
+   return infoCache != NULL ? infoCache->getData() : NULL;
 }
 
 /**
@@ -442,7 +442,7 @@ void HostConnections::unlockIfaceList()
 const StringObjectMap<NXvirNetwork> *HostConnections::getNetworkListAndLock()
 {
    m_networks.lock();
-   if(m_networks.shouldUpdate())
+   if (m_networks.shouldUpdate())
    {
       int numActiveNetworks = virConnectNumOfNetworks(m_connection);
       int numInactiveNetworks = virConnectNumOfDefinedNetworks(m_connection);
@@ -461,7 +461,7 @@ const StringObjectMap<NXvirNetwork> *HostConnections::getNetworkListAndLock()
          allNetworks->setPreallocated(WideStringFromMBString(activeNetworks[i]), new NXvirNetwork(virNetworkLookupByName(m_connection, activeNetworks[i])));
          free(activeNetworks[i]);
 #else
-         allNetworks->set(activeNetworks[i], new NXvirNetwork(virNetworkLookupByName(m_connection, activeNetworks[i])));
+         allNetworks->setPreallocated(activeNetworks[i], new NXvirNetwork(virNetworkLookupByName(m_connection, activeNetworks[i])));
 #endif
       }
 
@@ -492,11 +492,11 @@ void HostConnections::unlockNetworkList()
 /**
  * Returns network definition in XML format
  */
-const char *HostConnections::getNetworkDefenitionAndLock(const TCHAR *name, NXvirNetwork *network)
+const char *HostConnections::getNetworkDefinitionAndLock(const TCHAR *name, NXvirNetwork *network)
 {
    MutexLock(m_networkXMLMutex);
-   Cashe<char> *xmlChase = m_networkXMLs.get(name);
-   if (xmlChase == NULL || xmlChase->shouldUpdate())
+   Cache<char> *xmlCache = m_networkXMLs.get(name);
+   if (xmlCache == NULL || xmlCache->shouldUpdate())
    {
       bool getNetwork = network == NULL;
       if(getNetwork)
@@ -507,35 +507,35 @@ const char *HostConnections::getNetworkDefenitionAndLock(const TCHAR *name, NXvi
       if(network != NULL)
       {
          char *xml = virNetworkGetXMLDesc(*network, 0);
-         if(xmlChase == NULL)
+         if(xmlCache == NULL)
          {
-            xmlChase = new Cashe<char>();
-            m_networkXMLs.set(name, xmlChase);
+            xmlCache = new Cache<char>();
+            m_networkXMLs.set(name, xmlCache);
          }
-         xmlChase->update(xml);
+         xmlCache->update(xml);
       }
       else
       {
          m_networkXMLs.remove(name);
-         xmlChase = NULL;
+         xmlCache = NULL;
       }
 
       if(getNetwork)
          unlockNetworkList();
    }
 /*
-   if(xmlChase != NULL)
-      AgentWriteLog(6, _T("VMGR: ******Network defenition: %hs"), xmlChase->getData());
+   if(xmlCache != NULL)
+      AgentWriteLog(6, _T("VMGR: ******Network definition: %hs"), xmlCache->getData());
    else
-      AgentWriteLog(6, _T("VMGR: ******Network defenition: NULL"));
+      AgentWriteLog(6, _T("VMGR: ******Network definition: NULL"));
 */
-   return xmlChase != NULL ? xmlChase->getData() : NULL;
+   return xmlCache != nullptr ? xmlCache->getData() : nullptr;
 }
 
 /**
  * Unlocks network definition
  */
-void HostConnections::unlockNetworkDefenition()
+void HostConnections::unlockNetworkDefinition()
 {
    MutexUnlock(m_networkXMLMutex);
 }
@@ -603,7 +603,7 @@ void HostConnections::unlockStorageList()
 const virStoragePoolInfo *HostConnections::getStorageInformationAndLock(const TCHAR *name, NXvirStoragePool *storage)
 {
    MutexLock(m_storageInfoMutex);
-   Cashe<virStoragePoolInfo> *info = m_storageInfo.get(name);
+   Cache<virStoragePoolInfo> *info = m_storageInfo.get(name);
    if (info == NULL || info->shouldUpdate())
    {
       bool getStorage = storage == NULL;
@@ -619,7 +619,7 @@ const virStoragePoolInfo *HostConnections::getStorageInformationAndLock(const TC
          {
             if(info == NULL)
             {
-               info = new Cashe<virStoragePoolInfo>();
+               info = new Cache<virStoragePoolInfo>();
                m_storageInfo.set(name, info);
             }
             info->update(newInfo);

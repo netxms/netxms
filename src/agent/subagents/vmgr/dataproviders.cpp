@@ -341,16 +341,16 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    Table *value = ((VMDataStr *)userData)->value;
    HostConnections *conn = ((VMDataStr *)userData)->conn;
 
-   const char *xml = conn->getDomainDefenitionAndLock(key, vm);
+   const char *xml = conn->getDomainDefinitionAndLock(key, vm);
    if(xml == NULL)
    {
-      conn->unlockDomainDefenition();
+      conn->unlockDomainDefinition();
       return _CONTINUE;
    }
    Config conf;
    if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
       AgentWriteLog(2, _T("VMGR.FillVMData(): Not possible to parse VM XML definition"));
-   conn->unlockDomainDefenition();
+   conn->unlockDomainDefinition();
 
    value->addRow();
    value->set(0, virDomainGetID(*vm));
@@ -510,17 +510,17 @@ LONG H_GetVMDiskTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
    if(conn == NULL)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-   const char *xml = conn->getDomainDefenitionAndLock(vmName);
+   const char *xml = conn->getDomainDefinitionAndLock(vmName);
    if(xml == NULL)
    {
-      conn->unlockDomainDefenition();
+      conn->unlockDomainDefinition();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
    Config conf;
    if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
 		return SYSINFO_RC_UNSUPPORTED;
-   conn->unlockDomainDefenition();
+   conn->unlockDomainDefinition();
 
    value->addColumn(_T("SOURCE"), DCI_DT_STRING, _T("Source file"));
 	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
@@ -579,17 +579,17 @@ LONG H_GetVMControllerTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Ab
    if(conn == NULL)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-   const char *xml = conn->getDomainDefenitionAndLock(vmName);
+   const char *xml = conn->getDomainDefinitionAndLock(vmName);
    if(xml == NULL)
    {
-      conn->unlockDomainDefenition();
+      conn->unlockDomainDefinition();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
    Config conf;
    if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
 		return SYSINFO_RC_UNSUPPORTED;
-   conn->unlockDomainDefenition();
+   conn->unlockDomainDefinition();
 
 	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"), true);
 	value->addColumn(_T("INDEX"), DCI_DT_INT, _T("Index"));
@@ -628,17 +628,17 @@ LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abs
    if(conn == NULL)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-   const char *xml = conn->getDomainDefenitionAndLock(vmName);
+   const char *xml = conn->getDomainDefinitionAndLock(vmName);
    if(xml == NULL)
    {
-      conn->unlockDomainDefenition();
+      conn->unlockDomainDefinition();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
    Config conf;
    if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
 		return SYSINFO_RC_UNSUPPORTED;
-   conn->unlockDomainDefenition();
+   conn->unlockDomainDefinition();
 
    value->addColumn(_T("MAC"), DCI_DT_STRING, _T("MAC address"), true);
 	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
@@ -685,17 +685,17 @@ LONG H_GetVMVideoTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstrac
    if(conn == NULL)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-   const char *xml = conn->getDomainDefenitionAndLock(vmName);
+   const char *xml = conn->getDomainDefinitionAndLock(vmName);
    if(xml == NULL)
    {
-      conn->unlockDomainDefenition();
+      conn->unlockDomainDefinition();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
    Config conf;
    if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
 		return SYSINFO_RC_UNSUPPORTED;
-   conn->unlockDomainDefenition();
+   conn->unlockDomainDefinition();
 
 	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"), true);
 	value->addColumn(_T("VRAM"), DCI_DT_UINT64, _T("Video RAM"));
@@ -727,19 +727,19 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const void *obj, voi
    Table *value = ((VMDataStr *)userData)->value;
    HostConnections *conn = ((VMDataStr *)userData)->conn;
 
-   const char *xml = conn->getNetworkDefenitionAndLock(key, network);
+   const char *xml = conn->getNetworkDefinitionAndLock(key, network);
    if(xml == NULL)
    {
-      conn->unlockNetworkDefenition();
+      conn->unlockNetworkDefinition();
       return _CONTINUE;
    }
    Config conf;
    if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "network", false))
       AgentWriteLog(2, _T("VMGR.FillVMData(): Not possible to parse VM XML definition"));
-   conn->unlockNetworkDefenition();
+   conn->unlockNetworkDefinition();
 
    value->addRow();
-   value->set(0, conf.getValue(_T("/name"), _T("Unkonown")));
+   value->set(0, conf.getValue(_T("/name"), _T("Unknown")));
    value->set(1, conf.getValue(_T("/uuid"), _T("")));
 
    //concat all interfaces
@@ -752,7 +752,7 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const void *obj, voi
       if(i+1 != ifaceList->size())
          ifaces.append(_T(", "));
    }
-   value->set(2, ifaces.getBuffer());
+   value->set(2, ifaces);
    delete ifaceList;
 
    //concat all portgroups
@@ -765,7 +765,7 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const void *obj, voi
       if(i+1 != portgroupList->size())
          portgroup.append(_T(", "));
    }
-   value->set(3, portgroup.getBuffer());
+   value->set(3, portgroup);
    delete portgroupList;
 
    return _CONTINUE;
