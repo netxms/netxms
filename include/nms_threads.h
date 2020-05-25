@@ -1608,11 +1608,10 @@ public:
    void (T::*m_func)(R);
    R m_arg;
 
-   __ThreadPoolExecute_WrapperData_1(T *object, void (T::*func)(R), R arg)
+   __ThreadPoolExecute_WrapperData_1(T *object, void (T::*func)(R), R arg) : m_arg(arg)
    {
       m_object = object;
       m_func = func;
-      m_arg = arg;
    }
 };
 
@@ -1660,10 +1659,9 @@ public:
    void (T::*m_func)(R);
    R m_arg;
 
-   __ThreadPoolExecute_SharedPtr_WrapperData_1(const shared_ptr<T>& object, void (T::*func)(R), R arg) : m_object(object)
+   __ThreadPoolExecute_SharedPtr_WrapperData_1(const shared_ptr<T>& object, void (T::*func)(R), R arg) : m_object(object), m_arg(arg)
    {
       m_func = func;
-      m_arg = arg;
    }
 };
 
@@ -1712,12 +1710,10 @@ public:
    R1 m_arg1;
    R2 m_arg2;
 
-   __ThreadPoolExecute_WrapperData_2(T *object, void (T::*func)(R1, R2), R1 arg1, R2 arg2)
+   __ThreadPoolExecute_WrapperData_2(T *object, void (T::*func)(R1, R2), R1 arg1, R2 arg2) : m_arg1(arg1), m_arg2(arg2)
    {
       m_object = object;
       m_func = func;
-      m_arg1 = arg1;
-      m_arg2 = arg2;
    }
 };
 
@@ -1751,13 +1747,10 @@ public:
    R2 m_arg2;
    R3 m_arg3;
 
-   __ThreadPoolExecute_WrapperData_3(T *object, void (T::*func)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
+   __ThreadPoolExecute_WrapperData_3(T *object, void (T::*func)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3) : m_arg1(arg1), m_arg2(arg2), m_arg3(arg3)
    {
       m_object = object;
       m_func = func;
-      m_arg1 = arg1;
-      m_arg2 = arg2;
-      m_arg3 = arg3;
    }
 };
 

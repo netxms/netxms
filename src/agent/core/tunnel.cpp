@@ -89,7 +89,7 @@ class Tunnel
 {
 private:
    TCHAR *m_hostname;
-   UINT16 m_port;
+   uint16_t m_port;
    InetAddress m_address;
    SOCKET m_socket;
    SSL_CTX *m_context;
@@ -108,16 +108,16 @@ private:
    int m_tlsHandshakeFailures;
    bool m_ignoreClientCertificate;
 
-   Tunnel(const TCHAR *hostname, UINT16 port);
+   Tunnel(const TCHAR *hostname, uint16_t port);
 
    bool connectToServer();
    int sslWrite(const void *data, size_t size);
-   bool sendMessage(const NXCPMessage *msg);
-   NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return (m_queue != NULL) ? m_queue->waitForMessage(code, id, REQUEST_TIMEOUT) : NULL; }
+   bool sendMessage(const NXCPMessage& msg);
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return (m_queue != nullptr) ? m_queue->waitForMessage(code, id, REQUEST_TIMEOUT) : nullptr; }
 
    void processBindRequest(NXCPMessage *request);
-   void processChannelCloseRequest(NXCPMessage *request);
-   void createSession(NXCPMessage *request);
+   void processChannelCloseRequest(const NXCPMessage& request);
+   void createSession(const NXCPMessage& request);
 
    X509_REQ *createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey);
    bool saveCertificate(X509 *cert, EVP_PKEY *key);
@@ -134,7 +134,7 @@ public:
 
    TunnelCommChannel *createChannel();
    void closeChannel(TunnelCommChannel *channel);
-   ssize_t sendChannelData(UINT32 id, const void *data, size_t len);
+   ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
 
    const TCHAR *getHostname() const { return m_hostname; }
 
@@ -146,7 +146,7 @@ public:
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(Ownership::True)
+Tunnel::Tunnel(const TCHAR *hostname, uint16_t port) : m_channels(Ownership::True)
 {
    m_hostname = MemCopyString(hostname);
    m_port = port;
@@ -277,10 +277,10 @@ void Tunnel::recvThread()
          {
             case CMD_BIND_AGENT_TUNNEL:
                ThreadPoolExecute(g_commThreadPool, this, &Tunnel::processBindRequest, msg);
-               msg = NULL; // prevent message deletion
+               msg = nullptr; // prevent message deletion
                break;
             case CMD_CREATE_CHANNEL:
-               createSession(msg);
+               createSession(*msg);
                break;
             case CMD_CHANNEL_DATA:
                if (msg->isBinary())
@@ -288,7 +288,7 @@ void Tunnel::recvThread()
                   MutexLock(m_channelLock);
                   TunnelCommChannel *channel = m_channels.get(msg->getId());
                   MutexUnlock(m_channelLock);
-                  if (channel != NULL)
+                  if (channel != nullptr)
                   {
                      channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
                      channel->decRefCount();
@@ -296,11 +296,11 @@ void Tunnel::recvThread()
                }
                break;
             case CMD_CLOSE_CHANNEL:
-               processChannelCloseRequest(msg);
+               processChannelCloseRequest(*msg);
                break;
             default:
                m_queue->put(msg);
-               msg = NULL; // prevent message deletion
+               msg = nullptr; // prevent message deletion
                break;
          }
          delete msg;
@@ -330,7 +330,7 @@ int Tunnel::sslWrite(const void *data, size_t size)
    {
       canRetry = false;
       MutexLock(m_sslLock);
-      bytes = SSL_write(m_ssl, data, (int)size);
+      bytes = SSL_write(m_ssl, data, static_cast<int>(size));
       if (bytes <= 0)
       {
          int err = SSL_get_error(m_ssl, bytes);
@@ -360,7 +360,7 @@ int Tunnel::sslWrite(const void *data, size_t size)
 /**
  * Send message
  */
-bool Tunnel::sendMessage(const NXCPMessage *msg)
+bool Tunnel::sendMessage(const NXCPMessage& msg)
 {
    if (!m_connected || m_reset)
       return false;
@@ -368,11 +368,11 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
    if (nxlog_get_debug_level() >= 6)
    {
       TCHAR buffer[64];
-      debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+      debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg.getCode(), buffer));
    }
-   NXCP_MESSAGE *data = msg->serialize(false);
+   NXCP_MESSAGE *data = msg.serialize(false);
    bool success = (sslWrite(data, ntohl(data->size)) == ntohl(data->size));
-   free(data);
+   MemFree(data);
    return success;
 }
 
@@ -385,7 +385,7 @@ bool Tunnel::loadCertificate()
 #ifdef UNICODE
    char *un = MBStringFromWideString(m_hostname);
    CalculateSHA1Hash((BYTE *)un, strlen(un), addressHash);
-   free(un);
+   MemFree(un);
 #else
    CalculateSHA1Hash((BYTE *)m_hostname, strlen(m_hostname), addressHash);
 #endif
@@ -695,7 +695,7 @@ bool Tunnel::connectToServer()
    if (GetSystemHardwareId(hwid))
       msg.setField(VID_HARDWARE_ID, hwid, sizeof(hwid));
 
-   sendMessage(&msg);
+   sendMessage(msg);
 
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
    if (response == NULL)
@@ -749,7 +749,7 @@ void Tunnel::checkConnection()
       if (sendMessage(&msg))
       {
          NXCPMessage *response = waitForMessage(CMD_KEEPALIVE, msg.getId());
-         if (response == NULL)
+         if (response == nullptr)
          {
             debugPrintf(3, _T("Connection test failed"));
             disconnect();
@@ -963,17 +963,17 @@ void Tunnel::processBindRequest(NXCPMessage *request)
          OPENSSL_free(buffer);
 
          NXCPMessage *certResponse = waitForMessage(CMD_NEW_CERTIFICATE, request->getId());
-         if (certResponse != NULL)
+         if (certResponse != nullptr)
          {
             UINT32 rcc = certResponse->getFieldAsUInt32(VID_RCC);
             if (rcc == ERR_SUCCESS)
             {
                size_t certLen;
                const BYTE *certData = certResponse->getBinaryFieldPtr(VID_CERTIFICATE, &certLen);
-               if (certData != NULL)
+               if (certData != nullptr)
                {
                   X509 *cert = d2i_X509(NULL, &certData, (long)certLen);
-                  if (cert != NULL)
+                  if (cert != nullptr)
                   {
                      if (saveCertificate(cert, key))
                      {
@@ -1030,9 +1030,9 @@ void Tunnel::processBindRequest(NXCPMessage *request)
 /**
  * Create new session
  */
-void Tunnel::createSession(NXCPMessage *request)
+void Tunnel::createSession(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId(), 4);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId(), 4);
 
    // Assume that peer always have minimal access, so don't check return value
    bool masterServer, controlServer;
@@ -1085,14 +1085,14 @@ TunnelCommChannel *Tunnel::createChannel()
 /**
  * Process server's channel close request
  */
-void Tunnel::processChannelCloseRequest(NXCPMessage *request)
+void Tunnel::processChannelCloseRequest(const NXCPMessage& request)
 {
-   UINT32 id = request->getFieldAsUInt32(VID_CHANNEL_ID);
+   uint32_t id = request.getFieldAsUInt32(VID_CHANNEL_ID);
    debugPrintf(5, _T("Close request for channel %d"), id);
    MutexLock(m_channelLock);
    TunnelCommChannel *channel = m_channels.get(id);
    MutexUnlock(m_channelLock);
-   if (channel != NULL)
+   if (channel != nullptr)
    {
       channel->close();
       channel->decRefCount();
@@ -1104,7 +1104,7 @@ void Tunnel::processChannelCloseRequest(NXCPMessage *request)
  */
 void Tunnel::closeChannel(TunnelCommChannel *channel)
 {
-   UINT32 id = 0;
+   uint32_t id = 0;
    MutexLock(m_channelLock);
    if (m_channels.contains(channel->getId()))
    {
@@ -1125,7 +1125,7 @@ void Tunnel::closeChannel(TunnelCommChannel *channel)
 /**
  * Send channel data
  */
-ssize_t Tunnel::sendChannelData(UINT32 id, const void *data, size_t len)
+ssize_t Tunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 {
    NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
    int rc = sslWrite(msg, ntohl(msg->size));
