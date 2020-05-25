@@ -25,7 +25,7 @@
 #include <nxcpapi.h>
 
 #define NEVER 0
-#define DATA_COLLECTION_CASHE_TIME 10
+#define DATA_COLLECTION_CACHE_TIMEOUT 10
 
 /**
  * Parameter, list, table providers
@@ -79,9 +79,9 @@ public:
 };
 
 /**
- * Data cashing class
+ * Data caching class
  */
-template <class T> class Cashe
+template <class T> class Cache
 {
 private:
    time_t m_lastCollectionTime;
@@ -89,24 +89,25 @@ private:
    bool mallocObj;
 
 public:
-   Cashe(bool mallocObj = true) { m_lastCollectionTime = NEVER; m_data = NULL; this->mallocObj = mallocObj;}
-   ~Cashe() { if(mallocObj){ free(m_data); } else { delete(m_data); } }
-   const T *getData() { return m_data; }
-   const time_t getLastCollecitonTime() { return m_lastCollectionTime; }
-   void update(T* data) { m_lastCollectionTime = time(NULL); if(mallocObj){ free(m_data); } else { delete(m_data); } m_data = data; }
-   bool shouldUpdate() { return (time(NULL) - m_lastCollectionTime) > DATA_COLLECTION_CASHE_TIME; }
+   Cache(bool mallocObj = true) { m_lastCollectionTime = NEVER; m_data = nullptr; this->mallocObj = mallocObj;}
+   ~Cache() { if (mallocObj) { MemFree(m_data); } else { delete m_data; } }
+   const T *getData() const { return m_data; }
+   const time_t getLastCollecitonTime() const { return m_lastCollectionTime; }
+   void update(T* data) { m_lastCollectionTime = time(NULL); if (mallocObj) { MemFree(m_data); } else { delete m_data; } m_data = data; }
+   bool shouldUpdate() { return (time(NULL) - m_lastCollectionTime) > DATA_COLLECTION_CACHE_TIMEOUT; }
 };
 
 /**
  * Data cashing class
  */
-template <class T> class CasheAndLock : public Cashe<T>
+template <class T> class CacheAndLock : public Cache<T>
 {
 private:
    MUTEX m_mutex;
+
 public:
-   CasheAndLock(bool mallocObj = true) : Cashe<T>(mallocObj) { m_mutex = MutexCreate(); }
-   ~CasheAndLock() { MutexDestroy(m_mutex); }
+   CacheAndLock(bool mallocObj = true) : Cache<T>(mallocObj) { m_mutex = MutexCreate(); }
+   ~CacheAndLock() { MutexDestroy(m_mutex); }
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
 };
@@ -123,21 +124,21 @@ private:
    char *m_login;
    char *m_password;
 
-   CasheAndLock<char> m_capabilities;
-   CasheAndLock<virNodeInfo> m_nodeInfo;
-   CasheAndLock<StringObjectMap<NXvirDomain> > m_domains;
-   CasheAndLock<StringList> m_iface;
-   CasheAndLock<StringObjectMap<NXvirNetwork> > m_networks;
-   CasheAndLock<StringObjectMap<NXvirStoragePool> > m_storages;
+   CacheAndLock<char> m_capabilities;
+   CacheAndLock<virNodeInfo> m_nodeInfo;
+   CacheAndLock<StringObjectMap<NXvirDomain> > m_domains;
+   CacheAndLock<StringList> m_iface;
+   CacheAndLock<StringObjectMap<NXvirNetwork> > m_networks;
+   CacheAndLock<StringObjectMap<NXvirStoragePool> > m_storages;
 
    MUTEX m_vmInfoMutex;
-   StringObjectMap<Cashe<virDomainInfo> > m_vmInfo;
+   StringObjectMap<Cache<virDomainInfo> > m_vmInfo;
    MUTEX m_vmXMLMutex;
-   StringObjectMap<Cashe<char> > m_vmXMLs;
+   StringObjectMap<Cache<char> > m_vmXMLs;
    MUTEX m_networkXMLMutex;
-   StringObjectMap<Cashe<char> > m_networkXMLs;
+   StringObjectMap<Cache<char> > m_networkXMLs;
    MUTEX m_storageInfoMutex;
-   StringObjectMap<Cashe<virStoragePoolInfo> > m_storageInfo;
+   StringObjectMap<Cache<virStoragePoolInfo> > m_storageInfo;
 
    static int authCb(virConnectCredentialPtr cred, unsigned int ncred, void *cbdata);
 
@@ -154,8 +155,8 @@ public:
    //Domains
    const StringObjectMap<NXvirDomain> *getDomainListAndLock();
    void unlockDomainList();
-   const char *getDomainDefenitionAndLock(const TCHAR *name, NXvirDomain *vm = NULL);
-   void unlockDomainDefenition();
+   const char *getDomainDefinitionAndLock(const TCHAR *name, NXvirDomain *vm = NULL);
+   void unlockDomainDefinition();
    const virDomainInfo *getDomainInfoAndLock(const TCHAR *domainName, NXvirDomain *vm = NULL);
    void unlockDomainInfo();
    //Iface
@@ -164,8 +165,8 @@ public:
    //Networks
    const StringObjectMap<NXvirNetwork> *getNetworkListAndLock();
    void unlockNetworkList();
-   const char *getNetworkDefenitionAndLock(const TCHAR *name, NXvirNetwork *network = NULL);
-   void unlockNetworkDefenition();
+   const char *getNetworkDefinitionAndLock(const TCHAR *name, NXvirNetwork *network = NULL);
+   void unlockNetworkDefinition();
    //Storage
    const StringObjectMap<NXvirStoragePool> *getStorageListAndLock();
    void unlockStorageList();
