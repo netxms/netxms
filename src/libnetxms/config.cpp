@@ -36,10 +36,10 @@
 static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
 {
    if (xmlFormat && !expandEnv)
-      return _tcsdup(src);
+      return MemCopyString(src);
 
    size_t allocated = _tcslen(src) + 1;
-   TCHAR *buffer = (TCHAR *)malloc(allocated * sizeof(TCHAR));
+   TCHAR *buffer = MemAllocString(allocated);
 
    const TCHAR *in = src;
    TCHAR *out = buffer;
