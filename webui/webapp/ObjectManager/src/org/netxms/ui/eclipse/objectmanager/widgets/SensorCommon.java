@@ -152,7 +152,7 @@ public class SensorCommon extends Composite
    public boolean validate()
    {   
       if(commProtocol == Sensor.COMM_LORAWAN && 
-            (textMacAddress.getText() == null || textDeviceAddress.getText().length() == 0 || textDeviceAddress.getText().length() == 0))
+            (textMacAddress.getText() == null || textDeviceAddress.getText().isEmpty()))
          return false;
       if(commProtocol != Sensor.SENSOR_PROTO_UNKNOWN && selectorProxyNode.getObjectId() == 0)
          return false;
