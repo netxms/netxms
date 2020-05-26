@@ -341,17 +341,6 @@ size_t LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, ssize_t srcLen);
 size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
-#ifdef UNICODE_UCS4
-#define utf8_to_wchar   utf8_to_ucs4
-#define utf8_wcharlen   utf8_ucs4len
-#define wchar_to_utf8   ucs4_to_utf8
-#define wchar_utf8len   ucs4_utf8len
-#else
-#define utf8_to_wchar   utf8_to_ucs2
-#define utf8_wcharlen   utf8_ucs2len
-#define wchar_to_utf8   ucs2_to_utf8
-#define wchar_utf8len   ucs2_utf8len
-#endif
 
 #ifdef UNICODE_UCS4
 #define mb_to_ucs4(mstr, mlen, wstr, wlen)   (size_t)MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mstr, (int)(mlen), wstr, (int)(wlen))
@@ -370,6 +359,30 @@ size_t LIBNETXMS_EXPORTABLE ASCII_to_ucs4(const char *src, ssize_t srcLen, UCS4C
 size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
+
+#ifdef UNICODE_UCS4
+#define utf8_to_wchar   utf8_to_ucs4
+#define utf8_wcharlen   utf8_ucs4len
+#define wchar_to_utf8   ucs4_to_utf8
+#define wchar_utf8len   ucs4_utf8len
+#define wchar_to_mb     ucs4_to_mb
+#define mb_to_wchar     mb_to_ucs4
+#else
+#define utf8_to_wchar   utf8_to_ucs2
+#define utf8_wcharlen   utf8_ucs2len
+#define wchar_to_utf8   ucs2_to_utf8
+#define wchar_utf8len   ucs2_utf8len
+#define wchar_to_mb     ucs2_to_mb
+#define mb_to_wchar     mb_to_ucs2
+#endif
+
+#ifdef UNICODE
+#define utf8_to_tchar   utf8_to_wchar
+#define tchar_to_utf8   wchar_to_utf8
+#else
+#define utf8_to_tchar   utf8_to_mb
+#define tchar_to_utf8   mb_to_utf8
+#endif
 
 // Conversion helpers
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *src);
