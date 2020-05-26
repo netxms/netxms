@@ -18,6 +18,27 @@
 
 
 *
+* 3.3.330
+*
+
+- Fixed issue NX-1855 (NETXMS_FILE_STORE environment variable not using FileStore agent setting)
+
+
+*
+* 3.3.323
+*
+
+- Fixed bug in template import on server startup
+
+
+*
+* 3.3.315
+*
+
+- Fixed server crash on agent certificate renewal
+
+
+*
 * 3.3.314
 *
 
