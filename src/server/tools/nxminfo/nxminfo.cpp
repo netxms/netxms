@@ -1,6 +1,6 @@
 /*
 ** nxminfo - NetXMS module info tool
-** Copyright (C) 2016-2017 Raden Solutions
+** Copyright (C) 2016-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ NETXMS_EXECUTABLE_HEADER(nxminfo)
  */
 struct NXMODULE_METADATA_V1
 {
-   UINT32 size;   // structure size in bytes
+   uint32_t size;   // structure size in bytes
    int unicode;  // unicode flag
    char name[MAX_OBJECT_NAME];
    char vendor[128];
@@ -73,19 +73,13 @@ int main(int argc, char *argv[])
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-         _sntprintf(modname, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, fname);
-      }
-      else
-      {
-         _sntprintf(modname, MAX_PATH, _T("%s/%s"), PKGLIBDIR, fname);
-      }
+      TCHAR libdir[MAX_PATH];
+      GetNetXMSDirectory(nxDirLib, libdir);
+      _sntprintf(modname, MAX_PATH, _T("%s/%s"), libdir, fname);
    }
    else
    {
-      nx_strncpy(modname, fname, MAX_PATH);
+      _tcslcpy(modname, fname, MAX_PATH);
    }
 #else
 #define modname fname

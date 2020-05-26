@@ -1896,10 +1896,10 @@ int main(int argc, char *argv[])
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
       TCHAR path[MAX_PATH] = _T("");
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
+      String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
+      if (!homeDir.isEmpty())
       {
-         _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf"), homeDir);
+         _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf"), homeDir.cstr());
       }
 		if ((path[0] != 0) && (_taccess(path, 4) == 0))
 		{
@@ -1921,10 +1921,10 @@ int main(int argc, char *argv[])
 	if (!_tcscmp(g_szConfigIncludeDir, _T("{search}")))
 	{
       TCHAR path[MAX_PATH] = _T("");
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
+      String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
+      if (!homeDir.isEmpty())
       {
-         _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf.d"), homeDir);
+         _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf.d"), homeDir.cstr());
       }
 		if ((path[0] != 0) && (_taccess(path, 4) == 0))
 		{
@@ -2031,29 +2031,21 @@ int main(int argc, char *argv[])
                GetModuleFileName(GetModuleHandle(NULL), s_executableName, MAX_PATH);
 #else
 #ifdef UNICODE
-               char __buffer[PATH_MAX];
+               char __buffer[MAX_PATH];
 #else
 #define __buffer s_executableName
 #endif
-               if (realpath(argv[0], __buffer) == NULL)
+               if (realpath(argv[0], __buffer) == nullptr)
                {
                   // fallback
-                  TCHAR *path = _tgetenv(_T("NETXMS_HOME"));
-                  if (path != NULL)
-                  {
-                     _tcslcpy(s_executableName, path, sizeof(s_executableName) / sizeof(s_executableName[0]));
-                  }
-                  else
-                  {
-                     _tcslcpy(s_executableName, PREFIX, sizeof(s_executableName) / sizeof(s_executableName[0]));
-                  }
-                  _tcslcat(s_executableName, _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
+                  GetNetXMSDirectory(nxDirBin, s_executableName);
+                  _tcslcat(s_executableName, _T("/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
                }
                else
                {
 #ifdef UNICODE
-                  int len = strlen(__buffer);
-                  MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, __buffer, len, s_executableName, MAX_PATH);
+                  size_t len = strlen(__buffer);
+                  mb_to_wchar(__buffer, len, s_executableName, MAX_PATH);
 #endif
                }
 #endif

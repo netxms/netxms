@@ -136,11 +136,11 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
          _tcscpy(g_szConfigFile, _T("C:\\netxmsd.conf"));
       }
 #else
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if ((homeDir != nullptr) && (*homeDir != 0))
+      String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
+      if (!homeDir.isEmpty())
       {
          TCHAR config[MAX_PATH];
-         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
+         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir.cstr());
 		   if (_taccess(config, 4) == 0)
 		   {
 			   _tcscpy(g_szConfigFile, config);

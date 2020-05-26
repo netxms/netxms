@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,9 +30,9 @@ extern Config g_serverConfig;
 /**
  * List of loaded modules
  */
-TCHAR *g_moduleLoadList = NULL;
+TCHAR *g_moduleLoadList = nullptr;
 UINT32 g_dwNumModules = 0;
-NXMODULE *g_pModuleList = NULL;
+NXMODULE *g_pModuleList = nullptr;
 
 /**
  * Load module
@@ -51,15 +51,9 @@ static bool LoadNetXMSModule(const TCHAR *name)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, name);
-      }
-      else
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, name);
-      }
+      TCHAR libdir[MAX_PATH];
+      GetNetXMSDirectory(nxDirLib, libdir);
+      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), libdir, name);
    }
    else
    {
@@ -68,10 +62,10 @@ static bool LoadNetXMSModule(const TCHAR *name)
    HMODULE hModule = DLOpen(fullName, szErrorText);
 #endif
 
-   if (hModule != NULL)
+   if (hModule != nullptr)
    {
       bool (* RegisterModule)(NXMODULE *) = (bool (*)(NXMODULE *))DLGetSymbolAddr(hModule, "NXM_Register", szErrorText);
-      if (RegisterModule != NULL)
+      if (RegisterModule != nullptr)
       {
          NXMODULE module;
          memset(&module, 0, sizeof(NXMODULE));

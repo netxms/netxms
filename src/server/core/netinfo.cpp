@@ -43,11 +43,11 @@
 //
 
 #ifdef _WIN32
-static UINT32 (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = NULL;
+static UINT32 (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = nullptr;
 #else
-static HMODULE m_hSubAgent = NULL;
-static BOOL (* imp_NxSubAgentGetIfList)(StringList *) = NULL;
-static BOOL (* imp_NxSubAgentGetArpCache)(StringList *) = NULL;
+static HMODULE s_hSubAgent = nullptr;
+static BOOL (* imp_NxSubAgentGetIfList)(StringList *) = nullptr;
+static BOOL (* imp_NxSubAgentGetArpCache)(StringList *) = nullptr;
 #endif
 
 /**
@@ -66,46 +66,37 @@ void InitLocalNetInfo()
    }
 #elif HAVE_SYS_UTSNAME_H
    struct utsname un;
-   TCHAR szName[MAX_PATH], szErrorText[256];
-   int i;
-
    if (uname(&un) != -1)
    {
       // Convert system name to lowercase
-      for(i = 0; un.sysname[i] != 0; i++)
-         un.sysname[i] = tolower(un.sysname[i]);
+      strlwr(un.sysname);
       if (!strcmp(un.sysname, "hp-ux"))
          strcpy(un.sysname, "hpux");
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-         _sntprintf(szName, MAX_PATH, _T("%s/lib/netxms/%hs.nsm"), homeDir, un.sysname);
-      }
-      else
-      {
-         _sntprintf(szName, MAX_PATH, PKGLIBDIR _T("/%hs.nsm"), un.sysname);
-      }
 
-      m_hSubAgent = DLOpen(szName, szErrorText);
-      if (m_hSubAgent != NULL)
+      TCHAR libdir[MAX_PATH];
+      GetNetXMSDirectory(nxDirLib, libdir);
+
+      TCHAR subagentName[MAX_PATH], errorText[256];
+      _sntprintf(subagentName, MAX_PATH, _T("%s/%hs.nsm"), libdir, un.sysname);
+      s_hSubAgent = DLOpen(subagentName, errorText);
+      if (s_hSubAgent != nullptr)
       {
-         imp_NxSubAgentGetIfList = (BOOL (*)(StringList *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetIfList", NULL);
-         imp_NxSubAgentGetArpCache = (BOOL (*)(StringList *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetArpCache", NULL);
-         if ((imp_NxSubAgentGetIfList == NULL) &&
-             (imp_NxSubAgentGetArpCache == NULL))
+         imp_NxSubAgentGetIfList = (BOOL (*)(StringList *))DLGetSymbolAddr(s_hSubAgent, "__NxSubAgentGetIfList", NULL);
+         imp_NxSubAgentGetArpCache = (BOOL (*)(StringList *))DLGetSymbolAddr(s_hSubAgent, "__NxSubAgentGetArpCache", NULL);
+         if ((imp_NxSubAgentGetIfList == nullptr) && (imp_NxSubAgentGetArpCache == nullptr))
          {
-            DLClose(m_hSubAgent);
-            m_hSubAgent = NULL;
-            nxlog_write(NXLOG_ERROR, _T("Cannot load platform subagent \"%s\" (Subagent doesn't provide any usable parameters)"), szName);
+            DLClose(s_hSubAgent);
+            s_hSubAgent = nullptr;
+            nxlog_write(NXLOG_ERROR, _T("Cannot load platform subagent \"%s\" (Subagent doesn't provide any usable parameters)"), subagentName);
          }
          else
          {
-            nxlog_write(NXLOG_INFO, _T("Platform subagent \"%s\" successfully loaded"), szName);
+            nxlog_write(NXLOG_INFO, _T("Platform subagent \"%s\" successfully loaded"), subagentName);
          }
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Cannot load platform subagent \"%s\" (%s)"), szName, szErrorText);
+         nxlog_write(NXLOG_ERROR, _T("Cannot load platform subagent \"%s\" (%s)"), subagentName, errorText);
       }
    }
 #endif

@@ -51,10 +51,10 @@ static ObjectArray<Module> s_modules(8, 8, Ownership::True);
 static bool LoadServerModule(const TCHAR *name, bool mandatory)
 {
    bool success = false;
-   TCHAR szErrorText[256];
+   TCHAR errorText[256];
 
 #ifdef _WIN32
-   HMODULE hModule = DLOpen(name, szErrorText);
+   HMODULE hModule = DLOpen(name, errorText);
 #else
    TCHAR fullName[MAX_PATH];
 
@@ -62,33 +62,27 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, name);
-      }
-      else
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, name);
-      }
+      TCHAR libdir[MAX_PATH];
+      GetNetXMSDirectory(nxDirLib, libdir);
+      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), libdir, name);
    }
    else
    {
-      nx_strncpy(fullName, name, MAX_PATH);
+      _tcslcpy(fullName, name, MAX_PATH);
    }
-   HMODULE hModule = DLOpen(fullName, szErrorText);
+   HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
-   if (hModule != NULL)
+   if (hModule != nullptr)
    {
       Module *m = new Module();
       m->handle = hModule;
       _tcslcpy(m->name, name, MAX_PATH);
-      m->CheckDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDB", szErrorText);
-      m->UpgradeDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_UpgradeDB", szErrorText);
-      m->GetTables = (const TCHAR* const * (*)())DLGetSymbolAddr(hModule, "NXM_GetTables", szErrorText);
-      m->GetSchemaPrefix = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaPrefix", szErrorText);
-      if ((m->CheckDB != NULL) || (m->UpgradeDB != NULL) || (m->GetTables != NULL) || (m->GetSchemaPrefix != NULL))
+      m->CheckDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDB", errorText);
+      m->UpgradeDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_UpgradeDB", errorText);
+      m->GetTables = (const TCHAR* const * (*)())DLGetSymbolAddr(hModule, "NXM_GetTables", errorText);
+      m->GetSchemaPrefix = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaPrefix", errorText);
+      if ((m->CheckDB != nullptr) || (m->UpgradeDB != nullptr) || (m->GetTables != nullptr) || (m->GetSchemaPrefix != nullptr))
       {
          WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m loaded\n"), name);
          s_modules.add(m);
@@ -103,7 +97,7 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory)
    else
    {
       WriteToTerminalEx(_T("\x1b[%s:\x1b[0m Cannot load server module \x1b[1m%s\x1b[0m (%s)\n"),
-               mandatory ? _T("31;1mERROR") : _T("33;1mWARNING"), name, szErrorText);
+               mandatory ? _T("31;1mERROR") : _T("33;1mWARNING"), name, errorText);
    }
    return success;
 }
