@@ -91,8 +91,8 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
                   nameLen = 255;
                memcpy(name, in, nameLen * sizeof(TCHAR));
                name[nameLen] = 0;
-               const TCHAR *env = _tgetenv(name);
-               if ((env != nullptr) && (*env != 0))
+               String env = GetEnvironmentVariableEx(name);
+               if (!env.isEmpty())
                {
                   size_t len = _tcslen(env);
                   allocated += len;

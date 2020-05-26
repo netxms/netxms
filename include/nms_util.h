@@ -3489,6 +3489,7 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, cons
                                              int cchByteChar, WCHAR *pWideCharStr,
                                              int cchWideChar);
 
+DWORD LIBNETXMS_EXPORTABLE GetEnvironmentVariable(const TCHAR *var, TCHAR *buffer, DWORD size);
 BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *value);
 
 #ifdef UNICODE
@@ -3928,6 +3929,8 @@ int LIBNETXMS_EXPORTABLE DeflateFileStream(FILE *source, FILE *dest, bool gzipFo
 
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
+
+String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
 
 #endif
 

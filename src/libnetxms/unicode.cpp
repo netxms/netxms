@@ -852,12 +852,12 @@ WCHAR LIBNETXMS_EXPORTABLE *wgetenv(const WCHAR *_string)
    char name[256], *p;
    static WCHAR value[8192];
 
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _string, -1, name, 256, NULL, NULL);
+   wchar_to_mb(_string, -1, name, 256);
    p = getenv(name);
-   if (p == NULL)
-      return NULL;
+   if (p == nullptr)
+      return nullptr;
 
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, p, -1, value, 8192);
+   mb_to_wchar(p, -1, value, 8192);
    return value;
 }
 

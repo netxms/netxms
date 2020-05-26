@@ -253,8 +253,8 @@ static UINT32 s_logHistorySize = 4;
 static UINT32 s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static TCHAR s_executableName[MAX_PATH];
-static UINT32 s_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
-static TCHAR *s_debugTags = NULL;
+static int s_debugLevel = NXCONFIG_UNINITIALIZED_VALUE;
+static TCHAR *s_debugTags = nullptr;
 
 #if defined(_WIN32)
 static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
@@ -869,7 +869,7 @@ BOOL Initialize()
 {
    TCHAR *pItem, *pEnd;
 
-   if (s_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
+   if (s_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
       s_debugLevel = 0;
 
    // Open log file
@@ -899,27 +899,27 @@ BOOL Initialize()
 	nxlog_write(NXLOG_INFO, _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
 	nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
 
-   if (s_debugTags != NULL)
+   if (s_debugTags != nullptr)
    {
       int count;
       TCHAR **tagList = SplitString(s_debugTags, _T(','), &count);
-      if (tagList != NULL)
+      if (tagList != nullptr)
       {
          for(int i = 0; i < count; i++)
          {
             TCHAR *level = _tcschr(tagList[i], _T(':'));
-            if (level != NULL)
+            if (level != nullptr)
             {
                *level = 0;
                level++;
                Trim(tagList[i]);
-               nxlog_set_debug_level_tag(tagList[i], _tcstol(level, NULL, 0));
+               nxlog_set_debug_level_tag(tagList[i], _tcstol(level, nullptr, 0));
             }
-            free(tagList[i]);
+            MemFree(tagList[i]);
          }
-         free(tagList);
+         MemFree(tagList);
       }
-      free(s_debugTags);
+      MemFree(s_debugTags);
    }
 
 	nxlog_set_debug_level(s_debugLevel);
@@ -1722,7 +1722,7 @@ int main(int argc, char *argv[])
             g_dwFlags |= AF_DAEMON;
             break;
          case 'D':   // Turn on debug output
-				s_debugLevel = strtoul(optarg, &eptr, 0);
+				s_debugLevel = strtol(optarg, &eptr, 0);
 				if ((*eptr != 0) || (s_debugLevel > 9))
 				{
 					fprintf(stderr, "Invalid debug level: %s\n", optarg);
@@ -2223,7 +2223,7 @@ int main(int argc, char *argv[])
          }
          break;
 		case ACTION_RUN_WATCHDOG:
-		   if (s_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
+		   if (s_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
 		      s_debugLevel = 0;
 		   nxlog_set_debug_level(s_debugLevel);
 			iExitCode = WatchdogMain(dwMainPID, _tcscmp(configSection, DEFAULT_CONFIG_SECTION) ? configSection : NULL);
