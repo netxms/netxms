@@ -29,6 +29,7 @@ templates_DATA = \
 	netgear_nas.xml \
 	netxms_agent.xml \
 	netxms_server.xml \
+        object_tools.xml \
 	qnap.xml \
 	ruckus_zonedirector.xml \
 	sonicwall.xml \
