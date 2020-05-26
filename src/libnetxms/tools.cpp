@@ -2323,7 +2323,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
 /**
  * Load file content into memory (internal implementation)
  */
-static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS, bool stdInput)
+static BYTE *LoadFileContent(int fd, size_t *fileSize, bool kernelFS, bool stdInput)
 {
    size_t size;
    if (stdInput)
@@ -2334,9 +2334,9 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS, bool st
    {
       NX_STAT_STRUCT fs;
       if (NX_FSTAT(fd, &fs) == -1)
-         return NULL;
+         return nullptr;
 
-      size = (size_t)fs.st_size;
+      size = static_cast<size_t>(fs.st_size);
 #ifndef _WIN32
       if (kernelFS && (size == 0))
       {
@@ -2345,25 +2345,25 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS, bool st
 #endif
    }
 
-   BYTE *pBuffer = (BYTE *)MemAlloc(size + 1);
-   if (pBuffer != NULL)
+   BYTE *buffer = static_cast<BYTE*>(MemAlloc(size + 1));
+   if (buffer != nullptr)
    {
-      *pdwFileSize = (UINT32)size;
+      *fileSize = size;
       int bytesRead = 0;
       for(size_t bufPos = 0; bufPos < size; bufPos += bytesRead)
       {
          size_t numBytes = std::min(static_cast<size_t>(16384), size - bufPos);
-         if ((bytesRead = _read(fd, &pBuffer[bufPos], (int)numBytes)) < 0)
+         if ((bytesRead = _read(fd, &buffer[bufPos], (int)numBytes)) < 0)
          {
-            MemFreeAndNull(pBuffer);
+            MemFreeAndNull(buffer);
             break;
          }
          // On Linux stat() for /proc files may report size larger than actual
          // so we check here for premature end of file
          if (bytesRead == 0)
          {
-            pBuffer[bufPos] = 0;
-            *pdwFileSize = (UINT32)bufPos;
+            buffer[bufPos] = 0;
+            *fileSize = bufPos;
             break;
          }
 #ifndef _WIN32
@@ -2371,31 +2371,31 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS, bool st
          {
             // Assume that file is larger than expected
             size += 16384;
-            pBuffer = (BYTE *)MemRealloc(pBuffer, size + 1);
+            buffer = MemRealloc(buffer, size + 1);
          }
 #endif
       }
-      if (pBuffer != NULL)
-         pBuffer[size] = 0;
+      if (buffer != nullptr)
+         buffer[size] = 0;
    }
    if (!stdInput)
       _close(fd);
-   return pBuffer;
+   return buffer;
 }
 
 /**
  * Load file content into memory
  */
-BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *fileName, UINT32 *pdwFileSize)
+BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *fileName, size_t *fileSize)
 {
-   BYTE *buffer = NULL;
-   int fd = (fileName != NULL) ? _topen(fileName, O_RDONLY | O_BINARY) : fileno(stdin);
+   BYTE *buffer = nullptr;
+   int fd = (fileName != nullptr) ? _topen(fileName, O_RDONLY | O_BINARY) : fileno(stdin);
    if (fd != -1)
    {
 #ifdef _WIN32
-      buffer = LoadFileContent(fd, pdwFileSize, false, fileName == NULL);
+      buffer = LoadFileContent(fd, fileSize, false, fileName == nullptr);
 #else
-      buffer = LoadFileContent(fd, pdwFileSize, (fileName != NULL) && !_tcsncmp(fileName, _T("/proc/"), 6), fileName == NULL);
+      buffer = LoadFileContent(fd, fileSize, (fileName != nullptr) && !_tcsncmp(fileName, _T("/proc/"), 6), fileName == nullptr);
 #endif
    }
    return buffer;
@@ -2406,16 +2406,16 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *fileName, UINT32 *pdwFileSize)
 /**
  * Load file content into memory
  */
-BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, UINT32 *pdwFileSize)
+BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, size_t *fileSize)
 {
-   BYTE *buffer = NULL;
-   int fd = (fileName != NULL) ? _open(fileName, O_RDONLY | O_BINARY) : fileno(stdin);
+   BYTE *buffer = nullptr;
+   int fd = (fileName != nullptr) ? _open(fileName, O_RDONLY | O_BINARY) : fileno(stdin);
    if (fd != -1)
    {
 #ifdef _WIN32
-      buffer = LoadFileContent(fd, pdwFileSize, false, fileName == NULL);
+      buffer = LoadFileContent(fd, fileSize, false, fileName == nullptr);
 #else
-      buffer = LoadFileContent(fd, pdwFileSize, (fileName != NULL) && !strncmp(fileName, "/proc/", 6), fileName == NULL);
+      buffer = LoadFileContent(fd, fileSize, (fileName != nullptr) && !strncmp(fileName, "/proc/", 6), fileName == nullptr);
 #endif
    }
    return buffer;
@@ -2428,15 +2428,15 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, UINT32 *pdwFileSize)
  */
 char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName)
 {
-   BYTE *buffer = NULL;
-   int fd = (fileName != NULL) ? _topen(fileName, O_RDONLY | O_BINARY) : fileno(stdin);
+   BYTE *buffer = nullptr;
+   int fd = (fileName != nullptr) ? _topen(fileName, O_RDONLY | O_BINARY) : fileno(stdin);
    if (fd != -1)
    {
-      UINT32 size;
+      size_t size;
 #ifdef _WIN32
-      buffer = LoadFileContent(fd, &size, false, fileName == NULL);
+      buffer = LoadFileContent(fd, &size, false, fileName == nullptr);
 #else
-      buffer = LoadFileContent(fd, &size, (fileName != NULL) && !_tcsncmp(fileName, _T("/proc/"), 6), fileName == NULL);
+      buffer = LoadFileContent(fd, &size, (fileName != nullptr) && !_tcsncmp(fileName, _T("/proc/"), 6), fileName == nullptr);
 #endif
    }
    return reinterpret_cast<char*>(buffer);

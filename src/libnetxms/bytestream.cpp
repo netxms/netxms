@@ -320,13 +320,13 @@ bool ByteStream::save(int f)
  */
 ByteStream *ByteStream::load(const TCHAR *file)
 {
-   UINT32 size;
+   size_t size;
    BYTE *data = LoadFile(file, &size);
    if (data == NULL)
       return NULL;
    ByteStream *s = new ByteStream(0);
-   s->m_allocated = (size_t)size;
-   s->m_size = (size_t)size;
+   s->m_allocated = size;
+   s->m_size = size;
    s->m_data = data;
    return s;
 }

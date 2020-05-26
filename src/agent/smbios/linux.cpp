@@ -22,7 +22,7 @@
 
 static BYTE *SMBIOS_Reader(size_t *size)
 {
-   UINT32 fsize;
+   size_t fsize;
    BYTE *bios = LoadFileA("/sys/firmware/dmi/tables/DMI", &fsize);
    *size = fsize;
    return bios;

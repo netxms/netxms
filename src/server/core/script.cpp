@@ -766,9 +766,8 @@ void ExecuteStartupScripts()
             count++;
             _tcscpy(&path[insPos], f->d_name);
 
-            UINT32 size;
-            char *source = (char *)LoadFile(path, &size);
-            if (source != NULL)
+            char *source = LoadFileAsUTF8String(path);
+            if (source != nullptr)
             {
                TCHAR errorText[1024];
 #ifdef UNICODE

@@ -971,9 +971,9 @@ class SNMPTrapConfiguration
 {
 private:
    uuid m_guid;                   // Trap guid
-   UINT32 m_id;                   // Entry ID
+   uint32_t m_id;                 // Entry ID
    SNMP_ObjectId m_objectId;      // Trap OID
-   UINT32 m_eventCode;            // Event code
+   uint32_t m_eventCode;          // Event code
    TCHAR *m_eventTag;
    TCHAR *m_description;
    TCHAR *m_scriptSource;
@@ -985,7 +985,7 @@ private:
 public:
    SNMPTrapConfiguration();
    SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row);
-   SNMPTrapConfiguration(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT32 eventCode);
+   SNMPTrapConfiguration(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode);
    SNMPTrapConfiguration(NXCPMessage *msg);
    ~SNMPTrapConfiguration();
 
@@ -1260,8 +1260,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
                                                     json_t *oldValue, json_t *newValue,
                                                     const TCHAR *format, va_list args);
 
-bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen);
-UINT32 ImportConfig(Config *config, UINT32 flags);
+bool ValidateConfig(const Config& config, uint32_t flags, TCHAR *errorText, int errorTextLen);
+uint32_t ImportConfig(const Config& config, uint32_t flags);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(NXCPMessage *pMsg);

@@ -86,8 +86,6 @@ static void OnBreak(int sig)
 int main(int argc, char *argv[])
 {
 	int rc = 0, ch, traceLevel = -1;
-	BYTE *xml;
-	UINT32 size;
 	TCHAR *inputFile = NULL;
 #ifdef _WIN32
    bool vssSnapshots = false;
@@ -143,26 +141,21 @@ int main(int argc, char *argv[])
 
    InitLogParserLibrary();
 
-#ifdef UNICODE
-	WCHAR *wname = WideStringFromMBString(argv[optind]);
-	xml = LoadFile(wname, &size);
-	MemFree(wname);
-#else
-	xml = LoadFile(argv[optind], &size);
-#endif
-	if (xml != NULL)
+	size_t size;
+	BYTE *xml = LoadFileA(argv[optind], &size);
+	if (xml != nullptr)
 	{
 		TCHAR errorText[1024];
 
       ObjectArray<LogParser> *parsers = LogParser::createFromXml((const char *)xml, size, errorText, 1024); 
-		if ((parsers != NULL) && (parsers->size() > 0))
+		if ((parsers != nullptr) && (parsers->size() > 0))
 		{
          LogParser *parser = parsers->get(0);
          for(int i = 1; i < parsers->size(); i++)
             delete parsers->get(i);
 			if (traceLevel != -1)
 				parser->setTraceLevel(traceLevel);
-			if (inputFile != NULL)
+			if (inputFile != nullptr)
 				parser->setFileName(inputFile);
 #ifdef _WIN32
          if (vssSnapshots)

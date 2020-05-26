@@ -107,7 +107,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb
 /**
  * Create SNMP trap configuration object from config entry
  */
-SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT32 eventCode) : m_mappings(8, 8, Ownership::True)
+SNMPTrapConfiguration::SNMPTrapConfiguration(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode) : m_mappings(8, 8, Ownership::True)
 {
    if (id == 0)
       m_id = CreateUniqueId(IDG_SNMP_TRAP);
@@ -115,14 +115,14 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& gui
       m_id = id;
 
    m_guid = guid;
-   m_objectId = SNMP_ObjectId::parse(entry->getSubEntryValue(_T("oid"), 0, _T("")));
+   m_objectId = SNMP_ObjectId::parse(entry.getSubEntryValue(_T("oid"), 0, _T("")));
    m_eventCode = eventCode;
-   m_description = MemCopyString(entry->getSubEntryValue(_T("description")));
-   m_eventTag = MemCopyString(entry->getSubEntryValue(_T("eventTag"), 0, entry->getSubEntryValue(_T("userTag"))));
-   m_scriptSource = MemCopyString(entry->getSubEntryValue(_T("transformationScript")));
+   m_description = MemCopyString(entry.getSubEntryValue(_T("description")));
+   m_eventTag = MemCopyString(entry.getSubEntryValue(_T("eventTag"), 0, entry.getSubEntryValue(_T("userTag"))));
+   m_scriptSource = MemCopyString(entry.getSubEntryValue(_T("transformationScript")));
    m_script = nullptr;
 
-   ConfigEntry *parametersRoot = entry->findEntry(_T("parameters"));
+   const ConfigEntry *parametersRoot = entry.findEntry(_T("parameters"));
    if (parametersRoot != nullptr)
    {
       ObjectArray<ConfigEntry> *parameters = parametersRoot->getOrderedSubEntries(_T("parameter#*"));
@@ -132,7 +132,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& gui
          {
             SNMPTrapParameterMapping *param = new SNMPTrapParameterMapping(parameters->get(i));
             if (!param->isPositional() && !param->getOid()->isValid())
-               nxlog_write(NXLOG_WARNING, _T("Invalid trap parameter OID %s for trap %u in trap configuration table"), (const TCHAR *)param->getOid()->toString(), m_id);
+               nxlog_write(NXLOG_WARNING, _T("Invalid trap parameter OID %s for trap %u in trap configuration table"), param->getOid()->toString().cstr(), m_id);
             m_mappings.add(param);
          }
       }

@@ -185,15 +185,13 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
  */
 static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 {
-	BYTE *xml;
-	UINT32 size;
-	TCHAR error[1024];
-
-	xml = LoadFile(file, &size);
-	if (xml != NULL)
+	size_t size;
+	BYTE *xml = LoadFile(file, &size);
+	if (xml != nullptr)
 	{
+	   TCHAR error[1024];
 		ObjectArray<LogParser> *parsers = LogParser::createFromXml((const char *)xml, size, error, 1024);
-		if (parsers != NULL)
+		if (parsers != nullptr)
 		{
 			for (int i = 0; i < parsers->size(); i++)
 			{

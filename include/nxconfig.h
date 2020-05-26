@@ -64,41 +64,41 @@ public:
 	const TCHAR *getName() const { return m_name; }
 	int getId() const { return m_id; }
 	int getValueCount() const { return m_values.size(); }
-	int getConcatenatedValuesLength();
+	int getConcatenatedValuesLength() const;
 
    const TCHAR *getValue(int index = 0) const { return m_values.get(index); }
-	INT32 getValueAsInt(int index = 0, INT32 defaultValue = 0);
-	UINT32 getValueAsUInt(int index = 0, UINT32 defaultValue = 0);
-	INT64 getValueAsInt64(int index = 0, INT64 defaultValue = 0);
-	UINT64 getValueAsUInt64(int index = 0, UINT64 defaultValue = 0);
-	bool getValueAsBoolean(int index = 0, bool defaultValue = false);
-	uuid getValueAsUUID(int index);
+	int32_t getValueAsInt(int index = 0, int32_t defaultValue = 0) const;
+	uint32_t getValueAsUInt(int index = 0, uint32_t defaultValue = 0) const;
+	int64_t getValueAsInt64(int index = 0, int64_t defaultValue = 0) const;
+	uint64_t getValueAsUInt64(int index = 0, uint64_t defaultValue = 0) const;
+	bool getValueAsBoolean(int index = 0, bool defaultValue = false) const;
+	uuid getValueAsUUID(int index) const;
 
    void addValue(const TCHAR *value) { m_values.add(value); }
    void addValuePreallocated(TCHAR *value) { m_values.addPreallocated(value); }
 	void setValue(const TCHAR*value);
 
 	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = nullptr) const;
-	INT32 getSubEntryValueAsInt(const TCHAR *name, int index = 0, INT32 defaultValue = 0) const;
-	UINT32 getSubEntryValueAsUInt(const TCHAR *name, int index = 0, UINT32 defaultValue = 0) const;
-	INT64 getSubEntryValueAsInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0) const;
-	UINT64 getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, UINT64 defaultValue = 0) const;
+	int32_t getSubEntryValueAsInt(const TCHAR *name, int index = 0, int32_t defaultValue = 0) const;
+	uint32_t getSubEntryValueAsUInt(const TCHAR *name, int index = 0, uint32_t defaultValue = 0) const;
+	int64_t getSubEntryValueAsInt64(const TCHAR *name, int index = 0, int64_t defaultValue = 0) const;
+	uint64_t getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, uint64_t defaultValue = 0) const;
 	bool getSubEntryValueAsBoolean(const TCHAR *name, int index = 0, bool defaultValue = false) const;
 	uuid getSubEntryValueAsUUID(const TCHAR *name, int index = 0) const;
 
    const TCHAR *getAttribute(const TCHAR *name)  const { return m_attributes.get(name); }
-	INT32 getAttributeAsInt(const TCHAR *name, INT32 defaultValue = 0) const;
-	UINT32 getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue = 0) const;
-	INT64 getAttributeAsInt64(const TCHAR *name, INT64 defaultValue = 0) const;
-	UINT64 getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue = 0) const;
+	int32_t getAttributeAsInt(const TCHAR *name, int32_t defaultValue = 0) const;
+	uint32_t getAttributeAsUInt(const TCHAR *name, uint32_t defaultValue = 0) const;
+	int64_t getAttributeAsInt64(const TCHAR *name, int64_t defaultValue = 0) const;
+	uint64_t getAttributeAsUInt64(const TCHAR *name, uint64_t defaultValue = 0) const;
 	bool getAttributeAsBoolean(const TCHAR *name, bool defaultValue = false) const;
 
    void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); }
    void setAttributePreallocated(TCHAR *name, TCHAR *value) { m_attributes.setPreallocated(name, value); }
-   void setAttribute(const TCHAR *name, INT32 value);
-   void setAttribute(const TCHAR *name, UINT32 value);
-   void setAttribute(const TCHAR *name, INT64 value);
-   void setAttribute(const TCHAR *name, UINT64 value);
+   void setAttribute(const TCHAR *name, int32_t value);
+   void setAttribute(const TCHAR *name, uint32_t value);
+   void setAttribute(const TCHAR *name, int64_t value);
+   void setAttribute(const TCHAR *name, uint64_t value);
    void setAttribute(const TCHAR *name, bool value);
 
 	const TCHAR *getFile() const { return m_file; }
@@ -114,8 +114,8 @@ public:
 
    void addSubTree(const ConfigEntry *root, bool merge);
 
-	void print(FILE *file, int level, TCHAR *prefix);
-	void createXml(StringBuffer &xml, int level = 0);
+	void print(FILE *file, int level, TCHAR *prefix) const;
+	void createXml(StringBuffer &xml, int level = 0) const;
 };
 
 /**
@@ -170,23 +170,23 @@ public:
 
 	void deleteEntry(const TCHAR *path);
 
-	ConfigEntry *getEntry(const TCHAR *path);
-	const TCHAR *getValue(const TCHAR *path, const TCHAR *defaultValue = nullptr, int index = 0);
-   const TCHAR *getFirstNonEmptyValue(const TCHAR *path);
-   int32_t getValueAsInt(const TCHAR *path, int32_t defaultValue, int index = 0);
-	uint32_t getValueAsUInt(const TCHAR *path, uint32_t defaultValue, int index = 0);
-	int64_t getValueAsInt64(const TCHAR *path, int64_t defaultValue, int index = 0);
-	uint64_t getValueAsUInt64(const TCHAR *path, uint64_t defaultValue, int index = 0);
-	bool getValueAsBoolean(const TCHAR *path, bool defaultValue, int index = 0);
-	uuid getValueAsUUID(const TCHAR *path, int index = 0);
-	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *path, const TCHAR *mask);
-	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
+	ConfigEntry *getEntry(const TCHAR *path) const;
+	const TCHAR *getValue(const TCHAR *path, const TCHAR *defaultValue = nullptr, int index = 0) const;
+   const TCHAR *getFirstNonEmptyValue(const TCHAR *path) const;
+   int32_t getValueAsInt(const TCHAR *path, int32_t defaultValue, int index = 0) const;
+	uint32_t getValueAsUInt(const TCHAR *path, uint32_t defaultValue, int index = 0) const;
+	int64_t getValueAsInt64(const TCHAR *path, int64_t defaultValue, int index = 0) const;
+	uint64_t getValueAsUInt64(const TCHAR *path, uint64_t defaultValue, int index = 0) const;
+	bool getValueAsBoolean(const TCHAR *path, bool defaultValue, int index = 0) const;
+	uuid getValueAsUUID(const TCHAR *path, int index = 0) const;
+	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *path, const TCHAR *mask) const;
+	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask) const;
 
 	bool setValue(const TCHAR *path, const TCHAR *value);
-	bool setValue(const TCHAR *path, INT32 value);
-	bool setValue(const TCHAR *path, UINT32 value);
-	bool setValue(const TCHAR *path, INT64 value);
-	bool setValue(const TCHAR *path, UINT64 value);
+	bool setValue(const TCHAR *path, int32_t value);
+	bool setValue(const TCHAR *path, uint32_t value);
+	bool setValue(const TCHAR *path, int64_t value);
+	bool setValue(const TCHAR *path, uint64_t value);
 	bool setValue(const TCHAR *path, double value);
 	bool setValue(const TCHAR *path, const uuid& value);
 
@@ -194,13 +194,13 @@ public:
 
 	int getErrorCount() const { return m_errorCount; }
 
-	void print(FILE *file);
-	String createXml();
+	void print(FILE *file) const;
+	String createXml() const;
 
    void setAlias(const TCHAR *alias, const TCHAR *value) { if (alias != nullptr) m_aliases.set(alias, value); else m_aliases.remove(alias); }
    const TCHAR *getAlias(const TCHAR *alias) const { return m_aliases.get(alias); }
 
-   bool isExpansionAllowed() { return m_allowMacroExpansion; }
+   bool isExpansionAllowed() const { return m_allowMacroExpansion; }
 };
 
 

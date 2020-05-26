@@ -28,13 +28,13 @@
 /**
  * Check if given event exist either in server configuration or in configuration being imported
  */
-static bool IsEventExist(const TCHAR *name, Config *config)
+static bool IsEventExist(const TCHAR *name, const Config& config)
 {
    shared_ptr<EventTemplate> e = FindEventTemplateByName(name);
 	if (e != nullptr)
 		return true;
 
-	ConfigEntry *eventsRoot = config->getEntry(_T("/events"));
+	ConfigEntry *eventsRoot = config.getEntry(_T("/events"));
 	if (eventsRoot != nullptr)
 	{
 		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
@@ -56,7 +56,7 @@ static bool IsEventExist(const TCHAR *name, Config *config)
 /**
  * Validate DCI from template
  */
-static bool ValidateDci(Config *config, ConfigEntry *dci, const TCHAR *templateName, TCHAR *errorText, int errorTextLen)
+static bool ValidateDci(const Config& config, const ConfigEntry *dci, const TCHAR *templateName, TCHAR *errorText, int errorTextLen)
 {
 	ConfigEntry *thresholdsRoot = dci->findEntry(_T("thresholds"));
 	if (thresholdsRoot == nullptr)
@@ -91,7 +91,7 @@ static bool ValidateDci(Config *config, ConfigEntry *dci, const TCHAR *templateN
 /**
  * Validate template
  */
-static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText, int errorTextLen)
+static bool ValidateTemplate(const Config& config, const ConfigEntry *root, TCHAR *errorText, int errorTextLen)
 {
 	nxlog_debug_tag(DEBUG_TAG, 6, _T("ValidateConfig(): validating template \"%s\""), root->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
 
@@ -133,9 +133,8 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 /**
  * Validate configuration before import
  */
-bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen)
+bool ValidateConfig(const Config& config, uint32_t flags, TCHAR *errorText, int errorTextLen)
 {
-   int i;
 	ObjectArray<ConfigEntry> *events = nullptr, *traps = nullptr, *templates = nullptr;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
    bool success = false;
@@ -143,11 +142,11 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("ValidateConfig() called, flags = 0x%04X"), flags);
 
    // Validate events
-	eventsRoot = config->getEntry(_T("/events"));
+	eventsRoot = config.getEntry(_T("/events"));
 	if (eventsRoot != nullptr)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
-		for(i = 0; i < events->size(); i++)
+		for(int i = 0; i < events->size(); i++)
 		{
 			ConfigEntry *event = events->get(i);
 			nxlog_debug_tag(DEBUG_TAG, 6, _T("ValidateConfig(): validating event %s"), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
@@ -166,11 +165,11 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 	}
 
 	// Validate traps
-	trapsRoot = config->getEntry(_T("/traps"));
+	trapsRoot = config.getEntry(_T("/traps"));
 	if (trapsRoot != nullptr)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
-		for(i = 0; i < traps->size(); i++)
+		for(int i = 0; i < traps->size(); i++)
 		{
 			ConfigEntry *trap = traps->get(i);
 			nxlog_debug_tag(DEBUG_TAG, 6, _T("ValidateConfig(): validating trap \"%s\""), trap->getSubEntryValue(_T("description"), 0, _T("<unnamed>")));
@@ -183,11 +182,11 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 	}
 
 	// Validate templates
-	templatesRoot = config->getEntry(_T("/templates"));
+	templatesRoot = config.getEntry(_T("/templates"));
 	if (templatesRoot != nullptr)
 	{
 		templates = templatesRoot->getSubEntries(_T("template#*"));
-		for(i = 0; i < templates->size(); i++)
+		for(int i = 0; i < templates->size(); i++)
 		{
 			if (!ValidateTemplate(config, templates->get(i), errorText, errorTextLen))
 				goto stop_processing;
@@ -210,7 +209,7 @@ stop_processing:
 /**
  * Import event
  */
-static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
+static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite)
 {
 	const TCHAR *name = event->getSubEntryValue(_T("name"));
 	if (name == nullptr)
@@ -317,14 +316,14 @@ static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
 /**
  * Import SNMP trap configuration
  */
-static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions needed?
+static uint32_t ImportTrap(const ConfigEntry& trap, bool overwrite) // TODO transactions needed?
 {
-   UINT32 rcc = RCC_INTERNAL_ERROR;
-   shared_ptr<EventTemplate> eventTemplate = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
+   uint32_t rcc = RCC_INTERNAL_ERROR;
+   shared_ptr<EventTemplate> eventTemplate = FindEventTemplateByName(trap.getSubEntryValue(_T("event"), 0, _T("")));
 	if (eventTemplate == nullptr)
 		return rcc;
 
-	uuid guid = trap->getSubEntryValueAsUUID(_T("guid"));
+	uuid guid = trap.getSubEntryValueAsUUID(_T("guid"));
    if (guid.isNull())
    {
       guid = uuid::generate();
@@ -399,9 +398,9 @@ static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions
 /**
  * Find (and create as necessary) parent object for imported template
  */
-static shared_ptr<NetObj> FindTemplateRoot(ConfigEntry *config)
+static shared_ptr<NetObj> FindTemplateRoot(const ConfigEntry *config)
 {
-	ConfigEntry *pathRoot = config->findEntry(_T("path"));
+	const ConfigEntry *pathRoot = config->findEntry(_T("path"));
 	if (pathRoot == nullptr)
       return g_templateRoot;  // path not specified in config
 
@@ -429,7 +428,7 @@ static shared_ptr<NetObj> FindTemplateRoot(ConfigEntry *config)
 /**
  * Fill rule ordering array
  */
-static ObjectArray<uuid> *GetRuleOrdering(ConfigEntry *ruleOrdering)
+static ObjectArray<uuid> *GetRuleOrdering(const ConfigEntry *ruleOrdering)
 {
    ObjectArray<uuid> *ordering = nullptr;
    if(ruleOrdering != nullptr)
@@ -474,25 +473,24 @@ static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
 /**
  * Import configuration
  */
-UINT32 ImportConfig(Config *config, UINT32 flags)
+uint32_t ImportConfig(const Config& config, uint32_t flags)
 {
 	ObjectArray<ConfigEntry> *events = nullptr, *traps = nullptr, *templates = nullptr, *rules = nullptr,
 	                         *scripts = nullptr, *objectTools = nullptr, *summaryTables = nullptr,
 	                         *webServiceDef = nullptr, *actions = nullptr;
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot,
 	            *scriptsRoot, *objectToolsRoot, *summaryTablesRoot, *webServiceDefRoot, *actionsRoot;
-	UINT32 rcc = RCC_SUCCESS;
-	int i;
+	uint32_t rcc = RCC_SUCCESS;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() called, flags=0x%04X"), flags);
 
    // Import events
-	eventsRoot = config->getEntry(_T("/events"));
+	eventsRoot = config.getEntry(_T("/events"));
 	if (eventsRoot != nullptr)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): %d events to import"), events->size());
-		for(i = 0; i < events->size(); i++)
+		for(int i = 0; i < events->size(); i++)
 		{
 			rcc = ImportEvent(events->get(i), (flags & CFG_IMPORT_REPLACE_EVENTS) != 0);
 			if (rcc != RCC_SUCCESS)
@@ -508,14 +506,14 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
 	// Import traps
-	trapsRoot = config->getEntry(_T("/traps"));
+	trapsRoot = config.getEntry(_T("/traps"));
 	if (trapsRoot != nullptr)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): %d SNMP traps to import"), traps->size());
-		for(i = 0; i < traps->size(); i++)
+		for(int i = 0; i < traps->size(); i++)
 		{
-			rcc = ImportTrap(traps->get(i), (flags & CFG_IMPORT_REPLACE_TRAPS) != 0);
+			rcc = ImportTrap(*traps->get(i), (flags & CFG_IMPORT_REPLACE_TRAPS) != 0);
 			if (rcc != RCC_SUCCESS)
 				goto stop_processing;
 		}
@@ -523,11 +521,11 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
 	// Import templates
-	templatesRoot = config->getEntry(_T("/templates"));
+	templatesRoot = config.getEntry(_T("/templates"));
 	if (templatesRoot != nullptr)
 	{
 		templates = templatesRoot->getSubEntries(_T("template#*"));
-		for(i = 0; i < templates->size(); i++)
+		for(int i = 0; i < templates->size(); i++)
 		{
 		   ConfigEntry *tc = templates->get(i);
 		   uuid guid = tc->getSubEntryValueAsUUID(_T("guid"));
@@ -591,11 +589,11 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
    // Import actions
-   actionsRoot = config->getEntry(_T("/actions"));
+   actionsRoot = config.getEntry(_T("/actions"));
    if (actionsRoot != nullptr)
    {
       actions = actionsRoot->getSubEntries(_T("action#*"));
-      for(i = 0; i < actions->size(); i++)
+      for(int i = 0; i < actions->size(); i++)
       {
          ImportAction(actions->get(i), (flags & CFG_IMPORT_REPLACE_ACTIONS) != 0);
       }
@@ -603,15 +601,15 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
    }
 
 	// Import rules
-	rulesRoot = config->getEntry(_T("/rules"));
+	rulesRoot = config.getEntry(_T("/rules"));
 	if (rulesRoot != nullptr)
 	{
 		rules = rulesRoot->getOrderedSubEntries(_T("rule#*"));
 		if (rules->size() > 0)
 		{
 		   //get rule ordering
-		   ObjectArray<uuid> *ruleOrdering = GetRuleOrdering(config->getEntry(_T("/ruleOrdering")));
-         for(i = 0; i < rules->size(); i++)
+		   ObjectArray<uuid> *ruleOrdering = GetRuleOrdering(config.getEntry(_T("/ruleOrdering")));
+         for(int i = 0; i < rules->size(); i++)
          {
             EPRule *rule = new EPRule(rules->get(i));
             g_pEventPolicy->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
@@ -628,11 +626,11 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
 	// Import scripts
-	scriptsRoot = config->getEntry(_T("/scripts"));
+	scriptsRoot = config.getEntry(_T("/scripts"));
 	if (scriptsRoot != nullptr)
 	{
 		scripts = scriptsRoot->getSubEntries(_T("script#*"));
-		for(i = 0; i < scripts->size(); i++)
+		for(int i = 0; i < scripts->size(); i++)
 		{
          ImportScript(scripts->get(i), (flags & CFG_IMPORT_REPLACE_SCRIPTS) != 0);
 		}
@@ -640,11 +638,11 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
 	// Import object tools
-	objectToolsRoot = config->getEntry(_T("/objectTools"));
+	objectToolsRoot = config.getEntry(_T("/objectTools"));
 	if (objectToolsRoot != nullptr)
 	{
 		objectTools = objectToolsRoot->getSubEntries(_T("objectTool#*"));
-		for(i = 0; i < objectTools->size(); i++)
+		for(int i = 0; i < objectTools->size(); i++)
 		{
          ImportObjectTool(objectTools->get(i), (flags & CFG_IMPORT_REPLACE_OBJECT_TOOLS) != 0);
 		}
@@ -652,11 +650,11 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
 	// Import summary tables
-	summaryTablesRoot = config->getEntry(_T("/dciSummaryTables"));
+	summaryTablesRoot = config.getEntry(_T("/dciSummaryTables"));
 	if (summaryTablesRoot != nullptr)
 	{
 	   summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
-		for(i = 0; i < summaryTables->size(); i++)
+		for(int i = 0; i < summaryTables->size(); i++)
 		{
          ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0);
 		}
@@ -664,11 +662,11 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	}
 
 	//Import web service definitions
-   webServiceDefRoot = config->getEntry(_T("/webServiceDefinitions"));
+   webServiceDefRoot = config.getEntry(_T("/webServiceDefinitions"));
    if (webServiceDefRoot != nullptr)
    {
       webServiceDef = webServiceDefRoot->getSubEntries(_T("webServiceDefinition#*"));
-      for(i = 0; i < webServiceDef->size(); i++)
+      for(int i = 0; i < webServiceDef->size(); i++)
       {
          ImportWebServiceDefinition(webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0);
       }
@@ -713,8 +711,8 @@ void ImportLocalConfiguration(bool overwrite)
          if (MatchString(_T("*.xml"), f->d_name, FALSE))
          {
             _tcscpy(&path[insPos], f->d_name);
-            Config *config = new Config(false);
-            if (config->loadXmlConfig(path, "configuration"))
+            Config config(false);
+            if (config.loadXmlConfig(path, "configuration"))
             {
                ImportConfig(config, overwrite ? CFG_IMPORT_REPLACE_EVERYTHING : 0);
             }
@@ -722,7 +720,6 @@ void ImportLocalConfiguration(bool overwrite)
             {
                nxlog_debug_tag(DEBUG_TAG, 1, _T("Error loading configuration from %s"), path);
             }
-            delete config;
          }
       }
       _tclosedir(dir);

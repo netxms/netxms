@@ -218,9 +218,8 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
    }
    _tcslcat(schemaFile, _T("dbschema_sqlite.sql"), MAX_PATH);
 
-   UINT32 size;
-   char *data = (char *)LoadFile(schemaFile, &size);
-   if (data == NULL)
+   char *data = LoadFileAsUTF8String(schemaFile);
+   if (data == nullptr)
    {
       WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m cannot load schema file \"%s\"\n"), schemaFile);
       return false;

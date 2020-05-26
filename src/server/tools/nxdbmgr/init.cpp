@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -105,8 +105,8 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
  */
 bool ExecSQLBatch(const char *batchFile, bool showOutput)
 {
-   UINT32 dwSize;
-   BYTE *batch = LoadFileA(strcmp(batchFile, "-") ? batchFile : NULL, &dwSize);
+   size_t size;
+   BYTE *batch = LoadFileA(strcmp(batchFile, "-") ? batchFile : NULL, &size);
    if (batch == NULL)
    {
       if (strcmp(batchFile, "-"))
@@ -119,9 +119,9 @@ bool ExecSQLBatch(const char *batchFile, bool showOutput)
    BYTE *pQuery, *pNext;
    bool result = false;
 
-   for(pQuery = batch; pQuery < batch + dwSize; pQuery = pNext)
+   for(pQuery = batch; pQuery < batch + size; pQuery = pNext)
    {
-      pNext = FindEndOfQuery(pQuery, batch + dwSize);
+      pNext = FindEndOfQuery(pQuery, batch + size);
       if (!IsEmptyQuery((char *)pQuery))
       {
 #ifdef UNICODE
@@ -132,7 +132,7 @@ bool ExecSQLBatch(const char *batchFile, bool showOutput)
          result = SQLQuery((char *)pQuery, showOutput);
 #endif
          if (!result)
-            pNext = batch + dwSize;
+            pNext = batch + size;
       }
    }
    MemFree(batch);

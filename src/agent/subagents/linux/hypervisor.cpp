@@ -173,9 +173,9 @@ static bool IsLinuxVServer()
  */
 static bool DetectContainerByInitEnv(char *detectedType)
 {
-   UINT32 size;
+   size_t size;
    char *env = reinterpret_cast<char*>(LoadFileA("/proc/1/environ", &size));
-   if (env == NULL)
+   if (env == nullptr)
       return false;
 
    bool result = false;
@@ -185,7 +185,7 @@ static bool DetectContainerByInitEnv(char *detectedType)
       if (!strncmp(curr, "container=", 10))
       {
          result = true;
-         if (detectedType != NULL)
+         if (detectedType != nullptr)
          {
             if (!strcmp(&curr[10], "lxc"))
                strcpy(detectedType, "LXC");
@@ -251,9 +251,9 @@ static bool IsVMware()
       char path[1024];
       snprintf(path, 1024, "/sys/bus/pci/devices/%s/vendor", e->d_name);
 
-      UINT32 size;
+      size_t size;
       BYTE *content = LoadFileA(path, &size);
-      if (content != NULL)
+      if (content != nullptr)
       {
          if (!strncasecmp((char *)content, "0x15ad", MIN(size, 6)))
             result = true;
@@ -293,7 +293,7 @@ static bool IsXEN()
    if (!strncmp(s_cpuVendorId, "XenVMM", 6))
       return true;
 
-   UINT32 size;
+   size_t size;
    BYTE *content = LoadFileA("/sys/hypervisor/type", &size);
    if (content == nullptr)
       return false;
@@ -308,25 +308,25 @@ static bool IsXEN()
  */
 static bool GetXENVersionString(TCHAR *value)
 {
-   UINT32 size;
+   size_t size;
    BYTE *content = LoadFileA("/sys/hypervisor/version/major", &size);
-   if (content == NULL)
+   if (content == nullptr)
       return false;
-   int major = strtol((char *)content, NULL, 10);
+   int major = strtol((char *)content, nullptr, 10);
    free(content);
 
    content = LoadFileA("/sys/hypervisor/version/minor", &size);
-   if (content == NULL)
+   if (content == nullptr)
       return false;
-   int minor = strtol((char *)content, NULL, 10);
+   int minor = strtol((char *)content, nullptr, 10);
    free(content);
 
    const char *extra = "";
    content = LoadFileA("/sys/hypervisor/version/extra", &size);
-   if (content != NULL)
+   if (content != nullptr)
    {
       char *ptr = strchr((char *)content, '\n');
-      if (ptr != NULL)
+      if (ptr != nullptr)
          *ptr = 0;
       extra = (const char *)content;
    }

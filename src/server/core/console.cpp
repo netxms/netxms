@@ -1380,19 +1380,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          libraryLocked = false;
          destroyCompiledScript = true;
          char *script;
-         UINT32 fileSize;
-         if ((script = (char *)LoadFile(szBuffer, &fileSize)) != nullptr)
+         if ((script = LoadFileAsUTF8String(szBuffer)) != nullptr)
          {
             const int errorMsgLen = 512;
             TCHAR errorMsg[errorMsgLen];
 #ifdef UNICODE
-            WCHAR *wscript = WideStringFromMBString(script);
+            WCHAR *wscript = WideStringFromUTF8String(script);
             compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, nullptr);
-            free(wscript);
+            MemFree(wscript);
 #else
             compiledScript = NXSLCompile(script, errorMsg, errorMsgLen, nullptr);
 #endif
-            free(script);
+            MemFree(script);
             if (compiledScript == nullptr)
             {
                ConsolePrintf(pCtx, _T("ERROR: Script compilation error: %s\n\n"), errorMsg);

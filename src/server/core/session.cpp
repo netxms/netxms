@@ -9629,9 +9629,9 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
 
                // Validate and import configuration
                dwFlags = pRequest->getFieldAsUInt32(VID_FLAGS);
-               if (ValidateConfig(&config, dwFlags, szError, 1024))
+               if (ValidateConfig(config, dwFlags, szError, 1024))
                {
-                  msg.setField(VID_RCC, ImportConfig(&config, dwFlags));
+                  msg.setField(VID_RCC, ImportConfig(config, dwFlags));
                }
                else
                {

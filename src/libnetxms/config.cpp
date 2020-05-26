@@ -308,7 +308,7 @@ ObjectArray<ConfigEntry> *ConfigEntry::getOrderedSubEntries(const TCHAR *mask) c
 /**
  * Get entry value as integer
  */
-INT32 ConfigEntry::getValueAsInt(int index, INT32 defaultValue)
+int32_t ConfigEntry::getValueAsInt(int index, int32_t defaultValue) const
 {
    const TCHAR *value = getValue(index);
    return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
@@ -317,7 +317,7 @@ INT32 ConfigEntry::getValueAsInt(int index, INT32 defaultValue)
 /**
  * Get entry value as unsigned integer
  */
-UINT32 ConfigEntry::getValueAsUInt(int index, UINT32 defaultValue)
+uint32_t ConfigEntry::getValueAsUInt(int index, uint32_t defaultValue) const
 {
    const TCHAR *value = getValue(index);
    return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
@@ -326,7 +326,7 @@ UINT32 ConfigEntry::getValueAsUInt(int index, UINT32 defaultValue)
 /**
  * Get entry value as 64 bit integer
  */
-INT64 ConfigEntry::getValueAsInt64(int index, INT64 defaultValue)
+int64_t ConfigEntry::getValueAsInt64(int index, int64_t defaultValue) const
 {
    const TCHAR *value = getValue(index);
    return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
@@ -335,7 +335,7 @@ INT64 ConfigEntry::getValueAsInt64(int index, INT64 defaultValue)
 /**
  * Get entry value as 64 bit unsigned integer
  */
-UINT64 ConfigEntry::getValueAsUInt64(int index, UINT64 defaultValue)
+uint64_t ConfigEntry::getValueAsUInt64(int index, uint64_t defaultValue) const
 {
    const TCHAR *value = getValue(index);
    return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
@@ -345,7 +345,7 @@ UINT64 ConfigEntry::getValueAsUInt64(int index, UINT64 defaultValue)
  * Get entry value as boolean
  * (consider non-zero numerical value or strings "yes", "true", "on" as true)
  */
-bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue)
+bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue) const
 {
    const TCHAR *value = getValue(index);
    if (value != nullptr)
@@ -362,7 +362,7 @@ bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue)
 /**
  * Get entry value as GUID
  */
-uuid ConfigEntry::getValueAsUUID(int index)
+uuid ConfigEntry::getValueAsUUID(int index) const
 {
    const TCHAR *value = getValue(index);
    if (value != nullptr)
@@ -384,7 +384,7 @@ void ConfigEntry::setValue(const TCHAR *value)
 /**
  * Get summary length of all values as if they was concatenated with separator character
  */
-int ConfigEntry::getConcatenatedValuesLength()
+int ConfigEntry::getConcatenatedValuesLength() const
 {
    if (m_values.isEmpty())
       return 0;
@@ -412,25 +412,25 @@ const TCHAR* ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const T
    return (value != nullptr) ? value : defaultValue;
 }
 
-INT32 ConfigEntry::getSubEntryValueAsInt(const TCHAR *name, int index, INT32 defaultValue) const
+int32_t ConfigEntry::getSubEntryValueAsInt(const TCHAR *name, int index, int32_t defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
-UINT32 ConfigEntry::getSubEntryValueAsUInt(const TCHAR *name, int index, UINT32 defaultValue) const
+uint32_t ConfigEntry::getSubEntryValueAsUInt(const TCHAR *name, int index, uint32_t defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
 }
 
-INT64 ConfigEntry::getSubEntryValueAsInt64(const TCHAR *name, int index, INT64 defaultValue) const
+int64_t ConfigEntry::getSubEntryValueAsInt64(const TCHAR *name, int index, int64_t defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
-UINT64 ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, UINT64 defaultValue) const
+uint64_t ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, uint64_t defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
@@ -472,7 +472,7 @@ uuid ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, int index) const
 /**
  * Get attribute as integer
  */
-INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue) const
+int32_t ConfigEntry::getAttributeAsInt(const TCHAR *name, int32_t defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
@@ -481,7 +481,7 @@ INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue) cons
 /**
  * Get attribute as unsigned integer
  */
-UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue) const
+uint32_t ConfigEntry::getAttributeAsUInt(const TCHAR *name, uint32_t defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
@@ -490,7 +490,7 @@ UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue) c
 /**
  * Get attribute as 64 bit integer
  */
-INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue) const
+int64_t ConfigEntry::getAttributeAsInt64(const TCHAR *name, int64_t defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    return (value != nullptr) ? _tcstoll(value, nullptr, 0) : defaultValue;
@@ -499,7 +499,7 @@ INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue) co
 /**
  * Get attribute as unsigned 64 bit integer
  */
-UINT64 ConfigEntry::getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue) const
+uint64_t ConfigEntry::getAttributeAsUInt64(const TCHAR *name, uint64_t defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    return (value != nullptr) ? _tcstoull(value, nullptr, 0) : defaultValue;
@@ -525,7 +525,7 @@ bool ConfigEntry::getAttributeAsBoolean(const TCHAR *name, bool defaultValue) co
 /**
  * Set attribute
  */
-void ConfigEntry::setAttribute(const TCHAR *name, INT32 value)
+void ConfigEntry::setAttribute(const TCHAR *name, int32_t value)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, _T("%d"), (int)value);
@@ -535,7 +535,7 @@ void ConfigEntry::setAttribute(const TCHAR *name, INT32 value)
 /**
  * Set attribute
  */
-void ConfigEntry::setAttribute(const TCHAR *name, UINT32 value)
+void ConfigEntry::setAttribute(const TCHAR *name, uint32_t value)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, _T("%u"), (unsigned int)value);
@@ -545,7 +545,7 @@ void ConfigEntry::setAttribute(const TCHAR *name, UINT32 value)
 /**
  * Set attribute
  */
-void ConfigEntry::setAttribute(const TCHAR *name, INT64 value)
+void ConfigEntry::setAttribute(const TCHAR *name, int64_t value)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, INT64_FMT, value);
@@ -555,7 +555,7 @@ void ConfigEntry::setAttribute(const TCHAR *name, INT64 value)
 /**
  * Set attribute
  */
-void ConfigEntry::setAttribute(const TCHAR *name, UINT64 value)
+void ConfigEntry::setAttribute(const TCHAR *name, uint64_t value)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, UINT64_FMT, value);
@@ -610,7 +610,7 @@ void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
 /**
  * Print config entry
  */
-void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
+void ConfigEntry::print(FILE *file, int level, TCHAR *prefix) const
 {
    if (_isatty(_fileno(file)))
       WriteToTerminalEx(_T("%s\x1b[32;1m%s\x1b[0m\n"), prefix, m_name);
@@ -656,9 +656,9 @@ static EnumerationCallbackResult AddAttribute(const TCHAR *key, const void *valu
 /**
  * Create XML element(s) from config entry
  */
-void ConfigEntry::createXml(StringBuffer &xml, int level)
+void ConfigEntry::createXml(StringBuffer &xml, int level) const
 {
-   TCHAR *name = _tcsdup(m_name);
+   TCHAR *name = MemCopyString(m_name);
    TCHAR *ptr = _tcschr(name, _T('#'));
    if (ptr != nullptr)
       *ptr = 0;
@@ -695,7 +695,7 @@ void ConfigEntry::createXml(StringBuffer &xml, int level)
       xml.appendFormattedString(_T("</%s>\n"), name);
    }
 
-   free(name);
+   MemFree(name);
 }
 
 /**
@@ -745,10 +745,10 @@ void Config::error(const TCHAR *format, ...)
 /**
  * Parse size specification (with K, M, G, or T suffixes)
  */
-static UINT64 ParseSize(const TCHAR *s, UINT64 multiplier)
+static uint64_t ParseSize(const TCHAR *s, uint64_t multiplier)
 {
    TCHAR *eptr;
-   UINT64 value = _tcstoull(s, &eptr, 0);
+   uint64_t value = _tcstoull(s, &eptr, 0);
    while(*eptr == ' ')
       eptr++;
    if ((*eptr == 'K') || (*eptr == 'k'))
@@ -787,11 +787,11 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
          {
             case CT_LONG:
                if ((cfgTemplate[i].overrideIndicator != nullptr) &&
-                   (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
+                   (*((int32_t *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
                }
-               *((INT32 *)cfgTemplate[i].buffer) = _tcstol(value, &eptr, 0);
+               *((int32_t *)cfgTemplate[i].buffer) = _tcstol(value, &eptr, 0);
                if (*eptr != 0)
                {
                   error(_T("Invalid number '%s' in configuration file %s at line %d\n"), value, entry->getFile(), entry->getLine());
@@ -813,22 +813,22 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
                   || !_tcsicmp(value, _T("1")))
                {
-                  *((UINT32 *)cfgTemplate[i].buffer) |= (UINT32)cfgTemplate[i].bufferSize;
+                  *((uint32_t *)cfgTemplate[i].buffer) |= (uint32_t)cfgTemplate[i].bufferSize;
                }
                else
                {
-                  *((UINT32 *)cfgTemplate[i].buffer) &= ~((UINT32)cfgTemplate[i].bufferSize);
+                  *((uint32_t *)cfgTemplate[i].buffer) &= ~((uint32_t)cfgTemplate[i].bufferSize);
                }
                break;
             case CT_BOOLEAN64:
                if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
                   || !_tcsicmp(value, _T("1")))
                {
-                  *((UINT64 *)cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
+                  *((uint64_t *)cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
                }
                else
                {
-                  *((UINT64 *)cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
+                  *((uint64_t *)cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
                }
                break;
             case CT_STRING:
@@ -865,19 +865,19 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                break;
             case CT_SIZE_BYTES:
                if ((cfgTemplate[i].overrideIndicator != nullptr) &&
-                   (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
+                   (*((int32_t *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
                }
-               *((UINT64 *)cfgTemplate[i].buffer) = ParseSize(value, 1024);
+               *((uint64_t *)cfgTemplate[i].buffer) = ParseSize(value, 1024);
                break;
             case CT_SIZE_UNITS:
                if ((cfgTemplate[i].overrideIndicator != nullptr) &&
-                   (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
+                   (*((int32_t *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
                }
-               *((UINT64 *)cfgTemplate[i].buffer) = ParseSize(value, 1000);
+               *((uint64_t *)cfgTemplate[i].buffer) = ParseSize(value, 1000);
                break;
             case CT_IGNORE:
                break;
@@ -893,7 +893,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 /**
  * Get value
  */
-const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue, int index)
+const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue, int index) const
 {
    const TCHAR *value;
    ConfigEntry *entry = getEntry(path);
@@ -913,7 +913,7 @@ const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue, int 
 /**
  * Get first non-empty value
  */
-const TCHAR *Config::getFirstNonEmptyValue(const TCHAR *path)
+const TCHAR *Config::getFirstNonEmptyValue(const TCHAR *path) const
 {
    const TCHAR *value = nullptr;
    ConfigEntry *entry = getEntry(path);
@@ -935,7 +935,7 @@ const TCHAR *Config::getFirstNonEmptyValue(const TCHAR *path)
 /**
  * Get value as 32 bit integer
  */
-int32_t Config::getValueAsInt(const TCHAR *path, int32_t defaultValue, int index)
+int32_t Config::getValueAsInt(const TCHAR *path, int32_t defaultValue, int index) const
 {
    const TCHAR *value = getValue(path, nullptr, index);
    return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
@@ -944,7 +944,7 @@ int32_t Config::getValueAsInt(const TCHAR *path, int32_t defaultValue, int index
 /**
  * Get value as unsigned 32 bit integer
  */
-uint32_t Config::getValueAsUInt(const TCHAR *path, uint32_t defaultValue, int index)
+uint32_t Config::getValueAsUInt(const TCHAR *path, uint32_t defaultValue, int index) const
 {
    const TCHAR *value = getValue(path, nullptr, index);
    return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
@@ -953,7 +953,7 @@ uint32_t Config::getValueAsUInt(const TCHAR *path, uint32_t defaultValue, int in
 /**
  * Get value as 64 bit integer
  */
-int64_t Config::getValueAsInt64(const TCHAR *path, int64_t defaultValue, int index)
+int64_t Config::getValueAsInt64(const TCHAR *path, int64_t defaultValue, int index) const
 {
    const TCHAR *value = getValue(path, nullptr, index);
    return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
@@ -962,7 +962,7 @@ int64_t Config::getValueAsInt64(const TCHAR *path, int64_t defaultValue, int ind
 /**
  * Get value as unsigned 64 bit integer
  */
-uint64_t Config::getValueAsUInt64(const TCHAR *path, uint64_t defaultValue, int index)
+uint64_t Config::getValueAsUInt64(const TCHAR *path, uint64_t defaultValue, int index) const
 {
    const TCHAR *value = getValue(path, nullptr, index);
    return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
@@ -971,7 +971,7 @@ uint64_t Config::getValueAsUInt64(const TCHAR *path, uint64_t defaultValue, int 
 /**
  * Get value as boolean
  */
-bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue, int index)
+bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue, int index) const
 {
    const TCHAR *value = getValue(path, nullptr, index);
    if (value != nullptr)
@@ -988,7 +988,7 @@ bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue, int index)
 /**
  * Get value at given path as UUID
  */
-uuid Config::getValueAsUUID(const TCHAR *path, int index)
+uuid Config::getValueAsUUID(const TCHAR *path, int index) const
 {
    const TCHAR *value = getValue(path, nullptr, index);
    if (value != nullptr)
@@ -1004,7 +1004,7 @@ uuid Config::getValueAsUUID(const TCHAR *path, int index)
 /**
  * Get subentries
  */
-ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *mask)
+ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *mask) const
 {
    ConfigEntry *entry = getEntry(path);
    return (entry != nullptr) ? entry->getSubEntries(mask) : nullptr;
@@ -1013,7 +1013,7 @@ ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *
 /**
  * Get subentries ordered by id
  */
-ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask)
+ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask) const
 {
    ConfigEntry *entry = getEntry(path);
    return (entry != nullptr) ? entry->getOrderedSubEntries(mask) : nullptr;
@@ -1022,7 +1022,7 @@ ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const 
 /**
  * Get entry
  */
-ConfigEntry *Config::getEntry(const TCHAR *path)
+ConfigEntry *Config::getEntry(const TCHAR *path) const
 {
    if ((path == nullptr) || (*path != _T('/')))
       return nullptr;
@@ -1131,10 +1131,10 @@ bool Config::setValue(const TCHAR *path, const TCHAR *value)
  * Set value
  * Returns false on error (usually caused by incorrect path)
  */
-bool Config::setValue(const TCHAR *path, INT32 value)
+bool Config::setValue(const TCHAR *path, int32_t value)
 {
    TCHAR buffer[32];
-   _sntprintf(buffer, 32, _T("%ld"), (long) value);
+   _sntprintf(buffer, 32, _T("%d"), value);
    return setValue(path, buffer);
 }
 
@@ -1142,10 +1142,10 @@ bool Config::setValue(const TCHAR *path, INT32 value)
  * Set value
  * Returns false on error (usually caused by incorrect path)
  */
-bool Config::setValue(const TCHAR *path, UINT32 value)
+bool Config::setValue(const TCHAR *path, uint32_t value)
 {
    TCHAR buffer[32];
-   _sntprintf(buffer, 32, _T("%lu"), (unsigned long) value);
+   _sntprintf(buffer, 32, _T("%u"), value);
    return setValue(path, buffer);
 }
 
@@ -1153,7 +1153,7 @@ bool Config::setValue(const TCHAR *path, UINT32 value)
  * Set value
  * Returns false on error (usually caused by incorrect path)
  */
-bool Config::setValue(const TCHAR *path, INT64 value)
+bool Config::setValue(const TCHAR *path, int64_t value)
 {
    TCHAR buffer[32];
    _sntprintf(buffer, 32, INT64_FMT, value);
@@ -1164,7 +1164,7 @@ bool Config::setValue(const TCHAR *path, INT64 value)
  * Set value
  * Returns false on error (usually caused by incorrect path)
  */
-bool Config::setValue(const TCHAR *path, UINT64 value)
+bool Config::setValue(const TCHAR *path, uint64_t value)
 {
    TCHAR buffer[32];
    _sntprintf(buffer, 32, UINT64_FMT, value);
@@ -1223,15 +1223,13 @@ static TCHAR *FindComment(TCHAR *str)
  */
 bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
-   BYTE *xml;
-   UINT32 size;
    bool success;
-
-   xml = LoadFile(file, &size);
+   size_t size;
+   BYTE *xml = LoadFile(file, &size);
    if (xml != nullptr)
    {
       success = loadIniConfigFromMemory((char *)xml, (int)size, file, defaultIniSection, ignoreErrors);
-      free(xml);
+      MemFree(xml);
    }
    else
    {
@@ -1566,11 +1564,9 @@ bool Config::loadXmlConfigFromMemory(const char *xml, size_t xmlSize, const TCHA
  */
 bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag, bool merge)
 {
-   BYTE *xml;
-   UINT32 size;
    bool success;
-
-   xml = LoadFile(file, &size);
+   size_t size;
+   BYTE *xml = LoadFile(file, &size);
    if (xml != nullptr)
    {
       success = loadXmlConfigFromMemory((char *)xml, size, file, topLevelTag, merge);
@@ -1684,7 +1680,7 @@ void Config::addSubTree(const TCHAR *path, const ConfigEntry *root, bool merge)
 /**
  * Print config to output stream
  */
-void Config::print(FILE *file)
+void Config::print(FILE *file) const
 {
    TCHAR prefix[256] = _T("");
    if (m_root != nullptr)
@@ -1694,7 +1690,7 @@ void Config::print(FILE *file)
 /**
  * Create XML from config
  */
-String Config::createXml()
+String Config::createXml() const
 {
    StringBuffer xml;
    m_root->createXml(xml);

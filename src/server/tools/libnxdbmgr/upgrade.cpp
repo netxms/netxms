@@ -186,9 +186,9 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 	DB_RESULT hResult;
 	TCHAR *query;
 	size_t queryLen = 512;
-	BOOL success = FALSE;
+	bool success = false;
 
-	query = (TCHAR *)malloc(queryLen * sizeof(TCHAR));
+	query = MemAllocString(queryLen);
 
 	switch(g_dbSyntax)
 	{
@@ -205,16 +205,16 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 	if (!SQLQuery(query))
 	{
 	   MemFree(query);
-		return FALSE;
+		return false;
 	}
 
 	_sntprintf(query, queryLen, _T("SELECT %s,%s%s%s FROM %s WHERE %s LIKE '%%#%%'"),
 	           idColumn, column, (idColumn2 != NULL) ? _T(",") : _T(""), (idColumn2 != NULL) ? idColumn2 : _T(""), table, column);
 	hResult = SQLSelect(query);
-	if (hResult == NULL)
+	if (hResult == nullptr)
 	{
 	   MemFree(query);
-		return FALSE;
+		return false;
 	}
 
 	int count = DBGetNumRows(hResult);
@@ -228,12 +228,12 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 			if (newValue.length() + 256 > queryLen)
 			{
 				queryLen = newValue.length() + 256;
-				query = (TCHAR *)realloc(query, queryLen * sizeof(TCHAR));
+				query = MemRealloc(query, queryLen * sizeof(TCHAR));
 			}
 			if (isStringId)
 			{
-				TCHAR *id = DBGetField(hResult, i, 0, NULL, 0);
-				if (idColumn2 != NULL)
+				TCHAR *id = DBGetField(hResult, i, 0, nullptr, 0);
+				if (idColumn2 != nullptr)
 				{
 					TCHAR *id2 = DBGetField(hResult, i, 2, NULL, 0);
 					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=%s AND %s=%s"),
@@ -250,10 +250,10 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 			}
 			else
 			{
-				INT64 id = DBGetFieldInt64(hResult, i, 0);
-				if (idColumn2 != NULL)
+				int64_t id = DBGetFieldInt64(hResult, i, 0);
+				if (idColumn2 != nullptr)
 				{
-					INT64 id2 = DBGetFieldInt64(hResult, i, 2);
+				   int64_t id2 = DBGetFieldInt64(hResult, i, 2);
 					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT _T(" AND %s=") INT64_FMT,
 								  table, column, (const TCHAR *)newValue, idColumn, id, idColumn2, id2);
 				}
@@ -267,7 +267,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 				goto cleanup;
 		}
 	}
-	success = TRUE;
+	success = true;
 
 cleanup:
 	DBFreeResult(hResult);
@@ -275,9 +275,12 @@ cleanup:
 	return success;
 }
 
+/**
+ * Convert strings from # encoded form to normal form
+ */
 bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column)
 {
-	return ConvertStrings(table, idColumn, NULL, column, false);
+	return ConvertStrings(table, idColumn, nullptr, column, false);
 }
 
 /**
