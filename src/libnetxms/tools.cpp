@@ -772,11 +772,11 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
          memcpy(varName, &temp[i], len * sizeof(TCHAR));
          varName[len] = 0;
 
-         TCHAR *result = _tgetenv(varName);
-         if (result != NULL)
+         String varValue = GetEnvironmentVariableEx(varName);
+         if (!varValue.isEmpty())
          {
-            len = (int)std::min(_tcslen(result), bufSize - outpos - 1);
-            memcpy(&buffer[outpos], result, len * sizeof(TCHAR));
+            len = (int)std::min(varValue.length(), bufSize - outpos - 1);
+            memcpy(&buffer[outpos], varValue.cstr(), len * sizeof(TCHAR));
          }
          else
          {
@@ -3002,26 +3002,26 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
 {
    *dir = 0;
 
-   const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-   if (homeDir != NULL)
+   String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
+   if (!homeDir.isEmpty())
    {
 #ifdef _WIN32
       switch(type)
       {
          case nxDirBin:
-            _sntprintf(dir, MAX_PATH, _T("%s\\bin"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s\\bin"), homeDir.cstr());
             break;
          case nxDirData:
-            _sntprintf(dir, MAX_PATH, _T("%s\\var"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s\\var"), homeDir.cstr());
             break;
          case nxDirEtc:
-            _sntprintf(dir, MAX_PATH, _T("%s\\etc"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s\\etc"), homeDir.cstr());
             break;
          case nxDirLib:
-            _sntprintf(dir, MAX_PATH, _T("%s\\lib"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s\\lib"), homeDir.cstr());
             break;
          case nxDirShare:
-            _sntprintf(dir, MAX_PATH, _T("%s\\share"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s\\share"), homeDir.cstr());
             break;
          default:
             _tcslcpy(dir, homeDir, MAX_PATH);
@@ -3031,19 +3031,19 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
       switch(type)
       {
          case nxDirBin:
-            _sntprintf(dir, MAX_PATH, _T("%s/bin"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s/bin"), homeDir.cstr());
             break;
          case nxDirData:
-            _sntprintf(dir, MAX_PATH, _T("%s/var/lib/netxms"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s/var/lib/netxms"), homeDir.cstr());
             break;
          case nxDirEtc:
-            _sntprintf(dir, MAX_PATH, _T("%s/etc"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s/etc"), homeDir.cstr());
             break;
          case nxDirLib:
-            _sntprintf(dir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s/lib/netxms"), homeDir.cstr());
             break;
          case nxDirShare:
-            _sntprintf(dir, MAX_PATH, _T("%s/share/netxms"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s/share/netxms"), homeDir.cstr());
             break;
          default:
             _tcslcpy(dir, homeDir, MAX_PATH);
@@ -3822,7 +3822,7 @@ TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port,
 /**
  * Unset environment variable
  */
-static BOOL UnsetEnvVariable(const TCHAR *var)
+static BOOL UnsetEnvironmentVariable(const TCHAR *var)
 {
 #if HAVE_UNSETENV
 
@@ -3856,8 +3856,8 @@ static BOOL UnsetEnvVariable(const TCHAR *var)
  */
 BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *value)
 {
-   if (value == NULL)
-      return UnsetEnvVariable(var);
+   if (value == nullptr)
+      return UnsetEnvironmentVariable(var);
 
 #if HAVE_SETENV
 
@@ -3888,4 +3888,40 @@ BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *
 #endif //HAVE_SETENV
 }
 
+/**
+ * GetEnvironmentVariable implementation for non-Windows environments
+ */
+DWORD LIBNETXMS_EXPORTABLE GetEnvironmentVariable(const TCHAR *var, TCHAR *buffer, DWORD size)
+{
+   const TCHAR *v = _tgetenv(var);
+   if (v != nullptr)
+      _tcslcpy(buffer, v, size);
+   else
+      buffer[0] = 0;
+   return _tcslen(buffer);
+}
+
 #endif
+
+/**
+ * Get environment variable as string object. Returns empty
+ * string if variable is not found.
+ */
+String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var)
+{
+#ifdef _WIN32
+   TCHAR buffer[2048];
+   DWORD size = GetEnvironmentVariable(var, buffer, 2048);
+   if (size < 2048)
+      return (size > 0) ? String(buffer) : String();
+   // Buffer is not large enough
+   TCHAR *mbuffer = MemAllocString(size);
+   GetEnvironmentVariable(var, mbuffer, size);
+   String value = String(mbuffer);
+   MemFree(mbuffer);
+   return value;
+#else
+   const TCHAR *value = _tgetenv(var);
+   return (value != nullptr) ? String(value) : String();
+#endif
+}
