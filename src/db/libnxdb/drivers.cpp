@@ -143,7 +143,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
 	if (alreadyLoaded)
 	{
-	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Reusing already loaded database driver \"%hs\""), s_drivers[position]->m_name);
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DRIVER, _T("Reusing already loaded database driver \"%hs\""), s_drivers[position]->m_name);
 		goto reuse_driver;
 	}
 
