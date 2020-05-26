@@ -1,4 +1,11 @@
 *
+* 3.3.330
+*
+
+- Fixed issue NX-1855 (NETXMS_FILE_STORE environment variable not using FileStore agent setting)
+
+
+*
 * 3.3.323
 *
 

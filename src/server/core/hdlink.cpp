@@ -49,19 +49,13 @@ void LoadHelpDeskLink()
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, name);
-      }
-      else
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, name);
-      }
+      TCHAR libdir[MAX_PATH];
+      GetNetXMSDirectory(nxDirLib, libdir);
+      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), libdir, name);
    }
    else
    {
-      nx_strncpy(fullName, name, MAX_PATH);
+      _tcslcpy(fullName, name, MAX_PATH);
    }
    HMODULE hModule = DLOpen(fullName, errorText);
 #else

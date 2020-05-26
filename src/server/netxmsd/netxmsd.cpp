@@ -422,10 +422,10 @@ int main(int argc, char* argv[])
       RegCloseKey(hKey);
    }
 #else
-   const TCHAR *configEnv = _tgetenv(_T("NETXMSD_CONFIG"));
-   if ((configEnv != NULL) && (*configEnv != 0))
+   String configEnv = GetEnvironmentVariableEx(_T("NETXMSD_CONFIG"));
+   if (!configEnv.isEmpty())
    {
-      nx_strncpy(g_szConfigFile, configEnv, MAX_PATH);
+      _tcslcpy(g_szConfigFile, configEnv, MAX_PATH);
    }
 #endif
 

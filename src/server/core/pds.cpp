@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -132,7 +132,7 @@ static void LoadDriver(const TCHAR *file)
    TCHAR errorText[256];
 #ifdef _WIN32
    bool resetDllPath = false;
-	if (_tcschr(file, _T('\\')) == NULL)
+	if (_tcschr(file, _T('\\')) == nullptr)
 	{
 	   TCHAR path[MAX_PATH];
 	   _tcscpy(path, g_netxmsdLibDir);
@@ -143,21 +143,15 @@ static void LoadDriver(const TCHAR *file)
    HMODULE hModule = DLOpen(file, errorText);
    if (resetDllPath)
    {
-      SetDllDirectory(NULL);
+      SetDllDirectory(nullptr);
    }
 #else
 	TCHAR fullName[MAX_PATH];
-	if (_tcschr(file, _T('/')) == NULL)
+	if (_tcschr(file, _T('/')) == nullptr)
 	{
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if ((homeDir != NULL) && (*homeDir != 0))
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/pdsdrv/%s"), homeDir, file);
-      }
-      else
-      {
-		   _sntprintf(fullName, MAX_PATH, _T("%s/pdsdrv/%s"), PKGLIBDIR, file);
-      }
+	   TCHAR libdir[MAX_PATH];
+	   GetNetXMSDirectory(nxDirLib, libdir);
+      _sntprintf(fullName, MAX_PATH, _T("%s/pdsdrv/%s"), libdir, file);
 	}
 	else
 	{
@@ -166,12 +160,12 @@ static void LoadDriver(const TCHAR *file)
    HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
-   if (hModule != NULL)
+   if (hModule != nullptr)
    {
 		int *apiVersion = (int *)DLGetSymbolAddr(hModule, "pdsdrvAPIVersion", errorText);
       PerfDataStorageDriver *(* CreateInstance)() = (PerfDataStorageDriver *(*)())DLGetSymbolAddr(hModule, "pdsdrvCreateInstance", errorText);
 
-      if ((apiVersion != NULL) && (CreateInstance != NULL))
+      if ((apiVersion != nullptr) && (CreateInstance != nullptr))
       {
          if (*apiVersion == PDSDRV_API_VERSION)
          {
@@ -215,10 +209,10 @@ void LoadPerfDataStorageDrivers()
    memset(s_drivers, 0, sizeof(PerfDataStorageDriver *) * MAX_PDS_DRIVERS);
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading performance data storage drivers"));
-   for(TCHAR *curr = g_pdsLoadList, *next = NULL; curr != NULL; curr = next)
+   for(TCHAR *curr = g_pdsLoadList, *next = nullptr; curr != nullptr; curr = next)
    {
       next = _tcschr(curr, _T('\n'));
-      if (next != NULL)
+      if (next != nullptr)
       {
          *next = 0;
          next++;

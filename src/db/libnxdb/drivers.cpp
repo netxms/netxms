@@ -92,25 +92,19 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    driver->m_handle = DLOpen(module, szErrorText);
 #else
 	TCHAR fullName[MAX_PATH];
-	if (_tcscmp(module, _T(":self:")) && (_tcschr(module, _T('/')) == NULL))
+	if (_tcscmp(module, _T(":self:")) && (_tcschr(module, _T('/')) == nullptr))
 	{
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if ((homeDir != NULL) && (*homeDir != 0))
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/dbdrv/%s"), homeDir, module);
-      }
-      else
-      {
-		   _sntprintf(fullName, MAX_PATH, _T("%s/dbdrv/%s"), PKGLIBDIR, module);
-      }
+	   TCHAR libdir[MAX_PATH];
+	   GetNetXMSDirectory(nxDirLib, libdir);
+      _sntprintf(fullName, MAX_PATH, _T("%s/dbdrv/%s"), libdir, module);
 	}
 	else
 	{
 		_tcslcpy(fullName, module, MAX_PATH);
 	}
-   driver->m_handle = DLOpen(!_tcscmp(fullName, _T(":self:")) ? NULL : fullName, szErrorText);
+   driver->m_handle = DLOpen(!_tcscmp(fullName, _T(":self:")) ? nullptr : fullName, szErrorText);
 #endif
-   if (driver->m_handle == NULL)
+   if (driver->m_handle == nullptr)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Unable to load database driver module \"%s\": %s"), module, szErrorText);
 		goto failure;

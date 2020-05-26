@@ -288,32 +288,32 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-   { _T("Asterisk.Channels"), H_ChannelTable, NULL, _T("CHANNEL"), _T("Asterisk: channels") },
-   { _T("Asterisk.Channels(*)"), H_ChannelTable, NULL, _T("CHANNEL"), _T("Asterisk: channels") },
-   { _T("Asterisk.SIP.Peers"), H_SIPPeerTable, NULL, _T("NAME"), _T("Asterisk: SIP peers") },
-   { _T("Asterisk.SIP.Peers(*)"), H_SIPPeerTable, NULL, _T("NAME"), _T("Asterisk: SIP peers") },
-   { _T("Asterisk.SIP.RegistrationTests"), H_SIPRegistrationTestTable, NULL, _T("NAME"), _T("Asterisk: configured SIP registration tests") },
-   { _T("Asterisk.SIP.RegistrationTests(*)"), H_SIPRegistrationTestTable, NULL, _T("NAME"), _T("Asterisk: configured SIP registration tests") },
-   { _T("Asterisk.TaskProcessors"), H_TaskProcessorTable, NULL, _T("NAME"), _T("Asterisk: task processors") },
-   { _T("Asterisk.TaskProcessors(*)"), H_TaskProcessorTable, NULL, _T("NAME"), _T("Asterisk: task processors") }
+   { _T("Asterisk.Channels"), H_ChannelTable, nullptr, _T("CHANNEL"), _T("Asterisk: channels") },
+   { _T("Asterisk.Channels(*)"), H_ChannelTable, nullptr, _T("CHANNEL"), _T("Asterisk: channels") },
+   { _T("Asterisk.SIP.Peers"), H_SIPPeerTable, nullptr, _T("NAME"), _T("Asterisk: SIP peers") },
+   { _T("Asterisk.SIP.Peers(*)"), H_SIPPeerTable, nullptr, _T("NAME"), _T("Asterisk: SIP peers") },
+   { _T("Asterisk.SIP.RegistrationTests"), H_SIPRegistrationTestTable, nullptr, _T("NAME"), _T("Asterisk: configured SIP registration tests") },
+   { _T("Asterisk.SIP.RegistrationTests(*)"), H_SIPRegistrationTestTable, nullptr, _T("NAME"), _T("Asterisk: configured SIP registration tests") },
+   { _T("Asterisk.TaskProcessors"), H_TaskProcessorTable, nullptr, _T("NAME"), _T("Asterisk: task processors") },
+   { _T("Asterisk.TaskProcessors(*)"), H_TaskProcessorTable, nullptr, _T("NAME"), _T("Asterisk: task processors") }
 };
 
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("ASTERISK"), NETXMS_VERSION_STRING,
-	SubagentInit, SubagentShutdown, NULL, NULL,
+	SubagentInit, SubagentShutdown, nullptr, nullptr,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
 	s_lists,
    sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
    s_tables,
-   0, NULL,	// actions
-	0, NULL	// push parameters
+   0, nullptr,	// actions
+	0, nullptr	// push parameters
 };
 
 /**
@@ -321,7 +321,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(ASTERISK)
 {
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	return true;
 }
 

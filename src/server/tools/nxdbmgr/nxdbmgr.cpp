@@ -257,9 +257,9 @@ int main(int argc, char *argv[])
       RegCloseKey(hKey);
    }
 #else
-   const TCHAR *env = _tgetenv(_T("NETXMSD_CONFIG"));
-   if ((env != NULL) && (*env != 0))
-      nx_strncpy(configFile, env, MAX_PATH);
+   String envConfig = GetEnvironmentVariableEx(_T("NETXMSD_CONFIG"));
+   if (!envConfig.isEmpty())
+      _tcslcpy(configFile, envConfig, MAX_PATH);
 #endif
 
    // Search for config
@@ -278,11 +278,11 @@ int main(int argc, char *argv[])
          _tcscpy(configFile, _T("C:\\netxmsd.conf"));
       }
 #else
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if ((homeDir != NULL) && (*homeDir != 0))
+      String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
+      if (!homeDir.isEmpty())
       {
          TCHAR config[MAX_PATH];
-         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
+         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir.cstr());
 		   if (_taccess(config, 4) == 0)
 		   {
 			   _tcscpy(configFile, config);
