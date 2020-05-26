@@ -9619,8 +9619,8 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
       char *content = pRequest->getFieldAsUtf8String(VID_NXMP_CONTENT);
       if (content != nullptr)
       {
-			Config *config = new Config();
-         if (config->loadXmlConfigFromMemory(content, (int)strlen(content), nullptr, "configuration"))
+         Config config(false);
+         if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration"))
          {
             // Lock all required components
             if (LockComponent(CID_EPP, m_id, m_sessionName, nullptr, szLockInfo))
@@ -9629,9 +9629,9 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
 
                // Validate and import configuration
                dwFlags = pRequest->getFieldAsUInt32(VID_FLAGS);
-               if (ValidateConfig(config, dwFlags, szError, 1024))
+               if (ValidateConfig(&config, dwFlags, szError, 1024))
                {
-                  msg.setField(VID_RCC, ImportConfig(config, dwFlags));
+                  msg.setField(VID_RCC, ImportConfig(&config, dwFlags));
                }
                else
                {
@@ -9653,8 +9653,7 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
          {
             msg.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
          }
-			delete config;
-         free(content);
+         MemFree(content);
       }
       else
       {
