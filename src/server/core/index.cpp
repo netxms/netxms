@@ -456,8 +456,6 @@ void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data)
  * Get all objects in index. Result array created dynamically and
  * must be destroyed by the caller. Changes in result array will
  * not affect content of the index.
- *
- * @param updateRefCount if set to true, reference count for each object will be increased
  */
 SharedObjectArray<NetObj> *ObjectIndex::getObjects(bool (*filter)(NetObj *, void *), void *context)
 {
@@ -472,4 +470,20 @@ SharedObjectArray<NetObj> *ObjectIndex::getObjects(bool (*filter)(NetObj *, void
    }
    ReleaseIndex(index);
    return result;
+}
+
+/**
+ * Get all objects in index. Objects will be added to array supplied by caller.
+ */
+void ObjectIndex::getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj *, void *), void *context)
+{
+   INDEX_HEAD *index = acquireIndex();
+   for(size_t i = 0; i < index->size; i++)
+   {
+      if ((filter == nullptr) || filter(static_cast<shared_ptr<NetObj>*>(index->elements[i].object)->get(), context))
+      {
+         destination->add(*static_cast<shared_ptr<NetObj>*>(index->elements[i].object));
+      }
+   }
+   ReleaseIndex(index);
 }

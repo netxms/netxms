@@ -506,6 +506,14 @@ public:
    {
       return getObjects(reinterpret_cast<bool (*)(NetObj*, void*)>(filter), context);
    }
+
+   void getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj *, void *) = nullptr, void *context = nullptr);
+
+   template<typename C>
+   void getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj *, C *), C *context)
+   {
+      getObjects(destination, reinterpret_cast<bool (*)(NetObj*, void*)>(filter), context);
+   }
 };
 
 struct InetAddressIndexEntry;

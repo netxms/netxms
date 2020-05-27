@@ -277,7 +277,7 @@ static void QueuePredictionEngineTraining(NetObj *object, void *arg)
 /**
  * Housekeeper thread
  */
-static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
+static void HouseKeeper()
 {
    ThreadSetName("Housekeeper");
 
@@ -413,12 +413,19 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          else
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Using DELETE statements"));
-            g_idxAccessPointById.forEach(CleanDciData, hdb);
-            g_idxChassisById.forEach(CleanDciData, hdb);
-            g_idxClusterById.forEach(CleanDciData, hdb);
-            g_idxMobileDeviceById.forEach(CleanDciData, hdb);
-            g_idxNodeById.forEach(CleanDciData, hdb);
-            g_idxSensorById.forEach(CleanDciData, hdb);
+            SharedObjectArray<NetObj> objects(1024, 1024);
+            g_idxAccessPointById.getObjects(&objects);
+            g_idxChassisById.getObjects(&objects);
+            g_idxClusterById.getObjects(&objects);
+            g_idxMobileDeviceById.getObjects(&objects);
+            g_idxNodeById.getObjects(&objects);
+            g_idxSensorById.getObjects(&objects);
+
+            for(int i = 0; (i < objects.size()) && !s_shutdown; i++)
+            {
+               static_cast<DataCollectionTarget*>(objects.get(i))->cleanDCIData(hdb);
+               ThrottleHousekeeper();
+            }
          }
       }
       else
@@ -439,7 +446,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		// Validate template DCIs
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue template updates"));
-		g_idxObjectById.forEach(QueueTemplateUpdate, NULL);
+		g_idxObjectById.forEach(QueueTemplateUpdate, nullptr);
 
       // Call hooks in loaded modules
 		ENUMERATE_MODULES(pfHousekeeperHook)
@@ -452,7 +459,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		// Run training on prediction engines
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue prediction engines training"));
-		g_idxObjectById.forEach(QueuePredictionEngineTraining, NULL);
+		g_idxObjectById.forEach(QueuePredictionEngineTraining, nullptr);
 
       PostSystemEvent(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode, "t", time(nullptr) - cycleStartTime);
 
@@ -461,7 +468,6 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper thread terminated"));
-   return THREAD_OK;
 }
 
 /**
@@ -475,7 +481,7 @@ static THREAD s_thread = INVALID_THREAD_HANDLE;
 void StartHouseKeeper()
 {
    s_wakeupCondition = ConditionCreate(FALSE);
-   s_thread = ThreadCreateEx(HouseKeeper, 0, NULL);
+   s_thread = ThreadCreateEx(HouseKeeper);
 }
 
 /**

@@ -124,7 +124,7 @@ shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport 
 /**
  * NXSL "Component" class
  */
-class NXSL_ComponentClass : public NXSL_Class
+class LIBNXSRV_EXPORTABLE NXSL_ComponentClass : public NXSL_Class
 {
 public:
    NXSL_ComponentClass();
