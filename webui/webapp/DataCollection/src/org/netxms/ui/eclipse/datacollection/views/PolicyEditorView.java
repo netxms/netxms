@@ -493,7 +493,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             });
             break;
          case SessionNotification.POLICY_DELETED:
-            if (n.getSubCode() != templateId || !((AgentPolicy)n.getObject()).getGuid().equals(policyGUID))
+            if (n.getSubCode() != templateId || !policyGUID.equals(n.getObject()))
                return;
 
             display.asyncExec(new Runnable() {
