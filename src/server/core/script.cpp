@@ -302,7 +302,7 @@ uint32_t UpdateScript(const NXCPMessage *request, uint32_t *scriptId, ClientSess
       uint32_t id = ResolveScriptName(scriptName);
 
       bool newScript;
-      TCHAR *oldSource;
+      TCHAR *oldSource = nullptr;
       DB_STATEMENT hStmt;
       if (id == 0) // Create new script
       {
