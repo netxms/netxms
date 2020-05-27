@@ -121,7 +121,7 @@ NXSL_LibraryScript *NXSL_Library::findScript(const TCHAR *name)
          return script;
       }
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -171,6 +171,22 @@ NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *env)
    }
    unlock();
    return vm;
+}
+
+/**
+ * Get script dependencies
+ */
+StringList *NXSL_Library::getScriptDependencies(const TCHAR *name)
+{
+   StringList *dependencies = nullptr;
+   lock();
+   NXSL_LibraryScript *script = findScript(name);
+   if (script != nullptr)
+   {
+      dependencies = script->getProgram()->getRequiredModules();
+   }
+   unlock();
+   return dependencies;
 }
 
 /**

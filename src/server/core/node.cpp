@@ -9537,9 +9537,9 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
             msg.setFieldFromTime(baseInfoFieldId++, dco->getLastPollTime());
             baseInfoFieldId += 4;
             extraInfoFieldId += 1000;
-            if(dco->isAdvancedSchedule())
+            if (dco->isAdvancedSchedule())
             {
-               dco->fillScheduleInMessage(extraInfoFieldId, &msg);
+               dco->fillSchedulingDataMessage(&msg, extraInfoFieldId);
             }
             extraInfoFieldId += 100;
             count++;

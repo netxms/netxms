@@ -722,13 +722,13 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
       TCHAR *name = s.readString();
       if (name == NULL)
       {
-         nx_strncpy(errMsg, _T("Binary file read error (modules section)"), errMsgSize);
+         _tcslcpy(errMsg, _T("Binary file read error (modules section)"), errMsgSize);
          goto failure;
       }
 
       NXSL_ModuleImport *module = new NXSL_ModuleImport();
-      nx_strncpy(module->name, name, MAX_PATH);
-      free(name);
+      _tcslcpy(module->name, name, MAX_PATH);
+      MemFree(name);
       module->lineNumber = s.readInt32();
 
       p->m_requiredModules->add(module);
@@ -739,13 +739,13 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
    while(!s.eos())
    {
       char *name = s.readStringUtf8();
-      if (name == NULL)
+      if (name == nullptr)
       {
-         nx_strncpy(errMsg, _T("Binary file read error (functions section)"), errMsgSize);
+         _tcslcpy(errMsg, _T("Binary file read error (functions section)"), errMsgSize);
          goto failure;
       }
       p->m_functions->add(new NXSL_Function(name, s.readUInt32()));
-      free(name);
+      MemFree(name);
    }
 
    for(int i = 0; i < constants.size(); i++)
@@ -758,5 +758,16 @@ failure:
       p->destroyValue(constants.get(i));
 
    delete p;
-   return NULL;
+   return nullptr;
+}
+
+/**
+ * Get list of required module names
+ */
+StringList *NXSL_Program::getRequiredModules() const
+{
+   StringList *modules = new StringList();
+   for(int i = 0; i < m_requiredModules->size(); i++)
+      modules->add(m_requiredModules->get(i)->name);
+   return modules;
 }

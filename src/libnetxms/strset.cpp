@@ -211,6 +211,15 @@ void StringSet::addAll(const StringSet *src)
 }
 
 /**
+ * Add all entries from source list
+ */
+void StringSet::addAll(const StringList *src)
+{
+   for(int i = 0; i < src->size(); i++)
+      add(src->get(i));
+}
+
+/**
  * Add all entries from TCHAR pointer arrays
  */
 void StringSet::addAll(TCHAR **strings, int count)

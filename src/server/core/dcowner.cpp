@@ -898,30 +898,14 @@ IntegerArray<UINT32> *DataCollectionOwner::getDCIEventsList() const
  */
 StringSet *DataCollectionOwner::getDCIScriptList() const
 {
-   StringSet *list = new StringSet;
-
+   StringSet *scripts = new StringSet();
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
-      DCObject *o = m_dcObjects->get(i);
-      if (o->getDataSource() == DS_SCRIPT)
-      {
-         const TCHAR *name = o->getName();
-         const TCHAR *p = _tcschr(name, _T('('));
-         if (p != NULL)
-         {
-            TCHAR buffer[256];
-            _tcslcpy(buffer, name, p - name + 1);
-            list->add(buffer);
-         }
-         else
-         {
-            list->add(name);
-         }
-      }
+      m_dcObjects->get(i)->getScriptDependencies(scripts);
    }
    unlockDciAccess();
-   return list;
+   return scripts;
 }
 
 /**

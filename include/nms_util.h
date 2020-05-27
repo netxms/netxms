@@ -1853,6 +1853,8 @@ public:
 
    void addAll(const StringSet *src);
    void addAll(const StringSet &src) { addAll(&src); }
+   void addAll(const StringList *src);
+   void addAll(const StringList &src) { addAll(&src); }
    void addAll(TCHAR **strings, int count);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
    void addAllPreallocated(TCHAR **strings, int count);

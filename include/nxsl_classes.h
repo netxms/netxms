@@ -930,6 +930,7 @@ public:
 
    uint32_t getCodeSize() const { return m_instructionSet->size(); }
    bool isEmpty() const { return m_instructionSet->isEmpty() || ((m_instructionSet->size() == 1) && (m_instructionSet->get(0)->m_opCode == 28)); }
+   StringList *getRequiredModules() const;
 
    void dump(FILE *fp) { dump(fp, m_instructionSet); }
    static void dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructionSet);
@@ -996,6 +997,7 @@ public:
    NXSL_Program *findNxslProgram(const TCHAR *name);
    NXSL_LibraryScript *findScript(UINT32 id);
    NXSL_LibraryScript *findScript(const TCHAR *name);
+   StringList *getScriptDependencies(const TCHAR *name);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(void*), bool (*scriptValidator)(NXSL_LibraryScript*, void*), void *context);
 

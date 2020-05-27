@@ -1575,15 +1575,90 @@ shared_ptr<DCObjectInfo> DCObject::createDescriptorInternal() const
    return shared_ptr<DCObjectInfo>(new DCObjectInfo(this));
 }
 
-void DCObject::fillScheduleInMessage(uint32_t base, NXCPMessage *msg) const
+/**
+ * Fill message with scheduling data
+ */
+void DCObject::fillSchedulingDataMessage(NXCPMessage *msg, uint32_t base) const
 {
    msg->setField(base++, m_schedules->size());
-
    for(int i = 0; i < m_schedules->size(); i++)
    {
       msg->setField(base++, m_schedules->get(i));
    }
+}
 
+/**
+ * Add dependencies from library script with given name (and given script itself)
+ */
+static void AddScriptDependencies(StringSet *dependencies, const TCHAR *name)
+{
+   TCHAR buffer[256];
+   const TCHAR *p = _tcschr(name, _T('('));
+   const TCHAR *scriptName;
+   if (p != nullptr)
+   {
+      _tcslcpy(buffer, name, p - name + 1);
+      scriptName = buffer;
+   }
+   else
+   {
+      scriptName = name;
+   }
+   dependencies->add(scriptName);
+
+   StringList *scriptDependencies = GetServerScriptLibrary()->getScriptDependencies(scriptName);
+   if (dependencies != nullptr)
+   {
+      for(int i = 0; i < scriptDependencies->size(); i++)
+      {
+         const TCHAR *s = scriptDependencies->get(i);
+         if (!dependencies->contains(s))  // To avoid infinite loop on circular reference
+         {
+            dependencies->add(s);
+            AddScriptDependencies(dependencies, s);
+         }
+      }
+      delete scriptDependencies;
+   }
+}
+
+/**
+ * Add dependencies from compiled script
+ */
+static void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *script)
+{
+   if (script != nullptr)
+   {
+      StringList *modules = script->getRequiredModules();
+      if (modules != nullptr)
+      {
+         for(int i = 0; i < modules->size(); i++)
+         {
+            const TCHAR *s = modules->get(i);
+            if (!dependencies->contains(s))  // To avoid infinite loop on circular reference
+            {
+               dependencies->add(s);
+               AddScriptDependencies(dependencies, s);
+            }
+         }
+         delete modules;
+      }
+   }
+}
+
+/**
+ * Get all script dependencies for this object
+ */
+void DCObject::getScriptDependencies(StringSet *dependencies) const
+{
+   if (m_source == DS_SCRIPT)
+      AddScriptDependencies(dependencies, m_name);
+
+   if (m_instanceDiscoveryMethod == IDM_SCRIPT)
+      AddScriptDependencies(dependencies, m_instanceDiscoveryData);
+
+   AddScriptDependencies(dependencies, m_transformationScript);
+   AddScriptDependencies(dependencies, m_instanceFilter);
 }
 
 /**

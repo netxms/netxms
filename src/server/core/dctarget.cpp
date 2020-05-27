@@ -1587,9 +1587,9 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
       info->extraInfoFieldId += 1000;
    }
 
-   if(dco->isAdvancedSchedule())
+   if (dco->isAdvancedSchedule())
    {
-      dco->fillScheduleInMessage(info->extraInfoFieldId, info->msg);
+      dco->fillSchedulingDataMessage(info->msg, info->extraInfoFieldId);
    }
    info->extraInfoFieldId += 100;
 

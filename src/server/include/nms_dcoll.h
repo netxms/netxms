@@ -297,7 +297,7 @@ protected:
    SharedString m_instance;
    IntegerArray<UINT32> *m_accessList;
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
-   INT32 m_instanceRetentionTime;      // Retention time if instance is not found
+   int32_t m_instanceRetentionTime;      // Retention time if instance is not found
    time_t m_startTime;                 // Time to start data collection
    uint32_t m_relatedObject;
 
@@ -383,14 +383,14 @@ public:
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
-	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
+	bool isScheduledForDeletion() const { return m_scheduledForDeletion ? true : false; }
    void setLastPollTime(time_t lastPoll) { m_lastPoll = lastPoll; }
    void setStatus(int status, bool generateEvent);
    void setBusyFlag() { m_busy = 1; }
    void clearBusyFlag() { m_busy = 0; }
    void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
    void updateTimeIntervals() { lock(); updateTimeIntervalsInternal(); unlock(); }
-   void fillScheduleInMessage(uint32_t base, NXCPMessage *msg) const;
+   void fillSchedulingDataMessage(NXCPMessage *msg, uint32_t base) const;
 
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
@@ -402,6 +402,7 @@ public:
 
    virtual void getEventList(IntegerArray<UINT32> *eventList) = 0;
    virtual void createExportRecord(StringBuffer &xml) = 0;
+   virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson();
 
    NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
@@ -411,9 +412,9 @@ public:
    bool isForcePollRequested() { return m_doForcePoll; }
 	bool prepareForDeletion();
 
-	WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
+	uint16_t getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
 	SharedString getInstanceDiscoveryData() const { return GetAttributeWithLock(m_instanceDiscoveryData, m_hMutex); }
-   INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
+   int32_t getInstanceRetentionTime() const { return m_instanceRetentionTime; }
    StringObjectMap<InstanceDiscoveryData> *filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { lock(); m_instanceDiscoveryData = data; unlock(); }
@@ -423,7 +424,7 @@ public:
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
-   void setRelatedObject(UINT32 relatedObject) { m_relatedObject = relatedObject; }
+   void setRelatedObject(uint32_t relatedObject) { m_relatedObject = relatedObject; }
 
 	static int m_defaultRetentionTime;
 	static int m_defaultPollingInterval;
