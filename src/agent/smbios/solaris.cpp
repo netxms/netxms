@@ -22,7 +22,7 @@
 
 static BYTE *SMBIOS_Reader(size_t *biosSize)
 {
-   UINT32 fileSize;
+   size_t fileSize;
    BYTE *data = LoadFileA("/dev/smbios", &fileSize);
    if (data == nullptr)
       return nullptr;
