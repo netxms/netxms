@@ -32,7 +32,6 @@ BEGIN TRANSACTION;
 #include "events.in"
 #include "policy.in"
 #include "traps.in"
-#include "objtools.in"
 #include "scripts.in"
 #include "images.in"
 #include "country_codes.in"
