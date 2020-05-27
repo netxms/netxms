@@ -71,29 +71,27 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
    return ptr + 1;
 }
 
-
-//
-// Execute SQL batch file
-//
-
+/**
+ * Execute SQL batch file
+ */
 BOOL ExecSQLBatch(DB_HANDLE hConn, TCHAR *pszFile)
 {
-   BYTE *pBatch, *pQuery, *pNext;
-   UINT32 dwSize;
+   BYTE *pQuery, *pNext;
    BOOL bResult = FALSE;
 
-   pBatch = LoadFile(pszFile, &dwSize);
+   size_t size;
+   BYTE *pBatch = LoadFile(pszFile, &size);
    if (pBatch != NULL)
    {
-      for(pQuery = pBatch; pQuery < pBatch + dwSize; pQuery = pNext)
+      for(pQuery = pBatch; pQuery < pBatch + size; pQuery = pNext)
       {
-         pNext = FindEndOfQuery(pQuery, pBatch + dwSize);
+         pNext = FindEndOfQuery(pQuery, pBatch + size);
          if (!IsEmptyQuery((char *)pQuery))
          {
 #ifdef UNICODE
 				WCHAR *wquery = WideStringFromMBString((char *)pQuery);
             bResult = DBQuery(hConn, wquery);
-				free(wquery);
+				MemFree(wquery);
 #else
             bResult = DBQuery(hConn, (char *)pQuery);
 #endif
