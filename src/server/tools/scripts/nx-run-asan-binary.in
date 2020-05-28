@@ -23,7 +23,8 @@ if [ "$1" == "-ndd" ]; then
 	NDDS=`ls $PKGLIBDIR/ndd/*.ndd -1 | xargs`
 fi
 
-BINARY="$BINDIR/$1"
+BINARY_NAME="$1"
+BINARY="$BINDIR/$BINARY_NAME"
 LIBASAN=`ldd $BINARY | grep libasan | cut -d '>' -f 2 | cut -d '(' -f 1 | xargs`
 if [ "x$LIBASAN" == "x" ]; then
 	echo "*** $BINARY was built without address sanitizer support"
@@ -36,32 +37,75 @@ ASAN_OPTIONS="detect_odr_violation=1${ASAN_OPTIONS:+:}${ASAN_OPTIONS}"
 # Remove binary name from argument list
 shift
 
+# Determine default config file name
+if [ "$BINARY_NAME" == "nxagentd" ]; then
+	CONFIG_NAME="nxagentd"
+else
+	CONFIG_NAME="netxmsd"
+fi
+
 # Check for config specified with -c
 CONFIG=`getopt -q -- c: "$@" | sed -e 's,--.*,,' | cut -d "'" -f 2 | xargs`
 if [ "x$CONFIG" == "x" ]; then
-	CONFIG="$SYSCONFDIR/netxmsd.conf"
+	CONFIG="$SYSCONFDIR/$CONFIG_NAME.conf"
 	if [ ! -f "$CONFIG" ]; then
-		CONFIG="/etc/netxmsd.conf"
+		CONFIG="/etc/$CONFIG_NAME.conf"
 	fi
 fi
 
 if [ -f "$CONFIG" ]; then
 	echo "*** Using configuration file $CONFIG"
 
-	DRIVERS=`cat $CONFIG | grep -v '#' | grep DBDriver | cut -d '=' -f 2 | xargs`
+	echo "*** Building database driver preload list"
+	DRIVERS=`cat $CONFIG | grep -v '#' | grep -i DBDriver | cut -d '=' -f 2 | xargs`
+	# Both agent and server can implicitly load sqlite.ddr
+	DRIVERS="sqlite.ddr $DRIVERS"
 	for DRIVER in $DRIVERS; do
-		LD_PRELOAD="$LD_PRELOAD:$PKGLIBDIR/dbdrv/$DRIVER"
+		if echo $DRIVER | grep -q /; then
+			FILE="$DRIVER"
+		else
+			FILE="$PKGLIBDIR/dbdrv/$DRIVER"
+		fi
+		if file -L $FILE | grep ELF; then
+			LD_PRELOAD="$LD_PRELOAD:$FILE"
+		fi
 	done
 
-	MODULES=`cat $CONFIG | grep -v '#' | grep Module | cut -d '=' -f 2 | xargs`
-	for MODULE in $MODULES; do
-		MODULE=`echo $MODULE | cut -d ',' -f 1`
-		LD_PRELOAD="$LD_PRELOAD:$PKGLIBDIR/$MODULE"
-	done
+	if [ "$BINARY_NAME" == "nxagentd" ]; then
+		echo "*** Building subagents preload list"
+		SUBAGENTS=`cat $CONFIG | grep -v '#' | grep -i SubAgent | cut -d '=' -f 2 | xargs`
+		PLATFORM=`uname -s | tr '[:upper:]' '[:lower:]'`
+		SUBAGENTS="$PLATFORM.nsm $SUBAGENTS"
+		for SUBAGENT in $SUBAGENTS; do
+			if echo $SUBAGENT | grep -q /; then
+				FILE="$SUBAGENT"
+			else
+				FILE="$PKGLIBDIR/$SUBAGENT"
+			fi
+			if file -L $FILE | grep ELF; then
+				LD_PRELOAD="$LD_PRELOAD:$FILE"
+			fi
+		done
+	else
+		echo "*** Building modules preload list"
+		MODULES=`cat $CONFIG | grep -v '#' | grep -i Module | cut -d '=' -f 2 | xargs`
+		for MODULE in $MODULES; do
+			MODULE=`echo $MODULE | cut -d ',' -f 1`
+			if echo $MODULE | grep -q /; then
+				FILE="$MODULE"
+			else
+				FILE="$PKGLIBDIR/$MODULE"
+			fi
+			if file -L $FILE | grep ELF; then
+				LD_PRELOAD="$LD_PRELOAD:$FILE"
+			fi
+		done
 
-	for NDD in $NDDS; do
-		LD_PRELOAD="$LD_PRELOAD:$NDD"
-	done
+		echo "*** Building network device drivers preload list"
+		for NDD in $NDDS; do
+			LD_PRELOAD="$LD_PRELOAD:$NDD"
+		done
+	fi
 fi
 
 LSAN_SUPPRESSIONS_FILE="$DATADIR/lsan-suppressions.txt"
