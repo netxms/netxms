@@ -350,7 +350,12 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Abort if cannot bind to socket
    if (bindFailures == 2)
    {
-      exit(1);
+      nxlog_write(NXLOG_ERROR, _T("Cannot bind at least one socket, terminating agent process"));
+#ifdef _WIN32
+      ExitProcess(99);
+#else
+      _exit(99);
+#endif
    }
 
    // Set up queue
