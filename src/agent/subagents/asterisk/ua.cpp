@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,9 +23,18 @@
 #include <eXosip2/eXosip.h>
 
 /**
+ * Destroy exosip context
+ */
+static inline void eXosip_free(struct eXosip_t *ctx)
+{
+   eXosip_quit(ctx);
+   osip_free(ctx);
+}
+
+/**
  * Do SIP client registration
  */
-static INT32 RegisterSIPClient(const char *login, const char *password, const char *domain, const char *proxy, int *status)
+static int32_t RegisterSIPClient(const char *login, const char *password, const char *domain, const char *proxy, int *status)
 {
    *status = 400; // default status for client-side errors
 
@@ -33,7 +42,7 @@ static INT32 RegisterSIPClient(const char *login, const char *password, const ch
    snprintf(uri, 256, "sip:%s@%s", login, domain);
 
    struct eXosip_t *ctx = eXosip_malloc();
-   if (ctx == NULL)
+   if (ctx == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("RegisterSIPClient(%hs via %hs): call to eXosip_malloc() failed"), uri, proxy);
       return -1;
@@ -41,6 +50,7 @@ static INT32 RegisterSIPClient(const char *login, const char *password, const ch
 
    if (eXosip_init(ctx) != 0)
    {
+      osip_free(ctx);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("RegisterSIPClient(%hs via %hs): call to eXosip_init() failed"), uri, proxy);
       return -1;
    }
@@ -48,23 +58,23 @@ static INT32 RegisterSIPClient(const char *login, const char *password, const ch
    eXosip_set_user_agent(ctx, "NetXMS/" NETXMS_BUILD_TAG_A);
 
    // open a UDP socket
-   if (eXosip_listen_addr(ctx, IPPROTO_UDP, NULL, 0, AF_INET, 0) != 0)
+   if (eXosip_listen_addr(ctx, IPPROTO_UDP, nullptr, 0, AF_INET, 0) != 0)
    {
-      eXosip_quit(ctx);
+      eXosip_free(ctx);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("RegisterSIPClient(%hs via %hs): call to eXosip_listen_addr() failed"), uri, proxy);
       return -1;
    }
 
    eXosip_lock(ctx);
 
-   eXosip_add_authentication_info(ctx, login, login, password, NULL, NULL);
+   eXosip_add_authentication_info(ctx, login, login, password, nullptr, nullptr);
 
-   osip_message_t *regmsg = NULL;
+   osip_message_t *regmsg = nullptr;
    int registrationId = eXosip_register_build_initial_register(ctx, uri, proxy, uri, 300, &regmsg);
    if (registrationId < 0)
    {
       eXosip_unlock(ctx);
-      eXosip_quit(ctx);
+      eXosip_free(ctx);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("RegisterSIPClient(%hs via %hs): call to eXosip_register_build_initial_register() failed"), uri, proxy);
       return -1;
    }
@@ -75,7 +85,7 @@ static INT32 RegisterSIPClient(const char *login, const char *password, const ch
 
    if (rc != 0)
    {
-      eXosip_quit(ctx);
+      eXosip_free(ctx);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("RegisterSIPClient(%hs via %hs): call to eXosip_register_send_register() failed"), uri, proxy);
       return -1;
    }
@@ -92,14 +102,14 @@ static INT32 RegisterSIPClient(const char *login, const char *password, const ch
       if (evt == NULL)
          continue;
 
-      if ((evt->type == EXOSIP_REGISTRATION_FAILURE) && (evt->response != NULL) &&
+      if ((evt->type == EXOSIP_REGISTRATION_FAILURE) && (evt->response != nullptr) &&
           ((evt->response->status_code == 401) || (evt->response->status_code == 407)))
       {
          nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): registration failed with status code %03d (will retry)"),
                   uri, proxy, evt->response->status_code);
          eXosip_default_action(ctx, evt);
-         eXosip_event_free(evt);
          *status = evt->response->status_code;
+         eXosip_event_free(evt);
          continue;
       }
 
@@ -115,7 +125,7 @@ static INT32 RegisterSIPClient(const char *login, const char *password, const ch
 
       if (evt->type != EXOSIP_MESSAGE_PROCEEDING)
       {
-         int statusCode = (evt->response != NULL) ? evt->response->status_code : 408;
+         int statusCode = (evt->response != nullptr) ? evt->response->status_code : 408;
          nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): registration failed with status code %03d (will not retry)"), uri, proxy, statusCode);
          eXosip_event_free(evt);
          *status = statusCode;
@@ -125,7 +135,7 @@ static INT32 RegisterSIPClient(const char *login, const char *password, const ch
       eXosip_event_free(evt);
    }
 
-   eXosip_quit(ctx);
+   eXosip_free(ctx);
    return success ? elapsedTime : -1;
 }
 
@@ -215,7 +225,8 @@ void SIPRegistrationTest::run()
  */
 void SIPRegistrationTest::start()
 {
-   ThreadPoolScheduleRelative(g_asteriskThreadPool, m_interval, this, &SIPRegistrationTest::run);
+   // First run in 5 seconds, then repeat with configured intervals
+   ThreadPoolScheduleRelative(g_asteriskThreadPool, 5, this, &SIPRegistrationTest::run);
 }
 
 /**

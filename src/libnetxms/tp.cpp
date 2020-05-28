@@ -29,8 +29,8 @@
 /**
  * Wait time watermarks (milliseconds)
  */
-static UINT32 s_waitTimeHighWatermark = 200;
-static UINT32 s_waitTimeLowWatermark = 100;
+static uint32_t s_waitTimeHighWatermark = 200;
+static uint32_t s_waitTimeLowWatermark = 100;
 
 /**
  * Thread pool maintenance thread responsiveness
@@ -143,8 +143,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
    while(true)
    {
       WorkRequest *rq = static_cast<WorkRequest*>(q->getOrBlock(p->workerIdleTimeout));
-
-      if (rq == NULL)
+      if (rq == nullptr)
       {
          if (p->shutdownMode)
          {
@@ -175,7 +174,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
          break;
       }
       
-      if (rq->func == NULL) // stop indicator
+      if (rq->func == nullptr) // stop indicator
          break;
       
       int64_t waitTime = GetCurrentTimeMs() - rq->queueTime;
@@ -392,7 +391,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    ConditionDestroy(p->maintThreadWakeup);
 
    WorkRequest rq;
-   rq.func = NULL;
+   rq.func = nullptr;
    rq.queueTime = GetCurrentTimeMs();
    MutexLock(p->mutex);
    int count = p->threads->size();
@@ -400,7 +399,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
       p->queue->put(&rq);
    MutexUnlock(p->mutex);
 
-   p->threads->forEach(ThreadPoolDestroyCallback, NULL);
+   p->threads->forEach(ThreadPoolDestroyCallback, nullptr);
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Thread pool %s destroyed"), p->name);
    p->threads->setOwner(Ownership::True);
