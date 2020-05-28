@@ -106,6 +106,7 @@ std::string InfluxDBStorageDriver::normalizeString(std::string str)
    std::replace(str.begin(), str.end(), '-', '_');
    std::replace(str.begin(), str.end(), ',', '_');
    std::replace(str.begin(), str.end(), '#', '_');
+   std::replace(str.begin(), str.end(), '\\', '/');
    size_t index = str.find('(');
    if (index != std::string::npos)
       str.resize(index);
@@ -446,6 +447,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    // Host
    std::string host = getString(dci->getOwner()->getName());
    std::replace(host.begin(), host.end(), ' ', '_');
+   std::replace(host.begin(), host.end(), ',', '_');
    std::replace(host.begin(), host.end(), ':', '_');
    findAndReplaceAll(host, "__", "_");
    toLowerCase(host);
