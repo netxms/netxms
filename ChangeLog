@@ -19,6 +19,14 @@
 
 
 *
+* 3.3.340
+*
+
+- Fixed bugs in SIP registration testing in Asterisk subagent
+- Fixed memory leak in Asterisk subagent
+
+
+*
 * 3.3.330
 *
 
