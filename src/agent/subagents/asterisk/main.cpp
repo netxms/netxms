@@ -255,6 +255,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Asterisk.SIP.Peers.Unreachable(*)"), H_SIPPeerStats, _T("R"), DCI_DT_UINT, _T("Asterisk: unreachable SIP peers") },
    { _T("Asterisk.SIP.RegistrationTest.ElapsedTime(*)"), H_SIPRegistrationTestData, _T("E"), DCI_DT_INT, _T("Asterisk: SIP client registration test {instance} elapsed time") },
    { _T("Asterisk.SIP.RegistrationTest.Status(*)"), H_SIPRegistrationTestData, _T("S"), DCI_DT_INT, _T("Asterisk: SIP client registration test {instance} status") },
+   { _T("Asterisk.SIP.RegistrationTest.StatusText(*)"), H_SIPRegistrationTestData, _T("s"), DCI_DT_STRING, _T("Asterisk: SIP client registration test {instance} status text") },
    { _T("Asterisk.SIP.RegistrationTest.Timestamp(*)"), H_SIPRegistrationTestData, _T("T"), DCI_DT_INT64, _T("Asterisk: SIP client registration test {instance} timestamp") },
    { _T("Asterisk.SIP.TestRegistration(*)"), H_SIPTestRegistration, NULL, DCI_DT_INT, _T("Asterisk: ad-hoc SIP client registration test") },
    { _T("Asterisk.TaskProcessor.HighWatermark(*)"), H_TaskProcessorDetails, _T("H"), DCI_DT_UINT, _T("Asterisk: task processor {instance} high watermark") },

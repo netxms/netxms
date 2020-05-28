@@ -23,6 +23,90 @@
 #include <eXosip2/eXosip.h>
 
 /**
+ * SIP status codes
+ */
+static CodeLookupElement s_sipStatusCodes[] =
+{
+   { 100, _T("Trying") },
+   { 180, _T("Ringing") },
+   { 181, _T("Call is Being Forwarded") },
+   { 182, _T("Queued") },
+   { 183, _T("Session Progress") },
+   { 199, _T(" Early Dialog Terminated") },
+   { 200, _T("OK") },
+   { 202, _T("Accepted") },
+   { 204, _T("No Notification") },
+   { 300, _T("Multiple Choices") },
+   { 301, _T("Moved Permanently") },
+   { 302, _T("Moved Temporarily") },
+   { 305, _T("Use Proxy") },
+   { 380, _T("Alternative Service") },
+   { 400, _T("Bad Request") },
+   { 401, _T("Unauthorized") },
+   { 402, _T("Payment Required") },
+   { 403, _T("Forbidden") },
+   { 404, _T("Not Found") },
+   { 405, _T("Method Not Allowed") },
+   { 406, _T("Not Acceptable") },
+   { 407, _T("Proxy Authentication Required") },
+   { 408, _T("Request Timeout") },
+   { 409, _T("Conflict") },
+   { 410, _T("Gone") },
+   { 411, _T("Length Required") },
+   { 412, _T("Conditional Request Failed") },
+   { 413, _T("Request Entity Too Large") },
+   { 414, _T("Request-URI Too Long") },
+   { 415, _T("Unsupported Media Type") },
+   { 416, _T("Unsupported URI Scheme") },
+   { 417, _T("Unknown Resource-Priority") },
+   { 420, _T("Bad Extension") },
+   { 421, _T("Extension Required") },
+   { 422, _T("Session Interval Too Small") },
+   { 423, _T("Interval Too Brief") },
+   { 424, _T("Bad Location Information") },
+   { 428, _T("Use Identity Header") },
+   { 429, _T("Provide Referrer Identity") },
+   { 430, _T("Flow Failed") },
+   { 433, _T("Anonymity Disallowed") },
+   { 436, _T("Bad Identity-Info") },
+   { 437, _T("Unsupported Certificate") },
+   { 438, _T("Invalid Identity Header") },
+   { 439, _T("First Hop Lacks Outbound Support") },
+   { 440, _T("Max-Breadth Exceeded") },
+   { 469, _T("Bad Info Package") },
+   { 470, _T("Consent Needed") },
+   { 480, _T("Temporarily Unavailable") },
+   { 481, _T("Call/Transaction Does Not Exist") },
+   { 482, _T("Loop Detected") },
+   { 483, _T("Too Many Hops") },
+   { 484, _T("Address Incomplete") },
+   { 485, _T("Ambiguous") },
+   { 486, _T("Busy Here") },
+   { 487, _T("Request Terminated") },
+   { 488, _T("Not Acceptable Here") },
+   { 489, _T("Bad Event") },
+   { 491, _T("Request Pending") },
+   { 493, _T("Undecipherable") },
+   { 494, _T("Security Agreement Required") },
+   { 500, _T("Internal Server Error") },
+   { 501, _T("Not Implemented") },
+   { 502, _T("Bad Gateway") },
+   { 503, _T("Service Unavailable") },
+   { 504, _T("Server Time-out") },
+   { 505, _T("Version Not Supported") },
+   { 513, _T("Message Too Large") },
+   { 555, _T("Push Notification Service Not Supported") },
+   { 580, _T("Precondition Failure") },
+   { 600, _T("Busy Everywhere") },
+   { 603, _T("Decline") },
+   { 604, _T("Does Not Exist Anywhere") },
+   { 606, _T("Not Acceptable") },
+   { 607, _T("Unwanted") },
+   { 608, _T("Rejected") },
+   { 0, nullptr }
+};
+
+/**
  * Destroy exosip context
  */
 static inline void eXosip_free(struct eXosip_t *ctx)
@@ -79,7 +163,7 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
       return -1;
    }
 
-   INT64 startTime = GetCurrentTimeMs();
+   int64_t startTime = GetCurrentTimeMs();
    int rc = eXosip_register_send_register(ctx, registrationId, regmsg);
    eXosip_unlock(ctx);
 
@@ -91,7 +175,7 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
    }
 
    bool success = false;
-   INT32 elapsedTime;
+   int32_t elapsedTime;
    while(true)
    {
       eXosip_event_t *evt = eXosip_event_wait(ctx, 0, 100);
@@ -99,8 +183,10 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
       eXosip_execute(ctx);
       eXosip_automatic_action(ctx);
 
-      if (evt == NULL)
+      if (evt == nullptr)
          continue;
+
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): event %d"), uri, proxy, static_cast<int>(evt->type));
 
       if ((evt->type == EXOSIP_REGISTRATION_FAILURE) && (evt->response != nullptr) &&
           ((evt->response->status_code == 401) || (evt->response->status_code == 407)))
@@ -115,7 +201,7 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
 
       if (evt->type == EXOSIP_REGISTRATION_SUCCESS)
       {
-         elapsedTime = static_cast<INT32>(GetCurrentTimeMs() - startTime);
+         elapsedTime = static_cast<int32_t>(GetCurrentTimeMs() - startTime);
          nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): registration successful"), uri, proxy);
          success = true;
          eXosip_event_free(evt);
@@ -163,18 +249,52 @@ LONG H_SIPTestRegistration(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
  */
 SIPRegistrationTest::SIPRegistrationTest(ConfigEntry *config, const char *defaultProxy)
 {
-   m_name = _tcsdup(config->getName());
+   m_name = MemCopyString(config->getName());
 #ifdef UNICODE
    m_login = UTF8StringFromWideString(config->getSubEntryValue(L"Login", 0, L"netxms"));
    m_password = UTF8StringFromWideString(config->getSubEntryValue(L"Password", 0, L"netxms"));
    m_domain = UTF8StringFromWideString(config->getSubEntryValue(L"Domain", 0, L""));
-   const WCHAR *proxy = config->getSubEntryValue(L"Proxy", 0, NULL);
-   m_proxy = (proxy != NULL) ? UTF8StringFromWideString(proxy) : strdup(defaultProxy);
+   const WCHAR *proxy = config->getSubEntryValue(L"Proxy", 0, nullptr);
+   if (proxy != nullptr)
+   {
+      if (!wcsncmp(proxy, L"sip:", 4))
+      {
+         m_proxy = UTF8StringFromWideString(proxy);
+      }
+      else
+      {
+         size_t len = wchar_utf8len(proxy, -1) + 5;
+         m_proxy = MemAllocStringA(len);
+         memcpy(m_proxy, "sip:", 4);
+         wchar_to_utf8(proxy, -1, &m_proxy[4], len);
+      }
+   }
+   else
+   {
+      m_proxy = MemCopyStringA(defaultProxy);
+   }
 #else
-   m_login = strdup(config->getSubEntryValue("Login", 0, "netxms"));
-   m_password = strdup(config->getSubEntryValue("Password", 0, "netxms"));
-   m_domain = strdup(config->getSubEntryValue("Domain", 0, ""));
-   m_proxy = strdup(config->getSubEntryValue("Proxy", 0, defaultProxy));
+   m_login = MemCopyStringA(config->getSubEntryValue("Login", 0, "netxms"));
+   m_password = MemCopyStringA(config->getSubEntryValue("Password", 0, "netxms"));
+   m_domain = MemCopyStringA(config->getSubEntryValue("Domain", 0, ""));
+   const char *proxy = config->getSubEntryValue("Proxy", 0, nullptr);
+   if (proxy != nullptr)
+   {
+      if (!strncmp(proxy, "sip:", 4))
+      {
+         m_proxy = MemCopyStringA(proxy);
+      }
+      else
+      {
+         m_proxy = MemAllocStringA(strlen(proxy) + 5);
+         memcpy(m_proxy, "sip:", 4);
+         strcpy(&m_proxy[4], proxy);
+      }
+   }
+   else
+   {
+      m_proxy = MemCopyStringA(defaultProxy);
+   }
 #endif
    m_interval = config->getSubEntryValueAsUInt(_T("Interval"), 0, 300) * 1000;
    m_lastRunTime = 0;
@@ -263,6 +383,7 @@ LONG H_SIPRegistrationTestTable(const TCHAR *param, const TCHAR *arg, Table *val
    value->addColumn(_T("PROXY"), DCI_DT_STRING, _T("Proxy"));
    value->addColumn(_T("INTERVAL"), DCI_DT_INT, _T("Proxy"));
    value->addColumn(_T("STATUS"), DCI_DT_INT, _T("Status"));
+   value->addColumn(_T("STATUS_TEXT"), DCI_DT_STRING, _T("Status Text"));
    value->addColumn(_T("ELAPSED_TIME"), DCI_DT_INT, _T("Elapsed Time"));
    value->addColumn(_T("TIMESTAMP"), DCI_DT_INT64, _T("Timestamp"));
 
@@ -277,8 +398,9 @@ LONG H_SIPRegistrationTestTable(const TCHAR *param, const TCHAR *arg, Table *val
       value->set(3, t->getProxy());
       value->set(4, t->getInterval());
       value->set(5, t->getStatus());
-      value->set(6, t->getElapsedTime());
-      value->set(7, static_cast<INT64>(t->getLastRunTime()));
+      value->set(6, CodeToText(t->getStatus(), s_sipStatusCodes));
+      value->set(7, t->getElapsedTime());
+      value->set(8, static_cast<INT64>(t->getLastRunTime()));
    }
    delete tests;
    return SYSINFO_RC_SUCCESS;
@@ -295,7 +417,7 @@ LONG H_SIPRegistrationTestData(const TCHAR *param, const TCHAR *arg, TCHAR *valu
    GET_ARGUMENT(1, name, 128);
 
    SIPRegistrationTest *test = sys->getRegistartionTest(name);
-   if (test == NULL)
+   if (test == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    if (test->getLastRunTime() == 0)
@@ -308,6 +430,9 @@ LONG H_SIPRegistrationTestData(const TCHAR *param, const TCHAR *arg, TCHAR *valu
          break;
       case 'S':
          ret_int(value, test->getStatus());
+         break;
+      case 's':
+         ret_string(value, CodeToText(test->getStatus(), s_sipStatusCodes));
          break;
       case 'T':
          ret_int64(value, test->getLastRunTime());
