@@ -175,6 +175,7 @@ private:
    char *m_password;
    char *m_domain;
    char *m_proxy;
+   int32_t m_timeout;
    uint32_t m_interval;
    time_t m_lastRunTime;
    int32_t m_elapsedTime;
@@ -192,6 +193,7 @@ public:
    const char *getLogin() const { return m_login; }
    const char *getDomain() const { return m_domain; }
    const char *getProxy() const { return m_proxy; }
+   int32_t getTimeout() const { return m_timeout; }
    uint32_t getInterval() const { return m_interval; }
    time_t getLastRunTime() const { return GetAttributeWithLock(m_lastRunTime, m_mutex); }
    int32_t getElapsedTime() const { return GetAttributeWithLock(m_elapsedTime, m_mutex); }
