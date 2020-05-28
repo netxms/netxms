@@ -118,12 +118,13 @@ static inline void eXosip_free(struct eXosip_t *ctx)
 /**
  * Do SIP client registration
  */
-static int32_t RegisterSIPClient(const char *login, const char *password, const char *domain, const char *proxy, int *status)
+static int32_t RegisterSIPClient(const char *login, const char *password, const char *domain, const char *proxy, int32_t timeout, int *status)
 {
    *status = 400; // default status for client-side errors
 
    char uri[256];
    snprintf(uri, 256, "sip:%s@%s", login, domain);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): starting registration (timeout %d seconds)"), uri, proxy, timeout);
 
    struct eXosip_t *ctx = eXosip_malloc();
    if (ctx == nullptr)
@@ -154,7 +155,7 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
    eXosip_add_authentication_info(ctx, login, login, password, nullptr, nullptr);
 
    osip_message_t *regmsg = nullptr;
-   int registrationId = eXosip_register_build_initial_register(ctx, uri, proxy, uri, 300, &regmsg);
+   int registrationId = eXosip_register_build_initial_register(ctx, uri, proxy, uri, timeout, &regmsg);
    if (registrationId < 0)
    {
       eXosip_unlock(ctx);
@@ -194,7 +195,6 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
          nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): registration failed with status code %03d (will retry)"),
                   uri, proxy, evt->response->status_code);
          eXosip_default_action(ctx, evt);
-         *status = evt->response->status_code;
          eXosip_event_free(evt);
          continue;
       }
@@ -209,7 +209,7 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
          break;
       }
 
-      if (evt->type != EXOSIP_MESSAGE_PROCEEDING)
+      if (evt->type == EXOSIP_REGISTRATION_FAILURE)
       {
          int statusCode = (evt->response != nullptr) ? evt->response->status_code : 408;
          nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): registration failed with status code %03d (will not retry)"), uri, proxy, statusCode);
@@ -218,6 +218,9 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
          break;
       }
 
+      if ((evt->type == EXOSIP_MESSAGE_NEW) && (evt->request != nullptr))
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): received %hs message"), uri, proxy, osip_message_get_method(evt->request));
+      eXosip_default_action(ctx, evt);
       eXosip_event_free(evt);
    }
 
@@ -240,7 +243,7 @@ LONG H_SIPTestRegistration(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
    int status;
    char proxy[256] = "sip:";
    sys->getIpAddress().toStringA(&proxy[4]);
-   ret_int64(value, RegisterSIPClient(login, password, domain, proxy, &status));
+   ret_int64(value, RegisterSIPClient(login, password, domain, proxy, 5, &status));
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -296,6 +299,7 @@ SIPRegistrationTest::SIPRegistrationTest(ConfigEntry *config, const char *defaul
       m_proxy = MemCopyStringA(defaultProxy);
    }
 #endif
+   m_timeout = config->getSubEntryValueAsUInt(_T("Timeout"), 0, 30);
    m_interval = config->getSubEntryValueAsUInt(_T("Interval"), 0, 300) * 1000;
    m_lastRunTime = 0;
    m_elapsedTime = 0;
@@ -326,7 +330,7 @@ void SIPRegistrationTest::run()
       return;
 
    int status;
-   INT32 elapsed = RegisterSIPClient(m_login, m_password, m_domain, m_proxy, &status);
+   INT32 elapsed = RegisterSIPClient(m_login, m_password, m_domain, m_proxy, m_timeout, &status);
    MutexLock(m_mutex);
    m_lastRunTime = time(NULL);
    m_elapsedTime = elapsed;
