@@ -177,8 +177,16 @@ void InfluxDBStorageDriver::queuePush(const std::string& data)
    bool flushNow = data.empty();
    if (!flushNow)
    {
-      m_queuedMessages += data + "\n";
-      m_queuedMessageCount++;
+      // Check that packet is not longer than 64K
+      if (data.length() + m_queuedMessages.length() < 65534)
+      {
+         m_queuedMessages += data + "\n";
+         m_queuedMessageCount++;
+      }
+      else
+      {
+         flushNow = true;
+      }
    }
 
    if ((m_queuedMessageCount >= m_maxQueueSize) || flushNow)
@@ -202,6 +210,11 @@ void InfluxDBStorageDriver::queuePush(const std::string& data)
    }
    else
    {
+      if (flushNow && !data.empty())
+      {
+         m_queuedMessages += data + "\n";
+         m_queuedMessageCount++;
+      }
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Queue size: %u / %u"), m_queuedMessageCount, m_maxQueueSize);
    }
 
