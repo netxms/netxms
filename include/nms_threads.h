@@ -1385,14 +1385,14 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p);
 void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, ThreadPoolWorkerFunction f, void *arg);
-void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, INT64 runTime, ThreadPoolWorkerFunction f, void *arg);
-void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, ThreadPoolWorkerFunction f, void *arg);
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, ThreadPoolWorkerFunction f, void *arg);
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
 bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *info);
 int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, const TCHAR *key);
-UINT32 LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPool *p, const TCHAR *key);
+uint32_t LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPool *p, const TCHAR *key);
 StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
-void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, UINT32 waitTimeHWM, UINT32 waitTimeLWM);
+void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, uint32_t waitTimeHWM, uint32_t waitTimeLWM);
 
 /**
  * Wrapper for ThreadPoolExecute to use pointer to given type as argument
@@ -1544,7 +1544,7 @@ template <typename T, typename B> inline void ThreadPoolExecuteSerialized(Thread
 /**
  * Execute task with delay (use class member without arguments)
  */
-template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, T *object, void (B::*f)())
+template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, T *object, void (B::*f)())
 {
    ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
 }
@@ -1593,7 +1593,7 @@ template <typename T, typename B> inline void ThreadPoolExecuteSerialized(Thread
 /**
  * Execute task with delay (use class member without arguments) using smart pointer to object
  */
-template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, const shared_ptr<T>& object, void (B::*f)())
+template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, const shared_ptr<T>& object, void (B::*f)())
 {
    ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
 }
@@ -1644,7 +1644,7 @@ template <typename T, typename B, typename R> inline void ThreadPoolExecuteSeria
 /**
  * Execute task with delay (use class member with one argument)
  */
-template <typename T, typename B, typename R> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, T *object, void (B::*f)(R), R arg)
+template <typename T, typename B, typename R> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, T *object, void (B::*f)(R), R arg)
 {
    ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg));
 }
@@ -1694,7 +1694,7 @@ template <typename T, typename B, typename R> inline void ThreadPoolExecuteSeria
 /**
  * Execute task with delay (use class member with one argument) using smart pointer to object
  */
-template <typename T, typename B, typename R> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, const shared_ptr<T>& object, void (B::*f)(R), R arg)
+template <typename T, typename B, typename R> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, const shared_ptr<T>& object, void (B::*f)(R), R arg)
 {
    ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg));
 }
@@ -1833,7 +1833,7 @@ public:
    void set() { ConditionSet(m_condition); }
    void pulse() { ConditionPulse(m_condition); }
    void reset() { ConditionReset(m_condition); }
-   bool wait(UINT32 timeout = INFINITE) { return ConditionWait(m_condition, timeout); }
+   bool wait(uint32_t timeout = INFINITE) { return ConditionWait(m_condition, timeout); }
 };
 
 #endif   /* __cplusplus */
