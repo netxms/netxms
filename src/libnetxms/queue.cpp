@@ -80,10 +80,10 @@ void Queue::commonInit()
    pthread_mutex_init(&m_lock, &a);
    pthread_mutexattr_destroy(&a);
 #else
-   pthread_mutex_init(&m_lock, NULL);
+   pthread_mutex_init(&m_lock, nullptr);
 #endif
 
-   pthread_cond_init(&m_wakeupCondition, NULL);
+   pthread_cond_init(&m_wakeupCondition, nullptr);
 
 #endif
 
@@ -101,7 +101,7 @@ void Queue::commonInit()
  */
 Queue::~Queue()
 {
-   for(auto buffer = m_head; buffer != NULL;)
+   for(auto buffer = m_head; buffer != nullptr;)
    {
       if (m_owner)
       {
@@ -119,6 +119,8 @@ Queue::~Queue()
       MemFree(buffer);
       buffer = next;
    }
+
+   setShutdownMode();
 
 #ifdef _WIN32
    DeleteCriticalSection(&m_lock);
@@ -233,7 +235,7 @@ void *Queue::getOrBlock(uint32_t timeout)
    lock();
    m_readers++;
    void *element = getInternal();
-   while(element == NULL)
+   while(element == nullptr)
    {
 #ifdef _WIN32
       if (!SleepConditionVariableCS(&m_wakeupCondition, &m_lock, timeout))
@@ -280,7 +282,7 @@ void *Queue::getOrBlock(uint32_t timeout)
 void Queue::clear()
 {
    lock();
-   for(auto buffer = m_head; buffer != NULL;)
+   for(auto buffer = m_head; buffer != nullptr;)
    {
       if (m_owner)
       {
@@ -297,7 +299,7 @@ void Queue::clear()
       if (buffer == m_head)
       {
          buffer = buffer->next;
-         m_head->next = NULL;
+         m_head->next = nullptr;
          m_head->count = 0;
          m_head->head = 0;
          m_head->tail = 0;
@@ -343,14 +345,14 @@ void *Queue::find(const void *key, QueueComparator comparator, void *(*transform
 {
 	void *element = NULL;
 	lock();
-   for(auto buffer = m_head; buffer != NULL; buffer = buffer->next)
+   for(auto buffer = m_head; buffer != nullptr; buffer = buffer->next)
    {
       for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
       {
          void *curr = buffer->elements[pos];
-         if ((curr != NULL) && (curr != INVALID_POINTER_VALUE) && comparator(key, curr))
+         if ((curr != nullptr) && (curr != INVALID_POINTER_VALUE) && comparator(key, curr))
          {
-            element = (transform != NULL) ? transform(curr) : curr;
+            element = (transform != nullptr) ? transform(curr) : curr;
             break;
          }
          pos++;
@@ -370,16 +372,16 @@ bool Queue::remove(const void *key, QueueComparator comparator)
 {
 	bool success = false;
 	lock();
-   for(auto buffer = m_head; buffer != NULL; buffer = buffer->next)
+   for(auto buffer = m_head; buffer != nullptr; buffer = buffer->next)
    {
       for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
       {
          void *curr = buffer->elements[pos];
-         if ((curr != NULL) && (curr != INVALID_POINTER_VALUE) && comparator(key, curr))
+         if ((curr != nullptr) && (curr != INVALID_POINTER_VALUE) && comparator(key, curr))
          {
             if (m_owner)
                m_destructor(curr, this);
-            buffer->elements[pos] = NULL;
+            buffer->elements[pos] = nullptr;
             success = true;
             goto remove_completed;
          }
@@ -399,12 +401,12 @@ remove_completed:
 void Queue::forEach(QueueEnumerationCallback callback, void *context)
 {
    lock();
-   for(auto buffer = m_head; buffer != NULL; buffer = buffer->next)
+   for(auto buffer = m_head; buffer != nullptr; buffer = buffer->next)
    {
       for(size_t i = 0, pos = buffer->head; i < buffer->count; i++)
       {
          void *curr = buffer->elements[pos];
-         if ((curr != NULL) && (curr != INVALID_POINTER_VALUE))
+         if ((curr != nullptr) && (curr != INVALID_POINTER_VALUE))
          {
             if (callback(curr, context) == _STOP)
                goto stop_enumeration;
