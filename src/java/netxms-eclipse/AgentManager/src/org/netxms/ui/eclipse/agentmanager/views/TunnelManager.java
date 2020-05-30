@@ -388,18 +388,18 @@ public class TunnelManager extends ViewPart
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() != 1)
          return;
-      
+
       final AgentTunnel tunnel = (AgentTunnel)selection.getFirstElement();
       if (tunnel.isBound())
          return;
-      
+
       CreateNodeDialog dlg = new CreateNodeDialog(getSite().getShell(), null);
       dlg.setEnableShowAgainFlag(false);
       dlg.setObjectName(tunnel.getSystemName());
       dlg.setZoneUIN(tunnel.getZoneUIN());
       if (dlg.open() != Window.OK)
          return;
-      
+
       final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), 2);
       cd.setCreationFlags(dlg.getCreationFlags());
       cd.setPrimaryName(dlg.getHostName());
@@ -412,15 +412,25 @@ public class TunnelManager extends ViewPart
       cd.setZoneUIN(dlg.getZoneUIN());
       cd.setSshLogin(dlg.getSshLogin());
       cd.setSshPassword(dlg.getSshPassword());
-      
+
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Create new node and bind tunnel", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
+            // Always create node as unmanaged to start configuration poll only after tunnel bind
+            boolean stayUnmanaged = ((cd.getCreationFlags() & NXCObjectCreationData.CF_CREATE_UNMANAGED) != 0);
+            cd.setCreationFlags(cd.getCreationFlags() | NXCObjectCreationData.CF_CREATE_UNMANAGED);
+
             long nodeId = session.createObject(cd);
             session.bindAgentTunnel(tunnel.getId(), nodeId);
 
+            if (!stayUnmanaged)
+            {
+               // Wait for tunnel to appear
+               session.waitForAgentTunnel(nodeId, 20000);
+               session.setObjectManaged(nodeId, true);
+            }
             final List<AgentTunnel> tunnels = session.getAgentTunnels();
             runInUIThread(new Runnable() {
                @Override
@@ -430,7 +440,7 @@ public class TunnelManager extends ViewPart
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -438,7 +448,7 @@ public class TunnelManager extends ViewPart
          }
       }.start();
    }
-   
+
    /**
     * Bind tunnel to node
     */
@@ -481,7 +491,7 @@ public class TunnelManager extends ViewPart
          }
       }.start();
    }
-   
+
    /**
     * Unbind tunnel
     */
@@ -525,7 +535,7 @@ public class TunnelManager extends ViewPart
          }
       }.start();
    }
-   
+
    /**
     * Enable or disable filter
     * 
@@ -554,7 +564,7 @@ public class TunnelManager extends ViewPart
       filterText.setText(text);
       onFilterModify();
    }
-   
+
    /**
     * Handler for filter modification
     */

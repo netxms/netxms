@@ -11250,6 +11250,37 @@ public class NXCSession
    }
 
    /**
+    * Wait for bound tunnel for given node to appear. This method will not throw usual exceptions on communication or server errors
+    * but will return false instead.
+    *
+    * @param nodeId node ID
+    * @param timeout waiting timeout in milliseconds
+    * @return true if bound tunnel for given node exist
+    */
+   public boolean waitForAgentTunnel(long nodeId, long timeout)
+   {
+      try
+      {
+         while(timeout > 0)
+         {
+            long startTime = System.currentTimeMillis();
+            for(AgentTunnel t : getAgentTunnels())
+            {
+               if (t.isBound() && (t.getNodeId() == nodeId))
+                  return true;
+            }
+            Thread.sleep(1000);
+            timeout -= System.currentTimeMillis() - startTime;
+         }
+         return false;
+      }
+      catch(Exception e)
+      {
+         return false;
+      }
+   }
+
+   /**
     * Bind agent tunnel to node
     *
     * @param tunnelId tunnel ID
@@ -11282,13 +11313,13 @@ public class NXCSession
    }
 
    /**
-    * Substitute macross in may strings and one context
+    * Substitute macros in may strings and one context
     *
-    * @param context       expansion context alarm and node
+    * @param context expansion context alarm and node
     * @param textsToExpand texts to be expanded
-    * @param inputValues   input values provided by used used for %() expansion
+    * @param inputValues input values provided by used used for %() expansion
     * @return same count and order of strings already expanded
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<String> substitureMacross(ObjectContextBase context, List<String> textsToExpand, Map<String, String> inputValues)
