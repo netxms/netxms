@@ -245,17 +245,6 @@ static void CleanTimescaleData(DB_HANDLE hdb)
 }
 
 /**
- * Callback for cleaning expired DCI data on node
- */
-static void CleanDciData(NetObj *object, void *data)
-{
-   if (s_shutdown)
-      return;
-	static_cast<DataCollectionTarget*>(object)->cleanDCIData(static_cast<DB_HANDLE>(data));
-	ThrottleHousekeeper();
-}
-
-/**
  * Callback for validating template DCIs
  */
 static void QueueTemplateUpdate(NetObj *object, void *data)

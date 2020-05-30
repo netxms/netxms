@@ -26,11 +26,6 @@
 #define DEBUG_TAG_OBJECT_SYNC    _T("obj.sync")
 
 /**
- * Externals
- */
-void NetObjDelete(NetObj *pObject);
-
-/**
  * Thread pool
  */
 ThreadPool *g_syncerThreadPool = nullptr;
