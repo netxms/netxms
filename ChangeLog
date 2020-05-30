@@ -17,6 +17,7 @@
 	NX-1854 (When double-clicking a stacked graph in performance tab, it opens in a new view as non-stacked)
 	NX-1861 (Unable to add USM Credentials when zoning is ON)
 	NX-1862 (Lazy object synchronization breaks object-based link status display on maps)
+	NX-1865 (Remote Node using TLS Tunnel Added incorrectly if same name is resolvable on local NetXMS network)
 
 
 *

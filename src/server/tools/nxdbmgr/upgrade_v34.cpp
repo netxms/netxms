@@ -24,11 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.4 to 34.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.FallbackToLocalResolver"), _T("0"), _T("Fallback to server's local resolver if node address cannot be resolved via zone proxy."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 34.3 to 34.4
  */
 static bool H_UpgradeFromV3()
 {
-   //Recreate index for those who initialized database with an incorrect init script
+   // Recreate index for those who initialized database with an incorrect init script
    CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("snmp_communities")));
    CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("usm_credentials")));
    CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("shared_secrets")));
@@ -101,6 +111,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4,  34, 5,  H_UpgradeFromV4  },
    { 3,  34, 4,  H_UpgradeFromV3  },
    { 2,  34, 3,  H_UpgradeFromV2  },
    { 1,  34, 2,  H_UpgradeFromV1  },

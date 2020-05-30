@@ -3367,8 +3367,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    }
    unlockProperties();
 
-   UINT32 oldCapabilities = m_capabilities;
-   UINT32 modified = 0;
+   uint32_t oldCapabilities = m_capabilities;
+   uint32_t modified = 0;
 
    poller->setStatus(_T("wait for lock"));
    pollerLock(configuration);

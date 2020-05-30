@@ -378,7 +378,10 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname)
 {
    InetAddress ipAddr = InetAddress::parse(hostname);
-   if (!ipAddr.isValid() && IsZoningEnabled() && (zoneUIN != 0))
+   if (ipAddr.isValid())
+      return ipAddr;
+
+   if (IsZoningEnabled() && (zoneUIN != 0))
    {
       // resolve address through proxy agent
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
@@ -395,10 +398,14 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *host
             }
          }
       }
-   }
 
-   // Resolve address through local resolver
-   if (!ipAddr.isValid())
+      // Resolve address through local resolver as fallback
+      if (!ipAddr.isValid() && ConfigReadBoolean(_T("Objects.Nodes.FallbackToLocalResolver"), false))
+      {
+         ipAddr = InetAddress::resolveHostName(hostname);
+      }
+   }
+   else
    {
       ipAddr = InetAddress::resolveHostName(hostname);
    }
