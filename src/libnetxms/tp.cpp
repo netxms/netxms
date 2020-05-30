@@ -134,8 +134,6 @@ struct ThreadPool
    {
       threads.setOwner(Ownership::True);
       MutexDestroy(serializationLock);
-      for(int i = 0; i < schedulerQueue.size(); i++)
-         MemFree(schedulerQueue.get(i));
       MutexDestroy(schedulerLock);
       MutexDestroy(mutex);
       MemFree(name);
