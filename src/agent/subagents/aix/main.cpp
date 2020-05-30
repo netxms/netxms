@@ -28,7 +28,7 @@
 LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_FileSystemInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_HardwareMachineId(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_HardwareManufacturer(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
@@ -114,29 +114,29 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("Agent.SourcePackageSupport"), H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
-   { _T("Disk.Avail(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.AvailPerc(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.Free(*)"), H_DiskInfo, (TCHAR *)DISK_FREE, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.Total(*)"), H_DiskInfo, (TCHAR *)DISK_TOTAL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.Used(*)"), H_DiskInfo, (TCHAR *)DISK_USED, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.Avail(*)"), H_FileSystemInfo, (TCHAR *)FS_AVAIL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.AvailPerc(*)"), H_FileSystemInfo, (TCHAR *)FS_AVAIL_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.Free(*)"), H_FileSystemInfo, (TCHAR *)FS_FREE, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.FreePerc(*)"), H_FileSystemInfo, (TCHAR *)FS_FREE_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.Total(*)"), H_FileSystemInfo, (TCHAR *)FS_TOTAL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.Used(*)"), H_FileSystemInfo, (TCHAR *)FS_USED, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.UsedPerc(*)"), H_FileSystemInfo, (TCHAR *)FS_USED_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
 
-   { _T("FileSystem.Avail(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL, DCI_DT_UINT64, DCIDESC_FS_AVAIL },
-   { _T("FileSystem.AvailInodes(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_INODES, DCI_DT_UINT64, DCIDESC_FS_AVAILINODES },
-   { _T("FileSystem.AvailInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILINODESPERC },
-   { _T("FileSystem.AvailPerc(*)"), H_DiskInfo, (TCHAR *)DISK_AVAIL_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILPERC },
-   { _T("FileSystem.Free(*)"), H_DiskInfo, (TCHAR *)DISK_FREE, DCI_DT_UINT64, DCIDESC_FS_FREE },
-   { _T("FileSystem.FreeInodes(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_INODES, DCI_DT_UINT64, DCIDESC_FS_FREEINODES },
-   { _T("FileSystem.FreeInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEINODESPERC },
-   { _T("FileSystem.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
-   { _T("FileSystem.Total(*)"), H_DiskInfo, (TCHAR *)DISK_TOTAL, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
-   { _T("FileSystem.TotalInodes(*)"), H_DiskInfo, (TCHAR *)DISK_TOTAL_INODES, DCI_DT_UINT64, DCIDESC_FS_TOTALINODES },
-   { _T("FileSystem.Type(*)"), H_DiskInfo, (TCHAR *)DISK_FSTYPE, DCI_DT_STRING, DCIDESC_FS_TYPE },
-   { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
-   { _T("FileSystem.UsedInodes(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES, DCI_DT_UINT64, DCIDESC_FS_USEDINODES },
-   { _T("FileSystem.UsedInodesPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDINODESPERC },
-   { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
+   { _T("FileSystem.Avail(*)"), H_FileSystemInfo, (TCHAR *)FS_AVAIL, DCI_DT_UINT64, DCIDESC_FS_AVAIL },
+   { _T("FileSystem.AvailInodes(*)"), H_FileSystemInfo, (TCHAR *)FS_AVAIL_INODES, DCI_DT_UINT64, DCIDESC_FS_AVAILINODES },
+   { _T("FileSystem.AvailInodesPerc(*)"), H_FileSystemInfo, (TCHAR *)FS_AVAIL_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILINODESPERC },
+   { _T("FileSystem.AvailPerc(*)"), H_FileSystemInfo, (TCHAR *)FS_AVAIL_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILPERC },
+   { _T("FileSystem.Free(*)"), H_FileSystemInfo, (TCHAR *)FS_FREE, DCI_DT_UINT64, DCIDESC_FS_FREE },
+   { _T("FileSystem.FreeInodes(*)"), H_FileSystemInfo, (TCHAR *)FS_FREE_INODES, DCI_DT_UINT64, DCIDESC_FS_FREEINODES },
+   { _T("FileSystem.FreeInodesPerc(*)"), H_FileSystemInfo, (TCHAR *)FS_FREE_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEINODESPERC },
+   { _T("FileSystem.FreePerc(*)"), H_FileSystemInfo, (TCHAR *)FS_FREE_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
+   { _T("FileSystem.Total(*)"), H_FileSystemInfo, (TCHAR *)FS_TOTAL, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
+   { _T("FileSystem.TotalInodes(*)"), H_FileSystemInfo, (TCHAR *)FS_TOTAL_INODES, DCI_DT_UINT64, DCIDESC_FS_TOTALINODES },
+   { _T("FileSystem.Type(*)"), H_FileSystemInfo, (TCHAR *)FS_FSTYPE, DCI_DT_STRING, DCIDESC_FS_TYPE },
+   { _T("FileSystem.Used(*)"), H_FileSystemInfo, (TCHAR *)FS_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
+   { _T("FileSystem.UsedInodes(*)"), H_FileSystemInfo, (TCHAR *)FS_USED_INODES, DCI_DT_UINT64, DCIDESC_FS_USEDINODES },
+   { _T("FileSystem.UsedInodesPerc(*)"), H_FileSystemInfo, (TCHAR *)FS_USED_INODES_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDINODESPERC },
+   { _T("FileSystem.UsedPerc(*)"), H_FileSystemInfo, (TCHAR *)FS_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
    { _T("Hardware.System.MachineId"), H_HardwareMachineId, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MACHINEID },
    { _T("Hardware.System.Manufacturer"), H_HardwareManufacturer, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
@@ -275,6 +275,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.IO.WriteRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
 	{ _T("System.IO.WriteRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
 
+   { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAILABLE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
+   { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAILABLE_PERC, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
+   { _T("System.Memory.Physical.Cached"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_CACHED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_CACHED },
+   { _T("System.Memory.Physical.CachedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_CACHED_PERC, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_CACHED_PCT },
    { _T("System.Memory.Physical.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
    { _T("System.Memory.Physical.FreePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PERC, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
    { _T("System.Memory.Physical.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },

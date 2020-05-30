@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,21 +33,20 @@
 /**
  * Hander for System.CPU.Count parameter
  */
-LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
-	struct vario v;
-	LONG nRet;
-
-	if (sys_parm(SYSP_GET, SYSP_V_NCPUS_CFG, &v) == 0)
-	{
-		ret_int(pValue, v.v.v_ncpus_cfg.value);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-	else
-	{
-		nRet = SYSINFO_RC_ERROR;
-	}
-	return nRet;
+   LONG rc;
+   struct vario v;
+   if (sys_parm(SYSP_GET, SYSP_V_NCPUS_CFG, &v) == 0)
+   {
+      ret_int(value, v.v.v_ncpus_cfg.value);
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   return rc;
 }
 
 /**
@@ -69,42 +68,40 @@ LONG H_Uname(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSes
 /**
  * Handler for System.Uptime parameter
  */
-LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
-	LONG nRet = SYSINFO_RC_ERROR;
-	int fd;
-	struct utmp ut;
-
-	fd = open(UTMP_FILE, O_RDONLY);
-	if (fd != -1)
-	{
-		while(1)
-		{
-			if (read(fd, &ut, sizeof(struct utmp)) != sizeof(struct utmp))
-				break;	// Read error
-			if (ut.ut_type == BOOT_TIME)
-			{
-				ret_uint(pValue, time(NULL) - ut.ut_time);
-				nRet = SYSINFO_RC_SUCCESS;
-				break;
-			}
-		}
-		close(fd);
-	}
-	return nRet;
+   LONG rc = SYSINFO_RC_ERROR;
+   int fd = open(UTMP_FILE, O_RDONLY);
+   if (fd != -1)
+   {
+      while(true)
+      {
+         struct utmp ut;
+         if (read(fd, &ut, sizeof(struct utmp)) != sizeof(struct utmp))
+            break; // Read error
+         if (ut.ut_type == BOOT_TIME)
+         {
+            ret_uint(value, time(nullptr) - ut.ut_time);
+            rc = SYSINFO_RC_SUCCESS;
+            break;
+         }
+      }
+      close(fd);
+   }
+   return rc;
 }
 
 /**
  * Handler for System.Hostname parameter
  */
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct utsname un;
 
 	if (uname(&un) == 0)
 	{
-		ret_mbstring(pValue, un.nodename);
+		ret_mbstring(value, un.nodename);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 	else
@@ -117,87 +114,99 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 /**
  * Handler for System.Memory.Physical.xxx parameters
  */
-LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_MemoryInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	struct vminfo vmi;
-	LONG nRet;
+   struct vminfo vmi;
+   LONG rc;
 
-	if (vmgetinfo(&vmi, VMINFO, sizeof(struct vminfo)) == 0)
-	{
-		switch(CAST_FROM_POINTER(pArg, int))
-		{
-			case MEMINFO_PHYSICAL_FREE:
-				ret_uint64(pValue, vmi.numfrb * getpagesize());
-				break;
-			case MEMINFO_PHYSICAL_FREE_PERC:
-				ret_double(pValue, (double)vmi.numfrb * 100.0 / vmi.memsizepgs, 2);
-				break;
-			case MEMINFO_PHYSICAL_USED:
-				ret_uint64(pValue, (vmi.memsizepgs - vmi.numfrb) * getpagesize());
-				break;
-			case MEMINFO_PHYSICAL_USED_PERC:
-				ret_double(pValue, ((double)vmi.memsizepgs - vmi.numfrb) * 100.0 / vmi.memsizepgs, 2);
-				break;
-			case MEMINFO_PHYSICAL_TOTAL:
-				ret_uint64(pValue, vmi.memsizepgs * getpagesize());
-				break;
-		}
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-	else
-	{
-		nRet = SYSINFO_RC_ERROR;
-	}
-	return nRet;
+   if (vmgetinfo(&vmi, VMINFO, sizeof(struct vminfo)) == 0)
+   {
+      switch(CAST_FROM_POINTER(arg, int))
+      {
+         case MEMINFO_PHYSICAL_AVAILABLE:
+            ret_uint64(value, vmi.memavailable);
+            break;
+         case MEMINFO_PHYSICAL_AVAILABLE_PERC:
+            ret_double(value, (double)(vmi.memavailable / getpagesize()) * 100.0 / vmi.memsizepgs, 2);
+            break;
+         case MEMINFO_PHYSICAL_CACHED:
+            ret_uint64(value, vmi.numperm * getpagesize());
+            break;
+         case MEMINFO_PHYSICAL_CACHED_PERC:
+            ret_double(value, (double)vmi.numperm * 100.0 / vmi.memsizepgs, 2);
+            break;
+         case MEMINFO_PHYSICAL_FREE:
+            ret_uint64(value, vmi.numfrb * getpagesize());
+            break;
+         case MEMINFO_PHYSICAL_FREE_PERC:
+            ret_double(value, (double)vmi.numfrb * 100.0 / vmi.memsizepgs, 2);
+            break;
+         case MEMINFO_PHYSICAL_USED:
+            ret_uint64(value, (vmi.memsizepgs - vmi.numfrb) * getpagesize());
+            break;
+         case MEMINFO_PHYSICAL_USED_PERC:
+            ret_double(value, ((double)vmi.memsizepgs - vmi.numfrb) * 100.0 / vmi.memsizepgs, 2);
+            break;
+         case MEMINFO_PHYSICAL_TOTAL:
+            ret_uint64(value, vmi.memsizepgs * getpagesize());
+            break;
+      }
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   return rc;
 }
 
 /**
  * Handler for virtual and swap memory parameters
  */
-LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
-	perfstat_memory_total_t memStats;
-	LONG nRet;
+   perfstat_memory_total_t memStats;
+   LONG nRet;
 
 	if (perfstat_memory_total(NULL, &memStats, sizeof(perfstat_memory_total_t), 1) == 1)
 	{
 		switch(CAST_FROM_POINTER(pArg, int))
 		{
 			case MEMINFO_SWAP_FREE:
-				ret_uint64(pValue, memStats.pgsp_free * 4096);
+				ret_uint64(value, memStats.pgsp_free * 4096);
 				break;
 			case MEMINFO_SWAP_FREE_PERC:
-				ret_double(pValue, (double)memStats.pgsp_free * 100.0 / memStats.pgsp_total, 2);
+				ret_double(value, (double)memStats.pgsp_free * 100.0 / memStats.pgsp_total, 2);
 				break;
 			case MEMINFO_SWAP_USED:
-				ret_uint64(pValue, (memStats.pgsp_total - memStats.pgsp_free) * 4096);
+				ret_uint64(value, (memStats.pgsp_total - memStats.pgsp_free) * 4096);
 				break;
 			case MEMINFO_SWAP_USED_PERC:
-				ret_double(pValue, ((double)memStats.pgsp_total - memStats.pgsp_free) * 100.0 / memStats.pgsp_total);
+				ret_double(value, ((double)memStats.pgsp_total - memStats.pgsp_free) * 100.0 / memStats.pgsp_total);
 				break;
 			case MEMINFO_SWAP_TOTAL:
-				ret_uint64(pValue, memStats.pgsp_total * 4096);
+				ret_uint64(value, memStats.pgsp_total * 4096);
 				break;
 			case MEMINFO_VIRTUAL_ACTIVE:
-				ret_uint64(pValue, memStats.virt_active * 4096);
+				ret_uint64(value, memStats.virt_active * 4096);
 				break;
 			case MEMINFO_VIRTUAL_ACTIVE_PERC:
-				ret_double(pValue, (double)memStats.virt_active * 100.0 / memStats.virt_total);
+				ret_double(value, (double)memStats.virt_active * 100.0 / memStats.virt_total);
 				break;
 			case MEMINFO_VIRTUAL_FREE:
-				ret_uint64(pValue, (memStats.real_free + memStats.pgsp_free) * 4096);
+				ret_uint64(value, (memStats.real_free + memStats.pgsp_free) * 4096);
 				break;
 			case MEMINFO_VIRTUAL_FREE_PERC:
-				ret_double(pValue, ((double)memStats.real_free + memStats.pgsp_free) * 100.0 / memStats.virt_total);
+				ret_double(value, ((double)memStats.real_free + memStats.pgsp_free) * 100.0 / memStats.virt_total);
 				break;
 			case MEMINFO_VIRTUAL_USED:
-				ret_uint64(pValue, (memStats.virt_total - memStats.real_free - memStats.pgsp_free) * 4096);
+				ret_uint64(value, (memStats.virt_total - memStats.real_free - memStats.pgsp_free) * 4096);
 				break;
 			case MEMINFO_VIRTUAL_USED_PERC:
-				ret_double(pValue, ((double)memStats.virt_total - memStats.real_free - memStats.pgsp_free) * 100.0 / memStats.virt_total);
+				ret_double(value, ((double)memStats.virt_total - memStats.real_free - memStats.pgsp_free) * 100.0 / memStats.virt_total);
 				break;
 			case MEMINFO_VIRTUAL_TOTAL:
-				ret_uint64(pValue, memStats.virt_total * 4096);
+				ret_uint64(value, memStats.virt_total * 4096);
 				break;
 		}
 		nRet = SYSINFO_RC_SUCCESS;
@@ -206,19 +215,17 @@ LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 	{
 		nRet = SYSINFO_RC_ERROR;
 	}
-	return nRet;
+   return nRet;
 }
 
 /**
  * Read from /dev/kmem
  */
-static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
+static bool kread(int kmem, off_t offset, void *buffer, size_t buflen)
 {
-	if (lseek(kmem, offset, SEEK_SET) != -1)
-	{
-		return (read(kmem, buffer, buflen) == buflen);
-	}
-	return FALSE;
+   if (lseek(kmem, offset, SEEK_SET) != -1)
+      return (read(kmem, buffer, buflen) == buflen);
+   return false;
 }
 
 /**
@@ -226,19 +233,18 @@ static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
  */
 LONG H_LoadAvg(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	LONG rc;
-	perfstat_cpu_total_t info;
-
-	if (perfstat_cpu_total(NULL, &info, sizeof(perfstat_cpu_total_t), 1) == 1)
-	{
-		ret_double(value, (double)info.loadavg[*arg - '0'] / (double)(1 << SBITS));
-		rc = SYSINFO_RC_SUCCESS;
-	}
-	else
-	{
-		rc = SYSINFO_RC_ERROR;
-	}
-	return rc;
+   LONG rc;
+   perfstat_cpu_total_t info;
+   if (perfstat_cpu_total(NULL, &info, sizeof(perfstat_cpu_total_t), 1) == 1)
+   {
+      ret_double(value, (double)info.loadavg[*arg - '0'] / (double)(1 << SBITS));
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   return rc;
 }
 
 /**

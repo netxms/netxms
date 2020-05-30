@@ -22,9 +22,9 @@
 #include <sys/statvfs.h>
 
 /**
- * Handler for Disk.xxx parameters
+ * Handler for FileSystem.xxx parameters
  */
-LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_FileSystemInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
@@ -45,49 +45,49 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 		
 		switch((long)pArg)
 		{
-			case DISK_TOTAL:
+			case FS_TOTAL:
 				ret_uint64(pValue, totalBlocks * blockSize);
 				break;
-			case DISK_USED:
+			case FS_USED:
 				ret_uint64(pValue, usedBlocks * blockSize);
 				break;
-			case DISK_FREE:
+			case FS_FREE:
 				ret_uint64(pValue, freeBlocks * blockSize);
 				break;
-			case DISK_AVAIL:
+			case FS_AVAIL:
 				ret_uint64(pValue, availableBlocks * blockSize);
 				break;
-			case DISK_USED_PERC:
+			case FS_USED_PERC:
 				ret_double(pValue, (totalBlocks > 0) ? (usedBlocks * 100.0) / totalBlocks : 0);
 				break;
-			case DISK_FREE_PERC:
+			case FS_FREE_PERC:
 				ret_double(pValue, (totalBlocks > 0) ? (freeBlocks * 100.0) / totalBlocks : 0);
 				break;
-			case DISK_AVAIL_PERC:
+			case FS_AVAIL_PERC:
 				ret_double(pValue, (totalBlocks > 0) ? (availableBlocks * 100.0) / totalBlocks : 0);
 				break;
-			case DISK_TOTAL_INODES:
+			case FS_TOTAL_INODES:
 				ret_uint64(pValue, s.f_files);
 				break;
-			case DISK_USED_INODES:
+			case FS_USED_INODES:
 				ret_uint64(pValue, s.f_files - s.f_ffree);
 				break;
-			case DISK_FREE_INODES:
+			case FS_FREE_INODES:
 				ret_uint64(pValue, s.f_ffree);
 				break;
-			case DISK_AVAIL_INODES:
+			case FS_AVAIL_INODES:
 				ret_uint64(pValue, s.f_favail);
 				break;
-			case DISK_USED_INODES_PERC:
+			case FS_USED_INODES_PERC:
 				ret_double(pValue, (s.f_files > 0) ? ((s.f_files - s.f_ffree) * 100.0 / s.f_files) : 0);
 				break;
-			case DISK_FREE_INODES_PERC:
+			case FS_FREE_INODES_PERC:
 				ret_double(pValue, (s.f_files > 0) ? (s.f_ffree * 100.0 / s.f_files) : 0);
 				break;
-			case DISK_AVAIL_INODES_PERC:
+			case FS_AVAIL_INODES_PERC:
 				ret_double(pValue, (s.f_files > 0) ? (s.f_favail * 100.0 / s.f_files) : 0);
 				break;
-         case DISK_FSTYPE:
+         case FS_FSTYPE:
             ret_mbstring(pValue, s.f_basetype);
             break;
 			default:

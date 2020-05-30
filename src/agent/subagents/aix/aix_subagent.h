@@ -60,25 +60,25 @@ enum
 #define CPU_USAGE_PARAM_SOURCE(p) ((CAST_FROM_POINTER((p), DWORD)) & 0x0000FFFF)
 
 /**
- * Disk info types
+ * FIle system info types
  */
 enum
 {
-	DISK_AVAIL,
-	DISK_AVAIL_INODES,
-	DISK_AVAIL_INODES_PERC,
-	DISK_AVAIL_PERC,
-	DISK_FREE,
-	DISK_FREE_INODES,
-	DISK_FREE_INODES_PERC,
-	DISK_FREE_PERC,
-	DISK_FSTYPE,
-	DISK_TOTAL,
-	DISK_TOTAL_INODES,
-	DISK_USED,
-	DISK_USED_INODES,
-	DISK_USED_INODES_PERC,
-	DISK_USED_PERC
+	FS_AVAIL,
+	FS_AVAIL_INODES,
+	FS_AVAIL_INODES_PERC,
+	FS_AVAIL_PERC,
+	FS_FREE,
+	FS_FREE_INODES,
+	FS_FREE_INODES_PERC,
+	FS_FREE_PERC,
+	FS_FSTYPE,
+	FS_TOTAL,
+	FS_TOTAL_INODES,
+	FS_USED,
+	FS_USED_INODES,
+	FS_USED_INODES_PERC,
+	FS_USED_PERC
 };
 
 /**
@@ -114,6 +114,10 @@ enum
  */
 enum
 {
+	MEMINFO_PHYSICAL_AVAILABLE,
+	MEMINFO_PHYSICAL_AVAILABLE_PERC,
+	MEMINFO_PHYSICAL_CACHED,
+	MEMINFO_PHYSICAL_CACHED_PERC,
 	MEMINFO_PHYSICAL_FREE,
 	MEMINFO_PHYSICAL_FREE_PERC,
 	MEMINFO_PHYSICAL_TOTAL,
@@ -133,11 +137,9 @@ enum
 	MEMINFO_VIRTUAL_USED_PERC
 };
 
-
-//
-// Types for Process.XXX() parameters
-//
-
+/**
+ * Types for Process.XXX() parameters
+ */
 enum
 {
 	PROCINFO_CPUTIME,
@@ -153,11 +155,9 @@ enum
 	PROCINFO_THREADS
 };
 
-
-//
-// I/O stats request types
-//
-
+/**
+ * I/O stats request types
+ */
 enum
 {
 	IOSTAT_NUM_READS,
@@ -170,11 +170,9 @@ enum
 	IOSTAT_WAIT_TIME
 };
 
-
-//
-// Network interface request types
-//
-
+/**
+ * Network interface request types
+ */
 enum
 {
 	IF_INFO_ADMIN_STATUS,
@@ -190,22 +188,16 @@ enum
 	IF_INFO_MTU
 };
 
-
-//
-// Process list entry structure
-//
-
+/**
+ * Process list entry structure
+ */
 typedef struct t_ProcEnt
 {
 	unsigned int nPid;
 	char szProcName[128];
 } PROC_ENT;
 
-
-//
 // Functions
-//
-
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();
 
@@ -216,11 +208,7 @@ void ClearLvmData();
 
 void ClearNetworkData();
 
-//
 // Global variables
-//
-
 extern BOOL g_bShutdown;
-
 
 #endif
