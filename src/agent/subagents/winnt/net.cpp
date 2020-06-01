@@ -205,11 +205,16 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
 
    const ULONG flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
    ULONG size = 0;
-   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
+   ULONG rc = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size);
+   if (rc != ERROR_BUFFER_OVERFLOW)
+   {
+      TCHAR buffer[1024];
+      nxlog_debug(5, _T("WinNT: Call to GetAdaptersAddresses failed (%u: %s)"), rc, GetSystemErrorText(rc, buffer, 1024));
       return SYSINFO_RC_ERROR;
+   }
 
    IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
-   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
+   if ((rc = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size)) == ERROR_SUCCESS)
    {
       for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
       {
@@ -219,6 +224,8 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
             BinToStr(iface->PhysicalAddress, iface->PhysicalAddressLength, macAddr);
          else
             _tcscpy(macAddr, _T("000000000000"));
+
+         nxlog_debug(6, _T("WinNT: H_InterfaceList: interface \"%s\" with MAC %s"), iface->FriendlyName, macAddr);
 
          // Compose result string for each IP address
          for(IP_ADAPTER_UNICAST_ADDRESS *pAddr = iface->FirstUnicastAddress; pAddr != NULL; pAddr = pAddr->Next)
@@ -248,12 +255,15 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
                           addr.toString(ipAddr), addr.getMaskBits(), iface->IfType, 
                           iface->Mtu & 0x7FFFFFFF, macAddr, iface->FriendlyName);
                value->add(adapterInfo);
+               nxlog_debug(6, _T("WinNT: H_InterfaceList: address %s/%d on interface \"%s\""), ipAddr, addr.getMaskBits(), iface->FriendlyName);
             }
          }
       }
    }
    else
    {
+      TCHAR buffer[1024];
+      nxlog_debug(5, _T("WinNT: Call to GetAdaptersAddresses failed (%u: %s)"), rc, GetSystemErrorText(rc, buffer, 1024));
       result = SYSINFO_RC_ERROR;
    }
 
