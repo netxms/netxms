@@ -353,6 +353,7 @@ uint32_t UpdateScript(const NXCPMessage *request, uint32_t *scriptId, ClientSess
          session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldSource, scriptSource, 'T',
                   _T("Library script %s [%u] %s"), scriptName, id, newScript ? _T("created") : _T("modified"));
       }
+      MemFree(oldSource);
    }
    else
    {
