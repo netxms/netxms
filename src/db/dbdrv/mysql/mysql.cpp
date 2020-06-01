@@ -566,12 +566,12 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, 
  */
 extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
-	MYSQL_RESULT *result = NULL;
+	MYSQL_RESULT *result = nullptr;
 
-	if (pConn == NULL)
+	if (pConn == nullptr)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
-		return NULL;
+		return nullptr;
 	}
 
 	MutexLock(pConn->mutexQueryLock);
@@ -585,7 +585,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STAT
 			result->isPreparedStatement = true;
 			result->statement = hStmt->statement;
 			result->resultSet = mysql_stmt_result_metadata(hStmt->statement);
-			if (result->resultSet != NULL)
+			if (result->resultSet != nullptr)
 			{
 				result->numColumns = mysql_num_fields(result->resultSet);
 				result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
@@ -610,18 +610,18 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STAT
 					UpdateErrorMessage(mysql_stmt_error(hStmt->statement), errorText);
 					*pdwError = DBERR_OTHER_ERROR;
 					mysql_free_result(result->resultSet);
-					free(result->bindings);
-					free(result->lengthFields);
-					free(result);
-					result = NULL;
+					MemFree(result->bindings);
+					MemFree(result->lengthFields);
+					MemFree(result);
+					result = nullptr;
 				}
 			}
 			else
 			{
 				UpdateErrorMessage(mysql_stmt_error(hStmt->statement), errorText);
 				*pdwError = DBERR_OTHER_ERROR;
-				free(result);
-				result = NULL;
+				MemFree(result);
+				result = nullptr;
 			}
 		}
 		else
@@ -728,7 +728,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
             }
             else
             {
-			      MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, (WCHAR *)pBuffer, nBufSize);
+			      utf8_to_wchar((char *)b.buffer, -1, (WCHAR *)pBuffer, nBufSize);
    			   ((WCHAR *)pBuffer)[nBufSize - 1] = 0;
             }
          }

@@ -467,7 +467,7 @@ bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_UNBUFFERED_RESULT hResult, int colum
    {
       strlcpy(buffer, name, bufSize);
    }
-   return name != NULL;
+   return name != nullptr;
 }
 
 /**
@@ -477,7 +477,7 @@ bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_UNBUFFERED_RESULT hResult, int colum
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, TCHAR *pszBuffer, size_t nBufLen)
 {
 #ifdef UNICODE
-   if (pszBuffer != NULL)
+   if (pszBuffer != nullptr)
    {
       *pszBuffer = 0;
       return hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszBuffer, (int)nBufLen);
@@ -488,7 +488,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
       LONG nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
       if (nLen == -1)
       {
-         pszTemp = NULL;
+         pszTemp = nullptr;
       }
       else
       {

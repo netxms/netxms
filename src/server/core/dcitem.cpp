@@ -1584,14 +1584,18 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
                   functions[func], getStorageClassName(getStorageClass()));
             break;
          case DB_SYNTAX_MYSQL:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(cast(idata_value as decimal(30,10)),0)) FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                  functions[func]);
+            break;
          case DB_SYNTAX_SQLITE:
             _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata WHERE item_id=? and idata_timestamp between ? and ?"),
+                  _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
                   functions[func]);
             break;
          default:
             _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(idata_value,0)) FROM idata WHERE item_id=? and idata_timestamp between ? and ?"),
+                  _T("SELECT %s(coalesce(idata_value,0)) FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
                   functions[func]);
       }
    }
@@ -1616,14 +1620,18 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
                   functions[func], m_ownerId);
             break;
          case DB_SYNTAX_MYSQL:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(cast(idata_value as decimal(30,10)),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                  functions[func], m_ownerId);
+            break;
          case DB_SYNTAX_SQLITE:
             _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata_%u WHERE item_id=? and idata_timestamp between ? and ?"),
+                  _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
                   functions[func], m_ownerId);
             break;
          default:
             _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u WHERE item_id=? and idata_timestamp between ? and ?"),
+                  _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
                   functions[func], m_ownerId);
             break;
       }

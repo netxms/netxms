@@ -321,12 +321,13 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+	if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
 	{
       TCHAR *result = static_cast<DCItem*>(dci.get())->getAggregateValue(func, argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32());
-      if (result != NULL)
+      if (result != nullptr)
       {
-         *ppResult = vm->createValue(result);
+         // if there are no values driver will return empty string instead of actual NULL read from database
+         *ppResult = ((*result != 0) ? vm->createValue(result) : vm->createValue());
          MemFree(result);
       }
       else
