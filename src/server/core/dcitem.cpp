@@ -1561,62 +1561,71 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {
-      if (g_dbSyntax == DB_SYNTAX_ORACLE)
+      switch(g_dbSyntax)
       {
-         _sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata ")
-            _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-            functions[func]);
-      }
-      else if (g_dbSyntax == DB_SYNTAX_MSSQL)
-      {
-         _sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata ")
-            _T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
-            functions[func]);
-      }
-      else if (g_dbSyntax == DB_SYNTAX_PGSQL)
-      {
-         _sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata ")
-            _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
-            functions[func]);
-      }
-      else if (g_dbSyntax == DB_SYNTAX_TSDB)
-      {
-         _sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata_sc_%s ")
-            _T("WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?) AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
-            functions[func], getStorageClassName(getStorageClass()));
-      }
-      else
-      {
-         _sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata ")
-            _T("WHERE item_id=? and idata_timestamp between ? and ?"),
-            functions[func]);
+         case DB_SYNTAX_ORACLE:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                  functions[func]);
+            break;
+         case DB_SYNTAX_MSSQL:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
+                  functions[func]);
+            break;
+         case DB_SYNTAX_PGSQL:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(idata_value::double precision) FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+                  functions[func]);
+            break;
+         case DB_SYNTAX_TSDB:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(idata_value::double precision) FROM idata_sc_%s WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?) AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+                  functions[func], getStorageClassName(getStorageClass()));
+            break;
+         case DB_SYNTAX_MYSQL:
+         case DB_SYNTAX_SQLITE:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata WHERE item_id=? and idata_timestamp between ? and ?"),
+                  functions[func]);
+            break;
+         default:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(idata_value,0)) FROM idata WHERE item_id=? and idata_timestamp between ? and ?"),
+                  functions[func]);
       }
    }
    else
    {
-      if (g_dbSyntax == DB_SYNTAX_ORACLE)
+      switch(g_dbSyntax)
       {
-         _sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
-            _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-            functions[func], m_ownerId);
-      }
-      else if (g_dbSyntax == DB_SYNTAX_MSSQL)
-      {
-         _sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u ")
-            _T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
-            functions[func], m_ownerId);
-      }
-      else if ((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB))
-      {
-         _sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata_%u ")
-            _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
-            functions[func], m_ownerId);
-      }
-      else
-      {
-         _sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
-            _T("WHERE item_id=? and idata_timestamp between ? and ?"),
-            functions[func], m_ownerId);
+         case DB_SYNTAX_ORACLE:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                  functions[func], m_ownerId);
+            break;
+         case DB_SYNTAX_MSSQL:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
+                  functions[func], m_ownerId);
+            break;
+         case DB_SYNTAX_PGSQL:
+         case DB_SYNTAX_TSDB:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(idata_value::double precision) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+                  functions[func], m_ownerId);
+            break;
+         case DB_SYNTAX_MYSQL:
+         case DB_SYNTAX_SQLITE:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata_%u WHERE item_id=? and idata_timestamp between ? and ?"),
+                  functions[func], m_ownerId);
+            break;
+         default:
+            _sntprintf(query, 1024,
+                  _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u WHERE item_id=? and idata_timestamp between ? and ?"),
+                  functions[func], m_ownerId);
+            break;
       }
    }
 
