@@ -344,7 +344,7 @@ ssize_t TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
          }
          else
          {
-            nxlog_debug(7, _T("TlsMessageReceiver: SSL_read error (ssl_err=%d errno=%d)"), err, errno);
+            nxlog_debug(7, _T("TlsMessageReceiver: SSL_read error (ssl_err=%d socket_err=%d)"), err, WSAGetLastError());
             if (err == SSL_ERROR_SSL)
                LogOpenSSLErrorStack(7);
          }
