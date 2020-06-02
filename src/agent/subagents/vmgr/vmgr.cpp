@@ -1,6 +1,6 @@
 /*
  ** Vmgr management subagent
- ** Copyright (C) 2016 Raden Solutions
+ ** Copyright (C) 2016-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -28,11 +28,11 @@ StringObjectMap<HostConnections> g_connectionList(Ownership::True);
 /**
  * Configuration file template for host list
  */
-static TCHAR *s_hostList = NULL;
+static TCHAR *s_hostList = nullptr;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
 	{ _T("Host"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &s_hostList },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /**
@@ -46,28 +46,31 @@ static NX_CFG_TEMPLATE m_aditionalCfgTemplate[] =
 	{ _T("Url"), CT_MB_STRING, 0, 0, 512, 0, s_url },
 	{ _T("Username"), CT_MB_STRING, 0, 0, 64, 0, s_login },
 	{ _T("Password"), CT_MB_STRING, 0, 0, 128, 0, s_password },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /**
  * Adds connection object to array if it was possible to connect to it
  */
-bool AddConnection(const TCHAR *name)
+static bool ConnectToHost(const TCHAR *name)
 {
    HostConnections *conn = new HostConnections(name, s_url, s_login, s_password);
    bool success = conn->connect();
-   if(!success)
+   if (success)
    {
-      delete conn;
+      g_connectionList.set(name, conn);
    }
    else
    {
-      g_connectionList.set(name, conn);
+      delete conn;
    }
    return success;
 }
 
-void AddHostConfiguraiton(TCHAR *hostName, Config *config)
+/**
+ * Add host connection from configuration file
+ */
+static void AddHostConnectionFromConfig(TCHAR *hostName, Config *config)
 {
    TCHAR section[512];
    _sntprintf(section, 512, _T("VMGR:%s"), hostName);
@@ -82,44 +85,35 @@ void AddHostConfiguraiton(TCHAR *hostName, Config *config)
 	   StrStripA(s_password);
 	}
 
-   if(!success || s_url[0] == 0 || !AddConnection(hostName))
+   if (!success || s_url[0] == 0 || !ConnectToHost(hostName))
    {
-      AgentWriteLog(NXLOG_WARNING, _T("VMGR: Unable to add connection URL \"%hs\" for connection name \"%s\""), s_url, hostName);
+      nxlog_write_tag(NXLOG_WARNING, VMGR_DEBUG_TAG, _T("Unable to add host connection \"%s\" with URL \"%hs\""), hostName, s_url);
    }
    else
    {
-      AgentWriteLog(6, _T("VMGR: VM successfully added: URL \"%hs\", name \"%s\""), s_url, hostName);
+      nxlog_debug_tag(VMGR_DEBUG_TAG, 6, _T("VMGR: VM successfully added: URL \"%hs\", name \"%s\""), s_url, hostName);
    }
 }
 
-
 /**
- * Callback for global libvirt errors
+ * Libvirt error logger
  */
-static void customGlobalErrorFunc(void *userdata, virErrorPtr err)
+static void LibvirtErrorLogger(void *context, virErrorPtr err)
 {
-   int lvl = NXLOG_DEBUG;
+   int level;
    switch(err->level)
    {
-   case VIR_ERR_WARNING:
-      lvl = NXLOG_WARNING;
-      break;
-   case VIR_ERR_ERROR:
-      lvl = NXLOG_ERROR;
-      break;
-   default:
-      lvl = NXLOG_DEBUG;
-      break;
+      case VIR_ERR_WARNING:
+         level = NXLOG_WARNING;
+         break;
+      case VIR_ERR_ERROR:
+         level = NXLOG_ERROR;
+         break;
+      default:
+         level = NXLOG_INFO;
+         break;
    }
-   AgentWriteLog(lvl, _T("VMGR: %hs"), err->message);
-}
-
-/**
- * Function that sets all common configurations for libvirt
- */
-void InitLibvirt()
-{
-   virSetErrorFunc(NULL, customGlobalErrorFunc);
+   nxlog_write_tag(level, VMGR_DEBUG_TAG, _T("%hs"), err->message);
 }
 
 /**
@@ -131,30 +125,31 @@ static bool SubagentInit(Config *config)
    if (!config->parseTemplate(_T("VMGR"), m_cfgTemplate))
       return false;
 
-   if (s_hostList != NULL)
+   virSetErrorFunc(nullptr, LibvirtErrorLogger);
+
+   if (s_hostList != nullptr)
 	{
       TCHAR *item, *itemEnd;
-      for(item = itemEnd = s_hostList; (*item != 0) && (itemEnd != NULL); item = itemEnd + 1)
+      for(item = itemEnd = s_hostList; (*item != 0) && (itemEnd != nullptr); item = itemEnd + 1)
       {
          itemEnd = _tcschr(item, _T('\n'));
-         if (itemEnd != NULL)
+         if (itemEnd != nullptr)
             *itemEnd = 0;
          StrStrip(item);
-         AddHostConfiguraiton(item, config);
+         AddHostConnectionFromConfig(item, config);
       }
    }
 
-   if (s_hostList == NULL || g_connectionList.size() == 0)
+   if (s_hostList == nullptr || g_connectionList.size() == 0)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("VMGR: No connection URL found. Vmgr subagent will not be started."));
-      free(s_hostList);
+      nxlog_write_tag(NXLOG_WARNING, VMGR_DEBUG_TAG, _T("No connections defined, VMGR subagent will not start"));
+      MemFree(s_hostList);
       return false;
    }
 
-	free(s_hostList);
-	InitLibvirt();
+   MemFree(s_hostList);
 
-   AgentWriteDebugLog(2, _T("VMGR: subagent initialized"));
+   nxlog_write_tag(NXLOG_INFO, VMGR_DEBUG_TAG, _T("VMGR subagent initialized"));
    return true;
 }
 
@@ -163,7 +158,6 @@ static bool SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
-   //Preparations for shutdown
 }
 
 /**
@@ -191,41 +185,41 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("VMGR.VMHost"), H_GetHostList, NULL },
-	{ _T("VMGR.VMList(*)"), H_GetVMList, NULL }
+	{ _T("VMGR.VMHost"), H_GetHostList, nullptr },
+	{ _T("VMGR.VMList(*)"), H_GetVMList, nullptr }
 };
 
 /**
  * Supported tables
  */
-static NETXMS_SUBAGENT_TABLE m_tables[] =
+static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-	{ _T("VMGR.VM(*)"), H_GetVMTable, NULL, _T("NAME"), _T("Connection VM table") },
-	{ _T("VMGR.InterfaceList(*)"), H_GetIfaceTable, NULL, _T("NAME"), _T("Connection interface list") },
-	{ _T("VMGR.VMDisks(*)"), H_GetVMDiskTable, NULL, _T("DNAME"), _T("VM Disks") },
-	{ _T("VMGR.VMController(*)"), H_GetVMControllerTable, NULL, _T("TYPE"), _T("VM Controllers") },
-	{ _T("VMGR.VMInterface(*)"), H_GetVMInterfaceTable, NULL, _T("MAC"), _T("VM Interfaces") },
-	{ _T("VMGR.VMVideo(*)"), H_GetVMVideoTable, NULL, _T("TYPE"), _T("VM Video adapter settings") },
-	{ _T("VMGR.Networks(*)"), H_GetNetworksTable, NULL, _T("Name"), _T("Networks table") },
-	{ _T("VMGR.Storages(*)"), H_GetStoragesTable, NULL, _T("Name"), _T("Storages table") }
+	{ _T("VMGR.VM(*)"), H_GetVMTable, nullptr, _T("NAME"), _T("Connection VM table") },
+	{ _T("VMGR.InterfaceList(*)"), H_GetIfaceTable, nullptr, _T("NAME"), _T("Connection interface list") },
+	{ _T("VMGR.VMDisks(*)"), H_GetVMDiskTable, nullptr, _T("DNAME"), _T("VM Disks") },
+	{ _T("VMGR.VMController(*)"), H_GetVMControllerTable, nullptr, _T("TYPE"), _T("VM Controllers") },
+	{ _T("VMGR.VMInterface(*)"), H_GetVMInterfaceTable, nullptr, _T("MAC"), _T("VM Interfaces") },
+	{ _T("VMGR.VMVideo(*)"), H_GetVMVideoTable, nullptr, _T("TYPE"), _T("VM Video adapter settings") },
+	{ _T("VMGR.Networks(*)"), H_GetNetworksTable, nullptr, _T("Name"), _T("Networks table") },
+	{ _T("VMGR.Storages(*)"), H_GetStoragesTable, nullptr, _T("Name"), _T("Storages table") }
 };
 
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("VMGR"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL, NULL,
+   SubagentInit, SubagentShutdown, nullptr, nullptr,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
 	s_lists,
-	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
-	m_tables,
-   0, NULL, // actions
-   0, NULL  // push parameters
+	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+	s_tables,
+   0, nullptr, // actions
+   0, nullptr  // push parameters
 };
 
 /**
@@ -233,7 +227,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(VMGR)
 {
-   *ppInfo = &m_info;
+   *ppInfo = &s_info;
    return true;
 }
 
