@@ -81,22 +81,19 @@ static void UpdateEnvironment(CommSession *session)
 /**
  * Check is if new config contains ENV section
  */
-static void CheckEnvSectionAndReload(CommSession *session, const char *configContent)
+static void CheckEnvSectionAndReload(CommSession *session, const char *content, size_t contentLength)
 {
-   if (configContent != nullptr)
+   Config config;
+   config.setTopLevelTag(_T("config"));
+   bool validConfig = config.loadConfigFromMemory(content, contentLength, DEFAULT_CONFIG_SECTION, NULL, true, false);
+   if (validConfig)
    {
-      Config config;
-      config.setTopLevelTag(_T("config"));
-      bool validConfig = config.loadConfigFromMemory(configContent, strlen(configContent), DEFAULT_CONFIG_SECTION, NULL, true, false);
-      if (validConfig)
+      ObjectArray<ConfigEntry> *entrySet = config.getSubEntries(_T("/ENV"), _T("*"));
+      if (entrySet != nullptr)
       {
-         ObjectArray<ConfigEntry> *entrySet = config.getSubEntries(_T("/ENV"), _T("*"));
-         if (entrySet != nullptr)
-         {
-            session->debugPrintf(7, _T("CheckEnvSectionAndReload(): ENV section exists"));
-            UpdateEnvironment(session);
-            delete entrySet;
-         }
+         session->debugPrintf(7, _T("CheckEnvSectionAndReload(): ENV section exists"));
+         UpdateEnvironment(session);
+         delete entrySet;
       }
    }
 }
@@ -250,36 +247,35 @@ static uint32_t DeployPolicy(AbstractCommSession *session, const uuid& guid, NXC
  */
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 {
-	uint32_t rcc;
-
-   TCHAR type[32];
-   if (!_tcscmp(request->getFieldAsString(VID_POLICY_TYPE, type, 32), _T("")))
+   if (!request->isFieldExist(VID_POLICY_TYPE))
    {
-      UINT32 tmp = request->getFieldAsUInt16(VID_POLICY_TYPE);
+      session->debugPrintf(3, _T("Policy deployment: missing VID_POLICY_TYPE in request message"));
+      return ERR_MALFORMED_COMMAND;
+   }
+
+   TCHAR type[32] = _T("");
+   request->getFieldAsString(VID_POLICY_TYPE, type, 32);
+   if (type[0] == 0)
+   {
+      uint32_t tmp = request->getFieldAsUInt16(VID_POLICY_TYPE);
       if (tmp == AGENT_POLICY_LOG_PARSER)
-         _tcscpy(type, _T("AgentConfig"));
-      else if (tmp == AGENT_POLICY_CONFIG)
          _tcscpy(type, _T("LogParserConfig"));
+      else if (tmp == AGENT_POLICY_CONFIG)
+         _tcscpy(type, _T("AgentConfig"));
    }
 
 	uuid guid = request->getFieldAsGUID(VID_GUID);
 
-   size_t size = request->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
-   char *content = NULL;
-   if (size > 0)
-   {
-      BYTE *data = (BYTE *)MemAlloc(size+1);
-      request->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
-      content = reinterpret_cast<char *>(data);
-      data[size] = 0;
-   }
+   size_t size = 0;
+   const char *content = reinterpret_cast<const char*>(request->getBinaryFieldPtr(VID_CONFIG_FILE_DATA, &size));
+   session->debugPrintf(2, _T("DeployPolicy(): content size %d"), size);
 
-   session->debugPrintf(2, _T("DeployPolicy() size %d"), size);
-
+   uint32_t rcc;
    if (!_tcscmp(type, _T("AgentConfig")))
    {
       rcc = DeployPolicy(session, guid, request, g_szConfigPolicyDir);
-      CheckEnvSectionAndReload(session, content);
+      if (size != 0)
+         CheckEnvSectionAndReload(session, content, size);
    }
    else if (!_tcscmp(type, _T("LogParserConfig")))
    {
@@ -288,7 +284,7 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
    else if (!_tcscmp(type, _T("SupportApplicationConfig")))
    {
       rcc = DeployPolicy(session, guid, request, g_userAgentPolicyDirectory);
-      if (rcc == RCC_SUCCESS)
+      if (rcc == ERR_SUCCESS)
       {
          UpdateUserAgentsConfiguration();
       }
@@ -298,13 +294,13 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
       rcc = ERR_BAD_ARGUMENTS;
    }
 
-	if (rcc == RCC_SUCCESS)
+	if (rcc == ERR_SUCCESS)
 	{
 	   UINT32 version = request->getFieldAsUInt32(VID_VERSION);
       BYTE newHash[MD5_DIGEST_SIZE];
-      if (content != NULL)
+      if (content != nullptr)
       {
-         CalculateMD5Hash(reinterpret_cast<BYTE *>(content), strlen(content), newHash);
+         CalculateMD5Hash(reinterpret_cast<const BYTE*>(content), size, newHash);
       }
       else
       {
@@ -318,7 +314,6 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &n);
 	}
 	session->debugPrintf(3, _T("Policy deployment: TYPE=%s RCC=%d"), type, rcc);
-	MemFree(content);
    return rcc;
 }
 
