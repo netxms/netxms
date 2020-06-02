@@ -138,7 +138,7 @@ TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(UINT32 objectId, TCHAR *buffer)
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%d"), objectId);
    DB_RESULT hResult = SQLSelect(query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
@@ -148,6 +148,7 @@ TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(UINT32 objectId, TCHAR *buffer)
       {
          _sntprintf(buffer, MAX_OBJECT_NAME, _T("[%u]"), objectId);
       }
+      DBFreeResult(hResult);
    }
    else
    {
