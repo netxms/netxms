@@ -431,7 +431,7 @@ int AgentTunnel::sslWrite(const void *data, size_t size)
          }
          else
          {
-            debugPrintf(7, _T("SSL_write error (bytes=%d ssl_err=%d errno=%d)"), bytes, err, errno);
+            debugPrintf(7, _T("SSL_write error (bytes=%d ssl_err=%d socket_err=%d)"), bytes, err, WSAGetLastError());
             if (err == SSL_ERROR_SSL)
                LogOpenSSLErrorStack(7);
          }
