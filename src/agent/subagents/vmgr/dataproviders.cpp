@@ -530,32 +530,35 @@ LONG H_GetVMDiskTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
 	value->addColumn(_T("ADDRESS"), DCI_DT_STRING, _T("Address"));
 
    ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("disk"));
-   for(int i = 0; i < deviceList->size(); i++)
+   if (deviceList != NULL)
    {
-      value->addRow();
-      ConfigEntry *item = deviceList->get(i);
-      value->set(1, item->getAttribute(_T("type")));
-      value->set(2, item->getAttribute(_T("device")));
-      ConfigEntry *tmp = item->findEntry(_T("source"));
-      if(tmp != NULL)
-         value->set(0, tmp->getAttribute(_T("file")));
-      tmp = item->findEntry(_T("target"));
-      if(tmp != NULL)
+      for(int i = 0; i < deviceList->size(); i++)
       {
-         value->set(3, tmp->getAttribute(_T("dev")));
-         value->set(4, tmp->getAttribute(_T("bus")));
+         value->addRow();
+         ConfigEntry *item = deviceList->get(i);
+         value->set(1, item->getAttribute(_T("type")));
+         value->set(2, item->getAttribute(_T("device")));
+         ConfigEntry *tmp = item->findEntry(_T("source"));
+         if (tmp != NULL)
+            value->set(0, tmp->getAttribute(_T("file")));
+         tmp = item->findEntry(_T("target"));
+         if (tmp != NULL)
+         {
+            value->set(3, tmp->getAttribute(_T("dev")));
+            value->set(4, tmp->getAttribute(_T("bus")));
+         }
+         //get data form address
+         tmp = item->findEntry(_T("address"));
+         if (tmp != NULL)
+         {
+            TCHAR address[16];
+            _sntprintf(address, 16, _T("%d/%d/%d/%d"), tmp->getAttributeAsInt(_T("controller")),
+                        tmp->getAttributeAsInt(_T("bus")), tmp->getAttributeAsInt(_T("target")), tmp->getAttributeAsInt(_T("unit")));
+            value->set(5, address);
+         }
       }
-      //get data form address
-      tmp = item->findEntry(_T("address"));
-      if(tmp != NULL)
-      {
-         TCHAR address[16];
-         _sntprintf(address, 16, _T("%d/%d/%d/%d"), tmp->getAttributeAsInt(_T("controller")),
-                     tmp->getAttributeAsInt(_T("bus")), tmp->getAttributeAsInt(_T("target")), tmp->getAttributeAsInt(_T("unit")));
-         value->set(5, address);
-      }
+      delete deviceList;
    }
-   delete deviceList;
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -596,15 +599,18 @@ LONG H_GetVMControllerTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Ab
 	value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
 
    ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("controller"));
-   for(int i = 0; i < deviceList->size(); i++)
+   if (deviceList != NULL)
    {
-      value->addRow();
-      ConfigEntry *item = deviceList->get(i);
-      value->set(0, item->getAttribute(_T("type")));
-      value->set(1, item->getAttributeAsInt(_T("index"), 0));
-      value->set(2, item->getAttribute(_T("model")));
+      for(int i = 0; i < deviceList->size(); i++)
+      {
+         value->addRow();
+         ConfigEntry *item = deviceList->get(i);
+         value->set(0, item->getAttribute(_T("type")));
+         value->set(1, item->getAttributeAsInt(_T("index"), 0));
+         value->set(2, item->getAttribute(_T("model")));
+      }
+      delete deviceList;
    }
-   delete deviceList;
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -646,22 +652,25 @@ LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abs
 	value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
 
    ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("interface"));
-   for(int i = 0; i < deviceList->size(); i++)
+   if (deviceList != NULL)
    {
-      value->addRow();
-      ConfigEntry *item = deviceList->get(i);
-      value->set(1, item->getAttribute(_T("type")));
-      ConfigEntry *tmp = item->findEntry(_T("mac"));
-      if(tmp != NULL)
-         value->set(0, tmp->getAttribute(_T("address")));
-      tmp = item->findEntry(_T("source"));
-      if(tmp != NULL)
-         value->set(2, tmp->getAttribute(_T("bridge")));
-      tmp = item->findEntry(_T("model"));
-      if(tmp != NULL)
-         value->set(3, tmp->getAttribute(_T("type")));
+      for(int i = 0; i < deviceList->size(); i++)
+      {
+         value->addRow();
+         ConfigEntry *item = deviceList->get(i);
+         value->set(1, item->getAttribute(_T("type")));
+         ConfigEntry *tmp = item->findEntry(_T("mac"));
+         if(tmp != NULL)
+            value->set(0, tmp->getAttribute(_T("address")));
+         tmp = item->findEntry(_T("source"));
+         if(tmp != NULL)
+            value->set(2, tmp->getAttribute(_T("bridge")));
+         tmp = item->findEntry(_T("model"));
+         if(tmp != NULL)
+            value->set(3, tmp->getAttribute(_T("type")));
+      }
+      delete deviceList;
    }
-   delete deviceList;
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -701,18 +710,21 @@ LONG H_GetVMVideoTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstrac
 	value->addColumn(_T("VRAM"), DCI_DT_UINT64, _T("Video RAM"));
 
    ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("video"));
-   for(int i = 0; i < deviceList->size(); i++)
+   if (deviceList != NULL)
    {
-      value->addRow();
-      ConfigEntry *item = deviceList->get(i);
-      ConfigEntry *tmp = item->findEntry(_T("model"));
-      if(tmp != NULL)
+      for(int i = 0; i < deviceList->size(); i++)
       {
-         value->set(0, tmp->getAttribute(_T("type")));
-         value->set(1, tmp->getAttributeAsUInt64(_T("vram")) * 1024);
+         value->addRow();
+         ConfigEntry *item = deviceList->get(i);
+         ConfigEntry *tmp = item->findEntry(_T("model"));
+         if(tmp != NULL)
+         {
+            value->set(0, tmp->getAttribute(_T("type")));
+            value->set(1, tmp->getAttributeAsUInt64(_T("vram")) * 1024);
+         }
       }
+      delete deviceList;
    }
-   delete deviceList;
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -745,28 +757,34 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const void *obj, voi
    //concat all interfaces
    StringBuffer ifaces;
    ObjectArray<ConfigEntry> *ifaceList = conf.getSubEntries(_T("/forward"), _T("interface"));
-   for(int i = 0; i < ifaceList->size(); i++)
+   if (ifaceList != NULL)
    {
-      ConfigEntry *item = ifaceList->get(i);
-      ifaces.append(item->getAttribute(_T("dev")));
-      if(i+1 != ifaceList->size())
-         ifaces.append(_T(", "));
+      for(int i = 0; i < ifaceList->size(); i++)
+      {
+         ConfigEntry *item = ifaceList->get(i);
+         ifaces.append(item->getAttribute(_T("dev")));
+         if(i+1 != ifaceList->size())
+            ifaces.append(_T(", "));
+      }
+      value->set(2, ifaces.getBuffer());
+      delete ifaceList;
    }
-   value->set(2, ifaces.getBuffer());
-   delete ifaceList;
 
    //concat all portgroups
    StringBuffer portgroup;
    ObjectArray<ConfigEntry> *portgroupList = conf.getSubEntries(_T("/"), _T("portgroup"));
-   for(int i = 0; i < portgroupList->size(); i++)
+   if (portgroupList != NULL)
    {
-      ConfigEntry *item = portgroupList->get(i);
-      portgroup.append(item->getAttribute(_T("name")));
-      if(i+1 != portgroupList->size())
-         portgroup.append(_T(", "));
+      for(int i = 0; i < portgroupList->size(); i++)
+      {
+         ConfigEntry *item = portgroupList->get(i);
+         portgroup.append(item->getAttribute(_T("name")));
+         if(i+1 != portgroupList->size())
+            portgroup.append(_T(", "));
+      }
+      value->set(3, portgroup.getBuffer());
+      delete portgroupList;
    }
-   value->set(3, portgroup.getBuffer());
-   delete portgroupList;
 
    return _CONTINUE;
 }
