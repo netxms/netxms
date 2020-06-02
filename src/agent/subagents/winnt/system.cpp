@@ -947,3 +947,12 @@ LONG H_MemoryInfo2(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Handler for System.Uptime parameter
+ */
+LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_uint(value, static_cast<uint32_t>(GetTickCount64() / 1000));
+   return SYSINFO_RC_SUCCESS;
+}

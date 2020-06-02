@@ -362,7 +362,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL, DCI_DT_INT, _T("") },
    { _T("PDH.Version"), H_PdhVersion, NULL, DCI_DT_UINT, _T("Version of PDH.DLL") },
 	{ _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
-	{ _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
    { _T("WinPerf.Features"), H_WinPerfFeatures, NULL, DCI_DT_UINT, _T("Features supported by this WinPerf version") },
 };
 
