@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2016 Raden Solutions
+ ** Copyright (C) 2016-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -23,14 +23,15 @@
 /**
  * Host connection constructor
  */
-HostConnections::HostConnections(const TCHAR *name, const char *url, const char *login, const char *password)
-                                 : m_vmInfo(Ownership::True),m_vmXMLs(Ownership::True),m_networkXMLs(Ownership::True),m_storageInfo(Ownership::True),m_domains(false),m_iface(false),
-                                 m_networks(false),m_storages(false)
+HostConnections::HostConnections(const TCHAR *name, const char *url, const char *login, const char *password) :
+      m_vmInfo(Ownership::True), m_vmXMLs(Ownership::True), m_networkXMLs(Ownership::True), m_storageInfo(Ownership::True),
+      m_domains(false), m_iface(false), m_networks(false), m_storages(false)
 {
-   m_name = _tcsdup(name);
-   m_url = strdup(url);
-   m_login = strdup(login);
-   m_password = strdup(password);
+   m_connection = nullptr;
+   m_name = MemCopyString(name);
+   m_url = MemCopyStringA(url);
+   m_login = MemCopyStringA(login);
+   m_password = MemCopyStringA(password);
    m_vmXMLMutex = MutexCreate();
    m_networkXMLMutex = MutexCreate();
    m_storageInfoMutex = MutexCreate();
@@ -43,10 +44,10 @@ HostConnections::HostConnections(const TCHAR *name, const char *url, const char 
 HostConnections::~HostConnections()
 {
    disconnect();
-   free(m_url);
-   free(m_name);
-   free(m_login);
-   free(m_password);
+   MemFree(m_url);
+   MemFree(m_name);
+   MemFree(m_login);
+   MemFree(m_password);
    MutexDestroy(m_vmXMLMutex);
    MutexDestroy(m_networkXMLMutex);
    MutexDestroy(m_storageInfoMutex);
@@ -79,7 +80,8 @@ int HostConnections::authCb(virConnectCredentialPtr cred, unsigned int ncred, vo
 /**
  * Authentication credentials
  */
-static int authCreds[] = {
+static int authCreds[] =
+{
     VIR_CRED_AUTHNAME,
     VIR_CRED_PASSPHRASE,
 };
@@ -95,7 +97,7 @@ bool HostConnections::connect()
    auth.credtype = authCreds;
    auth.ncredtype = sizeof(authCreds)/sizeof(int);
    m_connection = virConnectOpenAuth(m_url, &auth, 0);
-   return m_connection != NULL;
+   return m_connection != nullptr;
 }
 
 /**
@@ -103,7 +105,7 @@ bool HostConnections::connect()
  */
 void HostConnections::disconnect()
 {
-   if(m_connection != NULL)
+   if (m_connection != nullptr)
       virConnectClose(m_connection);
 }
 
@@ -116,21 +118,23 @@ const char *HostConnections::getCapabilitiesAndLock()
    if(m_capabilities.shouldUpdate())
    {
       char *caps = virConnectGetCapabilities(m_connection);
-      if (caps == NULL)
+      if (caps == nullptr)
       {
          virError err;
          virCopyLastError(&err);
-         AgentWriteLog(6, _T("VMGR: virConnectGetCapabilities failed: %hs"), err.message);
+         nxlog_debug_tag(VMGR_DEBUG_TAG, 5, _T("HostConnections::getCapabilitiesAndLock(): virConnectGetCapabilities failed (%hs)"), err.message);
          virResetError(&err);
-         return NULL;
+         return nullptr;
       }
       m_capabilities.update(caps);
-      //AgentWriteLog(NXLOG_DEBUG, _T("VMGR: Capabilities of connection %hs: %hs"), m_url, caps);
+      nxlog_debug_tag(VMGR_DEBUG_TAG, 5, _T("Connection %hs capabilities: %hs"), m_url, caps);
    }
-
    return m_capabilities.getData();
 }
 
+/**
+ * Unlock capabilities
+ */
 void HostConnections::unlockCapabilities()
 {
    m_capabilities.unlock();
@@ -141,7 +145,7 @@ void HostConnections::unlockCapabilities()
  */
 UINT32 HostConnections::getMaxVCpuCount()
 {
-   return virConnectGetMaxVcpus(m_connection, NULL);
+   return virConnectGetMaxVcpus(m_connection, nullptr);
 }
 
 /**
@@ -158,24 +162,26 @@ UINT64 HostConnections::getHostFreeMemory()
 const virNodeInfo *HostConnections::getNodeInfoAndLock()
 {
    m_nodeInfo.lock();
-   if(m_nodeInfo.shouldUpdate())
+   if (m_nodeInfo.shouldUpdate())
    {
-      virNodeInfo *nodeInfo = (virNodeInfo *) malloc(sizeof(virNodeInfo));
+      virNodeInfo *nodeInfo = MemAllocStruct<virNodeInfo>();
       if (virNodeGetInfo(m_connection, nodeInfo) == -1)
       {
          virError err;
          virCopyLastError(&err);
-         AgentWriteLog(6, _T("VMGR: virConnectGetCapabilities failed: %hs"), err.message);
+         nxlog_debug_tag(VMGR_DEBUG_TAG, 6, _T("HostConnections::getNodeInfoAndLock(): virNodeGetInfo failed (%hs)"), err.message);
          virResetError(&err);
-         free(nodeInfo);
-         return NULL;
+         MemFree(nodeInfo);
+         return nullptr;
       }
       m_nodeInfo.update(nodeInfo);
    }
-
    return m_nodeInfo.getData();
 }
 
+/**
+ * Unlock node information
+ */
 void HostConnections::unlockNodeInfo()
 {
    m_nodeInfo.unlock();
@@ -207,7 +213,7 @@ UINT64 HostConnections::getConnectionVersion()
 UINT64 HostConnections::getLibraryVersion()
 {
    unsigned long int ver;
-   if(virConnectGetLibVersion(m_connection, &ver) == 0)
+   if (virConnectGetLibVersion(m_connection, &ver) == 0)
       return (UINT64)ver;
    else
       return -1;
@@ -228,8 +234,8 @@ const StringObjectMap<NXvirDomain> *HostConnections::getDomainListAndLock()
       int numActiveDomains = virConnectNumOfDomains(m_connection);
       int numInactiveDomains = virConnectNumOfDefinedDomains(m_connection);
 
-      char **inactiveDomains = (char **)malloc(sizeof(char *) * numInactiveDomains);
-      int *activeDomains = (int *)malloc(sizeof(int) * numActiveDomains);
+      char **inactiveDomains = MemAllocArray<char*>(numInactiveDomains);
+      int *activeDomains = MemAllocArray<int>(numActiveDomains);
 
       numActiveDomains = virConnectListDomains(m_connection, activeDomains, numActiveDomains);
       numInactiveDomains = virConnectListDefinedDomains(m_connection, inactiveDomains, numInactiveDomains);
@@ -275,22 +281,22 @@ void HostConnections::unlockDomainList()
 /**
  * Returns domain definition in XML format
  */
-const char *HostConnections::getDomainDefinitionAndLock(const TCHAR *name, NXvirDomain *vm)
+const char *HostConnections::getDomainDefinitionAndLock(const TCHAR *name, const NXvirDomain *vm)
 {
    MutexLock(m_vmXMLMutex);
    Cache<char> *xmlCache = m_vmXMLs.get(name);
-   if (xmlCache == NULL || xmlCache->shouldUpdate())
+   if (xmlCache == nullptr || xmlCache->shouldUpdate())
    {
-      bool getDomain = vm == NULL;
-      if(getDomain)
+      bool getDomain = vm == nullptr;
+      if (getDomain)
       {
          const StringObjectMap<NXvirDomain> *vmMap = getDomainListAndLock();
          vm = vmMap->get(name);
       }
-      if(vm != NULL)
+      if (vm != nullptr)
       {
          char *xml = virDomainGetXMLDesc(*vm, VIR_DOMAIN_XML_SECURE | VIR_DOMAIN_XML_INACTIVE);
-         if(xmlCache == NULL)
+         if (xmlCache == nullptr)
          {
             xmlCache = new Cache<char>();
             m_vmXMLs.set(name, xmlCache);
@@ -301,19 +307,13 @@ const char *HostConnections::getDomainDefinitionAndLock(const TCHAR *name, NXvir
       else
       {
          m_vmXMLs.remove(name);
-         xmlCache = NULL;
+         xmlCache = nullptr;
       }
 
-      if(getDomain)
+      if (getDomain)
          unlockDomainList();
    }
-/*
-   if(xmlCache != NULL)
-      AgentWriteLog(6, _T("VMGR: ******Domain definition: %hs"), xmlCache->getData());
-   else
-      AgentWriteLog(6, _T("VMGR: ******Domain definition: NULL"));
-*/
-   return xmlCache != NULL ? xmlCache->getData() : NULL;
+   return (xmlCache != nullptr) ? xmlCache->getData() : nullptr;
 }
 
 /**
@@ -327,24 +327,24 @@ void HostConnections::unlockDomainDefinition()
 /**
  * Returns domain information
  */
-const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainName, NXvirDomain *vm)
+const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainName, const NXvirDomain *vm)
 {
    MutexLock(m_vmInfoMutex);
    Cache<virDomainInfo> *infoCache = m_vmInfo.get(domainName);
-   if (infoCache == NULL || infoCache->shouldUpdate())
+   if (infoCache == nullptr || infoCache->shouldUpdate())
    {
-      bool getDomain = vm == NULL;
-      if(getDomain)
+      bool getDomain = vm == nullptr;
+      if (getDomain)
       {
          const StringObjectMap<NXvirDomain> *vmMap = getDomainListAndLock();
          vm = vmMap->get(domainName);
       }
-      if(vm != NULL)
+      if (vm != nullptr)
       {
          virDomainInfo *info = new virDomainInfo();
-         if(virDomainGetInfo(*vm, info) == 0)
+         if (virDomainGetInfo(*vm, info) == 0)
          {
-            if(infoCache == NULL)
+            if (infoCache == nullptr)
             {
                infoCache = new Cache<virDomainInfo>();
                m_vmInfo.set(domainName, infoCache);
@@ -359,14 +359,14 @@ const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainNa
       else
       {
          m_vmInfo.remove(domainName);
-         infoCache = NULL;
+         infoCache = nullptr;
       }
 
       if(getDomain)
          unlockDomainList();
    }
 
-   return infoCache != NULL ? infoCache->getData() : NULL;
+   return infoCache != nullptr ? infoCache->getData() : nullptr;
 }
 
 /**
@@ -393,40 +393,41 @@ const StringList *HostConnections::getIfaceListAndLock()
       int inactiveCount = virConnectNumOfDefinedInterfaces(m_connection);
       StringList *ifaceList = new StringList();
 
-      if(activeCount != -1)
+      if (activeCount != -1)
       {
-         char **active = (char **)malloc(sizeof(char *) * activeCount);
+         char **active = MemAllocArray<char*>(activeCount);
          virConnectListInterfaces(m_connection, active, activeCount);
          for(int i=0; i < activeCount; i++)
          {
             virInterfacePtr iface = virInterfaceLookupByName(m_connection, active[i]);
-            //AgentWriteLog(6, _T("VMGR: iface info!!!: %hs"), virInterfaceGetXMLDesc(iface, 0));
             virInterfaceFree(iface);
             ifaceList->addMBString(active[i]);
-            free(active[i]);
+            MemFree(active[i]);
          }
-         free(active);
+         MemFree(active);
       }
 
-      if(inactiveCount != -1)
+      if (inactiveCount != -1)
       {
-         char **inactive = (char **)malloc(sizeof(char *) * inactiveCount);
+         char **inactive = MemAllocArray<char*>(inactiveCount);
          virConnectListDefinedInterfaces(m_connection, inactive, inactiveCount);
          for(int i=0; i < inactiveCount; i++)
          {
             virInterfacePtr iface = virInterfaceLookupByName(m_connection, inactive[i]);
-            //AgentWriteLog(6, _T("VMGR: iface info!!!: %hs"), virInterfaceGetXMLDesc(iface, 0));
             virInterfaceFree(iface);
             ifaceList->addMBString(inactive[i]);
-            free(inactive[i]);
+            MemFree(inactive[i]);
          }
-         free(inactive);
+         MemFree(inactive);
       }
       m_iface.update(ifaceList);
    }
    return m_iface.getData();
 }
 
+/**
+ * Unlock interface list
+ */
 void HostConnections::unlockIfaceList()
 {
    m_iface.unlock();
@@ -447,8 +448,8 @@ const StringObjectMap<NXvirNetwork> *HostConnections::getNetworkListAndLock()
       int numActiveNetworks = virConnectNumOfNetworks(m_connection);
       int numInactiveNetworks = virConnectNumOfDefinedNetworks(m_connection);
 
-      char **inactiveNetworks = (char **)malloc(sizeof(char *) * numInactiveNetworks);
-      char **activeNetworks = (char **)malloc(sizeof(char *) * numActiveNetworks);
+      char **inactiveNetworks = MemAllocArray<char*>(numInactiveNetworks);
+      char **activeNetworks = MemAllocArray<char*>(numActiveNetworks);
 
       numActiveNetworks = virConnectListNetworks(m_connection, activeNetworks, numActiveNetworks);
       numInactiveNetworks = virConnectListDefinedNetworks(m_connection, inactiveNetworks, numInactiveNetworks);
@@ -459,7 +460,7 @@ const StringObjectMap<NXvirNetwork> *HostConnections::getNetworkListAndLock()
       {
 #ifdef UNICODE
          allNetworks->setPreallocated(WideStringFromMBString(activeNetworks[i]), new NXvirNetwork(virNetworkLookupByName(m_connection, activeNetworks[i])));
-         free(activeNetworks[i]);
+         MemFree(activeNetworks[i]);
 #else
          allNetworks->setPreallocated(activeNetworks[i], new NXvirNetwork(virNetworkLookupByName(m_connection, activeNetworks[i])));
 #endif
@@ -469,21 +470,25 @@ const StringObjectMap<NXvirNetwork> *HostConnections::getNetworkListAndLock()
       {
  #ifdef UNICODE
          allNetworks->setPreallocated(WideStringFromMBString(inactiveNetworks[i]), new NXvirNetwork(virNetworkLookupByName(m_connection, inactiveNetworks[i])));
-         free(inactiveNetworks[i]);
+         MemFree(inactiveNetworks[i]);
 #else
          allNetworks->setPreallocated(inactiveNetworks[i], new NXvirNetwork(virNetworkLookupByName(m_connection, inactiveNetworks[i])));
 #endif
       }
 
-      free(activeNetworks);
-      free(inactiveNetworks);
+      MemFree(activeNetworks);
+      MemFree(inactiveNetworks);
 
       m_networks.update(allNetworks);
    }
-   //AgentWriteLog(6, _T("VMGR: ******Network list size: %d"), m_networks.getData()->size());
+
+   nxlog_debug_tag(VMGR_DEBUG_TAG, 9, _T("HostConnections::getNetworkListAndLock(): network list size: %d"), m_networks.getData()->size());
    return m_networks.getData();
 }
 
+/**
+ * Unlock network list
+ */
 void HostConnections::unlockNetworkList()
 {
    m_networks.unlock();
@@ -492,22 +497,22 @@ void HostConnections::unlockNetworkList()
 /**
  * Returns network definition in XML format
  */
-const char *HostConnections::getNetworkDefinitionAndLock(const TCHAR *name, NXvirNetwork *network)
+const char *HostConnections::getNetworkDefinitionAndLock(const TCHAR *name, const NXvirNetwork *network)
 {
    MutexLock(m_networkXMLMutex);
    Cache<char> *xmlCache = m_networkXMLs.get(name);
-   if (xmlCache == NULL || xmlCache->shouldUpdate())
+   if (xmlCache == nullptr || xmlCache->shouldUpdate())
    {
-      bool getNetwork = network == NULL;
+      bool getNetwork = network == nullptr;
       if(getNetwork)
       {
          const StringObjectMap<NXvirNetwork> *networkMap = getNetworkListAndLock();
          network = networkMap->get(name);
       }
-      if(network != NULL)
+      if(network != nullptr)
       {
          char *xml = virNetworkGetXMLDesc(*network, 0);
-         if(xmlCache == NULL)
+         if(xmlCache == nullptr)
          {
             xmlCache = new Cache<char>();
             m_networkXMLs.set(name, xmlCache);
@@ -517,19 +522,14 @@ const char *HostConnections::getNetworkDefinitionAndLock(const TCHAR *name, NXvi
       else
       {
          m_networkXMLs.remove(name);
-         xmlCache = NULL;
+         xmlCache = nullptr;
       }
 
-      if(getNetwork)
+      if (getNetwork)
          unlockNetworkList();
    }
-/*
-   if(xmlCache != NULL)
-      AgentWriteLog(6, _T("VMGR: ******Network definition: %hs"), xmlCache->getData());
-   else
-      AgentWriteLog(6, _T("VMGR: ******Network definition: NULL"));
-*/
-   return xmlCache != nullptr ? xmlCache->getData() : nullptr;
+
+   return (xmlCache != nullptr) ? xmlCache->getData() : nullptr;
 }
 
 /**
@@ -550,13 +550,13 @@ void HostConnections::unlockNetworkDefinition()
 const StringObjectMap<NXvirStoragePool> *HostConnections::getStorageListAndLock()
 {
    m_storages.lock();
-   if(m_storages.shouldUpdate())
+   if (m_storages.shouldUpdate())
    {
       int numActive = virConnectNumOfStoragePools(m_connection);
       int numInactive = virConnectNumOfDefinedStoragePools(m_connection);
 
-      char **inactive = (char **)malloc(sizeof(char *) * numInactive);
-      char **active = (char **)malloc(sizeof(char *) * numActive);
+      char **inactive = MemAllocArray<char*>(numInactive);
+      char **active = MemAllocArray<char*>(numActive);
 
       numActive = virConnectListStoragePools(m_connection, active, numActive);
       numInactive = virConnectListDefinedStoragePools(m_connection, inactive, numInactive);
@@ -567,7 +567,7 @@ const StringObjectMap<NXvirStoragePool> *HostConnections::getStorageListAndLock(
       {
 #ifdef UNICODE
          allStorage->setPreallocated(WideStringFromMBString(active[i]), new NXvirStoragePool(virStoragePoolLookupByName(m_connection, active[i])));
-         free(active[i]);
+         MemFree(active[i]);
 #else
          allStorage->set(active[i], new NXvirStoragePool(virStoragePoolLookupByName(m_connection, active[i])));
 #endif
@@ -577,18 +577,18 @@ const StringObjectMap<NXvirStoragePool> *HostConnections::getStorageListAndLock(
       {
  #ifdef UNICODE
          allStorage->setPreallocated(WideStringFromMBString(inactive[i]), new NXvirStoragePool(virStoragePoolLookupByName(m_connection, inactive[i])));
-         free(inactive[i]);
+         MemFree(inactive[i]);
 #else
          allStorage->setPreallocated(inactive[i], new NXvirStoragePool(virStoragePoolLookupByName(m_connection, inactive[i])));
 #endif
       }
 
-      free(active);
-      free(inactive);
+      MemFree(active);
+      MemFree(inactive);
 
       m_storages.update(allStorage);
    }
-   //AgentWriteLog(6, _T("VMGR: ******Storage list size: %d"), m_storages.getData()->size());
+   nxlog_debug_tag(VMGR_DEBUG_TAG, 9, _T("HostConnections::getStorageListAndLock(): storage list size: %d"), m_storages.getData()->size());
    return m_storages.getData();
 }
 
@@ -600,24 +600,24 @@ void HostConnections::unlockStorageList()
 /**
  * Returns storage definition in XML format
  */
-const virStoragePoolInfo *HostConnections::getStorageInformationAndLock(const TCHAR *name, NXvirStoragePool *storage)
+const virStoragePoolInfo *HostConnections::getStorageInformationAndLock(const TCHAR *name, const NXvirStoragePool *storage)
 {
    MutexLock(m_storageInfoMutex);
    Cache<virStoragePoolInfo> *info = m_storageInfo.get(name);
-   if (info == NULL || info->shouldUpdate())
+   if (info == nullptr || info->shouldUpdate())
    {
-      bool getStorage = storage == NULL;
+      bool getStorage = storage == nullptr;
       if(getStorage)
       {
          const StringObjectMap<NXvirStoragePool> *storageMap = getStorageListAndLock();
          storage = storageMap->get(name);
       }
-      if(storage != NULL)
+      if(storage != nullptr)
       {
-         virStoragePoolInfoPtr newInfo = (virStoragePoolInfoPtr)malloc(sizeof(virStoragePoolInfo));
-         if(virStoragePoolGetInfo(*storage, newInfo) == 0)
+         virStoragePoolInfoPtr newInfo = MemAllocStruct<virStoragePoolInfo>();
+         if (virStoragePoolGetInfo(*storage, newInfo) == 0)
          {
-            if(info == NULL)
+            if (info == nullptr)
             {
                info = new Cache<virStoragePoolInfo>();
                m_storageInfo.set(name, info);
@@ -626,20 +626,20 @@ const virStoragePoolInfo *HostConnections::getStorageInformationAndLock(const TC
          }
          else
          {
-            free(newInfo);
+            MemFree(newInfo);
          }
 
       }
       else
       {
          m_storageInfo.remove(name);
-         info = NULL;
+         info = nullptr;
       }
 
-      if(getStorage)
+      if (getStorage)
          unlockStorageList();
    }
-   return info != NULL ? info->getData() : NULL;
+   return info != nullptr ? info->getData() : nullptr;
 }
 
 /**

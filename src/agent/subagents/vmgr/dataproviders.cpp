@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2016 Raden Solutions
+ ** Copyright (C) 2016-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -49,18 +49,18 @@ LONG H_GetFromCapabilities(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVal
 		return SYSINFO_RC_UNSUPPORTED;
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const char *xml = conn->getCapabilitiesAndLock();
-   if(xml == NULL)
+   if(xml == nullptr)
    {
       conn->unlockCapabilities();
       return SYSINFO_RC_ERROR;
    }
 
    Config conf;
-   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "capabilities", false))
+   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "capabilities", false))
    {
       conn->unlockCapabilities();
       return SYSINFO_RC_ERROR;
@@ -82,7 +82,7 @@ LONG H_GetUIntParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 		return SYSINFO_RC_UNSUPPORTED;
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    UINT32 resultValue = 0;
@@ -98,7 +98,7 @@ LONG H_GetUIntParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
       case 'F': //CPU.Frequency
       {
          const virNodeInfo *nodeInfo = conn->getNodeInfoAndLock();
-         if(nodeInfo == NULL)
+         if(nodeInfo == nullptr)
          {
             result = SYSINFO_RC_UNSUPPORTED;
          }
@@ -129,7 +129,7 @@ LONG H_GetUInt64Param(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 		return SYSINFO_RC_UNSUPPORTED;
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    UINT64 resultValue = 0;
@@ -147,7 +147,7 @@ LONG H_GetUInt64Param(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
       case 'M': //MemorySize
       {
          const virNodeInfo *nodeInfo = conn->getNodeInfoAndLock();
-         if(nodeInfo == NULL)
+         if(nodeInfo == nullptr)
          {
             result = SYSINFO_RC_UNSUPPORTED;
          }
@@ -192,10 +192,10 @@ LONG H_GetStringParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 		return SYSINFO_RC_UNSUPPORTED;
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-   char *resultValue = NULL;
+   char *resultValue = nullptr;
    LONG result = SYSINFO_RC_SUCCESS;
 
    switch(*pArg)
@@ -203,7 +203,7 @@ LONG H_GetStringParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
       case 'M': //Model
       {
          const virNodeInfo *nodeInfo = conn->getNodeInfoAndLock();
-         if(nodeInfo == NULL)
+         if(nodeInfo == nullptr)
          {
             result = SYSINFO_RC_UNSUPPORTED;
          }
@@ -216,7 +216,7 @@ LONG H_GetStringParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
       }
       case 'C': //ConnectionType
          resultValue = (char *)conn->getConnectionType();
-         if(resultValue == NULL)
+         if(resultValue == nullptr)
             result = SYSINFO_RC_UNSUPPORTED;
          break;
       default:
@@ -242,13 +242,13 @@ LONG H_GetVMInfoAsParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 		return SYSINFO_RC_UNSUPPORTED;
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-   char *resultValue = NULL;
+   char *resultValue = nullptr;
    LONG result = SYSINFO_RC_SUCCESS;
    const virDomainInfo *info = conn->getDomainInfoAndLock(vm);
-   if(info != NULL)
+   if(info != nullptr)
    {
       switch(*pArg)
       {
@@ -288,7 +288,7 @@ LONG H_GetVMList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstract
 		return SYSINFO_RC_UNSUPPORTED;
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if (conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    StringList *keyList = conn->getDomainListAndLock()->keys();
@@ -335,21 +335,21 @@ struct VMDataStr
 /**
  * Callback that fills table with VM information
  */
-EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *userData)
+static EnumerationCallbackResult FillVMData(const TCHAR *key, const NXvirDomain *vm, VMDataStr *userData)
 {
-   NXvirDomain *vm = (NXvirDomain *)obj;
-   Table *value = ((VMDataStr *)userData)->value;
-   HostConnections *conn = ((VMDataStr *)userData)->conn;
-
+   HostConnections *conn = userData->conn;
    const char *xml = conn->getDomainDefinitionAndLock(key, vm);
-   if(xml == NULL)
+   if (xml == nullptr)
    {
       conn->unlockDomainDefinition();
       return _CONTINUE;
    }
+
+   Table *value = ((VMDataStr *)userData)->value;
+
    Config conf;
-   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
-      AgentWriteLog(2, _T("VMGR.FillVMData(): Not possible to parse VM XML definition"));
+   if (!conf.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "domain", false))
+      nxlog_debug_tag(VMGR_DEBUG_TAG, 2, _T("FillVMData(): Cannot parse VM XML definition"));
    conn->unlockDomainDefinition();
 
    value->addRow();
@@ -358,7 +358,7 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    value->set(2, conf.getValue(_T("/uuid"), _T("")));
    StringBuffer os(conf.getValue(_T("/os/type"), _T("Unkonown")));
    ConfigEntry *entry = conf.getEntry(_T("/os/type"));
-   if(entry != NULL)
+   if(entry != nullptr)
    {
       os.append(_T("/"));
       os.append(entry->getAttribute(_T("arch")));
@@ -366,7 +366,7 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    value->set(4, os.getBuffer());
 
    const virDomainInfo *info = conn->getDomainInfoAndLock(key, vm);
-   if(info != NULL)
+   if (info != nullptr)
    {
       value->set(3, info->state < 8 ? vmStateMapping[info->state] :  _T("Unkonown"));
       value->set(6, (UINT64)info->memory * 1024);
@@ -387,15 +387,13 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    conn->unlockDomainInfo();
 
    int autostart;
-   if(virDomainGetAutostart(*vm, &autostart) == 0)
-   {
+   if (virDomainGetAutostart(*vm, &autostart) == 0)
       value->set(5, autostart == 0 ? _T("No") : _T("Yes"));
-   }
    else
       value->set(5, _T("Unkonown"));
 
    virDomainControlInfo cInfo;
-   if(virDomainGetControlInfo(*vm, &cInfo,0) == 0)
+   if (virDomainGetControlInfo(*vm, &cInfo,0) == 0)
    {
       value->set(11, cInfo.state > 4 ? _T("Unknown") : vmOpStateMapping[cInfo.state]);
       value->set(12, cInfo.details > 4 ? _T("Unknown") : vmOpStateDescMapping[cInfo.details]);
@@ -411,7 +409,7 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
 #if HAVE_VIRDOMAINGETTIME
    long long int seconds;
    UINT32 nsec;
-   if(virDomainGetTime(*vm, &seconds, &nsec, 0) == 0)
+   if (virDomainGetTime(*vm, &seconds, &nsec, 0) == 0)
       value->set(14, static_cast<int64_t>(seconds));
    else
 #endif
@@ -434,7 +432,7 @@ LONG H_GetVMTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractComm
 		return SYSINFO_RC_UNSUPPORTED;
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if (conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const StringObjectMap<NXvirDomain> *domains = conn->getDomainListAndLock();
@@ -475,7 +473,7 @@ LONG H_GetIfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    return SYSINFO_RC_UNSUPPORTED;
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if (conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const StringList *ifaceList = conn->getIfaceListAndLock();
@@ -507,18 +505,18 @@ LONG H_GetVMDiskTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
 
    _tcsupr(vmName);
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if (conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const char *xml = conn->getDomainDefinitionAndLock(vmName);
-   if(xml == NULL)
+   if (xml == nullptr)
    {
       conn->unlockDomainDefinition();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
-   Config conf;
-   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
+   Config config;
+   if (!config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "domain", false))
 		return SYSINFO_RC_UNSUPPORTED;
    conn->unlockDomainDefinition();
 
@@ -529,33 +527,36 @@ LONG H_GetVMDiskTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
 	value->addColumn(_T("CTYPE"), DCI_DT_STRING, _T("VM controller type"));
 	value->addColumn(_T("ADDRESS"), DCI_DT_STRING, _T("Address"));
 
-   ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("disk"));
-   for(int i = 0; i < deviceList->size(); i++)
+   ObjectArray<ConfigEntry> *deviceList = config.getSubEntries(_T("/devices"), _T("disk"));
+   if (deviceList != nullptr)
    {
-      value->addRow();
-      ConfigEntry *item = deviceList->get(i);
-      value->set(1, item->getAttribute(_T("type")));
-      value->set(2, item->getAttribute(_T("device")));
-      ConfigEntry *tmp = item->findEntry(_T("source"));
-      if(tmp != NULL)
-         value->set(0, tmp->getAttribute(_T("file")));
-      tmp = item->findEntry(_T("target"));
-      if(tmp != NULL)
+      for(int i = 0; i < deviceList->size(); i++)
       {
-         value->set(3, tmp->getAttribute(_T("dev")));
-         value->set(4, tmp->getAttribute(_T("bus")));
+         value->addRow();
+         ConfigEntry *item = deviceList->get(i);
+         value->set(1, item->getAttribute(_T("type")));
+         value->set(2, item->getAttribute(_T("device")));
+         ConfigEntry *tmp = item->findEntry(_T("source"));
+         if(tmp != nullptr)
+            value->set(0, tmp->getAttribute(_T("file")));
+         tmp = item->findEntry(_T("target"));
+         if(tmp != nullptr)
+         {
+            value->set(3, tmp->getAttribute(_T("dev")));
+            value->set(4, tmp->getAttribute(_T("bus")));
+         }
+         //get data form address
+         tmp = item->findEntry(_T("address"));
+         if(tmp != nullptr)
+         {
+            TCHAR address[16];
+            _sntprintf(address, 16, _T("%d/%d/%d/%d"), tmp->getAttributeAsInt(_T("controller")),
+                        tmp->getAttributeAsInt(_T("bus")), tmp->getAttributeAsInt(_T("target")), tmp->getAttributeAsInt(_T("unit")));
+            value->set(5, address);
+         }
       }
-      //get data form address
-      tmp = item->findEntry(_T("address"));
-      if(tmp != NULL)
-      {
-         TCHAR address[16];
-         _sntprintf(address, 16, _T("%d/%d/%d/%d"), tmp->getAttributeAsInt(_T("controller")),
-                     tmp->getAttributeAsInt(_T("bus")), tmp->getAttributeAsInt(_T("target")), tmp->getAttributeAsInt(_T("unit")));
-         value->set(5, address);
-      }
+      delete deviceList;
    }
-   delete deviceList;
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -576,18 +577,18 @@ LONG H_GetVMControllerTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Ab
 
    _tcsupr(vmName);
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const char *xml = conn->getDomainDefinitionAndLock(vmName);
-   if(xml == NULL)
+   if(xml == nullptr)
    {
       conn->unlockDomainDefinition();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
    Config conf;
-   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
+   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "domain", false))
 		return SYSINFO_RC_UNSUPPORTED;
    conn->unlockDomainDefinition();
 
@@ -596,15 +597,18 @@ LONG H_GetVMControllerTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Ab
 	value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
 
    ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("controller"));
-   for(int i = 0; i < deviceList->size(); i++)
+   if (deviceList != nullptr)
    {
-      value->addRow();
-      ConfigEntry *item = deviceList->get(i);
-      value->set(0, item->getAttribute(_T("type")));
-      value->set(1, item->getAttributeAsInt(_T("index"), 0));
-      value->set(2, item->getAttribute(_T("model")));
+      for(int i = 0; i < deviceList->size(); i++)
+      {
+         value->addRow();
+         ConfigEntry *item = deviceList->get(i);
+         value->set(0, item->getAttribute(_T("type")));
+         value->set(1, item->getAttributeAsInt(_T("index"), 0));
+         value->set(2, item->getAttribute(_T("model")));
+      }
+      delete deviceList;
    }
-   delete deviceList;
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -625,18 +629,18 @@ LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abs
 
    _tcsupr(vmName);
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const char *xml = conn->getDomainDefinitionAndLock(vmName);
-   if(xml == NULL)
+   if(xml == nullptr)
    {
       conn->unlockDomainDefinition();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
-   Config conf;
-   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
+   Config config;
+   if (!config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "domain", false))
 		return SYSINFO_RC_UNSUPPORTED;
    conn->unlockDomainDefinition();
 
@@ -645,23 +649,26 @@ LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abs
 	value->addColumn(_T("SOURCE"), DCI_DT_STRING, _T("Source"));
 	value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
 
-   ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("interface"));
-   for(int i = 0; i < deviceList->size(); i++)
+   ObjectArray<ConfigEntry> *deviceList = config.getSubEntries(_T("/devices"), _T("interface"));
+   if (deviceList != nullptr)
    {
-      value->addRow();
-      ConfigEntry *item = deviceList->get(i);
-      value->set(1, item->getAttribute(_T("type")));
-      ConfigEntry *tmp = item->findEntry(_T("mac"));
-      if(tmp != NULL)
-         value->set(0, tmp->getAttribute(_T("address")));
-      tmp = item->findEntry(_T("source"));
-      if(tmp != NULL)
-         value->set(2, tmp->getAttribute(_T("bridge")));
-      tmp = item->findEntry(_T("model"));
-      if(tmp != NULL)
-         value->set(3, tmp->getAttribute(_T("type")));
+      for(int i = 0; i < deviceList->size(); i++)
+      {
+         value->addRow();
+         ConfigEntry *item = deviceList->get(i);
+         value->set(1, item->getAttribute(_T("type")));
+         ConfigEntry *tmp = item->findEntry(_T("mac"));
+         if(tmp != nullptr)
+            value->set(0, tmp->getAttribute(_T("address")));
+         tmp = item->findEntry(_T("source"));
+         if(tmp != nullptr)
+            value->set(2, tmp->getAttribute(_T("bridge")));
+         tmp = item->findEntry(_T("model"));
+         if(tmp != nullptr)
+            value->set(3, tmp->getAttribute(_T("type")));
+      }
+      delete deviceList;
    }
-   delete deviceList;
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -682,91 +689,98 @@ LONG H_GetVMVideoTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstrac
 
    _tcsupr(vmName);
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const char *xml = conn->getDomainDefinitionAndLock(vmName);
-   if(xml == NULL)
+   if (xml == nullptr)
    {
       conn->unlockDomainDefinition();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 
-   Config conf;
-   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
+   Config config;
+   if(!config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "domain", false))
 		return SYSINFO_RC_UNSUPPORTED;
    conn->unlockDomainDefinition();
 
 	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"), true);
 	value->addColumn(_T("VRAM"), DCI_DT_UINT64, _T("Video RAM"));
 
-   ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("video"));
-   for(int i = 0; i < deviceList->size(); i++)
+   ObjectArray<ConfigEntry> *deviceList = config.getSubEntries(_T("/devices"), _T("video"));
+   if (deviceList != nullptr)
    {
-      value->addRow();
-      ConfigEntry *item = deviceList->get(i);
-      ConfigEntry *tmp = item->findEntry(_T("model"));
-      if(tmp != NULL)
+      for(int i = 0; i < deviceList->size(); i++)
       {
-         value->set(0, tmp->getAttribute(_T("type")));
-         value->set(1, tmp->getAttributeAsUInt64(_T("vram")) * 1024);
+         value->addRow();
+         ConfigEntry *item = deviceList->get(i);
+         ConfigEntry *tmp = item->findEntry(_T("model"));
+         if(tmp != nullptr)
+         {
+            value->set(0, tmp->getAttribute(_T("type")));
+            value->set(1, tmp->getAttributeAsUInt64(_T("vram")) * 1024);
+         }
       }
+      delete deviceList;
    }
-   delete deviceList;
 
    return SYSINFO_RC_SUCCESS;
 }
 
-
 /**
  * Callback that fills table with Network information
  */
-EnumerationCallbackResult FillNetworkData(const TCHAR *key, const void *obj, void *userData)
+EnumerationCallbackResult FillNetworkData(const TCHAR *key, const NXvirNetwork *network, VMDataStr *userData)
 {
-   NXvirNetwork *network = (NXvirNetwork *)obj;
-   Table *value = ((VMDataStr *)userData)->value;
-   HostConnections *conn = ((VMDataStr *)userData)->conn;
-
+   HostConnections *conn = userData->conn;
    const char *xml = conn->getNetworkDefinitionAndLock(key, network);
-   if(xml == NULL)
+   if (xml == nullptr)
    {
       conn->unlockNetworkDefinition();
       return _CONTINUE;
    }
-   Config conf;
-   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "network", false))
-      AgentWriteLog(2, _T("VMGR.FillVMData(): Not possible to parse VM XML definition"));
+
+   Config config;
+   if (!config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "network", false))
+      nxlog_debug_tag(VMGR_DEBUG_TAG, 2, _T("FillNetworkData(): Cannot parse VM XML definition"));
    conn->unlockNetworkDefinition();
 
+   Table *value = userData->value;
    value->addRow();
-   value->set(0, conf.getValue(_T("/name"), _T("Unknown")));
-   value->set(1, conf.getValue(_T("/uuid"), _T("")));
+   value->set(0, config.getValue(_T("/name"), _T("Unknown")));
+   value->set(1, config.getValue(_T("/uuid"), _T("")));
 
    //concat all interfaces
    StringBuffer ifaces;
-   ObjectArray<ConfigEntry> *ifaceList = conf.getSubEntries(_T("/forward"), _T("interface"));
-   for(int i = 0; i < ifaceList->size(); i++)
+   ObjectArray<ConfigEntry> *ifaceList = config.getSubEntries(_T("/forward"), _T("interface"));
+   if (ifaceList != nullptr)
    {
-      ConfigEntry *item = ifaceList->get(i);
-      ifaces.append(item->getAttribute(_T("dev")));
-      if(i+1 != ifaceList->size())
-         ifaces.append(_T(", "));
+      for(int i = 0; i < ifaceList->size(); i++)
+      {
+         ConfigEntry *item = ifaceList->get(i);
+         ifaces.append(item->getAttribute(_T("dev")));
+         if(i+1 != ifaceList->size())
+            ifaces.append(_T(", "));
+      }
+      value->set(2, ifaces);
+      delete ifaceList;
    }
-   value->set(2, ifaces);
-   delete ifaceList;
 
    //concat all portgroups
    StringBuffer portgroup;
-   ObjectArray<ConfigEntry> *portgroupList = conf.getSubEntries(_T("/"), _T("portgroup"));
-   for(int i = 0; i < portgroupList->size(); i++)
+   ObjectArray<ConfigEntry> *portgroupList = config.getSubEntries(_T("/"), _T("portgroup"));
+   if (portgroupList != nullptr)
    {
-      ConfigEntry *item = portgroupList->get(i);
-      portgroup.append(item->getAttribute(_T("name")));
-      if(i+1 != portgroupList->size())
-         portgroup.append(_T(", "));
+      for(int i = 0; i < portgroupList->size(); i++)
+      {
+         ConfigEntry *item = portgroupList->get(i);
+         portgroup.append(item->getAttribute(_T("name")));
+         if(i+1 != portgroupList->size())
+            portgroup.append(_T(", "));
+      }
+      value->set(3, portgroup);
+      delete portgroupList;
    }
-   value->set(3, portgroup);
-   delete portgroupList;
 
    return _CONTINUE;
 }
@@ -781,13 +795,12 @@ LONG H_GetNetworksTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstra
 	if (!AgentGetParameterArg(cmd, 1, name, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
-
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if (conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const StringObjectMap<NXvirNetwork> *networks = conn->getNetworkListAndLock();
-   if(networks == NULL)
+   if (networks == nullptr)
    {
       conn->unlockNetworkList();
       return SYSINFO_RC_NO_SUCH_INSTANCE;
@@ -851,11 +864,11 @@ LONG H_GetStoragesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstra
 
 
    HostConnections *conn = g_connectionList.get(name);
-   if(conn == NULL)
+   if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    const StringObjectMap<NXvirStoragePool> *storages = conn->getStorageListAndLock();
-   if(storages == NULL)
+   if(storages == nullptr)
    {
       conn->unlockStorageList();
       return SYSINFO_RC_NO_SUCH_INSTANCE;

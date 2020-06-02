@@ -24,6 +24,7 @@
 #include <nms_agent.h>
 #include <nxcpapi.h>
 
+#define VMGR_DEBUG_TAG  _T("sa.vmgr")
 #define NEVER 0
 #define DATA_COLLECTION_CACHE_TIMEOUT 10
 
@@ -155,9 +156,9 @@ public:
    //Domains
    const StringObjectMap<NXvirDomain> *getDomainListAndLock();
    void unlockDomainList();
-   const char *getDomainDefinitionAndLock(const TCHAR *name, NXvirDomain *vm = NULL);
+   const char *getDomainDefinitionAndLock(const TCHAR *name, const NXvirDomain *vm = nullptr);
    void unlockDomainDefinition();
-   const virDomainInfo *getDomainInfoAndLock(const TCHAR *domainName, NXvirDomain *vm = NULL);
+   const virDomainInfo *getDomainInfoAndLock(const TCHAR *domainName, const NXvirDomain *vm = nullptr);
    void unlockDomainInfo();
    //Iface
    const StringList *getIfaceListAndLock();
@@ -165,14 +166,13 @@ public:
    //Networks
    const StringObjectMap<NXvirNetwork> *getNetworkListAndLock();
    void unlockNetworkList();
-   const char *getNetworkDefinitionAndLock(const TCHAR *name, NXvirNetwork *network = NULL);
+   const char *getNetworkDefinitionAndLock(const TCHAR *name, const NXvirNetwork *network = nullptr);
    void unlockNetworkDefinition();
    //Storage
    const StringObjectMap<NXvirStoragePool> *getStorageListAndLock();
    void unlockStorageList();
-   const virStoragePoolInfo *getStorageInformationAndLock(const TCHAR *name, NXvirStoragePool *storage = NULL);
+   const virStoragePoolInfo *getStorageInformationAndLock(const TCHAR *name, const NXvirStoragePool *storage = nullptr);
    void unlockStorageInfo();
-
 
    UINT32 getMaxVCpuCount();
    UINT64 getHostFreeMemory();
@@ -180,7 +180,7 @@ public:
    UINT64 getConnectionVersion();
    UINT64 getLibraryVersion();
 
-   const TCHAR *getName() { return m_name; }
+   const TCHAR *getName() const { return m_name; }
    /***
    Functions that can be added:
    virDomainScreenshot - get screenshot form VM
