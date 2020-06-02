@@ -14201,7 +14201,7 @@ void ClientSession::getPolicyList(NXCPMessage *request)
    {
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         static_cast<Template&>(*templateObject).fillPolicyMessage(&msg);
+         static_cast<Template&>(*templateObject).fillPolicyListMessage(&msg);
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
       else
@@ -14230,7 +14230,7 @@ void ClientSession::getPolicy(NXCPMessage *request)
       if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          uuid guid = request->getFieldAsGUID(VID_GUID);
-         if (static_cast<Template&>(*templateObject).fillMessageWithPolicy(&msg, guid))
+         if (static_cast<Template&>(*templateObject).fillPolicyDetailsMessage(&msg, guid))
             msg.setField(VID_RCC, RCC_SUCCESS);
          else
             msg.setField(VID_RCC, RCC_INVALID_POLICY_ID);

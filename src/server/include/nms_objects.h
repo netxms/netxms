@@ -1371,9 +1371,9 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb);
 
-   virtual void fillMessage(NXCPMessage *msg, uint32_t baseId);
-   virtual void fillUpdateMessage(NXCPMessage *msg);
-   virtual uint32_t modifyFromMessage(const NXCPMessage *request);
+   virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   virtual void fillUpdateMessage(NXCPMessage *msg) const;
+   virtual uint32_t modifyFromMessage(const NXCPMessage& request);
 
    virtual void updateFromImport(const ConfigEntry *config);
    virtual void createExportRecord(StringBuffer &xml, uint32_t recordId);
@@ -1393,7 +1393,7 @@ public:
    FileDeliveryPolicy(const TCHAR *name, uint32_t ownerId) : GenericAgentPolicy(name, _T("FileDelivery"), ownerId) { }
    virtual ~FileDeliveryPolicy() { }
 
-   virtual uint32_t modifyFromMessage(const NXCPMessage *request) override;
+   virtual uint32_t modifyFromMessage(const NXCPMessage& request) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual void deploy(shared_ptr<AgentPolicyDeploymentData> data) override;
@@ -1443,11 +1443,11 @@ public:
 
    void createExportRecord(StringBuffer &xml);
 
-   bool hasPolicy(const uuid& guid);
-   bool fillMessageWithPolicy(NXCPMessage *msg, const uuid& guid);
-   uuid updatePolicyFromMessage(NXCPMessage *request);
+   bool hasPolicy(const uuid& guid) const;
+   void fillPolicyListMessage(NXCPMessage *pMsg) const;
+   bool fillPolicyDetailsMessage(NXCPMessage *msg, const uuid& guid) const;
+   uuid updatePolicyFromMessage(const NXCPMessage& request);
    bool removePolicy(const uuid& guid);
-   void fillPolicyMessage(NXCPMessage *pMsg);
    void applyPolicyChanges();
    void forceApplyPolicyChanges();
    void checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap);

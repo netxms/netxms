@@ -2380,15 +2380,15 @@ void AgentConnection::onFileDownload(bool success)
 UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 {
    NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId, rcc;
 
 	*info = nullptr;
-   dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    msg.setCode(CMD_GET_POLICY_INVENTORY);
-   msg.setId(dwRqId);
+   msg.setId(requestId);
+   uint32_t rcc;
    if (sendMessage(&msg))
 	{
-		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
 		if (response != nullptr)
 		{
 			rcc = response->getFieldAsUInt32(VID_RCC);

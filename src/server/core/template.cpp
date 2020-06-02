@@ -519,7 +519,7 @@ void Template::removeAllPolicies(Node *node)
 /**
  * Check policy exist
  */
-bool Template::hasPolicy(const uuid& guid)
+bool Template::hasPolicy(const uuid& guid) const
 {
    lockProperties();
    bool hasPolicy = false;
@@ -535,8 +535,10 @@ bool Template::hasPolicy(const uuid& guid)
    return hasPolicy;
 }
 
-
-bool Template::fillMessageWithPolicy(NXCPMessage *msg, const uuid& guid)
+/**
+ * Fill given NXCP message with details for specific policy
+ */
+bool Template::fillPolicyDetailsMessage(NXCPMessage *msg, const uuid& guid) const
 {
    bool hasPolicy = false;
    lockProperties();
@@ -554,9 +556,9 @@ bool Template::fillMessageWithPolicy(NXCPMessage *msg, const uuid& guid)
 }
 
 /**
- * Create NXCP message with object's data
+ * Fill NXCP message with data for all policies
  */
-void Template::fillPolicyMessage(NXCPMessage *pMsg)
+void Template::fillPolicyListMessage(NXCPMessage *msg) const
 {
    lockProperties();
    UINT32 fieldId = VID_AGENT_POLICY_BASE;
@@ -564,32 +566,32 @@ void Template::fillPolicyMessage(NXCPMessage *pMsg)
    for (int i = 0; i < m_policyList->size(); i++)
    {
       GenericAgentPolicy *object = m_policyList->get(i);
-      object->fillMessage(pMsg, fieldId);
+      object->fillMessage(msg, fieldId);
       fieldId += 100;
       count++;
    }
-   pMsg->setField(VID_POLICY_COUNT, count);
+   msg->setField(VID_POLICY_COUNT, count);
    unlockProperties();
 }
 
 /**
  * Update policy if GUID is provided and create policy if GUID is nullptr
  */
-uuid Template::updatePolicyFromMessage(NXCPMessage *request)
+uuid Template::updatePolicyFromMessage(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_UPDATE_AGENT_POLICY, m_id);
+   NXCPMessage msg(CMD_UPDATE_AGENT_POLICY, 0);
    bool updated = false;
 
    lockProperties();
 
    uuid guid;
-   if (request->isFieldExist(VID_GUID))
+   if (request.isFieldExist(VID_GUID))
    {
-      guid = request->getFieldAsGUID(VID_GUID);
+      guid = request.getFieldAsGUID(VID_GUID);
       GenericAgentPolicy *policy = nullptr;
       for (int i = 0; i < m_policyList->size(); i++)
       {
-         if(m_policyList->get(i)->getGuid().equals(guid))
+         if (m_policyList->get(i)->getGuid().equals(guid))
          {
             policy = m_policyList->get(i);
             break;
@@ -609,7 +611,7 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    else
    {
       TCHAR name[MAX_DB_STRING], policyType[32];
-      GenericAgentPolicy *curr = CreatePolicy(request->getFieldAsString(VID_NAME, name, MAX_DB_STRING), request->getFieldAsString(VID_POLICY_TYPE, policyType, 32), m_id);
+      GenericAgentPolicy *curr = CreatePolicy(request.getFieldAsString(VID_NAME, name, MAX_DB_STRING), request.getFieldAsString(VID_POLICY_TYPE, policyType, 32), m_id);
       curr->modifyFromMessage(request);
       m_policyList->add(curr);
       curr->fillUpdateMessage(&msg);

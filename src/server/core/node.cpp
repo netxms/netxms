@@ -2905,7 +2905,7 @@ bool Node::checkNetworkPath(UINT32 requestId)
 void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
 {
    AgentPolicyInfo *ap;
-   UINT32 rcc = conn->getPolicyInventory(&ap);
+   uint32_t rcc = conn->getPolicyInventory(&ap);
    if (rcc == ERR_SUCCESS)
    {
       // Check for unbound but installed policies

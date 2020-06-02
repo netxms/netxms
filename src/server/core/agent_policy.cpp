@@ -131,7 +131,7 @@ bool GenericAgentPolicy::loadFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with policy data
  */
-void GenericAgentPolicy::fillMessage(NXCPMessage *msg, uint32_t baseId)
+void GenericAgentPolicy::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    msg->setField(baseId, m_guid);
    msg->setField(baseId + 1, m_type);
@@ -143,7 +143,7 @@ void GenericAgentPolicy::fillMessage(NXCPMessage *msg, uint32_t baseId)
 /**
  * Create NXCP message with policy data for notifications
  */
-void GenericAgentPolicy::fillUpdateMessage(NXCPMessage *msg)
+void GenericAgentPolicy::fillUpdateMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_GUID, m_guid);
    msg->setField(VID_NAME, m_name);
@@ -155,18 +155,18 @@ void GenericAgentPolicy::fillUpdateMessage(NXCPMessage *msg)
 /**
  * Modify policy from message
  */
-UINT32 GenericAgentPolicy::modifyFromMessage(const NXCPMessage *msg)
+uint32_t GenericAgentPolicy::modifyFromMessage(const NXCPMessage& msg)
 {
    MutexLock(m_contentLock);
-   msg->getFieldAsString(VID_NAME, m_name, MAX_DB_STRING);
-   if (msg->isFieldExist(VID_CONFIG_FILE_DATA))
+   msg.getFieldAsString(VID_NAME, m_name, MAX_DB_STRING);
+   if (msg.isFieldExist(VID_CONFIG_FILE_DATA))
    {
       MemFree(m_content);
-      m_content = msg->getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
+      m_content = msg.getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
    }
-   if (msg->isFieldExist(VID_FLAGS))
+   if (msg.isFieldExist(VID_FLAGS))
    {
-      m_flags = msg->getFieldAsUInt32(VID_FLAGS);
+      m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    }
    m_version++;
    MutexUnlock(m_contentLock);
@@ -191,11 +191,15 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, char *content
    {
       if (!_tcscmp(m_type, _T("AgentConfig")))
       {
-         msg->setField(VID_POLICY_TYPE, static_cast<UINT16>(AGENT_POLICY_CONFIG));
+         msg->setField(VID_POLICY_TYPE, static_cast<uint16_t>(AGENT_POLICY_CONFIG));
       }
       else if (!_tcscmp(m_type, _T("LogParserConfig")))
       {
-         msg->setField(VID_POLICY_TYPE, static_cast<UINT16>(AGENT_POLICY_LOG_PARSER));
+         msg->setField(VID_POLICY_TYPE, static_cast<uint16_t>(AGENT_POLICY_LOG_PARSER));
+      }
+      else
+      {
+         return false;  // This policy type is not supported by old agents
       }
    }
    msg->setField(VID_GUID, m_guid);
@@ -395,13 +399,13 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
 /**
  * Modify from message and in case of duplicate - duplicate all physical files and update GUID
  */
-UINT32 FileDeliveryPolicy::modifyFromMessage(const NXCPMessage *request)
+uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
 {
-   UINT32 result = GenericAgentPolicy::modifyFromMessage(request);
+   uint32_t result = GenericAgentPolicy::modifyFromMessage(request);
    if (result != RCC_SUCCESS)
       return result;
 
-   if (request->getFieldAsBoolean(VID_DUPLICATE))
+   if (request.getFieldAsBoolean(VID_DUPLICATE))
    {
       MutexLock(m_contentLock);
       ObjectArray<FileInfo> files(64, 64, Ownership::True);
