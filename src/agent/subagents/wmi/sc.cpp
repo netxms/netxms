@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008-2019 Victor Kirhenshtein
+** Copyright (C) 2008-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -109,19 +109,20 @@ LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *valu
       else
       {
          AgentWriteDebugLog(6, _T("WMI: H_SecurityCenterProductState: no objects of class \"%s\""), arg);
-         if (!_tcscmp(arg, _T("FirewallProduct")))
-         {
-            ret_string(value, _T("Windows Firewall"));
-            rc = SYSINFO_RC_SUCCESS;
-         }
-         else
-         {
-            rc = SYSINFO_RC_UNSUPPORTED;
-         }
+         rc = SYSINFO_RC_UNSUPPORTED;
       }
 		pEnumObject->Release();
 		CloseWMIQuery(&ctx);
 	}
+
+   if ((rc != SYSINFO_RC_SUCCESS) && !_tcscmp(arg, _T("FirewallProduct")))
+   {
+      // WMI only provides information about 3rd party firewall products
+      // If none available assume that Windows Firewall is used
+      ret_string(value, _T("Windows Firewall"));
+      rc = SYSINFO_RC_SUCCESS;
+   }
+
    return rc;
 }
 
