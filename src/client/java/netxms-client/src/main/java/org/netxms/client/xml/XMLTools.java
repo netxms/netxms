@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.convert.Registry;
 import org.simpleframework.xml.convert.RegistryStrategy;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.filter.Filter;
 
 /**
  * Tools for XML conversion
@@ -40,6 +41,13 @@ public final class XMLTools
    {
       Registry registry = new Registry();
       registry.bind(UUID.class, UUIDConverter.class);
-      return new Persister(new AnnotationStrategy(new RegistryStrategy(registry)));
+      // Add dummy filter to prevent expansion of ${name} in XML data
+      return new Persister(new AnnotationStrategy(new RegistryStrategy(registry)), new Filter() {
+         @Override
+         public String replace(String text)
+         {
+            return null;
+         }
+      });
    }
 }
