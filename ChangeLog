@@ -6,6 +6,7 @@
 - Method getInterface in NXSL class "Node" automatically detects if parameter is interface index, name, or MAC address
 - Added built-in NXSL constant NXSL::SystemIsBigEndian
 - Implemented agent metrics for available and cache memory on AIX
+- New agent parameter WindowsFirewall.State on Windows
 - Fixed issues:
 	NX-763 (File Tail/Show should not access database directly)
 	NX-1556 (Add HMAC to every record in audit log table)
@@ -15,6 +16,7 @@
 	NX-1846 (Server crash when querying Audit Log)
 	NX-1848 (Add getGuid method to org.netxms.client.events.EventTemplate class in Java API)
 	NX-1854 (When double-clicking a stacked graph in performance tab, it opens in a new view as non-stacked)
+	NX-1860 (Parameters to get state of each Windows Firewall profile separately)
 	NX-1861 (Unable to add USM Credentials when zoning is ON)
 	NX-1862 (Lazy object synchronization breaks object-based link status display on maps)
 	NX-1865 (Remote Node using TLS Tunnel Added incorrectly if same name is resolvable on local NetXMS network)

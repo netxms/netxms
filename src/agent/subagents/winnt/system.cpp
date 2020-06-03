@@ -22,6 +22,7 @@
 
 #include "winnt_subagent.h"
 #include <wuapi.h>
+#include <netfw.h>
 
 /**
  * Handler for System.ServiceState parameter
@@ -954,5 +955,67 @@ LONG H_MemoryInfo2(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_uint(value, static_cast<uint32_t>(GetTickCount64() / 1000));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Windows firewall profile names and codes
+ */
+static CodeLookupElement s_firewallProfiles[] =
+{
+   { NET_FW_PROFILE2_DOMAIN, _T("DOMAIN") },
+   { NET_FW_PROFILE2_PRIVATE, _T("PRIVATE") },
+   { NET_FW_PROFILE2_PUBLIC, _T("PUBLIC") },
+   { 0, nullptr }
+};
+
+/**
+ * Get state of Windows Firewall
+ */
+LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR profileName[64];
+   if (!AgentGetParameterArg(cmd, 1, profileName, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   _tcsupr(profileName);
+   int32_t profile = CodeFromText(profileName, s_firewallProfiles, -1);
+   if (profile == -1)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+   if ((hr != S_OK) && (hr != S_FALSE))
+      return -1;
+
+   INetFwPolicy2 *fwPolicy;
+   hr = CoCreateInstance(__uuidof(NetFwPolicy2), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2), (void**)&fwPolicy);
+   if (hr != S_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallState: call to CoCreateInstance(NetFwPolicy2) failed"));
+      CoUninitialize();
+      return SYSINFO_RC_ERROR;
+   }
+
+   long profiles;
+   fwPolicy->get_CurrentProfileTypes(&profiles);
+
+   bool enabled = false;
+   for (int i = 1; i < 8; i = i << 1)
+   {
+      if ((profiles & i) == 0)
+         continue;
+
+      VARIANT_BOOL v = FALSE;
+      fwPolicy->get_FirewallEnabled((NET_FW_PROFILE_TYPE2)i, &v);
+      if (v)
+      {
+         enabled = true;
+         break;
+      }
+   }
+
+   fwPolicy->Release();
+   CoUninitialize();
+   ret_boolean(value, enabled);
    return SYSINFO_RC_SUCCESS;
 }
