@@ -221,55 +221,54 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          Activator.logError("Cannot parse file delivery policy XML", e);
       }
 
-      checkElementsExist(rootElements, newElementSet, false); 
-      checkElementsExist(newElementSet, rootElements, true); 
+      checkForMissingElements(rootElements, newElementSet, false); 
+      checkForMissingElements(newElementSet, rootElements, true); 
       fileTree.refresh(true);
    }
-   
-   private void checkElementsExist(Set<PathElement> elements1, Set<PathElement> elements2, boolean createMissing)
+
+   /**
+    * Check for missing elements
+    *
+    * @param newElements new element set
+    * @param originalElements original element set
+    * @param createMissing true if missing elements should be created
+    */
+   private void checkForMissingElements(Set<PathElement> newElements, Set<PathElement> originalElements, boolean createMissing)
    {
-      Iterator<PathElement> iter = elements1.iterator();
+      Iterator<PathElement> iter = newElements.iterator();
       while (iter.hasNext())
       {
-         PathElement el = iter.next();
-         PathElement element = null;
-         for (PathElement el2 : elements2)
+         PathElement newElement = iter.next();
+         PathElement originalElement = null;
+         for (PathElement e : originalElements)
          {
-            if(el.getName().equals(el2.getName()))
+            if (newElement.getName().equals(e.getName()))
             {
-               element = el2;
+               originalElement = e;
                break;
             }
          }
-         if (element == null)
+         if (originalElement == null)
          {
             if (createMissing)
             {
-               fileTree.refresh(el, true);
-               elements2.add(el);
+               fileTree.refresh(newElement, true);
+               originalElements.add(newElement);
             }
             else
             {
                iter.remove();
             }
          }
-         else if (el.isFile() != element.isFile() && createMissing)
+         else if (newElement.isFile() != originalElement.isFile() && createMissing)
          {
-            elements2.add(el);
+            originalElements.add(newElement);
          }
-         else if (!el.isFile())
+         else if (!newElement.isFile())
          {            
-            if (createMissing)
-            {
-               checkElementsExist(el.getChildrenSet(), element.getChildrenSet(), createMissing);
-            }
-            else
-            {
-               checkElementsExist(el.getChildrenSet(), element.getChildrenSet(), createMissing);              
-            }
+            checkForMissingElements(newElement.getChildrenSet(), originalElement.getChildrenSet(), createMissing);
          }
       }
-      
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,9 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
-import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.widgets.FileDeliveryPolicyEditor;
@@ -31,11 +28,10 @@ import org.netxms.ui.eclipse.datacollection.widgets.FileDeliveryPolicyEditor;
 /**
  * Label provider for file delivery policy tree
  */
-public class FileDeliveryPolicyLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
+public class FileDeliveryPolicyLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private Image imageFolder;
    private Image imageFile;
-   private WorkbenchLabelProvider wbLabelProvider;
    
    /**
     * Constructor 
@@ -44,11 +40,9 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
    {
       imageFolder = Activator.getImageDescriptor("icons/folder.gif").createImage();
       imageFile = Activator.getImageDescriptor("icons/file.png").createImage();
-      
-      wbLabelProvider = new WorkbenchLabelProvider();
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
@@ -60,24 +54,6 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
    }
 
    /**
-    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-    */
-   @Override
-   public Image getImage(Object element)
-   {
-      return wbLabelProvider.getImage(element);
-   }
-
-   /**
-    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-    */
-   @Override
-   public String getText(Object element)
-   {
-      return wbLabelProvider.getText(element);
-   }
-
-   /**
     * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
     */
    @Override
@@ -85,24 +61,12 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
    {
       imageFile.dispose();
       imageFolder.dispose();
-      wbLabelProvider.dispose();
       super.dispose();
    }
 
-   @Override
-   public Color getForeground(Object element)
-   {
-      // TODO Auto-generated method stub
-      return null;
-   }
-
-   @Override
-   public Color getBackground(Object element)
-   {
-      // TODO Auto-generated method stub
-      return null;
-   }
-
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
    @Override
    public String getColumnText(Object element, int columnIndex)
    {

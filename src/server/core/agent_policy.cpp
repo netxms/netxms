@@ -428,7 +428,8 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
 
       for(int i = 0; i < files.size(); i++)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::modifyFromMessage(): copy file and update guid from %s to %s"), (const TCHAR *)files.get(i)->guid.toString(), (const TCHAR *)files.get(i)->newGuid.toString());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::modifyFromMessage(): copy file and update GUID from %s to %s"),
+                  files.get(i)->guid.toString().cstr(), files.get(i)->newGuid.toString().cstr());
 
          StringBuffer sourceFile = g_netxmsdDataDir;
          sourceFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
