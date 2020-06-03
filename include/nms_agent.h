@@ -827,12 +827,12 @@ struct NETXMS_SUBAGENT_INFO
 /**
  * Inline functions for returning parameters
  */
-inline void ret_string(TCHAR *rbuf, const TCHAR *value)
+static inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 {
    _tcslcpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
-inline void ret_wstring(TCHAR *rbuf, const WCHAR *value)
+static inline void ret_wstring(TCHAR *rbuf, const WCHAR *value)
 {
 #ifdef UNICODE
    wcslcpy(rbuf, value, MAX_RESULT_LENGTH);
@@ -842,7 +842,7 @@ inline void ret_wstring(TCHAR *rbuf, const WCHAR *value)
 #endif
 }
 
-inline void ret_mbstring(TCHAR *rbuf, const char *value)
+static inline void ret_mbstring(TCHAR *rbuf, const char *value)
 {
 #ifdef UNICODE
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, rbuf, MAX_RESULT_LENGTH);
@@ -852,7 +852,13 @@ inline void ret_mbstring(TCHAR *rbuf, const char *value)
 #endif
 }
 
-inline void ret_int(TCHAR *rbuf, LONG value)
+static inline void ret_boolean(TCHAR *rbuf, bool value)
+{
+   rbuf[0] = value ? '1' : '0';
+   rbuf[1] = 0;
+}
+
+static inline void ret_int(TCHAR *rbuf, LONG value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%ld"), (long)value);
@@ -861,7 +867,7 @@ inline void ret_int(TCHAR *rbuf, LONG value)
 #endif
 }
 
-inline void ret_uint(TCHAR *rbuf, UINT32 value)
+static inline void ret_uint(TCHAR *rbuf, UINT32 value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%lu"), (unsigned long)value);
@@ -870,7 +876,7 @@ inline void ret_uint(TCHAR *rbuf, UINT32 value)
 #endif
 }
 
-inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
+static inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%1.*f"), digits, value);
@@ -879,7 +885,7 @@ inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
 #endif
 }
 
-inline void ret_int64(TCHAR *rbuf, INT64 value)
+static inline void ret_int64(TCHAR *rbuf, INT64 value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64d"), value);
@@ -888,7 +894,7 @@ inline void ret_int64(TCHAR *rbuf, INT64 value)
 #endif   /* _WIN32 */
 }
 
-inline void ret_uint64(TCHAR *rbuf, QWORD value)
+static inline void ret_uint64(TCHAR *rbuf, QWORD value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64u"), value);
