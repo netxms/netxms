@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,23 +48,22 @@ import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * "Communications" property page for zone objects
+ * "Agent Shared Secrets" property page for zone objects
  */
-public class ZoneAgentSecretConziguration extends PropertyPage
+public class ZoneAgentSecretConfiguration extends PropertyPage
 {
-   private TableViewer agentSecretList;
-   private Button agentSecretMoveUpButton;
-   private Button agentSecretMoveDownButton;
-   private Button agentSecretAddButton;
-   private Button agentSecretDeleteButton;
-   private boolean modified = false;
-
    private Zone zone;
    private List<String> agentSecrets;
+   private TableViewer secretList;
+   private Button buttonMoveUp;
+   private Button buttonMoveDown;
+   private Button buttonAdd;
+   private Button buttonDelete;
+   private boolean modified = false;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -105,7 +104,7 @@ public class ZoneAgentSecretConziguration extends PropertyPage
       gridData.grabExcessHorizontalSpace = true;
       clientArea.setLayoutData(gridData);
       
-      agentSecretList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      secretList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -113,8 +112,8 @@ public class ZoneAgentSecretConziguration extends PropertyPage
       gridData.grabExcessHorizontalSpace = true;
       gridData.horizontalSpan = 2;
       gridData.heightHint = 150;
-      agentSecretList.getTable().setLayoutData(gridData);
-      agentSecretList.setContentProvider(new ArrayContentProvider());
+      secretList.getTable().setLayoutData(gridData);
+      secretList.setContentProvider(new ArrayContentProvider());
       
       Composite buttonsLeft = new Composite(clientArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -127,12 +126,12 @@ public class ZoneAgentSecretConziguration extends PropertyPage
       gridData.horizontalAlignment = SWT.LEFT;
       buttonsLeft.setLayoutData(gridData);
       
-      agentSecretMoveUpButton = new Button(buttonsLeft, SWT.PUSH);
-      agentSecretMoveUpButton.setText("&Up");
+      buttonMoveUp = new Button(buttonsLeft, SWT.PUSH);
+      buttonMoveUp.setText("&Up");
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      agentSecretMoveUpButton.setLayoutData(rd);
-      agentSecretMoveUpButton.addSelectionListener(new SelectionListener() {
+      buttonMoveUp.setLayoutData(rd);
+      buttonMoveUp.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -146,12 +145,12 @@ public class ZoneAgentSecretConziguration extends PropertyPage
          }
       });
       
-      agentSecretMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
-      agentSecretMoveDownButton.setText("&Down");
+      buttonMoveDown = new Button(buttonsLeft, SWT.PUSH);
+      buttonMoveDown.setText("&Down");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      agentSecretMoveDownButton.setLayoutData(rd);
-      agentSecretMoveDownButton.addSelectionListener(new SelectionListener() {
+      buttonMoveDown.setLayoutData(rd);
+      buttonMoveDown.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -176,12 +175,12 @@ public class ZoneAgentSecretConziguration extends PropertyPage
       gridData.horizontalAlignment = SWT.RIGHT;
       buttonsRight.setLayoutData(gridData);
 
-      agentSecretAddButton = new Button(buttonsRight, SWT.PUSH);
-      agentSecretAddButton.setText("Add");
+      buttonAdd = new Button(buttonsRight, SWT.PUSH);
+      buttonAdd.setText("Add");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      agentSecretAddButton.setLayoutData(rd);
-      agentSecretAddButton.addSelectionListener(new SelectionListener() {
+      buttonAdd.setLayoutData(rd);
+      buttonAdd.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -195,12 +194,12 @@ public class ZoneAgentSecretConziguration extends PropertyPage
          }
       });
       
-      agentSecretDeleteButton = new Button(buttonsRight, SWT.PUSH);
-      agentSecretDeleteButton.setText("Delete");
+      buttonDelete = new Button(buttonsRight, SWT.PUSH);
+      buttonDelete.setText("Delete");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      agentSecretDeleteButton.setLayoutData(rd);
-      agentSecretDeleteButton.addSelectionListener(new SelectionListener() {
+      buttonDelete.setLayoutData(rd);
+      buttonDelete.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -214,22 +213,24 @@ public class ZoneAgentSecretConziguration extends PropertyPage
          }
       });
       
-      agentSecretList.addSelectionChangedListener(new ISelectionChangedListener() {
+      secretList.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)agentSecretList.getSelection();
-            agentSecretMoveUpButton.setEnabled(selection.size() == 1);
-            agentSecretMoveDownButton.setEnabled(selection.size() == 1);
-            agentSecretDeleteButton.setEnabled(selection.size() > 0);
+            IStructuredSelection selection = (IStructuredSelection)secretList.getSelection();
+            buttonMoveUp.setEnabled(selection.size() == 1);
+            buttonMoveDown.setEnabled(selection.size() == 1);
+            buttonDelete.setEnabled(selection.size() > 0);
          }
       });
 	}
 	
+   /**
+    * Load configured secrets from server
+    */
 	private void loadConfig()
 	{
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      
+      final NXCSession session = ConsoleSharedData.getSession();
 	   ConsoleJob job = new ConsoleJob(Messages.get().NetworkCredentials_LoadingConfig, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -240,7 +241,7 @@ public class ZoneAgentSecretConziguration extends PropertyPage
                @Override
                public void run()
                {
-                  agentSecretList.setInput(agentSecrets);     
+                  secretList.setInput(agentSecrets);     
                }
             });
          }
@@ -255,7 +256,10 @@ public class ZoneAgentSecretConziguration extends PropertyPage
       job.start();
 	}
 	
-   protected void addSharedSecret()
+   /**
+    * Add new secret
+    */
+   private void addSharedSecret()
    {
       InputDialog dlg = new InputDialog(getShell(), "Add shared secret", 
             "Please enter shared secret", "", null); //$NON-NLS-1$
@@ -263,21 +267,21 @@ public class ZoneAgentSecretConziguration extends PropertyPage
       {
          String value = dlg.getValue();
          agentSecrets.add(value);
-         agentSecretList.setInput(agentSecrets);
+         secretList.setInput(agentSecrets);
          modified = true;
       }
    }
 
    protected void removeSharedSecret()
    {
-      IStructuredSelection selection = (IStructuredSelection)agentSecretList.getSelection();
-      if (selection.size() > 0)
+      IStructuredSelection selection = (IStructuredSelection)secretList.getSelection();
+      if (!selection.isEmpty())
       {
          for(Object o : selection.toList())
          {
             agentSecrets.remove(o);
          }
-         agentSecretList.setInput(agentSecrets.toArray());
+         secretList.setInput(agentSecrets.toArray());
          modified = true;
       }
    }
@@ -287,9 +291,9 @@ public class ZoneAgentSecretConziguration extends PropertyPage
     * 
     * @param up true to move up, false to move down
     */
-   protected void moveSharedSecret(boolean up)
+   private void moveSharedSecret(boolean up)
    {
-      IStructuredSelection selection = (IStructuredSelection)agentSecretList.getSelection();
+      IStructuredSelection selection = (IStructuredSelection)secretList.getSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -297,20 +301,16 @@ public class ZoneAgentSecretConziguration extends PropertyPage
             int index = agentSecrets.indexOf(o);
             if (up)
             {
-               if (index < 1)
-                  return;
-               
-               Collections.swap(agentSecrets, index - 1, index);
+               if (index >= 1)
+                  Collections.swap(agentSecrets, index - 1, index);
             }
             else
             {
-               if ((index + 1) == agentSecrets.size())
-                  return;
-               
-               Collections.swap(agentSecrets, index + 1, index);
+               if ((index + 1) != agentSecrets.size())
+                  Collections.swap(agentSecrets, index + 1, index);
             }
          }
-         agentSecretList.setInput(agentSecrets);
+         secretList.setInput(agentSecrets);
          modified = true;
       }
    }
@@ -320,7 +320,7 @@ public class ZoneAgentSecretConziguration extends PropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected boolean applyChanges(final boolean isApply)
+   private boolean applyChanges(final boolean isApply)
 	{
       if (!modified)
          return true;     // Nothing to apply
@@ -346,9 +346,9 @@ public class ZoneAgentSecretConziguration extends PropertyPage
 		return true;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
