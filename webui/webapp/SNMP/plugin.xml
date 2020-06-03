@@ -162,7 +162,7 @@
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
-            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConziguration"
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConfiguration"
             id="org.netxms.ui.eclipse.snmp.propertypages.ZoneSNMPConziguration"
             name="SNMP Configuration">
          <enabledWhen>
@@ -172,7 +172,7 @@
          </enabledWhen>
       </page>
       <page
-            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConziguration"
+            class="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConfiguration"
             id="org.netxms.ui.eclipse.snmp.propertypages.ZoneAgentSecretConziguration"
             name="Agent Shared Secrets">
          <enabledWhen>
