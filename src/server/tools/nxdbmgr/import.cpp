@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -184,14 +184,14 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 static bool ImportDataTables(sqlite3 *db, const StringList& excludedTables)
 {
    IntegerArray<UINT32> *targets = GetDataCollectionTargets();
-   if (targets == NULL)
+   if (targets == nullptr)
       return false;
 
 	// Create and import idata_xx tables for each data collection target
    bool success = true;
 	for(int i = 0; i < targets->size(); i++)
 	{
-		UINT32 id = targets->get(i);
+		uint32_t id = targets->get(i);
 		if (!CreateIDataTable(id))
 		{
 		   success = false;
