@@ -428,7 +428,7 @@ static inline StringBuffer BuildDataInsertQuery(bool tdata, const TCHAR *sclass)
 /**
  * Migrate collected data from multi-table to single table configuration (TSDB version)
  */
-static bool MigrateDataToSingleTable_TSDB(UINT32 nodeId, bool tdata)
+static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
 {
    const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
    WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
@@ -459,9 +459,9 @@ static bool MigrateDataToSingleTable_TSDB(UINT32 nodeId, bool tdata)
    int rows = 0, totalRows = 0;
    while(DBFetch(hResult))
    {
-      UINT32 dciId = DBGetFieldULong(hResult, 0);
+      uint32_t dciId = DBGetFieldULong(hResult, 0);
       int *sclassPtr = s_dciStorageClasses.get(dciId);
-      int sclass = (sclassPtr != NULL) ? *sclassPtr : 0;
+      int sclass = (sclassPtr != nullptr) ? *sclassPtr : 0;
 
       StringBuffer& query = queries[sclass];
       query.append(hasContent[sclass] ? _T(",(") : _T(" ("));

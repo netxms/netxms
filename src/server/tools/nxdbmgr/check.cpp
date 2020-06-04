@@ -503,7 +503,7 @@ static void CheckEPP()
 /**
  * Check data tables for given object class
  */
-static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<UINT32> *list)
+static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32_t> *list)
 {
    TCHAR query[1024];
    _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
@@ -522,9 +522,9 @@ static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<UINT32
 /**
  * Get all data collection targets
  */
-IntegerArray<UINT32> *GetDataCollectionTargets()
+IntegerArray<uint32_t> *GetDataCollectionTargets()
 {
-   IntegerArray<UINT32> *list = new IntegerArray<UINT32>(128, 128);
+   IntegerArray<UINT32> *list = new IntegerArray<uint32_t>(128, 128);
    CollectObjectIdentifiers(_T("nodes"), list);
    CollectObjectIdentifiers(_T("clusters"), list);
    CollectObjectIdentifiers(_T("mobile_devices"), list);

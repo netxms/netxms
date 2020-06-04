@@ -70,7 +70,7 @@ void UnregisterOnlineUpgrade(int major, int minor);
 bool IsOnlineUpgradePending();
 void RunPendingOnlineUpgrades();
 
-IntegerArray<UINT32> *GetDataCollectionTargets();
+IntegerArray<uint32_t> *GetDataCollectionTargets();
 bool IsDataTableExist(const TCHAR *format, UINT32 id);
 
 BOOL CreateIDataTable(DWORD nodeId);

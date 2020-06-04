@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -238,26 +238,123 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
 }
 
 /**
+ * Export single table performance data
+ */
+static bool ExportSingleTablePerfData(sqlite3 *db, const StringList& excludedTables)
+{
+   _tprintf(_T("\x1b[31;1mERROR:\x1b[0m performance data export from this database is unsupported\n"));
+   return false;
+}
+
+/**
+ * Export multi-table performance data
+ */
+static bool ExportMultiTablePerfData(sqlite3 *db, const StringList& excludedTables)
+{
+   char queryTemplate[11][MAX_DB_STRING];
+   memset(queryTemplate, 0, sizeof(queryTemplate));
+
+   char *errmsg;
+   if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='IDataTableCreationCommand'",
+                    GetIDataQueryCB, queryTemplate[0], &errmsg) != SQLITE_OK)
+   {
+      _tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
+      sqlite3_free(errmsg);
+      return false;
+   }
+
+   for(int i = 0; i < 10; i++)
+   {
+      char query[256];
+      sprintf(query, "SELECT var_value FROM metadata WHERE var_name='TDataTableCreationCommand_%d'", i);
+      if (sqlite3_exec(db, query, GetIDataQueryCB, queryTemplate[i + 1], &errmsg) != SQLITE_OK)
+      {
+         _tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
+         sqlite3_free(errmsg);
+         return false;
+      }
+      if (queryTemplate[i + 1][0] == 0)
+         break;
+   }
+
+   shared_ptr<IntegerArray<uint32_t>> targets(GetDataCollectionTargets());
+   if (targets == nullptr)
+      return false;
+   for(int i = 0; i < targets->size(); i++)
+   {
+      uint32_t id = targets->get(i);
+
+      if (!g_skipDataSchemaMigration)
+      {
+         for(int j = 0; j < 11; j++)
+         {
+            if (queryTemplate[j][0] == 0)
+               break;
+
+            char query[1024];
+            snprintf(query, 1024, queryTemplate[j], id, id);
+            if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)
+            {
+               _tprintf(_T("ERROR: SQLite query failed: %hs (%hs)\n"), query, errmsg);
+               sqlite3_free(errmsg);
+               return false;
+            }
+         }
+      }
+
+      if (!g_skipDataMigration)
+      {
+         TCHAR idataTable[128];
+         _sntprintf(idataTable, 128, _T("idata_%d"), id);
+         if (!excludedTables.contains(idataTable))
+         {
+            if (!ExportTable(db, idataTable))
+            {
+               return false;
+            }
+         }
+         else
+         {
+            _tprintf(_T("Skipping table %s\n"), idataTable);
+         }
+
+         _sntprintf(idataTable, 128, _T("tdata_%d"), id);
+         if (!excludedTables.contains(idataTable))
+         {
+            if (!ExportTable(db, idataTable))
+            {
+               return false;
+            }
+         }
+         else
+         {
+            _tprintf(_T("Skipping table %s\n"), idataTable);
+         }
+      }
+   }
+   return true;
+}
+
+/**
  * Export database
  */
 void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
 {
-	sqlite3 *db;
-	char *errmsg, queryTemplate[11][MAX_DB_STRING];
-	TCHAR idataTable[128];
-   int legacy = 0, major = 0, minor = 0;
-	BOOL success = FALSE;
-
-	if (!ValidateDatabase())
-		return;
+   if (!ValidateDatabase())
+      return;
 
 	// Create new SQLite database
 	_unlink(file);
+   sqlite3 *db;
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
 		_tprintf(_T("ERROR: unable to open output file\n"));
 		return;
 	}
+
+   char *errmsg;
+   int legacy = 0, major = 0, minor = 0;
+   bool success = false;
 
    if (sqlite3_exec(db, "PRAGMA page_size=65536", NULL, NULL, &errmsg) != SQLITE_OK)
    {
@@ -305,10 +402,9 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
                          !_tcscmp(table, _T("alarm_events")))) ||
           (skipTrapLog && !_tcscmp(table, _T("snmp_trap_log"))) ||
           (skipSysLog && !_tcscmp(table, _T("syslog"))) ||
-          ((g_skipDataMigration || g_skipDataSchemaMigration) &&
-           (!_tcscmp(table, _T("raw_dci_values")) ||
-            !_tcsncmp(table, _T("idata"), 5) ||
-            !_tcsncmp(table, _T("tdata"), 5))) ||
+          ((g_skipDataMigration || g_skipDataSchemaMigration) && !_tcscmp(table, _T("raw_dci_values"))) ||
+          !_tcsncmp(table, _T("idata"), 5) ||
+          !_tcsncmp(table, _T("tdata"), 5) ||
           excludedTables.contains(table))
 	   {
 	      _tprintf(_T("Skipping table %s\n"), table);
@@ -324,91 +420,16 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
    if (!EnumerateModuleTables(ExportModuleTable, &data))
       goto cleanup;
 
-	if ((!g_skipDataMigration || !g_skipDataSchemaMigration) && !DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
+	if (!g_skipDataMigration || !g_skipDataSchemaMigration)
 	{
-	   int i;
-
-      // Export tables with collected DCI data
-      memset(queryTemplate, 0, sizeof(queryTemplate));
-
-      if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='IDataTableCreationCommand'",
-                       GetIDataQueryCB, queryTemplate[0], &errmsg) != SQLITE_OK)
-      {
-         _tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
-         sqlite3_free(errmsg);
-         goto cleanup;
-      }
-
-      for(i = 0; i < 10; i++)
-      {
-         char query[256];
-         sprintf(query, "SELECT var_value FROM metadata WHERE var_name='TDataTableCreationCommand_%d'", i);
-         if (sqlite3_exec(db, query, GetIDataQueryCB, queryTemplate[i + 1], &errmsg) != SQLITE_OK)
-         {
-            _tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
-            sqlite3_free(errmsg);
-            goto cleanup;
-         }
-         if (queryTemplate[i + 1][0] == 0)
-            break;
-      }
-
-      IntegerArray<UINT32> *targets = GetDataCollectionTargets();
-      if (targets == NULL)
-         goto cleanup;
-      for(i = 0; i < targets->size(); i++)
-      {
-         UINT32 id = targets->get(i);
-
-         if (!g_skipDataSchemaMigration)
-         {
-            for(int j = 0; j < 11; j++)
-            {
-               if (queryTemplate[j][0] == 0)
-                  break;
-
-               char query[1024];
-               snprintf(query, 1024, queryTemplate[j], id, id);
-               if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)
-               {
-                  _tprintf(_T("ERROR: SQLite query failed: %hs (%hs)\n"), query, errmsg);
-                  sqlite3_free(errmsg);
-                  goto cleanup;
-               }
-            }
-         }
-
-         if (!g_skipDataMigration)
-         {
-            _sntprintf(idataTable, 128, _T("idata_%d"), id);
-            if (!excludedTables.contains(idataTable))
-            {
-               if (!ExportTable(db, idataTable))
-               {
-                  goto cleanup;
-               }
-            }
-            else
-            {
-               _tprintf(_T("Skipping table %s\n"), idataTable);
-            }
-
-            _sntprintf(idataTable, 128, _T("tdata_%d"), id);
-            if (!excludedTables.contains(idataTable))
-            {
-               if (!ExportTable(db, idataTable))
-               {
-                  goto cleanup;
-               }
-            }
-            else
-            {
-               _tprintf(_T("Skipping table %s\n"), idataTable);
-            }
-         }
-      }
-
-      delete targets;
+	   if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
+	   {
+	      ExportSingleTablePerfData(db, excludedTables);
+	   }
+	   else
+	   {
+         ExportMultiTablePerfData(db, excludedTables);
+	   }
 	}
 
 	success = TRUE;
