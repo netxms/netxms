@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -681,11 +681,11 @@ static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, const char *szQuery, WCHAR *
    int retryCount = 60;
 
 retry:
-	PGresult	*pResult = PQexec(((PG_CONN *)pConn)->handle, szQuery);
+	PGresult	*pResult = PQexec(pConn->handle, szQuery);
 
-	if (pResult == NULL)
+	if (pResult == nullptr)
 	{
-		if (errorText != NULL)
+		if (errorText != nullptr)
 			wcsncpy(errorText, L"Internal error (pResult is NULL in UnsafeDrvSelect)", DBDRV_MAX_ERROR_TEXT);
 		return NULL;
 	}
@@ -695,7 +695,7 @@ retry:
 	{	
       const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
       if ((PQstatus(pConn->handle) != CONNECTION_BAD) &&
-          (sqlState != NULL) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
+          (sqlState != nullptr) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
       {
          ThreadSleep(500);
          retryCount--;
@@ -704,7 +704,7 @@ retry:
       }
       else
       {
-	      if (errorText != NULL)
+	      if (errorText != nullptr)
 	      {
 		      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
             int len = (int)wcslen(errorText);
@@ -719,10 +719,10 @@ retry:
 	      }
       }
 		PQclear(pResult);
-		return NULL;
+		return nullptr;
 	}
 
-	if (errorText != NULL)
+	if (errorText != nullptr)
 		*errorText = 0;
    return (DBDRV_RESULT)pResult;
 }
@@ -736,7 +736,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWO
    char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 	MutexLock(pConn->mutexQueryLock);
 	DBDRV_RESULT pResult = UnsafeDrvSelect(pConn, pszQueryUTF8, errorText);
-   if (pResult != NULL)
+   if (pResult != nullptr)
    {
       *pdwError = DBERR_SUCCESS;
    }
@@ -833,37 +833,42 @@ extern "C" LONG __EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int n
 /**
  * Get field value from result
  */
-extern "C" WCHAR __EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn, WCHAR *pBuffer, int nBufLen)
+static WCHAR *UnsafeGetField(DBDRV_RESULT result, int row, int column, WCHAR *buffer, size_t size)
 {
-	if (pResult == NULL)
-      return NULL;
+   if (PQfformat((PGresult *)result, column) != 0)
+      return nullptr;
 
-	if (PQfformat((PGresult *)pResult, nColumn) != 0)
-		return NULL;
+   const char *value = PQgetvalue((PGresult *)result, row, column);
+   if (value == nullptr)
+      return nullptr;
 
-	const char *value = PQgetvalue((PGresult *)pResult, nRow, nColumn);
-	if (value == NULL)
-	   return NULL;
+   utf8_to_wchar(value, -1, buffer, size);
+   buffer[size - 1] = 0;
+   return buffer;
+}
 
-   MultiByteToWideChar(CP_UTF8, 0, value, -1, pBuffer, nBufLen);
-   pBuffer[nBufLen - 1] = 0;
-	return pBuffer;
+/**
+ * Get field value from result
+ */
+extern "C" WCHAR __EXPORT *DrvGetField(DBDRV_RESULT result, int row, int column, WCHAR *buffer, int size)
+{
+	return (result != nullptr) ? UnsafeGetField(result, row, column, buffer, size) : nullptr;
 }
 
 /**
  * Get field value from result as UTF8 string
  */
-extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT pResult, int nRow, int nColumn, char *pBuffer, int nBufLen)
+extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT result, int row, int column, char *buffer, int size)
 {
-	if (pResult == NULL)
-      return NULL;
+	if (result == nullptr)
+      return nullptr;
 
-	const char *value = PQgetvalue((PGresult *)pResult, nRow, nColumn);
-	if (value == NULL)
-	   return NULL;
+	const char *value = PQgetvalue((PGresult *)result, row, column);
+	if (value == nullptr)
+	   return nullptr;
 
-   strlcpy(pBuffer, value, nBufLen);
-	return pBuffer;
+   strlcpy(buffer, value, size);
+	return nullptr;
 }
 
 /**
@@ -871,7 +876,7 @@ extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT pResult, int nRow, int nC
  */
 extern "C" int __EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
 {
-	return (pResult != NULL) ? PQntuples((PGresult *)pResult) : 0;
+	return (pResult != nullptr) ? PQntuples((PGresult *)pResult) : 0;
 }
 
 /**
@@ -879,7 +884,7 @@ extern "C" int __EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
  */
 extern "C" int __EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
 {
-	return (hResult != NULL) ? PQnfields((PGresult *)hResult) : 0;
+	return (hResult != nullptr) ? PQnfields((PGresult *)hResult) : 0;
 }
 
 /**
@@ -887,18 +892,24 @@ extern "C" int __EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
  */
 extern "C" const char __EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
 {
-	return (hResult != NULL) ? PQfname((PGresult *)hResult, column) : NULL;
+	return (hResult != nullptr) ? PQfname((PGresult *)hResult, column) : nullptr;
+}
+
+/**
+ * Internal free result
+ */
+static void UnsafeFreeResult(DBDRV_RESULT result)
+{
+   PQclear(static_cast<PGresult*>(result));
 }
 
 /**
  * Free SELECT results
  */
-extern "C" void __EXPORT DrvFreeResult(DBDRV_RESULT pResult)
+extern "C" void __EXPORT DrvFreeResult(DBDRV_RESULT result)
 {
-	if (pResult != NULL)
-	{
-   	PQclear((PGresult *)pResult);
-	}
+   if (result != nullptr)
+      UnsafeFreeResult(result);
 }
 
 /**
@@ -1331,18 +1342,19 @@ extern "C" DWORD __EXPORT DrvRollback(PG_CONN *pConn)
  */
 extern "C" int __EXPORT DrvIsTableExist(PG_CONN *pConn, const WCHAR *name)
 {
-   WCHAR query[256];
-   swprintf(query, 256, L"SELECT count(*) FROM information_schema.tables WHERE table_catalog=current_database() AND table_schema=current_schema() AND lower(table_name)=lower('%ls')", name);
-   DWORD error;
+   char query[256];
+   snprintf(query, 256, "SELECT count(*) FROM information_schema.tables WHERE table_catalog=current_database() AND table_schema=current_schema() AND lower(table_name)=lower('%ls')", name);
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   DBDRV_RESULT hResult = DrvSelect(pConn, query, &error, errorText);
-   if (hResult != NULL)
+   MutexLock(pConn->mutexQueryLock);
+   DBDRV_RESULT hResult = UnsafeDrvSelect(pConn, query, errorText);
+   MutexUnlock(pConn->mutexQueryLock);
+   if (hResult != nullptr)
    {
       WCHAR buffer[64] = L"";
-      DrvGetField(hResult, 0, 0, buffer, 64);
+      UnsafeGetField(hResult, 0, 0, buffer, 64);
       rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
-      DrvFreeResult(hResult);
+      UnsafeFreeResult(hResult);
    }
    return rc;
 }
