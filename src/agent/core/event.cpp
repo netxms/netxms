@@ -26,7 +26,6 @@
 /**
  * Static data
  */
-static Queue s_eventQueue;
 static UINT64 s_generatedEventsCount = 0;
 static UINT64 s_sentEventsCount = 0;
 static UINT64 s_eventIdBase = static_cast<UINT64>(time(NULL)) << 32;
@@ -34,60 +33,7 @@ static VolatileCounter s_eventIdCounter = 0;
 static time_t s_lastEventTimestamp = 0;
 
 /**
- * Trap sender
- */
-THREAD_RESULT THREAD_CALL EventSender(void *pArg)
-{
-   nxlog_debug(1, _T("Event sender thread started"));
-   while(true)
-   {
-      NXCP_MESSAGE *pMsg = (NXCP_MESSAGE *)s_eventQueue.getOrBlock();
-      if (pMsg == INVALID_POINTER_VALUE)
-         break;
-
-      bool sent = false;
-
-      if (g_dwFlags & AF_SUBAGENT_LOADER)
-      {
-         sent = SendRawMessageToMasterAgent(pMsg);
-      }
-      else
-      {
-         MutexLock(g_hSessionListAccess);
-         for(UINT32 i = 0; i < g_dwMaxSessions; i++)
-            if ((g_pSessionList[i] != NULL) && g_pSessionList[i]->canAcceptTraps())
-            {
-               g_pSessionList[i]->sendRawMessage(pMsg);
-               sent = true;
-            }
-         MutexUnlock(g_hSessionListAccess);
-      }
-
-      if (sent)
-		{
-	      MemFree(pMsg);
-			s_sentEventsCount++;
-		}
-		else
-		{
-         s_eventQueue.insert(pMsg);	// Re-queue trap
-			ThreadSleep(1);
-		}
-   }
-	nxlog_debug(1, _T("Event sender thread terminated"));
-   return THREAD_OK;
-}
-
-/**
- * Shutdown trap sender
- */
-void ShutdownEventSender()
-{
-	s_eventQueue.setShutdownMode();
-}
-
-/**
- * Send trap to server
+ * Send event to server
  */
 void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int pcount, const TCHAR **parameters)
 {
@@ -106,18 +52,18 @@ void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int p
                   eventCode, CHECK_NULL(eventName), static_cast<INT64>(timestamp), pcount, (const TCHAR *)argsText);
    }
 
-   NXCPMessage msg(CMD_TRAP, 0, 4); // Use version 4
-	msg.setField(VID_TRAP_ID, s_eventIdBase | static_cast<UINT64>(InterlockedIncrement(&s_eventIdCounter)));
-   msg.setField(VID_EVENT_CODE, eventCode);
+   NXCPMessage *msg = new NXCPMessage(CMD_TRAP, 0, 4); // Use version 4
+	msg->setField(VID_TRAP_ID, s_eventIdBase | static_cast<UINT64>(InterlockedIncrement(&s_eventIdCounter)));
+   msg->setField(VID_EVENT_CODE, eventCode);
 	if (eventName != NULL)
-		msg.setField(VID_EVENT_NAME, eventName);
-	msg.setFieldFromTime(VID_TIMESTAMP, (timestamp != 0) ? timestamp : time(NULL));
-   msg.setField(VID_NUM_ARGS, (WORD)pcount);
+		msg->setField(VID_EVENT_NAME, eventName);
+	msg->setFieldFromTime(VID_TIMESTAMP, (timestamp != 0) ? timestamp : time(NULL));
+   msg->setField(VID_NUM_ARGS, (WORD)pcount);
    for(int i = 0; i < pcount; i++)
-      msg.setField(VID_EVENT_ARG_BASE + i, parameters[i]);
+      msg->setField(VID_EVENT_ARG_BASE + i, parameters[i]);
 	s_generatedEventsCount++;
 	s_lastEventTimestamp = time(NULL);
-   s_eventQueue.put(msg.serialize());
+	g_notificationProcessorQueue.put(msg);
 }
 
 /**
@@ -219,7 +165,7 @@ void ForwardEvent(NXCPMessage *msg)
 	msg->setField(VID_TRAP_ID, s_eventIdBase | (UINT64)InterlockedIncrement(&s_eventIdCounter));
 	s_generatedEventsCount++;
 	s_lastEventTimestamp = time(NULL);
-   s_eventQueue.put(msg->serialize());
+	g_notificationProcessorQueue.put(msg);
 }
 
 /**

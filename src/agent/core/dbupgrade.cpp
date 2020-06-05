@@ -39,6 +39,30 @@ static DB_HANDLE s_db = NULL;
 
 
 /**
+ * Upgrade from V13 to V14
+ */
+static BOOL H_UpgradeFromV13(int currVersion, int newVersion)
+{
+   static TCHAR serversQuery[] =
+         _T("CREATE TABLE notification_servers (")
+         _T("  server_id number(20) not null,")
+         _T("  last_connection_time integer not null,")
+         _T("  PRIMARY KEY(server_id))");
+   CHK_EXEC(Query(serversQuery));
+
+   static TCHAR query[] =
+         _T("CREATE TABLE notification_data (")
+         _T("  id integer not null,")
+         _T("  server_id number(20) not null,")
+         _T("  serialized_data TEXT not null,")
+         _T("  PRIMARY KEY(server_id,id))");
+   CHK_EXEC(Query(query));
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 14));
+   return TRUE;
+}
+
+/**
  * Upgrade from V12 to V13
  */
 static BOOL H_UpgradeFromV12(int currVersion, int newVersion)
@@ -467,6 +491,7 @@ static struct
    { 10, 11, H_UpgradeFromV10 },
    { 11, 12, H_UpgradeFromV11 },
    { 12, 13, H_UpgradeFromV12 },
+   { 13, 14, H_UpgradeFromV13 },
    { 0, 0, NULL }
 };
 

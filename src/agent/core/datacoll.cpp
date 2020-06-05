@@ -1827,8 +1827,10 @@ void ShutdownLocalDataCollector()
  */
 void ClearDataCollectionConfiguration()
 {
-   s_itemLock.lock();
    DB_HANDLE db = GetLocalDatabaseHandle();
+   if (db == nullptr)
+      return;
+   s_itemLock.lock();
    DBQuery(db, _T("DELETE FROM dc_queue"));
    DBQuery(db, _T("DELETE FROM dc_config"));
    DBQuery(db, _T("DELETE FROM dc_snmp_targets"));

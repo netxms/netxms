@@ -153,7 +153,6 @@ void ExternalSubagent::connect(NamedPipe *pipe)
             break;
          case CMD_TRAP:
             ForwardEvent(msg);
-            delete msg;
             break;
          case CMD_PROXY_MESSAGE:
             ForwardSessionMessage(msg);

@@ -1073,6 +1073,7 @@ public:
       const String *s = m_string.get();
       return (s != NULL) ? s->isEmpty() : true;
    }
+   size_t length() const { return m_string->length(); }
 };
 
 /**

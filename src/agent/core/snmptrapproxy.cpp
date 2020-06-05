@@ -52,19 +52,6 @@ struct SNMPPacket
 };
 
 /**
- * Sender queue
- */
-static ObjectQueue<SNMPPacket> s_snmpTrapQueue(256, Ownership::True);
-
-/**
- * Shutdown trap sender
- */
-void ShutdownSNMPTrapSender()
-{
-	s_snmpTrapQueue.setShutdownMode();
-}
-
-/**
  * SNMP trap read thread
  */
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
@@ -136,7 +123,14 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
          SNMPPacket *message = new SNMPPacket(InetAddress::createFromSockaddr(reinterpret_cast<struct sockaddr*>(&sa)), g_snmpTrapPort, packet, bytes);
          nxlog_debug(6, _T("SNMPTrapReceiver: packet received from %s"), message->addr.toString(ipAddrStr));
          g_snmpTraps++;
-         s_snmpTrapQueue.put(message);
+
+         NXCPMessage *msg = new NXCPMessage(CMD_SNMP_TRAP, GenerateMessageId(), 4); // Use version 4
+         msg->setField(VID_IP_ADDRESS, message->addr);
+         msg->setField(VID_PORT, message->port);
+         msg->setField(VID_PDU_SIZE, static_cast<UINT32>(message->lenght));
+         msg->setField(VID_PDU, message->data, message->lenght);
+         msg->setField(VID_ZONE_UIN, g_zoneUIN);
+         g_notificationProcessorQueue.put(msg);
       }
       else
       {
@@ -147,67 +141,6 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
    delete pTransport;
    DebugPrintf(1, _T("SNMP Trap Receiver terminated"));
-   return THREAD_OK;
-}
-
-/**
- * SNMP trap read thread
- */
-THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
-{
-	DebugPrintf(1, _T("SNMP Trap sender thread started"));
-   while(1)
-   {
-      DebugPrintf(8, _T("SNMPTrapSender: waiting for message"));
-      SNMPPacket *pdu = s_snmpTrapQueue.getOrBlock();
-      if (pdu == INVALID_POINTER_VALUE)
-         break;
-
-      DebugPrintf(6, _T("SNMPTrapSender: got trap from queue"));
-      bool sent = false;
-
-      NXCPMessage *msg = new NXCPMessage(CMD_SNMP_TRAP, GenerateMessageId(), 4); // Use version 4
-      msg->setField(VID_IP_ADDRESS, pdu->addr);
-      msg->setField(VID_PORT, pdu->port);
-      msg->setField(VID_PDU_SIZE, static_cast<UINT32>(pdu->lenght));
-      msg->setField(VID_PDU, pdu->data, pdu->lenght);
-      msg->setField(VID_ZONE_UIN, g_zoneUIN);
-
-      if (g_dwFlags & AF_SUBAGENT_LOADER)
-      {
-         sent = SendMessageToMasterAgent(msg);
-      }
-      else
-      {
-         MutexLock(g_hSessionListAccess);
-         for(UINT32 i = 0; i < g_dwMaxSessions; i++)
-         {
-            if (g_pSessionList[i] != NULL)
-            {
-               if (g_pSessionList[i]->canAcceptTraps())
-               {
-                  g_pSessionList[i]->sendMessage(msg);
-                  sent = true;
-               }
-            }
-         }
-         MutexUnlock(g_hSessionListAccess);
-      }
-
-      delete msg;
-      if (!sent)
-      {
-         DebugPrintf(6, _T("Cannot forward SNMP trap to server"));
-         s_snmpTrapQueue.insert(pdu);
-			ThreadSleep(1);
-      }
-      else
-      {
-         DebugPrintf(6, _T("SNMP trap successfully forwarded to server"));
-         delete pdu;
-      }
-   }
-	DebugPrintf(1, _T("SNMP trap sender thread terminated"));
    return THREAD_OK;
 }
 

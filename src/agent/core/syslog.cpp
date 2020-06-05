@@ -49,11 +49,6 @@ public:
 };
 
 /**
- * Sender queue
- */
-static Queue s_syslogSenderQueue;
-
-/**
  * Counter for received messages
  */
 static UINT64 s_receivedMessages = 0;
@@ -68,9 +63,6 @@ LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
       case 'R':   // received messages
          ret_uint64(value, s_receivedMessages);
          break;
-      case 'Q':   // queue size
-         ret_uint(value, static_cast<UINT32>(s_syslogSenderQueue.size()));
-         break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
    }
@@ -78,80 +70,11 @@ LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 }
 
 /**
- * Shutdown trap sender
- */
-void ShutdownSyslogSender()
-{
-   s_syslogSenderQueue.setShutdownMode();
-}
-
-/**
- * Syslog messages sender thread
- */
-THREAD_RESULT THREAD_CALL SyslogSender(void *)
-{
-   nxlog_debug(1, _T("Syslog sender thread started"));
-   UINT64 id = (UINT64)time(NULL) << 32;
-   while(true)
-   {
-      nxlog_debug(8, _T("SyslogSender: waiting for message"));
-      SyslogRecord *rec = (SyslogRecord *)s_syslogSenderQueue.getOrBlock();
-      if (rec == INVALID_POINTER_VALUE)
-         break;
-
-      nxlog_debug(6, _T("SyslogSender: got message from queue"));
-      bool sent = false;
-
-      NXCPMessage msg(CMD_SYSLOG_RECORDS, GenerateMessageId(), 4);   // Use version 4
-      msg.setField(VID_REQUEST_ID, id++);
-      msg.setField(VID_IP_ADDRESS, rec->addr);
-      msg.setFieldFromTime(VID_TIMESTAMP, rec->timestamp);
-      msg.setField(VID_MESSAGE, (BYTE *)rec->message, rec->messageLength + 1);
-      msg.setField(VID_MESSAGE_LENGTH, rec->messageLength);
-      msg.setField(VID_ZONE_UIN, g_zoneUIN);
-
-      if (g_dwFlags & AF_SUBAGENT_LOADER)
-      {
-         sent = SendMessageToMasterAgent(&msg);
-      }
-      else
-      {
-         MutexLock(g_hSessionListAccess);
-         for(UINT32 i = 0; i < g_dwMaxSessions; i++)
-         {
-            if (g_pSessionList[i] != NULL)
-            {
-               if (g_pSessionList[i]->canAcceptTraps())
-               {
-                  g_pSessionList[i]->sendMessage(&msg);
-                  sent = true;
-               }
-            }
-         }
-         MutexUnlock(g_hSessionListAccess);
-      }
-
-      if (!sent)
-      {
-         nxlog_debug(6, _T("Cannot forward syslog message to server"));
-         s_syslogSenderQueue.insert(rec);
-         ThreadSleep(5);
-      }
-      else
-      {
-         nxlog_debug(6, _T("Syslog message successfully forwarded to server"));
-         delete rec;
-      }
-   }
-   nxlog_debug(1, _T("Syslog sender thread terminated"));
-   return THREAD_OK;
-}
-
-/**
  * Syslog messages receiver thread
  */
 THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
 {
+   UINT64 id = (UINT64)time(NULL) << 32;
    SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : CreateSocket(AF_INET, SOCK_DGRAM, 0);
 #ifdef WITH_IPV6
    SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : CreateSocket(AF_INET6, SOCK_DGRAM, 0);
@@ -301,7 +224,16 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
          if (bytes > 0)
          {
             syslogMessage[bytes] = 0;
-            s_syslogSenderQueue.put(new SyslogRecord(InetAddress::createFromSockaddr((struct sockaddr *)&addr), syslogMessage, bytes));
+            SyslogRecord rec(InetAddress::createFromSockaddr((struct sockaddr *)&addr), syslogMessage, bytes);
+
+            NXCPMessage *msg = new NXCPMessage(CMD_SYSLOG_RECORDS, GenerateMessageId(), 4);   // Use version 4
+            msg->setField(VID_REQUEST_ID, id++);
+            msg->setField(VID_IP_ADDRESS, rec.addr);
+            msg->setFieldFromTime(VID_TIMESTAMP, rec.timestamp);
+            msg->setField(VID_MESSAGE, (BYTE *)rec.message, rec.messageLength + 1);
+            msg->setField(VID_MESSAGE_LENGTH, rec.messageLength);
+            msg->setField(VID_ZONE_UIN, g_zoneUIN);
+            g_notificationProcessorQueue.put(msg);
             s_receivedMessages++;
          }
          else

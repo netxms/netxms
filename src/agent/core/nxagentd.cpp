@@ -65,25 +65,20 @@ NETXMS_EXECUTABLE_HEADER(nxagentd)
  */
 THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
-THREAD_RESULT THREAD_CALL EventSender(void *);
 THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
-THREAD_RESULT THREAD_CALL SNMPTrapSender(void *);
 THREAD_RESULT THREAD_CALL SyslogReceiver(void *);
-THREAD_RESULT THREAD_CALL SyslogSender(void *);
 THREAD_RESULT THREAD_CALL TunnelManager(void *);
 
 #ifdef _WIN32
 THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *);
 #endif
 
-void ShutdownEventSender();
-void ShutdownSNMPTrapSender();
-
-void ShutdownSyslogSender();
-
 void StartLocalDataCollector();
 void ShutdownLocalDataCollector();
+
+void StartNotificationSync();
+void ShutdownNotificationSync();
 
 void LoadUserAgentNotifications();
 
@@ -239,11 +234,9 @@ static TCHAR *s_serverConnectionList = NULL;
 static UINT32 s_enabledCiphers = 0xFFFF;
 static THREAD s_sessionWatchdogThread = INVALID_THREAD_HANDLE;
 static THREAD s_listenerThread = INVALID_THREAD_HANDLE;
-static THREAD s_eventSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_snmpTrapReceiverThread = INVALID_THREAD_HANDLE;
 static THREAD s_snmpTrapSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_syslogReceiverThread = INVALID_THREAD_HANDLE;
-static THREAD s_syslogSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_masterAgentListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_tunnelManagerThread = INVALID_THREAD_HANDLE;
 static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
@@ -1277,17 +1270,15 @@ BOOL Initialize()
    // Agent start time
    g_tmAgentStartTime = time(NULL);
 
-	s_eventSenderThread = ThreadCreateEx(EventSender, 0, NULL);
+   StartNotificationSync();
 
 	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
-      s_snmpTrapSenderThread = ThreadCreateEx(SNMPTrapSender, 0, NULL);
       s_snmpTrapReceiverThread = ThreadCreateEx(SNMPTrapReceiver, 0, NULL);
    }
 
    if (g_dwFlags & AF_ENABLE_SYSLOG_PROXY)
    {
-      s_syslogSenderThread = ThreadCreateEx(SyslogSender, 0, NULL);
       s_syslogReceiverThread = ThreadCreateEx(SyslogReceiver, 0, NULL);
    }
 
@@ -1389,8 +1380,8 @@ void Shutdown()
 
    g_dwFlags |= AF_SHUTDOWN;
    InitiateProcessShutdown();
+   ShutdownNotificationSync();
 
-   ShutdownEventSender();
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
 		ThreadJoin(s_masterAgentListenerThread);
@@ -1403,18 +1394,14 @@ void Shutdown()
 		ThreadJoin(s_tunnelManagerThread);
 		StopExternalSubagentConnectors();
 	}
-	ThreadJoin(s_eventSenderThread);
 	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
-      ShutdownSNMPTrapSender();
       ThreadJoin(s_snmpTrapReceiverThread);
       ThreadJoin(s_snmpTrapSenderThread);
 	}
    if (g_dwFlags & AF_ENABLE_SYSLOG_PROXY)
    {
-      ShutdownSyslogSender();
       ThreadJoin(s_syslogReceiverThread);
-      ThreadJoin(s_syslogSenderThread);
    }
 
 	DestroySessionList();
