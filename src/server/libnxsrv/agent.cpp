@@ -961,33 +961,33 @@ InterfaceList *AgentConnection::getInterfaceList()
 /**
  * Get parameter value
  */
-UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer)
+uint32_t AgentConnection::getParameter(const TCHAR *param, TCHAR *buffer, size_t size)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
    NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    msg.setCode(CMD_GET_PARAMETER);
-   msg.setId(dwRqId);
-   msg.setField(VID_PARAMETER, pszParam);
+   msg.setId(requestId);
+   msg.setField(VID_PARAMETER, param);
 
-   UINT32 dwRetCode;
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
       if (response != nullptr)
       {
-         dwRetCode = response->getFieldAsUInt32(VID_RCC);
-         if (dwRetCode == ERR_SUCCESS)
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
          {
             if (response->isFieldExist(VID_VALUE))
             {
-               response->getFieldAsString(VID_VALUE, pszBuffer, dwBufSize);
+               response->getFieldAsString(VID_VALUE, buffer, size);
             }
             else
             {
-               dwRetCode = ERR_MALFORMED_RESPONSE;
+               rcc = ERR_MALFORMED_RESPONSE;
                debugPrintf(3, _T("Malformed response to CMD_GET_PARAMETER"));
             }
          }
@@ -995,14 +995,14 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
       }
       else
       {
-         dwRetCode = ERR_REQUEST_TIMEOUT;
+         rcc = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwRetCode = ERR_CONNECTION_BROKEN;
+      rcc = ERR_CONNECTION_BROKEN;
    }
-   return dwRetCode;
+   return rcc;
 }
 
 /**
@@ -1433,9 +1433,9 @@ bool AgentConnection::processCustomMessage(NXCPMessage *pMsg)
 /**
  * Get list of values
  */
-UINT32 AgentConnection::getList(const TCHAR *param, StringList **list)
+uint32_t AgentConnection::getList(const TCHAR *param, StringList **list)
 {
-   UINT32 rcc;
+   uint32_t rcc;
    *list = nullptr;
    if (m_isConnected)
    {
@@ -1477,10 +1477,10 @@ UINT32 AgentConnection::getList(const TCHAR *param, StringList **list)
 /**
  * Get table
  */
-UINT32 AgentConnection::getTable(const TCHAR *pszParam, Table **table)
+uint32_t AgentConnection::getTable(const TCHAR *pszParam, Table **table)
 {
    NXCPMessage msg(m_nProtocolVersion), *pResponse;
-   UINT32 dwRqId, dwRetCode;
+   uint32_t dwRqId, dwRetCode;
 
 	*table = nullptr;
    if (m_isConnected)

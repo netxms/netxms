@@ -71,14 +71,12 @@ static THREAD m_hThread = INVALID_THREAD_HANDLE;
 /**
  * Find end-of-line character
  */
-static char *FindEOL(char *pszBuffer, int nLen)
+static char *FindEOL(char *pszBuffer, size_t len)
 {
-   int i;
-
-   for(i = 0; i < nLen; i++)
+   for(size_t i = 0; i < len; i++)
       if (pszBuffer[i] == '\n')
          return &pszBuffer[i];
-   return NULL;
+   return nullptr;
 }
 
 /**

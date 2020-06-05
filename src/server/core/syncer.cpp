@@ -57,7 +57,7 @@ int64_t GetSyncerRunTime(StatisticType statType)
    switch(statType)
    {
       case StatisticType::AVERAGE:
-         value = s_syncerRunTime.getAverage();
+         value = static_cast<int64_t>(s_syncerRunTime.getAverage());
          break;
       case StatisticType::CURRENT:
          value = s_syncerRunTime.getCurrent();

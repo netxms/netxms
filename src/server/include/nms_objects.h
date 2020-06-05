@@ -2690,8 +2690,9 @@ public:
 
 // Explicit instantiation of shared_ptr<*> to enable DLL interface for them
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
 template class NXCORE_EXPORTABLE shared_ptr<ComponentTree>;
+template class NXCORE_EXPORTABLE shared_ptr<NetworkPath>;
+template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
 #endif
 
 /**

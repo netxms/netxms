@@ -746,7 +746,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
                if (a->isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(*a)))
                {
 				      _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), a->toString(buffer));
-				      if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+				      if (conn->getParameter(parameter, buffer, 64) == ERR_SUCCESS)
 				      {
 					      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
 					      TCHAR *eptr;

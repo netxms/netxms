@@ -1359,9 +1359,9 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
          if (conn != nullptr)
          {
             TCHAR agentVersion[MAX_RESULT_LENGTH] = _T(""), hostName[MAX_RESULT_LENGTH] = _T(""), fqdn[MAX_RESULT_LENGTH] = _T("");
-            conn->getParameter(_T("Agent.Version"), MAX_RESULT_LENGTH, agentVersion);
-            conn->getParameter(_T("System.Hostname"), MAX_RESULT_LENGTH, hostName);
-            conn->getParameter(_T("System.FQDN"), MAX_RESULT_LENGTH, fqdn);
+            conn->getParameter(_T("Agent.Version"), agentVersion, MAX_RESULT_LENGTH);
+            conn->getParameter(_T("System.Hostname"), hostName, MAX_RESULT_LENGTH);
+            conn->getParameter(_T("System.FQDN"), fqdn, MAX_RESULT_LENGTH);
 
             if (_tcscmp(agentVersion, tunnel->getAgentVersion()))
             {

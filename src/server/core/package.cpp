@@ -167,7 +167,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
             {
                // Source package, check if target node
                // supports source packages
-               if (agentConn->getParameter(_T("Agent.SourcePackageSupport"), 32, szBuffer) == ERR_SUCCESS)
+               if (agentConn->getParameter(_T("Agent.SourcePackageSupport"), szBuffer, 32) == ERR_SUCCESS)
                {
                   targetCheckOK = (_tcstol(szBuffer, nullptr, 0) != 0);
                }
@@ -175,7 +175,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
             else
             {
                // Binary package, check target platform
-               if (agentConn->getParameter(_T("System.PlatformName"), MAX_PATH, szBuffer) == ERR_SUCCESS)
+               if (agentConn->getParameter(_T("System.PlatformName"), szBuffer, MAX_PATH) == ERR_SUCCESS)
                {
                   targetCheckOK = (_tcsicmp(szBuffer, task->platform) == 0);
                }
@@ -229,7 +229,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
                      if (connected)
                      {
                         // Check version
-                        if (agentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+                        if (agentConn->getParameter(_T("Agent.Version"), szBuffer, MAX_AGENT_VERSION_LEN) == ERR_SUCCESS)
                         {
                            if (!_tcsicmp(szBuffer, task->version))
                            {

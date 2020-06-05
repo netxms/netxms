@@ -544,21 +544,16 @@ uint32_t DeleteWebServiceDefinition(uint32_t id)
 void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, uint32_t *list)
 {
    SharedObjectArray<WebServiceDefinition> *definitions = GetWebServiceDefinitions();
-
-   for(int j = 0; j < count; j++)
+   for(uint32_t j = 0; j < count; j++)
    {
       for(int i = 0; i < definitions->size(); i++)
       {
-         if(list[j] == definitions->get(i)->getId())
+         if (list[j] == definitions->get(i)->getId())
             definitions->get(i)->createExportRecord(xml);
       }
    }
-
    delete definitions;
-
 }
-
-
 
 /**
  * Import web service definition configuration

@@ -3890,16 +3890,16 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
       if (conn != nullptr)
       {
          TCHAR buffer[MAX_RESULT_LENGTH];
-         if (conn->getParameter(_T("System.IsVirtual"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+         if (conn->getParameter(_T("System.IsVirtual"), buffer, MAX_RESULT_LENGTH) == ERR_SUCCESS)
          {
             VirtualizationType vt = static_cast<VirtualizationType>(_tcstol(buffer, nullptr, 10));
             if (vt != VTYPE_NONE)
             {
                type = (vt == VTYPE_FULL) ? NODE_TYPE_VIRTUAL : NODE_TYPE_CONTAINER;
-               if (conn->getParameter(_T("Hypervisor.Type"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+               if (conn->getParameter(_T("Hypervisor.Type"), buffer, MAX_RESULT_LENGTH) == ERR_SUCCESS)
                {
                   _tcslcpy(hypervisorType, buffer, MAX_HYPERVISOR_TYPE_LENGTH);
-                  if (conn->getParameter(_T("Hypervisor.Version"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+                  if (conn->getParameter(_T("Hypervisor.Version"), buffer, MAX_RESULT_LENGTH) == ERR_SUCCESS)
                   {
                      _tcslcpy(hypervisorInfo, buffer, MAX_HYPERVISOR_INFO_LENGTH);
                   }
@@ -4011,7 +4011,7 @@ bool Node::confPollAgent(UINT32 rqId)
       unlockProperties();
 
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, buffer) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(_T("Agent.Version"), buffer, MAX_AGENT_VERSION_LEN) == ERR_SUCCESS)
       {
          lockProperties();
          if (_tcscmp(m_agentVersion, buffer))
@@ -4023,7 +4023,7 @@ bool Node::confPollAgent(UINT32 rqId)
          unlockProperties();
       }
 
-      if (pAgentConn->getParameter(_T("Agent.ID"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(_T("Agent.ID"), buffer, MAX_RESULT_LENGTH) == ERR_SUCCESS)
       {
          uuid agentId = uuid::parse(buffer);
          lockProperties();
@@ -4037,7 +4037,7 @@ bool Node::confPollAgent(UINT32 rqId)
          unlockProperties();
       }
 
-      if (pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, buffer) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(_T("System.PlatformName"), buffer, MAX_PLATFORM_NAME_LEN) == ERR_SUCCESS)
       {
          lockProperties();
          if (_tcscmp(m_platformName, buffer))
@@ -4049,7 +4049,7 @@ bool Node::confPollAgent(UINT32 rqId)
          unlockProperties();
       }
 
-      if (pAgentConn->getParameter(_T("System.HardwareId"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(_T("System.HardwareId"), buffer, MAX_RESULT_LENGTH) == ERR_SUCCESS)
       {
          BYTE hardwareId[HARDWARE_ID_LENGTH];
          StrToBin(buffer, hardwareId, sizeof(hardwareId));
@@ -4064,7 +4064,7 @@ bool Node::confPollAgent(UINT32 rqId)
       }
 
       // Check IP forwarding status
-      if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), 16, buffer) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), buffer, 16) == ERR_SUCCESS)
       {
          if (_tcstoul(buffer, nullptr, 10) != 0)
             m_capabilities |= NC_IS_ROUTER;
@@ -4073,7 +4073,7 @@ bool Node::confPollAgent(UINT32 rqId)
       }
 
       // Get uname
-      if (pAgentConn->getParameter(_T("System.Uname"), MAX_DB_STRING, buffer) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(_T("System.Uname"), buffer, MAX_DB_STRING) == ERR_SUCCESS)
       {
          TranslateStr(buffer, _T("\r\n"), _T(" "));
          TranslateStr(buffer, _T("\n"), _T(" "));
@@ -4093,7 +4093,7 @@ bool Node::confPollAgent(UINT32 rqId)
       // if Net.Interface.64BitCounters not supported by agent then use
       // only presence of 64 bit parameters as indicator
       bool netIf64bitCounters = true;
-      if (pAgentConn->getParameter(_T("Net.Interface.64BitCounters"), MAX_DB_STRING, buffer) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(_T("Net.Interface.64BitCounters"), buffer, MAX_DB_STRING) == ERR_SUCCESS)
       {
          netIf64bitCounters = _tcstol(buffer, nullptr, 10) ? true : false;
       }
@@ -5807,7 +5807,7 @@ DataCollectionError Node::getMetricFromAgent(const TCHAR *szParam, UINT32 dwBufS
    // Get parameter from agent
    while(retry-- > 0)
    {
-      dwError = conn->getParameter(szParam, dwBufSize, szBuffer);
+      dwError = conn->getParameter(szParam, szBuffer, dwBufSize);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -10299,7 +10299,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
    {
       TCHAR parameter[128];
       _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), addr.toString(buffer));
-      UINT32 rcc = conn->getParameter(parameter, 64, buffer);
+      UINT32 rcc = conn->getParameter(parameter, buffer, 64);
       if (rcc == ERR_SUCCESS)
       {
          nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: proxy response: \"%s\""), debugPrefix, buffer);

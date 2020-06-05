@@ -467,7 +467,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 					TCHAR parameter[64], buffer[64];
 
 					_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
-					if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+					if (conn->getParameter(parameter, buffer, 64) == ERR_SUCCESS)
 					{
 						DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
 						TCHAR *eptr;

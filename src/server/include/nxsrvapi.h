@@ -925,9 +925,9 @@ public:
    ArpCache *getArpCache();
    InterfaceList *getInterfaceList();
    ROUTING_TABLE *getRoutingTable();
-   UINT32 getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer);
-   UINT32 getList(const TCHAR *param, StringList **list);
-   UINT32 getTable(const TCHAR *param, Table **table);
+   uint32_t getParameter(const TCHAR *param, TCHAR *buffer, size_t size);
+   uint32_t getList(const TCHAR *param, StringList **list);
+   uint32_t getTable(const TCHAR *param, Table **table);
    uint32_t queryWebService(WebServiceRequestType requestType, const TCHAR *url, uint32_t retentionTime,
             const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
             const StringList& pathList, bool verifyCert, bool verifyHost, void *results);

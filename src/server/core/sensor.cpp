@@ -860,7 +860,7 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
    // Get parameter from agent
    while(retry-- > 0)
    {
-      dwError = conn->getParameter(parameter, bufferSize, buffer);
+      dwError = conn->getParameter(parameter, buffer, bufferSize);
       switch(dwError)
       {
          case ERR_SUCCESS:

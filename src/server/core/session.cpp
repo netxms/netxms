@@ -8304,7 +8304,6 @@ void ClientSession::renameScript(NXCPMessage *request)
          msg.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
          {
-            TCHAR scriptName[MAX_DB_STRING];
             writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Library script with ID %u renamed from %s to %s"), scriptId, oldName, newName);
          }
       }

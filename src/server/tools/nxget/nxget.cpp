@@ -68,7 +68,7 @@ static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
    UINT32 dwError;
    TCHAR szBuffer[1024];
 
-   dwError = pConn->getParameter(pszParam, 1024, szBuffer);
+   dwError = pConn->getParameter(pszParam, szBuffer, 1024);
    if (dwError == ERR_SUCCESS)
    {
       if (bShowName)

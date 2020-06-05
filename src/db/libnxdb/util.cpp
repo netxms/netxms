@@ -53,32 +53,7 @@ static bool ExecuteQuery(DB_HANDLE hdb, const TCHAR *query)
 /**
  * Check if given record exists in database
  */
-bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, uint32_t id)
-{
-	bool exist = false;
-
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
-
-	DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
-		{
-			exist = (DBGetNumRows(hResult) > 0);
-			DBFreeResult(hResult);
-		}
-		DBFreeStatement(hStmt);
-	}
-	return exist;
-}
-
-/**
- * Check if given record exists in database
- */
-bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, uint64_t id)
+static bool IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, void *id, int cType, int sqlType, int allocType)
 {
    bool exist = false;
 
@@ -86,11 +61,11 @@ bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table,
    _sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, id);
+      DBBind(hStmt, 1, sqlType, cType, id, allocType);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          exist = (DBGetNumRows(hResult) > 0);
          DBFreeResult(hResult);
@@ -103,26 +78,25 @@ bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table,
 /**
  * Check if given record exists in database
  */
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, uint32_t id)
+{
+   return IsDatabaseRecordExist(hdb, table, idColumn, &id, DB_CTYPE_UINT32, DB_SQLTYPE_INTEGER, DB_BIND_TRANSIENT);
+}
+
+/**
+ * Check if given record exists in database
+ */
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, uint64_t id)
+{
+   return IsDatabaseRecordExist(hdb, table, idColumn, &id, DB_CTYPE_UINT64, DB_SQLTYPE_BIGINT, DB_BIND_TRANSIENT);
+}
+
+/**
+ * Check if given record exists in database
+ */
 bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const uuid& id)
 {
-	bool exist = false;
-
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
-
-	DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, id);
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
-		{
-			exist = (DBGetNumRows(hResult) > 0);
-			DBFreeResult(hResult);
-		}
-		DBFreeStatement(hStmt);
-	}
-	return exist;
+   return IsDatabaseRecordExist(hdb, table, idColumn, const_cast<TCHAR*>(id.toString().cstr()), DB_CTYPE_STRING, DB_SQLTYPE_VARCHAR, DB_BIND_TRANSIENT);
 }
 
 /**
@@ -130,24 +104,7 @@ bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table,
  */
 bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const TCHAR *id)
 {
-	bool exist = false;
-
-	TCHAR query[1256];
-	_sntprintf(query, sizeof(query), _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
-
-	DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, id, DB_BIND_STATIC);
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
-		{
-			exist = (DBGetNumRows(hResult) > 0);
-			DBFreeResult(hResult);
-		}
-		DBFreeStatement(hStmt);
-	}
-	return exist;
+   return IsDatabaseRecordExist(hdb, table, idColumn, const_cast<TCHAR*>(id), DB_CTYPE_STRING, DB_SQLTYPE_VARCHAR, DB_BIND_STATIC);
 }
 
 /**

@@ -311,7 +311,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 				TCHAR parameter[128], buffer[64];
 
 				_sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), ipAddr.toString(buffer));
-				if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+				if (conn->getParameter(parameter, buffer, 64) == ERR_SUCCESS)
 				{
 					TCHAR *eptr;
 					long value = _tcstol(buffer, &eptr, 10);
@@ -852,8 +852,8 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    if (agentConnection != nullptr)
    {
       data.flags |= NNF_IS_AGENT;
-      agentConnection->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.agentVersion);
-      agentConnection->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, data.platform);
+      agentConnection->getParameter(_T("Agent.Version"), data.agentVersion, MAX_AGENT_VERSION_LEN);
+      agentConnection->getParameter(_T("System.PlatformName"), data.platform, MAX_PLATFORM_NAME_LEN);
    }
 
    // Read interface list if possible
@@ -891,7 +891,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    else if (data.flags & NNF_IS_AGENT)
    {
       // Check IP forwarding status
-      if (agentConnection->getParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
+      if (agentConnection->getParameter(_T("Net.IP.Forwarding"), szBuffer, 16) == ERR_SUCCESS)
       {
          if (_tcstoul(szBuffer, nullptr, 10) != 0)
             data.flags |= NNF_IS_ROUTER;

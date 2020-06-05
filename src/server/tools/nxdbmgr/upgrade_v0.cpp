@@ -6947,14 +6947,13 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 		int count = DBGetNumRows(hResult);
 		for(int i = 0; i < count; i++)
 		{
-			TCHAR query[512];
-
-			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
-			DWORD dciId = DBGetFieldULong(hResult, i, 1);
+			uint32_t nodeId = DBGetFieldULong(hResult, i, 0);
+			uint32_t dciId = DBGetFieldULong(hResult, i, 1);
 
 			if (IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), nodeId))
 			{
-				_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d AND idata_value LIKE '%%#%%'"), nodeId, dciId);
+            TCHAR query[512];
+            _sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d AND idata_value LIKE '%%#%%'"), nodeId, dciId);
 				DB_RESULT hData = SQLSelect(query);
 				if (hData != NULL)
 				{

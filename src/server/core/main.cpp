@@ -534,9 +534,9 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
    {
       TCHAR result[MAX_RESULT_LENGTH];
 #ifdef _WIN32
-      UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd.exe)"), MAX_RESULT_LENGTH, result);
+      UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd.exe)"), result, MAX_RESULT_LENGTH);
 #else
-      UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd)"), MAX_RESULT_LENGTH, result);
+      UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd)"), result, MAX_RESULT_LENGTH);
 #endif
       if (key != nullptr)
          RSA_free(key);
