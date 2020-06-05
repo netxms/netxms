@@ -414,7 +414,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.LocalDatabase.Status"), H_ComponentStatus, _T("D"), DCI_DT_UINT, DCIDESC_AGENT_LOCALDB_STATUS },
    { _T("Agent.LocalDatabase.TotalQueries"), H_LocalDatabaseCounters, _T("T"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_TOTAL_QUERIES },
    { _T("Agent.LogFile.Status"), H_ComponentStatus, _T("L"), DCI_DT_UINT, DCIDESC_AGENT_LOG_STATUS },
-   { _T("Agent.Notification.QueueSize"), H_NotificationStats, NULL, DCI_DT_UINT, DCIDESC_AGENT_SYSLOGPROXY_QUEUESIZE },
+   { _T("Agent.Notification.QueueSize"), H_NotificationStats, NULL, DCI_DT_UINT, DCIDESC_AGENT_NOTIFICATION_QUEUESIZE },
    { _T("Agent.ProcessedRequests"), H_UIntPtr, (TCHAR *)&m_dwProcessedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_PROCESSEDREQUESTS },
    { _T("Agent.Proxy.ActiveSessions"), H_AgentProxyStats, _T("A"), DCI_DT_UINT, DCIDESC_AGENT_PROXY_ACTIVESESSIONS },
    { _T("Agent.Proxy.ConnectionRequests"), H_AgentProxyStats, _T("C"), DCI_DT_COUNTER64, DCIDESC_AGENT_PROXY_CONNECTIONREQUESTS },
