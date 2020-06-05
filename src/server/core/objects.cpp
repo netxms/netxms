@@ -1006,7 +1006,7 @@ bool AdjustSubnetBaseAddress(InetAddress& baseAddr, int32_t zoneUIN)
 /**
  * Find object by ID
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(UINT32 dwId, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objClass)
 {
    ObjectIndex *index;
    switch(objClass)
@@ -1034,7 +1034,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(UINT32 dwId, int objClass)
          break;
    }
 
-   shared_ptr<NetObj> object = index->get(dwId);
+   shared_ptr<NetObj> object = index->get(id);
 	if ((object == nullptr) || (objClass == -1))
 		return object;
 	return (objClass == object->getObjectClass()) ? object : shared_ptr<NetObj>();
@@ -1106,7 +1106,7 @@ SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *reg
 /**
  * Get object name by ID
  */
-const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName)
+const TCHAR NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const TCHAR *defaultName)
 {
 	shared_ptr<NetObj> object = g_idxObjectById.get(id);
    return (object != nullptr) ? object->getName() : defaultName;
@@ -2193,6 +2193,14 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
                }
             }
             delete collectors;
+         }
+         {
+            shared_ptr<NetworkPath> path = static_cast<const Node&>(object).getLastKnownNetworkPath();
+            if (path != nullptr)
+            {
+               console->print(_T("   Last known network path:\n"));
+               path->print(console, 6);
+            }
          }
          break;
       case OBJECT_SUBNET:

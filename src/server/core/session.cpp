@@ -12469,12 +12469,11 @@ void ClientSession::getNetworkPath(NXCPMessage *request)
 		{
 			if ((node1->getObjectClass() == OBJECT_NODE) && (node2->getObjectClass() == OBJECT_NODE))
 			{
-				NetworkPath *path = TraceRoute(static_pointer_cast<Node>(node1), static_pointer_cast<Node>(node2));
+				shared_ptr<NetworkPath> path = TraceRoute(static_pointer_cast<Node>(node1), static_pointer_cast<Node>(node2));
 				if (path != nullptr)
 				{
 					msg.setField(VID_RCC, RCC_SUCCESS);
 					path->fillMessage(&msg);
-					delete path;
 				}
 				else
 				{

@@ -1495,80 +1495,40 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
    else if (IsCommand(_T("TRACE"), szBuffer, 1))
    {
-      NetworkPath *pTrace;
-      TCHAR szNextHop[16];
-      int i;
-
       // Get arguments
       pArg = ExtractWord(pArg, szBuffer);
-      uint32_t dwNode1 = _tcstoul(szBuffer, nullptr, 0);
+      uint32_t sourceNodeId = _tcstoul(szBuffer, nullptr, 0);
 
       ExtractWord(pArg, szBuffer);
-      uint32_t dwNode2 = _tcstoul(szBuffer, nullptr, 0);
+      uint32_t destNodeId = _tcstoul(szBuffer, nullptr, 0);
 
-      if ((dwNode1 != 0) && (dwNode2 != 0))
+      if ((sourceNodeId != 0) && (destNodeId != 0))
       {
-         shared_ptr<NetObj> pObject1 = FindObjectById(dwNode1);
-         if (pObject1 == nullptr)
+         shared_ptr<NetObj> sourceNode = FindObjectById(sourceNodeId);
+         if (sourceNode == nullptr)
          {
-            ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode1);
+            ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), sourceNodeId);
          }
          else
          {
-            shared_ptr<NetObj> pObject2 = FindObjectById(dwNode2);
-            if (pObject2 == nullptr)
+            shared_ptr<NetObj> destNode = FindObjectById(destNodeId);
+            if (destNode == nullptr)
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode2);
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), destNodeId);
             }
             else
             {
-               if ((pObject1->getObjectClass() == OBJECT_NODE) && (pObject2->getObjectClass() == OBJECT_NODE))
+               if ((sourceNode->getObjectClass() == OBJECT_NODE) && (destNode->getObjectClass() == OBJECT_NODE))
                {
-                  pTrace = TraceRoute(static_pointer_cast<Node>(pObject1), static_pointer_cast<Node>(pObject2));
-                  if (pTrace != nullptr)
+                  shared_ptr<NetworkPath> trace = TraceRoute(static_pointer_cast<Node>(sourceNode), static_pointer_cast<Node>(destNode));
+                  if (trace != nullptr)
                   {
                      TCHAR sourceIp[32];
                      ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
-                           pObject1->getName(), pObject2->getName(), pTrace->getHopCount(),
-                           pTrace->isComplete() ? _T("complete") : _T("incomplete"),
-                           pTrace->getSourceAddress().toString(sourceIp));
-                     shared_ptr<Interface> iface;
-                     for(i = 0; i < pTrace->getHopCount(); i++)
-                     {
-                        NetworkPathElement *hop = pTrace->getHopInfo(i);
-                        switch(hop->type)
-                        {
-                           case NetworkPathElementType::DUMMY:
-                              ConsolePrintf(pCtx, _T("[%u] %s\n"),
-                                    hop->object->getId(),
-                                    hop->object->getName());
-                              break;
-                           case NetworkPathElementType::PROXY:
-                              ConsolePrintf(pCtx, _T("[%u] %s ==> proxy link via %s [%u]\n"),
-                                    hop->object->getId(),
-                                    hop->object->getName(),
-                                    GetObjectName(hop->ifIndex, _T("(unknown)")),
-                                    hop->ifIndex);
-                              break;
-                           case NetworkPathElementType::ROUTE:
-                              iface = static_cast<Node&>(*hop->object).findInterfaceByIndex(hop->ifIndex);
-                              ConsolePrintf(pCtx, _T("[%u] %s ==> %s via %s [%u]\n"),
-                                    hop->object->getId(),
-                                    hop->object->getName(),
-                                    hop->nextHop.toString(szNextHop),
-                                    (iface != nullptr) ? iface->getName() : _T("unknown"),
-                                    hop->ifIndex);
-                              break;
-                           case NetworkPathElementType::VPN:
-                              ConsolePrintf(pCtx, _T("[%u] %s ==> VPN via %u\n"),
-                                    hop->object->getId(),
-                                    hop->object->getName(),
-                                    GetObjectName(hop->ifIndex, _T("(unknown)")),
-                                    hop->ifIndex);
-                              break;
-                        }
-                     }
-                     delete pTrace;
+                           sourceNode->getName(), destNode->getName(), trace->getHopCount(),
+                           trace->isComplete() ? _T("complete") : _T("incomplete"),
+                           trace->getSourceAddress().toString(sourceIp));
+                     trace->print(pCtx, 3);
                      ConsolePrintf(pCtx, _T("\n"));
                   }
                   else

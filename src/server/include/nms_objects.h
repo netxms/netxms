@@ -2604,6 +2604,74 @@ enum class IcmpStatFunction
 };
 
 /**
+ * Reason of network path check failure
+ */
+enum class NetworkPathFailureReason
+{
+   NONE = 0,
+   ROUTER_DOWN = 1,
+   SWITCH_DOWN = 2,
+   WIRELESS_AP_DOWN = 3,
+   PROXY_NODE_DOWN = 4,
+   PROXY_AGENT_UNREACHABLE = 5,
+   VPN_TUNNEL_DOWN = 6,
+   ROUTING_LOOP = 7,
+   INTERFACE_DISABLED = 8
+};
+
+/**
+ * Get failure reason enum value from int
+ */
+static inline NetworkPathFailureReason NetworkPathFailureReasonFromInt(int32_t i)
+{
+   switch(i)
+   {
+      case 1: return NetworkPathFailureReason::ROUTER_DOWN;
+      case 2: return NetworkPathFailureReason::SWITCH_DOWN;
+      case 3: return NetworkPathFailureReason::WIRELESS_AP_DOWN;
+      case 4: return NetworkPathFailureReason::PROXY_NODE_DOWN;
+      case 5: return NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE;
+      case 6: return NetworkPathFailureReason::VPN_TUNNEL_DOWN;
+      case 7: return NetworkPathFailureReason::ROUTING_LOOP;
+      case 8: return NetworkPathFailureReason::INTERFACE_DISABLED;
+      default: return NetworkPathFailureReason::NONE;
+   }
+}
+
+/**
+ * Result of network path check
+ */
+struct NetworkPathCheckResult
+{
+   bool rootCauseFound;
+   NetworkPathFailureReason reason;
+   uint32_t rootCauseNodeId;
+   uint32_t rootCauseInterfaceId;
+
+   /**
+    * Construct negative result
+    */
+   NetworkPathCheckResult()
+   {
+      rootCauseFound = false;
+      reason = NetworkPathFailureReason::NONE;
+      rootCauseNodeId = 0;
+      rootCauseInterfaceId = 0;
+   }
+
+   /**
+    * Construct positive result for other reasons
+    */
+   NetworkPathCheckResult(NetworkPathFailureReason r, uint32_t nodeId, uint32_t interfaceId = 0)
+   {
+      rootCauseFound = true;
+      reason = r;
+      rootCauseNodeId = nodeId;
+      rootCauseInterfaceId = interfaceId;
+   }
+};
+
+/**
  * Container for proxy agent connections
  */
 class ProxyAgentConnection : public ObjectLock<shared_ptr<AgentConnectionEx>>
@@ -2718,18 +2786,19 @@ protected:
    ProxyAgentConnection *m_proxyConnections;
    VolatileCounter m_pendingDataConfigurationSync;
    SMCLP_Connection *m_smclpConnection;
-	UINT64 m_lastAgentTrapId;	     // ID of last received agent trap
-   UINT64 m_lastAgentPushRequestId; // ID of last received agent push request
-   UINT32 m_lastSNMPTrapId;
-   UINT64 m_lastSyslogMessageId; // ID of last received syslog message
-   UINT32 m_pollerNode;      // Node used for network service polling
-   UINT32 m_agentProxy;      // Node used as proxy for agent connection
-	UINT32 m_snmpProxy;       // Node used as proxy for SNMP requests
-   UINT32 m_eipProxy;        // Node used as proxy for EtherNet/IP requests
-   UINT32 m_icmpProxy;       // Node used as proxy for ICMP ping
-   UINT64 m_lastEvents[MAX_LAST_EVENTS];
+   uint64_t m_lastAgentTrapId;	     // ID of last received agent trap
+   uint64_t m_lastAgentPushRequestId; // ID of last received agent push request
+   uint32_t m_lastSNMPTrapId;
+   uint64_t m_lastSyslogMessageId; // ID of last received syslog message
+   uint32_t m_pollerNode;      // Node used for network service polling
+   uint32_t m_agentProxy;      // Node used as proxy for agent connection
+   uint32_t m_snmpProxy;       // Node used as proxy for SNMP requests
+   uint32_t m_eipProxy;        // Node used as proxy for EtherNet/IP requests
+   uint32_t m_icmpProxy;       // Node used as proxy for ICMP ping
+   uint64_t m_lastEvents[MAX_LAST_EVENTS];
    ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
-   ROUTING_TABLE *m_pRoutingTable;
+   ROUTING_TABLE *m_routingTable;
+   shared_ptr<NetworkPath> m_lastKnownNetworkPath;
 	ForwardingDatabase *m_fdb;
 	ArpCache *m_arpCache;
 	LinkLayerNeighbors *m_linkLayerNeighbors;
@@ -2824,10 +2893,10 @@ protected:
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
    void checkBridgeMib(SNMP_Transport *pTransport);
    void checkIfXTable(SNMP_Transport *pTransport);
-   bool checkNetworkPath(UINT32 requestId);
-   bool checkNetworkPathLayer2(UINT32 requestId, bool secondPass);
-   bool checkNetworkPathLayer3(UINT32 requestId, bool secondPass);
-   bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass);
+   NetworkPathCheckResult checkNetworkPath(uint32_t requestId);
+   NetworkPathCheckResult checkNetworkPathLayer2(uint32_t requestId, bool secondPass);
+   NetworkPathCheckResult checkNetworkPathLayer3(uint32_t requestId, bool secondPass);
+   NetworkPathCheckResult checkNetworkPathElement(uint32_t nodeId, const TCHAR *nodeType, bool isProxy, bool isSwitch, uint32_t requestId, bool secondPass);
    void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
 
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
@@ -2998,7 +3067,8 @@ public:
    void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    ROUTING_TABLE *getRoutingTable();
-   ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
+   ROUTING_TABLE *getCachedRoutingTable() { return m_routingTable; }
+   shared_ptr<NetworkPath> getLastKnownNetworkPath() const { return GetAttributeWithLock(m_lastKnownNetworkPath, m_mutexProperties); }
    LinkLayerNeighbors *getLinkLayerNeighbors();
    shared_ptr<VlanList> getVlans();
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
@@ -3085,9 +3155,9 @@ public:
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, TCHAR *pszRequest = nullptr, TCHAR *pszResponse = nullptr, UINT32 *responseTime = nullptr);
 
-   UINT64 getLastEventId(int index) { return ((index >= 0) && (index < MAX_LAST_EVENTS)) ? m_lastEvents[index] : 0; }
-   void setLastEventId(int index, UINT64 eventId) { if ((index >= 0) && (index < MAX_LAST_EVENTS)) m_lastEvents[index] = eventId; }
-   void setRoutingLoopEvent(const InetAddress& address, UINT32 nodeId, UINT64 eventId);
+   uint64_t getLastEventId(int index) const { return ((index >= 0) && (index < MAX_LAST_EVENTS)) ? m_lastEvents[index] : 0; }
+   void setLastEventId(int index, uint64_t eventId) { if ((index >= 0) && (index < MAX_LAST_EVENTS)) m_lastEvents[index] = eventId; }
+   void setRoutingLoopEvent(const InetAddress& address, uint32_t nodeId, uint64_t eventId);
 
    UINT32 callSnmpEnumerate(const TCHAR *pszRootOid,
       UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg,
@@ -4200,12 +4270,12 @@ void NXCORE_EXPORTABLE MacDbRemove(const MacAddress& macAddr);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const BYTE *macAddr);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr);
 
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(UINT32 dwId, int objClass = -1);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objClass = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objClass = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objClass = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (* comparator)(NetObj *, void *), void *userData, int objClass = -1);
 SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass = -1);
-const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
+const TCHAR NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const TCHAR *defaultName);
 shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *pszName);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddress& ipAddr);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, bool allZones, const InetAddress& ipAddr);

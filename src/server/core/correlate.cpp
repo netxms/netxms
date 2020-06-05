@@ -30,22 +30,6 @@
 static uint64_t m_networkLostEventId = 0;
 
 /**
- * Correlate current event to another node down event
- */
-static bool CheckNodeDown(const shared_ptr<Node>& currNode, Event *pEvent, uint32_t nodeId, const TCHAR *nodeType)
-{
-	shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
-	if ((node != nullptr) && node->isDown())
-	{
-		pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
-		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: %s %s [%d] for current node %s [%d] is down"),
-		          nodeType, node->getName(), node->getId(), currNode->getName(), currNode->getId());
-		return true;
-	}
-	return false;
-}
-
-/**
  * Correlate current event to agent unreachable event
  */
 static bool CheckAgentDown(const shared_ptr<Node>& currNode, Event *pEvent, uint32_t nodeId, const TCHAR *nodeType)
@@ -64,18 +48,18 @@ static bool CheckAgentDown(const shared_ptr<Node>& currNode, Event *pEvent, uint
 /**
  * Correlate SYS_NODE_DOWN event
  */
-static void C_SysNodeDown(const shared_ptr<Node>& pNode, Event *pEvent)
+static void C_SysNodeDown(const shared_ptr<Node>& pNode, Event *event)
 {
    if (!ConfigReadBoolean(_T("Events.Correlation.TopologyBased"), true))
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("C_SysNodeDown: topology based event correlation disabled"));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("C_SysNodeUnreachable: topology based event correlation disabled"));
       return;
    }
 
 	// Check for NetXMS server network connectivity
 	if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
 	{
-		pEvent->setRootId(m_networkLostEventId);
+		event->setRootId(m_networkLostEventId);
 		return;
 	}
 
@@ -85,130 +69,45 @@ static void C_SysNodeDown(const shared_ptr<Node>& pNode, Event *pEvent)
 		shared_ptr<Zone> zone = FindZoneByUIN(pNode->getZoneUIN());
 		if ((zone != nullptr) && !zone->isProxyNode(pNode->getId()) && (pNode->getAssignedZoneProxyId() != 0))
 		{
-		   if (CheckAgentDown(pNode, pEvent, pNode->getAssignedZoneProxyId(), _T("zone proxy")))
+		   if (CheckAgentDown(pNode, event, pNode->getAssignedZoneProxyId(), _T("zone proxy")))
 		      return;
-			pEvent->setRootId(0);
+			event->setRootId(0);
 		}
 	}
+}
 
-	// Check directly connected switch
-	shared_ptr<Interface> iface = pNode->findInterfaceByIP(pNode->getIpAddress());
-	if (iface != nullptr)
-	{
-	   if  (iface->getPeerNodeId() != 0)
-	   {
-         if (CheckNodeDown(pNode, pEvent, iface->getPeerNodeId(), _T("upstream switch")))
-            return;
-
-         shared_ptr<Node> switchNode = static_pointer_cast<Node>(FindObjectById(iface->getPeerNodeId(), OBJECT_NODE));
-         shared_ptr<Interface> switchIface = static_pointer_cast<Interface>(FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE));
-         if ((switchNode != nullptr) && (switchIface != nullptr) &&
-             ((switchIface->getAdminState() == IF_ADMIN_STATE_DOWN) || (switchIface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
-              (switchIface->getOperState() == IF_OPER_STATE_DOWN) || (switchIface->getOperState() == IF_OPER_STATE_TESTING)))
-         {
-            nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on switch %s [%d] for current node %s [%d] is down"),
-                        switchIface->getName(), switchIface->getId(), switchNode->getName(), switchNode->getId(), pNode->getName(), pNode->getId());
-            pEvent->setRootId(switchIface->getLastDownEventId());
-            return;
-         }
-	   }
-	   else
-	   {
-         int type = 0;
-         shared_ptr<NetObj> cp = FindInterfaceConnectionPoint(iface->getMacAddr(), &type);
-         if (cp != nullptr)
-         {
-            if (cp->getObjectClass() == OBJECT_INTERFACE)
-            {
-               Interface *iface = static_cast<Interface*>(cp.get());
-               if ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
-                    (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING))
-               {
-                  nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on switch %s [%d] for current node %s [%d] is down"),
-                              iface->getName(), iface->getId(), iface->getParentNodeName().cstr(), iface->getParentNodeId(),
-                              pNode->getName(), pNode->getId());
-                  return;
-               }
-            }
-            else if (cp->getObjectClass() == OBJECT_ACCESSPOINT)
-            {
-               AccessPoint *ap = static_cast<AccessPoint*>(cp.get());
-               if (ap->getStatus() == STATUS_CRITICAL)   // FIXME: how to correctly determine if AP is down?
-               {
-                  nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] for current node %s [%d] is down"),
-                              ap->getName(), ap->getId(), pNode->getName(), pNode->getId());
-                  return;
-               }
-            }
-         }
-	   }
-	}
-
-   // Trace route from management station or proxy to failed node and
-   // check for failed intermediate nodes or interfaces
-	UINT32 sourceNodeId = 0;
-	if (!(pNode->getFlags() & NF_DISABLE_ICMP))
-	   sourceNodeId = pNode->getIcmpProxy();
-   if ((sourceNodeId == 0) && !(pNode->getFlags() & NF_DISABLE_NXCP))
-      sourceNodeId = pNode->getAgentProxy();
-   if ((sourceNodeId == 0) && !(pNode->getFlags() & NF_DISABLE_SNMP))
-      sourceNodeId = pNode->getSNMPProxy();
-   if (sourceNodeId == 0)
-      sourceNodeId = pNode->getAssignedZoneProxyId();
-   shared_ptr<Node> sourceNode = static_pointer_cast<Node>(FindObjectById((sourceNodeId != 0) ? sourceNodeId : g_dwMgmtNode, OBJECT_NODE));
-   if (sourceNode == nullptr)
-	{
-		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: cannot find source node for network path trace"));
-		return;
-	}
-
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: tracing network path from node %s [%d] to node %s [%d]"),
-            sourceNode->getName(), sourceNode->getId(), pNode->getName(), pNode->getId());
-	NetworkPath *trace = TraceRoute(sourceNode, pNode);
-	if (trace == nullptr)
-	{
-		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: trace to node %s [%d] not available"), pNode->getName(), pNode->getId());
-		return;
-	}
-
-	bool stop = false;
-   for(int i = 0; i < trace->getHopCount(); i++)
+/**
+ * Correlate SYS_NODE_UNREACHABLE event
+ */
+static void C_SysNodeUnreachable(const shared_ptr<Node>& pNode, Event *event)
+{
+   if (!ConfigReadBoolean(_T("Events.Correlation.TopologyBased"), true))
    {
-		NetworkPathElement *hop = trace->getHopInfo(i);
-      if ((hop->object == nullptr) || (hop->object == pNode) || (hop->object->getObjectClass() != OBJECT_NODE))
-			continue;
-
-      if (static_cast<Node&>(*hop->object).isDown())
-      {
-         pEvent->setRootId(static_cast<Node&>(*hop->object).getLastEventId(LAST_EVENT_NODE_DOWN));
-			nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: upstream node %s [%d] for current node %s [%d] is down"),
-			          hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
-			break;
-      }
-
-      if (hop->type == NetworkPathElementType::ROUTE)
-      {
-         iface = static_cast<Node&>(*hop->object).findInterfaceByIndex(hop->ifIndex);
-         if ((iface != nullptr) &&
-             ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
-              (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
-         {
-            nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
-                        iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
-            pEvent->setRootId(iface->getLastDownEventId());
-            break;
-         }
-      }
-      else if (hop->type == NetworkPathElementType::VPN)
-      {
-         auto vpnConn = static_pointer_cast<VPNConnector>(FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR));
-         if ((vpnConn != nullptr) && (vpnConn->getStatus() == STATUS_CRITICAL))
-         {
-            /* TODO: set root id */
-         }
-      }
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("C_SysNodeUnreachable: topology based event correlation disabled"));
+      return;
    }
-   delete trace;
+
+   shared_ptr<NetObj> object;
+   NetworkPathFailureReason reason = NetworkPathFailureReasonFromInt(event->getParameterAsInt32(0, 0));
+   switch(reason)
+   {
+      case NetworkPathFailureReason::PROXY_NODE_DOWN:
+      case NetworkPathFailureReason::ROUTER_DOWN:
+      case NetworkPathFailureReason::SWITCH_DOWN:
+         object = FindObjectById(event->getParameterAsUInt32(2, 0), OBJECT_NODE);
+         if (object != nullptr)
+         {
+            event->setRootId(static_cast<const Node&>(*object).getLastEventId(LAST_EVENT_NODE_DOWN));
+         }
+         break;
+      case NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE:
+         object = FindObjectById(event->getParameterAsUInt32(2, 0), OBJECT_NODE);
+         if (object != nullptr)
+         {
+            event->setRootId(static_cast<const Node&>(*object).getLastEventId(LAST_EVENT_AGENT_DOWN));
+         }
+         break;
+   }
 }
 
 /**
@@ -241,7 +140,7 @@ void CorrelateEvent(Event *pEvent)
    {
       case EVENT_INTERFACE_DISABLED:
          {
-            shared_ptr<Interface> pInterface = node->findInterfaceByIndex(pEvent->getParameterAsULong(4));
+            shared_ptr<Interface> pInterface = node->findInterfaceByIndex(pEvent->getParameterAsUInt32(4));
             if (pInterface != nullptr)
             {
                pInterface->setLastDownEventId(pEvent->getId());
@@ -251,7 +150,7 @@ void CorrelateEvent(Event *pEvent)
       case EVENT_INTERFACE_DOWN:
       case EVENT_INTERFACE_EXPECTED_DOWN:
          {
-            shared_ptr<Interface> pInterface = node->findInterfaceByIndex(pEvent->getParameterAsULong(4));
+            shared_ptr<Interface> pInterface = node->findInterfaceByIndex(pEvent->getParameterAsUInt32(4));
             if (pInterface != nullptr)
             {
                pInterface->setLastDownEventId(pEvent->getId());
@@ -276,9 +175,12 @@ void CorrelateEvent(Event *pEvent)
          node->setLastEventId(LAST_EVENT_AGENT_DOWN, 0);
          break;
       case EVENT_NODE_DOWN:
-      case EVENT_NODE_UNREACHABLE:
          node->setLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
          C_SysNodeDown(node, pEvent);
+         break;
+      case EVENT_NODE_UNREACHABLE:
+         node->setLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
+         C_SysNodeUnreachable(node, pEvent);
          break;
       case EVENT_NODE_UP:
          node->setLastEventId(LAST_EVENT_NODE_DOWN, 0);
@@ -287,7 +189,7 @@ void CorrelateEvent(Event *pEvent)
          m_networkLostEventId = pEvent->getId();
          break;
       case EVENT_ROUTING_LOOP_DETECTED:
-         node->setRoutingLoopEvent(InetAddress::parse(pEvent->getNamedParameter(_T("destAddress"), _T(""))), pEvent->getNamedParameterAsULong(_T("destNodeId")), pEvent->getId());
+         node->setRoutingLoopEvent(InetAddress::parse(pEvent->getNamedParameter(_T("destAddress"), _T(""))), pEvent->getNamedParameterAsUInt32(_T("destNodeId")), pEvent->getId());
          break;
       default:
          break;

@@ -29,6 +29,7 @@
 #define DEBUG_TAG_AGENT          _T("node.agent")
 #define DEBUG_TAG_STATUS_POLL    _T("poll.status")
 #define DEBUG_TAG_ICMP_POLL      _T("poll.icmp")
+#define DEBUG_TAG_ROUTES_POLL    _T("poll.routes")
 #define DEBUG_TAG_TOPOLOGY_POLL  _T("poll.topology")
 
 /**
@@ -131,7 +132,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_icmpProxy = 0;
    memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
-   m_pRoutingTable = nullptr;
+   m_routingTable = nullptr;
    m_arpCache = nullptr;
    m_failTimeAgent = NEVER;
    m_failTimeSNMP = NEVER;
@@ -246,7 +247,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
    m_isHidden = true;
-   m_pRoutingTable = nullptr;
+   m_routingTable = nullptr;
    m_arpCache = nullptr;
    m_failTimeAgent = NEVER;
    m_failTimeSNMP = NEVER;
@@ -314,7 +315,7 @@ Node::~Node()
    delete m_driverParameters;
    MemFree(m_snmpObjectId);
    MemFree(m_sysDescription);
-   DestroyRoutingTable(m_pRoutingTable);
+   DestroyRoutingTable(m_routingTable);
    if (m_arpCache != nullptr)
       m_arpCache->decRefCount();
    if (m_linkLayerNeighbors != nullptr)
@@ -2252,29 +2253,29 @@ restart_agent_check:
       switch(curr->getObjectClass())
       {
          case OBJECT_INTERFACE:
-            DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_name, curr->getId(), curr->getName());
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): polling interface %d [%s]"), m_name, curr->getId(), curr->getName());
             static_cast<Interface*>(curr)->statusPoll(pSession, rqId, eventQueue, cluster.get(), snmp, m_icmpProxy);
             break;
          case OBJECT_NETWORKSERVICE:
-            DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, curr->getId(), curr->getName());
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, curr->getId(), curr->getName());
             static_cast<NetworkService*>(curr)->statusPoll(pSession, rqId, pollerNode, eventQueue);
             break;
          case OBJECT_ACCESSPOINT:
             if (snmp != nullptr)
             {
-               DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, curr->getId(), curr->getName());
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, curr->getId(), curr->getName());
                static_cast<AccessPoint*>(curr)->statusPollFromController(pSession, rqId, eventQueue, this, snmp);
             }
             break;
          default:
-            DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, curr->getId(), curr->getName(), curr->getObjectClass());
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, curr->getId(), curr->getName(), curr->getObjectClass());
             break;
       }
 
       POLL_CANCELLATION_CHECKPOINT_EX({ delete eventQueue; delete snmp; });
    }
    delete snmp;
-   nxlog_debug(7, _T("StatusPoll(%s): finished child object poll"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): finished child object poll"), m_name);
 
    // Check if entire node is down
    // This check is disabled for nodes without IP address
@@ -2303,12 +2304,12 @@ restart_agent_check:
             // Use TCP ping to check if node actually unreachable if possible
             if (m_ipAddress.isValidUnicast())
             {
-               nxlog_debug(6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
                sendPollerMsg(rqId, _T("Checking primary IP address with TCP ping on agent's port\r\n"));
                TcpPingResult r = TcpPing(m_ipAddress, m_agentPort, 1000);
                if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
                {
-                  nxlog_debug(6, _T("StatusPoll(%s): agent is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
                   sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
                   allDown = false;
                }
@@ -2335,12 +2336,12 @@ restart_agent_check:
             // Use TCP ping to check if node actually unreachable if possible
             if (m_ipAddress.isValidUnicast())
             {
-               nxlog_debug(6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
                sendPollerMsg(rqId, _T("Checking primary IP address with TCP ping on EtherNet/IP port\r\n"));
                TcpPingResult r = TcpPing(m_ipAddress, m_eipPort, 1000);
                if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
                {
-                  nxlog_debug(6, _T("StatusPoll(%s): EtherNet/IP is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
                   sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
                   allDown = false;
                }
@@ -2357,11 +2358,11 @@ restart_agent_check:
       }
       if (allDown && (m_flags & NF_PING_PRIMARY_IP) && m_ipAddress.isValidUnicast())
       {
-         nxlog_debug(6, _T("StatusPoll(%s): using ICMP ping on primary IP address"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using ICMP ping on primary IP address"), m_name);
          sendPollerMsg(rqId, _T("Checking primary IP address with ICMP ping\r\n"));
          if (IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false) == ICMP_SUCCESS)
          {
-            nxlog_debug(6, _T("StatusPoll(%s): primary IP address responds to ICMP ping, considering node as reachable"), m_name);
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): primary IP address responds to ICMP ping, considering node as reachable"), m_name);
             sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to ICMP ping\r\n"));
             allDown = false;
          }
@@ -2371,7 +2372,7 @@ restart_agent_check:
          }
       }
 
-      nxlog_debug(6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
       if (allDown)
       {
          if (!(m_state & DCSF_UNREACHABLE))
@@ -2379,7 +2380,11 @@ restart_agent_check:
             m_state |= DCSF_UNREACHABLE;
             m_downSince = time(nullptr);
             poller->setStatus(_T("check network path"));
-            if (checkNetworkPath(rqId))
+            NetworkPathCheckResult patchCheckResult = checkNetworkPath(rqId);
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): network path check result: (rootCauseFound=%s, reason=%d, node=%u, iface=%u)"),
+                     m_name, patchCheckResult.rootCauseFound ? _T("true") : _T("false"), static_cast<int>(patchCheckResult.reason),
+                     patchCheckResult.rootCauseNodeId, patchCheckResult.rootCauseInterfaceId);
+            if (patchCheckResult.rootCauseFound)
             {
                m_state |= DCSF_NETWORK_PATH_PROBLEM;
 
@@ -2398,7 +2403,56 @@ restart_agent_check:
                // Clear delayed event queue
                delete_and_null(eventQueue);
 
-               PostSystemEvent(EVENT_NODE_UNREACHABLE, m_id, nullptr);
+               static const TCHAR *pnames[] = {
+                        _T("reasonCode"), _T("reason"), _T("rootCauseNodeId"), _T("rootCauseNodeName"),
+                        _T("rootCauseInterfaceId"), _T("rootCauseInterfaceName"), _T("description")
+               };
+               static const TCHAR *reasonNames[] = {
+                        _T("None"), _T("Router down"), _T("Switch down"), _T("Wireless AP down"),
+                        _T("Proxy node down"), _T("Proxy agent unreachable"), _T("VPN tunnel down"),
+                        _T("Routing loop"), _T("Interface disabled")
+               };
+
+               TCHAR description[1024];
+               switch(patchCheckResult.reason)
+               {
+                  case NetworkPathFailureReason::INTERFACE_DISABLED:
+                     _sntprintf(description, 1024, _T("Interface %s on node %s is disabled"),
+                              GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("UNKNOWN")),
+                              GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
+                     break;
+                  case NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE:
+                     _sntprintf(description, 1024, _T("Agent on proxy node %s is unreachable"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
+                     break;
+                  case NetworkPathFailureReason::PROXY_NODE_DOWN:
+                     _sntprintf(description, 1024, _T("Proxy node %s is down"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
+                     break;
+                  case NetworkPathFailureReason::ROUTER_DOWN:
+                     _sntprintf(description, 1024, _T("Intermediate router %s is down"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
+                     break;
+                  case NetworkPathFailureReason::ROUTING_LOOP:
+                     _sntprintf(description, 1024, _T("Routing loop detected on intermediate router %s"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
+                     break;
+                  case NetworkPathFailureReason::SWITCH_DOWN:
+                     _sntprintf(description, 1024, _T("Intermediate switch %s is down"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
+                     break;
+                  case NetworkPathFailureReason::VPN_TUNNEL_DOWN:
+                     _sntprintf(description, 1024, _T("VPN tunnel %s on node %s is down"),
+                              GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("UNKNOWN")),
+                              GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
+                     break;
+                  case NetworkPathFailureReason::WIRELESS_AP_DOWN:
+                     _sntprintf(description, 1024, _T("Wireless access point %s is down"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
+                     break;
+                  default:
+                     _tcscpy(description, reasonNames[static_cast<int32_t>(patchCheckResult.reason)]);
+                     break;
+               }
+
+               PostSystemEventWithNames(EVENT_NODE_UNREACHABLE, m_id, "dsisiss", pnames, static_cast<int32_t>(patchCheckResult.reason),
+                        reasonNames[static_cast<int32_t>(patchCheckResult.reason)], patchCheckResult.rootCauseNodeId,
+                        GetObjectName(patchCheckResult.rootCauseNodeId, _T("")), patchCheckResult.rootCauseInterfaceId,
+                        GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("")), description);
             }
             else
             {
@@ -2410,7 +2464,7 @@ restart_agent_check:
          }
          else
          {
-            if((m_state & DCSF_NETWORK_PATH_PROBLEM) && !checkNetworkPath(rqId))
+            if ((m_state & DCSF_NETWORK_PATH_PROBLEM) && !checkNetworkPath(rqId).rootCauseFound)
             {
                PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
                m_state &= ~DCSF_NETWORK_PATH_PROBLEM;
@@ -2446,16 +2500,16 @@ restart_agent_check:
       if (getMetricFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          m_bootTime = time(nullptr) - _tcstol(buffer, nullptr, 0);
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
       }
       else if (getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
          m_bootTime = time(nullptr) - _tcstol(buffer, nullptr, 0) / 100;   // sysUpTime is in hundredths of a second
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
       }
       else
       {
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get system uptime"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get system uptime"), m_name, m_id);
       }
    }
    else
@@ -2479,7 +2533,7 @@ restart_agent_check:
       }
       else
       {
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_name, m_id);
          g_monitoringList.removeDisconnectedNode(m_id);
          m_agentUpTime = 0;
       }
@@ -2498,13 +2552,13 @@ restart_agent_check:
          GeoLocation loc = GeoLocation::parseAgentData(buffer);
          if (loc.getType() != GL_UNSET)
          {
-            DbgPrintf(5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, loc.getLatitudeAsString(), loc.getLongitudeAsString());
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, loc.getLatitudeAsString(), loc.getLongitudeAsString());
             setGeoLocation(loc);
          }
       }
       else
       {
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get system location"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get system location"), m_name, m_id);
       }
    }
 
@@ -2614,7 +2668,7 @@ restart_agent_check:
    unlockProperties();
 
    pollerUnlock();
-   DbgPrintf(5, _T("Finished status poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Finished status poll for node %s (ID: %d)"), m_name, m_id);
 
    // Check if the node has to be deleted due to long downtime
    if (rqId == 0)
@@ -2631,17 +2685,17 @@ restart_agent_check:
 /**
  * Check single element of network path
  */
-bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass)
+NetworkPathCheckResult Node::checkNetworkPathElement(uint32_t nodeId, const TCHAR *nodeType, bool isProxy, bool isSwitch, uint32_t requestId, bool secondPass)
 {
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
    if (node == nullptr)
-      return false;
+      return NetworkPathCheckResult();
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPathElement(%s [%d]): found %s: %s [%d]"), m_name, m_id, nodeType, node->getName(), node->getId());
 
    if (secondPass && (node->m_statusPollState.getLastCompleted() < time(nullptr) - 1))
    {
-      DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): forced status poll on node %s [%d]"),
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPathElement(%s [%d]): forced status poll on node %s [%d]"),
                 m_name, m_id, node->getName(), node->getId());
       node->startForcedStatusPoll();
       PollerInfo *poller = RegisterPoller(PollerType::STATUS, node);
@@ -2652,19 +2706,19 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
 
    if (node->isDown())
    {
-      DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
                 m_name, m_id, nodeType, node->getName(), node->getId());
       sendPollerMsg(requestId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->getName());
-      return true;
+      return NetworkPathCheckResult(isProxy ? NetworkPathFailureReason::PROXY_NODE_DOWN : (isSwitch ? NetworkPathFailureReason::SWITCH_DOWN : NetworkPathFailureReason::ROUTER_DOWN), node->getId());
    }
    if (isProxy && node->isNativeAgent() && (node->getState() & NSF_AGENT_UNREACHABLE))
    {
-      DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
                 m_name, m_id, nodeType, node->getName(), node->getId());
       sendPollerMsg(requestId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->getName());
-      return true;
+      return NetworkPathCheckResult(NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE, node->getId());
    }
-   return false;
+   return NetworkPathCheckResult();
 }
 
 /**
@@ -2672,10 +2726,10 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
  *
  * @return true if network path problems found
  */
-bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
+NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool secondPass)
 {
    if (IsShutdownInProgress())
-      return false;
+      return NetworkPathCheckResult();
 
    time_t now = time(nullptr);
 
@@ -2685,8 +2739,9 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
       shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
       if ((zone != nullptr) && !zone->isProxyNode(m_id))
       {
-         if (checkNetworkPathElement(zone->getProxyNodeId(this), _T("zone proxy"), true, requestId, secondPass))
-            return true;
+         NetworkPathCheckResult result = checkNetworkPathElement(zone->getProxyNodeId(this), _T("zone proxy"), true, false, requestId, secondPass);
+         if (result.rootCauseFound)
+            return result;
       }
    }
 
@@ -2698,19 +2753,23 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
       if  (iface->getPeerNodeId() != 0)
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
-         if (checkNetworkPathElement(iface->getPeerNodeId(), _T("upstream switch"), false, requestId, secondPass))
-            return true;
+         NetworkPathCheckResult result = checkNetworkPathElement(iface->getPeerNodeId(), _T("upstream switch"), false, true, requestId, secondPass);
+         if (result.rootCauseFound)
+            return result;
 
          shared_ptr<NetObj> switchNode = FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
          shared_ptr<Interface> switchIface = static_pointer_cast<Interface>(FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE));
-         if ((switchNode != nullptr) && (switchIface != nullptr) && (switchIface->getExpectedState() != IF_EXPECTED_STATE_IGNORE) &&
-             ((switchIface->getAdminState() == IF_ADMIN_STATE_DOWN) || (switchIface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
-              (switchIface->getOperState() == IF_OPER_STATE_DOWN) || (switchIface->getOperState() == IF_OPER_STATE_TESTING)))
+         if ((switchNode != nullptr) && (switchIface != nullptr) &&
+             ((switchIface->getAdminState() == IF_ADMIN_STATE_DOWN) || (switchIface->getAdminState() == IF_ADMIN_STATE_TESTING)))
          {
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is administratively down"),
                         m_name, m_id, switchIface->getName(), switchIface->getId(), switchNode->getName(), switchNode->getId());
-            sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), switchIface->getName(), switchNode->getName());
-            return true;
+            sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"), switchIface->getName(), switchNode->getName());
+            result.rootCauseFound = true;
+            result.reason = NetworkPathFailureReason::INTERFACE_DISABLED;
+            result.rootCauseNodeId = switchNode->getId();
+            result.rootCauseInterfaceId = switchIface->getId();
+            return result;
          }
       }
       else
@@ -2736,16 +2795,14 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
             if (cp->getObjectClass() == OBJECT_INTERFACE)
             {
                Interface *iface = static_cast<Interface*>(cp.get());
-               if ((iface->getExpectedState() != IF_EXPECTED_STATE_IGNORE) &&
-                   ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
-                    (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
+               if ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING))
                {
                   String parentNodeName = iface->getParentNodeName();
-                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%u]): upstream interface %s [%u] on switch %s [%u] is down"),
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%u]): upstream interface %s [%u] on switch %s [%u] is administratively down"),
                               m_name, m_id, iface->getName(), iface->getId(), parentNodeName.cstr(), iface->getParentNodeId());
-                  sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"),
+                  sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"),
                                 iface->getName(), parentNodeName.cstr());
-                  return true;
+                  return NetworkPathCheckResult(NetworkPathFailureReason::INTERFACE_DISABLED, iface->getParentNodeId(), iface->getId());
                }
             }
             else if (cp->getObjectClass() == OBJECT_ACCESSPOINT)
@@ -2756,7 +2813,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] is down"),
                               m_name, m_id, ap->getName(), ap->getId());
                   sendPollerMsg(requestId, POLLER_WARNING _T("   Wireless access point %s is down\r\n"), ap->getName());
-                  return true;
+                  return NetworkPathCheckResult(NetworkPathFailureReason::WIRELESS_AP_DOWN, ap->getId());
                }
             }
          }
@@ -2764,9 +2821,9 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
    }
    else
    {
-      DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find interface object for primary IP"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): cannot find interface object for primary IP"), m_name, m_id);
    }
-   return false;
+   return NetworkPathCheckResult();
 }
 
 /**
@@ -2774,25 +2831,33 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
  *
  * @return true if network path problems found
  */
-bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
+NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool secondPass)
 {
    if (IsShutdownInProgress())
-      return false;
+      return NetworkPathCheckResult();
 
    shared_ptr<Node> mgmtNode = static_pointer_cast<Node>(FindObjectById(g_dwMgmtNode, OBJECT_NODE));
    if (mgmtNode == nullptr)
    {
-      DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find management node"), m_name, m_id);
-      return false;
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): cannot find management node"), m_name, m_id);
+      return NetworkPathCheckResult();
    }
 
-   NetworkPath *trace = TraceRoute(mgmtNode, self());
-   if (trace == nullptr)
+   shared_ptr<NetworkPath> trace = TraceRoute(mgmtNode, self());
+   if ((trace == nullptr) && (m_lastKnownNetworkPath == nullptr))
    {
-      DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace not available"), m_name, m_id);
-      return false;
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): trace not available"), m_name, m_id);
+      return NetworkPathCheckResult();
    }
-   DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace available, %d hops, %s"),
+   if ((trace == nullptr) || !trace->isComplete())
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): current trace is %s, using cached trace"),
+               m_name, m_id, (trace == nullptr) ? _T("not available") : _T("incomplete"));
+      lockProperties();
+      trace = m_lastKnownNetworkPath;
+      unlockProperties();
+   }
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): trace available, %d hops, %s"),
              m_name, m_id, trace->getHopCount(), trace->isComplete() ? _T("complete") : _T("incomplete"));
 
    // We will do path check in two passes
@@ -2800,7 +2865,7 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
    // then method will just return true. Otherwise, we will do
    // second pass, this time forcing status poll on each node in the path.
    sendPollerMsg(requestId, _T("Checking network path (%s pass)...\r\n"), secondPass ? _T("second") : _T("first"));
-   bool pathProblemFound = false;
+   NetworkPathCheckResult result;
    for(int i = 0; i < trace->getHopCount(); i++)
    {
       NetworkPathElement *hop = trace->getHopInfo(i);
@@ -2830,32 +2895,34 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
                      m_id, &m_ipAddress, g_dwMgmtNode, &(trace->getSourceAddress()),
                      &prevHop->route, prevHop->route.getMaskBits(), hop->object->getId(), &prevHop->nextHop);
 
-               pathProblemFound = true;
+               result.rootCauseFound = true;
+               result.reason = NetworkPathFailureReason::ROUTING_LOOP;
+               result.rootCauseNodeId = hop->object->getId();
                break;
             }
          }
-         if (pathProblemFound)
+         if (result.rootCauseFound)
             break;
       }
 
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): checking upstream router %s [%d]"),
                   m_name, m_id, hop->object->getName(), hop->object->getId());
-      if (checkNetworkPathElement(hop->object->getId(), _T("upstream router"), false, requestId, secondPass))
-      {
-         pathProblemFound = true;
+      result = checkNetworkPathElement(hop->object->getId(), _T("upstream router"), false, false, requestId, secondPass);
+      if (result.rootCauseFound)
          break;
-      }
 
       if (hop->type == NetworkPathElementType::ROUTE)
       {
          shared_ptr<Interface> iface = static_cast<Node&>(*hop->object).findInterfaceByIndex(hop->ifIndex);
-         if ((iface != nullptr) && (iface->getExpectedState() != IF_EXPECTED_STATE_IGNORE) &&
-             ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
-              (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
+         if ((iface != nullptr) && ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING)))
          {
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on node %s [%d] is down"),
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on node %s [%d] is administratively down"),
                         m_name, m_id, iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId());
-            sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), iface->getName(), hop->object->getName());
+            sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"), iface->getName(), hop->object->getName());
+            result.rootCauseFound = true;
+            result.reason = NetworkPathFailureReason::INTERFACE_DISABLED;
+            result.rootCauseNodeId = hop->object->getId();
+            result.rootCauseInterfaceId = iface->getId();
             break;
          }
       }
@@ -2865,13 +2932,22 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
          shared_ptr<VPNConnector> vpnConn = static_pointer_cast<VPNConnector>(FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR));
          if ((vpnConn != nullptr) && (vpnConn->getStatus() == STATUS_CRITICAL))
          {
-            /* TODO: mark as path problem */
+            result.rootCauseFound = true;
+            result.reason = NetworkPathFailureReason::VPN_TUNNEL_DOWN;
+            result.rootCauseNodeId = hop->object->getId();
+            result.rootCauseInterfaceId = vpnConn->getId();
+            break;
          }
       }
    }
 
-   delete trace;
-   return pathProblemFound;
+   lockProperties();
+   if ((trace != m_lastKnownNetworkPath) && trace->isComplete())
+   {
+      m_lastKnownNetworkPath = trace;
+   }
+   unlockProperties();
+   return result;
 }
 
 /**
@@ -2879,23 +2955,23 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
  *
  * @return true if network path problems found
  */
-bool Node::checkNetworkPath(UINT32 requestId)
+NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId)
 {
-   if (checkNetworkPathLayer2(requestId, false))
-      return true;
+   NetworkPathCheckResult result = checkNetworkPathLayer2(requestId, false);
+   if (result.rootCauseFound)
+      return result;
 
-   if (checkNetworkPathLayer3(requestId, false))
-      return true;
+   result = checkNetworkPathLayer3(requestId, false);
+   if (result.rootCauseFound)
+      return result;
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
 
-   if (checkNetworkPathLayer2(requestId, true))
-      return true;
+   result = checkNetworkPathLayer2(requestId, true);
+   if (result.rootCauseFound)
+      return result;
 
-   if (checkNetworkPathLayer3(requestId, true))
-      return true;
-
-   return false;
+   return checkNetworkPathLayer3(requestId, true);
 }
 
 /**
@@ -2952,7 +3028,7 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
    }
    else
    {
-      DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getPolicyInventory() failed: rcc=%d"), m_name, rcc);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getPolicyInventory() failed: rcc=%d"), m_name, rcc);
    }
 }
 
@@ -2969,7 +3045,7 @@ void Node::updatePrimaryIpAddr()
    {
       TCHAR buffer1[64], buffer2[64];
 
-      DbgPrintf(4, _T("IP address for node %s [%d] changed from %s to %s"),
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("IP address for node %s [%d] changed from %s to %s"),
          m_name, (int)m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
       PostSystemEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
 
@@ -3408,7 +3484,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    if ((m_state & DCSF_UNREACHABLE) && !(m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
    {
       sendPollerMsg(rqId, POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
-      DbgPrintf(4, _T("Node is marked as unreachable, configuration poll aborted"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node is marked as unreachable, configuration poll aborted"));
    }
    else
    {
@@ -3596,7 +3672,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
    unlockProperties();
    pollerUnlock();
-   DbgPrintf(4, _T("Finished configuration poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished configuration poll for node %s (ID: %d)"), m_name, m_id);
 
    if (modified != 0)
    {
@@ -4051,7 +4127,7 @@ bool Node::confPollAgent(UINT32 rqId)
       }
       else
       {
-         DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_name, rcc);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_name, rcc);
       }
 
       // Get supported Windows Performance Counters
@@ -4838,7 +4914,7 @@ bool Node::deleteDuplicateInterfaces(UINT32 rqid)
          if (iface->getIfIndex() == static_cast<Interface*>(next)->getIfIndex())
          {
             deleteList.add(static_cast<Interface*>(next));
-            DbgPrintf(6, _T("Node::deleteDuplicateInterfaces(%s [%d]): found duplicate interface %s [%d], original %s [%d], ifIndex=%d"),
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::deleteDuplicateInterfaces(%s [%d]): found duplicate interface %s [%d], original %s [%d], ifIndex=%d"),
                m_name, m_id, next->getName(), next->getId(), iface->getName(), iface->getId(), iface->getIfIndex());
          }
       }
@@ -7647,14 +7723,14 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
 {
    bool found = false;
    routingTableLock();
-   if (m_pRoutingTable != nullptr)
+   if (m_routingTable != nullptr)
    {
-      for(int i = 0; i < m_pRoutingTable->iNumEntries; i++)
+      for(int i = 0; i < m_routingTable->iNumEntries; i++)
       {
-         if ((destAddr.getAddressV4() & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr)
+         if ((destAddr.getAddressV4() & m_routingTable->pRoutes[i].dwDestMask) == m_routingTable->pRoutes[i].dwDestAddr)
          {
-            *srcIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
-            shared_ptr<Interface> iface = findInterfaceByIndex(m_pRoutingTable->pRoutes[i].dwIfIndex);
+            *srcIfIndex = m_routingTable->pRoutes[i].dwIfIndex;
+            shared_ptr<Interface> iface = findInterfaceByIndex(m_routingTable->pRoutes[i].dwIfIndex);
             if (iface != nullptr)
             {
                *srcAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
@@ -7730,15 +7806,15 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
    // If directly connected subnet found, only check host routes
    nextHopFound = nextHopFound || nonFunctionalInterfaceFound;
    routingTableLock();
-   if (m_pRoutingTable != nullptr)
+   if (m_routingTable != nullptr)
    {
-      for(int i = 0; i < m_pRoutingTable->iNumEntries; i++)
+      for(int i = 0; i < m_routingTable->iNumEntries; i++)
       {
-         if ((!nextHopFound || (m_pRoutingTable->pRoutes[i].dwDestMask == 0xFFFFFFFF)) &&
-             ((destAddr.getAddressV4() & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr))
+         if ((!nextHopFound || (m_routingTable->pRoutes[i].dwDestMask == 0xFFFFFFFF)) &&
+             ((destAddr.getAddressV4() & m_routingTable->pRoutes[i].dwDestMask) == m_routingTable->pRoutes[i].dwDestAddr))
          {
-            shared_ptr<Interface> iface = findInterfaceByIndex(m_pRoutingTable->pRoutes[i].dwIfIndex);
-            if ((m_pRoutingTable->pRoutes[i].dwNextHop == 0) && (iface != nullptr) &&
+            shared_ptr<Interface> iface = findInterfaceByIndex(m_routingTable->pRoutes[i].dwIfIndex);
+            if ((m_routingTable->pRoutes[i].dwNextHop == 0) && (iface != nullptr) &&
                 (iface->getIpAddressList()->getFirstUnicastAddressV4().getHostBits() == 0))
             {
                // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
@@ -7747,11 +7823,11 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             }
             else
             {
-               *nextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
+               *nextHop = m_routingTable->pRoutes[i].dwNextHop;
             }
-            *route = m_pRoutingTable->pRoutes[i].dwDestAddr;
-            route->setMaskBits(BitsInMask(m_pRoutingTable->pRoutes[i].dwDestMask));
-            *ifIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
+            *route = m_routingTable->pRoutes[i].dwDestAddr;
+            route->setMaskBits(BitsInMask(m_routingTable->pRoutes[i].dwDestMask));
+            *ifIndex = m_routingTable->pRoutes[i].dwIfIndex;
             *isVpn = false;
             if (iface != nullptr)
             {
@@ -7759,7 +7835,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             }
             else
             {
-               _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), m_pRoutingTable->pRoutes[i].dwIfIndex);
+               _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), m_routingTable->pRoutes[i].dwIfIndex);
             }
             nextHopFound = true;
             break;
@@ -7812,10 +7888,10 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
    if (pRT != nullptr)
    {
       routingTableLock();
-      DestroyRoutingTable(m_pRoutingTable);
-      m_pRoutingTable = pRT;
+      DestroyRoutingTable(m_routingTable);
+      m_routingTable = pRT;
       routingTableUnlock();
-      DbgPrintf(5, _T("Routing table updated for node %s [%d]"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_ROUTES_POLL, 5, _T("Routing table updated for node %s [%d]"), m_name, m_id);
    }
    pollerUnlock();
 }
@@ -8434,7 +8510,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
    m_pollRequestor = pSession;
    sendPollerMsg(rqId, _T("Starting topology poll for node %s\r\n"), m_name);
-   DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Started topology poll for node %s [%d]"), m_name, m_id);
 
    if (m_driver != nullptr)
    {
@@ -8464,13 +8540,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          {
             resolveVlanPorts(vlanList);
             sendPollerMsg(rqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
-            DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("VLAN list retrieved from node %s [%d]"), m_name, m_id);
             m_vlans = shared_ptr<VlanList>(vlanList);
          }
          else
          {
             sendPollerMsg(rqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
-            DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_name, m_id);
             m_vlans.reset();
          }
          MutexUnlock(m_mutexTopoAccess);
@@ -8498,12 +8574,12 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    MutexUnlock(m_mutexTopoAccess);
    if (fdb != nullptr)
    {
-      DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Switch forwarding database retrieved for node %s [%d]"), m_name, m_id);
       sendPollerMsg(rqId, POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
    }
    else
    {
-      DbgPrintf(4, _T("Failed to get switch forwarding database from node %s [%d]"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Failed to get switch forwarding database from node %s [%d]"), m_name, m_id);
       sendPollerMsg(rqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
    }
 
@@ -8514,7 +8590,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    if (nbs != nullptr)
    {
       sendPollerMsg(rqId, POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->size());
-      DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_name, (int)m_id, nbs->size());
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_name, (int)m_id, nbs->size());
 
       MutexLock(m_mutexTopoAccess);
       if (m_linkLayerNeighbors != nullptr)
@@ -8533,11 +8609,11 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          shared_ptr<NetObj> object = FindObjectById(ni->objectId);
          if ((object != nullptr) && (object->getObjectClass() == OBJECT_NODE))
          {
-            DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): found peer node %s [%d], localIfIndex=%d remoteIfIndex=%d"),
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::topologyPoll(%s [%d]): found peer node %s [%d], localIfIndex=%d remoteIfIndex=%d"),
                       m_name, m_id, object->getName(), object->getId(), ni->ifLocal, ni->ifRemote);
             shared_ptr<Interface> ifLocal = findInterfaceByIndex(ni->ifLocal);
             shared_ptr<Interface> ifRemote = static_cast<Node*>(object.get())->findInterfaceByIndex(ni->ifRemote);
-            DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_name, m_id,
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_name, m_id,
                       (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"),
                       (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
             if ((ifLocal != nullptr) && (ifRemote != nullptr))
@@ -8564,7 +8640,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
                ifRemote->setPeer(this, ifLocal.get(), ni->protocol, true);
                sendPollerMsg(rqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
                              ifLocal->getName(), object->getName(), ifRemote->getName());
-               DbgPrintf(5, _T("Local interface %s:%s linked to remote interface %s:%s"),
+               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Local interface %s:%s linked to remote interface %s:%s"),
                          m_name, ifLocal->getName(), object->getName(), ifRemote->getName());
             }
          }
@@ -8582,7 +8658,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          if ((iface->getPeerNodeId() == m_id) && (iface->getPeerInterfaceId() == iface->getId()))
          {
             iface->clearPeer();
-            DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Self-linked interface %s [%d] fixed"), m_name, m_id, iface->getName(), iface->getId());
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%d]): Self-linked interface %s [%d] fixed"), m_name, m_id, iface->getName(), iface->getId());
          }
          // Remove outdated peer information
          else if (iface->getPeerNodeId() != 0)
@@ -8590,7 +8666,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
             shared_ptr<Node> peerNode = static_pointer_cast<Node>(FindObjectById(iface->getPeerNodeId(), OBJECT_NODE));
             if (peerNode == nullptr)
             {
-               DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): peer node set but node object does not exist"), m_name, m_id);
+               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%d]): peer node set but node object does not exist"), m_name, m_id);
                iface->clearPeer();
                continue;
             }
@@ -8618,14 +8694,14 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
                   ifPeer->clearPeer();
                }
                iface->clearPeer();
-               DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Removed outdated peer information from interface %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
+               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%d]): Removed outdated peer information from interface %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
             }
          }
       }
       unlockChildList();
 
       sendPollerMsg(rqId, _T("Link layer topology processed\r\n"));
-      DbgPrintf(4, _T("Link layer topology processed for node %s [%d]"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Link layer topology processed for node %s [%d]"), m_name, m_id);
    }
    else
    {
@@ -8646,7 +8722,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          if (stations != nullptr)
          {
             sendPollerMsg(rqId, _T("   %d wireless stations found\r\n"), stations->size());
-            DbgPrintf(6, _T("%d wireless stations found on controller node %s [%d]"), stations->size(), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("%d wireless stations found on controller node %s [%d]"), stations->size(), m_name, m_id);
 
             for(int i = 0; i < stations->size(); i++)
             {
@@ -8684,6 +8760,24 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       }
    }
 
+   if (m_ipAddress.isValidUnicast())
+   {
+      POLL_CANCELLATION_CHECKPOINT();
+
+      shared_ptr<NetObj> mgmtNode = FindObjectById(g_dwMgmtNode, OBJECT_NODE);
+      if (mgmtNode != nullptr)
+      {
+         shared_ptr<NetworkPath> trace = TraceRoute(static_pointer_cast<Node>(mgmtNode), self());
+         if ((trace != nullptr) && trace->isComplete())
+         {
+            lockProperties();
+            m_lastKnownNetworkPath = trace;
+            unlockProperties();
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("TopologyPoll(%s [%d]): network path updated"), m_name, m_id);
+         }
+      }
+   }
+
    POLL_CANCELLATION_CHECKPOINT();
 
    // Call hooks in loaded modules
@@ -8704,7 +8798,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
    pollerUnlock();
 
-   DbgPrintf(4, _T("Finished topology poll for node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Finished topology poll for node %s [%d]"), m_name, m_id);
 }
 
 /**
@@ -8942,11 +9036,11 @@ void Node::checkSubnetBinding()
    unlockChildList();
 
    // Check if we have subnet bindings for all interfaces
-   nxlog_debug(5, _T("Checking subnet bindings for node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Checking subnet bindings for node %s [%d]"), m_name, m_id);
    for(int i = 0; i < addrList.size(); i++)
    {
       InetAddress addr = addrList.get(i);
-      nxlog_debug(5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
 
       shared_ptr<Interface> iface = findInterfaceByIP(addr);
       if (iface == nullptr)
@@ -8961,7 +9055,7 @@ void Node::checkSubnetBinding()
       shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, addr);
       if (pSubnet != nullptr)
       {
-         nxlog_debug(5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
          if (isSync)
          {
             pSubnet.reset();   // No further checks on this subnet
@@ -8970,7 +9064,7 @@ void Node::checkSubnetBinding()
          {
             if (pSubnet->isSyntheticMask() && !iface->isSyntheticMask() && (addr.getMaskBits() > 0))
             {
-               nxlog_debug(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
                if ((addr.getHostBits() < 2) && (getParentCount() > 1))
                {
@@ -8989,7 +9083,7 @@ void Node::checkSubnetBinding()
             // Check if node is linked to this subnet
             if ((pSubnet != nullptr) && !pSubnet->isDirectChild(m_id))
             {
-               nxlog_debug(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
                pSubnet->addNode(self());
             }
@@ -9115,7 +9209,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
 
    m_pollRequestor = pSession;
    sendPollerMsg(rqId, _T("Starting interface names poll for node %s\r\n"), m_name);
-   DbgPrintf(4, _T("Starting interface names poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting interface names poll for node %s (ID: %d)"), m_name, m_id);
 
    // Retrieve interface list
    InterfaceList *pIfList = getInterfaceList();
@@ -9168,7 +9262,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
    // Finish poll
    sendPollerMsg(rqId, _T("Finished interface names poll for node %s\r\n"), m_name);
    _pollerUnlock();
-   DbgPrintf(4, _T("Finished interface names poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished interface names poll for node %s (ID: %d)"), m_name, m_id);
 }
 
 /**
@@ -9840,7 +9934,7 @@ bool Node::isAgentCompressionAllowed()
 /**
  * Set routing loop event information
  */
-void Node::setRoutingLoopEvent(const InetAddress& address, UINT32 nodeId, UINT64 eventId)
+void Node::setRoutingLoopEvent(const InetAddress& address, uint32_t nodeId, uint64_t eventId)
 {
    for(int i = 0; i < m_routingLoopEvents->size(); i++)
    {

@@ -84,15 +84,15 @@ public:
 class NXCORE_EXPORTABLE Event
 {
 private:
-   UINT64 m_id;
-   UINT64 m_rootId;    // Root event id
-   UINT32 m_code;
+   uint64_t m_id;
+   uint64_t m_rootId;    // Root event id
+   uint32_t m_code;
    int m_severity;
-   UINT32 m_flags;
+   uint32_t m_flags;
    EventOrigin m_origin;
-   UINT32 m_sourceId;
+   uint32_t m_sourceId;
    int32_t m_zoneUIN;
-   UINT32 m_dciId;
+   uint32_t m_dciId;
 	TCHAR m_name[MAX_EVENT_NAME];
    TCHAR *m_messageText;
    TCHAR *m_messageTemplate;
@@ -114,14 +114,14 @@ public:
             UINT32 dciId, const TCHAR *tag, StringMap *args);
    ~Event();
 
-   UINT64 getId() const { return m_id; }
-   UINT32 getCode() const { return m_code; }
-   UINT32 getSeverity() const { return m_severity; }
-   UINT32 getFlags() const { return m_flags; }
+   uint64_t getId() const { return m_id; }
+   uint32_t getCode() const { return m_code; }
+   uint32_t getSeverity() const { return m_severity; }
+   uint32_t getFlags() const { return m_flags; }
    EventOrigin getOrigin() const { return m_origin; }
-   UINT32 getSourceId() const { return m_sourceId; }
+   uint32_t getSourceId() const { return m_sourceId; }
    int32_t getZoneUIN() const { return m_zoneUIN; }
-   UINT32 getDciId() const { return m_dciId; }
+   uint32_t getDciId() const { return m_dciId; }
 	const TCHAR *getName() const { return m_name; }
    const TCHAR *getMessage() const { return m_messageText; }
    StringBuffer getTagsAsList() const;
@@ -132,13 +132,13 @@ public:
 
    void setSeverity(int severity) { m_severity = severity; }
 
-   UINT64 getRootId() const { return m_rootId; }
-   void setRootId(UINT64 id) { m_rootId = id; }
+   uint64_t getRootId() const { return m_rootId; }
+   void setRootId(uint64_t id) { m_rootId = id; }
 
    void prepareMessage(NXCPMessage *msg) const;
 
    void expandMessageText();
-   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm = NULL) const;
+   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm = nullptr) const;
    void setMessage(const TCHAR *text) { MemFree(m_messageText); m_messageText = MemCopyString(text); }
 
    bool hasTag(const TCHAR *tag) const { return m_tags.contains(tag); }
@@ -146,26 +146,38 @@ public:
    void removeTag(const TCHAR *tag) { m_tags.remove(tag); }
 
    int getParametersCount() const { return m_parameters.size(); }
-   const TCHAR *getParameter(int index, const TCHAR *defaultValue = NULL) const
+   const TCHAR *getParameter(int index, const TCHAR *defaultValue = nullptr) const
    {
       const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index));
-      return (v != NULL) ? v : defaultValue;
+      return (v != nullptr) ? v : defaultValue;
    }
    const TCHAR *getParameterName(int index) const { return m_parameterNames.get(index); }
-   UINT32 getParameterAsULong(int index, UINT32 defaultValue = 0) const
+   int32_t getParameterAsInt32(int index, int32_t defaultValue = 0) const
    {
-      const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index));
-      return (v != NULL) ? _tcstoul(v, NULL, 0) : defaultValue;
+      const TCHAR *v = static_cast<const TCHAR*>(m_parameters.get(index));
+      return (v != nullptr) ? _tcstol(v, nullptr, 0) : defaultValue;
    }
-   UINT64 getParameterAsUInt64(int index, UINT64 defaultValue = 0) const
+   uint32_t getParameterAsUInt32(int index, uint32_t defaultValue = 0) const
    {
-      const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index));
-      return (v != NULL) ? _tcstoull(v, NULL, 0) : defaultValue;
+      const TCHAR *v = static_cast<const TCHAR*>(m_parameters.get(index));
+      return (v != nullptr) ? _tcstoul(v, nullptr, 0) : defaultValue;
+   }
+   int64_t getParameterAsInt64(int index, int64_t defaultValue = 0) const
+   {
+      const TCHAR *v = static_cast<const TCHAR*>(m_parameters.get(index));
+      return (v != nullptr) ? _tcstoll(v, nullptr, 0) : defaultValue;
+   }
+   uint64_t getParameterAsUInt64(int index, uint64_t defaultValue = 0) const
+   {
+      const TCHAR *v = static_cast<const TCHAR*>(m_parameters.get(index));
+      return (v != nullptr) ? _tcstoull(v, nullptr, 0) : defaultValue;
    }
 
-	const TCHAR *getNamedParameter(const TCHAR *name, const TCHAR *defaultValue = NULL) const { return getParameter(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
-   UINT32 getNamedParameterAsULong(const TCHAR *name, UINT32 defaultValue = 0) const { return getParameterAsULong(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
-   UINT64 getNamedParameterAsUInt64(const TCHAR *name, UINT64 defaultValue = 0) const { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
+	const TCHAR *getNamedParameter(const TCHAR *name, const TCHAR *defaultValue = nullptr) const { return getParameter(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
+   int32_t getNamedParameterAsInt32(const TCHAR *name, int32_t defaultValue = 0) const { return getParameterAsInt32(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
+	uint32_t getNamedParameterAsUInt32(const TCHAR *name, uint32_t defaultValue = 0) const { return getParameterAsUInt32(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
+   int64_t getNamedParameterAsInt64(const TCHAR *name, int64_t defaultValue = 0) const { return getParameterAsInt64(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
+   uint64_t getNamedParameterAsUInt64(const TCHAR *name, uint64_t defaultValue = 0) const { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
 
 	void addParameter(const TCHAR *name, const TCHAR *value);
 	void setNamedParameter(const TCHAR *name, const TCHAR *value);

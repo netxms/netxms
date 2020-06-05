@@ -72,21 +72,21 @@ static UINT32 NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	var->getRawValue((BYTE *)&remoteIp, sizeof(UINT32));
 	remoteIp = ntohl(remoteIp);
 	TCHAR ipAddrText[32];
-	DbgPrintf(6, _T("NDP(%s [%d]): found peer at %d.%d IP address %s"), node->getName(), node->getId(), slot, port, IpToStr(remoteIp, ipAddrText));
+	nxlog_debug_tag(DEBUG_TAG_TOPO_NDP, 6, _T("NDP(%s [%d]): found peer at %d.%d IP address %s"), node->getName(), node->getId(), slot, port, IpToStr(remoteIp, ipAddrText));
 	shared_ptr<Node> remoteNode = FindNodeByIP(node->getZoneUIN(), remoteIp);
 	if (remoteNode == nullptr)
 	{
-		DbgPrintf(6, _T("NDP(%s [%d]): node object for IP %s not found"), node->getName(), node->getId(), ipAddrText);
+		nxlog_debug_tag(DEBUG_TAG_TOPO_NDP, 6, _T("NDP(%s [%d]): node object for IP %s not found"), node->getName(), node->getId(), ipAddrText);
 		return SNMP_ERR_SUCCESS;
 	}
 
 	shared_ptr<Interface> ifLocal = node->findInterfaceByLocation(InterfacePhysicalLocation(0, slot, 0, port));
-	DbgPrintf(6, _T("NDP(%s [%d]): remote node is %s [%d], local interface object \"%s\""), node->getName(), node->getId(),
+	nxlog_debug_tag(DEBUG_TAG_TOPO_NDP, 6, _T("NDP(%s [%d]): remote node is %s [%d], local interface object \"%s\""), node->getName(), node->getId(),
 	          remoteNode->getName(), remoteNode->getId(), (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"));
 	if (ifLocal != nullptr)
 	{
 		WORD rport = ReadRemoteSlotAndPort(node, oid, transport);
-		DbgPrintf(6, _T("NDP(%s [%d]): remote slot/port is %04X"), node->getName(), node->getId(), rport);
+		nxlog_debug_tag(DEBUG_TAG_TOPO_NDP, 6, _T("NDP(%s [%d]): remote slot/port is %04X"), node->getName(), node->getId(), rport);
 		if (rport != 0)
 		{
 			shared_ptr<Interface> ifRemote = remoteNode->findInterfaceByLocation(InterfacePhysicalLocation(0, rport >> 8, 0, rport & 0xFF));
@@ -115,8 +115,8 @@ void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getCapabilities() & NC_IS_NDP))
 		return;
 
-	DbgPrintf(5, _T("NDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG_TOPO_NDP, 5, _T("NDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
 	nbs->setData(node);
 	node->callSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
-	DbgPrintf(5, _T("NDP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG_TOPO_NDP, 5, _T("NDP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
 }

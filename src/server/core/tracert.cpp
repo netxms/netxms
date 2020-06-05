@@ -85,16 +85,64 @@ void NetworkPath::fillMessage(NXCPMessage *msg) const
 }
 
 /**
+ * Print network path to server console
+ */
+void NetworkPath::print(ServerConsole *console, int padding) const
+{
+   shared_ptr<Interface> iface;
+   TCHAR nextHop[64];
+   for(int i = 0; i < m_path.size(); i++)
+   {
+      NetworkPathElement *hop = m_path.get(i);
+      switch(hop->type)
+      {
+         case NetworkPathElementType::DUMMY:
+            console->printf(_T("%*s[%u] %s\n"),
+                  padding, _T(""),
+                  hop->object->getId(),
+                  hop->object->getName());
+            break;
+         case NetworkPathElementType::PROXY:
+            console->printf(_T("%*s[%u] %s ==> proxy link via %s [%u]\n"),
+                  padding, _T(""),
+                  hop->object->getId(),
+                  hop->object->getName(),
+                  GetObjectName(hop->ifIndex, _T("(unknown)")),
+                  hop->ifIndex);
+            break;
+         case NetworkPathElementType::ROUTE:
+            iface = static_cast<Node&>(*hop->object).findInterfaceByIndex(hop->ifIndex);
+            console->printf(_T("%*s[%u] %s ==> %s via %s [%u]\n"),
+                  padding, _T(""),
+                  hop->object->getId(),
+                  hop->object->getName(),
+                  hop->nextHop.toString(nextHop),
+                  (iface != nullptr) ? iface->getName() : _T("unknown"),
+                  hop->ifIndex);
+            break;
+         case NetworkPathElementType::VPN:
+            console->printf(_T("%*s[%u] %s ==> VPN via %u\n"),
+                  padding, _T(""),
+                  hop->object->getId(),
+                  hop->object->getName(),
+                  GetObjectName(hop->ifIndex, _T("(unknown)")),
+                  hop->ifIndex);
+            break;
+      }
+   }
+}
+
+/**
  * Trace route between two nodes
  */
-NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest)
+shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest)
 {
    uint32_t srcIfIndex;
    InetAddress srcAddr;
    if (!src->getOutwardInterface(dest->getIpAddress(), &srcAddr, &srcIfIndex))
       srcAddr = src->getIpAddress();
 
-   NetworkPath *path = new NetworkPath(srcAddr);
+   auto path = make_shared<NetworkPath>(srcAddr);
 
    int hopCount = 0;
    shared_ptr<Node> curr(src), next;

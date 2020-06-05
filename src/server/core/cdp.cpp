@@ -35,14 +35,14 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	remoteIp = ntohl(remoteIp);
 	
    TCHAR ipAddrText[16];
-	DbgPrintf(6, _T("CDP(%s [%d]): remote IP address %s"), node->getName(), node->getId(), IpToStr(remoteIp, ipAddrText));
+	nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 6, _T("CDP(%s [%d]): remote IP address %s"), node->getName(), node->getId(), IpToStr(remoteIp, ipAddrText));
 	shared_ptr<Node> remoteNode = FindNodeByIP(node->getZoneUIN(), remoteIp);
 	if (remoteNode == nullptr)
 	{
-		DbgPrintf(6, _T("CDP(%s [%d]): node object for remote IP %s not found"), node->getName(), node->getId(), ipAddrText);
+		nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 6, _T("CDP(%s [%d]): node object for remote IP %s not found"), node->getName(), node->getId(), ipAddrText);
 		return SNMP_ERR_SUCCESS;
 	}
-	DbgPrintf(6, _T("CDP(%s [%d]): remote node is %s [%d]"), node->getName(), node->getId(), remoteNode->getName(), remoteNode->getId());
+	nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 6, _T("CDP(%s [%d]): remote node is %s [%d]"), node->getName(), node->getId(), remoteNode->getName(), remoteNode->getId());
 
 	// Get additional info for current record
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
@@ -61,11 +61,11 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 		{
 			TCHAR ifName[MAX_CONNECTOR_NAME] = _T("");
 			pRespPDU->getVariable(0)->getValueAsString(ifName, MAX_CONNECTOR_NAME);
-			DbgPrintf(6, _T("CDP(%s [%d]): remote port is \"%s\""), node->getName(), node->getId(), ifName);
+			nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 6, _T("CDP(%s [%d]): remote port is \"%s\""), node->getName(), node->getId(), ifName);
 			shared_ptr<Interface> ifRemote = remoteNode->findInterfaceByName(ifName);
 			if (ifRemote != nullptr)
 			{
-				DbgPrintf(6, _T("CDP(%s [%d]): remote interface object is %s [%d]"), node->getName(), node->getId(), ifRemote->getName(), ifRemote->getId());
+				nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 6, _T("CDP(%s [%d]): remote interface object is %s [%d]"), node->getName(), node->getId(), ifRemote->getName(), ifRemote->getId());
 		
 				// Index for cdpCacheTable is cdpCacheIfIndex, cdpCacheDeviceIndex
             LL_NEIGHBOR_INFO info;
@@ -93,8 +93,8 @@ void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getCapabilities() & NC_IS_CDP))
 		return;
 
-	DbgPrintf(5, _T("CDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 5, _T("CDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
 	nbs->setData(node);
 	node->callSnmpEnumerate(_T(".1.3.6.1.4.1.9.9.23.1.2.1.1.4"), CDPTopoHandler, nbs);
-	DbgPrintf(5, _T("CDP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 5, _T("CDP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
 }

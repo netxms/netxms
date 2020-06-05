@@ -369,7 +369,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
             if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, context, true) != SNMP_ERR_SUCCESS)
             {
                // Some Cisco switches may not return data for certain system VLANs
-               nxlog_debug(5, _T("FDB: cannot read port table in context %s"), context);
+               nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: cannot read port table in context %s"), context);
             }
          }
       }
@@ -377,11 +377,11 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 
    FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb, nullptr, true));
    int size = fdb->getSize();
-   DbgPrintf(5, _T("FDB: %d entries read from dot1qTpFdbTable"), size);
+   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: %d entries read from dot1qTpFdbTable"), size);
 
    fdb->setCurrentVlanId(1);
    FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, nullptr, true));
-   DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize() - size);
+   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize() - size);
    size = fdb->getSize();
 
 	if (node->isPerVlanFdbSupported())
@@ -397,11 +397,11 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 				if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context) != SNMP_ERR_SUCCESS)
 				{
                // Some Cisco switches may not return data for certain system VLANs
-               nxlog_debug(5, _T("FDB: cannot read  FDB in context %s"), context);
+				   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: cannot read  FDB in context %s"), context);
             }
             else
             {
-               nxlog_debug(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
+               nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
             }
 				size = fdb->getSize();
 			}

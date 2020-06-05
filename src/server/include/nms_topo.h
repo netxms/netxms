@@ -88,6 +88,7 @@ public:
 	NetworkPathElement *getHopInfo(int index) const { return m_path.get(index); }
 
 	void fillMessage(NXCPMessage *msg) const;
+	void print(ServerConsole *console, int padding) const;
 };
 
 /**
@@ -276,7 +277,7 @@ public:
 // Topology functions
 //
 
-NetworkPath *TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
+shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, bool includeEndNodes);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
