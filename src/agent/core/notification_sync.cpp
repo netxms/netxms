@@ -272,7 +272,7 @@ static void UpdateLastConnectionTime(uint64_t serverId, time_t now)
       hStmt = DBPrepare(hdb, _T("INSERT INTO notification_servers (last_connection_time,server_id) VALUES (?,?)"));
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, now);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(now));
       DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, serverId);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
