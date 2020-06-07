@@ -2854,7 +2854,8 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): current trace is %s, using cached trace"),
                m_name, m_id, (trace == nullptr) ? _T("not available") : _T("incomplete"));
       lockProperties();
-      trace = m_lastKnownNetworkPath;
+      if (m_lastKnownNetworkPath != nullptr)
+         trace = m_lastKnownNetworkPath;
       unlockProperties();
    }
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): trace available, %d hops, %s"),
