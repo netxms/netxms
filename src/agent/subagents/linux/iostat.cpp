@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004 - 2016 Raden Solutions
+** Copyright (C) 2004-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@
  */
 struct IOSTAT_SAMPLE
 {
-	DWORD ioRequests;
-	DWORD stats[5];
+	unsigned long ioRequests;
+	unsigned long stats[5];
 };
 
 /**
@@ -36,9 +36,10 @@ struct IOSTAT_SAMPLE
  */
 struct IOSTAT_DEVICE
 {
-	char name[64];
-	bool isRealDevice;
-	IOSTAT_SAMPLE samples[SAMPLES_PER_MINUTE];
+   char name[64];
+   char sysfsName[64];
+   bool isRealDevice;
+   IOSTAT_SAMPLE samples[SAMPLES_PER_MINUTE];
 };
 
 /**
@@ -47,7 +48,7 @@ struct IOSTAT_DEVICE
 static CONDITION m_condStop;
 static THREAD m_collectorThread;
 static const char *m_statFile = "/proc/diskstats";
-static IOSTAT_DEVICE *m_devices = NULL;
+static IOSTAT_DEVICE *m_devices = nullptr;
 static int m_deviceCount = 0;
 static int m_currSample = 0;
 static MUTEX m_dataAccess;
@@ -58,60 +59,81 @@ static bool m_isSysFsAvailable = false;
  */
 static bool IsRealDevice(const char *name)
 {
-	if (!m_isSysFsAvailable)
-		return false;	// Unable to check
+   if (!m_isSysFsAvailable)
+      return false;  // Unable to check
 
-	// Check using /sys/block
-	char path[MAX_PATH];
+   // Check using /sys/block
+   char path[MAX_PATH];
+   snprintf(path, MAX_PATH, "/sys/block/%s", name);
+   return access(path, 0) == 0;
+}
 
-	snprintf(path, MAX_PATH, "/sys/block/%s", name);
-	
-	// Replace / by ! in device name
-	for(int i = 11; path[i] != 0; i++)
-		if (path[i] == '/')
-			path[i] = '!';
-
-	return access(path, 0) == 0;
+/**
+ * Read and parse /sys/block/<dev>/stat
+ */
+static void ReadSysFsStat(IOSTAT_DEVICE *d)
+{
+   char fname[MAX_PATH];
+   snprintf(fname, MAX_PATH, "/sys/block/%s/stat", d->sysfsName);
+   FILE *f = fopen(fname, "r");
+   if (f != nullptr)
+   {
+      char line[1024];
+      if (fgets(line, 1024, f) != nullptr)
+      {
+         int count = sscanf(line, "");
+      }
+      fclose(f);
+   }
 }
 
 /**
  * Parse single stat line
  */
-static void ParseIoStat(char *line)
+static IOSTAT_DEVICE *ParseIoStat(char *line)
 {
-	char *p = line;
+   char *p = line;
 
-	// Find device name
-	while(isspace(*p) || isdigit(*p))
-		p++;
+   // Find device name
+   while(isspace(*p) || isdigit(*p))
+      p++;
 
-	// Read device name
-	char devName[64];
-	int i;
-	for(i = 0; !isspace(*p) && (i < 63); i++, p++)
-		devName[i] = *p;
-	devName[i] = 0;
+   // Read device name
+   char devName[64];
+   int i;
+   for(i = 0; !isspace(*p) && (i < 63); i++, p++)
+      devName[i] = *p;
+   devName[i] = 0;
 
-	// Find device entry
-	int dev;
-	for(dev = 0; dev < m_deviceCount; dev++)
-		if (!strcmp(devName, m_devices[dev].name))
-			break;
-	if (dev == m_deviceCount)
-	{
-		// Add new device
-		m_deviceCount++;
-		m_devices = (IOSTAT_DEVICE *)realloc(m_devices, m_deviceCount * sizeof(IOSTAT_DEVICE));
-		strcpy(m_devices[dev].name, devName);
-		m_devices[dev].isRealDevice = IsRealDevice(devName);
-		memset(m_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
-		AgentWriteDebugLog(2, _T("ParseIoStat(): new device added (name=%hs isRealDevice=%d)"), devName, m_devices[dev].isRealDevice);
+   // Find device entry
+   int dev;
+   for(dev = 0; dev < m_deviceCount; dev++)
+      if (!strcmp(devName, m_devices[dev].name))
+         break;
+   if (dev == m_deviceCount)
+   {
+      // Add new device
+      m_deviceCount++;
+      m_devices = MemReallocArray(m_devices, m_deviceCount);
+      strcpy(m_devices[dev].name, devName);
+      strcpy(m_devices[dev].sysfsName, devName);
+
+	   // Replace / by ! in device name for sysfs
+	   for(int i = 0; m_devices[dev].sysfsName[i] != 0; i++)
+	      if (m_devices[dev].sysfsName[i] == '/')
+	         m_devices[dev].sysfsName[i] = '!';
+
+	   m_devices[dev].isRealDevice = IsRealDevice(m_devices[dev].sysfsName);
+	   memset(m_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
+	   AgentWriteDebugLog(2, _T("ParseIoStat(): new device added (name=%hs isRealDevice=%d)"), devName, m_devices[dev].isRealDevice);
 	}
 
 	// Parse counters
-	IOSTAT_SAMPLE *s = &m_devices[dev].samples[m_currSample];
-	sscanf(p, "%d %*d %d %*d %d %*d %d %*d %d %d %*d", &s->stats[IOSTAT_NUM_READS], &s->stats[IOSTAT_NUM_SREADS],
+	IOSTAT_DEVICE *d = &m_devices[dev];
+	IOSTAT_SAMPLE *s = d->samples[m_currSample];
+	sscanf(p, "%ld %*ld %ld %*ld %ld %*ld %ld %*ld %ld %ld %*ld", &s->stats[IOSTAT_NUM_READS], &s->stats[IOSTAT_NUM_SREADS],
 	       &s->stats[IOSTAT_NUM_WRITES], &s->stats[IOSTAT_NUM_SWRITES], &s->ioRequests, &s->stats[IOSTAT_IO_TIME]);
+	return d;
 }
 
 /**
@@ -119,19 +141,22 @@ static void ParseIoStat(char *line)
  */
 static void Collect()
 {
-	MutexLock(m_dataAccess);
+   MutexLock(m_dataAccess);
 
-	FILE *f = fopen(m_statFile, "r");
-	if (f != NULL)
-	{
-		char line[1024];
-
-		while(1)
+   FILE *f = fopen(m_statFile, "r");
+   if (f != nullptr)
+   {
+      char line[1024];
+		while(true)
 		{
-			if (fgets(line, 1024, f) == NULL)
+			if (fgets(line, 1024, f) == nullptr)
 				break;
 
-			ParseIoStat(line);
+			IOSTAT_DEVICE *d = ParseIoStat(line);
+			if (m_isSysFsAvailable && d->isRealDevice)
+			{
+			   ReadSysFsStat(d);
+			}
 		}
 		fclose(f);
 	}
@@ -208,7 +233,7 @@ static IOSTAT_SAMPLE *GetSamples(const TCHAR *param)
 	char *devName, buffer[64];
 
 	if (!AgentGetParameterArgA(param, 1, buffer, 64))
-		return NULL;
+		return nullptr;
 
 	devName = !strncmp(buffer, "/dev/", 5) ? &buffer[5] : buffer;
 
@@ -216,13 +241,13 @@ static IOSTAT_SAMPLE *GetSamples(const TCHAR *param)
 		if (!strcmp(devName, m_devices[i].name))
 			return m_devices[i].samples;
 
-	return NULL;
+	return nullptr;
 }
 
 /**
  * Get difference between oldest and newest samples
  */
-static DWORD GetSampleDelta(IOSTAT_SAMPLE *samples, int metric)
+static uint32_t GetSampleDelta(IOSTAT_SAMPLE *samples, int metric)
 {
 	// m_currSample points to next sample, so it's oldest one
 	int last = m_currSample - 1;
