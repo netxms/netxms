@@ -27,8 +27,7 @@
  */
 struct IOSTAT_SAMPLE
 {
-	unsigned long ioRequests;
-	unsigned long stats[5];
+	unsigned long stats[9];
 };
 
 /**
@@ -39,27 +38,32 @@ struct IOSTAT_DEVICE
    char name[64];
    char sysfsName[64];
    bool isRealDevice;
+   bool isFirstRead;
+   unsigned long lastReads;
+   unsigned long lastWrites;
+   unsigned long lastReadWaitTime;
+   unsigned long lastWriteWaitTime;
    IOSTAT_SAMPLE samples[SAMPLES_PER_MINUTE];
 };
 
 /**
  * Static data
  */
-static CONDITION m_condStop;
-static THREAD m_collectorThread;
-static const char *m_statFile = "/proc/diskstats";
-static IOSTAT_DEVICE *m_devices = nullptr;
-static int m_deviceCount = 0;
-static int m_currSample = 0;
-static MUTEX m_dataAccess;
-static bool m_isSysFsAvailable = false;
+static CONDITION s_stopCondition = INVALID_CONDITION_HANDLE;
+static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
+static const char *s_statFile = "/proc/diskstats";
+static IOSTAT_DEVICE *s_devices = nullptr;
+static int s_deviceCount = 0;
+static int s_currSample = 0;
+static MUTEX s_dataAccessLock;
+static bool s_isSysFsAvailable = false;
 
 /**
  * Check if given disk is a device, not partition
  */
 static bool IsRealDevice(const char *name)
 {
-   if (!m_isSysFsAvailable)
+   if (!s_isSysFsAvailable)
       return false;  // Unable to check
 
    // Check using /sys/block
@@ -81,7 +85,36 @@ static void ReadSysFsStat(IOSTAT_DEVICE *d)
       char line[1024];
       if (fgets(line, 1024, f) != nullptr)
       {
-         int count = sscanf(line, "");
+         unsigned long reads, writes, readWaitTime, writeWaitTime;
+         int count = sscanf(line, "%ld %*d %*d %ld %ld %*d %*d %ld", &reads, &readWaitTime, &writes, &writeWaitTime);
+         if (count == 4)
+         {
+            IOSTAT_SAMPLE *s = &d->samples[s_currSample];
+            if (d->isFirstRead)
+            {
+               s->stats[IOSTAT_READ_WAIT_TIME] = 0;
+               s->stats[IOSTAT_WRITE_WAIT_TIME] = 0;
+               s->stats[IOSTAT_WAIT_TIME] = 0;
+               d->isFirstRead = false;
+            }
+            else
+            {
+               unsigned long diffReads = reads - d->lastReads;
+               unsigned long diffReadWaitTime = readWaitTime - d->lastReadWaitTime;
+               s->stats[IOSTAT_READ_WAIT_TIME] = (diffReads > 0) ? (diffReadWaitTime / diffReads) : 0;
+
+               unsigned long diffWrites = writes - d->lastWrites;
+               unsigned long diffWriteWaitTime = writeWaitTime - d->lastWriteWaitTime;
+               s->stats[IOSTAT_WRITE_WAIT_TIME] = (diffWrites > 0) ? (diffWriteWaitTime / diffWrites) : 0;
+
+               unsigned long diffOps = diffReads + diffWrites;
+               s->stats[IOSTAT_WAIT_TIME] = (diffOps > 0) ? ((diffReadWaitTime + diffWriteWaitTime) / diffOps) : 0;
+            }
+            d->lastReads = reads;
+            d->lastWrites = writes;
+            d->lastReadWaitTime = readWaitTime;
+            d->lastWriteWaitTime = writeWaitTime;
+         }
       }
       fclose(f);
    }
@@ -107,33 +140,34 @@ static IOSTAT_DEVICE *ParseIoStat(char *line)
 
    // Find device entry
    int dev;
-   for(dev = 0; dev < m_deviceCount; dev++)
-      if (!strcmp(devName, m_devices[dev].name))
+   for(dev = 0; dev < s_deviceCount; dev++)
+      if (!strcmp(devName, s_devices[dev].name))
          break;
-   if (dev == m_deviceCount)
+   if (dev == s_deviceCount)
    {
       // Add new device
-      m_deviceCount++;
-      m_devices = MemReallocArray(m_devices, m_deviceCount);
-      strcpy(m_devices[dev].name, devName);
-      strcpy(m_devices[dev].sysfsName, devName);
+      s_deviceCount++;
+      s_devices = MemReallocArray(s_devices, s_deviceCount);
+      strcpy(s_devices[dev].name, devName);
+      strcpy(s_devices[dev].sysfsName, devName);
 
 	   // Replace / by ! in device name for sysfs
-	   for(int i = 0; m_devices[dev].sysfsName[i] != 0; i++)
-	      if (m_devices[dev].sysfsName[i] == '/')
-	         m_devices[dev].sysfsName[i] = '!';
+	   for(int i = 0; s_devices[dev].sysfsName[i] != 0; i++)
+	      if (s_devices[dev].sysfsName[i] == '/')
+	         s_devices[dev].sysfsName[i] = '!';
 
-	   m_devices[dev].isRealDevice = IsRealDevice(m_devices[dev].sysfsName);
-	   memset(m_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
-	   AgentWriteDebugLog(2, _T("ParseIoStat(): new device added (name=%hs isRealDevice=%d)"), devName, m_devices[dev].isRealDevice);
+	   s_devices[dev].isRealDevice = IsRealDevice(s_devices[dev].sysfsName);
+	   s_devices[dev].isFirstRead = true;
+	   memset(s_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
+	   AgentWriteDebugLog(2, _T("ParseIoStat(): new device added (name=%hs isRealDevice=%d)"), devName, s_devices[dev].isRealDevice);
 	}
 
 	// Parse counters
-	IOSTAT_DEVICE *d = &m_devices[dev];
-	IOSTAT_SAMPLE *s = d->samples[m_currSample];
-	sscanf(p, "%ld %*ld %ld %*ld %ld %*ld %ld %*ld %ld %ld %*ld", &s->stats[IOSTAT_NUM_READS], &s->stats[IOSTAT_NUM_SREADS],
-	       &s->stats[IOSTAT_NUM_WRITES], &s->stats[IOSTAT_NUM_SWRITES], &s->ioRequests, &s->stats[IOSTAT_IO_TIME]);
-	return d;
+   IOSTAT_DEVICE *d = &s_devices[dev];
+   IOSTAT_SAMPLE *s = &d->samples[s_currSample];
+   sscanf(p, "%ld %*d %ld %*d %ld %*d %ld %*d %ld %ld %*d", &s->stats[IOSTAT_NUM_READS], &s->stats[IOSTAT_NUM_SREADS],
+            &s->stats[IOSTAT_NUM_WRITES], &s->stats[IOSTAT_NUM_SWRITES], &s->stats[IOSTAT_DISK_QUEUE], &s->stats[IOSTAT_IO_TIME]);
+   return d;
 }
 
 /**
@@ -141,9 +175,9 @@ static IOSTAT_DEVICE *ParseIoStat(char *line)
  */
 static void Collect()
 {
-   MutexLock(m_dataAccess);
+   MutexLock(s_dataAccessLock);
 
-   FILE *f = fopen(m_statFile, "r");
+   FILE *f = fopen(s_statFile, "r");
    if (f != nullptr)
    {
       char line[1024];
@@ -153,7 +187,7 @@ static void Collect()
 				break;
 
 			IOSTAT_DEVICE *d = ParseIoStat(line);
-			if (m_isSysFsAvailable && d->isRealDevice)
+			if (s_isSysFsAvailable && d->isRealDevice)
 			{
 			   ReadSysFsStat(d);
 			}
@@ -161,11 +195,11 @@ static void Collect()
 		fclose(f);
 	}
 
-	m_currSample++;
-	if (m_currSample == SAMPLES_PER_MINUTE)
-		m_currSample = 0;
+	s_currSample++;
+	if (s_currSample == SAMPLES_PER_MINUTE)
+		s_currSample = 0;
 
-	MutexUnlock(m_dataAccess);
+	MutexUnlock(s_dataAccessLock);
 }
 
 /**
@@ -176,17 +210,17 @@ static THREAD_RESULT THREAD_CALL IoCollectionThread(void *arg)
 	// Get first sample for each device and fill all samples
 	// with same data
 	Collect();
-	MutexLock(m_dataAccess);
-	for(int i = 0; i < m_deviceCount; i++)
+	MutexLock(s_dataAccessLock);
+	for(int i = 0; i < s_deviceCount; i++)
 	{
 		for(int j = 1; j < SAMPLES_PER_MINUTE; j++)
-			memcpy(&m_devices[i].samples[j], &m_devices[i].samples[0], sizeof(IOSTAT_SAMPLE));
+			memcpy(&s_devices[i].samples[j], &s_devices[i].samples[0], sizeof(IOSTAT_SAMPLE));
 	}
-	MutexUnlock(m_dataAccess);
+	MutexUnlock(s_dataAccessLock);
 
 	while(true)
 	{
-		if (ConditionWait(m_condStop, 60000 / SAMPLES_PER_MINUTE))
+		if (ConditionWait(s_stopCondition, 60000 / SAMPLES_PER_MINUTE))
 			break;	// Stop condition set
 		Collect();
 	}
@@ -204,14 +238,14 @@ void StartIoStatCollector()
 	{
 		if (S_ISDIR(st.st_mode))
 		{
-			m_isSysFsAvailable = true;
+			s_isSysFsAvailable = true;
 			AgentWriteDebugLog(2, _T("Linux: using /sys/block to distinguish devices from partitions"));
 		}
 	}	
 
-	m_condStop = ConditionCreate(TRUE);
-	m_dataAccess = MutexCreate();
-	m_collectorThread = ThreadCreateEx(IoCollectionThread, 0, NULL);
+	s_stopCondition = ConditionCreate(TRUE);
+	s_dataAccessLock = MutexCreate();
+	s_collectorThread = ThreadCreateEx(IoCollectionThread, 0, NULL);
 }
 
 /**
@@ -219,10 +253,10 @@ void StartIoStatCollector()
  */
 void ShutdownIoStatCollector()
 {
-	ConditionSet(m_condStop);
-	ThreadJoin(m_collectorThread);
-	ConditionDestroy(m_condStop);
-	MutexDestroy(m_dataAccess);
+	ConditionSet(s_stopCondition);
+	ThreadJoin(s_collectorThread);
+	ConditionDestroy(s_stopCondition);
+	MutexDestroy(s_dataAccessLock);
 }
 
 /**
@@ -230,16 +264,15 @@ void ShutdownIoStatCollector()
  */
 static IOSTAT_SAMPLE *GetSamples(const TCHAR *param)
 {
-	char *devName, buffer[64];
-
+	char buffer[64];
 	if (!AgentGetParameterArgA(param, 1, buffer, 64))
 		return nullptr;
 
-	devName = !strncmp(buffer, "/dev/", 5) ? &buffer[5] : buffer;
+	char *devName = !strncmp(buffer, "/dev/", 5) ? &buffer[5] : buffer;
 
-	for(int i = 0; i < m_deviceCount; i++)
-		if (!strcmp(devName, m_devices[i].name))
-			return m_devices[i].samples;
+	for(int i = 0; i < s_deviceCount; i++)
+		if (!strcmp(devName, s_devices[i].name))
+			return s_devices[i].samples;
 
 	return nullptr;
 }
@@ -247,142 +280,209 @@ static IOSTAT_SAMPLE *GetSamples(const TCHAR *param)
 /**
  * Get difference between oldest and newest samples
  */
-static uint32_t GetSampleDelta(IOSTAT_SAMPLE *samples, int metric)
+static unsigned long GetSampleDelta(IOSTAT_SAMPLE *samples, int metric)
 {
 	// m_currSample points to next sample, so it's oldest one
-	int last = m_currSample - 1;
+	int last = s_currSample - 1;
 	if (last < 0)
 		last = SAMPLES_PER_MINUTE - 1;
-	return samples[last].stats[metric] - samples[m_currSample].stats[metric];
+	return samples[last].stats[metric] - samples[s_currSample].stats[metric];
 }
 
 /**
- * Handler for I/O stat parameters (per device)
+ * Get total for all samples
  */
-LONG H_IoStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+static unsigned long GetSampleTotal(IOSTAT_SAMPLE *samples, int metric)
+{
+   unsigned long sum = 0;
+   for(int i = 0; i < SAMPLES_PER_MINUTE; i++)
+      sum += samples[i].stats[metric];
+   return sum;
+}
+
+/**
+ * Handler for I/O stat parameters (per device) for cumulative counters
+ */
+LONG H_IoStatsCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
 
-	MutexLock(m_dataAccess);
+	MutexLock(s_dataAccessLock);
 
-	IOSTAT_SAMPLE *s = GetSamples(pszParam);
-	if (s != NULL)
+	IOSTAT_SAMPLE *s = GetSamples(param);
+	if (s != nullptr)
 	{
-		int metric = CAST_FROM_POINTER(pArg, int);
-		DWORD delta = GetSampleDelta(s, metric);
+		int metric = CAST_FROM_POINTER(arg, int);
+		unsigned long delta = GetSampleDelta(s, metric);
 		switch(metric)
 		{
 			case IOSTAT_NUM_SREADS:
 			case IOSTAT_NUM_SWRITES:
 				delta *= 512;	// Convert sectors to bytes
-				ret_uint(pValue, delta / SAMPLES_PER_MINUTE);
+				ret_uint(value, static_cast<uint32_t>(delta / SAMPLES_PER_MINUTE));
 				break;
 			case IOSTAT_IO_TIME:   // Milliseconds spent on I/O
-				ret_double(pValue, (double)delta / 600);	// = / 60000 * 100
+				ret_double(value, (double)delta / 600);	// = / 60000 * 100
 				break;
 			default:
-				ret_double(pValue, (double)delta / SAMPLES_PER_MINUTE);
+				ret_double(value, (double)delta / SAMPLES_PER_MINUTE);
 				break;
 		}
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
-	MutexUnlock(m_dataAccess);	
-
+	MutexUnlock(s_dataAccessLock);	
 	return nRet;
 }
 
 /**
- * Handler for I/O stat parameters (total)
+ * Handler for I/O stat parameters (per device) for non-cumulative counters
  */
-LONG H_IoStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_IoStatsNonCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int metric = CAST_FROM_POINTER(pArg, int);
+   int nRet = SYSINFO_RC_UNSUPPORTED;
 
-	MutexLock(m_dataAccess);
+   MutexLock(s_dataAccessLock);
 
-	double dsum = 0;
-	QWORD qsum = 0;
-	for(int i = 0; i < m_deviceCount; i++)
-	{
-		if (m_devices[i].isRealDevice)
-		{
-			DWORD delta = GetSampleDelta(m_devices[i].samples, metric);
-			switch(metric)
-			{
-				case IOSTAT_NUM_SREADS:
-				case IOSTAT_NUM_SWRITES:
-					delta *= 512;	// Convert sectors to bytes
-					qsum += (QWORD)(delta / 60);
-					break;
-				case IOSTAT_IO_TIME:   // Milliseconds spent on I/O - convert to %
-					dsum += (double)delta / 600;	// = / 60000 * 100
-					break;
-				default:
-					dsum += (double)delta / 60;
-					break;
-			}
-		}
-	}
+   IOSTAT_SAMPLE *s = GetSamples(param);
+   if (s != nullptr)
+   {
+      int metric = CAST_FROM_POINTER(arg, int);
+      unsigned long delta = GetSampleTotal(s, metric);
+      switch(metric)
+      {
+         case IOSTAT_READ_WAIT_TIME:
+         case IOSTAT_WRITE_WAIT_TIME:
+         case IOSTAT_WAIT_TIME:
+            ret_uint(value, static_cast<uint32_t>(delta / SAMPLES_PER_MINUTE));
+            break;
+         case IOSTAT_DISK_QUEUE:
+            ret_double(value, static_cast<double>(delta) / SAMPLES_PER_MINUTE);
+            break;
+      }
+      nRet = SYSINFO_RC_SUCCESS;
+   }
 
-	MutexUnlock(m_dataAccess);
-
-	if ((metric == IOSTAT_NUM_SREADS) || (metric == IOSTAT_NUM_SWRITES))
-	{
-		ret_uint64(pValue, qsum);
-	}
-	else
-	{
-		ret_double(pValue, dsum);
-	}
-
-	return SYSINFO_RC_SUCCESS;
+   MutexUnlock(s_dataAccessLock);
+   return nRet;
 }
 
 /**
- * Handler for disk queue parameters (per device)
+ * Handler for I/O stat parameters (total) that needs conversion from number of sectors to bytes
  */
-LONG H_DiskQueue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_IoStatsTotalSectors(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_UNSUPPORTED;
+   int metric = CAST_FROM_POINTER(arg, int);
 
-	MutexLock(m_dataAccess);
+   MutexLock(s_dataAccessLock);
 
-	IOSTAT_SAMPLE *s = GetSamples(pszParam);
-	if (s != NULL)
-	{
-		DWORD sum = 0;
-		for(int i = 0; i < SAMPLES_PER_MINUTE; i++)
-			sum += s[i].ioRequests;
-		ret_double(pValue, (double)sum / SAMPLES_PER_MINUTE);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
+   uint64_t sum = 0;
+   for(int i = 0; i < s_deviceCount; i++)
+   {
+      if (!s_devices[i].isRealDevice)
+         continue;
 
-	MutexUnlock(m_dataAccess);	
+      unsigned long delta = GetSampleDelta(s_devices[i].samples, metric);
+      delta *= 512;	// Convert sectors to bytes
+      sum += static_cast<uint64_t>(delta / 60);
+   }
 
-	return nRet;
+   MutexUnlock(s_dataAccessLock);
+
+   ret_uint64(value, sum);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
- * Handler for disk queue parameters (total)
+ * Handler for I/O stat parameters (total) with floating point value
  */
-LONG H_DiskQueueTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_IoStatsTotalFloat(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	MutexLock(m_dataAccess);
+   int metric = CAST_FROM_POINTER(arg, int);
 
-	DWORD sum = 0;
-	for(int i = 0; i < m_deviceCount; i++)
-	{
-		if (m_devices[i].isRealDevice)
-		{
-			for(int j = 0; j < SAMPLES_PER_MINUTE; j++)
-				sum += m_devices[i].samples[j].ioRequests;
-		}
-	}
-	MutexUnlock(m_dataAccess);	
+   MutexLock(s_dataAccessLock);
 
-	ret_double(pValue, (double)sum / SAMPLES_PER_MINUTE);
-	return SYSINFO_RC_SUCCESS;
+   double sum = 0;
+   for(int i = 0; i < s_deviceCount; i++)
+   {
+      if (s_devices[i].isRealDevice)
+         sum += GetSampleDelta(s_devices[i].samples, metric) / 60;
+   }
+
+   MutexUnlock(s_dataAccessLock);
+
+   ret_double(value, sum);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for I/O stat parameters (total) expressed in percentage of time
+ */
+LONG H_IoStatsTotalTimePct(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int metric = CAST_FROM_POINTER(arg, int);
+
+   MutexLock(s_dataAccessLock);
+
+   double sum = 0;
+   for(int i = 0; i < s_deviceCount; i++)
+   {
+      if (s_devices[i].isRealDevice)
+         sum += static_cast<double>(GetSampleDelta(s_devices[i].samples, metric)) / 600; // = / 60000 * 100
+   }
+
+   MutexUnlock(s_dataAccessLock);
+
+   ret_double(value, sum);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for non-cumulative I/O stat parameters (total) with floating point value
+ */
+LONG H_IoStatsTotalNonCumulativeFloat(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int metric = CAST_FROM_POINTER(arg, int);
+
+   MutexLock(s_dataAccessLock);
+
+   unsigned long sum = 0;
+   for(int i = 0; i < s_deviceCount; i++)
+   {
+      if (s_devices[i].isRealDevice)
+      {
+         for(int j = 0; j < SAMPLES_PER_MINUTE; j++)
+            sum += s_devices[i].samples[j].stats[metric];
+      }
+   }
+   MutexUnlock(s_dataAccessLock);
+
+   ret_double(value, static_cast<double>(sum) / SAMPLES_PER_MINUTE);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for non-cumulative I/O stat parameters (total) with integer value
+ */
+LONG H_IoStatsTotalNonCumulativeInteger(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int metric = CAST_FROM_POINTER(arg, int);
+
+   MutexLock(s_dataAccessLock);
+
+   unsigned long sum = 0;
+   for(int i = 0; i < s_deviceCount; i++)
+   {
+      if (s_devices[i].isRealDevice)
+      {
+         for(int j = 0; j < SAMPLES_PER_MINUTE; j++)
+            sum += s_devices[i].samples[j].stats[metric];
+      }
+   }
+   MutexUnlock(s_dataAccessLock);
+
+   ret_uint64(value, static_cast<uint64_t>(sum) / SAMPLES_PER_MINUTE);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -390,11 +490,11 @@ LONG H_DiskQueueTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
  */
 LONG H_IoDevices(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   for(int i = 0; i < m_deviceCount; i++)
+   for(int i = 0; i < s_deviceCount; i++)
    {
-      if (m_devices[i].isRealDevice)
+      if (s_devices[i].isRealDevice)
       {
-         value->addMBString(m_devices[i].name);
+         value->addMBString(s_devices[i].name);
       }
    }
    return SYSINFO_RC_SUCCESS;

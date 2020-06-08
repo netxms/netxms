@@ -201,12 +201,18 @@ enum
 /**
  * I/O stats
  */
-
-#define IOSTAT_NUM_READS      0
-#define IOSTAT_NUM_WRITES     1
-#define IOSTAT_NUM_SREADS     2
-#define IOSTAT_NUM_SWRITES    3
-#define IOSTAT_IO_TIME        4
+enum
+{
+   IOSTAT_NUM_READS       = 0,
+   IOSTAT_NUM_WRITES      = 1,
+   IOSTAT_NUM_SREADS      = 2,
+   IOSTAT_NUM_SWRITES     = 3,
+   IOSTAT_IO_TIME         = 4,
+   IOSTAT_READ_WAIT_TIME  = 5,
+   IOSTAT_WRITE_WAIT_TIME = 6,
+   IOSTAT_WAIT_TIME       = 7,
+   IOSTAT_DISK_QUEUE      = 8
+};
 
 /**
  * Functions
@@ -221,11 +227,14 @@ LONG H_IsVirtual(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_HypervisorType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_HypervisorVersion(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
-LONG H_IoDevices(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
-LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_IoStatsTotal(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_DiskQueue(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_DiskQueueTotal(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_IoDevices(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_IoStatsCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IoStatsNonCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IoStatsTotalSectors(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IoStatsTotalFloat(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IoStatsTotalTimePct(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IoStatsTotalNonCumulativeInteger(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IoStatsTotalNonCumulativeFloat(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 LONG H_NetIfInfoFromIOCTL(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetIfInfoFromProc(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
