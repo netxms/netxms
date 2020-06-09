@@ -1199,11 +1199,13 @@ ssize_t TunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
  */
 ssize_t TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 {
-   if (!m_active)
-      return 0;
-
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
+   if (!m_active && m_buffer.isEmpty())
+   {
+      LeaveCriticalSection(&m_bufferLock);
+      return 0;   // closed
+   }
    while (m_buffer.isEmpty())
    {
       if (!SleepConditionVariableCS(&m_dataCondition, &m_bufferLock, timeout))
@@ -1222,6 +1224,12 @@ ssize_t TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
    pthread_mutex_lock(&m_bufferLock);
    if (m_buffer.isEmpty())
    {
+      if (!m_active)
+      {
+         pthread_mutex_unlock(&m_bufferLock);
+         return 0;   // closed
+      }
+
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
       struct timespec ts;
       ts.tv_sec = timeout / 1000;

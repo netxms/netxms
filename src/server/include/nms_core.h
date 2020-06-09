@@ -812,6 +812,8 @@ private:
    void sendObjectUpdate(shared_ptr<NetObj> object);
    void scheduleObjectUpdate(shared_ptr<NetObj> object);
 
+   void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
+
 public:
    ClientSession(SOCKET hSocket, const InetAddress& addr);
    ~ClientSession();

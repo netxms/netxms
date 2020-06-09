@@ -881,8 +881,6 @@ protected:
 	NXCPEncryptionContext *acquireEncryptionContext();
    AbstractCommChannel *acquireChannel();
 
-   uint32_t waitForRCC(uint32_t requestId, uint32_t timeout);
-
 #ifdef _WIN32
    void setSelfPtr(const shared_ptr<AgentConnection>& sptr) { *m_self = sptr; }
 #else
@@ -920,7 +918,8 @@ public:
    bool sendMessage(NXCPMessage *msg);
    bool sendRawMessage(NXCP_MESSAGE *msg);
    void postRawMessage(NXCP_MESSAGE *msg);
-   NXCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeout) { return m_pMsgWaitQueue->waitForMessage(code, id, timeout); }
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_pMsgWaitQueue->waitForMessage(code, id, timeout); }
+   uint32_t waitForRCC(uint32_t requestId, uint32_t timeout);
 
    ArpCache *getArpCache();
    InterfaceList *getInterfaceList();

@@ -63,9 +63,9 @@ struct MessageField;
 class LIBNETXMS_EXPORTABLE NXCPMessage
 {
 private:
-   UINT16 m_code;
-   UINT16 m_flags;
-   UINT32 m_id;
+   uint16_t m_code;
+   uint16_t m_flags;
+   uint32_t m_id;
    MessageField *m_fields; // Message fields
    int m_version;          // Protocol version
    BYTE *m_data;           // binary data
@@ -90,11 +90,11 @@ public:
    static NXCPMessage *deserialize(const NXCP_MESSAGE *rawMsg, int version = NXCP_VERSION);
    NXCP_MESSAGE *serialize(bool allowCompression = false) const;
 
-   UINT16 getCode() const { return m_code; }
-   void setCode(UINT16 code) { m_code = code; }
+   uint16_t getCode() const { return m_code; }
+   void setCode(uint16_t code) { m_code = code; }
 
-   UINT32 getId() const { return m_id; }
-   void setId(UINT32 id) { m_id = id; }
+   uint32_t getId() const { return m_id; }
+   void setId(uint32_t id) { m_id = id; }
 
    int getProtocolVersion() const { return m_version; }
    void setProtocolVersion(int version);

@@ -1275,7 +1275,7 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
       if (pEnMsg != nullptr)
       {
          success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
-         free(pEnMsg);
+         MemFree(pEnMsg);
       }
       else
       {
@@ -1287,7 +1287,7 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    {
       success = (channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
-   free(rawMsg);
+   MemFree(rawMsg);
    channel->decRefCount();
    return success;
 }

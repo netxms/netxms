@@ -396,27 +396,21 @@ void ClientSession::readThread()
                      {
                         if (msg->isEndOfFile())
                         {
-                           debugPrintf(6, _T("Got end of file marker"));
-                           //get response with specific ID if ok< then send ok, else send error
+                           debugPrintf(6, _T("Got end of file marker for request ID %u"), msg->getId());
+                           incRefCount();
+                           ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::finalizeFileTransferToAgent, conn, msg->getId());
                            m_agentConnections.remove(msg->getId());
-
-                           NXCPMessage response;
-                           response.setCode(CMD_REQUEST_COMPLETED);
-                           response.setId(msg->getId());
-                           response.setField(VID_RCC, RCC_SUCCESS);
-                           sendMessage(&response);
                         }
                      }
                      else
                      {
-                        debugPrintf(6, _T("Error while sending to agent"));
-                        // I/O error
+                        debugPrintf(6, _T("Error while sending file to agent (request ID %u)"), msg->getId());
                         m_agentConnections.remove(msg->getId());
 
                         NXCPMessage response;
                         response.setCode(CMD_REQUEST_COMPLETED);
                         response.setId(msg->getId());
-                        response.setField(VID_RCC, RCC_IO_ERROR); //set result that came from agent
+                        response.setField(VID_RCC, RCC_COMM_FAILURE);
                         sendMessage(&response);
                      }
                   }
@@ -553,11 +547,26 @@ void ClientSession::readThread()
 }
 
 /**
+ * Finalize file transfer to agent
+ */
+void ClientSession::finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId)
+{
+   debugPrintf(6, _T("Waiting for final file transfer confirmation from agent for request ID %u"), requestId);
+   uint32_t rcc = conn->waitForRCC(requestId, conn->getCommandTimeout());
+   debugPrintf(6, _T("File transfer request %u: %s"), requestId, AgentErrorCodeToText(rcc));
+
+   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+   response.setField(VID_RCC, AgentErrorToRCC(rcc));
+   sendMessage(&response);
+   decRefCount();
+}
+
+/**
  * Request processing
  */
 void ClientSession::processRequest(NXCPMessage *request)
 {
-   UINT16 code = request->getCode();
+   uint16_t code = request->getCode();
 
    TCHAR buffer[128];
    debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(code, buffer));
