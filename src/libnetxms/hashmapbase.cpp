@@ -61,11 +61,11 @@ static void ObjectDestructor(void *object, HashMapBase *map)
  */
 HashMapBase::HashMapBase(Ownership objectOwner, unsigned int keylen, void (*destructor)(void *, HashMapBase *))
 {
-   m_data = NULL;
+   m_data = nullptr;
    m_objectOwner = (objectOwner == Ownership::True);
    m_keylen = keylen;
-   m_objectDestructor = (destructor != NULL) ? destructor : ObjectDestructor;
-   m_context = NULL;
+   m_objectDestructor = (destructor != nullptr) ? destructor : ObjectDestructor;
+   m_context = nullptr;
 }
 
 /**
@@ -97,8 +97,8 @@ void HashMapBase::clear()
  */
 HashMapEntry *HashMapBase::find(const void *key) const
 {
-	if (key == NULL)
-		return NULL;
+	if (key == nullptr)
+		return nullptr;
 
    HashMapEntry *entry;
    HASH_FIND(hh, m_data, key, m_keylen, entry);
@@ -110,11 +110,11 @@ HashMapEntry *HashMapBase::find(const void *key) const
  */
 void HashMapBase::_set(const void *key, void *value)
 {
-   if (key == NULL)
+   if (key == nullptr)
       return;
 
 	HashMapEntry *entry = find(key);
-	if (entry != NULL)
+	if (entry != nullptr)
 	{
 		if (m_objectOwner)
          destroyObject(entry->value);
@@ -139,7 +139,7 @@ void *HashMapBase::_get(const void *key) const
 {
    HashMapEntry *entry;
    HASH_FIND(hh, m_data, key, m_keylen, entry);
-   return (entry != NULL) ? entry->value : NULL;
+   return (entry != nullptr) ? entry->value : nullptr;
 }
 
 /**
@@ -149,7 +149,7 @@ void HashMapBase::_remove(const void *key, bool destroyValue)
 {
    HashMapEntry *entry;
    HASH_FIND(hh, m_data, key, m_keylen, entry);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
       HASH_DEL(m_data, entry);
       DELETE_KEY(this, entry);
@@ -163,13 +163,13 @@ void HashMapBase::_remove(const void *key, bool destroyValue)
  * Enumerate entries
  * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
  */
-EnumerationCallbackResult HashMapBase::forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData) const
+EnumerationCallbackResult HashMapBase::forEach(EnumerationCallbackResult (*cb)(const void *, void *, void *), void *context) const
 {
    EnumerationCallbackResult result = _CONTINUE;
    HashMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (cb(GET_KEY(entry), entry->value, userData) == _STOP)
+      if (cb(GET_KEY(entry), entry->value, context) == _STOP)
       {
          result = _STOP;
          break;
@@ -181,13 +181,13 @@ EnumerationCallbackResult HashMapBase::forEach(EnumerationCallbackResult (*cb)(c
 /**
  * Find entry
  */
-const void *HashMapBase::findElement(bool (*comparator)(const void *, const void *, void *), void *userData) const
+const void *HashMapBase::findElement(bool (*comparator)(const void *, const void *, void *), void *context) const
 {
-   const void *result = NULL;
+   const void *result = nullptr;
    HashMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (comparator(GET_KEY(entry), entry->value, userData))
+      if (comparator(GET_KEY(entry), entry->value, context))
       {
          result = entry->value;
          break;
@@ -210,8 +210,8 @@ int HashMapBase::size() const
 HashMapIterator::HashMapIterator(HashMapBase *hashMap)
 {
    m_hashMap = hashMap;
-   m_curr = NULL;
-   m_next = NULL;
+   m_curr = nullptr;
+   m_next = nullptr;
 }
 
 /**
@@ -219,10 +219,10 @@ HashMapIterator::HashMapIterator(HashMapBase *hashMap)
  */
 bool HashMapIterator::hasNext()
 {
-   if (m_hashMap->m_data == NULL)
+   if (m_hashMap->m_data == nullptr)
       return false;
 
-   return (m_curr != NULL) ? (m_next != NULL) : true;
+   return (m_curr != nullptr) ? (m_next != nullptr) : true;
 }
 
 /**
@@ -230,17 +230,17 @@ bool HashMapIterator::hasNext()
  */
 void *HashMapIterator::next()
 {
-   if (m_hashMap->m_data == NULL)
-      return NULL;
+   if (m_hashMap->m_data == nullptr)
+      return nullptr;
 
-   if (m_curr == NULL)  // iteration not started
+   if (m_curr == nullptr)  // iteration not started
    {
       m_curr = m_hashMap->m_data;
    }
    else
    {
-      if (m_next == NULL)
-         return NULL;
+      if (m_next == nullptr)
+         return nullptr;
       m_curr = m_next;
    }
    m_next = static_cast<HashMapEntry*>(m_curr->hh.next);
@@ -252,7 +252,7 @@ void *HashMapIterator::next()
  */
 void HashMapIterator::remove()
 {
-   if (m_curr == NULL)
+   if (m_curr == nullptr)
       return;
 
    HASH_DEL(m_hashMap->m_data, m_curr);
@@ -267,7 +267,7 @@ void HashMapIterator::remove()
  */
 void HashMapIterator::unlink()
 {
-   if (m_curr == NULL)
+   if (m_curr == nullptr)
       return;
 
    HASH_DEL(m_hashMap->m_data, m_curr);

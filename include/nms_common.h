@@ -1295,10 +1295,10 @@ template <typename T> T *MemRealloc(T *p, size_t size) { return (T*)realloc(p, s
 template <typename T> T *MemReallocArray(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
 #if FREE_IS_NULL_SAFE
 inline void MemFree(void *p) { free(p); }
-template <typename T> void MemFreeAndNull(T* &p) { free(p); p = NULL; }
+template <typename T> void MemFreeAndNull(T* &p) { free(p); p = nullptr; }
 #else
-inline void MemFree(void *p) { if (p != NULL) free(p); }
-template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p = NULL; } }
+inline void MemFree(void *p) { if (p != nullptr) free(p); }
+template <typename T> void MemFreeAndNull(T* &p) { if (p != nullptr) { free(p); p = nullptr; } }
 #endif
 
 #else /* __cplusplus */

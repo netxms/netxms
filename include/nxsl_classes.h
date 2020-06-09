@@ -1058,7 +1058,7 @@ public:
 class LIBNXSL_EXPORTABLE NXSL_VM : public NXSL_ValueManager
 {
 private:
-   static EnumerationCallbackResult createConstantsCallback(const void *key, const void *value, void *data);
+   static EnumerationCallbackResult createConstantsCallback(const void *key, void *value, void *data);
 
 protected:
    NXSL_Environment *m_env;

@@ -38,7 +38,7 @@
  * Housekeeper data
  */
 MUTEX __EXPORT MsgWaitQueue::m_housekeeperLock = MutexCreate();
-HashMap<UINT64, MsgWaitQueue> __EXPORT *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(Ownership::False);
+HashMap<uint64_t, MsgWaitQueue> __EXPORT *MsgWaitQueue::m_activeQueues = new HashMap<uint64_t, MsgWaitQueue>(Ownership::False);
 CONDITION __EXPORT MsgWaitQueue::m_shutdownCondition = ConditionCreate(true);
 THREAD __EXPORT MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
 
@@ -50,28 +50,28 @@ MsgWaitQueue::MsgWaitQueue()
    m_holdTime = 30000;      // Default message TTL is 30 seconds
    m_size = 0;
    m_allocated = 0;
-   m_elements = NULL;
+   m_elements = nullptr;
    m_sequence = 1;
 #if defined(_WIN32)
    InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
    memset(m_wakeupEvents, 0, MAX_MSGQUEUE_WAITERS * sizeof(HANDLE));
-   m_wakeupEvents[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
+   m_wakeupEvents[0] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
    memset(m_waiters, 0, MAX_MSGQUEUE_WAITERS);
 #elif defined(_USE_GNU_PTH)
    pth_mutex_init(&m_mutex);
    pth_cond_init(&m_wakeupCondition);
 #else
-   pthread_mutex_init(&m_mutex, NULL);
-   pthread_cond_init(&m_wakeupCondition, NULL);
+   pthread_mutex_init(&m_mutex, nullptr);
+   pthread_cond_init(&m_wakeupCondition, nullptr);
 #endif
 
    // register new queue
    MutexLock(m_housekeeperLock);
-   if (m_activeQueues != NULL)
-      m_activeQueues->set(CAST_FROM_POINTER(this, UINT64), this);
+   if (m_activeQueues != nullptr)
+      m_activeQueues->set(CAST_FROM_POINTER(this, uint64_t), this);
    if (m_housekeeperThread == INVALID_THREAD_HANDLE)
    {
-      m_housekeeperThread = ThreadCreateEx(MsgWaitQueue::housekeeperThread, 0, NULL);
+      m_housekeeperThread = ThreadCreateEx(MsgWaitQueue::housekeeperThread, 0, nullptr);
    }
    MutexUnlock(m_housekeeperLock);
 }
@@ -83,8 +83,8 @@ MsgWaitQueue::~MsgWaitQueue()
 {
    // unregister queue
    MutexLock(m_housekeeperLock);
-   if (m_activeQueues != NULL)
-      m_activeQueues->remove(CAST_FROM_POINTER(this, UINT64));
+   if (m_activeQueues != nullptr)
+      m_activeQueues->remove(CAST_FROM_POINTER(this, uint64_t));
    MutexUnlock(m_housekeeperLock);
 
    clear();
@@ -366,9 +366,9 @@ void MsgWaitQueue::housekeeperRun()
 /**
  * Callback for enumerating active queues
  */
-EnumerationCallbackResult MsgWaitQueue::houseKeeperCallback(const void *key, const void *object, void *arg)
+EnumerationCallbackResult MsgWaitQueue::houseKeeperCallback(const uint64_t& key, MsgWaitQueue *queue)
 {
-   ((MsgWaitQueue *)object)->housekeeperRun();
+   queue->housekeeperRun();
    return _CONTINUE;
 }
 
@@ -381,7 +381,7 @@ THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
    while(!ConditionWait(m_shutdownCondition, TTL_CHECK_INTERVAL))
    {
       MutexLock(m_housekeeperLock);
-      m_activeQueues->forEach(MsgWaitQueue::houseKeeperCallback, NULL);
+      m_activeQueues->forEach(MsgWaitQueue::houseKeeperCallback);
       MutexUnlock(m_housekeeperLock);
    }
    return THREAD_OK;
@@ -405,12 +405,11 @@ void MsgWaitQueue::shutdown()
 /**
  * Diag info callback
  */
-EnumerationCallbackResult MsgWaitQueue::diagInfoCallback(const void *key, const void *object, void *arg)
+EnumerationCallbackResult MsgWaitQueue::diagInfoCallback(const uint64_t& key, MsgWaitQueue *queue, StringBuffer *output)
 {
-   MsgWaitQueue *q = (MsgWaitQueue *)object;
    TCHAR buffer[256];
-   _sntprintf(buffer, 256, _T("   %p size=%d holdTime=%d\n"), q, q->m_size, q->m_holdTime);
-   static_cast<StringBuffer*>(arg)->append(buffer);
+   _sntprintf(buffer, 256, _T("   %p size=%d holdTime=%d\n"), queue, queue->m_size, queue->m_holdTime);
+   output->append(buffer);
    return _CONTINUE;
 }
 

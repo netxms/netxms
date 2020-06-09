@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -149,12 +149,12 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src, bool overwrite)
 /**
  * Callback for adding variables
  */
-static EnumerationCallbackResult AddVariableCallback(const void *key, const void *value, void *data)
+static EnumerationCallbackResult AddVariableCallback(const void *key, void *value, void *data)
 {
-   if (((NXSL_VariableSystem *)data)->find(*static_cast<const NXSL_Identifier*>(key)) == NULL)
+   if (static_cast<NXSL_VariableSystem*>(data)->find(*static_cast<const NXSL_Identifier*>(key)) == nullptr)
    {
-      ((NXSL_VariableSystem *)data)->create(*static_cast<const NXSL_Identifier*>(key),
-               ((NXSL_VariableSystem *)data)->vm()->createValue(static_cast<const NXSL_Value*>(value)));
+      static_cast<NXSL_VariableSystem*>(data)->create(*static_cast<const NXSL_Identifier*>(key),
+               static_cast<NXSL_VariableSystem*>(data)->vm()->createValue(static_cast<NXSL_Value*>(value)));
    }
    return _CONTINUE;
 }

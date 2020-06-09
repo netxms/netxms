@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2018 Raden Solutions
+** Copyright (C) 2014-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -225,8 +225,8 @@ void TuxedoServer::addInstance(TuxedoServerInstance *s)
  * Service list
  */
 static Mutex s_lock;
-static HashMap<UINT32, TuxedoServer> *s_servers = NULL;
-static HashMap<UINT32, TuxedoServerInstance> *s_serverInstances = NULL;
+static HashMap<uint32_t, TuxedoServer> *s_servers = nullptr;
+static HashMap<uint32_t, TuxedoServerInstance> *s_serverInstances = nullptr;
 
 /**
  * Reset server cache
@@ -321,15 +321,14 @@ void TuxedoQueryServers()
 /**
  * Fill server instance list
  */
-static EnumerationCallbackResult FillServerInstanceList(const void *key, const void *value, void *arg)
+static EnumerationCallbackResult FillServerInstanceList(const uint32_t& key, TuxedoServer *server, StringList *list)
 {
-   const ObjectArray<TuxedoServerInstance> &instances = static_cast<const TuxedoServer*>(value)->m_instances;
-   for(int i = 0; i < instances.size(); i++)
+   for(int i = 0; i < server->m_instances.size(); i++)
    {
-      TuxedoServerInstance *instance = instances.get(i);
+      TuxedoServerInstance *instance = server->m_instances.get(i);
       TCHAR serverId[64];
       _sntprintf(serverId, 64, _T("%ld,%ld"), instance->m_groupId, instance->m_id);
-      static_cast<StringList*>(arg)->add(serverId);
+      list->add(serverId);
    }
    return _CONTINUE;
 }
@@ -342,7 +341,7 @@ LONG H_ServerInstancesList(const TCHAR *param, const TCHAR *arg, StringList *val
    LONG rc = SYSINFO_RC_SUCCESS;
 
    s_lock.lock();
-   if (s_servers != NULL)
+   if (s_servers != nullptr)
    {
       s_servers->forEach(FillServerInstanceList, value);
    }
@@ -357,12 +356,11 @@ LONG H_ServerInstancesList(const TCHAR *param, const TCHAR *arg, StringList *val
 /**
  * Fill server list
  */
-static EnumerationCallbackResult FillServerList(const void *key, const void *value, void *arg)
+static EnumerationCallbackResult FillServerList(const uint32_t& key, TuxedoServer *server, StringList *list)
 {
-   const TuxedoServer *server = static_cast<const TuxedoServer*>(value);
    TCHAR serverId[64];
    _sntprintf(serverId, 64, _T("%ld,%ld"), server->m_summary.m_groupId, server->m_summary.m_baseId);
-   static_cast<StringList*>(arg)->add(serverId);
+   list->add(serverId);
    return _CONTINUE;
 }
 
@@ -374,7 +372,7 @@ LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
    LONG rc = SYSINFO_RC_SUCCESS;
 
    s_lock.lock();
-   if (s_servers != NULL)
+   if (s_servers != nullptr)
    {
       s_servers->forEach(FillServerList, value);
    }
@@ -389,14 +387,12 @@ LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 /**
  * Fill server instance table
  */
-static EnumerationCallbackResult FillServerInstanceTable(const void *key, const void *value, void *arg)
+static EnumerationCallbackResult FillServerInstanceTable(const uint32_t& key, TuxedoServer *server, Table *table)
 {
-   const ObjectArray<TuxedoServerInstance> &instances = static_cast<const TuxedoServer*>(value)->m_instances;
-   Table *table = static_cast<Table*>(arg);
-   for(int i = 0; i < instances.size(); i++)
+   for(int i = 0; i < server->m_instances.size(); i++)
    {
       table->addRow();
-      TuxedoServerInstance *s = instances.get(i);
+      TuxedoServerInstance *s = server->m_instances.get(i);
       table->set(0, (INT32)s->m_groupId);
       table->set(1, (INT32)s->m_id);
       table->set(2, (INT32)s->m_baseId);
@@ -483,10 +479,8 @@ LONG H_ServerInstancesTable(const TCHAR *param, const TCHAR *arg, Table *value, 
 /**
  * Fill server table
  */
-static EnumerationCallbackResult FillServerTable(const void *key, const void *value, void *arg)
+static EnumerationCallbackResult FillServerTable(const uint32_t& key, TuxedoServer *server, Table *table)
 {
-   const TuxedoServer *server = static_cast<const TuxedoServer*>(value);
-   Table *table = static_cast<Table*>(arg);
    table->addRow();
    table->set(0, (INT32)server->m_summary.m_groupId);
    table->set(1, (INT32)server->m_summary.m_baseId);

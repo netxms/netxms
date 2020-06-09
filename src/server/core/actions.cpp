@@ -129,15 +129,15 @@ void Action::saveToDatabase() const
 /**
  * Static data
  */
-static SynchronizedSharedHashMap<UINT32, Action> s_actions;
-static UINT32 m_dwUpdateCode;
+static SynchronizedSharedHashMap<uint32_t, Action> s_actions;
+static uint32_t s_updateCode;
 
 /**
  * Send updates to all connected clients
  */
 static void SendActionDBUpdate(ClientSession *pSession, void *pArg)
 {
-   pSession->onActionDBUpdate(m_dwUpdateCode, (const Action *)pArg);
+   pSession->onActionDBUpdate(s_updateCode, (const Action *)pArg);
 }
 
 /**
@@ -503,9 +503,9 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 /**
  * Action name comparator
  */
-static bool ActionNameComparator(const UINT32 *id, const Action *action, const TCHAR *name)
+static bool ActionNameComparator(const uint32_t& id, const Action& action, const TCHAR *name)
 {
-   return _tcsicmp(action->name, name) == 0;
+   return _tcsicmp(action.name, name) == 0;
 }
 
 /**
@@ -514,7 +514,7 @@ static bool ActionNameComparator(const UINT32 *id, const Action *action, const T
 uint32_t CreateAction(const TCHAR *name, uint32_t *id)
 {
    // Check for duplicate name
-   if (s_actions.findElement(ActionNameComparator, name) != NULL)
+   if (s_actions.findElement(ActionNameComparator, name) != nullptr)
       return RCC_OBJECT_ALREADY_EXISTS;
 
    Action *action = new Action(name);
@@ -522,7 +522,7 @@ uint32_t CreateAction(const TCHAR *name, uint32_t *id)
    action->saveToDatabase();
 
    s_actions.set(action->id, action);
-   m_dwUpdateCode = NX_NOTIFY_ACTION_CREATED;
+   s_updateCode = NX_NOTIFY_ACTION_CREATED;
    EnumerateClientSessions(SendActionDBUpdate, action);
 
    return RCC_SUCCESS;
@@ -538,7 +538,7 @@ uint32_t DeleteAction(uint32_t actionId)
    shared_ptr<Action> action = s_actions.getShared(actionId);
    if (action != nullptr)
    {
-      m_dwUpdateCode = NX_NOTIFY_ACTION_DELETED;
+      s_updateCode = NX_NOTIFY_ACTION_DELETED;
       EnumerateClientSessions(SendActionDBUpdate, action.get());
       s_actions.remove(actionId);
    }
@@ -582,7 +582,7 @@ uint32_t ModifyActionFromMessage(const NXCPMessage *msg)
 
       action->saveToDatabase();
 
-      m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
+      s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
       EnumerateClientSessions(SendActionDBUpdate, action);
       s_actions.set(actionId, action);
 
@@ -597,13 +597,13 @@ uint32_t ModifyActionFromMessage(const NXCPMessage *msg)
  * first - old name
  * second - new name
  */
-static EnumerationCallbackResult RenameChannel(const UINT32 *id, const Action *action, std::pair<TCHAR*, TCHAR*> *names)
+static EnumerationCallbackResult RenameChannel(const uint32_t& id, const shared_ptr<Action>& action, std::pair<TCHAR*, TCHAR*> *names)
 {
    if (!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME) && action->type == ACTION_NOTIFICATION)
    {
-      _tcsncpy(const_cast<TCHAR*>(action->channelName), names->second, MAX_OBJECT_NAME);
-      m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
-      EnumerateClientSessions(SendActionDBUpdate, const_cast<Action *>(action));
+      _tcsncpy(action->channelName, names->second, MAX_OBJECT_NAME);
+      s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
+      EnumerateClientSessions(SendActionDBUpdate, action.get());
    }
    return _CONTINUE;
 }
@@ -621,13 +621,9 @@ void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names)
 /**
  * Check if notification channel with given name is used in actions
  */
-static EnumerationCallbackResult CheckChannelUsage(const UINT32 *id, const Action *action, TCHAR *name)
+static bool CheckChannelUsage(const uint32_t& id, const Action& action, TCHAR *name)
 {
-   if(!_tcsncmp(action->channelName, name, MAX_OBJECT_NAME))
-   {
-      return _STOP;
-   }
-   return _CONTINUE;
+   return _tcsncmp(action.channelName, name, MAX_OBJECT_NAME) == 0;
 }
 
 /**
@@ -635,7 +631,7 @@ static EnumerationCallbackResult CheckChannelUsage(const UINT32 *id, const Actio
  */
 bool CheckChannelIsUsedInAction(TCHAR *name)
 {
-   return s_actions.forEach(CheckChannelUsage, name) == _STOP;
+   return s_actions.findElement(CheckChannelUsage, name) != nullptr;
 }
 
 /**
@@ -650,12 +646,11 @@ struct SendActionData
 /**
  * Send action to client
  */
-static EnumerationCallbackResult SendAction(const UINT32 *id, const Action *action, SendActionData *data)
+static EnumerationCallbackResult SendAction(const uint32_t& id, const shared_ptr<Action>& action, SendActionData *data)
 {
    action->fillMessage(data->message);
-   data->session->sendMessage(static_cast<SendActionData*>(data)->message);
+   data->session->sendMessage(data->message);
    data->message->deleteAllFields();
-
    return _CONTINUE;
 }
 
@@ -743,9 +738,9 @@ uuid GetActionGUID(uint32_t id)
 /**
  * Action GUID comparator
  */
-static bool ActionGUIDComparator(const UINT32 *id, const Action *action, const uuid *data)
+static bool ActionGUIDComparator(const uint32_t& id, const Action& action, const uuid *data)
 {
-   return action->guid.equals(*data);
+   return action.guid.equals(*data);
 }
 
 /**
@@ -785,7 +780,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       action->isDisabled = false;
       if (!guid.isNull())
          action->guid = guid;
-      m_dwUpdateCode = NX_NOTIFY_ACTION_CREATED;
+      s_updateCode = NX_NOTIFY_ACTION_CREATED;
    }
    else
    {
@@ -798,7 +793,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       }
       nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s"), action->name, action->guid.toString(guidText));
       _tcslcpy(action->name, config->getSubEntryValue(_T("name")), MAX_OBJECT_NAME);
-      m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
+      s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
       action = make_shared<Action>(action.get());
    }
 

@@ -158,6 +158,16 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
 }
 
 /**
+ * Callback for aborting active file transfers
+ */
+static EnumerationCallbackResult AbortFileTransfer(const uint32_t& key, DownloadFileInfo *file, CommSession *session)
+{
+   session->debugPrintf(4, _T("Transfer of file %s aborted because of session termination"), file->getFileName());
+   file->close(false);
+   return _CONTINUE;
+}
+
+/**
  * Destructor
  */
 CommSession::~CommSession()
@@ -178,6 +188,8 @@ CommSession::~CommSession()
 	MutexDestroy(m_socketWriteMutex);
    delete m_responseQueue;
    MutexDestroy(m_tcpProxyLock);
+
+   m_downloadFileMap.forEach(AbortFileTransfer, this);
 }
 
 /**

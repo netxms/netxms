@@ -55,7 +55,7 @@ const TCHAR *g_discoveredAddrSourceTypeAsText[] = {
 /**
  * Active pollers
  */
-static HashMap<UINT64, PollerInfo> s_pollers(Ownership::False);
+static HashMap<uint64_t, PollerInfo> s_pollers(Ownership::False);
 static Mutex s_pollerLock;
 
 /**
@@ -64,7 +64,7 @@ static Mutex s_pollerLock;
 PollerInfo::~PollerInfo()
 {
    s_pollerLock.lock();
-   s_pollers.remove(CAST_FROM_POINTER(this, UINT64));
+   s_pollers.remove(CAST_FROM_POINTER(this, uint64_t));
    s_pollerLock.unlock();
 }
 
@@ -75,7 +75,7 @@ PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object, bo
 {
    PollerInfo *p = new PollerInfo(type, object, objectCreation);
    s_pollerLock.lock();
-   s_pollers.set(CAST_FROM_POINTER(p, UINT64), p);
+   s_pollers.set(CAST_FROM_POINTER(p, uint64_t), p);
    s_pollerLock.unlock();
    return p;
 }
@@ -83,17 +83,15 @@ PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object, bo
 /**
  * Show poller information on console
  */
-static EnumerationCallbackResult ShowPollerInfo(const void *key, const void *object, void *arg)
+static EnumerationCallbackResult ShowPollerInfo(const uint64_t& key, PollerInfo *poller, ServerConsole *console)
 {
    static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("BSVC"), _T("COND"), _T("TOPO"), _T("ZONE"), _T("ICMP") };
 
-   PollerInfo *p = (PollerInfo *)object;
-   NetObj *o = p->getObject();
+   NetObj *o = poller->getObject();
 
    TCHAR name[32];
    _tcslcpy(name, o->getName(), 31);
-   ConsolePrintf(static_cast<CONSOLE_CTX>(arg), _T("%s | %9d | %-30s | %s\n"),
-            pollerType[static_cast<int>(p->getType())], o->getId(), name, p->getStatus());
+   console->printf(_T("%s | %9d | %-30s | %s\n"), pollerType[static_cast<int>(poller->getType())], o->getId(), name, poller->getStatus());
 
    return _CONTINUE;
 }
@@ -101,7 +99,7 @@ static EnumerationCallbackResult ShowPollerInfo(const void *key, const void *obj
 /**
  * Get poller diagnostic
  */
-void ShowPollers(CONSOLE_CTX console)
+void ShowPollers(ServerConsole *console)
 {
    ConsoleWrite(console, _T("Type | Object ID | Object name                    | Status\n")
                          _T("-----+-----------+--------------------------------+--------------------------\n"));

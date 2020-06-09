@@ -213,10 +213,10 @@ NXSL_VM::~NXSL_VM()
 /**
  * Constant creation callback
  */
-EnumerationCallbackResult NXSL_VM::createConstantsCallback(const void *key, const void *value, void *data)
+EnumerationCallbackResult NXSL_VM::createConstantsCallback(const void *key, void *value, void *data)
 {
    static_cast<NXSL_VM*>(data)->m_constants->create(*static_cast<const NXSL_Identifier*>(key),
-            static_cast<NXSL_VM*>(data)->createValue(static_cast<const NXSL_Value*>(value)));
+            static_cast<NXSL_VM*>(data)->createValue(static_cast<NXSL_Value*>(value)));
    return _CONTINUE;
 }
 

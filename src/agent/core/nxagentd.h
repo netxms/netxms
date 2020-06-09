@@ -313,7 +313,7 @@ private:
    bool m_acceptFileUpdates;
    bool m_ipv6Aware;
    bool m_bulkReconciliationSupported;
-   HashMap<UINT32, DownloadFileInfo> m_downloadFileMap;
+   HashMap<uint32_t, DownloadFileInfo> m_downloadFileMap;
    bool m_allowCompression;   // allow compression for structured messages
 	NXCPEncryptionContext *m_pCtx;
    time_t m_ts;               // Last activity timestamp

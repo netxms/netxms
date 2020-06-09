@@ -61,7 +61,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_matchCount = 0;
 	m_agentAction = NULL;
 	m_agentActionArgs = new StringList();
-   m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(Ownership::True);
+   m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
 
    const char *eptr;
    int eoffset;
@@ -111,7 +111,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    }
    m_agentAction = MemCopyString(src->m_agentAction);
    m_agentActionArgs = new StringList(src->m_agentActionArgs);
-   m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(Ownership::True);
+   m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
    restoreCounters(src);
 
    const char *eptr;
@@ -304,7 +304,7 @@ bool LogParserRule::matchRepeatCount()
       return true;
 
    // remove expired matches
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    for(int i = 0; i < m_matchArray->size(); i++)
    {
       if (m_matchArray->get(i) >= (now - m_repeatInterval))
@@ -323,13 +323,13 @@ bool LogParserRule::matchRepeatCount()
 /**
  * Increment check count
  */
-void LogParserRule::incCheckCount(UINT32 objectId)
+void LogParserRule::incCheckCount(uint32_t objectId)
 {
    m_checkCount++;
    if (objectId == 0)
       return;
    ObjectRuleStats *s = m_objectCounters->get(objectId);
-   if (s == NULL)
+   if (s == nullptr)
    {
       s = new ObjectRuleStats();
       m_objectCounters->set(objectId, s);
@@ -340,13 +340,13 @@ void LogParserRule::incCheckCount(UINT32 objectId)
 /**
  * Increment match count
  */
-void LogParserRule::incMatchCount(UINT32 objectId)
+void LogParserRule::incMatchCount(uint32_t objectId)
 {
    m_matchCount++;
    if (objectId == 0)
       return;
    ObjectRuleStats *s = m_objectCounters->get(objectId);
-   if (s == NULL)
+   if (s == nullptr)
    {
       s = new ObjectRuleStats();
       m_objectCounters->set(objectId, s);
@@ -357,34 +357,34 @@ void LogParserRule::incMatchCount(UINT32 objectId)
 /**
  * Get check count for specfic object
  */
-int LogParserRule::getCheckCount(UINT32 objectId) const
+int LogParserRule::getCheckCount(uint32_t objectId) const
 {
    if (objectId == 0)
       return m_checkCount;
    ObjectRuleStats *s = m_objectCounters->get(objectId);
-   return (s != NULL) ? s->checkCount : 0;
+   return (s != nullptr) ? s->checkCount : 0;
 }
 
 /**
  * Get match count for specfic object
  */
-int LogParserRule::getMatchCount(UINT32 objectId) const
+int LogParserRule::getMatchCount(uint32_t objectId) const
 {
    if (objectId == 0)
       return m_matchCount;
    ObjectRuleStats *s = m_objectCounters->get(objectId);
-   return (s != NULL) ? s->matchCount : 0;
+   return (s != nullptr) ? s->matchCount : 0;
 }
 
 /**
  * Callback for copying object counters
  */
-static EnumerationCallbackResult RestoreCountersCallback(const void *key, const void *value, void *arg)
+static EnumerationCallbackResult RestoreCountersCallback(const uint32_t& key, ObjectRuleStats *src, HashMap<uint32_t, ObjectRuleStats> *counters)
 {
-   ObjectRuleStats *s = new ObjectRuleStats;
-   s->checkCount = ((const ObjectRuleStats *)value)->checkCount;
-   s->matchCount = ((const ObjectRuleStats *)value)->matchCount;
-   ((HashMap<UINT32, ObjectRuleStats> *)arg)->set(*((UINT32 *)key), s);
+   ObjectRuleStats *dst = new ObjectRuleStats;
+   dst->checkCount = src->checkCount;
+   dst->matchCount = src->matchCount;
+   counters->set(key, dst);
    return _CONTINUE;
 }
 

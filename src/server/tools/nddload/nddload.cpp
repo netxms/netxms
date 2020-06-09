@@ -146,7 +146,7 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
    driver->analyzeDevice(transport, oid, &s_object, &s_driverData);
    _tprintf(_T("Custom attributes after device analyze:\n"));
    auto attributes = s_object.getCustomAttributes();
-   attributes->forEach(PrintAttributeCallback, NULL);
+   attributes->forEach(PrintAttributeCallback, nullptr);
    delete attributes;
    return true;
 }

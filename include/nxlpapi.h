@@ -147,15 +147,15 @@ private:
 	int m_matchCount;
 	TCHAR *m_agentAction;
 	StringList *m_agentActionArgs;
-	HashMap<UINT32, ObjectRuleStats> *m_objectCounters;
+	HashMap<uint32_t, ObjectRuleStats> *m_objectCounters;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
 	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp,
 	         LogParserCallback cb, void *context);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
-   void incCheckCount(UINT32 objectId);
-   void incMatchCount(UINT32 objectId);
+   void incCheckCount(uint32_t objectId);
+   void incMatchCount(uint32_t objectId);
 
 public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
@@ -213,8 +213,8 @@ public:
 
 	const TCHAR *getRegexpSource() const { return CHECK_NULL(m_regexp); }
 
-   int getCheckCount(UINT32 objectId = 0) const;
-   int getMatchCount(UINT32 objectId = 0) const;
+   int getCheckCount(uint32_t objectId = 0) const;
+   int getMatchCount(uint32_t objectId = 0) const;
 
    void restoreCounters(const LogParserRule *rule);
 };

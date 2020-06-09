@@ -2066,8 +2066,8 @@ public:
 
 	int size() const;
 
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData) const;
-   const void *findElement(bool (*comparator)(const void *, const void *, void *), void *userData) const;
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, void *, void *), void *context) const;
+   const void *findElement(bool (*comparator)(const void *, const void *, void *), void *context) const;
 
    void setContext(void *context) { m_context = context; }
    void *getContext() const { return m_context; }
@@ -2097,10 +2097,29 @@ public:
 /**
  * Hash map template for holding objects as values
  */
-template <class K, class V> class HashMap : public HashMapBase
+template<class K, class V> class HashMap : public HashMapBase
 {
 private:
 	static void destructor(void *object, HashMapBase *map) { delete (V*)object; }
+
+	template<typename C>
+	static EnumerationCallbackResult forEachWrapper(const void *key, void *value, void *context)
+	{
+	   return static_cast<std::pair<EnumerationCallbackResult (*)(const K&, V*, C*), C*>*>(context)->first(*static_cast<const K*>(key),
+	         static_cast<V*>(value), static_cast<std::pair<EnumerationCallbackResult (*)(const K&, V*, C*), C*>*>(context)->second);
+	}
+
+	static EnumerationCallbackResult forEachWrapperNoContext(const void *key, void *value, void *context)
+	{
+	   return reinterpret_cast<EnumerationCallbackResult (*)(const K&, V*)>(context)(*static_cast<const K*>(key), static_cast<V*>(value));
+	}
+
+	template<typename C>
+	static bool findElementWrapper(const void *key, const void *value, void *context)
+	{
+	   return static_cast<std::pair<bool (*)(const K&, const V&, C*), C*>*>(context)->first(*static_cast<const K*>(key),
+	         *static_cast<const V*>(value), static_cast<std::pair<EnumerationCallbackResult (*)(const K&, const V&, C*), C*>*>(context)->second);
+	}
 
 public:
 	HashMap(Ownership objectOwner = Ownership::False, void (*_destructor)(void *, HashMapBase *) = destructor) : HashMapBase(objectOwner, sizeof(K), _destructor) { }
@@ -2112,12 +2131,29 @@ public:
    bool contains(const K& key) { return _contains(&key); }
 
    Iterator<V> *iterator() { return new Iterator<V>(new HashMapIterator(this)); }
+
+   template<typename C> EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, V*, C*), C *context) const
+   {
+      std::pair<EnumerationCallbackResult (*)(const K&, V*, C*), C*> _context(cb, context);
+      return HashMapBase::forEach(&HashMap<K, V>::forEachWrapper<C>, &_context);
+   }
+
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, V*)) const
+   {
+      return HashMapBase::forEach(&HashMap<K, V>::forEachWrapperNoContext, reinterpret_cast<void*>(cb));
+   }
+
+   template<typename C> const V *findElement(bool (*comparator)(const K&, const V&, C*), C *context) const
+   {
+      std::pair<bool (*)(const K&, const V&, C*), C*> _context(comparator, context);
+      return static_cast<const V*>(HashMapBase::findElement(&HashMap<K, V>::findElementWrapper<C>, &_context));
+   }
 };
 
 /**
  * Hash map template for holding reference counting objects as values
  */
-template <class K, class V> class RefCountHashMap : public HashMapBase
+template<class K, class V> class RefCountHashMap : public HashMapBase
 {
 private:
    static void destructor(void *object, HashMapBase *map) { if (object != NULL) ((V*)object)->decRefCount(); }
@@ -2154,6 +2190,13 @@ private:
       static_cast<SharedHashMap<K, V>*>(hashMapBase->getContext())->m_pool.destroy(static_cast<shared_ptr<V>*>(element));
    }
 
+   template <typename C>
+   static EnumerationCallbackResult forEachCallbackWrapper(const K& key, shared_ptr<V> *value,
+         std::pair<EnumerationCallbackResult (*)(const K&, const shared_ptr<V>&, C*), C*> *context)
+   {
+      return context->first(key, *value, context->second);
+   }
+
 public:
    SharedHashMap() : m_pool(64), m_data(Ownership::True, SharedHashMap<K, V>::destructor) { m_data.setContext(this); }
    virtual ~SharedHashMap() { }
@@ -2180,9 +2223,10 @@ public:
    int size() const { return m_data.size(); }
 
    template <typename C>
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, const shared_ptr<V> *, C *), C *context) const
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, const shared_ptr<V>&, C*), C *context) const
    {
-      return m_data.forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void*, const void*, void*)>(cb), context);
+      std::pair<EnumerationCallbackResult (*)(const K&, const shared_ptr<V>&, C*), C*> _context(cb, context);
+      return m_data.forEach(&SharedHashMap<K, V>::forEachCallbackWrapper<C>, &_context);
    }
 };
 
@@ -2209,17 +2253,17 @@ private:
    }
 
    template <typename C>
-   static EnumerationCallbackResult forEachCallbackWrapper(const K *key, const shared_ptr<V> *value,
-         std::pair<EnumerationCallbackResult (*)(const K*, const V*, C*), C*> *context)
+   static EnumerationCallbackResult forEachCallbackWrapper(const K& key, shared_ptr<V> *value,
+         std::pair<EnumerationCallbackResult (*)(const K&, const shared_ptr<V>&, C*), C*> *context)
    {
-      return context->first(key, value->get(), context->second);
+      return context->first(key, *value, context->second);
    }
 
    template <typename C>
-   static bool findCallbackWrapper(const K *key, const shared_ptr<V> *value,
-         std::pair<bool (*)(const K*, const V*, C*), C*> *context)
+   static bool findCallbackWrapper(const K& key, const shared_ptr<V>& value,
+         std::pair<bool (*)(const K&, const V&, C*), C*> *context)
    {
-      return context->first(key, value->get(), context->second);
+      return context->first(key, *value, context->second);
    }
 
 public:
@@ -2283,27 +2327,23 @@ public:
    }
 
    template <typename C>
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K*, const V*, C*), C *context) const
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, const shared_ptr<V>&, C*), C *context) const
    {
-      std::pair<EnumerationCallbackResult (*)(const K*, const V*, C*), C*> internalContext(cb, context);
+      std::pair<EnumerationCallbackResult (*)(const K&, const shared_ptr<V>&, C*), C*> _context(cb, context);
       MutexLock(m_mutex);
-      EnumerationCallbackResult result = m_data.forEach(
-            reinterpret_cast<EnumerationCallbackResult (*)(const void*, const void*, void*)>(&SynchronizedSharedHashMap<K, V>::forEachCallbackWrapper<C>),
-            &internalContext);
+      EnumerationCallbackResult result = m_data.forEach(&SynchronizedSharedHashMap<K, V>::forEachCallbackWrapper<C>, &_context);
       MutexUnlock(m_mutex);
       return result;
    }
 
    template <typename C>
-   const shared_ptr<V>& findElement(bool (*cb)(const K *, const V* , C *), C *context) const
+   const shared_ptr<V>& findElement(bool (*cb)(const K&, const V&, C*), C *context) const
    {
-      std::pair<bool (*)(const K*, const V*, C*), C*> internalContext(cb, context);
+      std::pair<bool (*)(const K&, const V&, C*), C*> _context(cb, context);
       MutexLock(m_mutex);
-      auto result = reinterpret_cast<const shared_ptr<V>*>(m_data.findElement(
-            reinterpret_cast<bool (*)(const void*, const void*, void*)>(&SynchronizedSharedHashMap<K, V>::findCallbackWrapper<C>),
-            &internalContext));
+      auto result = m_data.findElement(&SynchronizedSharedHashMap<K, V>::findCallbackWrapper<C>, &_context);
       MutexUnlock(m_mutex);
-      return (result != NULL) ? *result : m_null;
+      return (result != nullptr) ? *result : m_null;
    }
 };
 

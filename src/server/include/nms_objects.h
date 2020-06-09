@@ -4320,7 +4320,7 @@ int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 
 PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object, bool objectCreation = false);
-void ShowPollers(CONSOLE_CTX console);
+void ShowPollers(ServerConsole *console);
 
 void InitUserAgentNotifications();
 void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
