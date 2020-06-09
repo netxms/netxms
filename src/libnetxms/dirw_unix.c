@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -29,9 +29,9 @@
  */
 DIRW *wopendir(const WCHAR *name)
 {
-	char *utf8name = UTF8StringFromWideString(name);
-	DIR *dir = opendir(utf8name);
-	free(utf8name);
+	char *mbname = MBStringFromWideStringSysLocale(name);
+	DIR *dir = opendir(mbname);
+	MemFree(mbname);
 	if (dir == NULL)
 		return NULL;
 	DIRW *d = (DIRW *)MemAlloc(sizeof(DIRW));
@@ -47,7 +47,11 @@ struct dirent_w *wreaddir(DIRW *dirp)
 	struct dirent *d = readdir(dirp->dir);
 	if (d == NULL)
 		return NULL;
-	utf8_to_wchar(d->d_name, -1, dirp->dirstr.d_name, 257);
+#if HAVE_MBSTOWCS
+   mbstowcs(dirp->dirstr.d_name, d->d_name, 257);
+#else
+	mb_to_wchar(d->d_name, -1, dirp->dirstr.d_name, 257);
+#endif
 	dirp->dirstr.d_name[256] = 0;
 	dirp->dirstr.d_ino = d->d_ino;
 #if HAVE_DIRENT_D_TYPE

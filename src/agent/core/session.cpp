@@ -260,7 +260,7 @@ void CommSession::readThread()
          if (nxlog_get_debug_level() >= 8)
          {
             String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), m_protocolVersion);
-            debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+            debugPrintf(8, _T("Message dump:\n%s"), msgDump.cstr());
          }
 
          if (msg->isBinary())
@@ -271,12 +271,13 @@ void CommSession::readThread()
             if (msg->getCode() == CMD_FILE_DATA)
             {
                DownloadFileInfo *dInfo = m_downloadFileMap.get(msg->getId());
-               if (dInfo != NULL)
+               if (dInfo != nullptr)
                {
                   if (dInfo->write(msg->getBinaryData(), msg->getBinaryDataSize(), msg->isCompressedStream()))
                   {
                      if (msg->isEndOfFile())
                      {
+                        debugPrintf(4, _T("Transfer of file %s completed"), dInfo->getFileName());
                         dInfo->close(true);
                         m_downloadFileMap.remove(msg->getId());
 
@@ -300,7 +301,7 @@ void CommSession::readThread()
             }
             else if (msg->getCode() == CMD_TCP_PROXY_DATA)
             {
-               UINT32 proxyId = msg->getId();
+               uint32_t proxyId = msg->getId();
                MutexLock(m_tcpProxyLock);
                for(int i = 0; i < m_tcpProxies.size(); i++)
                {
@@ -977,12 +978,12 @@ void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
 UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId, time_t fileModTime)
 {
    DownloadFileInfo *fInfo = new DownloadFileInfo(szFullPath, fileModTime);
-   debugPrintf(5, _T("CommSession::recvFile(): Writing to local file \"%s\""), szFullPath);
+   debugPrintf(4, _T("CommSession::openFile(): Writing to local file \"%s\""), szFullPath);
 
    if (!fInfo->open())
    {
       delete fInfo;
-      debugPrintf(2, _T("CommSession::recvFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
+      debugPrintf(2, _T("CommSession::openFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
       return ERR_IO_FAILURE;
    }
    else

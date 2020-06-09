@@ -115,10 +115,10 @@ static bool SubagentInit(Config *config)
       {
          RootFolder *folder = new RootFolder(root->getValue(i));
          g_rootFileManagerFolders->add(folder);
-         AgentWriteDebugLog(5, _T("FILEMGR: added root folder \"%s\""), folder->getFolder());
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Added file manager root directory \"%s\""), folder->getFolder());
       }
    }
-   AgentWriteDebugLog(2, _T("FILEMGR: subagent initialized"));
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("File manager subagent initialized"));
    return true;
 }
 
@@ -138,10 +138,10 @@ static void SubagentShutdown()
  */
 static TCHAR *GetRealPath(const TCHAR *path)
 {
-   if (path == NULL || path[0] == 0)
-      return NULL;
+   if ((path == nullptr) || (path[0] == 0))
+      return nullptr;
    TCHAR *result = MemAllocString(MAX_PATH);
-   _tcscpy(result,path);
+   _tcscpy(result, path);
    TCHAR *current = result;
 
    // just remove all dots before path
@@ -218,14 +218,14 @@ static TCHAR *GetRealPath(const TCHAR *path)
  */
 static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir, bool isModify = false)
 {
-   AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: input is %s"), path);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckFullPath: input is %s"), path);
    if (withHomeDir && !_tcscmp(path, FS_PATH_SEPARATOR))
    {
       *fullPath = MemCopyString(path);
       return true;
    }
 
-   *fullPath = NULL;
+   *fullPath = nullptr;
 
 #ifdef _WIN32
    TCHAR *fullPathBuffer = MemAllocString(MAX_PATH);
@@ -233,8 +233,8 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
 #else
    TCHAR *fullPathT = GetRealPath(path);
 #endif
-   AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: Full path %s"), fullPathT);
-   if (fullPathT == NULL)
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckFullPath: Full path %s"), fullPathT);
+   if (fullPathT == nullptr)
    {
 #ifdef _WIN32
       MemFree(fullPathBuffer);
@@ -259,7 +259,7 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
       }
    }
 
-   AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: Access denied to %s"), fullPathT);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckFullPath: Access denied to %s"), fullPathT);
    MemFree(fullPathT);
    return false;
 }
@@ -269,28 +269,24 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
 #define SYMLINK         4
 
 /**
- * Returns if file already exist
+ * Validate file change operation (upload, delete, etc.). Return strue if operation is allowed.
  */
-int CheckFileType(const TCHAR *fileName)
+static bool ValidateFileChangeOperation(const TCHAR *fileName, bool allowOverwrite, NXCPMessage *response)
 {
    NX_STAT_STRUCT st;
    if (CALL_STAT(fileName, &st) == 0)
    {
-      return S_ISDIR(st.st_mode) ? DIRECTORY : REGULAR_FILE;
-   }
-   return -1;
-}
-
-bool VerifyFileOperation(const TCHAR *fileName, bool allowOverwrite, NXCPMessage *response)
-{
-   int fileType = CheckFileType(fileName);
-   if(fileType > 0 && !allowOverwrite)
-   {
-      response->setField(VID_RCC, fileType == DIRECTORY ? ERR_FOLDER_ALREADY_EXISTS : ERR_FILE_ALREADY_EXISTS);
+      if (allowOverwrite)
+         return true;
+      response->setField(VID_RCC, S_ISDIR(st.st_mode) ? ERR_FOLDER_ALREADY_EXISTS : ERR_FILE_ALREADY_EXISTS);
       return false;
    }
-   else
-      return true;
+   if (errno != ENOENT)
+   {
+      response->setField(VID_RCC, ERR_IO_FAILURE);
+      return false;
+   }
+   return true;
 }
 
 #ifdef _WIN32
@@ -433,7 +429,7 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
    }
    else
    {
-      AgentWriteDebugLog(3, _T("FILEMGR: GetFolderContent: cannot get folder %s"), filePath);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetFolderContent: cannot get folder %s"), filePath);
       return false;
    }
 }
@@ -443,7 +439,7 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
  */
 static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFolder, bool allowMultipart, AbstractCommSession *session)
 {
-   nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" (root=%s, multipart=%s)"),
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("GetFolderContent: reading \"%s\" (root=%s, multipart=%s)"),
       folder, rootFolder ? _T("true") : _T("false"), allowMultipart ? _T("true") : _T("false"));
 
    NXCPMessage *msg;
@@ -482,7 +478,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
          session->sendMessage(msg);
          delete msg;
       }
-      nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" completed"), folder);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("GetFolderContent: reading \"%s\" completed"), folder);
       return;
    }
 
@@ -535,7 +531,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
    if (allowMultipart)
       delete msg;
 
-   nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" completed"), folder);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("GetFolderContent: reading \"%s\" completed"), folder);
 }
 
 /**
@@ -586,7 +582,7 @@ static BOOL Delete(const TCHAR *name)
 {
    MessageData *data = (MessageData *)dataStruct;
 
-   AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s, compress = %s"),
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s, compress = %s"),
                data->fileName, data->follow ? _T("true") : _T("false"), data->allowCompression ? _T("true") : _T("false"));
    bool success = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset, data->allowCompression, g_downloadFileStopMarkers->get(data->id));
    if (data->follow && success)
@@ -655,7 +651,7 @@ static void CH_GetFolderSize(NXCPMessage *request, NXCPMessage *response, Abstra
    if (directory[0] == 0)
    {
       response->setField(VID_RCC, ERR_IO_FAILURE);
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_SIZE): File name should be set."));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_GetFolderSize: File name is not set"));
       return;
    }
 
@@ -673,7 +669,7 @@ static void CH_GetFolderSize(NXCPMessage *request, NXCPMessage *response, Abstra
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_SIZE): Access denied"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_GetFolderSize: CheckFullPath failed"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
 }
@@ -688,7 +684,7 @@ static void CH_GetFolderContent(NXCPMessage *request, NXCPMessage *response, Abs
    if (directory[0] == 0)
    {
       response->setField(VID_RCC, ERR_IO_FAILURE);
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_CONTENT): File name should be set."));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_GetFolderContent: File name is not set"));
       return;
    }
 
@@ -703,7 +699,7 @@ static void CH_GetFolderContent(NXCPMessage *request, NXCPMessage *response, Abs
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_CONTENT): Access denied"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_GetFolderContent: CheckFullPath failed"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
 }
@@ -718,7 +714,7 @@ static void CH_CreateFolder(NXCPMessage *request, NXCPMessage *response, Abstrac
    if (directory[0] == 0)
    {
       response->setField(VID_RCC, ERR_IO_FAILURE);
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): File name should be set."));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_CreateFolder: File name is not set"));
       return;
    }
 
@@ -727,7 +723,7 @@ static void CH_CreateFolder(NXCPMessage *request, NXCPMessage *response, Abstrac
    TCHAR *fullPath = NULL;
    if (CheckFullPath(directory, &fullPath, false, true) && session->isMasterServer())
    {
-      if (VerifyFileOperation(fullPath, false, response))
+      if (ValidateFileChangeOperation(fullPath, false, response))
       {
          if (CreateFolder(fullPath))
          {
@@ -735,14 +731,14 @@ static void CH_CreateFolder(NXCPMessage *request, NXCPMessage *response, Abstrac
          }
          else
          {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Could not create directory \"%s\""), fullPath);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_CreateFolder: Could not create directory \"%s\""), fullPath);
             response->setField(VID_RCC, ERR_IO_FAILURE);
          }
       }
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Access denied"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_CreateFolder: CheckFullPath failed"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
    MemFree(fullPath);
@@ -758,7 +754,7 @@ static void CH_DeleteFile(NXCPMessage *request, NXCPMessage *response, AbstractC
    if (file[0] == 0)
    {
       response->setField(VID_RCC, ERR_IO_FAILURE);
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): File name should be set."));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_DeleteFile: File name is not set"));
       return;
    }
 
@@ -774,12 +770,12 @@ static void CH_DeleteFile(NXCPMessage *request, NXCPMessage *response, AbstractC
       else
       {
          response->setField(VID_RCC, ERR_IO_FAILURE);
-         AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): Delete failed on \"%s\""), fullPath);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_DeleteFile: Delete failed on \"%s\""), fullPath);
       }
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): Access denied on \"%s\""), file);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_DeleteFile: CheckFullPath failed on \"%s\""), file);
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
    MemFree(fullPath);
@@ -799,7 +795,7 @@ static void CH_RenameFile(NXCPMessage *request, NXCPMessage *response, AbstractC
    if (oldName[0] == 0 && newName[0] == 0)
    {
       response->setField(VID_RCC, ERR_IO_FAILURE);
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_RENAME_FILE): File names should be set."));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_RenameFile: File names is not set"));
       return;
    }
 
@@ -810,7 +806,7 @@ static void CH_RenameFile(NXCPMessage *request, NXCPMessage *response, AbstractC
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
    if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
    {
-      if (VerifyFileOperation(fullPathNew, allowOverwirite, response))
+      if (ValidateFileChangeOperation(fullPathNew, allowOverwirite, response))
       {
          if (_trename(fullPathOld, fullPathNew) == 0)
          {
@@ -824,7 +820,7 @@ static void CH_RenameFile(NXCPMessage *request, NXCPMessage *response, AbstractC
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_RENAME_FILE): Access denied"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_RenameFile: CheckFullPath failed"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
    MemFree(fullPathOld);
@@ -844,7 +840,7 @@ static void CH_MoveFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
    if ((oldName[0] == 0) && (newName[0] == 0))
    {
       response->setField(VID_RCC, ERR_IO_FAILURE);
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_MOVE_FILE): File names should be set."));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_MoveFile: File names are not set"));
       return;
    }
 
@@ -855,7 +851,7 @@ static void CH_MoveFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
    if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
    {
-      if (VerifyFileOperation(fullPathNew, allowOverwirite, response))
+      if (ValidateFileChangeOperation(fullPathNew, allowOverwirite, response))
       {
          if (MoveFileOrDirectory(fullPathOld, fullPathNew))
          {
@@ -869,7 +865,7 @@ static void CH_MoveFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_MOVE_FILE): Access denied"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_MoveFile: CheckFullPath failed"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
    MemFree(fullPathOld);
@@ -891,7 +887,7 @@ static void CH_CopyFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
    if ((oldName[0] == 0) && (newName[0] == 0))
    {
       response->setField(VID_RCC, ERR_IO_FAILURE);
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): File names should be set."));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_CopyFile: File names are not set"));
       return;
    }
 
@@ -902,7 +898,7 @@ static void CH_CopyFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
    if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
    {
-      if (VerifyFileOperation(fullPathNew, allowOverwrite, response))
+      if (ValidateFileChangeOperation(fullPathNew, allowOverwrite, response))
       {
          if (!CopyFileOrDirectory(fullPathOld, fullPathNew))
             response->setField(VID_RCC, ERR_IO_FAILURE);
@@ -910,7 +906,7 @@ static void CH_CopyFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): Access denied"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_CopyFile: CheckFullPath failed"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
    MemFree(fullPathOld);
@@ -925,14 +921,14 @@ static TCHAR *GetPathToFile(const TCHAR *fullPath)
 {
    TCHAR *pathToFile = MemCopyString(fullPath);
    TCHAR *ptr = _tcsrchr(pathToFile, FS_PATH_SEPARATOR_CHAR);
-   if (ptr != NULL)
+   if (ptr != nullptr)
    {
       *ptr = 0;
    }
    else
    {
       MemFree(pathToFile);
-      pathToFile = NULL;
+      pathToFile = nullptr;
    }
    return pathToFile;
 }
@@ -944,32 +940,32 @@ static void CH_Upload(NXCPMessage *request, NXCPMessage *response, AbstractCommS
 {
    TCHAR name[MAX_PATH];
    request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
-   bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
    if (name[0] == 0)
    {
       response->setField(VID_RCC, ERR_IO_FAILURE);
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_UPLOAD): File name should be set."));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_Upload: File name is not set"));
       return;
    }
 
    ConvertPathToHost(name, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
-   TCHAR *fullPath = NULL;
+   TCHAR *fullPath = nullptr;
    if (CheckFullPath(name, &fullPath, false, true) && session->isMasterServer())
    {
       TCHAR *pathToFile = GetPathToFile(fullPath);
-      if (pathToFile != NULL)
+      if (pathToFile != nullptr)
       {
          CreateFolder(pathToFile);
          MemFree(pathToFile);
       }
 
-      if (VerifyFileOperation(fullPath, allowOverwirite, response))
+      bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
+      if (ValidateFileChangeOperation(fullPath, allowOverwirite, response))
          response->setField(VID_RCC, session->openFile(fullPath, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_UPLOAD): Access denied"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_Upload: CheckFullPath failed"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
    MemFree(fullPath);
@@ -990,8 +986,8 @@ static void CH_GetFileDetails(NXCPMessage *request, NXCPMessage *response, Abstr
       NX_STAT_STRUCT fs;
       if (CALL_STAT(fullPath, &fs) == 0)
       {
-         response->setField(VID_FILE_SIZE, (UINT64)fs.st_size);
-         response->setField(VID_MODIFICATION_TIME, (UINT64)fs.st_mtime);
+         response->setField(VID_FILE_SIZE, static_cast<uint64_t>(fs.st_size));
+         response->setField(VID_MODIFICATION_TIME, static_cast<uint64_t>(fs.st_mtime));
          response->setField(VID_RCC, ERR_SUCCESS);
       }
       else
@@ -1002,7 +998,7 @@ static void CH_GetFileDetails(NXCPMessage *request, NXCPMessage *response, Abstr
    }
    else
    {
-      AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FILE_DETAILS): Access denied"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_GetFileDetails: CheckFullPath failed"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
 }

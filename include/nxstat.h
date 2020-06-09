@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -56,9 +56,9 @@ int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st);
 #endif
 
 #if defined(UNICODE) && !defined(_WIN32)
-inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s, bool follow)
+static inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s, bool follow)
 {
-	char *mbf = MBStringFromWideString(f);
+	char *mbf = MBStringFromWideStringSysLocale(f);
 	int rc = follow ? NX_STAT_FOLLOW_SYMLINK(mbf, s) : NX_STAT(mbf, s);
 	MemFree(mbf);
 	return rc;

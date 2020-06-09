@@ -660,7 +660,7 @@ int LIBNETXMS_EXPORTABLE wstat(const WCHAR *_path, struct stat *_sbuf)
 int LIBNETXMS_EXPORTABLE w##func(const WCHAR *_path) \
 { \
 	char path[MAX_PATH]; \
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL); \
+	WideCharToMultiByteSysLocale(_path, path, sizeof(path)); \
 	return func(path); \
 }
 
@@ -685,11 +685,11 @@ DEFINE_PATH_FUNC(remove)
 int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *_path)
 {
    char path[MAX_PATH];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
+   WideCharToMultiByteSysLocale(_path, path, sizeof(path));
    int rc = mkstemp(path);
    if (rc != -1)
    {
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, path, -1, _path, wcslen(_path) + 1);
+      MultiByteToWideCharSysLocale(path, _path, wcslen(_path) + 1);
    }
    return rc;
 }
@@ -702,7 +702,7 @@ FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type)
 {
    char *command = MBStringFromWideStringSysLocale(_command);
    char type[64];
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, _type, -1, type, 64, NULL, NULL);
+   wchar_to_mb(_type, -1, type, 64);
    FILE *f = popen(command, type);
    MemFree(command);
    return f;
@@ -714,15 +714,10 @@ FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type)
 
 FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
 {
-   char *name, *type;
-   FILE *f;
-
-   name = MBStringFromWideString(_name);
-   type = MBStringFromWideString(_type);
-   f = fopen(name, type);
-   MemFree(name);
-   MemFree(type);
-   return f;
+   char name[MAX_PATH], type[128];
+   WideCharToMultiByteSysLocale(_name, name, sizeof(name));
+   WideCharToMultiByteSysLocale(_type, type, sizeof(type));
+   return fopen(name, type);
 }
 
 #endif
@@ -731,15 +726,10 @@ FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
 
 FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type)
 {
-   char *name, *type;
-   FILE *f;
-
-   name = MBStringFromWideString(_name);
-   type = MBStringFromWideString(_type);
-   f = fopen64(name, type);
-   MemFree(name);
-   MemFree(type);
-   return f;
+   char name[MAX_PATH], type[128];
+   WideCharToMultiByteSysLocale(_name, name, sizeof(name));
+   WideCharToMultiByteSysLocale(_type, type, sizeof(type));
+   return fopen64(name, type);
 }
 
 #endif
@@ -748,14 +738,12 @@ FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type)
 
 int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
 {
-   char *name;
+   char name[MAX_PATH];
+   WideCharToMultiByteSysLocale(_name, name, sizeof(name));
    int rc;
-
-   name = MBStringFromWideString(_name);
    if (flags & O_CREAT)
    {
       va_list args;
-
       va_start(args, flags);
       rc = open(name, flags, (mode_t)va_arg(args, int));
       va_end(args);
@@ -764,7 +752,6 @@ int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
    {
       rc = open(name, flags);
    }
-   MemFree(name);
    return rc;
 }
 
@@ -772,15 +759,11 @@ int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
 
 #if !HAVE_WCHMOD
 
-int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode)
+int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_path, int mode)
 {
-   char *name;
-   int rc;
-
-   name = MBStringFromWideString(_name);
-   rc = chmod(name, mode);
-   MemFree(name);
-   return rc;
+   char path[MAX_PATH];
+   WideCharToMultiByteSysLocale(_path, path, sizeof(path));
+   return chmod(path, mode);
 }
 
 #endif
@@ -790,11 +773,8 @@ int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode)
 int LIBNETXMS_EXPORTABLE wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
 {
    char oldpath[MAX_PATH], newpath[MAX_PATH];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-      _oldpath, -1, oldpath, MAX_PATH, NULL, NULL);
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-      _newpath, -1, newpath, MAX_PATH, NULL, NULL);
+   WideCharToMultiByteSysLocale(_oldpath, oldpath, sizeof(oldpath));
+   WideCharToMultiByteSysLocale(_newpath, newpath, sizeof(newpath));
    return rename(oldpath, newpath);
 }
 
@@ -817,7 +797,7 @@ int LIBNETXMS_EXPORTABLE wsystem(const WCHAR *_cmd)
 int LIBNETXMS_EXPORTABLE waccess(const WCHAR *_path, int mode)
 {
    char path[MAX_PATH];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
+   WideCharToMultiByteSysLocale(_path, path, sizeof(path));
    return access(path, mode);
 }
 
@@ -828,7 +808,7 @@ int LIBNETXMS_EXPORTABLE waccess(const WCHAR *_path, int mode)
 int LIBNETXMS_EXPORTABLE wmkdir(const WCHAR *_path, int mode)
 {
    char path[MAX_PATH];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
+   WideCharToMultiByteSysLocale(_path, path, sizeof(path));
    return mkdir(path, mode);
 }
 
@@ -839,7 +819,7 @@ int LIBNETXMS_EXPORTABLE wmkdir(const WCHAR *_path, int mode)
 int LIBNETXMS_EXPORTABLE wutime(const WCHAR *_path, utimbuf *buf)
 {
    char path[MAX_PATH];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
+   WideCharToMultiByteSysLocale(_path, path, sizeof(path));
    return utime(path, buf);
 }
 
@@ -849,15 +829,15 @@ int LIBNETXMS_EXPORTABLE wutime(const WCHAR *_path, utimbuf *buf)
 
 WCHAR LIBNETXMS_EXPORTABLE *wgetenv(const WCHAR *_string)
 {
-   char name[256], *p;
    static WCHAR value[8192];
 
-   wchar_to_mb(_string, -1, name, 256);
-   p = getenv(name);
+   char name[256];
+   WideCharToMultiByteSysLocale(_string, name, sizeof(name));
+   char *p = getenv(name);
    if (p == nullptr)
       return nullptr;
 
-   mb_to_wchar(p, -1, value, 8192);
+   MultiByteToWideCharSysLocale(p, value, 8192);
    return value;
 }
 
@@ -868,8 +848,7 @@ WCHAR LIBNETXMS_EXPORTABLE *wgetenv(const WCHAR *_string)
 WCHAR LIBNETXMS_EXPORTABLE *wctime(const time_t *timep)
 {
    static WCHAR value[256];
-
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ctime(timep), -1, value, 256);
+   MultiByteToWideCharSysLocale(ctime(timep), value, 256);
    return value;
 }
 

@@ -27,10 +27,10 @@
  */
 DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
 {
-   m_fileName = _tcsdup(name);
+   m_fileName = MemCopyString(name);
    m_lastModTime = lastModTime;
    m_file = -1;
-   m_compressor = NULL;
+   m_compressor = nullptr;
 }
 
 /**
@@ -40,7 +40,7 @@ DownloadFileInfo::~DownloadFileInfo()
 {
    if (m_file != -1)
       close(false); // calling DownloadFileInfo::close, not system function
-   free(m_fileName);
+   MemFree(m_fileName);
    delete m_compressor;
 }
 
@@ -63,12 +63,12 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
    if (!compressedStream)
       return _write(m_file, data, (int)dataSize) == dataSize;
 
-   if (m_compressor == NULL)
+   if (m_compressor == nullptr)
    {
       NXCPStreamCompressionMethod method = (NXCPStreamCompressionMethod)(*data);
       m_compressor = StreamCompressor::create(method, false, FILE_BUFFER_SIZE);
       const TCHAR *methodName = (((int)method >= 0) && ((int)method <= 2)) ? compressionMethods[method] : _T("UNKNOWN");
-      if (m_compressor != NULL)
+      if (m_compressor != nullptr)
       {
          nxlog_debug(5, _T("DownloadFileInfo(%s): created stream compressor for method %s"), m_fileName, methodName);
       }
@@ -81,11 +81,11 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
 
    const BYTE *uncompressedData;
    size_t uncompressedDataSize = m_compressor->decompress(data + 4, dataSize - 4, &uncompressedData);
-   if (uncompressedDataSize != (int)ntohs(*((UINT16 *)(data + 2))))
+   if (uncompressedDataSize != (int)ntohs(*((uint16_t *)(data + 2))))
    {
       // decompressed block size validation failed
       nxlog_debug(5, _T("DownloadFileInfo(%s): decompression failure (size %d should be %d)"),
-               m_fileName, (int)uncompressedDataSize, (int)ntohs(*((UINT16 *)(data + 2))));
+               m_fileName, (int)uncompressedDataSize, (int)ntohs(*((uint16_t *)(data + 2))));
       return false;
    }
 

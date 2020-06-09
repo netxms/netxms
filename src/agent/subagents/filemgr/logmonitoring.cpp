@@ -118,7 +118,7 @@ bool MonitoredFileList::remove(const TCHAR *fileName)
    }
 
    if (!found)
-      AgentWriteDebugLog(6, _T("MonitoredFileList::removeMonitoringFile: attempt to delete non-existing file %s"), fileName);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("MonitoredFileList::removeMonitoringFile: attempt to delete non-existing file %s"), fileName);
 
    unlock();
    return found;
@@ -155,7 +155,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    int hFile = _topen(flData->getFile(), O_RDONLY | O_BINARY);
    if (hFile == -1)
    {
-      AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s (ID=%s)."), flData->getFile(), flData->getFileId());
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s (ID=%s)."), flData->getFile(), flData->getFileId());
       g_monitorFileList.remove(flData->getFileId());
       return THREAD_OK;
    }
@@ -198,7 +198,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
                if (content[j] == 0)
                   content[j] = ' ';
             content[readSize] = 0;
-            AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: %u bytes will be sent."), static_cast<unsigned int>(readSize));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SendFileUpdatesOverNXCP: %u bytes will be sent."), static_cast<unsigned int>(readSize));
             msg.setFieldFromMBString(VID_FILE_DATA, content);
             flData->setOffset(newOffset);
 

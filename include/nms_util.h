@@ -427,6 +427,42 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src);
 #ifdef __cplusplus
 
 /**
+ * Convert wide character string to multibyte character string using current system locale
+ */
+static inline void WideCharToMultiByteSysLocale(const WCHAR *src, char *dst, size_t dstSize)
+{
+#if HAVE_WCSTOMBS
+   size_t bytes = wcstombs(dst, src, dstSize);
+   if (bytes == (size_t)-1)
+      *dst = 0;
+   else if (bytes < dstSize)
+      dst[bytes] = 0;
+   else
+      dst[dstSize - 1] = 0;
+#else
+   wchar_to_mb(src, -1, dst, dstSize);
+#endif
+}
+
+/**
+ * Convert multibyte character string to wide character string using current system locale
+ */
+static inline void MultiByteToWideCharSysLocale(const char *src, WCHAR *dst, size_t dstSize)
+{
+#if HAVE_MBSTOWCS
+   size_t chars = mbstowcs(dst, src, dstSize);
+   if (chars == (size_t)-1)
+      *dst = 0;
+   else if (chars < dstSize)
+      dst[chars] = 0;
+   else
+      dst[dstSize - 1] = 0;
+#else
+   mb_to_wchar(src, -1, dst, dstSize);
+#endif
+}
+
+/**
  * NULL-safe convert wide string to UTF-8
  */
 inline char *UTF8StringFromWideStringEx(const WCHAR *src)
@@ -3419,10 +3455,10 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #endif
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommands);
-BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
+bool LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
 bool LIBNETXMS_EXPORTABLE SetLastModificationTime(TCHAR *fileName, time_t lastModDate);
-BOOL LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
-BOOL LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
+bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
+bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
 
 bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file);
 

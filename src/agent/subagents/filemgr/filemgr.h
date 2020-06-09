@@ -26,6 +26,7 @@
 #include <nxcpapi.h>
 #include <nxstat.h>
 
+#define DEBUG_TAG _T("sa.filemgr")
 
 /**
  * File monitoring

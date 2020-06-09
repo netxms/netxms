@@ -799,12 +799,12 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 /**
  * Create folder
  */
-BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
+bool LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
 {
    NX_STAT_STRUCT st;
    TCHAR *previous = _tcsdup(directory);
    TCHAR *ptr = _tcsrchr(previous, FS_PATH_SEPARATOR_CHAR);
-   BOOL result = FALSE;
+   bool result = false;
    if (ptr != NULL)
    {
       *ptr = 0;
@@ -820,7 +820,7 @@ BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
       {
          if (S_ISDIR(st.st_mode))
          {
-            result = TRUE;
+            result = true;
          }
       }
    }
@@ -834,7 +834,7 @@ BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
    if (result)
    {
 #ifdef _WIN32
-      result = CreateDirectory(directory, NULL);
+      result = CreateDirectory(directory, nullptr);
 #else
       result = (_tmkdir(directory, st.st_mode) == 0);
 #endif /* _WIN32 */
@@ -3611,11 +3611,11 @@ static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode)
 /**
  * Copy file/folder
  */
-BOOL LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
+bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
 {
    NX_STAT_STRUCT st;
    if (CALL_STAT(oldName, &st) != 0)
-      return FALSE;
+      return false;
 
    if (!S_ISDIR(st.st_mode))
    {
@@ -3627,19 +3627,19 @@ BOOL LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR 
    }
 
 #ifdef _WIN32
-   if (!CreateDirectory(newName, NULL))
-      return FALSE;
+   if (!CreateDirectory(newName, nullptr))
+      return false;
 #else
    if (_tmkdir(newName, st.st_mode) != 0)
-      return FALSE;
+      return false;
 #endif
 
    _TDIR *dir = _topendir(oldName);
-   if (dir == NULL)
-      return FALSE;
+   if (dir == nullptr)
+      return false;
 
    struct _tdirent *d;
-   while ((d = _treaddir(dir)) != NULL)
+   while ((d = _treaddir(dir)) != nullptr)
    {
       if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
          continue;
@@ -3658,43 +3658,41 @@ BOOL LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR 
    }
 
    _tclosedir(dir);
-   return TRUE;
+   return true;
 }
 
 /**
  * Move file/folder
  */
-BOOL LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
+bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
 {
 #ifdef _WIN32
    if (MoveFileEx(oldName, newName, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING))
-      return TRUE;
+      return true;
 #else
    if (_trename(oldName, newName) == 0)
-      return TRUE;
+      return true;
 #endif
 
    NX_STAT_STRUCT st;
    if (CALL_STAT(oldName, &st) != 0)
-      return FALSE;
+      return false;
 
    if (S_ISDIR(st.st_mode))
    {
 #ifdef _WIN32
-      CreateDirectory(newName, NULL);
+      CreateDirectory(newName, nullptr);
 #else
       _tmkdir(newName, st.st_mode);
 #endif
       _TDIR *dir = _topendir(oldName);
-      if (dir != NULL)
+      if (dir != nullptr)
       {
          struct _tdirent *d;
-         while((d = _treaddir(dir)) != NULL)
+         while((d = _treaddir(dir)) != nullptr)
          {
             if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
-            {
                continue;
-            }
             
             TCHAR nextNewName[MAX_PATH];
             _tcscpy(nextNewName, newName);
@@ -3716,14 +3714,14 @@ BOOL LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
    {
 #ifdef _WIN32
       if (!CopyFile(oldName, newName, FALSE))
-         return FALSE;
+         return false;
 #else
       if (!CopyFileInternal(oldName, newName, st.st_mode))
-         return FALSE;
+         return false;
 #endif
       _tremove(oldName);
    }
-   return TRUE;
+   return true;
 }
 
 /**
@@ -3828,7 +3826,7 @@ static BOOL UnsetEnvironmentVariable(const TCHAR *var)
 
 #ifdef UNICODE
    char *mbenv = MBStringFromWideStringSysLocale(var);
-   BOOL result = unsetenv(mbenv) == 0;
+   BOOL result = (unsetenv(mbenv) == 0);
    MemFree(mbenv);
    return result;
 #else
