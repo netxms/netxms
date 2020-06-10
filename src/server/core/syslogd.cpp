@@ -867,10 +867,10 @@ int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   if ((argc == 2) && !argv[1]->isInteger() && !argv[1]->isObject(_T("NetObj")))
+   if ((argc == 2) && !argv[1]->isInteger() && !argv[1]->isObject(g_nxslNetObjClass.getName()))
       return NXSL_ERR_NOT_INTEGER;
 
-   UINT32 objectId = 0;
+   uint32_t objectId = 0;
    if (argc == 2)
    {
       if (argv[1]->isInteger())
@@ -879,7 +879,7 @@ int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
       }
       else
       {
-         objectId = ((NetObj *)argv[1]->getValueAsObject()->getData())->getId();
+         objectId = (*static_cast<shared_ptr<NetObj>*>(argv[1]->getValueAsObject()->getData()))->getId();
       }
    }
 
@@ -904,10 +904,10 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if ((argc != 1) && (argc != 2))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if ((argc == 2) && !argv[1]->isInteger() && !argv[1]->isObject(_T("NetObj")))
+   if ((argc == 2) && !argv[1]->isInteger() && !argv[1]->isObject(g_nxslNetObjClass.getName()))
       return NXSL_ERR_NOT_INTEGER;
 
-   UINT32 objectId = 0;
+   uint32_t objectId = 0;
    if (argc == 2)
    {
       if (argv[1]->isInteger())
@@ -916,7 +916,7 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
       }
       else
       {
-         objectId = ((NetObj *)argv[1]->getValueAsObject()->getData())->getId();
+         objectId = (*static_cast<shared_ptr<NetObj>*>(argv[1]->getValueAsObject()->getData()))->getId();
       }
    }
 
