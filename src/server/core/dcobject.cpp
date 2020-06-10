@@ -1339,9 +1339,9 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
                      name = newName;
                   }
                }
-               if ((array->size() > 3) && array->get(3)->isObject(_T("NetObj")))
+               if ((array->size() > 3) && array->get(3)->isObject(g_nxslNetObjClass.getName()))
                {
-                  relatedObject = ((NetObj *)array->get(3)->getValueAsObject()->getData())->getId();
+                  relatedObject = (*static_cast<shared_ptr<NetObj>*>(array->get(3)->getValueAsObject()->getData()))->getId();
                }
             }
             else
