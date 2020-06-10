@@ -96,7 +96,7 @@ static void RegisterSessionAgent(SessionAgentConnector *newConnector)
 /**
  * Unregister session agent
  */
-static void UnregisterSessionAgent(UINT32 id)
+static void UnregisterSessionAgent(uint32_t id)
 {
    RWLockWriteLock(s_lock);
    for(int i = 0; i < s_agents.size(); i++)
@@ -131,15 +131,15 @@ THREAD_RESULT THREAD_CALL SessionAgentConnector::readThreadStarter(void *arg)
 /**
  * Connector constructor
  */
-SessionAgentConnector::SessionAgentConnector(UINT32 id, SOCKET s)
+SessionAgentConnector::SessionAgentConnector(uint32_t id, SOCKET s)
 {
    m_id = id;
    m_socket = s;
    m_sessionId = 0;
-   m_sessionName = NULL;
+   m_sessionName = nullptr;
    m_sessionState = USER_SESSION_OTHER;
-   m_userName = NULL;
-   m_clientName = NULL;
+   m_userName = nullptr;
+   m_clientName = nullptr;
    m_processId = 0;
    m_userAgent = false;
    m_mutex = MutexCreate();
@@ -190,13 +190,13 @@ bool SessionAgentConnector::sendMessage(const NXCPMessage *msg)
  */
 void SessionAgentConnector::readThread()
 {
-   NXCPEncryptionContext *dummyCtx = NULL;
+   NXCPEncryptionContext *dummyCtx = nullptr;
    NXCPInitBuffer(&m_msgBuffer);
    UINT32 rawMsgSize = 65536;
    NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
    while(1)
    {
-      ssize_t err = RecvNXCPMessageEx(m_socket, &rawMsg, &m_msgBuffer, &rawMsgSize, &dummyCtx, NULL, 300000, 4 * 1024 * 1024);
+      ssize_t err = RecvNXCPMessageEx(m_socket, &rawMsg, &m_msgBuffer, &rawMsgSize, &dummyCtx, nullptr, 300000, 4 * 1024 * 1024);
       if (err <= 0)
          break;
 
@@ -228,12 +228,12 @@ void SessionAgentConnector::readThread()
          DebugPrintf(8, _T("SA-%d: Message dump:\n%s"), m_id, (const TCHAR *)msgDump);
       }
 
-      UINT16 flags = ntohs(rawMsg->flags);
+      uint16_t flags = ntohs(rawMsg->flags);
       if (!(flags & MF_BINARY))
       {
          // Create message object from raw message
          NXCPMessage *msg = NXCPMessage::deserialize(rawMsg);
-         if (msg != NULL)
+         if (msg != nullptr)
          {
             if (msg->getCode() == CMD_LOGIN)
             {

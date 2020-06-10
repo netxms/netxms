@@ -52,14 +52,27 @@ COLORREF GetApplicationColor(ApplicationColorId colorId)
 /**
  * Welcome message
  */
-static TCHAR *s_welcomeMessage = NULL;
+static TCHAR *s_welcomeMessage = nullptr;
 
 /**
  * Get welcome message
  */
 const TCHAR *GetWelcomeMessage()
 {
-   return (s_welcomeMessage != NULL) ? s_welcomeMessage : _T("NetXMS User Agent\r\nVersion ") NETXMS_VERSION_STRING;
+   return (s_welcomeMessage != nullptr) ? s_welcomeMessage : _T("NetXMS User Agent\r\nVersion ") NETXMS_VERSION_STRING;
+}
+
+/**
+ * Tooltip message
+ */
+static TCHAR *s_tooltipMessage = nullptr;
+
+/**
+ * Get welcome message
+ */
+const TCHAR *GetTooltipMessage()
+{
+   return (s_tooltipMessage != nullptr) ? s_tooltipMessage : _T("NetXMS User Agent");
 }
 
 /**
@@ -119,7 +132,7 @@ static void CreateCustomIcon(const TCHAR *data)
    GetTempFileName(path, _T("nxua"), 0, fname);
 
    FILE *f = _tfopen(fname, _T("wb"));
-   if (f != NULL)
+   if (f != nullptr)
    {
       fwrite(imageData, 1, imageDataLen, f);
       fclose(f);
@@ -127,15 +140,40 @@ static void CreateCustomIcon(const TCHAR *data)
 
    MemFree(imageData);
 
-   if (s_appIcon != NULL)
+   if (s_appIcon != nullptr)
       DestroyIcon(s_appIcon);
-   s_appIcon = (HICON)LoadImage(NULL, fname, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
-   if (s_appIcon == NULL)
+   s_appIcon = (HICON)LoadImage(nullptr, fname, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
+   if (s_appIcon == nullptr)
       nxlog_debug(2, _T("Cannot load application icon from %s"), fname);
 
    UpdateTrayIcon(fname);
 
    DeleteFile(fname);
+}
+
+/**
+ * Combine text message from multiple policies
+ */
+static void BuildTextMessageFromConfig(TCHAR **message, const Config& config, const TCHAR *path)
+{
+   MemFreeAndNull(*message);
+   ConfigEntry *e = config.getEntry(path);
+   if (e != nullptr)
+   {
+      StringBuffer buffer;
+      for (int i = 0; i < e->getValueCount(); i++)
+      {
+         const TCHAR *v = e->getValue(i);
+         if ((v != nullptr) && (*v != 0))
+         {
+            if (!buffer.isEmpty())
+               buffer.append(_T("\r\n"));
+            buffer.append(v);
+         }
+      }
+      if (!buffer.isEmpty())
+         *message = MemCopyString(buffer);
+   }
 }
 
 /**
@@ -164,37 +202,22 @@ void LoadConfig()
    if (success)
    {
       nxlog_debug(2, _T("Configuration loaded from %s"), path);
-   
-      MemFreeAndNull(s_welcomeMessage);
-      ConfigEntry *e = config.getEntry(_T("/welcomeMessage"));
-      if (e != NULL)
-      {
-         StringBuffer buffer;
-         for (int i = 0; i < e->getValueCount(); i++)
-         {
-            const TCHAR *v = e->getValue(i);
-            if ((v != NULL) && (*v != 0))
-            {
-               if (!buffer.isEmpty())
-                  buffer.append(_T("\r\n"));
-               buffer.append(v);
-            }
-         }
-         if (!buffer.isEmpty())
-            s_welcomeMessage = MemCopyString(buffer);
-      }
 
-      e = config.getEntry(_T("/icon"));
-      if (e != NULL)
+      BuildTextMessageFromConfig(&s_welcomeMessage, config, _T("/welcomeMessage"));
+      BuildTextMessageFromConfig(&s_tooltipMessage, config, _T("/tooltipMessage"));
+      UpdateTrayTooltip();
+
+      ConfigEntry *e = config.getEntry(_T("/icon"));
+      if (e != nullptr)
       {
          CreateCustomIcon(e->getValue());
       }
       else
       {
-         if (s_appIcon != NULL)
+         if (s_appIcon != nullptr)
          {
             DestroyIcon(s_appIcon);
-            s_appIcon = NULL;
+            s_appIcon = nullptr;
          }
          ResetTrayIcon();
       }

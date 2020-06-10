@@ -5,7 +5,7 @@
 /**
  * Tray window handle
  */
-static HWND s_hWnd = NULL;
+static HWND s_hWnd = nullptr;
 
 /**
  * Tray icon data
@@ -15,7 +15,7 @@ static NOTIFYICONDATA s_trayIcon;
 /**
  * Tray icon image
  */
-static HICON s_trayIconImage = NULL;
+static HICON s_trayIconImage = nullptr;
 
 /**
  * Show tray contet menu
@@ -90,8 +90,8 @@ bool SetupTrayIcon()
    if (RegisterClass(&wc) == 0)
       return false;
 
-   s_hWnd = CreateWindow(TRAY_WINDOW_CLASS_NAME, _T("NetXMS User Agent"), 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, g_hInstance, NULL);
-   if (s_hWnd == NULL)
+   s_hWnd = CreateWindow(TRAY_WINDOW_CLASS_NAME, _T("NetXMS User Agent"), 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, g_hInstance, nullptr);
+   if (s_hWnd == nullptr)
       return false;
 
    memset(&s_trayIcon, 0, sizeof(NOTIFYICONDATA));
@@ -100,9 +100,9 @@ bool SetupTrayIcon()
    s_trayIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP;
    s_trayIcon.hWnd = s_hWnd;
    s_trayIcon.uCallbackMessage = NXUA_MSG_TOOLTIP_NOTIFY;
-   _tcscpy(s_trayIcon.szTip, _T("NetXMS User Agent"));
-   s_trayIcon.hIcon = (s_trayIconImage != NULL) ? s_trayIconImage : LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
-      
+   _tcslcpy(s_trayIcon.szTip, GetTooltipMessage(), sizeof(s_trayIcon.szTip) / sizeof(TCHAR));
+   s_trayIcon.hIcon = (s_trayIconImage != nullptr) ? s_trayIconImage : LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
+
    Shell_NotifyIcon(NIM_ADD, &s_trayIcon);
    Shell_NotifyIcon(NIM_SETVERSION, &s_trayIcon);
 
@@ -122,13 +122,13 @@ void RemoveTrayIcon()
  */
 void UpdateTrayIcon(const TCHAR *file)
 {
-   if (s_trayIconImage != NULL)
+   if (s_trayIconImage != nullptr)
       DestroyIcon(s_trayIconImage);
-   s_trayIconImage = (HICON)LoadImage(NULL, file, IMAGE_ICON, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), LR_LOADFROMFILE);
-   if (s_trayIconImage == NULL)
+   s_trayIconImage = (HICON)LoadImage(nullptr, file, IMAGE_ICON, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), LR_LOADFROMFILE);
+   if (s_trayIconImage == nullptr)
       nxlog_debug(2, _T("Cannot load tray icon from %s"), file);
 
-   s_trayIcon.hIcon = (s_trayIconImage != NULL) ? s_trayIconImage : LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
+   s_trayIcon.hIcon = (s_trayIconImage != nullptr) ? s_trayIconImage : LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
    Shell_NotifyIcon(NIM_MODIFY, &s_trayIcon);
 }
 
@@ -137,10 +137,19 @@ void UpdateTrayIcon(const TCHAR *file)
  */
 void ResetTrayIcon()
 {
-   if (s_trayIconImage != NULL)
+   if (s_trayIconImage != nullptr)
       DestroyIcon(s_trayIconImage);
-   s_trayIconImage = NULL;
+   s_trayIconImage = nullptr;
    s_trayIcon.hIcon = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
+   Shell_NotifyIcon(NIM_MODIFY, &s_trayIcon);
+}
+
+/**
+ * Update tray tooltip
+ */
+void UpdateTrayTooltip()
+{
+   _tcslcpy(s_trayIcon.szTip, GetTooltipMessage(), sizeof(s_trayIcon.szTip) / sizeof(TCHAR));
    Shell_NotifyIcon(NIM_MODIFY, &s_trayIcon);
 }
 

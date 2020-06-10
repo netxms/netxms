@@ -513,7 +513,7 @@ private:
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
 
 public:
-   SessionAgentConnector(UINT32 id, SOCKET s);
+   SessionAgentConnector(uint32_t id, SOCKET s);
    virtual ~SessionAgentConnector();
 
    void run();

@@ -150,13 +150,12 @@ void RemoveNotification(const NXCPMessage *request)
 /**
  * Selector for notifications
  */
-static EnumerationCallbackResult NotificationSelector(const void *key, const void *value, void *context)
+static EnumerationCallbackResult NotificationSelector(const ServerObjectKey& key, UserAgentNotification *n, ObjectArray<UserAgentNotification> *context)
 {
-   const UserAgentNotification *n = static_cast<const UserAgentNotification*>(value);
    time_t now = time(nullptr);
    if (!n->isRead() && !n->isStartup() && (n->isInstant() || ((n->getStartTime() <= now) && (n->getEndTime() >= now))))
    {
-      static_cast<ObjectArray<UserAgentNotification>*>(context)->add(new UserAgentNotification(n));
+      context->add(new UserAgentNotification(n));
    }
    return _CONTINUE;
 }
@@ -164,13 +163,12 @@ static EnumerationCallbackResult NotificationSelector(const void *key, const voi
 /**
  * Selector for startup notifications
  */
-static EnumerationCallbackResult StartupNotificationSelector(const void *key, const void *value, void *context)
+static EnumerationCallbackResult StartupNotificationSelector(const ServerObjectKey& key, UserAgentNotification *n, ObjectArray<UserAgentNotification> *context)
 {
-   const UserAgentNotification *n = static_cast<const UserAgentNotification*>(value);
    time_t now = time(nullptr);
    if (n->isStartup() && (n->getStartTime() <= now) && (n->getEndTime() >= now))
    {
-      static_cast<ObjectArray<UserAgentNotification>*>(context)->add(new UserAgentNotification(n));
+      context->add(new UserAgentNotification(n));
    }
    return _CONTINUE;
 }
@@ -181,7 +179,7 @@ static EnumerationCallbackResult StartupNotificationSelector(const void *key, co
 ObjectArray<UserAgentNotification> *GetNotificationsForDisplay(bool startup)
 {
    ObjectArray<UserAgentNotification> *list = new ObjectArray<UserAgentNotification>(64, 64, Ownership::True);
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    s_notificationLock.lock();
    s_notifications.forEach(startup ? StartupNotificationSelector : NotificationSelector, list);
    s_notificationLock.unlock();
@@ -191,13 +189,12 @@ ObjectArray<UserAgentNotification> *GetNotificationsForDisplay(bool startup)
 /**
  * Callback for checking pnding notifications
  */
-static EnumerationCallbackResult CheckPendingNotifications(const void *key, const void *value, void *context)
+static EnumerationCallbackResult CheckPendingNotifications(const ServerObjectKey& key, UserAgentNotification *n, bool *context)
 {
-   const UserAgentNotification *n = static_cast<const UserAgentNotification*>(value);
    time_t now = time(nullptr);
    if (!n->isRead() && !n->isStartup() && (n->isInstant() || ((n->getStartTime() <= now) && (n->getEndTime() >= now))))
    {
-      *static_cast<bool*>(context) = true;
+      *context = true;
       return _STOP;
    }
    return _CONTINUE;
