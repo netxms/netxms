@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 Raden Solutions
+ * Copyright (C) 2019-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,6 +98,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private ColorSelector notificationTextColor;
    private LabeledText desktopWallpaperFile;
    private LabeledText welcomeMessageText;
+   private LabeledText tooltipMessageText;
    private Button customColorSchemaCheckbox;
    private Button closeOnDeactivateCheckbox;
    private Combo windowPositioning;
@@ -177,7 +178,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       customColorSchemaCheckbox.setText("Use custom color schema");
       customColorSchemaCheckbox.setLayoutData(gd);
       customColorSchemaCheckbox.setSelection(policyData.menuBackgroundColor != null);
-      
+
       backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);    
       textColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Text", WidgetHelper.DEFAULT_LAYOUT_DATA);      
       borderColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Border", WidgetHelper.DEFAULT_LAYOUT_DATA);     
@@ -190,24 +191,37 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       notificationTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification text", WidgetHelper.DEFAULT_LAYOUT_DATA);
       notificationSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
       notificationHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
-      welcomeMessageText = new LabeledText(topArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
+
+      Composite messageArea = new Composite(topArea, SWT.NONE);
+      messageArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      messageArea.setLayout(layout);
+
+      welcomeMessageText = new LabeledText(messageArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
       welcomeMessageText.setLabel("Welcome message");
-      welcomeMessageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-      
+      welcomeMessageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      tooltipMessageText = new LabeledText(messageArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
+      tooltipMessageText.setLabel("Tooltip message");
+      tooltipMessageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
       Group windowBehaviorGroup = new Group(topArea, SWT.NONE);
       windowBehaviorGroup.setText("Window behavior");
       windowBehaviorGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
       layout = new GridLayout();
       layout.numColumns = 2;
       windowBehaviorGroup.setLayout(layout);
-      
+
       closeOnDeactivateCheckbox = new Button(windowBehaviorGroup, SWT.CHECK);
       closeOnDeactivateCheckbox.setText("Close on &deactivate");
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       closeOnDeactivateCheckbox.setLayoutData(gd);
-      
+
       windowPositioning = WidgetHelper.createLabeledCombo(windowBehaviorGroup, SWT.DROP_DOWN | SWT.READ_ONLY, "Positioning",
             new GridData(SWT.FILL, SWT.BOTTOM, true, false));
       windowPositioning.add("Undefined");
@@ -222,7 +236,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       windowPositioning.add("Bottom - Center");
       windowPositioning.add("Bottom - Right");
       windowPositioning.select(0);
-      
+
       notificationTimeout = new LabeledSpinner(windowBehaviorGroup, SWT.NONE);
       notificationTimeout.setLabel("Notification timeout");
       notificationTimeout.setRange(0, 3600);
@@ -283,6 +297,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          }
       };
       welcomeMessageText.getTextControl().addModifyListener(textModifyListener);
+      tooltipMessageText.getTextControl().addModifyListener(textModifyListener);
       desktopWallpaperFile.getTextControl().addModifyListener(textModifyListener);
       notificationTimeout.getSpinnerControl().addModifyListener(textModifyListener);
 
@@ -680,6 +695,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       notificationSelectionColor.setEnabled(policyData.customColorSchema);
 
       welcomeMessageText.setText(policyData.welcomeMessage != null ? policyData.welcomeMessage : "");
+      tooltipMessageText.setText(policyData.tooltipMessage != null ? policyData.tooltipMessage : "");
       
       desktopWallpaperFile.setText(policyData.desktopWallpaper);
 
@@ -698,6 +714,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    {
       policyData.setIcon((iconFile != null) && (iconFile.length > 0) ? iconFile : null);
       policyData.welcomeMessage = welcomeMessageText.getText();
+      policyData.tooltipMessage = tooltipMessageText.getText();
 
       policyData.desktopWallpaper = desktopWallpaperFile.getText();
 

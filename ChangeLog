@@ -9,6 +9,7 @@
 - Implemented agent metrics for available and cache memory on AIX
 - New agent parameter WindowsFirewall.State on Windows
 - Implemented disk latency parameters in Linux agent (System.IO.WaitTime, System.IO.ReadWaitTime, System.IO.WriteWaitTime)
+- User agent tooltip message can be set via policy
 - Fixed issues:
 	NX-763 (File Tail/Show should not access database directly)
 	NX-1078 (Event correlation not working)

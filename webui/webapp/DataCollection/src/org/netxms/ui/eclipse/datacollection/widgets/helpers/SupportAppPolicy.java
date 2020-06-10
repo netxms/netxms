@@ -88,6 +88,9 @@ public class SupportAppPolicy
    public String welcomeMessage;
 
    @Element(required=false)
+   public String tooltipMessage;
+
+   @Element(required = false)
    public String desktopWallpaper;
 
    @Element(required=false)
