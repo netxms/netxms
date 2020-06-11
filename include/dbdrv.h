@@ -77,14 +77,12 @@ typedef void * DBDRV_UNBUFFERED_RESULT;
 #define DB_CTYPE_UINT64       4
 #define DB_CTYPE_DOUBLE       5
 #define DB_CTYPE_UTF8_STRING  6
-#define DB_CTYPE_BINARY       7
 
 #define DB_SQLTYPE_VARCHAR    0
 #define DB_SQLTYPE_INTEGER    1
 #define DB_SQLTYPE_BIGINT     2
 #define DB_SQLTYPE_DOUBLE     3
 #define DB_SQLTYPE_TEXT       4
-#define DB_SQLTYPE_BLOB       5
 
 /**
  * DBIsTableExist return codes
