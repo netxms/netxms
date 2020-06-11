@@ -710,12 +710,10 @@ AC_ARG_WITH(openssl,
 AC_ARG_WITH(pcre,
 [AS_HELP_STRING(--with-pcre,specify PCRE location)],
 [
-	if test "x$withval" != "xno" ; then
-		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}/lib"
-			CPPFLAGS="$CPPFLAGS -I${withval}/include"
-		fi
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
 ])
 
@@ -739,6 +737,16 @@ AC_ARG_ENABLE(ssh,
 [
 	if test "x$enableval" = "xno"; then
 		DISABLE_SSH="yes"
+	fi
+])
+
+AC_ARG_WITH(libssh,
+[AS_HELP_STRING(--with-libssh,specify libssh location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LIBSSH_LDFLAGS="$LDFLAGS -L${withval}/lib"
+		LIBSSH_CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
 ])
 
@@ -2480,6 +2488,10 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 fi
 
 if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	CPPFLAGS="$LIBSSH_CPPFLAGS $CPPFLAGS"
+	LDFLAGS="$LIBSSH_LDFLAGS $LDFLAGS"
 	AC_CHECK_HEADER(libssh/libssh.h,HAVE_LIBSSH=yes,HAVE_LIBSSH=no)
 	if test "x$HAVE_LIBSSH" = "xyes"; then
 		AC_CHECK_LIB(ssh, ssh_version, [ HAVE_LIBSSH=yes ], [ HAVE_LIBSSH=no ])
@@ -2491,6 +2503,8 @@ if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	else
 		AC_MSG_ERROR(libssh is required for SSH support. Check that it is installed or use --disable-ssh option)
 	fi
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
 else
 	HAVE_LIBSSH=no
 fi
@@ -4384,6 +4398,8 @@ AC_SUBST(INFORMIX_LDFLAGS)
 AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(INSTALL_LIBPATH)
 AC_SUBST(LIBNXAGENT_LIBS)
+AC_SUBST(LIBSSH_CPPFLAGS)
+AC_SUBST(LIBSSH_LDFLAGS)
 AC_SUBST(MARIADB_CPPFLAGS)
 AC_SUBST(MARIADB_LDFLAGS)
 AC_SUBST(MARIADB_LIBS)
