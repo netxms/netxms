@@ -76,6 +76,7 @@ bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery)
 
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
+      query.replace(_T("$SQL:BLOB"), g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
       query.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
       query.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
       query.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);

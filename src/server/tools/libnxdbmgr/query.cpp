@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,16 +87,16 @@ bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt)
 /**
  * Non-standard SQL data type names
  */
-const TCHAR *g_sqlTypes[8][3] =
+const TCHAR *g_sqlTypes[8][4] =
 {
-   { _T("longtext"), _T("text"), _T("bigint") },              // MySQL
-   { _T("text"), _T("varchar(4000)"), _T("bigint") },         // PostgreSQL
-   { _T("text"), _T("varchar(4000)"), _T("bigint") },         // Microsoft SQL
-   { _T("clob"), _T("varchar(4000)"), _T("number(20)") },     // Oracle
-   { _T("varchar"), _T("varchar(4000)"), _T("number(20)") },  // SQLite
-   { _T("long varchar"), _T("varchar(4000)"), _T("bigint") }, // DB/2
-   { _T("text"), _T("lvarchar(4000)"), _T("bigint") },        // Informix
-   { _T("text"), _T("varchar(4000)"), _T("bigint") }          // TimescaleDB
+   { _T("longtext"),     _T("text"),           _T("bigint"),     _T("longblob")       }, // MySQL
+   { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("bytea")          }, // PostgreSQL
+   { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("varbinary(max)") }, // Microsoft SQL
+   { _T("clob"),         _T("varchar(4000)"),  _T("number(20)"), _T("blob")           }, // Oracle
+   { _T("varchar"),      _T("varchar(4000)"),  _T("number(20)"), _T("blob")           }, // SQLite
+   { _T("long varchar"), _T("varchar(4000)"),  _T("bigint"),     _T("blob")           }, // DB/2
+   { _T("text"),         _T("lvarchar(4000)"), _T("bigint"),     _T("blob")           }, // Informix
+   { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("bytea")          }  // TimescaleDB
 };
 
 /**
@@ -112,6 +112,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput)
 
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
+      realQuery.replace(_T("$SQL:BLOB"), g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
       realQuery.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
       realQuery.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
       realQuery.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
@@ -163,6 +164,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
 
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
+      batch.replace(_T("$SQL:BLOB"), g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
       batch.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
       batch.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
       batch.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);

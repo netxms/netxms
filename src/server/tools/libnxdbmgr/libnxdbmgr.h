@@ -36,9 +36,10 @@
 #define SQL_TYPE_TEXT      0
 #define SQL_TYPE_TEXT4K    1
 #define SQL_TYPE_INT64     2
+#define SQL_TYPE_BLOB      3
 
 extern bool g_queryTrace;
-extern const TCHAR *g_sqlTypes[8][3];
+extern const TCHAR *g_sqlTypes[8][4];
 extern const TCHAR *g_tableSuffix;
 
 #endif   /* _libnxdbmgr_h_ */
