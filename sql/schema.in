@@ -1826,6 +1826,7 @@ CREATE TABLE images
   category varchar(63) not null,
   mimetype varchar(32) not null,
   protected integer default 0,
+  image_data SQL_BLOB null,
   PRIMARY KEY(guid),
   UNIQUE(name, category)
 ) TABLE_TYPE;

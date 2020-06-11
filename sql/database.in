@@ -9,6 +9,8 @@
 #if defined(DB_MSSQL)
 
 #define DB_SYNTAX       'MSSQL'
+#define SQL_BLOB        varbinary(max)
+#define SQL_BLOB_TEXT   'varbinary(max)'
 #define SQL_TEXT        text
 #define SQL_TEXT_TEXT   'text'
 #define SQL_INT64       bigint
@@ -20,6 +22,8 @@
 #elif defined(DB_POSTGRESQL)
 
 #define DB_SYNTAX       'PGSQL'
+#define SQL_BLOB        bytea
+#define SQL_BLOB_TEXT   'bytea'
 #define SQL_TEXT        text
 #define SQL_TEXT_TEXT   'text'
 #define SQL_INT64       bigint
@@ -31,6 +35,8 @@
 #elif defined(DB_ORACLE)
 
 #define DB_SYNTAX       'ORACLE'
+#define SQL_BLOB        blob
+#define SQL_BLOB_TEXT   'blob'
 #define SQL_TEXT        clob
 #define SQL_TEXT_TEXT   'clob'
 #define SQL_INT64       number(20)
@@ -42,6 +48,8 @@
 #elif defined(DB_SQLITE)
 
 #define DB_SYNTAX       'SQLITE'
+#define SQL_BLOB        blob
+#define SQL_BLOB_TEXT   'blob'
 #define SQL_TEXT        varchar
 #define SQL_TEXT_TEXT   'varchar'
 #define SQL_INT64       number(20)
@@ -53,6 +61,8 @@
 #elif defined(DB_MYSQL)
 
 #define DB_SYNTAX       'MYSQL'
+#define SQL_BLOB        longblob
+#define SQL_BLOB_TEXT   'longblob'
 #define SQL_TEXT        longtext
 #define SQL_TEXT_TEXT   'longtext'
 #define SQL_INT64       bigint
@@ -64,6 +74,8 @@
 #elif defined(DB_DB2)
 
 #define DB_SYNTAX       'DB2'
+#define SQL_BLOB        blob
+#define SQL_BLOB_TEXT   'blob'
 #define SQL_TEXT        LONG VARCHAR
 #define SQL_TEXT_TEXT   'LONG VARCHAR'
 #define SQL_INT64       BIGINT
@@ -75,6 +87,8 @@
 #elif defined(DB_TSDB)
 
 #define DB_SYNTAX       'TSDB'
+#define SQL_BLOB        bytea
+#define SQL_BLOB_TEXT   'bytea'
 #define SQL_TEXT        text
 #define SQL_TEXT_TEXT   'text'
 #define SQL_INT64       bigint

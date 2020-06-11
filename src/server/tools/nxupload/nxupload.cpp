@@ -173,7 +173,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
 
 #ifdef UNICODE
    WCHAR fname[MAX_PATH];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, fname, MAX_PATH);
+   MultiByteToWideCharSysLocale(argv[optind + 1], fname, MAX_PATH);
    fname[MAX_PATH - 1] = 0;
 #else
 #define fname argv[optind + 1]
