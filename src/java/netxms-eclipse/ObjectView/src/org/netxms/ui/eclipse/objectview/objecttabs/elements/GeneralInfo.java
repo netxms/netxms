@@ -183,6 +183,7 @@ public class GeneralInfo extends TableElement
             addPair(Messages.get().SensorStatus_SerialNumber, node.getHardwareSerialNumber(), false);
 				if (node.hasAgent())
 				{
+               addPair("Hardware ID", node.getHardwareIdAsText(), false);
 					addPair(Messages.get().GeneralInfo_AgentVersion, node.getAgentVersion());
 					if (node.getAgentId() != null)
 					   addPair(Messages.get().GeneralInfo_AgentId, node.getAgentId().toString());
