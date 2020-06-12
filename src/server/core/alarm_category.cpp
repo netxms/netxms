@@ -216,14 +216,14 @@ void GetAlarmCategories(NXCPMessage *msg)
 /**
 * Update alarm category database
 */
-UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId)
+uint32_t UpdateAlarmCategory(const NXCPMessage *request, uint32_t *returnId)
 {
    TCHAR name[64];
    request->getFieldAsString(VID_NAME, name, 64);
    if (name[0] == 0)
       return RCC_CATEGORY_NAME_EMPTY;
 
-   UINT32 id = request->getFieldAsUInt32(VID_CATEGORY_ID);
+   uint32_t id = request->getFieldAsUInt32(VID_CATEGORY_ID);
 
    AlarmCategory *category;
    s_lock.writeLock();
@@ -236,7 +236,7 @@ UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId)
    else
    {
       category = s_categories.get(id);
-      if (category == NULL)
+      if (category == nullptr)
       {
          s_lock.unlock();
          return RCC_INVALID_OBJECT_ID;
@@ -263,9 +263,9 @@ UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId)
 /**
 * Delete alarm category from database
 */
-UINT32 DeleteAlarmCategory(UINT32 id)
+uint32_t DeleteAlarmCategory(uint32_t id)
 {
-   UINT32 rcc;
+   uint32_t rcc;
    s_lock.readLock();
    if (s_categories.contains(id))
    {
@@ -337,12 +337,12 @@ UINT32 DeleteAlarmCategory(UINT32 id)
 /**
  * Check user access to alarm category
  */
-bool CheckAlarmCategoryAccess(UINT32 userId, UINT32 categoryId)
+bool CheckAlarmCategoryAccess(uint32_t userId, uint32_t categoryId)
 {
    bool result = false;
    s_lock.readLock();
    AlarmCategory *c = s_categories.get(categoryId);
-   if (c != NULL)
+   if (c != nullptr)
    {
       result = c->checkAccess(userId);
    }
@@ -387,7 +387,7 @@ void LoadAlarmCategories()
    DBConnectionPoolReleaseConnection(hdb);
 }
 
-AlarmCategory *GetAlarmCategory(UINT32 id)
+AlarmCategory *GetAlarmCategory(uint32_t id)
 {
    s_lock.readLock();
    AlarmCategory *alarmCategory = new AlarmCategory(s_categories.get(id));
@@ -395,9 +395,9 @@ AlarmCategory *GetAlarmCategory(UINT32 id)
    return alarmCategory;
 }
 
-UINT32 GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *description)
+uint32_t GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *description)
 {
-   UINT32 id = 0;
+   uint32_t id = 0;
    s_lock.readLock();
    Iterator<AlarmCategory> *it = s_categories.iterator();
    while(it->hasNext())
@@ -415,7 +415,7 @@ UINT32 GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *descripti
    return id;
 }
 
-UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *description)
+uint32_t CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *description)
 {
    UINT32 id = CreateUniqueId(IDG_ALARM_CATEGORY);
    AlarmCategory *category = new AlarmCategory(id, name, description);

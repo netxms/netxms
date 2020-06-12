@@ -359,13 +359,13 @@ private:
 
 public:
    ScriptVMHandle(NXSL_VM *vm) { m_vm = vm; m_failureReason = ScriptVMFailureReason::SUCCESS; }
-   ScriptVMHandle(ScriptVMFailureReason failureReason) { m_vm = NULL; m_failureReason = failureReason; }
+   ScriptVMHandle(ScriptVMFailureReason failureReason) { m_vm = nullptr; m_failureReason = failureReason; }
 
    operator NXSL_VM *() { return m_vm; }
    NXSL_VM *operator->() { return m_vm; }
    NXSL_VM *vm() const { return m_vm; }
    ScriptVMFailureReason failureReason() const { return m_failureReason; }
-   bool isValid() const { return m_vm != NULL; }
+   bool isValid() const { return m_vm != nullptr; }
 
    void destroy() { delete m_vm; }
 };

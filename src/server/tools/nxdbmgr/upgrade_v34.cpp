@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.5 to 34.6
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC(SQLQuery(
+         _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+         _T("VALUES ('818f0711-1b0e-42ec-8d28-1298d18be2e9',22,'Hook::AlarmStateChange','")
+         _T("/* Available global variables:\r\n")
+         _T(" *  $alarm - alarm being processed (object of ''Alarm'' class)\r\n")
+         _T(" *\r\n")
+         _T(" * Expected return value:\r\n")
+         _T(" *  none - returned value is ignored\r\n */\r\n')")));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 34.4 to 34.5
  */
 static bool H_UpgradeFromV4()
@@ -111,6 +128,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 5,  34, 6,  H_UpgradeFromV5  },
    { 4,  34, 5,  H_UpgradeFromV4  },
    { 3,  34, 4,  H_UpgradeFromV3  },
    { 2,  34, 3,  H_UpgradeFromV2  },

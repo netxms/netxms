@@ -34,77 +34,79 @@
 class NXCORE_EXPORTABLE Alarm
 {
 private:
-   UINT64 m_sourceEventId;   // Originating event ID
-   UINT32 m_alarmId;         // Unique alarm ID
-   UINT32 m_parentAlarmId;   // Parent (root cause) alarm ID
+   uint64_t m_sourceEventId;   // Originating event ID
+   uint32_t m_alarmId;         // Unique alarm ID
+   uint32_t m_parentAlarmId;   // Parent (root cause) alarm ID
    TCHAR *m_rcaScriptName;   // Name of root cause analysis script
    time_t m_creationTime;    // Alarm creation time in UNIX time format
    time_t m_lastChangeTime;  // Alarm's last change time in UNIX time format
    uuid m_rule;              // GUID of EPP rule that generates this alarm
-   UINT32 m_sourceObject;    // Source object ID
+   uint32_t m_sourceObject;    // Source object ID
    int32_t m_zoneUIN;        // Zone UIN for source object
-   UINT32 m_sourceEventCode; // Originating event code
+   uint32_t m_sourceEventCode; // Originating event code
    TCHAR *m_eventTags;       // Tags of originating event
-   UINT32 m_dciId;           // related DCI ID
+   uint32_t m_dciId;           // related DCI ID
    BYTE m_currentSeverity;   // Alarm's current severity
    BYTE m_originalSeverity;  // Alarm's original severity
    BYTE m_state;             // Current state
    BYTE m_helpDeskState;     // State of alarm in helpdesk system
-   UINT32 m_ackByUser;       // ID of user who was acknowledged this alarm (0 for system)
-   UINT32 m_resolvedByUser;  // ID of user who was resolved this alarm (0 for system)
-   UINT32 m_termByUser;      // ID of user who was terminated this alarm (0 for system)
+   uint32_t m_ackByUser;       // ID of user who was acknowledged this alarm (0 for system)
+   uint32_t m_resolvedByUser;  // ID of user who was resolved this alarm (0 for system)
+   uint32_t m_termByUser;      // ID of user who was terminated this alarm (0 for system)
    time_t m_ackTimeout;      // Sticky acknowledgment end time, 0 if acknowledged without timeout
-   UINT32 m_repeatCount;
-   UINT32 m_timeout;
-   UINT32 m_timeoutEvent;
+   uint32_t m_repeatCount;
+   uint32_t m_timeout;
+   uint32_t m_timeoutEvent;
    TCHAR m_message[MAX_EVENT_MSG_LENGTH];
    TCHAR m_key[MAX_DB_STRING];
    TCHAR m_helpDeskRef[MAX_HELPDESK_REF_LEN];
    TCHAR *m_impact;
-   UINT32 m_commentCount;     // Number of comments added to alarm
-   IntegerArray<UINT64> *m_relatedEvents;
-   IntegerArray<UINT32> *m_alarmCategoryList;
-   UINT32 m_notificationCode; // notification code used when sending client notifications
-   IntegerArray<UINT32> *m_subordinateAlarms;
+   uint32_t m_commentCount;     // Number of comments added to alarm
+   IntegerArray<uint64_t> *m_relatedEvents;
+   IntegerArray<uint32_t> *m_alarmCategoryList;
+   uint32_t m_notificationCode; // notification code used when sending client notifications
+   IntegerArray<uint32_t> *m_subordinateAlarms;
 
    StringBuffer categoryListToString();
 
+   void executeHookScript();
+
 public:
-   Alarm(Event *event, UINT32 parentAlarmId, const TCHAR *rcaScriptName, const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
-            int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);
+   Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
+            int state, int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t ackTimeout, IntegerArray<uint32_t> *alarmCategoryList);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
-   Alarm(const Alarm *src, bool copyEvents, UINT32 notificationCode = 0);
+   Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode = 0);
    ~Alarm();
 
-   UINT64 getSourceEventId() const { return m_sourceEventId; }
-   UINT32 getAlarmId() const { return m_alarmId; }
-   UINT32 getParentAlarmId() const { return m_parentAlarmId; }
+   uint64_t getSourceEventId() const { return m_sourceEventId; }
+   uint32_t getAlarmId() const { return m_alarmId; }
+   uint32_t getParentAlarmId() const { return m_parentAlarmId; }
    const TCHAR *getRcaScriptName() const { return CHECK_NULL_EX(m_rcaScriptName); }
    time_t getCreationTime() const { return m_creationTime; }
    time_t getLastChangeTime() const { return m_lastChangeTime; }
    const uuid& getRule() const { return m_rule; }
-   UINT32 getSourceObject() const { return m_sourceObject; }
-   UINT32 getSourceEventCode() const { return m_sourceEventCode; }
+   uint32_t getSourceObject() const { return m_sourceObject; }
+   uint32_t getSourceEventCode() const { return m_sourceEventCode; }
    const TCHAR *getEventTags() const { return m_eventTags; }
-   UINT32 getDciId() const { return m_dciId; }
+   uint32_t getDciId() const { return m_dciId; }
    BYTE getCurrentSeverity() const { return m_currentSeverity; }
    BYTE getOriginalSeverity() const { return m_originalSeverity; }
    BYTE getState() const { return m_state; }
    BYTE getHelpDeskState() const { return m_helpDeskState; }
-   UINT32 getAckByUser() const { return m_ackByUser; }
-   UINT32 getResolvedByUser() const { return m_resolvedByUser; }
-   UINT32 getTermByUser() const { return m_termByUser; }
+   uint32_t getAckByUser() const { return m_ackByUser; }
+   uint32_t getResolvedByUser() const { return m_resolvedByUser; }
+   uint32_t getTermByUser() const { return m_termByUser; }
    time_t getAckTimeout() const { return m_ackTimeout; }
-   UINT32 getRepeatCount() const { return m_repeatCount; }
-   UINT32 getTimeout() const { return m_timeout; }
-   UINT32 getTimeoutEvent() const { return m_timeoutEvent; }
+   uint32_t getRepeatCount() const { return m_repeatCount; }
+   uint32_t getTimeout() const { return m_timeout; }
+   uint32_t getTimeoutEvent() const { return m_timeoutEvent; }
    const TCHAR *getMessage() const { return m_message; }
    const TCHAR *getKey() const { return m_key; }
    const TCHAR *getHelpDeskRef() const { return m_helpDeskRef; }
    const TCHAR *getImpact() const { return CHECK_NULL_EX(m_impact); }
-   UINT32 getCommentCount() const { return m_commentCount; }
-   UINT32 getNotificationCode() const { return m_notificationCode; }
-   UINT64 getMemoryUsage() const;
+   uint32_t getCommentCount() const { return m_commentCount; }
+   uint32_t getNotificationCode() const { return m_notificationCode; }
+   uint64_t getMemoryUsage() const;
 
    void fillMessage(NXCPMessage *msg) const;
 
@@ -117,18 +119,18 @@ public:
    void addRelatedEvent(UINT64 eventId) { if (m_relatedEvents != NULL) m_relatedEvents->add(eventId); }
    bool isEventRelated(UINT64 eventId) const { return (m_relatedEvents != NULL) && m_relatedEvents->contains(eventId); }
 
-   void updateFromEvent(Event *event, UINT32 parentAlarmId, const TCHAR *rcaScriptName, int state, int severity, UINT32 timeout,
-            UINT32 timeoutEvent, UINT32 ackTimeout, const TCHAR *message, const TCHAR *impact, IntegerArray<UINT32> *alarmCategoryList);
+   void updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, int state, int severity, uint32_t timeout,
+            uint32_t timeoutEvent, uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, IntegerArray<uint32_t> *alarmCategoryList);
    void updateParentAlarm(UINT32 parentAlarmId);
-   UINT32 acknowledge(ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime, bool includeSubordinates);
-   void resolve(UINT32 userId, Event *event, bool terminate, bool notify, bool includeSubordinates);
-   UINT32 openHelpdeskIssue(TCHAR *hdref);
+   uint32_t acknowledge(ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
+   void resolve(uint32_t userId, Event *event, bool terminate, bool notify, bool includeSubordinates);
+   uint32_t openHelpdeskIssue(TCHAR *hdref);
    void unlinkFromHelpdesk() { m_helpDeskState = ALARM_HELPDESK_IGNORED; m_helpDeskRef[0] = 0; }
-   UINT32 updateAlarmComment(UINT32 *commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk);
-   UINT32 deleteComment(UINT32 commentId);
+   uint32_t updateAlarmComment(uint32_t *commentId, const TCHAR *text, uint32_t userId, bool syncWithHelpdesk);
+   uint32_t deleteComment(uint32_t commentId);
 
-   void addSubordinateAlarm(UINT32 alarmId);
-   void removeSubordinateAlarm(UINT32 alarmId);
+   void addSubordinateAlarm(uint32_t alarmId);
+   void removeSubordinateAlarm(uint32_t alarmId);
 
    bool checkCategoryAccess(ClientSession *session) const;
 };
@@ -169,18 +171,18 @@ public:
 class AlarmComment
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    time_t m_changeTime;
-   UINT32 m_userId;
+   uint32_t m_userId;
    TCHAR *m_text;
 
 public:
-   AlarmComment(UINT32 id, time_t changeTime, UINT32 userId, TCHAR *text);
+   AlarmComment(uint32_t id, time_t changeTime, uint32_t userId, TCHAR *text);
    ~AlarmComment() { MemFree(m_text); }
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
    time_t getChangeTime() const { return m_changeTime; }
-   UINT32 getUserId() const { return m_userId; }
+   uint32_t getUserId() const { return m_userId; }
    const TCHAR *getText() const { return m_text; }
 };
 
@@ -194,61 +196,61 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession);
 void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId);
 void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
 
-UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, UINT32 userId, NXCPMessage *msg, ClientSession *session);
-ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId = 0, bool recursive = false);
+uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, uint32_t userId, NXCPMessage *msg, ClientSession *session);
+ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(uint32_t objectId = 0, bool recursive = false);
 Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId);
-UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, UINT32 userId, NXCPMessage *msg, ClientSession *session);
+uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, uint32_t userId, NXCPMessage *msg, ClientSession *session);
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool alreadyLocked = false);
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref);
 int GetMostCriticalStatusForObject(uint32_t objectId);
 void GetAlarmStats(NXCPMessage *pMsg);
 int GetAlarmCount();
-UINT64 GetAlarmMemoryUsage();
+uint64_t GetAlarmMemoryUsage();
 Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId);
 
-UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
-         int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 parentAlarmId, const TCHAR *rcaScriptName, Event *event,
-         UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue);
-UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime, bool includeSubordinates);
-UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
-UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session, bool terminate, bool includeSubordinates);
+uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
+         int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
+         uint32_t ackTimeout, IntegerArray<uint32_t> *alarmCategoryList, bool openHelpdeskIssue);
+uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t dwAlarmId, ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
+uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime);
+uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, ClientSession *session, bool terminate, bool includeSubordinates);
 void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, IntegerArray<UINT32> *failIds,
          IntegerArray<UINT32> *failCodes, ClientSession *session, bool terminate, bool includeSubordinates);
 void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *pEvent);
-void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate);
-UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate);
-void NXCORE_EXPORTABLE DeleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
+void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate);
+uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate);
+uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref);
+uint32_t NXCORE_EXPORTABLE TerminateAlarmByHDRef(const TCHAR *hdref);
+void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup);
 
-UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId);
-UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 *noteId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk = true);
-UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId);
-UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg);
-ObjectArray<AlarmComment> *GetAlarmComments(UINT32 alarmId);
+uint32_t AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId);
+uint32_t UpdateAlarmComment(uint32_t alarmId, uint32_t *noteId, const TCHAR *text, uint32_t userId, bool syncWithHelpdesk = true);
+uint32_t DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId);
+uint32_t GetAlarmComments(uint32_t alarmId, NXCPMessage *msg);
+ObjectArray<AlarmComment> *GetAlarmComments(uint32_t alarmId);
 
 bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
 
-UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref);
-UINT32 NXCORE_EXPORTABLE TerminateAlarmByHDRef(const TCHAR *hdref);
 void LoadHelpDeskLink();
-UINT32 CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref);
-UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref);
-UINT32 AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text);
-UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, size_t size, ClientSession *session);
-UINT32 GetHelpdeskIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
-UINT32 UnlinkHelpdeskIssueById(UINT32 dwAlarmId, ClientSession *session);
-UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session);
+uint32_t CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref);
+uint32_t OpenHelpdeskIssue(uint32_t alarmId, ClientSession *session, TCHAR *hdref);
+uint32_t AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text);
+uint32_t GetHelpdeskIssueUrlFromAlarm(uint32_t alarmId, uint32_t userId, TCHAR *url, size_t size, ClientSession *session);
+uint32_t GetHelpdeskIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
+uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, ClientSession *session);
+uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session);
 
 /**
  * Alarm category functions
  */
 void GetAlarmCategories(NXCPMessage *msg);
-UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId);
-UINT32 DeleteAlarmCategory(UINT32 id);
-bool CheckAlarmCategoryAccess(UINT32 userId, UINT32 categoryId);
+uint32_t UpdateAlarmCategory(const NXCPMessage *request, uint32_t *returnId);
+uint32_t DeleteAlarmCategory(uint32_t id);
+bool CheckAlarmCategoryAccess(uint32_t userId, uint32_t categoryId);
 void LoadAlarmCategories();
-AlarmCategory *GetAlarmCategory(UINT32 id);
-UINT32 GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *description);
-UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *description);
+AlarmCategory *GetAlarmCategory(uint32_t id);
+uint32_t GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *description);
+uint32_t CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *description);
 
 /**
  * Alarm summary emails
