@@ -409,17 +409,17 @@ public:
 class ServerDownloadFileInfo : public DownloadFileInfo
 {
 protected:
-   UINT32 m_uploadCommand;
-   UINT32 m_uploadData;
+   uint32_t m_uploadCommand;
+   uint32_t m_uploadData;
    uuid m_uploadImageGuid;
 
 public:
-   ServerDownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time_t lastModTime = 0);
+   ServerDownloadFileInfo(const TCHAR *name, uint32_t uploadCommand, time_t fileModificationTime = 0);
    virtual ~ServerDownloadFileInfo();
 
    virtual void close(bool success);
 
-   void setUploadData(UINT32 data) { m_uploadData = data; }
+   void setUploadData(uint32_t data) { m_uploadData = data; }
    void setImageGuid(const uuid& guid) { m_uploadImageGuid = guid; }
    void updateAgentPkgDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *platform, const TCHAR *cleanFileName);
 };
@@ -477,9 +477,9 @@ class NXCORE_EXPORTABLE ClientSession
 private:
    SOCKET m_hSocket;
    session_id_t m_id;
-   UINT32 m_dwUserId;
-   UINT64 m_systemAccessRights; // User's system access rights
-   UINT32 m_dwFlags;            // Session flags
+   uint32_t m_dwUserId;
+   uint64_t m_systemAccessRights; // User's system access rights
+   uint32_t m_dwFlags;            // Session flags
 	int m_clientType;				  // Client system type - desktop, web, mobile, etc.
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
@@ -502,7 +502,7 @@ private:
    UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
    UINT32 m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
-   HashMap<UINT32, ServerDownloadFileInfo> *m_downloadFileMap;
+   SynchronizedHashMap<uint32_t, ServerDownloadFileInfo> *m_downloadFileMap;
    VolatileCounter m_refCount;
    UINT32 m_dwEncryptionRqId;
    UINT32 m_dwEncryptionResult;
@@ -521,6 +521,8 @@ private:
    UINT32 m_objectNotificationDelay;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
+   static EnumerationCallbackResult checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer,
+      std::pair<ClientSession*, IntegerArray<uint32_t>*> *context);
 
    void readThread();
    void pollerThread(shared_ptr<DataCollectionTarget> object, int pollType, uint32_t requestId);
@@ -841,9 +843,9 @@ public:
    const TCHAR *getClientInfo() const { return m_clientInfo; }
 	const TCHAR *getWorkstation() const { return m_workstation; }
    const TCHAR *getWebServerAddress() const { return m_webServerAddress; }
-   UINT32 getUserId() const { return m_dwUserId; }
-	UINT64 getSystemRights() const { return m_systemAccessRights; }
-   UINT32 getFlags() const { return m_dwFlags; }
+   uint32_t getUserId() const { return m_dwUserId; }
+   uint64_t getSystemRights() const { return m_systemAccessRights; }
+   uint32_t getFlags() const { return m_dwFlags; }
    bool isAuthenticated() const { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
    bool isTerminated() const { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
    bool isConsoleOpen() const { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
@@ -860,7 +862,7 @@ public:
          ((requiredAccess & m_systemAccessRights) == requiredAccess);
    }
 
-   void setCustomLock(UINT32 bit, bool value)
+   void setCustomLock(uint32_t bit, bool value)
    {
       if (value)
          m_dwFlags |= (bit & 0xFF000000);
@@ -868,8 +870,10 @@ public:
          m_dwFlags &= ~(bit & 0xFF000000);
    }
 
+   void runHousekeeper();
+
    void kill();
-   void notify(UINT32 dwCode, UINT32 dwData = 0);
+   void notify(uint32_t code, uint32_t data = 0);
 
    void updateSystemAccessRights();
 

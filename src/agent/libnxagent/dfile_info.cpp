@@ -25,12 +25,13 @@
 /**
  * Constructor for DownloadFileInfo class only stores given data
  */
-DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
+DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t fileModificationTime)
 {
    m_fileName = MemCopyString(name);
-   m_lastModTime = lastModTime;
-   m_file = -1;
+   m_fileModificationTime = fileModificationTime;
+   m_fileHandle = -1;
    m_compressor = nullptr;
+   m_lastUpdateTime = time(nullptr);
 }
 
 /**
@@ -38,7 +39,7 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
  */
 DownloadFileInfo::~DownloadFileInfo()
 {
-   if (m_file != -1)
+   if (m_fileHandle != -1)
       close(false); // calling DownloadFileInfo::close, not system function
    MemFree(m_fileName);
    delete m_compressor;
@@ -49,8 +50,8 @@ DownloadFileInfo::~DownloadFileInfo()
  */
 bool DownloadFileInfo::open()
 {
-   m_file = _topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-   return m_file != -1;
+   m_fileHandle = _topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   return m_fileHandle != -1;
 }
 
 /**
@@ -60,8 +61,9 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
 {
    static const TCHAR *compressionMethods[] = { _T("NONE"), _T("LZ4"), _T("DEFLATE") };
 
+   m_lastUpdateTime = time(nullptr);
    if (!compressedStream)
-      return _write(m_file, data, (int)dataSize) == dataSize;
+      return _write(m_fileHandle, data, (int)dataSize) == dataSize;
 
    if (m_compressor == nullptr)
    {
@@ -89,7 +91,7 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
       return false;
    }
 
-   return _write(m_file, uncompressedData, (int)uncompressedDataSize) == uncompressedDataSize;
+   return _write(m_fileHandle, uncompressedData, (int)uncompressedDataSize) == uncompressedDataSize;
 }
 
 /**
@@ -97,13 +99,13 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
  */
 void DownloadFileInfo::close(bool success)
 {
-   _close(m_file);
-   m_file = -1;
+   _close(m_fileHandle);
+   m_fileHandle = -1;
 
    if (success)
    {
-      if (m_lastModTime != 0)
-         SetLastModificationTime(m_fileName, m_lastModTime);
+      if (m_fileModificationTime != 0)
+         SetLastModificationTime(m_fileName, m_fileModificationTime);
    }
    else
    {

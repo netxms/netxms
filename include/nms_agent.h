@@ -682,12 +682,13 @@ class LIBNXAGENT_EXPORTABLE DownloadFileInfo
 {
 protected:
    TCHAR *m_fileName;
-   time_t m_lastModTime;
-   int m_file;
+   time_t m_fileModificationTime;
+   int m_fileHandle;
    StreamCompressor *m_compressor;  // stream compressor for file transfer
+   time_t m_lastUpdateTime;
 
 public:
-   DownloadFileInfo(const TCHAR *name, time_t lastModTime = 0);
+   DownloadFileInfo(const TCHAR *name, time_t fileModificationTime = 0);
    virtual ~DownloadFileInfo();
 
    virtual bool open();
@@ -695,6 +696,7 @@ public:
    virtual void close(bool success);
 
    const TCHAR *getFileName() const { return m_fileName; }
+   time_t getLastUpdateTime() const { return m_lastUpdateTime; }
 };
 
 /**

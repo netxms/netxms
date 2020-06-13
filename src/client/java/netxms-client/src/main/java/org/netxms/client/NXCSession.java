@@ -1671,6 +1671,21 @@ public class NXCSession
       }
       outputStream.write(message);
    }
+   
+   /**
+    * Send "abort file transfer" message
+    *
+    * @param requestId request ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if operation was timed out
+    */
+   private void abortFileTransfer(long requestId) throws IOException, NXCException
+   {
+      NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_ABORT_FILE_TRANSFER, requestId);
+      msg.setBinaryMessage(true);
+      msg.setBinaryData(new byte[0]);
+      sendMessage(msg);
+   }
 
    /**
     * Send file over NXCP
@@ -1687,7 +1702,17 @@ public class NXCSession
    {
       if (listener != null)
          listener.setTotalWorkAmount(file.length());
-      final InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
+      
+      InputStream inputStream;
+      try
+      {
+         inputStream = new BufferedInputStream(new FileInputStream(file));
+      }
+      catch(IOException e)
+      {
+         abortFileTransfer(requestId);
+         throw e;
+      }
       sendFileStream(requestId, inputStream, listener, allowStreamCompression && (file.length() > 1024));
       inputStream.close();
    }
@@ -1732,57 +1757,53 @@ public class NXCSession
       Deflater compressor = allowStreamCompression ? new Deflater(9) : null;
       msg.setStream(true, allowStreamCompression);
 
-      boolean success = false;
       final byte[] buffer = new byte[FILE_BUFFER_SIZE];
-      long bytesSent = 0;
-      while(true)
+      try
       {
-         final int bytesRead = inputStream.read(buffer);
-         if (bytesRead < FILE_BUFFER_SIZE)
+         long bytesSent = 0;
+         while(true)
          {
-            msg.setEndOfFile(true);
+            final int bytesRead = inputStream.read(buffer);
+            if (bytesRead < FILE_BUFFER_SIZE)
+            {
+               msg.setEndOfFile(true);
+            }
+   
+            if ((compressor != null) && (bytesRead >= 0))
+            {
+               byte[] compressedData = new byte[compressor.deflateBound(bytesRead) + 4];
+               compressor.setInput(buffer, 0, bytesRead, false);
+               compressor.setOutput(compressedData, 4, compressedData.length - 4);
+               if (compressor.deflate(JZlib.Z_SYNC_FLUSH) != JZlib.Z_OK)
+                  throw new NXCException(RCC.IO_ERROR);
+               int length = compressedData.length - compressor.getAvailOut();
+               byte[] payload = Arrays.copyOf(compressedData, length);
+               payload[0] = 2;   // DEFLATE method
+               payload[1] = 0;   // reserved
+               payload[2] = (byte)((bytesRead >> 8) & 0xFF);   // uncompressed length, high bits
+               payload[3] = (byte)(bytesRead & 0xFF);   // uncompressed length, low bits
+               msg.setBinaryData(payload);
+            }
+            else
+            {
+               msg.setBinaryData((bytesRead == -1) ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
+            }
+            sendMessage(msg);
+   
+            bytesSent += (bytesRead == -1) ? 0 : bytesRead;
+            if (listener != null)
+               listener.markProgress(bytesSent);
+   
+            if (bytesRead < FILE_BUFFER_SIZE)
+               break;
          }
-
-         if ((compressor != null) && (bytesRead >= 0))
-         {
-            byte[] compressedData = new byte[compressor.deflateBound(bytesRead) + 4];
-            compressor.setInput(buffer, 0, bytesRead, false);
-            compressor.setOutput(compressedData, 4, compressedData.length - 4);
-            if (compressor.deflate(JZlib.Z_SYNC_FLUSH) != JZlib.Z_OK)
-               throw new NXCException(RCC.IO_ERROR);
-            int length = compressedData.length - compressor.getAvailOut();
-            byte[] payload = Arrays.copyOf(compressedData, length);
-            payload[0] = 2;   // DEFLATE method
-            payload[1] = 0;   // reserved
-            payload[2] = (byte)((bytesRead >> 8) & 0xFF);   // uncompressed length, high bits
-            payload[3] = (byte)(bytesRead & 0xFF);   // uncompressed length, low bits
-            msg.setBinaryData(payload);
-         }
-         else
-         {
-            msg.setBinaryData((bytesRead == -1) ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
-         }
-         sendMessage(msg);
-
-         bytesSent += (bytesRead == -1) ? 0 : bytesRead;
-         if (listener != null)
-            listener.markProgress(bytesSent);
-
-         if (bytesRead < FILE_BUFFER_SIZE)
-         {
-            success = true;
-            break;
-         }
+         if (compressor != null)
+            compressor.deflateEnd();
       }
-      if (compressor != null)
-         compressor.deflateEnd();
-
-      if (!success)
+      catch(Exception e)
       {
-         NXCPMessage abortMessage = new NXCPMessage(NXCPCodes.CMD_ABORT_FILE_TRANSFER, requestId);
-         abortMessage.setBinaryMessage(true);
-         sendMessage(abortMessage);
-         waitForRCC(abortMessage.getMessageId());
+         abortFileTransfer(requestId);
+         throw e;
       }
    }
 
@@ -9929,8 +9950,15 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       final long id = response.getFieldAsInt64(NXCPCodes.VID_PACKAGE_ID);
-      sendFile(msg.getMessageId(), pkgFile, listener, allowCompression);
-      waitForRCC(msg.getMessageId());
+      try
+      {
+         sendFile(msg.getMessageId(), pkgFile, listener, allowCompression);
+         waitForRCC(msg.getMessageId());
+      }
+      catch(IOException e)
+      {
+         
+      }
       return id;
    }
 

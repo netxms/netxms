@@ -70,34 +70,36 @@ void UnregisterClientSession(session_id_t id)
 /**
  * Keep-alive thread
  */
-static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
+static void ClientSessionManager()
 {
-   ThreadSetName("ClientKeepAlive");
+   ThreadSetName("ClientManager");
 
    // Read configuration
-   int iSleepTime = ConfigReadInt(_T("KeepAliveInterval"), 60);
+   uint32_t interval = ConfigReadInt(_T("KeepAliveInterval"), 60);
+   if (interval > 300)
+      interval = 300;
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Client session manager started (check interval %u seconds)"), interval);
 
    // Prepare keepalive message
-   NXCPMessage msg;
-   msg.setCode(CMD_KEEPALIVE);
-   msg.setId(0);
+   NXCPMessage msg(CMD_KEEPALIVE, 0);
 
    while(true)
    {
-      if (SleepAndCheckForShutdown(iSleepTime))
+      if (SleepAndCheckForShutdown(interval))
          break;
 
-      msg.setField(VID_TIMESTAMP, (UINT32)time(NULL));
+      msg.setFieldFromTime(VID_TIMESTAMP, time(nullptr));
       RWLockReadLock(s_sessionListLock);
       for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
-         if (s_sessionList[i] != NULL)
-            if (s_sessionList[i]->isAuthenticated())
-               s_sessionList[i]->postMessage(&msg);
+         if ((s_sessionList[i] != nullptr) && s_sessionList[i]->isAuthenticated())
+         {
+            s_sessionList[i]->postMessage(&msg);
+            s_sessionList[i]->runHousekeeper();
+         }
       RWLockUnlock(s_sessionListLock);
    }
 
-   DbgPrintf(1, _T("Client keep-alive thread terminated"));
-   return THREAD_OK;
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Client session manager thread stopped"));
 }
 
 /**
@@ -115,7 +117,7 @@ void InitClientListeners()
    s_sessionListLock = RWLockCreate();
 
    // Start client keep-alive thread
-   ThreadCreate(ClientKeepAliveThread, 0, NULL);
+   ThreadCreate(ClientSessionManager);
 }
 
 /**
@@ -218,7 +220,7 @@ bool NXCORE_EXPORTABLE KillClientSession(session_id_t id)
    RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if ((s_sessionList[i] != NULL) && (s_sessionList[i]->getId() == id))
+      if ((s_sessionList[i] != nullptr) && (s_sessionList[i]->getId() == id))
       {
          s_sessionList[i]->kill();
          success = true;

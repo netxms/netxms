@@ -25,7 +25,7 @@
 /**
  * Constructor for DownloadFileInfo class only stores given data
  */
-ServerDownloadFileInfo::ServerDownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time_t lastModTime) : DownloadFileInfo(name, lastModTime)
+ServerDownloadFileInfo::ServerDownloadFileInfo(const TCHAR *name, uint32_t uploadCommand, time_t fileModificationTime) : DownloadFileInfo(name, fileModificationTime)
 {
    m_uploadCommand = uploadCommand;
    m_uploadData = 0;

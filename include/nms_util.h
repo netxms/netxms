@@ -2151,6 +2151,97 @@ public:
 };
 
 /**
+ * Synchronized hash map
+ */
+template <class K, class V> class SynchronizedHashMap
+{
+   DISABLE_COPY_CTOR(SynchronizedHashMap)
+
+private:
+   HashMap<K, V> m_data;
+   MUTEX m_mutex;
+
+public:
+   SynchronizedHashMap(Ownership ownership) : m_data(ownership)
+   {
+      m_data.setContext(this);
+      m_mutex = MutexCreateFast();
+   }
+   virtual ~SynchronizedHashMap() { MutexDestroy(m_mutex); }
+
+   void set(const K& key, V *element)
+   {
+      MutexLock(m_mutex);
+      m_data.set(key, element);
+      MutexUnlock(m_mutex);
+   }
+
+   V *get(const K& key) const
+   {
+      MutexLock(m_mutex);
+      auto p = m_data.get(key);
+      MutexUnlock(m_mutex);
+      return p;
+   }
+
+   void remove(const K& key)
+   {
+      MutexLock(m_mutex);
+      m_data.remove(key);
+      MutexUnlock(m_mutex);
+   }
+
+   void clear()
+   {
+      MutexLock(m_mutex);
+      m_data.clear();
+      MutexUnlock(m_mutex);
+   }
+
+   bool contains(const K& key)
+   {
+      MutexLock(m_mutex);
+      bool contains = m_data.contains(key);
+      MutexUnlock(m_mutex);
+      return contains;
+   }
+
+   int size() const
+   {
+      MutexLock(m_mutex);
+      int size = m_data.size();
+      MutexUnlock(m_mutex);
+      return size;
+   }
+
+   template <typename C>
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, V*, C*), C *context) const
+   {
+      MutexLock(m_mutex);
+      EnumerationCallbackResult result = m_data.forEach(cb, context);
+      MutexUnlock(m_mutex);
+      return result;
+   }
+
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, V*)) const
+   {
+      MutexLock(m_mutex);
+      EnumerationCallbackResult result = m_data.forEach(cb);
+      MutexUnlock(m_mutex);
+      return result;
+   }
+
+   template <typename C>
+   const shared_ptr<V>& findElement(bool(*cb)(const K&, const V&, C*), C *context) const
+   {
+      MutexLock(m_mutex);
+      auto result = m_data.findElement(cb, context);
+      MutexUnlock(m_mutex);
+      return result;
+   }
+};
+
+/**
  * Hash map template for holding reference counting objects as values
  */
 template<class K, class V> class RefCountHashMap : public HashMapBase
@@ -2270,7 +2361,7 @@ public:
    SynchronizedSharedHashMap() : m_pool(64), m_data(Ownership::True, SynchronizedSharedHashMap<K, V>::destructor)
    {
       m_data.setContext(this);
-      m_mutex = MutexCreate();
+      m_mutex = MutexCreateFast();
    }
    virtual ~SynchronizedSharedHashMap() { MutexDestroy(m_mutex); }
 

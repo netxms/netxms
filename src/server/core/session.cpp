@@ -113,6 +113,15 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *context)
 }
 
 /**
+ * Callback for cancelling pending file transfer
+ */
+static EnumerationCallbackResult CancelFileTransfer(const uint32_t& key, ServerDownloadFileInfo *file)
+{
+   file->close(false);
+   return _CONTINUE;
+}
+
+/**
  * Client communication read thread starter
  */
 THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *arg)
@@ -168,7 +177,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_soundFileTypes.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
    m_serverCommands = new HashMap<UINT32, ProcessExecutor>(Ownership::True);
-   m_downloadFileMap = new HashMap<UINT32, ServerDownloadFileInfo>(Ownership::True);
+   m_downloadFileMap = new SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>(Ownership::True);
    m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, Ownership::True);
    m_tcpProxyLock = MutexCreate();
    m_tcpProxyChannelId = 0;
@@ -211,8 +220,10 @@ ClientSession::~ClientSession()
 
    m_soundFileTypes.clear();
 
-   delete m_serverCommands;
+   m_downloadFileMap->forEach(CancelFileTransfer);
    delete m_downloadFileMap;
+
+   delete m_serverCommands;
    delete m_tcpProxyConnections;
    MutexDestroy(m_tcpProxyLock);
    delete m_pendingObjectNotifications;
@@ -225,6 +236,35 @@ ClientSession::~ClientSession()
 bool ClientSession::start()
 {
    return ThreadCreate(readThreadStarter, 0, this);
+}
+
+/**
+ * Check if file transfer is stalled and should be cancelled
+ */
+EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer, 
+      std::pair<ClientSession*, IntegerArray<uint32_t>*> *context)
+{
+   if (time(nullptr) - fileTransfer->getLastUpdateTime() > 60)
+   {
+      context->first->debugPrintf(3, _T("File transfer [%u] for file \"%s\" cancelled by timeout"), key, fileTransfer->getFileName());
+      context->second->add(key);
+      fileTransfer->close(false);
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Run session housekeeper
+ */
+void ClientSession::runHousekeeper()
+{
+   IntegerArray<uint32_t> cancelList;
+   std::pair<ClientSession*, IntegerArray<uint32_t>*> context(this, &cancelList);
+   m_downloadFileMap->forEach(ClientSession::checkFileTransfer, &context);
+   for (int i = 0; i < cancelList.size(); i++)
+   {
+      m_downloadFileMap->remove(cancelList.get(i));
+   }
 }
 
 /**
@@ -1870,7 +1910,7 @@ void ClientSession::login(NXCPMessage *pRequest)
       if (dwResult == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
-         nx_strncpy(m_loginName, szLogin, MAX_USER_NAME);
+         _tcslcpy(m_loginName, szLogin, MAX_USER_NAME);
          _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_workstation);
          m_loginTime = time(nullptr);
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -2824,11 +2864,11 @@ void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
 /**
  * Send notification message to server
  */
-void ClientSession::notify(UINT32 dwCode, UINT32 dwData)
+void ClientSession::notify(uint32_t code, uint32_t data)
 {
    NXCPMessage msg(CMD_NOTIFY, 0);
-   msg.setField(VID_NOTIFICATION_CODE, dwCode);
-   msg.setField(VID_NOTIFICATION_DATA, dwData);
+   msg.setField(VID_NOTIFICATION_CODE, code);
+   msg.setField(VID_NOTIFICATION_DATA, data);
    postMessage(&msg);
 }
 
@@ -12396,7 +12436,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
       {
          m_downloadFileMap->set(request->getId(), fInfo);
          msg.setField(VID_RCC, RCC_SUCCESS);
-         WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Started upload of file \"%s\" to server"), fileName);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Started upload of file \"%s\" to server"), fileName);
          NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
       }
       else

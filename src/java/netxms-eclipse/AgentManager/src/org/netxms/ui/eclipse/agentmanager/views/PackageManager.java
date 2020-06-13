@@ -276,7 +276,7 @@ public class PackageManager extends ViewPart
 			{
 				final File npiFile = new File(npiName);
 				final PackageInfo p = new PackageInfo(npiFile);
-				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				final NXCSession session = ConsoleSharedData.getSession();
 				new ConsoleJob(Messages.get().PackageManager_InstallPackage, this, Activator.PLUGIN_ID, null) {
 					@Override
 					protected void runInternal(final IProgressMonitor monitor) throws Exception
@@ -307,7 +307,7 @@ public class PackageManager extends ViewPart
 							}
 						});
 					}
-					
+
 					@Override
 					protected String getErrorMessage()
 					{
