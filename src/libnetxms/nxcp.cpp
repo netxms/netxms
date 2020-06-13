@@ -836,7 +836,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
          if ((cancellationFlag != nullptr) && (*cancellationFlag > 0))
             break;
 
-         int bytes;
+         size_t bytes;
          if (compressor != nullptr)
          {
             stream->read(reinterpret_cast<char*>(compBuffer), bufferSize);
@@ -850,7 +850,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             *((BYTE *)msg->fields) = (BYTE)compressionMethod;
             *((BYTE *)msg->fields + 1) = 0;
             *((uint16_t *)((BYTE *)msg->fields + 2)) = htons((uint16_t)bytes);
-            bytes = (int)compressor->compress(compBuffer, bytes, (BYTE *)msg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
+            bytes = compressor->compress(compBuffer, bytes, (BYTE *)msg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
          }
          else
          {
@@ -879,7 +879,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
          }
          else
          {
-            if (channel->send(msg, static_cast<size_t>(bytes) + NXCP_HEADER_SIZE + padding, mutex) <= 0)
+            if (channel->send(msg, bytes + NXCP_HEADER_SIZE + padding, mutex) <= 0)
                break;	// Send error
          }
 

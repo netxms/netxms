@@ -235,7 +235,7 @@ private:
 	StringList m_exclusionSchedules;
 	TCHAR *m_name;
 	CodeLookupElement *m_eventNameList;
-	bool (*m_eventResolver)(const TCHAR *, UINT32 *);
+	bool (*m_eventResolver)(const TCHAR *, uint32_t *);
 	THREAD m_thread;	// Associated thread
    CONDITION m_stopCondition;
    int m_recordsProcessed;
@@ -284,8 +284,8 @@ public:
 	LogParser(const LogParser *src);
 	~LogParser();
 
-	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1,
-		TCHAR *errorText = NULL, int errBufSize = 0, bool (*eventResolver)(const TCHAR *, UINT32 *) = NULL);
+	static ObjectArray<LogParser> *createFromXml(const char *xml, ssize_t xmlLen = -1,
+		TCHAR *errorText = nullptr, size_t errBufSize = 0, bool (*eventResolver)(const TCHAR *, uint32_t *) = nullptr);
 
    const TCHAR *getName() const { return m_name; }
    const uuid& getGuid() const { return m_guid;  }

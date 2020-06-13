@@ -58,7 +58,6 @@ int main(int argc, char *argv[])
    TCHAR *pszSource, szError[1024];
    const char *entryPoint = NULL;
    char outFile[MAX_PATH] = "";
-   UINT32 dwSize;
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;

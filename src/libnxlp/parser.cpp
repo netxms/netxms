@@ -830,28 +830,28 @@ static void CharData(void *userData, const XML_Char *s, int len)
  * Create parser configuration from XML. Returns array of identical parsers,
  * one for each <file> tag in source XML. Resulting parsers only differs with file names.
  */
-ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize, bool (*eventResolver)(const TCHAR *, UINT32 *))
+ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, ssize_t xmlLen, TCHAR *errorText,
+      size_t errBufSize, bool (*eventResolver)(const TCHAR *, uint32_t *))
 {
-	ObjectArray<LogParser> *parsers = NULL;
+	ObjectArray<LogParser> *parsers = nullptr;
 
-	XML_Parser parser = XML_ParserCreate(NULL);
+	XML_Parser parser = XML_ParserCreate(nullptr);
 	LogParser_XmlParserState state;
 	state.parser = new LogParser;
 	state.parser->setEventNameResolver(eventResolver);
 	XML_SetUserData(parser, &state);
 	XML_SetElementHandler(parser, StartElement, EndElement);
 	XML_SetCharacterDataHandler(parser, CharData);
-	bool success = (XML_Parse(parser, xml, (xmlLen == -1) ? (int)strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
-	if (!success && (errorText != NULL))
+	bool success = (XML_Parse(parser, xml, static_cast<int>((xmlLen == -1) ? strlen(xml) : xmlLen), TRUE) != XML_STATUS_ERROR);
+	if (!success && (errorText != nullptr))
 	{
 		_sntprintf(errorText, errBufSize, _T("%hs at line %d"),
-			XML_ErrorString(XML_GetErrorCode(parser)),
-			(int)XML_GetCurrentLineNumber(parser));
+			   XML_ErrorString(XML_GetErrorCode(parser)), static_cast<int>(XML_GetCurrentLineNumber(parser)));
 	}
 	XML_ParserFree(parser);
 	if (success && (state.state == XML_STATE_ERROR))
 	{
-		if (errorText != NULL)
+		if (errorText != nullptr)
 			_tcslcpy(errorText, state.errorText, errBufSize);
 	}
 	else if (success)
@@ -899,7 +899,7 @@ UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
 
 	if (m_eventResolver != NULL)
 	{
-		UINT32 val;
+		uint32_t val;
 		if (m_eventResolver(name, &val))
 			return val;
 	}

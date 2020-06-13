@@ -109,7 +109,7 @@ static THREAD_RESULT THREAD_CALL NotificationSender(void *arg)
             if (s_serverSyncStatus.get(i)->status == SyncStatus::online)
             {
                MutexLock(g_hSessionListAccess);
-               for(int j = 0; j < g_dwMaxSessions; j++)
+               for(uint32_t j = 0; j < g_dwMaxSessions; j++)
                {
                   if (g_pSessionList[j] != nullptr)
                   {
@@ -333,7 +333,7 @@ void NotificationHousekeeper(void *arg)
 
    //Update last connection time for all connected sessions
    MutexLock(g_hSessionListAccess);
-   for(int i = 0; i < g_dwMaxSessions; i++)
+   for(uint32_t i = 0; i < g_dwMaxSessions; i++)
    {
       if (g_pSessionList[i] != nullptr)
       {

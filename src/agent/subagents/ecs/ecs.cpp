@@ -74,7 +74,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
          if (SendEx(sd, req, len, 0, NULL) == len)
          {
             char buff[10240];
-            int err;
+            ssize_t err;
             // ok, request sent, read content;
             while ((err = RecvEx(sd, buff, 10240, 0, 30000)) > 0)
             {

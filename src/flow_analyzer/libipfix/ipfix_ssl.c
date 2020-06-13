@@ -195,7 +195,6 @@ long ipfix_ssl_post_connection_check(SSL *ssl, char *host)
             if (!strcmp(extstr, "subjectAltName"))
             {
                 int                  j;
-                unsigned char        *data;
                 STACK_OF(CONF_VALUE) *val;
                 CONF_VALUE           *nval;
                 const X509V3_EXT_METHOD    *meth;
