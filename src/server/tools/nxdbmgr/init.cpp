@@ -25,14 +25,12 @@
 /**
  * Check if query is empty
  */
-static BOOL IsEmptyQuery(const char *pszQuery)
+static bool IsEmptyQuery(const char *pszQuery)
 {
-   const char *ptr;
-
-   for(ptr = pszQuery; *ptr != 0; ptr++)
+   for (const char *ptr = pszQuery; *ptr != 0; ptr++)
       if ((*ptr != ' ') && (*ptr != '\t') && (*ptr != '\r') && (*ptr != '\n'))
-         return FALSE;
-   return TRUE;
+         return false;
+   return true;
 }
 
 /**

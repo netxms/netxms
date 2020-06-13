@@ -27,7 +27,7 @@ CConfigWizard::CConfigWizard(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectP
 
 CConfigWizard::~CConfigWizard()
 {
-   free(m_cfg.m_pszDependencyList);
+   MemFree(m_cfg.m_pszDependencyList);
 }
 
 
@@ -129,4 +129,19 @@ void CConfigWizard::DefaultConfig(const TCHAR *installDir)
 			}
       }
    }
+}
+
+/**
+ * Handle dialog initialization
+ */
+BOOL CConfigWizard::OnInitDialog()
+{
+   BOOL bResult = CPropertySheet::OnInitDialog();
+
+   SendMessage(WM_SETICON, ICON_BIG, (LPARAM)GetParent()->GetIcon(TRUE));
+   SendMessage(WM_SETICON, ICON_SMALL, (LPARAM)GetParent()->GetIcon(FALSE));
+
+   SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE) | WS_EX_APPWINDOW);
+
+   return bResult;
 }

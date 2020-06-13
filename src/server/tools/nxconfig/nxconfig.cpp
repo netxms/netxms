@@ -134,6 +134,10 @@ BOOL CNxconfigApp::InitInstance()
 	// create and load the frame with its resources
 	pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL);
 
+   HICON hIcon = LoadIcon(MAKEINTRESOURCE(IDR_MAINFRAME));
+   pFrame->SendMessage(WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+   pFrame->SendMessage(WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+
 	// The one and only window has been initialized, so show and update it.
 	//pFrame->ShowWindow(SW_SHOW);
 	//pFrame->UpdateWindow();
@@ -181,8 +185,7 @@ void CNxconfigApp::OnFileCfgWizard()
       HKEY hKey;
       DWORD dwData = 1;
 
-      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
-                       KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
       {
          RegSetValueEx(hKey, _T("ServerIsConfigured"), 0, REG_DWORD, (BYTE *)&dwData, sizeof(DWORD));
          RegCloseKey(hKey);
@@ -192,11 +195,9 @@ void CNxconfigApp::OnFileCfgWizard()
    m_pMainWnd->PostMessage(WM_COMMAND, ID_APP_EXIT);
 }
 
-
-//
-// Create configuration file for local agent
-//
-
+/**
+ * Create configuration file for local agent
+ */
 void CNxconfigApp::CreateAgentConfig()
 {
    FILE *fp;
@@ -255,7 +256,7 @@ void CNxconfigApp::CreateAgentConfig()
       }
       _ftprintf(fp, _T("FileStore = %s\\var\n"), m_szInstallDir);
       _ftprintf(fp, _T("RequireAuthentication = no\n"));
-      _ftprintf(fp, _T("SubAgent = winperf.nsm\nSubAgent = portcheck.nsm\nSubAgent = ping.nsm\nSubAgent = ssh.nsm\n"));
+      _ftprintf(fp, _T("SubAgent = winperf.nsm\nSubAgent = wmi.nsm\nSubAgent = portcheck.nsm\nSubAgent = ping.nsm\nSubAgent = ssh.nsm\n"));
       fclose(fp);
    }
 }

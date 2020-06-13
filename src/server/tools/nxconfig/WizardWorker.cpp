@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Configurator for Windows
-** Copyright (C) 2005-2018 Victor Kirhenshtein
+** Copyright (C) 2005-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -137,15 +137,14 @@ static BOOL InstallService(WIZARD_CFG_INFO *pc)
 /**
  * Execute query and set error text
  */
-static BOOL DBQueryEx(DB_HANDLE hConn, TCHAR *pszQuery)
+static bool ExecuteSQLQuery(DB_HANDLE hdb, TCHAR *query)
 {
-   BOOL bResult;
-
-   bResult = DBQuery(hConn, pszQuery);
-   if (!bResult)
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   bool success = DBQueryEx(hdb, query, errorText);
+   if (!success)
       _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
-                 _T("SQL query failed:\n%s"), pszQuery);
-   return bResult;
+                 _T("SQL query failed:\n%s\n%s"), query, errorText);
+   return success;
 }
 
 /**
@@ -277,21 +276,21 @@ static BOOL CreateDBMySQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    BOOL bResult;
 
    _sntprintf(szQuery, 256, _T("CREATE DATABASE %s"), pc->m_szDBName);
-   bResult = DBQueryEx(hConn, szQuery);
+   bResult = ExecuteSQLQuery(hConn, szQuery);
 
    if (bResult)
    {
       _sntprintf(szQuery, 256, _T("GRANT ALL ON %s.* TO %s IDENTIFIED BY '%s'"),
                 pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
-      bResult = DBQueryEx(hConn, szQuery);
+      bResult = ExecuteSQLQuery(hConn, szQuery);
 
       _sntprintf(szQuery, 256, _T("GRANT ALL ON %s.* TO %s@localhost IDENTIFIED BY '%s'"),
                 pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
-      bResult = DBQueryEx(hConn, szQuery);
+      bResult = ExecuteSQLQuery(hConn, szQuery);
    }
 
    if (bResult)
-      bResult = DBQueryEx(hConn, _T("FLUSH PRIVILEGES"));
+      bResult = ExecuteSQLQuery(hConn, _T("FLUSH PRIVILEGES"));
    return bResult;
 }
 
@@ -304,20 +303,20 @@ static BOOL CreateDBPostgreSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    BOOL bResult;
 
    _sntprintf(szQuery, 256, _T("CREATE DATABASE %s"), pc->m_szDBName);
-   bResult = DBQueryEx(hConn, szQuery);
+   bResult = ExecuteSQLQuery(hConn, szQuery);
 
    if (bResult)
    {
       _sntprintf(szQuery, 256, _T("CREATE USER %s WITH PASSWORD '%s'"),
                 pc->m_szDBLogin, pc->m_szDBPassword);
-      bResult = DBQueryEx(hConn, szQuery);
+      bResult = ExecuteSQLQuery(hConn, szQuery);
    }
 
    if (bResult)
    {
       _sntprintf(szQuery, 256, _T("GRANT ALL PRIVILEGES ON DATABASE %s TO %s"),
                 pc->m_szDBName, pc->m_szDBLogin);
-      bResult = DBQueryEx(hConn, szQuery);
+      bResult = ExecuteSQLQuery(hConn, szQuery);
    }
 
    return bResult;
@@ -331,17 +330,17 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    TCHAR szQuery[512], *pszLogin;
    BOOL bResult;
 
-   bResult = DBQueryEx(hConn, _T("USE master"));
+   bResult = ExecuteSQLQuery(hConn, _T("USE master"));
    if (bResult)
    {
       _sntprintf(szQuery, 512, _T("CREATE DATABASE %s"), pc->m_szDBName);
-      bResult = DBQueryEx(hConn, szQuery);
+      bResult = ExecuteSQLQuery(hConn, szQuery);
    }
 
    if (bResult)
    {
       _sntprintf(szQuery, 512, _T("USE %s"), pc->m_szDBName);
-      bResult = DBQueryEx(hConn, szQuery);
+      bResult = ExecuteSQLQuery(hConn, szQuery);
    }
 
    if (bResult)
@@ -355,7 +354,7 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
       {
          _sntprintf(szQuery, 512, _T("sp_addlogin @loginame = '%s', @passwd = '%s', @defdb = '%s'"),
                     pc->m_szDBLogin, pc->m_szDBPassword, pc->m_szDBName);
-         bResult = DBQueryEx(hConn, szQuery);
+         bResult = ExecuteSQLQuery(hConn, szQuery);
          pszLogin = pc->m_szDBLogin;
       }
    }
@@ -363,13 +362,13 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    if (bResult)
    {
       _sntprintf(szQuery, 512, _T("sp_grantdbaccess @loginame = '%s'"), pszLogin);
-      bResult = DBQueryEx(hConn, szQuery);
+      bResult = ExecuteSQLQuery(hConn, szQuery);
    }
 
    if (bResult)
    {
       _sntprintf(szQuery, 512, _T("GRANT ALL TO %s"), pszLogin);
-      bResult = DBQueryEx(hConn, szQuery);
+      bResult = ExecuteSQLQuery(hConn, szQuery);
    }
 
    return bResult;
@@ -519,7 +518,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
          _uuid_generate(guid);
          _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=0"),
                     _uuid_to_string(guid, szGUID));
-         bResult = DBQueryEx(hConn, szQuery);
+         bResult = ExecuteSQLQuery(hConn, szQuery);
       }
 
       // Generate GUID for "everyone" group
@@ -528,7 +527,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
          _uuid_generate(guid);
          _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"),
                     _uuid_to_string(guid, szGUID), GROUP_EVERYONE);
-         bResult = DBQueryEx(hConn, szQuery);
+         bResult = ExecuteSQLQuery(hConn, szQuery);
       }
 
       PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);

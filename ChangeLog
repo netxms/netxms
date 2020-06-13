@@ -14,8 +14,10 @@
 - Fixed issues:
 	NX-470 (Hooks or events for alarm state change)
 	NX-763 (File Tail/Show should not access database directly)
+	NX-1043 (Windows installer cannot initialize Oracle database)
 	NX-1078 (Event correlation not working)
 	NX-1176 (Handle routing loops during event correlation)
+	NX-1524 (Server configuration wizard is not visible on task bar)
 	NX-1556 (Add HMAC to every record in audit log table)
 	NX-1739 (When a node goes down and it's upstream port on a switch goes down, do not correlate those events)
 	NX-1801 (Strange if condition)
