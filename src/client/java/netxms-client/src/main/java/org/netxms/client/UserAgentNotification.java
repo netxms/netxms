@@ -35,6 +35,8 @@ public class UserAgentNotification
    private Date endTime;
    private boolean recalled;
    private boolean onStartup;
+   private Date creationTime; 
+   private long createdBy;
    
    /**
     * Create notification object from NXCP message. 
@@ -44,7 +46,7 @@ public class UserAgentNotification
     * @param session associated client session
     */
    public UserAgentNotification(NXCPMessage msg, long baseId, NXCSession session)
-   {
+   {      
       id = msg.getFieldAsInt32(baseId);
       message = msg.getFieldAsString(baseId + 1);
       startTime = msg.getFieldAsDate(baseId + 2);
@@ -63,6 +65,8 @@ public class UserAgentNotification
       objectNames = sb.toString();
 
       recalled = msg.getFieldAsBoolean(baseId + 6);
+      creationTime = msg.getFieldAsDate(baseId + 7);
+      createdBy = msg.getFieldAsInt64(baseId + 8);
    }
 
    /**
@@ -143,5 +147,21 @@ public class UserAgentNotification
    public boolean isStartupNotification()
    {
       return onStartup;
+   }
+
+   /**
+    * @return the creationTime
+    */
+   public Date getCreationTime()
+   {
+      return creationTime;
+   }
+
+   /**
+    * @return the createdBy
+    */
+   public long getCreatedBy()
+   {
+      return createdBy;
    }
 }

@@ -1590,7 +1590,7 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
    time_t startTime = (time_t)argv[2]->getValueAsUInt64();
    time_t endTime = (time_t)argv[3]->getValueAsUInt64();
 
-   UserAgentNotificationItem *uan = CreateNewUserAgentNotification(message, idList, startTime, endTime, argv[3]->getValueAsBoolean());
+   UserAgentNotificationItem *uan = CreateNewUserAgentNotification(message, idList, startTime, endTime, argv[3]->getValueAsBoolean(), 0);
 
    *result = vm->createValue(uan->getId());
    uan->decRefCount();

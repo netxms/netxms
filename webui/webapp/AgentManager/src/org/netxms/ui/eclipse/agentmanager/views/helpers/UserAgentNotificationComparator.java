@@ -30,6 +30,18 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class UserAgentNotificationComparator extends ViewerComparator
 {
+   private UserAgentNotificationLabelProvider provider;
+   
+   /**
+    * Constructor
+    * 
+    * @param provider label provider
+    */
+   public UserAgentNotificationComparator(UserAgentNotificationLabelProvider provider)
+   {
+      this.provider = provider;      
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -62,6 +74,12 @@ public class UserAgentNotificationComparator extends ViewerComparator
 			case UserAgentNotificationView.COL_END_TIME:
             result = uam1.getEndTime().compareTo(uam2.getEndTime());
 				break;
+         case UserAgentNotificationView.COL_CREATION_TIME:
+            result = uam1.getCreationTime().compareTo(uam2.getCreationTime());
+            break;
+         case UserAgentNotificationView.COL_CREATED_BY:
+            result = provider.getUserName(uam1).compareTo(provider.getUserName(uam2)); //$NON-NLS-1$ //$NON-NLS-2$            
+            break;
 			default:
 				result = 0;
 		}

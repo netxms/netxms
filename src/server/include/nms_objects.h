@@ -4229,10 +4229,12 @@ private:
    bool m_recall;
    bool m_onStartup;
    VolatileCounter m_refCount;
+   time_t m_creationTime;
+   uint32_t m_creatiorId;
 
 public:
    UserAgentNotificationItem(DB_RESULT result, int row);
-   UserAgentNotificationItem(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool startup);
+   UserAgentNotificationItem(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool startup, uint32_t userId);
    ~UserAgentNotificationItem() { }
 
    UINT32 getId() { return m_id; }
@@ -4325,7 +4327,7 @@ void ShowPollers(ServerConsole *console);
 void InitUserAgentNotifications();
 void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
 void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
-UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool onStartup);
+UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool onStartup, uint32_t userId);
 
 void DeleteObjectFromPhysicalLinks(UINT32 id);
 void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId);

@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.agentmanager.views.helpers;
 
+import java.util.Date;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.UserAgentNotification;
@@ -29,11 +30,30 @@ import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 public class UserAgentNotificationFilter extends ViewerFilter
 {
    private String filterString = null;
+   private UserAgentNotificationLabelProvider provider;
+   private boolean showAllOneTime = true;
+   private boolean showAllOneScheduled = true;
+   
+   /**
+    * Constructor
+    * 
+    * @param provider label provider
+    */
+   public UserAgentNotificationFilter(UserAgentNotificationLabelProvider provider)
+   {
+      this.provider = provider;      
+   }
 
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
       UserAgentNotification uam = (UserAgentNotification)element;
+      
+      if (!showAllOneTime && uam.getEndTime().getTime() == 0 && uam.getCreationTime().before(new Date(System.currentTimeMillis() - 3600 * 1000)))
+         return false;
+      if (!showAllOneScheduled && uam.getEndTime().getTime() != 0 && uam.getEndTime().before(new Date()))
+         return false;
+      
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
       else if (Long.toString(uam.getId()).toLowerCase().contains(filterString))
@@ -50,6 +70,10 @@ public class UserAgentNotificationFilter extends ViewerFilter
          return true;
       else if (uam.isStartupNotification() ? "yes".contains(filterString) : "no".contains(filterString))
          return true;
+      else if (RegionalSettings.getDateTimeFormat().format(uam.getCreationTime()).contains(filterString))
+         return true;
+      else if (provider.getUserName(uam).contains(filterString))
+         return true;
       return false;
    }
    
@@ -59,5 +83,37 @@ public class UserAgentNotificationFilter extends ViewerFilter
    public void setFilterString(String filterString)
    {
       this.filterString = filterString.toLowerCase();
+   }
+
+   /**
+    * @return the showAllOneTime
+    */
+   public boolean isShowAllOneTime()
+   {
+      return showAllOneTime;
+   }
+
+   /**
+    * @param showAllOneTime the showAllOneTime to set
+    */
+   public void setShowAllOneTime(boolean showAllOneTime)
+   {
+      this.showAllOneTime = showAllOneTime;
+   }
+
+   /**
+    * @return the showAllOneScheduled
+    */
+   public boolean isShowAllOneScheduled()
+   {
+      return showAllOneScheduled;
+   }
+
+   /**
+    * @param showAllOneScheduled the showAllOneScheduled to set
+    */
+   public void setShowAllOneScheduled(boolean showAllOneScheduled)
+   {
+      this.showAllOneScheduled = showAllOneScheduled;
    }
 }

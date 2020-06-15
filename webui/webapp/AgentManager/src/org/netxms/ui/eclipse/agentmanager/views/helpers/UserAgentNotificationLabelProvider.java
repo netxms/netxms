@@ -21,15 +21,33 @@ package org.netxms.ui.eclipse.agentmanager.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.NXCSession;
 import org.netxms.client.UserAgentNotification;
+import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView;
+import org.netxms.ui.eclipse.console.UserRefreshRunnable;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Label provider for user agent notification
  */
 public class UserAgentNotificationLabelProvider extends LabelProvider implements ITableLabelProvider
 {   
+   private NXCSession session;
+   private SortableTableViewer viewer;
+   
+   
+   /**
+    * Constructor
+    */
+   public UserAgentNotificationLabelProvider(SortableTableViewer viewer)
+   {
+      this.viewer = viewer;
+      session = ConsoleSharedData.getSession();      
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
@@ -62,7 +80,17 @@ public class UserAgentNotificationLabelProvider extends LabelProvider implements
 				return uaMessage.getStartTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(uaMessage.getStartTime());
 			case UserAgentNotificationView.COL_END_TIME:
 				return uaMessage.getEndTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(uaMessage.getEndTime());
+         case UserAgentNotificationView.COL_CREATION_TIME:
+            return uaMessage.getCreationTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(uaMessage.getCreationTime());
+         case UserAgentNotificationView.COL_CREATED_BY:
+            return getUserName(uaMessage); //$NON-NLS-1$ //$NON-NLS-2$   
 		}
 		return null;
 	}
+
+   public String getUserName(UserAgentNotification uam)
+   {
+      AbstractUserObject user = session.findUserDBObjectById(uam.getCreatedBy(), new UserRefreshRunnable(viewer, uam)); 
+      return (user != null) ? user.getName() : ("[" + Long.toString(uam.getCreatedBy()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+   }
 }

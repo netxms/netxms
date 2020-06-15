@@ -98,9 +98,21 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
             }
             rc = SYSINFO_RC_SUCCESS;
          }
+         else
+         {
+            nxlog_debug(6, _T("SSH output size is zero"));
+         }
          delete output;
       }
+      else
+      {
+         nxlog_debug(6, _T("SSH output is empty"));
+      }
       ReleaseSession(ssh);
+   }
+   else
+   {
+      nxlog_debug(6, _T("Failed to create SSH connection"));
    }
    return rc;
 }

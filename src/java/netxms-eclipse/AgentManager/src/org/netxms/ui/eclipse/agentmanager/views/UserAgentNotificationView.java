@@ -3,10 +3,12 @@ package org.netxms.ui.eclipse.agentmanager.views;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -52,11 +54,15 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
    public static final int COL_IS_STARTUP = 4;
    public static final int COL_START_TIME = 5;
    public static final int COL_END_TIME = 6;
+   public static final int COL_CREATION_TIME = 7;
+   public static final int COL_CREATED_BY = 8;
    
    private SortableTableViewer viewer; 
    private UserAgentNotificationFilter filter;
    private boolean initShowfilter = true;
    private FilterText filterText;
+   private Action actionShowAllOneTime;
+   private Action actionShowAllOneScheduled;
    private Action actionShowFilter;
    private Action actionRefresh;
    private Action actionRecall;
@@ -89,25 +95,31 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
          }
       });
       
-      final String[] names = { "ID", "Objects", "Message", "Is recalled", "Is startup", "Start time", "End time" };
-      final int[] widths = { 80, 300, 300, 80, 80, 100, 100 };
+      final String[] names = { "ID", "Objects", "Message", "Is recalled", "Is startup", "Start time", "End time", "Creation time", "Created by" };
+      final int[] widths = { 80, 300, 300, 80, 80, 100, 100, 100, 100 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new UserAgentNotificationLabelProvider());
-      viewer.setComparator(new UserAgentNotificationComparator());
-      filter = new UserAgentNotificationFilter();
+      UserAgentNotificationLabelProvider lebleProvider = new UserAgentNotificationLabelProvider(viewer);
+      viewer.setLabelProvider(lebleProvider);
+      viewer.setComparator(new UserAgentNotificationComparator(lebleProvider));
+      filter = new UserAgentNotificationFilter(lebleProvider);
       viewer.addFilter(filter);
       
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       initShowfilter = settings.getBoolean(ID + "initShowFilter");
       
       WidgetHelper.restoreTableViewerSettings(viewer, settings, "UserAgentNotification");
+      filter.setShowAllOneTime(getBooleanFromSettings(settings, "UserAgentNotification.showAllOneTime", false));
+      filter.setShowAllOneScheduled(getBooleanFromSettings(settings, "UserAgentNotification.showAllOneScheduled", false));
+      
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             WidgetHelper.saveTableViewerSettings(viewer, settings, "UserAgentNotification");
             settings.put(ID + "initShowFilter", initShowfilter);
+            settings.put("UserAgentNotification.showAllOneTime", filter.isShowAllOneTime());
+            settings.put("UserAgentNotification.showAllOneScheduled", filter.isShowAllOneScheduled());
          }
       });
       
@@ -167,7 +179,27 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
     * Create actions
     */
    private void createActions()
-   {
+   {      
+      actionShowAllOneTime = new Action("Show all &one time notifications", IAction.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            filter.setShowAllOneTime(actionShowAllOneTime.isChecked());
+            viewer.refresh();
+         }
+      };
+      actionShowAllOneTime.setChecked(filter.isShowAllOneTime());
+      
+      actionShowAllOneScheduled = new Action("Show all &scheduler notifications", IAction.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            filter.setShowAllOneScheduled(actionShowAllOneScheduled.isChecked());
+            viewer.refresh();
+         }
+      };
+      actionShowAllOneScheduled.setChecked(filter.isShowAllOneScheduled());
+      
       actionRefresh = new RefreshAction(this) {
          @Override
          public void run()
@@ -248,8 +280,12 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
     */
    private void fillLocalPullDown(IMenuManager manager)
    {
-      manager.add(actionRefresh);
       manager.add(actionShowFilter);
+      manager.add(new Separator());
+      manager.add(actionShowAllOneTime);
+      manager.add(actionShowAllOneScheduled);
+      manager.add(new Separator());
+      manager.add(actionRefresh);
    }
 
    /**
@@ -258,8 +294,8 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
     */
    private void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(actionRefresh);
       manager.add(actionShowFilter);
+      manager.add(actionRefresh);
    }
 
    /**
@@ -314,6 +350,7 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
     */
    private void refresh()
    {
+      //TODO: sync missing users
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Get list of user agent notifications", this, Activator.PLUGIN_ID, null) {
          @Override
@@ -394,4 +431,17 @@ public class UserAgentNotificationView extends ViewPart implements SessionListen
 				break;
 		}		
 	}
+
+   /**
+    * @param settings
+    * @param name
+    * @param defaultValue
+    * @return
+    */
+   private static boolean getBooleanFromSettings(IDialogSettings settings, String name, boolean defaultValue)
+   {
+      if (settings.get(name) == null)
+         return defaultValue;
+      return settings.getBoolean(name);
+   }
 }

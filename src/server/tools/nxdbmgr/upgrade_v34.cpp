@@ -24,6 +24,31 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.6 to 34.7
+ */
+static bool H_UpgradeFromV6()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE user_agent_notifications ADD creation_time integer\n")
+      _T("ALTER TABLE user_agent_notifications ADD created_by integer\n")
+      _T("UPDATE user_agent_notifications SET created_by=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   //update one time notifications to delete on housekeeper old notifications
+   time_t now = time(nullptr);
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("UPDATE user_agent_notifications SET creation_time=%d WHERE end_time=0"), now);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("user_agent_notifications"), _T("creation_time")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("user_agent_notifications"), _T("created_by")));
+
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 34.5 to 34.6
  */
 static bool H_UpgradeFromV5()
@@ -128,6 +153,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 6,  34, 7,  H_UpgradeFromV6  },
    { 5,  34, 6,  H_UpgradeFromV5  },
    { 4,  34, 5,  H_UpgradeFromV4  },
    { 3,  34, 4,  H_UpgradeFromV3  },
