@@ -7,6 +7,7 @@
 - Method getInterface in NXSL class "Node" automatically detects if parameter is interface index, name, or MAC address
 - Added built-in NXSL constant NXSL::SystemIsBigEndian
 - Added NXSL hook for alarm state change (Hook::AlarmStateChange)
+- Can pass arguments to NXSL script executed as EPP action
 - Implemented agent metrics for available and cache memory on AIX
 - New agent parameter WindowsFirewall.State on Windows
 - Implemented disk latency parameters in Linux agent (System.IO.WaitTime, System.IO.ReadWaitTime, System.IO.WriteWaitTime)
@@ -20,6 +21,7 @@
 	NX-1176 (Handle routing loops during event correlation)
 	NX-1524 (Server configuration wizard is not visible on task bar)
 	NX-1556 (Add HMAC to every record in audit log table)
+	NX-1566 (NXSL Script Action to allow for parameters)
 	NX-1739 (When a node goes down and it's upstream port on a switch goes down, do not correlate those events)
 	NX-1753 (File downloads from agent and file upload to server should be logged to Audit Log)
 	NX-1801 (Strange if condition)

@@ -317,36 +317,57 @@ static bool ForwardEvent(const TCHAR *server, const Event *event)
 /**
  * Execute NXSL script
  */
-static bool ExecuteActionScript(const TCHAR *scriptName, const Event *event)
+static bool ExecuteActionScript(const TCHAR *script, const Event *event)
 {
+   TCHAR name[1024];
+   _tcslcpy(name, script, 1024);
+   Trim(name);
+
+   // Can be in form parameter(arg1, arg2, ... argN)
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != nullptr)
+   {
+      size_t l = _tcslen(name) - 1;
+      if (name[l] != _T(')'))
+         return false;
+      name[l] = 0;
+      *p = 0;
+   }
+
    bool success = false;
-	NXSL_VM *vm = CreateServerScriptVM(scriptName, FindObjectById(event->getSourceId()));
-	if (vm != NULL)
+	NXSL_VM *vm = CreateServerScriptVM(name, FindObjectById(event->getSourceId()));
+	if (vm != nullptr)
 	{
 		vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
 
-		// Pass event's parameters as arguments
-		NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * event->getParametersCount());
-		memset(ppValueList, 0, sizeof(NXSL_Value *) * event->getParametersCount());
-		for(int i = 0; i < event->getParametersCount(); i++)
-			ppValueList[i] = vm->createValue(event->getParameter(i));
+      ObjectRefArray<NXSL_Value> args(16, 16);
+      if ((p == nullptr) || ParseValueList(vm, &p, args))
+      {
+         // Pass event's parameters as arguments
+         for(int i = 0; i < event->getParametersCount(); i++)
+            args.add(vm->createValue(event->getParameter(i)));
 
-		if (vm->run(event->getParametersCount(), ppValueList))
-		{
-			nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: script %s successfully executed"), scriptName);
-			success = true;
-		}
-		else
-		{
-			nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: Script %s execution error: %s"), scriptName, vm->getErrorText());
-			PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
-		}
-	   free(ppValueList);
+         if (vm->run(args))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: script %s successfully executed"), name);
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: Script %s execution error: %s"), name, vm->getErrorText());
+            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), 0);
+         }
+      }
+      else
+      {
+         // argument parsing error
+         nxlog_debug(6, _T("ExecuteActionScript: Argument parsing error for script %s"), name);
+      }
       delete vm;
 	}
 	else
 	{
-		nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript(): Cannot find script %s"), scriptName);
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: Cannot find script %s"), name);
 	}
 	return success;
 }
@@ -447,7 +468,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 						   curr = next + 1;
 					   } while(next != NULL);
 #else
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("cannot send XMPP message to %s (server compiled without XMPP support)"), (const TCHAR *)expandedRcpt);
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("cannot send XMPP message to %s (server compiled without XMPP support)"), expandedRcpt.cstr());
 #endif
                }
                else
@@ -459,7 +480,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
             case ACTION_REMOTE:
                if (!expandedRcpt.isEmpty())
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing on \"%s\": \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing on \"%s\": \"%s\""), expandedRcpt.cstr(), expandedData.cstr());
                   success = ExecuteRemoteAction(expandedRcpt, expandedData);
                }
                else
@@ -471,7 +492,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 				case ACTION_FORWARD_EVENT:
                if (!expandedRcpt.isEmpty())
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), (const TCHAR *)expandedRcpt);
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), expandedRcpt.cstr());
                   success = ForwardEvent(expandedRcpt, event);
                }
                else
@@ -483,7 +504,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 				case ACTION_NXSL_SCRIPT:
                if (!expandedRcpt.isEmpty())
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), (const TCHAR *)expandedRcpt);
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), expandedRcpt.cstr());
                   success = ExecuteActionScript(expandedRcpt, event);
                }
                else
