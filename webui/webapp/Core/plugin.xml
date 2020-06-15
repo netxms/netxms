@@ -130,12 +130,6 @@
             sequence="M1+M3+S">
       </key>
       <key
-            commandId="org.netxms.ui.eclipse.library.commands.show_filter"
-            contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
-            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="M1+F2">
-      </key>
-      <key
             commandId="org.netxms.ui.eclipse.library.commands.pause_trace"
             contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
@@ -176,6 +170,12 @@
             id="org.netxms.ui.eclipse.defaultKeyBinding"
             name="%scheme.name">
       </scheme>
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
