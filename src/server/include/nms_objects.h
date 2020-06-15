@@ -4221,35 +4221,36 @@ struct ObjectQueryResult
 class UserAgentNotificationItem
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    TCHAR m_message[MAX_USER_AGENT_MESSAGE_SIZE];
-   IntegerArray<UINT32> m_objects;
+   IntegerArray<uint32_t> m_objects;
    time_t m_startTime;
    time_t m_endTime;
    bool m_recall;
    bool m_onStartup;
    VolatileCounter m_refCount;
    time_t m_creationTime;
-   uint32_t m_creatiorId;
+   uint32_t m_creatorId;
 
 public:
    UserAgentNotificationItem(DB_RESULT result, int row);
-   UserAgentNotificationItem(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool startup, uint32_t userId);
+   UserAgentNotificationItem(const TCHAR *message, const IntegerArray<uint32_t>& objects, time_t startTime, time_t endTime, bool startup, uint32_t userId);
    ~UserAgentNotificationItem() { }
 
-   UINT32 getId() { return m_id; }
-   time_t getEndTime() { return m_endTime; }
-   time_t getStartTime() { return m_startTime; }
-   bool isRecalled() { return m_recall; }
+   uint32_t getId() const { return m_id; }
+   time_t getEndTime() const { return m_endTime; }
+   time_t getStartTime() const { return m_startTime; }
+   time_t getCreationTime() const { return m_creationTime; }
+   bool isRecalled() const { return m_recall; }
 
    void recall() { m_recall = true; processUpdate(); };
    void processUpdate();
-   bool isApplicable(UINT32 nodeId);
-   void fillMessage(UINT32 base, NXCPMessage *msg, bool fullInfo = true);
+   bool isApplicable(uint32_t nodeId) const;
+   void fillMessage(uint32_t base, NXCPMessage *msg, bool fullInfo = true) const;
    void saveToDatabase();
    void incRefCount() { InterlockedIncrement(&m_refCount); }
    void decRefCount() { InterlockedDecrement(&m_refCount); }
-   bool hasNoRef() { return m_refCount == 0; }
+   bool hasNoRef() const { return m_refCount == 0; }
 
    json_t *toJson() const;
 };

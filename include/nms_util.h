@@ -1402,14 +1402,13 @@ public:
  */
 template <class T> class IntegerArray : public Array
 {
-   DISABLE_COPY_CTOR(IntegerArray)
-
 private:
 	static void destructor(void *element, Array *array) { }
 
 public:
-	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
+	IntegerArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
 	IntegerArray(const IntegerArray<T> *src) : Array(src) { }
+   IntegerArray(const IntegerArray<T>& src) : Array(&src) { }
 	virtual ~IntegerArray() { }
 
    int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }

@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 
-
 Mutex g_userAgentNotificationListMutex;
 ObjectArray<UserAgentNotificationItem> g_userAgentNotificationList(0, 16, Ownership::True);
 
@@ -138,14 +137,14 @@ UserAgentNotificationItem::UserAgentNotificationItem(DB_RESULT result, int row) 
    m_recall = DBGetFieldLong(result, row, 5) ? true : false;
    m_onStartup = DBGetFieldLong(result, row, 6) ? true : false;
    m_creationTime = DBGetFieldLong(result, row, 7);
-   m_creatiorId = DBGetFieldLong(result, row, 8);
+   m_creatorId = DBGetFieldLong(result, row, 8);
    m_refCount = 0;
 }
 
 /**
  * Create new user agent message
  */
-UserAgentNotificationItem::UserAgentNotificationItem(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool startup, uint32_t userId) : m_objects(objects)
+UserAgentNotificationItem::UserAgentNotificationItem(const TCHAR *message, const IntegerArray<uint32_t>& objects, time_t startTime, time_t endTime, bool startup, uint32_t userId) : m_objects(objects)
 {
    m_id = CreateUniqueId(IDG_UA_MESSAGE);
    _tcslcpy(m_message, message, MAX_USER_AGENT_MESSAGE_SIZE);
@@ -155,18 +154,18 @@ UserAgentNotificationItem::UserAgentNotificationItem(const TCHAR *message, const
    m_onStartup = startup;
    m_refCount = 0;
    m_creationTime = time(nullptr);
-   m_creatiorId = userId;
+   m_creatorId = userId;
 }
 
 /**
  * Check if user agent message is applicable on the node
  */
-bool UserAgentNotificationItem::isApplicable(UINT32 nodeId)
+bool UserAgentNotificationItem::isApplicable(uint32_t nodeId) const
 {
    for (int i = 0; i < m_objects.size(); i++)
    {
-      UINT32 id = m_objects.get(i);
-      if(id == nodeId || IsParentObject(id, nodeId))
+      uint32_t id = m_objects.get(i);
+      if ((id == nodeId) || IsParentObject(id, nodeId))
          return true;
    }
    return false;
@@ -224,7 +223,7 @@ void UserAgentNotificationItem::processUpdate()
 /**
  * Fill message with user agent message data
  */
-void UserAgentNotificationItem::fillMessage(UINT32 base, NXCPMessage *msg, bool fullInfo)
+void UserAgentNotificationItem::fillMessage(UINT32 base, NXCPMessage *msg, bool fullInfo) const
 {
    msg->setField(base, m_id);
    msg->setField(base + 1, m_message);
@@ -235,8 +234,8 @@ void UserAgentNotificationItem::fillMessage(UINT32 base, NXCPMessage *msg, bool 
    {
       msg->setFieldFromInt32Array(base + 5, &m_objects);
       msg->setField(base + 6, m_recall);
-      msg->setField(base + 7, m_creationTime);
-      msg->setField(base + 8, m_creatiorId);
+      msg->setFieldFromTime(base + 7, m_creationTime);
+      msg->setField(base + 8, m_creatorId);
    }
 }
 
@@ -265,12 +264,12 @@ void UserAgentNotificationItem::saveToDatabase()
          buffer.append(m_objects.get(i));
       }
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, buffer, MAX_USER_AGENT_MESSAGE_SIZE);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)m_startTime);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_endTime);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_startTime));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_endTime));
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, (m_recall ? _T("1") : _T("0")), DB_BIND_STATIC);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, (m_onStartup ? _T("1") : _T("0")), DB_BIND_STATIC);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_creationTime);
-      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_creatiorId);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_creatorId);
       DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
 
       DBExecute(hStmt);
@@ -293,6 +292,6 @@ json_t *UserAgentNotificationItem::toJson() const
    json_object_set_new(root, "endTime", json_integer(m_endTime));
    json_object_set_new(root, "recalled", json_boolean(m_recall));
    json_object_set_new(root, "creationTime", json_boolean(m_creationTime));
-   json_object_set_new(root, "createdBy", json_boolean(m_creatiorId));
+   json_object_set_new(root, "createdBy", json_boolean(m_creatorId));
    return root;
 }
