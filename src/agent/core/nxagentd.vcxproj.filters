@@ -124,6 +124,9 @@
     <ClCompile Include="websvc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="nproc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="messages.h">

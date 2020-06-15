@@ -280,13 +280,13 @@ static void ProcessRequest(NXCPMessage *request)
  */
 static void ProcessMessages()
 {
-   NXCPEncryptionContext *dummyCtx = NULL;
+   NXCPEncryptionContext *dummyCtx = nullptr;
    NXCPInitBuffer(&s_msgBuffer);
    UINT32 rawMsgSize = 65536;
-   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
+   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)MemAlloc(rawMsgSize);
    while(true)
    {
-      int err = RecvNXCPMessageEx(s_socket, &rawMsg, &s_msgBuffer, &rawMsgSize, &dummyCtx, NULL, 900000, 4 * 1024 * 1024);
+      ssize_t err = RecvNXCPMessageEx(s_socket, &rawMsg, &s_msgBuffer, &rawMsgSize, &dummyCtx, nullptr, 900000, 4 * 1024 * 1024);
       if (err <= 0)
          break;
 
@@ -306,17 +306,18 @@ static void ProcessMessages()
       }
 
       // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(rawMsg->size) != err)
+      if (static_cast<ssize_t>(ntohl(rawMsg->size)) != err)
       {
-         _tprintf(_T("Actual message size doesn't match wSize value (%d,%d)\n"), err, ntohl(rawMsg->size));
+         _tprintf(_T("Actual message size doesn't match size value in header (%u != %u)\n"),
+            static_cast<uint32_t>(err), ntohl(rawMsg->size));
          continue;   // Bad packet, wait for next
       }
 
-      UINT16 flags = ntohs(rawMsg->flags);
+      uint16_t flags = ntohs(rawMsg->flags);
       if (!(flags & MF_BINARY))
       {
          NXCPMessage *msg = NXCPMessage::deserialize(rawMsg);
-         if (msg != NULL)
+         if (msg != nullptr)
          {
             TCHAR msgCodeName[256];
             _tprintf(_T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));

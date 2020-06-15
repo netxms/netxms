@@ -684,8 +684,8 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
    bool useRecipientName = recipient[0] == _T('@');
    if (!useRecipientName)
    {
-      int numCount = _tcsspn((recipient[0] != _T('-')) ? recipient : (recipient + 1), NUMBERS_TEXT);
-      int textLen = _tcslen(recipient);
+      size_t numCount = _tcsspn((recipient[0] != _T('-')) ? recipient : (recipient + 1), NUMBERS_TEXT);
+      size_t textLen = _tcslen(recipient);
       useRecipientName = (recipient[0] == _T('-')) ? (numCount == (textLen - 1)) : (numCount == textLen);
    }
 
