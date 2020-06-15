@@ -27,7 +27,6 @@
  * Static data
  */
 static UINT64 s_generatedEventsCount = 0;
-static UINT64 s_sentEventsCount = 0;
 static UINT64 s_eventIdBase = static_cast<UINT64>(time(NULL)) << 32;
 static VolatileCounter s_eventIdCounter = 0;
 static time_t s_lastEventTimestamp = 0;
@@ -35,34 +34,36 @@ static time_t s_lastEventTimestamp = 0;
 /**
  * Send event to server
  */
-void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int pcount, const TCHAR **parameters)
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int argc, const TCHAR **argv)
 {
    if (nxlog_get_debug_level() >= 5)
    {
       StringBuffer argsText;
-      for(int i = 0; i < pcount; i++)
+      for(int i = 0; i < argc; i++)
       {
          argsText.append(_T(", arg["));
          argsText.append(i);
          argsText.append(_T("]=\""));
-         argsText.append(CHECK_NULL(parameters[i]));
+         argsText.append(CHECK_NULL(argv[i]));
          argsText.append(_T('"'));
       }
       nxlog_debug(5, _T("PostEvent(): event_code=%d, event_name=%s, timestamp=") INT64_FMT _T(", num_args=%d%s"),
-                  eventCode, CHECK_NULL(eventName), static_cast<INT64>(timestamp), pcount, (const TCHAR *)argsText);
+                  eventCode, CHECK_NULL(eventName), static_cast<INT64>(timestamp), argc, (const TCHAR *)argsText);
    }
 
    NXCPMessage *msg = new NXCPMessage(CMD_TRAP, 0, 4); // Use version 4
-	msg->setField(VID_TRAP_ID, s_eventIdBase | static_cast<UINT64>(InterlockedIncrement(&s_eventIdCounter)));
+	msg->setField(VID_TRAP_ID, s_eventIdBase | static_cast<uint64_t>(InterlockedIncrement(&s_eventIdCounter)));
    msg->setField(VID_EVENT_CODE, eventCode);
-	if (eventName != NULL)
+	if (eventName != nullptr)
 		msg->setField(VID_EVENT_NAME, eventName);
-	msg->setFieldFromTime(VID_TIMESTAMP, (timestamp != 0) ? timestamp : time(NULL));
-   msg->setField(VID_NUM_ARGS, (WORD)pcount);
-   for(int i = 0; i < pcount; i++)
-      msg->setField(VID_EVENT_ARG_BASE + i, parameters[i]);
-	s_generatedEventsCount++;
-	s_lastEventTimestamp = time(NULL);
+	msg->setFieldFromTime(VID_TIMESTAMP, (timestamp != 0) ? timestamp : time(nullptr));
+   msg->setField(VID_NUM_ARGS, static_cast<uint16_t>(argc));
+   for(int i = 0; i < argc; i++)
+      msg->setField(VID_EVENT_ARG_BASE + i, argv[i]);
+
+   s_generatedEventsCount++;
+	s_lastEventTimestamp = time(nullptr);
+
 	g_notificationProcessorQueue.put(msg);
 }
 
@@ -82,57 +83,57 @@ void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int p
  *        D - 64-bit decimal integer
  *        X - 64-bit hex integer
  */
-void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const char *format, va_list args)
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, va_list args)
 {
-   int i, iNumArgs;
-   TCHAR *ppArgList[64];
+   int i, argc;
+   TCHAR *argv[64];
    static TCHAR badFormat[] = _T("BAD FORMAT");
 
-   iNumArgs = (format == NULL) ? 0 : (int)strlen(format);
-   for(i = 0; i < iNumArgs; i++)
+   argc = (format == nullptr) ? 0 : static_cast<int>(strlen(format));
+   for(i = 0; i < argc; i++)
    {
       switch(format[i])
       {
          case 's':
-            ppArgList[i] = va_arg(args, TCHAR *);
+            argv[i] = va_arg(args, TCHAR *);
             break;
          case 'm':
 #ifdef UNICODE
-            ppArgList[i] = WideStringFromMBString(va_arg(args, char *));
+            argv[i] = WideStringFromMBString(va_arg(args, char *));
 #else
-            ppArgList[i] = va_arg(args, char *);
+            argv[i] = va_arg(args, char *);
 #endif
             break;
          case 'd':
-            ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));   //
-            _sntprintf(ppArgList[i], 16, _T("%d"), va_arg(args, LONG)); //
+            argv[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
+            _sntprintf(argv[i], 16, _T("%d"), va_arg(args, int32_t));
             break;
          case 'D':
-            ppArgList[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
-            _sntprintf(ppArgList[i], 32, INT64_FMT, va_arg(args, INT64));
+            argv[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
+            _sntprintf(argv[i], 32, INT64_FMT, va_arg(args, int64_t));
             break;
          case 'x':
          case 'i':
-            ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-            _sntprintf(ppArgList[i], 16, _T("0x%08X"), va_arg(args, UINT32));
+            argv[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
+            _sntprintf(argv[i], 16, _T("0x%08X"), va_arg(args, uint32_t));
             break;
          case 'X':
-            ppArgList[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
-            _sntprintf(ppArgList[i], 32, UINT64X_FMT(_T("016")), va_arg(args, QWORD));
+            argv[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
+            _sntprintf(argv[i], 32, UINT64X_FMT(_T("016")), va_arg(args, uint64_t));
             break;
          case 'a':
-            ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-            IpToStr(va_arg(args, UINT32), ppArgList[i]);
+            argv[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
+            IpToStr(va_arg(args, uint32_t), argv[i]);
             break;
          default:
-            ppArgList[i] = badFormat;
+            argv[i] = badFormat;
             break;
       }
    }
 
-   PostEvent(eventCode, eventName, timestamp, iNumArgs, const_cast<const TCHAR**>(ppArgList));
+   PostEvent(eventCode, eventName, timestamp, argc, const_cast<const TCHAR**>(argv));
 
-   for(i = 0; i < iNumArgs; i++)
+   for(i = 0; i < argc; i++)
       if ((format[i] == 'd') || (format[i] == 'x') ||
          (format[i] == 'D') || (format[i] == 'X') ||
          (format[i] == 'i') || (format[i] == 'a')
@@ -141,7 +142,7 @@ void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const
 #endif
          )
       {
-         free(ppArgList[i]);
+         MemFree(argv[i]);
       }
 }
 
@@ -149,7 +150,7 @@ void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const
  * Send event - variant 3
  * Same as variant 2, but uses argument list instead of va_list
  */
-void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...)
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -177,9 +178,6 @@ LONG H_AgentEventSender(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstra
 	{
 		case 'G':
 			ret_uint64(value, s_generatedEventsCount);
-			break;
-		case 'S':
-			ret_uint64(value, s_sentEventsCount);
 			break;
 		case 'T':
 			ret_uint64(value, static_cast<UINT64>(s_lastEventTimestamp));

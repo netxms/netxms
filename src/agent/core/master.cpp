@@ -119,7 +119,7 @@ static NamedPipe *s_pipe = nullptr;
 /**
  * Listener thread for master agent commands
  */
-THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
+void MasterAgentListener()
 {
    while(!(g_dwFlags & AF_SHUTDOWN))
 	{
@@ -221,7 +221,6 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 		}
 	}
 	AgentWriteDebugLog(1, _T("Master agent listener stopped"));
-	return THREAD_OK;
 }
 
 /**

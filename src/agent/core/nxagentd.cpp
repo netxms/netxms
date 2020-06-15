@@ -63,12 +63,12 @@ NETXMS_EXECUTABLE_HEADER(nxagentd)
 /**
  * Externals
  */
-THREAD_RESULT THREAD_CALL ListenerThread(void *);
-THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
-THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg);
-THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
-THREAD_RESULT THREAD_CALL SyslogReceiver(void *);
-THREAD_RESULT THREAD_CALL TunnelManager(void *);
+void ListenerThread();
+void SessionWatchdog();
+void MasterAgentListener();
+void SNMPTrapReceiver();
+void SyslogReceiver();
+void TunnelManager();
 
 #ifdef _WIN32
 THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *);
@@ -77,8 +77,8 @@ THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *);
 void StartLocalDataCollector();
 void ShutdownLocalDataCollector();
 
-void StartNotificationSync();
-void ShutdownNotificationSync();
+void StartNotificationProcessor();
+void StopNotificationProcessor();
 
 void LoadUserAgentNotifications();
 
@@ -1268,23 +1268,23 @@ BOOL Initialize()
 	StartParamProvidersPoller();
 
    // Agent start time
-   g_tmAgentStartTime = time(NULL);
+   g_tmAgentStartTime = time(nullptr);
 
-   StartNotificationSync();
+   StartNotificationProcessor();
 
 	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
-      s_snmpTrapReceiverThread = ThreadCreateEx(SNMPTrapReceiver, 0, NULL);
+      s_snmpTrapReceiverThread = ThreadCreateEx(SNMPTrapReceiver);
    }
 
    if (g_dwFlags & AF_ENABLE_SYSLOG_PROXY)
    {
-      s_syslogReceiverThread = ThreadCreateEx(SyslogReceiver, 0, NULL);
+      s_syslogReceiverThread = ThreadCreateEx(SyslogReceiver);
    }
 
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
-		s_masterAgentListenerThread = ThreadCreateEx(MasterAgentListener, 0, NULL);
+		s_masterAgentListenerThread = ThreadCreateEx(MasterAgentListener);
 	}
 	else
 	{
@@ -1292,8 +1292,8 @@ BOOL Initialize()
       StartLocalDataCollector();
       if (g_wListenPort != 0)
       {
-         s_listenerThread = ThreadCreateEx(ListenerThread, 0, NULL);
-         s_sessionWatchdogThread = ThreadCreateEx(SessionWatchdog, 0, NULL);
+         s_listenerThread = ThreadCreateEx(ListenerThread);
+         s_sessionWatchdogThread = ThreadCreateEx(SessionWatchdog);
       }
       else
       {
@@ -1311,7 +1311,7 @@ BOOL Initialize()
          RegisterOnServer(g_szRegistrar, g_zoneUIN);
       }
 
-      s_tunnelManagerThread = ThreadCreateEx(TunnelManager, 0, NULL);
+      s_tunnelManagerThread = ThreadCreateEx(TunnelManager);
 	}
 
 #ifdef _WIN32
@@ -1380,7 +1380,6 @@ void Shutdown()
 
    g_dwFlags |= AF_SHUTDOWN;
    InitiateProcessShutdown();
-   ShutdownNotificationSync();
 
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
@@ -1404,6 +1403,7 @@ void Shutdown()
       ThreadJoin(s_syslogReceiverThread);
    }
 
+   StopNotificationProcessor();
 	DestroySessionList();
 
    if (!(g_dwFlags & AF_SUBAGENT_LOADER))

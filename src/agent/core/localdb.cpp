@@ -202,8 +202,8 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  PRIMARY KEY(server_id))"),
 
    _T("CREATE TABLE notification_data (")
-   _T("  id integer not null,")
    _T("  server_id number(20) not null,")
+   _T("  id integer not null,")
    _T("  serialized_data TEXT not null,")
    _T("  PRIMARY KEY(server_id,id))"),
 

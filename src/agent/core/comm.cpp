@@ -221,7 +221,7 @@ AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *,
 /**
  * TCP/IP Listener
  */ 
-THREAD_RESULT THREAD_CALL ListenerThread(void *)
+void ListenerThread()
 {
    // Create socket(s)
    SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : CreateSocket(AF_INET, SOCK_STREAM, 0);
@@ -497,13 +497,12 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    closesocket(hSocket6);
 #endif
    nxlog_debug(1, _T("Listener thread terminated"));
-   return THREAD_OK;
 }
 
 /**
  * Session watchdog thread
  */
-THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
+void SessionWatchdog()
 {
    m_mutexWatchdogActive = MutexCreate();
    MutexLock(m_mutexWatchdogActive);
@@ -535,8 +534,6 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    ThreadSleep(1);
    MutexUnlock(m_mutexWatchdogActive);
    DebugPrintf(1, _T("Session Watchdog thread terminated"));
-
-   return THREAD_OK;
 }
 
 /**

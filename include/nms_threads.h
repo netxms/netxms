@@ -1395,6 +1395,54 @@ StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
 void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, uint32_t waitTimeHWM, uint32_t waitTimeLWM);
 
 /**
+ * Wrapper for ThreadPoolExecute for function without arguments
+ */
+static inline void ThreadPoolExecute_NoArg_Wrapper(void *arg)
+{
+   ((void (*)())arg)();
+}
+
+/**
+ * Wrapper for ThreadPoolExecute for function without arguments
+ */
+static inline void ThreadPoolExecute(ThreadPool *p, void (*f)())
+{
+   ThreadPoolExecute(p, ThreadPoolExecute_NoArg_Wrapper, (void *)f);
+}
+
+/**
+ * Wrapper for ThreadPoolExecuteSerialized for function without arguments
+ */
+static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)())
+{
+   ThreadPoolExecuteSerialized(p, key, ThreadPoolExecute_NoArg_Wrapper, (void *)f);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleAbsolute for function without arguments
+ */
+static inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, void (*f)())
+{
+   ThreadPoolScheduleAbsolute(p, runTime, ThreadPoolExecute_NoArg_Wrapper, (void *)f);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleAbsoluteMs for function without arguments
+ */
+static inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, void (*f)())
+{
+   ThreadPoolScheduleAbsoluteMs(p, runTime, ThreadPoolExecute_NoArg_Wrapper, (void *)f);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleRelative for function without arguments
+ */
+static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)())
+{
+   ThreadPoolScheduleRelative(p, delay, ThreadPoolExecute_NoArg_Wrapper, (void *)f);
+}
+
+/**
  * Wrapper for ThreadPoolExecute to use pointer to given type as argument
  */
 template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(T *), T *arg)

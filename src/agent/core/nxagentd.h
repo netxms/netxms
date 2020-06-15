@@ -783,9 +783,9 @@ bool WaitForProcess(const TCHAR *name);
 
 UINT32 UpgradeAgent(TCHAR *pszPkgFile);
 
-void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int iNumArgs, const TCHAR **ppArgList);
-void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const char *pszFormat, ...);
-void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const char *pszFormat, va_list args);
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int argc, const TCHAR **argv);
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...);
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, va_list args);
 void ForwardEvent(NXCPMessage *msg);
 
 void StartPushConnector();

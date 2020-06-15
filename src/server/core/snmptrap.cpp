@@ -715,7 +715,7 @@ static SNMP_Transport *CreateTransport(SOCKET hSocket)
 /**
  * SNMP trap receiver thread
  */
-THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
+void SNMPTrapReceiver()
 {
    static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
    SNMP_Engine localEngine(engineId, 12);
@@ -735,7 +735,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to create socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
-      return THREAD_OK;
+      return;
    }
 
    SetSocketExclusiveAddrUse(hSocket);
@@ -833,7 +833,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    if (bindFailures == 2)
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP trap receiver aborted - cannot bind at least one socket"));
-      return THREAD_OK;
+      return;
    }
 
    if (hSocket != INVALID_SOCKET)
@@ -938,7 +938,6 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    delete snmp6;
 #endif
    nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP Trap Receiver terminated"));
-   return THREAD_OK;
 }
 
 /**

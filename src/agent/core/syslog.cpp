@@ -72,7 +72,7 @@ LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Syslog messages receiver thread
  */
-THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
+void SyslogReceiver()
 {
    UINT64 id = (UINT64)time(NULL) << 32;
    SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : CreateSocket(AF_INET, SOCK_DGRAM, 0);
@@ -87,7 +87,7 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
 #endif
    {
       nxlog_debug(1, _T("SyslogReceiver: cannot create socket"));
-      return THREAD_OK;
+      return;
    }
 
    SetSocketExclusiveAddrUse(hSocket);
@@ -185,7 +185,7 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
    if (bindFailures == 2)
    {
       nxlog_debug(1, _T("Syslog receiver aborted - cannot bind at least one socket"));
-      return THREAD_OK;
+      return;
    }
 
    if (hSocket != INVALID_SOCKET)
@@ -257,5 +257,4 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
 #endif
 
    nxlog_debug(1, _T("Syslog receiver thread stopped"));
-   return THREAD_OK;
 }

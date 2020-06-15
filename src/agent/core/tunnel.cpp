@@ -1412,13 +1412,13 @@ void ParseTunnelList(TCHAR *list)
 /**
  * Tunnel manager
  */
-THREAD_RESULT THREAD_CALL TunnelManager(void *)
+void TunnelManager()
 {
 #ifdef _WITH_ENCRYPTION
    if (s_tunnels.size() == 0)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("No tunnels configured, tunnel manager will not start"));
-      return THREAD_OK;
+      return;
    }
 
    g_tunnelKeepaliveInterval *= 1000;  // convert to milliseconds
@@ -1441,5 +1441,4 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
 #else
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Agent built without encryption support, tunnel manager will not start"));
 #endif
-   return THREAD_OK;
 }

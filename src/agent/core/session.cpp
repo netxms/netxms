@@ -33,7 +33,7 @@ void ClearDataCollectionConfiguration();
 UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request);
 UINT32 RemoveUserAgentNotification(UINT64 serverId, NXCPMessage *request);
 UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request);
-void OnIncommingSesstion(CommSession *session);
+void RegisterSessionForNotifications(CommSession *session);
 
 /**
  * SNMP proxy thread pool
@@ -629,7 +629,7 @@ void CommSession::processingThread()
                break;
             case CMD_ENABLE_AGENT_TRAPS:
                m_acceptTraps = true;
-               OnIncommingSesstion(this);
+               RegisterSessionForNotifications(this);
                response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_ENABLE_FILE_UPDATES:

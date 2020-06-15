@@ -108,7 +108,7 @@ THREAD_RESULT THREAD_CALL ClientListenerThread(void *);
 THREAD_RESULT THREAD_CALL MobileDeviceListenerThread(void *);
 THREAD_RESULT THREAD_CALL ISCListener(void *);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *);
-THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
+void SNMPTrapReceiver();
 THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
@@ -1070,7 +1070,7 @@ retry_db_lock:
    // Start SNMP trapper
    InitTraps();
    if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
-      ThreadCreate(SNMPTrapReceiver, 0, NULL);
+      ThreadCreate(SNMPTrapReceiver);
 
    // Start built-in syslog daemon
    StartSyslogServer();

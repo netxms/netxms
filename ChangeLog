@@ -27,6 +27,7 @@
 	NX-1846 (Server crash when querying Audit Log)
 	NX-1848 (Add getGuid method to org.netxms.client.events.EventTemplate class in Java API)
 	NX-1854 (When double-clicking a stacked graph in performance tab, it opens in a new view as non-stacked)
+	NX-1856 (Text in tooltip for user support application should be configurable)
 	NX-1860 (Parameters to get state of each Windows Firewall profile separately)
 	NX-1861 (Unable to add USM Credentials when zoning is ON)
 	NX-1862 (Lazy object synchronization breaks object-based link status display on maps)

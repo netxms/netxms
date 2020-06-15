@@ -54,12 +54,12 @@ struct SNMPPacket
 /**
  * SNMP trap read thread
  */
-THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
+void SNMPTrapReceiver()
 {
    if (g_dwFlags & AF_DISABLE_IPV4)
    {
       nxlog_debug(1, _T("SNMPTrapReceiver: IPv4 disabled, exiting"));
-      return THREAD_OK;
+      return;
    }
 
    SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
@@ -67,7 +67,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    {
       TCHAR buffer[1024];
       nxlog_debug(1, _T("SNMPTrapReceiver: cannot create socket (%s)"), GetLastSocketErrorText(buffer, 1024));
-      return THREAD_OK;
+      return;
    }
 
    SetSocketExclusiveAddrUse(hSocket);
@@ -101,7 +101,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       TCHAR buffer[1024];
       nxlog_debug(1, _T("SNMPTrapReceiver: cannot bind socket (%s)"), GetLastSocketErrorText(buffer, 1024));
       closesocket(hSocket);
-      return THREAD_OK;
+      return;
    }
 
    TCHAR ipAddrStr[64];
@@ -141,7 +141,6 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
    delete pTransport;
    DebugPrintf(1, _T("SNMP Trap Receiver terminated"));
-   return THREAD_OK;
 }
 
 /** Implementation of class SNMP_TrapProxyTransport **/
