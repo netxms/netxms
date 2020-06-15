@@ -48,6 +48,7 @@
 - Fixed bug in agent policy deployment in 2.x compatibility mode
 - Fixed bug in database export
 - Fixed issues:
+	NX-1696 (Database export error)
 	NX-1868 (Zone SNMP Configuration SNMP v3 "Modify" button spelt incorrectly)
 	NX-1869 (Environment variables in file delivery policy expanded on save)
 
