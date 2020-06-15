@@ -38,7 +38,7 @@ static bool H_UpgradeFromV6()
    //update one time notifications to delete on housekeeper old notifications
    time_t now = time(nullptr);
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("UPDATE user_agent_notifications SET creation_time=%d WHERE end_time=0"), now);
+   _sntprintf(query, 1024, _T("UPDATE user_agent_notifications SET creation_time=%u WHERE end_time=0"), (uint32_t)now);
    CHK_EXEC(SQLQuery(query));
 
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("user_agent_notifications"), _T("creation_time")));
