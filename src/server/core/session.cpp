@@ -10545,12 +10545,9 @@ void ClientSession::getServerFile(NXCPMessage *request)
  */
 void ClientSession::getAgentFile(NXCPMessage *request)
 {
-   NXCPMessage msg;
-	TCHAR remoteFile[MAX_PATH];
-	bool success = false;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+	bool success = false;
 
 	shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
 	if (object != nullptr)
@@ -10559,6 +10556,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
+			   TCHAR remoteFile[MAX_PATH];
 				request->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
             bool monitor = request->getFieldAsBoolean(VID_FILE_FOLLOW);
             shared_ptr<FileDownloadTask> task;
@@ -10589,6 +10587,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 
 				if (success)
 				{
+		         writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Initiated download of file \"%s\" from node %s"), remoteFile, object->getName());
 				   ThreadPoolExecute(g_clientThreadPool, task, &FileDownloadTask::run);
 				}
 			}
@@ -10599,6 +10598,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 		}
 		else
 		{
+		   writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on download file from node %s"), object->getName());
 			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
 		}
 	}
@@ -12134,8 +12134,7 @@ void ClientSession::uploadFileToAgent(NXCPMessage *request)
 					auto job = new FileUploadJob(static_pointer_cast<Node>(object), localFile, remoteFile, m_dwUserId, request->getFieldAsBoolean(VID_CREATE_JOB_ON_HOLD));
 					if (AddJob(job))
 					{
-						WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId,
-										  _T("File upload to agent initiated, local='%s' remote='%s'"), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
+						writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("File upload to node %s initiated, local=\"%s\", remote=\"%s\""), object->getName(), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
 						msg.setField(VID_JOB_ID, job->getId());
 						msg.setField(VID_RCC, RCC_SUCCESS);
 					}
@@ -12160,7 +12159,7 @@ void ClientSession::uploadFileToAgent(NXCPMessage *request)
 		else
 		{
 			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, nodeId, _T("Access denied on file upload"));
+			writeAuditLog(AUDIT_OBJECTS, false, nodeId, _T("Access denied on upload file to node %s"), object->getName());
 		}
 	}
 	else
@@ -12412,11 +12411,7 @@ void ClientSession::getVlans(NXCPMessage *request)
  */
 void ClientSession::receiveFile(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
@@ -12447,6 +12442,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
    }
    else
    {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on upload file to server"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -13238,47 +13234,43 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                      switch(request->getCode())
                      {
                         case CMD_GET_FOLDER_SIZE:
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                                         _T("Get size of agents folder \"%s\""), fileName);
+                           writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Get size of directory \"%s\" on node %s"), fileName, object->getName());
                            break;
                         case CMD_GET_FOLDER_CONTENT:
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                                         _T("Get content of agents folder \"%s\""), fileName);
+                           writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Get content of directory \"%s\" on node %s"), fileName, object->getName());
                            break;
                         case CMD_FILEMGR_DELETE_FILE:
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                                         _T("Delete agents file/folder \"%s\""), fileName);
+                           writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Delete file \"%s\" on node %s"), fileName, object->getName());
                            break;
                         case CMD_FILEMGR_RENAME_FILE:
                         {
                            TCHAR newFileName[MAX_PATH];
                            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                                         _T("Rename agents file/folder \"%s\" to \"%s\""), fileName, newFileName);
+                           writeAuditLog(AUDIT_OBJECTS, true, objectId,
+                                         _T("Rename file \"%s\" to \"%s\" on node %s"), fileName, newFileName, object->getName());
                            break;
                         }
                         case CMD_FILEMGR_MOVE_FILE:
                         {
                            TCHAR newFileName[MAX_PATH];
                            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                                         _T("Move agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
+                           writeAuditLog(AUDIT_OBJECTS, true, objectId,
+                                         _T("Move file \"%s\" to \"%s\" on node %s"), fileName, newFileName, object->getName());
                            break;
                         }
                         case CMD_FILEMGR_CREATE_FOLDER:
                         {
                            TCHAR newFileName[MAX_PATH];
                            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                                         _T("Create folder \"%s\""), fileName);
+                           writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Create directory \"%s\" on node %s"), fileName, object->getName());
                            break;
                         }
                         case CMD_FILEMGR_COPY_FILE:
                         {
                            TCHAR newFileName[MAX_PATH];
                            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                                         _T("Copy agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
+                           writeAuditLog(AUDIT_OBJECTS, true, objectId,
+                                         _T("Copy file \"%s\" to \"%s\" on node %s"), fileName, newFileName, object->getName());
                            break;
                         }
                      }
@@ -13317,46 +13309,40 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
 
 	if (rcc == RCC_ACCESS_DENIED)
 	{
+      TCHAR newFileName[MAX_PATH];
       switch(request->getCode())
       {
+         case CMD_GET_FOLDER_SIZE:
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on reading size of directory \"%s\" on node %s"),
+                     fileName, object->getName());
+            break;
          case CMD_GET_FOLDER_CONTENT:
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
-               _T("Acess denied to get content of agents folder \"%s\""), fileName);
-               break;
-         case CMD_FILEMGR_DELETE_FILE:
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
-               _T("Acess denied to delete agents file/folder \"%s\""), fileName);
-               break;
-         case CMD_FILEMGR_RENAME_FILE:
-         {
-            TCHAR newFileName[MAX_PATH];
-            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
-               _T("Acess denied to rename agents file/folder \"%s\" to \"%s\""), fileName, newFileName);
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on reading content of directory \"%s\" on node %s"),
+                     fileName, object->getName());
             break;
-         }
-         case CMD_FILEMGR_MOVE_FILE:
-         {
-            TCHAR newFileName[MAX_PATH];
-            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
-               _T("Acess denied to move agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
-            break;
-         }
          case CMD_FILEMGR_CREATE_FOLDER:
-         {
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
-               _T("Access denied to create folder \"%s\""), fileName);
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on create directory \"%s\" on node %s"), fileName,
+                     object->getName());
             break;
-         }
-         case CMD_FILEMGR_COPY_FILE:
-         {
-            TCHAR newFileName[MAX_PATH];
+         case CMD_FILEMGR_DELETE_FILE:
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on delete file \"%s\" on node %s"), fileName,
+                     object->getName());
+            break;
+         case CMD_FILEMGR_RENAME_FILE:
             request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
-               _T("Access denied to copy agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on rename file \"%s\" to \"%s\" on node %s"), fileName,
+                     newFileName, object->getName());
             break;
-         }
+         case CMD_FILEMGR_MOVE_FILE:
+            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on move file \"%s\" to \"%s\" on node %s"), fileName,
+                     newFileName, object->getName());
+            break;
+         case CMD_FILEMGR_COPY_FILE:
+            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on copy file \"%s\" to \"%s\" on node %s"), fileName,
+                     newFileName, object->getName());
+            break;
       }
 	}
 
@@ -13370,7 +13356,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
 void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
 {
    NXCPMessage msg, *response = nullptr, *responseMessage;
-	UINT32 rcc = RCC_INTERNAL_ERROR;
+	uint32_t rcc = RCC_INTERNAL_ERROR;
    responseMessage = &msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -13378,7 +13364,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
 
    TCHAR fileName[MAX_PATH];
    request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-   UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
 	if (object != nullptr)
 	{
@@ -13397,14 +13383,10 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                   rcc = response->getFieldAsUInt32(VID_RCC);
                   if (rcc == RCC_SUCCESS)
                   {
+                     writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Started direct upload of file \"%s\" to node %s"), fileName, object->getName());
                      response->setCode(CMD_REQUEST_COMPLETED);
                      response->setField(VID_ENABLE_COMPRESSION, conn->isCompressionAllowed());
                      responseMessage = response;
-
-                     //Add line in audit log
-                     WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                        _T("Started direct upload of file \"%s\" to agent"), fileName);
-                     //Set all required for file download
                      m_agentConnections.put(request->getId(), conn);
                   }
                   else
@@ -13440,8 +13422,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
 
 	if (rcc == RCC_ACCESS_DENIED)
 	{
-      WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
-            _T("Access denied for direct upload of file \"%s\" to agent"), fileName);
+      writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied for direct upload of file \"%s\" to node %s"), fileName, object->getName());
 	}
 
    sendMessage(responseMessage);
@@ -13477,7 +13458,7 @@ void ClientSession::getSwitchForwardingDatabase(NXCPMessage *request)
       else
       {
          msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, node->getId(), _T("Access denied on reading FDB"));
+         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on reading FDB"));
       }
    }
    else  // No object with given ID
