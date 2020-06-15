@@ -162,6 +162,20 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 }
 
 /**
+ * Atomically exchange 32-bit values
+ */
+inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, UINT32 exchange, UINT32 comparand)
+{
+#if HAVE_ATOMIC_H
+   return atomic_cas_32(target, comparand, exchange);
+#else
+   _Asm_mf(_DFLT_FENCE);
+   _Asm_mov_to_ar(_AREG_CCV, (uint64_t)comparand);
+   return (uint32_t)_Asm_cmpxchg(_SZ_W, _SEM_ACQ, (void *)target, (uint64_t)exchange, _LDHINT_NONE);
+#endif
+}
+
+/**
  * Atomically increment 64-bit value by 1
  */
 inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
@@ -207,6 +221,18 @@ inline void *InterlockedExchangePointer(void *volatile *target, void *value)
    return (void*)_Asm_xchg(_SZ_W, (void*)target, (uint32_t)value, _LDHINT_NONE);
 #endif
 #endif
+}
+
+/**
+ * Atomic bitwise OR
+ */
+inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
+{
+   uint32_t c;
+   do
+   {
+      c = *target;
+   } while(InterlockedCompareExchange(target, c | bits, c) != c);
 }
 
 #elif defined(_AIX)
