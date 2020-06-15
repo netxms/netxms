@@ -44,7 +44,7 @@ static bool H_UpgradeFromV6()
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("user_agent_notifications"), _T("creation_time")));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("user_agent_notifications"), _T("created_by")));
 
-   CHK_EXEC(SetMinorSchemaVersion(6));
+   CHK_EXEC(SetMinorSchemaVersion(7));
    return true;
 }
 
