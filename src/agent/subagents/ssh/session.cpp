@@ -158,28 +158,22 @@ void SSHSession::disconnect()
  */
 StringList *SSHSession::execute(const TCHAR *command)
 {
-   ssh_set_log_level(SSH_LOG_FUNCTIONS);
    if ((m_session == nullptr) || !ssh_is_connected(m_session))
    {
-      nxlog_debug(6, _T("SSH is not connected"));
+      nxlog_debug(6, _T("SSH: is not connected"));
       return nullptr;
    }
 
-   nxlog_debug(6, _T("Before ssh_channel_new"));
    ssh_channel channel = ssh_channel_new(m_session);
-   nxlog_debug(6, _T("After ssh_channel_new"));
    if (channel == nullptr)
    {
-      nxlog_debug(6, _T("SSH channel is null"));
+      nxlog_debug(6, _T("SSH: channel is null"));
       return nullptr;
    }
 
    StringList *output = nullptr;
-   nxlog_debug(6, _T("Before ssh_channel_open_session"));
    if (ssh_channel_open_session(channel) == SSH_OK)
    {
-      nxlog_debug(6, _T("After ssh_channel_open_session"));
-      nxlog_debug(6, _T("Before ssh_channel_request_exec"));
 #ifdef UNICODE
       char *mbcmd = UTF8StringFromWideString(command);
       if (ssh_channel_request_exec(channel, mbcmd) == SSH_OK)
@@ -187,15 +181,11 @@ StringList *SSHSession::execute(const TCHAR *command)
       if (ssh_channel_request_exec(channel, command) == SSH_OK)
 #endif
       {
-         nxlog_debug(6, _T("After ssh_channel_request_exec"));
          output = new StringList();
          char buffer[8192];
-         nxlog_debug(6, _T("Before ssh_channel_read"));
          //ThreadSleep(1);
          int nbytes = ssh_channel_read(channel, buffer, sizeof(buffer) - 1, 0);
-         nxlog_debug(6, _T("The number of bytes read by ssh_channel_read: %d"), nbytes);
          int offset = 0;
-         bool firstResult = false;//nbytes > 0;
          while(nbytes > 0)
          {
             buffer[nbytes + offset] = 0;
@@ -214,11 +204,9 @@ StringList *SSHSession::execute(const TCHAR *command)
             offset = (int)strlen(curr);
             if (offset > 0)
                memmove(buffer, curr, offset);
-            nxlog_debug(6, _T("Before ssh_channel_read"));
             nbytes = ssh_channel_read(channel, &buffer[offset], sizeof(buffer) - offset - 1, 0);
-            nxlog_debug(6, _T("The number of bytes read by ssh_channel_read: %d"), nbytes);
          }
-         if (nbytes == 0 || firstResult)
+         if (nbytes == 0)
          {
             if (offset > 0)
             {
