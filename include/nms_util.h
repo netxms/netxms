@@ -3002,9 +3002,9 @@ private:
    TCHAR *toStringInternalDecimal(TCHAR *buffer, const TCHAR separator) const;
 
 public:
-   MacAddress(size_t length = 0) : GenericId(length) { }
-   MacAddress(const BYTE *value, size_t length) : GenericId(value, length) { }
-   MacAddress(const MacAddress& src) : GenericId(src) { }
+   MacAddress(size_t length = 0) : GenericId<8>(length) { }
+   MacAddress(const BYTE *value, size_t length) : GenericId<8>(value, length) { }
+   MacAddress(const MacAddress& src) : GenericId<8>(src) { }
 
    static MacAddress parse(const char *str);
    static MacAddress parse(const WCHAR *str);
@@ -3012,8 +3012,8 @@ public:
    bool isValid() const { return !isNull(); }
    bool isBroadcast() const;
    bool isMulticast() const { return (m_length == 6) ? (m_value[0] & 0x01) != 0 : false; }
-   bool equals(const MacAddress &a) const { return GenericId::equals(a); }
-   bool equals(const BYTE *value, size_t length = 6) const { return GenericId::equals(value, length); }
+   bool equals(const MacAddress &a) const { return GenericId<8>::equals(a); }
+   bool equals(const BYTE *value, size_t length = 6) const { return GenericId<8>::equals(value, length); }
 
    TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
    String toString(MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
