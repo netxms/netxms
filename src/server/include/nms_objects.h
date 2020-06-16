@@ -2701,12 +2701,12 @@ template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
 class NXCORE_EXPORTABLE NodeHardwareId : public GenericId<HARDWARE_ID_LENGTH>
 {
 public:
-   NodeHardwareId() : GenericId(HARDWARE_ID_LENGTH) { }
-   NodeHardwareId(const BYTE *value) : GenericId(value, HARDWARE_ID_LENGTH) { }
-   NodeHardwareId(const NodeHardwareId& src) : GenericId(src) { }
+   NodeHardwareId() : GenericId<HARDWARE_ID_LENGTH>(HARDWARE_ID_LENGTH) { }
+   NodeHardwareId(const BYTE *value) : GenericId<HARDWARE_ID_LENGTH>(value, HARDWARE_ID_LENGTH) { }
+   NodeHardwareId(const NodeHardwareId& src) : GenericId<HARDWARE_ID_LENGTH>(src) { }
 
-   bool equals(const NodeHardwareId &a) const { return GenericId::equals(a); }
-   bool equals(const BYTE *value) const { return GenericId::equals(value, HARDWARE_ID_LENGTH); }
+   bool equals(const NodeHardwareId &a) const { return GenericId<HARDWARE_ID_LENGTH>::equals(a); }
+   bool equals(const BYTE *value) const { return GenericId<HARDWARE_ID_LENGTH>::equals(value, HARDWARE_ID_LENGTH); }
 };
 
 /**
