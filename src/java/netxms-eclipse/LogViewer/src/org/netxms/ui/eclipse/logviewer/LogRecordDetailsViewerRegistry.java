@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.logviewer;
 import java.util.HashMap;
 import java.util.Map;
 import org.netxms.ui.eclipse.logviewer.views.helpers.AuditLogRecordDetailsViewer;
+import org.netxms.ui.eclipse.logviewer.views.helpers.EventLogRecordDetailsViewer;
 
 /**
  * Registry for log record details viewers
@@ -35,6 +36,7 @@ public final class LogRecordDetailsViewerRegistry
    static
    {
       registry.put("AuditLog", new AuditLogRecordDetailsViewer());
+      registry.put("EventLog", new EventLogRecordDetailsViewer());
    }
 
    /**
