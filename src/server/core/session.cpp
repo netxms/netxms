@@ -69,8 +69,8 @@ void GetPredictionEngines(NXCPMessage *msg);
 bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, const DataCollectionTarget& dcTarget);
 
 void GetAgentTunnels(NXCPMessage *msg);
-UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
-UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
+uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
+uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 
 void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList);
 

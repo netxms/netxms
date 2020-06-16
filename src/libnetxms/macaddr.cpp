@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -36,17 +36,6 @@ const MacAddress LIBNETXMS_EXPORTABLE MacAddress::NONE;
 const MacAddress LIBNETXMS_EXPORTABLE MacAddress::ZERO(MAC_ADDR_LENGTH);
 
 /**
- * Returns true if MAC address is valid (has non-zero length and do not consists of all zeroes
- */
-bool MacAddress::isValid() const
-{
-   for(size_t i = 0; i < m_length; i++)
-      if (m_value[i] != 0)
-         return true;
-   return false;
-}
-
-/**
  * Returns true if it is the broadcast address
  */
 bool MacAddress::isBroadcast() const
@@ -60,7 +49,7 @@ bool MacAddress::isBroadcast() const
 }
 
 /**
- * Returns string representaiton of mac address
+ * Returns string representation of MAC address
  */
 TCHAR *MacAddress::toString(TCHAR *buffer, MacAddressNotation notation) const
 {
@@ -92,7 +81,7 @@ TCHAR *MacAddress::toString(TCHAR *buffer, MacAddressNotation notation) const
 }
 
 /**
- * Returns string representaiton of mac address
+ * Returns string representation of MAC address
  */
 String MacAddress::toString(MacAddressNotation notation) const
 {

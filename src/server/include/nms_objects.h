@@ -2696,6 +2696,20 @@ template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
 #endif
 
 /**
+ * Node hardware ID
+ */
+class NXCORE_EXPORTABLE NodeHardwareId : public GenericId<HARDWARE_ID_LENGTH>
+{
+public:
+   NodeHardwareId() : GenericId(HARDWARE_ID_LENGTH) { }
+   NodeHardwareId(const BYTE *value) : GenericId(value, HARDWARE_ID_LENGTH) { }
+   NodeHardwareId(const NodeHardwareId& src) : GenericId(src) { }
+
+   bool equals(const NodeHardwareId &a) const { return GenericId::equals(a); }
+   bool equals(const BYTE *value) const { return GenericId::equals(value, HARDWARE_ID_LENGTH); }
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -2754,7 +2768,7 @@ protected:
 	TCHAR *m_agentCertSubject;
    TCHAR m_agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR m_platformName[MAX_PLATFORM_NAME_LEN];
-   BYTE m_hardwareId[HARDWARE_ID_LENGTH];
+   NodeHardwareId m_hardwareId;
    TCHAR *m_snmpObjectId;
 	TCHAR *m_sysDescription;   // Agent's System.Uname or SNMP sysDescr
 	TCHAR *m_sysName;				// SNMP sysName
@@ -2993,7 +3007,7 @@ public:
    const uuid& getAgentId() const { return m_agentId; }
    const TCHAR *getAgentVersion() const { return m_agentVersion; }
    const TCHAR *getPlatformName() const { return m_platformName; }
-   const BYTE *getHardwareId() const { return m_hardwareId; }
+   const NodeHardwareId& getHardwareId() const { return m_hardwareId; }
    SNMP_Version getSNMPVersion() const { return m_snmpVersion; }
    uint16_t getSNMPPort() const { return m_snmpPort; }
    uint32_t getSNMPProxy() const { return m_snmpProxy; }
@@ -4288,6 +4302,8 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByMAC(const BYTE *macAddr);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByBridgeId(const BYTE *bridgeId);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByLLDPId(const TCHAR *lldpId);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeBySysName(const TCHAR *sysName);
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByAgentId(const uuid& agentId);
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByHardwareId(const NodeHardwareId& hardwareId);
 SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindNodesByHostname(int32_t zoneUIN, const TCHAR *hostname);
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByIP(int32_t zoneUIN, const InetAddress& ipAddr);
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const BYTE *macAddr);

@@ -1371,7 +1371,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "hardwareId"))
    {
       TCHAR buffer[HARDWARE_ID_LENGTH * 2 + 1];
-      value = vm->createValue(BinToStr(node->getHardwareId(), HARDWARE_ID_LENGTH, buffer));
+      value = vm->createValue(BinToStr(node->getHardwareId().value(), HARDWARE_ID_LENGTH, buffer));
    }
    else if (!strcmp(attr, "hasWinPDH"))
    {

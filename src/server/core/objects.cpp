@@ -852,10 +852,10 @@ shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByDescription(const TCHAR *
 /**
  * LLDP ID comparator
  */
-static bool LldpIdComparator(NetObj *object, void *lldpId)
+static bool LldpIdComparator(NetObj *object, const TCHAR *lldpId)
 {
-	const TCHAR *id = ((Node *)object)->getLLDPNodeId();
-	return (id != nullptr) && !_tcscmp(id, (const TCHAR *)lldpId);
+	const TCHAR *id = static_cast<Node*>(object)->getLLDPNodeId();
+	return (id != nullptr) && !_tcscmp(id, lldpId);
 }
 
 /**
@@ -863,7 +863,7 @@ static bool LldpIdComparator(NetObj *object, void *lldpId)
  */
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByLLDPId(const TCHAR *lldpId)
 {
-	return static_pointer_cast<Node>(g_idxNodeById.find(LldpIdComparator, (void *)lldpId));
+	return static_pointer_cast<Node>(g_idxNodeById.find(LldpIdComparator, lldpId));
 }
 
 /**
@@ -893,9 +893,9 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeBySysName(const TCHAR *sysName)
 /**
  * Bridge ID comparator
  */
-static bool BridgeIdComparator(NetObj *object, void *bridgeId)
+static bool BridgeIdComparator(NetObj *object, const BYTE *bridgeId)
 {
-	return ((Node *)object)->isBridge() && !memcmp(((Node *)object)->getBridgeId(), bridgeId, MAC_ADDR_LENGTH);
+	return static_cast<Node*>(object)->isBridge() && !memcmp(static_cast<Node*>(object)->getBridgeId(), bridgeId, MAC_ADDR_LENGTH);
 }
 
 /**
@@ -903,7 +903,43 @@ static bool BridgeIdComparator(NetObj *object, void *bridgeId)
  */
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByBridgeId(const BYTE *bridgeId)
 {
-	return static_pointer_cast<Node>(g_idxNodeById.find(BridgeIdComparator, (void *)bridgeId));
+	return static_pointer_cast<Node>(g_idxNodeById.find(BridgeIdComparator, bridgeId));
+}
+
+/**
+ * Agent ID comparator
+ */
+static bool AgentIdComparator(NetObj *object, const uuid *agentId)
+{
+   return static_cast<Node*>(object)->getAgentId().equals(*agentId);
+}
+
+/**
+ * Find node by agent ID
+ */
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByAgentId(const uuid& agentId)
+{
+   if (agentId.isNull())
+      return shared_ptr<Node>();
+   return static_pointer_cast<Node>(g_idxNodeById.find(AgentIdComparator, &agentId));
+}
+
+/**
+ * Hardware ID comparator
+ */
+static bool HardwareIdComparator(NetObj *object, const NodeHardwareId *hardwareId)
+{
+   return static_cast<Node*>(object)->getHardwareId().equals(*hardwareId);
+}
+
+/**
+ * Find node by hardware ID
+ */
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByHardwareId(const NodeHardwareId& hardwareId)
+{
+   if (hardwareId.isNull())
+      return shared_ptr<Node>();
+   return static_pointer_cast<Node>(g_idxNodeById.find(HardwareIdComparator, &hardwareId));
 }
 
 /**

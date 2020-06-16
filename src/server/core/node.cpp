@@ -115,7 +115,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_agentCertSubject = nullptr;
    m_agentVersion[0] = 0;
    m_platformName[0] = 0;
-   memset(m_hardwareId, 0, HARDWARE_ID_LENGTH);
    m_sysDescription = nullptr;
    m_sysName = nullptr;
    m_sysContact = nullptr;
@@ -229,7 +228,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_agentCertSubject = nullptr;
    m_agentVersion[0] = 0;
    m_platformName[0] = 0;
-   memset(m_hardwareId, 0, HARDWARE_ID_LENGTH);
    m_sysDescription = nullptr;
    m_sysName = nullptr;
    m_sysContact = nullptr;
@@ -516,7 +514,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_cipState = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 65));
    m_eipProxy = DBGetFieldULong(hResult, 0, 66);
    m_eipPort = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 67));
-   DBGetFieldByteArray2(hResult, 0, 68, m_hardwareId, HARDWARE_ID_LENGTH, 0);
+   BYTE hardwareId[HARDWARE_ID_LENGTH];
+   DBGetFieldByteArray2(hResult, 0, 68, hardwareId, HARDWARE_ID_LENGTH, 0);
+   m_hardwareId = NodeHardwareId(hardwareId);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -946,7 +946,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 66, DB_SQLTYPE_INTEGER, m_cipState);
          DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_eipProxy);
          DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_eipPort);
-         DBBind(hStmt, 69, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId, HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
+         DBBind(hStmt, 69, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
          DBBind(hStmt, 70, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
@@ -4055,9 +4055,9 @@ bool Node::confPollAgent(UINT32 rqId)
          BYTE hardwareId[HARDWARE_ID_LENGTH];
          StrToBin(buffer, hardwareId, sizeof(hardwareId));
          lockProperties();
-         if (memcmp(m_hardwareId, hardwareId, HARDWARE_ID_LENGTH))
+         if (!m_hardwareId.equals(hardwareId))
          {
-            memcpy(m_hardwareId, hardwareId, HARDWARE_ID_LENGTH);
+            m_hardwareId = NodeHardwareId(hardwareId);
             hasChanges = true;
             sendPollerMsg(rqId, _T("   Hardware ID changed to %s\r\n"), buffer);
          }
@@ -6696,7 +6696,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
    pMsg->setField(VID_AGENT_VERSION, m_agentVersion);
    pMsg->setField(VID_AGENT_ID, m_agentId);
-   pMsg->setField(VID_HARDWARE_ID, m_hardwareId, HARDWARE_ID_LENGTH);
+   pMsg->setField(VID_HARDWARE_ID, m_hardwareId.value(), HARDWARE_ID_LENGTH);
    pMsg->setField(VID_PLATFORM_NAME, m_platformName);
    pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);
    pMsg->setField(VID_ZONE_UIN, m_zoneUIN);

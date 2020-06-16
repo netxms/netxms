@@ -98,7 +98,7 @@ protected:
    time_t m_certificateExpirationTime;
    AgentTunnelState m_state;
    time_t m_startTime;
-   BYTE m_hardwareId[HARDWARE_ID_LENGTH];
+   NodeHardwareId m_hardwareId;
    TCHAR *m_systemName;
    TCHAR m_hostname[MAX_DNS_NAME];
    TCHAR *m_platformName;
@@ -145,7 +145,7 @@ public:
 
    uint32_t getId() const { return m_id; }
    const InetAddress& getAddress() const { return m_address; }
-   const BYTE *getHardwareId() const { return m_hardwareId; }
+   const NodeHardwareId& getHardwareId() const { return m_hardwareId; }
    const TCHAR *getSystemName() const { return CHECK_NULL_EX(m_systemName); }
    const TCHAR *getHostname() const { return m_hostname; }
    const TCHAR *getDisplayName() const { return (m_hostname[0] != 0) ? m_hostname : CHECK_NULL_EX(m_systemName); }
@@ -174,6 +174,6 @@ bool SetupServerTlsContext(SSL_CTX *context);
 /**
  * Get tunnel for node
  */
-AgentTunnel *GetTunnelForNode(UINT32 nodeId);
+AgentTunnel *GetTunnelForNode(uint32_t nodeId);
 
 #endif

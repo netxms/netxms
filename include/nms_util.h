@@ -2963,34 +2963,57 @@ enum class MacAddressNotation
 };
 
 /**
- * MAC address
+ * Generic unique ID class for identifiers based on array of bytes (EUI, MAC address, etc.)
  */
-class LIBNETXMS_EXPORTABLE MacAddress
+template<size_t MaxLen> class GenericId
 {
-private:
-   BYTE m_value[16];
+protected:
+   BYTE m_value[MaxLen];
    size_t m_length;
 
+public:
+   GenericId(size_t length = 0) { m_length = std::min(length, MaxLen); memset(m_value, 0, MaxLen); }
+   GenericId(const BYTE *value, size_t length) { memset(m_value, 0, MaxLen); m_length = std::min(length, MaxLen); memcpy(m_value, value, m_length); }
+   GenericId(const GenericId& src) { memcpy(m_value, src.m_value, MaxLen); m_length = src.m_length; }
+
+   const BYTE *value() const { return m_value; }
+   size_t length() const { return m_length; }
+
+   bool equals(const GenericId &a) const { return (a.length() == m_length) ? memcmp(m_value, a.value(), m_length) == 0 : false; }
+   bool equals(const BYTE *value, size_t length) const { return (length == m_length) ? memcmp(m_value, value, m_length) == 0 : false; }
+
+   bool isNull() const
+   {
+      for(size_t i = 0; i < m_length; i++)
+         if (m_value[i] != 0)
+            return false;
+      return true;
+   }
+};
+
+/**
+ * MAC address
+ */
+class LIBNETXMS_EXPORTABLE MacAddress : public GenericId<8>
+{
+private:
    TCHAR *toStringInternal(TCHAR *buffer, const TCHAR separator, bool bytePair = false) const;
    TCHAR *toStringInternal3(TCHAR *buffer, const TCHAR separator) const;
    TCHAR *toStringInternalDecimal(TCHAR *buffer, const TCHAR separator) const;
 
 public:
-   MacAddress(size_t length = 0) { m_length = MIN(length, 16); memset(m_value, 0, 16); }
-   MacAddress(const BYTE *value, size_t length) { memset(m_value, 0, 16); m_length = MIN(length, 16); memcpy(m_value, value, m_length); }
-   MacAddress(const MacAddress& src) { memcpy(m_value, src.m_value, 16); m_length = src.m_length; }
+   MacAddress(size_t length = 0) : GenericId(length) { }
+   MacAddress(const BYTE *value, size_t length) : GenericId(value, length) { }
+   MacAddress(const MacAddress& src) : GenericId(src) { }
 
    static MacAddress parse(const char *str);
    static MacAddress parse(const WCHAR *str);
 
-   const BYTE *value() const { return m_value; }
-   size_t length() const { return m_length; }
-
-   bool isValid() const;
+   bool isValid() const { return !isNull(); }
    bool isBroadcast() const;
    bool isMulticast() const { return (m_length == 6) ? (m_value[0] & 0x01) != 0 : false; }
-   bool equals(const MacAddress &a) const { return (a.length() == m_length) ? memcmp(m_value, a.value(), m_length) == 0 : false; }
-   bool equals(const BYTE *value, size_t length = 6) const { return (length == m_length) ? memcmp(m_value, value, m_length) == 0 : false; }
+   bool equals(const MacAddress &a) const { return GenericId::equals(a); }
+   bool equals(const BYTE *value, size_t length = 6) const { return GenericId::equals(value, length); }
 
    TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
    String toString(MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;

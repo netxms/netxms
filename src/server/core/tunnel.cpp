@@ -106,7 +106,7 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
 /**
  * Get tunnel for node. Caller must decrease reference counter on tunnel.
  */
-AgentTunnel *GetTunnelForNode(UINT32 nodeId)
+AgentTunnel *GetTunnelForNode(uint32_t nodeId)
 {
    s_tunnelListLock.lock();
    AgentTunnel *t = s_boundTunnels.get(nodeId);
@@ -117,7 +117,7 @@ AgentTunnel *GetTunnelForNode(UINT32 nodeId)
 /**
  * Bind agent tunnel
  */
-UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId)
+uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId)
 {
    AgentTunnel *tunnel = nullptr;
    s_tunnelListLock.lock();
@@ -141,7 +141,7 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId)
    TCHAR userName[MAX_USER_NAME];
    nxlog_debug_tag(DEBUG_TAG, 4, _T("BindAgentTunnel: processing bind request %u -> %u by user %s"),
             tunnelId, nodeId, ResolveUserId(userId, userName, true));
-   UINT32 rcc = tunnel->bind(nodeId, userId);
+   uint32_t rcc = tunnel->bind(nodeId, userId);
    tunnel->decRefCount();
    return rcc;
 }
@@ -149,7 +149,7 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId)
 /**
  * Unbind agent tunnel from node
  */
-UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId)
+uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
 {
    shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
    if (node == nullptr)
@@ -265,7 +265,6 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_zoneUIN = zoneUIN;
    m_certificateExpirationTime = certificateExpirationTime;
    m_state = AGENT_TUNNEL_INIT;
-   memset(m_hardwareId, 0, HARDWARE_ID_LENGTH);
    m_systemName = nullptr;
    m_platformName = nullptr;
    m_systemInfo = nullptr;
@@ -531,7 +530,9 @@ void AgentTunnel::setup(const NXCPMessage *request)
          if (p != nullptr)
             *p = 0;  // Remove git commit hash from version string
       }
-      request->getFieldAsBinary(VID_HARDWARE_ID, m_hardwareId, HARDWARE_ID_LENGTH);
+      size_t size;
+      const BYTE *hardwareId = request->getBinaryFieldPtr(VID_HARDWARE_ID, &size);
+      m_hardwareId = ((hardwareId != nullptr) && (size == HARDWARE_ID_LENGTH)) ? NodeHardwareId(hardwareId) : NodeHardwareId();
 
       m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
       response.setField(VID_RCC, ERR_SUCCESS);
@@ -541,13 +542,13 @@ void AgentTunnel::setup(const NXCPMessage *request)
       if (m_state != AGENT_TUNNEL_BOUND)
          m_zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
 
-      TCHAR hardwareId[HARDWARE_ID_LENGTH * 2 + 1];
+      TCHAR hardwareIdText[HARDWARE_ID_LENGTH * 2 + 1];
       debugPrintf(3, _T("%s tunnel initialized"), (m_state == AGENT_TUNNEL_BOUND) ? _T("Bound") : _T("Unbound"));
       debugPrintf(4, _T("   System name..............: %s"), m_systemName);
       debugPrintf(4, _T("   Hostname.................: %s"), m_hostname);
       debugPrintf(4, _T("   System information.......: %s"), m_systemInfo);
       debugPrintf(4, _T("   Platform name............: %s"), m_platformName);
-      debugPrintf(4, _T("   Hardware ID..............: %s"), BinToStr(m_hardwareId, HARDWARE_ID_LENGTH, hardwareId));
+      debugPrintf(4, _T("   Hardware ID..............: %s"), BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareIdText));
       debugPrintf(4, _T("   Agent ID.................: %s"), m_agentId.toString().cstr());
       debugPrintf(4, _T("   Agent version............: %s"), m_agentVersion);
       debugPrintf(4, _T("   Zone UIN.................: %d"), m_zoneUIN);
@@ -841,7 +842,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 14, m_snmpProxy);
    msg->setField(baseId + 15, m_snmpTrapProxy);
    msg->setFieldFromTime(baseId + 16, m_certificateExpirationTime);
-   msg->setField(baseId + 17, m_hardwareId, HARDWARE_ID_LENGTH);
+   msg->setField(baseId + 17, m_hardwareId.value(), HARDWARE_ID_LENGTH);
 }
 
 /**
@@ -1329,19 +1330,55 @@ void CloseAgentTunnels()
 }
 
 /**
- * Find matching node for tunnel
+ * Find matching node for tunnel using agent ID and hardware ID
  */
-static bool MatchTunnelToNode(NetObj *object, void *data)
+static bool MatchTunnelToNodeStage1(NetObj *object, AgentTunnel *tunnel)
 {
    Node *node = static_cast<Node*>(object);
-   AgentTunnel *tunnel = static_cast<AgentTunnel*>(data);
 
    if (!node->getTunnelId().isNull())
    {
       // Already have bound tunnel
-      // Assume that node is the same if agent ID match
-      return node->getAgentId().equals(tunnel->getAgentId());
+      AgentTunnel *activeTunnel = GetTunnelForNode(node->getId());
+      if (activeTunnel != nullptr)
+      {
+         // Node already have active tunnel, should not match
+         activeTunnel->decRefCount();
+         return false;
+      }
+
+      // Node has bound tunnel but it is not active
+      // Assume that node is the same if both agent ID and hardware ID match
+      if (node->getAgentId().equals(tunnel->getAgentId()) && node->getHardwareId().equals(tunnel->getHardwareId()))
+      {
+         TCHAR ipAddrText[64];
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s)"),
+                  node->getName(), node->getId(), tunnel->getDisplayName(), tunnel->getAddress().toString(ipAddrText));
+         return true;
+      }
+      return false;
    }
+
+   if (!node->getAgentId().isNull() && node->getAgentId().equals(tunnel->getAgentId()) && node->getHardwareId().equals(tunnel->getHardwareId()))
+   {
+      TCHAR ipAddrText[64];
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s)"),
+               node->getName(), node->getId(), tunnel->getDisplayName(), tunnel->getAddress().toString(ipAddrText));
+      return true;
+   }
+
+   return false;
+}
+
+/**
+ * Find matching node for tunnel using name or address
+ */
+static bool MatchTunnelToNodeStage2(NetObj *object, AgentTunnel *tunnel)
+{
+   Node *node = static_cast<Node*>(object);
+
+   if (!node->getTunnelId().isNull())
+      return false;
 
    if (IsZoningEnabled() && (tunnel->getZoneUIN() != node->getZoneUIN()))
       return false;  // Wrong zone
@@ -1393,6 +1430,17 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
    }
 
    return false;
+}
+
+/**
+ * Find matching node for tunnel
+ */
+static shared_ptr<Node> FindMatchingNode(AgentTunnel *tunnel)
+{
+   auto node = static_pointer_cast<Node>(g_idxNodeById.find(MatchTunnelToNodeStage1, tunnel));
+   if (node == nullptr)
+      node = static_pointer_cast<Node>(g_idxNodeById.find(MatchTunnelToNodeStage2, tunnel));
+   return node;
 }
 
 /**
@@ -1473,7 +1521,7 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             break;
          case BIND_NODE:
          case BIND_OR_CREATE_NODE:
-            shared_ptr<Node> node = static_pointer_cast<Node>(g_idxNodeById.find(MatchTunnelToNode, t));
+            shared_ptr<Node> node = FindMatchingNode(t);
             if (node != nullptr)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Binding tunnel from %s (%s) to existing node %s [%d]"),
