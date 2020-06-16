@@ -211,6 +211,7 @@
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.PhysicalLinkTab"
             contextId="org.netxms.ui.eclipse.objectview.context.PhysicalLinks"
+            icon="icons/physical_links.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.PhysicalLinkTab"
             name="Physical links"
             order="30">
