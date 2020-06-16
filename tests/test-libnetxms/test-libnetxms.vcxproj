@@ -172,6 +172,7 @@
     <ClCompile Include="mempool.cpp" />
     <ClCompile Include="nxcp.cpp" />
     <ClCompile Include="proc.cpp" />
+    <ClCompile Include="queue.cpp" />
     <ClCompile Include="test-libnetxms.cpp" />
     <ClCompile Include="threads.cpp" />
     <ClCompile Include="tp.cpp" />
