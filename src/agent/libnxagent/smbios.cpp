@@ -1040,6 +1040,11 @@ bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
    nxlog_debug_tag(DEBUG_TAG, 5, _T("System product name: %hs"), s_hardwareProduct);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("System serial number: %hs"), s_hardwareSerialNumber);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("System UUID: %s"), s_hardwareUUID.toString().cstr());
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Baseboard manufacturer: %hs"), s_baseboardManufacturer);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Baseboard product name: %hs"), s_baseboardProduct);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Baseboard serial number: %hs"), s_baseboardSerialNumber);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Baseboard type: %hs"), s_baseboardType);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Baseboard version: %hs"), s_baseboardVersion);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS vendor: %hs"), s_biosVendor);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS version: %hs"), s_biosVersion);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS address: %04X"), s_biosAddress);
