@@ -66,27 +66,27 @@ void ShowServerStats(CONSOLE_CTX console)
 /**
  * Show queue stats from function
  */
-void ShowQueueStats(CONSOLE_CTX console, INT64 size, const TCHAR *pszName)
+void ShowQueueStats(CONSOLE_CTX console, size_t size, const TCHAR *name)
 {
-   ConsolePrintf(console, _T("%-32s : %u\n"), pszName, static_cast<unsigned int>(size));
+   ConsolePrintf(console, _T("%-32s : %u\n"), name, static_cast<unsigned int>(size));
 }
 
 /**
  * Show queue stats
  */
-void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName)
+void ShowQueueStats(CONSOLE_CTX console, const Queue *queue, const TCHAR *name)
 {
-   if (pQueue != NULL)
-      ShowQueueStats(console, pQueue->size(), pszName);
+   if (queue != nullptr)
+      ShowQueueStats(console, queue->size(), name);
 }
 
 /**
  * Show queue stats
  */
-void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *pszName)
+void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *name)
 {
    int size;
-   if (p != NULL)
+   if (p != nullptr)
    {
       ThreadPoolInfo info;
       ThreadPoolGetInfo(p, &info);
@@ -96,7 +96,7 @@ void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR 
    {
       size = 0;
    }
-   ConsolePrintf(console, _T("%-32s : %d\n"), pszName, size);
+   ConsolePrintf(console, _T("%-32s : %d\n"), name, size);
 }
 
 /**
