@@ -42,7 +42,7 @@ SharedObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue;
 /**
  * Average time to queue DCI
  */
-UINT32 g_averageDCIQueuingTime = 0;
+uint32_t g_averageDCIQueuingTime = 0;
 
 /**
  * Collect data for DCI

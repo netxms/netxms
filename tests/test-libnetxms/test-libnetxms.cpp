@@ -4,7 +4,6 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
-#include <nxqueue.h>
 #include <nxcpapi.h>
 #include <nxproc.h>
 #include <testtools.h>
@@ -15,6 +14,8 @@ void TestGauge64();
 void TestMemoryPool();
 void TestObjectMemoryPool();
 void TestThreadPool();
+void TestQueue();
+void TestSharedObjectQueue();
 void TestMsgWaitQueue();
 void TestMessageClass();
 void TestMutex();
@@ -969,99 +970,6 @@ static void TestItoa()
    AssertTrue(!wcscmp(_itow(0555, wbuffer, 8), L"555"));
    AssertTrue(!wcscmp(_itow(0xFA48, wbuffer, 16), L"fa48"));
    EndTest();
-}
-
-/**
- * Test comparator for the queue
- */
-static bool TestQueueComparator(const void *key, const void *value)
-{
-   return strcmp(static_cast<const char*>(key), static_cast<const char*>(value)) == 0;
-}
-
-/**
- * Test queue
- */
-static void TestQueue()
-{
-   Queue *q = new Queue(16, Ownership::False);
-
-   StartTest(_T("Queue: put/get"));
-   for(int i = 0; i < 40; i++)
-      q->put(CAST_TO_POINTER(i + 1, void *));
-   AssertEquals(q->size(), 40);
-   AssertEquals(q->allocated(), 48);
-   for(int i = 0; i < 40; i++)
-   {
-      void *p = q->get();
-      AssertNotNull(p);
-      AssertEquals(CAST_FROM_POINTER(p, int), i + 1);
-   }
-   AssertEquals(q->size(), 0);
-   EndTest();
-
-   StartTest(_T("Queue: insert"));
-   for (int i = 0; i < 20; i++)
-      q->put((void*)"LowPriority");
-   AssertEquals(q->size(), 20);
-   q->insert((void*)"HighPriority");
-   AssertEquals(q->size(), 21);
-   AssertTrue(!strcmp(static_cast<char*>(q->get()), "HighPriority"));
-   AssertEquals(q->size(), 20);
-   AssertTrue(!strcmp(static_cast<char*>(q->get()), "LowPriority"));
-   AssertEquals(q->size(), 19);
-   EndTest();
-
-   StartTest(_T("Queue: find/remove"));
-   q->put((void*)"HighPriority");
-   q->put((void*)"LowPriority");
-   q->put((void*)"LowPriority");
-   AssertEquals(q->size(), 22);
-   AssertTrue(q->find("HighPriority", TestQueueComparator));
-   AssertEquals(q->size(), 22);
-   AssertTrue(q->remove("HighPriority", TestQueueComparator));
-   AssertFalse(q->find("HighPriority", TestQueueComparator));
-   EndTest();
-
-   StartTest(_T("Queue: clear"));
-   q->clear();
-   AssertEquals(q->size(), 0);
-   AssertEquals(q->allocated(), 16);
-   EndTest();
-
-   StartTest(_T("Queue: shrink"));
-   for(int i = 0; i < 60; i++)
-      q->put(CAST_TO_POINTER(i + 1, void *));
-   AssertEquals(q->size(), 60);
-   AssertEquals(q->allocated(), 64);
-   for(int i = 0; i < 55; i++)
-   {
-      void *p = q->get();
-      AssertNotNull(p);
-      AssertEquals(CAST_FROM_POINTER(p, int), i + 1);
-   }
-   AssertEquals(q->size(), 5);
-   AssertEquals(q->allocated(), 16);
-   EndTest();
-
-   StartTest(_T("Queue: performance"));
-   delete q;
-   q = new Queue();
-   INT64 startTime = GetCurrentTimeMs();
-   for(int i = 0; i < 100; i++)
-   {
-      for(int j = 0; j < 10000; j++)
-         q->put(CAST_TO_POINTER(j + 1, void *));
-      AssertEquals(q->size(), 10000);
-
-      void *p;
-      while((p = q->get()) != NULL)
-         ;
-      AssertEquals(q->size(), 0);
-   }
-   EndTest(GetCurrentTimeMs() - startTime);
-
-   delete q;
 }
 
 /**
@@ -2104,6 +2012,7 @@ int main(int argc, char *argv[])
    TestInetAddress();
    TestItoa();
    TestQueue();
+   TestSharedObjectQueue();
    TestHashMap();
    TestSharedHashMap();
    TestSynchronizedSharedHashMap();

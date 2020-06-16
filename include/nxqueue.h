@@ -92,7 +92,7 @@ public:
    size_t size() const { return m_size; }
    size_t allocated() const { return m_blockSize * m_blockCount; }
    void clear();
-	void *find(const void *key, QueueComparator comparator, void *(*transform)(void*) = NULL);
+	void *find(const void *key, QueueComparator comparator, void *(*transform)(void*) = nullptr);
 	bool remove(const void *key, QueueComparator comparator);
 	void forEach(QueueEnumerationCallback callback, void *context);
 };
@@ -128,14 +128,26 @@ template<typename T> class SharedObjectQueue : public Queue
    DISABLE_COPY_CTOR(SharedObjectQueue)
 
 private:
-   ObjectMemoryPool<shared_ptr<T>> m_pool;
+   SynchronizedObjectMemoryPool<shared_ptr<T>> m_pool;
 
    static void destructor(void *object, Queue *queue) { static_cast<SharedObjectQueue<T>*>(queue)->m_pool.destroy(static_cast<shared_ptr<T>*>(object)); }
 
 public:
-   SharedObjectQueue() : Queue(256, Ownership::True) { m_destructor = destructor; }
-   SharedObjectQueue(size_t blockSize) : Queue(blockSize, Ownership::True) { m_destructor = destructor; }
-   virtual ~SharedObjectQueue() { }
+   SharedObjectQueue() : Queue(256, Ownership::True)
+   {
+      m_destructor = destructor;
+   }
+   SharedObjectQueue(size_t blockSize) : Queue(blockSize, Ownership::True), m_pool(blockSize)
+   {
+      m_destructor = destructor;
+   }
+   virtual ~SharedObjectQueue()
+   {
+      // Explicit call to clear will cause destruction of any objects remaining in queue.
+      // Leaving it to Queue destructor can cause invalid memory access because memory
+      // pool with shared pointers will be destroyed before base class destructor call.
+      clear();
+   }
 
    shared_ptr<T> get()
    {
@@ -157,7 +169,7 @@ public:
    }
 
    void put(shared_ptr<T> object) { Queue::put(new(m_pool.allocate()) shared_ptr<T>(object)); }
-   void insert(void *object) { Queue::insert(new(m_pool.allocate()) shared_ptr<T>(object)); }
+   void insert(shared_ptr<T> object) { Queue::insert(new(m_pool.allocate()) shared_ptr<T>(object)); }
 };
 
 #endif    /* _nxqueue_h_ */

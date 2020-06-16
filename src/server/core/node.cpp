@@ -36,7 +36,7 @@
  */
 extern VolatileCounter64 g_syslogMessagesReceived;
 extern VolatileCounter64 g_snmpTrapsReceived;
-extern UINT32 g_averageDCIQueuingTime;
+extern uint32_t g_averageDCIQueuingTime;
 
 /**
  * Poller thread pool
