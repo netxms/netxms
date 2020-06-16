@@ -537,8 +537,8 @@ public:
          m_elementSize += 8 - m_elementSize % 8;
       m_regionSize = m_headerSize + regionCapacity * m_elementSize;
       m_currentRegion = MemAlloc(m_regionSize);
-      *((void **)m_currentRegion) = NULL; // pointer to previous region
-      m_firstDeleted = NULL;
+      *((void **)m_currentRegion) = nullptr; // pointer to previous region
+      m_firstDeleted = nullptr;
       m_allocated = m_headerSize;
    }
 
@@ -548,7 +548,7 @@ public:
    ~ObjectMemoryPool()
    {
       void *r = m_currentRegion;
-      while(r != NULL)
+      while(r != nullptr)
       {
          void *n = *((void **)r);
          MemFree(r);
@@ -562,7 +562,7 @@ public:
    T *allocate()
    {
       T *p;
-      if (m_firstDeleted != NULL)
+      if (m_firstDeleted != nullptr)
       {
          p = m_firstDeleted;
          m_firstDeleted = *((T**)p);
@@ -597,7 +597,7 @@ public:
     */
    void free(T *p)
    {
-      if (p != NULL)
+      if (p != nullptr)
       {
          *((T**)p) = m_firstDeleted;
          m_firstDeleted = p;
@@ -609,7 +609,77 @@ public:
     */
    void destroy(T *p)
    {
-      if (p != NULL)
+      if (p != nullptr)
+      {
+         p->~T();
+         free(p);
+      }
+   }
+};
+
+/**
+ * Synchronized version of ObjectMemoryPool (uses spinlock for locking)
+ */
+template<typename T> class SynchronizedObjectMemoryPool : public ObjectMemoryPool<T>
+{
+private:
+   VolatileCounter m_lock;
+
+   void lock()
+   {
+      while (InterlockedCompareExchange(&m_lock, 1, 0) != 0);
+   }
+
+   void unlock()
+   {
+      InterlockedDecrement(&m_lock);
+   }
+
+public:
+   /**
+    * Create new memory pool
+    */
+   SynchronizedObjectMemoryPool(size_t regionCapacity = 256) : ObjectMemoryPool<T>(regionCapacity)
+   {
+      m_lock = 0;
+   }
+
+   /**
+    * Allocate memory for object without initializing
+    */
+   T *allocate()
+   {
+      lock();
+      T *p = ObjectMemoryPool<T>::allocate();
+      unlock();
+      return p;
+   }
+
+   /**
+    * Create object using default constructor
+    */
+   T *create()
+   {
+      T *p = allocate();
+      return new(p) T();
+   }
+
+   /**
+    * Free memory block without calling object destructor
+    */
+   void free(T *p)
+   {
+      lock();
+      ObjectMemoryPool<T>::free(p);
+      unlock();
+   }
+
+   /**
+    * Destroy object
+    */
+   void destroy(T *p)
+   {
+      if (p != nullptr)
       {
          p->~T();
          free(p);
