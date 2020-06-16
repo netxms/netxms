@@ -36,6 +36,8 @@ public interface GroupMarkers
 
 	public static final String MB_OBJECT_CREATION = "objectcreation"; //$NON-NLS-1$
 	public static final String MB_OBJECT_MANAGEMENT = "objectmgmt"; //$NON-NLS-1$
+   public static final String MB_OBJECT_MANAGEMENT_TAIL = "objectmgmttail"; //$NON-NLS-1$
+   public static final String MB_OBJECT_CONTROL = "objectcontrol"; //$NON-NLS-1$
    public static final String MB_OBJECT_TOOLS = "objecttools"; //$NON-NLS-1$
 	public static final String MB_OBJECT_BINDING = "objectbinding"; //$NON-NLS-1$
 	public static final String MB_DATA_COLLECTION = "datacollection"; //$NON-NLS-1$

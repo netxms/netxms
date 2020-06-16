@@ -633,18 +633,18 @@ public class ObjectBrowser extends ViewPart
 	   ObjectContextMenu.fill(manager, getSite(), objectTree.getTreeViewer());
 	
       if (isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
-         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveObject);
+         manager.insertBefore(GroupMarkers.MB_OBJECT_MANAGEMENT_TAIL, actionMoveObject);
       if (isValidSelectionForMove(SubtreeType.TEMPLATES))
-         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveTemplate);
+         manager.insertBefore(GroupMarkers.MB_OBJECT_MANAGEMENT_TAIL, actionMoveTemplate);
       if (isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
-         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveBusinessService);
+         manager.insertBefore(GroupMarkers.MB_OBJECT_MANAGEMENT_TAIL, actionMoveBusinessService);
       if (isValidSelectionForMove(SubtreeType.DASHBOARDS))
-         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveDashboard);
+         manager.insertBefore(GroupMarkers.MB_OBJECT_MANAGEMENT_TAIL, actionMoveDashboard);
       if (isValidSelectionForMove(SubtreeType.MAPS))
-         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveMap);
+         manager.insertBefore(GroupMarkers.MB_OBJECT_MANAGEMENT_TAIL, actionMoveMap);
 	}
-	
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override

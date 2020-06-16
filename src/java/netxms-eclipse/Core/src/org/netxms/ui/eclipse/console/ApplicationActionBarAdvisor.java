@@ -25,9 +25,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Comparator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.ICoolBarManager;
@@ -53,6 +56,7 @@ import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.eclipse.ui.internal.ActionSetContributionItem;
 import org.eclipse.ui.internal.actions.CommandAction;
 import org.netxms.base.VersionInfo;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
@@ -268,19 +272,52 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		};
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
-	 */
+   /**
+    * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
+    */
 	@Override
 	protected void fillMenuBar(IMenuManager menuBar)
 	{
 		MenuManager fileMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_File, IWorkbenchActionConstants.M_FILE);
 		MenuManager viewMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_View, GroupMarkers.M_VIEW);
 		MenuManager monitorMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Monitor, GroupMarkers.M_MONITOR);
-		MenuManager configMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Configuration, GroupMarkers.M_CONFIG);
 		MenuManager toolsMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Tools, GroupMarkers.M_TOOLS);
 		MenuManager windowMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW);
 		MenuManager helpMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Help, IWorkbenchActionConstants.M_HELP);
+
+      MenuManager configMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Configuration, GroupMarkers.M_CONFIG) {
+         @Override
+         protected void itemAdded(IContributionItem item)
+         {
+            IContributionItem[] items = getItems();
+            Arrays.sort(items, new Comparator<IContributionItem>() {
+               @Override
+               public int compare(IContributionItem item1, IContributionItem item2)
+               {
+                  if (item1 instanceof ActionSetContributionItem)
+                     item1 = ((ActionSetContributionItem)item1).getInnerItem();
+                  if (item2 instanceof ActionSetContributionItem)
+                     item2 = ((ActionSetContributionItem)item2).getInnerItem();
+
+                  String n1;
+                  if (item1 instanceof ActionContributionItem)
+                     n1 = ((ActionContributionItem)item1).getAction().getText().replace("&", "");
+                  else
+                     n1 = item1.getId();
+
+                  String n2;
+                  if (item2 instanceof ActionContributionItem)
+                     n2 = ((ActionContributionItem)item2).getAction().getText().replace("&", "");
+                  else
+                     n2 = item2.getId();
+
+                  return n1.compareToIgnoreCase(n2);
+               }
+            });
+            internalSetItems(items);
+            super.itemAdded(item);
+         }
+      };
 
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
@@ -324,6 +361,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		
 		// Monitor
 		monitorMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+
+      // Configuration
+      configMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		
 		// Tools
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

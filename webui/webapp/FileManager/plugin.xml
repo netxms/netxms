@@ -57,7 +57,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Node"
                label="%action.label.UploadFile"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
          <action
@@ -66,7 +66,7 @@
                icon="icons/filemgr.png"
                id="org.netxms.ui.eclipse.filemanager.popupActions.FileManager_Node"
                label="%action.label.FileManager"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
@@ -79,7 +79,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Container"
                label="%action.label.UploadFile"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
@@ -92,7 +92,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_ServiceRoot"
                label="%action.label.UploadFile"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
@@ -105,7 +105,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Subnet"
                label="%action.label.UploadFile"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
@@ -118,7 +118,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_EntireNetwork"
                label="%action.label.UploadFile"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>

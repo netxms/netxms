@@ -457,14 +457,14 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject_Container"
                label="%action.label.Unbind"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject_Container"
                label="%action.label.Bind"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateSensor"
@@ -532,14 +532,14 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject_ServiceRoot"
                label="%action.label.Unbind"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject_ServiceRoot"
                label="%action.label.Bind"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateSensor"
@@ -609,19 +609,19 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Node"
                label="%action.label.BindTo"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeZone"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeZone_Node"
                label="%action.label.ChangeZone"
-               menubarPath="objectmgmt">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/additions">
          </action>
          <menu
                id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
                label="%menu.label.Poll"
-               path="objectmgmt">
+               path="objectcontrol">
          </menu>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.TopologyPoll"
@@ -711,21 +711,21 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.removeClusterNode"
                label="%action.label.RemoveNode"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.AddClusterNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.addClusterNode"
                label="%action.label.AddNode"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Cluster"
                label="%action.label.BindTo"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <menu
                id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
@@ -780,7 +780,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_MobileDevice"
                label="%action.label.BindTo"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
       </objectContribution>
       <objectContribution
@@ -792,7 +792,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Sensor"
                label="%action.label.BindTo"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
          <menu
                id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
@@ -833,7 +833,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Rack"
                label="%action.label.BindTo"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
       </objectContribution>
       <objectContribution
@@ -845,7 +845,7 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Subnet"
                label="%action.label.BindTo"
-               menubarPath="objectbinding">
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/objectbinding">
          </action>
       </objectContribution>
       <objectContribution
@@ -873,134 +873,155 @@
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
+            allPopups="false"
             locationURI="popup:org.eclipse.ui.popup.any?before=objectmgmt">
-         <command
-               commandId="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
-               icon="icons/delete.png"
-               label="%action.label.Delete"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <and>
-                  <count
-                        value="+">
-                  </count>   
-	               <iterate>
-	                  <and>
-	                     <instanceof
-	                           value="org.netxms.client.objects.AbstractObject">
-	                     </instanceof>
-	                     <not>
-	                        <or>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.EntireNetwork">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.ServiceRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.TemplateRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.NetworkMapRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.DashboardRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.BusinessServiceRoot">
-	                           </instanceof>
-	                        </or>
-	                     </not>
-	                  </and>
-	               </iterate>
-	            </and>
-            </visibleWhen>
-         </command>
-         <command
-               commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
-               label="%action.label.Manage"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <and>
-                  <count
-                        value="+">
-                  </count>   
-	               <iterate>
-	                  <and>
-	                     <adapt
-	                           type="org.netxms.client.objects.AbstractObject">
-	                     </adapt>
-	                     <not>
-	                        <or>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.Template">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.TemplateGroup">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.TemplateRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.Dashboard">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.DashboardRoot">
-	                           </instanceof>
-                            <instanceof
-                                  value="org.netxms.client.objects.DashboardGroup">
-                            </instanceof>
-	                        </or>
-	                     </not>
-	                  </and>
-	               </iterate>
-               </and>
-            </visibleWhen>
-         </command>
-         <command
-               commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
-               label="%action.label.Unmanage"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <and>
-                  <count
-                        value="+">
-                  </count>   
-	               <iterate>
-	                  <and>
-	                     <adapt
-	                           type="org.netxms.client.objects.AbstractObject">
-	                     </adapt>
-	                     <not>
-	                        <or>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.Template">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.TemplateGroup">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.TemplateRoot">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.Dashboard">
-	                           </instanceof>
-	                           <instanceof
-	                                 value="org.netxms.client.objects.DashboardRoot">
-	                           </instanceof>
-                            <instanceof
-                                  value="org.netxms.client.objects.DashboardGroup">
-                            </instanceof>
-	                        </or>
-	                     </not>
-	                  </and>
-	               </iterate>
-               </and>
-            </visibleWhen>
-         </command>
+         <menu
+               id="org.netxms.ui.ObjectOperationsMenu"
+               label="%menu.label.Object">
+            <separator
+                  name="objectbinding"
+                  visible="false">
+            </separator>
+            <separator
+                  name="objectstate"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
+                  label="%action.label.Manage"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <and>
+                     <count
+                           value="+">
+                     </count>
+                     <iterate>
+                        <and>
+                           <adapt
+                                 type="org.netxms.client.objects.AbstractObject">
+                           </adapt>
+                           <not>
+                              <or>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Template">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Dashboard">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardGroup">
+                                 </instanceof>
+                              </or>
+                           </not>
+                        </and>
+                     </iterate>
+                  </and>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
+                  label="%action.label.Unmanage"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <and>
+                     <count
+                           value="+">
+                     </count>
+                     <iterate>
+                        <and>
+                           <adapt
+                                 type="org.netxms.client.objects.AbstractObject">
+                           </adapt>
+                           <not>
+                              <or>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Template">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Dashboard">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardGroup">
+                                 </instanceof>
+                              </or>
+                           </not>
+                        </and>
+                     </iterate>
+                  </and>
+               </visibleWhen>
+            </command>
+            <separator
+                  name="additions"
+                  visible="true">
+            </separator>
+            <separator
+                  name="destruction"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
+                  icon="icons/delete.png"
+                  label="%action.label.Delete"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <and>
+                     <count
+                           value="+">
+                     </count>
+                     <iterate>
+                        <and>
+                           <instanceof
+                                 value="org.netxms.client.objects.AbstractObject">
+                           </instanceof>
+                           <not>
+                              <or>
+                                 <instanceof
+                                       value="org.netxms.client.objects.EntireNetwork">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.ServiceRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMapRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.BusinessServiceRoot">
+                                 </instanceof>
+                              </or>
+                           </not>
+                        </and>
+                     </iterate>
+                  </and>
+               </visibleWhen>
+            </command>
+         </menu>
          <menu
                id="maintenance"
                label="%menu.label.Maintenance">

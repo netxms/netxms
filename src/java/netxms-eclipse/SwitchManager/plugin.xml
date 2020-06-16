@@ -24,7 +24,7 @@
                icon="icons/pae.png"
                id="org.netxms.ui.eclipse.snmp.popupActions.OpenDot1xStateView_Node"
                label="%action.PaePortState.label"
-               menubarPath="topology">
+               menubarPath="TopologySubmenu/mac">
          </action>
       </objectContribution>
       <objectContribution

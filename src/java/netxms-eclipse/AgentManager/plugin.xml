@@ -74,7 +74,7 @@
                icon="icons/agent_config.gif"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.OpenAgentConfig_Node"
                label="%menu.EditConfig"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
          <action
@@ -83,7 +83,7 @@
                icon="icons/image_obj.gif"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.TakeScreenshot_Node"
                label="%menu.TakeScreenshot"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
          <action
@@ -92,7 +92,7 @@
                icon="icons/user_agent_messages.png"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_Node"
                label="Send user support application notification"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
@@ -106,7 +106,7 @@
                icon="icons/user_agent_messages.png"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_Container"
                label="Send user support application notification"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
@@ -120,7 +120,7 @@
                icon="icons/user_agent_messages.png"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_ServiceRoot"
                label="Send user support application notification"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
@@ -134,7 +134,7 @@
                icon="icons/user_agent_messages.png"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_Rack"
                label="Send user support application notification"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
@@ -148,7 +148,7 @@
                icon="icons/user_agent_messages.png"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification_Cluster"
                label="Send user support application notification"
-               menubarPath="objectmgmt"
+               menubarPath="objectcontrol"
                style="push">
          </action>
       </objectContribution>
