@@ -230,9 +230,16 @@ static const TCHAR *s_dbTables[] =
    _T("agent_policy"),
    _T("dc_config"),
    _T("dc_queue"),
+   _T("dc_proxy"),
+   _T("dc_schedules"),
    _T("dc_snmp_table_columns"),
    _T("dc_snmp_targets"),
+   _T("device_decoder_map"),
+   _T("notification_data"),
+   _T("notification_servers"),
    _T("registry"),
+   _T("user_agent_notifications"),
+   _T("zone_config"),
    nullptr
 };
 
