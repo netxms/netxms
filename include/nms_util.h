@@ -2505,6 +2505,8 @@ public:
    const BYTE *buffer(size_t *size) const { *size = m_size; return m_data; }
    const BYTE *buffer() const { return m_data; }
 
+   BYTE *takeBuffer();
+
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
    void write(BYTE b) { write(&b, 1); }

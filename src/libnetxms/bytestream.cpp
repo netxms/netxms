@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2017 Raden Solutions
+ ** Copyright (C) 2003-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -32,7 +32,7 @@ ByteStream::ByteStream(size_t initial)
    m_size = 0;
    m_pos = 0;
    m_allocationStep = 4096;
-   m_data = (m_allocated > 0) ? (BYTE *)malloc(m_allocated) : NULL;
+   m_data = (m_allocated > 0) ? static_cast<BYTE*>(MemAlloc(m_allocated)) : nullptr;
 }
 
 /**
@@ -44,7 +44,7 @@ ByteStream::ByteStream(const void *data, size_t size)
    m_size = size;
    m_pos = 0;
    m_allocationStep = 4096;
-   m_data = (m_allocated > 0) ? static_cast<BYTE*>(MemCopyBlock(data, size)) : NULL;
+   m_data = (m_allocated > 0) ? static_cast<BYTE*>(MemCopyBlock(data, size)) : nullptr;
 }
 
 /**
@@ -56,6 +56,19 @@ ByteStream::~ByteStream()
 }
 
 /**
+ * Take byte stream buffer (byte stream will became empty)
+ */
+BYTE *ByteStream::takeBuffer()
+{
+   BYTE *data = m_data;
+   m_data = nullptr;
+   m_allocated = 0;
+   m_size = 0;
+   m_pos = 0;
+   return data;
+}
+
+/**
  * Write data
  */
 void ByteStream::write(const void *data, size_t size)
@@ -63,7 +76,7 @@ void ByteStream::write(const void *data, size_t size)
    if (m_pos + size > m_allocated)
    {
       m_allocated += std::max(size, m_allocationStep);
-      m_data = (BYTE *)realloc(m_data, m_allocated);
+      m_data = MemRealloc(m_data, m_allocated);
    }
    memcpy(&m_data[m_pos], data, size);
    m_pos += size;
@@ -82,7 +95,7 @@ void ByteStream::writeString(const TCHAR *s)
    char *utf8str = UTF8StringFromMBString(s);
 #endif
    writeStringUtf8(utf8str);
-   free(utf8str);
+   MemFree(utf8str);
 }
 
 /**
@@ -91,7 +104,7 @@ void ByteStream::writeString(const TCHAR *s)
 void ByteStream::writeStringUtf8(const char *s)
 {
    // write len < 2^15 as 2 bytes and 4 bytes with higher bit set otherwise
-   UINT32 len = (UINT32)strlen(s);
+   uint32_t len = (UINT32)strlen(s);
    if (len < 0x8000)
       write((UINT16)len);
    else
