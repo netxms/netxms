@@ -37,13 +37,12 @@
  * @param timeout connection timeout in milliseconds
  * @return connected SocketConnection object or NULL on connection failure
  */
-SocketConnection *SocketConnection::createTCPConnection(const TCHAR *hostName, WORD port, UINT32 timeout)
+SocketConnection *SocketConnection::createTCPConnection(const TCHAR *hostName, uint16_t port, uint32_t timeout)
 {
 	SocketConnection *s = new SocketConnection;
 	if (!s->connectTCP(hostName, port, timeout))
 	{
-		delete s;
-		s = NULL;
+		delete_and_null(s);
 	}
 	return s;
 }
@@ -75,7 +74,7 @@ SocketConnection::~SocketConnection()
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout)
+bool SocketConnection::connectTCP(const TCHAR *hostName, uint16_t port, uint32_t timeout)
 {
    InetAddress addr = InetAddress::resolveHostName(hostName);
    if (!addr.isValidUnicast())
@@ -91,7 +90,7 @@ bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, UINT32 timeo
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool SocketConnection::connectTCP(const InetAddress& ip, WORD port, UINT32 timeout)
+bool SocketConnection::connectTCP(const InetAddress& ip, uint16_t port, uint32_t timeout)
 {
 	m_socket = ConnectToHost(ip, port, (timeout != 0) ? timeout : 30000);
 	return m_socket != INVALID_SOCKET;
@@ -100,7 +99,7 @@ bool SocketConnection::connectTCP(const InetAddress& ip, WORD port, UINT32 timeo
 /**
  * Check if given socket can be read
  */
-bool SocketConnection::canRead(UINT32 timeout)
+bool SocketConnection::canRead(uint32_t timeout)
 {
    SocketPoller p;
    p.add(m_socket);
@@ -110,17 +109,34 @@ bool SocketConnection::canRead(UINT32 timeout)
 /**
  * Read data from socket
  */
-ssize_t SocketConnection::read(char *pBuff, size_t nSize, UINT32 timeout)
+ssize_t SocketConnection::read(void *buffer, size_t size, uint32_t timeout)
 {
-	return RecvEx(m_socket, pBuff, nSize, 0, timeout);
+	return RecvEx(m_socket, buffer, size, 0, timeout);
+}
+
+/**
+ * Read exact number of bytes from socket
+ */
+bool SocketConnection::readFully(void *buffer, size_t size, uint32_t timeout)
+{
+   BYTE *p = static_cast<BYTE*>(buffer);
+   while(size > 0)
+   {
+      ssize_t bytes = RecvEx(m_socket, p, size, 0, timeout);
+      if (bytes <= 0)
+         return false;
+      size -= bytes;
+      p += bytes;
+   }
+   return true;
 }
 
 /**
  * Write data to socket
  */
-ssize_t SocketConnection::write(const char *pBuff, size_t nSize)
+ssize_t SocketConnection::write(const void *buffer, size_t size)
 {
-	return SendEx(m_socket, pBuff, nSize, 0, NULL);
+	return SendEx(m_socket, buffer, size, 0, nullptr);
 }
 
 /**
@@ -128,7 +144,7 @@ ssize_t SocketConnection::write(const char *pBuff, size_t nSize)
  */
 bool SocketConnection::writeLine(const char *line)
 {
-	if (write(line, (int)strlen(line)) <= 0)
+	if (write(line, strlen(line)) <= 0)
 		return false;
 	return write("\r\n", 2) > 0;
 }
@@ -146,15 +162,15 @@ void SocketConnection::disconnect()
 /**
  * Wait for specific text in input stream. All data up to given text are discarded.
  */
-bool SocketConnection::waitForText(const char *text, int timeout)
+bool SocketConnection::waitForText(const char *text, uint32_t timeout)
 {
-	int textLen = (int)strlen(text);
-	int bufLen = (int)strlen(m_data);
+	size_t textLen = strlen(text);
+	size_t bufLen = strlen(m_data);
 
 	char *p = strstr(m_data, text);
-	if (p != NULL)
+	if (p != nullptr)
 	{
-		int index = (int)(p - m_data);
+		size_t index = static_cast<size_t>(p - m_data);
 		m_dataPos = bufLen - (index + textLen);
 		memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
 		return true;
@@ -163,26 +179,22 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 	m_dataPos = std::min(bufLen, textLen - 1);
 	memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
 
-	while(1)
+	while (true)
 	{
 		if (!canRead(timeout))
-		{
 			return false;
-		}
 
       ssize_t size = read(&m_data[m_dataPos], 4095 - m_dataPos);
       if ((size <= 0) && (WSAGetLastError() != WSAEWOULDBLOCK) && (WSAGetLastError() != WSAEINPROGRESS))
-      {
          return false;
-      }
 
 		m_data[size + m_dataPos] = 0;
-		bufLen = (int)strlen(m_data);
+		bufLen = strlen(m_data);
 
 		p = strstr(m_data, text);
-		if (p != NULL)
+		if (p != nullptr)
 		{
-			int index = (int)(p - m_data);
+			size_t index = static_cast<size_t>(p - m_data);
 			m_dataPos = bufLen - (index + textLen);
 			memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
 			return true;
@@ -201,7 +213,7 @@ bool SocketConnection::waitForText(const char *text, int timeout)
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool TelnetConnection::connect(const TCHAR *hostName, WORD port, UINT32 timeout)
+bool TelnetConnection::connect(const TCHAR *hostName, uint16_t port, uint32_t timeout)
 {
    InetAddress addr = InetAddress::resolveHostName(hostName);
    if (!addr.isValidUnicast())
@@ -217,7 +229,7 @@ bool TelnetConnection::connect(const TCHAR *hostName, WORD port, UINT32 timeout)
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool TelnetConnection::connect(const InetAddress& ip, WORD port, UINT32 timeout)
+bool TelnetConnection::connect(const InetAddress& ip, uint16_t port, uint32_t timeout)
 {
    bool ret = SocketConnection::connectTCP(ip, port, timeout);
 
@@ -237,21 +249,21 @@ bool TelnetConnection::connect(const InetAddress& ip, WORD port, UINT32 timeout)
 /**
  * Read data from socket
  */
-ssize_t TelnetConnection::read(char *pBuff, size_t nSize, UINT32 timeout)
+ssize_t TelnetConnection::read(void *buffer, size_t size, uint32_t timeout)
 {
 retry:
-   ssize_t bytesRead = RecvEx(m_socket, pBuff, nSize, 0, timeout);
+   ssize_t bytesRead = RecvEx(m_socket, buffer, size, 0, timeout);
    if (bytesRead > 0)
    {
       // process telnet control sequences
       for (ssize_t i = 0; i < bytesRead - 1; i++)
       {
          int skip = 0;
-         switch ((unsigned char)pBuff[i])
+         switch (static_cast<BYTE*>(buffer)[i])
          {
             case TELNET_IAC: // "Interpret as Command"
                {
-                  unsigned char cmd = (unsigned char)pBuff[i + 1];
+                  unsigned char cmd = static_cast<BYTE*>(buffer)[i + 1];
 
                   switch (cmd)
                   {
@@ -266,15 +278,15 @@ retry:
                         if ((i + 1) < bytesRead)
                         {
                            skip = 3;
-                           if ((unsigned char)pBuff[i + 2] == TELNET_GA)
+                           if (static_cast<BYTE*>(buffer)[i + 2] == TELNET_GA)
                            {
-                              pBuff[i + 1] = cmd == TELNET_DO ? TELNET_WILL : TELNET_DO;
+                              static_cast<BYTE*>(buffer)[i + 1] = (cmd == TELNET_DO) ? TELNET_WILL : TELNET_DO;
                            }
                            else
                            {
-                              pBuff[i + 1] = cmd == TELNET_DO ? TELNET_WONT : TELNET_DONT;
+                              static_cast<BYTE*>(buffer)[i + 1] = (cmd == TELNET_DO) ? TELNET_WONT : TELNET_DONT;
                            }
-                           write(pBuff + i, 3);
+                           write(static_cast<BYTE*>(buffer) + i, 3);
                         }
                         break;
                      default:
@@ -289,7 +301,7 @@ retry:
 
          if (skip > 0)
          {
-            memmove(pBuff + i, pBuff + i + skip, bytesRead - i - 1);
+            memmove(static_cast<BYTE*>(buffer) + i, static_cast<BYTE*>(buffer) + i + skip, bytesRead - i - 1);
             bytesRead -= skip;
             i--;
          }
@@ -303,11 +315,10 @@ retry:
    return bytesRead;
 }
 
-
 /**
  * Read line from socket
  */
-ssize_t TelnetConnection::readLine(char *buffer, size_t size, UINT32 timeout)
+ssize_t TelnetConnection::readLine(char *buffer, size_t size, uint32_t timeout)
 {
    ssize_t numOfChars = 0;
    ssize_t bytesRead = 0;
@@ -346,15 +357,13 @@ ssize_t TelnetConnection::readLine(char *buffer, size_t size, UINT32 timeout)
  * @param timeout connection timeout in milliseconds
  * @return connected TelnetConnection object or NULL on connection failure
  */
-TelnetConnection *TelnetConnection::createConnection(const TCHAR *hostName, WORD port, UINT32 timeout)
+TelnetConnection *TelnetConnection::createConnection(const TCHAR *hostName, uint16_t port, uint32_t timeout)
 {
 	TelnetConnection *tc = new TelnetConnection();
 	if (!tc->connect(hostName, port, timeout))
 	{
-		delete tc;
-		tc = NULL;
+      delete_and_null(tc);
 	}
-
 	return tc;
 }
 
@@ -366,14 +375,12 @@ TelnetConnection *TelnetConnection::createConnection(const TCHAR *hostName, WORD
  * @param timeout connection timeout in milliseconds
  * @return connected TelnetConnection object or NULL on connection failure
  */
-TelnetConnection *TelnetConnection::createConnection(const InetAddress& ip, WORD port, UINT32 timeout)
+TelnetConnection *TelnetConnection::createConnection(const InetAddress& ip, uint16_t port, uint32_t timeout)
 {
    TelnetConnection *tc = new TelnetConnection();
    if (!tc->connect(ip, port, timeout))
    {
-      delete tc;
-      tc = NULL;
+      delete_and_null(tc);
    }
-
    return tc;
 }

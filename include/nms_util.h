@@ -3148,25 +3148,27 @@ class LIBNETXMS_EXPORTABLE SocketConnection
 protected:
 	SOCKET m_socket;
 	char m_data[4096];
-	int m_dataPos;
+	size_t m_dataPos;
 
    SocketConnection();
 
 public:
 	virtual ~SocketConnection();
 
-	bool connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout);
-	bool connectTCP(const InetAddress& ip, WORD port, UINT32 timeout);
+	bool connectTCP(const TCHAR *hostName, uint16_t port, uint32_t timeout);
+	bool connectTCP(const InetAddress& ip, uint16_t port, uint32_t timeout);
 	void disconnect();
 
-	bool canRead(UINT32 timeout);
-	virtual ssize_t read(char *pBuff, size_t nSize, uint32_t timeout = INFINITE);
-	bool waitForText(const char *text, int timeout);
+   virtual ssize_t read(void *buffer, size_t size, uint32_t timeout = INFINITE);
 
-   ssize_t write(const char *pBuff, size_t nSize);
+	bool canRead(uint32_t timeout);
+	bool waitForText(const char *text, uint32_t timeout);
+	bool readFully(void *buffer, size_t size, uint32_t timeout = INFINITE);
+
+   ssize_t write(const void *buffer, size_t size);
 	bool writeLine(const char *line);
 
-	static SocketConnection *createTCPConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
+	static SocketConnection *createTCPConnection(const TCHAR *hostName, uint16_t port, uint32_t timeout);
 };
 
 /**
@@ -3179,18 +3181,15 @@ class LIBNETXMS_EXPORTABLE TelnetConnection : public SocketConnection
 protected:
    TelnetConnection() : SocketConnection() { }
 
-	bool connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout);
-	bool connectTCP(const InetAddress& ip, WORD port, UINT32 timeout);
-
-   bool connect(const TCHAR *hostName, WORD port, UINT32 timeout);
-   bool connect(const InetAddress& ip, WORD port, UINT32 timeout);
+   bool connect(const TCHAR *hostName, uint16_t port, uint32_t timeout);
+   bool connect(const InetAddress& ip, uint16_t port, uint32_t timeout);
 
 public:
-	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
-   static TelnetConnection *createConnection(const InetAddress& ip, WORD port, UINT32 timeout);
+	static TelnetConnection *createConnection(const TCHAR *hostName, uint16_t port, uint32_t timeout);
+   static TelnetConnection *createConnection(const InetAddress& ip, uint16_t port, uint32_t timeout);
 
-	virtual ssize_t read(char *pBuff, size_t nSize, UINT32 timeout = INFINITE) override;
-   ssize_t readLine(char *buffer, size_t size, UINT32 timeout = INFINITE);
+   virtual ssize_t read(void *buffer, size_t size, uint32_t timeout = INFINITE) override;
+   ssize_t readLine(char *buffer, size_t size, uint32_t timeout = INFINITE);
 };
 
 /**
