@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.8 to 34.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SMTP.FromAddr' WHERE var_name='SMTPFromAddr'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SMTP.FromName' WHERE var_name='SMTPFromName'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SMTP.Port' WHERE var_name='SMTPPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SMTP.RetryCount' WHERE var_name='SMTPRetryCount'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SMTP.Server' WHERE var_name='SMTPServer'")));
+   CHK_EXEC(CreateConfigParam(_T("SMTP.LocalHostName"), _T(""), _T("Local host name used in HELO command. If empty then fully qualified name of local system will be used."), nullptr, 'S', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 34.7 to 34.8
  */
 static bool H_UpgradeFromV7()
@@ -164,6 +179,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 8,  34, 9,  H_UpgradeFromV8  },
    { 7,  34, 8,  H_UpgradeFromV7  },
    { 6,  34, 7,  H_UpgradeFromV6  },
    { 5,  34, 6,  H_UpgradeFromV5  },

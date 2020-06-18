@@ -5,6 +5,8 @@
 - Improved logic for node capability expiration
 - "Reset identity" command line option in agent
 - EtherNet/IP has priority over SNMP when reading hardware information
+- Fixed issues:
+	NX-1422 (SMTP HELO should be configurable)
 
 
 *

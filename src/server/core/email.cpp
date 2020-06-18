@@ -174,18 +174,31 @@ static char *EncodeHeader(const char *header, const char *encoding, const char *
 static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8)
 {
    TCHAR smtpServer[256];
-   char fromName[256], fromAddr[256];
-   ConfigReadStr(_T("SMTPServer"), smtpServer, 256, _T("localhost"));
-   ConfigReadStrA(_T("SMTPFromAddr"), fromAddr, 256, "netxms@localhost");
+   char fromName[256], fromAddr[256], localHostName[256];
+   ConfigReadStr(_T("SMTP.Server"), smtpServer, 256, _T("localhost"));
+   ConfigReadStrA(_T("SMTP.FromAddr"), fromAddr, 256, "netxms@localhost");
    if (isUtf8)
    {
-      ConfigReadStrUTF8(_T("SMTPFromName"), fromName, 256, "NetXMS Server");
+      ConfigReadStrUTF8(_T("SMTP.FromName"), fromName, 256, "NetXMS Server");
    }
    else
    {
-      ConfigReadStrA(_T("SMTPFromName"), fromName, 256, "NetXMS Server");
+      ConfigReadStrA(_T("SMTP.FromName"), fromName, 256, "NetXMS Server");
    }
-   UINT16 smtpPort = (UINT16)ConfigReadInt(_T("SMTPPort"), 25);
+   uint16_t smtpPort = static_cast<uint16_t>(ConfigReadInt(_T("SMTP.Port"), 25));
+   ConfigReadStrA(_T("SMTP.LocalHostName"), localHostName, 256, "");
+   if (localHostName[0] == 0)
+   {
+#ifdef UNICODE
+      WCHAR localHostNameW[256] = L"";
+      GetLocalHostName(localHostNameW, 256, true);
+      wchar_to_utf8(localHostNameW, -1, localHostName, 256);
+#else
+      GetLocalHostName(localHostName, 256, true);
+#endif
+      if (localHostName[0] == 0)
+         strcpy(localHostName, "localhost");
+   }
 
    // Resolve hostname
 	InetAddress addr = InetAddress::resolveHostName(smtpServer);
@@ -213,7 +226,9 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                if (iResp == 220)
                {
                   iState = STATE_HELLO;
-                  SendEx(hSocket, "HELO netxms\r\n", 13, 0, NULL);
+                  char command[280];
+                  snprintf(command, 280, "HELO %s\r\n", localHostName);
+                  SendEx(hSocket, command, strlen(command), 0, nullptr);
                }
                else
                {
@@ -475,7 +490,7 @@ void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, c
       envelope->text = strdup(pszText);
 	}
 #endif
-	envelope->retryCount = ConfigReadInt(_T("SMTPRetryCount"), 1);
+	envelope->retryCount = ConfigReadInt(_T("SMTP.RetryCount"), 1);
 	envelope->isHtml = isHtml;
    m_pMailerQueue->put(envelope);
 }

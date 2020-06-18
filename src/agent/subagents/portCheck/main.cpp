@@ -18,6 +18,7 @@
  * Global variables
  */
 char g_szDomainName[128] = "netxms.org";
+char g_hostName[128] = "";
 char g_szFailedDir[1024] = "";
 UINT32 g_serviceCheckFlags = 0;
 
@@ -155,6 +156,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
 	{ _T("DomainName"), CT_MB_STRING, 0, 0, 128, 0, g_szDomainName },
 	{ _T("FailedDirectory"), CT_MB_STRING, 0, 0, 1024, 0, &g_szFailedDir },
+   { _T("HostName"), CT_MB_STRING, 0, 0, 128, 0, g_hostName },
    { _T("NegativeResponseTimeOnError"), CT_BOOLEAN, 0, 0, SCF_NEGATIVE_TIME_ON_ERROR, 0, &g_serviceCheckFlags },
    { _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_dwDefaultTimeout },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }

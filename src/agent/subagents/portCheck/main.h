@@ -39,6 +39,7 @@ LONG H_CheckTelnet(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *)
 int CheckTelnet(char *, const InetAddress&, short, char *, char *, UINT32);
 
 extern char g_szDomainName[];
+extern char g_hostName[];
 extern char g_szFailedDir[];
 extern UINT32 g_serviceCheckFlags;
 

@@ -72,10 +72,21 @@ int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UI
 
 		CHECK_OK("220")
 		{
-			if (gethostname(szHostname, sizeof(szHostname)) == -1)
-			{
-				strcpy(szHostname, "netxms-portcheck");
-			}
+         strlcpy(szHostname, g_hostName, sizeof(szHostname));
+		   if (szHostname[0] == 0)
+		   {
+#ifdef UNICODE
+		      WCHAR wname[128] = L"";
+            GetLocalHostName(wname, 128, true);
+            wchar_to_utf8(wname, -1, szHostname, sizeof(szHostname));
+#else
+		      GetLocalHostName(szHostname, sizeof(szHostname), true);
+#endif
+	         if (szHostname[0] == 0)
+            {
+               strcpy(szHostname, "netxms-portcheck");
+            }
+		   }
 			
 			snprintf(szTmp, sizeof(szTmp), "HELO %s\r\n", szHostname);
 			if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
