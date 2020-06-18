@@ -1609,11 +1609,9 @@ static int ResetIdentity()
    int exitCode = 0;
    if (OpenLocalDatabase())
    {
-      TCHAR agentIdText[MAX_DB_STRING];
-      uuid agentId = uuid::generate();
-      if (WriteMetadata(_T("AgentId"), agentId.toString(agentIdText)))
+      if (WriteMetadata(_T("AgentId"), uuid::NULL_UUID.toString()))
       {
-         _tprintf(_T("Agent ID set to %s\n"), agentId.toString(agentIdText));
+         _tprintf(_T("Agent ID was reset\n"));
       }
       else
       {
