@@ -3,6 +3,7 @@
 *
 
 - Improved logic for node capability expiration
+- "Reset identity" command line option in agent
 
 
 *

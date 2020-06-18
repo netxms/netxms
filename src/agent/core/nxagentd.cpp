@@ -133,28 +133,32 @@ int CreateConfig(bool forceCreate, const char *masterServers, const char *logFil
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:P:r:RsSUvW:X:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:P:r:RsSTUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:P:r:Su:vW:X:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:P:r:STu:vW:xX:Z:z:"
 #endif
 
 /**
- * Actions
+ * Agent startup commands
  */
-#define ACTION_NONE                    0
-#define ACTION_RUN_AGENT               1
-#define ACTION_INSTALL_SERVICE         2
-#define ACTION_REMOVE_SERVICE          3
-#define ACTION_START_SERVICE           4
-#define ACTION_STOP_SERVICE            5
-#define ACTION_CHECK_CONFIG            6
-#define ACTION_INSTALL_EVENT_SOURCE    7
-#define ACTION_REMOVE_EVENT_SOURCE     8
-#define ACTION_CREATE_CONFIG           9
-#define ACTION_HELP							10
-#define ACTION_RUN_WATCHDOG            11
-#define ACTION_SHUTDOWN_EXT_AGENTS     12
-#define ACTION_GET_LOG_LOCATION        13
+enum class Command
+{
+   CHECK_CONFIG,
+   CREATE_CONFIG,
+   GET_LOG_LOCATION,
+   HELP,
+   INSTALL_EVENT_SOURCE,
+   INSTALL_SERVICE,
+   NONE,
+   REMOVE_EVENT_SOURCE,
+   REMOVE_SERVICE,
+   RESET_IDENTITY,
+   RUN_AGENT,
+   RUN_WATCHDOG,
+   SHUTDOWN_EXT_AGENTS,
+   START_SERVICE,
+   STOP_SERVICE
+};
 
 /**
  * Global variables
@@ -382,6 +386,7 @@ static TCHAR m_szHelpText[] =
 #if WITH_SYSTEMD
    _T("   -S         : Run as systemd daemon\n")
 #endif
+   _T("   -T         : Reset agent identity\n")
    _T("   -u <uid>   : Change user ID to <uid> after start\n")
 #endif
    _T("   -v         : Display version and exit\n")
@@ -395,7 +400,7 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
 #ifdef UNICODE
    m_name = MBStringFromWideString(name);
 #else
-   m_name = strdup(name);
+   m_name = MemCopyStringA(name);
 #endif
 
    char *p = strchr(m_name, '/');
@@ -406,7 +411,7 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
       m_address = InetAddress::resolveHostName(m_name);
       if (m_address.isValid())
       {
-         int bits = strtol(p, NULL, 10);
+         int bits = strtol(p, nullptr, 10);
          if ((bits >= 0) && (bits <= ((m_address.getFamily() == AF_INET) ? 32 : 128)))
             m_address.setMaskBits(bits);
       }
@@ -420,7 +425,7 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
 
    m_control = control;
    m_master = master;
-   m_lastResolveTime = time(NULL);
+   m_lastResolveTime = time(nullptr);
    m_mutex = MutexCreate();
 }
 
@@ -1597,6 +1602,64 @@ static int GetGroupId(const char *name)
 #endif
 
 /**
+ * Reset agent identity
+ */
+static int ResetIdentity()
+{
+   int exitCode = 0;
+   if (OpenLocalDatabase())
+   {
+      TCHAR agentIdText[MAX_DB_STRING];
+      uuid agentId = uuid::generate();
+      if (WriteMetadata(_T("AgentId"), agentId.toString(agentIdText)))
+      {
+         _tprintf(_T("Agent ID set to %s\n"), agentId.toString(agentIdText));
+      }
+      else
+      {
+         _tprintf(_T("Cannot update agent ID\n"));
+         exitCode = 6;
+      }
+      CloseLocalDatabase();
+   }
+   else
+   {
+      _tprintf(_T("Cannot open local database\n"));
+      exitCode = 5;
+   }
+
+   ConfigureAgentDirectory(g_certificateDirectory, CERTIFICATES_FOLDER, _T("Certificate"));
+   _TDIR *dir = _topendir(g_certificateDirectory);
+   if (dir != nullptr)
+   {
+      TCHAR path[MAX_PATH];
+      struct _tdirent *d;
+      while((d = _treaddir(dir)) != nullptr)
+      {
+         if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+            continue;
+
+         _sntprintf(path, MAX_PATH, _T("%s%s"), g_certificateDirectory, d->d_name);
+         if (_tremove(path) == 0)
+         {
+            _tprintf(_T("Deleted certificate file %s\n"), path);
+         }
+         else
+         {
+            _tprintf(_T("Cannot delete certificate file %s (%s)\n"), path, _tcserror(errno));
+            exitCode = 7;
+         }
+      }
+      _tclosedir(dir);
+   }
+   else
+   {
+      _tprintf(_T("Cannot read certificate directory\n"));
+   }
+   return exitCode;
+}
+
+/**
  * Update agent environment from config
  */
 static void UpdateEnvironment()
@@ -1621,7 +1684,8 @@ static void UpdateEnvironment()
  */
 int main(int argc, char *argv[])
 {
-   int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
+   Command command = Command::RUN_AGENT;
+   int exitCode = 0;
    BOOL bRestart = FALSE;
    UINT32 dwOldPID, dwMainPID;
 	char *eptr;
@@ -1663,18 +1727,20 @@ int main(int argc, char *argv[])
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
    static struct option longOptions[] =
    {
-      { (char *)"zone-uin", 1, NULL, 'B' },
-      { NULL, 0, 0, 0 }
+      { (char *)"reset-identity", 0, nullptr, 'T' },
+      { (char *)"zone-uin", 1, nullptr, 'B' },
+      { nullptr, 0, 0, 0 }
    };
 #endif
 
    // Parse command line
 	if (argc == 1)
-		iAction = ACTION_HELP;
+		command = Command::HELP;
    opterr = 1;
 
+   int ch;
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
-   while((ch = getopt_long(argc, argv, VALID_OPTIONS, longOptions, NULL)) != -1)
+   while((ch = getopt_long(argc, argv, VALID_OPTIONS, longOptions, nullptr)) != -1)
 #else
    while((ch = getopt(argc, argv, VALID_OPTIONS)) != -1)
 #endif
@@ -1687,8 +1753,8 @@ int main(int argc, char *argv[])
             if ((*eptr != 0))
             {
                fprintf(stderr, "Invalid zone UIN: %s\n", optarg);
-               iAction = -1;
-               iExitCode = 1;
+               command = Command::NONE;
+               exitCode = 1;
             }
             else
                g_zoneUIN = zoneUIN;
@@ -1703,7 +1769,7 @@ int main(int argc, char *argv[])
 #endif
             break;
          case 'C':   // Configuration check only
-            iAction = ACTION_CHECK_CONFIG;
+            command = Command::CHECK_CONFIG;
             break;
          case 'd':   // Run as daemon
             g_dwFlags |= AF_DAEMON;
@@ -1713,8 +1779,8 @@ int main(int argc, char *argv[])
 				if ((*eptr != 0) || (s_debugLevel > 9))
 				{
 					fprintf(stderr, "Invalid debug level: %s\n", optarg);
-					iAction = -1;
-					iExitCode = 1;
+					command = Command::NONE;
+					exitCode = 1;
 				}
             break;
 			case 'f':	// Run in foreground
@@ -1737,7 +1803,7 @@ int main(int argc, char *argv[])
 #endif
             break;
          case 'h':   // Display help and exit
-            iAction = ACTION_HELP;
+            command = Command::HELP;
             break;
 #ifdef _WIN32
          case 'H':   // Hide window
@@ -1746,13 +1812,13 @@ int main(int argc, char *argv[])
 #endif
          case 'k':   // Delayed restart of external sub-agents and session agents
             restartExternalProcesses = true;
-            iAction = ACTION_SHUTDOWN_EXT_AGENTS;
+            command = Command::SHUTDOWN_EXT_AGENTS;
             break;
          case 'K':   // Shutdown external sub-agents and session agents
-            iAction = ACTION_SHUTDOWN_EXT_AGENTS;
+            command = Command::SHUTDOWN_EXT_AGENTS;
             break;
          case 'l':
-            iAction = ACTION_GET_LOG_LOCATION;
+            command = Command::GET_LOG_LOCATION;
             break;
 #ifndef _WIN32
          case 'p':   // PID file
@@ -1790,6 +1856,9 @@ int main(int argc, char *argv[])
             strlcpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);
 #endif
             break;
+         case 'T':   // Reset identity
+            command = Command::RESET_IDENTITY;
+            break;
 #ifndef _WIN32
 			case 'u':	// set user ID
 				uid = GetUserId(optarg);
@@ -1797,10 +1866,10 @@ int main(int argc, char *argv[])
 #endif
          case 'v':   // Print version and exit
             _tprintf(_T("NetXMS Core Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n"));
-            iAction = ACTION_NONE;
+            command = Command::NONE;
             break;
          case 'W':   // Watchdog process
-            iAction = ACTION_RUN_WATCHDOG;
+            command = Command::RUN_WATCHDOG;
             dwMainPID = strtoul(optarg, NULL, 10);
             break;
          case 'X':   // Agent is being restarted
@@ -1808,7 +1877,7 @@ int main(int argc, char *argv[])
             dwOldPID = strtoul(optarg, NULL, 10);
             break;
          case 'Z':   // Create configuration file
-            iAction = ACTION_CREATE_CONFIG;
+            command = Command::CREATE_CONFIG;
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
 				g_szConfigFile[MAX_PATH - 1] = 0;
@@ -1824,22 +1893,22 @@ int main(int argc, char *argv[])
             g_dwFlags |= AF_INTERACTIVE_SERVICE;
             break;
          case 'I':   // Install Windows service
-            iAction = ACTION_INSTALL_SERVICE;
+            command = Command::INSTALL_SERVICE;
             break;
          case 'R':   // Remove Windows service
-            iAction = ACTION_REMOVE_SERVICE;
+            command = Command::REMOVE_SERVICE;
             break;
          case 's':   // Start Windows service
-            iAction = ACTION_START_SERVICE;
+            command = Command::START_SERVICE;
             break;
          case 'S':   // Stop Windows service
-            iAction = ACTION_STOP_SERVICE;
+            command = Command::STOP_SERVICE;
             break;
          case 'E':   // Install Windows event source
-            iAction = ACTION_INSTALL_EVENT_SOURCE;
+            command = Command::INSTALL_EVENT_SOURCE;
             break;
          case 'U':   // Remove Windows event source
-            iAction = ACTION_REMOVE_EVENT_SOURCE;
+            command = Command::REMOVE_EVENT_SOURCE;
             break;
          case 'e':   // Event source name
 #ifdef UNICODE
@@ -1871,8 +1940,8 @@ int main(int argc, char *argv[])
             break;
 #endif
          case '?':
-            iAction = ACTION_HELP;
-            iExitCode = 1;
+            command = Command::HELP;
+            exitCode = 1;
             break;
          default:
             break;
@@ -1965,9 +2034,9 @@ int main(int argc, char *argv[])
       DoRestartActions(dwOldPID);
 
    // Do requested action
-   switch(iAction)
+   switch(command)
    {
-      case ACTION_RUN_AGENT:
+      case Command::RUN_AGENT:
          // Set default value for session idle timeout based on
          // connect() timeout, if possible
 #if HAVE_SYSCTLBYNAME && !defined(_IPSO)
@@ -2080,7 +2149,7 @@ int main(int argc, char *argv[])
 						{
 							ConsolePrintf(_T("Agent initialization failed\n"));
 							nxlog_close();
-							iExitCode = 3;
+							exitCode = 3;
 						}
 					}
 #else    /* _WIN32 */
@@ -2089,10 +2158,10 @@ int main(int argc, char *argv[])
 						if (daemon(0, 0) == -1)
 						{
 							perror("Unable to setup itself as a daemon");
-							iExitCode = 4;
+							exitCode = 4;
 						}
                }
-					if (iExitCode == 0)
+					if (exitCode == 0)
                {
 #ifndef _WIN32
 					   if (gid == 0)
@@ -2159,7 +2228,7 @@ int main(int argc, char *argv[])
 						{
 							ConsolePrintf(_T("Agent initialization failed\n"));
 							nxlog_close();
-							iExitCode = 3;
+							exitCode = 3;
 						}
 	            }
 #endif   /* _WIN32 */
@@ -2175,16 +2244,16 @@ int main(int argc, char *argv[])
 				else
 				{
 					ConsolePrintf(_T("Error parsing configuration file\n"));
-					iExitCode = 2;
+					exitCode = 2;
 				}
          }
          else
          {
             ConsolePrintf(_T("Error loading configuration file\n"));
-            iExitCode = 2;
+            exitCode = 2;
          }
          break;
-      case ACTION_CHECK_CONFIG:
+      case Command::CHECK_CONFIG:
          {
             bool validConfig = LoadConfig(configSection, true);
             if (validConfig)
@@ -2197,74 +2266,91 @@ int main(int argc, char *argv[])
             if (!validConfig)
             {
                ConsolePrintf(_T("Configuration file check failed\n"));
-               iExitCode = 2;
+               exitCode = 2;
             }
          }
          break;
-		case ACTION_RUN_WATCHDOG:
+		case Command::RUN_WATCHDOG:
 		   if (s_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
 		      s_debugLevel = 0;
 		   nxlog_set_debug_level(s_debugLevel);
-			iExitCode = WatchdogMain(dwMainPID, _tcscmp(configSection, DEFAULT_CONFIG_SECTION) ? configSection : NULL);
+			exitCode = WatchdogMain(dwMainPID, _tcscmp(configSection, DEFAULT_CONFIG_SECTION) ? configSection : NULL);
 			break;
-      case ACTION_CREATE_CONFIG:
-         iExitCode = CreateConfig(forceCreateConfig, CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
+      case Command::CREATE_CONFIG:
+         exitCode = CreateConfig(forceCreateConfig, CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
                                   CHECK_NULL_A(argv[optind + 2]), CHECK_NULL_A(argv[optind + 3]),
 			                         argc - optind - 4, &argv[optind + 4], extraConfigValues);
          break;
-      case ACTION_SHUTDOWN_EXT_AGENTS:
+      case Command::SHUTDOWN_EXT_AGENTS:
          InitiateExternalProcessShutdown(restartExternalProcesses);
-         iExitCode = 0;
+         exitCode = 0;
          break;
-      case ACTION_GET_LOG_LOCATION:
+      case Command::GET_LOG_LOCATION:
+         if (LoadConfig(configSection, true))
          {
-            if (LoadConfig(configSection, true))
+            if (g_config->parseTemplate(configSection, m_cfgTemplate))
             {
-               if (g_config->parseTemplate(configSection, m_cfgTemplate))
-               {
-                  _tprintf(_T("%s\n"), g_szLogFile);
-               }
-               else
-               {
-                  ConsolePrintf(_T("Configuration file parsing failed\n"));
-                  iExitCode = 2;
-               }
+               _tprintf(_T("%s\n"), g_szLogFile);
             }
             else
             {
-               ConsolePrintf(_T("Configuration file load failed\n"));
-               iExitCode = 2;
+               ConsolePrintf(_T("Configuration file parsing failed\n"));
+               exitCode = 2;
             }
+         }
+         else
+         {
+            ConsolePrintf(_T("Configuration file load failed\n"));
+            exitCode = 2;
+         }
+         break;
+      case Command::RESET_IDENTITY:
+         if (LoadConfig(configSection, true))
+         {
+            if (g_config->parseTemplate(configSection, m_cfgTemplate))
+            {
+               exitCode = ResetIdentity();
+            }
+            else
+            {
+               ConsolePrintf(_T("Configuration file parsing failed\n"));
+               exitCode = 2;
+            }
+         }
+         else
+         {
+            ConsolePrintf(_T("Configuration file load failed\n"));
+            exitCode = 2;
          }
          break;
 #ifdef _WIN32
-      case ACTION_INSTALL_SERVICE:
+      case Command::INSTALL_SERVICE:
          GetModuleFileName(GetModuleHandle(NULL), szModuleName, MAX_PATH);
          InstallService(szModuleName, g_szConfigFile, s_debugLevel);
          break;
-      case ACTION_REMOVE_SERVICE:
+      case Command::REMOVE_SERVICE:
          RemoveService();
          break;
-      case ACTION_INSTALL_EVENT_SOURCE:
+      case Command::INSTALL_EVENT_SOURCE:
          GetModuleFileName(GetModuleHandle(NULL), szModuleName, MAX_PATH);
          InstallEventSource(szModuleName);
          break;
-      case ACTION_REMOVE_EVENT_SOURCE:
+      case Command::REMOVE_EVENT_SOURCE:
          RemoveEventSource();
          break;
-      case ACTION_START_SERVICE:
+      case Command::START_SERVICE:
          StartAgentService();
          break;
-      case ACTION_STOP_SERVICE:
+      case Command::STOP_SERVICE:
          StopAgentService();
          break;
 #endif
-		case ACTION_HELP:
+		case Command::HELP:
          _fputts(m_szHelpText, stdout);
 			break;
       default:
          break;
    }
 
-   return iExitCode;
+   return exitCode;
 }
