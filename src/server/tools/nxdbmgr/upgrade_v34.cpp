@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.7 to 34.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Objects.Nodes.CapabilityExpirationTime',description='Time before capability (NetXMS Agent, SNMP, EtherNet/IP) expires if node is not responding for requests via appropriate protocol.' WHERE var_name='CapabilityExpirationTime'")));
+   CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.CapabilityExpirationGracePeriod"), _T("3600"), _T("Grace period for capability expiration after node recovered from unreachable state."), _T("seconds"), 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 34.6 to 34.7
  */
 static bool H_UpgradeFromV6()
@@ -153,6 +164,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 7,  34, 8,  H_UpgradeFromV7  },
    { 6,  34, 7,  H_UpgradeFromV6  },
    { 5,  34, 6,  H_UpgradeFromV5  },
    { 4,  34, 5,  H_UpgradeFromV4  },

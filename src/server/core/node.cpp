@@ -136,6 +136,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_failTimeAgent = NEVER;
    m_failTimeSNMP = NEVER;
    m_failTimeEtherNetIP = NEVER;
+   m_recoveryTime = NEVER;
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
    m_linkLayerNeighbors = nullptr;
@@ -250,6 +251,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_failTimeAgent = NEVER;
    m_failTimeSNMP = NEVER;
    m_failTimeEtherNetIP = NEVER;
+   m_recoveryTime = NEVER;
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
    m_linkLayerNeighbors = nullptr;
@@ -1928,8 +1930,9 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
 
    // Read capability expiration time and current time
-   time_t tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
-   time_t tNow = time(nullptr);
+   time_t capabilityExpirationTime = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 604800));
+   time_t capabilityExpirationGracePeriod = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 3600));
+   time_t now = time(nullptr);
 
    bool agentConnected = false;
    bool resyncDataCollectionConfiguration = false;
@@ -1943,14 +1946,11 @@ restart_agent_check:
       updatePrimaryIpAddr();
    }
 
-   UINT32 requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls;
+   uint32_t requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls;
 
    // Check SNMP agent connectivity
    if ((m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)) && m_ipAddress.isValidUnicast())
    {
-      TCHAR szBuffer[256];
-      UINT32 dwResult;
-
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): check SNMP"), m_name);
       SNMP_Transport *pTransport = createSnmpTransport();
       if (pTransport != nullptr)
@@ -1962,8 +1962,10 @@ restart_agent_check:
          {
             testOid = _T(".1.3.6.1.2.1.1.2.0");
          }
-         dwResult = SnmpGet(m_snmpVersion, pTransport, testOid, nullptr, 0, szBuffer, sizeof(szBuffer), 0);
-         if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
+
+         TCHAR buffer[256];
+         uint32_t snmpErr = SnmpGet(m_snmpVersion, pTransport, testOid, nullptr, 0, buffer, sizeof(buffer), 0);
+         if ((snmpErr == SNMP_ERR_SUCCESS) || (snmpErr == SNMP_ERR_NO_OBJECT))
          {
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
@@ -1990,7 +1992,7 @@ restart_agent_check:
                unlockProperties();
             }
          }
-         else if ((dwResult == SNMP_ERR_ENGINE_ID) && (m_snmpVersion == SNMP_VERSION_3) && (retryCount > 0))
+         else if ((snmpErr == SNMP_ERR_ENGINE_ID) && (m_snmpVersion == SNMP_VERSION_3) && (retryCount > 0))
          {
             // Reset authoritative engine data
             lockProperties();
@@ -2002,7 +2004,7 @@ restart_agent_check:
          }
          else
          {
-            if (pTransport->isProxyTransport() && (dwResult == SNMP_ERR_COMM))
+            if (pTransport->isProxyTransport() && (snmpErr == SNMP_ERR_COMM))
             {
                shared_ptr<AgentConnectionEx> pconn = acquireProxyConnection(SNMP_PROXY, true);
                if ((pconn != nullptr) && (retryCount > 0))
@@ -2017,7 +2019,7 @@ restart_agent_check:
             sendPollerMsg(rqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
-               if ((tNow > m_failTimeSNMP + tExpire) && (!(m_state & DCSF_UNREACHABLE)))
+               if ((now > m_failTimeSNMP + capabilityExpirationTime) && (!(m_state & DCSF_UNREACHABLE)) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
                {
                   m_capabilities &= ~NC_IS_SNMP;
                   m_state &= ~NSF_SNMP_UNREACHABLE;
@@ -2032,7 +2034,7 @@ restart_agent_check:
                {
                   m_state |= NSF_SNMP_UNREACHABLE;
                   PostSystemEventEx(eventQueue, EVENT_SNMP_FAIL, m_id, nullptr);
-                  m_failTimeSNMP = tNow;
+                  m_failTimeSNMP = now;
                   m_pollCountSNMP = 0;
                }
             }
@@ -2092,7 +2094,7 @@ restart_agent_check:
          sendPollerMsg(rqId, POLLER_ERROR _T("Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(error));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
-            if ((tNow > m_failTimeAgent + tExpire) && !(m_state & DCSF_UNREACHABLE))
+            if ((now > m_failTimeAgent + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
             {
                m_capabilities &= ~NC_IS_NATIVE_AGENT;
                m_state &= ~NSF_AGENT_UNREACHABLE;
@@ -2108,7 +2110,7 @@ restart_agent_check:
             {
                m_state |= NSF_AGENT_UNREACHABLE;
                PostSystemEventEx(eventQueue, EVENT_AGENT_FAIL, m_id, nullptr);
-               m_failTimeAgent = tNow;
+               m_failTimeAgent = now;
                //cancel file monitoring locally(on agent it is canceled if agent have fallen)
                g_monitoringList.removeDisconnectedNode(m_id);
                m_pollCountAgent = 0;
@@ -2184,7 +2186,7 @@ restart_agent_check:
          sendPollerMsg(rqId, POLLER_ERROR _T("Cannot connect to device via EtherNet/IP (%s)\r\n"), reason.cstr());
          if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
          {
-            if ((tNow > m_failTimeEtherNetIP + tExpire) && !(m_state & DCSF_UNREACHABLE))
+            if ((now > m_failTimeEtherNetIP + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
             {
                m_capabilities &= ~NC_IS_ETHERNET_IP;
                m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
@@ -2198,7 +2200,7 @@ restart_agent_check:
             {
                m_state |= NSF_ETHERNET_IP_UNREACHABLE;
                PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_UNREACHABLE, m_id, nullptr);
-               m_failTimeEtherNetIP = tNow;
+               m_failTimeEtherNetIP = now;
                m_pollCountEtherNetIP = 0;
             }
          }
@@ -2482,6 +2484,8 @@ restart_agent_check:
             PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason);
             sendPollerMsg(rqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
             resyncDataCollectionConfiguration = true; // Will cause addition of all remotely collected DCIs on proxy
+            // Set recovery time to provide grace period for capability expiration
+            m_recoveryTime = now;
             goto restart_agent_check;
          }
          else
@@ -4498,7 +4502,7 @@ bool Node::confPollSnmp(uint32_t rqId)
       {
          if (components == nullptr)
          {
-            time_t expirationTime = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
+            time_t expirationTime = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 604800));
             if (m_components->getTimestamp() + expirationTime < time(nullptr))
             {
                m_components = components;

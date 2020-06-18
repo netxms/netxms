@@ -2788,6 +2788,7 @@ protected:
    time_t m_failTimeAgent;
    time_t m_failTimeSNMP;
    time_t m_failTimeEtherNetIP;
+   time_t m_recoveryTime;
 	time_t m_downSince;
    time_t m_bootTime;
    time_t m_agentUpTime;
