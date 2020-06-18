@@ -3164,6 +3164,15 @@ bool Node::updateSystemHardwareProperty(SharedString &property, const TCHAR *val
  */
 bool Node::updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId)
 {
+   // Skip for EtherNet/IP devices because hardware information is updated
+   // from identity message and if SNMP is present on device it may override
+   // it with incorrect values
+   if (m_capabilities & NC_IS_ETHERNET_IP)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): skipping Node::updateSystemHardwareInformation for EtherNet/IP device"), m_name);
+      return false;
+   }
+
    poller->setStatus(_T("hardware check"));
    sendPollerMsg(requestId, _T("Updating general system hardware information\r\n"));
 
