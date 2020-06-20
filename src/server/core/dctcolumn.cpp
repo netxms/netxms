@@ -36,16 +36,16 @@ DCTableColumn::DCTableColumn(const DCTableColumn *src)
 /**
  * Create column object from NXCP message
  */
-DCTableColumn::DCTableColumn(NXCPMessage *msg, UINT32 baseId)
+DCTableColumn::DCTableColumn(const NXCPMessage& msg, UINT32 baseId)
 {
-	msg->getFieldAsString(baseId, m_name, MAX_COLUMN_NAME);
-	m_flags = msg->getFieldAsUInt16(baseId + 1);
-   m_displayName = msg->getFieldAsString(baseId + 3);
+	msg.getFieldAsString(baseId, m_name, MAX_COLUMN_NAME);
+	m_flags = msg.getFieldAsUInt16(baseId + 1);
+   m_displayName = msg.getFieldAsString(baseId + 3);
 
-   if (msg->isFieldExist(baseId + 2))
+   if (msg.isFieldExist(baseId + 2))
 	{
 		UINT32 oid[256];
-		size_t len = msg->getFieldAsInt32Array(baseId + 2, 256, oid);
+		size_t len = msg.getFieldAsInt32Array(baseId + 2, 256, oid);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(oid, len);

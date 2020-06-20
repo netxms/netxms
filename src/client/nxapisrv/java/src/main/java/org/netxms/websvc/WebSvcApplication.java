@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ public class WebSvcApplication extends Application
       setStatusService(statusService);
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.restlet.Application#createInboundRoot()
     */
    @Override

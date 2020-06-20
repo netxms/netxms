@@ -811,27 +811,27 @@ void DCTable::createMessage(NXCPMessage *msg)
 /**
  * Update data collection object from NXCP message
  */
-void DCTable::updateFromMessage(NXCPMessage *pMsg)
+void DCTable::updateFromMessage(const NXCPMessage& msg)
 {
-	DCObject::updateFromMessage(pMsg);
+	DCObject::updateFromMessage(msg);
 
    lock();
 
 	m_columns->clear();
-	int count = (int)pMsg->getFieldAsUInt32(VID_NUM_COLUMNS);
-	UINT32 varId = VID_DCI_COLUMN_BASE;
+	int count = msg.getFieldAsInt32(VID_NUM_COLUMNS);
+	uint32_t fieldId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < count; i++)
 	{
-		m_columns->add(new DCTableColumn(pMsg, varId));
-		varId += 10;
+		m_columns->add(new DCTableColumn(msg, fieldId));
+		fieldId += 10;
 	}
 
-	count = (int)pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
+	count = msg.getFieldAsInt32(VID_NUM_THRESHOLDS);
    ObjectArray<DCTableThreshold> *newThresholds = new ObjectArray<DCTableThreshold>(count, 8, Ownership::True);
-	varId = VID_DCI_THRESHOLD_BASE;
+	fieldId = VID_DCI_THRESHOLD_BASE;
 	for(int i = 0; i < count; i++)
 	{
-      DCTableThreshold *t = new DCTableThreshold(pMsg, &varId);
+      DCTableThreshold *t = new DCTableThreshold(msg, &fieldId);
 		newThresholds->add(t);
       for(int j = 0; j < m_thresholds->size(); j++)
       {

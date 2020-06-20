@@ -553,40 +553,40 @@ void DCItem::deleteFromDatabase()
 /**
  * Update item from NXCP message
  */
-void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId)
+void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId)
 {
-	DCObject::updateFromMessage(pMsg);
+	DCObject::updateFromMessage(msg);
 
    lock();
 
-   m_dataType = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_DATA_TYPE);
-   m_deltaCalculation = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
-	m_sampleCount = (int)pMsg->getFieldAsUInt16(VID_SAMPLE_COUNT);
-	m_nBaseUnits = pMsg->getFieldAsUInt16(VID_BASE_UNITS);
-	m_nMultiplier = (int)pMsg->getFieldAsUInt32(VID_MULTIPLIER);
+   m_dataType = (BYTE)msg.getFieldAsUInt16(VID_DCI_DATA_TYPE);
+   m_deltaCalculation = (BYTE)msg.getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
+	m_sampleCount = msg.getFieldAsInt16(VID_SAMPLE_COUNT);
+	m_nBaseUnits = msg.getFieldAsUInt16(VID_BASE_UNITS);
+	m_nMultiplier = msg.getFieldAsInt32(VID_MULTIPLIER);
 	MemFree(m_customUnitName);
-	m_customUnitName = pMsg->getFieldAsString(VID_CUSTOM_UNITS_NAME);
-	m_snmpRawValueType = pMsg->getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
-   pMsg->getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
+	m_customUnitName = msg.getFieldAsString(VID_CUSTOM_UNITS_NAME);
+	m_snmpRawValueType = msg.getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
+   msg.getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
 
    // Update thresholds
-   UINT32 dwNum = pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
-   UINT32 *newThresholds = MemAllocArray<UINT32>(dwNum);
-   *ppdwMapIndex = MemAllocArray<UINT32>(dwNum);
-   *ppdwMapId = MemAllocArray<UINT32>(dwNum);
-   *pdwNumMaps = 0;
+   uint32_t dwNum = msg.getFieldAsUInt32(VID_NUM_THRESHOLDS);
+   uint32_t *newThresholds = MemAllocArray<uint32_t>(dwNum);
+   *mapIndex = MemAllocArray<uint32_t>(dwNum);
+   *mapId = MemAllocArray<uint32_t>(dwNum);
+   *numMaps = 0;
 
    // Read all new threshold ids from message
-   for(UINT32 i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
+   for(uint32_t i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
    {
-      newThresholds[i] = pMsg->getFieldAsUInt32(dwId);
+      newThresholds[i] = msg.getFieldAsUInt32(dwId);
    }
 
    // Check if some thresholds was deleted, and reposition others if needed
    Threshold **ppNewList = MemAllocArray<Threshold*>(dwNum);
    for(int i = 0; i < getThresholdCount(); i++)
    {
-		UINT32 j;
+      uint32_t j;
       for(j = 0; j < dwNum; j++)
          if (m_thresholds->get(i)->getId() == newThresholds[j])
             break;
@@ -604,7 +604,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    }
 
    // Add or update thresholds
-   for(UINT32 i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
+   for(uint32_t i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
    {
       if (newThresholds[i] == 0)    // New threshold?
       {
@@ -612,12 +612,12 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
          ppNewList[i]->createId();
 
          // Add index -> id mapping
-         (*ppdwMapIndex)[*pdwNumMaps] = i;
-         (*ppdwMapId)[*pdwNumMaps] = ppNewList[i]->getId();
-         (*pdwNumMaps)++;
+         (*mapIndex)[*numMaps] = i;
+         (*mapId)[*numMaps] = ppNewList[i]->getId();
+         (*numMaps)++;
       }
       if (ppNewList[i] != nullptr)
-         ppNewList[i]->updateFromMessage(pMsg, dwId);
+         ppNewList[i]->updateFromMessage(msg, dwId);
    }
 
 	if (dwNum > 0)
@@ -632,7 +632,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 		{
 			m_thresholds = new ObjectArray<Threshold>((int)dwNum, 8, Ownership::True);
 		}
-		for(UINT32 i = 0; i < dwNum; i++)
+		for(uint32_t i = 0; i < dwNum; i++)
       {
          if (ppNewList[i] != nullptr)
 			   m_thresholds->add(ppNewList[i]);

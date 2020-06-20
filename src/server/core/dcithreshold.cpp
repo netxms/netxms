@@ -622,19 +622,19 @@ void Threshold::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 /**
  * Update threshold object from NXCP message
  */
-void Threshold::updateFromMessage(NXCPMessage *msg, UINT32 baseId)
+void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)
 {
 	TCHAR buffer[MAX_DCI_STRING_VALUE];
-	UINT32 varId = baseId + 1;	// Skip ID field
+	uint32_t fieldId = baseId + 1;	// Skip ID field
 
-	m_eventCode = msg->getFieldAsUInt32(varId++);
-	m_rearmEventCode = msg->getFieldAsUInt32(varId++);
-   m_function = (BYTE)msg->getFieldAsUInt16(varId++);
-   m_operation = (BYTE)msg->getFieldAsUInt16(varId++);
-   m_sampleCount = (int)msg->getFieldAsUInt32(varId++);
-   setScript(msg->getFieldAsString(varId++));
-	m_repeatInterval = (int)msg->getFieldAsUInt32(varId++);
-	m_value = msg->getFieldAsString(varId++, buffer, MAX_DCI_STRING_VALUE);
+	m_eventCode = msg.getFieldAsUInt32(fieldId++);
+	m_rearmEventCode = msg.getFieldAsUInt32(fieldId++);
+   m_function = (BYTE)msg.getFieldAsUInt16(fieldId++);
+   m_operation = (BYTE)msg.getFieldAsUInt16(fieldId++);
+   m_sampleCount = (int)msg.getFieldAsUInt32(fieldId++);
+   setScript(msg.getFieldAsString(fieldId++));
+	m_repeatInterval = (int)msg.getFieldAsUInt32(fieldId++);
+	m_value = msg.getFieldAsString(fieldId++, buffer, MAX_DCI_STRING_VALUE);
    m_expandValue = (NumChars(m_value, '%') > 0);
 }
 

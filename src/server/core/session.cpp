@@ -162,9 +162,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
 	_tcscpy(m_clientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
    m_systemAccessRights = 0;
-   m_openDCIListLock = MutexCreate();
-   m_dwOpenDCIListSize = 0;
-   m_pOpenDCIList = nullptr;
    m_ppEPPRuleList = nullptr;
    m_dwNumRecordsToUpload = 0;
    m_dwRecordsUploaded = 0;
@@ -199,9 +196,7 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendAuditLog);
    MutexDestroy(m_mutexPollerInit);
    MutexDestroy(m_subscriptionLock);
-   MutexDestroy(m_openDCIListLock);
    delete m_subscriptions;
-   MemFree(m_pOpenDCIList);
    if (m_ppEPPRuleList != nullptr)
    {
       if (m_dwFlags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
@@ -323,19 +318,14 @@ bool ClientSession::isSubscribedTo(const TCHAR *channel) const
 }
 
 /**
- * Check if data collection configuration is open
+ * Callback for closing all open data collection configurations
  */
-bool ClientSession::isDCOpened(UINT32 dcId) const
+static EnumerationCallbackResult CloseDataCollectionConfiguration(const uint32_t *id, void *arg)
 {
-   bool found = false;
-   MutexLock(m_openDCIListLock);
-   for(UINT32 i = 0; i < m_dwOpenDCIListSize; i++)
-   {
-      if (dcId == m_pOpenDCIList[i])
-         found = true;
-   }
-   MutexUnlock(m_openDCIListLock);
-   return found;
+   shared_ptr<NetObj> object = FindObjectById(*id);
+   if ((object != nullptr) && (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE)))
+      static_cast<DataCollectionOwner&>(*object).applyDCIChanges();
+   return _CONTINUE;
 }
 
 /**
@@ -555,16 +545,8 @@ void ClientSession::readThread()
    // remove all pending file transfers from reporting server
    RemovePendingFileTransferRequests(this);
 
-   // Remove all locks created by this session
    RemoveAllSessionLocks(m_id);
-   MutexLock(m_openDCIListLock);
-   for(UINT32 i = 0; i < m_dwOpenDCIListSize; i++)
-   {
-      shared_ptr<NetObj> object = FindObjectById(m_pOpenDCIList[i]);
-      if ((object != nullptr) && (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE)))
-         static_cast<DataCollectionOwner&>(*object).applyDCIChanges();
-   }
-   MutexUnlock(m_openDCIListLock);
+   m_openDataCollectionConfigurations.forEach(CloseDataCollectionConfiguration, nullptr);
 
    // Waiting while reference count becomes 0
    if (m_refCount > 0)
@@ -3499,8 +3481,8 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
    bool success = false;
 
    // Get node id and check object class and access rights
-   uint32_t dwObjectId = request->getFieldAsUInt32(VID_OBJECT_ID);
-   shared_ptr<NetObj> object = FindObjectById(dwObjectId);
+   uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
@@ -3511,12 +3493,7 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
             msg.setField(VID_RCC, RCC_SUCCESS);
             if (!request->getFieldAsBoolean(VID_IS_REFRESH))
             {
-               MutexLock(m_openDCIListLock);
-               // modify list of open nodes DCI lists
-               m_pOpenDCIList = (UINT32 *)realloc(m_pOpenDCIList, sizeof(UINT32) * (m_dwOpenDCIListSize + 1));
-               m_pOpenDCIList[m_dwOpenDCIListSize] = dwObjectId;
-               m_dwOpenDCIListSize++;
-               MutexUnlock(m_openDCIListLock);
+               m_openDataCollectionConfigurations.put(objectId);
             }
          }
          else
@@ -3550,8 +3527,8 @@ void ClientSession::closeNodeDCIList(NXCPMessage *request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get node id and check object class and access rights
-   uint32_t dwObjectId = request->getFieldAsUInt32(VID_OBJECT_ID);
-   shared_ptr<NetObj> object = FindObjectById(dwObjectId);
+   uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
@@ -3559,17 +3536,7 @@ void ClientSession::closeNodeDCIList(NXCPMessage *request)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             static_cast<DataCollectionOwner&>(*object).applyDCIChanges();
-            MutexLock(m_openDCIListLock);
-            for(UINT32 i = 0; i < m_dwOpenDCIListSize; i++)
-            {
-               if (m_pOpenDCIList[i] == dwObjectId)
-               {
-                  m_dwOpenDCIListSize--;
-                  memmove(&m_pOpenDCIList[i], &m_pOpenDCIList[i + 1], sizeof(UINT32) * (m_dwOpenDCIListSize - i));
-                  break;
-               }
-            }
-            MutexUnlock(m_openDCIListLock);
+            m_openDataCollectionConfigurations.remove(objectId);
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -3607,8 +3574,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            UINT32 i, itemId, dwNumMaps, *pdwMapId, *pdwMapIndex;
-            DCObject *dcObject;
+            UINT32 i, itemId;
             bool success = false;
 
             json_t *oldValue = object->toJson();
@@ -3622,6 +3588,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                   {
                      int dcObjectType = (int)request->getFieldAsUInt16(VID_DCOBJECT_TYPE);
                      // Create dummy DCI
+                     DCObject *dcObject;
                      switch(dcObjectType)
                      {
                         case DCO_TYPE_ITEM:
@@ -3667,6 +3634,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                   // Update existing
                   if (success)
                   {
+                     uint32_t dwNumMaps, *pdwMapId, *pdwMapIndex;
                      success = static_cast<DataCollectionOwner&>(*object).updateDCObject(itemId, request, &dwNumMaps, &pdwMapIndex, &pdwMapId, m_dwUserId);
                      if (success)
                      {

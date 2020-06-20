@@ -286,17 +286,17 @@ DCTableConditionGroup::DCTableConditionGroup(DCTableConditionGroup *src)
 /**
  * Create condition group from NXCP message
  */
-DCTableConditionGroup::DCTableConditionGroup(NXCPMessage *msg, UINT32 *baseId)
+DCTableConditionGroup::DCTableConditionGroup(const NXCPMessage& msg, uint32_t *baseId)
 {
-   UINT32 varId = *baseId;
-   int count = msg->getFieldAsUInt32(varId++);
+   uint32_t varId = *baseId;
+   int count = msg.getFieldAsUInt32(varId++);
    m_conditions = new ObjectArray<DCTableCondition>(count, 8, Ownership::True);
    for(int i = 0; i < count; i++)
    {
       TCHAR column[MAX_COLUMN_NAME], value[MAX_RESULT_LENGTH];
-      msg->getFieldAsString(varId++, column, MAX_COLUMN_NAME);
-      int op = (int)msg->getFieldAsUInt16(varId++);
-      msg->getFieldAsString(varId++, value, MAX_RESULT_LENGTH);
+      msg.getFieldAsString(varId++, column, MAX_COLUMN_NAME);
+      int op = (int)msg.getFieldAsUInt16(varId++);
+      msg.getFieldAsString(varId++, value, MAX_RESULT_LENGTH);
       m_conditions->add(new DCTableCondition(column, op, value));
    }
    *baseId = varId;
@@ -456,16 +456,16 @@ DCTableThreshold::DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row)
 /**
  * Create table threshold from NXCP message
  */
-DCTableThreshold::DCTableThreshold(NXCPMessage *msg, UINT32 *baseId)
+DCTableThreshold::DCTableThreshold(const NXCPMessage& msg, uint32_t *baseId)
 {
-   UINT32 fieldId = *baseId;
-   m_id = msg->getFieldAsUInt32(fieldId++);
+   uint32_t fieldId = *baseId;
+   m_id = msg.getFieldAsUInt32(fieldId++);
    if (m_id == 0)
       m_id = CreateUniqueId(IDG_THRESHOLD);
-   m_activationEvent = msg->getFieldAsUInt32(fieldId++);
-   m_deactivationEvent = msg->getFieldAsUInt32(fieldId++);
-   m_sampleCount = msg->getFieldAsUInt32(fieldId++);
-   int count = (int)msg->getFieldAsUInt32(fieldId++);
+   m_activationEvent = msg.getFieldAsUInt32(fieldId++);
+   m_deactivationEvent = msg.getFieldAsUInt32(fieldId++);
+   m_sampleCount = msg.getFieldAsUInt32(fieldId++);
+   int count = (int)msg.getFieldAsUInt32(fieldId++);
    m_groups = new ObjectArray<DCTableConditionGroup>(count, 4, Ownership::True);
    *baseId = fieldId;
    for(int i = 0; i < count; i++)

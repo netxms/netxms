@@ -370,7 +370,7 @@ void NotifyClientsOnDCIUpdate(NXCPMessage *update, const NetObj& object)
           session->isAuthenticated() &&
           !session->isTerminated() &&
           object.checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) &&
-          session->isDCOpened(object.getId()))
+          session->isDataCollectionConfigurationOpen(object.getId()))
       {
          session->postMessage(update);
       }

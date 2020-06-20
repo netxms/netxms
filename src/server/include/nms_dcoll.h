@@ -190,10 +190,10 @@ public:
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
-   void updateFromMessage(NXCPMessage *msg, UINT32 baseId);
+   void updateFromMessage(const NXCPMessage& msg, uint32_t baseId);
 
    void createId();
-   UINT32 getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_sampleCount; }
+   uint32_t getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_sampleCount; }
 
    bool equals(const Threshold *t) const;
 
@@ -393,7 +393,7 @@ public:
    void fillSchedulingDataMessage(NXCPMessage *msg, uint32_t base) const;
 
    virtual void createMessage(NXCPMessage *pMsg);
-   virtual void updateFromMessage(NXCPMessage *pMsg);
+   virtual void updateFromMessage(const NXCPMessage& msg);
 
    virtual void changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion);
 
@@ -517,7 +517,7 @@ public:
    TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 
    virtual void createMessage(NXCPMessage *msg) override;
-   void updateFromMessage(NXCPMessage *msg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
+   void updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId);
    void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
 
    virtual void changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion) override;
@@ -560,7 +560,7 @@ private:
 
 public:
 	DCTableColumn(const DCTableColumn *src);
-	DCTableColumn(NXCPMessage *msg, uint32_t baseId);
+	DCTableColumn(const NXCPMessage& msg, uint32_t baseId);
 	DCTableColumn(DB_RESULT hResult, int row);
    DCTableColumn(ConfigEntry *e);
 	~DCTableColumn();
@@ -624,7 +624,7 @@ private:
 
 public:
    DCTableConditionGroup();
-   DCTableConditionGroup(NXCPMessage *msg, UINT32 *baseId);
+   DCTableConditionGroup(const NXCPMessage& msg, uint32_t *baseId);
    DCTableConditionGroup(DCTableConditionGroup *src);
    DCTableConditionGroup(ConfigEntry *e);
    ~DCTableConditionGroup();
@@ -687,7 +687,7 @@ private:
 public:
    DCTableThreshold();
    DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row);
-   DCTableThreshold(NXCPMessage *msg, UINT32 *baseId);
+   DCTableThreshold(const NXCPMessage& msg, uint32_t *baseId);
    DCTableThreshold(DCTableThreshold *src, bool shadowCopy);
    DCTableThreshold(ConfigEntry *e);
    ~DCTableThreshold();
@@ -760,7 +760,7 @@ public:
    virtual void generateEventsBasedOnThrDiff() override;
 
    virtual void createMessage(NXCPMessage *msg) override;
-   virtual void updateFromMessage(NXCPMessage *msg) override;
+   virtual void updateFromMessage(const NXCPMessage& msg) override;
 
 	virtual bool deleteAllData() override;
    virtual bool deleteEntry(time_t timestamp) override;

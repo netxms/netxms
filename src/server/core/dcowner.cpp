@@ -383,7 +383,7 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
 /**
  * Delete data collection object from node
  */
-bool DataCollectionOwner::deleteDCObject(UINT32 dcObjectId, bool needLock, UINT32 userId)
+bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uint32_t userId)
 {
    bool success = false;
 
@@ -476,7 +476,7 @@ void DataCollectionOwner::deleteDCObject(DCObject *object)
 /**
  * Modify data collection object from NXCP message
  */
-bool DataCollectionOwner::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId, UINT32 userId)
+bool DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId, uint32_t userId)
 {
    bool success = false;
 
@@ -486,14 +486,14 @@ bool DataCollectionOwner::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UIN
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-      if (object->getId() == dwItemId)
+      if (object->getId() == dcObjectId)
       {
          if (object->hasAccess(userId))
          {
             if (object->getType() == DCO_TYPE_ITEM)
-               static_cast<DCItem*>(object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
+               static_cast<DCItem*>(object)->updateFromMessage(msg, numMaps, mapIndex, mapId);
             else
-               object->updateFromMessage(pMsg);
+               object->updateFromMessage(msg);
 
             if (object->getInstanceDiscoveryMethod() != IDM_NONE)
                updateInstanceDiscoveryItems(object);
@@ -502,7 +502,7 @@ bool DataCollectionOwner::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UIN
          }
          else
          {
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::updateDCObject: denied access to DCObject %u for user %u"), dwItemId, userId);
+            nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::updateDCObject: denied access to DCObject %u for user %u"), dcObjectId, userId);
          }
          break;
       }

@@ -778,41 +778,41 @@ void DCObject::createMessage(NXCPMessage *pMsg)
 /**
  * Update data collection object from NXCP message
  */
-void DCObject::updateFromMessage(NXCPMessage *pMsg)
+void DCObject::updateFromMessage(const NXCPMessage& msg)
 {
    lock();
 
-   m_name = pMsg->getFieldAsSharedString(VID_NAME, MAX_ITEM_NAME);
-   m_description = pMsg->getFieldAsSharedString(VID_DESCRIPTION, MAX_DB_STRING);
-   m_systemTag = pMsg->getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DB_STRING);
-	m_flags = pMsg->getFieldAsUInt16(VID_FLAGS);
-   m_source = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
-   setStatus(pMsg->getFieldAsUInt16(VID_DCI_STATUS), true);
-	m_dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
-	m_sourceNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
-   m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
-   m_snmpVersion = pMsg->isFieldExist(VID_SNMP_VERSION) ? static_cast<SNMP_Version>(pMsg->getFieldAsInt16(VID_SNMP_VERSION)) : SNMP_VERSION_DEFAULT;
-	pMsg->getFieldAsString(VID_PERFTAB_SETTINGS, &m_pszPerfTabSettings);
-   pMsg->getFieldAsString(VID_COMMENTS, &m_comments);
+   m_name = msg.getFieldAsSharedString(VID_NAME, MAX_ITEM_NAME);
+   m_description = msg.getFieldAsSharedString(VID_DESCRIPTION, MAX_DB_STRING);
+   m_systemTag = msg.getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DB_STRING);
+	m_flags = msg.getFieldAsUInt16(VID_FLAGS);
+   m_source = (BYTE)msg.getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
+   setStatus(msg.getFieldAsUInt16(VID_DCI_STATUS), true);
+	m_dwResourceId = msg.getFieldAsUInt32(VID_RESOURCE_ID);
+	m_sourceNode = msg.getFieldAsUInt32(VID_AGENT_PROXY);
+   m_snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
+   m_snmpVersion = msg.isFieldExist(VID_SNMP_VERSION) ? static_cast<SNMP_Version>(msg.getFieldAsInt16(VID_SNMP_VERSION)) : SNMP_VERSION_DEFAULT;
+	msg.getFieldAsString(VID_PERFTAB_SETTINGS, &m_pszPerfTabSettings);
+   msg.getFieldAsString(VID_COMMENTS, &m_comments);
 
-   m_pollingScheduleType = static_cast<BYTE>(pMsg->getFieldAsUInt16(VID_POLLING_SCHEDULE_TYPE));
+   m_pollingScheduleType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_POLLING_SCHEDULE_TYPE));
    if (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM)
-      pMsg->getFieldAsString(VID_POLLING_INTERVAL, &m_pollingIntervalSrc);
+      msg.getFieldAsString(VID_POLLING_INTERVAL, &m_pollingIntervalSrc);
    else
       MemFreeAndNull(m_pollingIntervalSrc);
-   m_retentionType = static_cast<BYTE>(pMsg->getFieldAsUInt16(VID_RETENTION_TYPE));
+   m_retentionType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_RETENTION_TYPE));
    if (m_retentionType == DC_POLLING_SCHEDULE_CUSTOM)
-      pMsg->getFieldAsString(VID_RETENTION_TIME, &m_retentionTimeSrc);
+      msg.getFieldAsString(VID_RETENTION_TIME, &m_retentionTimeSrc);
    else
       MemFreeAndNull(m_retentionTimeSrc);
    updateTimeIntervalsInternal();
 
-   TCHAR *pszStr = pMsg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
+   TCHAR *pszStr = msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT);
    setTransformationScript(pszStr);
    MemFree(pszStr);
 
    // Update schedules
-   int count = pMsg->getFieldAsInt32(VID_NUM_SCHEDULES);
+   int count = msg.getFieldAsInt32(VID_NUM_SCHEDULES);
    if (count > 0)
    {
       if (m_schedules != nullptr)
@@ -823,7 +823,7 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
       UINT32 fieldId = VID_DCI_SCHEDULE_BASE;
       for(int i = 0; i < count; i++, fieldId++)
       {
-         TCHAR *s = pMsg->getFieldAsString(fieldId);
+         TCHAR *s = msg.getFieldAsString(fieldId);
          if (s != nullptr)
          {
             m_schedules->addPreallocated(s);
@@ -835,20 +835,20 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
       delete_and_null(m_schedules);
    }
 
-   m_instanceDiscoveryMethod = pMsg->getFieldAsUInt16(VID_INSTD_METHOD);
-   m_instanceDiscoveryData = pMsg->getFieldAsSharedString(VID_INSTD_DATA, MAX_INSTANCE_LEN);
+   m_instanceDiscoveryMethod = msg.getFieldAsUInt16(VID_INSTD_METHOD);
+   m_instanceDiscoveryData = msg.getFieldAsSharedString(VID_INSTD_DATA, MAX_INSTANCE_LEN);
 
-   pszStr = pMsg->getFieldAsString(VID_INSTD_FILTER);
+   pszStr = msg.getFieldAsString(VID_INSTD_FILTER);
    setInstanceFilter(pszStr);
    MemFree(pszStr);
 
-   m_instance = pMsg->getFieldAsSharedString(VID_INSTANCE, MAX_INSTANCE_LEN);
+   m_instance = msg.getFieldAsSharedString(VID_INSTANCE, MAX_INSTANCE_LEN);
 
    m_accessList->clear();
-   pMsg->getFieldAsInt32Array(VID_ACL, m_accessList);
+   msg.getFieldAsInt32Array(VID_ACL, m_accessList);
 
-   m_instanceRetentionTime = pMsg->getFieldAsInt32(VID_INSTANCE_RETENTION);
-   m_relatedObject = pMsg->getFieldAsUInt32(VID_RELATED_OBJECT);
+   m_instanceRetentionTime = msg.getFieldAsInt32(VID_INSTANCE_RETENTION);
+   m_relatedObject = msg.getFieldAsUInt32(VID_RELATED_OBJECT);
 
 	unlock();
 }

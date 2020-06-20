@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ public class Objects extends AbstractObjectHandler
 {
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)
     */
    @Override

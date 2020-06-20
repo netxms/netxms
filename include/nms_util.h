@@ -2010,18 +2010,66 @@ public:
 /**
  * Hash set template
  */
-template <class K> class HashSet : public HashSetBase
+template<class K> class HashSet : public HashSetBase
 {
 public:
    HashSet() : HashSetBase(sizeof(K)) { }
 
    void put(const K& key) { _put(&key); }
    void remove(const K& key) { _remove(&key); }
-   bool contains(const K& key) { return _contains(&key); }
+   bool contains(const K& key) const { return _contains(&key); }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
    {
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void *, void *)>(cb), context);
+   }
+};
+
+/**
+ * Synchronized hash set
+ */
+template<class K> class SynchronizedHashSet
+{
+private:
+   HashSet<K> m_set;
+   MUTEX m_mutex;
+
+public:
+   SynchronizedHashSet()
+   {
+      m_mutex = MutexCreateFast();
+   }
+   ~SynchronizedHashSet()
+   {
+      MutexDestroy(m_mutex);
+   }
+
+   void put(const K& key)
+   {
+      MutexLock(m_mutex);
+      m_set.put(key);
+      MutexUnlock(m_mutex);
+   }
+   void remove(const K& key)
+   {
+      MutexLock(m_mutex);
+      m_set.remove(key);
+      MutexUnlock(m_mutex);
+   }
+   bool contains(const K& key) const
+   {
+      MutexLock(m_mutex);
+      bool result = m_set.contains(key);
+      MutexUnlock(m_mutex);
+      return result;
+   }
+
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
+   {
+      MutexLock(m_mutex);
+      auto result = m_set.forEach(cb, context);
+      MutexUnlock(m_mutex);
+      return result;
    }
 };
 
