@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,11 +41,11 @@ public class DataCollectionTable extends DataCollectionObject
 	private List<TableThreshold> thresholds;
 	
 	/**
-	 * Create data collection object from NXCP message.
-	 * 
-	 * @param owner The owner object
-	 * @param msg The NXCPMessage
-	 */
+    * Create data collection object from NXCP message.
+    *
+    * @param owner The owner object
+    * @param msg The NXCPMessage
+    */
 	public DataCollectionTable(DataCollectionConfiguration owner, NXCPMessage msg)
 	{
 		super(owner, msg);
@@ -72,31 +72,54 @@ public class DataCollectionTable extends DataCollectionObject
 	}
 
 	/**
-	 * Constructor for new data collection objects.
-	 * 
-	 * @param owner The owner object
-	 * @param id The table ID
-	 */
-	public DataCollectionTable(DataCollectionConfiguration owner, long id)
+    * Constructor for new data collection objects.
+    *
+    * @param owner The owner object
+    * @param nodeId Owning node ID
+    * @param id The table ID
+    */
+   public DataCollectionTable(DataCollectionConfiguration owner, long nodeId, long id)
 	{
-		super(owner, id);
+      super(owner, nodeId, id);
 		instanceColumn = null;
 		columns = new ArrayList<ColumnDefinition>(0);
 		thresholds = new ArrayList<TableThreshold>(0);
 	}
-   
+
+   /**
+    * Constructor for new data collection objects.
+    *
+    * @param owner The owner object
+    * @param id The table ID
+    */
+   public DataCollectionTable(DataCollectionConfiguration owner, long id)
+   {
+      this(owner, owner.getNodeId(), id);
+   }
+
+   /**
+    * Constructor for new data collection objects.
+    *
+    * @param nodeId Owning node ID
+    * @param id The table ID
+    */
+   public DataCollectionTable(long nodeId, long id)
+   {
+      this(null, nodeId, id);
+   }
+
    /**
     * Object copy constructor
-    * 
+    *
     * @param owner object owner
-    * @param dco object to copy
+    * @param src object to copy
     */
-	protected DataCollectionTable(DataCollectionConfiguration owner, DataCollectionTable dco)
+	protected DataCollectionTable(DataCollectionConfiguration owner, DataCollectionTable src)
    {
-      super(owner, dco);  
-      instanceColumn = dco.instanceColumn;
-      columns = new ArrayList<ColumnDefinition>(dco.columns);
-      thresholds = new ArrayList<TableThreshold>(dco.thresholds);
+      super(owner, src);
+      instanceColumn = src.instanceColumn;
+      columns = new ArrayList<ColumnDefinition>(src.columns);
+      thresholds = new ArrayList<TableThreshold>(src.thresholds);
    }
 
    /**

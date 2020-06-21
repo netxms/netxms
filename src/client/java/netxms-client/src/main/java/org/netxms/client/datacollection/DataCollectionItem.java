@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,15 +98,15 @@ public class DataCollectionItem extends DataCollectionObject
 	}
 
 	/**
-	 * Constructor for new data collection items.
-	 * 
-	 * @param owner Owning configuration object
-	 * @param id Identifier assigned to new item
-	 */
-	public DataCollectionItem(final DataCollectionConfiguration owner, long id)
+    * Constructor for new data collection items.
+    *
+    * @param owner Owning configuration object
+    * @param nodeId Owning node ID
+    * @param id Identifier assigned to new item
+    */
+   protected DataCollectionItem(DataCollectionConfiguration owner, long nodeId, long id)
 	{
-		super(owner, id);
-		
+      super(owner, nodeId, id);
 		dataType = DataType.INT32;
 		deltaCalculation = DELTA_NONE;
 		sampleCount = 0;
@@ -117,25 +117,47 @@ public class DataCollectionItem extends DataCollectionObject
 		predictionEngine = "";
 		thresholds = new ArrayList<Threshold>(0);
 	}
-   
+
+   /**
+    * Constructor for new data collection items.
+    *
+    * @param owner Owning configuration object
+    * @param id Identifier assigned to new item
+    */
+   public DataCollectionItem(DataCollectionConfiguration owner, long id)
+   {
+      this(owner, owner.getNodeId(), id);
+   }
+
+   /**
+    * Constructor for new data collection items.
+    *
+    * @param nodeId Owning node ID
+    * @param id Identifier assigned to new item
+    */
+   public DataCollectionItem(long nodeId, long id)
+   {
+      this(null, nodeId, id);
+   }
+
    /**
     * Object copy constructor
-    * 
+    *
     * @param owner object owner
-    * @param dco object to copy
+    * @param src object to copy
     */
-	protected DataCollectionItem(DataCollectionConfiguration owner, DataCollectionItem dco)
+   protected DataCollectionItem(DataCollectionConfiguration owner, DataCollectionItem src)
    {
-      super(owner, dco);   
-      dataType = dco.dataType;
-      deltaCalculation = dco.deltaCalculation;
-      sampleCount = dco.sampleCount;
-      baseUnits = dco.baseUnits;
-      multiplier = dco.multiplier;
-      customUnitName = dco.customUnitName;
-      snmpRawValueType = dco.snmpRawValueType;
-      thresholds = new ArrayList<Threshold>(dco.thresholds);
-      predictionEngine = dco.predictionEngine;
+      super(owner, src);
+      dataType = src.dataType;
+      deltaCalculation = src.deltaCalculation;
+      sampleCount = src.sampleCount;
+      baseUnits = src.baseUnits;
+      multiplier = src.multiplier;
+      customUnitName = src.customUnitName;
+      snmpRawValueType = src.snmpRawValueType;
+      thresholds = new ArrayList<Threshold>(src.thresholds);
+      predictionEngine = src.predictionEngine;
    }
 
    /**

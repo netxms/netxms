@@ -567,12 +567,12 @@ bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, 
 /**
  * Unlock data collection items list
  */
-void DataCollectionOwner::applyDCIChanges()
+void DataCollectionOwner::applyDCIChanges(bool forcedChange)
 {
    bool callChangeHook = false;
 
    lockProperties();
-   if (m_dciListModified)
+   if (m_dciListModified || forcedChange)
    {
       setModified(MODIFY_DATA_COLLECTION);
       callChangeHook = true;

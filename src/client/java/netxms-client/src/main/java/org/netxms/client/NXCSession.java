@@ -6882,6 +6882,23 @@ public class NXCSession
    }
 
    /**
+    * Modify data collection object without opening data collection configuration.
+    *
+    * @param dco dcObject collection object
+    * @return Identifier assigned to newly created object
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long modifyDataCollectionObject(DataCollectionObject dcObject) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)dcObject.getNodeId());
+      dcObject.fillMessage(msg);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_DCI_ID);
+   }
+
+   /**
     * Clear data collection configuration on agent. Will wipe out all configuration and collected data.
     *
     * @param nodeId node object ID

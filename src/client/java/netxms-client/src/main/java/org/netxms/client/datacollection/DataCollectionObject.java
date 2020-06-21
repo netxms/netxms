@@ -84,6 +84,7 @@ public abstract class DataCollectionObject
 	
 	protected DataCollectionConfiguration owner;
 	protected long id;
+   protected long nodeId;
 	protected long templateId;
 	protected long resourceId;
 	protected long sourceNode;
@@ -122,6 +123,7 @@ public abstract class DataCollectionObject
 	{
 		this.owner = owner;
 		id = msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
+      nodeId = owner.getNodeId();
 		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		resourceId = msg.getFieldAsInt64(NXCPCodes.VID_RESOURCE_ID);
 		sourceNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
@@ -166,15 +168,17 @@ public abstract class DataCollectionObject
 	}
 
 	/**
-	 * Constructor for new data collection objects.
-	 * 
-	 * @param owner Owning configuration object
-	 * @param id Identifier assigned to new item
-	 */
-	protected DataCollectionObject(final DataCollectionConfiguration owner, long id)
+    * Constructor for new data collection objects.
+    *
+    * @param owner Owning configuration object
+    * @param nodeId Owning node ID
+    * @param id Identifier assigned to new item
+    */
+   protected DataCollectionObject(final DataCollectionConfiguration owner, long nodeId, long id)
 	{
 		this.owner = owner;
 		this.id = id;
+      this.nodeId = nodeId;
 		templateId = 0;
 		resourceId = 0;
 		sourceNode = 0;
@@ -199,44 +203,67 @@ public abstract class DataCollectionObject
       instanceRetentionTime = -1;
       relatedObject = 0;
 	}
-	
+
+   /**
+    * Constructor for new data collection objects.
+    *
+    * @param owner Owning configuration object
+    * @param id Identifier assigned to new item
+    */
+   protected DataCollectionObject(final DataCollectionConfiguration owner, long id)
+   {
+      this(owner, owner.getNodeId(), id);
+   }
+
+   /**
+    * Constructor for new data collection objects.
+    *
+    * @param nodeId Owning node ID
+    * @param id Identifier assigned to new item
+    */
+   protected DataCollectionObject(long nodeId, long id)
+   {
+      this(null, nodeId, id);
+   }
+
 	/**
-	 * Object copy constructor
-	 * 
-	 * @param owner object owner
-	 * @param dco object to copy
-	 */
-	public DataCollectionObject(DataCollectionConfiguration owner, DataCollectionObject dco)
+    * Object copy constructor
+    *
+    * @param owner object owner
+    * @param src object to copy
+    */
+	public DataCollectionObject(DataCollectionConfiguration owner, DataCollectionObject src)
    {
 	   this.owner = owner;
-	   id = dco.id;
-	   templateId = dco.templateId;
-	   resourceId = dco.resourceId;
-	   sourceNode = dco.sourceNode;
-	   pollingScheduleType = dco.pollingScheduleType;
-	   pollingInterval = dco.pollingInterval;
-	   retentionType = dco.retentionType;
-	   retentionTime = dco.retentionTime;
-	   origin = dco.origin;
-	   status = dco.status;
-	   flags = dco.flags;
-	   transformationScript = dco.transformationScript;
-	   name = dco.name;
-	   description = dco.description;
-	   systemTag = dco.systemTag;
-	   perfTabSettings = dco.perfTabSettings;
-	   snmpPort = dco.snmpPort;
-      snmpVersion = dco.snmpVersion;
-	   schedules = new ArrayList<String>(dco.schedules);
-	   userData = dco.userData;
-	   comments = dco.comments;
-	   instance = dco.instance;
-	   instanceDiscoveryMethod = dco.instanceDiscoveryMethod;
-	   instanceDiscoveryData = dco.instanceDiscoveryData;
-	   instanceDiscoveryFilter = dco.instanceDiscoveryFilter;
-	   accessList = new ArrayList<Long>(dco.accessList);
-	   instanceRetentionTime = dco.instanceRetentionTime;
-	   relatedObject = dco.relatedObject;
+	   id = src.id;
+      this.nodeId = src.nodeId;
+	   templateId = src.templateId;
+	   resourceId = src.resourceId;
+	   sourceNode = src.sourceNode;
+	   pollingScheduleType = src.pollingScheduleType;
+	   pollingInterval = src.pollingInterval;
+	   retentionType = src.retentionType;
+	   retentionTime = src.retentionTime;
+	   origin = src.origin;
+	   status = src.status;
+	   flags = src.flags;
+	   transformationScript = src.transformationScript;
+	   name = src.name;
+	   description = src.description;
+	   systemTag = src.systemTag;
+	   perfTabSettings = src.perfTabSettings;
+	   snmpPort = src.snmpPort;
+      snmpVersion = src.snmpVersion;
+	   schedules = new ArrayList<String>(src.schedules);
+	   userData = src.userData;
+	   comments = src.comments;
+	   instance = src.instance;
+	   instanceDiscoveryMethod = src.instanceDiscoveryMethod;
+	   instanceDiscoveryData = src.instanceDiscoveryData;
+	   instanceDiscoveryFilter = src.instanceDiscoveryFilter;
+	   accessList = new ArrayList<Long>(src.accessList);
+	   instanceRetentionTime = src.instanceRetentionTime;
+	   relatedObject = src.relatedObject;
    }
 
    /**
@@ -563,7 +590,7 @@ public abstract class DataCollectionObject
 	 */
 	public long getNodeId()
 	{
-		return owner.getNodeId();
+      return nodeId;
 	}
 
 	/**

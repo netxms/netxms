@@ -92,12 +92,12 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
          {
             case APPLY_TEMPLATE:
                task->source->applyToTarget(static_pointer_cast<DataCollectionTarget>(dcTarget));
-               static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges();
+               static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges(false);
                bSuccess = TRUE;
                break;
             case REMOVE_TEMPLATE:
                static_cast<DataCollectionTarget*>(dcTarget.get())->unbindFromTemplate(task->source, task->removeDCI);
-               static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges();
+               static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges(false);
                bSuccess = TRUE;
                break;
             default:

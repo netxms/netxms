@@ -1282,7 +1282,7 @@ public:
    StringSet *getDCIScriptList() const;
    bool isDataCollectionSource(UINT32 nodeId) const;
 
-   virtual void applyDCIChanges();
+   virtual void applyDCIChanges(bool forcedChange);
    virtual bool applyToTarget(const shared_ptr<DataCollectionTarget>& target);
 
    void queueUpdate() const;
@@ -1431,7 +1431,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-   virtual void applyDCIChanges() override;
+   virtual void applyDCIChanges(bool forcedChange) override;
    virtual bool applyToTarget(const shared_ptr<DataCollectionTarget>& target) override;
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;

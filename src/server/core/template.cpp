@@ -366,16 +366,16 @@ void Template::forceDeployPolicies(const shared_ptr<Node>& target)
 /**
  * Unlock data collection items list
  */
-void Template::applyDCIChanges()
+void Template::applyDCIChanges(bool forcedChange)
 {
    lockProperties();
-   if (m_dciListModified)
+   if (m_dciListModified || forcedChange)
    {
       updateVersion();
       setModified(MODIFY_OTHER);
    }
    unlockProperties();
-   super::applyDCIChanges();
+   super::applyDCIChanges(forcedChange);
 }
 
 /**

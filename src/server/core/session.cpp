@@ -324,7 +324,7 @@ static EnumerationCallbackResult CloseDataCollectionConfiguration(const uint32_t
 {
    shared_ptr<NetObj> object = FindObjectById(*id);
    if ((object != nullptr) && (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE)))
-      static_cast<DataCollectionOwner&>(*object).applyDCIChanges();
+      static_cast<DataCollectionOwner&>(*object).applyDCIChanges(false);
    return _CONTINUE;
 }
 
@@ -3535,7 +3535,7 @@ void ClientSession::closeNodeDCIList(NXCPMessage *request)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-            static_cast<DataCollectionOwner&>(*object).applyDCIChanges();
+            static_cast<DataCollectionOwner&>(*object).applyDCIChanges(false);
             m_openDataCollectionConfigurations.remove(objectId);
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
@@ -3574,12 +3574,12 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            UINT32 i, itemId;
             bool success = false;
 
             json_t *oldValue = object->toJson();
 
-            int dcObjectType = (int)request->getFieldAsUInt16(VID_DCOBJECT_TYPE);
+            uint32_t itemId;
+            int dcObjectType = request->getFieldAsInt16(VID_DCOBJECT_TYPE);
             switch(request->getCode())
             {
                case CMD_MODIFY_NODE_DCI:
@@ -3634,8 +3634,8 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                   // Update existing
                   if (success)
                   {
-                     uint32_t dwNumMaps, *pdwMapId, *pdwMapIndex;
-                     success = static_cast<DataCollectionOwner&>(*object).updateDCObject(itemId, request, &dwNumMaps, &pdwMapIndex, &pdwMapId, m_dwUserId);
+                     uint32_t mapCount, *mapId, *mapIndex;
+                     success = static_cast<DataCollectionOwner&>(*object).updateDCObject(itemId, request, &mapCount, &mapIndex, &mapId, m_dwUserId);
                      if (success)
                      {
                         msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3646,16 +3646,16 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                         // Send index to id mapping for newly created thresholds to client
                         if (dcObjectType == DCO_TYPE_ITEM)
                         {
-                           msg.setField(VID_DCI_NUM_MAPS, dwNumMaps);
-                           for(i = 0; i < dwNumMaps; i++)
+                           msg.setField(VID_DCI_NUM_MAPS, mapCount);
+                           for(uint32_t i = 0; i < mapCount; i++)
                            {
-                              pdwMapId[i] = htonl(pdwMapId[i]);
-                              pdwMapIndex[i] = htonl(pdwMapIndex[i]);
+                              mapId[i] = htonl(mapId[i]);
+                              mapIndex[i] = htonl(mapIndex[i]);
                            }
-                           msg.setField(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(UINT32) * dwNumMaps);
-                           msg.setField(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(UINT32) * dwNumMaps);
-                           MemFree(pdwMapId);
-                           MemFree(pdwMapIndex);
+                           msg.setField(VID_DCI_MAP_IDS, reinterpret_cast<BYTE*>(mapId), sizeof(uint32_t) * mapCount);
+                           msg.setField(VID_DCI_MAP_INDEXES, reinterpret_cast<BYTE*>(mapIndex), sizeof(uint32_t) * mapCount);
+                           MemFree(mapId);
+                           MemFree(mapIndex);
                         }
                      }
                      else
@@ -3672,7 +3672,10 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
             }
             if (success)
             {
-               static_cast<DataCollectionOwner&>(*object).setDCIModificationFlag();
+               if (m_openDataCollectionConfigurations.contains(dwObjectId))
+                  static_cast<DataCollectionOwner&>(*object).setDCIModificationFlag();
+               else
+                  static_cast<DataCollectionOwner&>(*object).applyDCIChanges(true);
                json_t *newValue = object->toJson();
                writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue, _T("Data collection configuration changed for object %s"), object->getName());
                json_decref(newValue);
@@ -4031,7 +4034,7 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
 
             // Cleanup
             MemFree(pdwItemList);
-            static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges();
+            static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges(!m_openDataCollectionConfigurations.contains(pDestination->getId()));
             msg.setField(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
 
             // Queue template update
@@ -7153,7 +7156,7 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
             ObjectTransactionStart();
             bool bErrors = static_cast<Template&>(*pSource).applyToTarget(static_pointer_cast<DataCollectionTarget>(pDestination));
             ObjectTransactionEnd();
-            static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges();
+            static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges(false);
             msg.setField(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
          }
          else  // User doesn't have enough rights on object(s)
