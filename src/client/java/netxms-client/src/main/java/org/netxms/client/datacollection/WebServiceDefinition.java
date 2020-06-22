@@ -354,7 +354,7 @@ public class WebServiceDefinition
    }
 
    /**
-    * @param verifyCertificate the verifyCertificate to set
+    * @param verifyHost the verifyHost to set
     */
    public void setVerifyHost(boolean verifyHost)
    {

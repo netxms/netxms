@@ -1297,7 +1297,7 @@ public class NXCSession
     * Create session object that will connect to given address on given port without encryption.
     * 
     * @param connAddress server host name or IP address
-    * @param port TCP port
+    * @param connPort TCP port
     */
    public NXCSession(String connAddress, int connPort)
    {
@@ -1308,7 +1308,7 @@ public class NXCSession
     * Create session object that will connect to given address on given port.
     * 
     * @param connAddress server host name or IP address
-    * @param port TCP port
+    * @param connPort TCP port
     * @param connUseEncryption setup encrypted session if true
     */
    public NXCSession(String connAddress, int connPort, boolean connUseEncryption)
@@ -4157,7 +4157,7 @@ public class NXCSession
    /**
     * Synchronize users by id if does not exist
     *
-    * @param userList list of user id's to synchronize
+    * @param users list of user id's to synchronize
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7726,7 +7726,8 @@ public class NXCSession
    /**
     * Update list of well-known SNMP USM credentials on server. Existing list
     * will be replaced by given one.
-    * @param map New map of SNMP USM credentials
+    * @param zoneUIN Zone unique idenetifier
+    * @param list List of SNMP credentials
     *
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
