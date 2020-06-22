@@ -252,7 +252,7 @@ public abstract class Card extends DashboardComposite
 	{
 		this.doubleClickAction = doubleClickAction;
 	}
-
+	
 	/**
 	 * Dispose current client area and create new one by calling createClientArea
 	 */

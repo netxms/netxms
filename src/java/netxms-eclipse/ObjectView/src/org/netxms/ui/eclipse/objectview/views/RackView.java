@@ -42,7 +42,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
@@ -98,7 +98,7 @@ public class RackView extends ViewPart implements ISelectionProvider
       rackFrontWidget = new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT);
       rackRearWidget = new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR);
       
-      rackArea.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
+      rackArea.setBackground(ThemeEngine.getBackgroundColor("Rack"));
       rackArea.addControlListener(new ControlAdapter() {
          @Override
          public void controlResized(ControlEvent e)

@@ -25,9 +25,7 @@ import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
@@ -58,7 +56,6 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 		add(label, BorderLayout.CENTER);
 		
 		setOpaque(true);
-		setBackgroundColor(SharedColors.getColor(SharedColors.MAP_SMALL_LABEL_BACKGROUND, Display.getCurrent()));
 		
 		updateSize();
 	}
@@ -78,11 +75,11 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 	@Override
 	protected void paintFigure(Graphics gc)
 	{
-		Rectangle rect = new Rectangle(getBounds());
-		rect.x += BORDER_WIDTH / 2;
-		rect.y += BORDER_WIDTH / 2;
-		rect.width -= BORDER_WIDTH;
-		rect.height -= BORDER_WIDTH;
+      Rectangle rect = new Rectangle(getBounds());
+      rect.x += BORDER_WIDTH / 2;
+      rect.y += BORDER_WIDTH / 2;
+      rect.width -= BORDER_WIDTH;
+      rect.height -= BORDER_WIDTH;
       
 		gc.setAntialias(SWT.ON);
 		

@@ -32,9 +32,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 
 /**
  * Composite capable of showing message bar on top of main content.
@@ -59,8 +59,8 @@ public class CompositeWithMessageBar extends Composite implements MessageBar
       setLayout(new FormLayout());
       
       messageBar = new Composite(this, SWT.NONE);
-      messageBar.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
-      messageBar.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, getDisplay()));
+      messageBar.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
+      messageBar.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
       GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;

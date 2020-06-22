@@ -70,9 +70,9 @@ import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
@@ -124,7 +124,7 @@ public class RuleEditor extends Composite
       session = (NXCSession)ConsoleSharedData.getSession();
       labelProvider = new WorkbenchLabelProvider();
 
-      setBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_RULE_BORDER, getDisplay()));
+      setBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Rule"));
 
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
@@ -167,8 +167,8 @@ public class RuleEditor extends Composite
          @Override
          protected Control createClientArea(Composite parent)
          {
-            setTitleBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_CONDITION_BORDER, getDisplay()));
-            setTitleColor(SharedColors.getColor(SharedColors.RULE_EDITOR_TITLE_TEXT, getDisplay()));
+            setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Condition"));
+            setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
             return createConditionControl(parent, RuleEditor.this.rule);
          }
       };
@@ -188,8 +188,8 @@ public class RuleEditor extends Composite
          @Override
          protected Control createClientArea(Composite parent)
          {
-            setTitleBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_ACTION_BORDER, getDisplay()));
-            setTitleColor(SharedColors.getColor(SharedColors.RULE_EDITOR_TITLE_TEXT, getDisplay()));
+            setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Action"));
+            setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
             return createActionControl(parent, RuleEditor.this.rule);
          }
       };
@@ -240,7 +240,7 @@ public class RuleEditor extends Composite
    private void createMainArea()
    {
       mainArea = new Composite(this, SWT.NONE);
-      mainArea.setBackground(SharedColors.getColor(SharedColors.DASHBOARD_BACKGROUND, getDisplay()));
+      mainArea.setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
 
       GridLayout layout = new GridLayout();
       layout.numColumns = verticalLayout ? 1 : 2;
@@ -262,8 +262,7 @@ public class RuleEditor extends Composite
    private void createLeftPanel()
    {
       leftPanel = new Composite(this, SWT.NONE);
-      leftPanel.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND
-            : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
+      leftPanel.setBackground(ThemeEngine.getBackgroundColor(rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
       leftPanel.addMouseListener(ruleMouseListener);
 
       GridLayout layout = new GridLayout();
@@ -281,9 +280,8 @@ public class RuleEditor extends Composite
       ruleNumberLabel = new Label(leftPanel, SWT.NONE);
       ruleNumberLabel.setText(Integer.toString(ruleNumber));
       ruleNumberLabel.setFont(editor.getBoldFont());
-      ruleNumberLabel.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND
-            : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
-      ruleNumberLabel.setForeground(SharedColors.getColor(SharedColors.RULE_EDITOR_TITLE_TEXT, getDisplay()));
+      ruleNumberLabel.setBackground(leftPanel.getBackground());
+      ruleNumberLabel.setForeground(ThemeEngine.getForegroundColor("RuleEditor.Title"));
       ruleNumberLabel.setAlignment(SWT.CENTER);
       ruleNumberLabel.addMouseListener(ruleMouseListener);
 
@@ -345,8 +343,7 @@ public class RuleEditor extends Composite
       };
 
       header = new Composite(this, SWT.NONE);
-      header.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND
-            : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
+      header.setBackground(ThemeEngine.getBackgroundColor(rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
       header.addMouseListener(headerMouseListener);
 
       GridLayout layout = new GridLayout();
@@ -363,9 +360,8 @@ public class RuleEditor extends Composite
          headerLabel.setText(rule.getComments() + Messages.get().RuleEditor_DisabledSuffix);
       else
          headerLabel.setText(rule.getComments());
-      headerLabel.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND
-            : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
-      headerLabel.setForeground(SharedColors.getColor(SharedColors.RULE_EDITOR_TITLE_TEXT, getDisplay()));
+      headerLabel.setBackground(header.getBackground());
+      headerLabel.setForeground(ThemeEngine.getForegroundColor("RuleEditor.Title"));
       headerLabel.setFont(editor.getNormalFont());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -374,8 +370,7 @@ public class RuleEditor extends Composite
       headerLabel.addMouseListener(headerMouseListener);
 
       editButton = new Label(header, SWT.NONE);
-      editButton.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND
-            : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
+      editButton.setBackground(header.getBackground());
       editButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       editButton.setImage(editor.getImageEdit());
       editButton.setToolTipText(Messages.get().RuleEditor_Tooltip_EditRule);
@@ -405,8 +400,7 @@ public class RuleEditor extends Composite
       });
 
       expandButton = new Label(header, SWT.NONE);
-      expandButton.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND
-            : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
+      expandButton.setBackground(header.getBackground());
       expandButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
       expandButton.setToolTipText(collapsed ? Messages.get().RuleEditor_Tooltip_ExpandRule
@@ -489,7 +483,7 @@ public class RuleEditor extends Composite
    {
       Composite clientArea = new Composite(parent, SWT.NONE);
 
-      clientArea.setBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_BACKGROUND, getDisplay()));
+      clientArea.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = 0;
       clientArea.setLayout(layout);
@@ -619,7 +613,7 @@ public class RuleEditor extends Composite
    private Label createLabel(Composite parent, int indent, boolean bold, String text, MouseListener mouseListener)
    {
       Label label = new Label(parent, SWT.NONE);
-      label.setBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_BACKGROUND, getDisplay()));
+      label.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
       label.setFont(bold ? editor.getBoldFont() : editor.getNormalFont());
       label.setText(text);
 
@@ -644,7 +638,7 @@ public class RuleEditor extends Composite
    private CLabel createCLabel(Composite parent, int indent, boolean bold)
    {
       CLabel label = new CLabel(parent, SWT.NONE);
-      label.setBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_BACKGROUND, getDisplay()));
+      label.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
       label.setFont(bold ? editor.getBoldFont() : editor.getNormalFont());
 
       GridData gd = new GridData();
@@ -694,7 +688,7 @@ public class RuleEditor extends Composite
    {
       Composite clientArea = new Composite(parent, SWT.NONE);
 
-      clientArea.setBackground(SharedColors.getColor(SharedColors.RULE_EDITOR_BACKGROUND, getDisplay()));
+      clientArea.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = 0;
       clientArea.setLayout(layout);
@@ -1106,9 +1100,8 @@ public class RuleEditor extends Composite
    public void setSelected(boolean selected)
    {
       this.selected = selected;
-      final Color color = SharedColors.getColor(selected ? SharedColors.RULE_EDITOR_SELECTED_TITLE_BACKGROUND
-            : (rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND
-                  : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND), getDisplay());
+      final Color color = ThemeEngine.getBackgroundColor(
+            selected ? "RuleEditor.Title.Selected" : (rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
 
       leftPanel.setBackground(color);
       for(Control c : leftPanel.getChildren())
@@ -1153,9 +1146,8 @@ public class RuleEditor extends Composite
     */
    private void updateBackground()
    {
-      final Color color = SharedColors.getColor(selected ? SharedColors.RULE_EDITOR_SELECTED_TITLE_BACKGROUND
-            : (rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND
-                  : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND), getDisplay());
+      final Color color = ThemeEngine.getBackgroundColor(
+            selected ? "RuleEditor.Title.Selected" : (rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
       leftPanel.setBackground(color);
       for(Control c : leftPanel.getChildren())
          c.setBackground(color);

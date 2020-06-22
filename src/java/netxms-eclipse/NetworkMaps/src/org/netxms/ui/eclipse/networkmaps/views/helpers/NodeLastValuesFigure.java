@@ -7,9 +7,8 @@ import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.GridLayout;
 import org.eclipse.draw2d.Label;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 
 /**
  * Figure which shows DCI values
@@ -26,7 +25,7 @@ public class NodeLastValuesFigure extends Figure
 		layout.marginWidth = 0;
 		setLayoutManager(layout);
 		
-		Color color = SharedColors.getColor(SharedColors.MAP_LAST_VALUES_TEXT, Display.getCurrent());
+      Color color = ThemeEngine.getForegroundColor("Map.LastValues");
 		for(DciValue v : values)
 		{
 			Label descr = new Label(v.getDescription());

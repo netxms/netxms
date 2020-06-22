@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
@@ -224,7 +223,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 				}
 			}
 		}		
-		gc.setForeground(SharedColors.getColor(SharedColors.BORDER, getDisplay()));
+      gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
 		gc.drawLine(width - 1, 0, width - 1, getClientArea().height);
 	}
 	

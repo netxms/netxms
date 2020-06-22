@@ -21,16 +21,16 @@ package org.netxms.ui.eclipse.console;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 
 /**
  * Preference initializer for console
  */
 public class PreferenceInitializer extends AbstractPreferenceInitializer
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer#initializeDefaultPreferences()
-	 */
+   /**
+    * @see org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer#initializeDefaultPreferences()
+    */
 	@Override
 	public void initializeDefaultPreferences()
 	{
@@ -42,7 +42,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("SHOW_COOLBAR", true); //$NON-NLS-1$
 		ps.setDefault("SHOW_HIDDEN_ATTRIBUTES", false); //$NON-NLS-1$
 		ps.setDefault("SHOW_TRAY_ICON", true); //$NON-NLS-1$
-		
+
 		ps.setDefault("HTTP_PROXY_ENABLED", false); //$NON-NLS-1$
 		ps.setDefault("HTTP_PROXY_SERVER", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		ps.setDefault("HTTP_PROXY_PORT", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -50,21 +50,21 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("HTTP_PROXY_AUTH", false); //$NON-NLS-1$
 		ps.setDefault("HTTP_PROXY_LOGIN", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		ps.setDefault("HTTP_PROXY_PASSWORD", ""); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		ps.setDefault("DATETIME_FORMAT", RegionalSettings.DATETIME_FORMAT_SERVER); //$NON-NLS-1$
 		ps.setDefault("DATE_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultDateFormat); //$NON-NLS-1$
 		ps.setDefault("TIME_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultTimeFormat); //$NON-NLS-1$
       ps.setDefault("SHORT_TIME_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultShortTimeFormat); //$NON-NLS-1$
       ps.setDefault("USE_SERVER_TIMEZONE", false); //$NON-NLS-1$
-      
-      ps.setDefault("Status.Colors.Normal", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_NORMAL)); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Warning", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_WARNING)); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Minor", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_MINOR)); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Major", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_MAJOR)); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Critical", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_CRITICAL)); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Unknown", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_UNKNOWN)); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Unmanaged", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_UNMANAGED)); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Disabled", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_DISABLED)); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Testing", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_TESTING)); //$NON-NLS-1$
+
+      ps.setDefault("Status.Colors.Normal", ThemeEngine.getForegroundColorDefinitionAsText("Status.Normal")); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Warning", ThemeEngine.getForegroundColorDefinitionAsText("Status.Warning")); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Minor", ThemeEngine.getForegroundColorDefinitionAsText("Status.Minor")); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Major", ThemeEngine.getForegroundColorDefinitionAsText("Status.Major")); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Critical", ThemeEngine.getForegroundColorDefinitionAsText("Status.Critical")); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Unknown", ThemeEngine.getForegroundColorDefinitionAsText("Status.Unknown")); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Unmanaged", ThemeEngine.getForegroundColorDefinitionAsText("Status.Unmanaged")); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Disabled", ThemeEngine.getForegroundColorDefinitionAsText("Status.Disabled")); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Testing", ThemeEngine.getForegroundColorDefinitionAsText("Status.Testing")); //$NON-NLS-1$
 	}
 }

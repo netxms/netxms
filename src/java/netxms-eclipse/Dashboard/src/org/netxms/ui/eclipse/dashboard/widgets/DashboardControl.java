@@ -33,7 +33,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditElementXmlDlg;
@@ -112,7 +112,7 @@ public class DashboardControl extends Composite
 	 */
 	private void createContent()
 	{
-		setBackground(SharedColors.getColor(SharedColors.DASHBOARD_BACKGROUND, getDisplay()));
+      setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
 		
 		DashboardLayout layout = new DashboardLayout();
 		layout.numColumns = dashboard.getNumColumns();

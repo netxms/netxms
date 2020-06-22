@@ -72,7 +72,7 @@ import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -180,8 +180,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		header.setFont(headerFont);
-		header.setBackground(SharedColors.getColor(SharedColors.MIB_EXPLORER_HEADER_BACKGROUND, parent.getDisplay()));
-		header.setForeground(SharedColors.getColor(SharedColors.MIB_EXPLORER_HEADER_TEXT, parent.getDisplay()));
+      header.setBackground(ThemeEngine.getBackgroundColor("MibExplorer.Header"));
+      header.setForeground(ThemeEngine.getForegroundColor("MibExplorer.Header"));
 		header.setText((currentNode != null) ? currentNode.getObjectName() : ""); //$NON-NLS-1$
 		
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);

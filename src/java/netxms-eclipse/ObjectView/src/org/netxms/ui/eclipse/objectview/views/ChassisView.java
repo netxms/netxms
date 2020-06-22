@@ -40,7 +40,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.Chassis;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.ChassisWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
@@ -96,7 +96,7 @@ public class ChassisView extends ViewPart implements ISelectionProvider
       chassisFrontWidget = new ChassisWidget(chassisArea, SWT.NONE, chassis, RackOrientation.FRONT, true);
       chassisRearWidget = new ChassisWidget(chassisArea, SWT.NONE, chassis, RackOrientation.REAR, true);
       
-      chassisArea.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
+      chassisArea.setBackground(ThemeEngine.getBackgroundColor("Rack"));
       chassisArea.addControlListener(new ControlAdapter() {
          @Override
          public void controlResized(ControlEvent e)

@@ -55,8 +55,8 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
@@ -905,7 +905,7 @@ public class WidgetHelper
 			return true;	// Ignore validation for disabled controls
 		
 		boolean ok = validator.validate(text);
-		control.setBackground(ok ? null : SharedColors.getColor(SharedColors.ERROR_BACKGROUND, control.getDisplay()));
+      control.setBackground(ok ? null : ThemeEngine.getBackgroundColor("TextInput.Error"));
 		if (ok)
 		{
 			if (page != null)

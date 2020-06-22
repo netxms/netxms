@@ -33,8 +33,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.nxsl.Messages;
 
 /**
@@ -112,11 +112,11 @@ public class ScriptEditor extends Composite
       layout.numColumns = 2;
       hintArea.setLayout(layout);
       hintArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-      hintArea.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
+      hintArea.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
       
       CLabel hintsTitle = new CLabel(hintArea, SWT.NONE);
-      hintsTitle.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
-      hintsTitle.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, getDisplay()));
+      hintsTitle.setBackground(hintArea.getBackground());
+      hintsTitle.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
       hintsTitle.setImage(SharedIcons.IMG_INFORMATION);
       hintsTitle.setText(Messages.get().ScriptEditor_Hints);
       hintsTitle.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -304,8 +304,8 @@ public class ScriptEditor extends Composite
          hintTextControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
          hintTextControl.setEditable(false);
          hintTextControl.setText(hintText);
-         hintTextControl.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
-         hintTextControl.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, getDisplay()));
+         hintTextControl.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
+         hintTextControl.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
          hintsExpandButton.setImage(SharedIcons.IMG_COLLAPSE);
       }
       layout(true, true);

@@ -43,8 +43,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.FontTools;
@@ -490,7 +490,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
       
       gc.setAntialias(SWT.ON);
       gc.setTextAntialias(SWT.ON);
-      gc.setForeground(SharedColors.getColor(SharedColors.TEXT_NORMAL, getDisplay()));
+      gc.setForeground(ThemeEngine.getForegroundColor("StatusMap.Text"));
       gc.setLineWidth(1);
       
 	   objectMap.clear();

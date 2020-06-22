@@ -47,7 +47,7 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
@@ -484,7 +484,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 			gc.setFont(mapTitleFont);
 			rect = getClientArea();
 			int x = (rect.width - gc.textExtent(title).x) / 2;
-			gc.setForeground(SharedColors.getColor(SharedColors.GEOMAP_TITLE, getDisplay()));
+         gc.setForeground(ThemeEngine.getForegroundColor("GeoMap.Title"));
 			gc.drawText(title, x, 10, true);
 		}
 		

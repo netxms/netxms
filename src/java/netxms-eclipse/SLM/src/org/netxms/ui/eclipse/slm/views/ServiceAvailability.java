@@ -13,7 +13,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
@@ -26,7 +25,7 @@ import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Messages;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -167,7 +166,7 @@ public class ServiceAvailability extends ViewPart
 	private void paintLegend(GC gc)
 	{
 		final int th = gc.textExtent(Messages.get().ServiceAvailability_UptimeDowntime).y;
-		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, Display.getCurrent());
+      final Color fg = ThemeEngine.getForegroundColor("ServiceAvailability.Legend");
 		
 		gc.setBackground(colors.create(127, 154, 72));
 		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg.getRGB(), 0.2f, colors));

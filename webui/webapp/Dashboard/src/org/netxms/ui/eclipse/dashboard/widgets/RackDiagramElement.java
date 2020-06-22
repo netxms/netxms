@@ -34,6 +34,7 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
@@ -46,7 +47,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Rack;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
@@ -104,10 +105,12 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       
       if (rack != null)
       {
+         Color backgroundColor = ThemeEngine.getBackgroundColor("Rack");
+
          if (config.isShowTitle())
          {
             title = createTitleLabel(this, rack.getObjectName());
-            title.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
+            title.setBackground(backgroundColor);
             title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
          }
                   
@@ -137,7 +140,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
                return super.computeSize(wHint, hHint, changed);    
             }
          };
-         rackArea.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
+         rackArea.setBackground(backgroundColor);
          rackArea.addControlListener(new ControlAdapter() {
             @Override
             public void controlResized(ControlEvent e)

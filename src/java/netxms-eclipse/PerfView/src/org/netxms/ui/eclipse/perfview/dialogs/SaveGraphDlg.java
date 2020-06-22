@@ -12,7 +12,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -53,9 +53,9 @@ public class SaveGraphDlg extends Dialog
 		newShell.setText(Messages.get().SaveGraphDlg_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -74,16 +74,16 @@ public class SaveGraphDlg extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 400;
 		fieldName.setLayoutData(gd);
-		
-      if(errorMessageText != null)
+
+      if (errorMessageText != null)
       {
          errorMessage = new Label(dialogArea, SWT.LEFT);
-         errorMessage.setForeground(SharedColors.getColor(SharedColors.STATUS_CRITICAL, parent.getDisplay()));
+         errorMessage.setForeground(ThemeEngine.getForegroundColor("List.Error"));
          errorMessage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
          errorMessage.setText(errorMessageText);         
       }   
-      
-      if(havePermissionToOverwrite)
+
+      if (havePermissionToOverwrite)
       {
          checkOverwrite = new Button(dialogArea, SWT.CHECK);
          checkOverwrite.setText(Messages.get().SaveGraphDlg_Overwrite);         

@@ -45,8 +45,8 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.configs.ChassisPlacement;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
@@ -89,7 +89,7 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       this.chassis = chassis;
       this.view = (view == RackOrientation.FILL) ? RackOrientation.FRONT : view;
       
-      setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
+      setBackground(ThemeEngine.getBackgroundColor("Rack"));
       
       titleFonts = FontTools.getFonts(FONT_NAMES, 6, SWT.BOLD, 16);
       

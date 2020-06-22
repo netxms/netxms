@@ -40,7 +40,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
@@ -71,7 +71,7 @@ public abstract class Card extends DashboardComposite
       super(parent, SWT.BORDER);
 		this.text = text;
 
-		titleColor = SharedColors.getColor(SharedColors.CARD_TITLE_TEXT, getDisplay());
+      titleColor = ThemeEngine.getForegroundColor("Card.Title");
 
       titleFont = FontTools.createTitleFont();
 		setFont(titleFont);

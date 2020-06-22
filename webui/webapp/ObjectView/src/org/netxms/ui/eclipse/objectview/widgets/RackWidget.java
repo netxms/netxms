@@ -47,8 +47,8 @@ import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.ElementForPhysicalPlacment;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.PassiveRackElement;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.objectview.Activator;
@@ -104,7 +104,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       this.rack = rack;
       this.view = (view == RackOrientation.FILL) ? RackOrientation.FRONT : view;
       
-      setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
+      setBackground(ThemeEngine.getBackgroundColor("Rack"));
       
       labelFonts = FontTools.getFonts(FONT_NAMES, 6, SWT.NORMAL, 16);
       titleFonts = FontTools.getFonts(FONT_NAMES, 6, SWT.BOLD, 16);
@@ -178,22 +178,22 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       gc.drawText(VIEW_LABELS[view.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2);
 
       // Rack itself
-      gc.setBackground(SharedColors.getColor(SharedColors.RACK_EMPTY_SPACE, getDisplay()));
+      gc.setBackground(ThemeEngine.getBackgroundColor("Rack.EmptySpace"));
       gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 3, 3);
       gc.setLineWidth(borderWidth);
-      gc.setForeground(SharedColors.getColor(SharedColors.RACK_BORDER, getDisplay()));
+      gc.setForeground(ThemeEngine.getForegroundColor("Rack.Border"));
       gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 3, 3);
       
       // Rack bottom
-      gc.setBackground(SharedColors.getColor(SharedColors.RACK_BORDER, getDisplay()));
+      gc.setBackground(ThemeEngine.getBackgroundColor("Rack.Border"));
       gc.fillRectangle(rect.x + borderWidth * 2 - (borderWidth + 1) / 2, rect.y + rect.height, borderWidth * 2, (int)(borderWidth * 1.5));
       gc.fillRectangle(rect.x + rect.width - borderWidth * 3 - (borderWidth + 1) / 2, rect.y + rect.height, borderWidth * 2, (int)(borderWidth * 1.5));
 
       // Draw unit numbers
       int[] unitBaselines = new int[rack.getHeight() + 1];
       gc.setFont(WidgetHelper.getBestFittingFont(gc, labelFonts, "00", UNIT_NUMBER_WIDTH, (int)unitHeight - 2)); //$NON-NLS-1$
-      gc.setForeground(SharedColors.getColor(SharedColors.RACK_TEXT, getDisplay()));
-      gc.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
+      gc.setForeground(ThemeEngine.getForegroundColor("Rack"));
+      gc.setBackground(ThemeEngine.getBackgroundColor("Rack"));
       gc.setLineWidth(1);
       double dy = rack.isTopBottomNumbering() ? rect.y + unitHeight + (borderWidth + 1) / 2 : rect.y + rect.height - (borderWidth + 1) / 2;
       if (rack.isTopBottomNumbering())
@@ -368,7 +368,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          }
       }
    }
-
+   
    /* (non-Javadoc)
     * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
     */

@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.ChassisWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
@@ -74,7 +74,7 @@ public class ChassisTab extends ObjectTab implements ISelectionProvider
             return new Point(s.x , s.y * 2);
          }
 	   };
-	   content.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
+      content.setBackground(ThemeEngine.getBackgroundColor("Rack"));
 	   content.addControlListener(new ControlAdapter() {
          @Override
          public void controlResized(ControlEvent e)

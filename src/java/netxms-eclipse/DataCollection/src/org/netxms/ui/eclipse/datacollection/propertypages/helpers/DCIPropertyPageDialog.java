@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 
@@ -47,7 +47,7 @@ public class DCIPropertyPageDialog extends PropertyPage
       if (message != null)
       {
          Composite messageArea = new Composite(parent, SWT.BORDER);
-         messageArea.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, messageArea.getDisplay()));
+         messageArea.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
          GridLayout layout = new GridLayout(2, false);
          messageArea.setLayout(layout);
          GridData gd = new GridData();
@@ -65,7 +65,7 @@ public class DCIPropertyPageDialog extends PropertyPage
          
          Label messageLabel = new Label(messageArea, SWT.WRAP);
          messageLabel.setBackground(messageArea.getBackground());
-         messageLabel.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, messageArea.getDisplay()));
+         messageLabel.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
          messageLabel.setText(message);
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;

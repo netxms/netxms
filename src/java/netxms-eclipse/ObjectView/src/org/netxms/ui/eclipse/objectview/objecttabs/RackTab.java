@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
@@ -75,7 +75,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
             return new Point(s.x * 2, s.y);
          }
 	   };
-	   content.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
+      content.setBackground(ThemeEngine.getBackgroundColor("Rack"));
 	   content.addControlListener(new ControlAdapter() {
          @Override
          public void controlResized(ControlEvent e)

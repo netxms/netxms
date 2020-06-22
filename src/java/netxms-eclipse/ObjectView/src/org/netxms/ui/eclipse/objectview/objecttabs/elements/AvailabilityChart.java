@@ -35,7 +35,7 @@ import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -159,7 +159,7 @@ public class AvailabilityChart extends OverviewPageElement
 	private void paintLegend(GC gc)
 	{
 		final int th = gc.textExtent(Messages.get().AvailabilityChart_Uptime + Messages.get().AvailabilityChart_Downtime).y;
-		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, getDisplay());
+      final Color fg = ThemeEngine.getForegroundColor("ServiceAvailability.Legend");
 		
 		gc.setBackground(colors.create(127, 154, 72));
 		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg.getRGB(), 0.2f, colors));

@@ -52,9 +52,9 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.constants.Severity;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -97,8 +97,8 @@ public class BaseFileViewer extends Composite
       
       /*** Message bar ***/
       messageBar = new Composite(this, SWT.NONE);
-      messageBar.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
-      messageBar.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, getDisplay()));
+      messageBar.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
+      messageBar.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
       GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;
@@ -576,7 +576,7 @@ public class BaseFileViewer extends Composite
       }
       else
       {
-         searchBarText.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, text.getDisplay()));
+         searchBarText.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
       }
    }
    
@@ -607,7 +607,7 @@ public class BaseFileViewer extends Composite
       }
       else
       {
-         searchBarText.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, text.getDisplay()));
+         searchBarText.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
       }
    }
    

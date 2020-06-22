@@ -40,7 +40,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -207,7 +207,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 				{
 					setErrorMessage(e.getLocalizedMessage());
 					if (updatedControl != null)
-						updatedControl.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, getShell().getDisplay()));
+                  updatedControl.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
 					return;
 				}
 				break;
@@ -243,7 +243,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
             {
                setErrorMessage(e.getLocalizedMessage());
                if (updatedControl != null)
-                  updatedControl.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, getShell().getDisplay()));
+                  updatedControl.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
                return;
             }
             break;
