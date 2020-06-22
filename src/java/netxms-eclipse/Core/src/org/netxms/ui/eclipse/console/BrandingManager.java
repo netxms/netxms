@@ -26,7 +26,6 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.console.api.BrandingProvider;
 
@@ -95,7 +94,7 @@ public class BrandingManager
 			}
 		}
 	}
-	
+
 	/**
 	 * Get product name.
 	 * 
@@ -156,22 +155,6 @@ public class BrandingManager
 			ImageDescriptor d = p.getLoginTitleImage();
 			if (d != null)
 				return d;
-		}
-		return null;
-	}
-	
-	/**
-	 * Get filler color for login dialog title image.
-	 * 
-	 * @return image descriptor for login dialog title image or null if no branding provider defines one.
-	 */
-	public RGB getLoginTitleColor()
-	{
-		for(BrandingProvider p : providers.values())
-		{
-			RGB rgb = p.getLoginTitleColor();
-			if (rgb != null)
-				return rgb;
 		}
 		return null;
 	}

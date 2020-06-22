@@ -167,22 +167,6 @@ public class BrandingManager
 	}
 	
 	/**
-	 * Get filler color for login dialog title image.
-	 * 
-	 * @return image descriptor for login dialog title image or null if no branding provider defines one.
-	 */
-	public RGB getLoginTitleColor()
-	{
-		for(BrandingProvider p : providers.values())
-		{
-			RGB rgb = p.getLoginTitleColor();
-			if (rgb != null)
-				return rgb;
-		}
-		return null;
-	}
-
-	/**
 	 * Get default perspective ID. 
 	 * 
 	 * @return default perspective ID or null if no branding provider defines one.

@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.console.api;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
 
 /**
@@ -55,13 +54,6 @@ public interface BrandingProvider
 	 * @return image descriptor for image to be displayed in login dialog or null to use default
 	 */
 	public ImageDescriptor getLoginTitleImage();
-	
-	/**
-	 * Get filler color for login dialog title image.
-	 * 
-	 * @return filler color for login dialog title image or null to use default
-	 */
-	public RGB getLoginTitleColor();
 	
 	/**
 	 * Get login dialog title.
