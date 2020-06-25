@@ -911,6 +911,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
          if (!DBExecute(hStmt))
             return ReturnDBFailure(hdb, hStmt);
       }
+      DBFreeStatement(hStmt);
    }
 
    DBCommit(hdb);

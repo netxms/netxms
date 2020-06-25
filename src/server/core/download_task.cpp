@@ -175,6 +175,7 @@ void FileDownloadTask::run()
 	   m_session->sendMessage(&abortCmd);
 
       response.setField(VID_RCC, AgentErrorToRCC(rcc));
+      delete fileDescriptor;
 	}
    m_session->sendMessage(&response);
 }

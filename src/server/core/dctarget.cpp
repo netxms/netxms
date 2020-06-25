@@ -1331,7 +1331,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             }
             else
             {
-               tableData->setAt(row, i + offset,
+               tableData->setPreallocatedAt(row, i + offset,
                   ((DCItem *)object)->getAggregateValue(
                      tableDefinition->getAggregationFunction(),
                      tableDefinition->getPeriodStart(),
