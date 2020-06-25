@@ -4,5 +4,7 @@ ListenPort = ~LISTEN_PORT~
 LogFile = ~STATEDIR~/nxagentd.log
 SubAgent = filemgr.nsm
 
+Action = echo: echo "Hi"
+
 [FileMgr]
 RootFolder = /
