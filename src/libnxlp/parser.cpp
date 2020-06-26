@@ -853,6 +853,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, ssize_t xmlLen
 	{
 		if (errorText != nullptr)
 			_tcslcpy(errorText, state.errorText, errBufSize);
+      delete state.parser;
 	}
 	else if (success)
 	{
@@ -880,6 +881,10 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, ssize_t xmlLen
 			// It is possible to have parser without <file> tag, syslog parser for example
 			parsers->add(state.parser);
 		}
+	}
+	else
+	{
+      delete state.parser;
 	}
 
 	return parsers;
