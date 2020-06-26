@@ -123,10 +123,7 @@ public abstract class DataCollectionObject
 	{
 		this.owner = owner;
 		id = msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
-		if (owner != null)
-		   nodeId = owner.getNodeId();
-		else
-		   nodeId = 0;
+	   nodeId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
 		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		resourceId = msg.getFieldAsInt64(NXCPCodes.VID_RESOURCE_ID);
 		sourceNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
@@ -239,6 +236,10 @@ public abstract class DataCollectionObject
    {
 	   this.owner = owner;
 	   id = src.id;
+      if (owner != null)
+         nodeId = owner.getNodeId();
+      else
+         nodeId = src.nodeId;
       this.nodeId = owner.getNodeId();
 	   templateId = src.templateId;
 	   resourceId = src.resourceId;
