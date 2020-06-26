@@ -240,7 +240,6 @@ public abstract class DataCollectionObject
          nodeId = owner.getNodeId();
       else
          nodeId = src.nodeId;
-      this.nodeId = owner.getNodeId();
 	   templateId = src.templateId;
 	   resourceId = src.resourceId;
 	   sourceNode = src.sourceNode;
