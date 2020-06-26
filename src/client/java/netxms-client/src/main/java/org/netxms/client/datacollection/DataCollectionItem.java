@@ -141,6 +141,14 @@ public class DataCollectionItem extends DataCollectionObject
    }
 
    /**
+    * Default constructor (intended for deserialization)
+    */
+   protected DataCollectionItem()
+   {
+      this(null, 0, 0);
+   }
+
+   /**
     * Object copy constructor
     *
     * @param owner object owner

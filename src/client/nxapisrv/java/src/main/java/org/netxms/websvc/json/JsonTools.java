@@ -29,8 +29,11 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.websvc.json.adapters.AbstractObjectSerializer;
+import org.netxms.websvc.json.adapters.DataCollectionObjectDeserializer;
+import org.netxms.websvc.json.adapters.DataCollectionObjectSerializer;
 import org.netxms.websvc.json.adapters.DateAdapter;
 import org.netxms.websvc.json.adapters.InetAddressAdapter;
 import org.netxms.websvc.json.adapters.InetAddressExAdapter;
@@ -75,6 +78,8 @@ public class JsonTools
       registerTypeAdapter(builder, MacAddress.class, new MacAddressAdapter(), adapterExclusion);
       registerTypeAdapter(builder, NXCSession.class, new NXCSessionAdapter(), adapterExclusion);
       registerTypeHierarchyAdapter(builder, AbstractObject.class, new AbstractObjectSerializer(), adapterExclusion);
+      registerTypeHierarchyAdapter(builder, DataCollectionObject.class, new DataCollectionObjectSerializer(), adapterExclusion);
+      registerTypeHierarchyAdapter(builder, DataCollectionObject.class, new DataCollectionObjectDeserializer(), adapterExclusion);
       builder.setExclusionStrategies(new ExclusionStrategy() {
          @Override
          public boolean shouldSkipField(FieldAttributes f)

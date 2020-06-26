@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.annotations.Internal;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.snmp.SnmpVersion;
 
@@ -82,7 +83,9 @@ public abstract class DataCollectionObject
    public static final int RETENTION_CUSTOM  = 1;
    public static final int RETENTION_NONE    = 2;
 	
+   @Internal
 	protected DataCollectionConfiguration owner;
+
 	protected long id;
    protected long nodeId;
 	protected long templateId;
@@ -226,6 +229,14 @@ public abstract class DataCollectionObject
       this(null, nodeId, id);
    }
 
+   /**
+    * Default constructor (intended for deserialization)
+    */
+   protected DataCollectionObject()
+   {
+      this(null, 0, 0);
+   }
+
 	/**
     * Object copy constructor
     *
@@ -236,10 +247,7 @@ public abstract class DataCollectionObject
    {
 	   this.owner = owner;
 	   id = src.id;
-      if (owner != null)
-         nodeId = owner.getNodeId();
-      else
-         nodeId = src.nodeId;
+      nodeId = (owner != null) ? owner.getNodeId() : src.nodeId;
 	   templateId = src.templateId;
 	   resourceId = src.resourceId;
 	   sourceNode = src.sourceNode;
@@ -804,7 +812,12 @@ public abstract class DataCollectionObject
    {
       this.id = id;
    }
-   
+
+   public void setNodeId(long nodeId)
+   {
+      this.nodeId = nodeId;
+   }
+
    /**
     * @return the instance
     */

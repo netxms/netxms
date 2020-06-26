@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import org.netxms.websvc.handlers.AccessIntegrationTools;
 import org.netxms.websvc.handlers.Alarms;
+import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
+import org.netxms.websvc.handlers.DataCollectionObjectHandler;
 import org.netxms.websvc.handlers.GrafanaAlarms;
 import org.netxms.websvc.handlers.GrafanaDataCollection;
 import org.netxms.websvc.handlers.HistoricalData;
@@ -88,10 +90,11 @@ public class WebSvcApplication extends Application
       router.attach("/objects", Objects.class);
       router.attach("/objects/{object-id}", Objects.class);
       router.attach("/objects/{object-id}/lastvalues", LastValues.class);
+      router.attach("/objects/{object-id}/datacollection", DataCollectionConfigurationHandler.class);
+      router.attach("/objects/{object-id}/datacollection/{id}", DataCollectionObjectHandler.class);
       router.attach("/objects/{object-id}/datacollection/{id}/values", HistoricalData.class);
       router.attach("/objects/{object-id}/objecttools", ObjectTools.class);
       router.attach("/objects/{object-id}/objecttools/output/{id}", ObjectToolOutputHandler.class);
-      router.attach("/objects/datacollection/values", HistoricalData.class);  /* FIXME: wrong base URL? */
       router.attach("/predefinedgraphs", PredefinedGraphs.class);
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);

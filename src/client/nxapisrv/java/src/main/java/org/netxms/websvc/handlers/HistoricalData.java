@@ -36,15 +36,14 @@ import org.netxms.websvc.json.ResponseContainer;
  */
 public class HistoricalData extends AbstractObjectHandler
 {
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
-      AbstractObject obj = getObject();
+      AbstractObject object = getObject();
       long dciId = 0;
       try 
       {
@@ -52,10 +51,10 @@ public class HistoricalData extends AbstractObjectHandler
       }
       catch(NumberFormatException e)
       {
-         dciId = session.dciNameToId(obj.getObjectId(), id);
+         dciId = session.dciNameToId(object.getObjectId(), id);
       }
       
-      if(obj == null || dciId == 0 || !(obj instanceof DataCollectionTarget))
+      if ((object == null) || (dciId == 0) || !(object instanceof DataCollectionTarget))
          throw new NXCException(RCC.INVALID_OBJECT_ID);
       
       String timeFrom = query.get("from");
@@ -67,7 +66,7 @@ public class HistoricalData extends AbstractObjectHandler
       
       if (timeFrom != null || timeTo != null)
       {
-         data = session.getCollectedData(obj.getObjectId(), dciId,
+         data = session.getCollectedData(object.getObjectId(), dciId,
                new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000),
                parseInt(itemCount, 0), HistoricalDataType.PROCESSED);
       }
@@ -75,23 +74,23 @@ public class HistoricalData extends AbstractObjectHandler
       {
          Date now = new Date();
          long from = now.getTime() - parseLong(timeInteval, 0) * 1000;
-         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0), HistoricalDataType.PROCESSED);         
+         data  = session.getCollectedData(object.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0), HistoricalDataType.PROCESSED);         
       }
       else if (itemCount != null)
       {         
-         data  = session.getCollectedData(obj.getObjectId(), dciId, null, null, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);
+         data  = session.getCollectedData(object.getObjectId(), dciId, null, null, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);
       }  
       else
       {
          Date now = new Date();
          long from = now.getTime() - 3600000; // one hour
-         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);           
+         data  = session.getCollectedData(object.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);           
       }
       
       return new ResponseContainer("values", data);
    }
 
-   /*
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
    @Override protected Object getCollection(Map<String, String> query) throws Exception
@@ -118,7 +117,7 @@ public class HistoricalData extends AbstractObjectHandler
          String timeInterval = dciPairs[4];
          String timeUnit = dciPairs[5];
 
-         if(dciId == null || nodeId == null || !(session.findObjectById(parseLong(nodeId, 0)) instanceof DataCollectionTarget))
+         if (dciId == null || nodeId == null || !(session.findObjectById(parseLong(nodeId, 0)) instanceof DataCollectionTarget))
             throw new NXCException(RCC.INVALID_OBJECT_ID);
 
          DciData collectedData = null;

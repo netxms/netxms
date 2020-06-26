@@ -30,7 +30,7 @@ import org.netxms.client.objects.AbstractObject;
 public class AbstractObjectHandler extends AbstractHandler
 {
    /**
-    * Get object from URL entity ID part
+    * Get object from URL entity ID part.
     * 
     * @return object
     * @throws Exception if object cannot be found or request is invalid
@@ -56,5 +56,27 @@ public class AbstractObjectHandler extends AbstractHandler
       if (object == null)
          throw new NXCException(RCC.INVALID_OBJECT_ID);
       return object;
+   }
+
+   /**
+    * Get object ID (validated) from URL entity ID part.
+    * 
+    * @return object ID
+    * @throws Exception if object cannot be found or request is invalid
+    */
+   protected long getObjectId() throws Exception
+   {
+      return getObject().getObjectId();
+   }
+
+   /**
+    * Get object GUID (validated) from URL entity ID part.
+    * 
+    * @return object GUID
+    * @throws Exception if object cannot be found or request is invalid
+    */
+   protected UUID getObjectGuid() throws Exception
+   {
+      return getObject().getGuid();
    }
 }

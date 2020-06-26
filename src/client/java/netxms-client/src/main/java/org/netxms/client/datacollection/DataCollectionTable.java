@@ -109,6 +109,14 @@ public class DataCollectionTable extends DataCollectionObject
    }
 
    /**
+    * Default constructor (intended for deserialization)
+    */
+   protected DataCollectionTable()
+   {
+      this(null, 0, 0);
+   }
+
+   /**
     * Object copy constructor
     *
     * @param owner object owner
