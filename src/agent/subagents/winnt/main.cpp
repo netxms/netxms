@@ -80,10 +80,8 @@ bool g_isWin5 = false;
  */
 static void ImportSymbols()
 {
-   HMODULE hModule;
-
    // IPHLPAPI.DLL
-   hModule = LoadLibrary(_T("IPHLPAPI.DLL"));
+   HMODULE hModule = LoadLibrary(_T("IPHLPAPI.DLL"));
    if (hModule != NULL)
    {
       imp_GetIfEntry2 = (DWORD (__stdcall *)(PMIB_IF_ROW2))GetProcAddress(hModule, "GetIfEntry2");
@@ -183,12 +181,27 @@ struct BiosHeader
  */
 static BYTE *BIOSReader(size_t *size)
 {
+   // KERNEL32.DLL
+   HMODULE hModule = GetModuleHandle(_T("KERNEL32.DLL"));
+   if (hModule == NULL)
+   {
+      nxlog_debug(3, _T("SMBIOS: Unable to get handle for KERNEL32.DLL"));
+      return NULL;
+   }
+
+   UINT (__stdcall *__GetSystemFirmwareTable)(DWORD, DWORD, PVOID, DWORD) = (UINT (__stdcall *)(DWORD, DWORD, PVOID, DWORD))GetProcAddress(hModule, "GetSystemFirmwareTable");
+   if (__GetSystemFirmwareTable == NULL)
+   {
+      nxlog_debug(3, _T("SMBIOS: GetSystemFirmwareTable is unavailable"));
+      return NULL;
+   }
+
    BYTE *buffer = (BYTE *)malloc(16384);
-   UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
+   UINT rc = __GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
    if (rc > 16384)
    {
       buffer = (BYTE *)realloc(buffer, rc);
-      rc = GetSystemFirmwareTable('RSMB', 0, buffer, rc);
+      rc = __GetSystemFirmwareTable('RSMB', 0, buffer, rc);
    }
    if (rc == 0)
    {
