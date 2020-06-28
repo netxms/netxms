@@ -581,7 +581,8 @@ private:
    void changeDCIStatus(NXCPMessage *pRequest);
    void getLastValues(NXCPMessage *pRequest);
    void getLastValuesByDciId(NXCPMessage *pRequest);
-   void getTableLastValues(NXCPMessage *pRequest);
+   void getTableLastValue(NXCPMessage *request);
+   void getLastValue(NXCPMessage *request);
    void getActiveThresholds(NXCPMessage *pRequest);
 	void getThresholdSummary(NXCPMessage *request);
    void openEventProcessingPolicy(NXCPMessage *request);
@@ -1143,7 +1144,7 @@ void PrintNetworkDeviceDriverList(ServerConsole *console);
 void LoadNotificationChannelDrivers();
 void LoadNotificationChannels();
 void ShutdownNotificationChannels();
-void SendNotification(const TCHAR *name, TCHAR *expandedRcpt, const TCHAR *expandedSubject, const TCHAR *expandedData);
+void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message);
 void GetNotificationChannels(NXCPMessage *msg);
 void GetNotificationDrivers(NXCPMessage *msg);
 bool IsNotificationChannelExists(const TCHAR *name);

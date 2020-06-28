@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -50,7 +51,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
-   private int origin;
+   private DataOrigin origin;
    private Button queryButton;
    private Action actionQuery;
    private AbstractObject queryObject;
@@ -59,7 +60,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
     * @param parentShell
     * @param nodeId
     */
-   public SelectAgentParamDlg(Shell parentShell, long nodeId, int origin, boolean selectTables)
+   public SelectAgentParamDlg(Shell parentShell, long nodeId, DataOrigin origin, boolean selectTables)
    {
       super(parentShell, nodeId, selectTables);
       this.origin = origin;

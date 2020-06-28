@@ -53,7 +53,7 @@ public class HistoricalData extends AbstractObjectHandler
       {
          dciId = session.dciNameToId(object.getObjectId(), id);
       }
-      
+
       if ((object == null) || (dciId == 0) || !(object instanceof DataCollectionTarget))
          throw new NXCException(RCC.INVALID_OBJECT_ID);
       
@@ -61,9 +61,9 @@ public class HistoricalData extends AbstractObjectHandler
       String timeTo = query.get("to");
       String timeInteval = query.get("timeInterval");
       String itemCount = query.get("itemCount");
-      
+
       DciData data = null;
-      
+
       if (timeFrom != null || timeTo != null)
       {
          data = session.getCollectedData(object.getObjectId(), dciId,
@@ -86,7 +86,7 @@ public class HistoricalData extends AbstractObjectHandler
          long from = now.getTime() - 3600000; // one hour
          data  = session.getCollectedData(object.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);           
       }
-      
+
       return new ResponseContainer("values", data);
    }
 

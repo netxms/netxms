@@ -20,6 +20,7 @@ package org.netxms.client.datacollection;
 
 import java.util.Date;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.Severity;
 
@@ -34,7 +35,7 @@ public abstract class DciValue
 	protected String name;				// name
 	protected String description;	// description
 	protected String value;			// value
-	protected int source;				// data source (agent, SNMP, etc.)
+   protected DataOrigin source;  // data source (agent, SNMP, etc.)
 	protected DataType dataType;
 	protected int status;				// status (active, disabled, etc.)
    protected Severity mostCriticalSeverity; //used only in simple dci
@@ -89,7 +90,7 @@ public abstract class DciValue
 		name = msg.getFieldAsString(fieldId++);
       flags = msg.getFieldAsInt32(fieldId++);
 		description = msg.getFieldAsString(fieldId++);
-		source = msg.getFieldAsInt32(fieldId++);
+      source = DataOrigin.getByValue(msg.getFieldAsInt32(fieldId++));
 		dataType = DataType.getByValue(msg.getFieldAsInt32(fieldId++));
 		value = msg.getFieldAsString(fieldId++);
 		timestamp = msg.getFieldAsDate(fieldId++);
@@ -150,7 +151,7 @@ public abstract class DciValue
 	/**
 	 * @return the source
 	 */
-	public int getSource()
+   public DataOrigin getSource()
 	{
 		return source;
 	}

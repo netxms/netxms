@@ -65,8 +65,8 @@ struct MAIL_ENVELOPE
 /**
  * Static data
  */
-static Queue *m_pMailerQueue = NULL;
-static THREAD m_hThread = INVALID_THREAD_HANDLE;
+static ObjectQueue<MAIL_ENVELOPE> s_mailerQueue(64, Ownership::False);
+static THREAD s_mailerThread = INVALID_THREAD_HANDLE;
 
 /**
  * Find end-of-line character
@@ -404,7 +404,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 	DbgPrintf(1, _T("SMTP mailer thread started"));
    while(1)
    {
-      MAIL_ENVELOPE *pEnvelope = (MAIL_ENVELOPE *)m_pMailerQueue->getOrBlock();
+      MAIL_ENVELOPE *pEnvelope = s_mailerQueue.getOrBlock();
       if (pEnvelope == INVALID_POINTER_VALUE)
          break;
 
@@ -418,7 +418,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 			if (pEnvelope->retryCount > 0)
 			{
 				// Try posting again
-				m_pMailerQueue->put(pEnvelope);
+			   s_mailerQueue.put(pEnvelope);
 			}
 			else
 			{
@@ -443,8 +443,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
  */
 void InitMailer()
 {
-   m_pMailerQueue = new Queue;
-   m_hThread = ThreadCreateEx(MailerThread, 0, NULL);
+   s_mailerThread = ThreadCreateEx(MailerThread, 0, NULL);
 }
 
 /**
@@ -452,11 +451,9 @@ void InitMailer()
  */
 void ShutdownMailer()
 {
-   m_pMailerQueue->clear();
-   m_pMailerQueue->put(INVALID_POINTER_VALUE);
-   if (m_hThread != INVALID_THREAD_HANDLE)
-      ThreadJoin(m_hThread);
-   delete m_pMailerQueue;
+   s_mailerQueue.clear();
+   s_mailerQueue.put(INVALID_POINTER_VALUE);
+   ThreadJoin(s_mailerThread);
 }
 
 /**
@@ -464,7 +461,7 @@ void ShutdownMailer()
  */
 void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText, bool isHtml)
 {
-   MAIL_ENVELOPE *envelope = (MAIL_ENVELOPE *)malloc(sizeof(MAIL_ENVELOPE));
+   auto envelope = MemAllocStruct<MAIL_ENVELOPE>();
    ConfigReadStrA(_T("MailEncoding"), envelope->encoding, 64, "utf8");
    envelope->isUtf8 = isHtml || !stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8");
 
@@ -492,5 +489,5 @@ void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, c
 #endif
 	envelope->retryCount = ConfigReadInt(_T("SMTP.RetryCount"), 1);
 	envelope->isHtml = isHtml;
-   m_pMailerQueue->put(envelope);
+	s_mailerQueue.put(envelope);
 }

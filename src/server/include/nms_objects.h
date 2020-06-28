@@ -2032,7 +2032,8 @@ public:
 
    NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
 
-   UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
+   uint32_t getTableLastValue(uint32_t dciId, NXCPMessage *msg);
+   uint32_t getDciLastValue(uint32_t dciId, NXCPMessage *msg);
    UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);
    UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);

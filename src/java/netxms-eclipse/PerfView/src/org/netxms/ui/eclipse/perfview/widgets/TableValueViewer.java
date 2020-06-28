@@ -30,6 +30,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -244,9 +245,9 @@ public class TableValueViewer extends BaseTableValueViewer
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
          String instance = buildInstanceString(cells[i].getViewerRow());
-         int source = currentData.getSource();
+         DataOrigin source = currentData.getSource();
 
-         id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + Integer.toString(source) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+         id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + Integer.toString(source.getValue()) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                + Integer.toString(column.getDataType().getValue()) + "@" + safeEncode(currentData.getTitle()) + "@" //$NON-NLS-1$ //$NON-NLS-2$
                + safeEncode(column.getDisplayName() + ": " + instance.replace("~~~", " / ")) + "@" + safeEncode(instance) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
                + safeEncode(column.getName());

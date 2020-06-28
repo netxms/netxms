@@ -1383,7 +1383,31 @@ UINT64 DCItem::getCacheMemoryUsage() const
 }
 
 /**
- * Put last value into CSCP message
+ * Put last value into NXCP message (single DCI per message)
+ */
+void DCItem::fillLastValueMessage(NXCPMessage *msg)
+{
+   lock();
+   msg->setField(VID_DCI_SOURCE_TYPE, m_source);
+   if (m_cacheSize > 0)
+   {
+      msg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(m_dataType));
+      msg->setField(VID_VALUE, m_ppValueCache[0]->getString());
+      msg->setField(VID_RAW_VALUE, m_prevRawValue.getString());
+      msg->setFieldFromTime(VID_TIMESTAMP, m_ppValueCache[0]->getTimeStamp());
+   }
+   else
+   {
+      msg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(DCI_DT_NULL));
+      msg->setField(VID_VALUE, _T(""));
+      msg->setField(VID_RAW_VALUE, _T(""));
+      msg->setField(VID_TIMESTAMP, static_cast<uint32_t>(0));
+   }
+   unlock();
+}
+
+/**
+ * Put last value into NXCP message
  */
 void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
 {
@@ -1392,18 +1416,18 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
    pMsg->setField(dwId++, m_name);
    pMsg->setField(dwId++, m_flags);
    pMsg->setField(dwId++, m_description);
-   pMsg->setField(dwId++, (UINT16)m_source);
+   pMsg->setField(dwId++, static_cast<uint16_t>(m_source));
    if (m_cacheSize > 0)
    {
-      pMsg->setField(dwId++, (UINT16)m_dataType);
+      pMsg->setField(dwId++, static_cast<uint16_t>(m_dataType));
       pMsg->setField(dwId++, m_ppValueCache[0]->getString());
       pMsg->setFieldFromTime(dwId++, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
-      pMsg->setField(dwId++, (UINT16)DCI_DT_NULL);
+      pMsg->setField(dwId++, static_cast<uint16_t>(DCI_DT_NULL));
       pMsg->setField(dwId++, _T(""));
-      pMsg->setField(dwId++, (UINT32)0);
+      pMsg->setField(dwId++, static_cast<uint32_t>(0));
    }
    pMsg->setField(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
 	pMsg->setField(dwId++, (WORD)getType());

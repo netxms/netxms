@@ -47,6 +47,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -126,7 +127,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       {
 		   chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       }
-		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, DataType.INT32, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
+		chart.addParameter(new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		addDisposeListener(new DisposeListener() {
          @Override
@@ -288,7 +289,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 			else
 				styles.set(items.size() - 1, style);
 			chart.setItemStyles(styles);
-			chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, DataType.INT32, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
+			chart.addParameter(new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	

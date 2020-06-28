@@ -30,6 +30,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -52,7 +53,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
    
 	private NXCSession session;
 	private Image statusImages[];
-	private HashMap<Integer, String> originTexts = new HashMap<Integer, String>();
+   private HashMap<DataOrigin, String> originTexts = new HashMap<DataOrigin, String>();
 	private HashMap<Integer, String> statusTexts = new HashMap<Integer, String>();
 	
 	/**
@@ -67,17 +68,17 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		statusImages[DataCollectionItem.DISABLED] = Activator.getImageDescriptor("icons/disabled.gif").createImage(); //$NON-NLS-1$
 		statusImages[DataCollectionItem.NOT_SUPPORTED] = Activator.getImageDescriptor("icons/unsupported.gif").createImage(); //$NON-NLS-1$
 		
-		originTexts.put(DataCollectionItem.AGENT, Messages.get().DciLabelProvider_SourceAgent);
-      originTexts.put(DataCollectionItem.DEVICE_DRIVER, Messages.get().DciLabelProvider_SourceDeviceDriver);
-		originTexts.put(DataCollectionItem.INTERNAL, Messages.get().DciLabelProvider_SourceInternal);
-      originTexts.put(DataCollectionItem.MQTT, Messages.get().DciLabelProvider_SourceMQTT);
-		originTexts.put(DataCollectionItem.PUSH, Messages.get().DciLabelProvider_SourcePush);
-      originTexts.put(DataCollectionItem.SCRIPT, Messages.get().DciLabelProvider_SourceScript);
-      originTexts.put(DataCollectionItem.SMCLP, Messages.get().DciLabelProvider_SourceILO);
-      originTexts.put(DataCollectionItem.SNMP, Messages.get().DciLabelProvider_SourceSNMP);
-      originTexts.put(DataCollectionItem.SSH, Messages.get().DciLabelProvider_SourceSSH);
-      originTexts.put(DataCollectionItem.WEB_SERVICE, Messages.get().DciLabelProvider_SourceWebService);
-		originTexts.put(DataCollectionItem.WINPERF, Messages.get().DciLabelProvider_SourceWinPerf);
+      originTexts.put(DataOrigin.AGENT, Messages.get().DciLabelProvider_SourceAgent);
+      originTexts.put(DataOrigin.DEVICE_DRIVER, Messages.get().DciLabelProvider_SourceDeviceDriver);
+      originTexts.put(DataOrigin.INTERNAL, Messages.get().DciLabelProvider_SourceInternal);
+      originTexts.put(DataOrigin.MQTT, Messages.get().DciLabelProvider_SourceMQTT);
+      originTexts.put(DataOrigin.PUSH, Messages.get().DciLabelProvider_SourcePush);
+      originTexts.put(DataOrigin.SCRIPT, Messages.get().DciLabelProvider_SourceScript);
+      originTexts.put(DataOrigin.SMCLP, Messages.get().DciLabelProvider_SourceILO);
+      originTexts.put(DataOrigin.SNMP, Messages.get().DciLabelProvider_SourceSNMP);
+      originTexts.put(DataOrigin.SSH, Messages.get().DciLabelProvider_SourceSSH);
+      originTexts.put(DataOrigin.WEB_SERVICE, Messages.get().DciLabelProvider_SourceWebService);
+      originTexts.put(DataOrigin.WINPERF, Messages.get().DciLabelProvider_SourceWinPerf);
 		
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.get().DciLabelProvider_Active);
 		statusTexts.put(DataCollectionItem.DISABLED, Messages.get().DciLabelProvider_Disabled);

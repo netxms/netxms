@@ -164,7 +164,7 @@ public abstract class AbstractHandler extends ServerResource
          return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
       }
    }
-   
+
    /**
     * Get entity ID
     * 
@@ -174,7 +174,7 @@ public abstract class AbstractHandler extends ServerResource
    {
       return (String)getRequest().getAttributes().get(getEntityIdFieldName());
    }
-   
+
    /**
     * Get name of entity ID field
     * 
@@ -184,7 +184,7 @@ public abstract class AbstractHandler extends ServerResource
    {
       return "id";
    }
-   
+
    /**
     * Decode strings from Base64
     * 

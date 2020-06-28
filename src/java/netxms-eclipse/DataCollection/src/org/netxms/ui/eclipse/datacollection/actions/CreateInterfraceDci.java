@@ -39,6 +39,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -172,7 +173,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		dci.setRetentionTime(Integer.toString(retentionTime));
 		if (node.hasAgent())
 		{
-			dci.setOrigin(DataCollectionItem.AGENT);
+         dci.setOrigin(DataOrigin.AGENT);
 			if (node.isAgentIfXCountersSupported())
 				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataType.COUNTER64 : DataType.COUNTER32);
 			else
@@ -180,7 +181,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		}
 		else
 		{
-			dci.setOrigin(DataCollectionItem.SNMP);
+         dci.setOrigin(DataOrigin.SNMP);
 			if (node.isIfXTableSupported())
 				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataType.COUNTER64 : DataType.COUNTER32);
 			else
@@ -191,7 +192,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		dci.setDeltaCalculation(dciInfo.delta ? DataCollectionItem.DELTA_AVERAGE_PER_SECOND : DataCollectionItem.DELTA_NONE);
 		dci.setRelatedObject(iface.getObjectId());
 		
-		if (dci.getOrigin() == DataCollectionItem.AGENT)
+      if (dci.getOrigin() == DataOrigin.AGENT)
 		{
 			switch(dciType)
 			{

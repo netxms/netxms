@@ -509,10 +509,8 @@ void Table::updateFromMessage(NXCPMessage *msg)
  */
 int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
 {
-	UINT32 id;
-
 	msg.setField(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
-   msg.setField(VID_DCI_SOURCE_TYPE, (UINT16)m_source);
+   msg.setField(VID_DCI_SOURCE_TYPE, static_cast<uint16_t>(m_source));
    msg.setField(VID_TABLE_EXTENDED_FORMAT, (UINT16)(m_extendedFormat ? 1 : 0));
 
 	if (offset == 0)
@@ -520,14 +518,14 @@ int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
 		msg.setField(VID_TABLE_NUM_ROWS, (UINT32)m_data->size());
 		msg.setField(VID_TABLE_NUM_COLS, (UINT32)m_columns->size());
 
-      id = VID_TABLE_COLUMN_INFO_BASE;
+      uint32_t id = VID_TABLE_COLUMN_INFO_BASE;
       for(int i = 0; i < m_columns->size(); i++, id += 10)
          m_columns->get(i)->fillMessage(&msg, id);
 	}
 	msg.setField(VID_TABLE_OFFSET, (UINT32)offset);
 
 	int stopRow = (rowLimit == -1) ? m_data->size() : std::min(m_data->size(), offset + rowLimit);
-   id = VID_TABLE_DATA_BASE;
+   uint32_t id = VID_TABLE_DATA_BASE;
 	for(int row = offset; row < stopRow; row++)
 	{
       TableRow *r = m_data->get(row);

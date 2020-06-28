@@ -663,7 +663,7 @@ void GetNotificationChannels(NXCPMessage *msg)
  */
 void GetNotificationDrivers(NXCPMessage *msg)
 {
-   UINT32 base = VID_NOTIFICATION_DRIVER_BASE;
+   uint32_t base = VID_NOTIFICATION_DRIVER_BASE;
    StringList *keyList = s_driverList.keys();
    for(int i = 0; i < keyList->size(); i++)
    {
@@ -677,28 +677,28 @@ void GetNotificationDrivers(NXCPMessage *msg)
 /**
  * Send notification
  */
-void SendNotification(const TCHAR *name, TCHAR *expandedRcpt, const TCHAR *expandedSubject, const TCHAR *expandedData)
+void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
-   if(nc != NULL)
+   if (nc != nullptr)
    {
-      if(expandedRcpt != NULL)
+      if (recipient != nullptr)
       {
-         TCHAR *curr = expandedRcpt, *next;
+         TCHAR *curr = recipient, *next;
          do
          {
             next = _tcschr(curr, _T(';'));
-            if (next != NULL)
+            if (next != nullptr)
                *next = 0;
             StrStrip(curr);
-            nc->send(curr, expandedSubject, expandedData);
+            nc->send(curr, subject, message);
             curr = next + 1;
-         } while(next != NULL);
+         } while(next != nullptr);
       }
       else
       {
-         nc->send(expandedRcpt, expandedSubject, expandedData);
+         nc->send(recipient, subject, message);
       }
    }
    else
@@ -718,14 +718,14 @@ static void LoadDriver(const TCHAR *file)
    TCHAR errorText[256];
 
    HMODULE hModule = DLOpen(file, errorText);
-   if (hModule != NULL)
+   if (hModule != nullptr)
    {
       int *apiVersion = reinterpret_cast<int *>(DLGetSymbolAddr(hModule, "NcdAPIVersion", errorText));
       const char **name = reinterpret_cast<const char **>(DLGetSymbolAddr(hModule, "NcdName", errorText));
       NCDriver *(*InstanceFactory)(Config *, NCDriverStorageManager *) = (NCDriver *(*)(Config *, NCDriverStorageManager *))DLGetSymbolAddr(hModule, "NcdCreateInstance", errorText);
       NCConfigurationTemplate *(*GetConfigTemplate)() = (NCConfigurationTemplate *(*)())DLGetSymbolAddr(hModule, "NcdGetConfigurationTemplate", errorText);
 
-      if ((apiVersion != NULL) && (InstanceFactory != NULL) && (name != NULL) && (GetConfigTemplate != NULL))
+      if ((apiVersion != nullptr) && (InstanceFactory != nullptr) && (name != nullptr) && (GetConfigTemplate != nullptr))
       {
          if (*apiVersion == NCDRV_API_VERSION)
          {

@@ -72,6 +72,7 @@ import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.NodePollType;
@@ -87,6 +88,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DciLastValue;
 import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
@@ -4698,17 +4700,17 @@ public class NXCSession
    }
 
    /**
-    * Get last values for given table DCI on given node
+    * Get last value for given table DCI on given node
     *
     * @param nodeId ID of the node to get DCI values for
-    * @param dciId  DCI ID
+    * @param dciId DCI ID
     * @return Table object with last values for table DCI
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public Table getTableLastValues(final long nodeId, final long dciId) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TABLE_LAST_VALUES);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TABLE_LAST_VALUE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
       sendMessage(msg);
@@ -4718,12 +4720,31 @@ public class NXCSession
    }
 
    /**
-    * Get list of DCIs configured to be shown on performance tab in console for
-    * given node.
+    * Get last value for given table or single valued DCI on given node
+    *
+    * @param nodeId ID of the node to get DCI values for
+    * @param dciId DCI ID
+    * @return Last value object
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DciLastValue getDciLastValue(final long nodeId, final long dciId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_LAST_VALUE);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new DciLastValue(response);
+   }
+
+   /**
+    * Get list of DCIs configured to be shown on performance tab in console for given node.
     *
     * @param nodeId Node object ID
     * @return List of performance tab DCIs
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public PerfTabDci[] getPerfTabItems(final long nodeId) throws IOException, NXCException
@@ -5172,11 +5193,11 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String queryParameter(long nodeId, int origin, String name) throws IOException, NXCException
+   public String queryParameter(long nodeId, DataOrigin origin, String name) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_PARAMETER);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin.getValue());
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
 
@@ -7794,12 +7815,12 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<AgentParameter> getSupportedParameters(long nodeId, int origin) throws IOException, NXCException
+   public List<AgentParameter> getSupportedParameters(long nodeId, DataOrigin origin) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, 0x01); // Indicates request for parameters list
-      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin.getValue());
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
@@ -7824,7 +7845,7 @@ public class NXCSession
     */
    public List<AgentParameter> getSupportedParameters(long nodeId) throws IOException, NXCException
    {
-      return getSupportedParameters(nodeId, DataCollectionObject.AGENT);
+      return getSupportedParameters(nodeId, DataOrigin.AGENT);
    }
 
    /**
@@ -7840,7 +7861,7 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, 0x02); // Indicates request for table list
-      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, DataCollectionObject.AGENT);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, DataOrigin.AGENT.getValue());
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 

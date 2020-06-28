@@ -382,7 +382,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
    bool success = false;
 
    shared_ptr<Action> action = s_actions.getShared(actionId);
-   if (action != NULL)
+   if (action != nullptr)
    {
       if (action->isDisabled)
       {
@@ -422,12 +422,12 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 					   do
 					   {
 						   next = _tcschr(curr, _T(';'));
-						   if (next != NULL)
+						   if (next != nullptr)
 							   *next = 0;
 						   StrStrip(curr);
 						   PostMail(curr, expandedSubject, expandedData);
 						   curr = next + 1;
-					   } while(next != NULL);
+					   } while(next != nullptr);
                }
                else
                {
@@ -845,9 +845,9 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
  */
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
-   UINT32 actionId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("action"), 0);
-   Event *restoredEvent = NULL;
-   Alarm *restoredAlarm = NULL;
+   uint32_t actionId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("action"), 0);
+   Event *restoredEvent = nullptr;
+   Alarm *restoredAlarm = nullptr;
    const Event *event;
    const Alarm *alarm;
    if (parameters->m_transientData != nullptr)
@@ -857,17 +857,17 @@ void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameter
    }
    else
    {
-      UINT64 eventId = ExtractNamedOptionValueAsUInt64(parameters->m_persistentData, _T("event"), 0);
+      uint64_t eventId = ExtractNamedOptionValueAsUInt64(parameters->m_persistentData, _T("event"), 0);
       if (eventId != 0)
       {
          restoredEvent = LoadEventFromDatabase(eventId);
       }
 
-      UINT32 alarmId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("alarm"), 0);
+      uint32_t alarmId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("alarm"), 0);
       if (alarmId != 0)
       {
          restoredAlarm = FindAlarmById(alarmId);
-         if (restoredAlarm == NULL)
+         if (restoredAlarm == nullptr)
             restoredAlarm = LoadAlarmFromDatabase(alarmId);
       }
 
@@ -875,7 +875,7 @@ void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameter
       alarm = restoredAlarm;
    }
 
-   if (event != NULL)
+   if (event != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing scheduled action [%u] for event %s on node [%u]"),
                actionId, event->getName(), parameters->m_objectId);
@@ -896,7 +896,7 @@ void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameter
 ActionExecutionTransientData::ActionExecutionTransientData(const Event *e, const Alarm *a)
 {
    m_event = new Event(e);
-   m_alarm = (a != NULL) ? new Alarm(a, false) : NULL;
+   m_alarm = (a != nullptr) ? new Alarm(a, false) : nullptr;
 }
 
 /**

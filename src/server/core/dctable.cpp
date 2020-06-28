@@ -857,7 +857,8 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
    lock();
 	if (m_lastValue != nullptr)
 	{
-		m_lastValue->fillMessage(*msg, 0, -1);
+      msg->setFieldFromTime(VID_TIMESTAMP, m_lastPoll);
+      m_lastValue->fillMessage(*msg, 0, -1);
 	}
    unlock();
 }

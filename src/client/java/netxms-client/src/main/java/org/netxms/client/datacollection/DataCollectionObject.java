@@ -26,6 +26,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.snmp.SnmpVersion;
 
 /**
@@ -37,19 +38,6 @@ public abstract class DataCollectionObject
 	public static final int DCO_TYPE_GENERIC = 0;
 	public static final int DCO_TYPE_ITEM    = 1;
 	public static final int DCO_TYPE_TABLE   = 2;
-	
-	// data sources
-	public static final int INTERNAL = 0;
-	public static final int AGENT = 1;
-	public static final int SNMP = 2;
-	public static final int WEB_SERVICE = 3;
-	public static final int PUSH = 4;
-	public static final int WINPERF = 5;
-	public static final int SMCLP = 6;
-   public static final int SCRIPT = 7;
-   public static final int SSH = 8;
-   public static final int MQTT = 9;
-   public static final int DEVICE_DRIVER = 10;
 	
 	// data collection object status
 	public static final int ACTIVE = 0;
@@ -95,7 +83,7 @@ public abstract class DataCollectionObject
 	protected String pollingInterval;
    protected int retentionType;
 	protected String retentionTime;
-	protected int origin;
+   protected DataOrigin origin;
 	protected int status;
 	protected int flags;
 	protected String transformationScript;
@@ -134,7 +122,7 @@ public abstract class DataCollectionObject
 		pollingInterval = msg.getFieldAsString(NXCPCodes.VID_POLLING_INTERVAL);
 		retentionType = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TYPE);
 		retentionTime = msg.getFieldAsString(NXCPCodes.VID_RETENTION_TIME);
-		origin = msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE);
+      origin = DataOrigin.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE));
 		status = msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		transformationScript = msg.getFieldAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
@@ -189,7 +177,7 @@ public abstract class DataCollectionObject
 		pollingInterval = null;
 		retentionType = RETENTION_DEFAULT;
 		retentionTime = null;
-		origin = AGENT;
+      origin = DataOrigin.AGENT;
 		status = ACTIVE;
 		flags = 0;
 		transformationScript = null;
@@ -289,7 +277,7 @@ public abstract class DataCollectionObject
 		msg.setField(NXCPCodes.VID_POLLING_INTERVAL, pollingInterval);
       msg.setFieldInt16(NXCPCodes.VID_RETENTION_TYPE, retentionType);
 		msg.setField(NXCPCodes.VID_RETENTION_TIME, retentionTime);
-		msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin.getValue());
 		msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
 		msg.setField(NXCPCodes.VID_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -488,7 +476,7 @@ public abstract class DataCollectionObject
 	/**
 	 * @return the origin
 	 */
-	public int getOrigin()
+   public DataOrigin getOrigin()
 	{
 		return origin;
 	}
@@ -496,7 +484,7 @@ public abstract class DataCollectionObject
 	/**
 	 * @param origin the origin to set
 	 */
-	public void setOrigin(int origin)
+   public void setOrigin(DataOrigin origin)
 	{
 		this.origin = origin;
 	}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.api;
 
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 
 /**
@@ -33,7 +34,7 @@ public interface DataCollectionObjectListener
 	 * @param description
 	 * @param dataType
 	 */
-	public void onSelectItem(int origin, String name, String description, DataType dataType);
+   public void onSelectItem(DataOrigin origin, String name, String description, DataType dataType);
 
 	/**
 	 * Called by editor after user choose new table parameter using "Select" button
@@ -43,5 +44,5 @@ public interface DataCollectionObjectListener
 	 * @param description
 	 * @param instanceColumn
 	 */
-	public void onSelectTable(int origin, String name, String description);
+   public void onSelectTable(DataOrigin origin, String name, String description);
 }

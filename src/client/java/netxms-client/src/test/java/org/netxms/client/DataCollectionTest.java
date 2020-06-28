@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.netxms.client.constants.AggregationFunction;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
@@ -52,7 +53,7 @@ public class DataCollectionTest extends AbstractSessionTest
 		for(int i = 0; i < list.length; i++)
 		{
 			System.out.println(list[i].getDescription() + " = " + list[i].getValue());
-			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataCollectionObject.INTERNAL))
+         if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataOrigin.INTERNAL))
 				statusFound = true;
 		}
 		assertEquals(true, statusFound);
@@ -71,7 +72,7 @@ public class DataCollectionTest extends AbstractSessionTest
 		for(int i = 0; i < list.length; i++)
 		{
 			System.out.println(list[i].getDescription() + " = " + list[i].getValue());
-			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataCollectionObject.INTERNAL))
+         if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataOrigin.INTERNAL))
 				statusFound = true;
 		}
 		assertEquals(true, statusFound);

@@ -40,6 +40,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ASN;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -169,7 +170,7 @@ public class CreateSnmpDci implements IObjectActionDelegate
       dci.setPollingInterval(Integer.toString(pollingInterval));
       dci.setRetentionType(DataCollectionObject.RETENTION_CUSTOM);
       dci.setRetentionTime(Integer.toString(retentionTime));
-		dci.setOrigin(DataCollectionItem.SNMP);
+      dci.setOrigin(DataOrigin.SNMP);
 		dci.setDataType(dciTypeFromAsnType(value.getType()));
 		dci.setStatus(DataCollectionItem.ACTIVE);
 		dci.setDescription(description);

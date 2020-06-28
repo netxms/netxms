@@ -58,6 +58,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
@@ -775,11 +776,11 @@ public class DataCollectionEditor extends ViewPart
       {
          if(((AbstractNode)object).hasSnmpAgent())
          {
-            dci.setOrigin(DataCollectionObject.SNMP);
+            dci.setOrigin(DataOrigin.SNMP);
          }
          else
          {
-            dci.setOrigin(DataCollectionObject.INTERNAL);
+            dci.setOrigin(DataOrigin.INTERNAL);
          }
       }
       viewer.add(dci);
@@ -797,11 +798,11 @@ public class DataCollectionEditor extends ViewPart
       {
          if(((AbstractNode)object).hasSnmpAgent())
          {
-            dci.setOrigin(DataCollectionObject.SNMP);
+            dci.setOrigin(DataOrigin.SNMP);
          }
          else
          {
-            dci.setOrigin(DataCollectionObject.INTERNAL);
+            dci.setOrigin(DataOrigin.INTERNAL);
          }
       }
       viewer.add(dci);

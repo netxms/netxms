@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractNode;
@@ -202,7 +202,7 @@ public class GeneralTable extends DCIPropertyPageDialog
       origin.add(Messages.get().DciLabelProvider_SourceScript);
       origin.add(Messages.get().DciLabelProvider_SourceSSH);
       origin.add(Messages.get().DciLabelProvider_SourceMQTT);
-      origin.select(dci.getOrigin());
+      origin.select(dci.getOrigin().getValue());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -237,12 +237,12 @@ public class GeneralTable extends DCIPropertyPageDialog
       fd.left = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.RIGHT);
       fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       checkUseCustomSnmpPort.setLayoutData(fd);
-      checkUseCustomSnmpPort.setEnabled(dci.getOrigin() == DataCollectionObject.SNMP);
+      checkUseCustomSnmpPort.setEnabled(dci.getOrigin() == DataOrigin.SNMP);
 
       customSnmpPort = new Spinner(groupData, SWT.BORDER);
       customSnmpPort.setMinimum(1);
       customSnmpPort.setMaximum(65535);
-      if ((dci.getOrigin() == DataCollectionItem.SNMP) && (dci.getSnmpPort() != 0))
+      if ((dci.getOrigin() == DataOrigin.SNMP) && (dci.getSnmpPort() != 0))
       {
          customSnmpPort.setEnabled(true);
          customSnmpPort.setSelection(dci.getSnmpPort());
@@ -278,7 +278,7 @@ public class GeneralTable extends DCIPropertyPageDialog
       fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       checkUseCustomSnmpVersion.setLayoutData(fd);
-      checkUseCustomSnmpVersion.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
+      checkUseCustomSnmpVersion.setEnabled(dci.getOrigin() == DataOrigin.SNMP);
 
       customSnmpVersion = new Combo(groupData, SWT.BORDER | SWT.READ_ONLY);
       customSnmpVersion.add("1");
@@ -296,7 +296,7 @@ public class GeneralTable extends DCIPropertyPageDialog
       sourceNode.setLabel(Messages.get().GeneralTable_ProxyNode);
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dci.getSourceNode());
-      sourceNode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
+      sourceNode.setEnabled(dci.getOrigin() != DataOrigin.PUSH);
       sourceNode.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -313,7 +313,7 @@ public class GeneralTable extends DCIPropertyPageDialog
       agentCacheMode.add(Messages.get().GeneralTable_On);
       agentCacheMode.add(Messages.get().GeneralTable_Off);
       agentCacheMode.select(dci.getCacheMode().getValue());
-      agentCacheMode.setEnabled((dci.getOrigin() == DataCollectionItem.AGENT) || (dci.getOrigin() == DataCollectionItem.SNMP));
+      agentCacheMode.setEnabled((dci.getOrigin() == DataOrigin.AGENT) || (dci.getOrigin() == DataOrigin.SNMP));
 
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -343,7 +343,7 @@ public class GeneralTable extends DCIPropertyPageDialog
       schedulingMode.add(Messages.get().General_FixedIntervalsCustom);
       schedulingMode.add(Messages.get().General_CustomSchedule);
       schedulingMode.select(dci.getPollingScheduleType());
-      schedulingMode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
+      schedulingMode.setEnabled(dci.getOrigin() != DataOrigin.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -361,7 +361,7 @@ public class GeneralTable extends DCIPropertyPageDialog
       pollingInterval = new LabeledText(groupPolling, SWT.NONE);
       pollingInterval.setLabel(Messages.get().General_PollingInterval);
       pollingInterval.setText(dci.getPollingInterval());
-      pollingInterval.setEnabled((dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dci.getOrigin() != DataCollectionItem.PUSH));
+      pollingInterval.setEnabled((dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dci.getOrigin() != DataOrigin.PUSH));
       fd = new FormData();
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.right = new FormAttachment(100, 0);
@@ -494,22 +494,22 @@ public class GeneralTable extends DCIPropertyPageDialog
 	 */
 	private void onOriginChange()
 	{
-		int index = origin.getSelectionIndex();
-		sourceNode.setEnabled(index != DataCollectionObject.PUSH);
-      schedulingMode.setEnabled((index != DataCollectionItem.PUSH) && (index != DataCollectionItem.MQTT));
-      pollingInterval.setEnabled((index != DataCollectionItem.PUSH) && (index != DataCollectionItem.MQTT) && (schedulingMode.getSelectionIndex() == 1));
-		checkUseCustomSnmpPort.setEnabled(index == DataCollectionObject.SNMP);
-		customSnmpPort.setEnabled((index == DataCollectionObject.SNMP) && checkUseCustomSnmpPort.getSelection());
-      checkUseCustomSnmpVersion.setEnabled(index == DataCollectionItem.SNMP);
-      customSnmpVersion.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpVersion.getSelection());
-      agentCacheMode.setEnabled((index == DataCollectionItem.AGENT) || (index == DataCollectionItem.SNMP));
+      DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
+		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH);
+      schedulingMode.setEnabled((dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT));
+      pollingInterval.setEnabled((dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT) && (schedulingMode.getSelectionIndex() == 1));
+		checkUseCustomSnmpPort.setEnabled(dataOrigin == DataOrigin.SNMP);
+		customSnmpPort.setEnabled((dataOrigin == DataOrigin.SNMP) && checkUseCustomSnmpPort.getSelection());
+      checkUseCustomSnmpVersion.setEnabled(dataOrigin == DataOrigin.SNMP);
+      customSnmpVersion.setEnabled((dataOrigin == DataOrigin.SNMP) && checkUseCustomSnmpVersion.getSelection());
+      agentCacheMode.setEnabled((dataOrigin == DataOrigin.AGENT) || (dataOrigin == DataOrigin.SNMP));
       selectButton.setEnabled(
-            (index == DataCollectionItem.AGENT) || 
-            (index == DataCollectionItem.SNMP) || 
-            (index == DataCollectionItem.INTERNAL) || 
-            (index == DataCollectionItem.WINPERF) || 
-            (index == DataCollectionItem.WEB_SERVICE) || 
-            (index == DataCollectionItem.SCRIPT));
+            (dataOrigin == DataOrigin.AGENT) || 
+            (dataOrigin == DataOrigin.SNMP) || 
+            (dataOrigin == DataOrigin.INTERNAL) || 
+            (dataOrigin == DataOrigin.WINPERF) || 
+            (dataOrigin == DataOrigin.WEB_SERVICE) || 
+            (dataOrigin == DataOrigin.SCRIPT));
 	}
 	
 	/**
@@ -519,15 +519,16 @@ public class GeneralTable extends DCIPropertyPageDialog
 	{
 		Dialog dlg;
 		editor.setSourceNode(sourceNode.getObjectId());
-		switch(origin.getSelectionIndex())
+      DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
+      switch(dataOrigin)
 		{
-			case DataCollectionObject.AGENT:
+         case AGENT:
 			   if (sourceNode.getObjectId() != 0)
-               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), origin.getSelectionIndex(), true);
+               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), dataOrigin, true);
             else
-               dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), origin.getSelectionIndex(), true);
+               dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), dataOrigin, true);
 				break;
-			case DataCollectionObject.SNMP:
+         case SNMP:
 				SnmpObjectId oid;
 				try
 				{
@@ -542,7 +543,7 @@ public class GeneralTable extends DCIPropertyPageDialog
             else
                dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
 				break;
-         case DataCollectionItem.SCRIPT:
+         case SCRIPT:
             dlg = new SelectParameterScriptDialog(getShell());
             break;
 			default:
@@ -555,7 +556,8 @@ public class GeneralTable extends DCIPropertyPageDialog
 			IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
 			description.setText(pd.getParameterDescription());
 			parameter.setText(pd.getParameterName());
-			editor.fireOnSelectTableListeners(origin.getSelectionIndex(), pd.getParameterName(), pd.getParameterDescription());
+         editor.fireOnSelectTableListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(),
+               pd.getParameterDescription());
 		}
 	}
 	
@@ -568,7 +570,7 @@ public class GeneralTable extends DCIPropertyPageDialog
 	{
 		dci.setDescription(description.getText().trim());
 		dci.setName(parameter.getText().trim());
-		dci.setOrigin(origin.getSelectionIndex());
+      dci.setOrigin(DataOrigin.getByValue(origin.getSelectionIndex()));
 		dci.setSourceNode(sourceNode.getObjectId());
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
       dci.setPollingScheduleType(schedulingMode.getSelectionIndex());

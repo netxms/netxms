@@ -6,6 +6,7 @@
 - "Reset identity" command line option in agent
 - EtherNet/IP has priority over SNMP when reading hardware information
 - Implemented Web API calls for DCI creation and modification
+- Implemented Web API calls for reading last value of specific DCI
 - Fixed issues:
 	NX-1422 (SMTP HELO should be configurable)
 

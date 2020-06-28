@@ -51,9 +51,9 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ColumnDefinition;
-import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
@@ -311,14 +311,14 @@ public class TableColumns extends DCIPropertyPageDialog
       
       final DataCollectionObjectListener listener = new DataCollectionObjectListener() {
 			@Override
-			public void onSelectItem(int origin, String name, String description, DataType dataType)
+         public void onSelectItem(DataOrigin origin, String name, String description, DataType dataType)
 			{
 			}
 
 			@Override
-			public void onSelectTable(int origin, String name, String description)
+         public void onSelectTable(DataOrigin origin, String name, String description)
 			{
-				if (origin == DataCollectionObject.AGENT)
+            if (origin == DataOrigin.AGENT)
 					updateColumnsFromAgent(name, false, null);
 			}
 		};

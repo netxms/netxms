@@ -510,6 +510,7 @@ public:
    virtual void generateEventsBasedOnThrDiff() override;
 
    void fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId);
+   void fillLastValueMessage(NXCPMessage *msg);
    NXSL_Value *getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls);
    NXSL_Value *getRawValueForNXSL(NXSL_VM *vm);
    const TCHAR *getLastValue();

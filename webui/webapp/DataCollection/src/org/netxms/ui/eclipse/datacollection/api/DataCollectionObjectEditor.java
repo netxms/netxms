@@ -23,6 +23,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -132,7 +133,7 @@ public class DataCollectionObjectEditor
 	 * @param description
 	 * @param dataType
 	 */
-	public void fireOnSelectItemListeners(int origin, String name, String description, DataType dataType)
+   public void fireOnSelectItemListeners(DataOrigin origin, String name, String description, DataType dataType)
 	{
 		for(DataCollectionObjectListener l : listeners)
 			l.onSelectItem(origin, name, description, dataType);
@@ -143,7 +144,7 @@ public class DataCollectionObjectEditor
 	 * @param name
 	 * @param description
 	 */
-	public void fireOnSelectTableListeners(int origin, String name, String description)
+   public void fireOnSelectTableListeners(DataOrigin origin, String name, String description)
 	{
 		for(DataCollectionObjectListener l : listeners)
 			l.onSelectTable(origin, name, description);

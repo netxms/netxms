@@ -24,15 +24,15 @@ import java.util.Comparator;
 import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
-import org.netxms.client.datacollection.DataCollectionObject;
 
 /**
  * Generic class for holding data in tabular format. Table has named columns. All data stored as strings.
  */
 public class Table
 {
-	private int source;
+   private DataOrigin source;
 	private String title;
 	private List<TableColumnDefinition> columns;
 	private List<TableRow> data;
@@ -44,7 +44,7 @@ public class Table
 	public Table()
 	{
 		title = "untitled";
-		source = DataCollectionObject.AGENT;
+      source = DataOrigin.AGENT;
 		columns = new ArrayList<TableColumnDefinition>(0);
 		data = new ArrayList<TableRow>(0);
 		extendedFormat = false;
@@ -58,7 +58,7 @@ public class Table
 	public Table(final NXCPMessage msg)
 	{
 		title = msg.getFieldAsString(NXCPCodes.VID_TABLE_TITLE);
-		source = msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE);
+      source = DataOrigin.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE));
 		
 		final int columnCount = msg.getFieldAsInt32(NXCPCodes.VID_TABLE_NUM_COLS);
 		columns = new ArrayList<TableColumnDefinition>(columnCount);
@@ -360,17 +360,21 @@ public class Table
 	}
 
 	/**
-	 * @return the source
-	 */
-	public int getSource()
+    * Get data origin (source).
+    *
+    * @return data origin
+    */
+   public DataOrigin getSource()
 	{
 		return source;
 	}
 
 	/**
-	 * @param source the source to set
-	 */
-	public void setSource(int source)
+    * Set data origin (source)
+    *
+    * @param source new data origin (source)
+    */
+   public void setSource(DataOrigin source)
 	{
 		this.source = source;
 	}

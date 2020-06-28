@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.client.datacollection;
 
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 
 /**
@@ -28,7 +29,7 @@ public class GraphItem
 	private long nodeId;
 	private long dciId;
 	private int type;
-	private int source;
+   private DataOrigin source;
 	private DataType dataType;
 	private String name;
 	private String description;
@@ -44,7 +45,7 @@ public class GraphItem
 		nodeId = 0;
 		dciId = 0;
 		type = DataCollectionObject.DCO_TYPE_ITEM;
-		source = DataCollectionObject.AGENT;
+      source = DataOrigin.AGENT;
 		dataType = DataType.STRING;
 		name = "<noname>";
 		description = "<noname>";
@@ -64,7 +65,8 @@ public class GraphItem
 	 * @param description The description
 	 * @param displayFormat The display format
 	 */
-	public GraphItem(long nodeId, long dciId, int source, DataType dataType, String name, String description, String displayFormat)
+   public GraphItem(long nodeId, long dciId, DataOrigin source, DataType dataType, String name, String description,
+         String displayFormat)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -91,7 +93,8 @@ public class GraphItem
     * @param instance The instance
     * @param dataColumn The data column
 	 */
-	public GraphItem(long nodeId, long dciId, int source, DataType dataType, String name, String description, String displayFormat, String instance, String dataColumn)
+   public GraphItem(long nodeId, long dciId, DataOrigin source, DataType dataType, String name, String description,
+         String displayFormat, String instance, String dataColumn)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -140,7 +143,7 @@ public class GraphItem
 	/**
 	 * @return the source
 	 */
-	public int getSource()
+   public DataOrigin getSource()
 	{
 		return source;
 	}
@@ -148,7 +151,7 @@ public class GraphItem
 	/**
 	 * @param source the source to set
 	 */
-	public void setSource(int source)
+   public void setSource(DataOrigin source)
 	{
 		this.source = source;
 	}

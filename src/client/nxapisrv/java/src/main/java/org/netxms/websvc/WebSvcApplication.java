@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import org.netxms.websvc.handlers.AccessIntegrationTools;
 import org.netxms.websvc.handlers.Alarms;
+import org.netxms.websvc.handlers.DCObjectLastValue;
 import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
 import org.netxms.websvc.handlers.DataCollectionObjectHandler;
 import org.netxms.websvc.handlers.GrafanaAlarms;
@@ -93,6 +94,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/datacollection", DataCollectionConfigurationHandler.class);
       router.attach("/objects/{object-id}/datacollection/{id}", DataCollectionObjectHandler.class);
       router.attach("/objects/{object-id}/datacollection/{id}/values", HistoricalData.class);
+      router.attach("/objects/{object-id}/datacollection/{id}/lastvalue", DCObjectLastValue.class);
       router.attach("/objects/{object-id}/objecttools", ObjectTools.class);
       router.attach("/objects/{object-id}/objecttools/output/{id}", ObjectToolOutputHandler.class);
       router.attach("/predefinedgraphs", PredefinedGraphs.class);

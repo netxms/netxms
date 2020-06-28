@@ -349,21 +349,60 @@ void DataCollectionTarget::scheduleTableDataCleanup(UINT32 dciId)
 }
 
 /**
+ * Get last value of DCI (either table or single value)
+ */
+uint32_t DataCollectionTarget::getDciLastValue(uint32_t dciId, NXCPMessage *msg)
+{
+   uint32_t rcc = RCC_INVALID_DCI_ID;
+
+   readLockDciAccess();
+
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *object = m_dcObjects->get(i);
+      if (object->getId() == dciId)
+      {
+         msg->setField(VID_DCOBJECT_TYPE, static_cast<int16_t>(object->getType()));
+         if (object->getType() == DCO_TYPE_TABLE)
+         {
+            static_cast<DCTable*>(object)->fillLastValueMessage(msg);
+         }
+         else
+         {
+            static_cast<DCItem*>(object)->fillLastValueMessage(msg);
+         }
+         rcc = RCC_SUCCESS;
+         break;
+      }
+   }
+
+   unlockDciAccess();
+   return rcc;
+}
+
+/**
  * Get last collected values of given table
  */
-UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, NXCPMessage *msg)
+uint32_t DataCollectionTarget::getTableLastValue(uint32_t dciId, NXCPMessage *msg)
 {
-	UINT32 rcc = RCC_INVALID_DCI_ID;
+   uint32_t rcc = RCC_INVALID_DCI_ID;
 
    readLockDciAccess();
 
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if ((object->getId() == dciId) && (object->getType() == DCO_TYPE_TABLE))
+		if (object->getId() == dciId)
 		{
-			((DCTable *)object)->fillLastValueMessage(msg);
-			rcc = RCC_SUCCESS;
+		   if (object->getType() == DCO_TYPE_TABLE)
+		   {
+		      static_cast<DCTable*>(object)->fillLastValueMessage(msg);
+		      rcc = RCC_SUCCESS;
+		   }
+		   else
+		   {
+		      rcc = RCC_INCOMPATIBLE_OPERATION;
+		   }
 			break;
 		}
 	}

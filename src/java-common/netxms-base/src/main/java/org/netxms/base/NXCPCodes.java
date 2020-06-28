@@ -279,7 +279,7 @@ public class NXCPCodes
 	public static final int CMD_GET_NODE_COMPONENTS = 0x0101;
 	public static final int CMD_UPDATE_ALARM_COMMENT = 0x0102;
 	public static final int CMD_GET_ALARM = 0x0103;
-	public static final int CMD_GET_TABLE_LAST_VALUES = 0x0104;
+	public static final int CMD_GET_TABLE_LAST_VALUE = 0x0104;
 	public static final int CMD_GET_TABLE_DCI_DATA = 0x0105;
 	public static final int CMD_GET_THRESHOLD_SUMMARY = 0x0106;
 	public static final int CMD_RESOLVE_ALARM = 0x0107;
@@ -427,6 +427,7 @@ public class NXCPCodes
    public static final int CMD_GET_SNMP_PORT_LIST = 0x019A;
    public static final int CMD_UPDATE_SNMP_PORT_LIST = 0x019B;
    public static final int CMD_GET_LOG_RECORD_DETAILS = 0x019C;
+   public static final int CMD_GET_DCI_LAST_VALUE = 0x019D;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1145,6 +1146,7 @@ public class NXCPCodes
    public static final long VID_RECORD_ID = 704;
    public static final long VID_RECORD_ID_COLUMN = 705;
    public static final long VID_OBJECT_ID_COLUMN = 706;
+   public static final long VID_RAW_VALUE = 707;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

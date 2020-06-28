@@ -43,6 +43,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -151,7 +152,7 @@ public class DataComparisonView extends ViewPart
 					{
 						items.add(new GraphItem(Long.parseLong(subfields[0], 10), // Node ID 
 								Long.parseLong(subfields[1], 10), // DCI ID
-								Integer.parseInt(subfields[2], 10), // source
+								DataOrigin.getByValue(Integer.parseInt(subfields[2], 10)), // source
 								DataType.getByValue(Integer.parseInt(subfields[3], 10)), // data type
 								URLDecoder.decode(subfields[4], "UTF-8"), // name //$NON-NLS-1$
 								URLDecoder.decode(subfields[5], "UTF-8"), // description //$NON-NLS-1$
@@ -172,7 +173,7 @@ public class DataComparisonView extends ViewPart
 					{
 						items.add(new GraphItem(Long.parseLong(subfields[0], 10), // Node ID 
 								Long.parseLong(subfields[1], 10), // DCI ID
-								Integer.parseInt(subfields[2], 10), // source
+								DataOrigin.getByValue(Integer.parseInt(subfields[2], 10)), // source
 								DataType.getByValue(Integer.parseInt(subfields[3], 10)), // data type
 								URLDecoder.decode(subfields[4], "UTF-8"), // name //$NON-NLS-1$
 								URLDecoder.decode(subfields[5], "UTF-8"), //$NON-NLS-1$

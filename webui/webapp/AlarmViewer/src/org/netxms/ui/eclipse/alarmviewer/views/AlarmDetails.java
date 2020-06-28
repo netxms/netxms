@@ -65,6 +65,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
@@ -618,7 +619,7 @@ public class AlarmDetails extends ViewPart
          chart.setExtendedLegend(true);
          chart.setGridVisible(true);
          chart.setTranslucent(true);
-         chart.addParameter(new GraphItem(nodeId, dciId, 0, dci.getDataType(), dci.getName(), dci.getDescription(), "%s"));
+         chart.addParameter(new GraphItem(nodeId, dciId, DataOrigin.INTERNAL, dci.getDataType(), dci.getName(), dci.getDescription(), "%s"));
          
          List<GraphItemStyle> itemStyles = chart.getItemStyles();
          itemStyles.get(0).setType(GraphItemStyle.AREA);

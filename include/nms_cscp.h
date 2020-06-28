@@ -501,7 +501,7 @@ typedef struct
 #define CMD_GET_NODE_COMPONENTS           0x0101
 #define CMD_UPDATE_ALARM_COMMENT          0x0102
 #define CMD_GET_ALARM                     0x0103
-#define CMD_GET_TABLE_LAST_VALUES         0x0104
+#define CMD_GET_TABLE_LAST_VALUE          0x0104
 #define CMD_GET_TABLE_DCI_DATA            0x0105
 #define CMD_GET_THRESHOLD_SUMMARY         0x0106
 #define CMD_RESOLVE_ALARM                 0x0107
@@ -654,6 +654,7 @@ typedef struct
 #define CMD_GET_SNMP_PORT_LIST            0x019A
 #define CMD_UPDATE_SNMP_PORT_LIST         0x019B
 #define CMD_GET_LOG_RECORD_DETAILS        0x019C
+#define CMD_GET_DCI_LAST_VALUE            0x019D
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1375,6 +1376,7 @@ typedef struct
 #define VID_RECORD_ID               ((UINT32)704)
 #define VID_RECORD_ID_COLUMN        ((UINT32)705)
 #define VID_OBJECT_ID_COLUMN        ((UINT32)706)
+#define VID_RAW_VALUE               ((UINT32)707)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

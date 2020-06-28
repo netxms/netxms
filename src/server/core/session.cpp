@@ -880,8 +880,11 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_DCI_VALUES:
          getLastValuesByDciId(request);
          break;
-      case CMD_GET_TABLE_LAST_VALUES:
-         getTableLastValues(request);
+      case CMD_GET_TABLE_LAST_VALUE:
+         getTableLastValue(request);
+         break;
+      case CMD_GET_DCI_LAST_VALUE:
+         getLastValue(request);
          break;
       case CMD_GET_ACTIVE_THRESHOLDS:
          getActiveThresholds(request);
@@ -4824,21 +4827,57 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
 }
 
 /**
- * Send latest collected values for given table DCI of given node
+ * Send latest collected value for given table DCI of given node
  */
-void ClientSession::getTableLastValues(NXCPMessage *pRequest)
+void ClientSession::getTableLastValue(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get node id and check object class and access rights
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if (object->isDataCollectionTarget())
          {
-				msg.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getTableLastValues(pRequest->getFieldAsUInt32(VID_DCI_ID), &msg));
+				msg.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getTableLastValue(request->getFieldAsUInt32(VID_DCI_ID), &msg));
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Send latest collected value for given DCI (table or single valued) of given node
+ */
+void ClientSession::getLastValue(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   // Get node id and check object class and access rights
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (object->isDataCollectionTarget())
+         {
+            msg.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getDciLastValue(request->getFieldAsUInt32(VID_DCI_ID), &msg));
          }
          else
          {

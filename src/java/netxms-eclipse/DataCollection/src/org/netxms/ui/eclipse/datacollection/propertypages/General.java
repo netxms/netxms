@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -192,7 +193,7 @@ public class General extends DCIPropertyPageDialog
       origin.add(Messages.get().DciLabelProvider_SourceSSH);
       origin.add(Messages.get().DciLabelProvider_SourceMQTT);
       origin.add(Messages.get().DciLabelProvider_SourceDeviceDriver);
-      origin.select(dci.getOrigin());
+      origin.select(dci.getOrigin().getValue());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -242,13 +243,13 @@ public class General extends DCIPropertyPageDialog
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       checkInterpretRawSnmpValue.setLayoutData(fd);
-      checkInterpretRawSnmpValue.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
+      checkInterpretRawSnmpValue.setEnabled(dci.getOrigin() == DataOrigin.SNMP);
 
       snmpRawType = new Combo(groupData, SWT.BORDER | SWT.READ_ONLY);
       for(int i = 0; i < snmpRawTypes.length; i++)
       	snmpRawType.add(snmpRawTypes[i]);
       snmpRawType.select(dci.getSnmpRawValueType());
-      snmpRawType.setEnabled((dci.getOrigin() == DataCollectionItem.SNMP) && dci.isSnmpRawValueInOctetString());
+      snmpRawType.setEnabled((dci.getOrigin() == DataOrigin.SNMP) && dci.isSnmpRawValueInOctetString());
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
@@ -275,12 +276,12 @@ public class General extends DCIPropertyPageDialog
       fd.left = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
       fd.top = new FormAttachment(dataType.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       checkUseCustomSnmpPort.setLayoutData(fd);
-      checkUseCustomSnmpPort.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
+      checkUseCustomSnmpPort.setEnabled(dci.getOrigin() == DataOrigin.SNMP);
 
       customSnmpPort = new Spinner(groupData, SWT.BORDER);
       customSnmpPort.setMinimum(1);
       customSnmpPort.setMaximum(65535);
-      if ((dci.getOrigin() == DataCollectionItem.SNMP) && (dci.getSnmpPort() != 0))
+      if ((dci.getOrigin() == DataOrigin.SNMP) && (dci.getSnmpPort() != 0))
       {
       	customSnmpPort.setEnabled(true);
       	customSnmpPort.setSelection(dci.getSnmpPort());
@@ -316,7 +317,7 @@ public class General extends DCIPropertyPageDialog
       fd.top = new FormAttachment(dataType.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       checkUseCustomSnmpVersion.setLayoutData(fd);
-      checkUseCustomSnmpVersion.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
+      checkUseCustomSnmpVersion.setEnabled(dci.getOrigin() == DataOrigin.SNMP);
 
       customSnmpVersion = new Combo(groupData, SWT.BORDER | SWT.READ_ONLY);
       customSnmpVersion.add("1");
@@ -334,7 +335,7 @@ public class General extends DCIPropertyPageDialog
       sampleCount.setLabel(Messages.get().General_SampleCountForAvg);
       sampleCount.setRange(0, 65535);
       sampleCount.setSelection(dci.getSampleCount());
-		sampleCount.setEnabled(dci.getOrigin() == DataCollectionItem.WINPERF);
+      sampleCount.setEnabled(dci.getOrigin() == DataOrigin.WINPERF);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
@@ -345,7 +346,7 @@ public class General extends DCIPropertyPageDialog
       sourceNode.setLabel(Messages.get().General_ProxyNode);
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dci.getSourceNode());
-      sourceNode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
+      sourceNode.setEnabled(dci.getOrigin() != DataOrigin.PUSH);
       
       fd = new FormData();
       fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
@@ -355,7 +356,7 @@ public class General extends DCIPropertyPageDialog
       agentCacheMode.add(Messages.get().General_On);
       agentCacheMode.add(Messages.get().General_Off);
       agentCacheMode.select(dci.getCacheMode().getValue());
-      agentCacheMode.setEnabled((dci.getOrigin() == DataCollectionItem.AGENT) || (dci.getOrigin() == DataCollectionItem.SNMP));
+      agentCacheMode.setEnabled((dci.getOrigin() == DataOrigin.AGENT) || (dci.getOrigin() == DataOrigin.SNMP));
 
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -385,7 +386,7 @@ public class General extends DCIPropertyPageDialog
       schedulingMode.add(Messages.get().General_FixedIntervalsCustom);
       schedulingMode.add(Messages.get().General_CustomSchedule);
       schedulingMode.select(dci.getPollingScheduleType());
-      schedulingMode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
+      schedulingMode.setEnabled(dci.getOrigin() != DataOrigin.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -403,7 +404,7 @@ public class General extends DCIPropertyPageDialog
       pollingInterval = new LabeledText(groupPolling, SWT.NONE);
       pollingInterval.setLabel(Messages.get().General_PollingInterval);
       pollingInterval.setText(dci.getPollingInterval());
-      pollingInterval.setEnabled((dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dci.getOrigin() != DataCollectionItem.PUSH));
+      pollingInterval.setEnabled((dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dci.getOrigin() != DataOrigin.PUSH));
       fd = new FormData();
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.right = new FormAttachment(100, 0);
@@ -506,26 +507,26 @@ public class General extends DCIPropertyPageDialog
 	 */
 	private void onOriginChange()
 	{
-		int index = origin.getSelectionIndex();
-		sourceNode.setEnabled(index != DataCollectionItem.PUSH);
-		schedulingMode.setEnabled((index != DataCollectionItem.PUSH) && (index != DataCollectionItem.MQTT));
-		pollingInterval.setEnabled((index != DataCollectionItem.PUSH) && (index != DataCollectionItem.MQTT) && (schedulingMode.getSelectionIndex() == 1));
-		checkInterpretRawSnmpValue.setEnabled(index == DataCollectionItem.SNMP);
-		snmpRawType.setEnabled((index == DataCollectionItem.SNMP) && checkInterpretRawSnmpValue.getSelection());
-		checkUseCustomSnmpPort.setEnabled(index == DataCollectionItem.SNMP);
-		customSnmpPort.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpPort.getSelection());
-      checkUseCustomSnmpVersion.setEnabled(index == DataCollectionItem.SNMP);
-      customSnmpVersion.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpVersion.getSelection());
-		sampleCount.setEnabled(index == DataCollectionItem.WINPERF);
-		agentCacheMode.setEnabled((index == DataCollectionItem.AGENT) || (index == DataCollectionItem.SNMP));
+      DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
+		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH);
+		schedulingMode.setEnabled((dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT));
+		pollingInterval.setEnabled((dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT) && (schedulingMode.getSelectionIndex() == 1));
+		checkInterpretRawSnmpValue.setEnabled(dataOrigin == DataOrigin.SNMP);
+		snmpRawType.setEnabled((dataOrigin == DataOrigin.SNMP) && checkInterpretRawSnmpValue.getSelection());
+		checkUseCustomSnmpPort.setEnabled(dataOrigin == DataOrigin.SNMP);
+		customSnmpPort.setEnabled((dataOrigin == DataOrigin.SNMP) && checkUseCustomSnmpPort.getSelection());
+      checkUseCustomSnmpVersion.setEnabled(dataOrigin == DataOrigin.SNMP);
+      customSnmpVersion.setEnabled((dataOrigin == DataOrigin.SNMP) && checkUseCustomSnmpVersion.getSelection());
+		sampleCount.setEnabled(dataOrigin == DataOrigin.WINPERF);
+		agentCacheMode.setEnabled((dataOrigin == DataOrigin.AGENT) || (dataOrigin == DataOrigin.SNMP));
 		selectButton.setEnabled(
-		      (index == DataCollectionItem.AGENT) || 
-		      (index == DataCollectionItem.SNMP) || 
-		      (index == DataCollectionItem.INTERNAL) || 
-		      (index == DataCollectionItem.WINPERF) || 
-		      (index == DataCollectionItem.WEB_SERVICE) || 
-            (index == DataCollectionItem.DEVICE_DRIVER) || 
-		      (index == DataCollectionItem.SCRIPT));
+		      (dataOrigin == DataOrigin.AGENT) || 
+		      (dataOrigin == DataOrigin.SNMP) || 
+		      (dataOrigin == DataOrigin.INTERNAL) || 
+		      (dataOrigin == DataOrigin.WINPERF) || 
+		      (dataOrigin == DataOrigin.WEB_SERVICE) || 
+            (dataOrigin == DataOrigin.DEVICE_DRIVER) || 
+		      (dataOrigin == DataOrigin.SCRIPT));
 	}
 	
 	/**
@@ -534,22 +535,23 @@ public class General extends DCIPropertyPageDialog
 	private void selectParameter()
 	{
 		Dialog dlg;
-		switch(origin.getSelectionIndex())
+      DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
+      switch(dataOrigin)
 		{
-			case DataCollectionItem.INTERNAL:
+         case INTERNAL:
 			   if (sourceNode.getObjectId() != 0)
 			      dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId());
 			   else
 			      dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId());
 				break;
-			case DataCollectionItem.AGENT:
-         case DataCollectionItem.DEVICE_DRIVER:
+         case AGENT:
+         case DEVICE_DRIVER:
 			   if (sourceNode.getObjectId() != 0)
-			      dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), origin.getSelectionIndex(), false);
+               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), dataOrigin, false);
 			   else
-			      dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), origin.getSelectionIndex(), false);
+               dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), dataOrigin, false);
 				break;
-			case DataCollectionItem.SNMP:
+         case SNMP:
 				SnmpObjectId oid;
 				try
 				{
@@ -564,16 +566,16 @@ public class General extends DCIPropertyPageDialog
 				else
 				   dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
 				break;
-			case DataCollectionItem.WINPERF:
+         case WINPERF:
 			   if (sourceNode.getObjectId() != 0)
 			      dlg = new WinPerfCounterSelectionDialog(getShell(), sourceNode.getObjectId());
 			   else
 			      dlg = new WinPerfCounterSelectionDialog(getShell(), dci.getNodeId());
 				break;
-         case DataCollectionItem.SCRIPT:
+         case SCRIPT:
             dlg = new SelectParameterScriptDialog(getShell());
             break;
-         case DataCollectionItem.WEB_SERVICE:
+         case WEB_SERVICE:
             dlg = new SelectWebServiceDlg(getShell(), false);
             break;
 			default:
@@ -587,7 +589,8 @@ public class General extends DCIPropertyPageDialog
 			description.setText(pd.getParameterDescription());
 			parameter.setText(pd.getParameterName());
 			dataType.select(getDataTypePosition(pd.getParameterDataType()));
-			editor.fireOnSelectItemListeners(origin.getSelectionIndex(), pd.getParameterName(), pd.getParameterDescription(), pd.getParameterDataType());
+         editor.fireOnSelectItemListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(),
+               pd.getParameterDescription(), pd.getParameterDataType());
 		}
 	}
 	
@@ -600,7 +603,7 @@ public class General extends DCIPropertyPageDialog
 	{
 		dci.setDescription(description.getText().trim());
 		dci.setName(parameter.getText().trim());
-		dci.setOrigin(origin.getSelectionIndex());
+      dci.setOrigin(DataOrigin.getByValue(origin.getSelectionIndex()));
 		dci.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
 		dci.setSampleCount(sampleCount.getSelection());
 		dci.setSourceNode(sourceNode.getObjectId());
