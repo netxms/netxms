@@ -8,6 +8,7 @@
 - Implemented Web API calls for DCI creation and modification
 - Implemented Web API calls for reading last value of specific DCI
 - Fixed bug that prevents PushDCIData NXSL function to work on chassis object
+- Fixed bug in template import
 - Fixed issues:
 	NX-1422 (SMTP HELO should be configurable)
 

@@ -977,7 +977,9 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
          }
          else
          {
-            m_dcObjects->add(make_shared<DCItem>(e, self()));
+            auto dci = make_shared<DCItem>(e, self());
+            m_dcObjects->add(dci);
+            guid = dci->getGuid();  // For case when export file does not contain valid GUID
          }
          guidList.add(new uuid(guid));
       }
@@ -995,7 +997,9 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
          }
          else
          {
-            m_dcObjects->add(make_shared<DCTable>(e, self()));
+            auto dci = make_shared<DCTable>(e, self());
+            m_dcObjects->add(dci);
+            guid = dci->getGuid();  // For case when export file does not contain valid GUID
          }
          guidList.add(new uuid(guid));
       }
@@ -1003,7 +1007,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
    }
 
    // Delete DCIs missing in import
-   IntegerArray<UINT32> deleteList;
+   IntegerArray<uint32_t> deleteList;
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       bool found = false;
