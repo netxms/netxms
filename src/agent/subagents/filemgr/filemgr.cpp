@@ -107,7 +107,7 @@ RootFolder::RootFolder(const TCHAR *folder)
 static bool SubagentInit(Config *config)
 {
    g_rootFileManagerFolders = new ObjectArray<RootFolder>(16, 16, Ownership::True);
-   g_downloadFileStopMarkers = new HashMap<UINT32, VolatileCounter>();
+   g_downloadFileStopMarkers = new HashMap<UINT32, VolatileCounter>(Ownership::True);
    ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
    if (root != NULL)
    {
