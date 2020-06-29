@@ -105,7 +105,7 @@ public:
 /**
  * NXSL "Chassis" class
  */
-class NXSL_ChassisClass : public NXSL_NetObjClass
+class NXSL_ChassisClass : public NXSL_DCTargetClass
 {
 public:
    NXSL_ChassisClass();

@@ -7,6 +7,7 @@
 - EtherNet/IP has priority over SNMP when reading hardware information
 - Implemented Web API calls for DCI creation and modification
 - Implemented Web API calls for reading last value of specific DCI
+- Fixed bug that prevents PushDCIData NXSL function to work on chassis object
 - Fixed issues:
 	NX-1422 (SMTP HELO should be configurable)
 

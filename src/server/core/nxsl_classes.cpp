@@ -2133,7 +2133,7 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const char *att
 /**
  * NXSL class "Chassis" constructor
  */
-NXSL_ChassisClass::NXSL_ChassisClass() : NXSL_NetObjClass()
+NXSL_ChassisClass::NXSL_ChassisClass() : NXSL_DCTargetClass()
 {
    setName(_T("Chassis"));
 }
@@ -2143,7 +2143,7 @@ NXSL_ChassisClass::NXSL_ChassisClass() : NXSL_NetObjClass()
  */
 NXSL_Value *NXSL_ChassisClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
    if (value != nullptr)
       return value;
 

@@ -464,8 +464,8 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 /**
  * NXSL function: create new DCI
  * Format: CreateDCI(node, origin, name, description, dataType, pollingInterval, retentionTime)
- * Possible origin values: "agent", "snmp", "internal", "push"
- * Possible dataType values: "int32", "uint32", "int64", "uint64", "float", "string"
+ * Possible origin values: "agent", "snmp", "internal", "push", "websvc", "winperf", "script", "ssh", "mqtt", "driver"
+ * Possible dataType values: "int32", "uint32", "int64", "uint64", "counter32", "counter64", "float", "string"
  * Returns DCI object on success and NULL of failure
  */
 static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
@@ -483,11 +483,11 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 
 	// Origin
-	static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("cpsnmp"),
-	         _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), NULL };
+	static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("websvc"),
+	         _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), nullptr };
 	int origin = -1;
 	const TCHAR *name = argv[1]->getValueAsCString();
-	for(int i = 0; originNames[i] != NULL; i++)
+	for(int i = 0; originNames[i] != nullptr; i++)
 		if (!_tcsicmp(originNames[i], name))
 		{
 			origin = i;
@@ -495,10 +495,10 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		}
 
 	// Data types
-	static const TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), NULL };
+	static const TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), _T("null"), _T("counter32"), _T("counter64"), nullptr };
 	int dataType = -1;
 	name = argv[4]->getValueAsCString();
-	for(int i = 0; dtNames[i] != NULL; i++)
+	for(int i = 0; dtNames[i] != nullptr; i++)
 		if (!_tcsicmp(dtNames[i], name))
 		{
 			dataType = i;
@@ -508,8 +508,8 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	if ((origin != -1) && (dataType != -1))
 	{
 		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(),
-		         origin, dataType, argv[5]->isString() ? argv[5]->getValueAsCString() : NULL,
-			      argv[6]->isString() ? argv[6]->getValueAsCString() : NULL, node, argv[3]->getValueAsCString());
+		         origin, dataType, argv[5]->isString() ? argv[5]->getValueAsCString() : nullptr,
+			      argv[6]->isString() ? argv[6]->getValueAsCString() : nullptr, node, argv[3]->getValueAsCString());
 		node->addDCObject(dci);
 		*ppResult = dci->createNXSLObject(vm);
 	}
