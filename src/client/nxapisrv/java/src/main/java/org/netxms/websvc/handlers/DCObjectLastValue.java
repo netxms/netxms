@@ -19,6 +19,14 @@
 package org.netxms.websvc.handlers;
 
 import java.util.Map;
+import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.TableRow;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciLastValue;
+import org.netxms.websvc.json.JsonTools;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Handler for data collection object last value request
@@ -31,6 +39,46 @@ public class DCObjectLastValue extends AbstractObjectHandler
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {
-      return getSession().getDciLastValue(getObjectId(), Long.parseLong(id));
+      DciLastValue value = getSession().getDciLastValue(getObjectId(), Long.parseLong(id));
+      if (value.getDciType() != DataCollectionObject.DCO_TYPE_TABLE)
+         return value;
+
+      JsonObject result = new JsonObject();
+      result.addProperty("dciType", value.getDciType());
+      result.addProperty("dataOrigin", value.getDataOrigin().toString());
+      result.addProperty("timestamp", value.getTimestamp().getTime());
+
+      JsonObject tableValue = new JsonObject();
+      result.add("tableValue", tableValue);
+
+      Gson gson = JsonTools.createGsonInstance();
+      TableColumnDefinition[] columns = value.getTableValue().getColumns();
+      tableValue.add("columns", gson.toJsonTree(columns));
+
+      JsonArray rows = new JsonArray();
+      tableValue.add("data", rows);
+      
+      if (Boolean.parseBoolean(query.getOrDefault("rowsAsObjects", "false")))
+      {
+         for(TableRow r : value.getTableValue().getAllRows())
+         {
+            JsonObject row = new JsonObject();
+            for(int i = 0; i < columns.length; i++)
+               row.addProperty(columns[i].getName(), r.getValue(i));
+            rows.add(row);
+         }
+      }
+      else
+      {
+         for(TableRow r : value.getTableValue().getAllRows())
+         {
+            JsonArray row = new JsonArray();
+            for(int i = 0; i < columns.length; i++)
+               row.add(r.getValue(i));
+            rows.add(row);
+         }
+      }
+
+      return result;
    }
 }

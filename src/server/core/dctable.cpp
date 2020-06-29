@@ -860,6 +860,10 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
       msg->setFieldFromTime(VID_TIMESTAMP, m_lastPoll);
       m_lastValue->fillMessage(*msg, 0, -1);
 	}
+	else
+	{
+      msg->setFieldFromTime(VID_TIMESTAMP, static_cast<uint32_t>(0));
+	}
    unlock();
 }
 
