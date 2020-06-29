@@ -206,6 +206,15 @@ public class WebServiceGeneral extends PreferencePage
          MessageDialogHelper.openWarning(getShell(), "Warning", "Web service name cannot be empty!");
          return false;
       }
+
+      if (svcName.contains(":") || svcName.contains("/") || svcName.contains(",") || svcName.contains("(") || svcName.contains(")")
+            || svcName.contains("{") || svcName.contains("}") || svcName.contains("'") || svcName.contains("\""))
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning",
+               "Web service name cannot contain following characters: / , : ' \" ( ) { }");
+         return false;
+      }
+
       definition.setName(svcName);
       definition.setUrl(url.getText().trim());
       definition.setVerifyCertificate(checkVerifyCert.getSelection());
