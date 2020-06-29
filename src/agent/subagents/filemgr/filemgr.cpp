@@ -31,8 +31,8 @@
 /**
  * Root folders
  */
-static ObjectArray<RootFolder> *g_rootFileManagerFolders;
-static HashMap<UINT32, VolatileCounter> *g_downloadFileStopMarkers;
+static ObjectArray<RootFolder> *s_rootDirectories;
+static HashMap<uint32_t, VolatileCounter> *s_downloadFileStopMarkers;
 
 /**
  * Monitored file list
@@ -106,15 +106,15 @@ RootFolder::RootFolder(const TCHAR *folder)
  */
 static bool SubagentInit(Config *config)
 {
-   g_rootFileManagerFolders = new ObjectArray<RootFolder>(16, 16, Ownership::True);
-   g_downloadFileStopMarkers = new HashMap<UINT32, VolatileCounter>();
+   s_rootDirectories = new ObjectArray<RootFolder>(16, 16, Ownership::True);
+   s_downloadFileStopMarkers = new HashMap<uint32_t, VolatileCounter>(Ownership::True);
    ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
    if (root != NULL)
    {
       for(int i = 0; i < root->getValueCount(); i++)
       {
          RootFolder *folder = new RootFolder(root->getValue(i));
-         g_rootFileManagerFolders->add(folder);
+         s_rootDirectories->add(folder);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Added file manager root directory \"%s\""), folder->getFolder());
       }
    }
@@ -127,8 +127,8 @@ static bool SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
-   delete g_rootFileManagerFolders;
-   delete g_downloadFileStopMarkers;
+   delete s_rootDirectories;
+   delete s_downloadFileStopMarkers;
 }
 
 #ifndef _WIN32
@@ -242,15 +242,15 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
       return false;
    }
 
-   for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
+   for(int i = 0; i < s_rootDirectories->size(); i++)
    {
 #if defined(_WIN32) || defined(__APPLE__)
-      if (!_tcsnicmp(g_rootFileManagerFolders->get(i)->getFolder(), fullPathT, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
+      if (!_tcsnicmp(s_rootDirectories->get(i)->getFolder(), fullPathT, _tcslen(s_rootDirectories->get(i)->getFolder())))
 #else
-      if (!_tcsncmp(g_rootFileManagerFolders->get(i)->getFolder(), fullPathT, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
+      if (!_tcsncmp(s_rootDirectories->get(i)->getFolder(), fullPathT, _tcslen(s_rootDirectories->get(i)->getFolder())))
 #endif
       {
-         if (!isModify || !g_rootFileManagerFolders->get(i)->isReadOnly())
+         if (!isModify || !s_rootDirectories->get(i)->isReadOnly())
          {
             *fullPath = fullPathT;
             return true;
@@ -462,9 +462,9 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
    {
       response->setField(VID_RCC, ERR_SUCCESS);
 
-      for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
+      for(int i = 0; i < s_rootDirectories->size(); i++)
       {
-         if (FillMessageFolderContent(g_rootFileManagerFolders->get(i)->getFolder(), g_rootFileManagerFolders->get(i)->getFolder(), msg, fieldId))
+         if (FillMessageFolderContent(s_rootDirectories->get(i)->getFolder(), s_rootDirectories->get(i)->getFolder(), msg, fieldId))
          {
             count++;
             fieldId += 10;
@@ -584,7 +584,7 @@ static BOOL Delete(const TCHAR *name)
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s, compress = %s"),
                data->fileName, data->follow ? _T("true") : _T("false"), data->allowCompression ? _T("true") : _T("false"));
-   bool success = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset, data->allowCompression, g_downloadFileStopMarkers->get(data->id));
+   bool success = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset, data->allowCompression, s_downloadFileStopMarkers->get(data->id));
    if (data->follow && success)
    {
       g_monitorFileList.add(data->fileNameCode);
@@ -594,7 +594,7 @@ static BOOL Delete(const TCHAR *name)
    data->session->decRefCount();
    MemFree(data->fileName);
    MemFree(data->fileNameCode);
-   g_downloadFileStopMarkers->remove(data->id);
+   s_downloadFileStopMarkers->remove(data->id);
    delete data;
    return THREAD_OK;
 }
@@ -1070,7 +1070,7 @@ static void CH_GetFile(NXCPMessage *request, NXCPMessage *response, AbstractComm
       data->offset = request->getFieldAsUInt32(VID_FILE_OFFSET);
       data->session = session;
       session->incRefCount();
-      g_downloadFileStopMarkers->set(request->getId(), new VolatileCounter(0));
+      s_downloadFileStopMarkers->set(request->getId(), new VolatileCounter(0));
 
       ThreadCreateEx(SendFile, 0, data);
 
@@ -1087,7 +1087,7 @@ static void CH_GetFile(NXCPMessage *request, NXCPMessage *response, AbstractComm
  */
 static void CH_CancelFileDownload(NXCPMessage *request, NXCPMessage *response)
 {
-   VolatileCounter *counter = g_downloadFileStopMarkers->get(request->getFieldAsUInt32(VID_REQUEST_ID));
+   VolatileCounter *counter = s_downloadFileStopMarkers->get(request->getFieldAsUInt32(VID_REQUEST_ID));
    if (counter != NULL)
    {
       InterlockedIncrement(counter);
