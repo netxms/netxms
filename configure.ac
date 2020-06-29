@@ -1846,6 +1846,8 @@ if test "x$CXX" = "xCC" ; then
 	fi
 
 	AC_CXX_CHECK_OPTION(-std=c++11)
+	AC_CXX_CHECK_OPTION(-features=no%except)
+	AC_CXX_CHECK_OPTION(-features=no%rtti)
 	AC_CXX_CHECK_OPTION(-xatomic=studio)
 
 	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
