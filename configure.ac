@@ -1784,7 +1784,7 @@ fi
 if test "x$CXX" = "xCC" ; then
 	SQLFLAGS="-Qn"
 	CPPFLAGS="$CPPFLAGS -mt"
-	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit"
+	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit,wbadlkginit"
 
 	TEST_XARCH="no"
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
@@ -1846,9 +1846,10 @@ if test "x$CXX" = "xCC" ; then
 	fi
 
 	AC_CXX_CHECK_OPTION(-std=c++11)
+	AC_LD_CHECK_OPTION(-std=c++11)
 	AC_CXX_CHECK_OPTION(-features=no%except)
 	AC_CXX_CHECK_OPTION(-features=no%rtti)
-	AC_CXX_CHECK_OPTION(-xatomic=studio)
+	AC_LD_CHECK_OPTION(-xatomic=studio)
 
 	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
 	OLD_CPPFLAGS="$CPPFLAGS"
@@ -1862,6 +1863,9 @@ if test "x$CXX" = "xCC" ; then
 			CPPFLAGS="$OLD_CPPFLAGS"
 			AC_MSG_RESULT(no)
 		])
+
+	# The following is needed to avoid load errors for modules (subagents, drivers, etc.)
+	LIBS="$LIBS -lCrunG3"
 fi
 
 
