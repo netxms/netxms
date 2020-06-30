@@ -176,9 +176,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 		   case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-				   *error = ((Node *)dcTarget)->getTableFromAgent(table->getName(), &result);
-               if ((*error == DCE_SUCCESS) && (result != nullptr))
-                  table->updateResultColumns(result);
+				   *error = static_cast<Node*>(dcTarget)->getTableFromAgent(table->getName(), &result);
             }
 			   else
             {
@@ -189,8 +187,6 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
                *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table->getSnmpPort(), table->getSnmpVersion(), table->getName(), table->getColumns(), &result);
-               if ((*error == DCE_SUCCESS) && (result != nullptr))
-                  table->updateResultColumns(result);
             }
 			   else
             {
@@ -204,6 +200,8 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 			   *error = DCE_NOT_SUPPORTED;
 			   break;
 	   }
+      if ((*error == DCE_SUCCESS) && (result != nullptr))
+         table->updateResultColumns(result);
    }
 	return result;
 }
