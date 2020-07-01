@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ void WatchdogGetThreads(StringList *out)
 /**
  * Watchdog thread
  */
-THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
+static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 {
    ThreadSetName("Watchdog");
    nxlog_debug(1, _T("Watchdog thread started"));
