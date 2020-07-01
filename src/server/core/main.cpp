@@ -100,21 +100,21 @@ void StopSyslogServer();
  * Thread functions
  */
 void Syncer();
-THREAD_RESULT THREAD_CALL NodePoller(void *);
+void NodePoller();
 void PollManager(CONDITION startCondition);
 void EventProcessor();
-THREAD_RESULT THREAD_CALL WatchdogThread(void *);
-THREAD_RESULT THREAD_CALL ClientListenerThread(void *);
-THREAD_RESULT THREAD_CALL MobileDeviceListenerThread(void *);
-THREAD_RESULT THREAD_CALL ISCListener(void *);
-THREAD_RESULT THREAD_CALL LocalAdminListener(void *);
+void ClientListenerThread();
+void MobileDeviceListenerThread();
+void ISCListener();
+void LocalAdminListener();
 void SNMPTrapReceiver();
 void BeaconPoller();
-THREAD_RESULT THREAD_CALL JobManagerThread(void *);
-THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
-THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
-THREAD_RESULT THREAD_CALL ServerStatCollector(void *);
-THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg);
+void JobManagerThread();
+void UptimeCalculator();
+void ReportingServerConnector();
+void ServerStatCollector();
+void TunnelListenerThread();
+void LDAPSyncThread();
 
 /**
  * Global variables
@@ -200,14 +200,7 @@ bool NXCORE_EXPORTABLE IsComponentRegistered(const TCHAR *id)
  */
 void FillComponentsMessage(NXCPMessage *msg)
 {
-   msg->setField(VID_NUM_COMPONENTS, (INT32)s_components.size());
-   UINT32 fieldId = VID_COMPONENT_LIST_BASE;
-   Iterator<const TCHAR> *it = s_components.iterator();
-   while(it->hasNext())
-   {
-      msg->setField(fieldId++, it->next());
-   }
-   delete it;
+   s_components.fillMessage(msg, VID_COMPONENT_LIST_BASE, VID_NUM_COMPONENTS);
 }
 
 /**
@@ -737,7 +730,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
    // Start local administrative interface listener if required
    if (g_flags & AF_ENABLE_LOCAL_CONSOLE)
-      ThreadCreate(LocalAdminListener, 0, NULL);
+      ThreadCreate(LocalAdminListener);
 
 	// Wait for database password if needed
 	GetDatabasePassword();
@@ -1054,9 +1047,8 @@ retry_db_lock:
    }
 
    // Start threads
-   ThreadCreate(WatchdogThread, 0, NULL);
-   ThreadCreate(NodePoller, 0, NULL);
-   ThreadCreate(JobManagerThread, 0, NULL);
+   ThreadCreate(NodePoller);
+   ThreadCreate(JobManagerThread);
    s_syncerThread = ThreadCreateEx(Syncer);
 
    CONDITION pollManagerInitialized = ConditionCreate(true);
@@ -1080,15 +1072,15 @@ retry_db_lock:
 
    // Start inter-server communication listener
    if (ConfigReadBoolean(_T("EnableISCListener"), false))
-      ThreadCreate(ISCListener, 0, NULL);
+      ThreadCreate(ISCListener);
 
    // Start reporting server connector
    if (ConfigReadBoolean(_T("EnableReportingServer"), false))
-      ThreadCreate(ReportingServerConnector, 0, NULL);
+      ThreadCreate(ReportingServerConnector);
 
    // Start LDAP synchronization
    if (ConfigReadInt(_T("LDAP.SyncInterval"), 0))
-      ThreadCreate(SyncLDAPUsers, 0, NULL);
+      ThreadCreate(LDAPSyncThread);
 
    // Wait for initialization of critical threads
    ConditionWait(pollManagerInitialized, INFINITE);
@@ -1119,13 +1111,13 @@ retry_db_lock:
    AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
 
    // Start listeners
-   s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread, 0, NULL);
-   s_clientListenerThread = ThreadCreateEx(ClientListenerThread, 0, NULL);
+   s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread);
+   s_clientListenerThread = ThreadCreateEx(ClientListenerThread);
    InitMobileDeviceListeners();
-   s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread, 0, NULL);
+   s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread);
 
    // Start uptime calculator for SLM
-   ThreadCreate(UptimeCalculator, 0, NULL);
+   ThreadCreate(UptimeCalculator);
 
    nxlog_debug(2, _T("LIBDIR: %s"), g_netxmsdLibDir);
 
@@ -1147,7 +1139,7 @@ retry_db_lock:
 
    // Internal stat collector should be started last when all queues
    // and thread pools already created
-   s_statCollectorThread = ThreadCreateEx(ServerStatCollector, 0, NULL);
+   s_statCollectorThread = ThreadCreateEx(ServerStatCollector);
 
    g_flags |= AF_SERVER_INITIALIZED;
    PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, NULL);

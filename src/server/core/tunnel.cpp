@@ -1272,17 +1272,17 @@ ConnectionProcessingResult TunnelListener::processConnection(SOCKET s, const Ine
 /**
  * Tunnel listener
  */
-THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg)
+void TunnelListenerThread()
 {
    ThreadSetName("TunnelListener");
    s_tunnelListenerLock.lock();
-   UINT16 listenPort = (UINT16)ConfigReadULong(_T("AgentTunnels.ListenPort"), 4703);
+   uint16_t listenPort = static_cast<uint16_t>(ConfigReadULong(_T("AgentTunnels.ListenPort"), 4703));
    TunnelListener listener(listenPort);
    listener.setListenAddress(g_szListenAddress);
    if (!listener.initialize())
    {
       s_tunnelListenerLock.unlock();
-      return THREAD_OK;
+      return;
    }
 
    listener.mainLoop();
@@ -1290,7 +1290,6 @@ THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg)
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Tunnel listener thread terminated"));
    s_tunnelListenerLock.unlock();
-   return THREAD_OK;
 }
 
 /**

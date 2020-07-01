@@ -113,7 +113,7 @@ static EnumerationCallbackResult UpdateGauge(const TCHAR *key, const void *value
 /**
  * Statistics collection thread
  */
-THREAD_RESULT THREAD_CALL ServerStatCollector(void *arg)
+void ServerStatCollector()
 {
    ThreadSetName("StatCollector");
 
@@ -141,7 +141,6 @@ THREAD_RESULT THREAD_CALL ServerStatCollector(void *arg)
       s_queuesLock.unlock();
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Server statistic collector thread stopped"));
-   return THREAD_OK;
 }
 
 /**

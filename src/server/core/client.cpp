@@ -167,18 +167,17 @@ ConnectionProcessingResult ClientListener::processConnection(SOCKET s, const Ine
 /**
  * Listener thread
  */
-THREAD_RESULT THREAD_CALL ClientListenerThread(void *arg)
+void ClientListenerThread()
 {
    ThreadSetName("ClientListener");
    UINT16 listenPort = (UINT16)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
    ClientListener listener(listenPort);
    listener.setListenAddress(g_szListenAddress);
    if (!listener.initialize())
-      return THREAD_OK;
+      return;
 
    listener.mainLoop();
    listener.shutdown();
-   return THREAD_OK;
 }
 
 /**

@@ -159,7 +159,7 @@ static RSConnector *m_connector = NULL;
 /**
  * Reporting server connection manager
  */
-THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
+void ReportingServerConnector()
 {
 	TCHAR hostname[256];
 	ConfigReadStr(_T("ReportingServerHostname"), hostname, 256, _T("localhost"));
@@ -184,7 +184,6 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
    m_connector = NULL;
 
 	DbgPrintf(1, _T("Reporting Server connector stopped"));
-   return THREAD_OK;
 }
 
 /**

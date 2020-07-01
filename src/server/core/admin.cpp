@@ -104,7 +104,7 @@ close_session:
 /**
  * Local administrative interface listener thread
  */
-THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
+void LocalAdminListener()
 {
    ThreadSetName("DebugConsole");
 
@@ -118,7 +118,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to create socket for local admin interface (%s)"), GetLastSocketErrorText(buffer, 1024));
-      return THREAD_OK;
+      return;
    }
 
 	SetSocketExclusiveAddrUse(sock);
@@ -139,7 +139,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to bind socket for local admin interface (%s)"), GetLastSocketErrorText(buffer, 1024));
       closesocket(sock);
-      return THREAD_OK;
+      return;
    }
 
    // Set up queue
@@ -200,5 +200,4 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 
    closesocket(sock);
    nxlog_debug(1, _T("Local administration interface listener stopped"));
-   return THREAD_OK;
 }

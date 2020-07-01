@@ -22,18 +22,17 @@
 
 #include "nxcore.h"
 
-//
-//  Uptime calculator thread
-//
-
-THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg)
+/**
+ *  Uptime calculator thread
+ */
+void UptimeCalculator()
 {
 	const int calcInterval = 60; 
 
    ThreadSetName("UptimeCalc");
 	DbgPrintf(1, _T("UptimeCalculator thread started"));
 
-	while(TRUE)
+	while(true)
 	{
 		g_businessServiceRoot->updateUptimeStats(time(NULL), TRUE);
 		if (SleepAndCheckForShutdown(calcInterval))
@@ -41,7 +40,4 @@ THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg)
 	}
 
 	DbgPrintf(1, _T("UptimeCalculator thread terminated"));
-
-	return THREAD_OK;
 }
-

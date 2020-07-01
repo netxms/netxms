@@ -1334,9 +1334,9 @@ ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType);
  */
 void WatchdogInit();
 void WatchdogShutdown();
-UINT32 WatchdogAddThread(const TCHAR *name, time_t notifyInterval);
-void WatchdogNotify(UINT32 id);
-void WatchdogStartSleep(UINT32 id);
+uint32_t WatchdogAddThread(const TCHAR *name, time_t notifyInterval);
+void WatchdogNotify(uint32_t id);
+void WatchdogStartSleep(uint32_t id);
 void WatchdogPrintStatus(CONSOLE_CTX console);
 WatchdogState WatchdogGetState(const TCHAR *name);
 void WatchdogGetThreads(StringList *out);

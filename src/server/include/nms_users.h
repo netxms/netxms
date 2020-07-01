@@ -447,7 +447,6 @@ void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject);
 void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectMap<Entry> *entryListId, UINT32 m_action, bool isUser);
 void UpdateLDAPGroup(const TCHAR* dn, const Entry *ldapObject);
 void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject);
-THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
 void DumpUsers(CONSOLE_CTX pCtx);

@@ -212,7 +212,7 @@ static void CleanupJobQueue(ServerJobQueue *queue, void *data)
 /**
  * Job manager worker thread
  */
-THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
+void JobManagerThread()
 {
    ThreadSetName("JobManager");
 	nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread started"));
@@ -224,5 +224,4 @@ THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
 	}
 
 	nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread stopped"));
-	return THREAD_OK;
 }

@@ -203,7 +203,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 /**
  * ISC listener thread
  */
-THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
+void ISCListener()
 {
    SOCKET sock, sockClient;
    struct sockaddr_in servAddr;
@@ -217,7 +217,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to create socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));
-      return THREAD_OK;
+      return;
    }
 
 	SetSocketExclusiveAddrUse(sock);
@@ -239,7 +239,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
       nxlog_write(NXLOG_ERROR, _T("Unable to bind socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));
       closesocket(sock);
       /* TODO: we should initiate shutdown from here */
-      return THREAD_OK;
+      return;
    }
 
    // Set up queue
@@ -286,6 +286,4 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
 
    closesocket(sock);
 	DbgPrintf(1, _T("ISC listener stopped"));
-   return THREAD_OK;
 }
-

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG_WATCHDOG _T("watchdog")
+
 /**
  * Max thread name length
  */
@@ -42,20 +44,20 @@ static struct
    time_t lastReport;
    WatchdogState state;
 } s_threadInfo[MAX_THREADS];
-static UINT32 s_numThreads = 0;
+static uint32_t s_numThreads = 0;
 static MUTEX s_watchdogLock = INVALID_MUTEX_HANDLE;
 
 /**
  * Add thread to watch list
  */
-UINT32 WatchdogAddThread(const TCHAR *name, time_t notifyInterval)
+uint32_t WatchdogAddThread(const TCHAR *name, time_t notifyInterval)
 {
    MutexLock(s_watchdogLock);
    _tcscpy(s_threadInfo[s_numThreads].name, name);
    s_threadInfo[s_numThreads].notifyInterval = notifyInterval;
-   s_threadInfo[s_numThreads].lastReport = time(NULL);
+   s_threadInfo[s_numThreads].lastReport = time(nullptr);
    s_threadInfo[s_numThreads].state = WATCHDOG_RUNNING;
-   UINT32 id = s_numThreads;
+   uint32_t id = s_numThreads;
    s_numThreads++;
    MutexUnlock(s_watchdogLock);
    return id;
@@ -64,7 +66,7 @@ UINT32 WatchdogAddThread(const TCHAR *name, time_t notifyInterval)
 /**
  * Set thread timestamp
  */
-void WatchdogNotify(UINT32 id)
+void WatchdogNotify(uint32_t id)
 {
    if (IsShutdownInProgress())
       return;
@@ -74,10 +76,10 @@ void WatchdogNotify(UINT32 id)
    {
       if (s_threadInfo[id].state == WATCHDOG_NOT_RESPONDING)
       {
-         nxlog_write(NXLOG_INFO, _T("Thread \"%s\" returned to running state"), s_threadInfo[id].name);
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WATCHDOG, _T("Thread \"%s\" returned to running state"), s_threadInfo[id].name);
          PostSystemEvent(EVENT_THREAD_RUNNING, g_dwMgmtNode, "s", s_threadInfo[id].name);
       }
-      s_threadInfo[id].lastReport = time(NULL);
+      s_threadInfo[id].lastReport = time(nullptr);
       s_threadInfo[id].state = WATCHDOG_RUNNING;
    }
    MutexUnlock(s_watchdogLock);
@@ -86,7 +88,7 @@ void WatchdogNotify(UINT32 id)
 /**
  * Set thread sleep mode
  */
-void WatchdogStartSleep(UINT32 id)
+void WatchdogStartSleep(uint32_t id)
 {
    if (IsShutdownInProgress())
       return;
@@ -96,10 +98,10 @@ void WatchdogStartSleep(UINT32 id)
    {
       if (s_threadInfo[id].state == WATCHDOG_NOT_RESPONDING)
       {
-         nxlog_write(NXLOG_INFO, _T("Thread \"%s\" returned to running state"), s_threadInfo[id].name);
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WATCHDOG, _T("Thread \"%s\" returned to running state"), s_threadInfo[id].name);
          PostSystemEvent(EVENT_THREAD_RUNNING, g_dwMgmtNode, "s", s_threadInfo[id].name);
       }
-      s_threadInfo[id].lastReport = time(NULL);
+      s_threadInfo[id].lastReport = time(nullptr);
       s_threadInfo[id].state = WATCHDOG_SLEEPING;
    }
    MutexUnlock(s_watchdogLock);
@@ -153,10 +155,11 @@ void WatchdogGetThreads(StringList *out)
 /**
  * Watchdog thread
  */
-THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
+static void WatchdogThread()
 {
    ThreadSetName("Watchdog");
-   nxlog_debug(1, _T("Watchdog thread started"));
+   nxlog_debug_tag(DEBUG_TAG_WATCHDOG, 1, _T("Watchdog thread started"));
+
    while(!SleepAndCheckForShutdown(20))
    {
       // Walk through threads and check if they are alive
@@ -167,14 +170,13 @@ THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
              (s_threadInfo[i].state == WATCHDOG_RUNNING))
          {
             PostSystemEvent(EVENT_THREAD_HANGS, g_dwMgmtNode, "s", s_threadInfo[i].name);
-            nxlog_write(NXLOG_ERROR, _T("Thread \"%s\" does not respond to watchdog thread"), s_threadInfo[i].name);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_WATCHDOG, _T("Thread \"%s\" does not respond to watchdog thread"), s_threadInfo[i].name);
             s_threadInfo[i].state = WATCHDOG_NOT_RESPONDING;
          }
       MutexUnlock(s_watchdogLock);
    }
 
-   nxlog_debug(1, _T("Watchdog thread terminated"));
-   return THREAD_OK;
+   nxlog_debug_tag(DEBUG_TAG_WATCHDOG, 1, _T("Watchdog thread terminated"));
 }
 
 /**
@@ -188,7 +190,7 @@ static THREAD s_watchdogThread = INVALID_THREAD_HANDLE;
 void WatchdogInit()
 {
    s_watchdogLock = MutexCreate();
-   s_watchdogThread = ThreadCreateEx(WatchdogThread, 0, NULL);
+   s_watchdogThread = ThreadCreateEx(WatchdogThread);
 }
 
 /**

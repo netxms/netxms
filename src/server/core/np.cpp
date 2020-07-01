@@ -1059,7 +1059,7 @@ static void ProcessDiscoveredAddress(DiscoveredAddress *address)
 /**
  * Node poller thread (poll new nodes and put them into the database)
  */
-THREAD_RESULT THREAD_CALL NodePoller(void *arg)
+void NodePoller()
 {
 	TCHAR szIpAddr[64];
 
@@ -1099,7 +1099,6 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
       }
    }
    nxlog_debug(1, _T("Node poller thread terminated"));
-   return THREAD_OK;
 }
 
 /**

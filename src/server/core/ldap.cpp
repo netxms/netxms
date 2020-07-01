@@ -1028,25 +1028,24 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 #endif
 
 /**
- * Get users, according to search line & insetr in netxms DB missing
+ * Read users from LDAP directory according to search expression and add missing to NetXMS user database
  */
-THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg)
+void LDAPSyncThread()
 {
    ThreadSetName("LDAPSync");
    UINT32 syncInterval = ConfigReadInt(_T("LDAP.SyncInterval"), 0);
    if (syncInterval == 0)
    {
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("SyncLDAPUsers: sync thread will not start because LDAP sync is disabled"));
-      return THREAD_OK;
+      nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPSyncThread: sync thread will not start because LDAP sync is disabled"));
+      return;
    }
 
-   nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("SyncLDAPUsers: sync thread started, interval %d minutes"), syncInterval);
+   nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPSyncThread: sync thread started, interval %d minutes"), syncInterval);
    syncInterval *= 60;
    while(!SleepAndCheckForShutdown(syncInterval))
    {
       LDAPConnection conn;
       conn.syncUsers();
    }
-   nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("SyncLDAPUsers: sync thread stopped"));
-   return THREAD_OK;
+   nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPSyncThread: sync thread stopped"));
 }

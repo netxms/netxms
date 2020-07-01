@@ -248,13 +248,13 @@ void StringSet::addAllPreallocated(TCHAR **strings, int count)
  */
 void StringSet::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const
 {
-   UINT32 varId = baseId;
+   uint32_t fieldId = baseId;
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      msg->setField(varId++, entry->str);
+      msg->setField(fieldId++, entry->str);
    }
-   msg->setField(countId, varId - baseId);
+   msg->setField(countId, fieldId - baseId);
 }
 
 /**
@@ -272,11 +272,11 @@ void StringSet::addAllFromMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 
       clear();
 
    int count = (int)msg->getFieldAsUInt32(countId);
-   UINT32 varId = baseId;
+   uint32_t fieldId = baseId;
    for(int i = 0; i < count; i++)
    {
-      TCHAR *str = msg->getFieldAsString(varId++);
-      if (str != NULL)
+      TCHAR *str = msg->getFieldAsString(fieldId++);
+      if (str != nullptr)
       {
          if (toUppercase)
             _tcsupr(str);
