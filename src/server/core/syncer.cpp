@@ -212,7 +212,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 /**
  * Syncer thread
  */
-THREAD_RESULT THREAD_CALL Syncer(void *arg)
+void Syncer()
 {
    ThreadSetName("Syncer");
 
@@ -247,5 +247,4 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
    }
 
    nxlog_debug_tag(DEBUG_TAG_SYNC, 1, _T("Syncer thread terminated"));
-   return THREAD_OK;
 }

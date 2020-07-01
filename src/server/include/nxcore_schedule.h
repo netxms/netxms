@@ -155,6 +155,7 @@ public:
       return key;
    }
    time_t getScheduledExecutionTime() const { return m_scheduledExecutionTime; }
+   time_t getLastExecutionTime() const { return m_lastExecutionTime; }
    uint32_t getOwner() const
    {
       lock();

@@ -47,6 +47,17 @@ static void MissingTaskHandler(const shared_ptr<ScheduledTaskParameters>& parame
 }
 
 /**
+ * Delayed delete of scheduled task
+ */
+static void DelayedTaskDelete(void *taskId)
+{
+   while(IsScheduledTaskRunning(CAST_FROM_POINTER(taskId, uint32_t)))
+      ThreadSleep(10);
+   DeleteScheduledTask(CAST_FROM_POINTER(taskId, uint32_t), 0, SYSTEM_ACCESS_FULL);
+}
+
+
+/**
  * Callback definition for missing task handlers
  */
 static SchedulerCallback s_missingTaskHandler(MissingTaskHandler, 0);
@@ -271,7 +282,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
    callback->m_handler(m_parameters);
 
    lock();
-   m_lastExecutionTime = time(NULL);
+   m_lastExecutionTime = time(nullptr);
    m_flags &= ~SCHEDULED_TASK_RUNNING;
    m_flags |= SCHEDULED_TASK_COMPLETED;
    saveToDatabase(false);
@@ -284,7 +295,13 @@ void ScheduledTask::run(SchedulerCallback *callback)
       s_oneTimeScheduleLock.unlock();
 
       if (isSystem())
+      {
          DeleteScheduledTask(m_id, 0, SYSTEM_ACCESS_FULL);
+      }
+      else
+      {
+         ThreadPoolScheduleRelative(g_schedulerThreadPool, ConfigReadULong(_T("Scheduler.TaskRetentionTime"), 86400) * 1000, DelayedTaskDelete, CAST_TO_POINTER(m_id, void*));
+      }
    }
 }
 
@@ -696,16 +713,6 @@ ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
 }
 
 /**
- * Delayed scheduled task delete
- */
-static void DelayedTaskDelete(void *taskId)
-{
-   while(IsScheduledTaskRunning(CAST_FROM_POINTER(taskId, uint32_t)))
-      ThreadSleep(10);
-   DeleteScheduledTask(CAST_FROM_POINTER(taskId, uint32_t), 0, SYSTEM_ACCESS_FULL);
-}
-
-/**
  * Delete scheduled task(s) by task handler id from specific task category
  */
 static void DeleteScheduledTaskByHandlerId(ObjectArray<ScheduledTask> *category, const TCHAR *taskHandlerId, IntegerArray<uint32_t> *deleteList)
@@ -990,7 +997,7 @@ uint32_t UpdateScheduledTaskFromMsg(NXCPMessage *request,  uint32_t owner, uint6
 /**
  * Thread that checks one time schedules and executes them
  */
-static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
+static void AdHocScheduler()
 {
    ThreadSetName("Scheduler/A");
    uint32_t sleepTime = 1;
@@ -1045,13 +1052,12 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
       nxlog_debug_tag(DEBUG_TAG, 6, _T("AdHocScheduler: sleeping for %d seconds"), sleepTime);
    }
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Ad hoc scheduler stopped"));
-   return THREAD_OK;
 }
 
 /**
  * Wakes up for execution of one time schedule or for recalculation new wake up timestamp
  */
-static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
+static void RecurrentScheduler()
 {
    ThreadSetName("Scheduler/R");
    uint32_t watchdogId = WatchdogAddThread(_T("Recurrent scheduler"), 5);
@@ -1093,7 +1099,26 @@ static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
       WatchdogStartSleep(watchdogId);
    } while(!SleepAndCheckForShutdown(60)); //sleep 1 minute
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Recurrent scheduler stopped"));
-   return THREAD_OK;
+}
+
+/**
+ * Delete expired tasks
+ */
+static void DeleteExpiredTasks()
+{
+   uint32_t taskRetentionTime = ConfigReadULong(_T("Scheduler.TaskRetentionTime"), 86400);
+   s_oneTimeScheduleLock.lock();
+   time_t now = time(nullptr);
+   for(int i = 0; i < s_oneTimeSchedules.size(); i++)
+   {
+      ScheduledTask *task = s_oneTimeSchedules.get(i);
+      if (task->isCompleted())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("DeleteExpiredTasks: scheduling delete for task [%u]"), task->getId());
+         ThreadPoolScheduleAbsolute(g_schedulerThreadPool, std::max(now, task->getLastExecutionTime() + taskRetentionTime), DelayedTaskDelete, CAST_TO_POINTER(task->getId(), void*));
+      }
+   }
+   s_oneTimeScheduleLock.unlock();
 }
 
 /**
@@ -1113,7 +1138,7 @@ void InitializeTaskScheduler()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,taskId,schedule,params,execution_time,last_execution_time,flags,owner,object_id,comments,task_key FROM scheduled_tasks"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -1137,8 +1162,10 @@ void InitializeTaskScheduler()
    DBConnectionPoolReleaseConnection(hdb);
    s_oneTimeSchedules.sort(ScheduledTaskComparator);
 
-   s_oneTimeEventThread = ThreadCreateEx(AdHocScheduler, 0, NULL);
-   s_cronSchedulerThread = ThreadCreateEx(RecurrentScheduler, 0, NULL);
+   s_oneTimeEventThread = ThreadCreateEx(AdHocScheduler);
+   s_cronSchedulerThread = ThreadCreateEx(RecurrentScheduler);
+
+   ThreadPoolExecute(g_schedulerThreadPool, DeleteExpiredTasks);
 }
 
 /**
@@ -1146,7 +1173,7 @@ void InitializeTaskScheduler()
  */
 void ShutdownTaskScheduler()
 {
-   if (g_schedulerThreadPool == NULL)
+   if (g_schedulerThreadPool == nullptr)
       return;
 
    s_wakeupCondition.set();

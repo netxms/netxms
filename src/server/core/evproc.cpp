@@ -196,7 +196,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 /**
  * Event processing thread
  */
-THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
+void EventProcessor()
 {
    ThreadSetName("EventProcessor");
 
@@ -294,7 +294,6 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 	ThreadJoin(s_threadStormDetector);
 	ThreadJoin(s_threadLogger);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Event processing thread stopped"));
-   return THREAD_OK;
 }
 
 /**

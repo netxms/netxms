@@ -99,17 +99,17 @@ void StopSyslogServer();
 /**
  * Thread functions
  */
-THREAD_RESULT THREAD_CALL Syncer(void *);
+void Syncer();
 THREAD_RESULT THREAD_CALL NodePoller(void *);
-THREAD_RESULT THREAD_CALL PollManager(void *);
-THREAD_RESULT THREAD_CALL EventProcessor(void *);
+void PollManager(CONDITION startCondition);
+void EventProcessor();
 THREAD_RESULT THREAD_CALL WatchdogThread(void *);
 THREAD_RESULT THREAD_CALL ClientListenerThread(void *);
 THREAD_RESULT THREAD_CALL MobileDeviceListenerThread(void *);
 THREAD_RESULT THREAD_CALL ISCListener(void *);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *);
 void SNMPTrapReceiver();
-THREAD_RESULT THREAD_CALL BeaconPoller(void *);
+void BeaconPoller();
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
@@ -1057,15 +1057,15 @@ retry_db_lock:
    ThreadCreate(WatchdogThread, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
    ThreadCreate(JobManagerThread, 0, NULL);
-   s_syncerThread = ThreadCreateEx(Syncer, 0, NULL);
+   s_syncerThread = ThreadCreateEx(Syncer);
 
    CONDITION pollManagerInitialized = ConditionCreate(true);
-   s_pollManagerThread = ThreadCreateEx(PollManager, 0, pollManagerInitialized);
+   s_pollManagerThread = ThreadCreateEx(PollManager, pollManagerInitialized);
 
    StartHouseKeeper();
 
    // Start event processor
-   s_eventProcessorThread = ThreadCreateEx(EventProcessor, 0, NULL);
+   s_eventProcessorThread = ThreadCreateEx(EventProcessor);
 
    // Start SNMP trapper
    InitTraps();
@@ -1076,7 +1076,7 @@ retry_db_lock:
    StartSyslogServer();
 
    // Start beacon host poller
-   ThreadCreate(BeaconPoller, 0, NULL);
+   ThreadCreate(BeaconPoller);
 
    // Start inter-server communication listener
    if (ConfigReadBoolean(_T("EnableISCListener"), false))
@@ -1116,7 +1116,7 @@ retry_db_lock:
       DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
 
    // Schedule poll timers reset
-   AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
+   AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
 
    // Start listeners
    s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread, 0, NULL);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,22 +22,24 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("beacon")
+
 /**
  * Beacon hosts poller
  */
-THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
+void BeaconPoller()
 {
-	UINT32 interval = ConfigReadULong(_T("BeaconPollingInterval"), 1000);
-	UINT32 timeout = ConfigReadULong(_T("BeaconTimeout"), 1000);
-	UINT32 packetSize = ConfigReadULong(_T("IcmpPingSize"), 46);
+	uint32_t interval = ConfigReadULong(_T("BeaconPollingInterval"), 1000);
+	uint32_t timeout = ConfigReadULong(_T("BeaconTimeout"), 1000);
+	uint32_t packetSize = ConfigReadULong(_T("IcmpPingSize"), 46);
 
 	TCHAR hosts[MAX_CONFIG_VALUE];
 	ConfigReadStr(_T("BeaconHosts"), hosts, MAX_CONFIG_VALUE, _T(""));
 	StrStrip(hosts);
 	if (hosts[0] == 0)	// Empty list
 	{
-		DbgPrintf(1, _T("Beacon poller will not start because beacon host list is empty"));
-		return THREAD_OK;
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Beacon poller will not start because beacon host list is empty"));
+		return;
 	}
 
    InetAddressList hostList;
@@ -54,27 +56,27 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
       if (addr.isValidUnicast())
       {
          hostList.add(addr);
-         DbgPrintf(4, _T("Beacon host %s added"), (const TCHAR *)addr.toString());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Beacon host %s added"), (const TCHAR *)addr.toString());
       }
       else
 		{
-			nxlog_write(NXLOG_WARNING, _T("Invalid beacon host name or address %s - host will be excluded from beacon list"), curr);
+			nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Invalid beacon host name or address %s - host will be excluded from beacon list"), curr);
 		}
 	}
 
    if (hostList.size() == 0)
 	{
-		DbgPrintf(1, _T("Beacon poller will not start because no valid host names was found in beacon list"));
-		return THREAD_OK;
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Beacon poller will not start because no valid host names was found in beacon list"));
+		return;
 	}
 
-	DbgPrintf(1, _T("Beacon poller thread started"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Beacon poller thread started"));
 	while(!(g_flags & AF_SHUTDOWN))
 	{
       int i;
       for(i = 0; i < hostList.size(); i++)
 		{
-         DbgPrintf(7, _T("Beacon poller: checking host %s"), hostList.get(i).toString(hosts));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Beacon poller: checking host %s"), hostList.get(i).toString(hosts));
          if (IcmpPing(hostList.get(i), 1, timeout, NULL, packetSize, false) == ICMP_SUCCESS)
 				break;	// At least one beacon responds, no need to check others
 		}
@@ -91,6 +93,5 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 		}
 		ThreadSleepMs(interval);
 	}
-	DbgPrintf(1, _T("Beacon poller thread terminated"));
-	return THREAD_OK;
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Beacon poller thread terminated"));
 }

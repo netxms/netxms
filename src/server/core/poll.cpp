@@ -622,7 +622,7 @@ static CONDITION s_activeDiscoveryWakeup = ConditionCreate(false);
 /**
  * Active discovery poller thread
  */
-static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
+static void ActiveDiscoveryPoller()
 {
    ThreadSetName("ActiveDiscovery");
 
@@ -697,7 +697,6 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
    }
 
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Active discovery thread terminated"));
-   return THREAD_OK;
 }
 
 /**
@@ -705,7 +704,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
  */
 static void QueueForPolling(NetObj *object, void *data)
 {
-   WatchdogNotify(*static_cast<UINT32*>(data));
+   WatchdogNotify(*static_cast<uint32_t*>(data));
    if (IsShutdownInProgress())
       return;
 
@@ -801,7 +800,7 @@ static void QueueForPolling(NetObj *object, void *data)
 /**
  * Node and condition queuing thread
  */
-THREAD_RESULT THREAD_CALL PollManager(void *arg)
+void PollManager(CONDITION startCondition)
 {
    ThreadSetName("PollManager");
    g_pollerThreadPool = ThreadPoolCreate( _T("POLLERS"),
@@ -810,12 +809,12 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
          256 * 1024);
 
    // Start active discovery poller
-   THREAD activeDiscoveryPollerThread = ThreadCreateEx(ActiveDiscoveryPoller, 0, nullptr);
+   THREAD activeDiscoveryPollerThread = ThreadCreateEx(ActiveDiscoveryPoller);
 
-   UINT32 watchdogId = WatchdogAddThread(_T("Poll Manager"), 5);
+   uint32_t watchdogId = WatchdogAddThread(_T("Poll Manager"), 5);
    int counter = 0;
 
-   ConditionSet(static_cast<CONDITION>(arg));
+   ConditionSet(startCondition);
 
    WatchdogStartSleep(watchdogId);
    while(!SleepAndCheckForShutdown(5))
@@ -855,7 +854,6 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
    s_activeDiscoveryWakeup = INVALID_CONDITION_HANDLE;
 
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Poll manager main thread terminated"));
-   return THREAD_OK;
 }
 
 /**

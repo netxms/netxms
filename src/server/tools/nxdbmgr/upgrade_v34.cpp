@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.9 to 34.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(CreateConfigParam(_T("Scheduler.TaskRetentionTime"), _T("86400"), _T("Retention time for completed non-recurrent scheduled tasks. Such tasks will be deleted automatically after given number of seconds since completion time."), _T("seconds"), 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 34.8 to 34.9
  */
 static bool H_UpgradeFromV8()
@@ -179,6 +189,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 9,  34, 10, H_UpgradeFromV9  },
    { 8,  34, 9,  H_UpgradeFromV8  },
    { 7,  34, 8,  H_UpgradeFromV7  },
    { 6,  34, 7,  H_UpgradeFromV6  },
