@@ -1106,7 +1106,7 @@ static void RecurrentScheduler()
  */
 static void DeleteExpiredTasks()
 {
-   uint32_t taskRetentionTime = ConfigReadULong(_T("Scheduler.TaskRetentionTime"), 86400);
+   time_t taskRetentionTime = ConfigReadULong(_T("Scheduler.TaskRetentionTime"), 86400);
    s_oneTimeScheduleLock.lock();
    time_t now = time(nullptr);
    for(int i = 0; i < s_oneTimeSchedules.size(); i++)
