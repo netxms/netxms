@@ -104,7 +104,6 @@ THREAD_RESULT THREAD_CALL Syncer(void *);
 THREAD_RESULT THREAD_CALL NodePoller(void *);
 THREAD_RESULT THREAD_CALL PollManager(void *);
 THREAD_RESULT THREAD_CALL EventProcessor(void *);
-THREAD_RESULT THREAD_CALL WatchdogThread(void *);
 THREAD_RESULT THREAD_CALL ClientListenerThread(void *);
 THREAD_RESULT THREAD_CALL MobileDeviceListenerThread(void *);
 THREAD_RESULT THREAD_CALL ISCListener(void *);
@@ -1060,7 +1059,6 @@ retry_db_lock:
    }
 
    // Start threads
-   ThreadCreate(WatchdogThread, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
    ThreadCreate(JobManagerThread, 0, NULL);
    s_syncerThread = ThreadCreateEx(Syncer, 0, NULL);
