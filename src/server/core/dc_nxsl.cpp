@@ -483,27 +483,45 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 
 	// Origin
-	static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("websvc"),
-	         _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), nullptr };
 	int origin = -1;
-	const TCHAR *name = argv[1]->getValueAsCString();
-	for(int i = 0; originNames[i] != nullptr; i++)
-		if (!_tcsicmp(originNames[i], name))
-		{
-			origin = i;
-			break;
-		}
+	if (argv[1]->isInteger())
+	{
+	   origin = argv[1]->getValueAsInt32();
+	   if ((origin < 0) || (origin > 10))
+	      origin = -1;
+	}
+	else
+	{
+	   static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("websvc"),
+	            _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), nullptr };
+      const TCHAR *name = argv[1]->getValueAsCString();
+      for(int i = 0; originNames[i] != nullptr; i++)
+         if (!_tcsicmp(originNames[i], name))
+         {
+            origin = i;
+            break;
+         }
+	}
 
 	// Data types
-	static const TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), _T("null"), _T("counter32"), _T("counter64"), nullptr };
 	int dataType = -1;
-	name = argv[4]->getValueAsCString();
-	for(int i = 0; dtNames[i] != nullptr; i++)
-		if (!_tcsicmp(dtNames[i], name))
-		{
-			dataType = i;
-			break;
-		}
+	if (argv[4]->isInteger())
+	{
+	   dataType = argv[4]->getValueAsInt32();
+      if ((dataType < 0) || (dataType > 8))
+         dataType = -1;
+	}
+	else
+	{
+	   static const TCHAR *dtNames[] = { _T("int32"), _T("uint32"), _T("int64"), _T("uint64"), _T("string"), _T("float"), _T("null"), _T("counter32"), _T("counter64"), nullptr };
+      const TCHAR *name = argv[4]->getValueAsCString();
+      for(int i = 0; dtNames[i] != nullptr; i++)
+         if (!_tcsicmp(dtNames[i], name))
+         {
+            dataType = i;
+            break;
+         }
+	}
 
 	if ((origin != -1) && (dataType != -1))
 	{

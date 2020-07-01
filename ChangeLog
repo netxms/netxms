@@ -7,6 +7,7 @@
 - EtherNet/IP has priority over SNMP when reading hardware information
 - Implemented Web API calls for DCI creation and modification
 - Implemented Web API calls for reading last value of specific DCI
+- NXSL function CreateDCI accepts numeric codes for data type and data origin
 - Fixed bug that prevents PushDCIData NXSL function to work on chassis object
 - Fixed bug in template import
 - Fixed issues:
