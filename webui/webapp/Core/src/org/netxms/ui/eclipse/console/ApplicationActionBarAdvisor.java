@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionNextView;
 	private IWorkbenchAction actionShowViewMenu;
 	private Action actionOpenProgressView;
-	private IContributionItem contribItemShowView;
 	private IContributionItem contribItemOpenPerspective;
 
 	/**
@@ -84,13 +83,12 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		super(configurer);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.ActionBarAdvisor#makeActions(org.eclipse.ui.IWorkbenchWindow)
-	 */
+   /**
+    * @see org.eclipse.ui.application.ActionBarAdvisor#makeActions(org.eclipse.ui.IWorkbenchWindow)
+    */
 	@Override
 	protected void makeActions(final IWorkbenchWindow window)
 	{
-		contribItemShowView = ContributionItemFactory.VIEWS_SHORTLIST.create(window);
 		contribItemOpenPerspective = ContributionItemFactory.PERSPECTIVES_SHORTLIST.create(window);
 		
 		actionExit = ActionFactory.QUIT.create(window);
@@ -268,11 +266,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		MenuManager openPerspectiveMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_OpenPerspective, "openPerspective"); //$NON-NLS-1$
 		openPerspectiveMenuMgr.add(contribItemOpenPerspective);
 		windowMenu.add(openPerspectiveMenuMgr);
-		
-		final MenuManager showViewMenuMgr = new MenuManager(Messages.get().ApplicationActionBarAdvisor_ShowView, "showView"); //$NON-NLS-1$
-		showViewMenuMgr.add(contribItemShowView);
-		windowMenu.add(showViewMenuMgr);
-		
 		windowMenu.add(new Separator());
 		windowMenu.add(actionCustomizePerspective);
 		windowMenu.add(actionSavePerspective);
