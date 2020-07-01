@@ -1304,6 +1304,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) Housekeeper execution time in seconds'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_LICENSE_PROBLEM, 'SYS_LICENSE_PROBLEM', 'ea282f6f-c636-414f-91ce-0aa871648144',
+		EVENT_SEVERITY_WARNING, 1,
+		'License problem - %1',
+		'Generated when licensing problem is detected by extension module.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Problem description'
+	);
 
 /*
 ** SNMP traps

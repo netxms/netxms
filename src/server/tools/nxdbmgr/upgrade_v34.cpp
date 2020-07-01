@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.10 to 34.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_LICENSE_PROBLEM, _T("SYS_LICENSE_PROBLEM"),
+            SEVERITY_WARNING, EF_LOG, _T("ea282f6f-c636-414f-91ce-0aa871648144"),
+            _T("License problem - %1"),
+            _T("Generated when licensing problem is detected by extension module.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Problem description")
+            ));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 34.9 to 34.10
  */
 static bool H_UpgradeFromV9()
@@ -186,9 +202,10 @@ static struct
    int version;
    int nextMajor;
    int nextMinor;
-   bool (* upgradeProc)();
+   bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 10, 34, 11, H_UpgradeFromV10 },
    { 9,  34, 10, H_UpgradeFromV9  },
    { 8,  34, 9,  H_UpgradeFromV8  },
    { 7,  34, 8,  H_UpgradeFromV7  },
