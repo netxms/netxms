@@ -124,17 +124,16 @@ static EnumerationCallbackResult CancelFileTransfer(const uint32_t& key, ServerD
 /**
  * Client communication read thread starter
  */
-THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *arg)
+void ClientSession::readThreadStarter(ClientSession *session)
 {
    ThreadSetName("SessionReader");
-   static_cast<ClientSession*>(arg)->readThread();
+   session->readThread();
 
    // When ClientSession::ReadThread exits, all other session
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterClientSession(static_cast<ClientSession*>(arg)->getId());
-   delete static_cast<ClientSession*>(arg);
-   return THREAD_OK;
+   UnregisterClientSession(session->getId());
+   delete session;
 }
 
 /**
@@ -230,7 +229,7 @@ ClientSession::~ClientSession()
  */
 bool ClientSession::start()
 {
-   return ThreadCreate(readThreadStarter, 0, this);
+   return ThreadCreate(readThreadStarter, this);
 }
 
 /**
@@ -1772,7 +1771,7 @@ void ClientSession::login(NXCPMessage *pRequest)
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false;
-   UINT32 dwResult;
+   uint32_t rcc;
 #ifdef _WITH_ENCRYPTION
 	X509 *pCert;
 #endif
@@ -1813,7 +1812,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
-      UINT32 graceLogins = 0;
+      uint32_t graceLogins = 0;
       bool closeOtherSessions = false;
       pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
@@ -1826,7 +1825,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 #else
 				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
-				dwResult = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_dwUserId,
+				rcc = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_dwUserId,
 													 &m_systemAccessRights, &changePasswd, &intruderLockout,
 													 &closeOtherSessions, false, &graceLogins);
 				break;
@@ -1839,22 +1838,22 @@ void ClientSession::login(NXCPMessage *pRequest)
 					const BYTE *signature = pRequest->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
                if (signature != nullptr)
                {
-                  dwResult = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR*>(signature), sigLen, 
+                  rcc = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR*>(signature), sigLen,
                         pCert, m_challenge, &m_dwUserId, &m_systemAccessRights, &changePasswd, &intruderLockout,
                         &closeOtherSessions, false, &graceLogins);
                }
                else
                {
-                  dwResult = RCC_INVALID_REQUEST;
+                  rcc = RCC_INVALID_REQUEST;
                }
 					X509_free(pCert);
 				}
 				else
 				{
-					dwResult = RCC_BAD_CERTIFICATE;
+					rcc = RCC_BAD_CERTIFICATE;
 				}
 #else
-				dwResult = RCC_NOT_IMPLEMENTED;
+				rcc = RCC_NOT_IMPLEMENTED;
 #endif
 				break;
          case NETXMS_AUTH_TYPE_SSO_TICKET:
@@ -1863,36 +1862,36 @@ void ClientSession::login(NXCPMessage *pRequest)
             if (CASAuthenticate(ticket, szLogin))
             {
                debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, szLogin);
-				   dwResult = AuthenticateUser(szLogin, nullptr, 0, nullptr, nullptr, &m_dwUserId,
+				   rcc = AuthenticateUser(szLogin, nullptr, 0, nullptr, nullptr, &m_dwUserId,
 													    &m_systemAccessRights, &changePasswd, &intruderLockout,
 													    &closeOtherSessions, true, &graceLogins);
             }
             else
             {
                debugPrintf(5, _T("SSO ticket %hs is invalid"), ticket);
-               dwResult = RCC_ACCESS_DENIED;
+               rcc = RCC_ACCESS_DENIED;
             }
             break;
 			default:
-				dwResult = RCC_UNSUPPORTED_AUTH_TYPE;
+				rcc = RCC_UNSUPPORTED_AUTH_TYPE;
 				break;
 		}
 
       // Additional validation by loaded modules
-      if (dwResult == RCC_SUCCESS)
+      if (rcc == RCC_SUCCESS)
       {
          ENUMERATE_MODULES(pfAdditionalLoginCheck)
          {
-            dwResult = CURRENT_MODULE.pfAdditionalLoginCheck(m_dwUserId, pRequest);
-            if (dwResult != RCC_SUCCESS)
+            rcc = CURRENT_MODULE.pfAdditionalLoginCheck(m_dwUserId, pRequest);
+            if (rcc != RCC_SUCCESS)
             {
-               debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), CURRENT_MODULE.szName, dwResult);
+               debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), CURRENT_MODULE.szName, rcc);
                break;
             }
          }
       }
 
-      if (dwResult == RCC_SUCCESS)
+      if (rcc == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
          _tcslcpy(m_loginName, szLogin, MAX_USER_NAME);
@@ -1915,8 +1914,8 @@ void ClientSession::login(NXCPMessage *pRequest)
          msg.setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
          msg.setField(VID_GRACE_LOGINS, graceLogins);
 
-         // Client configuration hints
          GetClientConfigurationHints(&msg);
+         FillLicenseProblemsMessage(&msg);
 
          if (pRequest->getFieldAsBoolean(VID_ENABLE_COMPRESSION))
          {
@@ -1950,10 +1949,10 @@ void ClientSession::login(NXCPMessage *pRequest)
       }
       else
       {
-         msg.setField(VID_RCC, dwResult);
+         msg.setField(VID_RCC, rcc);
 			writeAuditLog(AUDIT_SECURITY, false, 0,
 			              _T("User \"%s\" login failed with error code %d (client info: %s)"),
-							  szLogin, dwResult, m_clientInfo);
+							  szLogin, rcc, m_clientInfo);
 			if (intruderLockout)
 			{
 				writeAuditLog(AUDIT_SECURITY, false, 0,
@@ -2888,7 +2887,7 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
-   uint32_t dwResult = RCC_SUCCESS;
+   uint32_t rcc = RCC_SUCCESS;
    uint32_t dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
    shared_ptr<NetObj> object = FindObjectById(dwObjectId);
    if (object != nullptr)
@@ -2901,17 +2900,17 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
          // if he has OBJECT_ACCESS_ACL permission
          if (pRequest->isFieldExist(VID_ACL_SIZE))
             if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACL))
-               dwResult = RCC_ACCESS_DENIED;
+               rcc = RCC_ACCESS_DENIED;
 
          // If allowed, change object and set completion code
-         if (dwResult == RCC_SUCCESS)
+         if (rcc == RCC_SUCCESS)
 			{
-            dwResult = object->modifyFromMessage(pRequest);
-	         if (dwResult == RCC_SUCCESS)
+            rcc = object->modifyFromMessage(pRequest);
+	         if (rcc == RCC_SUCCESS)
 				{
 					object->postModify();
 				}
-				else if (dwResult == RCC_ALREADY_EXIST)
+				else if (rcc == RCC_ALREADY_EXIST)
 				{
                // Add information about conflicting nodes
                InetAddress ipAddr;
@@ -2928,9 +2927,9 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
                SetNodesConflictString(&msg, static_cast<Node&>(*object).getZoneUIN(), ipAddr);
             }
 			}
-         msg.setField(VID_RCC, dwResult);
+         msg.setField(VID_RCC, rcc);
 
-			if (dwResult == RCC_SUCCESS)
+			if (rcc == RCC_SUCCESS)
 			{
 			   json_t *newValue = object->toJson();
 			   writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue, _T("Object %s modified from client"), object->getName());
@@ -3041,16 +3040,16 @@ void ClientSession::createUser(NXCPMessage *pRequest)
    }
    else
    {
-      UINT32 dwResult, dwUserId;
+      UINT32 rcc, dwUserId;
       TCHAR szUserName[MAX_USER_NAME];
 
       pRequest->getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
       if (IsValidObjectName(szUserName))
       {
          bool isGroup = pRequest->getFieldAsBoolean(VID_IS_GROUP);
-         dwResult = CreateNewUser(szUserName, isGroup, &dwUserId);
-         msg.setField(VID_RCC, dwResult);
-         if (dwResult == RCC_SUCCESS)
+         rcc = CreateNewUser(szUserName, isGroup, &dwUserId);
+         msg.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
          {
             msg.setField(VID_USER_ID, dwUserId);   // Send id of new user to client
             writeAuditLog(AUDIT_SECURITY, true, 0, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), szUserName);

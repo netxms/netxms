@@ -1377,6 +1377,7 @@ typedef struct
 #define VID_RECORD_ID_COLUMN        ((UINT32)705)
 #define VID_OBJECT_ID_COLUMN        ((UINT32)706)
 #define VID_RAW_VALUE               ((UINT32)707)
+#define VID_LICENSE_PROBLEM_COUNT   ((UINT32)708)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1569,6 +1570,8 @@ typedef struct
 #define VID_NETWORK_PATH_BASE       ((UINT32)0x40000000)
 
 #define VID_COMPONENT_LIST_BASE     ((UINT32)0x20000000)
+
+#define VID_LICENSE_PROBLEM_BASE    ((UINT32)0x28000000)
 
 #define VID_RADIO_LIST_BASE         ((UINT32)0x30000000)
 

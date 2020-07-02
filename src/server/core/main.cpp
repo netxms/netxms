@@ -149,15 +149,15 @@ NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(int g_dbSyntax) = DB_SYNTAX_UNKNOWN;
 NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
 UINT64 g_serverId = 0;
-RSA *g_pServerKey = NULL;
+RSA *g_pServerKey = nullptr;
 time_t g_serverStartTime = 0;
 UINT32 g_lockTimeout = 60000;   // Default timeout for acquiring mutex
 UINT32 g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
 UINT32 g_requiredPolls = 1;
 INT32 g_instanceRetentionTime = 0; // Default instance retention time
-DB_DRIVER g_dbDriver = NULL;
-NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = NULL;
+DB_DRIVER g_dbDriver = nullptr;
+NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = nullptr;
 INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 InetAddressList g_peerNodeAddrList;
 Condition g_dbPasswordReady(true);
@@ -174,6 +174,9 @@ static THREAD s_eventProcessorThread = INVALID_THREAD_HANDLE;
 static THREAD s_statCollectorThread = INVALID_THREAD_HANDLE;
 static ShutdownReason s_shutdownReason = ShutdownReason::OTHER;
 static StringSet s_components;
+static ObjectArray<LicenseProblem> s_licenseProblems(0, 16, Ownership::True);
+static Mutex s_licenseProblemsLock;
+static uint32_t s_licenseProblemId = 1;
 
 #ifndef _WIN32
 static pthread_t m_signalHandlerThread;
@@ -201,6 +204,71 @@ bool NXCORE_EXPORTABLE IsComponentRegistered(const TCHAR *id)
 void FillComponentsMessage(NXCPMessage *msg)
 {
    s_components.fillMessage(msg, VID_COMPONENT_LIST_BASE, VID_NUM_COMPONENTS);
+}
+
+/**
+ * Register license problem. Returns assigned problem ID.
+ */
+uint32_t NXCORE_EXPORTABLE RegisterLicenseProblem(const TCHAR *component, const TCHAR *type, const TCHAR *description)
+{
+   s_licenseProblemsLock.lock();
+   auto p = new LicenseProblem(s_licenseProblemId++, component, type, description);
+   s_licenseProblems.add(p);
+   s_licenseProblemsLock.unlock();
+   return p->id;
+}
+
+/**
+ * Unregister license problem using problem ID.
+ */
+void NXCORE_EXPORTABLE UnregisterLicenseProblem(uint32_t id)
+{
+   s_licenseProblemsLock.lock();
+   for(int i = 0; i < s_licenseProblems.size(); i++)
+      if (s_licenseProblems.get(i)->id == id)
+      {
+         s_licenseProblems.remove(i);
+         break;
+      }
+   s_licenseProblemsLock.unlock();
+}
+
+/**
+ * Unregister license problem using component name and problem type.
+ */
+void NXCORE_EXPORTABLE UnregisterLicenseProblem(const TCHAR *component, const TCHAR *type)
+{
+   s_licenseProblemsLock.lock();
+   for(int i = 0; i < s_licenseProblems.size(); i++)
+   {
+      LicenseProblem *p = s_licenseProblems.get(i);
+      if (!_tcsicmp(p->component, component) && !_tcsicmp(p->type, type))
+      {
+         s_licenseProblems.remove(i);
+         break;
+      }
+   }
+   s_licenseProblemsLock.unlock();
+}
+
+/**
+ * Fill NXCP message with list of license problems
+ */
+void NXCORE_EXPORTABLE FillLicenseProblemsMessage(NXCPMessage *msg)
+{
+   uint32_t fieldId = VID_LICENSE_PROBLEM_BASE;
+   s_licenseProblemsLock.lock();
+   for(int i = 0; i < s_licenseProblems.size(); i++)
+   {
+      LicenseProblem *p = s_licenseProblems.get(i);
+      msg->setField(fieldId++, p->id);
+      msg->setFieldFromTime(fieldId++, p->timestamp);
+      msg->setField(fieldId++, p->component);
+      msg->setField(fieldId++, p->type);
+      msg->setField(fieldId++, p->description);
+   }
+   msg->setField(VID_LICENSE_PROBLEM_COUNT, s_licenseProblems.size());
+   s_licenseProblemsLock.unlock();
 }
 
 /**

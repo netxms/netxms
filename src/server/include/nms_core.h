@@ -518,7 +518,7 @@ private:
    MUTEX m_pendingObjectNotificationsLock;
    UINT32 m_objectNotificationDelay;
 
-   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
+   static void readThreadStarter(ClientSession *session);
    static EnumerationCallbackResult checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer,
       std::pair<ClientSession*, IntegerArray<uint32_t>*> *context);
 
@@ -1405,6 +1405,38 @@ public:
    void removeDisconnectedNode(uint32_t nodeId);
    ObjectArray<ClientSession> *findClientByFNameAndNodeID(const TCHAR *fileName, uint32_t nodeID);
 };
+
+/**
+ * License problem
+ */
+struct NXCORE_EXPORTABLE LicenseProblem
+{
+   uint32_t id;
+   time_t timestamp;
+   TCHAR component[MAX_OBJECT_NAME];
+   TCHAR type[MAX_OBJECT_NAME];
+   TCHAR *description;
+
+   LicenseProblem(uint32_t id, const TCHAR *component, const TCHAR *type, const TCHAR *description)
+   {
+      this->id = id;
+      this->timestamp = time(nullptr);
+      _tcslcpy(this->component, component, MAX_OBJECT_NAME);
+      _tcslcpy(this->type, type, MAX_OBJECT_NAME);
+      this->description = MemCopyString(description);
+   }
+
+   ~LicenseProblem()
+   {
+      MemFree(description);
+   }
+};
+
+uint32_t NXCORE_EXPORTABLE RegisterLicenseProblem(const TCHAR *component, const TCHAR *type, const TCHAR *description);
+void NXCORE_EXPORTABLE UnregisterLicenseProblem(uint32_t id);
+void NXCORE_EXPORTABLE UnregisterLicenseProblem(const TCHAR *component, const TCHAR *type);
+void NXCORE_EXPORTABLE FillLicenseProblemsMessage(NXCPMessage *msg);
+
 
 /**********************
  * Distance calculation

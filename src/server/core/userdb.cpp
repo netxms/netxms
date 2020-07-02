@@ -316,7 +316,7 @@ BOOL LoadUsers()
 /**
  * Save user list to database
  */
-void SaveUsers(DB_HANDLE hdb, UINT32 watchdogId)
+void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
 {
    // Save users
    RWLockWriteLock(s_userDatabaseLock);
@@ -349,10 +349,9 @@ void SaveUsers(DB_HANDLE hdb, UINT32 watchdogId)
  * SSO server, ssoAuth must be set to true. Password expiration, change flag and grace
  * count ignored for SSO logins.
  */
-UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
-                        BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
-							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions,
-							   bool ssoAuth, UINT32 *graceLogins)
+uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
+         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
+         bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins)
 {
    RWLockReadLock(s_userDatabaseLock);
    User *user = s_users.get(login);
