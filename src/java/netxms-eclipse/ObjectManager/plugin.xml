@@ -1060,6 +1060,15 @@
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardGroup">
                                  </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMap">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMapGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMapRoot">
+                                 </instanceof>
                               </or>
                            </not>
                         </and>
@@ -1101,6 +1110,15 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMap">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMapGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMapRoot">
                                  </instanceof>
                               </or>
                            </not>
@@ -1146,6 +1164,15 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMap">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMapGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.NetworkMapRoot">
                                  </instanceof>
                               </or>
                            </not>
