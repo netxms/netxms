@@ -767,7 +767,7 @@ static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 	}
 
 stop_handler:
-	sigprocmask(SIG_UNBLOCK, &signals, NULL);
+	sigprocmask(SIG_UNBLOCK, &signals, nullptr);
 	return THREAD_OK;
 }
 
@@ -805,9 +805,9 @@ static void LoadPlatformSubagent()
  */
 static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag)
 {
-	if (session == NULL)
+	if (session == nullptr)
 		return false;
-	return ((CommSession *)session)->sendFile(requestId, file, offset, allowCompression, cancellationFlag);
+	return static_cast<CommSession*>(session)->sendFile(requestId, file, offset, allowCompression, cancellationFlag);
 }
 
 /**
@@ -849,7 +849,7 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 /**
  * Get log destination flags
  */
-static inline UINT32 GetLogDestinationFlag()
+static inline uint32_t GetLogDestinationFlag()
 {
    if (g_dwFlags & AF_USE_SYSLOG)
       return NXLOG_USE_SYSLOG;
@@ -994,22 +994,22 @@ BOOL Initialize()
    DBInit();
    if (!OpenLocalDatabase())
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to open local database"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database unavailable"));
    }
 
    TCHAR agentIdText[MAX_DB_STRING];
-   if (ReadMetadata(_T("AgentId"), agentIdText) != NULL)
+   if (ReadMetadata(_T("AgentId"), agentIdText) != nullptr)
       g_agentId = uuid::parse(agentIdText);
    if (g_agentId.isNull())
    {
       g_agentId = uuid::generate();
       WriteMetadata(_T("AgentId"), g_agentId.toString(agentIdText));
-      nxlog_debug(1, _T("New agent ID generated"));
+      nxlog_write(NXLOG_INFO, _T("New agent ID generated"));
    }
    nxlog_write(NXLOG_INFO, _T("Agent ID is %s"), g_agentId.toString(agentIdText));
 
    TCHAR hostname[256];
-   if (GetLocalHostName(hostname, 256, true) == NULL)
+   if (GetLocalHostName(hostname, 256, true) == nullptr)
    {
       // Fallback to non-FQDN host name
       GetLocalHostName(hostname, 256, false);

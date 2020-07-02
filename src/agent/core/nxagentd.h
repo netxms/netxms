@@ -67,6 +67,8 @@
 #define NXAGENTD_SYSLOG_NAME          _T("nxagentd")
 #endif
 
+#define DEBUG_TAG_LOCALDB        _T("db.agent")
+
 #define DEFAULT_CONFIG_SECTION   _T("CORE")
 
 #define MAX_PSUFFIX_LENGTH 32
