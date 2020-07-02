@@ -52,7 +52,7 @@ static const TCHAR *s_eventParamNamesAgentIdMismatch[] =
 /**
  * Tunnel registration
  */
-static RefCountHashMap<UINT32, AgentTunnel> s_boundTunnels(Ownership::True);
+static RefCountHashMap<uint32_t, AgentTunnel> s_boundTunnels(Ownership::True);
 static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
 
@@ -398,12 +398,11 @@ void AgentTunnel::recvThread()
 /**
  * Tunnel receiver thread starter
  */
-THREAD_RESULT THREAD_CALL AgentTunnel::recvThreadStarter(void *arg)
+void AgentTunnel::recvThreadStarter(AgentTunnel *tunnel)
 {
    ThreadSetName("TunnelReceiver");
-   ((AgentTunnel *)arg)->recvThread();
-   ((AgentTunnel *)arg)->decRefCount();
-   return THREAD_OK;
+   tunnel->recvThread();
+   tunnel->decRefCount();
 }
 
 /**
@@ -471,7 +470,7 @@ void AgentTunnel::start()
 {
    debugPrintf(4, _T("Tunnel started"));
    incRefCount();
-   ThreadCreate(AgentTunnel::recvThreadStarter, 0, this);
+   ThreadCreate(AgentTunnel::recvThreadStarter, this);
 }
 
 /**
@@ -1345,23 +1344,42 @@ static bool MatchTunnelToNodeStage1(NetObj *object, AgentTunnel *tunnel)
          activeTunnel->decRefCount();
          return false;
       }
-
-      // Node has bound tunnel but it is not active
-      // Assume that node is the same if both agent ID and hardware ID match
-      if (node->getAgentId().equals(tunnel->getAgentId()) && node->getHardwareId().equals(tunnel->getHardwareId()))
-      {
-         TCHAR ipAddrText[64];
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s)"),
-                  node->getName(), node->getId(), tunnel->getDisplayName(), tunnel->getAddress().toString(ipAddrText));
-         return true;
-      }
-      return false;
    }
 
    if (!node->getAgentId().isNull() && node->getAgentId().equals(tunnel->getAgentId()) && node->getHardwareId().equals(tunnel->getHardwareId()))
    {
       TCHAR ipAddrText[64];
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s)"),
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s) using agent ID and hardware ID"),
+               node->getName(), node->getId(), tunnel->getDisplayName(), tunnel->getAddress().toString(ipAddrText));
+      return true;
+   }
+
+   return false;
+}
+
+/**
+ * Find matching node for tunnel using only hardware ID
+ */
+static bool MatchTunnelToNodeStage2(NetObj *object, AgentTunnel *tunnel)
+{
+   Node *node = static_cast<Node*>(object);
+
+   if (!node->getTunnelId().isNull())
+   {
+      // Already have bound tunnel
+      AgentTunnel *activeTunnel = GetTunnelForNode(node->getId());
+      if (activeTunnel != nullptr)
+      {
+         // Node already have active tunnel, should not match
+         activeTunnel->decRefCount();
+         return false;
+      }
+   }
+
+   if (node->getHardwareId().equals(tunnel->getHardwareId()))
+   {
+      TCHAR ipAddrText[64];
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s) using hardware ID"),
                node->getName(), node->getId(), tunnel->getDisplayName(), tunnel->getAddress().toString(ipAddrText));
       return true;
    }
@@ -1372,7 +1390,7 @@ static bool MatchTunnelToNodeStage1(NetObj *object, AgentTunnel *tunnel)
 /**
  * Find matching node for tunnel using name or address
  */
-static bool MatchTunnelToNodeStage2(NetObj *object, AgentTunnel *tunnel)
+static bool MatchTunnelToNodeStage3(NetObj *object, AgentTunnel *tunnel)
 {
    Node *node = static_cast<Node*>(object);
 
@@ -1424,7 +1442,7 @@ static bool MatchTunnelToNodeStage2(NetObj *object, AgentTunnel *tunnel)
       }
 
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s)"),
-               node->getName(), node->getId(), tunnel->getDisplayName(), (const TCHAR *)tunnel->getAddress().toString());
+               node->getName(), node->getId(), tunnel->getDisplayName(), tunnel->getAddress().toString().cstr());
       return true;   // Match by IP address or name
    }
 
@@ -1437,8 +1455,10 @@ static bool MatchTunnelToNodeStage2(NetObj *object, AgentTunnel *tunnel)
 static shared_ptr<Node> FindMatchingNode(AgentTunnel *tunnel)
 {
    auto node = static_pointer_cast<Node>(g_idxNodeById.find(MatchTunnelToNodeStage1, tunnel));
-   if (node == nullptr)
+   if ((node == nullptr) && !tunnel->getHardwareId().isNull())
       node = static_pointer_cast<Node>(g_idxNodeById.find(MatchTunnelToNodeStage2, tunnel));
+   if (node == nullptr)
+      node = static_pointer_cast<Node>(g_idxNodeById.find(MatchTunnelToNodeStage3, tunnel));
    return node;
 }
 

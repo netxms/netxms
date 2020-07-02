@@ -119,7 +119,7 @@ protected:
    virtual ~AgentTunnel();
 
    void recvThread();
-   static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
+   static void recvThreadStarter(AgentTunnel *tunnel);
    
    int sslWrite(const void *data, size_t size);
    bool sendMessage(NXCPMessage *msg);
