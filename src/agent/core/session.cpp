@@ -38,17 +38,17 @@ void RegisterSessionForNotifications(CommSession *session);
 /**
  * SNMP proxy thread pool
  */
-ThreadPool *g_snmpProxyThreadPool = NULL;
+ThreadPool *g_snmpProxyThreadPool = nullptr;
 
 /**
  * Communication request processing thread pool
  */
-ThreadPool *g_commThreadPool = NULL;
+ThreadPool *g_commThreadPool = nullptr;
 
 /**
  * Agent action thread pool
  */
-ThreadPool *g_executorThreadPool = NULL;
+ThreadPool *g_executorThreadPool = nullptr;
 
 /**
  * Next free session ID
@@ -58,7 +58,7 @@ static VolatileCounter s_sessionId = 0;
 /**
  * Agent proxy statistics
  */
-static UINT64 s_proxyConnectionRequests = 0;
+static uint64_t s_proxyConnectionRequests = 0;
 static VolatileCounter s_activeProxySessions = 0;
 
 /**
@@ -149,8 +149,8 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
    m_bulkReconciliationSupported = false;
    m_disconnected = false;
    m_allowCompression = false;
-   m_pCtx = NULL;
-   m_ts = time(NULL);
+   m_pCtx = nullptr;
+   m_ts = time(nullptr);
    m_socketWriteMutex = MutexCreate();
    m_responseQueue = new MsgWaitQueue();
    m_requestId = 0;
@@ -248,7 +248,7 @@ void CommSession::readThread()
          // Check for timeout
          if (result == MSGRECV_TIMEOUT)
          {
-            if (m_ts < time(NULL) - (time_t)g_dwIdleTimeout)
+            if (m_ts < time(nullptr) - (time_t)g_dwIdleTimeout)
             {
                debugPrintf(5, _T("Session disconnected by timeout (last activity timestamp is %d)"), (int)m_ts);
                break;
@@ -257,7 +257,7 @@ void CommSession::readThread()
          }
 
          // Receive error
-         if (msg == NULL)
+         if (msg == nullptr)
          {
             if (result == MSGRECV_CLOSED)
                debugPrintf(5, _T("Communication channel closed by peer"));
@@ -267,7 +267,7 @@ void CommSession::readThread()
          }
 
          // Update activity timestamp
-         m_ts = time(NULL);
+         m_ts = time(nullptr);
 
          if (nxlog_get_debug_level() >= 8)
          {
@@ -443,7 +443,7 @@ void CommSession::readThread()
    m_tcpProxies.clear();
    ThreadJoin(m_tcpProxyReadThread);
 
-   debugPrintf(5, _T("Session with %s closed"), (const TCHAR *)m_serverAddr.toString());
+   debugPrintf(5, _T("Session with %s closed"), m_serverAddr.toString().cstr());
 }
 
 /**
@@ -453,7 +453,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
 {
    if (m_disconnected)
    {
-      free(msg);
+      MemFree(msg);
       debugPrintf(6, _T("Aborting sendRawMessage call because session is disconnected"));
       return false;
    }
@@ -481,7 +481,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
          {
             success = false;
          }
-         free(enMsg);
+         MemFree(enMsg);
       }
    }
    else
@@ -498,7 +498,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
 	   debugPrintf(6, _T("CommSession::SendRawMessage() for %s (size %d) failed (error %d: %s)"),
 	            NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size), WSAGetLastError(), _tcserror(WSAGetLastError()));
 	}
-   free(msg);
+	MemFree(msg);
    return success;
 }
 
@@ -562,7 +562,7 @@ void CommSession::processingThread()
       NXCPMessage *request = m_processingQueue->getOrBlock();
       if (request == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
-      UINT32 command = request->getCode();
+      uint16_t command = request->getCode();
 
       // Prepare response message
       NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId(), m_protocolVersion);
