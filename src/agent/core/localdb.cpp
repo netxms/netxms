@@ -25,12 +25,12 @@
 /**
  * Database driver
  */
-static DB_DRIVER s_driver = NULL;
+static DB_DRIVER s_driver = nullptr;
 
 /**
  * Database handle
  */
-static DB_HANDLE s_db = NULL;
+static DB_HANDLE s_db = nullptr;
 
 /**
  * Read metadata
@@ -187,7 +187,7 @@ static bool InitDatabase()
    for(int i = 0; s_dbInitQueries[i] != NULL; i++)
       if (!DBQuery(s_db, s_dbInitQueries[i]))
          return false;
-   nxlog_debug(1, _T("Empty local database initialized successfully"));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("Empty local database successfully initialized"));
    return true;
 }
 
@@ -209,7 +209,7 @@ static bool CheckDatabaseStructure()
       // assume empty database, create tables
       if (!InitDatabase())
       {
-         nxlog_write(NXLOG_ERROR, _T("Local database is corrupted and cannot be used"));
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database is corrupted and cannot be used (initialization failed)"));
          return false;
       }
 
@@ -226,7 +226,7 @@ static bool CheckDatabaseStructure()
 
    if ((version <= 0) || (version > DB_SCHEMA_VERSION))
    {
-      nxlog_write(NXLOG_ERROR, _T("Local database is corrupted and cannot be used"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database is corrupted and cannot be used (invalid schema version)"));
       return false;
    }
 
@@ -235,24 +235,23 @@ static bool CheckDatabaseStructure()
       if (!UpgradeDatabase())
       {
          version = ReadMetadataAsInt(_T("SchemaVersion"));
-         nxlog_debug(1, _T("Local database schema version is %d and cannot be upgraded to %d"), version, DB_SCHEMA_VERSION);
-         nxlog_write(NXLOG_ERROR, _T("Local database is corrupted and cannot be used"));
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database is corrupted and cannot be used (database schema upgrade from version %d tp %d failed)"), version, DB_SCHEMA_VERSION);
          return false;
       }
    }
 
    bool success = true;
-   for(int i = 0; s_dbTables[i] != NULL; i++)
+   for(int i = 0; s_dbTables[i] != nullptr; i++)
    {
       if (!DBIsTableExist(s_db, s_dbTables[i]))
       {
-         nxlog_debug(1, _T("Local database table %s does not exist"), s_dbTables[i]);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database table %s does not exist"), s_dbTables[i]);
          success = false;
       }
    }
    if (!success)
    {
-      nxlog_write(NXLOG_ERROR, _T("Local database is corrupted and cannot be used"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database is corrupted and cannot be used (missing tables)"));
       return false;
    }
 
@@ -274,12 +273,13 @@ static bool SyntaxReader(DB_HANDLE hdb, TCHAR *syntaxId)
 bool OpenLocalDatabase()
 {
 #ifdef _STATIC_AGENT
-   s_driver = DBLoadDriver(_T(":self:"), _T(""), nxlog_get_debug_level() == 9, NULL, NULL);
+   s_driver = DBLoadDriver(_T(":self:"), _T(""), nxlog_get_debug_level() == 9, nullptr, nullptr);
 #else
-   s_driver = DBLoadDriver(_T("sqlite.ddr"), _T(""), nxlog_get_debug_level() == 9, NULL, NULL);
+   s_driver = DBLoadDriver(_T("sqlite.ddr"), _T(""), nxlog_get_debug_level() == 9, nullptr, nullptr);
 #endif
-   if (s_driver == NULL)
+   if (s_driver == nullptr)
    {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot load SQLite database driver"));
       return false;
    }
 
@@ -297,10 +297,10 @@ bool OpenLocalDatabase()
 	}
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   s_db = DBConnect(s_driver, NULL, dbFile, NULL, NULL, NULL, errorText);
-   if (s_db == NULL)
+   s_db = DBConnect(s_driver, nullptr, dbFile, nullptr, nullptr, nullptr, errorText);
+   if (s_db == nullptr)
    {
-      nxlog_debug(1, _T("Local database open error: %s"), errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot open database (%s)"), errorText);
 	   g_failFlags |= FAIL_OPEN_DATABASE;
       return false;
    }
@@ -309,7 +309,7 @@ bool OpenLocalDatabase()
    {
 	   g_failFlags |= FAIL_UPGRADE_DATABASE;
       DBDisconnect(s_db);
-      s_db = NULL;
+      s_db = nullptr;
       return false;
    }
 
@@ -317,7 +317,7 @@ bool OpenLocalDatabase()
       DBSetLongRunningThreshold(g_longRunningQueryThreshold);
 
    DBQuery(s_db, _T("VACUUM"));
-   DebugPrintf(1, _T("Local database opened successfully"));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("Local database opened successfully"));
    return true;
 }
 

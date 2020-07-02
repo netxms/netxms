@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2016-2018 Raden Solutions
+** Copyright (C) 2016-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@ bool g_ignoreAgentDbErrors = FALSE;
  */
 static DB_HANDLE s_db = NULL;
 
-
 /**
  * Upgrade from V8 to V9
  */
@@ -50,7 +49,6 @@ static BOOL H_UpgradeFromV9(int currVersion, int newVersion)
    CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 10));
    return TRUE;
 }
-
 
 /**
  * Upgrade from V8 to V9
@@ -173,10 +171,11 @@ static BOOL H_UpgradeFromV3(int currVersion, int newVersion)
 
 /**
  * Upgrade from V2 to V3
+ *
+ * This upgrade procedure moves config policy from old folder to a new one that is specially created form this purposes.
  */
 static BOOL H_UpgradeFromV2(int currVersion, int newVersion)
 {
-   //This upgrade procedure moves config policy from old folder to a new one that is specially created form this purposes
    DB_RESULT hResult = DBSelect(s_db, _T("SELECT guid FROM agent_policy WHERE type=1"));
    if (hResult != NULL)
    {
@@ -247,22 +246,19 @@ static BOOL H_UpgradeFromV2(int currVersion, int newVersion)
 
 /**
  * Upgrade from V1 to V2
+ *
+ * This upgrade contains:
+ *    1. check that version and depending on version of DATACOLL_SCHEMA_VERSION apply second or both patches
+ *       move upgrade of data collection database to this function
+ *    2. remove DATACOLL_SCHEMA_VERSION from metadata
+ *    3. create policy table (guid, type, server, version) unique giud
+ *    4. Move policy information from registry to database
+ *    5. Create table registry that will store (key, value) unique key
+ *    6. Move upgrade file storage pleace from registry to db
+ *    7. Delete registry file (remove unused functions for registry)
  */
 static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
 {
-   /*
-   This upgrade contains:
-     1. check that version and depending on version of DATACOLL_SCHEMA_VERSION apply second or both patches
-        move upgrade of data collection database to this function
-     2. remove DATACOLL_SCHEMA_VERSION from metadata
-     3. create policy table (guid, type, server, version) unique giud
-     4. Move policy information from registry to database
-     5. Create table registry that will store (key, value) unique key
-     6. Move upgrade file storage pleace from registry to db
-     7. Delete registry file (remove unused functions for registry)
-   */
-
-   // Data collection upgrade procedure
    const TCHAR *s_upgradeQueries[] =
    {
       _T("CREATE TABLE dc_queue (")
@@ -302,7 +298,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
       _T("  PRIMARY KEY(guid))")
    };
 
-   UINT32 dbVersion = ReadMetadataAsInt(_T("DataCollectionSchemaVersion"));
+   int32_t dbVersion = ReadMetadataAsInt(_T("DataCollectionSchemaVersion"));
    while(dbVersion < 3)
    {
       CHK_EXEC(Query(s_upgradeQueries[dbVersion]));
@@ -342,7 +338,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
    registryExists = registry->loadXmlConfig(regPath, "registry");
    if (!registryExists)
    {
-      DebugPrintf(1, _T("Registry file doesn't exist. No data will be moved from registry to database\n"));
+      nxlog_debug_tag(DEBUG_TAG_LOCALDB, 1, _T("Registry file does not exist, no data will be moved from registry to database"));
       CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 2));
       delete registry;
       return TRUE;
@@ -411,7 +407,6 @@ static struct
    { 0, 0, NULL }
 };
 
-
 /**
  * Upgrade database to new version
  */
@@ -425,13 +420,11 @@ bool UpgradeDatabase()
 	version = ReadMetadataAsInt(_T("SchemaVersion"));
    if (version == DB_SCHEMA_VERSION)
    {
-      DebugPrintf(1, _T("Database format is up to date"));
+      nxlog_debug_tag(DEBUG_TAG_LOCALDB, 1, _T("Database format is up to date"));
    }
    else if (version > DB_SCHEMA_VERSION)
    {
-        DebugPrintf(1, _T("Your database has format version %d, this agent is compiled for version %d.\n"), version, DB_SCHEMA_VERSION);
-         DebugPrintf(1, _T("You need to upgrade your agent before using this database.\n"));
-
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database schema version is %d but agent is compiled for version %d"), version, DB_SCHEMA_VERSION);
    }
    else
    {
@@ -442,12 +435,12 @@ bool UpgradeDatabase()
          for(i = 0; m_dbUpgradeMap[i].fpProc != NULL; i++)
             if (m_dbUpgradeMap[i].version == version)
                break;
-         if (m_dbUpgradeMap[i].fpProc == NULL)
+         if (m_dbUpgradeMap[i].fpProc == nullptr)
          {
-            DebugPrintf(1, _T("Unable to find upgrade procedure for version %d"), version);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Unable to find upgrade procedure for version %d"), version);
             break;
          }
-         DebugPrintf(1, _T("Upgrading from version %d to %d"), version, m_dbUpgradeMap[i].newVersion);
+         nxlog_debug_tag(DEBUG_TAG_LOCALDB, 1, _T("Upgrading database schema from version %d to %d"), version, m_dbUpgradeMap[i].newVersion);
          DBBegin(s_db);
          if (m_dbUpgradeMap[i].fpProc(version, m_dbUpgradeMap[i].newVersion))
          {
@@ -456,13 +449,13 @@ bool UpgradeDatabase()
          }
          else
          {
-            DebugPrintf(1, _T("Rolling back last stage due to upgrade errors..."));
+            nxlog_debug_tag(DEBUG_TAG_LOCALDB, 1, _T("Rolling back last stage due to upgrade errors..."));
             DBRollback(s_db);
             break;
          }
       }
 
-      DebugPrintf(1, _T("Database upgrade %s"), (version == DB_SCHEMA_VERSION) ? _T("succeeded") : _T("failed"));
+      nxlog_write_tag((version == DB_SCHEMA_VERSION) ? NXLOG_INFO : NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Database upgrade %s"), (version == DB_SCHEMA_VERSION) ? _T("succeeded") : _T("failed"));
    }
    return version == DB_SCHEMA_VERSION;
 }
