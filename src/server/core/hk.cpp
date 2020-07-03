@@ -113,7 +113,7 @@ static void DeleteEmptySubnets()
 void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId)
 {
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_notes WHERE alarm_id=?"));
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		return;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
@@ -127,7 +127,7 @@ void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId)
 void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId)
 {
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_events WHERE alarm_id=?"));
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		return;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
@@ -140,25 +140,25 @@ void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId)
  */
 static void CleanAlarmHistory(DB_HANDLE hdb)
 {
-	UINT32 retentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
+   time_t retentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
 	if (retentionTime == 0)
 		return;
 
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing alarm log (retention time %d days)"), retentionTime);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing alarm log (retention time %d days)"), static_cast<int>(retentionTime));
 	retentionTime *= 86400;	// Convert days to seconds
-	time_t ts = time(NULL) - (time_t)retentionTime;
+	time_t ts = time(nullptr) - retentionTime;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT alarm_id FROM alarms WHERE alarm_state=3 AND last_change_time<?"));
-	if (hStmt != NULL)
+	if (hStmt != nullptr)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)ts);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (uint32_t)ts);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
          {
-            UINT32 alarmId = DBGetFieldULong(hResult, i, 0);
+            uint32_t alarmId = DBGetFieldULong(hResult, i, 0);
 				DeleteAlarmNotes(hdb, alarmId);
             if (!ThrottleHousekeeper())
                break;
@@ -174,7 +174,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 	if (!s_shutdown)
 	{
       hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE alarm_state=3 AND last_change_time<?"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)ts);
          DBExecute(hStmt);

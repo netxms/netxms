@@ -41,6 +41,16 @@ void DataCollector(const shared_ptr<DCObject>& dcObject);
 bool ThrottleHousekeeper();
 
 /**
+ * Lock IDATA writes
+ */
+void LockIDataWrites();
+
+/**
+ * Unlock IDATA writes
+ */
+void UnlockIDataWrites();
+
+/**
  * Poller thread pool
  */
 extern ThreadPool *g_pollerThreadPool;
@@ -290,8 +300,10 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    if (itemCount > 0)
    {
+      LockIDataWrites();
       nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryItems);
       DBQuery(hdb, queryItems);
+      UnlockIDataWrites();
       if (!ThrottleHousekeeper())
          return;
    }

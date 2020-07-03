@@ -42,8 +42,8 @@ struct DELAYED_SQL_REQUEST
 struct DELAYED_IDATA_INSERT
 {
    time_t timestamp;
-   UINT32 nodeId;
-   UINT32 dciId;
+   uint32_t nodeId;
+   uint32_t dciId;
    TCHAR rawValue[MAX_RESULT_LENGTH];
    TCHAR transformedValue[MAX_RESULT_LENGTH];
 };
@@ -55,7 +55,7 @@ struct DELAYED_RAW_DATA_UPDATE
 {
    UT_hash_handle hh;
    time_t timestamp;
-   UINT32 dciId;
+   uint32_t dciId;
    bool deleteFlag;
    TCHAR rawValue[MAX_RESULT_LENGTH];
    TCHAR transformedValue[MAX_RESULT_LENGTH];
@@ -126,6 +126,27 @@ static Condition s_queueMonitorStopCondition(true);
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static THREAD s_rawDataWriterThread = INVALID_THREAD_HANDLE;
 static THREAD s_queueMonitorThread = INVALID_THREAD_HANDLE;
+
+/**
+ * IDATA tables write lock
+ */
+static RWLOCK s_idataWriteLock = RWLockCreate();
+
+/**
+ * Lock IDATA writes (used by housekeeper)
+ */
+void LockIDataWrites()
+{
+   RWLockWriteLock(s_idataWriteLock);
+}
+
+/**
+ * Unlock IDATA writes
+ */
+void UnlockIDataWrites()
+{
+   RWLockUnlock(s_idataWriteLock);
+}
 
 /**
  * Put SQL request into queue for later execution
@@ -230,7 +251,7 @@ void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawVal
    HASH_FIND_INT(s_rawDataWriterQueue, &dciId, rq);
    if (rq == nullptr)
    {
-      rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
+      rq = MemAllocStruct<DELAYED_RAW_DATA_UPDATE>();
       rq->dciId = dciId;
       rq->deleteFlag = false;
       HASH_ADD_INT(s_rawDataWriterQueue, dciId, rq);
@@ -252,7 +273,7 @@ void QueueRawDciDataDelete(uint32_t dciId)
    HASH_FIND_INT(s_rawDataWriterQueue, &dciId, rq);
    if (rq == nullptr)
    {
-      rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
+      rq = MemAllocStruct<DELAYED_RAW_DATA_UPDATE>();
       rq->dciId = dciId;
       HASH_ADD_INT(s_rawDataWriterQueue, dciId, rq);
    }
@@ -282,7 +303,7 @@ static void DBWriteThread()
 		else
 		{
 			DB_STATEMENT hStmt = DBPrepare(hdb, rq->query);
-			if (hStmt != NULL)
+			if (hStmt != nullptr)
 			{
 				for(int i = 0; i < rq->bindCount; i++)
 				{
@@ -311,6 +332,8 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 		DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      RWLockReadLock(s_idataWriteLock);
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		if (DBBegin(hdb))
@@ -358,7 +381,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 					break;
 
 				rq = writer->queue->getOrBlock(500);
-				if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
+				if ((rq == nullptr) || (rq == INVALID_POINTER_VALUE))
 					break;
 			}
 			DBCommit(hdb);
@@ -368,6 +391,9 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 			MemFree(rq);
 		}
 		DBConnectionPoolReleaseConnection(hdb);
+
+		RWLockUnlock(s_idataWriteLock);
+
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 	}
@@ -390,6 +416,8 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      RWLockReadLock(s_idataWriteLock);
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (DBBegin(hdb))
@@ -420,6 +448,9 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
          MemFree(rq);
       }
       DBConnectionPoolReleaseConnection(hdb);
+
+      RWLockUnlock(s_idataWriteLock);
+
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
    }
@@ -461,6 +492,9 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      if (writer->storageClass == nullptr)   // Lock is not needed for TimescaleDB
+         RWLockReadLock(s_idataWriteLock);
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (DBBegin(hdb))
@@ -508,6 +542,10 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
          MemFree(rq);
       }
       DBConnectionPoolReleaseConnection(hdb);
+
+      if (writer->storageClass != nullptr)
+         RWLockUnlock(s_idataWriteLock);
+
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
    }
@@ -528,6 +566,8 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      RWLockReadLock(s_idataWriteLock);
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (DBBegin(hdb))
@@ -567,6 +607,9 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
          MemFree(rq);
       }
       DBConnectionPoolReleaseConnection(hdb);
+
+      RWLockUnlock(s_idataWriteLock);
+
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
    }
