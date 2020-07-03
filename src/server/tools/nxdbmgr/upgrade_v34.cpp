@@ -24,6 +24,18 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 34.11 to 34.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET description='Allows/disallows conversion of SNMP trap OCTET STRING varbinds into hex strings if they contain non-printable characters.' WHERE var_name='AllowTrapVarbindsConversion'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET description='Time when housekeeper starts. Housekeeper deletes expired log records and DCI data as well as cleans removed objects.' WHERE var_name='Housekeeper.StartTime'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name IN ('AnonymousFileAccess','LockTimeout')")));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 34.10 to 34.11
  */
 static bool H_UpgradeFromV10()
@@ -205,6 +217,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 11, 34, 12, H_UpgradeFromV11 },
    { 10, 34, 11, H_UpgradeFromV10 },
    { 9,  34, 10, H_UpgradeFromV9  },
    { 8,  34, 9,  H_UpgradeFromV8  },

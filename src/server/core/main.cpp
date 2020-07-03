@@ -151,7 +151,6 @@ NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
 UINT64 g_serverId = 0;
 RSA *g_pServerKey = nullptr;
 time_t g_serverStartTime = 0;
-UINT32 g_lockTimeout = 60000;   // Default timeout for acquiring mutex
 UINT32 g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
 UINT32 g_requiredPolls = 1;
@@ -453,7 +452,6 @@ static void LoadGlobalConfig()
 
    g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
    g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
-   g_lockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
    g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
    g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
    g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
