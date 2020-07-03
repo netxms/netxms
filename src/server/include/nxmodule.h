@@ -96,6 +96,7 @@ typedef struct
 	bool (*pfAcceptNewNode)(const InetAddress& addr, uint32_t zoneId, BYTE *macAddr);
 	uint32_t (*pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, uint32_t zoneId, NXCPMessage *request);
    uint32_t (*pfAdditionalLoginCheck)(uint32_t userId, NXCPMessage *request);
+   void (*pfOnNodeMgmtStatusChange)(const shared_ptr<Node>& node, bool isManaged);
    void (*pfClientSessionClose)(ClientSession *session);
    void (*pfNXSLServerEnvConfig)(NXSL_Environment *env);
    void (*pfNXSLServerVMConfig)(NXSL_VM *vm);

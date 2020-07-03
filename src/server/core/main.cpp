@@ -215,6 +215,7 @@ uint32_t NXCORE_EXPORTABLE RegisterLicenseProblem(const TCHAR *component, const 
    auto p = new LicenseProblem(s_licenseProblemId++, component, type, description);
    s_licenseProblems.add(p);
    s_licenseProblemsLock.unlock();
+   PostSystemEvent(EVENT_LICENSE_PROBLEM, g_dwMgmtNode, "s", description);
    return p->id;
 }
 
@@ -266,6 +267,7 @@ void NXCORE_EXPORTABLE FillLicenseProblemsMessage(NXCPMessage *msg)
       msg->setField(fieldId++, p->component);
       msg->setField(fieldId++, p->type);
       msg->setField(fieldId++, p->description);
+      fieldId += 5;
    }
    msg->setField(VID_LICENSE_PROBLEM_COUNT, s_licenseProblems.size());
    s_licenseProblemsLock.unlock();

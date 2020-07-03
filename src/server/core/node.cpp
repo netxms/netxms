@@ -1865,7 +1865,7 @@ void Node::deleteInterface(Interface *iface)
 /**
  * Set object's management status
  */
-bool Node::setMgmtStatus(BOOL isManaged)
+bool Node::setMgmtStatus(bool isManaged)
 {
    if (!super::setMgmtStatus(isManaged))
       return false;
@@ -1882,6 +1882,8 @@ bool Node::setMgmtStatus(BOOL isManaged)
    // call to onDataCollectionChange will force data collection
    // configuration upload to this node or relevant proxy nodes
    onDataCollectionChange();
+
+   CALL_ALL_MODULES(pfOnNodeMgmtStatusChange, (self(), isManaged));
    return true;
 }
 

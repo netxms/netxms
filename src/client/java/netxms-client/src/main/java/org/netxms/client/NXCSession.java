@@ -364,6 +364,9 @@ public class NXCSession
 
    // Message of the day
    private String messageOfTheDay;
+   
+   // Registered license problems
+   private LicenseProblem[] licenseProblems = null;
 
    // Cached list of prediction engines
    private List<PredictionEngine> predictionEngines = null;
@@ -2282,6 +2285,19 @@ public class NXCSession
       }
 
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
+      
+      count = response.getFieldAsInt32(NXCPCodes.VID_LICENSE_PROBLEM_COUNT);
+      if (count > 0)
+      {
+         licenseProblems = new LicenseProblem[count];
+         long fieldId = NXCPCodes.VID_LICENSE_PROBLEM_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            licenseProblems[i] = new LicenseProblem(response, fieldId);
+            fieldId++;
+            Logger.warning("NXCSession.login", "License problem reported by server: " + licenseProblems[i].getDescription());
+         }
+      }
 
       allowCompression = response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION);
 
@@ -2714,6 +2730,26 @@ public class NXCSession
    public String getMessageOfTheDay()
    {
       return messageOfTheDay;
+   }
+   
+   /**
+    * Get list of license problems reported by server. This method will always return null for community edition server.
+    *
+    * @return list of license problems reported by server or null if there are none
+    */
+   public LicenseProblem[] getLicenseProblems()
+   {
+      return licenseProblems;
+   }
+
+   /**
+    * Check if server has any license problems.
+    *
+    * @return true if server has any license problems
+    */
+   public boolean hasLicenseProblems()
+   {
+      return (licenseProblems != null) && (licenseProblems.length > 0);
    }
 
    /**

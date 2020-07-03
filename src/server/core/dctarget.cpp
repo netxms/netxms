@@ -1459,7 +1459,7 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
 /**
  * Set object's management status
  */
-bool DataCollectionTarget::setMgmtStatus(BOOL isManaged)
+bool DataCollectionTarget::setMgmtStatus(bool isManaged)
 {
    return super::setMgmtStatus(isManaged);
 }

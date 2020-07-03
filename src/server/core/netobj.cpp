@@ -1554,33 +1554,33 @@ void NetObj::dropUserAccess(uint32_t userId)
 /**
  * Set object's management status
  */
-bool NetObj::setMgmtStatus(BOOL bIsManaged)
+bool NetObj::setMgmtStatus(bool isManaged)
 {
    int oldStatus;
 
    lockProperties();
 
-   if ((bIsManaged && (m_status != STATUS_UNMANAGED)) ||
-       ((!bIsManaged) && (m_status == STATUS_UNMANAGED)))
+   if ((isManaged && (m_status != STATUS_UNMANAGED)) ||
+       ((!isManaged) && (m_status == STATUS_UNMANAGED)))
    {
       unlockProperties();
       return false;  // Status is already correct
    }
 
    oldStatus = m_status;
-   m_status = (bIsManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
+   m_status = (isManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
 
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 
    // Generate event if current object is a node
    if (getObjectClass() == OBJECT_NODE)
-      PostSystemEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id, "d", oldStatus);
+      PostSystemEvent(isManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id, "d", oldStatus);
 
    // Change status for child objects also
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
-      getChildList().get(i)->setMgmtStatus(bIsManaged);
+      getChildList().get(i)->setMgmtStatus(isManaged);
    unlockChildList();
 
    // Cause parent object(s) to recalculate it's status

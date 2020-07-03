@@ -1147,6 +1147,7 @@ public class NXCPCodes
    public static final long VID_RECORD_ID_COLUMN = 705;
    public static final long VID_OBJECT_ID_COLUMN = 706;
    public static final long VID_RAW_VALUE = 707;
+   public static final long VID_LICENSE_PROBLEM_COUNT = 708;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1232,6 +1233,7 @@ public class NXCPCodes
 	public static final long VID_VLAN_LIST_BASE = 0x10000000L;
 	public static final long VID_NETWORK_PATH_BASE = 0x40000000L;
 	public static final long VID_COMPONENT_LIST_BASE = 0x20000000L;
+   public static final long VID_LICENSE_PROBLEM_BASE = 0x28000000L;
 	public static final long VID_RADIO_LIST_BASE = 0x30000000L;
 	public static final long VID_UUID_LIST_BASE = 0x10000000L;
 	public static final long VID_RULE_LIST_BASE = 0x10000000L;

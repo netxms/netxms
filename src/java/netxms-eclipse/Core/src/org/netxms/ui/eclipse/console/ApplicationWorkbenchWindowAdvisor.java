@@ -49,6 +49,7 @@ import org.netxms.certificate.loader.KeyStoreRequestListener;
 import org.netxms.certificate.manager.CertificateManager;
 import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
+import org.netxms.client.LicenseProblem;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
@@ -609,16 +610,29 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
    }
    
    /**
-    * Show the message of the day messagebox
+    * Show the message of the day message box
     */
    private void showMessageOfTheDay()
    {   
-      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      NXCSession session = ConsoleSharedData.getSession();
+
       String message = session.getMessageOfTheDay();
-      
       if (!message.isEmpty())
       {
          MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Announcement", message);
+      }
+
+      LicenseProblem[] licenseProblems = session.getLicenseProblems();
+      if ((licenseProblems != null) && (licenseProblems.length > 0))
+      {
+         StringBuilder sb = new StringBuilder();
+         for(LicenseProblem p : licenseProblems)
+         {
+            if (sb.length() == 0)
+               sb.append("\r\n");
+            sb.append(p.getDescription());
+         }
+         MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "License Problem", sb.toString());
       }
    }
 }

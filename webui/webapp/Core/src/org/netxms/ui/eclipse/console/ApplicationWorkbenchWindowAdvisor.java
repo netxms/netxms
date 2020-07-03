@@ -38,6 +38,7 @@ import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.internal.keys.BindingService;
 import org.eclipse.ui.keys.IBindingService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.LicenseProblem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
 import org.netxms.client.objects.AbstractObject;
@@ -233,11 +234,24 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
    private void showMessageOfTheDay()
    {   
       NXCSession session = ConsoleSharedData.getSession();
+
       String message = session.getMessageOfTheDay();
-      
       if (!message.isEmpty())
       {
          MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Announcement", message);
+      }
+
+      LicenseProblem[] licenseProblems = session.getLicenseProblems();
+      if ((licenseProblems != null) && (licenseProblems.length > 0))
+      {
+         StringBuilder sb = new StringBuilder();
+         for(LicenseProblem p : licenseProblems)
+         {
+            if (sb.length() == 0)
+               sb.append("\r\n");
+            sb.append(p.getDescription());
+         }
+         MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "License Problem", sb.toString());
       }
    }
 }

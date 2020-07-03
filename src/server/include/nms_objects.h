@@ -1054,7 +1054,7 @@ public:
 
    void commentsToMessage(NXCPMessage *pMsg);
 
-   virtual bool setMgmtStatus(BOOL bIsManaged);
+   virtual bool setMgmtStatus(bool bIsManaged);
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    uint32_t getUserRights(uint32_t userId) const;
@@ -2009,7 +2009,7 @@ public:
 
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual bool setMgmtStatus(BOOL isManaged) override;
+   virtual bool setMgmtStatus(bool isManaged) override;
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
    virtual bool isDataCollectionTarget() const override;
 
@@ -3108,7 +3108,7 @@ public:
 
 	void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 
-	virtual bool setMgmtStatus(BOOL isManaged) override;
+	virtual bool setMgmtStatus(bool isManaged) override;
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
 	bool checkAgentTrapId(UINT64 id);

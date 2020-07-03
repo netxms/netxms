@@ -439,6 +439,11 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	{
       Activator.getDefault().setStatusLine(statusLine);
       
+      if (ConsoleSharedData.getSession().hasLicenseProblems())
+      {
+         statusLine.add(new LicenseProblemStatusLineItem("LicenseProblem", StatusLineContributionItem.CALC_TRUE_WIDTH)); //$NON-NLS-1$
+      }
+      
 		StatusLineContributionItem statusItem = new StatusLineContributionItem("ConnectionStatus", StatusLineContributionItem.CALC_TRUE_WIDTH); //$NON-NLS-1$
 		statusItem.setText(""); //$NON-NLS-1$
 		statusLine.add(statusItem);

@@ -814,7 +814,7 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(TRUE);
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(true);
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -838,7 +838,7 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(FALSE);
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(false);
 
 	*ppResult = vm->createValue();
 	return 0;
