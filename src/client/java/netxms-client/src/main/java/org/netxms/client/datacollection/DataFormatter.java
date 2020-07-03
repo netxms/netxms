@@ -72,7 +72,7 @@ public class DataFormatter
 
       for(int i = 0; i < format.length; i++)
       {
-         if (format[i] == '%')
+         if (format[i] == '%' && (i + 1 != format.length))
          {
             i++;
             if (format[i] == '%')
