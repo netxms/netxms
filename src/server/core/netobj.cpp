@@ -1339,7 +1339,16 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
    // Change object's name
    if (pRequest->isFieldExist(VID_OBJECT_NAME))
+   {
       pRequest->getFieldAsString(VID_OBJECT_NAME, m_name, MAX_OBJECT_NAME);
+
+      // Cleanup
+      for(int i = 0; m_name[i] != 0; i++)
+      {
+         if (m_name[i] < 0x20)
+            m_name[i] = ' ';
+      }
+   }
 
    // Change object's status calculation/propagation algorithms
    if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
