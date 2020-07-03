@@ -15,6 +15,7 @@
 	NX-1422 (SMTP HELO should be configurable)
 	NX-1886 (DCI Table using Script Origin ignores Column definition)
 	NX-1888 (Delete completed non-recurring scheduled tasks after configurable retention period)
+	NX-1892 (Wrong format string on a map makes the map uneditable)
 
 
 *
