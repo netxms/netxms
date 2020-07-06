@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = reconf configure netxms.sln README.HPUX jemalloc.sym
+EXTRA_DIST = reconf configure netxms.sln jemalloc.sym
 SUBDIRS = . m4 build src doc tools contrib manpages
 SUBDIRS += @TOP_LEVEL_MODULES@
 
