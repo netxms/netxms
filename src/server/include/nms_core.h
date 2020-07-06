@@ -464,9 +464,11 @@ public:
  */
 typedef int session_id_t;
 
-// Explicit instantiation of AbstractIndex<AgentConnection> template class
+// Explicit instantiation of template classes
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE SharedPointerIndex<AgentConnection>;
+template class NXCORE_EXPORTABLE HashSet<uint32_t>;
+template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #endif
 
 /**
