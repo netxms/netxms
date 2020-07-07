@@ -1243,27 +1243,6 @@ int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
- * System functions, mostly for debugging
- */
-int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
-{
-	if (!argv[0]->isInteger())
-		return NXSL_ERR_NOT_INTEGER;
-
-	switch(argv[0]->getValueAsInt32())
-	{
-		case 1:	// dump script code to stdout
-			vm->dump(stdout);
-			break;
-		default:
-			break;
-	}
-
-	*ppResult = vm->createValue();
-	return 0;
-}
-
-/**
  * NXSL function: floor
  */
 int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)

@@ -165,6 +165,7 @@ OperandType NXSL_Instruction::getOperandType()
 		case OPCODE_NAME:
       case OPCODE_PUSH_CONSTREF:
       case OPCODE_PUSH_EXPRVAR:
+      case OPCODE_PUSH_PROPERTY:
       case OPCODE_PUSH_VARIABLE:
       case OPCODE_SAFE_GET_ATTR:
       case OPCODE_SELECT:

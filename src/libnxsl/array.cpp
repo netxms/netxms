@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,51 +30,74 @@ NXSL_Array::NXSL_Array(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
 {
 	m_size = 0;
 	m_allocated = 0;
-	m_data = NULL;
+	m_data = nullptr;
 }
 
 /**
  *  Create copy of given array
  */
-NXSL_Array::NXSL_Array(const NXSL_Array *src) : NXSL_HandleCountObject(src->m_vm)
+NXSL_Array::NXSL_Array(const NXSL_Array& src) : NXSL_HandleCountObject(src.m_vm)
 {
-	m_size = src->m_size;
-	m_allocated = src->m_size;
+	m_size = m_allocated = src.m_size;
 	if (m_size > 0)
 	{
-		m_data = (NXSL_ArrayElement *)malloc(sizeof(NXSL_ArrayElement) * m_size);
+		m_data = MemAllocArrayNoInit<NXSL_ArrayElement>(m_size);
 		for(int i = 0; i < m_size; i++)
 		{
-			m_data[i].index = src->m_data[i].index;
-			m_data[i].value = m_vm->createValue(src->m_data[i].value);
+			m_data[i].index = src.m_data[i].index;
+			m_data[i].value = m_vm->createValue(src.m_data[i].value);
 		}
 	}
 	else
 	{
-		m_data = NULL;
+		m_data = nullptr;
 	}
 }
 
 /**
  * Create array populated with values from string list
  */
-NXSL_Array::NXSL_Array(NXSL_ValueManager *vm, const StringList *values) : NXSL_HandleCountObject(vm)
+NXSL_Array::NXSL_Array(NXSL_ValueManager *vm, const StringList& values) : NXSL_HandleCountObject(vm)
 {
-	m_size = values->size();
-	m_allocated = m_size;
+	m_size = m_allocated = values.size();
 	if (m_size > 0)
 	{
-		m_data = (NXSL_ArrayElement *)malloc(sizeof(NXSL_ArrayElement) * m_size);
+      m_data = MemAllocArrayNoInit<NXSL_ArrayElement>(m_size);
 		for(int i = 0; i < m_size; i++)
 		{
 			m_data[i].index = i;
-			m_data[i].value = m_vm->createValue(values->get(i));
+			m_data[i].value = m_vm->createValue(values.get(i));
 		}
 	}
 	else
 	{
-		m_data = NULL;
+		m_data = nullptr;
 	}
+}
+
+/**
+ * Create array populated with values from string set
+ */
+NXSL_Array::NXSL_Array(NXSL_ValueManager *vm, const StringSet& values) : NXSL_HandleCountObject(vm)
+{
+   m_size = m_allocated = values.size();
+   if (m_size > 0)
+   {
+      m_data = MemAllocArrayNoInit<NXSL_ArrayElement>(m_size);
+      int index = 0;
+      auto it = values.constIterator();
+      while(it->hasNext())
+      {
+         m_data[index].index = index;
+         m_data[index].value = m_vm->createValue(it->next());
+         index++;
+      }
+      delete it;
+   }
+   else
+   {
+      m_data = nullptr;
+   }
 }
 
 /**
@@ -82,11 +105,9 @@ NXSL_Array::NXSL_Array(NXSL_ValueManager *vm, const StringList *values) : NXSL_H
  */
 NXSL_Array::~NXSL_Array()
 {
-	int i;
-
-	for(i = 0; i < m_size; i++)
+	for(int i = 0; i < m_size; i++)
 		m_vm->destroyValue(m_data[i].value);
-	free(m_data);
+	MemFree(m_data);
 }
 
 /**
@@ -94,7 +115,7 @@ NXSL_Array::~NXSL_Array()
  */
 static int CompareElements(const void *p1, const void *p2)
 {
-	return COMPARE_NUMBERS(((NXSL_ArrayElement *)p1)->index, ((NXSL_ArrayElement *)p2)->index);
+	return COMPARE_NUMBERS(static_cast<const NXSL_ArrayElement*>(p1)->index, static_cast<const NXSL_ArrayElement*>(p2)->index);
 }
 
 /**
@@ -102,11 +123,10 @@ static int CompareElements(const void *p1, const void *p2)
  */
 NXSL_Value *NXSL_Array::get(int index) const
 {
-	NXSL_ArrayElement *element, key;
-
+	NXSL_ArrayElement key;
 	key.index = index;
-	element = (NXSL_ArrayElement *)bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
-	return (element != NULL) ? element->value : NULL;
+	NXSL_ArrayElement *element = static_cast<NXSL_ArrayElement*>(bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements));
+	return (element != nullptr) ? element->value : nullptr;
 }
 
 /**
@@ -115,7 +135,7 @@ NXSL_Value *NXSL_Array::get(int index) const
 NXSL_Value *NXSL_Array::getByPosition(int position) const
 {
 	if ((position < 0) || (position >= m_size))
-		return NULL;
+		return nullptr;
 	return m_data[position].value;
 }
 

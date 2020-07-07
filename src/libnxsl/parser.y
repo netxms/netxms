@@ -707,7 +707,11 @@ Operand:
 }
 |	T_COMPOUND_IDENTIFIER
 {
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_PUSH_CONSTREF, $1));
+   // Special case for VM properties
+   if (!strcmp($1.v, "NXSL::Classes") || !strcmp($1.v, "NXSL::Functions"))
+      pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_PUSH_PROPERTY, $1));
+   else
+		pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_PUSH_CONSTREF, $1));
 }
 |	Constant
 {

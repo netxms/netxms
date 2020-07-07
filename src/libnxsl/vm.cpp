@@ -30,6 +30,11 @@
 #define CONTROL_STACK_LIMIT      32768
 
 /**
+ * Class registry
+ */
+extern NXSL_ClassRegistry g_nxslClassRegistry;
+
+/**
  * Error texts
  */
 static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
@@ -164,7 +169,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_securityContext = nullptr;
    m_functions = nullptr;
    m_modules = new ObjectArray<NXSL_Module>(4, 4, Ownership::True);
-   m_dwSubLevel = 0;    // Level of current subroutine
+   m_subLevel = 0;    // Level of current subroutine
    m_env = (env != nullptr) ? env : new NXSL_Environment;
    m_pRetValue = nullptr;
 	m_userData = nullptr;
@@ -389,9 +394,9 @@ resume:
    while((v = m_dataStack->pop()) != NULL)
       destroyValue(v);
    
-   while(m_dwSubLevel > 0)
+   while(m_subLevel > 0)
    {
-      m_dwSubLevel--;
+      m_subLevel--;
       delete (NXSL_VariableSystem *)m_codeStack->pop();
       delete (NXSL_VariableSystem *)m_codeStack->pop();
       m_codeStack->pop();
@@ -419,9 +424,9 @@ bool NXSL_VM::unwind()
    if (p == NULL)
       return false;
 
-   while(m_dwSubLevel > p->subLevel)
+   while(m_subLevel > p->subLevel)
    {
-      m_dwSubLevel--;
+      m_subLevel--;
 
       if (m_expressionVariables != NULL)
       {
@@ -597,11 +602,11 @@ void NXSL_VM::execute()
          m_dataStack->push(createValue(cp->m_operand.m_variable->getValue()));
          break;
       case OPCODE_PUSH_EXPRVAR:
-         if (m_expressionVariables == NULL)
+         if (m_expressionVariables == nullptr)
             m_expressionVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::EXPRESSION);
 
          pVar = m_expressionVariables->find(*cp->m_operand.m_identifier);
-         if (pVar != NULL)
+         if (pVar != nullptr)
          {
             m_dataStack->push(createValue(pVar->getValue()));
             // convert to direct variable access without name lookup
@@ -612,16 +617,16 @@ void NXSL_VM::execute()
             }
             dwNext++;   // Skip next instruction
          }
-         else if (m_dwSubLevel < CONTROL_STACK_LIMIT)
+         else if (m_subLevel < CONTROL_STACK_LIMIT)
          {
-            m_dwSubLevel++;
+            m_subLevel++;
             m_codeStack->push(CAST_TO_POINTER(m_cp + 1, void *));
-            m_codeStack->push(NULL);
+            m_codeStack->push(nullptr);
             m_codeStack->push(m_expressionVariables);
-            if (m_expressionVariables != NULL)
+            if (m_expressionVariables != nullptr)
             {
                m_expressionVariables->restoreVariableReferences(m_instructionSet);
-               m_expressionVariables = NULL;
+               m_expressionVariables = nullptr;
             }
             dwNext = cp->m_addr2;
          }
@@ -631,30 +636,30 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_UPDATE_EXPRVAR:
-         if (m_exportedExpressionVariables == NULL)
+         if (m_exportedExpressionVariables == nullptr)
          {
             dwNext++;   // Skip next instruction
             break;   // no need for update
          }
 
-         if (m_expressionVariables == NULL)
+         if (m_expressionVariables == nullptr)
             m_expressionVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::EXPRESSION);
 
          pVar = m_expressionVariables->find(*cp->m_operand.m_identifier);
-         if (pVar != NULL)
+         if (pVar != nullptr)
          {
             dwNext++;   // Skip next instruction
          }
-         else if (m_dwSubLevel < CONTROL_STACK_LIMIT)
+         else if (m_subLevel < CONTROL_STACK_LIMIT)
          {
-            m_dwSubLevel++;
+            m_subLevel++;
             m_codeStack->push(CAST_TO_POINTER(m_cp + 1, void *));
-            m_codeStack->push(NULL);
+            m_codeStack->push(nullptr);
             m_codeStack->push(m_expressionVariables);
-            if (m_expressionVariables != NULL)
+            if (m_expressionVariables != nullptr)
             {
                m_expressionVariables->restoreVariableReferences(m_instructionSet);
-               m_expressionVariables = NULL;
+               m_expressionVariables = nullptr;
             }
             dwNext = cp->m_addr2;
          }
@@ -665,7 +670,7 @@ void NXSL_VM::execute()
          break;
       case OPCODE_PUSH_CONSTREF:
          pVar = m_constants->find(*cp->m_operand.m_identifier);
-         if (pVar != NULL)
+         if (pVar != nullptr)
          {
             m_dataStack->push(createValue(pVar->getValue()));
             // convert to direct value access without name lookup
@@ -681,16 +686,19 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_CLEAR_EXPRVARS:
-         if (m_exportedExpressionVariables != NULL)
+         if (m_exportedExpressionVariables != nullptr)
          {
             delete *m_exportedExpressionVariables;
             *m_exportedExpressionVariables = m_expressionVariables;
-            m_expressionVariables = NULL;
+            m_expressionVariables = nullptr;
          }
          else
          {
             delete_and_null(m_expressionVariables);
          }
+         break;
+      case OPCODE_PUSH_PROPERTY:
+         pushProperty(*cp->m_operand.m_identifier);
          break;
       case OPCODE_NEW_ARRAY:
          m_dataStack->push(createValue(new NXSL_Array(this)));
@@ -1289,9 +1297,9 @@ void NXSL_VM::execute()
          m_dataStack->push(createValue());
          /* no break */
       case OPCODE_RETURN:
-         if (m_dwSubLevel > 0)
+         if (m_subLevel > 0)
          {
-            m_dwSubLevel--;
+            m_subLevel--;
 
             NXSL_VariableSystem *savedExpressionVariables = static_cast<NXSL_VariableSystem*>(m_codeStack->pop());
             if (m_expressionVariables != NULL)
@@ -1629,7 +1637,7 @@ void NXSL_VM::execute()
             NXSL_CatchPoint *p = new NXSL_CatchPoint;
             p->addr = cp->m_operand.m_addr;
             p->dataStackSize = m_dataStack->getSize();
-            p->subLevel = m_dwSubLevel;
+            p->subLevel = m_subLevel;
             m_catchStack->push(p);
          }
          break;
@@ -2411,9 +2419,9 @@ void NXSL_VM::callFunction(int nArgCount)
    NXSL_Value *pValue;
    char varName[MAX_IDENTIFIER_LENGTH];
 
-   if (m_dwSubLevel < CONTROL_STACK_LIMIT)
+   if (m_subLevel < CONTROL_STACK_LIMIT)
    {
-      m_dwSubLevel++;
+      m_subLevel++;
       m_codeStack->push(CAST_TO_POINTER(m_cp + 1, void *));
       m_codeStack->push(m_localVariables);
       m_localVariables->restoreVariableReferences(m_instructionSet);
@@ -2719,6 +2727,38 @@ void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const char *attribute, bool s
 }
 
 /**
+ * Push VM property
+ */
+void NXSL_VM::pushProperty(const NXSL_Identifier& name)
+{
+   if (!strcmp(name.value, "NXSL::Classes"))
+   {
+      NXSL_Array *a = new NXSL_Array(this);
+      for(size_t i = 0; i < g_nxslClassRegistry.size; i++)
+         a->append(createValue(new NXSL_Object(this, &g_nxslMetaClass, g_nxslClassRegistry.classes[i])));
+      m_dataStack->push(createValue(a));
+   }
+   else if (!strcmp(name.value, "NXSL::Functions"))
+   {
+      StringSet *functions = m_env->getAllFunctions();
+      for(int i = 0; i < m_functions->size(); i++)
+      {
+#ifdef UNICODE
+         functions->addPreallocated(WideStringFromUTF8String(m_functions->get(i)->m_name.value));
+#else
+         functions->add(m_functions->get(i)->m_name.value);
+#endif
+      }
+      m_dataStack->push(createValue(new NXSL_Array(this, *functions)));
+      delete functions;
+   }
+   else
+   {
+      m_dataStack->push(createValue());
+   }
+}
+
+/**
  * Set context object
  */
 void NXSL_VM::setContextObject(NXSL_Value *value)
@@ -2730,7 +2770,7 @@ void NXSL_VM::setContextObject(NXSL_Value *value)
    }
    else
    {
-      m_context = NULL;
+      m_context = nullptr;
       destroyValue(value);
    }
 }

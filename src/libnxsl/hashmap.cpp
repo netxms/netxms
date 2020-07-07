@@ -42,14 +42,14 @@ NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
 /**
  * Create copy of existing hash map
  */
-NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src) : NXSL_HandleCountObject(src->m_vm)
+NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap& src) : NXSL_HandleCountObject(src.m_vm)
 {
-   m_values = new NXSL_StringValueMap(src->m_vm, Ownership::True);
-   StructArray<KeyValuePair<void>> *values = src->m_values->toArray();
+   m_values = new NXSL_StringValueMap(src.m_vm, Ownership::True);
+   StructArray<KeyValuePair<void>> *values = src.m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
       KeyValuePair<void> *p = values->get(i);
-      m_values->set(p->key, m_vm->createValue((const NXSL_Value *)p->value));
+      m_values->set(p->key, m_vm->createValue(static_cast<const NXSL_Value*>(p->value)));
    }
    delete values;
 }

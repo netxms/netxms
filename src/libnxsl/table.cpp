@@ -451,7 +451,7 @@ NXSL_TableRowClass::~NXSL_TableRowClass()
  */
 void NXSL_TableRowClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (TableRowReference *)object->getData();
+   delete static_cast<TableRowReference*>(object->getData());
 }
 
 /**
@@ -460,8 +460,8 @@ void NXSL_TableRowClass::onObjectDelete(NXSL_Object *object)
 NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = NULL;
-   TableRowReference *row = (TableRowReference *)object->getData();
+   NXSL_Value *value = nullptr;
+   TableRowReference *row = static_cast<TableRowReference*>(object->getData());
    if (!strcmp(attr, "index"))
    {
       value = vm->createValue(row->getIndex());

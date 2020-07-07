@@ -142,6 +142,7 @@ typedef void *yyscan_t;
 #define OPCODE_CASE_CONST_LT  97
 #define OPCODE_CASE_GT        98
 #define OPCODE_CASE_CONST_GT  99
+#define OPCODE_PUSH_PROPERTY  100
 
 class NXSL_Compiler;
 
@@ -218,6 +219,16 @@ public:
 
 	void setIdentifierOperation(int opcode) { m_idOpCode = opcode; }
 	int getIdentifierOperation() { return m_idOpCode; }
+};
+
+/**
+ * Class registry
+ */
+struct NXSL_ClassRegistry
+{
+   size_t size;
+   size_t allocated;
+   NXSL_Class **classes;
 };
 
 

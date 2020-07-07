@@ -24,12 +24,29 @@
 #include "libnxsl.h"
 
 /**
+ * Class registry. ObjectArray cannot be used here to ensure that registry initialization
+ * is done as part of static initialization before any global variable defining actual NXSL class is initialized.
+ */
+NXSL_ClassRegistry g_nxslClassRegistry = { 0, 0, nullptr };
+
+/**
+ * Instance of NXSL_MetaClass
+ */
+NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
+
+/**
  * Class constructor
  */
 NXSL_Class::NXSL_Class()
 {
    setName(_T("Object"));
    m_methods = new HashMap<NXSL_Identifier, NXSL_ExtMethod>(Ownership::True);
+   if (g_nxslClassRegistry.size == g_nxslClassRegistry.allocated)
+   {
+      g_nxslClassRegistry.allocated += 64;
+      g_nxslClassRegistry.classes = MemReallocArray(g_nxslClassRegistry.classes, g_nxslClassRegistry.allocated);
+   }
+   g_nxslClassRegistry.classes[g_nxslClassRegistry.size++] = this;
 }
 
 /**
@@ -96,6 +113,55 @@ void NXSL_Class::onObjectCreate(NXSL_Object *object)
  */
 void NXSL_Class::onObjectDelete(NXSL_Object *object)
 {
+}
+
+/**
+ * Class "Class" constructor
+ */
+NXSL_MetaClass::NXSL_MetaClass() : NXSL_Class()
+{
+   setName(_T("Class"));
+}
+
+/**
+ * Class "Class" destructor
+ */
+NXSL_MetaClass::~NXSL_MetaClass()
+{
+}
+
+/**
+ * Callback to fill method list
+ */
+static EnumerationCallbackResult FillMethodList(const NXSL_Identifier& name, NXSL_ExtMethod *method, NXSL_Array *array)
+{
+   array->append(array->vm()->createValue(name.value));
+   return _CONTINUE;
+}
+
+/**
+ * Class "Class" attribute handler
+ */
+NXSL_Value *NXSL_MetaClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   NXSL_VM *vm = object->vm();
+   NXSL_Value *value = nullptr;
+   NXSL_Class *c = static_cast<NXSL_Class*>(object->getData());
+   if (!strcmp(attr, "hierarchy"))
+   {
+      value = vm->createValue(new NXSL_Array(vm, c->getClassHierarchy()));
+   }
+   else if (!strcmp(attr, "methods"))
+   {
+      NXSL_Array *values = new NXSL_Array(vm);
+      c->m_methods->forEach(FillMethodList, values);
+      value = vm->createValue(values);
+   }
+   else if (!strcmp(attr, "name"))
+   {
+      value = vm->createValue(c->getName());
+   }
+   return value;
 }
 
 /**

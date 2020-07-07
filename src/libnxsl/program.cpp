@@ -56,7 +56,7 @@ static const char *s_nxslCommandMnemonic[] =
    "PUSH", "SET", "CALL", "INC", "DEC",
    "INCP", "DECP", "IN", "PUSH", "SET",
    "UPDATE", "CLREXPR", "RANGE", "CASELT",
-   "CASELT", "CASEGT", "CASEGT"
+   "CASELT", "CASEGT", "CASEGT", "PUSH"
 };
 
 /**
@@ -128,7 +128,7 @@ void NXSL_Program::disableExpressionVariables(int line)
  */
 void NXSL_Program::registerExpressionVariable(const NXSL_Identifier& identifier)
 {
-   if (m_expressionVariables != NULL)
+   if (m_expressionVariables != nullptr)
       m_expressionVariables->add(new NXSL_IdentifierLocation(identifier, m_instructionSet->size()));
 }
 
@@ -136,9 +136,9 @@ void NXSL_Program::registerExpressionVariable(const NXSL_Identifier& identifier)
  * Get address of expression variable code block. Will return
  * INVALID_ADDRESS if given variable is not registered as expression variable.
  */
-UINT32 NXSL_Program::getExpressionVariableCodeBlock(const NXSL_Identifier& identifier)
+uint32_t NXSL_Program::getExpressionVariableCodeBlock(const NXSL_Identifier& identifier)
 {
-   if (m_expressionVariables == NULL)
+   if (m_expressionVariables == nullptr)
       return INVALID_ADDRESS;
 
    for(int i = 0; i < m_expressionVariables->size(); i++)
@@ -157,7 +157,7 @@ UINT32 NXSL_Program::getExpressionVariableCodeBlock(const NXSL_Identifier& ident
  */
 void NXSL_Program::addPushVariableInstruction(const NXSL_Identifier& name, int line)
 {
-   UINT32 addr = getExpressionVariableCodeBlock(name);
+   uint32_t addr = getExpressionVariableCodeBlock(name);
    if (addr == INVALID_ADDRESS)
    {
       addInstruction(new NXSL_Instruction(this, line, OPCODE_PUSH_VARIABLE, name));
@@ -317,6 +317,7 @@ void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructi
             break;
          case OPCODE_PUSH_CONSTREF:
          case OPCODE_PUSH_VARIABLE:
+         case OPCODE_PUSH_PROPERTY:
          case OPCODE_SET:
          case OPCODE_BIND:
          case OPCODE_ARRAY:
@@ -378,12 +379,12 @@ void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructi
 /**
  * Get final jump destination from a jump chain
  */
-UINT32 NXSL_Program::getFinalJumpDestination(UINT32 dwAddr, int srcJump)
+uint32_t NXSL_Program::getFinalJumpDestination(uint32_t addr, int srcJump)
 {
-   NXSL_Instruction *instr = m_instructionSet->get(dwAddr);
+   NXSL_Instruction *instr = m_instructionSet->get(addr);
 	if ((instr->m_opCode == OPCODE_JMP) || (instr->m_opCode == srcJump))
 		return getFinalJumpDestination(instr->m_operand.m_addr, srcJump);
-	return dwAddr;
+	return addr;
 }
 
 /**

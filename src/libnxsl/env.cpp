@@ -74,7 +74,6 @@ int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sqrt(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_tan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -172,7 +171,6 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "sqrt", F_sqrt, 1 },
 	{ "strftime", F_strftime, -1 },
 	{ "substr", F_substr, -1 },
-	{ "sys", F_sys, 1 },
    { "tan", F_tan, 1 },
    { "tanh", F_tanh, 1 },
 	{ "time", F_time, 0 },
@@ -227,7 +225,7 @@ NXSL_Environment::NXSL_Environment() : m_metadata(1024)
 {
    m_functions = createFunctionListRef(s_builtinFunctions, sizeof(s_builtinFunctions) / sizeof(NXSL_ExtFunction));
    m_selectors = createSelectorListRef(s_builtinSelectors, sizeof(s_builtinSelectors) / sizeof(NXSL_ExtSelector));
-   m_library = NULL;
+   m_library = nullptr;
 }
 
 /**
@@ -242,13 +240,33 @@ NXSL_Environment::~NXSL_Environment()
  */
 const NXSL_ExtFunction *NXSL_Environment::findFunction(const NXSL_Identifier& name) const
 {
-   for(NXSL_EnvironmentListRef<NXSL_ExtFunction> *list = m_functions; list != NULL; list = list->next)
+   for(NXSL_EnvironmentListRef<NXSL_ExtFunction> *list = m_functions; list != nullptr; list = list->next)
    {
       for(size_t i = 0; i < list->count; i++)
          if (!strcmp(list->elements[i].m_name, name.value))
             return &list->elements[i];
    }
-   return NULL;
+   return nullptr;
+}
+
+/**
+ * Get all available functions
+ */
+StringSet *NXSL_Environment::getAllFunctions() const
+{
+   StringSet *functions = new StringSet();
+   for(NXSL_EnvironmentListRef<NXSL_ExtFunction> *list = m_functions; list != nullptr; list = list->next)
+   {
+      for(size_t i = 0; i < list->count; i++)
+      {
+#ifdef UNICODE
+         functions->addPreallocated(WideStringFromUTF8String(list->elements[i].m_name));
+#else
+         functions->add(list->elements[i].m_name);
+#endif
+      }
+   }
+   return functions;
 }
 
 /**
@@ -274,13 +292,13 @@ void NXSL_Environment::registerIOFunctions()
  */
 const NXSL_ExtSelector *NXSL_Environment::findSelector(const NXSL_Identifier& name) const
 {
-   for(NXSL_EnvironmentListRef<NXSL_ExtSelector> *list = m_selectors; list != NULL; list = list->next)
+   for(NXSL_EnvironmentListRef<NXSL_ExtSelector> *list = m_selectors; list != nullptr; list = list->next)
    {
       for(size_t i = 0; i < list->count; i++)
          if (!strcmp(list->elements[i].m_name, name.value))
             return &list->elements[i];
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -348,7 +366,7 @@ void NXSL_Environment::trace(int level, const TCHAR *text)
 void NXSL_Environment::print(NXSL_Value *value)
 {
    const TCHAR *text = value->getValueAsCString();
-   if (text != NULL)
+   if (text != nullptr)
 	{
       WriteToTerminal(text);
 	}

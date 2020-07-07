@@ -185,6 +185,8 @@ struct NXSL_ExtMethod
  */
 class LIBNXSL_EXPORTABLE NXSL_Class
 {
+   friend class NXSL_MetaClass;
+
 private:
    TCHAR m_name[MAX_CLASS_NAME];
    StringList m_classHierarchy;
@@ -193,6 +195,7 @@ protected:
    HashMap<NXSL_Identifier, NXSL_ExtMethod> *m_methods;
 
    void setName(const TCHAR *name);
+   const StringList& getClassHierarchy() const { return m_classHierarchy; }
 
 public:
    NXSL_Class();
@@ -285,8 +288,9 @@ private:
 
 public:
 	NXSL_Array(NXSL_ValueManager *vm);
-	NXSL_Array(const NXSL_Array *src);
-   NXSL_Array(NXSL_ValueManager *vm, const StringList *values);
+	NXSL_Array(const NXSL_Array& src);
+   NXSL_Array(NXSL_ValueManager *vm, const StringList& values);
+   NXSL_Array(NXSL_ValueManager *vm, const StringSet& values);
 	virtual ~NXSL_Array();
 
    int size() const { return m_size; }
@@ -339,7 +343,7 @@ private:
 
 public:
 	NXSL_HashMap(NXSL_ValueManager *vm);
-	NXSL_HashMap(const NXSL_HashMap *src);
+	NXSL_HashMap(const NXSL_HashMap& src);
 	virtual ~NXSL_HashMap();
 
    void set(const TCHAR *key, NXSL_Value *value) { m_values->set(key, value); }
@@ -418,7 +422,7 @@ public:
    void cloneObject()
    {
       m_object->decHandleCount();
-      m_object = new T(m_object);
+      m_object = new T(*m_object);
       m_object->incHandleCount();
    }
 };
@@ -725,6 +729,7 @@ public:
    void setLibrary(NXSL_Library *lib) { m_library = lib; }
 
    const NXSL_ExtFunction *findFunction(const NXSL_Identifier& name) const;
+   StringSet *getAllFunctions() const;
    void registerFunctionSet(size_t count, const NXSL_ExtFunction *list);
    void registerIOFunctions();
 
@@ -1065,9 +1070,9 @@ protected:
 	void *m_userData;
 
    ObjectArray<NXSL_Instruction> *m_instructionSet;
-   UINT32 m_cp;
+   uint32_t m_cp;
 
-   UINT32 m_dwSubLevel;
+   uint32_t m_subLevel;
    NXSL_ObjectStack<NXSL_Value> *m_dataStack;
    NXSL_Stack *m_codeStack;
    NXSL_Stack *m_catchStack;
@@ -1098,6 +1103,7 @@ protected:
    void callFunction(int nArgCount);
    bool callExternalFunction(const NXSL_ExtFunction *function, int stackItems);
    UINT32 callSelector(const NXSL_Identifier& name, int numElements);
+   void pushProperty(const NXSL_Identifier& name);
    void doUnaryOperation(int nOpCode);
    void doBinaryOperation(int nOpCode);
    void getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value *index);
@@ -1153,7 +1159,7 @@ public:
    NXSL_Value *getResult() { return m_pRetValue; }
 
    void setSecurityContext(NXSL_SecurityContext *context);
-   bool validateAccess(int accessType, const void *object) { return (m_securityContext != NULL) ? m_securityContext->validateAccess(accessType, object) : false; }
+   bool validateAccess(int accessType, const void *object) { return (m_securityContext != nullptr) ? m_securityContext->validateAccess(accessType, object) : false; }
 
 	void *getUserData() { return m_userData; }
 	void setUserData(void *data) { m_userData = data; }
@@ -1281,8 +1287,21 @@ public:
 };
 
 /**
+ * NXSL "Class" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_MetaClass : public NXSL_Class
+{
+public:
+   NXSL_MetaClass();
+   virtual ~NXSL_MetaClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+};
+
+/**
  * Class definition instances
  */
+extern NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
 extern NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
