@@ -2,6 +2,7 @@
 * 3.4-CURRENT
 *
 
+- PostgreSQL monitoring subagent
 - Improved driver for Cisco Nexus
 - Improved LLDP based network topology discovery
 - Correctly detect LLDP capability on Mikrotik devices

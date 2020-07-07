@@ -1,12 +1,12 @@
-SUBAGENT = postgresql
+SUBAGENT = pgsql
 
-pkglib_LTLIBRARIES = postgresql.la
-postgresql_la_SOURCES = main.cpp
-postgresql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
-postgresql_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-postgresql_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
+pkglib_LTLIBRARIES = pgsql.la
+pgsql_la_SOURCES = db.cpp main.cpp
+pgsql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
+pgsql_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
+pgsql_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
-EXTRA_DIST = postgresql.vcxproj postgresql.vcxproj.filters postgresql_subagent.h
+EXTRA_DIST = pgsql.vcxproj pgsql.vcxproj.filters pgsql_subagent.h
 
 if !STATIC_BUILD
 install-exec-hook:

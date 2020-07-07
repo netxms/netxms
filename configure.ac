@@ -873,7 +873,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
 	NCDRV_DIRS="anysms kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
@@ -1000,6 +1000,12 @@ if test $? = 0; then
 	if test $? = 0; then
 		COMPONENTS="$COMPONENTS mysql"
 		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/mysql/mysql.la"
+	fi
+
+	check_substr "$STATIC_SUBAGENT_LIST" "pgsql"
+	if test $? = 0; then
+		COMPONENTS="$COMPONENTS pgsql"
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/pgsql/pgsql.la"
 	fi
 
 	case "$PLATFORM" in
@@ -1167,6 +1173,7 @@ fi
 check_substr "$COMPONENTS" "pgsql"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS pgsql"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS pgsql"
 fi
 
 check_substr "$COMPONENTS" "sqlite_drv"
@@ -4630,6 +4637,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/odbcquery/Makefile
 	src/agent/subagents/openbsd/Makefile
 	src/agent/subagents/oracle/Makefile
+	src/agent/subagents/pgsql/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/portCheck/Makefile
 	src/agent/subagents/python/Makefile
