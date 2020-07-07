@@ -262,14 +262,17 @@ void NXSL_TableClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = NULL;
    Table *table = static_cast<Table*>(object->getData());
-   if (!strcmp(attr, "columnCount"))
+   if (compareAttributeName(attr, "columnCount"))
    {
       value = vm->createValue((LONG)table->getNumColumns());
    }
-   else if (!strcmp(attr, "columns"))
+   else if (compareAttributeName(attr, "columns"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
       ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
@@ -279,7 +282,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(columns);
    }
-   else if (!strcmp(attr, "instanceColumns"))
+   else if (compareAttributeName(attr, "instanceColumns"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
       ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
@@ -291,7 +294,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(columns);
    }
-   else if (!strcmp(attr, "instanceColumnIndexes"))
+   else if (compareAttributeName(attr, "instanceColumnIndexes"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
       ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
@@ -303,11 +306,11 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(columns);
    }
-   else if (!strcmp(attr, "rowCount"))
+   else if (compareAttributeName(attr, "rowCount"))
    {
       value = vm->createValue((LONG)table->getNumRows());
    }
-   else if (!strcmp(attr, "rows"))
+   else if (compareAttributeName(attr, "rows"))
    {
       NXSL_Array *rows = new NXSL_Array(vm);
       for(int i = 0; i < table->getNumRows(); i++)
@@ -316,7 +319,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(rows);
    }
-   else if (!strcmp(attr, "title"))
+   else if (compareAttributeName(attr, "title"))
    {
       value = vm->createValue(table->getTitle());
    }
@@ -372,22 +375,25 @@ void NXSL_TableColumnClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = NULL;
-   TableColumnDefinition *tc = (TableColumnDefinition *)object->getData();
-   if (!strcmp(attr, "dataType"))
+   TableColumnDefinition *tc = static_cast<TableColumnDefinition*>(object->getData());
+   if (compareAttributeName(attr, "dataType"))
    {
       value = vm->createValue(tc->getDataType());
    }
-   else if (!strcmp(attr, "displayName"))
+   else if (compareAttributeName(attr, "displayName"))
    {
       value = vm->createValue(tc->getDisplayName());
    }
-   else if (!strcmp(attr, "isInstanceColumn"))
+   else if (compareAttributeName(attr, "isInstanceColumn"))
    {
       value = vm->createValue((INT32)(tc->isInstanceColumn() ? 1 : 0));
    }
-   else if (!strcmp(attr, "name"))
+   else if (compareAttributeName(attr, "name"))
    {
       value = vm->createValue(tc->getName());
    }
@@ -459,26 +465,29 @@ void NXSL_TableRowClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = nullptr;
    TableRowReference *row = static_cast<TableRowReference*>(object->getData());
-   if (!strcmp(attr, "index"))
+   if (compareAttributeName(attr, "index"))
    {
       value = vm->createValue(row->getIndex());
    }
-   else if (!strcmp(attr, "instance"))
+   else if (compareAttributeName(attr, "instance"))
    {
       TCHAR instance[1024] = _T("");
       row->getTable()->buildInstanceString(row->getIndex(), instance, 1024);
       value = vm->createValue(instance);
    }
-   else if (!strcmp(attr, "values"))
+   else if (compareAttributeName(attr, "values"))
    {
       NXSL_Array *values = new NXSL_Array(vm);
       for(int i = 0; i < row->getTable()->getNumColumns(); i++)
       {
          const TCHAR *v = row->get(i);
-         values->set(i, (v != NULL) ? vm->createValue(v) : vm->createValue());
+         values->set(i, (v != nullptr) ? vm->createValue(v) : vm->createValue());
       }
       value = vm->createValue(values);
    }

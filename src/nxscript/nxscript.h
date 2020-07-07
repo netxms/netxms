@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005-2009 Victor Kirhenshtein
+** Copyright (C) 2005-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,19 +31,5 @@
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-
-
-//
-// Test class
-//
-
-class NXSL_TestClass : public NXSL_Class
-{
-public:
-   NXSL_TestClass();
-
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *pszAttr);
-   virtual bool setAttr(NXSL_Object *pObject, const char *pszAttr, NXSL_Value *pValue);
-};
 
 #endif

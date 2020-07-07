@@ -56,47 +56,50 @@ void NXSL_InetAddressClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = NULL;
    InetAddress *a = (InetAddress *)object->getData();
-   if (!strcmp(attr, "address"))
+   if (compareAttributeName(attr, "address"))
    {
       TCHAR buffer[64];
       value = vm->createValue(a->toString(buffer));
    }
-   else if (!strcmp(attr, "family"))
+   else if (compareAttributeName(attr, "family"))
    {
       value = vm->createValue((a->getFamily() == AF_INET) ? _T("inet") : (a->getFamily() == AF_INET6 ? _T("inet6") : _T("unspec")));
    }
-   else if (!strcmp(attr, "isAnyLocal"))
+   else if (compareAttributeName(attr, "isAnyLocal"))
    {
       value = vm->createValue(a->isAnyLocal());
    }
-   else if (!strcmp(attr, "isBroadcast"))
+   else if (compareAttributeName(attr, "isBroadcast"))
    {
       value = vm->createValue(a->isBroadcast());
    }
-   else if (!strcmp(attr, "isLinkLocal"))
+   else if (compareAttributeName(attr, "isLinkLocal"))
    {
       value = vm->createValue(a->isLinkLocal());
    }
-   else if (!strcmp(attr, "isLoopback"))
+   else if (compareAttributeName(attr, "isLoopback"))
    {
       value = vm->createValue(a->isLoopback());
    }
-   else if (!strcmp(attr, "isMulticast"))
+   else if (compareAttributeName(attr, "isMulticast"))
    {
       value = vm->createValue(a->isMulticast());
    }
-   else if (!strcmp(attr, "isValid"))
+   else if (compareAttributeName(attr, "isValid"))
    {
       value = vm->createValue(a->isValid());
    }
-   else if (!strcmp(attr, "isValidUnicast"))
+   else if (compareAttributeName(attr, "isValidUnicast"))
    {
       value = vm->createValue(a->isValidUnicast());
    }
-   else if (!strcmp(attr, "mask"))
+   else if (compareAttributeName(attr, "mask"))
    {
       value = vm->createValue(a->getMaskBits());
    }

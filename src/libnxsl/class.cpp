@@ -30,9 +30,41 @@
 NXSL_ClassRegistry g_nxslClassRegistry = { 0, 0, nullptr };
 
 /**
+ * Instance of NXSL_Class
+ */
+NXSL_Class LIBNXSL_EXPORTABLE g_nxslBaseClass;
+
+/**
  * Instance of NXSL_MetaClass
  */
 NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
+
+/**
+ * Method __get for NXSL base class
+ */
+NXSL_METHOD_DEFINITION(Object, __get)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NXSL_Value *v = object->getClass()->getAttr(object, argv[0]->getValueAsMBString());
+   *result = (v != nullptr) ? v : vm->createValue();
+   return 0;
+}
+
+/**
+ * Method __invoke for NXSL base class
+ */
+NXSL_METHOD_DEFINITION(Object, __invoke)
+{
+   if (argc < 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   return object->getClass()->callMethod(argv[0]->getValueAsMBString(), object, argc - 1, &argv[1], result, vm);
+}
 
 /**
  * Class constructor
@@ -41,6 +73,11 @@ NXSL_Class::NXSL_Class()
 {
    setName(_T("Object"));
    m_methods = new HashMap<NXSL_Identifier, NXSL_ExtMethod>(Ownership::True);
+   m_metadataLock = MutexCreateFast();
+
+   NXSL_REGISTER_METHOD(Object, __get, 1);
+   NXSL_REGISTER_METHOD(Object, __invoke, -1);
+
    if (g_nxslClassRegistry.size == g_nxslClassRegistry.allocated)
    {
       g_nxslClassRegistry.allocated += 64;
@@ -55,6 +92,7 @@ NXSL_Class::NXSL_Class()
 NXSL_Class::~NXSL_Class()
 {
    delete m_methods;
+   MutexDestroy(m_metadataLock);
 }
 
 /**
@@ -70,9 +108,11 @@ void NXSL_Class::setName(const TCHAR *name)
  * Get attribute
  * Default implementation always returns error
  */
-NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, const char *pszAttr)
+NXSL_Value *NXSL_Class::getAttr(NXSL_Object *object, const char *attr)
 {
-   return NULL;
+   if (compareAttributeName(attr, "__class"))
+      return object->vm()->createValue(new NXSL_Object(object->vm(), &g_nxslMetaClass, object->getClass()));
+   return nullptr;
 }
 
 /**
@@ -82,6 +122,23 @@ NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, const char *pszAttr)
 bool NXSL_Class::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value)
 {
    return false;
+}
+
+/**
+ * Scan class attributes
+ */
+void NXSL_Class::scanAttributes()
+{
+   MutexLock(m_metadataLock);
+   if (m_attributes.isEmpty())
+   {
+      NXSL_VM vm(new NXSL_Environment());
+      NXSL_Object object(&vm, &g_nxslBaseClass, nullptr);
+      NXSL_Value *v = getAttr(&object, "?"); // will populate m_attributes
+      if (v != nullptr)
+         vm.destroyValue(v);
+   }
+   MutexUnlock(m_metadataLock);
 }
 
 /**
@@ -144,20 +201,28 @@ static EnumerationCallbackResult FillMethodList(const NXSL_Identifier& name, NXS
  */
 NXSL_Value *NXSL_MetaClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = nullptr;
    NXSL_Class *c = static_cast<NXSL_Class*>(object->getData());
-   if (!strcmp(attr, "hierarchy"))
+   if (compareAttributeName(attr, "attributes"))
+   {
+      c->scanAttributes();
+      value = vm->createValue(new NXSL_Array(vm, c->getAttributes()));
+   }
+   else if (compareAttributeName(attr, "hierarchy"))
    {
       value = vm->createValue(new NXSL_Array(vm, c->getClassHierarchy()));
    }
-   else if (!strcmp(attr, "methods"))
+   else if (compareAttributeName(attr, "methods"))
    {
       NXSL_Array *values = new NXSL_Array(vm);
       c->m_methods->forEach(FillMethodList, values);
       value = vm->createValue(values);
    }
-   else if (!strcmp(attr, "name"))
+   else if (compareAttributeName(attr, "name"))
    {
       value = vm->createValue(c->getName());
    }

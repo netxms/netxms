@@ -2735,7 +2735,9 @@ void NXSL_VM::pushProperty(const NXSL_Identifier& name)
    {
       NXSL_Array *a = new NXSL_Array(this);
       for(size_t i = 0; i < g_nxslClassRegistry.size; i++)
+      {
          a->append(createValue(new NXSL_Object(this, &g_nxslMetaClass, g_nxslClassRegistry.classes[i])));
+      }
       m_dataStack->push(createValue(a));
    }
    else if (!strcmp(name.value, "NXSL::Functions"))

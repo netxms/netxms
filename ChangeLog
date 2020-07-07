@@ -1,4 +1,15 @@
 *
+* 4.0-CURRENT
+*
+
+- Access to NXSL object's class metadata via __class attribute
+- Access to NXSL object's attributes via __get method
+- Invoke NXSL object's methods via __invoke method
+- Fixed issues:
+	NX-1841 (Option to enumerate all attributes and methods of an object in NXSL)
+
+
+*
 * 3.4.232
 *
 

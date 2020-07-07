@@ -190,12 +190,29 @@ class LIBNXSL_EXPORTABLE NXSL_Class
 private:
    TCHAR m_name[MAX_CLASS_NAME];
    StringList m_classHierarchy;
+   StringSet m_attributes;
+   MUTEX m_metadataLock;
 
 protected:
    HashMap<NXSL_Identifier, NXSL_ExtMethod> *m_methods;
 
    void setName(const TCHAR *name);
    const StringList& getClassHierarchy() const { return m_classHierarchy; }
+   const StringSet& getAttributes() const { return m_attributes; }
+
+   bool compareAttributeName(const char *name, const char *tmpl)
+   {
+      if (*name == '?')
+      {
+#ifdef UNICODE
+         m_attributes.addPreallocated(WideStringFromUTF8String(tmpl));
+#else
+         m_attributes.add(tmpl);
+#endif
+         return false;
+      }
+      return strcmp(name, tmpl) == 0;
+   }
 
 public:
    NXSL_Class();
@@ -211,6 +228,8 @@ public:
 
    const TCHAR *getName() const { return m_name; }
    bool instanceOf(const TCHAR *name) const { return !_tcscmp(name, m_name) || m_classHierarchy.contains(name); }
+
+   void scanAttributes();
 };
 
 /**
@@ -1225,7 +1244,6 @@ public:
    NXSL_ConnectorClass();
    virtual ~NXSL_ConnectorClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
 	virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -1301,6 +1319,7 @@ public:
 /**
  * Class definition instances
  */
+extern NXSL_Class LIBNXSL_EXPORTABLE g_nxslBaseClass;
 extern NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;

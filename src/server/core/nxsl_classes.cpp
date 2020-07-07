@@ -52,6 +52,15 @@ template <class O> static NXSL_Value *GetObjectIcmpStatistic(const O *object, Ic
 }
 
 /**
+ * Safely get pointer from object data
+ */
+template<typename T> static T *SharedObjectFromData(NXSL_Object *nxslObject)
+{
+   void *data = nxslObject->getData();
+   return (data != nullptr) ? static_cast<shared_ptr<T>*>(data)->get() : nullptr;
+}
+
+/**
  * NetObj::bind(object)
  */
 NXSL_METHOD_DEFINITION(NetObj, bind)
@@ -514,10 +523,13 @@ void NXSL_NetObjClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(_object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = _object->vm();
-   NXSL_Value *value = nullptr;
-   NetObj *object = static_cast<shared_ptr<NetObj>*>(_object->getData())->get();
-   if (!strcmp(attr, "alarms"))
+   auto object = SharedObjectFromData<NetObj>(_object);
+   if (compareAttributeName(attr, "alarms"))
    {
       ObjectArray<Alarm> *alarms = GetAlarms(object->getId(), true);
       alarms->setOwner(Ownership::False);
@@ -527,9 +539,9 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
       value = vm->createValue(array);
       delete alarms;
    }
-   else if (!strcmp(attr, "backupZoneProxy"))
+   else if (compareAttributeName(attr, "backupZoneProxy"))
    {
-      UINT32 id = object->getAssignedZoneProxyId(true);
+      uint32_t id = object->getAssignedZoneProxyId(true);
       if (id != 0)
       {
          shared_ptr<NetObj> proxy = FindObjectById(id, OBJECT_NODE);
@@ -540,79 +552,79 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "backupZoneProxyId"))
+   else if (compareAttributeName(attr, "backupZoneProxyId"))
    {
       value = vm->createValue(object->getAssignedZoneProxyId(true));
    }
-   else if (!strcmp(attr, "children"))
+   else if (compareAttributeName(attr, "children"))
    {
       value = vm->createValue(object->getChildrenForNXSL(vm));
    }
-   else if (!strcmp(attr, "city"))
+   else if (compareAttributeName(attr, "city"))
    {
       value = vm->createValue(object->getPostalAddress()->getCity());
    }
-   else if (!strcmp(attr, "comments"))
+   else if (compareAttributeName(attr, "comments"))
    {
       value = vm->createValue(object->getComments());
    }
-   else if (!strcmp(attr, "country"))
+   else if (compareAttributeName(attr, "country"))
    {
       value = vm->createValue(object->getPostalAddress()->getCountry());
    }
-   else if (!strcmp(attr, "creationTime"))
+   else if (compareAttributeName(attr, "creationTime"))
    {
       value = vm->createValue(static_cast<INT64>(object->getCreationTime()));
    }
-   else if (!strcmp(attr, "customAttributes"))
+   else if (compareAttributeName(attr, "customAttributes"))
    {
       value = object->getCustomAttributesForNXSL(vm);
    }
-   else if (!strcmp(attr, "geolocation"))
+   else if (compareAttributeName(attr, "geolocation"))
    {
       value = NXSL_GeoLocationClass::createObject(vm, object->getGeoLocation());
    }
-   else if (!strcmp(attr, "guid"))
+   else if (compareAttributeName(attr, "guid"))
    {
       TCHAR buffer[64];
       value = vm->createValue(object->getGuid().toString(buffer));
    }
-   else if (!strcmp(attr, "id"))
+   else if (compareAttributeName(attr, "id"))
    {
       value = vm->createValue(object->getId());
    }
-   else if (!strcmp(attr, "ipAddr"))
+   else if (compareAttributeName(attr, "ipAddr"))
    {
       TCHAR buffer[64];
       object->getPrimaryIpAddress().toString(buffer);
       value = vm->createValue(buffer);
    }
-   else if (!strcmp(attr, "isInMaintenanceMode"))
+   else if (compareAttributeName(attr, "isInMaintenanceMode"))
    {
       value = vm->createValue(object->isInMaintenanceMode());
    }
-   else if (!strcmp(attr, "maintenanceInitiator"))
+   else if (compareAttributeName(attr, "maintenanceInitiator"))
    {
       value = vm->createValue(object->getMaintenanceInitiator());
    }
-   else if (!strcmp(attr, "mapImage"))
+   else if (compareAttributeName(attr, "mapImage"))
    {
       TCHAR buffer[64];
       value = vm->createValue(object->getMapImage().toString(buffer));
    }
-   else if (!strcmp(attr, "name"))
+   else if (compareAttributeName(attr, "name"))
    {
       value = vm->createValue(object->getName());
    }
-   else if (!strcmp(attr, "parents"))
+   else if (compareAttributeName(attr, "parents"))
    {
       value = vm->createValue(object->getParentsForNXSL(vm));
    }
-   else if (!strcmp(attr, "postcode"))
+   else if (compareAttributeName(attr, "postcode"))
    {
       value = vm->createValue(object->getPostalAddress()->getPostCode());
    }
-   else if (!strcmp(attr, "primaryZoneProxy"))
+   else if (compareAttributeName(attr, "primaryZoneProxy"))
    {
       UINT32 id = object->getAssignedZoneProxyId(false);
       if (id != 0)
@@ -625,11 +637,11 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "primaryZoneProxyId"))
+   else if (compareAttributeName(attr, "primaryZoneProxyId"))
    {
       value = vm->createValue(object->getAssignedZoneProxyId(false));
    }
-   else if (!strcmp(attr, "responsibleUsers"))
+   else if (compareAttributeName(attr, "responsibleUsers"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
       IntegerArray<UINT32> *responsibleUsers = object->getAllResponsibleUsers();
@@ -643,33 +655,33 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
       delete userDB;
       delete responsibleUsers;
    }
-   else if (!strcmp(attr, "state"))
+   else if (compareAttributeName(attr, "state"))
    {
       value = vm->createValue(object->getState());
    }
-   else if (!strcmp(attr, "status"))
+   else if (compareAttributeName(attr, "status"))
    {
       value = vm->createValue((LONG)object->getStatus());
    }
-   else if (!strcmp(attr, "streetAddress"))
+   else if (compareAttributeName(attr, "streetAddress"))
    {
       value = vm->createValue(object->getPostalAddress()->getStreetAddress());
    }
-   else if (!strcmp(attr, "type"))
+   else if (compareAttributeName(attr, "type"))
    {
       value = vm->createValue((LONG)object->getObjectClass());
    }
-	else
-	{
+   else if (object != nullptr)   // Object can be null if attribute scan is running
+   {
 #ifdef UNICODE
       WCHAR wattr[MAX_IDENTIFIER_LENGTH];
       MultiByteToWideChar(CP_UTF8, 0, attr, -1, wattr, MAX_IDENTIFIER_LENGTH);
       wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
       value = object->getCustomAttributeForNXSL(vm, wattr);
 #else
-		value = object->getCustomAttributeForNXSL(vm, attr);
+      value = object->getCustomAttributeForNXSL(vm, attr);
 #endif
-	}
+   }
    return value;
 }
 
@@ -691,16 +703,16 @@ NXSL_Value *NXSL_SubnetClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Subnet *subnet = static_cast<shared_ptr<Subnet>*>(object->getData())->get();
-   if (!strcmp(attr, "ipNetMask"))
+   auto subnet = SharedObjectFromData<Subnet>(object);
+   if (compareAttributeName(attr, "ipNetMask"))
    {
       value = vm->createValue(subnet->getIpAddress().getMaskBits());
    }
-   else if (!strcmp(attr, "isSyntheticMask"))
+   else if (compareAttributeName(attr, "isSyntheticMask"))
    {
       value = vm->createValue(subnet->isSyntheticMask());
    }
-   else if (!strcmp(attr, "zone"))
+   else if (compareAttributeName(attr, "zone"))
    {
       if (g_flags & AF_ENABLE_ZONING)
       {
@@ -719,7 +731,7 @@ NXSL_Value *NXSL_SubnetClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "zoneUIN"))
+   else if (compareAttributeName(attr, "zoneUIN"))
    {
       value = vm->createValue(subnet->getZoneUIN());
    }
@@ -807,8 +819,8 @@ NXSL_Value *NXSL_DCTargetClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   DataCollectionTarget *dcTarget = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
-   if (!strcmp(attr, "templates"))
+   auto dcTarget = SharedObjectFromData<DataCollectionTarget>(object);
+   if (compareAttributeName(attr, "templates"))
    {
       value = vm->createValue(dcTarget->getTemplatesForNXSL(vm));
    }
@@ -833,8 +845,8 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Zone *zone = static_cast<shared_ptr<Zone>*>(object->getData())->get();
-   if (!strcmp(attr, "proxyNodes"))
+   auto zone = SharedObjectFromData<Zone>(object);
+   if (compareAttributeName(attr, "proxyNodes"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
       IntegerArray<UINT32> *proxies = zone->getAllProxyNodes();
@@ -847,7 +859,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       value = vm->createValue(array);
       delete proxies;
    }
-   else if (!strcmp(attr, "proxyNodeIds"))
+   else if (compareAttributeName(attr, "proxyNodeIds"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
       IntegerArray<UINT32> *proxies = zone->getAllProxyNodes();
@@ -856,7 +868,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       value = vm->createValue(array);
       delete proxies;
    }
-   else if (!strcmp(attr, "uin"))
+   else if (compareAttributeName(attr, "uin"))
    {
       value = vm->createValue(zone->getUIN());
    }
@@ -1255,66 +1267,66 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
-   if (!strcmp(attr, "agentCertificateSubject"))
+   auto node = SharedObjectFromData<Node>(object);
+   if (compareAttributeName(attr, "agentCertificateSubject"))
    {
       value = vm->createValue(node->getAgentCertificateSubject());
    }
-   else if (!strcmp(attr, "agentId"))
+   else if (compareAttributeName(attr, "agentId"))
    {
       TCHAR buffer[64];
       value = vm->createValue(node->getAgentId().toString(buffer));
    }
-   else if (!strcmp(attr, "agentVersion"))
+   else if (compareAttributeName(attr, "agentVersion"))
    {
       value = vm->createValue(node->getAgentVersion());
    }
-   else if (!strcmp(attr, "bootTime"))
+   else if (compareAttributeName(attr, "bootTime"))
    {
       value = vm->createValue(static_cast<INT64>(node->getBootTime()));
    }
-   else if (!strcmp(attr, "bridgeBaseAddress"))
+   else if (compareAttributeName(attr, "bridgeBaseAddress"))
    {
       TCHAR buffer[64];
       value = vm->createValue(BinToStr(node->getBridgeId(), MAC_ADDR_LENGTH, buffer));
    }
-   else if (!strcmp(attr, "capabilities"))
+   else if (compareAttributeName(attr, "capabilities"))
    {
       value = vm->createValue(node->getCapabilities());
    }
-   else if (!strcmp(attr, "cipDeviceType"))
+   else if (compareAttributeName(attr, "cipDeviceType"))
    {
       value = vm->createValue(node->getCipDeviceType());
    }
-   else if (!strcmp(attr, "cipDeviceTypeAsText"))
+   else if (compareAttributeName(attr, "cipDeviceTypeAsText"))
    {
       value = vm->createValue(CIP_DeviceTypeNameFromCode(node->getCipDeviceType()));
    }
-   else if (!strcmp(attr, "cipExtendedStatus"))
+   else if (compareAttributeName(attr, "cipExtendedStatus"))
    {
       value = vm->createValue((node->getCipStatus() & CIP_DEVICE_STATUS_EXTENDED_STATUS_MASK) >> 4);
    }
-   else if (!strcmp(attr, "cipExtendedStatusAsText"))
+   else if (compareAttributeName(attr, "cipExtendedStatusAsText"))
    {
       value = vm->createValue(CIP_DecodeExtendedDeviceStatus(node->getCipStatus()));
    }
-   else if (!strcmp(attr, "cipStatus"))
+   else if (compareAttributeName(attr, "cipStatus"))
    {
       value = vm->createValue(node->getCipStatus());
    }
-   else if (!strcmp(attr, "cipStatusAsText"))
+   else if (compareAttributeName(attr, "cipStatusAsText"))
    {
       value = vm->createValue(CIP_DecodeDeviceStatus(node->getCipStatus()));
    }
-   else if (!strcmp(attr, "cipState"))
+   else if (compareAttributeName(attr, "cipState"))
    {
       value = vm->createValue(node->getCipState());
    }
-   else if (!strcmp(attr, "cipStateAsText"))
+   else if (compareAttributeName(attr, "cipStateAsText"))
    {
       value = vm->createValue(CIP_DeviceStateTextFromCode(node->getCipState()));
    }
-   else if (!strcmp(attr, "components"))
+   else if (compareAttributeName(attr, "components"))
    {
       shared_ptr<ComponentTree> components = node->getComponents();
       if (components != nullptr)
@@ -1326,7 +1338,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "dependentNodes"))
+   else if (compareAttributeName(attr, "dependentNodes"))
    {
       StructArray<DependentNode> *dependencies = GetNodeDependencies(node->getId());
       NXSL_Array *a = new NXSL_Array(vm);
@@ -1336,172 +1348,172 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(a);
    }
-   else if (!strcmp(attr, "driver"))
+   else if (compareAttributeName(attr, "driver"))
    {
       value = vm->createValue(node->getDriverName());
    }
-   else if (!strcmp(attr, "downSince"))
+   else if (compareAttributeName(attr, "downSince"))
    {
       value = vm->createValue(static_cast<INT64>(node->getDownSince()));
    }
-   else if (!strcmp(attr, "flags"))
+   else if (compareAttributeName(attr, "flags"))
    {
 		value = vm->createValue(node->getFlags());
    }
-   else if (!strcmp(attr, "hasAgentIfXCounters"))
+   else if (compareAttributeName(attr, "hasAgentIfXCounters"))
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_AGENT_IFXCOUNTERS) ? 1 : 0);
    }
-   else if (!strcmp(attr, "hasEntityMIB"))
+   else if (compareAttributeName(attr, "hasEntityMIB"))
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_ENTITY_MIB) ? 1 : 0);
    }
-   else if (!strcmp(attr, "hasIfXTable"))
+   else if (compareAttributeName(attr, "hasIfXTable"))
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_IFXTABLE) ? 1 : 0);
    }
-   else if (!strcmp(attr, "hasUserAgent"))
+   else if (compareAttributeName(attr, "hasUserAgent"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_HAS_USER_AGENT) ? 1 : 0));
    }
-   else if (!strcmp(attr, "hasVLANs"))
+   else if (compareAttributeName(attr, "hasVLANs"))
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_VLANS) ? 1 : 0);
    }
-   else if (!strcmp(attr, "hardwareId"))
+   else if (compareAttributeName(attr, "hardwareId"))
    {
       TCHAR buffer[HARDWARE_ID_LENGTH * 2 + 1];
       value = vm->createValue(BinToStr(node->getHardwareId().value(), HARDWARE_ID_LENGTH, buffer));
    }
-   else if (!strcmp(attr, "hasWinPDH"))
+   else if (compareAttributeName(attr, "hasWinPDH"))
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_WINPDH) ? 1 : 0);
    }
-   else if (!strcmp(attr, "hypervisorInfo"))
+   else if (compareAttributeName(attr, "hypervisorInfo"))
    {
       value = vm->createValue(node->getHypervisorInfo());
    }
-   else if (!strcmp(attr, "hypervisorType"))
+   else if (compareAttributeName(attr, "hypervisorType"))
    {
       value = vm->createValue(node->getHypervisorType());
    }
-   else if (!strcmp(attr, "icmpAverageRTT"))
+   else if (compareAttributeName(attr, "icmpAverageRTT"))
    {
       value = GetNodeIcmpStatistic(node, IcmpStatFunction::AVERAGE, vm);
    }
-   else if (!strcmp(attr, "icmpLastRTT"))
+   else if (compareAttributeName(attr, "icmpLastRTT"))
    {
       value = GetNodeIcmpStatistic(node, IcmpStatFunction::LAST, vm);
    }
-   else if (!strcmp(attr, "icmpMaxRTT"))
+   else if (compareAttributeName(attr, "icmpMaxRTT"))
    {
       value = GetNodeIcmpStatistic(node, IcmpStatFunction::MAX, vm);
    }
-   else if (!strcmp(attr, "icmpMinRTT"))
+   else if (compareAttributeName(attr, "icmpMinRTT"))
    {
       value = GetNodeIcmpStatistic(node, IcmpStatFunction::MIN, vm);
    }
-   else if (!strcmp(attr, "icmpPacketLoss"))
+   else if (compareAttributeName(attr, "icmpPacketLoss"))
    {
       value = GetNodeIcmpStatistic(node, IcmpStatFunction::LOSS, vm);
    }
-   else if (!strcmp(attr, "interfaces"))
+   else if (compareAttributeName(attr, "interfaces"))
    {
       value = vm->createValue(node->getInterfacesForNXSL(vm));
    }
-   else if (!strcmp(attr, "isAgent"))
+   else if (compareAttributeName(attr, "isAgent"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_NATIVE_AGENT) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isBridge"))
+   else if (compareAttributeName(attr, "isBridge"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_BRIDGE) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isCDP"))
+   else if (compareAttributeName(attr, "isCDP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_CDP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isEtherNetIP"))
+   else if (compareAttributeName(attr, "isEtherNetIP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_ETHERNET_IP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isInMaintenanceMode"))
+   else if (compareAttributeName(attr, "isInMaintenanceMode"))
    {
       value = vm->createValue((LONG)(node->isInMaintenanceMode() ? 1 : 0));
    }
-   else if (!strcmp(attr, "isLLDP"))
+   else if (compareAttributeName(attr, "isLLDP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_LLDP) ? 1 : 0));
    }
-	else if (!strcmp(attr, "isLocalMgmt") || !strcmp(attr, "isLocalManagement"))
+	else if (compareAttributeName(attr, "isLocalMgmt") || compareAttributeName(attr, "isLocalManagement"))
 	{
 		value = vm->createValue((LONG)((node->isLocalManagement()) ? 1 : 0));
 	}
-   else if (!strcmp(attr, "isModbusTCP"))
+   else if (compareAttributeName(attr, "isModbusTCP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_MODBUS_TCP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isOSPF"))
+   else if (compareAttributeName(attr, "isOSPF"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_OSPF) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isPAE") || !strcmp(attr, "is802_1x"))
+   else if (compareAttributeName(attr, "isPAE") || compareAttributeName(attr, "is802_1x"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_8021X) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isPrinter"))
+   else if (compareAttributeName(attr, "isPrinter"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_PRINTER) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isProfiNet"))
+   else if (compareAttributeName(attr, "isProfiNet"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_PROFINET) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isRemotelyManaged"))
+   else if (compareAttributeName(attr, "isRemotelyManaged"))
    {
       value = vm->createValue((LONG)((node->getFlags() & NF_REMOTE_AGENT) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isRouter"))
+   else if (compareAttributeName(attr, "isRouter"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_ROUTER) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isSMCLP"))
+   else if (compareAttributeName(attr, "isSMCLP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_SMCLP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isSNMP"))
+   else if (compareAttributeName(attr, "isSNMP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_SNMP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isSONMP") || !strcmp(attr, "isNDP"))
+   else if (compareAttributeName(attr, "isSONMP") || compareAttributeName(attr, "isNDP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_NDP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isSTP"))
+   else if (compareAttributeName(attr, "isSTP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_STP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isVirtual"))
+   else if (compareAttributeName(attr, "isVirtual"))
    {
       value = vm->createValue((LONG)(node->isVirtual() ? 1 : 0));
    }
-   else if (!strcmp(attr, "isVRRP"))
+   else if (compareAttributeName(attr, "isVRRP"))
    {
       value = vm->createValue((node->getCapabilities() & NC_IS_VRRP) ? 1 : 0);
    }
-   else if (!strcmp(attr, "lastAgentCommTime"))
+   else if (compareAttributeName(attr, "lastAgentCommTime"))
    {
       value = vm->createValue((INT64)node->getLastAgentCommTime());
    }
-   else if (!strcmp(attr, "nodeSubType"))
+   else if (compareAttributeName(attr, "nodeSubType"))
    {
       value = vm->createValue(node->getSubType());
    }
-   else if (!strcmp(attr, "nodeType"))
+   else if (compareAttributeName(attr, "nodeType"))
    {
       value = vm->createValue((INT32)node->getType());
    }
-   else if (!strcmp(attr, "physicalContainer"))
+   else if (compareAttributeName(attr, "physicalContainer"))
    {
       shared_ptr<NetObj> object = FindObjectById(node->getPhysicalContainerId());
       if (object != nullptr)
@@ -1513,31 +1525,31 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "physicalContainerId"))
+   else if (compareAttributeName(attr, "physicalContainerId"))
    {
       value = vm->createValue(node->getPhysicalContainerId());
    }
-   else if (!strcmp(attr, "platformName"))
+   else if (compareAttributeName(attr, "platformName"))
    {
       value = vm->createValue(node->getPlatformName());
    }
-   else if (!strcmp(attr, "primaryHostName"))
+   else if (compareAttributeName(attr, "primaryHostName"))
    {
       value = vm->createValue(node->getPrimaryHostName());
    }
-   else if (!strcmp(attr, "productCode"))
+   else if (compareAttributeName(attr, "productCode"))
    {
       value = vm->createValue(node->getProductCode());
    }
-   else if (!strcmp(attr, "productName"))
+   else if (compareAttributeName(attr, "productName"))
    {
       value = vm->createValue(node->getProductName());
    }
-   else if (!strcmp(attr, "productVersion"))
+   else if (compareAttributeName(attr, "productVersion"))
    {
       value = vm->createValue(node->getProductVersion());
    }
-   else if (!strcmp(attr, "rack"))
+   else if (compareAttributeName(attr, "rack"))
    {
       shared_ptr<NetObj> rack = FindObjectById(node->getPhysicalContainerId(), OBJECT_RACK);
       if (rack != nullptr)
@@ -1549,7 +1561,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "rackId"))
+   else if (compareAttributeName(attr, "rackId"))
    {
       if (FindObjectById(node->getPhysicalContainerId(), OBJECT_RACK) != nullptr)
       {
@@ -1560,51 +1572,51 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue(0);
       }
    }
-   else if (!strcmp(attr, "rackHeight"))
+   else if (compareAttributeName(attr, "rackHeight"))
    {
       value = vm->createValue(node->getRackHeight());
    }
-   else if (!strcmp(attr, "rackPosition"))
+   else if (compareAttributeName(attr, "rackPosition"))
    {
       value = vm->createValue(node->getRackPosition());
    }
-   else if (!strcmp(attr, "runtimeFlags"))
+   else if (compareAttributeName(attr, "runtimeFlags"))
    {
       value = vm->createValue(node->getRuntimeFlags());
    }
-   else if (!strcmp(attr, "serialNumber"))
+   else if (compareAttributeName(attr, "serialNumber"))
    {
       value = vm->createValue(node->getSerialNumber());
    }
-   else if (!strcmp(attr, "snmpOID"))
+   else if (compareAttributeName(attr, "snmpOID"))
    {
       value = vm->createValue(node->getSNMPObjectId());
    }
-   else if (!strcmp(attr, "snmpSysContact"))
+   else if (compareAttributeName(attr, "snmpSysContact"))
    {
       value = vm->createValue(node->getSysContact());
    }
-   else if (!strcmp(attr, "snmpSysLocation"))
+   else if (compareAttributeName(attr, "snmpSysLocation"))
    {
       value = vm->createValue(node->getSysLocation());
    }
-   else if (!strcmp(attr, "snmpSysName"))
+   else if (compareAttributeName(attr, "snmpSysName"))
    {
       value = vm->createValue(node->getSysName());
    }
-   else if (!strcmp(attr, "snmpVersion"))
+   else if (compareAttributeName(attr, "snmpVersion"))
    {
       value = vm->createValue((LONG)node->getSNMPVersion());
    }
-   else if (!strcmp(attr, "sysDescription"))
+   else if (compareAttributeName(attr, "sysDescription"))
    {
       value = vm->createValue(node->getSysDescription());
    }
-   else if (!strcmp(attr, "vendor"))
+   else if (compareAttributeName(attr, "vendor"))
    {
       value = vm->createValue(node->getVendor());
    }
-   else if (!strcmp(attr, "vlans"))
+   else if (compareAttributeName(attr, "vlans"))
    {
       shared_ptr<VlanList> vlans = node->getVlans();
       if (vlans != nullptr)
@@ -1621,7 +1633,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "zone"))
+   else if (compareAttributeName(attr, "zone"))
 	{
       if (IsZoningEnabled())
       {
@@ -1640,7 +1652,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
 		   value = vm->createValue();
 	   }
 	}
-   else if (!strcmp(attr, "zoneProxyAssignments"))
+   else if (compareAttributeName(attr, "zoneProxyAssignments"))
    {
       if (IsZoningEnabled())
       {
@@ -1659,7 +1671,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue(0);
       }
    }
-   else if (!strcmp(attr, "zoneProxyStatus"))
+   else if (compareAttributeName(attr, "zoneProxyStatus"))
    {
       if (IsZoningEnabled())
       {
@@ -1678,7 +1690,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue(0);
       }
    }
-   else if (!strcmp(attr, "zoneUIN"))
+   else if (compareAttributeName(attr, "zoneUIN"))
 	{
       value = vm->createValue(node->getZoneUIN());
    }
@@ -1765,72 +1777,72 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
-   if (!strcmp(attr, "adminState"))
+   auto iface = SharedObjectFromData<Interface>(object);
+   if (compareAttributeName(attr, "adminState"))
    {
 		value = vm->createValue((LONG)iface->getAdminState());
    }
-   else if (!strcmp(attr, "alias"))
+   else if (compareAttributeName(attr, "alias"))
    {
       value = vm->createValue(iface->getAlias());
    }
-   else if (!strcmp(attr, "bridgePortNumber"))
+   else if (compareAttributeName(attr, "bridgePortNumber"))
    {
 		value = vm->createValue(iface->getBridgePortNumber());
    }
-   else if (!strcmp(attr, "chassis"))
+   else if (compareAttributeName(attr, "chassis"))
    {
       value = vm->createValue(iface->getChassis());
    }
-   else if (!strcmp(attr, "description"))
+   else if (compareAttributeName(attr, "description"))
    {
       value = vm->createValue(iface->getDescription());
    }
-   else if (!strcmp(attr, "dot1xBackendAuthState"))
+   else if (compareAttributeName(attr, "dot1xBackendAuthState"))
    {
 		value = vm->createValue((LONG)iface->getDot1xBackendAuthState());
    }
-   else if (!strcmp(attr, "dot1xPaeAuthState"))
+   else if (compareAttributeName(attr, "dot1xPaeAuthState"))
    {
 		value = vm->createValue((LONG)iface->getDot1xPaeAuthState());
    }
-   else if (!strcmp(attr, "expectedState"))
+   else if (compareAttributeName(attr, "expectedState"))
    {
 		value = vm->createValue((iface->getFlags() & IF_EXPECTED_STATE_MASK) >> 28);
    }
-   else if (!strcmp(attr, "flags"))
+   else if (compareAttributeName(attr, "flags"))
    {
 		value = vm->createValue(iface->getFlags());
    }
-   else if (!strcmp(attr, "icmpAverageRTT"))
+   else if (compareAttributeName(attr, "icmpAverageRTT"))
    {
       value = GetObjectIcmpStatistic(iface, IcmpStatFunction::AVERAGE, vm);
    }
-   else if (!strcmp(attr, "icmpLastRTT"))
+   else if (compareAttributeName(attr, "icmpLastRTT"))
    {
       value = GetObjectIcmpStatistic(iface, IcmpStatFunction::LAST, vm);
    }
-   else if (!strcmp(attr, "icmpMaxRTT"))
+   else if (compareAttributeName(attr, "icmpMaxRTT"))
    {
       value = GetObjectIcmpStatistic(iface, IcmpStatFunction::MAX, vm);
    }
-   else if (!strcmp(attr, "icmpMinRTT"))
+   else if (compareAttributeName(attr, "icmpMinRTT"))
    {
       value = GetObjectIcmpStatistic(iface, IcmpStatFunction::MIN, vm);
    }
-   else if (!strcmp(attr, "icmpPacketLoss"))
+   else if (compareAttributeName(attr, "icmpPacketLoss"))
    {
       value = GetObjectIcmpStatistic(iface, IcmpStatFunction::LOSS, vm);
    }
-   else if (!strcmp(attr, "ifIndex"))
+   else if (compareAttributeName(attr, "ifIndex"))
    {
 		value = vm->createValue(iface->getIfIndex());
    }
-   else if (!strcmp(attr, "ifType"))
+   else if (compareAttributeName(attr, "ifType"))
    {
 		value = vm->createValue(iface->getIfType());
    }
-   else if (!strcmp(attr, "ipAddressList"))
+   else if (compareAttributeName(attr, "ipAddressList"))
    {
       const InetAddressList *addrList = iface->getIpAddressList();
       NXSL_Array *a = new NXSL_Array(vm);
@@ -1840,40 +1852,40 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(a);
    }
-   else if (!strcmp(attr, "isExcludedFromTopology"))
+   else if (compareAttributeName(attr, "isExcludedFromTopology"))
    {
       value = vm->createValue((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
    }
-   else if (!strcmp(attr, "isIncludedInIcmpPoll"))
+   else if (compareAttributeName(attr, "isIncludedInIcmpPoll"))
    {
       value = vm->createValue((LONG)(iface->isIncludedInIcmpPoll() ? 1 : 0));
    }
-   else if (!strcmp(attr, "isLoopback"))
+   else if (compareAttributeName(attr, "isLoopback"))
    {
 		value = vm->createValue((LONG)(iface->isLoopback() ? 1 : 0));
    }
-   else if (!strcmp(attr, "isManuallyCreated"))
+   else if (compareAttributeName(attr, "isManuallyCreated"))
    {
 		value = vm->createValue((LONG)(iface->isManuallyCreated() ? 1 : 0));
    }
-   else if (!strcmp(attr, "isPhysicalPort"))
+   else if (compareAttributeName(attr, "isPhysicalPort"))
    {
 		value = vm->createValue((LONG)(iface->isPhysicalPort() ? 1 : 0));
    }
-   else if (!strcmp(attr, "macAddr"))
+   else if (compareAttributeName(attr, "macAddr"))
    {
 		TCHAR buffer[256];
 		value = vm->createValue(iface->getMacAddr().toString(buffer));
    }
-   else if (!strcmp(attr, "module"))
+   else if (compareAttributeName(attr, "module"))
    {
       value = vm->createValue(iface->getModule());
    }
-   else if (!strcmp(attr, "mtu"))
+   else if (compareAttributeName(attr, "mtu"))
    {
       value = vm->createValue(iface->getMTU());
    }
-   else if (!strcmp(attr, "node"))
+   else if (compareAttributeName(attr, "node"))
 	{
       shared_ptr<Node> parentNode = iface->getParentNode();
 		if (parentNode != nullptr)
@@ -1885,11 +1897,11 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 			value = vm->createValue();
 		}
 	}
-   else if (!strcmp(attr, "operState"))
+   else if (compareAttributeName(attr, "operState"))
    {
 		value = vm->createValue((LONG)iface->getOperState());
    }
-   else if (!strcmp(attr, "peerInterface"))
+   else if (compareAttributeName(attr, "peerInterface"))
    {
       shared_ptr<NetObj> peerIface = FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
 		if (peerIface != nullptr)
@@ -1929,7 +1941,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 			value = vm->createValue();
 		}
    }
-   else if (!strcmp(attr, "peerNode"))
+   else if (compareAttributeName(attr, "peerNode"))
    {
       shared_ptr<NetObj> peerNode = FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
 		if (peerNode != nullptr)
@@ -1959,23 +1971,23 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 			value = vm->createValue();
 		}
    }
-   else if (!strcmp(attr, "pic"))
+   else if (compareAttributeName(attr, "pic"))
    {
       value = vm->createValue(iface->getPIC());
    }
-   else if (!strcmp(attr, "port"))
+   else if (compareAttributeName(attr, "port"))
    {
       value = vm->createValue(iface->getPort());
    }
-   else if (!strcmp(attr, "speed"))
+   else if (compareAttributeName(attr, "speed"))
    {
       value = vm->createValue(iface->getSpeed());
    }
-   else if (!strcmp(attr, "vlans"))
+   else if (compareAttributeName(attr, "vlans"))
    {
       value = iface->getVlanListForNXSL(vm);
    }
-   else if (!strcmp(attr, "zone"))
+   else if (compareAttributeName(attr, "zone"))
 	{
       if (g_flags & AF_ENABLE_ZONING)
       {
@@ -1994,7 +2006,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 		   value = vm->createValue();
 	   }
 	}
-   else if (!strcmp(attr, "zoneUIN"))
+   else if (compareAttributeName(attr, "zoneUIN"))
 	{
       value = vm->createValue(iface->getZoneUIN());
    }
@@ -2019,36 +2031,36 @@ NXSL_Value *NXSL_AccessPointClass::getAttr(NXSL_Object *object, const char *attr
       return value;
 
    NXSL_VM *vm = object->vm();
-   AccessPoint *ap = static_cast<shared_ptr<AccessPoint>*>(object->getData())->get();
-   if (!strcmp(attr, "icmpAverageRTT"))
+   auto ap = SharedObjectFromData<AccessPoint>(object);
+   if (compareAttributeName(attr, "icmpAverageRTT"))
    {
       value = GetObjectIcmpStatistic(ap, IcmpStatFunction::AVERAGE, vm);
    }
-   else if (!strcmp(attr, "icmpLastRTT"))
+   else if (compareAttributeName(attr, "icmpLastRTT"))
    {
       value = GetObjectIcmpStatistic(ap, IcmpStatFunction::LAST, vm);
    }
-   else if (!strcmp(attr, "icmpMaxRTT"))
+   else if (compareAttributeName(attr, "icmpMaxRTT"))
    {
       value = GetObjectIcmpStatistic(ap, IcmpStatFunction::MAX, vm);
    }
-   else if (!strcmp(attr, "icmpMinRTT"))
+   else if (compareAttributeName(attr, "icmpMinRTT"))
    {
       value = GetObjectIcmpStatistic(ap, IcmpStatFunction::MIN, vm);
    }
-   else if (!strcmp(attr, "icmpPacketLoss"))
+   else if (compareAttributeName(attr, "icmpPacketLoss"))
    {
       value = GetObjectIcmpStatistic(ap, IcmpStatFunction::LOSS, vm);
    }
-   else if (!strcmp(attr, "index"))
+   else if (compareAttributeName(attr, "index"))
    {
       value = vm->createValue(ap->getIndex());
    }
-   else if (!strcmp(attr, "model"))
+   else if (compareAttributeName(attr, "model"))
    {
       value = vm->createValue(ap->getModel());
    }
-   else if (!strcmp(attr, "node"))
+   else if (compareAttributeName(attr, "node"))
    {
       shared_ptr<Node> parentNode = ap->getParentNode();
       if (parentNode != nullptr)
@@ -2060,15 +2072,15 @@ NXSL_Value *NXSL_AccessPointClass::getAttr(NXSL_Object *object, const char *attr
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "serialNumber"))
+   else if (compareAttributeName(attr, "serialNumber"))
    {
       value = vm->createValue(ap->getSerialNumber());
    }
-   else if (!strcmp(attr, "state"))
+   else if (compareAttributeName(attr, "state"))
    {
       value = vm->createValue(ap->getApState());
    }
-   else if (!strcmp(attr, "vendor"))
+   else if (compareAttributeName(attr, "vendor"))
    {
       value = vm->createValue(ap->getVendor());
    }
@@ -2093,36 +2105,36 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const char *att
       return value;
 
    NXSL_VM *vm = object->vm();
-   MobileDevice *mobDevice = static_cast<shared_ptr<MobileDevice>*>(object->getData())->get();
-   if (!strcmp(attr, "deviceId"))
+   auto mobDevice = SharedObjectFromData<MobileDevice>(object);
+   if (compareAttributeName(attr, "deviceId"))
    {
 		value = vm->createValue(mobDevice->getDeviceId());
    }
-   else if (!strcmp(attr, "vendor"))
+   else if (compareAttributeName(attr, "vendor"))
    {
       value = vm->createValue(mobDevice->getVendor());
    }
-   else if (!strcmp(attr, "model"))
+   else if (compareAttributeName(attr, "model"))
    {
       value = vm->createValue(mobDevice->getModel());
    }
-   else if (!strcmp(attr, "serialNumber"))
+   else if (compareAttributeName(attr, "serialNumber"))
    {
       value = vm->createValue(mobDevice->getSerialNumber());
    }
-   else if (!strcmp(attr, "osName"))
+   else if (compareAttributeName(attr, "osName"))
    {
       value = vm->createValue(mobDevice->getOsName());
    }
-   else if (!strcmp(attr, "osVersion"))
+   else if (compareAttributeName(attr, "osVersion"))
    {
       value = vm->createValue(mobDevice->getOsVersion());
    }
-   else if (!strcmp(attr, "userId"))
+   else if (compareAttributeName(attr, "userId"))
    {
       value = vm->createValue(mobDevice->getUserId());
    }
-   else if (!strcmp(attr, "batteryLevel"))
+   else if (compareAttributeName(attr, "batteryLevel"))
    {
       value = vm->createValue(mobDevice->getBatteryLevel());
    }
@@ -2148,8 +2160,8 @@ NXSL_Value *NXSL_ChassisClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Chassis *chassis = static_cast<shared_ptr<Chassis>*>(object->getData())->get();
-   if (!strcmp(attr, "controller"))
+   auto chassis = SharedObjectFromData<Chassis>(object);
+   if (compareAttributeName(attr, "controller"))
    {
       shared_ptr<NetObj> node = FindObjectById(chassis->getControllerId(), OBJECT_NODE);
       if (node != nullptr)
@@ -2161,15 +2173,15 @@ NXSL_Value *NXSL_ChassisClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "controllerId"))
+   else if (compareAttributeName(attr, "controllerId"))
    {
       value = vm->createValue(chassis->getControllerId());
    }
-   else if (!strcmp(attr, "flags"))
+   else if (compareAttributeName(attr, "flags"))
    {
       value = vm->createValue(chassis->getFlags());
    }
-   else if (!strcmp(attr, "rack"))
+   else if (compareAttributeName(attr, "rack"))
    {
       shared_ptr<NetObj> rack = FindObjectById(chassis->getRackId(), OBJECT_RACK);
       if (rack != nullptr)
@@ -2181,15 +2193,15 @@ NXSL_Value *NXSL_ChassisClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "rackId"))
+   else if (compareAttributeName(attr, "rackId"))
    {
       value = vm->createValue(chassis->getRackId());
    }
-   else if (!strcmp(attr, "rackHeight"))
+   else if (compareAttributeName(attr, "rackHeight"))
    {
       value = vm->createValue(chassis->getRackHeight());
    }
-   else if (!strcmp(attr, "rackPosition"))
+   else if (compareAttributeName(attr, "rackPosition"))
    {
       value = vm->createValue(chassis->getRackPosition());
    }
@@ -2237,12 +2249,12 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Cluster *cluster = static_cast<shared_ptr<Cluster>*>(object->getData())->get();
-   if (!strcmp(attr, "nodes"))
+   auto cluster = SharedObjectFromData<Cluster>(object);
+   if (compareAttributeName(attr, "nodes"))
    {
       value = vm->createValue(cluster->getNodesForNXSL(vm));
    }
-   else if (!strcmp(attr, "zone"))
+   else if (compareAttributeName(attr, "zone"))
    {
       if (g_flags & AF_ENABLE_ZONING)
       {
@@ -2261,7 +2273,7 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "zoneUIN"))
+   else if (compareAttributeName(attr, "zoneUIN"))
    {
       value = vm->createValue(cluster->getZoneUIN());
    }
@@ -2315,17 +2327,17 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Container *container = static_cast<shared_ptr<Container>*>(object->getData())->get();
-   if (!strcmp(attr, "autoBindScript"))
+   auto container = SharedObjectFromData<Container>(object);
+   if (compareAttributeName(attr, "autoBindScript"))
    {
       const TCHAR *script = container->getAutoBindScriptSource();
       value = vm->createValue(CHECK_NULL_EX(script));
    }
-   else if (!strcmp(attr, "isAutoBindEnabled"))
+   else if (compareAttributeName(attr, "isAutoBindEnabled"))
    {
       value = vm->createValue(container->isAutoBindEnabled() ? 1 : 0);
    }
-   else if (!strcmp(attr, "isAutoUnbindEnabled"))
+   else if (compareAttributeName(attr, "isAutoUnbindEnabled"))
    {
       value = vm->createValue(container->isAutoUnbindEnabled() ? 1 : 0);
    }
@@ -2424,21 +2436,21 @@ NXSL_Value *NXSL_TemplateClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Template *tmpl = static_cast<shared_ptr<Template>*>(object->getData())->get();
-   if (!strcmp(attr, "autoApplyScript"))
+   auto tmpl = SharedObjectFromData<Template>(object);
+   if (compareAttributeName(attr, "autoApplyScript"))
    {
       const TCHAR *script = tmpl->getAutoBindScriptSource();
       value = vm->createValue(CHECK_NULL_EX(script));
    }
-   else if (!strcmp(attr, "isAutoApplyEnabled"))
+   else if (compareAttributeName(attr, "isAutoApplyEnabled"))
    {
       value = vm->createValue(tmpl->isAutoBindEnabled() ? 1 : 0);
    }
-   else if (!strcmp(attr, "isAutoRemoveEnabled"))
+   else if (compareAttributeName(attr, "isAutoRemoveEnabled"))
    {
       value = vm->createValue(tmpl->isAutoUnbindEnabled() ? 1 : 0);
    }
-   else if (!strcmp(attr, "version"))
+   else if (compareAttributeName(attr, "version"))
    {
       value = vm->createValue(tmpl->getVersion());
    }
@@ -2608,21 +2620,23 @@ void NXSL_EventClass::onObjectDelete(NXSL_Object *object)
 /**
  * NXSL class Event: get attribute
  */
-NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
+NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_Value *value = nullptr;
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
 
-   NXSL_VM *vm = pObject->vm();
-   const Event *event = static_cast<Event*>(pObject->getData());
-   if (!strcmp(attr, "code"))
+   NXSL_VM *vm = object->vm();
+   const Event *event = static_cast<Event*>(object->getData());
+   if (compareAttributeName(attr, "code"))
    {
       value = vm->createValue(event->getCode());
    }
-   else if (!strcmp(attr, "customMessage"))
+   else if (compareAttributeName(attr, "customMessage"))
    {
       value = vm->createValue(event->getCustomMessage());
    }
-   else if (!strcmp(attr, "dci"))
+   else if (compareAttributeName(attr, "dci"))
    {
       UINT32 dciId = event->getDciId();
       if (dciId != 0)
@@ -2650,76 +2664,76 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "dciId"))
+   else if (compareAttributeName(attr, "dciId"))
    {
       value = vm->createValue(event->getDciId());
    }
-   else if (!strcmp(attr, "id"))
+   else if (compareAttributeName(attr, "id"))
    {
       value = vm->createValue(event->getId());
    }
-   else if (!strcmp(attr, "message"))
+   else if (compareAttributeName(attr, "message"))
    {
       value = vm->createValue(event->getMessage());
    }
-   else if (!strcmp(attr, "name"))
+   else if (compareAttributeName(attr, "name"))
    {
 		value = vm->createValue(event->getName());
    }
-   else if (!strcmp(attr, "origin"))
+   else if (compareAttributeName(attr, "origin"))
    {
       value = vm->createValue(static_cast<INT32>(event->getOrigin()));
    }
-   else if (!strcmp(attr, "originTimestamp"))
+   else if (compareAttributeName(attr, "originTimestamp"))
    {
       value = vm->createValue(static_cast<INT64>(event->getOriginTimestamp()));
    }
-   else if (!strcmp(attr, "parameters"))
+   else if (compareAttributeName(attr, "parameters"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
       for(int i = 0; i < event->getParametersCount(); i++)
          array->set(i + 1, vm->createValue(event->getParameter(i)));
       value = vm->createValue(array);
    }
-   else if (!strcmp(attr, "parameterNames"))
+   else if (compareAttributeName(attr, "parameterNames"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
       for(int i = 0; i < event->getParametersCount(); i++)
          array->set(i + 1, vm->createValue(event->getParameterName(i)));
       value = vm->createValue(array);
    }
-   else if (!strcmp(attr, "rootId"))
+   else if (compareAttributeName(attr, "rootId"))
    {
       value = vm->createValue(event->getRootId());
    }
-   else if (!strcmp(attr, "severity"))
+   else if (compareAttributeName(attr, "severity"))
    {
       value = vm->createValue(event->getSeverity());
    }
-   else if (!strcmp(attr, "source"))
+   else if (compareAttributeName(attr, "source"))
    {
       shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
       value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
    }
-   else if (!strcmp(attr, "sourceId"))
+   else if (compareAttributeName(attr, "sourceId"))
    {
       value = vm->createValue(event->getSourceId());
    }
-   else if (!strcmp(attr, "tagList"))
+   else if (compareAttributeName(attr, "tagList"))
    {
       value = vm->createValue(event->getTagsAsList());
    }
-   else if (!strcmp(attr, "tags"))
+   else if (compareAttributeName(attr, "tags"))
    {
       StringList *tags = String(event->getTagsAsList()).split(_T(","));
       value = vm->createValue(new NXSL_Array(vm, tags));
       delete tags;
    }
-   else if (!strcmp(attr, "timestamp"))
+   else if (compareAttributeName(attr, "timestamp"))
    {
       value = vm->createValue(static_cast<INT64>(event->getTimestamp()));
    }
-   else
+   else if (event != nullptr)    // Event can be null if getAttr called by attribute scan
    {
       if (attr[0] == _T('$'))
       {
@@ -2925,98 +2939,101 @@ void NXSL_AlarmClass::onObjectDelete(NXSL_Object *object)
 /**
  * NXSL class Alarm: get attribute
  */
-NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
+NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_VM *vm = pObject->vm();
-   NXSL_Value *value = nullptr;
-   Alarm *alarm = (Alarm *)pObject->getData();
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
 
-   if (!strcmp(attr, "ackBy"))
+   NXSL_VM *vm = object->vm();
+   Alarm *alarm = static_cast<Alarm*>(object->getData());
+
+   if (compareAttributeName(attr, "ackBy"))
    {
       value = vm->createValue(alarm->getAckByUser());
    }
-   else if (!strcmp(attr, "creationTime"))
+   else if (compareAttributeName(attr, "creationTime"))
    {
       value = vm->createValue((INT64)alarm->getCreationTime());
    }
-   else if (!strcmp(attr, "dciId"))
+   else if (compareAttributeName(attr, "dciId"))
    {
       value = vm->createValue(alarm->getDciId());
    }
-   else if (!strcmp(attr, "eventCode"))
+   else if (compareAttributeName(attr, "eventCode"))
    {
       value = vm->createValue(alarm->getSourceEventCode());
    }
-   else if (!strcmp(attr, "eventId"))
+   else if (compareAttributeName(attr, "eventId"))
    {
       value = vm->createValue(alarm->getSourceEventId());
    }
-   else if (!strcmp(attr, "eventTagList"))
+   else if (compareAttributeName(attr, "eventTagList"))
    {
       value = vm->createValue(alarm->getEventTags());
    }
-   else if (!strcmp(attr, "helpdeskReference"))
+   else if (compareAttributeName(attr, "helpdeskReference"))
    {
       value = vm->createValue(alarm->getHelpDeskRef());
    }
-   else if (!strcmp(attr, "helpdeskState"))
+   else if (compareAttributeName(attr, "helpdeskState"))
    {
       value = vm->createValue(alarm->getHelpDeskState());
    }
-   else if (!strcmp(attr, "id"))
+   else if (compareAttributeName(attr, "id"))
    {
       value = vm->createValue(alarm->getAlarmId());
    }
-   else if (!strcmp(attr, "impact"))
+   else if (compareAttributeName(attr, "impact"))
    {
       value = vm->createValue(alarm->getImpact());
    }
-   else if (!strcmp(attr, "key"))
+   else if (compareAttributeName(attr, "key"))
    {
       value = vm->createValue(alarm->getKey());
    }
-   else if (!strcmp(attr, "lastChangeTime"))
+   else if (compareAttributeName(attr, "lastChangeTime"))
    {
       value = vm->createValue((INT64)alarm->getLastChangeTime());
    }
-   else if (!strcmp(attr, "message"))
+   else if (compareAttributeName(attr, "message"))
    {
       value = vm->createValue(alarm->getMessage());
    }
-   else if (!strcmp(attr, "originalSeverity"))
+   else if (compareAttributeName(attr, "originalSeverity"))
    {
       value = vm->createValue(alarm->getOriginalSeverity());
    }
-   else if (!strcmp(attr, "parentId"))
+   else if (compareAttributeName(attr, "parentId"))
    {
       value = vm->createValue(alarm->getParentAlarmId());
    }
-   else if (!strcmp(attr, "repeatCount"))
+   else if (compareAttributeName(attr, "repeatCount"))
    {
       value = vm->createValue(alarm->getRepeatCount());
    }
-   else if (!strcmp(attr, "resolvedBy"))
+   else if (compareAttributeName(attr, "resolvedBy"))
    {
       value = vm->createValue(alarm->getResolvedByUser());
    }
-   else if (!strcmp(attr, "rcaScriptName"))
+   else if (compareAttributeName(attr, "rcaScriptName"))
    {
       value = vm->createValue(alarm->getRcaScriptName());
    }
-   else if (!strcmp(attr, "ruleGuid"))
+   else if (compareAttributeName(attr, "ruleGuid"))
    {
       TCHAR buffer[64];
       value = vm->createValue(alarm->getRule().toString(buffer));
    }
-   else if (!strcmp(attr, "severity"))
+   else if (compareAttributeName(attr, "severity"))
    {
       value = vm->createValue(alarm->getCurrentSeverity());
    }
-   else if (!strcmp(attr, "sourceObject"))
+   else if (compareAttributeName(attr, "sourceObject"))
    {
       value = vm->createValue(alarm->getSourceObject());
    }
-   else if (!strcmp(attr, "state"))
+   else if (compareAttributeName(attr, "state"))
    {
       value = vm->createValue(alarm->getState());
    }
@@ -3042,25 +3059,28 @@ void NXSL_AlarmCommentClass::onObjectDelete(NXSL_Object *object)
 /**
  * NXSL class Alarm: get attribute
  */
-NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *pObject, const char *attr)
+NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_VM *vm = pObject->vm();
-   NXSL_Value *value = nullptr;
-   AlarmComment *alarmComment = (AlarmComment *)pObject->getData();
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
 
-   if (!strcmp(attr, "id"))
+   NXSL_VM *vm = object->vm();
+   AlarmComment *alarmComment = static_cast<AlarmComment*>(object->getData());
+
+   if (compareAttributeName(attr, "id"))
    {
       value = vm->createValue(alarmComment->getId());
    }
-   else if (!strcmp(attr, "changeTime"))
+   else if (compareAttributeName(attr, "changeTime"))
    {
       value = vm->createValue((INT64)alarmComment->getChangeTime());
    }
-   else if (!strcmp(attr, "userId"))
+   else if (compareAttributeName(attr, "userId"))
    {
       value = vm->createValue(alarmComment->getUserId());
    }
-   else if (!strcmp(attr, "text"))
+   else if (compareAttributeName(attr, "text"))
    {
       value = vm->createValue(alarmComment->getText());
    }
@@ -3109,62 +3129,65 @@ void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   const DCObjectInfo *dci = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
-   NXSL_Value *value = nullptr;
-   if (!strcmp(attr, "activeThresholdSeverity"))
+   const DCObjectInfo *dci = SharedObjectFromData<DCObjectInfo>(object);
+   if (compareAttributeName(attr, "activeThresholdSeverity"))
    {
       value = vm->createValue(dci->getThresholdSeverity());
    }
-   else if (!strcmp(attr, "comments"))
+   else if (compareAttributeName(attr, "comments"))
    {
 		value = vm->createValue(dci->getComments());
    }
-   else if (!strcmp(attr, "dataType") && (dci->getType() == DCO_TYPE_ITEM))
+   else if (compareAttributeName(attr, "dataType") && (dci->getType() == DCO_TYPE_ITEM))
    {
 		value = vm->createValue(dci->getDataType());
    }
-   else if (!strcmp(attr, "description"))
+   else if (compareAttributeName(attr, "description"))
    {
 		value = vm->createValue(dci->getDescription());
    }
-   else if (!strcmp(attr, "errorCount"))
+   else if (compareAttributeName(attr, "errorCount"))
    {
 		value = vm->createValue(dci->getErrorCount());
    }
-   else if (!strcmp(attr, "hasActiveThreshold"))
+   else if (compareAttributeName(attr, "hasActiveThreshold"))
    {
       value = vm->createValue(dci->hasActiveThreshold() ? 1 : 0);
    }
-   else if (!strcmp(attr, "id"))
+   else if (compareAttributeName(attr, "id"))
    {
 		value = vm->createValue(dci->getId());
    }
-   else if (!strcmp(attr, "instance"))
+   else if (compareAttributeName(attr, "instance"))
    {
 		value = vm->createValue(dci->getInstance());
    }
-   else if (!strcmp(attr, "instanceData"))
+   else if (compareAttributeName(attr, "instanceData"))
    {
 		value = vm->createValue(dci->getInstanceData());
    }
-   else if (!strcmp(attr, "lastPollTime"))
+   else if (compareAttributeName(attr, "lastPollTime"))
    {
 		value = vm->createValue((INT64)dci->getLastPollTime());
    }
-   else if (!strcmp(attr, "name"))
+   else if (compareAttributeName(attr, "name"))
    {
 		value = vm->createValue(dci->getName());
    }
-   else if (!strcmp(attr, "origin"))
+   else if (compareAttributeName(attr, "origin"))
    {
 		value = vm->createValue((LONG)dci->getOrigin());
    }
-   else if (!strcmp(attr, "pollingInterval"))
+   else if (compareAttributeName(attr, "pollingInterval"))
    {
       value = vm->createValue(dci->getPollingInterval());
    }
-   else if (!strcmp(attr, "relatedObject"))
+   else if (compareAttributeName(attr, "relatedObject"))
    {
       if (dci->getRelatedObject() != 0)
       {
@@ -3176,15 +3199,15 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "status"))
+   else if (compareAttributeName(attr, "status"))
    {
 		value = vm->createValue((LONG)dci->getStatus());
    }
-   else if (!strcmp(attr, "systemTag"))
+   else if (compareAttributeName(attr, "systemTag"))
    {
 		value = vm->createValue(dci->getSystemTag());
    }
-   else if (!strcmp(attr, "template"))
+   else if (compareAttributeName(attr, "template"))
    {
       if (dci->getTemplateId() != 0)
       {
@@ -3196,15 +3219,15 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
          value = vm->createValue();
       }
    }
-   else if (!strcmp(attr, "templateId"))
+   else if (compareAttributeName(attr, "templateId"))
    {
       value = vm->createValue(dci->getTemplateId());
    }
-   else if (!strcmp(attr, "templateItemId"))
+   else if (compareAttributeName(attr, "templateItemId"))
    {
       value = vm->createValue(dci->getTemplateItemId());
    }
-   else if (!strcmp(attr, "type"))
+   else if (compareAttributeName(attr, "type"))
    {
 		value = vm->createValue((LONG)dci->getType());
    }
@@ -3229,38 +3252,38 @@ NXSL_Value *NXSL_SensorClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Sensor *s = static_cast<shared_ptr<Sensor>*>(object->getData())->get();
-   if (!strcmp(attr, "description"))
+   auto sensor = SharedObjectFromData<Sensor>(object);
+   if (compareAttributeName(attr, "description"))
    {
-      value = vm->createValue(s->getDescription());
+      value = vm->createValue(sensor->getDescription());
    }
-   else if (!strcmp(attr, "frameCount"))
+   else if (compareAttributeName(attr, "frameCount"))
    {
-      value = vm->createValue(s->getFrameCount());
+      value = vm->createValue(sensor->getFrameCount());
    }
-   else if (!strcmp(attr, "lastContact"))
+   else if (compareAttributeName(attr, "lastContact"))
    {
-      value = vm->createValue((UINT32)s->getLastContact());
+      value = vm->createValue((UINT32)sensor->getLastContact());
    }
-   else if (!strcmp(attr, "metaType"))
+   else if (compareAttributeName(attr, "metaType"))
    {
-      value = vm->createValue(s->getMetaType());
+      value = vm->createValue(sensor->getMetaType());
    }
-   else if (!strcmp(attr, "protocol"))
+   else if (compareAttributeName(attr, "protocol"))
    {
-      value = vm->createValue(s->getCommProtocol());
+      value = vm->createValue(sensor->getCommProtocol());
    }
-   else if (!strcmp(attr, "serial"))
+   else if (compareAttributeName(attr, "serial"))
    {
-      value = vm->createValue(s->getSerialNumber());
+      value = vm->createValue(sensor->getSerialNumber());
    }
-   else if (!strcmp(attr, "type"))
+   else if (compareAttributeName(attr, "type"))
    {
-      value = vm->createValue(s->getSensorClass());
+      value = vm->createValue(sensor->getSensorClass());
    }
-   else if (!strcmp(attr, "vendor"))
+   else if (compareAttributeName(attr, "vendor"))
    {
-      value = vm->createValue(s->getVendor());
+      value = vm->createValue(sensor->getVendor());
    }
 
    return value;
@@ -3452,10 +3475,13 @@ NXSL_SNMPTransportClass::NXSL_SNMPTransportClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_SNMPTransportClass::getAttr(NXSL_Object *object, const char *attr)
 {
-	NXSL_Value *value = nullptr;
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
 	SNMP_Transport *t = static_cast<SNMP_Transport*>(object->getData());
 
-	if (!strcmp(attr, "snmpVersion"))
+	if (compareAttributeName(attr, "snmpVersion"))
 	{
 	   const TCHAR *version = NULL;
 		switch (t->getSnmpVersion())
@@ -3503,36 +3529,39 @@ NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-	NXSL_Value *value = nullptr;
-	SNMP_Variable *t = (SNMP_Variable *)object->getData();
-	if (!strcmp(attr, "type"))
+	SNMP_Variable *t = static_cast<SNMP_Variable*>(object->getData());
+	if (compareAttributeName(attr, "type"))
 	{
 		value = vm->createValue((UINT32)t->getType());
 	}
-	else if (!strcmp(attr, "name"))
+	else if (compareAttributeName(attr, "name"))
 	{
 		value = vm->createValue(t->getName().toString());
 	}
-	else if (!strcmp(attr, "value"))
+	else if (compareAttributeName(attr, "value"))
 	{
    	TCHAR strValue[1024];
 		value = vm->createValue(t->getValueAsString(strValue, 1024));
 	}
-	else if (!strcmp(attr, "printableValue"))
+	else if (compareAttributeName(attr, "printableValue"))
 	{
    	TCHAR strValue[1024];
 		bool convToHex = true;
 		t->getValueAsPrintableString(strValue, 1024, &convToHex);
 		value = vm->createValue(strValue);
 	}
-	else if (!strcmp(attr, "valueAsIp"))
+	else if (compareAttributeName(attr, "valueAsIp"))
 	{
    	TCHAR strValue[128];
 		t->getValueAsIPAddr(strValue);
 		value = vm->createValue(strValue);
 	}
-	else if (!strcmp(attr, "valueAsMac"))
+	else if (compareAttributeName(attr, "valueAsMac"))
 	{
    	TCHAR strValue[128];
 		value = vm->createValue(t->getValueAsMACAddr().toString(strValue));
@@ -3546,7 +3575,7 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const char *attr
  */
 void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 {
-	delete (SNMP_Variable *)object->getData();
+	delete static_cast<SNMP_Variable*>(object->getData());
 }
 
 /**
@@ -3562,56 +3591,59 @@ NXSL_UserDBObjectClass::NXSL_UserDBObjectClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_UserDBObjectClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_VM *vm = object->vm();
-   NXSL_Value *value = nullptr;
-   UserDatabaseObject *dbObject = static_cast<UserDatabaseObject *>(object->getData());
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
 
-   if (!strcmp(attr, "description"))
+   NXSL_VM *vm = object->vm();
+   UserDatabaseObject *dbObject = static_cast<UserDatabaseObject*>(object->getData());
+
+   if (compareAttributeName(attr, "description"))
    {
       value = vm->createValue(dbObject->getDescription());
    }
-   else if (!strcmp(attr, "flags"))
+   else if (compareAttributeName(attr, "flags"))
    {
       value = vm->createValue(dbObject->getFlags());
    }
-   else if (!strcmp(attr, "guid"))
+   else if (compareAttributeName(attr, "guid"))
    {
       TCHAR buffer[64];
       value = vm->createValue(dbObject->getGuidAsText(buffer));
    }
-   else if (!strcmp(attr, "id"))
+   else if (compareAttributeName(attr, "id"))
    {
       value = vm->createValue(dbObject->getId());
    }
-   else if (!strcmp(attr, "isDeleted"))
+   else if (compareAttributeName(attr, "isDeleted"))
    {
       value = vm->createValue(dbObject->isDeleted());
    }
-   else if (!strcmp(attr, "isDisabled"))
+   else if (compareAttributeName(attr, "isDisabled"))
    {
       value = vm->createValue(dbObject->isDisabled());
    }
-   else if (!strcmp(attr, "isGroup"))
+   else if (compareAttributeName(attr, "isGroup"))
    {
       value = vm->createValue(dbObject->isGroup());
    }
-   else if (!strcmp(attr, "isModified"))
+   else if (compareAttributeName(attr, "isModified"))
    {
       value = vm->createValue(dbObject->isModified());
    }
-   else if (!strcmp(attr, "isLDAPUser"))
+   else if (compareAttributeName(attr, "isLDAPUser"))
    {
       value = vm->createValue(dbObject->isLDAPUser());
    }
-   else if (!strcmp(attr, "ldapDomain"))
+   else if (compareAttributeName(attr, "ldapDomain"))
    {
       value = vm->createValue(dbObject->getDn());
    }
-   else if (!strcmp(attr, "ldapId"))
+   else if (compareAttributeName(attr, "ldapId"))
    {
       value = vm->createValue(dbObject->getLdapId());
    }
-   else if (!strcmp(attr, "systemRights"))
+   else if (compareAttributeName(attr, "systemRights"))
    {
       value = vm->createValue(dbObject->getSystemRights());
    }
@@ -3637,36 +3669,36 @@ NXSL_Value *NXSL_UserClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   User *user = static_cast<User *>(object->getData());
-   if (!strcmp(attr, "authMethod"))
+   User *user = static_cast<User*>(object->getData());
+   if (compareAttributeName(attr, "authMethod"))
    {
       value = vm->createValue(user->getAuthMethod());
    }
-   else if (!strcmp(attr, "certMappingData"))
+   else if (compareAttributeName(attr, "certMappingData"))
    {
       value = vm->createValue(user->getCertMappingData());
    }
-   else if (!strcmp(attr, "certMappingMethod"))
+   else if (compareAttributeName(attr, "certMappingMethod"))
    {
       value = vm->createValue(user->getCertMappingMethod());
    }
-   else if (!strcmp(attr, "disabledUntil"))
+   else if (compareAttributeName(attr, "disabledUntil"))
    {
       value = vm->createValue(static_cast<UINT32>(user->getReEnableTime()));
    }
-   else if (!strcmp(attr, "fullName"))
+   else if (compareAttributeName(attr, "fullName"))
    {
       value = vm->createValue(user->getFullName());
    }
-   else if (!strcmp(attr, "graceLogins"))
+   else if (compareAttributeName(attr, "graceLogins"))
    {
       value = vm->createValue(user->getGraceLogins());
    }
-   else if (!strcmp(attr, "lastLogin"))
+   else if (compareAttributeName(attr, "lastLogin"))
    {
       value = vm->createValue(static_cast<UINT32>(user->getLastLoginTime()));
    }
-   else if (!strcmp(attr, "xmppId"))
+   else if (compareAttributeName(attr, "xmppId"))
    {
       value = vm->createValue(user->getXmppId());
    }
@@ -3701,11 +3733,11 @@ NXSL_Value *NXSL_UserGroupClass::getAttr(NXSL_Object *object, const char *attr)
 
    NXSL_VM *vm = object->vm();
    Group *group = static_cast<Group*>(object->getData());
-   if (!strcmp(attr, "memberCount"))
+   if (compareAttributeName(attr, "memberCount"))
    {
       value = vm->createValue(group->getMemberCount());
    }
-   else if (!strcmp(attr, "members"))
+   else if (compareAttributeName(attr, "members"))
    {
       UINT32 *members = nullptr;
       int count = group->getMembers(&members);
@@ -3751,31 +3783,34 @@ NXSL_NodeDependencyClass::NXSL_NodeDependencyClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_NodeDependencyClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = nullptr;
    DependentNode *dn = static_cast<DependentNode*>(object->getData());
 
-   if (!strcmp(attr, "id"))
+   if (compareAttributeName(attr, "id"))
    {
       value = vm->createValue(dn->nodeId);
    }
-   else if (!strcmp(attr, "isAgentProxy"))
+   else if (compareAttributeName(attr, "isAgentProxy"))
    {
       value = vm->createValue((dn->dependencyType & NODE_DEP_AGENT_PROXY) != 0);
    }
-   else if (!strcmp(attr, "isDataCollectionSource"))
+   else if (compareAttributeName(attr, "isDataCollectionSource"))
    {
       value = vm->createValue((dn->dependencyType & NODE_DEP_DC_SOURCE) != 0);
    }
-   else if (!strcmp(attr, "isICMPProxy"))
+   else if (compareAttributeName(attr, "isICMPProxy"))
    {
       value = vm->createValue((dn->dependencyType & NODE_DEP_ICMP_PROXY) != 0);
    }
-   else if (!strcmp(attr, "isSNMPProxy"))
+   else if (compareAttributeName(attr, "isSNMPProxy"))
    {
       value = vm->createValue((dn->dependencyType & NODE_DEP_SNMP_PROXY) != 0);
    }
-   else if (!strcmp(attr, "type"))
+   else if (compareAttributeName(attr, "type"))
    {
       value = vm->createValue(dn->dependencyType);
    }
@@ -3803,15 +3838,18 @@ NXSL_VlanClass::NXSL_VlanClass()
  */
 NXSL_Value *NXSL_VlanClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = nullptr;
    VlanInfo *vlan = static_cast<VlanInfo*>(object->getData());
 
-   if (!strcmp(attr, "id"))
+   if (compareAttributeName(attr, "id"))
    {
       value = vm->createValue(vlan->getVlanId());
    }
-   else if (!strcmp(attr, "interfaces"))
+   else if (compareAttributeName(attr, "interfaces"))
    {
       NXSL_Array *a = new NXSL_Array(vm);
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(vlan->getNodeId(), OBJECT_NODE));
@@ -3829,7 +3867,7 @@ NXSL_Value *NXSL_VlanClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(a);
    }
-   else if (!strcmp(attr, "name"))
+   else if (compareAttributeName(attr, "name"))
    {
       value = vm->createValue(vlan->getName());
    }

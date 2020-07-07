@@ -227,6 +227,11 @@ void NXSL_JsonObjectClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_JsonObjectClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+   if (*attr == '?') // attribute scan
+      return nullptr;
    return ValueFromJson(object->vm(), json_object_get(static_cast<json_t*>(object->getData()), attr));
 }
 
@@ -359,13 +364,16 @@ void NXSL_JsonArrayClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_JsonArrayClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = NULL;
-   if (!strcmp(attr, "size"))
+   if (compareAttributeName(attr, "size"))
    {
       value = vm->createValue(static_cast<UINT32>(json_array_size(static_cast<json_t*>(object->getData()))));
    }
-   else if (!strcmp(attr, "values"))
+   else if (compareAttributeName(attr, "values"))
    {
       NXSL_Array *values = new NXSL_Array(vm);
       json_t *jarray = static_cast<json_t*>(object->getData());

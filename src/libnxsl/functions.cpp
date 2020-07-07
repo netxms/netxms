@@ -569,7 +569,7 @@ class NXSL_TimeClass : public NXSL_Class
 public:
    NXSL_TimeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
@@ -585,51 +585,50 @@ NXSL_TimeClass::NXSL_TimeClass() : NXSL_Class()
 /**
  * Get TIME class attribute
  */
-NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const char *attr)
+NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_VM *vm = pObject->vm();
-   NXSL_Value *value;
-   struct tm *st = (struct tm *)pObject->getData();
-   if (!strcmp(attr, "sec") || !strcmp(attr, "tm_sec"))
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   struct tm *st = (struct tm *)object->getData();
+   if (compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
    {
       value = vm->createValue((LONG)st->tm_sec);
    }
-   else if (!strcmp(attr, "min") || !strcmp(attr, "tm_min"))
+   else if (compareAttributeName(attr, "min") || compareAttributeName(attr, "tm_min"))
    {
       value = vm->createValue((LONG)st->tm_min);
    }
-   else if (!strcmp(attr, "hour") || !strcmp(attr, "tm_hour"))
+   else if (compareAttributeName(attr, "hour") || compareAttributeName(attr, "tm_hour"))
    {
       value = vm->createValue((LONG)st->tm_hour);
    }
-   else if (!strcmp(attr, "mday") || !strcmp(attr, "tm_mday"))
+   else if (compareAttributeName(attr, "mday") || compareAttributeName(attr, "tm_mday"))
    {
       value = vm->createValue((LONG)st->tm_mday);
    }
-   else if (!strcmp(attr, "mon") || !strcmp(attr, "tm_mon"))
+   else if (compareAttributeName(attr, "mon") || compareAttributeName(attr, "tm_mon"))
    {
       value = vm->createValue((LONG)st->tm_mon);
    }
-   else if (!strcmp(attr, "year") || !strcmp(attr, "tm_year"))
+   else if (compareAttributeName(attr, "year") || compareAttributeName(attr, "tm_year"))
    {
       value = vm->createValue((LONG)(st->tm_year + 1900));
    }
-   else if (!strcmp(attr, "yday") || !strcmp(attr, "tm_yday"))
+   else if (compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
    {
       value = vm->createValue((LONG)st->tm_yday);
    }
-   else if (!strcmp(attr, "wday") || !strcmp(attr, "tm_wday"))
+   else if (compareAttributeName(attr, "wday") || compareAttributeName(attr, "tm_wday"))
    {
       value = vm->createValue((LONG)st->tm_wday);
    }
-   else if (!strcmp(attr, "isdst") || !strcmp(attr, "tm_isdst"))
+   else if (compareAttributeName(attr, "isdst") || compareAttributeName(attr, "tm_isdst"))
    {
       value = vm->createValue((LONG)st->tm_isdst);
    }
-	else
-	{
-		value = NULL;	// Error
-	}
    return value;
 }
 
@@ -695,7 +694,7 @@ void NXSL_TimeClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * NXSL "TIME" class object
+ * NXSL "Time" class object
  */
 static NXSL_TimeClass s_nxslTimeClass;
 
@@ -708,7 +707,7 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    if (argc == 0)
 	{
-		t = time(NULL);
+		t = time(nullptr);
 	}
 	else if (argc == 1)
 	{

@@ -27,9 +27,6 @@
 
 NETXMS_EXECUTABLE_HEADER(nxscript)
 
-
-static NXSL_TestClass m_testClass;
-
 class NXSL_TestEnv : public NXSL_Environment
 {
 public:
@@ -40,14 +37,6 @@ void NXSL_TestEnv::configureVM(NXSL_VM *vm)
 {
    NXSL_Environment::configureVM(vm);
    vm->setGlobalVariable("$nxscript", vm->createValue(NETXMS_VERSION_STRING));
-}
-
-int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
-{
-	TCHAR *buffer = (TCHAR *)malloc(1024);
-	_tcscpy(buffer, _T("test value"));
-   *ppResult = vm->createValue(new NXSL_Object(vm, &m_testClass, buffer));
-   return 0;
 }
 
 /**
@@ -61,16 +50,11 @@ int main(int argc, char *argv[])
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
-   NXSL_ExtFunction func;
    int i, ch;
    bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false;
    int runCount = 1, rc = 0;
 
    InitNetXMSProcess(true);
-
-   func.m_iNumArgs = 0;
-   func.m_pfHandler = F_new;
-   strcpy(func.m_name, "__new");
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
                    _T("Copyright (c) 2005-2020 Victor Kirhenshtein\n\n"));
@@ -194,7 +178,6 @@ int main(int argc, char *argv[])
       {
 		   pEnv = new NXSL_TestEnv;
 		   pEnv->registerIOFunctions();
-		   pEnv->registerFunctionSet(1, &func);
 
          // Create VM
          NXSL_VM *vm = new NXSL_VM(pEnv);

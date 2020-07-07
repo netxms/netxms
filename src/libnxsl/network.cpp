@@ -62,15 +62,6 @@ void NXSL_ConnectorClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * Implementation of "Connector" class: get attribute
- */
-NXSL_Value *NXSL_ConnectorClass::getAttr(NXSL_Object *object, const char *attr)
-{
-   NXSL_Value *value = NULL;
-   return value;
-}
-
-/**
  * NXSL "Connector" class object
  */
 static NXSL_ConnectorClass m_nxslConnectorClass;

@@ -415,51 +415,54 @@ void NXSL_ComponentClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   const UINT32 classCount = 12;
+   const uint32_t classCount = 12;
    static const TCHAR *className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
                                                  _T("container"), _T("power supply"), _T("fan"), _T("sensor"),
                                                  _T("module"), _T("port"), _T("stack") };
 
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = NULL;
    NXSL_ComponentHandle *handle = static_cast<NXSL_ComponentHandle*>(object->getData());
-   Component *component = handle->component;
-   if (!strcmp(attr, "class"))
+   Component *component = (handle != nullptr) ? handle->component : nullptr;  // Can be null if called by scanAttributes()
+   if (compareAttributeName(attr, "class"))
    {
       if (component->getClass() >= classCount)
          value = vm->createValue(className[2]); // Unknown class
       else
          value = vm->createValue(className[component->getClass()]);
    }
-   else if (!strcmp(attr, "children"))
+   else if (compareAttributeName(attr, "children"))
    {
       value = vm->createValue(handle->getChildrenForNXSL(vm));
    }
-   else if (!strcmp(attr, "description"))
+   else if (compareAttributeName(attr, "description"))
    {
       value = vm->createValue(component->getDescription());
    }
-   else if (!strcmp(attr, "ifIndex"))
+   else if (compareAttributeName(attr, "ifIndex"))
    {
       value = vm->createValue(component->getIfIndex());
    }
-   else if (!strcmp(attr, "firmware"))
+   else if (compareAttributeName(attr, "firmware"))
    {
       value = vm->createValue(component->getFirmware());
    }
-   else if (!strcmp(attr, "model"))
+   else if (compareAttributeName(attr, "model"))
    {
       value = vm->createValue(component->getModel());
    }
-   else if (!strcmp(attr, "name"))
+   else if (compareAttributeName(attr, "name"))
    {
       value = vm->createValue(component->getName());
    }
-   else if (!strcmp(attr, "serial"))
+   else if (compareAttributeName(attr, "serial"))
    {
       value = vm->createValue(component->getSerial());
    }
-   else if (!strcmp(attr, "vendor"))
+   else if (compareAttributeName(attr, "vendor"))
    {
       value = vm->createValue(component->getVendor());
    }

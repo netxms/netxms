@@ -56,34 +56,37 @@ void NXSL_GeoLocationClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_VM *vm = object->vm();
-   NXSL_Value *value = NULL;
    GeoLocation *gl = static_cast<GeoLocation*>(object->getData());
-   if (!strcmp(attr, "isManual"))
+   if (compareAttributeName(attr, "isManual"))
    {
       value = vm->createValue(gl->isManual());
    }
-   else if (!strcmp(attr, "isValid"))
+   else if (compareAttributeName(attr, "isValid"))
    {
       value = vm->createValue(gl->isValid());
    }
-   else if (!strcmp(attr, "latitude"))
+   else if (compareAttributeName(attr, "latitude"))
    {
       value = vm->createValue(gl->getLatitude());
    }
-   else if (!strcmp(attr, "latitudeText"))
+   else if (compareAttributeName(attr, "latitudeText"))
    {
       value = vm->createValue(gl->getLatitudeAsString());
    }
-   else if (!strcmp(attr, "longitude"))
+   else if (compareAttributeName(attr, "longitude"))
    {
       value = vm->createValue(gl->getLongitude());
    }
-   else if (!strcmp(attr, "longitudeText"))
+   else if (compareAttributeName(attr, "longitudeText"))
    {
       value = vm->createValue(gl->getLongitudeAsString());
    }
-   else if (!strcmp(attr, "type"))
+   else if (compareAttributeName(attr, "type"))
    {
       value = vm->createValue(gl->getType());
    }

@@ -25,9 +25,6 @@
 /**
  * Externals
  */
-extern UINT32 g_nxslNumSituationFunctions;
-extern NXSL_ExtFunction g_nxslSituationFunctions[];
-
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
 int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -1719,7 +1716,6 @@ NXSL_ServerEnv::NXSL_ServerEnv() : NXSL_Environment()
 	setLibrary(GetServerScriptLibrary());
 	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
-	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
 	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCTIONS)
 		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
    if (g_flags & AF_ENABLE_NXSL_FILE_IO_FUNCTIONS)

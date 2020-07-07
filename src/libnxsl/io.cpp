@@ -225,13 +225,16 @@ NXSL_FileClass::NXSL_FileClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
    NXSL_FileHandle *f = static_cast<NXSL_FileHandle*>(object->getData());
-	NXSL_Value *value = NULL;
-	if (!strcmp(attr, "eof"))
+	if (compareAttributeName(attr, "eof"))
 	{
 		value = object->vm()->createValue((INT32)feof(f->handle));
 	}
-	else if (!strcmp(attr, "name"))
+	else if (compareAttributeName(attr, "name"))
    {
       value = object->vm()->createValue(f->name);
    }
