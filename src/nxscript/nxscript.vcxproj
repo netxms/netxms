@@ -171,7 +171,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="class.cpp" />
     <ClCompile Include="nxscript.cpp" />
   </ItemGroup>
   <ItemGroup>
