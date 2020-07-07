@@ -73,6 +73,39 @@ bool CiscoNexusDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 }
 
 /**
+ * Handler for IP address enumeration
+ */
+static UINT32 HandlerIPAddressList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   //.1.3.6.1.4.1.9.9.309.1.1.3.1.1.436731904.1.4.10.5.130.2
+   const UINT32 *oid = var->getName().value();
+
+   InetAddress addr;
+   if (((oid[15] == 1) && (oid[16] == 4)) || ((oid[15] == 3) && (oid[16] == 8))) // ipv4 and ipv4z
+   {
+      addr = InetAddress((uint32_t)((oid[17] << 24) | (oid[18] << 16) | (oid[19] << 8) | oid[20]));
+   }
+   else if (((oid[15] == 2) && (oid[16] == 16)) || ((oid[15] == 4) && (oid[16] == 20))) // ipv6 and ipv6z
+   {
+      BYTE bytes[16];
+      for(int i = 17, j = 0; j < 16; i++, j++)
+         bytes[j] = (BYTE)oid[i];
+      addr = InetAddress(bytes);
+   }
+   else
+   {
+      return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format
+   }
+
+   auto ifList = static_cast<InterfaceList*>(arg);
+   InterfaceInfo *iface = ifList->findByIfIndex(oid[14]);
+   if (iface != nullptr)
+      iface->ipAddrList.add(addr);
+
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
  * Extract integer from capture group
  */
 static UINT32 IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
@@ -96,19 +129,22 @@ InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, NObject *no
 {
    // Get interface list from standard MIB
    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-   if (ifList == NULL)
-      return NULL;
+   if (ifList == nullptr)
+      return nullptr;
+
+   // Read IP addresses
+   SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.309.1.1.3.1.1"), HandlerIPAddressList, ifList); // ciiIPIfAddressPrefixLength
 
    const char *eptr;
    int eoffset;
    PCRE *reBase = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
-   if (reBase == NULL)
+   if (reBase == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile base regexp: %hs at offset %d"), eptr, eoffset);
       return ifList;
    }
    PCRE *reFex = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
-   if (reFex == NULL)
+   if (reFex == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
       _pcre_free_t(reBase);
@@ -215,7 +251,7 @@ static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, vo
       request.bindVariable(new SNMP_Variable(oid));
    }
 
-   SNMP_PDU *response = NULL;
+   SNMP_PDU *response = nullptr;
    if (transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
    {
       if (var->getValueAsInt() == 3)
@@ -223,14 +259,14 @@ static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, vo
          for(int i = 0; i < 4; i++)
          {
             SNMP_Variable *v = response->getVariable(i);
-            if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+            if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
                AddPortToVLANs(v, i * 1024, vlanList);
          }
       }
       else
       {
          SNMP_Variable *v = response->getVariable(0);
-         if ((v != NULL) && (v->getType() == ASN_INTEGER))
+         if ((v != nullptr) && (v->getType() == ASN_INTEGER))
          {
             vlanList->addMemberPort(v->getValueAsInt(), ifIndex);
          }
@@ -265,5 +301,5 @@ VlanList *CiscoNexusDriver::getVlans(SNMP_Transport *snmp, NObject *node, Driver
 
 failure:
    delete list;
-   return NULL;
+   return nullptr;
 }

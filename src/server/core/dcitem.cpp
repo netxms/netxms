@@ -663,6 +663,8 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
 {
    ItemValue rawValue, *pValue;
 
+   *updateStatus = false;
+
    lock();
 
    auto owner = m_owner.lock();
@@ -697,10 +699,6 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
    if (isStatusDCO() && (tmTimeStamp > m_tPrevValueTimeStamp) && ((m_cacheSize == 0) || !m_bCacheLoaded || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
    {
       *updateStatus = true;
-   }
-   else
-   {
-      *updateStatus = false;
    }
 
    if (tmTimeStamp > m_tPrevValueTimeStamp)
