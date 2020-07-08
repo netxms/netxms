@@ -29,12 +29,13 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 {
 	memcpy(&m_info, info, sizeof(DatabaseInfo));
 	m_pollerThread = INVALID_THREAD_HANDLE;
-	m_session = NULL;
+	m_session = nullptr;
 	m_connected = false;
-	m_data = NULL;
+	m_data = nullptr;
 	m_dataLock = MutexCreate();
 	m_sessionLock = MutexCreate();
-	m_stopCondition = ConditionCreate(TRUE);
+	m_stopCondition = ConditionCreate(true);
+	m_version = 0;
 }
 
 /**
@@ -107,19 +108,19 @@ THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
  */
 void DatabaseInstance::pollerThread()
 {
-	AgentWriteDebugLog(3, _T("PGSQL: poller thread for database server %s started"), m_info.id);
-	INT64 connectionTTL = (INT64)m_info.connectionTTL * _LL(1000);
-	do
-	{
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("PGSQL: poller thread for database server %s started"), m_info.id);
+   INT64 connectionTTL = (INT64)m_info.connectionTTL * _LL(1000);
+   do
+   {
 reconnect:
 		MutexLock(m_sessionLock);
 
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-		m_session = DBConnect(g_pgsqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, NULL, errorText);
-		if (m_session == NULL)
+		m_session = DBConnect(g_pgsqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, nullptr, errorText);
+		if (m_session == nullptr)
 		{
 			MutexUnlock(m_sessionLock);
-			AgentWriteDebugLog(6, _T("PGSQL: cannot connect to database server %s: %s"), m_info.id, errorText);
+			nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot connect to PostgreSQL database server %s (%s)"), m_info.id, errorText);
 			continue;
 		}
 
@@ -127,36 +128,36 @@ reconnect:
 		DBEnableReconnect(m_session, false);
 		m_version = getPgsqlVersion();
 		if ((m_version & 0xFF) == 0)
-			AgentWriteLog(NXLOG_INFO, _T("PGSQL: connection with database server %s restored (version %d.%d, connection TTL %d)"),
+		   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Connection with PostgreSQL database server %s restored (version %d.%d, connection TTL %d)"),
 				m_info.id, m_version >> 16, (m_version >> 8) & 0xFF, m_info.connectionTTL);
 		else
-			AgentWriteLog(NXLOG_INFO, _T("PGSQL: connection with database server %s restored (version %d.%d.%d, connection TTL %d)"),
+		   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Connection with PostgreSQL database server %s restored (version %d.%d.%d, connection TTL %d)"),
 				m_info.id, m_version >> 16, (m_version >> 8) & 0xFF, m_version & 0xFF, m_info.connectionTTL);
 
 		MutexUnlock(m_sessionLock);
 
-		INT64 pollerLoopStartTime = GetCurrentTimeMs();
-		UINT32 sleepTime;
+		int64_t pollerLoopStartTime = GetCurrentTimeMs();
+		uint32_t sleepTime;
 		do
 		{
-			INT64 startTime = GetCurrentTimeMs();
+		   int64_t startTime = GetCurrentTimeMs();
 			if (!poll())
 			{
-				AgentWriteLog(NXLOG_WARNING, _T("PGSQL: connection with database server %s lost"), m_info.id);
+				nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Connection with PostgreSQL database server %s is lost"), m_info.id);
 				break;
 			}
-			INT64 currTime = GetCurrentTimeMs();
+			int64_t currTime = GetCurrentTimeMs();
 			if (currTime - pollerLoopStartTime > connectionTTL)
 			{
-				AgentWriteDebugLog(4, _T("PGSQL: planned connection reset"));
+				nxlog_debug_tag(DEBUG_TAG, 4, _T("Planned connection reset for database %s"), m_info.id);
 				MutexLock(m_sessionLock);
 				m_connected = false;
 				DBDisconnect(m_session);
-				m_session = NULL;
+				m_session = nullptr;
 				MutexUnlock(m_sessionLock);
 				goto reconnect;
 			}
-			INT64 elapsedTime = currTime - startTime;
+			int64_t elapsedTime = currTime - startTime;
 			sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
 		}
 		while(!ConditionWait(m_stopCondition, sleepTime));
@@ -168,26 +169,7 @@ reconnect:
 		MutexUnlock(m_sessionLock);
 	}
 	while(!ConditionWait(m_stopCondition, 60000));	// reconnect every 60 seconds
-	AgentWriteDebugLog(3, _T("PGSQL: poller thread for database server %s stopped"), m_info.id);
-}
-
-/**
- * Read global stats table into memory
- */
-static StringMap *ReadGlobalStatsTable(DB_HANDLE hdb, const TCHAR *table)
-{
-	TCHAR query[128];
-	_sntprintf(query, 128, _T("SELECT variable_name,variable_value FROM %s"), table);
-	DB_RESULT hResult = DBSelect(hdb, query);
-	if (hResult == NULL)
-		return NULL;
-
-	StringMap *data = new StringMap();
-	int count = DBGetNumRows(hResult);
-	for(int i = 0; i < count; i++)
-		data->setPreallocated(DBGetField(hResult, i, 0, NULL, 0), DBGetField(hResult, i, 1, NULL, 0));
-	DBFreeResult(hResult);
-	return data;
+	nxlog_debug_tag(DEBUG_TAG, 3, _T("Poller thread for database server %s stopped"), m_info.id);
 }
 
 /**
@@ -200,7 +182,7 @@ bool DatabaseInstance::poll()
 	int count = 0;
 	int failures = 0;
 
-	for(int i = 0; g_queries[i].name != NULL; i++)
+	for(int i = 0; g_queries[i].name != nullptr; i++)
 	{
 		if (g_queries[i].minVersion > m_version)
 			continue;	// not supported by this database
@@ -379,7 +361,7 @@ bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
 			value->addRow();
 			for(int col = 0; col < numColumns; col++)
 			{
-				value->setPreallocated(col, DBGetField(hResult, row, col, NULL, 0));
+				value->setPreallocated(col, DBGetField(hResult, row, col, nullptr, 0));
 			}
 		}
 

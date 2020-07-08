@@ -21,12 +21,10 @@
 
 #include "pgsql_subagent.h"
 
-#define DEBUG_TAG _T("pgsql")
-
 /**
  * Driver handle
  */
-DB_DRIVER g_pgsqlDriver = NULL;
+DB_DRIVER g_pgsqlDriver = nullptr;
 
 /**
  * Polling queries
@@ -474,13 +472,11 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
  */
 static bool SubAgentInit(Config *config)
 {
-	int i;
-
 	// Init db driver
-	g_pgsqlDriver = DBLoadDriver(_T("pgsql.ddr"), NULL, TRUE, NULL, NULL);
-	if (g_pgsqlDriver == NULL)
+	g_pgsqlDriver = DBLoadDriver(_T("pgsql.ddr"), nullptr, false, nullptr, nullptr);
+	if (g_pgsqlDriver == nullptr)
 	{
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("PGSQL: failed to load database driver"));
+		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to load PostgreSQL database driver"));
 		return false;
 	}
 
@@ -529,7 +525,7 @@ static bool SubAgentInit(Config *config)
 			_sntprintf(section, MAX_DB_STRING, _T("pgsql/servers/%s"), e->getName());
 			if (!config->parseTemplate(section, s_configTemplate))
 			{
-				nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("PGSQL: error parsing configuration template %s"), e->getName());
+				nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Error parsing PostgreSQL subagent configuration template %s"), e->getName());
 				continue;
 			}
 
@@ -546,13 +542,13 @@ static bool SubAgentInit(Config *config)
 	// Exit if no usable configuration found
 	if (s_instances->size() == 0)
 	{
-		nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("PGSQL: no databases to monitor, exiting"));
+	   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("No databases to monitor, exiting"));
 		delete s_instances;
 		return false;
 	}
 
 	// Run query thread for each configured database
-	for(i = 0; i < s_instances->size(); i++)
+	for(int i = 0; i < s_instances->size(); i++)
 		s_instances->get(i)->run();
 
 	return true;
@@ -563,11 +559,11 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-	nxlog_debug_tag(DEBUG_TAG, 1, _T("PGSQL: stopping pollers"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Stopping PostgreSQL database pollers"));
 	for(int i = 0; i < s_instances->size(); i++)
 		s_instances->get(i)->stop();
 	delete s_instances;
-	AgentWriteDebugLog(1, _T("PGSQL: stopped"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("PostgreSQL subagent stopped"));
 }
 
 /**
@@ -654,7 +650,6 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 	{ _T("PostgreSQL.Databases(*)"), H_TagList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: databases on the specific server") },
 	{ _T("PostgreSQL.AllDatabases"), H_AllDatabasesList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: all databases on all monitored servers") },
 	{ _T("PostgreSQL.DataTags(*)"), H_TagList, _T("^(.*)$") }
-
 };
 
 /**
@@ -674,12 +669,12 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("PGSQL"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL, NULL,
+	SubAgentInit, SubAgentShutdown, nullptr, nullptr,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
 	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE), s_tables,
-	0,	NULL,	 // actions
-	0,	NULL	  // push parameters
+	0,	nullptr,	 // actions
+	0,	nullptr	  // push parameters
 };
 
 /**

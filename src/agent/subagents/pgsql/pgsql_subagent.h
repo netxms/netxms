@@ -27,6 +27,8 @@
 #include <nms_agent.h>
 #include <nxdbapi.h>
 
+#define DEBUG_TAG _T("sa.pgsql")
+
 /**
  * Database connection information
  */
