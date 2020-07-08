@@ -467,6 +467,13 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       CASReadSettings();
    }
+   else if (!_tcscmp(name, _T("CheckTrustedNodes")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         g_flags |= AF_CHECK_TRUSTED_NODES;
+      else
+         g_flags &= ~AF_CHECK_TRUSTED_NODES;
+   }
    else if (!_tcscmp(name, _T("DBWriter.MaxQueueSize")))
    {
       OnDBWriterMaxQueueSizeChange();
@@ -521,6 +528,13 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("NetworkDiscovery.PassiveDiscovery.Interval")))
    {
       g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
+   }
+   else if (!_tcscmp(name, _T("NXSL.EnableContainerFunctions")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
+      else
+         g_flags &= ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {
