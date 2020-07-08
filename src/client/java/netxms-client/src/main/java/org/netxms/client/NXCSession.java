@@ -7054,6 +7054,7 @@ public class NXCSession
                return true;
             }
          };
+         handler.setMessageWaitTimeout(commandTimeout);
          addMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId(), handler);
       }
       sendMessage(msg);
