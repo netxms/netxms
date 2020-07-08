@@ -16,11 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.tests;
 
 import java.io.File;
 import java.util.Date;
-
+import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.MibTree;
 import org.netxms.client.snmp.SnmpObjectId;

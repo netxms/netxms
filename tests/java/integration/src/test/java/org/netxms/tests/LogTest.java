@@ -16,10 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.tests;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import org.netxms.client.NXCSession;
+import org.netxms.client.Table;
+import org.netxms.client.TableRow;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;

@@ -16,13 +16,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.tests;
 
 import java.net.InetAddress;
 import java.util.Set;
 import org.netxms.base.InetAddressEx;
-import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
 

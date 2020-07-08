@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2012 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,25 +16,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.tests;
 
-import java.util.List;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 
 /**
- * Graph configuration test
- *
+ * Test for sendEvent API
  */
-public class GraphTest extends AbstractSessionTest
+public class SendEventTest extends AbstractSessionTest
 {
-	public void testGetPredefinedGraphs() throws Exception
+	public void testSendEvent() throws Exception
 	{
 		final NXCSession session = connect();
 		
-		List<GraphSettings> graphs = session.getPredefinedGraphs(false);
-		System.out.println(graphs.size() + " graphs retrieved");
-		for(GraphSettings gs : graphs)
-			System.out.println(">>> " + gs.getName());
+		session.sendEvent(1, new String[0]);
+		session.sendEvent("SYS_NODE_ADDED", new String[0]);
+		
+		session.syncObjects();
+		for(AbstractObject o : session.getAllObjects())
+		{
+			if (o instanceof Node)
+			{
+				session.sendEvent(0, "SYS_SCRIPT_ERROR", o.getObjectId(), new String[] { "test1", "test2", "0" }, "TAG");
+				break;
+			}
+		}
 		
 		session.disconnect();
 	}

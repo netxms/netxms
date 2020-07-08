@@ -16,34 +16,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.tests;
 
+import org.netxms.client.NXCSession;
+import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyRule;
 
 /**
- * Tests for scripting functions
+ * Tests for EPP management
  */
-public class ScriptTest extends AbstractSessionTest
+public class EventProcessingPolicyTest extends AbstractSessionTest
 {
-   public void testAddressMap() throws Exception
-   {
+	public void testGetPolicy() throws Exception
+	{
+		final NXCSession session = connect();
+
+		EventProcessingPolicy p = session.getEventProcessingPolicy();
+		for(EventProcessingPolicyRule r : p.getRules())
+			System.out.println("  " + r.getGuid() + " " + r.getComments());
+		
+		session.disconnect();
+	}
+	
+	public void testSendEvent() throws Exception
+	{
       final NXCSession session = connect();
 
-      ScriptCompilationResult r = session.compileScript("a = 1; b = 2; return a / b;", true);
-      assertTrue(r.success);
-      assertNotNull(r.code);
-      assertNull(r.errorMessage);
-      
-      r = session.compileScript("a = 1; b = 2; return a / b;", false);
-      assertTrue(r.success);
-      assertNull(r.code);
-      assertNull(r.errorMessage);
-      
-      r = session.compileScript("a = 1*; b = 2; return a / b;", false);
-      assertFalse(r.success);
-      assertNull(r.code);
-      assertNotNull(r.errorMessage);
-      System.out.println("Compilation error message: \"" + r.errorMessage + "\"");
+      session.sendEvent(TestConstants.EVENT_CODE, new String[] { "test message\nline #2\nline #3" });
       
       session.disconnect();
-   }
+	}
 }

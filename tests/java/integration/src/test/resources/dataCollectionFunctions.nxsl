@@ -1,0 +1,89 @@
+/*
+* This script requires:
+*     node, that is management node
+*/
+
+preCreatedNodeId = $1;
+preCreatedNode = FindObject(preCreatedNodeId);
+
+dciName = $2;
+dciDescription = "NXSL integration Tests DCIs";
+
+//Create push DCI
+pushDci = CreateDCI(preCreatedNode, "push", dciName, dciDescription, "int32", 0, 0);
+
+//Find DCIs, list DCIs
+list = FindAllDCIs(preCreatedNode, "Server*", "*MAIN*");
+foreach (dci : list) {
+   assert(dci->name like "Server*");
+   assert(dci->description like "*MAIN*");
+}
+assert(list->size > 0);
+
+dciId = FindDCIByDescription(preCreatedNode, dciDescription);
+assert(dciId == pushDci->id);
+dciId = FindDCIByName(preCreatedNode, dciName);
+assert(dciId == pushDci->id);
+
+//Pus DCI data
+startTime = time();
+PushDCIData(preCreatedNode, pushDci->id, 13);
+sleep(1000);
+PushDCIData(preCreatedNode, pushDci->id, 25);
+sleep(1000);
+period1Time = time();
+sleep(1000);
+PushDCIData(preCreatedNode, pushDci->id, 1);
+sleep(1000);
+PushDCIData(preCreatedNode, pushDci->id, 2);
+sleep(1000);
+
+//Calculate average, max, min, sum
+val = GetAvgDCIValue(preCreatedNode, dciId, 0, period1Time);
+assert(val == 19);
+val = GetAvgDCIValue(preCreatedNode, dciId, startTime, period1Time);
+assert(val == 19);
+val = GetAvgDCIValue(preCreatedNode, dciId, period1Time, time());
+assert(val == 1.5);
+
+val = GetMaxDCIValue(preCreatedNode, dciId, 0, period1Time);
+assert(val == 25);
+val = GetMaxDCIValue(preCreatedNode, dciId, startTime, time());
+assert(val == 25);
+val = GetMaxDCIValue(preCreatedNode, dciId, period1Time, time());
+assert(val == 2);
+
+val = GetMinDCIValue(preCreatedNode, dciId, 0, period1Time);
+assert(val == 13);
+val = GetMinDCIValue(preCreatedNode, dciId, startTime, time());
+assert(val == 1);
+val = GetMinDCIValue(preCreatedNode, dciId, period1Time, time());
+assert(val == 1);
+
+val = GetSumDCIValue(preCreatedNode, dciId, 0, period1Time);
+assert(val == 38);
+val = GetSumDCIValue(preCreatedNode, dciId, startTime, time());
+assert(val == 41);
+val = GetSumDCIValue(preCreatedNode, dciId, period1Time, time());
+assert(val == 3);
+
+//Get DCI functions
+dci = GetDCIObject(preCreatedNode, pushDci->id);
+assert(dci->name == pushDci->name);
+dci = GetDCIObject(preCreatedNode, 555555);
+assert(dci == null);
+
+value = GetDCIRawValue(preCreatedNode, pushDci->id);
+assert(value == 2);
+
+value = GetDCIValue(preCreatedNode, pushDci->id);
+assert(value == 2);
+
+value = GetDCIValueByDescription(preCreatedNode, dciDescription);
+assert(value == 2);
+
+value = GetDCIValueByName(preCreatedNode, dciName);
+assert(value == 2);
+
+values = GetDCIValues(preCreatedNode, pushDci->id, startTime, time());
+assert(string(values) == string(%(2, 1, 25, 13)));

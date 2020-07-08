@@ -1,9 +1,10 @@
-package org.netxms.client;
+package org.netxms.tests;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectContextBase;

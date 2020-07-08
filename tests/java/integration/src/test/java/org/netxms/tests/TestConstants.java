@@ -1,8 +1,9 @@
-package org.netxms.client;
+package org.netxms.tests;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
+import org.netxms.client.NXCSession;
 
 /******************************************************************
  *Documentation about test server configuration
@@ -28,10 +29,10 @@ public class TestConstants
    public static String loginName = "admin";
    public static String password = "";
    //Other constants
-   public static int NODE_ID = 114;
-   public static int LOCAL_NODE_ID = 114;
-   public static long SUBNET_ID = 796;
-   public static String FILE_NAME = "/var/adm/messages";
+   public static int NODE_ID = 4946;
+   public static int LOCAL_NODE_ID = 9190;
+   public static long SUBNET_ID = 4796;
+   public static String FILE_NAME = "/opt/netxms/log/nxagentd";
    public static int FILE_OFFSET = 0;
    public static String ACTION = "netstat";
    public static int EVENT_CODE = 100000;

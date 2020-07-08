@@ -1,0 +1,50 @@
+/*
+* This script requires:
+*     node, that is management node
+*/
+
+preCreatedNodeId = $1;
+preCreatedNode = FindObject(preCreatedNodeId);
+actionName = $2;
+actionName2 = $3;
+
+assert(AgentExecuteAction(preCreatedNode, actionName));
+assert(AgentExecuteAction(preCreatedNode, actionName, "Param1", 2, 3.01));
+//assert(!AgentExecuteAction(preCreatedNode, "nonexisting action")); //TODO: uncomment after fix
+
+
+result = AgentExecuteActionWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01);
+assert(result == "Param1 2 3.010000 \n");
+
+list = AgentReadList(preCreatedNode, "System.ProcessList");
+
+foundNxagentd = false;
+foreach (item : list) {
+   if (item like "*nxagentd*")
+   {
+      foundNxagentd = true;
+      break;
+   }
+}
+assert(foundNxagentd);
+
+
+parameter = AgentReadParameter(preCreatedNode, "Agent.LocalDatabase.Status");
+assert(parameter == 0);
+
+table = AgentReadTable(preCreatedNode, "Agent.SubAgents");
+
+filemgrFound = false;
+for (i = 0; i < table->rowCount; i++)
+{
+   for(j = 0; j < table->columnCount; j++)
+   {
+      if(table->get(i,j) == "filemgr.nsm")
+      {
+         filemgrFound = true;
+         break;
+      }
+   }
+}
+
+assert(filemgrFound);

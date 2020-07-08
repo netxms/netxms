@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,23 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.tests;
+
+import org.netxms.client.NXCSession;
+import org.netxms.client.server.ServerJob;
 
 /**
- * Event database sync test
+ * @author Victor
+ *
  */
-public class EventDatabaseSyncTest extends AbstractSessionTest
+public class JobTest extends AbstractSessionTest
 {
-	public void testSyncEventDatabase() throws Exception
+	public void testJobList() throws Exception
 	{
 		final NXCSession session = connect();
 		
-		assertNull(session.findEventTemplateByCode(1L));
-		session.syncEventTemplates();
-		assertNotNull(session.findEventTemplateByCode(1L));
+		final ServerJob[] jobList = session.getServerJobList();
+		assertNotNull(jobList);
 		
 		session.disconnect();
 	}

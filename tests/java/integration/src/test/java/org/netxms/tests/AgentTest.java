@@ -16,7 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.tests;
+
+import org.netxms.client.NXCSession;
+import org.netxms.client.TextOutputListener;
 
 /**
  * Tests for agent-related functions
@@ -36,6 +39,11 @@ public class AgentTest extends AbstractSessionTest
 
          @Override
          public void setStreamId(long streamId)
+         {
+         }
+
+         @Override
+         public void onError()
          {
          }
       }, null);

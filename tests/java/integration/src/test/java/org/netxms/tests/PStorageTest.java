@@ -1,9 +1,10 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.tests;
 
 import java.util.HashMap;
+import org.netxms.client.NXCSession;
 
 /**
  * Persistent storage test

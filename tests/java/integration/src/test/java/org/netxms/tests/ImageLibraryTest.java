@@ -16,11 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.tests;
 
 import java.util.List;
 import java.util.UUID;
-
+import org.netxms.client.LibraryImage;
+import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 
 /**
@@ -38,7 +40,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		//assertEquals("ATM", image1.getName());
 		//assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image1.getGuid().toString());
 		assertEquals(false, image1.isComplete());
-		assertEquals("Network Objects", image1.getCategory());
+		assertEquals("Rack", image1.getCategory());
 		
 		for(LibraryImage i : library)
 			System.out.println(i.toString());
