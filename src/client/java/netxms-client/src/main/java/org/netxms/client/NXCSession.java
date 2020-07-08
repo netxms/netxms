@@ -7035,9 +7035,13 @@ public class NXCSession
                if (m.getFieldAsInt32(NXCPCodes.VID_RCC) != RCC.SUCCESS)
                {
                   String errorMessage = m.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
-                  if ((errorMessage != null) && (listener != null))
+                  if ((listener != null))
                   {
-                     listener.messageReceived(errorMessage + "\n\n");
+                     if (errorMessage != null)
+                     {
+                        listener.messageReceived(errorMessage + "\n\n");
+                     }
+                     listener.onError();
                   }
                }
                else
@@ -7134,14 +7138,48 @@ public class NXCSession
     * @param nodeId   ID of the node object to test script on
     * @param script   script source code
     * @param listener script output listener
+    * @param parameters script parameter list can be null
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeScript(long nodeId, String script, final TextOutputListener listener) throws IOException, NXCException
+   public void executeScript(long nodeId, String script, String parameters, 
+         final TextOutputListener listener) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
+      if (parameters != null)
+      {
+         msg.setField(NXCPCodes.VID_PARAMETER, parameters);
+      }
+      processScriptExecution(msg, listener);
+   }
+
+   /**
+    * Execute script.
+    *
+    * @param nodeId   ID of the node object to test script on
+    * @param script   script source code
+    * @param listener script output listener
+    * @param parameterList script parameter list can be null
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void executeScript(long nodeId, String script, List<String> parameterList, 
+         final TextOutputListener listener) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setField(NXCPCodes.VID_SCRIPT, script);
+      if (parameterList != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_FIELDS, parameterList.size());
+         long fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
+         for(String param : parameterList)
+         {
+            msg.setField(fieldId++, param);
+         }
+      }
       processScriptExecution(msg, listener);
    }
 

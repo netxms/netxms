@@ -312,4 +312,9 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    {
       return MessageDialog.openConfirm(Display.getCurrent().getActiveShell(), "Stop command", "Do you wish to stop the command \"" + lastCommand + "\"? ") ? 0 : 2;
    }
+
+   @Override
+   public void onError()
+   {
+   }
 }

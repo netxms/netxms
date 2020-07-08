@@ -193,4 +193,9 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    public void setStreamId(long streamId)
    {
    }
+
+   @Override
+   public void onError()
+   {
+   }
 }

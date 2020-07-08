@@ -341,7 +341,7 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
 		vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
 
       ObjectRefArray<NXSL_Value> args(16, 16);
-      if ((p == nullptr) || ParseValueList(vm, &p, args))
+      if ((p == nullptr) || ParseValueList(vm, &p, args, true))
       {
          // Pass event's parameters as arguments
          for(int i = 0; i < event->getParametersCount(); i++)

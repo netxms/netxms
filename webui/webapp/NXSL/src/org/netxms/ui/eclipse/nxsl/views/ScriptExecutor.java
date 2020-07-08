@@ -41,6 +41,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
@@ -82,6 +83,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    private Form form;
    private Combo scriptCombo;
    private ScriptEditor scriptEditor;
+   private Text parametersField;
    private TextConsole output;
    private IOConsoleOutputStream consoleOutputStream;
    private Action actionSave;
@@ -162,14 +164,26 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       gridData.grabExcessVerticalSpace = true;
       splitter.setLayoutData(gridData);
       
-      /**** Script editor  ****/
+      /**** Script parameters  ****/      
       Composite container = toolkit.createComposite(splitter);
       layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;
       layout.marginBottom = 4;
       container.setLayout(layout);
+      
       Section section = toolkit.createSection(container, Section.TITLE_BAR);
+      section.setText("Parameters");
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      section.setLayoutData(gridData);
+      
+      parametersField = new Text(section, SWT.SINGLE | SWT.BORDER);
+      section.setClient(parametersField);
+
+      /**** Script editor  ****/
+      section = toolkit.createSection(container, Section.TITLE_BAR);
       section.setText(Messages.get().ScriptExecutor_Source);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -177,7 +191,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       gridData.verticalAlignment = SWT.FILL;
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
-      
+            
       scriptEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
       section.setClient(scriptEditor);
       scriptEditor.setText(""); //$NON-NLS-1$
@@ -446,13 +460,14 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    protected void executeScript()
    {
       final String script = scriptEditor.getText();
+      final String parameters = parametersField.getText();
       consoleOutputStream = output.newOutputStream();
       actionExecute.setEnabled(false);
       new ConsoleJob(Messages.get().ScriptExecutor_JobName_Execute, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.executeScript(objectId, script, ScriptExecutor.this);
+            session.executeScript(objectId, script, parameters, ScriptExecutor.this);
          }
          
          @Override
@@ -720,6 +735,11 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
 
    @Override
    public void setStreamId(long streamId)
+   {
+   }
+
+   @Override
+   public void onError()
    {
    }
 }

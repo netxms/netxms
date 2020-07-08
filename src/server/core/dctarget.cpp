@@ -882,7 +882,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
    if (vm != nullptr)
    {
       ObjectRefArray<NXSL_Value> args(16, 16);
-      if ((p != nullptr) && !ParseValueList(vm, &p, args))
+      if ((p != nullptr) && !ParseValueList(vm, &p, args, true))
       {
          // argument parsing error
          nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Argument parsing error"), m_name, param);

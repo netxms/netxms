@@ -10822,7 +10822,27 @@ void ClientSession::executeScript(NXCPMessage *request)
    if (success)
    {
       msg.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
-      if (vm->run())
+
+      int count = request->getFieldAsInt16(VID_NUM_FIELDS);
+      ObjectRefArray<NXSL_Value> sargs(count, 1);
+      if (request->isFieldExist(VID_PARAMETER))
+      {
+         TCHAR parameters[1024];
+         request->getFieldAsString(VID_PARAMETER, parameters, 1024);
+         TCHAR *p = parameters;
+         ParseValueList(vm, &p, sargs, false);
+      }
+      else if (count > 0)
+      {
+         UINT32 fieldId = VID_FIELD_LIST_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            SharedString value = request->getFieldAsSharedString(fieldId++);
+            sargs.add(vm->createValue(value));
+         }
+      }
+
+      if (vm->run(sargs))
       {
          TCHAR buffer[1024];
          const TCHAR *value = vm->getResult()->getValueAsCString();

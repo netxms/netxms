@@ -36,4 +36,9 @@ public interface TextOutputListener
     * @param streamId ID of output stream (actual meaning depends on API call)
     */
    public void setStreamId(long streamId);
+
+   /**
+    * Called when error occurs
+    */
+   public void onError();
 }

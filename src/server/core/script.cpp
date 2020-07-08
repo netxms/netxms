@@ -573,7 +573,7 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
       _tcslcpy(parameters, argListStart, 4096);
 
       TCHAR *p = parameters;
-      if (!ParseValueList(vm, &p, args))
+      if (!ParseValueList(vm, &p, args, true))
       {
          // argument parsing error
          if (object != nullptr)
@@ -609,12 +609,15 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
 /**
  * Parse value list
  */
-bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args)
+bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets)
 {
    TCHAR *p = *start;
 
-   *p = 0;
-   p++;
+   if (hasBrackets)
+   {
+      *p = 0;
+      p++;
+   }
 
    TCHAR *s = p;
    int state = 1; // normal text
@@ -710,7 +713,7 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
             {
                p++;
                ObjectRefArray<NXSL_Value> elements(16, 16);
-               if (ParseValueList(vm, &p, elements))
+               if (ParseValueList(vm, &p, elements, true))
                {
                   NXSL_Array *array = new NXSL_Array(vm);
                   for(int i = 0; i < elements.size(); i++)

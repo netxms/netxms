@@ -401,7 +401,7 @@ bool GetScriptName(uint32_t scriptId, TCHAR *buffer, size_t size);
 void CreateScriptExportRecord(StringBuffer &xml, uint32_t id);
 void ImportScript(ConfigEntry *config, bool overwrite);
 NXSL_VM *FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object);
-bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args);
+bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets);
 
 /**
  * Global variables

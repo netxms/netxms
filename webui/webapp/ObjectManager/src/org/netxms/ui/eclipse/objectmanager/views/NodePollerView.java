@@ -299,6 +299,11 @@ public class NodePollerView extends ViewPart
          public void setStreamId(long streamId)
          {
          }
+
+         @Override
+         public void onError()
+         {
+         }
       };
 
       Job job = new Job(String.format(Messages.get().NodePollerView_JobName, target.getObjectName(), target.getObjectId())) {
