@@ -114,7 +114,7 @@ public abstract class DataCollectionObject
 	{
 		this.owner = owner;
 		id = msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
-	   nodeId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
+		nodeId = (owner != null) ? owner.getNodeId() : msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
 		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		resourceId = msg.getFieldAsInt64(NXCPCodes.VID_RESOURCE_ID);
 		sourceNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
