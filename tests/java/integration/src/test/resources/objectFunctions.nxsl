@@ -164,6 +164,6 @@ assert(container->name == "Test2");
 //Delete all objects
 DeleteObject(container);
 DeleteObject(node);
-sleep(30000);
+sleep(GetConfigurationVariable("SyncInterval") * 1000);
 assert(FindObject(nodeId) == null);
 assert(FindObject(containerId) == null);
