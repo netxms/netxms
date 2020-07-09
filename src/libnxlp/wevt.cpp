@@ -71,7 +71,8 @@ static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_P
  */
 static StringList *ExtractVariables(EVT_HANDLE event)
 {
-   TCHAR buffer[8192];
+   TCHAR buffer[4096];
+   void *renderBuffer = buffer;
 
    static PCWSTR eventProperties[] = { L"Event/EventData/Data[1]" };
    EVT_HANDLE renderContext = _EvtCreateRenderContext(0, NULL, EvtRenderContextUser);
@@ -86,17 +87,23 @@ static StringList *ExtractVariables(EVT_HANDLE event)
 
    // Get event values
    DWORD reqSize, propCount = 0;
-   if (!_EvtRender(renderContext, event, EvtRenderEventValues, 8192, buffer, &reqSize, &propCount))
+   BOOL renderSuccess = _EvtRender(renderContext, event, EvtRenderEventValues, sizeof(buffer), renderBuffer, &reqSize, &propCount);
+   if (!renderSuccess && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExtractVariables: Call to EvtRender failed: %s"),
-         GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ExtractVariables: Call to EvtRender requires larger buffer (%u bytes)"), reqSize);
+      renderBuffer = MemAlloc(reqSize);
+      renderSuccess = _EvtRender(renderContext, event, EvtRenderEventValues, reqSize, renderBuffer, &reqSize, &propCount);
+   }
+   if (!renderSuccess)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExtractVariables: Call to EvtRender failed: %s"), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
       goto cleanup;
    }
 
    if (propCount > 0)
    {
       variables = new StringList();
-      PEVT_VARIANT values = PEVT_VARIANT(buffer);
+      PEVT_VARIANT values = PEVT_VARIANT(renderBuffer);
       for (DWORD i = 0; i < propCount; i++)
       {
          switch (values[i].Type)
@@ -149,6 +156,8 @@ static StringList *ExtractVariables(EVT_HANDLE event)
 
 cleanup:
    _EvtClose(renderContext);
+   if (renderBuffer != buffer)
+      MemFree(renderBuffer);
    return variables;
 }
 
@@ -158,6 +167,7 @@ cleanup:
 static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID userContext, EVT_HANDLE event)
 {
 	WCHAR buffer[4096], *msg = buffer;
+   void *renderBuffer = buffer;
 	DWORD reqSize, propCount = 0;
 	EVT_HANDLE pubMetadata = NULL;
 	BOOL success;
@@ -175,23 +185,28 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
       L"Event/System/TimeCreated/@SystemTime"
    };
 	EVT_HANDLE renderContext = _EvtCreateRenderContext(6, eventProperties, EvtRenderContextValues);
-	if (renderContext == NULL)
+	if (renderContext == nullptr)
 	{
-		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtCreateRenderContext failed: %s"),
-							    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtCreateRenderContext failed: %s"), GetSystemErrorText(GetLastError(), buffer, 4096));
 		return 0;
 	}
 
 	// Get event values
-	if (!_EvtRender(renderContext, event, EvtRenderEventValues, 4096, buffer, &reqSize, &propCount))
-	{
-		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtRender failed: %s"),
-		                   GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+   BOOL renderSuccess = _EvtRender(renderContext, event, EvtRenderEventValues, sizeof(buffer), renderBuffer, &reqSize, &propCount);
+   if (!renderSuccess && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Call to EvtRender requires larger buffer (%u bytes)"), reqSize);
+      renderBuffer = MemAlloc(reqSize);
+      renderSuccess = _EvtRender(renderContext, event, EvtRenderEventValues, reqSize, renderBuffer, &reqSize, &propCount);
+   }
+   if (!renderSuccess)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtRender failed: %s"), GetSystemErrorText(GetLastError(), buffer, 4096));
 		goto cleanup;
 	}
 
 	// Publisher name
-	PEVT_VARIANT values = PEVT_VARIANT(buffer);
+	PEVT_VARIANT values = PEVT_VARIANT(renderBuffer);
 	if ((values[0].Type == EvtVarTypeString) && (values[0].StringVal != NULL))
 	{
 #ifdef UNICODE
@@ -243,7 +258,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		level = EVENTLOG_AUDIT_FAILURE;
 
    // Record ID
-   UINT64 recordId = 0;
+   uint64_t recordId = 0;
    if ((values[4].Type == EvtVarTypeUInt64) || (values[4].Type == EvtVarTypeInt64))
       recordId = values[4].UInt64Val;
    else if ((values[4].Type == EvtVarTypeUInt32) || (values[4].Type == EvtVarTypeInt32))
@@ -268,15 +283,15 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
    }
 
 	// Open publisher metadata
-	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
-	if (pubMetadata == NULL)
+	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, nullptr, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
+	if (pubMetadata == nullptr)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtOpenPublisherMetadata failed: %s"), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
 
 	// Format message text
-	success = _EvtFormatMessage(pubMetadata, event, 0, 0, NULL, EvtFormatMessageEvent, 4096, buffer, &reqSize);
+	success = _EvtFormatMessage(pubMetadata, event, 0, 0, nullptr, EvtFormatMessageEvent, 4096, buffer, &reqSize);
 	if (!success)
 	{
       DWORD error = GetLastError();
@@ -325,7 +340,9 @@ cleanup:
 	_EvtClose(renderContext);
 	if (msg != buffer)
 		MemFree(msg);
-	return 0;
+   if (renderBuffer != buffer)
+      MemFree(renderBuffer);
+   return 0;
 }
 
 /**
