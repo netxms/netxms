@@ -38,6 +38,7 @@ public class TestConstants
    public static int EVENT_CODE = 100000;
    public static int CONNECTION_POOL = 100;
    public static int USER_ID = 1;
+   public static String IMAGE_CATEGORY = "Network Objects";
    //Reinitialize variables from properties file
    public static TestConstants testConstants = new TestConstants();
    
