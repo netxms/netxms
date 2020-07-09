@@ -3,6 +3,7 @@
 *
 
 - Improved driver for Cisco Nexus
+- Fixed UI bug with accessing collected performance data from data collection editor
 - Fixed issues:
 	NX-1863 (Logwatch fails on parsing large Windows Event Log events)
 
