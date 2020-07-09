@@ -111,7 +111,7 @@ DatabaseQuery g_queries[] =
 	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(10, 0, 0), 0, 0,
 		_T("SELECT pg_catalog.pg_wal_lsn_diff(pg_current_wal_lsn(),'0/00000000') AS xlog_size, count(*) AS xlog_files FROM pg_catalog.pg_ls_waldir()")
 	},
-	{ NULL, 0, 0, 0, NULL }
+	{ nullptr, 0, 0, 0, nullptr }
 };
 
 /**
@@ -280,10 +280,9 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
 		return SYSINFO_RC_UNSUPPORTED;
 
 	DatabaseInstance *db = FindInstance(id);
-	if (db == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+	if (db == nullptr)
+		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-	bool missingAsZero;
 	if (arg[0] == _T('?'))  // count missing data as 0
 	{
 		if (db->getData(&arg[1], value))
@@ -291,8 +290,7 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
 		ret_int(value, 0);
 		return SYSINFO_RC_SUCCESS;
 	}
-	else
-		return db->getData(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+	return db->getData(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**
@@ -304,23 +302,26 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 	if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	TCHAR *c;
+   DatabaseInstance *db = FindInstance(id);
+   if (db == nullptr)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   TCHAR *c;
 	TCHAR instance[MAX_DB_STRING];
-	if ((c = _tcschr(id, _T('@'))) != NULL) { // is the first parameter in format database@connection
+	if ((c = _tcschr(id, _T('@'))) != nullptr)  // is the first parameter in format database@connection
+   {
 		*(c++) = 0;
 		_tcscpy(instance, id);
 		_tcscpy(id, c);
 	}
 
-
-
-	DatabaseInstance *db = FindInstance(id);
-	if (db == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
-
-	if (c == NULL) 
-		if (!AgentGetParameterArg(param, 2, instance, MAX_DB_STRING))
-			_tcscpy(instance, db->getName()); // use connection's maintenance database
+   if (c == nullptr)
+   {
+      if (!AgentGetParameterArg(param, 2, instance, MAX_DB_STRING))
+         return SYSINFO_RC_UNSUPPORTED;
+      if (instance[0] == 0)
+         _tcscpy(instance, db->getName()); // use connection's maintenance database
+   }
 
 	TCHAR tag[MAX_DB_STRING];
 	bool missingAsZero;
@@ -355,7 +356,7 @@ static LONG H_DatabaseServerConnectionStatus(const TCHAR *param, const TCHAR *ar
 
 	DatabaseInstance *db = FindInstance(id);
 	if (db == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
 	ret_string(value, db->isConnected() ? _T("YES") : _T("NO"));
 	return SYSINFO_RC_SUCCESS;
@@ -372,7 +373,7 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
 
 	DatabaseInstance *db = FindInstance(id);
 	if (db == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
 	int version = db->getVersion();
 	if ((version & 0xFF) == 0)
@@ -381,7 +382,6 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
 		_sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%d.%d"), version >> 16, (version >> 8) & 0xFF, version & 0xFF);
 	return SYSINFO_RC_SUCCESS;
 }
-
 
 /**
  * Handler for PostgreSQL.DBServersList list
@@ -398,20 +398,20 @@ static LONG H_DBServersList(const TCHAR *param, const TCHAR *arg, StringList *va
  */
 static LONG H_AllDatabasesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	StringList *list;
-	for(int i = 0; i < s_instances->size(); i++) {
+	for(int i = 0; i < s_instances->size(); i++)
+   {
 		DatabaseInstance *db = s_instances->get(i);
-		list = new StringList();
-		if (!db->getTagList(arg, list)) {
-			delete list;
+
+		StringList list;
+		if (!db->getTagList(arg, &list))
 			return SYSINFO_RC_ERROR;
-		}
-		for(int j = 0; j < list->size(); j++) {
+
+		for(int j = 0; j < list.size(); j++)
+      {
 			TCHAR s[MAX_RESULT_LENGTH];
-			_sntprintf(s, MAX_RESULT_LENGTH, _T("%s@%s"), list->get(j), db->getId());
+			_sntprintf(s, MAX_RESULT_LENGTH, _T("%s@%s"), list.get(j), db->getId());
 			value->add(s);
 		}
-		delete list;
 	}
 	return SYSINFO_RC_SUCCESS;
 }
@@ -426,8 +426,8 @@ static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 		return SYSINFO_RC_UNSUPPORTED;
 
 	DatabaseInstance *db = FindInstance(id);
-	if (db == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+	if (db == nullptr)
+		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
 	return db->getTagList(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
@@ -442,8 +442,8 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
 		return SYSINFO_RC_UNSUPPORTED;
 
 	DatabaseInstance *db = FindInstance(id);
-	if (db == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+	if (db == nullptr)
+		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
 	TableDescriptor *td = (TableDescriptor *)arg;
 	while (td->minVersion > db->getVersion())
@@ -464,7 +464,7 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
 	{ _T("Login"),			CT_STRING, 0, 0, MAX_DB_LOGIN,	 0, s_dbInfo.login },
 	{ _T("Password"),		CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbInfo.password },
 	{ _T("Server"),			CT_STRING, 0, 0, MAX_DB_STRING,	0, s_dbInfo.server },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /*

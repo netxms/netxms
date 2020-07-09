@@ -352,6 +352,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxhwid", "src\agent\tools\n
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "moxa", "src\server\drivers\moxa\moxa.vcxproj", "{3E701556-A2C0-45F8-41C7-82AEFDC43371}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pgsql", "src\agent\subagents\pgsql\pgsql.vcxproj", "{11B762A4-07BA-42D6-9819-D287AB3F59E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1466,6 +1468,14 @@ Global
 		{3E701556-A2C0-45F8-41C7-82AEFDC43371}.Release|Win32.Build.0 = Release|Win32
 		{3E701556-A2C0-45F8-41C7-82AEFDC43371}.Release|x64.ActiveCfg = Release|x64
 		{3E701556-A2C0-45F8-41C7-82AEFDC43371}.Release|x64.Build.0 = Release|x64
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1}.Debug|Win32.Build.0 = Debug|Win32
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1}.Debug|x64.ActiveCfg = Debug|x64
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1}.Debug|x64.Build.0 = Debug|x64
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1}.Release|Win32.ActiveCfg = Release|Win32
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1}.Release|Win32.Build.0 = Release|Win32
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1}.Release|x64.ActiveCfg = Release|x64
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1618,6 +1628,7 @@ Global
 		{114CD471-021A-A216-21CF-1F2FA75815EA} = {B5794570-4B2F-422E-881D-3ADB85587D8E}
 		{0EEAC781-1319-284F-B9A2-D1CBEFF8062E} = {896A7CDA-423A-460A-83E2-6ED37DAE187C}
 		{3E701556-A2C0-45F8-41C7-82AEFDC43371} = {53997B2A-D94C-428C-816D-938C297A1866}
+		{11B762A4-07BA-42D6-9819-D287AB3F59E1} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
