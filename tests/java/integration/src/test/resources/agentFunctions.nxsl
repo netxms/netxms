@@ -14,7 +14,7 @@ assert(AgentExecuteAction(preCreatedNode, actionName, "Param1", 2, 3.01));
 
 
 result = AgentExecuteActionWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01);
-assert(result == "Param1 2 3.010000 \n");
+assert(result == "Param1 2 3.010000\n");
 
 list = AgentReadList(preCreatedNode, "System.ProcessList");
 
