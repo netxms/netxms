@@ -1697,6 +1697,48 @@ static int F_ExpandString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 }
 
 /**
+ * Sends e-mail to specified recipients
+ * Syntax:
+ *    SendMail(recipients, subject, text, ishtml)
+ * Returnded value:
+ *    none
+ */
+static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+	if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	if (!argv[3]->isBoolean())
+		return  NXSL_ERR_NOT_BOOLEAN;
+
+	StringBuffer rcpts(argv[0]->getValueAsCString());
+	rcpts.trim();
+	const TCHAR *subj = argv[1]->getValueAsCString();
+	const TCHAR *text = argv[2]->getValueAsCString();
+	bool ishtml = argv[3]->getValueAsBoolean();
+
+	if (!rcpts.isEmpty())
+	{
+		nxlog_debug_tag(_T("SendMail.nxsl"), 3, _T("Sending mail to %s: \"%s\""), (const TCHAR *)rcpts, text);
+		TCHAR *curr = rcpts.getBuffer(), *next;
+		do
+		{
+			next = _tcschr(curr, _T(';'));
+			if (next != nullptr)
+				*next = 0;
+			StrStrip(curr);
+			PostMail(curr, subj, text, ishtml);
+			curr = next + 1;
+		} while(next != nullptr);
+	}
+	else
+	{
+		nxlog_debug_tag(_T("SendMail.nxsl"), 3, _T("Empty recipients list - mail will not be sent"));
+	}
+	return 0;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -1747,6 +1789,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "ManageObject", F_ManageObject, 1 },
 	{ "PostEvent", F_PostEvent, -1 },
 	{ "RenameObject", F_RenameObject, 2 },
+	{ "SendMail", F_SendMail, 4 },
    { "SetCustomAttribute", F_SetCustomAttribute, 3 },
    { "SetEventParameter", F_SetEventParameter, 3 },
 	{ "SetInterfaceExpectedState", F_SetInterfaceExpectedState, 2 },
