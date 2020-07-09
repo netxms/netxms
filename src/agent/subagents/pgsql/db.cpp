@@ -192,7 +192,7 @@ bool DatabaseInstance::poll()
 
 		count++;
 		DB_RESULT hResult = DBSelect(m_session, g_queries[i].query);
-		if (hResult == NULL)
+		if (hResult == nullptr)
 		{
 			failures++;
 			continue;
@@ -201,6 +201,7 @@ bool DatabaseInstance::poll()
 		int rowCount = DBGetNumRows(hResult);
 		if (rowCount == 0)
 		{
+		   DBFreeResult(hResult);
 			continue;
 		}
 
@@ -233,7 +234,7 @@ bool DatabaseInstance::poll()
 					size_t tagLen = _tcslen(tag);
 					tag[tagLen++] = _T('@');
 					nx_strncpy(&tag[tagLen], instance, 256 - tagLen);
-					data->setPreallocated(_tcsdup(tag), DBGetField(hResult, row, col, NULL, 0));
+					data->setPreallocated(MemCopyString(tag), DBGetField(hResult, row, col, nullptr, 0));
 				}
 			}
 		}
@@ -242,7 +243,7 @@ bool DatabaseInstance::poll()
 			for(int col = 0; col < numColumns; col++)
 			{
 				DBGetColumnName(hResult, col, &tag[tagBaseLen], 256 - tagBaseLen);
-				data->setPreallocated(_tcsdup(tag), DBGetField(hResult, 0, col, NULL, 0));
+				data->setPreallocated(MemCopyString(tag), DBGetField(hResult, 0, col, nullptr, 0));
 			}
 		}
 

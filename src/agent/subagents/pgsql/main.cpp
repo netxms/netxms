@@ -646,7 +646,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("PostgreSQL.DBServers"), H_DBServersList, NULL, _T("PostgreSQL: database servers being monitored") },
+	{ _T("PostgreSQL.DBServers"), H_DBServersList, nullptr, _T("PostgreSQL: database servers being monitored") },
 	{ _T("PostgreSQL.Databases(*)"), H_TagList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: databases on the specific server") },
 	{ _T("PostgreSQL.AllDatabases"), H_AllDatabasesList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: all databases on all monitored servers") },
 	{ _T("PostgreSQL.DataTags(*)"), H_TagList, _T("^(.*)$") }
@@ -659,7 +659,7 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
 	{ _T("PostgreSQL.Backends(*)"), H_TableQuery, (const TCHAR *)&s_tqBackends, _T("PID"), _T("PostgreSQL: backend activity") },
 	{ _T("PostgreSQL.Locks(*)"), H_TableQuery, (const TCHAR *)&s_tqLocks, _T("PID"), _T("PostgreSQL: locks") },
-	{ _T("PostgreSQL.PrepparedTransactions(*)"), H_TableQuery, (const TCHAR *)&s_tqPrepared, _T("GID"), _T("PostgreSQL: prepared transactions") }
+	{ _T("PostgreSQL.PreparedTransactions(*)"), H_TableQuery, (const TCHAR *)&s_tqPrepared, _T("GID"), _T("PostgreSQL: prepared transactions") }
 };
 
 /**
