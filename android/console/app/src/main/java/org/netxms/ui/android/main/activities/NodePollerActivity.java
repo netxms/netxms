@@ -94,7 +94,11 @@ public class NodePollerActivity extends AbstractClientActivity
 
 						@Override
 						public void setStreamId(long l)
+						{
+						}
 
+						@Override
+						public void onError()
 						{
 						}
 					});
