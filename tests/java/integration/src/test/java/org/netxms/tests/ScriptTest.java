@@ -20,6 +20,7 @@ package org.netxms.tests;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.netxms.base.InetAddressEx;
@@ -31,6 +32,7 @@ import org.netxms.client.ScriptCompilationResult;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 
@@ -236,6 +238,29 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          session.deleteObject(templateId);
          session.disconnect();
       }
+   }
+   
+   public void testNXSLAlarmFunctions() throws Exception
+   {
+      session = connect();
+      
+      HashMap<Long, Alarm> alarms = session.getAlarms();
+      assertTrue(alarms.size() > 0);
+      
+      List<String> params = new ArrayList<String>();
+      for(Alarm alarm : alarms.values())
+      {
+         String alarmKey = alarm.getKey();
+         if(alarmKey.isEmpty())
+            continue;
+         params.add(Long.toString(alarm.getId()));
+         params.add(alarmKey);
+         params.add(".*" + alarmKey.substring(1));
+         break;
+      }
+      System.out.println("Check that at least one alarm was found");
+      assertTrue(params.size() == 3);
+      executeScript("/alarmFunctions.nxsl", params);
    }
 
    /**

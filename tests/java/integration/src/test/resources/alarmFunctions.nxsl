@@ -1,0 +1,19 @@
+alarmId = $1;
+alarmKey = $2;
+alarmKeyRegexp = $3;
+
+//Non existing
+alarm = FindAlarmById(000);
+assert(alarm == null);
+alarm = FindAlarmByKey("Non existing key");
+assert(alarm == null);
+alarm = FindAlarmByKeyRegex("Non existing regexp");
+assert(alarm == null);
+
+//Valid
+alarm = FindAlarmById(alarmId);
+assert(alarm->key == alarmKey);
+alarm = FindAlarmByKey(alarmKey);
+assert(alarm->id == alarmId);
+alarm = FindAlarmByKeyRegex(alarmKeyRegexp);
+assert(alarm != null);
