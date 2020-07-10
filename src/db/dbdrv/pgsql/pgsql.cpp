@@ -513,13 +513,13 @@ extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR 
    {
       retry = false;
 	   PGresult	*pResult = (hStmt->name[0] != 0) ? 
-         PQexecPrepared(pConn->handle, hStmt->name, hStmt->pcount, hStmt->buffers, NULL, NULL, 0) :
-         PQexecParams(pConn->handle, hStmt->query, hStmt->pcount, NULL, hStmt->buffers, NULL, NULL, 0);
-	   if (pResult != NULL)
+         PQexecPrepared(pConn->handle, hStmt->name, hStmt->pcount, hStmt->buffers, nullptr, nullptr, 0) :
+         PQexecParams(pConn->handle, hStmt->query, hStmt->pcount, NULL, hStmt->buffers, nullptr, nullptr, 0);
+	   if (pResult != nullptr)
 	   {
 		   if (PQresultStatus(pResult) == PGRES_COMMAND_OK)
 		   {
-			   if (errorText != NULL)
+			   if (errorText != nullptr)
 				   *errorText = 0;
 			   rc = DBERR_SUCCESS;
 		   }
@@ -527,7 +527,7 @@ extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR 
 		   {
             const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
             if ((PQstatus(pConn->handle) != CONNECTION_BAD) &&
-                (sqlState != NULL) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
+                (sqlState != nullptr) && (!strcmp(sqlState, "53000") || !strcmp(sqlState, "53200")) && (retryCount > 0))
             {
                ThreadSleep(500);
                retry = true;
@@ -535,7 +535,7 @@ extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR 
             }
             else
             {
-			      if (errorText != NULL)
+			      if (errorText != nullptr)
 			      {
 				      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
                   int len = (int)wcslen(errorText);
@@ -556,7 +556,7 @@ extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR 
 	   }
 	   else
 	   {
-		   if (errorText != NULL)
+		   if (errorText != nullptr)
 			   wcsncpy(errorText, L"Internal error (pResult is NULL in DrvExecute)", DBDRV_MAX_ERROR_TEXT);
 		   rc = DBERR_OTHER_ERROR;
 	   }
@@ -605,14 +605,14 @@ static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText
 retry:
    PGresult	*pResult = PQexec(pConn->handle, szQuery);
 
-	if (pResult == NULL)
+	if (pResult == nullptr)
 	{
-		if (errorText != NULL)
+		if (errorText != nullptr)
 			wcsncpy(errorText, L"Internal error (pResult is NULL in UnsafeDrvQuery)", DBDRV_MAX_ERROR_TEXT);
 		return false;
 	}
 
-	if (PQresultStatus(pResult) != PGRES_COMMAND_OK)
+   if ((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK))
 	{
       const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
       if ((PQstatus(pConn->handle) != CONNECTION_BAD) &&
@@ -625,7 +625,7 @@ retry:
       }
       else
       {
-	      if (errorText != NULL)
+	      if (errorText != nullptr)
 	      {
 		      MultiByteToWideChar(CP_UTF8, 0, CHECK_NULL_EX_A(sqlState), -1, errorText, DBDRV_MAX_ERROR_TEXT);
             int len = (int)wcslen(errorText);
@@ -644,7 +644,7 @@ retry:
 	}
 
 	PQclear(pResult);
-	if (errorText != NULL)
+	if (errorText != nullptr)
 		*errorText = 0;
    return true;
 }
@@ -690,8 +690,7 @@ retry:
 		return NULL;
 	}
 
-	if ((PQresultStatus(pResult) != PGRES_COMMAND_OK) &&
-	    (PQresultStatus(pResult) != PGRES_TUPLES_OK))
+	if ((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK))
 	{	
       const char *sqlState = PQresultErrorField(pResult, PG_DIAG_SQLSTATE);
       if ((PQstatus(pConn->handle) != CONNECTION_BAD) &&
@@ -1293,7 +1292,7 @@ extern "C" DWORD __EXPORT DrvBegin(PG_CONN *pConn)
       return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock);
-	if (UnsafeDrvQuery(pConn, "BEGIN", NULL))
+	if (UnsafeDrvQuery(pConn, "BEGIN", nullptr))
    {
       dwResult = DBERR_SUCCESS;
    }
@@ -1316,7 +1315,7 @@ extern "C" DWORD __EXPORT DrvCommit(PG_CONN *pConn)
       return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock);
-	bRet = UnsafeDrvQuery(pConn, "COMMIT", NULL);
+	bRet = UnsafeDrvQuery(pConn, "COMMIT", nullptr);
 	MutexUnlock(pConn->mutexQueryLock);
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
