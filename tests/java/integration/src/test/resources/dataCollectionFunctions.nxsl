@@ -7,7 +7,7 @@ preCreatedNodeId = $1;
 preCreatedNode = FindObject(preCreatedNodeId);
 
 dciName = $2;
-dciDescription = "NXSL integration Tests DCIs";
+dciDescription = "NXSL integration Tests DCIs " . time();
 
 //Create push DCI
 pushDci = CreateDCI(preCreatedNode, "push", dciName, dciDescription, "int32", 0, 0);
