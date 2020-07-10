@@ -398,7 +398,10 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?,?)"), true);
+      DB_STATEMENT hStmt = DBPrepare(hdb,
+               (g_dbSyntax == DB_SYNTAX_TSDB) ?
+                        _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?)") :
+                        _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?,?)"), true);
       if (hStmt == nullptr)
       {
          MemFree(r);
@@ -428,10 +431,10 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
 
          if (!DBExecute(hStmt))
          {
-            free(r);
+            MemFree(r);
             break;
          }
-         free(r);
+         MemFree(r);
          count++;
          if (count == maxRecords)
             break;

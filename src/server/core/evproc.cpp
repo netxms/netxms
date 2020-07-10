@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -153,9 +153,14 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		}
 		else
 		{
-			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,")
-				_T("origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) ")
-				_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"), true);
+			DB_STATEMENT hStmt = DBPrepare(hdb,
+			         (g_dbSyntax == DB_SYNTAX_TSDB) ?
+                        _T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,")
+                        _T("origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) ")
+                        _T("VALUES (?,?,to_timestamp(?),?,?,?,?,?,?,?,?,?,?)") :
+                        _T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,")
+                        _T("origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) ")
+                        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"), true);
 			if (hStmt != nullptr)
 			{
 				do

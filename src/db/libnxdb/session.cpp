@@ -261,7 +261,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 #endif
 
    MutexLock(hConn->m_mutexTransLock);
-   INT64 ms = GetCurrentTimeMs();
+   int64_t ms = GetCurrentTimeMs();
 
    dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
    if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)

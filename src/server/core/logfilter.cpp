@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,26 +26,26 @@
 /**
  * Create log filter object from NXCP message
  */
-LogFilter::LogFilter(NXCPMessage *msg)
+LogFilter::LogFilter(const NXCPMessage& msg, LogHandle *log)
 {
-	m_numColumnFilters = (int)msg->getFieldAsUInt32(VID_NUM_FILTERS);
-	m_columnFilters = (ColumnFilter **)malloc(sizeof(ColumnFilter *) * m_numColumnFilters);
-	UINT32 varId = VID_COLUMN_FILTERS_BASE;
+	m_numColumnFilters = msg.getFieldAsInt32(VID_NUM_FILTERS);
+	m_columnFilters = MemAllocArray<ColumnFilter*>(m_numColumnFilters);
+	uint32_t fieldId = VID_COLUMN_FILTERS_BASE;
 	for(int i = 0; i < m_numColumnFilters; i++)
 	{
 		TCHAR column[256];
-		msg->getFieldAsString(varId++, column, 256);
-		m_columnFilters[i] = new ColumnFilter(msg, column, varId);
-		varId += m_columnFilters[i]->getVariableCount();
+		msg.getFieldAsString(fieldId++, column, 256);
+		m_columnFilters[i] = new ColumnFilter(msg, column, fieldId, log);
+		fieldId += m_columnFilters[i]->getVariableCount();
 	}
 
-	m_numOrderingColumns = (int)msg->getFieldAsUInt32(VID_NUM_ORDERING_COLUMNS);
-	m_orderingColumns = (OrderingColumn *)malloc(sizeof(OrderingColumn) * m_numOrderingColumns);
-	varId = VID_ORDERING_COLUMNS_BASE;
+	m_numOrderingColumns = msg.getFieldAsInt32(VID_NUM_ORDERING_COLUMNS);
+	m_orderingColumns = MemAllocArray<OrderingColumn>(m_numOrderingColumns);
+	fieldId = VID_ORDERING_COLUMNS_BASE;
 	for(int i = 0; i < m_numOrderingColumns; i++)
 	{
-		msg->getFieldAsString(varId++, m_orderingColumns[i].name, MAX_COLUMN_NAME_LEN);
-		m_orderingColumns[i].descending = msg->getFieldAsUInt16(varId++) ? true : false;
+		msg.getFieldAsString(fieldId++, m_orderingColumns[i].name, MAX_COLUMN_NAME_LEN);
+		m_orderingColumns[i].descending = msg.getFieldAsUInt16(fieldId++) ? true : false;
 	}
 }
 

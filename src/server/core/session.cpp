@@ -11238,7 +11238,7 @@ void ClientSession::queryServerLog(NXCPMessage *request)
 	if (log != nullptr)
 	{
 		INT64 rowCount;
-		msg.setField(VID_RCC, log->query(new LogFilter(request), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		msg.setField(VID_RCC, log->query(new LogFilter(*request, log), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
 		msg.setField(VID_NUM_ROWS, rowCount);
 		log->release();
 	}

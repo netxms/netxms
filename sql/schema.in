@@ -1167,7 +1167,11 @@ CREATE TABLE event_log
 (
   event_id SQL_INT64 not null,
   event_code integer not null,
+#ifdef DB_TSDB
+  event_timestamp timestamptz not null,
+#else
   event_timestamp integer not null,
+#endif
   origin integer not null,
   origin_timestamp integer not null,
   event_source integer not null,    /* Source object ID */
@@ -1179,7 +1183,7 @@ CREATE TABLE event_log
   root_event_id SQL_INT64 not null, /* Non-zero if current event correlates to some other event */
   raw_data SQL_TEXT null, /* Raw event data in JSON format */
 #ifdef DB_TSDB
-  PRIMARY KEY(event_id,event_source,event_timestamp)
+  PRIMARY KEY(event_id,event_timestamp)
 #else
   PRIMARY KEY(event_id)
 #endif
@@ -1209,7 +1213,7 @@ CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
 #endif
 
 #ifdef DB_TSDB
-SELECT create_hypertable('event_log', 'event_timestamp', 'event_source', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('event_log', 'event_timestamp', chunk_time_interval => interval '86400 seconds');
 #endif
 
 /**
@@ -1342,16 +1346,11 @@ CREATE TABLE alarms
   event_tags varchar(2000) null,
   rca_script_name varchar(255) null, // Name of root cause analysis script used during creation
   impact varchar(1000) null,
-#ifdef DB_TSDB
-  PRIMARY KEY(alarm_id,source_object_id,creation_time)
-#else
   PRIMARY KEY(alarm_id)
-#endif
 ) TABLE_TYPE;
 
-#ifdef DB_TSDB
-SELECT create_hypertable('alarms', 'creation_time', 'source_object_id', chunk_time_interval => 86400, number_partitions => 10, migrate_data => true);
-#endif
+CREATE INDEX idx_alarms_source_object_id ON alarms(source_object_id);
+CREATE INDEX idx_alarms_last_change_time ON alarms(last_change_time);
 
 /*
 ** Alarm notes
@@ -1523,7 +1522,11 @@ CREATE TABLE object_tools_input_fields
 CREATE TABLE syslog
 (
   msg_id SQL_INT64 not null,
+#ifdef DB_TSDB
+  msg_timestamp timestamptz not null,
+#else
   msg_timestamp integer not null,
+#endif
   facility integer not null,
   severity integer not null,
   source_object_id integer not null,
@@ -1532,7 +1535,7 @@ CREATE TABLE syslog
   msg_tag varchar(32) null,
   msg_text SQL_TEXT null,
 #ifdef DB_TSDB
-  PRIMARY KEY(msg_id,source_object_id,msg_timestamp)
+  PRIMARY KEY(msg_id,msg_timestamp)
 #else
   PRIMARY KEY(msg_id)
 #endif
@@ -1542,7 +1545,7 @@ CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
 CREATE INDEX idx_syslog_source ON syslog(source_object_id);
 
 #ifdef DB_TSDB
-SELECT create_hypertable('syslog', 'msg_timestamp', 'source_object_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('syslog', 'msg_timestamp', chunk_time_interval => interval '86400 seconds');
 #endif
 
 /*
@@ -1563,14 +1566,18 @@ CREATE TABLE script_library
 CREATE TABLE snmp_trap_log
 (
   trap_id SQL_INT64 not null,
+#ifdef DB_TSDB
+  trap_timestamp timestamptz not null,
+#else
   trap_timestamp integer not null,
+#endif
   ip_addr varchar(48) not null,
   object_id integer not null,
   zone_uin integer not null,
   trap_oid varchar(255) not null,
   trap_varlist SQL_TEXT null,
 #ifdef DB_TSDB
-  PRIMARY KEY(trap_id,object_id,trap_timestamp)
+  PRIMARY KEY(trap_id,trap_timestamp)
 #else
   PRIMARY KEY(trap_id)
 #endif
@@ -1580,7 +1587,7 @@ CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
 CREATE INDEX idx_snmp_trap_log_oid ON snmp_trap_log(object_id);
 
 #ifdef DB_TSDB
-SELECT create_hypertable('snmp_trap_log', 'trap_timestamp', 'object_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('snmp_trap_log', 'trap_timestamp', chunk_time_interval => interval '86400 seconds');
 #endif
 
 /*

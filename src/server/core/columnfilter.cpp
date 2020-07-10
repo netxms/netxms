@@ -26,45 +26,48 @@
 /**
  * Create column filter object from NXCP message
  */
-ColumnFilter::ColumnFilter(NXCPMessage *msg, const TCHAR *column, UINT32 baseId)
+ColumnFilter::ColumnFilter(const NXCPMessage& msg, const TCHAR *column, uint32_t baseId, LogHandle *log)
 {
-	uint32_t varId;
+	uint32_t fieldId;
 
-	m_column = _tcsdup(column);
-	m_type = (int)msg->getFieldAsUInt16(baseId);
+	m_column = MemCopyString(column);
+	const LOG_COLUMN *cd = log->getColumnDefinition(m_column);
+	m_columnFlags = (cd != nullptr) ? cd->flags : 0;
+
+	m_type = msg.getFieldAsInt16(baseId);
 	switch(m_type)
 	{
 		case FILTER_EQUALS:
 		case FILTER_LESS:
 		case FILTER_GREATER:
 		case FILTER_CHILDOF:
-			m_value.numericValue = msg->getFieldAsUInt64(baseId + 1);
-			m_negated = msg->getFieldAsUInt16(baseId + 2) ? true : false;
+			m_value.numericValue = msg.getFieldAsInt64(baseId + 1);
+			m_negated = msg.getFieldAsBoolean(baseId + 2);
 			m_varCount = 3;
 			break;
 		case FILTER_RANGE:
-			m_value.range.start = msg->getFieldAsUInt64(baseId + 1);
-			m_value.range.end = msg->getFieldAsUInt64(baseId + 2);
-			m_negated = msg->getFieldAsUInt16(baseId + 3) ? true : false;
+			m_value.range.start = msg.getFieldAsInt64(baseId + 1);
+			m_value.range.end = msg.getFieldAsInt64(baseId + 2);
+			m_negated = msg.getFieldAsBoolean(baseId + 3);
 			m_varCount = 4;
 			break;
 		case FILTER_LIKE:
-			m_value.like = msg->getFieldAsString(baseId + 1);
-			m_negated = msg->getFieldAsUInt16(baseId + 2) ? true : false;
+			m_value.like = msg.getFieldAsString(baseId + 1);
+			m_negated = msg.getFieldAsBoolean(baseId + 2);
 			m_varCount = 3;
 			break;
 		case FILTER_SET:
-			m_value.set.operation = msg->getFieldAsUInt16(baseId + 1);
-			m_value.set.count = msg->getFieldAsUInt16(baseId + 2);
+			m_value.set.operation = msg.getFieldAsInt16(baseId + 1);
+			m_value.set.count = msg.getFieldAsInt16(baseId + 2);
 			m_varCount = 3;
 
-			m_value.set.filters = (ColumnFilter **)malloc(sizeof(ColumnFilter *) * m_value.set.count);
-			varId = baseId + 3;
+			m_value.set.filters = MemAllocArray<ColumnFilter*>(m_value.set.count);
+			fieldId = baseId + 3;
 			for(int i = 0; i < m_value.set.count; i++)
 			{
-				ColumnFilter *filter = new ColumnFilter(msg, column, varId);
+				ColumnFilter *filter = new ColumnFilter(msg, column, fieldId, log);
 				m_value.set.filters[i] = filter;
-				varId += filter->getVariableCount();
+				fieldId += filter->getVariableCount();
 				m_varCount += filter->getVariableCount();
 			}
 			break;
@@ -104,22 +107,70 @@ StringBuffer ColumnFilter::generateSql()
 		case FILTER_EQUALS:
 			if (m_negated)
 				sql.append(_T("NOT "));
-			sql.appendFormattedString(_T("%s = ") INT64_FMT, m_column, m_value.numericValue);
+			sql.append(m_column);
+			sql.append(_T(" = "));
+			if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
+			{
+	         sql.append(_T("to_timestamp("));
+            sql.append(m_value.numericValue);
+            sql.append(_T(")"));
+			}
+			else
+			{
+			   sql.append(m_value.numericValue);
+			}
 			break;
 		case FILTER_LESS:
 			if (m_negated)
             sql.append(_T("NOT "));
-			sql.appendFormattedString(_T("%s < ") INT64_FMT, m_column, m_value.numericValue);
+         sql.append(m_column);
+         sql.append(_T(" < "));
+         if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
+         {
+            sql.append(_T("to_timestamp("));
+            sql.append(m_value.numericValue);
+            sql.append(_T(")"));
+         }
+         else
+         {
+            sql.append(m_value.numericValue);
+         }
 			break;
 		case FILTER_GREATER:
 			if (m_negated)
             sql.append(_T("NOT "));
-			sql.appendFormattedString(_T("%s > ") INT64_FMT, m_column, m_value.numericValue);
+         sql.append(m_column);
+         sql.append(_T(" > "));
+         if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
+         {
+            sql.append(_T("to_timestamp("));
+            sql.append(m_value.numericValue);
+            sql.append(_T(")"));
+         }
+         else
+         {
+            sql.append(m_value.numericValue);
+         }
 			break;
 		case FILTER_RANGE:
 			if (m_negated)
             sql.append(_T("NOT "));
-			sql.appendFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
+         sql.append(m_column);
+         sql.append(_T(" BETWEEN "));
+         if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
+         {
+            sql.append(_T("to_timestamp("));
+            sql.append(m_value.range.start);
+            sql.append(_T(") AND to_timestamp("));
+            sql.append(m_value.range.end);
+            sql.append(_T(")"));
+         }
+         else
+         {
+            sql.append(m_value.range.start);
+            sql.append(_T(" AND "));
+            sql.append(m_value.range.end);
+         }
 			break;
 		case FILTER_LIKE:
 			if (m_value.like[0] == 0)

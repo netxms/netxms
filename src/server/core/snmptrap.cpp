@@ -573,30 +573,31 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
    // Write trap to log if required
    if (s_logAllTraps || (node != nullptr))
    {
-      NXCPMessage msg;
-      TCHAR szQuery[8192], oidText[1024];
-      UINT32 dwTimeStamp = (UINT32)time(nullptr);
+      time_t timestamp = time(nullptr);
 
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Varbinds for %s %s from %s:"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"), &buffer[96], buffer);
       varbinds = BuildVarbindList(pdu);
 
       // Write new trap to database
-		UINT64 trapId = InterlockedIncrement64(&s_trapId);
-      _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
+		uint64_t trapId = InterlockedIncrement64(&s_trapId);
+      TCHAR query[8192], oidText[1024];
+      _sntprintf(query, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
                                 _T("ip_addr,object_id,zone_uin,trap_oid,trap_varlist) VALUES ")
-                                _T("(") INT64_FMT _T(",%d,'%s',%d,%d,'%s',%s)"),
-                 trapId, dwTimeStamp, srcAddr.toString(buffer),
+                                _T("(") UINT64_FMT _T(",%s") INT64_FMT _T("%s,'%s',%d,%d,'%s',%s)"),
+                 trapId, (g_dbSyntax == DB_SYNTAX_TSDB) ? _T("to_timestamp(") : _T(""), static_cast<int64_t>(timestamp),
+                 (g_dbSyntax == DB_SYNTAX_TSDB) ? _T(")") : _T(""), srcAddr.toString(buffer),
                  (node != nullptr) ? node->getId() : (UINT32)0, (node != nullptr) ? node->getZoneUIN() : zoneUIN,
                  pdu->getTrapId()->toString(oidText, 1024),
                  (const TCHAR *)DBPrepareString(g_dbDriver, varbinds));
-      QueueSQLRequest(szQuery);
+      QueueSQLRequest(query);
 
       // Notify connected clients
+      NXCPMessage msg;
       msg.setCode(CMD_TRAP_LOG_RECORDS);
       msg.setField(VID_NUM_RECORDS, (UINT32)1);
       msg.setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
       msg.setField(VID_TRAP_LOG_MSG_BASE, trapId);
-      msg.setField(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
+      msg.setFieldFromTime(VID_TRAP_LOG_MSG_BASE + 1, timestamp);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (node != nullptr) ? node->getId() : (UINT32)0);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 4, pdu->getTrapId()->toString(oidText, 1024));

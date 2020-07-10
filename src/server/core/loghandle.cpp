@@ -42,7 +42,7 @@ static inline bool IsIgnoredColumn(int type)
 /**
  * Constructor
  */
-LogHandle::LogHandle(NXCORE_LOG *info) : RefCountObject()
+LogHandle::LogHandle(const NXCORE_LOG *info) : RefCountObject()
 {
 	m_log = info;
 	m_filter = nullptr;
@@ -85,6 +85,17 @@ void LogHandle::getColumnInfo(NXCPMessage *msg)
 }
 
 /**
+ * Get column definition by column name
+ */
+const LOG_COLUMN *LogHandle::getColumnDefinition(const TCHAR *name) const
+{
+   for(int i = 0; m_log->columns[i].name != nullptr; i++)
+      if (!_tcsicmp(m_log->columns[i].name, name))
+         return &m_log->columns[i];
+   return nullptr;
+}
+
+/**
  * Delete query results
  */
 void LogHandle::deleteQueryResults()
@@ -102,7 +113,7 @@ void LogHandle::deleteQueryResults()
 void LogHandle::buildQueryColumnList()
 {
 	m_queryColumns.clear();
-	LOG_COLUMN *column = m_log->columns;
+	const LOG_COLUMN *column = m_log->columns;
 	bool first = true;
 	while(column->name != nullptr)
 	{
@@ -120,7 +131,16 @@ void LogHandle::buildQueryColumnList()
 		{
 			first = false;
 		}
-		m_queryColumns.append(column->name);
+		if ((column->flags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
+      {
+         m_queryColumns.append(_T("date_part('epoch',"));
+         m_queryColumns.append(column->name);
+         m_queryColumns.append(_T(")::int"));
+      }
+		else
+		{
+		   m_queryColumns.append(column->name);
+		}
 		column++;
 	}
 }
@@ -323,17 +343,17 @@ bool LogHandle::queryInternal(int64_t *rowCount, uint32_t userId)
  */
 Table *LogHandle::createTable()
 {
-	Table *table = new Table();
+   Table *table = new Table();
 
-	LOG_COLUMN *column = m_log->columns;
-	while(column->name != NULL)
-	{
+   const LOG_COLUMN *column = m_log->columns;
+   while(column->name != nullptr)
+   {
       if (!IsIgnoredColumn(column->type))
          table->addColumn(column->name);
-		column++;
-	}
+      column++;
+   }
 
-	return table;
+   return table;
 }
 
 /**

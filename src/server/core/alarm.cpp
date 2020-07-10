@@ -712,16 +712,28 @@ static void FillEventData(NXCPMessage *msg, UINT32 baseId, DB_RESULT hResult, in
  *
  * @return number of consumed variable identifiers
  */
-static UINT32 GetCorrelatedEvents(QWORD eventId, NXCPMessage *msg, UINT32 baseId, DB_HANDLE hdb)
+static uint32_t GetCorrelatedEvents(uint64_t eventId, NXCPMessage *msg, uint32_t baseId, DB_HANDLE hdb)
 {
-	UINT32 varId = baseId;
-	DB_STATEMENT hStmt = DBPrepare(hdb,
-		(g_dbSyntax == DB_SYNTAX_ORACLE) ?
-			_T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
-			_T("FROM event_log e,event_cfg c WHERE zero_to_null(e.root_event_id)=? AND c.event_code=e.event_code")
-		:
-			_T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
-			_T("FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code"));
+	uint32_t fieldId = baseId;
+	DB_STATEMENT hStmt;
+	switch(g_dbSyntax)
+	{
+	   case DB_SYNTAX_ORACLE:
+	      hStmt = DBPrepare(hdb,
+	               _T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
+	               _T("FROM event_log e,event_cfg c WHERE zero_to_null(e.root_event_id)=? AND c.event_code=e.event_code"));
+	      break;
+	   case DB_SYNTAX_TSDB:
+         hStmt = DBPrepare(hdb,
+                  _T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,date_part('epoch',e.event_timestamp)::int,e.event_message ")
+                  _T("FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code"));
+         break;
+	   default:
+         hStmt = DBPrepare(hdb,
+                  _T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
+                  _T("FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code"));
+         break;
+	}
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, eventId);
@@ -731,22 +743,22 @@ static UINT32 GetCorrelatedEvents(QWORD eventId, NXCPMessage *msg, UINT32 baseId
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
 			{
-				FillEventData(msg, varId, hResult, i, eventId);
-				varId += 10;
-				QWORD eventId = DBGetFieldUInt64(hResult, i, 0);
-				varId += GetCorrelatedEvents(eventId, msg, varId, hdb);
+				FillEventData(msg, fieldId, hResult, i, eventId);
+				fieldId += 10;
+				uint64_t eventId = DBGetFieldUInt64(hResult, i, 0);
+				fieldId += GetCorrelatedEvents(eventId, msg, fieldId, hdb);
 			}
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
 	}
-	return varId - baseId;
+	return fieldId - baseId;
 }
 
 /**
  * Fill NXCP message with alarm's related events
  */
-static void FillAlarmEventsMessage(NXCPMessage *msg, UINT32 alarmId)
+static void FillAlarmEventsMessage(NXCPMessage *msg, uint32_t alarmId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    const TCHAR *query;

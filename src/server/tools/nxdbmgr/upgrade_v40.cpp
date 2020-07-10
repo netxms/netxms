@@ -21,8 +21,122 @@
 **/
 
 #include "nxdbmgr.h"
-#include <nxevent.h>
 
+/**
+ * Upgrade from 40.1 to 40.2
+ */
+static bool H_UpgradeFromV1()
+{
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE alarms RENAME TO old_alarms")));
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE alarms (")
+            _T("   alarm_id integer not null,")
+            _T("   parent_alarm_id integer not null,")
+            _T("   alarm_state integer not null,")
+            _T("   hd_state integer not null,")
+            _T("   hd_ref varchar(63) null,")
+            _T("   creation_time integer not null,")
+            _T("   last_change_time integer not null,")
+            _T("   rule_guid varchar(36) null,")
+            _T("   source_object_id integer not null,")
+            _T("   zone_uin integer not null,")
+            _T("   source_event_code integer not null,")
+            _T("   source_event_id $SQL:INT64 not null,")
+            _T("   dci_id integer not null,")
+            _T("   message varchar(2000) null,")
+            _T("   original_severity integer not null,")
+            _T("   current_severity integer not null,")
+            _T("   repeat_count integer not null,")
+            _T("   alarm_key varchar(255) null,")
+            _T("   ack_by integer not null,")
+            _T("   resolved_by integer not null,")
+            _T("   term_by integer not null,")
+            _T("   timeout integer not null,")
+            _T("   timeout_event integer not null,")
+            _T("   ack_timeout integer not null,")
+            _T("   alarm_category_ids varchar(255) null,")
+            _T("   event_tags varchar(2000) null,")
+            _T("   rca_script_name varchar(255) null,")
+            _T("   impact varchar(1000) null,")
+            _T("   PRIMARY KEY(alarm_id))")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_alarms_source_object_id ON alarms(source_object_id)")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_alarms_last_change_time ON alarms(last_change_time)")));
+      CHK_EXEC(SQLQuery(_T("INSERT INTO alarms (alarm_id,parent_alarm_id,alarm_state,hd_state,hd_ref,creation_time,last_change_time,rule_guid,source_object_id,zone_uin,source_event_code,source_event_id,dci_id,message,original_severity,current_severity,repeat_count,alarm_key,ack_by,resolved_by,term_by,timeout,timeout_event,ack_timeout,alarm_category_ids,event_tags,rca_script_name,impact) SELECT alarm_id,parent_alarm_id,alarm_state,hd_state,hd_ref,creation_time,last_change_time,rule_guid,source_object_id,zone_uin,source_event_code,source_event_id,dci_id,message,original_severity,current_severity,repeat_count,alarm_key,ack_by,resolved_by,term_by,timeout,timeout_event,ack_timeout,alarm_category_ids,event_tags,rca_script_name,impact FROM old_alarms")));
+      CHK_EXEC(SQLQuery(_T("DROP TABLE old_alarms CASCADE")));
+
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE event_log RENAME TO event_log_v40_2")));
+      CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_event_log_event_timestamp")));
+      CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_event_log_source")));
+      CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_event_log_root_id")));
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE event_log (")
+            _T("   event_id $SQL:INT64 not null,")
+            _T("   event_code integer not null,")
+            _T("   event_timestamp timestamptz not null,")
+            _T("   origin integer not null,")
+            _T("   origin_timestamp integer not null,")
+            _T("   event_source integer not null,")
+            _T("   zone_uin integer not null,")
+            _T("   dci_id integer not null,")
+            _T("   event_severity integer not null,")
+            _T("   event_message varchar(2000) null,")
+            _T("   event_tags varchar(2000) null,")
+            _T("   root_event_id $SQL:INT64 not null,")
+            _T("   raw_data $SQL:TEXT null,")
+            _T("   PRIMARY KEY(event_id,event_timestamp))")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp)")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_source ON event_log(event_source)")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('event_log', 'event_timestamp', chunk_time_interval => interval '86400 seconds')")));
+
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE syslog RENAME TO syslog_v40_2")));
+      CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_syslog_msg_timestamp")));
+      CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_syslog_source")));
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE syslog (")
+            _T("   msg_id $SQL:INT64 not null,")
+            _T("   msg_timestamp timestamptz not null,")
+            _T("   facility integer not null,")
+            _T("   severity integer not null,")
+            _T("   source_object_id integer not null,")
+            _T("   zone_uin integer not null,")
+            _T("   hostname varchar(127) null,")
+            _T("   msg_tag varchar(32) null,")
+            _T("   msg_text $SQL:TEXT null,")
+            _T("   PRIMARY KEY(msg_id,msg_timestamp))")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp)")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_syslog_source ON syslog(source_object_id)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('syslog', 'msg_timestamp', chunk_time_interval => interval '86400 seconds')")));
+
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE snmp_trap_log RENAME TO snmp_trap_log_v40_2")));
+      CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_snmp_trap_log_tt")));
+      CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_snmp_trap_log_oid")));
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE snmp_trap_log (")
+            _T("   trap_id $SQL:INT64 not null,")
+            _T("   trap_timestamp timestamptz not null,")
+            _T("   ip_addr varchar(48) not null,")
+            _T("   object_id integer not null,")
+            _T("   zone_uin integer not null,")
+            _T("   trap_oid varchar(255) not null,")
+            _T("   trap_varlist $SQL:TEXT null,")
+            _T("   PRIMARY KEY(trap_id,trap_timestamp))")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp)")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_snmp_trap_log_oid ON snmp_trap_log(object_id)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('snmp_trap_log', 'trap_timestamp', chunk_time_interval => interval '86400 seconds')")));
+
+      RegisterOnlineUpgrade(40, 2);
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_alarms_source_object_id ON alarms(source_object_id)")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_alarms_last_change_time ON alarms(last_change_time)")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
 
 /**
  * Upgrade from 40.0 to 40.1
@@ -46,6 +160,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 1,  40, 2,  H_UpgradeFromV1  },
    { 0,  40, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };

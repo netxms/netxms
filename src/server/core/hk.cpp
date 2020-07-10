@@ -202,9 +202,7 @@ static void DropChunksForStorageClass(DB_HANDLE hdb, time_t cutoffTime, TCHAR ob
    _sntprintf(query, 256, _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), '%cdata_sc_%s')"),
             static_cast<int64_t>(cutoffTime), objectType, DCObject::getStorageClassName(storageClass));
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing query \"%s\""), query);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
-      DBFreeResult(hResult);
+   DBQuery(hdb, query);
 }
 
 /**
@@ -320,64 +318,73 @@ static void HouseKeeper()
 		CleanAlarmHistory(hdb);
 
 		// Remove outdated event log records
-		uint32_t dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
-		if (dwRetentionTime > 0)
+		uint32_t retentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
+		if (retentionTime > 0)
 		{
-	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing event log (retention time %d days)"), dwRetentionTime);
-			dwRetentionTime *= 86400;	// Convert days to seconds
+	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing event log (retention time %d days)"), retentionTime);
+			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), (long)(cycleStartTime - dwRetentionTime));
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), 'event_log')"), static_cast<int64_t>(cycleStartTime - retentionTime));
+         else
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
 			DBQuery(hdb, query);
 			if (!ThrottleHousekeeper())
 			   break;
 		}
 
 		// Remove outdated syslog records
-		dwRetentionTime = ConfigReadULong(_T("SyslogRetentionTime"), 90);
-		if (dwRetentionTime > 0)
+		retentionTime = ConfigReadULong(_T("SyslogRetentionTime"), 90);
+		if (retentionTime > 0)
 		{
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing syslog (retention time %d days)"), dwRetentionTime);
-			dwRetentionTime *= 86400;	// Convert days to seconds
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing syslog (retention time %d days)"), retentionTime);
+			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), (long)(cycleStartTime - dwRetentionTime));
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), 'syslog')"), static_cast<int64_t>(cycleStartTime - retentionTime));
+         else
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
 			DBQuery(hdb, query);
          if (!ThrottleHousekeeper())
             break;
 		}
 
 		// Remove outdated audit log records
-		dwRetentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
-		if (dwRetentionTime > 0)
+		retentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
+		if (retentionTime > 0)
 		{
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing audit log (retention time %d days)"), dwRetentionTime);
-			dwRetentionTime *= 86400;	// Convert days to seconds
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing audit log (retention time %d days)"), retentionTime);
+			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(cycleStartTime - dwRetentionTime));
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
 			DBQuery(hdb, query);
          if (!ThrottleHousekeeper())
             break;
 		}
 
 		// Remove outdated SNMP trap log records
-		dwRetentionTime = ConfigReadULong(_T("SNMPTrapLogRetentionTime"), 90);
-		if (dwRetentionTime > 0)
+		retentionTime = ConfigReadULong(_T("SNMPTrapLogRetentionTime"), 90);
+		if (retentionTime > 0)
 		{
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing SNMP trap log (retention time %d days)"), dwRetentionTime);
-			dwRetentionTime *= 86400;	// Convert days to seconds
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing SNMP trap log (retention time %d days)"), retentionTime);
+			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<%ld"), (long)(cycleStartTime - dwRetentionTime));
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), 'snmp_trap_log')"), static_cast<int64_t>(cycleStartTime - retentionTime));
+         else
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
 			DBQuery(hdb, query);
          if (!ThrottleHousekeeper())
             break;
 		}
 
       // Delete old user agent messages
-      dwRetentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);
-      if (dwRetentionTime > 0)
+      retentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);
+      if (retentionTime > 0)
       {
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing user agent messages log (retention time %d days)"), dwRetentionTime);
-         dwRetentionTime *= 86400;  // Convert days to seconds
-         DeleteExpiredUserAgentNotifications(hdb, dwRetentionTime);
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing user agent messages log (retention time %d days)"), retentionTime);
+         retentionTime *= 86400;  // Convert days to seconds
+         DeleteExpiredUserAgentNotifications(hdb, retentionTime);
          if (!ThrottleHousekeeper())
             break;
       }

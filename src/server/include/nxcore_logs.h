@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,6 +60,11 @@
 #define SET_OPERATION_OR   1
 
 /**
+ * Log column flags
+ */
+#define LCF_TSDB_TIMESTAMPTZ  0x0001   /* Column is of timestamptz data type in TimescaleDB */
+
+/**
  * Log column definition structure
  */
 struct LOG_COLUMN
@@ -67,6 +72,7 @@ struct LOG_COLUMN
 	const TCHAR *name;
 	const TCHAR *description;
 	int type;
+	uint32_t flags;
 };
 
 /**
@@ -91,23 +97,26 @@ struct OrderingColumn
 	bool descending;
 };
 
+class LogHandle;
+
 /**
  * Column filter
  */
 class ColumnFilter
 {
 private:
-	int m_varCount;	// Number of variables read from NXCP message during construction
-	int m_type;
-	TCHAR *m_column;
-	bool m_negated;
+   int m_varCount;   // Number of variables read from NXCP message during construction
+   int m_type;
+   TCHAR *m_column;
+   uint32_t m_columnFlags;
+   bool m_negated;
 	union t_ColumnFilterValue
 	{
-		INT64 numericValue;	// numeric value for <, >, and = operations
+		int64_t numericValue;   // numeric value for <, >, and = operations
 		struct
 		{
-			INT64 start;
-			INT64 end;
+		   int64_t start;
+		   int64_t end;
 		} range;
 		TCHAR *like;
 		struct
@@ -119,10 +128,10 @@ private:
 	} m_value;
 
 public:
-	ColumnFilter(NXCPMessage *msg, const TCHAR *column, UINT32 baseId);
+	ColumnFilter(const NXCPMessage& msg, const TCHAR *column, uint32_t baseId, LogHandle *log);
 	~ColumnFilter();
 
-	int getVariableCount() { return m_varCount; }
+	int getVariableCount() const { return m_varCount; }
 
 	StringBuffer generateSql();
 };
@@ -133,31 +142,31 @@ public:
 class LogFilter
 {
 private:
-	int m_numColumnFilters;
-	ColumnFilter **m_columnFilters;
-	int m_numOrderingColumns;
-	OrderingColumn *m_orderingColumns;
+   int m_numColumnFilters;
+   ColumnFilter **m_columnFilters;
+   int m_numOrderingColumns;
+   OrderingColumn *m_orderingColumns;
 
 public:
-	LogFilter(NXCPMessage *msg);
-	~LogFilter();
+   LogFilter(const NXCPMessage& msg, LogHandle *log);
+   ~LogFilter();
 
-	StringBuffer buildOrderClause();
+   StringBuffer buildOrderClause();
 
-	int getNumColumnFilter()
-	{
-		return m_numColumnFilters;
-	}
+   int getNumColumnFilter() const
+   {
+      return m_numColumnFilters;
+   }
 
-	ColumnFilter *getColumnFilter(int offset)
-	{
-		return m_columnFilters[offset];
-	}
+   ColumnFilter *getColumnFilter(int offset)
+   {
+      return m_columnFilters[offset];
+   }
 
-	int getNumOrderingColumns()
-	{
-		return m_numOrderingColumns;
-	}
+   int getNumOrderingColumns() const
+   {
+      return m_numOrderingColumns;
+   }
 };
 
 /**
@@ -166,31 +175,32 @@ public:
 class LogHandle : public RefCountObject
 {
 private:
-	NXCORE_LOG *m_log;
-	LogFilter *m_filter;
-	MUTEX m_lock;
+   const NXCORE_LOG *m_log;
+   LogFilter *m_filter;
+   MUTEX m_lock;
    StringBuffer m_queryColumns;
-	uint32_t m_rowCountLimit;
-	int64_t m_maxRecordId;
-	DB_RESULT m_resultSet;
+   uint32_t m_rowCountLimit;
+   int64_t m_maxRecordId;
+   DB_RESULT m_resultSet;
 
-	void buildQueryColumnList();
-	StringBuffer buildObjectAccessConstraint(uint32_t userId);
-	void deleteQueryResults();
-	bool queryInternal(int64_t *rowCount, uint32_t userId);
-	Table *createTable();
+   void buildQueryColumnList();
+   StringBuffer buildObjectAccessConstraint(uint32_t userId);
+   void deleteQueryResults();
+   bool queryInternal(int64_t *rowCount, uint32_t userId);
+   Table *createTable();
 
 public:
-	LogHandle(NXCORE_LOG *log);
-	virtual ~LogHandle();
+   LogHandle(const NXCORE_LOG *log);
+   virtual ~LogHandle();
 
-	void lock() { MutexLock(m_lock); }
-	void release() { MutexUnlock(m_lock); decRefCount(); }
+   void lock() { MutexLock(m_lock); }
+   void release() { MutexUnlock(m_lock); decRefCount(); }
 
-	bool query(LogFilter *filter, int64_t *rowCount, uint32_t userId);
-	Table *getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId);
-	void getRecordDetails(int64_t recordId, NXCPMessage *msg);
-	void getColumnInfo(NXCPMessage *msg);
+   bool query(LogFilter *filter, int64_t *rowCount, uint32_t userId);
+   Table *getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId);
+   void getRecordDetails(int64_t recordId, NXCPMessage *msg);
+   void getColumnInfo(NXCPMessage *msg);
+   const LOG_COLUMN *getColumnDefinition(const TCHAR *name) const;
 };
 
 // API functions
