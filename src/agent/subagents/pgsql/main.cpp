@@ -302,10 +302,6 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 	if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
-   if (db == nullptr)
-      return SYSINFO_RC_NO_SUCH_INSTANCE;
-
    TCHAR *c;
 	TCHAR instance[MAX_DB_STRING];
 	if ((c = _tcschr(id, _T('@'))) != nullptr)  // is the first parameter in format database@connection
@@ -315,6 +311,10 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 		_tcscpy(id, c);
 	}
 
+   DatabaseInstance *db = FindInstance(id);
+   if (db == nullptr)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
    if (c == nullptr)
    {
       if (!AgentGetParameterArg(param, 2, instance, MAX_DB_STRING))
@@ -322,6 +322,8 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
       if (instance[0] == 0)
          _tcscpy(instance, db->getName()); // use connection's maintenance database
    }
+
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("H_InstanceParameter: querying %s for instance %s"), arg, instance);
 
 	TCHAR tag[MAX_DB_STRING];
 	bool missingAsZero;
@@ -342,7 +344,7 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 		ret_int(value, 0);
 		return SYSINFO_RC_SUCCESS;
 	}
-	return SYSINFO_RC_ERROR;
+	return SYSINFO_RC_NO_SUCH_INSTANCE;
 }
 
 /**
