@@ -28,16 +28,14 @@
  */
 static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *arg, int maxSize, bool inBrackets)
 {
-   const TCHAR *ptr1, *ptr2;
-   int state, currIndex, pos;
-   bool success = true;
-
    arg[0] = 0;    // Default is empty string
-   ptr1 = _tcschr(param, _T('('));
-   if(!inBrackets)   //If no brackets is used set beginning of the sting as a parameter beginning
-      ptr1 = param;
-   if (ptr1 == NULL)
+   const TCHAR *ptr1 = inBrackets ? _tcschr(param, _T('(')) : param;
+   if (ptr1 == nullptr)
       return true;  // No arguments at all
+
+   bool success = true;
+   int state, currIndex, pos;
+   const TCHAR *ptr2;
    for(ptr2 = ptr1 + 1, currIndex = 1, state = 0, pos = 0; state != -1; ptr2++)
    {
       switch(state)
@@ -69,7 +67,7 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
                   break;
                case 0:
                   state = -1;       // Finish processing
-                  if (!inBrackets) //No error flag if parameters were given without braces
+                  if (inBrackets)   // No error flag if parameters were given without brackets
                      success = false;  // Set error flag
                   break;
                default:
@@ -140,14 +138,16 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
 bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize, bool inBrackets)
 {
 #ifdef UNICODE
-	WCHAR *temp = (WCHAR *)malloc(maxSize * sizeof(WCHAR));
+   WCHAR localBuffer[1024];
+	WCHAR *temp = (maxSize > 1024) ? MemAllocStringW(maxSize) : localBuffer;
 	bool success = AgentGetParameterArgInternal(param, index, temp, maxSize, inBrackets);
 	if (success)
 	{
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, temp, -1, arg, maxSize, NULL, NULL);
+		wchar_to_mb(temp, -1, arg, maxSize);
 		arg[maxSize - 1] = 0;
 	}
-	free(temp);
+	if (temp != localBuffer)
+	   MemFree(temp);
 	return success;
 #else
 	return AgentGetParameterArgInternal(param, index, arg, maxSize, inBrackets);
@@ -163,14 +163,16 @@ bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, 
 #ifdef UNICODE
 	return AgentGetParameterArgInternal(param, index, arg, maxSize, inBrackets);
 #else
-	char *temp = (char *)malloc(maxSize);
+   char localBuffer[1024];
+   char *temp = (maxSize > 1024) ? MemAllocStringA(maxSize) : localBuffer;
 	bool success = AgentGetParameterArgInternal(param, index, temp, maxSize, inBrackets);
 	if (success)
 	{
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, temp, -1, arg, maxSize);
+		mb_to_wchar(temp, -1, arg, maxSize);
 		arg[maxSize - 1] = 0;
 	}
-	free(temp);
+   if (temp != localBuffer)
+      MemFree(temp);
 	return success;
 #endif
 }
