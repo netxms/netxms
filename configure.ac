@@ -2965,7 +2965,23 @@ if test "$CXX" != "CC"; then
 			[ AC_MSG_RESULT(no) ],
 			[
 				AC_MSG_RESULT(yes)
-				AC_CHECK_LIB(atomic, __sync_fetch_and_add_8)
+				AC_MSG_CHECKING([for libatomic])
+				OLD_LIBS="$LIBS"
+				LIBS="$LIBS -latomic"
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+					[[
+#if SIZEOF_LONG == 8
+						unsigned long val;
+#else
+						unsigned long long val;
+#endif
+						__sync_fetch_and_add(&val, 1);
+					]])],
+					[ AC_MSG_RESULT(yes) ],
+					[
+						AC_MSG_RESULT(no)
+						LIBS="$OLD_LIBS"
+					])
 			])
 	fi
 fi
