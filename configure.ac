@@ -2951,7 +2951,7 @@ if test "$CXX" != "CC"; then
 	fi
 	AC_MSG_RESULT([$have_atomic_builtins])
 
-	if test "$CC" = "gcc" -a "$have_sync_builtins" = "yes"; then
+	if test "x$ac_compiler_gnu" = "xyes" -a "$have_sync_builtins" = "yes"; then
 		AC_MSG_CHECKING([if 64 bit __sync builtins require libatomic])
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
 			[[
