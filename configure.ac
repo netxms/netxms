@@ -2950,6 +2950,24 @@ if test "$CXX" != "CC"; then
 		AC_DEFINE([HAVE_ATOMIC_BUILTINS], [1], [Define to 1 if gcc __atomic builtins are available])
 	fi
 	AC_MSG_RESULT([$have_atomic_builtins])
+
+	if test "$CC" = "gcc" -a "$have_sync_builtins" = "yes"; then
+		AC_MSG_CHECKING([if 64 bit __sync builtins require libatomic])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+			[[
+#if SIZEOF_LONG == 8
+				unsigned long val;
+#else
+				unsigned long long val;
+#endif
+				__sync_fetch_and_add(&val, 1);
+			]])],
+			[ AC_MSG_RESULT(no) ],
+			[
+				AC_MSG_RESULT(yes)
+				AC_CHECK_LIB(atomic, __sync_fetch_and_add_8)
+			])
+	fi
 fi
 
 
