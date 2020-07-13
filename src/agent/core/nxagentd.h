@@ -901,8 +901,9 @@ private:
 
    AgentActionExecutor();
 
-   virtual void onOutput(const char *text);
-   virtual void endOfOutput();
+   virtual void onOutput(const char *text) override;
+   virtual void endOfOutput() override;
+
    void substituteArgs();
    UINT32 findAgentAction();
 
