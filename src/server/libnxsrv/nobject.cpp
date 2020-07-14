@@ -97,7 +97,7 @@ void NObject::addChild(const shared_ptr<NObject>& object)
    {
       std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
       if(pair->second->isInheritable())
-         updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->isRedefined() ? m_id : pair->second->sourceObject));
+         updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->isRedefined() || pair->second->sourceObject == 0 ? m_id : pair->second->sourceObject));
    }
    delete iterator;
    unlockCustomAttributes();
