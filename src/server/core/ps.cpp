@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_ps.h>
 
 /**
  * Storage
@@ -126,10 +127,10 @@ bool DeletePersistentStorageValue(const TCHAR *key)
 /**
  * Get persistent storage value by key
  */
-const TCHAR *GetPersistentStorageValue(const TCHAR *key)
+SharedString GetPersistentStorageValue(const TCHAR *key)
 {
-   if (key == NULL)
-      return NULL;
+   if (key == nullptr)
+      return nullptr;
 
    TCHAR tempKey[128];
    if (_tcslen(key) > 127)
@@ -139,7 +140,7 @@ const TCHAR *GetPersistentStorageValue(const TCHAR *key)
    }
 
    MutexLock(s_lockPStorage);
-   const TCHAR *value = s_persistentStorage.get(key);
+   SharedString value(s_persistentStorage.get(key));
    MutexUnlock(s_lockPStorage);
    return value;
 }
@@ -154,40 +155,32 @@ void GetPersistentStorageList(NXCPMessage *msg)
    MutexUnlock(s_lockPStorage);
 }
 
-struct PsCbContainer
-{
-   void *ptr;
-   UINT32 watchdogId;
-};
-
 /**
  * Callback for persistent storage value delete form database
  */
-static EnumerationCallbackResult DeletePSValueCB(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult DeletePSValueCB(const TCHAR *key, const TCHAR *value, std::pair<DB_STATEMENT, uint32_t> *context)
 {
-   WatchdogNotify(((PsCbContainer *)data)->watchdogId);
-   DB_STATEMENT hStmt = (DB_STATEMENT)((PsCbContainer *)data)->ptr;
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
-   return DBExecute(hStmt) ? _CONTINUE : _STOP;
+   WatchdogNotify(context->second);
+   DBBind(context->first, 1, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+   return DBExecute(context->first) ? _CONTINUE : _STOP;
 }
 
 /**
  * Callback for persistent storage value set to database
  */
-static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const TCHAR *value, std::pair<DB_HANDLE, uint32_t> *context)
 {
-   WatchdogNotify(((PsCbContainer *)data)->watchdogId);
-   DB_HANDLE hdb = (DB_HANDLE)((PsCbContainer *)data)->ptr;
+   WatchdogNotify(context->second);
 
    DB_STATEMENT hStmt =
-      IsDatabaseRecordExist(hdb, _T("persistent_storage"), _T("entry_key"), key) ?
-         DBPrepare(hdb, _T("UPDATE persistent_storage SET value=? WHERE entry_key=?")) :
-         DBPrepare(hdb, _T("INSERT INTO persistent_storage (value,entry_key) VALUES (?,?)"));
+      IsDatabaseRecordExist(context->first, _T("persistent_storage"), _T("entry_key"), key) ?
+         DBPrepare(context->first, _T("UPDATE persistent_storage SET value=? WHERE entry_key=?")) :
+         DBPrepare(context->first, _T("INSERT INTO persistent_storage (value,entry_key) VALUES (?,?)"));
 
    bool success;
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, static_cast<const TCHAR*>(value), DB_BIND_STATIC);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -203,18 +196,17 @@ static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const void *valu
 /**
  * Callback for persistent storage value delete form database
  */
-static EnumerationCallbackResult MoveToPreviousListCB(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult MoveToPreviousListCB(const TCHAR *key, const TCHAR *value, StringMap *moveMap)
 {
-   StringMap *mapToMove = (StringMap*)data;
    if (!s_valueDeleteList->contains(key) && !s_valueSetList->contains(key))
-      mapToMove->set(key, static_cast<const TCHAR*>(value));
+      moveMap->set(key, value);
    return _CONTINUE;
 }
 
 /**
  * Update persistent storage in database
  */
-void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
+void UpdatePStorageDatabase(DB_HANDLE hdb, uint32_t watchdogId)
 {
    if (s_valueDeleteList->isEmpty() && s_valueSetList->isEmpty()) //do nothing if there are no updates
       return;
@@ -234,12 +226,10 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
    if (!tmpDeleteList->isEmpty())
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM persistent_storage WHERE entry_key=?"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
-         PsCbContainer container;
-         container.watchdogId = watchdogId;
-         container.ptr = hStmt;
-         success = _CONTINUE == tmpDeleteList->forEach(DeletePSValueCB, &container);
+         std::pair<DB_STATEMENT, uint32_t> context(hStmt, watchdogId);
+         success = _CONTINUE == tmpDeleteList->forEach(DeletePSValueCB, &context);
          DBFreeStatement(hStmt);
       }
       else
@@ -250,10 +240,8 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
 
    if (!tmpSetList->isEmpty())
    {
-      PsCbContainer container;
-      container.watchdogId = watchdogId;
-      container.ptr = hdb;
-      success = _CONTINUE == tmpSetList->forEach(SetPSValueCB, &container);
+      std::pair<DB_HANDLE, uint32_t> context(hdb, watchdogId);
+      success = _CONTINUE == tmpSetList->forEach(SetPSValueCB, &context);
    }
 
    if (success)
@@ -298,7 +286,8 @@ void NXSL_PersistentStorage::write(const TCHAR *name, NXSL_Value *value)
  */
 NXSL_Value *NXSL_PersistentStorage::read(const TCHAR *name, NXSL_ValueManager *vm)
 {
-   return vm->createValue(GetPersistentStorageValue(name));
+   SharedString value = GetPersistentStorageValue(name);
+   return !value.isNull() ? vm->createValue(value) : vm->createValue();
 }
 
 /**

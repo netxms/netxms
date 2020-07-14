@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_ps.h>
 
 /**
  * Externals

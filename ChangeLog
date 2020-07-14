@@ -17,6 +17,7 @@
 - Fixed UI bug with accessing collected performance data from data collection editor
 - Fixed issues:
 	NX-1863 (Logwatch fails on parsing large Windows Event Log events)
+	NX-1897 (ReadPersistentStorage returns incorrect value for non-existing key)
 
 
 *
