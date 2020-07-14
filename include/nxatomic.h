@@ -404,7 +404,8 @@ inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, uint3
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
    __asm__ __volatile__("xchgl %2, %1" : "=a" (comparand), "+m" (*target) : "0" (exchange));
 #elif HAVE_ATOMIC_BUILTINS
-   return __atomic_compare_exchange_n(target, &comparand, exchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? comparand : *target;
+   uint32_t expected = comparand;
+   return __atomic_compare_exchange_n(target, &expected, exchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? comparand : expected;
 #else
    return __sync_val_compare_and_swap(target, comparand, exchange);
 #endif
