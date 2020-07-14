@@ -27,6 +27,7 @@
 #include <entity_mib.h>
 #include <nxcore_websvc.h>
 #include <nxcore_logs.h>
+#include <nxcore_ps.h>
 #include <nms_pkg.h>
 
 #ifdef _WIN32

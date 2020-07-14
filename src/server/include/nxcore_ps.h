@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,9 +30,9 @@ void PersistentStorageInit();
 void PersistentStorageDestroy();
 void SetPersistentStorageValue(const TCHAR *key, const TCHAR *value);
 bool DeletePersistentStorageValue(const TCHAR *key);
-const TCHAR *GetPersistentStorageValue(const TCHAR *key);
+SharedString GetPersistentStorageValue(const TCHAR *key);
 void GetPersistentStorageList(NXCPMessage *msg);
-void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId);
+void UpdatePStorageDatabase(DB_HANDLE hdb, uint32_t watchdogId);
 
 /**
  * NXSL class for persistent storage
@@ -45,7 +45,6 @@ public:
 
    void remove(const TCHAR *name);
 };
-
 
 /**
  * NXSL persistent storage

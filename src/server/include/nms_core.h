@@ -90,7 +90,6 @@
 #include "nms_locks.h"
 #include "nms_topo.h"
 #include "nms_script.h"
-#include "nxcore_ps.h"
 #include "nxcore_jobs.h"
 #include "nxcore_schedule.h"
 #ifdef WITH_ZMQ
