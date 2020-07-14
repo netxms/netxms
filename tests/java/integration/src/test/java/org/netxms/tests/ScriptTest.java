@@ -20,6 +20,7 @@ package org.netxms.tests;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
@@ -168,7 +169,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       }
       assertNotNull(managementNode);      
 
-      String dciName = "Test.DCI";
+      String dciName = "Test.DCI" + Long.toString((new Date()).getTime());
       List<String> params = new ArrayList<String>();
       params.add(Long.toString(managementNode.getObjectId()));
       params.add(dciName);
