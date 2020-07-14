@@ -2943,6 +2943,7 @@ if test "$CXX" != "CC"; then
 			__atomic_test_and_set(&l, __ATOMIC_RELAXED);
 			__atomic_store_n(&v, 1, __ATOMIC_RELEASE);
 			__atomic_load_n(&v, __ATOMIC_ACQUIRE);
+			__atomic_fetch_add(&v, 1, __ATOMIC_SEQ_CST);
 		]])],
 		[have_atomic_builtins=yes],
 		[have_atomic_builtins=no])
@@ -2952,6 +2953,40 @@ if test "$CXX" != "CC"; then
 	AC_MSG_RESULT([$have_atomic_builtins])
 
 	if test "x$ac_compiler_gnu" = "xyes" -a "$have_sync_builtins" = "yes"; then
+		AC_MSG_CHECKING([if 64 bit __atomic builtins require libatomic])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+			[[
+#if SIZEOF_LONG == 8
+				unsigned long val;
+#else
+				unsigned long long val;
+#endif
+				__atomic_fetch_add(&val, 1, __ATOMIC_SEQ_CST);
+			]])],
+			[ AC_MSG_RESULT(no) ],
+			[
+				AC_MSG_RESULT(yes)
+				AC_MSG_CHECKING([for libatomic])
+				OLD_LIBS="$LIBS"
+				LIBS="$LIBS -latomic"
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+					[[
+#if SIZEOF_LONG == 8
+						unsigned long val;
+#else
+						unsigned long long val;
+#endif
+						__atomic_fetch_add(&val, 1, __ATOMIC_SEQ_CST);
+					]])],
+					[ AC_MSG_RESULT(yes) ],
+					[
+						AC_MSG_RESULT(no)
+						LIBS="$OLD_LIBS"
+					])
+			])
+	fi
+
+	if test "x$ac_compiler_gnu" = "xyes" -a "$have_sync_builtins" = "yes" -a "$have_atomic_builtins" != "yes"; then
 		AC_MSG_CHECKING([if 64 bit __sync builtins require libatomic])
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
 			[[

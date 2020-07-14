@@ -373,6 +373,8 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
    VolatileCounter temp = 1;
    __asm__ __volatile__("lock; xaddl %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
    return temp + 1;
+#elif HAVE_ATOMIC_BUILTINS
+   return __atomic_add_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_add_and_fetch(v, 1);
 #endif
@@ -387,6 +389,8 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
    VolatileCounter temp = -1;
    __asm__ __volatile__("lock; xaddl %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
    return temp - 1;
+#elif HAVE_ATOMIC_BUILTINS
+   return __atomic_sub_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_sub_and_fetch(v, 1);
 #endif
@@ -399,6 +403,8 @@ inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, uint3
 {
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
    __asm__ __volatile__("xchgl %2, %1" : "=a" (comparand), "+m" (*target) : "0" (exchange));
+#elif HAVE_ATOMIC_BUILTINS
+   return __atomic_compare_exchange_n(target, &comparand, exchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? comparand : *target;
 #else
    return __sync_val_compare_and_swap(target, comparand, exchange);
 #endif
@@ -413,6 +419,8 @@ inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
    VolatileCounter64 temp = 1;
    __asm__ __volatile__("lock; xaddq %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
    return temp + 1;
+#elif HAVE_ATOMIC_BUILTINS
+   return __atomic_add_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_add_and_fetch(v, 1);
 #endif
@@ -427,6 +435,8 @@ inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
    VolatileCounter64 temp = -1;
    __asm__ __volatile__("lock; xaddq %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
    return temp - 1;
+#elif HAVE_ATOMIC_BUILTINS
+   return __atomic_sub_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_sub_and_fetch(v, 1);
 #endif
@@ -445,6 +455,8 @@ inline void *InterlockedExchangePointer(void* volatile *target, void *value)
    __asm__ __volatile__("xchgl %2, %1" : "=a" (oldval), "+m" (*target) : "0" (value));
 #endif
    return oldval;
+#elif HAVE_ATOMIC_BUILTINS
+   return __atomic_exchange_n(target, value, __ATOMIC_SEQ_CST);
 #else
    __sync_synchronize();
    return __sync_lock_test_and_set(target, value);
@@ -462,6 +474,8 @@ inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
    {
       c = *target;
    } while(InterlockedCompareExchange(target, c | bits, c) != c)
+#elif HAVE_ATOMIC_BUILTINS
+   __atomic_or_fetch(target, bits, __ATOMIC_SEQ_CST);
 #else
    __sync_or_and_fetch(target, bits);
 #endif
