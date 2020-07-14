@@ -96,8 +96,8 @@ DatabaseQuery g_queries[] =
 			_T("CASE WHEN (pg_catalog.current_setting('archive_mode')::boolean AND ( last_failed_wal IS NULL OR last_failed_wal <= last_archived_wal)) THEN 'YES' ELSE 'NO' END AS is_archiving ")
 			_T("FROM pg_catalog.pg_stat_archiver")
 	},
-	{ _T("REPLICATION"), 0, 0, 0,
-		_T("SELECT CASE WHEN pg_is_in_recovery() THEN 'YES' ELSE 'NO' END AS in_recovery,  CASE WHEN count(*) > 0 THEN 'YES' ELSE 'NO' END AS is_receiver FROM pg_catalog.pg_stat_wal_receiver")
+	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(9, 6, 0), 0, 0,
+		_T("SELECT CASE WHEN pg_is_in_recovery() THEN 'YES' ELSE 'NO' END AS in_recovery, CASE WHEN count(*) > 0 THEN 'YES' ELSE 'NO' END AS is_receiver FROM pg_catalog.pg_stat_wal_receiver")
 	},
 	{ _T("REPLICATION"), 0, 0, 0,
 		_T("SELECT count(*) stanby FROM pg_catalog.pg_stat_replication")
