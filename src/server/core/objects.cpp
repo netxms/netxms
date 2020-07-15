@@ -1358,6 +1358,14 @@ static void LinkObjects(NetObj *object, void *data)
 }
 
 /**
+ * ObjectIndex::forEach callback which prunes custom attributes
+ */
+static void PruneCustomAttributes(NetObj *object, void *data)
+{
+   object->pruneCustomAttributes();
+}
+
+/**
  * Load objects from database at stratup
  */
 BOOL LoadObjects()
@@ -2065,8 +2073,6 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
-   DBConnectionPoolReleaseConnection(mainDB);
-
    g_idxObjectById.setStartupMode(false);
    g_idxServiceCheckById.setStartupMode(false);
 
@@ -2082,6 +2088,14 @@ BOOL LoadObjects()
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;
+
+   //Prune custom attributes if required
+   if (MetaDataReadInt32(_T("PruneCustomAttributes"), 0) > 0)
+   {
+      g_idxObjectById.forEach(PruneCustomAttributes, nullptr);
+      DBQuery(mainDB, _T("DELETE FROM metadata WHERE var_name='PruneCustomAttributes'"));
+   }
+   DBConnectionPoolReleaseConnection(mainDB);
 
    // Recalculate status for built-in objects
    g_entireNetwork->calculateCompoundStatus();

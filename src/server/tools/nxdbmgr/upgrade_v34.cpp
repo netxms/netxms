@@ -23,6 +23,18 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+/**
+ * Upgrade from 34.12 to 34.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('PruneCustomAttributes', '1')"))); //Set flag to deduplicate custom attributes
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
 /**
  * Upgrade from 34.11 to 34.12
  */
@@ -217,6 +229,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 12, 34, 13, H_UpgradeFromV12 },
    { 11, 34, 12, H_UpgradeFromV11 },
    { 10, 34, 11, H_UpgradeFromV10 },
    { 9,  34, 10, H_UpgradeFromV9  },

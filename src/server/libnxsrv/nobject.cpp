@@ -880,3 +880,40 @@ NXSL_Value *NObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
 void NObject::onCustomAttributeChange()
 {
 }
+
+/**
+ * Will remove custom attributes from current node if it's inherited and duplicate key+value from parent node
+ */
+void NObject::pruneCustomAttributes()
+{
+   StringList deletionList;
+   lockCustomAttributes();
+   StructArray<KeyValuePair<CustomAttribute>> *attributes = m_customAttributes->toArray();
+   for(int i = 0; i < attributes->size(); i++)
+   {
+      KeyValuePair<CustomAttribute> *p = attributes->get(i);
+      p->value->sourceObject;
+      if (p->value->isRedefined())
+      {
+         SharedString parentValue = getCustomAttributeFromParent(p->key);
+         if (parentValue.isNull())
+         {
+            CustomAttribute *ca = m_customAttributes->get(p->key);
+            ca->flags &= ~CAF_REDEFINED;
+            onCustomAttributeChange();
+         }
+         else if (!_tcscmp(p->value->value, parentValue))
+         {
+            deletionList.add(p->key);
+         }
+      }
+   }
+   delete attributes;
+   unlockCustomAttributes();
+
+   for (int i = 0; i < deletionList.size(); i++)
+   {
+      deleteCustomAttribute(deletionList.get(i));
+   }
+}
+
