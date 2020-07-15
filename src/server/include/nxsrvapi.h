@@ -640,6 +640,8 @@ public:
 
    StringBuffer dbgGetParentList() const;
    StringBuffer dbgGetChildList() const;
+
+   void pruneCustomAttributes();
 };
 
 /**

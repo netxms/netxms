@@ -22,6 +22,23 @@
 
 #include "nxdbmgr.h"
 
+
+/**
+ * Upgrade from 40.2 to 40.3
+ */
+static bool H_UpgradeFromV2()
+{
+   if (GetSchemaLevelForMajorVersion(34) < 13)
+   {
+      //Set flag to deduplicate custom attributes
+      CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('PruneCustomAttributes', '1')")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(34, 13));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
 /**
  * Upgrade from 40.1 to 40.2
  */
@@ -160,6 +177,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 2,  40, 3,  H_UpgradeFromV2  },
    { 1,  40, 2,  H_UpgradeFromV1  },
    { 0,  40, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
