@@ -55,11 +55,7 @@ int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-#ifdef _WIN32
-	*result = vm->createValue((LONG)CopyFile(argv[0]->getValueAsCString(), argv[1]->getValueAsCString(), FALSE));
-#else
-	*result = vm->createValue();	/* TODO: implement file copy on UNIX */
-#endif
+	*result = vm->createValue((LONG)(CopyFileOrDirectory(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()) ? 1 : 0));
 	return 0;
 }
 

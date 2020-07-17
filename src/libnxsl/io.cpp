@@ -163,7 +163,7 @@ NXSL_METHOD_DEFINITION(FILE, write)
    if (slen > 0)
    {
       NXSL_FileHandle *f = static_cast<NXSL_FileHandle*>(object->getData());
-      if (!f->closed && !feof(f->handle))
+      if (!f->closed)
       {
 #ifdef UNICODE
          char *data = MBStringFromWideStringSysLocale(s);
@@ -191,7 +191,7 @@ NXSL_METHOD_DEFINITION(FILE, writeLine)
    if (slen > 0)
    {
       NXSL_FileHandle *f = static_cast<NXSL_FileHandle*>(object->getData());
-      if (!f->closed && !feof(f->handle))
+      if (!f->closed)
       {
 #ifdef UNICODE
          char *data = MBStringFromWideStringSysLocale(s);
