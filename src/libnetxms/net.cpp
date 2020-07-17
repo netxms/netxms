@@ -77,7 +77,7 @@ SocketConnection::~SocketConnection()
 bool SocketConnection::connectTCP(const TCHAR *hostName, uint16_t port, uint32_t timeout)
 {
    InetAddress addr = InetAddress::resolveHostName(hostName);
-   if (!addr.isValidUnicast())
+   if (!addr.isValidUnicast() && !addr.isLoopback())
       return false;
    return connectTCP(addr, port, timeout);
 }
