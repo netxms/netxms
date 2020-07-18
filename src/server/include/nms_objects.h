@@ -3192,6 +3192,7 @@ public:
    DataCollectionError getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value) const;
    StringList *getIcmpStatCollectors() const;
 
+   NetworkDeviceDriver *getDriver() const { return m_driver; }
 	DriverData *getDriverData() { return m_driverData; }
 	void setDriverData(DriverData *data) { m_driverData = data; }
 
@@ -4301,6 +4302,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddre
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, bool allZones, const InetAddress& ipAddr);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddressList *ipAddrList);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByMAC(const BYTE *macAddr);
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByMAC(const MacAddress& macAddr);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByBridgeId(const BYTE *bridgeId);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByLLDPId(const TCHAR *lldpId);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeBySysName(const TCHAR *sysName);

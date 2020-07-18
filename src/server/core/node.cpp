@@ -4585,16 +4585,19 @@ bool Node::confPollSnmp(uint32_t rqId)
    }
 
    // Check for LLDP (Link Layer Discovery Protocol) support
-   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+   // MikroTik devices are known to not return lldpLocChassisId and lldpLocChassisIdSubtype so we
+   // use lldpLocSysCapEnabled as fallback check
+   if ((SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS) ||
+       (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.6.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS))
    {
       lockProperties();
       m_capabilities |= NC_IS_LLDP;
       unlockProperties();
 
-      INT32 type;
+      int32_t type;
       BYTE data[256];
       UINT32 dataLen;
-      if ((SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), nullptr, 0, &type, sizeof(INT32), 0, nullptr) == SNMP_ERR_SUCCESS) &&
+      if ((SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), nullptr, 0, &type, sizeof(int32_t), 0, nullptr) == SNMP_ERR_SUCCESS) &&
           (SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
       {
          BuildLldpId(type, data, dataLen, szBuffer, 1024);

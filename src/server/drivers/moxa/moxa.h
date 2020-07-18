@@ -39,6 +39,7 @@ public:
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
+   virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id) override;
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
 

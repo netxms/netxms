@@ -775,6 +775,15 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByMAC(const BYTE *macAddr)
 }
 
 /**
+ * Find node by MAC address
+ */
+shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByMAC(const MacAddress& macAddr)
+{
+   shared_ptr<Interface> iface = FindInterfaceByMAC(macAddr);
+   return (iface != nullptr) ? iface->getParentNode() : shared_ptr<Node>();
+}
+
+/**
  * Find interface by MAC address
  */
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const BYTE *macAddr)
