@@ -150,6 +150,30 @@ InterfaceList *MoxaEDRDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 }
 
 /**
+ * Translate LLDP port name (port ID subtype 5) to local interface id.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver's data
+ * @param lldpName port name received from LLDP MIB
+ * @param id interface ID structure to be filled at success
+ * @return true if interface identification provided
+ */
+bool MoxaEDRDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+{
+   // Device could present string like "PORTn" or just "n" where n is port number (same as interface index)
+   TCHAR *eptr;
+   uint32_t portId = !_tcsncmp(lldpName, _T("PORT"), 4) ? _tcstoul(&lldpName[4], &eptr, 10) : _tcstoul(lldpName, &eptr, 10);
+   if ((portId != 0) && (*eptr == 0))
+   {
+      id->type = InterfaceIdType::INDEX;
+      id->value.ifIndex = portId;
+      return true;
+   }
+   return false;
+}
+
+/**
  * Handler for VLAN enumeration on Avaya ERS
  */
 static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, void *context)

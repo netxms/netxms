@@ -668,6 +668,21 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
 }
 
 /**
+ * Translate LLDP port name (port ID subtype 5) to local interface id. Default implementation always returns false.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver's data
+ * @param lldpName port name received from LLDP MIB
+ * @param id interface ID structure to be filled at success
+ * @return true if interface identification provided
+ */
+bool NetworkDeviceDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+{
+   return false;
+}
+
+/**
  * Handler for VLAN enumeration
  */
 static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)

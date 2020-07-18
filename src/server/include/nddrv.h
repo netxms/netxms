@@ -148,6 +148,28 @@ struct DeviceHardwareInfo
 };
 
 /**
+ * Interface identification type
+ */
+enum class InterfaceIdType
+{
+   INDEX = 0,
+   NAME = 1
+};
+
+/**
+ * Interface identification
+ */
+struct InterfaceId
+{
+   InterfaceIdType type;
+   union
+   {
+      uint32_t ifIndex;
+      TCHAR ifName[192];
+   } value;
+};
+
+/**
  * Radio interface information
  */
 struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
@@ -330,6 +352,7 @@ public:
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
                                   int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id);
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);

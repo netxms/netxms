@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Extreme Networks switches
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -79,8 +79,8 @@ InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	if (ifList == nullptr)
+		return nullptr;
 
 	// Update physical port locations
    for(int i = 0; i < ifList->size(); i++)
@@ -92,7 +92,7 @@ InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
       TCHAR ifName[64];
       nx_strncpy(ifName, iface->name, 64);
       TCHAR *p = _tcschr(ifName, _T(':'));
-      if (p == NULL)
+      if (p == nullptr)
          continue;
 
       *p = 0;
@@ -111,6 +111,26 @@ InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
       iface->location.port = port;
    }
 	return ifList;
+}
+
+/**
+ * Translate LLDP port name (port ID subtype 5) to local interface id.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver's data
+ * @param lldpName port name received from LLDP MIB
+ * @param id interface ID structure to be filled at success
+ * @return true if interface identification provided
+ */
+bool ExtremeDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+{
+   // Actual interface names could be in form 1:name
+   id->type = InterfaceIdType::NAME;
+   id->value.ifName[0] = _T('1');
+   id->value.ifName[1] = _T(':');
+   _tcslcpy(&id->value.ifName[2], lldpName, 190);
+   return true;
 }
 
 /**

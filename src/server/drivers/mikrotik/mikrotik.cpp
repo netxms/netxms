@@ -159,6 +159,29 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 }
 
 /**
+ * Translate LLDP port name (port ID subtype 5) to local interface id.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver's data
+ * @param lldpName port name received from LLDP MIB
+ * @param id interface ID structure to be filled at success
+ * @return true if interface identification provided
+ */
+bool MikrotikDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+{
+   // bridged interfaces can be reported by Mikrotik device as bridge/interface
+   const TCHAR *s = _tcsrchr(lldpName, _T('/'));
+   if (s != nullptr)
+   {
+      id->type = InterfaceIdType::NAME;
+      _tcslcpy(id->value.ifName, s + 1, 192);
+      return true;
+   }
+   return false;
+}
+
+/**
  * SNMP walker callback which just counts number of varbinds
  */
 static UINT32 CountingSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)

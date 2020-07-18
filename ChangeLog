@@ -14,6 +14,8 @@
 *
 
 - Improved driver for Cisco Nexus
+- Improved LLDP based network topology discovery
+- Correctly detect LLDP capability on Mikrotik devices
 - Fixed UI bug with accessing collected performance data from data collection editor
 - Fixed issues:
 	NX-1863 (Logwatch fails on parsing large Windows Event Log events)
