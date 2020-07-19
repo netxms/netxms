@@ -71,47 +71,47 @@ FORCEINLINE LONGLONG InterlockedDecrement64(LONGLONG volatile *v)
 
 #if defined(__sun)
 
-typedef volatile uint32_t VolatileCounter;
-typedef volatile uint64_t VolatileCounter64;
+typedef volatile int32_t VolatileCounter;
+typedef volatile int64_t VolatileCounter64;
 
 /**
  * Atomically increment 32-bit value by 1
  */
-inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
+inline int32_t InterlockedIncrement(VolatileCounter *v)
 {
-   return atomic_inc_32_nv(v);
+   return (int32_t)atomic_inc_32_nv((volatile uint32_t *)v);
 }
 
 /**
  * Atomically decrement 32-bit value by 1
  */
-inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
+inline int32_t InterlockedDecrement(VolatileCounter *v)
 {
-   return atomic_dec_32_nv(v);
+   return atomic_dec_32_nv((volatile uint32_t *)v);
 }
 
 /**
  * Atomically exchange 32-bit values
  */
-inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, uint32_t exchange, uint32_t comparand)
+inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_t exchange, int32_t comparand)
 {
-   return atomic_cas_32(target, comparand, exchange);
+   return atomic_cas_32((volatile uint32_t *)target, (uint32_t)comparand, (uint32_t)exchange);
 }
 
 /**
  * Atomically increment 64-bit value by 1
  */
-inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
+inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
 {
-   return atomic_inc_64_nv(v);
+   return (int64_t)atomic_inc_64_nv((volatile uint64_t *)v);
 }
 
 /**
  * Atomically decrement 64-bit value by 1
  */
-inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
+inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
 {
-   return atomic_dec_64_nv(v);
+   return (int64_t)atomic_dec_64_nv((volatile uint64_t *)v);
 }
 
 /**
@@ -132,72 +132,72 @@ inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
 
 #elif defined(__HP_aCC)
 
-typedef volatile uint32_t VolatileCounter;
-typedef volatile uint64_t VolatileCounter64;
+typedef volatile int32_t VolatileCounter;
+typedef volatile int64_t VolatileCounter64;
 
 /**
  * Atomically increment 32-bit value by 1
  */
-inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
+inline int32_t InterlockedIncrement(VolatileCounter *v)
 {
 #if HAVE_ATOMIC_H
-   return atomic_inc_32(v) + 1;
+   return (int32_t)atomic_inc_32((volatile uint32_t *)v) + 1;
 #else
    _Asm_mf(_DFLT_FENCE);
-   return (uint32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
+   return (int32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
 #endif
 }
 
 /**
  * Atomically decrement 32-bit value by 1
  */
-inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
+inline int32_t InterlockedDecrement(VolatileCounter *v)
 {
 #if HAVE_ATOMIC_H
-   return atomic_dec_32(v) - 1;
+   return (int32_t)atomic_dec_32((volatile uint32_t *)v) - 1;
 #else
    _Asm_mf(_DFLT_FENCE);
-   return (uint32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
+   return (int32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
 #endif
 }
 
 /**
  * Atomically exchange 32-bit values
  */
-inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, uint32_t exchange, uint32_t comparand)
+inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_t exchange, int32_t comparand)
 {
 #if HAVE_ATOMIC_H
-   return atomic_cas_32(target, comparand, exchange);
+   return (int32_t)atomic_cas_32((volatile uint32_t *)target, (uint32_t)comparand, (uint32_t)exchange);
 #else
    _Asm_mf(_DFLT_FENCE);
    _Asm_mov_to_ar(_AREG_CCV, (uint64_t)comparand);
-   return (uint32_t)_Asm_cmpxchg(_SZ_W, _SEM_ACQ, (void *)target, (uint64_t)exchange, _LDHINT_NONE);
+   return (int32_t)_Asm_cmpxchg(_SZ_W, _SEM_ACQ, (void *)target, (uint64_t)exchange, _LDHINT_NONE);
 #endif
 }
 
 /**
  * Atomically increment 64-bit value by 1
  */
-inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
+inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
 {
 #if HAVE_ATOMIC_H
-   return atomic_inc_64(v) + 1;
+   return (int64_t)atomic_inc_64((volatile uint64_t *)v) + 1;
 #else
    _Asm_mf(_DFLT_FENCE);
-   return (uint64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
+   return (int64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
 #endif
 }
 
 /**
  * Atomically decrement 64-bit value by 1
  */
-inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
+inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
 {
 #if HAVE_ATOMIC_H
-   return atomic_dec_64(v) - 1;
+   return (int64_t)atomic_dec_64((volatile uint64_t *)v) - 1;
 #else
    _Asm_mf(_DFLT_FENCE);
-   return (uint64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
+   return (int64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
 #endif
 }
 
@@ -228,11 +228,11 @@ inline void *InterlockedExchangePointer(void *volatile *target, void *value)
  */
 inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
 {
-   uint32_t c;
+   int32_t c;
    do
    {
       c = *target;
-   } while(InterlockedCompareExchange(target, c | bits, c) != c);
+   } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c | bits), c) != c);
 }
 
 #elif defined(_AIX)
@@ -243,7 +243,7 @@ typedef volatile int64_t VolatileCounter64;
 /**
  * Atomically increment 32-bit value by 1
  */
-inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
+inline int32_t InterlockedIncrement(VolatileCounter *v)
 {
 #if !HAVE_DECL___SYNC_ADD_AND_FETCH
    VolatileCounter oldval;
@@ -260,7 +260,7 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 /**
  * Atomically decrement 32-bit value by 1
  */
-inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
+inline int32_t InterlockedDecrement(VolatileCounter *v)
 {
 #if !HAVE_DECL___SYNC_SUB_AND_FETCH
    VolatileCounter oldval;
@@ -277,7 +277,7 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 /**
  * Atomically exchange 32-bit values
  */
-inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, uint32_t exchange, uint32_t comparand)
+inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_t exchange, int32_t comparand)
 {
 #if !HAVE_DECL___SYNC_VAL_COMPARE_AND_SWAP
    int32_t oldval = comparand;
@@ -291,7 +291,7 @@ inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, uint3
 /**
  * Atomically increment 64-bit value by 1
  */
-inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
+inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
 {
 #if !HAVE_DECL___SYNC_ADD_AND_FETCH
    VolatileCounter64 oldval;
@@ -308,7 +308,7 @@ inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
 /**
  * Atomically decrement 64-bit value by 1
  */
-inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
+inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
 {
 #if !HAVE_DECL___SYNC_SUB_AND_FETCH
    VolatileCounter64 oldval;
@@ -349,11 +349,11 @@ inline void *InterlockedExchangePointer(void *volatile *target, void *value)
 inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
 {
 #if !HAVE_DECL___SYNC_OR_AND_FETCH
-   uint32_t c;
+   int32_t c;
    do
    {
       c = *target;
-   } while(InterlockedCompareExchange(target, c | bits, c) != c);
+   } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c | bits), c) != c);
 #else
    __sync_or_and_fetch(target, bits);
 #endif
@@ -367,7 +367,7 @@ typedef volatile int64_t VolatileCounter64;
 /**
  * Atomically increment 32-bit value by 1
  */
-inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
+inline int32_t InterlockedIncrement(VolatileCounter *v)
 {
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
    VolatileCounter temp = 1;
@@ -383,7 +383,7 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 /**
  * Atomically decrement 32-bit value by 1
  */
-inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
+inline int32_t InterlockedDecrement(VolatileCounter *v)
 {
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
    VolatileCounter temp = -1;
@@ -399,12 +399,12 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 /**
  * Atomically exchange 32-bit values
  */
-inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, uint32_t exchange, uint32_t comparand)
+inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_t exchange, int32_t comparand)
 {
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
    __asm__ __volatile__("xchgl %2, %1" : "=a" (comparand), "+m" (*target) : "0" (exchange));
 #elif HAVE_ATOMIC_BUILTINS
-   uint32_t expected = comparand;
+   int32_t expected = comparand;
    return __atomic_compare_exchange_n(target, &expected, exchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? comparand : expected;
 #else
    return __sync_val_compare_and_swap(target, comparand, exchange);
@@ -414,7 +414,7 @@ inline VolatileCounter InterlockedCompareExchange(VolatileCounter *target, uint3
 /**
  * Atomically increment 64-bit value by 1
  */
-inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
+inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
 {
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
    VolatileCounter64 temp = 1;
@@ -430,7 +430,7 @@ inline VolatileCounter64 InterlockedIncrement64(VolatileCounter64 *v)
 /**
  * Atomically decrement 64-bit value by 1
  */
-inline VolatileCounter64 InterlockedDecrement64(VolatileCounter64 *v)
+inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
 {
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
    VolatileCounter64 temp = -1;
@@ -470,11 +470,11 @@ inline void *InterlockedExchangePointer(void* volatile *target, void *value)
 inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
 {
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   uint32_t c;
+   int32_t c;
    do
    {
       c = *target;
-   } while(InterlockedCompareExchange(target, c | bits, c) != c)
+   } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c | bits), c) != c)
 #elif HAVE_ATOMIC_BUILTINS
    __atomic_or_fetch(target, bits, __ATOMIC_SEQ_CST);
 #else
