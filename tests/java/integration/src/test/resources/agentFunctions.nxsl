@@ -19,6 +19,7 @@ result = AgentExecuteActionWithOutput(preCreatedNode, actionName2, "Param1", 2, 
 assert(result == "Param1 2 3.010000 4\n");
 
 list = AgentReadList(preCreatedNode, "System.ProcessList");
+assert(list != null);
 
 foundNxagentd = false;
 foreach (item : list) {
