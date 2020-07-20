@@ -725,7 +725,7 @@ void NetworkMap::updateContent()
             }
             if (topology != nullptr)
             {
-               objects.merge(topology);
+               objects.merge(*topology);
                delete topology;
             }
             else
@@ -749,6 +749,15 @@ void NetworkMap::updateContent()
 }
 
 /**
+ * Object filter for NetworkMapObjectList::filterObjects
+ */
+bool NetworkMap::objectFilter(uint32_t objectId, NetworkMap *map)
+{
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   return (object != nullptr) && map->isAllowedOnMap(object);
+}
+
+/**
  * Update objects from given list
  */
 void NetworkMap::updateObjects(NetworkMapObjectList *objects)
@@ -760,19 +769,8 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
    // Filter out disallowed objects
    if ((m_flags & MF_FILTER_OBJECTS) && (m_filter != nullptr))
    {
-      for(int j = 0; j < objects->getNumObjects(); j++)
-      {
-         IntegerArray<UINT32> *idList = objects->getObjects();
-         for(int i = 0; i < idList->size(); i++)
-         {
-            shared_ptr<NetObj> object = FindObjectById(idList->get(i));
-            if ((object == nullptr) || !isAllowedOnMap(object))
-            {
-               idList->remove(i);
-               i--;
-            }
-         }
-      }
+      nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u]): running object filter"), m_name, m_id);
+      objects->filterObjects(NetworkMap::objectFilter, this);
    }
 
    lockProperties();
@@ -784,8 +782,8 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       if (!link->checkFlagSet(AUTO_GENERATED))
          continue;
 
-      UINT32 objID1 = objectIdFromElementId(link->getElement1());
-      UINT32 objID2 = objectIdFromElementId(link->getElement2());
+      uint32_t objID1 = objectIdFromElementId(link->getElement1());
+      uint32_t objID2 = objectIdFromElementId(link->getElement2());
       bool linkExists = false;
       if (objects->isLinkExist(objID1, objID2))
       {
@@ -832,7 +830,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          NetworkMapElement *e = m_elements->get(j);
          if (e->getType() != MAP_ELEMENT_OBJECT)
             continue;
-         if (((NetworkMapObject *)e)->getObjectId() == objects->getObjects()->get(i))
+         if (((NetworkMapObject *)e)->getObjectId() == objects->getObjects().get(i))
          {
             found = true;
             break;
@@ -840,7 +838,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       }
       if (!found)
       {
-         UINT32 objectId = objects->getObjects()->get(i);
+         uint32_t objectId = objects->getObjects().get(i);
          NetworkMapElement *e = new NetworkMapObject(m_nextElementId++, objectId, 1);
          m_elements->add(e);
          modified = true;
@@ -849,15 +847,17 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
    }
 
    // add new links
-   for(int i = 0; i < objects->getNumLinks(); i++)
+   const ObjectArray<ObjLink>& links = objects->getLinks();
+   for(int i = 0; i < links.size(); i++)
    {
+      ObjLink *newLink = links.get(i);
       bool found = false;
       for(int j = 0; j < m_links->size(); j++)
       {
-         NetworkMapLink *l = m_links->get(j);
-         UINT32 obj1 = objectIdFromElementId(l->getElement1());
-         UINT32 obj2 = objectIdFromElementId(l->getElement2());
-         if ((objects->getLinks()->get(i)->id1 == obj1) && (objects->getLinks()->get(i)->id2 == obj2) && (objects->getLinks()->get(i)->type == l->getType()))
+         NetworkMapLink *currLink = m_links->get(j);
+         uint32_t obj1 = objectIdFromElementId(currLink->getElement1());
+         uint32_t obj2 = objectIdFromElementId(currLink->getElement2());
+         if ((newLink->id1 == obj1) && (newLink->id2 == obj2) && (newLink->type == currLink->getType()))
          {
             found = true;
             break;
@@ -865,27 +865,26 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       }
       if (!found)
       {
-         ObjLink *linkInfo = objects->getLinks()->get(i);
-         UINT32 e1 = elementIdFromObjectId(linkInfo->id1);
-         UINT32 e2 = elementIdFromObjectId(linkInfo->id2);
+         uint32_t e1 = elementIdFromObjectId(newLink->id1);
+         uint32_t e2 = elementIdFromObjectId(newLink->id2);
          // Element ID can be 0 if link points to object removed by filter
          if ((e1 != 0) && (e2 != 0))
          {
-            NetworkMapLink *l = new NetworkMapLink(e1, e2, linkInfo->type);
-            l->setConnector1Name(linkInfo->port1);
-            l->setConnector2Name(linkInfo->port2);
-            l->setName(linkInfo->name);
+            NetworkMapLink *l = new NetworkMapLink(e1, e2, newLink->type);
+            l->setConnector1Name(newLink->port1);
+            l->setConnector2Name(newLink->port2);
+            l->setName(newLink->name);
             StringBuffer config;
             config.append(_T("<config>\n"));
             config.append(_T("\t<dciList length=\"0\"/>\n"));
             config.append(_T("\t<objectStatusList class=\"java.util.ArrayList\">\n"));
 
-            shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(linkInfo->id1, OBJECT_NODE));
+            shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(newLink->id1, OBJECT_NODE));
             if (node != nullptr)
             {
-               for(int n = 0; n < objects->getLinks()->get(i)->portIdCount; n++)
+               for(int n = 0; n < links.get(i)->portIdCount; n++)
                {
-                  shared_ptr<Interface> iface = node->findInterfaceByIndex(linkInfo->portIdArray1[n]);
+                  shared_ptr<Interface> iface = node->findInterfaceByIndex(newLink->portIdArray1[n]);
                   if (iface != nullptr)
                   {
                      config.append(_T("\t\t<long>"));
@@ -895,12 +894,12 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
                }
             }
 
-            node = static_pointer_cast<Node>(FindObjectById(linkInfo->id2, OBJECT_NODE));
+            node = static_pointer_cast<Node>(FindObjectById(newLink->id2, OBJECT_NODE));
             if (node != nullptr)
             {
-               for(int n = 0; n < linkInfo->portIdCount; n++)
+               for(int n = 0; n < newLink->portIdCount; n++)
                {
-                  shared_ptr<Interface> iface = node->findInterfaceByIndex(linkInfo->portIdArray2[n]);
+                  shared_ptr<Interface> iface = node->findInterfaceByIndex(newLink->portIdArray2[n]);
                   if (iface != nullptr)
                   {
                      config.append(_T("\t\t<long>"));
@@ -919,12 +918,12 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             m_links->add(l);
             modified = true;
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u (%u) - %u (%u) added"),
-                     m_name, m_id, l->getElement1(), linkInfo->id1, l->getElement2(), linkInfo->id2);
+                     m_name, m_id, l->getElement1(), newLink->id1, l->getElement2(), newLink->id2);
          }
          else
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: cannot add link because elements are missing for object pair (%u,%u)"),
-                     m_name, m_id, linkInfo->id1, linkInfo->id2);
+                     m_name, m_id, newLink->id1, newLink->id2);
          }
       }
    }

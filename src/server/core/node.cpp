@@ -8340,7 +8340,7 @@ NetworkMapObjectList *Node::getL2Topology()
    }
    else
    {
-      pResult = new NetworkMapObjectList(m_topology);
+      pResult = new NetworkMapObjectList(*m_topology);
    }
    MutexUnlock(m_mutexTopoAccess);
    return pResult;
@@ -8364,7 +8364,7 @@ NetworkMapObjectList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool 
 
       MutexLock(m_mutexTopoAccess);
       delete m_topology;
-      m_topology = new NetworkMapObjectList(result);
+      m_topology = new NetworkMapObjectList(*result);
       m_topologyRebuildTimestamp = time(nullptr);
    }
    else
