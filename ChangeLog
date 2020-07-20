@@ -16,11 +16,13 @@
 - Improved driver for Cisco Nexus
 - Improved LLDP based network topology discovery
 - Correctly detect LLDP capability on Mikrotik devices
+- New NXSL functions GetServerNode and GetServerNodeId
 - Fixed UI bug with accessing collected performance data from data collection editor
 - Fixed issues:
 	NX-1863 (Logwatch fails on parsing large Windows Event Log events)
 	NX-1895 (After server restart GUI is not showing from where a custom attribute is inherited)
 	NX-1897 (ReadPersistentStorage returns incorrect value for non-existing key)
+	NX-1901 (Get node of active NetXMS server in NXSL)
 
 
 *
