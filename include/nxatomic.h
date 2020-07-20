@@ -127,7 +127,7 @@ inline void *InterlockedExchangePointer(void *volatile *target, void *value)
  */
 inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
 {
-   atomic_or_32(target, bits);
+   atomic_or_32((volatile uint32_t *)target, bits);
 }
 
 #elif defined(__HP_aCC)
