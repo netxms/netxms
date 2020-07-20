@@ -3860,7 +3860,7 @@ protected:
 	double m_backgroundLatitude;
 	double m_backgroundLongitude;
 	int m_backgroundZoom;
-	UINT32 m_nextElementId;
+	uint32_t m_nextElementId;
 	ObjectArray<NetworkMapElement> *m_elements;
 	ObjectArray<NetworkMapLink> *m_links;
 	TCHAR *m_filterSource;
@@ -3875,6 +3875,8 @@ protected:
 
    void setFilter(const TCHAR *filter);
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);
+
+   static bool objectFilter(uint32_t objectId, NetworkMap *map);
 
 public:
    NetworkMap();

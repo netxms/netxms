@@ -60,55 +60,37 @@ ObjLink::ObjLink(const ObjLink *src) : name(src->name)
 /**
  * Create empty object list
  */
-NetworkMapObjectList::NetworkMapObjectList()
+NetworkMapObjectList::NetworkMapObjectList() : m_objectList(64, 64), m_linkList(64, 64, Ownership::True)
 {
-   m_objectList = new IntegerArray<UINT32>(16, 16);
-   m_linkList = new ObjectArray<ObjLink>(16, 16, Ownership::True);
    m_allowDuplicateLinks = false;
 }
 
 /**
  * Copy constructor
  */
-NetworkMapObjectList::NetworkMapObjectList(NetworkMapObjectList *src)
+NetworkMapObjectList::NetworkMapObjectList(const NetworkMapObjectList& src) : m_objectList(src.m_objectList), m_linkList(src.m_linkList.size(), 64, Ownership::True)
 {
-   m_allowDuplicateLinks = src->m_allowDuplicateLinks;
-
-   m_objectList = new IntegerArray<UINT32>(src->m_objectList->size(), 16);
-   for(int i = 0; i < src->m_objectList->size(); i++)
-      m_objectList->add(src->m_objectList->get(i));
-
-   m_linkList = new ObjectArray<ObjLink>(src->m_linkList->size(), 16, Ownership::True);
-	for(int i = 0; i < src->m_linkList->size(); i++)
-      m_linkList->add(new ObjLink(src->m_linkList->get(i)));
-}
-
-/**
- * Destructor
- */
-NetworkMapObjectList::~NetworkMapObjectList()
-{
-   delete m_objectList;
-   delete m_linkList;
+   m_allowDuplicateLinks = src.m_allowDuplicateLinks;
+	for(int i = 0; i < src.m_linkList.size(); i++)
+      m_linkList.add(new ObjLink(src.m_linkList.get(i)));
 }
 
 /**
  * Merge two lists
  */
-void NetworkMapObjectList::merge(const NetworkMapObjectList *src)
+void NetworkMapObjectList::merge(const NetworkMapObjectList& src)
 {
-   if (src->isAllowDuplicateLinks())
+   if (src.isAllowDuplicateLinks())
       m_allowDuplicateLinks = true;
 
-   for(int i = 0; i < src->m_objectList->size(); i++)
+   for(int i = 0; i < src.m_objectList.size(); i++)
+      addObject(src.m_objectList.get(i));
+
+   for(int i = 0; i < src.m_linkList.size(); i++)
    {
-      addObject(src->m_objectList->get(i));
-   }
-   for(int i = 0; i < src->m_linkList->size(); i++)
-   {
-      ObjLink *l = src->m_linkList->get(i);
-      if (m_allowDuplicateLinks || !isLinkExist(l->id1, l->id2))
-         m_linkList->add(new ObjLink(l));
+      ObjLink *l = src.m_linkList.get(i);
+      if (m_allowDuplicateLinks || (!isLinkExist(l->id1, l->id2) && !isLinkExist(l->id2, l->id1)))
+         m_linkList.add(new ObjLink(l));
    }
 }
 
@@ -117,8 +99,23 @@ void NetworkMapObjectList::merge(const NetworkMapObjectList *src)
  */
 void NetworkMapObjectList::clear()
 {
-   m_linkList->clear();
-   m_objectList->clear();
+   m_linkList.clear();
+   m_objectList.clear();
+}
+
+/**
+ * Filter objects using provided filter. Any object for which filter function will return false will be removed.
+ */
+void NetworkMapObjectList::filterObjects(bool (*filter)(uint32_t, void *), void *context)
+{
+   for(int i = 0; i < m_objectList.size(); i++)
+   {
+      if (!filter(m_objectList.get(i), context))
+      {
+         m_objectList.remove(i);
+         i--;
+      }
+   }
 }
 
 /**
@@ -126,35 +123,35 @@ void NetworkMapObjectList::clear()
  */
 static int CompareObjectId(const void *e1, const void *e2)
 {
-   UINT32 id1 = *((UINT32 *)e1);
-   UINT32 id2 = *((UINT32 *)e2);
+   uint32_t id1 = *((uint32_t *)e1);
+   uint32_t id2 = *((uint32_t *)e2);
    return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
 }
 
 /**
  * Add object to list
  */
-void NetworkMapObjectList::addObject(UINT32 id)
+void NetworkMapObjectList::addObject(uint32_t id)
 {
    if (!isObjectExist(id))
    {
-      m_objectList->add(id);
-      m_objectList->sort(CompareObjectId);
+      m_objectList.add(id);
+      m_objectList.sort(CompareObjectId);
    }
 }
 
 /**
  * Remove object from list
  */
-void NetworkMapObjectList::removeObject(UINT32 id)
+void NetworkMapObjectList::removeObject(uint32_t id)
 {
-   m_objectList->remove(m_objectList->indexOf(id));
+   m_objectList.remove(m_objectList.indexOf(id));
 
-   for(int i = 0; i < m_linkList->size(); i++)
+   for(int i = 0; i < m_linkList.size(); i++)
    {
-      if ((m_linkList->get(i)->id1 == id) || (m_linkList->get(i)->id2 == id))
+      if ((m_linkList.get(i)->id1 == id) || (m_linkList.get(i)->id2 == id))
       {
-         m_linkList->remove(i);
+         m_linkList.remove(i);
          i--;
       }
    }
@@ -163,20 +160,20 @@ void NetworkMapObjectList::removeObject(UINT32 id)
 /**
  * Link two objects
  */
-void NetworkMapObjectList::linkObjects(UINT32 id1, UINT32 id2, int linkType, const TCHAR *linkName)
+void NetworkMapObjectList::linkObjects(uint32_t id1, uint32_t id2, int linkType, const TCHAR *linkName)
 {
    bool linkExists = false;
-   if ((m_objectList->indexOf(id1) != -1) && (m_objectList->indexOf(id2) != -1))  // if both objects exist
+   if ((m_objectList.indexOf(id1) != -1) && (m_objectList.indexOf(id2) != -1))  // if both objects exist
    {
       // Check for duplicate links
-      for(int i = 0; i < m_linkList->size(); i++)
+      for(int i = 0; i < m_linkList.size(); i++)
       {
-         if (((m_linkList->get(i)->id1 == id1) && (m_linkList->get(i)->id2 == id2)) ||
-             ((m_linkList->get(i)->id2 == id1) && (m_linkList->get(i)->id1 == id2)))
+         if (((m_linkList.get(i)->id1 == id1) && (m_linkList.get(i)->id2 == id2)) ||
+             ((m_linkList.get(i)->id2 == id1) && (m_linkList.get(i)->id1 == id2)))
          {
             if (m_allowDuplicateLinks)
             {
-               if (m_linkList->get(i)->type == linkType)
+               if (m_linkList.get(i)->type == linkType)
                {
                   linkExists = true;
                   break;
@@ -195,9 +192,9 @@ void NetworkMapObjectList::linkObjects(UINT32 id1, UINT32 id2, int linkType, con
          link->id1 = id1;
          link->id2 = id2;
          link->type = linkType;
-         if (linkName != NULL)
+         if (linkName != nullptr)
             link->name = linkName;
-         m_linkList->add(link);
+         m_linkList.add(link);
       }
    }
 }
@@ -216,56 +213,56 @@ static void UpdatePortNames(ObjLink *link, const TCHAR *port1, const TCHAR *port
 /**
  * Link two objects with named links
  */
-void NetworkMapObjectList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2)
+void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR *port1, const TCHAR *port2, uint32_t portId1, uint32_t portId2)
 {
    bool linkExists = false;
-   if ((m_objectList->indexOf(id1) != -1) && (m_objectList->indexOf(id2) != -1))  // if both objects exist
+   if ((m_objectList.indexOf(id1) != -1) && (m_objectList.indexOf(id2) != -1))  // if both objects exist
    {
       // Check for duplicate links
-      for(int i = 0; i < m_linkList->size(); i++)
+      for(int i = 0; i < m_linkList.size(); i++)
       {
-			if ((m_linkList->get(i)->id1 == id1) && (m_linkList->get(i)->id2 == id2))
+			if ((m_linkList.get(i)->id1 == id1) && (m_linkList.get(i)->id2 == id2))
 			{
 				int j;
-				for(j = 0; j < m_linkList->get(i)->portIdCount; j++)
+				for(j = 0; j < m_linkList.get(i)->portIdCount; j++)
 				{
 					// assume point-to-point interfaces, therefore "or" is enough
-					if ((m_linkList->get(i)->portIdArray1[j] == portId1) || (m_linkList->get(i)->portIdArray2[j] == portId2))
+					if ((m_linkList.get(i)->portIdArray1[j] == portId1) || (m_linkList.get(i)->portIdArray2[j] == portId2))
                {
                   linkExists = true;
                   break;
                }
 				}
-				if (!linkExists && (m_linkList->get(i)->portIdCount < MAX_PORT_COUNT))
+				if (!linkExists && (m_linkList.get(i)->portIdCount < MAX_PORT_COUNT))
 				{
-					m_linkList->get(i)->portIdArray1[j] = portId1;
-					m_linkList->get(i)->portIdArray2[j] = portId2;
-					m_linkList->get(i)->portIdCount++;
-					UpdatePortNames(m_linkList->get(i), port1, port2);
-					m_linkList->get(i)->type = LINK_TYPE_MULTILINK;
+					m_linkList.get(i)->portIdArray1[j] = portId1;
+					m_linkList.get(i)->portIdArray2[j] = portId2;
+					m_linkList.get(i)->portIdCount++;
+					UpdatePortNames(m_linkList.get(i), port1, port2);
+					m_linkList.get(i)->type = LINK_TYPE_MULTILINK;
                linkExists = true;
 				}
 				break;
 			}
-			if ((m_linkList->get(i)->id1 == id2) && (m_linkList->get(i)->id2 == id1))
+			if ((m_linkList.get(i)->id1 == id2) && (m_linkList.get(i)->id2 == id1))
 			{
 				int j;
-				for(j = 0; j < m_linkList->get(i)->portIdCount; j++)
+				for(j = 0; j < m_linkList.get(i)->portIdCount; j++)
 				{
 					// assume point-to-point interfaces, therefore or is enough
-					if ((m_linkList->get(i)->portIdArray1[j] == portId2) || (m_linkList->get(i)->portIdArray2[j] == portId1))
+					if ((m_linkList.get(i)->portIdArray1[j] == portId2) || (m_linkList.get(i)->portIdArray2[j] == portId1))
 					{
                   linkExists = true;
                   break;
                }
 				}
-				if (!linkExists && (m_linkList->get(i)->portIdCount < MAX_PORT_COUNT))
+				if (!linkExists && (m_linkList.get(i)->portIdCount < MAX_PORT_COUNT))
 				{
-					m_linkList->get(i)->portIdArray1[j] = portId2;
-					m_linkList->get(i)->portIdArray2[j] = portId1;
-					m_linkList->get(i)->portIdCount++;
-					UpdatePortNames(m_linkList->get(i), port2, port1);
-					m_linkList->get(i)->type = LINK_TYPE_MULTILINK;
+					m_linkList.get(i)->portIdArray1[j] = portId2;
+					m_linkList.get(i)->portIdArray2[j] = portId1;
+					m_linkList.get(i)->portIdCount++;
+					UpdatePortNames(m_linkList.get(i), port2, port1);
+					m_linkList.get(i)->type = LINK_TYPE_MULTILINK;
                linkExists = true;
 				}
 				break;
@@ -280,9 +277,9 @@ void NetworkMapObjectList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *po
 			obj->portIdCount = 1;
 			obj->portIdArray1[0] = portId1;
 			obj->portIdArray2[0] = portId2;
-			nx_strncpy(obj->port1, port1, MAX_CONNECTOR_NAME);
-			nx_strncpy(obj->port2, port2, MAX_CONNECTOR_NAME);
-			m_linkList->add(obj);
+			_tcslcpy(obj->port1, port1, MAX_CONNECTOR_NAME);
+			_tcslcpy(obj->port2, port2, MAX_CONNECTOR_NAME);
+			m_linkList.add(obj);
       }
    }
 }
@@ -293,34 +290,34 @@ void NetworkMapObjectList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *po
 void NetworkMapObjectList::createMessage(NXCPMessage *msg)
 {
 	// Object list
-	msg->setField(VID_NUM_OBJECTS, m_objectList->size());
-	if (m_objectList->size() > 0)
-		msg->setFieldFromInt32Array(VID_OBJECT_LIST, m_objectList);
+	msg->setField(VID_NUM_OBJECTS, m_objectList.size());
+	if (m_objectList.size() > 0)
+		msg->setFieldFromInt32Array(VID_OBJECT_LIST, &m_objectList);
 
 	// Links between objects
-	msg->setField(VID_NUM_LINKS, m_linkList->size());
-   UINT32 dwId = VID_OBJECT_LINKS_BASE;
-	for(int i = 0; i < m_linkList->size(); i++, dwId += 3)
+	msg->setField(VID_NUM_LINKS, m_linkList.size());
+	uint32_t fieldId = VID_OBJECT_LINKS_BASE;
+	for(int i = 0; i < m_linkList.size(); i++, fieldId += 3)
 	{
-      ObjLink *l = m_linkList->get(i);
-		msg->setField(dwId++, l->id1);
-		msg->setField(dwId++, l->id2);
-		msg->setField(dwId++, (WORD)l->type);
-		msg->setField(dwId++, l->port1);
-		msg->setField(dwId++, l->port2);
-		msg->setField(dwId++, l->name);
-		msg->setField(dwId++, m_linkList->get(i)->flags);
+      ObjLink *l = m_linkList.get(i);
+		msg->setField(fieldId++, l->id1);
+		msg->setField(fieldId++, l->id2);
+		msg->setField(fieldId++, (WORD)l->type);
+		msg->setField(fieldId++, l->port1);
+		msg->setField(fieldId++, l->port2);
+		msg->setField(fieldId++, l->name);
+		msg->setField(fieldId++, m_linkList.get(i)->flags);
 	}
 }
 
 /**
  * Check if link between two given objects exist
  */
-bool NetworkMapObjectList::isLinkExist(UINT32 objectId1, UINT32 objectId2) const
+bool NetworkMapObjectList::isLinkExist(uint32_t objectId1, uint32_t objectId2) const
 {
-   for(int i = 0; i < m_linkList->size(); i++)
+   for(int i = 0; i < m_linkList.size(); i++)
    {
-      ObjLink *l = m_linkList->get(i);
+      ObjLink *l = m_linkList.get(i);
 		if ((l->id1 == objectId1) && (l->id2 == objectId2))
 			return true;
 	}
@@ -330,23 +327,23 @@ bool NetworkMapObjectList::isLinkExist(UINT32 objectId1, UINT32 objectId2) const
 /**
  * Get link between two given objects if it exists
  */
-ObjLink *NetworkMapObjectList::getLink(UINT32 objectId1, UINT32 objectId2, int linkType)
+ObjLink *NetworkMapObjectList::getLink(uint32_t objectId1, uint32_t objectId2, int linkType)
 {
-   for(int i = 0; i < m_linkList->size(); i++)
+   for(int i = 0; i < m_linkList.size(); i++)
    {
-      ObjLink *l = m_linkList->get(i);
+      ObjLink *l = m_linkList.get(i);
       if (((l->id1 == objectId1) && (l->id2 == objectId2)) ||
          (((l->id1 == objectId2) && (l->id2 == objectId1)) &&
            (l->type == linkType)))
          return l;
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Check if given object exist
  */
-bool NetworkMapObjectList::isObjectExist(UINT32 objectId) const
+bool NetworkMapObjectList::isObjectExist(uint32_t objectId) const
 {
-   return bsearch(&objectId, m_objectList->getBuffer(), m_objectList->size(), sizeof(UINT32), CompareObjectId) != NULL;
+   return bsearch(&objectId, m_objectList.getBuffer(), m_objectList.size(), sizeof(uint32_t), CompareObjectId) != nullptr;
 }

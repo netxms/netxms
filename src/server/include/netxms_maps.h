@@ -61,15 +61,15 @@
 class ObjLink
 {
 public:
-   UINT32 id1;
-   UINT32 id2;
+   uint32_t id1;
+   uint32_t id2;
    int type;
 	TCHAR port1[MAX_CONNECTOR_NAME];
 	TCHAR port2[MAX_CONNECTOR_NAME];
 	int portIdCount;
-	UINT32 portIdArray1[MAX_PORT_COUNT];
-	UINT32 portIdArray2[MAX_PORT_COUNT];
-	UINT32 flags;
+	uint32_t portIdArray1[MAX_PORT_COUNT];
+	uint32_t portIdArray2[MAX_PORT_COUNT];
+	uint32_t flags;
 	MutableString name;
 
    ObjLink();
@@ -82,33 +82,34 @@ public:
 class NetworkMapObjectList
 {
 protected:
-   IntegerArray<UINT32> *m_objectList;
-   ObjectArray<ObjLink> *m_linkList;
+   IntegerArray<uint32_t> m_objectList;
+   ObjectArray<ObjLink> m_linkList;
    bool m_allowDuplicateLinks;
 
 public:
    NetworkMapObjectList();
-   NetworkMapObjectList(NetworkMapObjectList *src);
-   ~NetworkMapObjectList();
+   NetworkMapObjectList(const NetworkMapObjectList& src);
 
-   void merge(const NetworkMapObjectList *src);
+   void merge(const NetworkMapObjectList& src);
 
-   void addObject(UINT32 id);
-   void linkObjects(UINT32 id1, UINT32 id2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = NULL);
-   void linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2);
-   void removeObject(UINT32 id);
+   void addObject(uint32_t id);
+   void linkObjects(uint32_t id1, uint32_t id2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = nullptr);
+   void linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR *port1, const TCHAR *port2, uint32_t portId1, uint32_t portId2);
+   void removeObject(uint32_t id);
    void clear();
+   void filterObjects(bool (*filter)(uint32_t, void *), void *context);
+   template<typename C> void filterObjects(bool (*filter)(uint32_t, C *), C *context) { filterObjects(reinterpret_cast<bool (*)(uint32_t, void *)>(filter), context); }
 
-   int getNumObjects() const { return m_objectList->size(); }
-   IntegerArray<UINT32> *getObjects() { return m_objectList; }
-   int getNumLinks() const { return m_linkList->size(); }
-   ObjectArray<ObjLink> *getLinks() { return m_linkList; }
+   int getNumObjects() const { return m_objectList.size(); }
+   const IntegerArray<uint32_t>& getObjects() const { return m_objectList; }
+   int getNumLinks() const { return m_linkList.size(); }
+   const ObjectArray<ObjLink>& getLinks() const { return m_linkList; }
 
 	void createMessage(NXCPMessage *pMsg);
 
-	bool isLinkExist(UINT32 objectId1, UINT32 objectId2) const;
-	ObjLink *getLink(UINT32 objectId1, UINT32 objectId2, int linkType);
-	bool isObjectExist(UINT32 objectId) const;
+	bool isLinkExist(uint32_t objectId1, uint32_t objectId2) const;
+	ObjLink *getLink(uint32_t objectId1, uint32_t objectId2, int linkType);
+	bool isObjectExist(uint32_t objectId) const;
 
 	void setAllowDuplicateLinks(bool allowDuplicateLinks) { m_allowDuplicateLinks = allowDuplicateLinks; }
 	bool isAllowDuplicateLinks() const { return m_allowDuplicateLinks; }
