@@ -100,7 +100,7 @@ DatabaseQuery g_queries[] =
 		_T("SELECT CASE WHEN pg_is_in_recovery() THEN 'YES' ELSE 'NO' END AS in_recovery, CASE WHEN count(*) > 0 THEN 'YES' ELSE 'NO' END AS is_receiver FROM pg_catalog.pg_stat_wal_receiver")
 	},
 	{ _T("REPLICATION"), 0, 0, 0,
-		_T("SELECT count(*) stanby FROM pg_catalog.pg_stat_replication")
+		_T("SELECT count(*) wal_senders FROM pg_catalog.pg_stat_replication")
 	},
 	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(10, 0, 0), 0, 0,
 		_T("SELECT CASE WHEN pg_catalog.pg_last_wal_receive_lsn() = pg_catalog.pg_last_wal_replay_lsn() THEN 0 ELSE COALESCE(EXTRACT(EPOCH FROM now() - pg_catalog.pg_last_xact_replay_timestamp())::integer, 0) END AS lag")
@@ -600,8 +600,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("PostgreSQL.Replication.IsReceiver(*)"), H_GlobalParameter, _T("REPLICATION/is_receiver"), DCI_DT_STRING, _T("PostgreSQL/Replication: is receicer") },
 	{ _T("PostgreSQL.Replication.Lag(*)"), H_GlobalParameter, _T("REPLICATION/lag"), DCI_DT_INT, _T("PostgreSQL/Replication: lag in seconds") },
 	{ _T("PostgreSQL.Replication.LagBytes(*)"), H_GlobalParameter, _T("?REPLICATION/lag_bytes"), DCI_DT_FLOAT, _T("PostgreSQL/Replication: lag in bytes ") },
-	{ _T("PostgreSQL.Replication.Stanby(*)"), H_GlobalParameter, _T("REPLICATION/stanby"), DCI_DT_INT64, _T("PostgreSQL/Replication: WAL senders") },
 	{ _T("PostgreSQL.Replication.WALFiles(*)"), H_GlobalParameter, _T("REPLICATION/xlog_files"), DCI_DT_INT64, _T("PostgreSQL/Replication: WAL files") },
+   { _T("PostgreSQL.Replication.WALSenders(*)"), H_GlobalParameter, _T("REPLICATION/wal_senders"), DCI_DT_INT64, _T("PostgreSQL/Replication: WAL senders") },
 	{ _T("PostgreSQL.Replication.WALSize(*)"), H_GlobalParameter, _T("REPLICATION/xlog_size"), DCI_DT_FLOAT, _T("PostgreSQL/Replication: WAL size") },
 	{ _T("PostgreSQL.DBConnections.Active(*)"), H_InstanceParameter, _T("DB_CONNECTIONS/active"), DCI_DT_INT, _T("PostgreSQL/DBConnections: {instance-name} number of active backends") },
 	{ _T("PostgreSQL.DBConnections.Autovacuum(*)"), H_InstanceParameter, _T("DB_CONNECTIONS/autovacuum"), DCI_DT_INT, _T("PostgreSQL/DBConnections: {instance-name} autovacuum backends") },
