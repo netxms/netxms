@@ -153,6 +153,67 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **result
 }
 
 /**
+ * Get ID of node representing NetXMS server.
+ */
+static int F_GetServerNodeId(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   *result = vm->createValue(g_dwMgmtNode);
+   return 0;
+}
+
+/**
+ * Get node object representing NetXMS server.
+ * Optional first argument: current node object or null
+ */
+static int F_GetServerNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   shared_ptr<Node> currNode;
+   if ((argc > 0) && !argv[0]->isNull())
+   {
+      if (!argv[0]->isObject())
+         return NXSL_ERR_NOT_OBJECT;
+
+      NXSL_Object *object = argv[0]->getValueAsObject();
+      if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
+         return NXSL_ERR_BAD_CLASS;
+
+      currNode = *static_cast<shared_ptr<Node>*>(object->getData());
+   }
+
+   shared_ptr<Node> serverNode = static_pointer_cast<Node>(FindObjectById(g_dwMgmtNode, OBJECT_NODE));
+   if (serverNode != nullptr)
+   {
+      if (g_flags & AF_CHECK_TRUSTED_NODES)
+      {
+         if ((currNode != nullptr) && (serverNode->isTrustedNode(currNode->getId())))
+         {
+            *result = serverNode->createNXSLObject(vm);
+         }
+         else
+         {
+            // No access, return null
+            *result = vm->createValue();
+            nxlog_debug(4, _T("NXSL::GetServerNode(%s [%d]): access denied for node %s [%d]"),
+                      (currNode != nullptr) ? currNode->getName() : _T("null"), (currNode != nullptr) ? currNode->getId() : 0,
+                      argv[1]->getValueAsCString(), serverNode->getName(), serverNode->getId());
+         }
+      }
+      else
+      {
+         *result = serverNode->createNXSLObject(vm);
+      }
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
  * Find node object
  * First argument: current node object or null
  * Second argument: node id or name
@@ -1675,6 +1736,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "GetNodeTemplates", F_GetNodeTemplates, 1 },
    { "GetObjectChildren", F_GetObjectChildren, 1 },
    { "GetObjectParents", F_GetObjectParents, 1 },
+   { "GetServerNode", F_GetServerNode, -1 },
+   { "GetServerNodeId", F_GetServerNodeId, 0 },
    { "GetSyslogRuleCheckCount", F_GetSyslogRuleCheckCount, -1 },
    { "GetSyslogRuleMatchCount", F_GetSyslogRuleMatchCount, -1 },
 	{ "FindAlarmById", F_FindAlarmById, 1 },
