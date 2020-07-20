@@ -1099,7 +1099,7 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, We
    pathList.add(path);
    StringMap results;
    uint32_t agentStatus = conn->queryWebService(queryType, url, d->getCacheRetentionTime(), d->getLogin(), d->getPassword(), d->getAuthType(),
-         headers, pathList, d->isVerifyCertificate(), d->isVerifyHost(),
+         headers, pathList, d->isVerifyCertificate(), d->isVerifyHost(), d->isTextParsingUsed(),
          (queryType == WebServiceRequestType::PARAMETER) ? static_cast<void*>(&results) : static_cast<void*>(list));
 
    DataCollectionError rc;

@@ -41,6 +41,7 @@ static WebServiceAuthType s_authType = WebServiceAuthType::NONE;
 static StringMap s_headers;
 static bool s_verifyCert = true;
 static bool s_verifyHost = true;
+static bool s_parseAsPlainText = false;
 static WebServiceRequestType s_requestType = WebServiceRequestType::PARAMETER;
 
 /**
@@ -65,7 +66,7 @@ static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const Strin
          StringMap results;
          rcc = pConn->queryWebServiceParameters(url, s_retentionTime,
                   (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
-                  s_authType, s_headers, parameters, s_verifyCert, s_verifyHost, &results);
+                  s_authType, s_headers, parameters, s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
 
          if (rcc == ERR_SUCCESS)
          {
@@ -79,7 +80,7 @@ static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const Strin
          StringList results;
          rcc = pConn->queryWebServiceList(url, s_retentionTime,
                   (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
-                  s_authType, s_headers, parameters.get(0), s_verifyCert, s_verifyHost, &results);
+                  s_authType, s_headers, parameters.get(0), s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
 
          if (rcc == ERR_SUCCESS)
          {
@@ -118,8 +119,8 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
       case 'C':   // disable certificate's host check
          s_verifyHost = false;
          break;
-      case 'D':   // debug level
-         nxlog_set_debug_level((int)strtol(optarg, NULL, 0));
+      case 'd':   // debug level
+         s_parseAsPlainText = true;
          break;
       case 'i':   // Interval
          i = strtol(optarg, &eptr, 0);
@@ -272,6 +273,7 @@ int main(int argc, char *argv[])
                        _T("Tool specific options:\n")
                        _T("   -c           : Do not verify service certificate.\n")
                        _T("   -C           : Do not verify certificate's name against host.\n")
+                       _T("   -d           : Use text parsing.\n")
                        _T("   -H header    : HTTP header (can be used multiple times).\n")
                        _T("   -i seconds   : Query service continuously with given interval.\n")
                        _T("   -l           : Requested parameter is a list.\n")
@@ -280,7 +282,7 @@ int main(int argc, char *argv[])
                        _T("   -r seconds   : Cache retention time.\n")
                        _T("   -t auth      : HTTP authentication type. Valid methods are \"none\", \"basic\", \"digest\",\n")
                        _T("                  \"ntlm\", \"bearer\", \"any\", or \"anysafe\". Default is \"none\".\n");
-   tool.additionalOptions = "cCH:i:lL:P:r:t:";
+   tool.additionalOptions = "cCdH:i:lL:P:r:t:";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

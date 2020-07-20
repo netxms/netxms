@@ -73,7 +73,7 @@ public:
    uint32_t getList(const TCHAR *path, NXCPMessage *response);
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
    uint32_t updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
-            struct curl_slist *headers, bool peerVerify, bool hostVerify, const char *topLevelName);
+            struct curl_slist *headers, bool peerVerify, bool hostVerify, bool useTextParsing, const char *topLevelName);
 
    void lock() { m_lock.lock(); }
    void unlock() { m_lock.unlock(); }
@@ -458,7 +458,7 @@ static long CurlAuthType(WebServiceAuthType authType)
  * Update cached data
  */
 uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
-         struct curl_slist *headers, bool peerVerify, bool hostVerify, const char *topLevelName)
+         struct curl_slist *headers, bool peerVerify, bool hostVerify, bool useTextParsing, const char *topLevelName)
 {
    uint32_t rcc = ERR_SUCCESS;
    CURL *curl = curl_easy_init();
@@ -523,7 +523,7 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                m_responseData.appendPreallocated(text);
 #endif
                m_responseData.trim();
-               if (m_responseData.startsWith(_T("<")))
+               if (!useTextParsing && m_responseData.startsWith(_T("<")))
                {
                   m_type = DocumentType::XML;
                   char *content = m_responseData.getUTF8String();
@@ -532,7 +532,7 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to load XML"));
                   MemFree(content);
                }
-               else if (m_responseData.startsWith(_T("{")))
+               else if (!useTextParsing && m_responseData.startsWith(_T("{")))
                {
                   m_type = DocumentType::JSON;
                   char *content = m_responseData.getUTF8String();
@@ -617,6 +617,7 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
       uint32_t fieldId = VID_HEADERS_BASE;
       char header[CURL_MAX_HTTP_HEADER];
       bool verifyHost = request->isFieldExist(VID_VERIFY_HOST) ? request->getFieldAsBoolean(VID_VERIFY_HOST) : true;
+      bool useTextParsing = request->getFieldAsBoolean(VID_USE_TEXT_PARSING);
       for(uint32_t i = 0; i < headerCount; i++)
       {
          request->getFieldAsUtf8String(fieldId++, header, 256);
@@ -628,7 +629,7 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
       }
       WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
       result = cachedEntry->updateData(url, login, password, authType,
-               headers, request->getFieldAsBoolean(VID_VERIFY_CERT), verifyHost, topLevelName + 1);
+               headers, request->getFieldAsBoolean(VID_VERIFY_CERT), verifyHost, useTextParsing, topLevelName + 1);
 
       curl_slist_free_all(headers);
       MemFree(login);

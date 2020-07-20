@@ -28,6 +28,7 @@
  */
 #define WS_FLAG_VERIFY_CERTIFICATE  1
 #define WS_FLAG_VERIFY_HOST         2
+#define WS_FLAG_USE_TEXT_PARSING    4
 
 /**
  * Web service definition
@@ -73,6 +74,7 @@ public:
    const StringMap& getHeaders() const { return m_headers; }
    bool isVerifyCertificate() const { return (m_flags & WS_FLAG_VERIFY_CERTIFICATE) > 0; }
    bool isVerifyHost() const { return (m_flags & WS_FLAG_VERIFY_HOST) > 0; }
+   bool isTextParsingUsed() const { return (m_flags & WS_FLAG_USE_TEXT_PARSING) > 0; }
    uint32_t getFlags() const { return m_flags; }
 };
 
