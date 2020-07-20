@@ -32,6 +32,7 @@ public class WebServiceDefinition
 {
    private final int FLAG_VERIFY_CERTIFICATE = 1;
    private final int FLAG_VERIFY_HOST = 2;
+   private final int FLAG_PARSE_AS_TEXT = 4;
    
    private int id;
    private UUID guid;
@@ -346,7 +347,7 @@ public class WebServiceDefinition
    }
 
    /**
-    * @return the verifyCertificate
+    * @return the verify host
     */
    public boolean isVerifyHost()
    {
@@ -361,7 +362,28 @@ public class WebServiceDefinition
       if(verifyHost)
          flags |= FLAG_VERIFY_HOST;
       else
-         flags &= ~FLAG_VERIFY_HOST;
-         
+         flags &= ~FLAG_VERIFY_HOST;         
    }
+
+   /**
+    * Sets if text parsing should be used
+    * 
+    * @param useTextParsing if text parsing should be used
+    */
+   public void setParseAsText(boolean useTextParsing)
+   {
+      if(useTextParsing)
+         flags |= FLAG_PARSE_AS_TEXT;
+      else
+         flags &= ~FLAG_PARSE_AS_TEXT;        
+   }
+
+   /**
+    * @return if text parsing should be used
+    */
+   public boolean isTextParsingUsed()
+   {
+      return (flags & FLAG_PARSE_AS_TEXT) > 0;
+   }
+
 }

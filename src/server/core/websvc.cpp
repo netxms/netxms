@@ -178,7 +178,7 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
 
    StringMap resultSet;
    UINT32 rcc = conn->queryWebService(requestType, url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, pathList,
-         isVerifyCertificate(), isVerifyHost(), (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
+         isVerifyCertificate(), isVerifyHost(), isTextParsingUsed(), (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
    if ((rcc == ERR_SUCCESS) && (requestType == WebServiceRequestType::PARAMETER))
    {
       const TCHAR *value = resultSet.get(path);
