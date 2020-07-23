@@ -1751,7 +1751,7 @@ CREATE TABLE snmp_ports
    id integer not null,
    port integer not null,
    zone integer not null,
-   PRIMARY KEY(id)
+   PRIMARY KEY(id,zone)
 ) TABLE_TYPE;
 
 /*
