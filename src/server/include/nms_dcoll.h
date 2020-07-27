@@ -359,13 +359,13 @@ public:
    shared_ptr<DataCollectionOwner> getOwner() const { return m_owner.lock(); }
    uint32_t getOwnerId() const { return m_ownerId; }
    const TCHAR *getOwnerName() const;
-   UINT32 getTemplateId() const { return m_dwTemplateId; }
-   UINT32 getTemplateItemId() const { return m_dwTemplateItemId; }
-	UINT32 getResourceId() const { return m_dwResourceId; }
-	UINT32 getSourceNode() const { return m_sourceNode; }
+   uint32_t getTemplateId() const { return m_dwTemplateId; }
+   uint32_t getTemplateItemId() const { return m_dwTemplateItemId; }
+   uint32_t getResourceId() const { return m_dwResourceId; }
+   uint32_t getSourceNode() const { return m_sourceNode; }
 	time_t getLastPollTime() const { return m_lastPoll; }
-	UINT32 getErrorCount() const { return m_dwErrorCount; }
-	UINT16 getSnmpPort() const { return m_snmpPort; }
+   uint32_t getErrorCount() const { return m_dwErrorCount; }
+	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    bool isShowOnObjectTooltip() const { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
    bool isShowInObjectOverview() const { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
@@ -379,7 +379,7 @@ public:
    INT16 getAgentCacheMode();
    bool hasValue();
    bool hasAccess(UINT32 userId);
-   UINT32 getRelatedObject() const { return m_relatedObject; }
+   uint32_t getRelatedObject() const { return m_relatedObject; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);

@@ -241,7 +241,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
 
    DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
              dcObject->getId(), dcObjectName.cstr(), (target != nullptr) ? (int)target->getId() : -1, dcObject->getSourceNode());
-   UINT32 sourceNodeId = target->getEffectiveSourceNode(dcObject.get());
+   uint32_t sourceNodeId = target->getEffectiveSourceNode(dcObject.get());
    if (sourceNodeId != 0)
    {
       shared_ptr<Node> sourceNode = static_pointer_cast<Node>(FindObjectById(sourceNodeId, OBJECT_NODE));

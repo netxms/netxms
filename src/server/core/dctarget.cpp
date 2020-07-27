@@ -679,10 +679,11 @@ void DataCollectionTarget::queueItemsForPolling()
              (object->getDataSource() == DS_SSH) ||
              (object->getDataSource() == DS_SMCLP))
          {
+            uint32_t sourceNodeId = getEffectiveSourceNode(object);
             TCHAR key[32];
             _sntprintf(key, 32, _T("%08X/%s"),
-                     m_id, (object->getDataSource() == DS_SSH) ? _T("ssh") :
-                              (object->getDataSource() == DS_SMCLP) ? _T("smclp") : _T("agent"));
+                  (sourceNodeId != 0) ? sourceNodeId : m_id, (object->getDataSource() == DS_SSH) ? _T("ssh") :
+                  (object->getDataSource() == DS_SMCLP) ? _T("smclp") : _T("agent"));
             ThreadPoolExecuteSerialized(g_dataCollectorThreadPool, key, DataCollector, m_dcObjects->getShared(i));
          }
          else
