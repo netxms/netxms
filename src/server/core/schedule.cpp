@@ -945,22 +945,24 @@ uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64
    TCHAR *taskHandler = request->getFieldAsString(VID_TASK_HANDLER);
    TCHAR *persistentData = request->getFieldAsString(VID_PARAMETER);
    TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
+   TCHAR *key = request->getFieldAsString(VID_TASK_KEY);
    uint32_t objectId = request->getFieldAsInt32(VID_OBJECT_ID);
    uint32_t rcc;
    if (request->isFieldExist(VID_SCHEDULE))
    {
       TCHAR *schedule = request->getFieldAsString(VID_SCHEDULE);
-      rcc = AddRecurrentScheduledTask(taskHandler, schedule, persistentData, NULL, owner, objectId, systemAccessRights, comments);
+      rcc = AddRecurrentScheduledTask(taskHandler, schedule, persistentData, NULL, owner, objectId, systemAccessRights, comments, key);
       MemFree(schedule);
    }
    else
    {
       rcc = AddOneTimeScheduledTask(taskHandler, request->getFieldAsTime(VID_EXECUTION_TIME),
-               persistentData, NULL, owner, objectId, systemAccessRights, comments);
+               persistentData, NULL, owner, objectId, systemAccessRights, comments, key);
    }
    MemFree(taskHandler);
    MemFree(persistentData);
    MemFree(comments);
+   MemFree(key);
    return rcc;
 }
 
