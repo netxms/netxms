@@ -1,0 +1,82 @@
+/*
+* This script requires:
+*     id of node with SNMP and driver
+*     existing scheduled task key
+*     latest user agent id
+*/
+
+nodeId = $1;
+scheduledKey = $2;
+latestUaNotificationId = $3;
+node = FindObject(nodeId);
+
+//Classof
+for (n : GetAllNodes()) 
+{
+   class = classof(n);
+   assert("Node" == class);
+   break;
+}
+
+//Scheduled tasks 
+count = CountScheduledTasksByKey("Non existing"); //Create scheduled task
+assert(count == 0);
+count = CountScheduledTasksByKey(scheduledKey); //Create scheduled task
+assert(count == 1);
+
+//User agent notification
+notificationId = CreateUserAgentNotification(node, "Interval user agent notification text", time(), time()+86400); //Create notification and then externally check it
+assert(notificationId == (latestUaNotificationId + 1));
+
+//Driver read parameter
+//TODO: Make successful test
+result = DriverReadParameter(node, "Test"); //Read form SNMP device
+assert(result == null);
+
+//Events
+code = EventCodeFromName("SYS_NODE_DOWN");
+assert(code == 28);
+name = EventNameFromCode(28);
+assert(name == "SYS_NODE_DOWN");
+
+value = GetConfigurationVariable("TileServerURL");
+assert(value == "https://tile.netxms.org/osm/");
+
+value = GetConfigurationVariable("Non Existing");
+assert(value == null);
+
+//Syslog rule check
+//TODO: Make successful test
+result = GetSyslogRuleCheckCount("Non Existing Rule", node);
+assert(result == -1);
+result = GetSyslogRuleMatchCount("Non Existing Rule", node);
+assert(result == -1);
+
+pollerNames = GetThreadPoolNames();
+nameFound = false;
+for (name : pollerNames)
+{
+   if (name == "POLLERS")
+   {
+      nameFound = true;
+      break;
+   }
+}
+assert(nameFound);
+
+//Persistent storage
+name = "TestName";
+value = ReadPersistentStorage(name);
+assert(value == null);
+
+WritePersistentStorage(name, "Value");
+value = ReadPersistentStorage(name);
+assert(value == "Value");
+
+WritePersistentStorage(name, "Value2");
+value = ReadPersistentStorage(name);
+assert(value == "Value2");
+
+WritePersistentStorage(name, null);
+value = ReadPersistentStorage(name);
+assert(value == null);

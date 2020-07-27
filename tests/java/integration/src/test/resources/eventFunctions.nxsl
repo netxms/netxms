@@ -1,0 +1,28 @@
+/*
+* This script requires:
+*     existing event id
+*     any existing node id
+*/
+
+eventId = $1;
+nodeId = $2;
+parameterName = "Custom parameter";
+parameterValue = "Custom parameter value";
+node = FindObject(nodeId);
+
+event = LoadEvent(12);
+assert(event == null);
+
+event = LoadEvent(eventId);
+assert(event != null);
+SetEventParameter(event, parameterName, parameterValue);
+value = GetEventParameter(event, parameterName);
+assert(value != parameterName);
+value = GetEventParameter(event, "Non existing");
+assert(value != parameterName);
+
+assert(!PostEvent(node, 200000));
+
+assert(PostEvent(node, 100000));
+assert(PostEvent(node, 100000, "my tag", "param1", "param2"));
+assert(PostEvent(node, "SYS_NODE_ADDED", null, "param1"));

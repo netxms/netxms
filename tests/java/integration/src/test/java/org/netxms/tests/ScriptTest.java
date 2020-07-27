@@ -20,17 +20,22 @@ package org.netxms.tests;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.client.AgentPolicy;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ScheduledTask;
 import org.netxms.client.ScriptCompilationResult;
 import org.netxms.client.TextOutputListener;
+import org.netxms.client.UserAgentNotification;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.events.Alarm;
@@ -262,6 +267,72 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       System.out.println("Check that at least one alarm was found");
       assertTrue(params.size() == 3);
       executeScript("/alarmFunctions.nxsl", params);
+   }
+   
+   public void testNXSLEventFunctions() throws Exception
+   {
+      session = connect();
+      
+      HashMap<Long, Alarm> alarms = session.getAlarms();
+      assertTrue(alarms.size() > 0);
+      
+      List<String> params = new ArrayList<String>();
+      for(Alarm alarm : alarms.values())
+      {
+         String alarmKey = alarm.getKey();
+         if(alarmKey.isEmpty())
+            continue;
+         params.add(Long.toString(alarm.getSourceEventId()));
+         params.add(Long.toString(alarm.getSourceObjectId()));
+         break;
+      }
+      System.out.println("Check that at least one alarm was found");
+      assertTrue(params.size() == 2);
+      executeScript("/eventFunctions.nxsl", params);
+   }
+   
+   public void testNXSLMiscelaniousFunctions() throws Exception
+   {
+      session = connect();
+      List<String> params = new ArrayList<String>();
+
+      session.syncObjects();
+      List<AbstractObject> objects = session.getAllObjects(); //Find managment node
+      AbstractObject snmpNode = null;
+      for (AbstractObject obj : objects)
+      {
+         if (obj instanceof Node && ((Node)obj).isManagementServer())
+         {
+            snmpNode = obj;
+            break;            
+         }
+      }
+      assertNotNull(snmpNode);  
+      
+      Set<Long> objectSet = new HashSet<Long>();
+      objectSet.add(snmpNode.getObjectId());
+      String scheduledTaskKey = "TestKey" + Long.toString((new Date()).getTime());;
+      ScheduledTask task = new ScheduledTask("Execute.Script", "", "testScript",
+            "Test comment", new Date(new Date().getTime() + 1200000), 0, snmpNode.getObjectId());
+      task.setKey(scheduledTaskKey);
+      session.addScheduledTask(task);
+      session.createUserAgentNotification("Message", objectSet, new Date(), new Date(), true);
+      
+      List<UserAgentNotification> notificaitons = session.getUserAgentNotifications();
+      notificaitons.sort(new Comparator<UserAgentNotification>() {
+
+         @Override
+         public int compare(UserAgentNotification o1, UserAgentNotification o2)
+         {
+            return Long.compare(o2.getId(), o1.getId());
+         }
+      });
+
+      params.add(Long.toString(snmpNode.getObjectId()));
+      params.add(scheduledTaskKey);
+      params.add(Long.toString(notificaitons.get(0).getId()));
+      
+      executeScript("/miscelaniousFunctions.nxsl", params);
    }
 
    /**
