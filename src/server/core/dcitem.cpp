@@ -1785,7 +1785,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 	m_nBaseUnits = item->m_nBaseUnits;
 	m_nMultiplier = item->m_nMultiplier;
 	MemFree(m_customUnitName);
-	m_customUnitName = (item->m_customUnitName != nullptr) ? _tcsdup(item->m_customUnitName) : nullptr;
+	m_customUnitName = MemCopyString(item->m_customUnitName);
 
    // Copy thresholds
    // ***************************
