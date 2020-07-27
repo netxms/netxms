@@ -1607,7 +1607,7 @@ static void AddScriptDependencies(StringSet *dependencies, const TCHAR *name)
    dependencies->add(scriptName);
 
    StringList *scriptDependencies = GetServerScriptLibrary()->getScriptDependencies(scriptName);
-   if (dependencies != nullptr)
+   if (scriptDependencies != nullptr)
    {
       for(int i = 0; i < scriptDependencies->size(); i++)
       {
