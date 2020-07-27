@@ -174,9 +174,9 @@ enum LinkLayerProtocol
  */
 struct LL_NEIGHBOR_INFO
 {
-	UINT32 ifLocal;             // Local interface index
-	UINT32 ifRemote;            // Remote interface index
-	UINT32 objectId;		       // ID of connected object
+	uint32_t ifLocal;           // Local interface index
+	uint32_t ifRemote;          // Remote interface index
+	uint32_t objectId;		    // ID of connected object
 	bool isPtToPt;			       // true if this is point-to-point link
 	LinkLayerProtocol protocol; // Protocol used to obtain information
    bool isCached;              // true if this is cached information
