@@ -52,9 +52,9 @@ typedef struct
    char chMagic[6];
    BYTE bHeaderSize;    // Header size in bytes
    BYTE bVersion;
-   WORD flags;
+   uint16_t flags;
    BYTE bReserved[2];
-   UINT32 dwTimeStamp;   // Server's timestamp
+   uint32_t dwTimeStamp;   // Server's timestamp
 } SNMP_MIB_HEADER;
 
 /**

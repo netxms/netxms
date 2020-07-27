@@ -25,6 +25,7 @@
 
 #include <nms_common.h>
 #include <nms_threads.h>
+#include <nxqueue.h>
 
 #ifdef LIBNXSNMP_EXPORTS
 #define LIBNXSNMP_EXPORTABLE __EXPORT
@@ -775,6 +776,52 @@ public:
 
    int size() const { return m_values->size(); }
    bool isEmpty() const { return m_values->size() == 0; }
+};
+
+/**
+ * SNMP reader request
+ */
+struct SNMP_ReaderRequest
+{
+   SNMP_ObjectId oid;
+   void (*callback)(const SNMP_ObjectId&, const SNMP_Variable*, void *);
+   void *context;
+};
+
+/**
+ * SNMP reader
+ */
+class LIBNXSNMP_EXPORTABLE SNMP_Reader
+{
+private:
+   SNMP_Transport *m_transport;
+   ThreadPool *m_threadPool;
+   CONDITION m_workerCompleted;
+   ObjectQueue<SNMP_ReaderRequest> m_queue;
+   SynchronizedObjectMemoryPool<SNMP_ReaderRequest> m_memoryPool;
+
+   void worker();
+
+public:
+   SNMP_Reader(SNMP_Transport *transport, ThreadPool *threadPool)
+   {
+      m_transport = transport;
+      m_threadPool = threadPool;
+      m_workerCompleted = ConditionCreate(true);
+      ThreadPoolExecute(threadPool, this, &SNMP_Reader::worker);
+   }
+   ~SNMP_Reader()
+   {
+      m_queue.put(static_cast<SNMP_ReaderRequest*>(INVALID_POINTER_VALUE));
+      ConditionWait(m_workerCompleted, INFINITE);
+      ConditionDestroy(m_workerCompleted);
+   }
+
+   void queueRequest(const SNMP_ObjectId& oid, void (*callback)(const SNMP_ObjectId&, const SNMP_Variable*, void*), void *context);
+   template<typename C> void queueRequest(const SNMP_ObjectId& oid, void (*callback)(const SNMP_ObjectId&, const SNMP_Variable*, C*), C *context)
+   {
+      queueRequest(oid, reinterpret_cast<void (*)(const SNMP_ObjectId&, const SNMP_Variable*, void*)>(callback), context);
+   }
 };
 
 /**

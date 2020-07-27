@@ -916,22 +916,22 @@ void DataElement::fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId)
  */
 struct ServerSyncStatus
 {
-   UINT64 serverId;
-   INT32 queueSize;
+   uint64_t serverId;
+   int32_t queueSize;
    time_t lastSync;
 
-   ServerSyncStatus(UINT64 sid)
+   ServerSyncStatus(uint64_t sid)
    {
       serverId = sid;
       queueSize = 0;
-      lastSync = time(NULL);
+      lastSync = time(nullptr);
    }
 };
 
 /**
  * Server sync status information
  */
-static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(Ownership::True);
+static HashMap<uint64_t, ServerSyncStatus> s_serverSyncStatus(Ownership::True);
 static Mutex s_serverSyncStatusLock;
 
 /**
@@ -954,7 +954,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
          break;
 
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?,?)"));
-      if (hStmt == NULL)
+      if (hStmt == nullptr)
       {
          delete e;
          continue;
@@ -962,7 +962,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
 
       UINT32 count = 0;
       DBBegin(hdb);
-      while((e != NULL) && (e != INVALID_POINTER_VALUE))
+      while((e != nullptr) && (e != INVALID_POINTER_VALUE))
       {
          e->saveToDatabase(hStmt);
          delete e;
@@ -1002,7 +1002,7 @@ static bool SessionComparator_Reconciliation(AbstractCommSession *session, void 
    if ((session->getServerId() == 0) || !session->canAcceptData())
       return false;
    ServerSyncStatus *s = s_serverSyncStatus.get(session->getServerId());
-   if ((s != NULL) && (s->queueSize > 0))
+   if ((s != nullptr) && (s->queueSize > 0))
    {
       return true;
    }

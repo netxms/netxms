@@ -91,16 +91,15 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                                       const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
                                       size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen)
 {
-   SNMP_PDU *pRqPDU, *pRespPDU;
-   UINT32 pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
+   if (pTransport == nullptr)
+      return SNMP_ERR_COMM;
+
+   uint32_t pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
    size_t nameLength;
 
-	if (pTransport == NULL)
-		return SNMP_ERR_COMM;
-
    // Create PDU and send request
-   pRqPDU = new SNMP_PDU((dwFlags & SG_GET_NEXT_REQUEST) ? SNMP_GET_NEXT_REQUEST : SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, pTransport->getSnmpVersion());
-   if (szOidStr != NULL)
+   SNMP_PDU request((dwFlags & SG_GET_NEXT_REQUEST) ? SNMP_GET_NEXT_REQUEST : SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, pTransport->getSnmpVersion());
+   if (szOidStr != nullptr)
    {
       nameLength = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
       if (nameLength == 0)
@@ -123,16 +122,17 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
 
    if (dwResult == SNMP_ERR_SUCCESS)   // Still no errors
    {
-      pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLength));
-      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, s_snmpTimeout, 3);
+      request.bindVariable(new SNMP_Variable(pdwVarName, nameLength));
+      SNMP_PDU *response;
+      dwResult = pTransport->doRequest(&request, &response, s_snmpTimeout, 3);
 
       // Analyze response
       if (dwResult == SNMP_ERR_SUCCESS)
       {
-         if ((pRespPDU->getNumVariables() > 0) &&
-             (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+         if ((response->getNumVariables() > 0) &&
+             (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
          {
-            SNMP_Variable *pVar = pRespPDU->getVariable(0);
+            SNMP_Variable *pVar = response->getVariable(0);
 
             if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
                 (pVar->getType() != ASN_NO_SUCH_INSTANCE) &&
@@ -209,12 +209,12 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
          }
          else
          {
-            if (pRespPDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
+            if (response->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
                dwResult = SNMP_ERR_NO_OBJECT;
             else
                dwResult = SNMP_ERR_AGENT;
          }
-         delete pRespPDU;
+         delete response;
       }
       else
       {
@@ -223,7 +223,6 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
       }
    }
 
-   delete pRqPDU;
    return dwResult;
 }
 

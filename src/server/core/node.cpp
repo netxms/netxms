@@ -45,6 +45,11 @@ extern uint32_t g_averageDCIQueuingTime;
 extern ThreadPool *g_pollerThreadPool;
 
 /**
+ * Thread pool for data collectors
+ */
+ThreadPool *g_dataCollectorThreadPool = nullptr;
+
+/**
  * Unbind agent tunnel from node
  */
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
@@ -222,6 +227,8 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
    m_smclpConnection = nullptr;
+   m_snmpReaderCreationTime = 0;
+   m_snmpReaderLock = MutexCreateFast();
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
@@ -310,6 +317,7 @@ Node::~Node()
    MutexDestroy(m_mutexTopoAccess);
    delete[] m_proxyConnections;
    delete m_smclpConnection;
+   MutexDestroy(m_snmpReaderLock);
    delete m_agentParameters;
    delete m_agentTables;
    delete m_driverParameters;
@@ -8143,7 +8151,7 @@ uint32_t Node::getEffectiveAgentProxy()
 /**
  * Create SNMP transport
  */
-SNMP_Transport *Node::createSnmpTransport(UINT16 port, SNMP_Version version, const TCHAR *context)
+SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, const TCHAR *context)
 {
    if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return nullptr;
@@ -8216,6 +8224,26 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext() const
    SNMP_SecurityContext *ctx = new SNMP_SecurityContext(m_snmpSecurity);
    unlockProperties();
    return ctx;
+}
+
+/**
+ * Get (and create if needed) SNMP reader for possible bulk read
+ */
+shared_ptr<SNMP_Reader> Node::getSnmpReader()
+{
+   MutexLock(m_snmpReaderLock);
+   if ((m_snmpReader == nullptr) || (m_snmpReaderCreationTime < time(nullptr) - 300))
+   {
+      // Create new reader
+      SNMP_Transport *transport = createSnmpTransport();
+      if (transport != nullptr)
+         m_snmpReader = make_shared<SNMP_Reader>(transport, g_dataCollectorThreadPool);
+      else
+         m_snmpReader.reset();
+   }
+   shared_ptr<SNMP_Reader> reader = m_snmpReader;
+   MutexUnlock(m_snmpReaderLock);
+   return reader;
 }
 
 /**

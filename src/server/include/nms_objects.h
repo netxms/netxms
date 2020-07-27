@@ -2800,9 +2800,13 @@ protected:
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
    shared_ptr<AgentConnectionEx> m_agentConnection;
+   shared_ptr<AgentConnection> m_fileUpdateConnection;
    ProxyAgentConnection *m_proxyConnections;
    VolatileCounter m_pendingDataConfigurationSync;
    SMCLP_Connection *m_smclpConnection;
+   shared_ptr<SNMP_Reader> m_snmpReader;
+   time_t m_snmpReaderCreationTime;
+   MUTEX m_snmpReaderLock;
    uint64_t m_lastAgentTrapId;	     // ID of last received agent trap
    uint64_t m_lastAgentPushRequestId; // ID of last received agent push request
    uint32_t m_lastSNMPTrapId;
@@ -2831,7 +2835,6 @@ protected:
 	ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
    ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
 	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
-	shared_ptr<AgentConnection> m_fileUpdateConnection;
 	INT16 m_rackHeight;
 	INT16 m_rackPosition;
 	UINT32 m_physicalContainer;
@@ -3151,8 +3154,9 @@ public:
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
-	SNMP_Transport *createSnmpTransport(UINT16 port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const TCHAR *context = nullptr);
+	SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const TCHAR *context = nullptr);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
+	shared_ptr<SNMP_Reader> getSnmpReader();
 
 	uint32_t getEffectiveSnmpProxy(bool backup = false);
 	uint32_t getEffectiveEtherNetIPProxy(bool backup = false);
