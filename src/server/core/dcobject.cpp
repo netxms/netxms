@@ -1662,6 +1662,15 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
 }
 
 /**
+ * Get data source name
+ */
+const TCHAR *DCObject::getDataProviderName(int dataProvider)
+{
+   static const TCHAR *names[] = { _T("internal"), _T("nxagent"), _T("snmp"), _T("websvc"), _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver") };
+   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_DEVICE_DRIVER)) ? names[dataProvider] : _T("unknown");
+}
+
+/**
  * Data collection object info - constructor
  */
 DCObjectInfo::DCObjectInfo(const DCObject *object)

@@ -345,7 +345,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
 /**
  * Callback for queueing DCIs
  */
-static void QueueItems(NetObj *object, UINT32 *watchdogId)
+static void QueueItems(NetObj *object, uint32_t *watchdogId)
 {
    if (IsShutdownInProgress())
       return;
@@ -364,7 +364,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
    ThreadSetName("ItemPoller");
 
-   UINT32 watchdogId = WatchdogAddThread(_T("Item Poller"), 10);
+   uint32_t watchdogId = WatchdogAddThread(_T("Item Poller"), 10);
    GaugeData<UINT32> queuingTime(ITEM_POLLING_INTERVAL, 300);
 
    while(!IsShutdownInProgress())

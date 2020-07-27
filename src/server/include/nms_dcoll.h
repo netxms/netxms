@@ -351,6 +351,7 @@ public:
    uint32_t getId() const { return m_id; }
 	const uuid& getGuid() const { return m_guid; }
    int getDataSource() const { return m_source; }
+   const TCHAR *getDataProviderName() const { return getDataProviderName(m_source); }
    int getStatus() const { return m_status; }
    SharedString getName() const { return GetAttributeWithLock(m_name, m_hMutex); }
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_hMutex); }
@@ -431,6 +432,7 @@ public:
 
    static DCObjectStorageClass storageClassFromRetentionTime(int retentionTime);
    static const TCHAR *getStorageClassName(DCObjectStorageClass storageClass);
+   static const TCHAR *getDataProviderName(int dataProvider);
 };
 
 /**
