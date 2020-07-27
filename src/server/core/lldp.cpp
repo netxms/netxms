@@ -197,13 +197,10 @@ static void ProcessLLDPConnectionEntry(Node *node, SNMP_Transport *snmp, StringO
 	newOid[oid.length() - 4] = 6;	// lldpRemPortIdSubtype
    SNMP_Variable *lldpRemPortIdSubtype = GetVariableFromCache(newOid, oid.length(), connections);
 
-	newOid[oid.length() - 4] = 8;	// lldpRemPortDesc
-   SNMP_Variable *lldpRemPortDesc = GetVariableFromCache(newOid, oid.length(), connections);
-
    newOid[oid.length() - 4] = 9;   // lldpRemSysName
    SNMP_Variable *lldpRemSysName = GetVariableFromCache(newOid, oid.length(), connections);
 
-	if ((lldpRemChassisIdSubtype != nullptr) && (lldpRemPortId != nullptr) && (lldpRemPortIdSubtype != nullptr) && (lldpRemPortDesc != nullptr) && (lldpRemSysName != nullptr))
+	if ((lldpRemChassisIdSubtype != nullptr) && (lldpRemPortId != nullptr) && (lldpRemPortIdSubtype != nullptr) && (lldpRemSysName != nullptr))
    {
 		// Build LLDP ID for remote system
 		TCHAR remoteId[256];
@@ -240,15 +237,23 @@ static void ProcessLLDPConnectionEntry(Node *node, SNMP_Transport *snmp, StringO
          if (ifRemote == nullptr)
          {
             // Try to find remote interface by description
-            TCHAR *ifDescr = lldpRemPortDesc->getValueAsString((TCHAR *)remoteIfId, 1024 / sizeof(TCHAR));
-            Trim(ifDescr);
-            nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): FindRemoteInterface failed, lookup by description (\"%s\")"), node->getName(), node->getId(), CHECK_NULL(ifDescr));
-            if (ifDescr != nullptr)
-               ifRemote = remoteNode->findInterfaceByName(ifDescr);
+            newOid[oid.length() - 4] = 8; // lldpRemPortDesc
+            SNMP_Variable *lldpRemPortDesc = GetVariableFromCache(newOid, oid.length(), connections);
+            if (lldpRemPortDesc != nullptr)
+            {
+               TCHAR *ifDescr = lldpRemPortDesc->getValueAsString((TCHAR *)remoteIfId, 1024 / sizeof(TCHAR));
+               Trim(ifDescr);
+               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): FindRemoteInterface failed, lookup by description (\"%s\")"), node->getName(), node->getId(), CHECK_NULL(ifDescr));
+               if (ifDescr != nullptr)
+                  ifRemote = remoteNode->findInterfaceByName(ifDescr);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%d]): FindRemoteInterface failed but lldpRemPortDesc is not available"), node->getName(), node->getId());
+            }
          }
 
 			LL_NEIGHBOR_INFO info;
-
 			info.objectId = remoteNode->getId();
 			info.ifRemote = (ifRemote != nullptr) ? ifRemote->getIfIndex() : 0;
 			info.isPtToPt = true;
@@ -256,7 +261,7 @@ static void ProcessLLDPConnectionEntry(Node *node, SNMP_Transport *snmp, StringO
          info.isCached = false;
 
 			// Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
-			UINT32 localPort = oid.getElement(oid.length() - 2);
+			uint32_t localPort = oid.getElement(oid.length() - 2);
 
 			// Determine interface index from local port number. It can be
 			// either ifIndex or dot1dBasePort, as described in LLDP MIB:
