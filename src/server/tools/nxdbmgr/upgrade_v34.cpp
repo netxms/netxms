@@ -25,6 +25,18 @@
 
 
 /**
+ * Upgrade from 34.13 to 34.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("snmp_ports")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("snmp_ports"), _T("id,zone")));
+
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 34.12 to 34.13
  */
 static bool H_UpgradeFromV12()
@@ -229,6 +241,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 13, 34, 14, H_UpgradeFromV13 },
    { 12, 34, 13, H_UpgradeFromV12 },
    { 11, 34, 12, H_UpgradeFromV11 },
    { 10, 34, 11, H_UpgradeFromV10 },
