@@ -528,6 +528,12 @@ static StringBuffer BuildRestartCommandLine(bool withWaitPid)
    command.append(_T("\" -D "));
    command.append(s_debugLevel);
 
+#if !defined(_WIN32)
+   command.append(_T(" -p \""));
+   command.append(g_szPidFile);
+   command.append(_T('"'));
+#endif
+
    if (g_szPlatformSuffix[0] != 0)
    {
       command.append(_T(" -P \""));
