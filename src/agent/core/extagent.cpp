@@ -119,9 +119,6 @@ static void ForwardSessionMessage(NXCPMessage *msg)
  */
 void ExternalSubagent::connect(NamedPipe *pipe)
 {
-	TCHAR buffer[256];
-   UINT32 i;
-
 	m_pipe = pipe;
 	m_connected = true;
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection established"), m_name);
@@ -130,20 +127,22 @@ void ExternalSubagent::connect(NamedPipe *pipe)
 	{
       MessageReceiverResult result;
       NXCPMessage *msg = receiver.readMessage(5000, &result);
-		if (msg == NULL)
+		if (msg == nullptr)
       {
 		   if (result == MSGRECV_TIMEOUT)
 		      continue;
          AgentWriteDebugLog(6, _T("ExternalSubagent(%s): receiver failure (%s)"), m_name, AbstractMessageReceiver::resultToText(result));
 			break;
       }
+
+	   TCHAR buffer[256];
 		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
       switch(msg->getCode())
       {
          case CMD_PUSH_DCI_DATA:
             MutexLock(g_hSessionListAccess);
-            for(i = 0; i < g_dwMaxSessions; i++)
-               if (g_pSessionList[i] != NULL)
+            for(uint32_t i = 0; i < g_maxCommSessions; i++)
+               if (g_pSessionList[i] != nullptr)
                   if (g_pSessionList[i]->canAcceptTraps())
                   {
                      g_pSessionList[i]->sendMessage(msg);
@@ -167,7 +166,7 @@ void ExternalSubagent::connect(NamedPipe *pipe)
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection closed"), m_name);
 	m_connected = false;
 	m_msgQueue->clear();
-	m_pipe = NULL;
+	m_pipe = nullptr;
 }
 
 /**
