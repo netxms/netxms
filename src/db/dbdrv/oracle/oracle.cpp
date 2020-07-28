@@ -1020,17 +1020,14 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 	sword nStatus;
 	ORACLE_FETCH_BUFFER *pBuffers;
 
-	ORACLE_RESULT *pResult = (ORACLE_RESULT *)malloc(sizeof(ORACLE_RESULT));
-	pResult->nRows = 0;
-	pResult->pData = NULL;
-	pResult->columnNames = NULL;
-	OCIAttrGet(handleStmt, OCI_HTYPE_STMT, &nCount, NULL, OCI_ATTR_PARAM_COUNT, pConn->handleError);
+	ORACLE_RESULT *pResult = MemAllocStruct<ORACLE_RESULT>();
+	OCIAttrGet(handleStmt, OCI_HTYPE_STMT, &nCount, nullptr, OCI_ATTR_PARAM_COUNT, pConn->handleError);
 	pResult->nCols = nCount;
 	if (pResult->nCols > 0)
 	{
 		// Prepare receive buffers and fetch column names
-		pResult->columnNames = (char **)calloc(pResult->nCols, sizeof(char *));
-		pBuffers = (ORACLE_FETCH_BUFFER *)calloc(pResult->nCols, sizeof(ORACLE_FETCH_BUFFER));
+		pResult->columnNames = MemAllocArray<char*>(pResult->nCols);
+		pBuffers = MemAllocArray<ORACLE_FETCH_BUFFER>(pResult->nCols);
 		for(int i = 0; i < pResult->nCols; i++)
 		{
 			if ((nStatus = OCIParamGet(handleStmt, OCI_HTYPE_STMT, pConn->handleError,
@@ -1256,11 +1253,10 @@ extern "C" LONG __EXPORT DrvGetFieldLength(ORACLE_RESULT *pResult, int nRow, int
 /**
  * Get field value from result
  */
-extern "C" WCHAR __EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColumn,
-                                     WCHAR *pBuffer, int nBufLen)
+extern "C" WCHAR __EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColumn, WCHAR *pBuffer, int nBufLen)
 {
-   WCHAR *pValue = NULL;
-   if (pResult != NULL)
+   WCHAR *pValue = nullptr;
+   if (pResult != nullptr)
    {
       if ((nRow < pResult->nRows) && (nRow >= 0) &&
           (nColumn < pResult->nCols) && (nColumn >= 0))
@@ -1277,7 +1273,7 @@ extern "C" WCHAR __EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nCo
  */
 extern "C" int __EXPORT DrvGetNumRows(ORACLE_RESULT *pResult)
 {
-	return (pResult != NULL) ? pResult->nRows : 0;
+	return (pResult != nullptr) ? pResult->nRows : 0;
 }
 
 /**

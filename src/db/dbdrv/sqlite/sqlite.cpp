@@ -1,6 +1,6 @@
 /* 
 ** SQLite Database Driver
-** Copyright (C) 2005-2016 Victor Kirhenshtein
+** Copyright (C) 2005-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -364,7 +364,7 @@ static int SelectCallback(void *arg, int nCols, char **ppszData, char **ppszName
    }
 
 	// Store column names
-	if ((static_cast<SQLITE_RESULT*>(arg)->ppszNames == NULL) && (nCols > 0) && (ppszNames != NULL))
+	if ((static_cast<SQLITE_RESULT*>(arg)->ppszNames == nullptr) && (nCols > 0) && (ppszNames != nullptr))
 	{
 		static_cast<SQLITE_RESULT*>(arg)->ppszNames = (char **)malloc(sizeof(char *) * nCols);
 		for(i = 0; i < nCols; i++)
@@ -388,22 +388,20 @@ static int SelectCallback(void *arg, int nCols, char **ppszData, char **ppszName
  */
 extern "C" void __EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
 {
-   int i, nCount;
-
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
-      if (hResult->ppszData != NULL)
+      if (hResult->ppszData != nullptr)
       {
-         nCount = hResult->nRows * hResult->nCols;
-         for(i = 0; i < nCount; i++)
+         int nCount = hResult->nRows * hResult->nCols;
+         for(int i = 0; i < nCount; i++)
             MemFree(hResult->ppszData[i]);
-         free(hResult->ppszData);
+         MemFree(hResult->ppszData);
 
-         for(i = 0; i < hResult->nCols; i++)
+         for(int i = 0; i < hResult->nCols; i++)
             MemFree(hResult->ppszNames[i]);
-         free(hResult->ppszNames);
+         MemFree(hResult->ppszNames);
       }
-      free(hResult);
+      MemFree(hResult);
    }
 }
 
@@ -414,8 +412,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery,
 {
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 
-	SQLITE_RESULT *result = (SQLITE_RESULT *)malloc(sizeof(SQLITE_RESULT));
-   memset(result, 0, sizeof(SQLITE_RESULT));
+   SQLITE_RESULT *result = MemAllocStruct<SQLITE_RESULT>();
 
 	MutexLock(hConn->mutexQueryLock);
 retry:
@@ -434,7 +431,7 @@ retry:
    }
    MutexUnlock(hConn->mutexQueryLock);
 
-	free(pszQueryUTF8);
+	MemFree(pszQueryUTF8);
    *pdwError = (result != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
    return result;
 }
@@ -444,8 +441,7 @@ retry:
  */
 extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
 {
-   SQLITE_RESULT *result = (SQLITE_RESULT *)malloc(sizeof(SQLITE_RESULT));
-   memset(result, 0, sizeof(SQLITE_RESULT));
+   SQLITE_RESULT *result = MemAllocStruct<SQLITE_RESULT>();
 
    MutexLock(hConn->mutexQueryLock);
 
@@ -453,7 +449,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
 	char **cnames = (char **)malloc(sizeof(char *) * nCols * 2);	// column names + values
 	char **values = &cnames[nCols];
 	bool firstRow = true;
-	while(1)
+	while(true)
 	{
 		int rc = sqlite3_step(stmt);
 
@@ -510,7 +506,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
 	if (*pdwError != DBERR_SUCCESS)
 	{
 		DrvFreeResult(result);
-		result = NULL;
+		result = nullptr;
 	}
 
 	return result;
@@ -519,46 +515,38 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
 /**
  * Get field length from result
  */
-extern "C" LONG __EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLength(SQLITE_RESULT *hResult, int row, int column)
 {
-   if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
-       (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
-       (iRow >= 0) && (iColumn >= 0))
-      return (LONG)strlen(((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn]);
+   if ((row < hResult->nRows) && (column < hResult->nCols) && (row >= 0) && (column >= 0))
+      return (LONG)strlen(hResult->ppszData[row * hResult->nCols + column]);
    return -1;
 }
 
 /**
  * Get field value from result
  */
-extern "C" WCHAR __EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn, WCHAR *pwszBuffer, int nBufLen)
+extern "C" WCHAR __EXPORT *DrvGetField(SQLITE_RESULT *hResult, int row, int column, WCHAR *buffer, int nBufLen)
 {
-   if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
-       (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
-       (iRow >= 0) && (iColumn >= 0))
+   if ((row < hResult->nRows) && (column < hResult->nCols) && (row >= 0) && (column >= 0))
    {
-      MultiByteToWideChar(CP_UTF8, 0, ((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn],
-                          -1, pwszBuffer, nBufLen);
-      pwszBuffer[nBufLen - 1] = 0;
-      return pwszBuffer;
+      utf8_to_wchar(hResult->ppszData[row * hResult->nCols + column], -1, buffer, nBufLen);
+      buffer[nBufLen - 1] = 0;
+      return buffer;
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Get field value from result as UTF8 string
  */
-extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT hResult, int iRow, int iColumn, char *buffer, int nBufLen)
+extern "C" char __EXPORT *DrvGetFieldUTF8(SQLITE_RESULT *hResult, int row, int column, char *buffer, int nBufLen)
 {
-   if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
-       (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
-       (iRow >= 0) && (iColumn >= 0))
+   if ((row < hResult->nRows) && (column < hResult->nCols) && (row >= 0) && (column >= 0))
    {
-      strncpy(buffer, ((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn], nBufLen);
-      buffer[nBufLen - 1] = 0;
+      strlcpy(buffer, hResult->ppszData[row * hResult->nCols + column], nBufLen);
       return buffer;
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
