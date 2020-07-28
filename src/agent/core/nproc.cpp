@@ -98,7 +98,7 @@ static void NotificationProcessor()
             if (server->status == SyncStatus::ONLINE)
             {
                MutexLock(g_hSessionListAccess);
-               for(uint32_t j = 0; j < g_dwMaxSessions; j++)
+               for(uint32_t j = 0; j < g_maxCommSessions; j++)
                {
                   CommSession *session = g_pSessionList[j];
                   if (session != nullptr)
@@ -325,14 +325,11 @@ static void NotificationHousekeeper()
 
    // Update last connection time for all connected sessions
    MutexLock(g_hSessionListAccess);
-   for(uint32_t i = 0; i < g_dwMaxSessions; i++)
+   for(uint32_t i = 0; i < g_maxCommSessions; i++)
    {
-      if (g_pSessionList[i] != nullptr)
+      if ((g_pSessionList[i] != nullptr) && g_pSessionList[i]->canAcceptTraps())
       {
-         if (g_pSessionList[i]->canAcceptTraps())
-         {
-            UpdateServerRegistration(g_pSessionList[i]->getServerId(), now);
-         }
+         UpdateServerRegistration(g_pSessionList[i]->getServerId(), now);
       }
    }
    MutexUnlock(g_hSessionListAccess);

@@ -213,7 +213,7 @@ void Tunnel::disconnect()
    delete_and_null(m_queue);
    MutexUnlock(m_stateLock);
 
-   Array channels(g_dwMaxSessions, 16, Ownership::False);
+   Array channels(g_maxCommSessions, 16, Ownership::False);
    MutexLock(m_channelLock);
    Iterator<TunnelCommChannel> *it = m_channels.iterator();
    while(it->hasNext())
@@ -1072,7 +1072,7 @@ TunnelCommChannel *Tunnel::createChannel()
 {
    TunnelCommChannel *channel = NULL;
    MutexLock(m_channelLock);
-   if (m_channels.size() < (int)g_dwMaxSessions)
+   if (m_channels.size() < (int)g_maxCommSessions)
    {
       channel = new TunnelCommChannel(this);
       m_channels.set(channel->getId(), channel);

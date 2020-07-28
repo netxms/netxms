@@ -803,7 +803,7 @@ void ShutdownSessionAgents(bool restart);
 bool IsUserAgentInstalled();
 bool GetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp);
 
-UINT32 GenerateMessageId();
+uint32_t GenerateMessageId();
 
 void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg);
 
@@ -862,7 +862,7 @@ extern time_t g_tmAgentStartTime;
 extern TCHAR g_szPlatformSuffix[];
 extern UINT32 g_dwStartupDelay;
 extern UINT32 g_dwIdleTimeout;
-extern UINT32 g_dwMaxSessions;
+extern uint32_t g_maxCommSessions;
 extern UINT32 g_execTimeout;
 extern UINT32 g_eppTimeout;
 extern UINT32 g_snmpTimeout;
@@ -870,8 +870,8 @@ extern UINT16 g_snmpTrapPort;
 extern UINT32 g_longRunningQueryThreshold;
 extern UINT16 g_sessionAgentPort;
 extern int32_t g_zoneUIN;
-extern UINT32 g_tunnelKeepaliveInterval;
-extern UINT16 g_syslogListenPort;
+extern uint32_t g_tunnelKeepaliveInterval;
+extern uint16_t g_syslogListenPort;
 extern shared_ptr_store<Config> g_config;
 
 extern UINT32 g_acceptErrors;

@@ -51,13 +51,12 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_
    else
    {
       MutexLock(g_hSessionListAccess);
-      for(DWORD i = 0; i < g_dwMaxSessions; i++)
-         if (g_pSessionList[i] != NULL)
-            if (g_pSessionList[i]->canAcceptTraps())
-            {
-               g_pSessionList[i]->sendMessage(&msg);
-               success = true;
-            }
+      for(uint32_t i = 0; i < g_maxCommSessions; i++)
+         if ((g_pSessionList[i] != nullptr) && g_pSessionList[i]->canAcceptTraps())
+         {
+            g_pSessionList[i]->sendMessage(&msg);
+            success = true;
+         }
       MutexUnlock(g_hSessionListAccess);
    }
 	return success;

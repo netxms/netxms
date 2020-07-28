@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,9 +46,9 @@ static VolatileCounter s_messageId = (INT32)time(NULL);
 /**
  * Generate new message ID
  */
-UINT32 GenerateMessageId()
+uint32_t GenerateMessageId()
 {
-   return (UINT32)InterlockedIncrement(&s_messageId);
+   return static_cast<uint32_t>(InterlockedIncrement(&s_messageId));
 }
 
 /**
@@ -56,17 +56,17 @@ UINT32 GenerateMessageId()
  */
 void InitSessionList()
 {
-   if (g_dwMaxSessions == 0)  // default value
+   if (g_maxCommSessions == 0)  // default value
    {
-      g_dwMaxSessions = (g_dwFlags & (AF_ENABLE_PROXY | AF_ENABLE_SNMP_PROXY)) ? 1024 : 32;
+      g_maxCommSessions = (g_dwFlags & (AF_ENABLE_PROXY | AF_ENABLE_SNMP_PROXY)) ? 1024 : 32;
    }
    else
    {
-      g_dwMaxSessions = MIN(MAX(g_dwMaxSessions, 2), 4096);
+      g_maxCommSessions = MIN(MAX(g_maxCommSessions, 2), 4096);
    }
-   nxlog_debug(2, _T("Maximum number of sessions set to %d"), g_dwMaxSessions);
-	g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
-	memset(g_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
+   nxlog_debug(2, _T("Maximum number of sessions set to %d"), g_maxCommSessions);
+	g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_maxCommSessions);
+	memset(g_pSessionList, 0, sizeof(CommSession *) * g_maxCommSessions);
 	g_hSessionListAccess = MutexCreate();
 }
 
@@ -103,7 +103,7 @@ bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *p
 bool RegisterSession(CommSession *session)
 {
    MutexLock(g_hSessionListAccess);
-   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   for(UINT32 i = 0; i < g_maxCommSessions; i++)
       if (g_pSessionList[i] == NULL)
       {
          g_pSessionList[i] = session;
@@ -143,7 +143,7 @@ bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSessio
 {
    bool result = false;
    MutexLock(g_hSessionListAccess);
-   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   for(UINT32 i = 0; i < g_maxCommSessions; i++)
    {
       if (g_pSessionList[i] == NULL)
          continue;
@@ -165,7 +165,7 @@ AbstractCommSession *FindServerSessionByServerId(UINT64 serverId)
 {
    AbstractCommSession *session = NULL;
    MutexLock(g_hSessionListAccess);
-   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   for(UINT32 i = 0; i < g_maxCommSessions; i++)
    {
       if ((g_pSessionList[i] != NULL) && (g_pSessionList[i]->getServerId() == serverId))
       {
@@ -185,7 +185,7 @@ AbstractCommSession *FindServerSessionById(UINT32 id)
 {
    AbstractCommSession *session = NULL;
    MutexLock(g_hSessionListAccess);
-   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   for(UINT32 i = 0; i < g_maxCommSessions; i++)
    {
       if ((g_pSessionList[i] != NULL) && (g_pSessionList[i]->getId() == id))
       {
@@ -205,7 +205,7 @@ AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *,
 {
    AbstractCommSession *session = NULL;
    MutexLock(g_hSessionListAccess);
-   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   for(UINT32 i = 0; i < g_maxCommSessions; i++)
    {
       if ((g_pSessionList[i] != NULL) && (comparator(g_pSessionList[i], userData)))
       {
@@ -510,15 +510,15 @@ void SessionWatchdog()
    while(!AgentSleepAndCheckForShutdown(5000))
    {
       MutexLock(g_hSessionListAccess);
-      time_t now = time(NULL);
-      for(UINT32 i = 0; i < g_dwMaxSessions; i++)
-         if (g_pSessionList[i] != NULL)
+      time_t now = time(nullptr);
+      for(uint32_t i = 0; i < g_maxCommSessions; i++)
+         if (g_pSessionList[i] != nullptr)
          {
             if (g_pSessionList[i]->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
 				{
                g_pSessionList[i]->debugPrintf(4, _T("Session disconnected by watchdog (last activity timestamp is ") UINT64_FMT _T(")"), (UINT64)g_pSessionList[i]->getTimeStamp());
                g_pSessionList[i]->disconnect();
-               g_pSessionList[i] = NULL;
+               g_pSessionList[i] = nullptr;
 				}
          }
       MutexUnlock(g_hSessionListAccess);
@@ -526,8 +526,8 @@ void SessionWatchdog()
 
    // Disconnect all sessions
    MutexLock(g_hSessionListAccess);
-   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
-      if (g_pSessionList[i] != NULL)
+   for(uint32_t i = 0; i < g_maxCommSessions; i++)
+      if (g_pSessionList[i] != nullptr)
          g_pSessionList[i]->disconnect();
    MutexUnlock(g_hSessionListAccess);
 
@@ -541,14 +541,12 @@ void SessionWatchdog()
  */
 LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   int nCounter;
-   UINT32 i;
-
    MutexLock(g_hSessionListAccess);
-   for(i = 0, nCounter = 0; i < g_dwMaxSessions; i++)
-      if (g_pSessionList[i] != NULL)
-         nCounter++;
+   int count = 0;
+   for(uint32_t i = 0; i < g_maxCommSessions; i++)
+      if (g_pSessionList[i] != nullptr)
+         count++;
    MutexUnlock(g_hSessionListAccess);
-   ret_int(pValue, nCounter);
+   ret_int(pValue, count);
    return SYSINFO_RC_SUCCESS;
 }
