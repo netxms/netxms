@@ -374,7 +374,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    
 	if (hResult != NULL)
 	{
-		result = (DB_RESULT)malloc(sizeof(db_result_t));
+		result = MemAllocStruct<db_result_t>();
 		result->m_driver = hConn->m_driver;
 		result->m_connection = hConn;
 		result->m_data = hResult;
