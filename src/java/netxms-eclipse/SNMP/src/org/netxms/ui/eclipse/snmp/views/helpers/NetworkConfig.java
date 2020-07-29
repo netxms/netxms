@@ -15,7 +15,7 @@ public class NetworkConfig
    // Global SNMP config flag
    public static int NETWORK_CONFIG_GLOBAL = -1;
    public static int ALL_ZONES = -2;
-   
+
    //Configuration type flags
    public static int COMMUNITIES    = 0x01;
    public static int USM            = 0x02;
@@ -45,9 +45,9 @@ public class NetworkConfig
     */
    public void load(int configId, int zoneUIN) throws NXCException, IOException
    {
-      if((configId & COMMUNITIES) > 0)
+      if ((configId & COMMUNITIES) > 0)
       {
-         if(ALL_ZONES == zoneUIN)
+         if (ALL_ZONES == zoneUIN)
          {
             communities = session.getSnmpCommunities();
          }
@@ -57,9 +57,9 @@ public class NetworkConfig
          }    
       }
       
-      if((configId & USM) > 0)
+      if ((configId & USM) > 0)
       {
-         if(ALL_ZONES == zoneUIN)
+         if (ALL_ZONES == zoneUIN)
          {
             usmCredentials = session.getSnmpUsmCredentials();
          }
@@ -69,27 +69,27 @@ public class NetworkConfig
          } 
       }
       
-      if((configId & PORTS) > 0)
+      if ((configId & PORTS) > 0)
       {
-         if(ALL_ZONES == zoneUIN)
+         if (ALL_ZONES == zoneUIN)
          {
-            ports = session.getSNMPPors();
+            ports = session.getSNMPPorts();
          }
          else
          {
-            ports.put(zoneUIN, session.getSNMPPors(zoneUIN));            
+            ports.put(zoneUIN, session.getSNMPPorts(zoneUIN));            
          }
       }
       
-      if((configId & AGENT_SECRETS) > 0)
+      if ((configId & AGENT_SECRETS) > 0)
       {
-         if(ALL_ZONES == zoneUIN)
+         if (ALL_ZONES == zoneUIN)
          {
-            sharedSecrets = session.getShredSecrets();
+            sharedSecrets = session.getAgentSharedSecrets();
          }
          else
          {
-            sharedSecrets.put(zoneUIN, session.getAgentSecrets(zoneUIN));            
+            sharedSecrets.put(zoneUIN, session.getAgentSharedSecrets(zoneUIN));            
          }  
       }
    }
@@ -110,27 +110,27 @@ public class NetworkConfig
    public void save(NXCSession session) throws NXCException, IOException
    {
       for (Entry<Integer, Integer> value : changedConfig.entrySet())
-         if((value.getValue() & COMMUNITIES) > 0)
+         if ((value.getValue() & COMMUNITIES) > 0)
          {
-            session.updateSnmpCommunities((int)value.getKey(), communities.get(value.getKey()));   
+            session.updateSnmpCommunities(value.getKey(), communities.get(value.getKey()));
          }
       
       for (Entry<Integer, Integer> value : changedConfig.entrySet())
-         if((value.getValue() & USM) > 0)
+         if ((value.getValue() & USM) > 0)
          {
-            session.updateSnmpUsmCredentials((int)value.getKey(), usmCredentials.get(value.getKey()));    
+            session.updateSnmpUsmCredentials(value.getKey(), usmCredentials.get(value.getKey()));
          }
       
       for (Entry<Integer, Integer> value : changedConfig.entrySet())
-         if((value.getValue() & PORTS) > 0)
+         if ((value.getValue() & PORTS) > 0)
          {
-            session.updateSNMPPorts((int)value.getKey(), ports.get(value.getKey()));
+            session.updateSNMPPorts(value.getKey(), ports.get(value.getKey()));
          }
       
       for (Entry<Integer, Integer> value : changedConfig.entrySet())
-         if((value.getValue() & AGENT_SECRETS) > 0)
+         if ((value.getValue() & AGENT_SECRETS) > 0)
          {
-            session.updateSharedSecrets((int)value.getKey(), sharedSecrets.get(value.getKey()));    
+            session.updateAgentSharedSecrets(value.getKey(), sharedSecrets.get(value.getKey()));
          }
       
       changedConfig.clear();
@@ -171,7 +171,7 @@ public class NetworkConfig
          this.communities.put((int)zoneUIN, list);
       }
    }
-   
+
    /**
     * @return the ports
     */
@@ -182,14 +182,16 @@ public class NetworkConfig
       else
          return new ArrayList<Integer>();
    }
-   
+
    /**
     * @param communities the communities to set
     */
    public void addPort(Integer port, long zoneUIN)
    {
       if (this.ports.containsKey((int)zoneUIN))
+      {
          this.ports.get((int)zoneUIN).add(port);
+      }
       else
       {
          List<Integer> list = new ArrayList<Integer>();
@@ -215,7 +217,9 @@ public class NetworkConfig
    public void addUsmCredentials(SnmpUsmCredential credential, long zoneUIN)
    {
       if (usmCredentials.containsKey((int)zoneUIN))
+      {
          usmCredentials.get((int)zoneUIN).add(credential);
+      }
       else
       {
          List<SnmpUsmCredential> list = new ArrayList<SnmpUsmCredential>();
@@ -242,7 +246,9 @@ public class NetworkConfig
    public void addSharedSecret(String sharedSecret, long zoneUIN)
    {
       if (this.sharedSecrets.containsKey((int)zoneUIN))
+      {
          this.sharedSecrets.get((int)zoneUIN).add(sharedSecret);
+      }
       else
       {
          List<String> list = new ArrayList<String>();

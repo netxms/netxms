@@ -235,7 +235,7 @@ public class ZoneAgentSecretConfiguration extends PropertyPage
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            agentSecrets = session.getAgentSecrets(zone.getUIN());
+            agentSecrets = session.getAgentSharedSecrets(zone.getUIN());
             
             runInUIThread(new Runnable() {
                @Override
@@ -334,7 +334,7 @@ public class ZoneAgentSecretConfiguration extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            session.updateSharedSecrets(zone.getUIN(), agentSecrets);   
+            session.updateAgentSharedSecrets(zone.getUIN(), agentSecrets);   
 			}
 
 			@Override
