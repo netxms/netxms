@@ -12009,48 +12009,48 @@ public class NXCSession
    }
 
    /**
-    * Get shared secret list form server
+    * Get agent shared secret list (global and all zones).
     * 
-    * @return map with zone id and shared secret list
+    * @return map with zone UIN and shared secret list (-1 for global secrets).
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<Integer, List<String>> getShredSecrets() throws IOException, NXCException
+   public Map<Integer, List<String>> getAgentSharedSecrets() throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SHARED_SECRET_LIST);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      long baseId = NXCPCodes.VID_SHARED_SECRET_LIST_BASE;
       Map<Integer, List<String>> map = new HashMap<Integer, List<String>>(count);
       List<String> stringList = new ArrayList<String>();
-      int zoneId = 0;
-      for(int i = 0; i < count; i++)
+      int currentZoneUIN = 0;
+      long baseId = NXCPCodes.VID_SHARED_SECRET_LIST_BASE;
+      for(int i = 0; i < count; i++, baseId += 10)
       {
-         if (i != 0 && zoneId != response.getFieldAsInt32(baseId+1))
+         int zoneUIN = response.getFieldAsInt32(baseId + 1);
+         if ((i != 0) && (currentZoneUIN != zoneUIN))
          {
-            map.put(zoneId, stringList);
+            map.put(currentZoneUIN, stringList);
             stringList = new ArrayList<String>();
+            currentZoneUIN = zoneUIN;
          }
          stringList.add(response.getFieldAsString(baseId++));
-         zoneId = response.getFieldAsInt32(baseId++);
-         baseId += 8;
       }
       if (count > 0)
-         map.put(zoneId, stringList);
+         map.put(currentZoneUIN, stringList);
       return map;
    }
 
    /**
-    * Get shared secret list form server
-    * @param zoneUIN 
-    * 
+    * Get agent shared secret list for specific zone.
+    *
+    * @param zoneUIN zone UIN (-1 for global shared secret list)
     * @return map with zone id and shared secret list
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<String> getAgentSecrets(int zoneUIN) throws IOException, NXCException
+   public List<String> getAgentSharedSecrets(int zoneUIN) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SHARED_SECRET_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
@@ -12068,13 +12068,14 @@ public class NXCSession
    }
 
    /**
-    * Update shared secret list on server
+    * Update agent shared secret list on server.
+    *
+    * @param zoneUIN zone UIN (-1 for global shared secret list)
     * @param sharedSecrets list of shared secrets
-    * 
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateSharedSecrets(int zoneUIN, List<String> sharedSecrets) throws IOException, NXCException
+   public void updateAgentSharedSecrets(int zoneUIN, List<String> sharedSecrets) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SHARED_SECRET_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
@@ -12089,48 +12090,48 @@ public class NXCSession
    }
 
    /**
-    * Get SNMP port list
+    * Get list of configured SNMP ports (global and all zones).
     * 
-    * @return
+    * @return list of configured SNMP ports
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<Integer, List<Integer>> getSNMPPors() throws IOException, NXCException
+   public Map<Integer, List<Integer>> getSNMPPorts() throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SNMP_PORT_LIST);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT);
-      long baseId = NXCPCodes.VID_ZONE_SNMP_PORT_LIST_BASE;
       Map<Integer, List<Integer>> map = new HashMap<Integer, List<Integer>>(count);
       List<Integer> stringList = new ArrayList<Integer>();
-      int zoneId = 0;
-      for(int i = 0; i < count; i++)
+      int currentZoneUIN = 0;
+      long baseId = NXCPCodes.VID_ZONE_SNMP_PORT_LIST_BASE;
+      for(int i = 0; i < count; i++, baseId += 10)
       {
-         if (i != 0 && zoneId != response.getFieldAsInt32(baseId+1))
+         int zoneUIN = response.getFieldAsInt32(baseId + 1);
+         if ((i != 0) && (currentZoneUIN != zoneUIN))
          {
-            map.put(zoneId, stringList);
+            map.put(currentZoneUIN, stringList);
             stringList = new ArrayList<Integer>();
+            currentZoneUIN = zoneUIN;
          }
-         stringList.add(response.getFieldAsInt32(baseId++));
-         zoneId = response.getFieldAsInt32(baseId++);
-         baseId += 8;
+         stringList.add(response.getFieldAsInt32(baseId));
       }
       if (count > 0)
-         map.put(zoneId, stringList);
+         map.put(currentZoneUIN, stringList);
       return map;
    }
 
    /**
-    * Get SNMP port list
-    * @param zoneUIN 
-    * 
-    * @return
+    * Get list of configured SNMP ports for given zone.
+    *
+    * @param zoneUIN zone UIN (-1 for global port list)
+    * @return list of configured SNMP ports
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<Integer> getSNMPPors(int zoneUIN) throws IOException, NXCException
+   public List<Integer> getSNMPPorts(int zoneUIN) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SNMP_PORT_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
@@ -12146,11 +12147,12 @@ public class NXCSession
       }
       return portList;
    }
-   
+
    /**
-    * Update SNMP port list
-    * @param ports
-    * 
+    * Update SNMP port list.
+    *
+    * @param zoneUIN zone UIN for which port list should be updated (-1 for global port list)
+    * @param ports new SNMP port list
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */

@@ -256,7 +256,7 @@ public class ZoneSNMPConfiguration extends PropertyPage
          {
             communities = session.getSnmpCommunities(zone.getUIN());
             usmCredentials = session.getSnmpUsmCredentials(zone.getUIN());
-            ports = session.getSNMPPors(zone.getUIN());
+            ports = session.getSNMPPorts(zone.getUIN());
             
             runInUIThread(new Runnable() {
                @Override
