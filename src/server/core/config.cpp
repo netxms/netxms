@@ -467,6 +467,27 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       CASReadSettings();
    }
+   else if (!_tcscmp(name, _T("DBWriter.HouseKeeperInterlock")))
+   {
+      switch(_tcstol(value, nullptr, 0))
+      {
+         case 0:  // Auto
+            if (g_dbSyntax == DB_SYNTAX_MSSQL)
+               g_flags |= AF_DBWRITER_HK_INTERLOCK;
+            else
+               g_flags &= ~AF_DBWRITER_HK_INTERLOCK;
+            break;
+         case 1:  // Off
+            g_flags &= ~AF_DBWRITER_HK_INTERLOCK;
+            break;
+         case 2:  // On
+            g_flags |= AF_DBWRITER_HK_INTERLOCK;
+            break;
+         default:
+            break;
+      }
+      nxlog_write_tag(NXLOG_INFO, _T("db.writer"), _T("DBWriter/Housekeeper interlock is %s"), (g_flags & AF_DBWRITER_HK_INTERLOCK) ? _T("ON") : _T("OFF"));
+   }
    else if (!_tcscmp(name, _T("DBWriter.MaxQueueSize")))
    {
       OnDBWriterMaxQueueSizeChange();

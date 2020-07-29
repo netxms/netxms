@@ -25,6 +25,25 @@
 
 
 /**
+ * Upgrade from 34.14 to 34.15
+ */
+static bool H_UpgradeFromV14()
+{
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.HouseKeeperInterlock"), _T("0"), _T("Controls if server should block background write of collected performance data while housekeeper deletes expired records."), nullptr, 'C', true, false, false, false));
+
+   static const TCHAR *batch =
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','0','Auto')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','1','Off')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','2','On')\n")
+         _T("UPDATE config_values SET var_name='LDAP.UserDeleteAction' WHERE var_name='LdapUserDeleteAction'\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 34.13 to 34.14
  */
 static bool H_UpgradeFromV13()
@@ -241,6 +260,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 14, 34, 15, H_UpgradeFromV14 },
    { 13, 34, 14, H_UpgradeFromV13 },
    { 12, 34, 13, H_UpgradeFromV12 },
    { 11, 34, 12, H_UpgradeFromV11 },
