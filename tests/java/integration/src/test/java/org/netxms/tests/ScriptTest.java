@@ -39,6 +39,8 @@ import org.netxms.client.UserAgentNotification;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.mt.MappingTable;
+import org.netxms.client.mt.MappingTableEntry;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 
@@ -296,6 +298,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       session = connect();
       List<String> params = new ArrayList<String>();
 
+      //Find Object
       session.syncObjects();
       List<AbstractObject> objects = session.getAllObjects(); //Find managment node
       AbstractObject snmpNode = null;
@@ -309,15 +312,17 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       }
       assertNotNull(snmpNode);  
       
+      //Create scheduled task
       Set<Long> objectSet = new HashSet<Long>();
       objectSet.add(snmpNode.getObjectId());
-      String scheduledTaskKey = "TestKey" + Long.toString((new Date()).getTime());;
+      String scheduledTaskKey = "TestKey" + Long.toString((new Date()).getTime());
       ScheduledTask task = new ScheduledTask("Execute.Script", "", "testScript",
-            "Test comment", new Date(new Date().getTime() + 1200000), 0, snmpNode.getObjectId());
+            "NXSLMiscelanious test comment", new Date(new Date().getTime() + 1200000), 0, snmpNode.getObjectId());
       task.setKey(scheduledTaskKey);
       session.addScheduledTask(task);
-      session.createUserAgentNotification("Message", objectSet, new Date(), new Date(), true);
-      
+
+      //Create user agent notification
+      session.createUserAgentNotification("Message", objectSet, new Date(), new Date(), true);      
       List<UserAgentNotification> notificaitons = session.getUserAgentNotifications();
       notificaitons.sort(new Comparator<UserAgentNotification>() {
 
@@ -327,12 +332,52 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
             return Long.compare(o2.getId(), o1.getId());
          }
       });
+      long nextNotificationId = notificaitons.get(0).getId();
+      
+      //Create map for tests
+      String mappingTableName = "TestMap" + Long.toString((new Date()).getTime());
+      int id = session.createMappingTable(mappingTableName, "NXSLMiscelanious test map description", 0);
+      final MappingTable mappingTable = session.getMappingTable(id);
+      String mappingTableKey1 = "TestMapKey1" + Long.toString((new Date()).getTime());
+      String mappingTableValue1 = "TestMapKeyValue1";
+      MappingTableEntry e = new MappingTableEntry(mappingTableKey1, mappingTableValue1, "NXSLMiscelanious test"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      mappingTable.getData().add(e);      
+      String mappingTableKey2 = "TestMapKey2" + Long.toString((new Date()).getTime());
+      String mappingTableValue2 = "TestMapKeyValue2";
+      MappingTableEntry e2 = new MappingTableEntry(mappingTableKey2, mappingTableValue2, "NXSLMiscelanious test"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      mappingTable.getData().add(e2);
+      session.updateMappingTable(mappingTable);      
 
       params.add(Long.toString(snmpNode.getObjectId()));
       params.add(scheduledTaskKey);
-      params.add(Long.toString(notificaitons.get(0).getId()));
+      params.add(Long.toString(nextNotificationId));
+      params.add(mappingTableName);
+      params.add(mappingTableKey1);
+      params.add(mappingTableValue1);
+      params.add(mappingTableKey2);
+      params.add(mappingTableValue2);
       
-      executeScript("/miscelaniousFunctions.nxsl", params);
+      try
+      {
+         executeScript("/miscelaniousFunctions.nxsl", params);
+   
+         //Check if new notification was created by nxsl
+         notificaitons = session.getUserAgentNotifications();
+         notificaitons.sort(new Comparator<UserAgentNotification>() {
+   
+            @Override
+            public int compare(UserAgentNotification o1, UserAgentNotification o2)
+            {
+               return Long.compare(o2.getId(), o1.getId());
+            }
+         });
+         
+         assertEquals(nextNotificationId + 1, notificaitons.get(0).getId());    
+      }
+      finally
+      {
+         session.deleteMappingTable(id);
+      }
    }
 
    /**

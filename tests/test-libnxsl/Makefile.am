@@ -11,10 +11,13 @@
 nxsltestdir=$(pkgdatadir)/nxsltest
 
 nxsltest_DATA = \
+	addr.nxsl \
 	arrays.nxsl \
 	base64.nxsl \
 	control.nxsl \
+	gethost.nxsl \
 	globals.nxsl \
+	json.nxsl \
 	like.nxsl \
 	math.nxsl \
 	regexp.nxsl \

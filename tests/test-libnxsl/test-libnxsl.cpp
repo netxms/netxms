@@ -105,10 +105,13 @@ int main(int argc, char *argv[])
    }
 
    TestCompiler();
+   RunTestScript(_T("addr.nxsl"));
    RunTestScript(_T("arrays.nxsl"));
    RunTestScript(_T("base64.nxsl"));
    RunTestScript(_T("control.nxsl"));
+   RunTestScript(_T("gethost.nxsl"));
    RunTestScript(_T("globals.nxsl"));
+   RunTestScript(_T("json.nxsl"));
    RunTestScript(_T("like.nxsl"));
    RunTestScript(_T("math.nxsl"));
    RunTestScript(_T("regexp.nxsl"));

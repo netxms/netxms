@@ -1,0 +1,111 @@
+json = new JsonObject();
+json->flags = 42;
+json->name = "Test Object";
+json->data = new JsonObject();
+json->data->version = "V1.22";
+json->data->reference = "reference string";
+json->data->value = 0.712;
+json->set("rcpt", "mail@domain.com");
+json->series = %(1, 2, 3, 10, 20);
+
+r = json->data;
+r->extraBytes = "some extra bytes";
+
+expectedResult = "{\n";
+expectedResult = expectedResult . "   \"flags\": 42,\n";
+expectedResult = expectedResult . "   \"name\": \"Test Object\",\n";
+expectedResult = expectedResult . "   \"data\": {\n";
+expectedResult = expectedResult . "      \"version\": \"V1.22\",\n";
+expectedResult = expectedResult . "      \"reference\": \"reference string\",\n";
+expectedResult = expectedResult . "      \"value\": 0.71199999999999997,\n";
+expectedResult = expectedResult . "      \"extraBytes\": \"some extra bytes\"\n";
+expectedResult = expectedResult . "   },\n";
+expectedResult = expectedResult . "   \"rcpt\": \"mail@domain.com\",\n";
+expectedResult = expectedResult . "   \"series\": [\n";
+expectedResult = expectedResult . "      1,\n";
+expectedResult = expectedResult . "      2,\n";
+expectedResult = expectedResult . "      3,\n";
+expectedResult = expectedResult . "      10,\n";
+expectedResult = expectedResult . "      20\n";
+expectedResult = expectedResult . "   ]\n";
+expectedResult = expectedResult . "}";
+
+assert(expectedResult == json->serialize());
+
+expectedValues = %( "flags = 42", "name = Test Object", "data = JsonObject@*", "rcpt = mail@domain.com", "series = JsonArray@*" );
+
+i = 0;
+for(k : json->keys())
+{
+	assert((k . " = " . json->get(k)) like expectedValues[i]);
+	i++;
+}
+json = JsonParse(expectedResult);
+assert(json != null);
+
+assert(json->name == "Test Object");
+
+timestamp = time();
+json->timestamp = timestamp;
+json->zzz = %(1, 2, %("level2-1", "level2-2"));
+
+expectedResult = "{\n";
+expectedResult = expectedResult . "   \"flags\": 42,\n";
+expectedResult = expectedResult . "   \"name\": \"Test Object\",\n";
+expectedResult = expectedResult . "   \"data\": {\n";
+expectedResult = expectedResult . "      \"version\": \"V1.22\",\n";
+expectedResult = expectedResult . "      \"reference\": \"reference string\",\n";
+expectedResult = expectedResult . "      \"value\": 0.71199999999999997,\n";
+expectedResult = expectedResult . "      \"extraBytes\": \"some extra bytes\"\n";
+expectedResult = expectedResult . "   },\n";
+expectedResult = expectedResult . "   \"rcpt\": \"mail@domain.com\",\n";
+expectedResult = expectedResult . "   \"series\": [\n";
+expectedResult = expectedResult . "      1,\n";
+expectedResult = expectedResult . "      2,\n";
+expectedResult = expectedResult . "      3,\n";
+expectedResult = expectedResult . "      10,\n";
+expectedResult = expectedResult . "      20\n";
+expectedResult = expectedResult . "   ],\n";
+expectedResult = expectedResult . "   \"timestamp\": " . timestamp . ",\n";
+expectedResult = expectedResult . "   \"zzz\": [\n";
+expectedResult = expectedResult . "      1,\n";
+expectedResult = expectedResult . "      2,\n";
+expectedResult = expectedResult . "      [\n";
+expectedResult = expectedResult . "         \"level2-1\",\n";
+expectedResult = expectedResult . "         \"level2-2\"\n";
+expectedResult = expectedResult . "      ]\n";
+expectedResult = expectedResult . "   ]\n";
+expectedResult = expectedResult . "}";
+
+assert(expectedResult == json->serialize());
+
+series = json->series;
+assert(series->size == 5);
+
+expectedValues = %( 1, 2, 3, 10, 20 );
+
+i = 0;
+for(s : series->values)
+{
+	assert(s == expectedValues[i]);
+	i++;
+}
+
+series->append(42);
+series->append(%(10, 20, 30, "test"));
+assert(series->size == 7);
+
+
+expectedValues = %( 1, 2, 3, 10, 20, 42 );
+
+i = 0;
+for(s : json->series->values)
+{
+	assert(s == expectedValues[i]);
+	i++;
+	if(i == json->series->values->size - 1)
+		break;
+}
+assert(("" . json->series->values[json->series->values->size - 1]) like "JsonArray@*");
+
+return 0;
