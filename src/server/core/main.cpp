@@ -441,6 +441,25 @@ static void LoadGlobalConfig()
          break;
    }
 
+   switch(ConfigReadInt(_T("DBWriter.HouseKeeperInterlock"), 0))
+   {
+      case 0:  // Auto
+         if (g_dbSyntax == DB_SYNTAX_MSSQL)
+            g_flags |= AF_DBWRITER_HK_INTERLOCK;
+         else
+            g_flags &= ~AF_DBWRITER_HK_INTERLOCK;
+         break;
+      case 1:  // Off
+         g_flags &= ~AF_DBWRITER_HK_INTERLOCK;
+         break;
+      case 2:  // On
+         g_flags |= AF_DBWRITER_HK_INTERLOCK;
+         break;
+      default:
+         break;
+   }
+   nxlog_write_tag(NXLOG_INFO, _T("db.writer"), _T("DBWriter/Housekeeper interlock is %s"), (g_flags & AF_DBWRITER_HK_INTERLOCK) ? _T("ON") : _T("OFF"));
+
    if (g_netxmsdDataDir[0] == 0)
    {
       GetNetXMSDirectory(nxDirData, g_netxmsdDataDir);
@@ -459,8 +478,7 @@ static void LoadGlobalConfig()
    g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);
    g_instanceRetentionTime = ConfigReadInt(_T("InstanceRetentionTime"), 0); // Config values are in days
 
-   UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 1500);
-   SnmpSetDefaultTimeout(snmpTimeout);
+   SnmpSetDefaultTimeout(ConfigReadInt(_T("SNMPRequestTimeout"), 1500));
 }
 
 /**

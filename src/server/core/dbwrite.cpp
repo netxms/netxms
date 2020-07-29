@@ -131,13 +131,18 @@ static THREAD s_queueMonitorThread = INVALID_THREAD_HANDLE;
  * IDATA tables write lock
  */
 static RWLOCK s_idataWriteLock = RWLockCreate();
+static bool s_idataWriteLockActive = false;
 
 /**
  * Lock IDATA writes (used by housekeeper)
  */
 void LockIDataWrites()
 {
-   RWLockWriteLock(s_idataWriteLock);
+   if (g_flags & AF_DBWRITER_HK_INTERLOCK)
+   {
+      RWLockWriteLock(s_idataWriteLock);
+      s_idataWriteLockActive = true;
+   }
 }
 
 /**
@@ -145,7 +150,11 @@ void LockIDataWrites()
  */
 void UnlockIDataWrites()
 {
-   RWLockUnlock(s_idataWriteLock);
+   if (s_idataWriteLockActive)
+   {
+      s_idataWriteLockActive = false;
+      RWLockUnlock(s_idataWriteLock);
+   }
 }
 
 /**
@@ -333,7 +342,16 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
-      RWLockReadLock(s_idataWriteLock);
+      bool idataLock;
+      if (g_flags & AF_DBWRITER_HK_INTERLOCK)
+      {
+         RWLockReadLock(s_idataWriteLock);
+         idataLock = true;
+      }
+      else
+      {
+         idataLock = false;
+      }
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		if (DBBegin(hdb))
@@ -392,7 +410,8 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 		}
 		DBConnectionPoolReleaseConnection(hdb);
 
-		RWLockUnlock(s_idataWriteLock);
+		if (idataLock)
+		   RWLockUnlock(s_idataWriteLock);
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
@@ -417,7 +436,16 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
-      RWLockReadLock(s_idataWriteLock);
+      bool idataLock;
+      if (g_flags & AF_DBWRITER_HK_INTERLOCK)
+      {
+         RWLockReadLock(s_idataWriteLock);
+         idataLock = true;
+      }
+      else
+      {
+         idataLock = false;
+      }
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (DBBegin(hdb))
@@ -449,7 +477,8 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
       }
       DBConnectionPoolReleaseConnection(hdb);
 
-      RWLockUnlock(s_idataWriteLock);
+      if (idataLock)
+         RWLockUnlock(s_idataWriteLock);
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
@@ -493,8 +522,23 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
+      bool idataLock;
       if (writer->storageClass == nullptr)   // Lock is not needed for TimescaleDB
-         RWLockReadLock(s_idataWriteLock);
+      {
+         if (g_flags & AF_DBWRITER_HK_INTERLOCK)
+         {
+            RWLockReadLock(s_idataWriteLock);
+            idataLock = true;
+         }
+         else
+         {
+            idataLock = false;
+         }
+      }
+      else
+      {
+         idataLock = false;
+      }
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (DBBegin(hdb))
@@ -543,7 +587,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
       }
       DBConnectionPoolReleaseConnection(hdb);
 
-      if (writer->storageClass != nullptr)
+      if (idataLock)
          RWLockUnlock(s_idataWriteLock);
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
@@ -567,7 +611,16 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
-      RWLockReadLock(s_idataWriteLock);
+      bool idataLock;
+      if (g_flags & AF_DBWRITER_HK_INTERLOCK)
+      {
+         RWLockReadLock(s_idataWriteLock);
+         idataLock = true;
+      }
+      else
+      {
+         idataLock = false;
+      }
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (DBBegin(hdb))
@@ -608,7 +661,8 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
       }
       DBConnectionPoolReleaseConnection(hdb);
 
-      RWLockUnlock(s_idataWriteLock);
+      if (idataLock)
+         RWLockUnlock(s_idataWriteLock);
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;

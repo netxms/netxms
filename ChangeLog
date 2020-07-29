@@ -20,6 +20,7 @@
 - New NXSL functions GetServerNode and GetServerNodeId
 - Fixed UI bug with accessing collected performance data from data collection editor
 - Configurable size of SNMP proxy thread pool on agent
+- Housekeeper optimization
 - Fixed issues:
 	NX-1863 (Logwatch fails on parsing large Windows Event Log events)
 	NX-1880 (Duplicate links on automatic maps with multiple seed nodes)

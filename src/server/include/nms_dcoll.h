@@ -377,6 +377,7 @@ public:
    int getAggregationFunction() const { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    DCObjectStorageClass getStorageClass() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? storageClassFromRetentionTime(m_retentionTime) : DCObjectStorageClass::DEFAULT; }
    int getEffectiveRetentionTime() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? std::max(m_retentionTime, 1) : m_defaultRetentionTime; }
+   bool isDataStorageEnabled() const { return m_retentionType != DC_RETENTION_NONE; }
    INT16 getAgentCacheMode();
    bool hasValue();
    bool hasAccess(UINT32 userId);

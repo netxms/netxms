@@ -248,33 +248,88 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    time_t now = time(nullptr);
 
    readLockDciAccess();
+
+   // Check if all DCIs has same retention time
+   bool sameRetentionTimeItems = true;
+   bool sameRetentionTimeTables = true;
+   int retentionTimeItems = -1;
+   int retentionTimeTables = -1;
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *o = m_dcObjects->get(i);
+      if (!o->isDataStorageEnabled())
+         continue;   // Ignore "do not store" objects
+
       if (o->getType() == DCO_TYPE_ITEM)
+      {
+         if (retentionTimeItems == -1)
+         {
+            retentionTimeItems = o->getEffectiveRetentionTime();
+         }
+         else if (retentionTimeItems != o->getEffectiveRetentionTime())
+         {
+            sameRetentionTimeItems = false;
+            break;
+         }
+      }
+      else if (o->getType() == DCO_TYPE_TABLE)
+      {
+         if (retentionTimeTables == -1)
+         {
+            retentionTimeTables = o->getEffectiveRetentionTime();
+         }
+         else if (retentionTimeTables != o->getEffectiveRetentionTime())
+         {
+            sameRetentionTimeTables = false;
+            break;
+         }
+      }
+   }
+
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *o = m_dcObjects->get(i);
+      if (!o->isDataStorageEnabled())
+         continue;   // Ignore "do not store" objects
+
+      if ((o->getType() == DCO_TYPE_ITEM) && !sameRetentionTimeItems)
       {
          if (itemCount > 0)
             queryItems.append(_T(" OR "));
          queryItems.append(_T("(item_id="));
          queryItems.append(o->getId());
          queryItems.append(_T(" AND idata_timestamp<"));
-         queryItems.append((INT64)(now - o->getEffectiveRetentionTime() * 86400));
+         queryItems.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
          queryItems.append(_T(')'));
          itemCount++;
       }
-      else if (o->getType() == DCO_TYPE_TABLE)
+      else if ((o->getType() == DCO_TYPE_TABLE) && !sameRetentionTimeTables)
       {
          if (tableCount > 0)
             queryTables.append(_T(" OR "));
          queryTables.append(_T("(item_id="));
          queryTables.append(o->getId());
          queryTables.append(_T(" AND tdata_timestamp<"));
-         queryTables.append((INT64)(now - o->getEffectiveRetentionTime() * 86400));
+         queryTables.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
          queryTables.append(_T(')'));
          tableCount++;
       }
    }
    unlockDciAccess();
+
+   if (sameRetentionTimeItems && (retentionTimeItems != -1))
+   {
+      queryItems.append(_T("idata_timestamp<"));
+      queryItems.append(static_cast<int64_t>(now - retentionTimeItems * 86400));
+      itemCount++;   // Indicate that query should be run
+   }
+
+   if (sameRetentionTimeTables && (retentionTimeTables != -1))
+   {
+      queryTables.append(_T("tdata_timestamp<"));
+      queryTables.append(static_cast<int64_t>(now - retentionTimeTables * 86400));
+      tableCount++;   // Indicate that query should be run
+   }
 
    lockProperties();
    for(int i = 0; i < m_deletedItems->size(); i++)

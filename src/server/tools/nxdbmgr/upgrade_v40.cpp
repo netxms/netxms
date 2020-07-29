@@ -22,6 +22,28 @@
 
 #include "nxdbmgr.h"
 
+/**
+ * Upgrade from 40.3 to 40.4
+ */
+static bool H_UpgradeFromV3()
+{
+   if (GetSchemaLevelForMajorVersion(34) < 14)
+   {
+      CHK_EXEC(CreateConfigParam(_T("DBWriter.HouseKeeperInterlock"), _T("0"), _T("Controls if server should block background write of collected performance data while housekeeper deletes expired records."), nullptr, 'C', true, false, false, false));
+
+      static const TCHAR *batch =
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','0','Auto')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','1','Off')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','2','On')\n")
+            _T("UPDATE config_values SET var_name='LDAP.UserDeleteAction' WHERE var_name='LdapUserDeleteAction'\n")
+            _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(34, 14));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
 
 /**
  * Upgrade from 40.2 to 40.3
@@ -30,11 +52,9 @@ static bool H_UpgradeFromV2()
 {
    if (GetSchemaLevelForMajorVersion(34) < 13)
    {
-      //Set flag to deduplicate custom attributes
       CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('PruneCustomAttributes', '1')")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(34, 13));
    }
-
    CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
 }
@@ -177,6 +197,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 3,  40, 4,  H_UpgradeFromV3  },
    { 2,  40, 3,  H_UpgradeFromV2  },
    { 1,  40, 2,  H_UpgradeFromV1  },
    { 0,  40, 1,  H_UpgradeFromV0  },
