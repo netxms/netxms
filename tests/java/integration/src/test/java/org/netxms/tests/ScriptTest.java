@@ -174,12 +174,16 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
             break;            
          }
       }
-      assertNotNull(managementNode);      
+      assertNotNull(managementNode);    
+      
+      //Run housekeeper to delete deleted DCI data
+      session.processConsoleCommand("hk");      
 
       String dciName = "Test.DCI" + Long.toString((new Date()).getTime());
       List<String> params = new ArrayList<String>();
       params.add(Long.toString(managementNode.getObjectId()));
       params.add(dciName);
+      
       executeScript("/dataCollectionFunctions.nxsl", params);
       
       DataCollectionConfiguration config = session.openDataCollectionConfiguration(managementNode.getObjectId());
