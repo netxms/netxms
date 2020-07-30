@@ -91,6 +91,11 @@ int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
 
+#ifdef _WIN32
+   WSADATA wsaData;
+   WSAStartup(2, &wsaData);
+#endif
+
 #ifndef UNICODE
    SetDefaultCodepage("CP1251"); // Some tests contain cyrillic symbols
 #endif
