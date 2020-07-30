@@ -81,6 +81,8 @@ mibs_DATA = \
 	Brocade-REG-MIB.txt \
 	Brocade-TC.txt \
 	CABLE-DIAG-MIB.txt \
+	CAMBIUM-MIB.txt \
+	CAMBIUM-PMP80211-MIB.txt \
 	CDX-6500-COMMON-MIB.txt \
 	CFMEXTENSION-MIB.txt \
 	CHECKPOINT-NG-MIB.txt \
