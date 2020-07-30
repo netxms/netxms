@@ -169,8 +169,16 @@ public class GeneralInfo extends TableElement
 				AbstractNode node = (AbstractNode)object;
 				if (session.isZoningEnabled())
 					addPair(Messages.get().GeneralInfo_ZoneId, getZoneName(node.getZoneId()));
-				addPair(Messages.get().GeneralInfo_PrimaryHostName, node.getPrimaryName());
-				addPair(Messages.get().GeneralInfo_PrimaryIP, node.getPrimaryIP().getHostAddress());
+            if ((node.getFlags() & AbstractNode.NF_EXTERNAL_GATEWAY) != 0)
+            {
+               addPair(Messages.get().GeneralInfo_PrimaryHostName, node.getPrimaryName() + " (external gateway)");
+               addPair(Messages.get().GeneralInfo_PrimaryIP, node.getPrimaryIP().getHostAddress() + " (external gateway)");
+            }
+            else
+            {
+               addPair(Messages.get().GeneralInfo_PrimaryHostName, node.getPrimaryName());
+               addPair(Messages.get().GeneralInfo_PrimaryIP, node.getPrimaryIP().getHostAddress());
+            }
             addPair(Messages.get().GeneralInfo_NodeType, node.getNodeType().toString(), false);
             addPair(Messages.get().GeneralInfo_HypervisorType, node.getHypervisorType(), false);
             addPair(Messages.get().GeneralInfo_HypervisorInformation, node.getHypervisorInformation(), false);
@@ -238,7 +246,7 @@ public class GeneralInfo extends TableElement
          case AbstractObject.OBJECT_SENSOR:
             Sensor sensor = (Sensor)object;
             addPair(Messages.get().SensorStatus_DeviceAddress, sensor.getDeviceAddress(), false);
-            if(sensor.getMacAddress() != null && !sensor.getMacAddress().isNull())
+            if (sensor.getMacAddress() != null && !sensor.getMacAddress().isNull())
                addPair(Messages.get().SensorStatus_MacAddress, sensor.getMacAddress().toString(), true);
             addPair(Messages.get().SensorStatus_Vendor, sensor.getVendor(), true);            
             addPair(Messages.get().SensorStatus_DeviceClass, Sensor.DEV_CLASS_NAMES[sensor.getDeviceClass()]);
@@ -246,13 +254,13 @@ public class GeneralInfo extends TableElement
             addPair(Messages.get().SensorStatus_SerialNumber, sensor.getSerialNumber(), true);
             addPair(Messages.get().SensorStatus_MetaType, sensor.getMetaType(), true);
             addPair(Messages.get().SensorStatus_Description, sensor.getDescription(), true);
-            if(sensor.getFrameCount() != 0)
+            if (sensor.getFrameCount() != 0)
                addPair(Messages.get().SensorStatus_FrameCount, Integer.toString(sensor.getFrameCount()));
-            if(sensor.getSignalStrenght() != 1)
+            if (sensor.getSignalStrenght() != 1)
                addPair(Messages.get().SensorStatus_RSSI, Integer.toString(sensor.getSignalStrenght()));
-            if(sensor.getSignalNoise() != Integer.MAX_VALUE)
+            if (sensor.getSignalNoise() != Integer.MAX_VALUE)
                addPair(Messages.get().SensorStatus_SNR, Double.toString((double)sensor.getSignalNoise()/10));
-            if(sensor.getFrequency() != 0)
+            if (sensor.getFrequency() != 0)
                addPair(Messages.get().SensorStatus_Frequency, Double.toString((double)sensor.getFrequency()/10));
             break;
 			case AbstractObject.OBJECT_ACCESSPOINT:

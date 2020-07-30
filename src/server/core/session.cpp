@@ -7597,7 +7597,7 @@ void ClientSession::changeObjectZone(NXCPMessage *pRequest)
 				if (zone != nullptr)
 				{
 					// Check if target zone already have object with same primary IP
-					if ((static_cast<Node&>(*object).getFlags() & NF_REMOTE_AGENT) ||
+					if ((static_cast<Node&>(*object).getFlags() & NF_EXTERNAL_GATEWAY) ||
 					    ((FindNodeByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr) &&
 						  (FindSubnetByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr)))
 					{

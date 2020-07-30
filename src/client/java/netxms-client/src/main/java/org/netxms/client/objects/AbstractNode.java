@@ -48,7 +48,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	public static final int AGENT_AUTH_PLAINTEXT = 1;
 	public static final int AGENT_AUTH_MD5 = 2;
 	public static final int AGENT_AUTH_SHA1 = 3;
-	
+
 	// Node capabilities
 	public static final int NC_IS_SNMP                = 0x00000001;
 	public static final int NC_IS_NATIVE_AGENT        = 0x00000002;
@@ -76,7 +76,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    public static final int NC_IS_PROFINET            = 0x02000000;
 
 	// Node flags
-   public static final int NF_REMOTE_AGENT           = 0x00010000;
+   public static final int NF_EXTERNAL_GATEWAY       = 0x00010000;
 	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00020000;
 	public static final int NF_DISABLE_TOPOLOGY_POLL  = 0x00040000;
 	public static final int NF_DISABLE_SNMP           = 0x00080000;
@@ -88,16 +88,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    public static final int NF_SNMP_SETTINGS_LOCKED   = 0x02000000;
    public static final int NF_PING_PRIMARY_IP        = 0x04000000;
    public static final int NF_DISABLE_ETHERNET_IP    = 0x08000000;
-	
+
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;
 	public static final int NSF_SNMP_UNREACHABLE   = 0x00020000;
 	public static final int NSF_CPSNMP_UNREACHABLE = 0x00040000;
-	
+
 	public static final int IFXTABLE_DEFAULT = 0;
 	public static final int IFXTABLE_ENABLED = 1;
 	public static final int IFXTABLE_DISABLED = 2;
-	
+
 	protected InetAddressEx primaryIP;
 	protected String primaryName;
 	protected int flags;

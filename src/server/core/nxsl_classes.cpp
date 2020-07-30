@@ -1457,9 +1457,9 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_PROFINET) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isRemotelyManaged"))
+   else if (!strcmp(attr, "isRemotelyManaged") || !strcmp(attr, "isExternalGateway"))
    {
-      value = vm->createValue((LONG)((node->getFlags() & NF_REMOTE_AGENT) ? 1 : 0));
+      value = vm->createValue((LONG)((node->getFlags() & NF_EXTERNAL_GATEWAY) ? 1 : 0));
    }
    else if (!strcmp(attr, "isRouter"))
    {

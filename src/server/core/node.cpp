@@ -3058,7 +3058,7 @@ void Node::updatePrimaryIpAddr()
 
       lockProperties();
 
-      if (m_flags & NF_REMOTE_AGENT)
+      if (m_flags & NF_EXTERNAL_GATEWAY)
       {
          m_ipAddress = ipAddr;
          setModified(MODIFY_NODE_PROPERTIES);
@@ -3765,8 +3765,8 @@ DuplicateCheckResult Node::checkForDuplicates(shared_ptr<Node> *duplicate, TCHAR
 bool Node::isDuplicateOf(Node *node, TCHAR *reason, size_t size)
 {
    // Check if primary IP is on one of other node's interfaces
-   if (!(m_flags & NF_REMOTE_AGENT) && m_ipAddress.isValidUnicast() &&
-       !(node->getFlags() &  NF_REMOTE_AGENT) && node->getIpAddress().isValidUnicast())
+   if (!(m_flags & NF_EXTERNAL_GATEWAY) && m_ipAddress.isValidUnicast() &&
+       !(node->getFlags() &  NF_EXTERNAL_GATEWAY) && node->getIpAddress().isValidUnicast())
    {
       shared_ptr<Interface> iface = node->findInterfaceByIP(m_ipAddress);
       if (iface != nullptr)
@@ -5190,7 +5190,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          }
       }
    }
-   else if (!(m_flags & NF_REMOTE_AGENT))    /* pIfList == nullptr */
+   else if (!(m_flags & NF_EXTERNAL_GATEWAY))    /* pIfList == nullptr */
    {
       sendPollerMsg(rqid, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
@@ -6801,7 +6801,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
    {
-      bool wasRemoteAgent = ((m_flags & NF_REMOTE_AGENT) != 0);
+      bool wasRemoteAgent = ((m_flags & NF_EXTERNAL_GATEWAY) != 0);
       if (pRequest->isFieldExist(VID_FLAGS_MASK))
       {
          UINT32 mask = pRequest->getFieldAsUInt32(VID_FLAGS_MASK);
@@ -6812,7 +6812,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       {
          m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
       }
-      if (wasRemoteAgent && !(m_flags & NF_REMOTE_AGENT) && m_ipAddress.isValidUnicast())
+      if (wasRemoteAgent && !(m_flags & NF_EXTERNAL_GATEWAY) && m_ipAddress.isValidUnicast())
       {
          if (IsZoningEnabled())
          {
@@ -6831,7 +6831,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
             g_idxNodeByAddr.put(m_ipAddress, self());
          }
       }
-      else if (!wasRemoteAgent && (m_flags & NF_REMOTE_AGENT) && m_ipAddress.isValidUnicast())
+      else if (!wasRemoteAgent && (m_flags & NF_EXTERNAL_GATEWAY) && m_ipAddress.isValidUnicast())
       {
          if (IsZoningEnabled())
          {
@@ -6857,7 +6857,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       InetAddress ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
 
-      if (m_flags & NF_REMOTE_AGENT)
+      if (m_flags & NF_EXTERNAL_GATEWAY)
       {
          lockProperties();
          m_ipAddress = ipAddr;
@@ -6909,7 +6909,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
 
       InetAddress ipAddr = ResolveHostName(m_zoneUIN, primaryName);
-      if (ipAddr.isValid() && !(m_flags & NF_REMOTE_AGENT))
+      if (ipAddr.isValid() && !(m_flags & NF_EXTERNAL_GATEWAY))
       {
          // Check if received IP address is one of node's interface addresses
          readLockChildList();
@@ -7537,7 +7537,7 @@ shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool 
  */
 void Node::setPrimaryIPAddress(const InetAddress& addr)
 {
-   if (addr.equals(m_ipAddress) || (m_flags & NF_REMOTE_AGENT))
+   if (addr.equals(m_ipAddress) || (m_flags & NF_EXTERNAL_GATEWAY))
       return;
 
    InetAddress oldIpAddr = m_ipAddress;
@@ -9147,7 +9147,7 @@ void Node::checkSubnetBinding()
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
    // to find subnet node primary IP
-   if ((getParentsCount(OBJECT_SUBNET) == 0) && m_ipAddress.isValidUnicast() && !(m_flags & NF_REMOTE_AGENT) && !addrList.hasAddress(m_ipAddress))
+   if ((getParentsCount(OBJECT_SUBNET) == 0) && m_ipAddress.isValidUnicast() && !(m_flags & NF_EXTERNAL_GATEWAY) && !addrList.hasAddress(m_ipAddress))
    {
       shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
       if (pSubnet != nullptr)
@@ -9177,7 +9177,7 @@ void Node::checkSubnetBinding()
       if (getParentList().get(i)->getObjectClass() == OBJECT_SUBNET)
       {
          Subnet *pSubnet = (Subnet *)getParentList().get(i);
-         if (pSubnet->getIpAddress().contain(m_ipAddress) && !(m_flags & NF_REMOTE_AGENT))
+         if (pSubnet->getIpAddress().contain(m_ipAddress) && !(m_flags & NF_EXTERNAL_GATEWAY))
             continue;   // primary IP is in given subnet
 
          int j;

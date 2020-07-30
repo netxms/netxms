@@ -3293,7 +3293,7 @@ static void MoveNodeFlags(UINT32 oldFlag, UINT32 *flags, bool withSnmpConfLock)
    MoveFlag(oldFlag, flags, 0x10000000, DCF_DISABLE_STATUS_POLL);
    MoveFlag(oldFlag, flags, 0x20000000, DCF_DISABLE_CONF_POLL);
    MoveFlag(oldFlag, flags, 0x80000000, DCF_DISABLE_DATA_COLLECT);
-   MoveFlag(oldFlag, flags, 0x00000080, NF_REMOTE_AGENT);
+   MoveFlag(oldFlag, flags, 0x00000080, NF_EXTERNAL_GATEWAY);
    if (withSnmpConfLock)
    {
       MoveFlag(oldFlag, flags, 0x00200000, NF_SNMP_SETTINGS_LOCKED);

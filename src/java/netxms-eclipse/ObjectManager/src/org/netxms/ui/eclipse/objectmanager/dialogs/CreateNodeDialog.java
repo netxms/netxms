@@ -114,9 +114,9 @@ public class CreateNodeDialog extends Dialog
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -124,9 +124,9 @@ public class CreateNodeDialog extends Dialog
 		newShell.setText(Messages.get().CreateNodeDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -204,8 +204,8 @@ public class CreateNodeDialog extends Dialog
 		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		
 		checkRemoteManagementNode = new Button(optionsGroup, SWT.CHECK);
-		checkRemoteManagementNode.setText("Primary IP address is an address of remote management node");
-      checkRemoteManagementNode.setSelection((creationFlags & NXCObjectCreationData.CF_REMOTE_MANAGEMENT_NODE) != 0);
+      checkRemoteManagementNode.setText("Communication through external gateway");
+      checkRemoteManagementNode.setSelection((creationFlags & NXCObjectCreationData.CF_EXTERNAL_GATEWAY) != 0);
 		
 		checkUnmanaged = new Button(optionsGroup, SWT.CHECK);
 		checkUnmanaged.setText(Messages.get().CreateNodeDialog_CreateUnmanaged);
@@ -374,16 +374,16 @@ public class CreateNodeDialog extends Dialog
          creationFlags |= NXCObjectCreationData.CF_DISABLE_ETHERNET_IP;
       if (checkDisableAutomaticSNMPConfig.getSelection())
          creationFlags |= NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED;
-      if(checkRemoteManagementNode.getSelection())
-         creationFlags |=  NXCObjectCreationData.CF_REMOTE_MANAGEMENT_NODE;
-		
+      if (checkRemoteManagementNode.getSelection())
+         creationFlags |= NXCObjectCreationData.CF_EXTERNAL_GATEWAY;
+
 		agentPort = agentPortField.getSelection();
 		snmpPort = snmpPortField.getSelection();
       etherNetIpPort = etherNetIpPortField.getSelection();
-		
+
 		sshLogin = sshLoginField.getText().trim();
 		sshPassword = sshPasswordField.getText();
-		
+
 		agentProxy = agentProxySelector.getObjectId();
 		snmpProxy = snmpProxySelector.getObjectId();
       etherNetIpProxy = etherNetIpProxySelector.getObjectId();
@@ -392,7 +392,7 @@ public class CreateNodeDialog extends Dialog
 		{
 		   zoneUIN = zoneSelector.getZoneUIN();
 		}
-		
+
 		showAgain = enableShowAgainFlag ? checkCreateAnother.getSelection() : false;
 		super.okPressed();
 	}
