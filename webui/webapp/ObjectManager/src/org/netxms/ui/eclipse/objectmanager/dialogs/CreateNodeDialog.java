@@ -256,7 +256,7 @@ public class CreateNodeDialog extends Dialog
 		checkDisableSNMP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_SNMP) != 0);
 		
       checkDisableEtherNetIP = new Button(optionsGroup, SWT.CHECK);
-      checkDisableEtherNetIP.setText("Disable EtherNet/IP");
+      checkDisableEtherNetIP.setText("Disable usage of &EtherNet/IP for all polls");
       checkDisableEtherNetIP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ETHERNET_IP) != 0);
 
 		checkDisablePing = new Button(optionsGroup, SWT.CHECK);
