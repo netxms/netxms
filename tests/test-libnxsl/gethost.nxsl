@@ -1,7 +1,7 @@
 //gethostbyaddr
 assert("localhost" == gethostbyaddr("127.0.0.1"));
 assert("dns.google" == gethostbyaddr("8.8.8.8"));
-assert(null == gethostbyaddr("0.0.0.0"));
+assert(null == gethostbyaddr("169.254.15.16"));
 
 //gethostbyname
 assert("127.0.0.1" == gethostbyname("localhost"));
