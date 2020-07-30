@@ -132,11 +132,10 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
 {
    TCHAR ipAddrText[64];
    nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode(%s/%d) zone %d"), newNodeData->ipAddr.toString(ipAddrText),
-                                               newNodeData->ipAddr.getMaskBits(),
-                                               (int)newNodeData->zoneUIN);
+            newNodeData->ipAddr.getMaskBits(), newNodeData->zoneUIN);
 
    // Check for node existence
-   if ((newNodeData->creationFlags & NXC_NCF_REMOTE_MANAGEMENT_NODE) == 0 &&
+   if ((newNodeData->creationFlags & NXC_NCF_EXTERNAL_GATEWAY) == 0 &&
        ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr) ||
        (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr)))
    {
@@ -144,7 +143,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
       return shared_ptr<Node>();
    }
 
-   UINT32 flags = 0;
+   uint32_t flags = 0;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_ICMP)
       flags |= NF_DISABLE_ICMP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_SNMP)
@@ -155,8 +154,8 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
       flags |= NF_DISABLE_NXCP;
    if (newNodeData->creationFlags & NXC_NCF_SNMP_SETTINGS_LOCKED)
       flags |= NF_SNMP_SETTINGS_LOCKED;
-   if (newNodeData->creationFlags & NXC_NCF_REMOTE_MANAGEMENT_NODE)
-      flags |= NF_REMOTE_AGENT;
+   if (newNodeData->creationFlags & NXC_NCF_EXTERNAL_GATEWAY)
+      flags |= NF_EXTERNAL_GATEWAY;
    shared_ptr<Node> node = MakeSharedNObject<Node>(newNodeData, flags);
    NetObjInsert(node, true, false);
 

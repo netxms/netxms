@@ -314,7 +314,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(object->getId(), object);
-            if (!(static_cast<Node&>(*object).getFlags() & NF_REMOTE_AGENT))
+            if (!(static_cast<Node&>(*object).getFlags() & NF_EXTERNAL_GATEWAY))
             {
 			      if (IsZoningEnabled())
 			      {
@@ -474,7 +474,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(object.getId());
-         if (!(static_cast<const Node&>(object).getFlags() & NF_REMOTE_AGENT))
+         if (!(static_cast<const Node&>(object).getFlags() & NF_EXTERNAL_GATEWAY))
          {
 			   if (IsZoningEnabled())
 			   {

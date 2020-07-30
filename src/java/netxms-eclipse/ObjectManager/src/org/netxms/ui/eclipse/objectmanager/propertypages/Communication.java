@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,13 +45,13 @@ public class Communication extends PropertyPage
 {
 	private AbstractNode node;
 	private LabeledText primaryName;
-   private Button agentIsRemote;
+   private Button externalGateway;
    private Button enablePingOnPrimaryIP;
 	private boolean primaryNameChanged = false;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -78,13 +78,13 @@ public class Communication extends PropertyPage
 			}
 		});
 
-      agentIsRemote = new Button(dialogArea, SWT.CHECK);
-      agentIsRemote.setText(Messages.get().Communication_RemoteAgent);
-      agentIsRemote.setSelection((node.getFlags() & AbstractNode.NF_REMOTE_AGENT) != 0);
+      externalGateway = new Button(dialogArea, SWT.CHECK);
+      externalGateway.setText(Messages.get().Communication_RemoteAgent);
+      externalGateway.setSelection((node.getFlags() & AbstractNode.NF_EXTERNAL_GATEWAY) != 0);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      agentIsRemote.setLayoutData(gd);
+      externalGateway.setLayoutData(gd);
       		
       enablePingOnPrimaryIP = new Button(dialogArea, SWT.CHECK);
       enablePingOnPrimaryIP.setText("Use ICMP ping on primary IP address to determine node status");
@@ -123,15 +123,15 @@ public class Communication extends PropertyPage
 			setValid(false);
 		
 		int flags = node.getFlags();
-      if (agentIsRemote.getSelection())
-         flags |= AbstractNode.NF_REMOTE_AGENT;
+      if (externalGateway.getSelection())
+         flags |= AbstractNode.NF_EXTERNAL_GATEWAY;
       else
-         flags &= ~AbstractNode.NF_REMOTE_AGENT;
+         flags &= ~AbstractNode.NF_EXTERNAL_GATEWAY;
       if (enablePingOnPrimaryIP.getSelection())
          flags |= AbstractNode.NF_PING_PRIMARY_IP;
       else
          flags &= ~AbstractNode.NF_PING_PRIMARY_IP;
-		md.setObjectFlags(flags, AbstractNode.NF_REMOTE_AGENT | AbstractNode.NF_PING_PRIMARY_IP);
+      md.setObjectFlags(flags, AbstractNode.NF_EXTERNAL_GATEWAY | AbstractNode.NF_PING_PRIMARY_IP);
 
 		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().Communication_JobName, node.getObjectName()), null, Activator.PLUGIN_ID, null) {
@@ -190,6 +190,6 @@ public class Communication extends PropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		agentIsRemote.setSelection(false);
+		externalGateway.setSelection(false);
 	}
 }
