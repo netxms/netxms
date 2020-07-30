@@ -206,6 +206,7 @@ public:
    ~AccessPointInfo();
 
 	void addRadioInterface(const RadioInterfaceInfo& iface);
+	void setMacAddr(const MacAddress& macAddr) { m_macAddr = macAddr; }
 
 	uint32_t getIndex() const { return m_index; }
 	const MacAddress& getMacAddr() const { return m_macAddr; }
@@ -231,19 +232,19 @@ struct WirelessStationInfo
 {
 	// This part filled by driver
    BYTE macAddr[MAC_ADDR_LENGTH];
-	UINT32 ipAddr;	// IP address, must be in host byte order
+	uint32_t ipAddr;	// IP address, must be in host byte order
 	int rfIndex;	// radio interface index
    BYTE bssid[MAC_ADDR_LENGTH];
    short apMatchPolicy;
 	TCHAR ssid[MAX_OBJECT_NAME];
    int vlan;
    int signalStrength;
-   UINT32 txRate;
-   UINT32 rxRate;
+   uint32_t txRate;
+   uint32_t rxRate;
 
 	// This part filled by core
-	UINT32 apObjectId;
-	UINT32 nodeId;
+   uint32_t apObjectId;
+   uint32_t nodeId;
    TCHAR rfName[MAX_OBJECT_NAME];
 };
 
@@ -369,5 +370,10 @@ public:
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual ArpCache *getArpCache(SNMP_Transport *snmp, DriverData *driverData);
 };
+
+/**
+ * Helper function for converting frequency to channel number
+ */
+int LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq);
 
 #endif   /* _nddrv_h_ */

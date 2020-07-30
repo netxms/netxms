@@ -205,11 +205,6 @@ bool MikrotikDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, D
 }
 
 /**
- * 2.4 GHz (802.11b/g/n) frequency to channel number map
- */
-static int s_frequencyMap[14] = { 2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472, 2484 };
-
-/**
  * Handler for access point enumeration - adopted
  */
 static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
@@ -249,7 +244,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
             macAddr = response->getVariable(3)->getValueAsMACAddr();
 
          TCHAR name[MAX_OBJECT_NAME];
-         AccessPointInfo *ap = new AccessPointInfo(apIndex, macAddr, InetAddress::INVALID, AP_ADOPTED, var->getValueAsString(name, MAX_OBJECT_NAME), NULL, NULL, NULL);
+         AccessPointInfo *ap = new AccessPointInfo(apIndex, macAddr, InetAddress::INVALID, AP_ADOPTED, var->getValueAsString(name, MAX_OBJECT_NAME), nullptr, nullptr, nullptr);
 
          TCHAR macAddrText[64];
          nxlog_debug_tag(DEBUG_TAG, 6, _T("AP: index=%d name=%s macAddr=%s"), apIndex, name, macAddr.toString(macAddrText));
@@ -259,16 +254,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
          response->getVariable(2)->getValueAsString(radio.name, 64);
          response->getVariable(3)->getRawValue(radio.macAddr, MAC_ADDR_LENGTH);
          radio.index = apIndex;
-
-         int freq = response->getVariable(1)->getValueAsInt();
-         for(int i = 0; i < 14; i++)
-         {
-            if (s_frequencyMap[i] == freq)
-            {
-               radio.channel = i + 1;
-               break;
-            }
-         }
+         radio.channel = WirelessFrequencyToChannel(response->getVariable(1)->getValueAsInt());
 
          ap->addRadioInterface(radio);
          apList->add(ap);
@@ -289,8 +275,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
 ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"),
-                HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
    {
       delete apList;
       return nullptr;
@@ -322,7 +307,7 @@ AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, NObje
  */
 static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
-   ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
+   ObjectArray<WirelessStationInfo> *wsList = static_cast<ObjectArray<WirelessStationInfo>*>(arg);
 
    const SNMP_ObjectId& name = var->getName();
    UINT32 apIndex = name.getElement(name.length() - 1);
@@ -360,7 +345,7 @@ ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Trans
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
-      wsList = NULL;
+      wsList = nullptr;
    }
    return wsList;
 }

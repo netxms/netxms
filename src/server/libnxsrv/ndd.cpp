@@ -25,6 +25,28 @@
 #define DEBUG_TAG _T("ndd.common")
 
 /**
+ * 2.4 GHz (802.11b/g/n) frequency to channel number map
+ */
+static int s_frequencyMap[14] = { 2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472, 2484 };
+
+/**
+ * Helper function for converting frequency to channel number
+ */
+int LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq)
+{
+   if ((freq >= 5000) && (freq < 6000))
+      return (freq - 5000) / 5;
+
+   for(int i = 0; i < 14; i++)
+   {
+      if (s_frequencyMap[i] == freq)
+         return i + 1;
+   }
+
+   return 0;
+}
+
+/**
  * Serialize radio interface information to JSON
  */
 json_t *RadioInterfaceInfo::toJson() const
@@ -530,15 +552,15 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
          // Interface speed
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.15.%d"), iface->index);  // try ifHighSpeed first
-         UINT32 speed;
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &speed, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+         uint32_t speed;
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &speed, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
 			{
 				speed = 0;
 			}
          if (speed < 2000)  // ifHighSpeed not supported or slow interface
          {
             _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.5.%d"), iface->index);  // ifSpeed
-            if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &speed, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+            if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &speed, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
             {
                iface->speed = speed;
             }
