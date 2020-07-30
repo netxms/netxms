@@ -379,7 +379,7 @@ bool InetAddress::inRange(const InetAddress& start, const InetAddress& end) cons
 struct sockaddr *InetAddress::fillSockAddr(SockAddrBuffer *buffer, UINT16 port) const
 {
    if (!isValid())
-      return NULL;
+      return nullptr;
 
    memset(buffer, 0, sizeof(SockAddrBuffer));
    ((struct sockaddr *)buffer)->sa_family = m_family;
@@ -394,7 +394,7 @@ struct sockaddr *InetAddress::fillSockAddr(SockAddrBuffer *buffer, UINT16 port) 
       memcpy(buffer->sa6.sin6_addr.s6_addr, m_addr.v6, 16);
       buffer->sa6.sin6_port = htons(port);
 #else
-      return NULL;
+      return nullptr;
 #endif
    }
    return (struct sockaddr *)buffer;
@@ -410,9 +410,9 @@ struct sockaddr *InetAddress::fillSockAddr(SockAddrBuffer *buffer, UINT16 port) 
 TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
 {
    if (!isValid())
-      return NULL;
+      return nullptr;
 
-   struct hostent *hs = NULL;
+   struct hostent *hs = nullptr;
    if (m_family == AF_INET)
    {
       uint32_t addr = htonl(m_addr.v4);
@@ -423,8 +423,12 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
 		hs = gethostbyaddr((const char *)m_addr.v6, 16, AF_INET6);
    }
 
-   if (hs == NULL)
-      return NULL;
+   if (hs == nullptr)
+      return nullptr;
+
+   // Some versions of libc may return IP address instead of NULL if it cannot be resolved
+   if (equals(InetAddress::parse(hs->h_name)))
+      return nullptr;
 
 #ifdef UNICODE
 	mb_to_wchar(hs->h_name, -1, buffer, buflen);
