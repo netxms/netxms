@@ -1,5 +1,5 @@
 //gethostbyaddr
-assert("localhost" == gethostbyaddr("127.0.0.1"));
+assert("wall.office.radensolutions.com" == gethostbyaddr("10.5.7.1"));
 assert("dns.google" == gethostbyaddr("8.8.8.8"));
 assert(null == gethostbyaddr("169.254.15.16"));
 
