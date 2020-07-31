@@ -33,11 +33,6 @@ import junit.framework.TestCase;
  */
 public abstract class AbstractSessionTest extends TestCase
 {
-    protected static final String serverAddress = "127.0.0.1";
-    protected static final int serverPort = NXCSession.DEFAULT_CONN_PORT;
-    protected static final String loginName = "admin";
-    protected static final String password = "";
-
     protected NXCSession connect(boolean useEncryption) throws Exception
     {
         Logger.setLoggingFacility(new LoggingFacility() {

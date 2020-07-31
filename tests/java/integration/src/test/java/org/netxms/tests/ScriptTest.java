@@ -175,9 +175,6 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          }
       }
       assertNotNull(managementNode);    
-      
-      //Run housekeeper to delete deleted DCI data
-      session.processConsoleCommand("hk");      
 
       String dciName = "Test.DCI" + Long.toString((new Date()).getTime());
       List<String> params = new ArrayList<String>();
@@ -235,7 +232,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          session.savePolicy(templateId, policy, false);
 
          session.applyTemplate(templateId, managementNode.getObjectId());
-         session.executeActionWithExpansion(managementNode.getObjectId(), 0, "Agent.Restart", false, null, null, null);
+         session.executeAction(managementNode.getObjectId(), "Agent.Restart", null);
 
          Thread.sleep(10000); // Wait for agent restart
 
@@ -278,22 +275,23 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    public void testNXSLEventFunctions() throws Exception
    {
       session = connect();
-      
-      HashMap<Long, Alarm> alarms = session.getAlarms();
-      assertTrue(alarms.size() > 0);
+
+      session.syncObjects();
+      List<AbstractObject> objects = session.getAllObjects(); //Find managment node
+      AbstractObject managementNode = null;
+      for (AbstractObject obj : objects)
+      {
+         if (obj instanceof Node && ((Node)obj).isManagementServer())
+         {
+            managementNode = obj;
+            break;            
+         }
+      }
+      assertNotNull(managementNode); 
       
       List<String> params = new ArrayList<String>();
-      for(Alarm alarm : alarms.values())
-      {
-         String alarmKey = alarm.getKey();
-         if(alarmKey.isEmpty())
-            continue;
-         params.add(Long.toString(alarm.getSourceEventId()));
-         params.add(Long.toString(alarm.getSourceObjectId()));
-         break;
-      }
-      System.out.println("Check that at least one alarm was found");
-      assertTrue(params.size() == 2);
+      params.add(Long.toString(managementNode.getObjectId()));
+      
       executeScript("/eventFunctions.nxsl", params);
    }
    
