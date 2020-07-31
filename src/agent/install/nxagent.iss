@@ -28,9 +28,11 @@ Source: "..\..\..\Release\informix.nsm"; DestDir: "{app}\bin"; Flags: ignorevers
 Source: "..\..\..\Release\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\Release\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\odbcquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\Release\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
