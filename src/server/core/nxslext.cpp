@@ -1699,27 +1699,31 @@ static int F_ExpandString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 /**
  * Sends e-mail to specified recipients
  * Syntax:
- *    SendMail(recipients, subject, text, ishtml)
- * Returnded value:
+ *    SendMail(recipients, subject, text, isHTML)
+ *    isHTML is optional, if omitted assume false
+ * Returned value:
  *    none
  */
 static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc < 3) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
 	if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	if (!argv[3]->isBoolean())
+	if ((argc > 3) && !argv[3]->isBoolean())
 		return  NXSL_ERR_NOT_BOOLEAN;
 
 	StringBuffer rcpts(argv[0]->getValueAsCString());
 	rcpts.trim();
 	const TCHAR *subj = argv[1]->getValueAsCString();
 	const TCHAR *text = argv[2]->getValueAsCString();
-	bool ishtml = argv[3]->getValueAsBoolean();
+	bool isHTML = (argc > 3) ? argv[3]->getValueAsBoolean() : false;
 
 	if (!rcpts.isEmpty())
 	{
-		nxlog_debug_tag(_T("SendMail.nxsl"), 3, _T("Sending mail to %s: \"%s\""), (const TCHAR *)rcpts, text);
+		nxlog_debug_tag(_T("nxsl.sendmail"), 3, _T("Sending mail to %s: \"%s\""), rcpts.cstr(), text);
 		TCHAR *curr = rcpts.getBuffer(), *next;
 		do
 		{
@@ -1727,13 +1731,13 @@ static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 			if (next != nullptr)
 				*next = 0;
 			StrStrip(curr);
-			PostMail(curr, subj, text, ishtml);
+			PostMail(curr, subj, text, isHTML);
 			curr = next + 1;
 		} while(next != nullptr);
 	}
 	else
 	{
-		nxlog_debug_tag(_T("SendMail.nxsl"), 3, _T("Empty recipients list - mail will not be sent"));
+		nxlog_debug_tag(_T("nxsl.sendmail"), 3, _T("Empty recipients list - mail will not be sent"));
 	}
 	return 0;
 }
@@ -1789,7 +1793,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "ManageObject", F_ManageObject, 1 },
 	{ "PostEvent", F_PostEvent, -1 },
 	{ "RenameObject", F_RenameObject, 2 },
-	{ "SendMail", F_SendMail, 4 },
+	{ "SendMail", F_SendMail, -1 },
    { "SetCustomAttribute", F_SetCustomAttribute, 3 },
    { "SetEventParameter", F_SetEventParameter, 3 },
 	{ "SetInterfaceExpectedState", F_SetInterfaceExpectedState, 2 },
