@@ -340,7 +340,7 @@ ObjectArray<AccessPointInfo> *CambiumEPMPDriver::getAccessPoints(SNMP_Transport 
    TCHAR macAddrText[64] = _T("");
    MacAddress radioMAC = MacAddress::parse(response->getVariable(5)->getValueAsString(macAddrText, 64));
 
-   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(1, 16, Ownership::True);
+   auto apList = new ObjectArray<AccessPointInfo>(1, 16, Ownership::True);
    TCHAR name[MAX_OBJECT_NAME];
    apList->add(new AccessPointInfo(1, radioMAC, InetAddress::INVALID, AP_ADOPTED, response->getVariable(0)->getValueAsString(name, MAX_OBJECT_NAME), nullptr, nullptr, nullptr));
 
@@ -377,7 +377,7 @@ ObjectArray<AccessPointInfo> *CambiumEPMPDriver::getAccessPoints(SNMP_Transport 
  */
 static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
-   ObjectArray<WirelessStationInfo> *wsList = static_cast<ObjectArray<WirelessStationInfo>*>(arg);
+   auto wsList = static_cast<ObjectArray<WirelessStationInfo>*>(arg);
 
    SNMP_ObjectId oid = var->getName();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -430,9 +430,8 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
  */
 ObjectArray<WirelessStationInfo> *CambiumEPMPDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.17713.21.1.2.30.1.1"), // connectedSTAMAC
-                HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
+   auto wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.17713.21.1.2.30.1.1"), HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS) // connectedSTAMAC
    {
       delete wsList;
       wsList = nullptr;

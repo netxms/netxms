@@ -40,6 +40,11 @@ public:
    virtual int isPotentialDevice(const TCHAR *oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 apIndex,
+            const MacAddress& macAddr, const InetAddress& ipAddr, const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
 };
 
 /**
