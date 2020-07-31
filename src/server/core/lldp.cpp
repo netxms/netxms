@@ -188,16 +188,16 @@ static void ProcessLLDPConnectionEntry(Node *node, SNMP_Transport *snmp, StringO
 	uint32_t newOid[128];
 	memcpy(newOid, oid.value(), oid.length() * sizeof(uint32_t));
 
-	newOid[oid.length() - 4] = 4;	// lldpRemChassisIdSubtype
+	newOid[10] = 4;	// lldpRemChassisIdSubtype
 	SNMP_Variable *lldpRemChassisIdSubtype = GetVariableFromCache(newOid, oid.length(), connections);
 
-	newOid[oid.length() - 4] = 7;	// lldpRemPortId
+	newOid[10] = 7;	// lldpRemPortId
    SNMP_Variable *lldpRemPortId = GetVariableFromCache(newOid, oid.length(), connections);
 
-	newOid[oid.length() - 4] = 6;	// lldpRemPortIdSubtype
+	newOid[10] = 6;	// lldpRemPortIdSubtype
    SNMP_Variable *lldpRemPortIdSubtype = GetVariableFromCache(newOid, oid.length(), connections);
 
-   newOid[oid.length() - 4] = 9;   // lldpRemSysName
+   newOid[10] = 9;   // lldpRemSysName
    SNMP_Variable *lldpRemSysName = GetVariableFromCache(newOid, oid.length(), connections);
 
 	if ((lldpRemChassisIdSubtype != nullptr) && (lldpRemPortId != nullptr) && (lldpRemPortIdSubtype != nullptr) && (lldpRemSysName != nullptr))
@@ -237,7 +237,7 @@ static void ProcessLLDPConnectionEntry(Node *node, SNMP_Transport *snmp, StringO
          if (ifRemote == nullptr)
          {
             // Try to find remote interface by description
-            newOid[oid.length() - 4] = 8; // lldpRemPortDesc
+            newOid[10] = 8; // lldpRemPortDesc
             SNMP_Variable *lldpRemPortDesc = GetVariableFromCache(newOid, oid.length(), connections);
             if (lldpRemPortDesc != nullptr)
             {
