@@ -166,8 +166,10 @@ mibs_DATA = \
 	COSINE-GLOBAL-REG.txt \
 	COSINE-InVision-MIB.txt \
 	COSINE-ORION-MIB.txt \
+	CPQHLTH-MIB.txt \
 	CPQHOST-MIB.txt \
 	CPQPOWER-MIB.txt \
+	CPQSINFO-MIB.txt \
 	CPU-PROTECT-MIB.txt \
 	CYBEROAM-MIB.txt \
 	DDM-MGMT-MIB.txt \
