@@ -22,6 +22,9 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG_OBJECT_RELATIONS  _T("obj.relations")
+#define DEBUG_TAG_OBJECT_LIFECYCLE  _T("obj.lifecycle")
+
 /**
  * Class names
  */
@@ -488,7 +491,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	}
 
 	if (!success)
-		DbgPrintf(4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_name, (long)m_id, getObjectClass());
+		nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_name, (long)m_id, getObjectClass());
 
    return success;
 }
@@ -498,7 +501,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
  */
 static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const CustomAttribute *value, DB_STATEMENT hStmt)
 {
-   if(value->sourceObject != 0 && (value->flags & CAF_REDEFINED) == 0) //do not save inherited attributes
+   if ((value->sourceObject != 0) && !(value->flags & CAF_REDEFINED)) // do not save inherited attributes
       return _CONTINUE;
 
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
@@ -520,7 +523,7 @@ static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const 
  */
 bool NetObj::saveModuleData(DB_HANDLE hdb)
 {
-   if (!(m_modified & MODIFY_MODULE_DATA) || (m_moduleData == NULL))
+   if (!(m_modified & MODIFY_MODULE_DATA) || (m_moduleData == nullptr))
       return true;
 
    ModuleDataDatabaseCallbackParams data;
@@ -717,7 +720,7 @@ void NetObj::addChild(const shared_ptr<NetObj>& object)
 {
    super::addChild(object);
 	markAsModified(MODIFY_RELATIONS);
-   DbgPrintf(7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
+	nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
 /**
@@ -727,7 +730,7 @@ void NetObj::addParent(const shared_ptr<NetObj>& object)
 {
    super::addParent(object);
 	markAsModified(MODIFY_RELATIONS);
-   DbgPrintf(7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
+	nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
 /**
@@ -735,7 +738,7 @@ void NetObj::addParent(const shared_ptr<NetObj>& object)
  */
 void NetObj::deleteChild(const NetObj& object)
 {
-   DbgPrintf(7, _T("NetObj::deleteChild: this=%s [%u]; object=%s [%u]"), m_name, m_id, object.getName(), object.getId());
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::deleteChild: this=%s [%u]; object=%s [%u]"), m_name, m_id, object.getName(), object.getId());
    super::deleteChild(object.getId());
 	markAsModified(MODIFY_RELATIONS);
 }
@@ -745,7 +748,7 @@ void NetObj::deleteChild(const NetObj& object)
  */
 void NetObj::deleteParent(const NetObj& object)
 {
-   DbgPrintf(7, _T("NetObj::deleteParent: this=%s [%u]; object=%s [%u]"), m_name, m_id, object.getName(), object.getId());
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::deleteParent: this=%s [%u]; object=%s [%u]"), m_name, m_id, object.getName(), object.getId());
    super::deleteParent(object.getId());
 	markAsModified(MODIFY_RELATIONS);
 }
@@ -767,14 +770,14 @@ void NetObj::onObjectDeleteCallback(NetObj *object, NetObj *context)
  */
 void NetObj::deleteObject(NetObj *initiator)
 {
-   nxlog_debug(4, _T("Deleting object %d [%s]"), m_id, m_name);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Deleting object %d [%s]"), m_id, m_name);
 
 	// Prevent object change propagation until it's marked as deleted
 	// (to prevent the object's incorrect appearance in GUI)
 	lockProperties();
 	if (m_isDeleteInitiated)
 	{
-	   nxlog_debug(4, _T("Attempt to call NetObj::deleteObject() multiple times for object %d [%s]"), m_id, m_name);
+	   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Attempt to call NetObj::deleteObject() multiple times for object %d [%s]"), m_id, m_name);
 	   unlockProperties();
 	   return;
 	}
@@ -787,12 +790,13 @@ void NetObj::deleteObject(NetObj *initiator)
 
    prepareForDeletion();
 
-   nxlog_debug(5, _T("NetObj::deleteObject(): deleting object %d from indexes"), m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 5, _T("NetObj::deleteObject(): deleting object %d from indexes"), m_id);
    NetObjDeleteFromIndexes(*this);
 
    // Delete references to this object from child objects
-   DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_id);
    SharedObjectArray<NetObj> *deleteList = nullptr;
+   SharedObjectArray<NetObj> *detachList = nullptr;
    writeLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
    {
@@ -806,14 +810,27 @@ void NetObj::deleteObject(NetObj *initiator)
       }
       else
       {
-         o->deleteParent(*this);
+         if (detachList == nullptr)
+            detachList = new SharedObjectArray<NetObj>();
+         detachList->add(o);
       }
    }
    clearChildList();
    unlockChildList();
 
+   if (detachList != nullptr)
+   {
+      for(int i = 0; i < detachList->size(); i++)
+      {
+         NetObj *obj = detachList->get(i);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::deleteObject(): calling deleteParent() on %s [%d]"), obj->getName(), obj->getId());
+         obj->deleteParent(*this);
+      }
+      delete detachList;
+   }
+
    // Remove references to this object from parent objects
-   DbgPrintf(5, _T("NetObj::deleteObject(): clearing parent list for object %d"), m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::deleteObject(): clearing parent list for object %d"), m_id);
    SharedObjectArray<NetObj> *recalcList = nullptr;
    writeLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
@@ -847,7 +864,7 @@ void NetObj::deleteObject(NetObj *initiator)
       for(int i = 0; i < deleteList->size(); i++)
       {
          NetObj *obj = deleteList->get(i);
-         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), obj->getName(), obj->getId());
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), obj->getName(), obj->getId());
          obj->deleteObject(this);
       }
       delete deleteList;
@@ -870,10 +887,10 @@ void NetObj::deleteObject(NetObj *initiator)
    unlockProperties();
 
    // Notify all other objects about object deletion
-   nxlog_debug(5, _T("NetObj::deleteObject(%s [%d]): calling onObjectDelete()"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 5, _T("NetObj::deleteObject(%s [%d]): calling onObjectDelete()"), m_name, m_id);
 	g_idxObjectById.forEach(onObjectDeleteCallback, this);
 
-   DbgPrintf(4, _T("Object %d successfully deleted"), m_id);
+	nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Object %d successfully deleted"), m_id);
 }
 
 /**
@@ -882,12 +899,12 @@ void NetObj::deleteObject(NetObj *initiator)
 void NetObj::onObjectDelete(UINT32 objectId)
 {
    lockProperties();
-   if (m_trustedNodes != NULL)
+   if (m_trustedNodes != nullptr)
    {
       int index = m_trustedNodes->indexOf(objectId);
       if (index != -1)
       {
-         nxlog_debug(5, _T("NetObj::onObjectDelete(%s [%u]): deleted object %u was listed as trusted node"), m_name, m_id, objectId);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::onObjectDelete(%s [%u]): deleted object %u was listed as trusted node"), m_name, m_id, objectId);
          m_trustedNodes->remove(index);
          setModified(MODIFY_COMMON_PROPERTIES);
       }
@@ -2388,14 +2405,14 @@ void NetObj::executeHookScript(const TCHAR *hookName)
    ScriptVMHandle vm = CreateServerScriptVM(scriptName, self());
    if (!vm.isValid())
    {
-      DbgPrintf(7, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" %s"), m_name, m_id,
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 7, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" %s"), m_name, m_id,
                scriptName, (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
       return;
    }
 
    if (!vm->run())
    {
-      DbgPrintf(4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
                 m_name, m_id, scriptName, vm->getErrorText());
    }
    vm.destroy();
