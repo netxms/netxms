@@ -180,7 +180,7 @@ TuxedoServerInstance::TuxedoServerInstance(TuxedoServerInstance *src)
 class TuxedoServer
 {
 public:
-   UINT32 m_uniqueId;
+   uint32_t m_uniqueId;
    ObjectArray<TuxedoServerInstance> m_instances;
    TuxedoServerInstance m_summary;
    long m_running;
@@ -224,7 +224,7 @@ void TuxedoServer::addInstance(TuxedoServerInstance *s)
 /**
  * Service list
  */
-static Mutex s_lock;
+static Mutex s_lock(true);
 static HashMap<uint32_t, TuxedoServer> *s_servers = nullptr;
 static HashMap<uint32_t, TuxedoServerInstance> *s_serverInstances = nullptr;
 
@@ -244,10 +244,10 @@ void TuxedoResetServers()
  */
 void TuxedoQueryServers()
 {
-   HashMap<UINT32, TuxedoServer> *servers = new HashMap<UINT32, TuxedoServer>(Ownership::True);
-   HashMap<UINT32, TuxedoServerInstance> *serverInstances = new HashMap<UINT32, TuxedoServerInstance>(Ownership::True);
+   auto servers = new HashMap<uint32_t, TuxedoServer>(Ownership::True);
+   auto serverInstances = new HashMap<uint32_t, TuxedoServerInstance>(Ownership::False);
 
-   FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
+   FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", nullptr, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
    CFchg32(fb, TA_CLASS, 0, (char *)"T_SERVER", 0, FLD_STRING);
 
@@ -262,19 +262,19 @@ void TuxedoQueryServers()
 
    bool readMore = true;
    long rsplen = 262144;
-   FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);
+   FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", nullptr, rsplen);
    while(readMore)
    {
       readMore = false;
       if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
          long count = 0;
-         CFget32(rsp, TA_OCCURS, 0, (char *)&count, NULL, FLD_LONG);
+         CFget32(rsp, TA_OCCURS, 0, (char *)&count, nullptr, FLD_LONG);
          for(int i = 0; i < (int)count; i++)
          {
             TuxedoServerInstance *instance = new TuxedoServerInstance(rsp, (FLDOCC32)i);
             TuxedoServer *server = servers->get(instance->getUniqueBaseId());
-            if (server != NULL)
+            if (server != nullptr)
             {
                server->addInstance(instance);
             }
@@ -283,11 +283,11 @@ void TuxedoQueryServers()
                server = new TuxedoServer(instance);
                servers->set(server->m_uniqueId, server);
             }
-            serverInstances->set(static_cast<UINT32>((instance->m_groupId << 16) | instance->m_id), instance);
+            serverInstances->set(static_cast<uint32_t>((instance->m_groupId << 16) | instance->m_id), instance);
          }
 
          long more = 0;
-         CFget32(rsp, TA_MORE, 0, (char *)&more, NULL, FLD_LONG);
+         CFget32(rsp, TA_MORE, 0, (char *)&more, nullptr, FLD_LONG);
          if (more)
          {
          	CFchg32(fb, TA_OPERATION, 0, (char *)"GETNEXT", 0, FLD_STRING);
@@ -434,7 +434,7 @@ LONG H_ServerInstancesTable(const TCHAR *param, const TCHAR *arg, Table *value, 
    LONG rc = SYSINFO_RC_SUCCESS;
 
    s_lock.lock();
-   if (s_servers != NULL)
+   if (s_servers != nullptr)
    {
       value->addColumn(_T("GROUP_ID"), DCI_DT_INT, _T("Group ID"), true);
       value->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
@@ -516,7 +516,7 @@ LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
    LONG rc = SYSINFO_RC_SUCCESS;
 
    s_lock.lock();
-   if (s_servers != NULL)
+   if (s_servers != nullptr)
    {
       value->addColumn(_T("GROUP_ID"), DCI_DT_INT, _T("Group ID"), true);
       value->addColumn(_T("BASE_ID"), DCI_DT_INT, _T("Base ID"), true);
@@ -576,10 +576,10 @@ LONG H_ServerInstanceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
    LONG rc = SYSINFO_RC_SUCCESS;
 
    s_lock.lock();
-   if (s_servers != NULL)
+   if ((s_servers != nullptr) && (s_serverInstances != nullptr))
    {
-      const TuxedoServerInstance *s = s_serverInstances->get(static_cast<UINT32>((groupId << 16) | serverId));
-      if (s != NULL)
+      const TuxedoServerInstance *s = s_serverInstances->get(static_cast<uint32_t>((groupId << 16) | serverId));
+      if (s != nullptr)
       {
          switch(*arg)
          {
@@ -661,10 +661,10 @@ LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    LONG rc = SYSINFO_RC_SUCCESS;
 
    s_lock.lock();
-   if (s_servers != NULL)
+   if (s_servers != nullptr)
    {
-      const TuxedoServer *s = s_servers->get(static_cast<UINT32>((groupId << 16) | baseId));
-      if (s != NULL)
+      const TuxedoServer *s = s_servers->get(static_cast<uint32_t>((groupId << 16) | baseId));
+      if (s != nullptr)
       {
          switch(*arg)
          {
