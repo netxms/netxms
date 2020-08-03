@@ -1258,8 +1258,7 @@ extern "C" WCHAR __EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nCo
    WCHAR *pValue = nullptr;
    if (pResult != nullptr)
    {
-      if ((nRow < pResult->nRows) && (nRow >= 0) &&
-          (nColumn < pResult->nCols) && (nColumn >= 0))
+      if ((nRow < pResult->nRows) && (nRow >= 0) && (nColumn < pResult->nCols) && (nColumn >= 0))
       {
          wcslcpy(pBuffer, pResult->pData[nRow * pResult->nCols + nColumn], nBufLen);
          pValue = pBuffer;
