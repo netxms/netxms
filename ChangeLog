@@ -13,6 +13,7 @@
 * 3.4-CURRENT
 *
 
+- Added driver for SAF Tehnika Integra devices
 - Fixed issues:
 	NX-1916 (Device could be marked as supporting ENTITY MIB when it is in fact not supported)
 
