@@ -1,0 +1,309 @@
+SAF-ALARM-MIB DEFINITIONS ::= BEGIN
+
+  IMPORTS
+      MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+      Integer32, Unsigned32, TimeTicks
+          FROM SNMPv2-SMI                -- [RFC2578]
+      TEXTUAL-CONVENTION,
+      DisplayString, DateAndTime
+          FROM SNMPv2-TC                 -- [RFC2579]
+      SnmpAdminString
+          FROM SNMP-FRAMEWORK-MIB        -- [RFC3411]
+      IANAItuEventType, IANAItuProbableCause
+          FROM IANA-ITU-ALARM-TC-MIB     -- [RFC3877]
+      OBJECT-GROUP, NOTIFICATION-GROUP, MODULE-COMPLIANCE
+          FROM SNMPv2-CONF               -- [RFC2580]
+      tehnika
+          FROM SAF-ENTERPRISE;
+
+
+--saf             OBJECT IDENTIFIER ::=   { enterprises 7571 }
+--tehnika			OBJECT IDENTIFIER ::=   { saf 100 }
+
+safAlarmMIB MODULE-IDENTITY
+      LAST-UPDATED "201603030000Z"  -- 03 mar 2016
+      ORGANIZATION "SAF Tehnika"
+      CONTACT-INFO
+           "EMail: support@saftehnika.com
+           http://www.saftehnika.com/"
+      DESCRIPTION
+           "The MIB module describes a solution to
+           SAF Tehnika equipment alarms and to store the current list
+           of active alarms.
+           Copyright (C) SAF Tehnika, 2007,2008,2014."
+-- Revision history
+      REVISION    "201603030000Z"  -- 03 mar 2016
+      DESCRIPTION
+                "Typos fixed"
+      REVISION    "201407030000Z"  -- 03 jul 2014
+      DESCRIPTION
+                "Grammar typos fixed"
+      REVISION    "201407010000Z"  -- 01 jul 2014
+      DESCRIPTION
+                "Public Release 1.02.
+                 Some modules descriptions should be taken from IANA MIBs"
+      REVISION    "200809170000Z"  -- 17 sep 2008
+      DESCRIPTION
+                "Public Release 1.01.
+                 Second version of SAF Alarm MIB"
+      REVISION    "200705100000Z"  -- 10 may 2007
+      DESCRIPTION
+                "Public Release 1.0"
+      ::= { tehnika 118 }
+
+
+SafPerceivedSeverity ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+            "modified ITU perceived severity values"
+    REFERENCE
+           "ITU Recommendation M.3100, 'Generic Network Information
+            Model', 1995
+            ITU Recommendation X.733, 'Information Technology - Open
+            Systems Interconnection - System Management: Alarm
+            Reporting Function', 1992"
+    SYNTAX         INTEGER
+           {
+           cleared (1),
+           indeterminate (2),
+           critical (3),
+           major (4),
+           minor (5),
+           warning (6),
+           event (7)
+           }
+
+
+safAlarmObjects OBJECT IDENTIFIER ::=   { safAlarmMIB 1}
+safAlarmActive  OBJECT IDENTIFIER ::=   { safAlarmObjects 1}
+
+safAlarmActiveLastChanged OBJECT-TYPE
+   SYNTAX      TimeTicks
+   MAX-ACCESS  read-only
+   STATUS      current
+   DESCRIPTION 
+   "The value of sysUpTime at the time of the last
+    creation, deletion or modification of an entry in
+    the safAlarmTable(s).
+   "
+   ::= { safAlarmActive 1 }
+
+safAlarmActiveLastChangedDateAndTime OBJECT-TYPE
+   SYNTAX      DateAndTime
+   MAX-ACCESS  read-only
+   STATUS      current
+   DESCRIPTION "The value of Date and Time when the last
+         creation, deletion or modification of an entry in
+         the safAlarmTable(s)."
+   ::= { safAlarmActive 3 }
+
+
+safAlarmActiveTable OBJECT-TYPE
+   SYNTAX      SEQUENCE OF SafAlarmActiveEntry
+   MAX-ACCESS  not-accessible
+   STATUS      current
+   DESCRIPTION "Alarm table."
+   ::= { safAlarmActive 2 }
+
+
+safAlarmActiveEntry OBJECT-TYPE
+   SYNTAX      SafAlarmActiveEntry
+   MAX-ACCESS  not-accessible
+   STATUS      current
+   DESCRIPTION "Entries of alarm table."
+      INDEX       { safAlarmActiveIndex }
+   ::= { safAlarmActiveTable 1 }
+
+SafAlarmActiveEntry ::= SEQUENCE {
+   safAlarmActiveIndex              Unsigned32,
+   safAlarmActiveManagedObj         OBJECT IDENTIFIER,
+   safAlarmActiveDateAndTime        DateAndTime,
+   safAlarmActiveEventType          IANAItuEventType,
+   safAlarmActiveProbableCause      IANAItuProbableCause,
+   safAlarmActivePerceivedSeverity  SafPerceivedSeverity,
+   safAlarmActiveThresholdTriggered Integer32,
+   safAlarmActiveThresholdValue    Integer32,
+   safAlarmActiveThresholdTTriggered  DisplayString,
+   safAlarmActiveThresholdTValue   DisplayString,
+   safAlarmActiveAdditionalText     SnmpAdminString
+   }
+
+
+safAlarmActiveIndex OBJECT-TYPE
+   SYNTAX     Unsigned32 (1..4294967295)
+   MAX-ACCESS not-accessible   -- read only?
+   STATUS     current
+   DESCRIPTION
+       "An integer that acts as an alarm Id
+       to uniquely identify each alarm
+       within the alarm list. "
+   ::= { safAlarmActiveEntry 1 }
+
+
+   safAlarmActiveManagedObj OBJECT-TYPE
+   SYNTAX OBJECT IDENTIFIER
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION "Object, which raises an alarm. Indicates 
+         specific object, which raises an alarm. This should 
+		 refer to interfaces or Object class and instance."
+   ::= { safAlarmActiveEntry 2 }
+
+   safAlarmActiveDateAndTime OBJECT-TYPE
+   SYNTAX DateAndTime
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION "Alarm date and time."
+   ::= { safAlarmActiveEntry 3 }
+
+   safAlarmActiveEventType OBJECT-TYPE
+   SYNTAX IANAItuEventType
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION "Alarm type in accordance with IANA."
+   ::= { safAlarmActiveEntry 4 }
+
+   safAlarmActiveProbableCause OBJECT-TYPE
+   SYNTAX IANAItuProbableCause
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION "ITU probable cause values."
+   ::= { safAlarmActiveEntry 5 }
+
+   safAlarmActivePerceivedSeverity OBJECT-TYPE
+   SYNTAX SafPerceivedSeverity
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION "ITU perceived severity values."
+   ::= { safAlarmActiveEntry 6 }
+
+   safAlarmActiveThresholdTriggered OBJECT-TYPE
+   SYNTAX Integer32
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION "The identifier of the threshold attribute 
+         that caused the notification."
+   ::= { safAlarmActiveEntry 7 }
+
+   safAlarmActiveThresholdValue OBJECT-TYPE
+   SYNTAX Integer32
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION "The value of the gauge or counter which crossed 
+         the threshold. This may be different from the threshold 
+		 value if, for example, the gauge may only take on 
+		 descrete values."
+   ::= { safAlarmActiveEntry 8 }
+
+   safAlarmActiveThresholdTTriggered OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION " "
+   ::= { safAlarmActiveEntry 9 }
+
+   safAlarmActiveThresholdTValue OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION " "
+   ::= { safAlarmActiveEntry 10 }
+
+   safAlarmActiveAdditionalText OBJECT-TYPE
+   SYNTAX SnmpAdminString
+   MAX-ACCESS read-only
+   STATUS     current
+   DESCRIPTION "Alarm information interpreted in user friendly 
+         text. For example, 'Ethernet interface'."
+   ::= { safAlarmActiveEntry 11 }
+
+safAlarmNotifications OBJECT IDENTIFIER ::= { safAlarmMIB 0 }
+
+safAlarmActiveState NOTIFICATION-TYPE
+   OBJECTS { 
+--             safAlarmActiveIndex,
+             safAlarmActiveManagedObj,
+             safAlarmActiveDateAndTime,
+             safAlarmActiveEventType,
+             safAlarmActiveProbableCause,
+             safAlarmActivePerceivedSeverity,
+             safAlarmActiveThresholdTriggered,
+             safAlarmActiveThresholdValue,
+             safAlarmActiveAdditionalText
+           }
+   STATUS      current
+   DESCRIPTION "An instance of the alarm indicated."
+   ::= { safAlarmNotifications 2 }
+
+safAlarmActiveTState NOTIFICATION-TYPE
+   OBJECTS { 
+--             safAlarmActiveIndex,
+             safAlarmActiveManagedObj,
+             safAlarmActiveDateAndTime,       
+             safAlarmActiveEventType,
+             safAlarmActiveProbableCause,
+             safAlarmActivePerceivedSeverity,
+             safAlarmActiveThresholdTTriggered,
+             safAlarmActiveThresholdTValue,
+             safAlarmActiveAdditionalText
+           }
+   STATUS      current
+   DESCRIPTION "An instance of the alarm indicated."
+   ::= { safAlarmNotifications 3 }
+
+safAlarmClearState NOTIFICATION-TYPE
+   OBJECTS     {
+--                  safAlarmActiveIndex
+                    safAlarmActiveManagedObj
+               }
+   STATUS      deprecated
+   DESCRIPTION "An instance of the clear alarm."
+   ::= { safAlarmNotifications 4 }
+
+
+-- Conformance
+
+
+safAlarmConformance OBJECT IDENTIFIER ::= { safAlarmMIB 3 }
+safAlarmCompliances OBJECT IDENTIFIER ::= { safAlarmConformance 1 }
+
+safAlarmCompliance MODULE-COMPLIANCE
+    STATUS       current
+    DESCRIPTION "The compliance statement for SNMP engine which
+                 implements the SAF Tehnika alarms."
+    MODULE -- this module
+      MANDATORY-GROUPS { 
+                safAlarmActiveGroup,
+                safAlarmNotificationsGroup }
+    ::= { safAlarmCompliances 1 }
+safAlarmGroups OBJECT IDENTIFIER ::= { safAlarmConformance 2 }
+
+safAlarmActiveGroup OBJECT-GROUP
+   OBJECTS {
+          safAlarmActiveLastChanged,
+          safAlarmActiveLastChangedDateAndTime,
+--          safAlarmActiveIndex,
+          safAlarmActiveManagedObj,
+          safAlarmActiveDateAndTime,
+          safAlarmActiveEventType,
+          safAlarmActiveProbableCause,
+          safAlarmActivePerceivedSeverity,
+          safAlarmActiveThresholdTriggered,
+          safAlarmActiveThresholdValue,
+          safAlarmActiveThresholdTTriggered,
+          safAlarmActiveThresholdTValue,
+          safAlarmActiveAdditionalText
+   }
+   STATUS   current
+   DESCRIPTION "Active Alarm list group."
+   ::= { safAlarmGroups 1}
+   
+safAlarmNotificationsGroup NOTIFICATION-GROUP
+   NOTIFICATIONS { safAlarmActiveState, safAlarmActiveTState, safAlarmClearState }
+   STATUS        deprecated
+   DESCRIPTION "The collection of notifications that can be used to
+         alarms for faults."
+   ::= { safAlarmGroups 2 }
+
+
+END
