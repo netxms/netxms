@@ -136,7 +136,8 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
 
             if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
                 (pVar->getType() != ASN_NO_SUCH_INSTANCE) &&
-                (pVar->getType() != ASN_END_OF_MIBVIEW))
+                (pVar->getType() != ASN_END_OF_MIBVIEW) &&
+                (!(dwFlags & SG_GET_NEXT_REQUEST) || (pVar->getName().compare(pdwVarName, nameLength) == OID_LONGER)))
             {
                if (dwFlags & SG_RAW_RESULT)
                {
