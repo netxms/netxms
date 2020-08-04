@@ -9778,14 +9778,17 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
       if (i == dwNumTemplates)   // All objects passed test
       {
-         StringBuffer xml;
-			TCHAR *temp;
+         TCHAR osVersion[256];
+         GetOSVersionString(osVersion, 256);
 
-         xml = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>4</formatVersion>\n\t<description>");
-			temp = pRequest->getFieldAsString(VID_DESCRIPTION);
-			xml.appendPreallocated(EscapeStringForXML(temp, -1));
-			MemFree(temp);
-         xml += _T("</description>\n");
+         StringBuffer xml(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>4</formatVersion>\n\t<server>\n\t\t<version>")
+                  NETXMS_VERSION_STRING _T("</version>\n\t\t<buildTag>") NETXMS_BUILD_TAG _T("</buildTag>\n\t\t<operatingSystem>"));
+         xml.appendPreallocated(EscapeStringForXML(osVersion, -1));
+         xml.append(_T("</operatingSystem>\n\t</server>\n\t<description>"));
+			TCHAR *description = pRequest->getFieldAsString(VID_DESCRIPTION);
+			xml.appendPreallocated(EscapeStringForXML(description, -1));
+			MemFree(description);
+         xml.append(_T("</description>\n"));
 
          // Write events
          xml += _T("\t<events>\n");
