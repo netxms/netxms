@@ -40,7 +40,7 @@ sleep(1000);
 
 //Calculate average, max, min, sum
 val = GetAvgDCIValue(preCreatedNode, dciId, 0, period1Time);
-println "GetAvgDCIValue(should be 19): " + val;
+println "GetAvgDCIValue(should be 19): " . val;
 assert(val == 19);
 val = GetAvgDCIValue(preCreatedNode, dciId, startTime, period1Time);
 assert(val == 19);
