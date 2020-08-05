@@ -96,6 +96,9 @@ public class ObjectQuery extends ElementWidget
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
+            if(((SortableTableViewer)viewer).getTable().getSortColumn() == null)
+               return 0;
+            
             ObjectProperty p = (ObjectProperty)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ObjectProperty");
             String v1 = ((ObjectQueryResult)e1).getPropertyValue(p.name);
             String v2 = ((ObjectQueryResult)e2).getPropertyValue(p.name);
@@ -120,12 +123,13 @@ public class ObjectQuery extends ElementWidget
       
       for(ObjectProperty p : config.getProperties())
       {
-         TableColumn c = viewer.addColumn(p.displayName, 150);
+         TableColumn c = viewer.addColumn(p.displayName == null || p.displayName.isEmpty() ? p.name : p.displayName, 150);
          c.setData("ObjectProperty", p);
       }
 
       viewer.getTable().setSortDirection(SWT.UP);
-      viewer.getTable().setSortColumn(viewer.getTable().getColumn(0));
+      if(viewer.getTable().getColumnCount() > 0)
+         viewer.getTable().setSortColumn(viewer.getTable().getColumn(0));
       
       objectSelectionProvider = new ObjectSelectionProvider(viewer);
       createPopupMenu();
