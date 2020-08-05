@@ -36,11 +36,6 @@ UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request);
 void RegisterSessionForNotifications(CommSession *session);
 
 /**
- * SNMP proxy thread pool
- */
-ThreadPool *g_snmpProxyThreadPool = nullptr;
-
-/**
  * Communication request processing thread pool
  */
 ThreadPool *g_commThreadPool = nullptr;
@@ -394,8 +389,7 @@ void CommSession::readThread()
                case CMD_SNMP_REQUEST:
                   if (m_masterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
                   {
-                     incRefCount();
-                     ThreadPoolExecute(g_snmpProxyThreadPool, this, &CommSession::proxySnmpRequest, msg);
+                     proxySnmpRequest(msg);
                   }
                   else
                   {

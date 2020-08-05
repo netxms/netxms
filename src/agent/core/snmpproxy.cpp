@@ -28,6 +28,11 @@
 #define SNMP_BUFFER_SIZE		65536
 
 /**
+ * SNMP proxy socket poller
+ */
+BackgroundSocketPoller *g_snmpProxySocketPoller = nullptr;
+
+/**
  * SNMP proxy stats
  */
 static VolatileCounter64 s_serverRequests = 0;
@@ -63,20 +68,101 @@ LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 /**
  * Read PDU from network
  */
-static bool ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize, UINT32 timeout)
+static bool ReadPDU(SOCKET hSocket, BYTE *pdu, uint32_t *size)
 {
-	SocketPoller sp;
-	sp.add(hSocket);
-	if (sp.poll(timeout) <= 0)
-	   return false;
-
 	int bytes = recv(hSocket, (char *)pdu, SNMP_BUFFER_SIZE, 0);
 	if (bytes >= 0)
 	{
-		*pdwSize = bytes;
+		*size = bytes;
 		return true;
 	}
 	return false;
+}
+
+/**
+ * Proxy context
+ */
+struct ProxyContext
+{
+   InetAddress addr;
+   CommSession *session;
+   NXCPMessage *request;
+   const BYTE *pduIn;
+   size_t sizeIn;
+   int retries;
+   uint32_t timeout;
+   BYTE response[SNMP_BUFFER_SIZE];
+
+   ProxyContext(const InetAddress& _addr, CommSession *_session, NXCPMessage *_request, uint32_t _timeout) : addr(_addr)
+   {
+      session = _session;
+      session->incRefCount();
+      request = _request;
+      pduIn = request->getBinaryFieldPtr(VID_PDU, &sizeIn);
+      retries = 3;
+      timeout = _timeout;
+   }
+   ~ProxyContext()
+   {
+      session->decRefCount();
+      delete request;
+   }
+};
+
+/**
+ * Callback for background poller
+ */
+static void SocketPollerCallback(BackgroundSocketPollResult result, SOCKET hSocket, ProxyContext *context)
+{
+   if (result == BackgroundSocketPollResult::TIMEOUT)
+   {
+      context->retries--;
+      if (context->retries > 0)
+      {
+         if (send(hSocket, (char *)context->pduIn, (int)context->sizeIn, 0) == (int)context->sizeIn)
+         {
+            InterlockedIncrement64(&s_snmpRequests);
+            g_snmpProxySocketPoller->poll(hSocket, context->timeout, SocketPollerCallback, context);
+            return;
+         }
+      }
+   }
+
+   NXCPMessage response(CMD_REQUEST_COMPLETED, context->request->getId(), context->session->getProtocolVersion());
+   if (result == BackgroundSocketPollResult::SUCCESS)
+   {
+      uint32_t responseSize;
+      if (ReadPDU(hSocket, context->response, &responseSize))
+      {
+         InterlockedIncrement64(&s_snmpResponses);
+         response.setField(VID_PDU_SIZE, responseSize);
+         response.setField(VID_PDU, context->response, responseSize);
+         response.setField(VID_RCC, ERR_SUCCESS);
+         context->session->debugPrintf(7, _T("proxySnmpRequest(%d, %s): success (%d retries left)"),
+                  context->request->getId(), context->addr.toString().cstr(), context->retries);
+      }
+      else
+      {
+         TCHAR buffer[1024];
+         context->session->debugPrintf(7, _T("proxySnmpRequest(%d, %s): read failure (%d: %s)"),
+                  context->request->getId(), context->addr.toString().cstr(), WSAGetLastError(), GetLastSocketErrorText(buffer, 1024));
+         response.setField(VID_RCC, ERR_SOCKET_ERROR);
+      }
+   }
+   else if (result == BackgroundSocketPollResult::TIMEOUT)
+   {
+      response.setField(VID_RCC, ERR_REQUEST_TIMEOUT);
+      context->session->debugPrintf(7, _T("proxySnmpRequest(%d, %s): timeout"), context->request->getId(), context->addr.toString().cstr());
+   }
+   else
+   {
+      response.setField(VID_RCC, ERR_SOCKET_ERROR);
+      context->session->debugPrintf(7, _T("proxySnmpRequest(%d, %s): socket error"), context->request->getId(), context->addr.toString().cstr());
+   }
+
+   context->session->postMessage(&response);
+   delete context;
+   closesocket(hSocket);
 }
 
 /**
@@ -84,13 +170,14 @@ static bool ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize, UINT32 timeout)
  */
 void CommSession::proxySnmpRequest(NXCPMessage *request)
 {
-   UINT32 requestId = request->getId();
-   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId, m_protocolVersion);
+   uint32_t requestId = request->getId();
+   uint32_t rcc = ERR_SUCCESS;
 
    InterlockedIncrement64(&s_serverRequests);
+
    size_t sizeIn;
    const BYTE *pduIn = request->getBinaryFieldPtr(VID_PDU, &sizeIn);
-   if ((pduIn != NULL) && (sizeIn > 0))
+   if ((pduIn != nullptr) && (sizeIn > 0))
    {
       InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
       SOCKET hSocket = CreateSocket(addr.getFamily(), SOCK_DGRAM, 0);
@@ -100,54 +187,27 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
          addr.fillSockAddr(&sa, request->getFieldAsUInt16(VID_PORT));
          if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
          {
-            BYTE *pduOut = (BYTE *)MemAlloc(SNMP_BUFFER_SIZE);
-            if (pduOut != nullptr)
+            uint32_t serverTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
+            uint32_t timeout = (g_snmpTimeout != 0) ? g_snmpTimeout : ((serverTimeout != 0) ? serverTimeout : 1000);   // 1 second if not set
+            auto context = new ProxyContext(addr, this, request, timeout);
+            if (context != nullptr)
             {
-               uint32_t serverTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
-               uint32_t timeout = (g_snmpTimeout != 0) ? g_snmpTimeout : ((serverTimeout != 0) ? serverTimeout : 1000);   // 1 second if not set
-
-               uint32_t rcc = ERR_REQUEST_TIMEOUT;
-               int nRetries;
-               for(nRetries = 0; nRetries < 3; nRetries++)
+               if (send(hSocket, (char *)pduIn, (int)sizeIn, 0) == (int)sizeIn)
                {
-                  if (send(hSocket, (char *)pduIn, (int)sizeIn, 0) == (int)sizeIn)
-                  {
-                     InterlockedIncrement64(&s_snmpRequests);
-                     UINT32 dwSizeOut;
-                     if (ReadPDU(hSocket, pduOut, &dwSizeOut, timeout))
-                     {
-                        InterlockedIncrement64(&s_snmpResponses);
-                        response.setField(VID_PDU_SIZE, dwSizeOut);
-                        response.setField(VID_PDU, pduOut, dwSizeOut);
-                        rcc = ERR_SUCCESS;
-                        break;
-                     }
-                     else
-                     {
-                        int error = WSAGetLastError();
-                        TCHAR buffer[1024];
-                        debugPrintf(7, _T("proxySnmpRequest(%d): read failure or timeout (%d: %s)"), requestId, error, GetLastSocketErrorText(buffer, 1024));
-                        if (error == WSAECONNREFUSED)
-                        {
-                           rcc = ERR_SOCKET_ERROR;
-                           break; // No point retrying after ECONNREFUSED
-                        }
-                     }
-                  }
-                  else
-                  {
-                     int error = WSAGetLastError();
-                     TCHAR buffer[1024];
-                     debugPrintf(7, _T("proxySnmpRequest(%d): send() call failed (%d: %s)"), requestId, error, GetLastSocketErrorText(buffer, 1024));
-                  }
+                  InterlockedIncrement64(&s_snmpRequests);
+                  g_snmpProxySocketPoller->poll(hSocket, context->timeout, SocketPollerCallback, context);
+                  request = nullptr;   // Prevent destruction
+                  hSocket = INVALID_SOCKET;  // Prevent close
                }
-               MemFree(pduOut);
-               response.setField(VID_RCC, rcc);
-               debugPrintf(7, _T("proxySnmpRequest(%d, %s): %s (%d retries)"), requestId, addr.toString().cstr(), (nRetries == 3) ? _T("failure") : _T("success"), nRetries);
+               else
+               {
+                  rcc = ERR_SOCKET_ERROR;
+                  debugPrintf(7, _T("proxySnmpRequest(%d, %s): initial send failure"), requestId, addr.toString().cstr());
+               }
             }
             else
             {
-               response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
+               rcc = ERR_OUT_OF_RESOURCES;
                debugPrintf(7, _T("proxySnmpRequest(%d, %s): memory allocation failure"), requestId, addr.toString().cstr());
             }
          }
@@ -156,22 +216,29 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
             int error = WSAGetLastError();
             TCHAR buffer[1024];
             debugPrintf(7, _T("proxySnmpRequest(%d, %s): connect() call failed (%d: %s)"), requestId, addr.toString().cstr(), error, GetLastSocketErrorText(buffer, 1024));
-            response.setField(VID_RCC, ERR_SOCKET_ERROR);
+            rcc = ERR_SOCKET_ERROR;
          }
-         closesocket(hSocket);
+         if (hSocket != INVALID_SOCKET)
+            closesocket(hSocket);
       }
       else
       {
-         response.setField(VID_RCC, ERR_SOCKET_ERROR);
-         debugPrintf(7, _T("proxySnmpRequest(%d, %s): socket() call failed (%d)"), requestId,  (const TCHAR *)addr.toString(), WSAGetLastError());
+         rcc =  ERR_SOCKET_ERROR;
+         debugPrintf(7, _T("proxySnmpRequest(%d, %s): socket() call failed (%d)"), requestId, addr.toString().cstr(), WSAGetLastError());
       }
    }
    else
    {
-      response.setField(VID_RCC, ERR_MALFORMED_COMMAND);
+      rcc = ERR_MALFORMED_COMMAND;
       debugPrintf(7, _T("proxySnmpRequest(%d): input PDU is missing or empty"), requestId);
    }
-	sendMessage(&response);
+
+   if (rcc != ERR_SUCCESS)
+   {
+      NXCPMessage response(CMD_REQUEST_COMPLETED, requestId, m_protocolVersion);
+      response.setField(VID_RCC, rcc);
+      sendMessage(&response);
+   }
+
 	delete request;
-	decRefCount();
 }

@@ -236,7 +236,6 @@ static TCHAR *s_externalSubAgentsList = nullptr;
 static TCHAR *s_appAgentsList = nullptr;
 static TCHAR *s_serverConnectionList = nullptr;
 static uint32_t s_enabledCiphers = 0xFFFF;
-static uint32_t s_snmpProxyPoolSize = 128;
 static THREAD s_sessionWatchdogThread = INVALID_THREAD_HANDLE;
 static THREAD s_listenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_snmpTrapReceiverThread = INVALID_THREAD_HANDLE;
@@ -327,7 +326,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, nullptr },
    { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, nullptr },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
-   { _T("SNMPProxyThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &s_snmpProxyPoolSize, nullptr },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_snmpTimeout, nullptr },
 	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, &g_szSNMPTrapListenAddress, nullptr },
    { _T("SNMPTrapPort"), CT_WORD, 0, 0, 0, 0, &g_snmpTrapPort, nullptr },
@@ -1037,9 +1035,7 @@ BOOL Initialize()
 	   g_commThreadPool = ThreadPoolCreate(_T("COMM"), 4, MAX(MIN(g_maxCommSessions * 2, 8), 256));
 	   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
 	   {
-	      if (s_snmpProxyPoolSize < 8)
-	         s_snmpProxyPoolSize = 8;
-	      g_snmpProxyThreadPool = ThreadPoolCreate(_T("SNMPPROXY"), 1, s_snmpProxyPoolSize);
+	      g_snmpProxySocketPoller = new BackgroundSocketPoller();
 	   }
 
 		// Initialize built-in parameters
@@ -1425,7 +1421,7 @@ void Shutdown()
    {
       if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
       {
-         ThreadPoolDestroy(g_snmpProxyThreadPool);
+         delete g_snmpProxySocketPoller;
       }
       ThreadPoolDestroy(g_commThreadPool);
    }

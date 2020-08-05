@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -167,4 +167,158 @@ void SocketPoller::reset()
    m_maxfd = 0;
 #endif
 #endif
+}
+
+/**
+ * Create background socket poller
+ */
+BackgroundSocketPoller::BackgroundSocketPoller()
+{
+   m_mutex = MutexCreateFast();
+   m_head = m_memoryPool.allocate();
+   m_head->next = nullptr;
+
+#ifdef _WIN32
+#else
+   if (pipe(m_controlSockets) != 0)
+   {
+      m_controlSockets[0] = INVALID_SOCKET;
+      m_controlSockets[1] = INVALID_SOCKET;
+   }
+#endif
+
+   m_workerThread = ThreadCreateEx(this, &BackgroundSocketPoller::workerThread);
+}
+
+/**
+ * Destroy background poller
+ */
+BackgroundSocketPoller::~BackgroundSocketPoller()
+{
+   notifyWorkerThread('S');
+   ThreadJoin(m_workerThread);
+   closesocket(m_controlSockets[1]);
+   closesocket(m_controlSockets[0]);
+   MutexDestroy(m_mutex);
+}
+
+/**
+ * Add socket for background polling
+ */
+void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callback)(BackgroundSocketPollResult, SOCKET, void*), void *context)
+{
+   BackgroundSocketPollRequest *request = m_memoryPool.allocate();
+   request->socket = socket;
+   request->timeout = timeout;
+   request->callback = callback;
+   request->context = context;
+   request->queueTime = GetCurrentTimeMs();
+
+   MutexLock(m_mutex);
+   request->next = m_head->next;
+   m_head->next = request;
+   MutexUnlock(m_mutex);
+
+   notifyWorkerThread();
+}
+
+/**
+ * Notify worker thread
+ */
+void BackgroundSocketPoller::notifyWorkerThread(char command)
+{
+   if (m_controlSockets[1] != INVALID_SOCKET)
+   {
+#ifdef _WIN32
+      send(m_controlSockets[1], &command, 1, 0);
+#else
+      write(m_controlSockets[1], &command, 1);
+#endif
+   }
+}
+
+/**
+ * Background poller's worker thread
+ */
+void BackgroundSocketPoller::workerThread()
+{
+   SocketPoller sp;
+   while(true)
+   {
+      sp.reset();
+      sp.add(m_controlSockets[0]);
+
+      uint32_t timeout = 30000;
+      int64_t now = GetCurrentTimeMs();
+      BackgroundSocketPollRequest *processedRequests = nullptr;
+
+      MutexLock(m_mutex);
+      for(auto r = m_head->next, p = m_head; r != nullptr; p = r, r = r->next)
+      {
+         uint32_t waitTime = static_cast<uint32_t>(now - r->queueTime);
+         if (waitTime < r->timeout)
+         {
+            uint32_t t = r->timeout - waitTime;
+            if (t < timeout)
+               timeout = t;
+            sp.add(r->socket);
+         }
+         else
+         {
+            p->next = r->next;
+            r->next = processedRequests;
+            processedRequests = r;
+            r = p;
+         }
+      }
+      MutexUnlock(m_mutex);
+
+      for(auto r = processedRequests; r != nullptr;)
+      {
+         auto n = r->next;
+         r->callback(BackgroundSocketPollResult::TIMEOUT, r->socket, r->context);
+         m_memoryPool.free(r);
+         r = n;
+      }
+
+      if (sp.poll(timeout) > 0)
+      {
+         if (sp.isSet(m_controlSockets[0]))
+         {
+            char command = 0;
+#ifdef _WIN32
+            recv(m_controlSockets[0], &command, 1, 0);
+#else
+            read(m_controlSockets[0], &command, 1);
+#endif
+            if (command == 'S')
+               break;
+         }
+
+         processedRequests = nullptr;
+         MutexLock(m_mutex);
+         for(auto r = m_head->next, p = m_head; r != nullptr; p = r, r = r->next)
+         {
+            if (sp.isSet(r->socket))
+            {
+               p->next = r->next;
+               r->next = processedRequests;
+               processedRequests = r;
+               r = p;
+            }
+         }
+         MutexUnlock(m_mutex);
+
+         for(auto r = processedRequests; r != nullptr;)
+         {
+            auto n = r->next;
+            r->callback(BackgroundSocketPollResult::SUCCESS, r->socket, r->context);
+            m_memoryPool.free(r);
+            r = n;
+         }
+      }
+   }
+
+   for(auto r = m_head->next; r != nullptr; r = r->next)
+      r->callback(BackgroundSocketPollResult::SHUTDOWN, r->socket, r->context);
 }

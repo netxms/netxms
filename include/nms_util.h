@@ -3308,6 +3308,60 @@ public:
 };
 
 /**
+ * Result of background socket poll
+ */
+enum class BackgroundSocketPollResult
+{
+   SUCCESS = 0,
+   TIMEOUT = 1,
+   ERROR = 2,
+   SHUTDOWN = 3
+};
+
+/**
+ * Backgroud socket poll request
+ */
+struct BackgroundSocketPollRequest
+{
+   BackgroundSocketPollRequest *next;
+   SOCKET socket;
+   void (*callback)(BackgroundSocketPollResult, SOCKET, void*);
+   void *context;
+   int64_t queueTime;
+   int32_t timeout;
+};
+
+/**
+ * Background socket poller
+ */
+class LIBNETXMS_EXPORTABLE BackgroundSocketPoller
+{
+   DISABLE_COPY_CTOR(BackgroundSocketPoller)
+
+private:
+   SynchronizedObjectMemoryPool<BackgroundSocketPollRequest> m_memoryPool;
+   THREAD m_workerThread;
+   SOCKET m_controlSockets[2];
+   MUTEX m_mutex;
+   BackgroundSocketPollRequest *m_head;
+
+   void workerThread();
+   void notifyWorkerThread(char command = 'W');
+
+public:
+   BackgroundSocketPoller();
+   ~BackgroundSocketPoller();
+
+   void poll(SOCKET socket, uint32_t timeout, void (*callback)(BackgroundSocketPollResult, SOCKET, void*), void *context);
+   template<typename C> void poll(SOCKET socket, uint32_t timeout, void (*callback)(BackgroundSocketPollResult, SOCKET, C*), C *context)
+   {
+      poll(socket, timeout, reinterpret_cast<void (*)(BackgroundSocketPollResult, SOCKET, void*)>(callback), context);
+   }
+
+   bool isValid() const { return (m_controlSockets[0] != INVALID_SOCKET) && (m_workerThread != INVALID_THREAD_HANDLE); }
+};
+
+/**
  * Abstract communication channel
  */
 class LIBNETXMS_EXPORTABLE AbstractCommChannel : public RefCountObject
