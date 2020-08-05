@@ -1290,6 +1290,57 @@ template<typename R1, typename R2> THREAD ThreadCreateEx(void (*function)(R1, R2
 }
 
 /**
+ * Wrapper data for ThreadCreate/ThreadCreateEx on object method using pointer to object (no arguments)
+ */
+template <typename T> class ThreadCreate_ObjectPtr_WrapperData_0
+{
+public:
+   T *m_object;
+   void (T::*m_func)();
+
+   ThreadCreate_ObjectPtr_WrapperData_0(T *object, void (T::*func)())
+   {
+      m_object = object;
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadCreate/ThreadCreateEx on object method using pointer to object (no arguments)
+ */
+template <typename T> THREAD_RESULT THREAD_CALL ThreadCreate_ObjectPtr_Wrapper_0(void *arg)
+{
+   auto wd = static_cast<ThreadCreate_ObjectPtr_WrapperData_0<T>*>(arg);
+   ((*wd->m_object).*(wd->m_func))();
+   delete wd;
+   return THREAD_OK;
+}
+
+/**
+ * Template wrapper for ThreadCreate on object method using pointer to object (no arguments)
+ */
+template<typename T, typename B> bool ThreadCreate(T *object, void (B::*method)(), int stackSize = 0)
+{
+   auto wd = new ThreadCreate_ObjectPtr_WrapperData_0<B>(object, method);
+   bool success = ThreadCreate(ThreadCreate_ObjectPtr_Wrapper_0<B>, stackSize, wd);
+   if (!success)
+      delete wd;
+   return success;
+}
+
+/**
+ * Template wrapper for ThreadCreateEx on object method using pointer to object (no arguments)
+ */
+template<typename T, typename B> THREAD ThreadCreateEx(T *object, void (B::*method)(), int stackSize = 0)
+{
+   auto wd = new ThreadCreate_ObjectPtr_WrapperData_0<B>(object, method);
+   THREAD thread = ThreadCreateEx(ThreadCreate_ObjectPtr_Wrapper_0<B>, stackSize, wd);
+   if (thread == INVALID_THREAD_HANDLE)
+      delete wd;
+   return thread;
+}
+
+/**
  * Wrapper data for ThreadCreate/ThreadCreateEx on object method using smart pointer to object (no arguments)
  */
 template <typename T> class ThreadCreate_SharedPtr_WrapperData_0
