@@ -112,25 +112,37 @@ public class ObjectTest extends AbstractSessionTest
 		AbstractObject object = session.findObjectById(2);
 		assertNotNull(object);
 		
-		NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, "TestNode", 2);
-		cd.setCreationFlags(NXCObjectCreationData.CF_CREATE_UNMANAGED);
-		cd.setIpAddress(new InetAddressEx(InetAddress.getByName("192.168.10.1"), 0));
-		long id = session.createObject(cd);
-		assertFalse(id == 0);
-
-		Thread.sleep(1000);	// Object update should be received from server
-
-		object = session.findObjectById(id);
-		assertNotNull(object);
-		assertEquals("TestNode", object.getObjectName());
-		
-		session.deleteObject(id);
-
-		Thread.sleep(1000);	// Object update should be received from server
-		object = session.findObjectById(id);
-		assertNull(object);
-		
-		session.disconnect();
+		long id = 0;
+		try
+		{
+   		NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, "TestNode", 2);
+   		cd.setCreationFlags(NXCObjectCreationData.CF_CREATE_UNMANAGED);
+   		cd.setIpAddress(new InetAddressEx(InetAddress.getByName("192.168.10.1"), 0));
+   		id = session.createObject(cd);
+   		assertFalse(id == 0);
+   
+   		Thread.sleep(1000);	// Object update should be received from server
+   
+   		object = session.findObjectById(id);
+   		assertNotNull(object);
+   		assertEquals("TestNode", object.getObjectName());
+   		
+   		session.deleteObject(id);
+   
+   		Thread.sleep(1000);	// Object update should be received from server
+   		object = session.findObjectById(id);
+   		assertNull(object);
+		}
+		finally
+		{
+		   if (id != 0)
+		   {
+	         object = session.findObjectById(id);
+		      if (object != null)
+	            session.deleteObject(id);  		      
+		   }			   
+	      session.disconnect();   
+      }
 	}
 
 	public void testObjectFind() throws Exception
