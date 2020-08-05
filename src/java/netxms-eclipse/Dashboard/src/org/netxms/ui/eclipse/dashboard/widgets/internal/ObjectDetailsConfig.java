@@ -81,7 +81,7 @@ public class ObjectDetailsConfig extends DashboardElementConfig
     */
    public List<ObjectProperty> getProperties()
    {
-      return properties;
+      return properties == null ? new ArrayList<ObjectProperty>() : properties;
    }
 
    /**
@@ -97,7 +97,7 @@ public class ObjectDetailsConfig extends DashboardElementConfig
     */
    public List<String> getOrderingProperties()
    {
-      return orderingProperties;
+      return orderingProperties == null ? new ArrayList<String>() : orderingProperties;
    }
    
    /**
@@ -197,7 +197,7 @@ public class ObjectDetailsConfig extends DashboardElementConfig
       @Element
       public String name;
       
-      @Element
+      @Element(required = false)
       public String displayName;
       
       @Attribute(required=false)

@@ -46,7 +46,7 @@ public class ObjectDetailsLabelProvider extends LabelProvider implements ITableL
       {
          return r.getPropertyValue(properties.get(columnIndex).name);
       }
-      catch(ArrayIndexOutOfBoundsException e)
+      catch(IndexOutOfBoundsException e)
       {
          return null;
       }
