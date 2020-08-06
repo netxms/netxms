@@ -3489,11 +3489,6 @@ struct NX_CFG_TEMPLATE
    void *overrideIndicator;
 };
 
-/**
- * getopt() prototype if needed
- */
-#include <netxms_getopt.h>
-
 //
 // Structures for opendir() / readdir() / closedir()
 //

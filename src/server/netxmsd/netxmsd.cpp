@@ -22,10 +22,7 @@
 **/
 
 #include "netxmsd.h"
-
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
+#include <netxms_getopt.h>
 
 #ifdef _WIN32
 #include <dbghelp.h>

@@ -21,6 +21,7 @@
 **/
 
 #include "libnxsrv.h"
+#include <netxms_getopt.h>
 
 /**
  * Debug writer
@@ -65,8 +66,8 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    RSA *serverKey = nullptr;
 
 #if defined(UNICODE) && !defined(_WIN32)
-   WCHAR **wargv = MemAllocArray<WCHAR*>(argc);
-   for (i = 0; i < argc; i++)
+   WCHAR **wargv = MemAllocArray<WCHAR*>(tool->argc);
+   for (i = 0; i < tool->argc; i++)
       wargv[i] = WideStringFromMBStringSysLocale(tool->argv[i]);
 #define _targv wargv
 #else
@@ -74,11 +75,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
 #endif
 
    // Parse command line
-#if defined(UNICODE) || defined(_WIN32)
-   opterrW = 1;
-#else
-   opterr = 1;
-#endif
+   _topterr = 1;
    char options[128] = "D:e:hK:O:p:s:S:vw:W:X:";
    strlcat(options, tool->additionalOptions, 128);
 
@@ -280,6 +277,12 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          }
       }
    }
+
+#if defined(UNICODE) && !defined(_WIN32)
+   for(i = 0; i < tool->argc; i++)
+      MemFree(wargv[i]);
+   MemFree(wargv);
+#endif
 
    return iExitCode;
 }

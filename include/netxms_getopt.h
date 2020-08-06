@@ -73,6 +73,8 @@
 #ifndef _NETXMS_GETOPT_H
 #define _NETXMS_GETOPT_H
 
+#include <nms_util.h>
+
 #undef HAVE_GETOPT_LONG
 #define HAVE_GETOPT_LONG 1
 
@@ -81,7 +83,11 @@
 
 #if USE_BUNDLED_GETOPT
 #undef REPLACE_GETOPT
-#define REPLACE_GETOPT
+#define REPLACE_GETOPT 1
+#endif
+
+#if !REPLACE_GETOPT && HAVE_GETOPT_H
+#include <getopt.h>
 #endif
 
 #ifdef	__cplusplus

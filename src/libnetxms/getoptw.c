@@ -102,15 +102,15 @@ static const char illoptchar[] = "illegal option -- %c"; /* From P1003.2 */
 static int dash_prefix = NO_PREFIX;
 static const char gnuoptchar[] = "invalid option -- %c";
 
-static const char recargstring[] = "option `%s%s' requires an argument";
-static const char ambig[] = "option `%s%.*s' is ambiguous";
-static const char noarg[] = "option `%s%.*s' doesn't allow an argument";
-static const char illoptstring[] = "unrecognized option `%s%s'";
+static const char recargstring[] = "option `%s%ls' requires an argument";
+static const char ambig[] = "option `%s%.*ls' is ambiguous";
+static const char noarg[] = "option `%s%.*ls' doesn't allow an argument";
+static const char illoptstring[] = "unrecognized option `%s%ls'";
 #else
-static const char recargstring[] = "option requires an argument -- %s";
-static const char ambig[] = "ambiguous option -- %.*s";
-static const char noarg[] = "option doesn't take an argument -- %.*s";
-static const char illoptstring[] = "unknown option -- %s";
+static const char recargstring[] = "option requires an argument -- %ls";
+static const char ambig[] = "ambiguous option -- %.*ls";
+static const char noarg[] = "option doesn't take an argument -- %.*ls";
+static const char illoptstring[] = "unknown option -- %ls";
 #endif
 
 /**
@@ -565,7 +565,6 @@ start:
         return (optchar);
 }
 
-#ifdef REPLACE_GETOPT
 /*
  * getopt --
  *      Parse argc/argv argument vector.
@@ -577,7 +576,6 @@ getoptW(int nargc, WCHAR * const *nargv, const char *options)
 {
    return getopt_internalW(nargc, nargv, options, NULL, NULL, FLAG_PERMUTE);
 }
-#endif /* REPLACE_GETOPT */
 
 /*
  * getopt_long --
