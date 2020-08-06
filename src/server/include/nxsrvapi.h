@@ -1074,13 +1074,17 @@ public:
  */
 struct ServerCommandLineTool
 {
+#ifdef _WIN32
+   TCHAR **argv;
+#else
    char **argv;
+#endif
    int argc;
    const TCHAR *mainHelpText;
    const char *additionalOptions;
-   bool (*parseAdditionalOptionCb)(const char ch, const char *optarg);
-   bool (*isArgMissingCb)(int currentCount);
-   int (*executeCommandCb)(AgentConnection *conn, int argc, char *argv[], RSA *serverKey);
+   bool(*parseAdditionalOptionCb)(const char, const TCHAR*);
+   bool (*isArgMissingCb)(int);
+   int(*executeCommandCb)(AgentConnection*, int, TCHAR**, int, RSA*);
 };
 
 /**

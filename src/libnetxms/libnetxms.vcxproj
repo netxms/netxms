@@ -204,6 +204,7 @@
     <ClCompile Include="dload.cpp" />
     <ClCompile Include="geolocation.cpp" />
     <ClCompile Include="getopt.c" />
+    <ClCompile Include="getoptw.c" />
     <ClCompile Include="hash.cpp" />
     <ClCompile Include="hashmapbase.cpp" />
     <ClCompile Include="hashsetbase.cpp" />

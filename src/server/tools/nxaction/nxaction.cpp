@@ -49,7 +49,7 @@ static void OutputCallback(ActionCallbackEvent e, const TCHAR *data, void *arg)
 /**
  * Parse nxaction additional options
  */
-static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
+static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 {
    switch(ch)
    {
@@ -73,27 +73,15 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *pServerKey)
 {
    UINT32 dwError;
    int i, k;
-#ifdef UNICODE
-   WCHAR action[256];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, action, 256);
-   action[255] = 0;
-
-   StringList list;
-   int count = std::min(argc - optind - 2, 256);
-   for(i = 0, k = optind + 2; i < count; i++, k++)
-      list.addPreallocated(WideStringFromMBStringSysLocale(argv[k]));
-   dwError = conn->execAction(action, list, s_showOutput, OutputCallback);
-#else
    StringList list;
    int count = std::min(argc - optind - 2, 256);
    for(i = 0, k = optind + 2; i < count; i++, k++)
       list.add(argv[k]);
    dwError = conn->execAction(argv[optind + 1], list, s_showOutput, OutputCallback);
-#endif
    if (dwError == ERR_SUCCESS)
       _tprintf(_T("Action executed successfully\n"));
    else
@@ -105,14 +93,18 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
 /**
  * Startup
  */
+#ifdef _WIN32
+int _tmain(int argc, TCHAR *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
    tool.mainHelpText = _T("Usage: nxaction [<options>] <host> <action> [<action args>]\n")
-                           _T("Tool specific options are:\n")
-                           _T("   -o           : Show action's output.\n");
+                       _T("Tool specific options are:\n")
+                       _T("   -o           : Show action's output.\n");
    tool.additionalOptions = "o";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;

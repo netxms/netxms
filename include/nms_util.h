@@ -3492,9 +3492,7 @@ struct NX_CFG_TEMPLATE
 /**
  * getopt() prototype if needed
  */
-#if USE_BUNDLED_GETOPT
 #include <netxms_getopt.h>
-#endif
 
 //
 // Structures for opendir() / readdir() / closedir()

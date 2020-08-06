@@ -103,11 +103,11 @@ static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const Strin
 /**
  * Parse nxwsget specific parameters
  */
-static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
+static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 {
    int i;
    bool start = true;
-   char *eptr;
+   TCHAR *eptr;
    TCHAR header[1024];
    TCHAR *s;
 
@@ -123,10 +123,10 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          s_parseAsPlainText = true;
          break;
       case 'i':   // Interval
-         i = strtol(optarg, &eptr, 0);
+         i = _tcstol(optarg, &eptr, 0);
          if ((*eptr != 0) || (i <= 0))
          {
-            _tprintf(_T("Invalid interval \"%hs\"\n"), optarg);
+            _tprintf(_T("Invalid interval \"%s\"\n"), optarg);
             start = false;
          }
          else
@@ -135,18 +135,9 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          }
          break;
       case 'H':   // Header
-#ifdef UNICODE
-#if HAVE_MBSTOWCS
-         mbstowcs(header, optarg, 1024);
-#else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, header, 1024);
-#endif
-         header[1023] = 0;
-#else
-         strlcpy(header, optarg, 1024);
-#endif
+         _tcslcpy(header, optarg, 1024);
          s = _tcschr(header, _T(':'));
-         if (s != NULL)
+         if (s != nullptr)
          {
             *s++ = 0;
             while(_istspace(*s))
@@ -162,55 +153,37 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          s_requestType = WebServiceRequestType::LIST;
          break;
       case 'L':   // Login
-#ifdef UNICODE
-#if HAVE_MBSTOWCS
-         mbstowcs(s_login, optarg, MAX_CRED_LEN);
-#else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, s_login, MAX_CRED_LEN);
-#endif
-         s_login[MAX_CRED_LEN - 1] = 0;
-#else
-         strlcpy(s_login, optarg, MAX_CRED_LEN);
-#endif
+         _tcslcpy(s_login, optarg, MAX_CRED_LEN);
          break;
       case 'P':   // Password
-#ifdef UNICODE
-#if HAVE_MBSTOWCS
-         mbstowcs(s_password, optarg, MAX_CRED_LEN);
-#else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, s_password, MAX_CRED_LEN);
-#endif
-         s_password[MAX_CRED_LEN - 1] = 0;
-#else
-         strlcpy(s_password, optarg, MAX_CRED_LEN);
-#endif
+         _tcslcpy(s_password, optarg, MAX_CRED_LEN);
          break;
       case 'r':   // Retention time
-         s_retentionTime = strtol(optarg, &eptr, 0);
+         s_retentionTime = _tcstol(optarg, &eptr, 0);
          if ((*eptr != 0) || (s_retentionTime < 1))
          {
-            printf("Invalid retention time \"%s\"\n", optarg);
+            _tprintf(_T("Invalid retention time \"%s\"\n"), optarg);
             start = false;
          }
          break;
       case 't':
-         if (!strcmp(optarg, "any"))
+         if (!_tcscmp(optarg, _T("any")))
             s_authType = WebServiceAuthType::ANY;
-         else if (!strcmp(optarg, "anysafe"))
+         else if (!_tcscmp(optarg, _T("anysafe")))
             s_authType = WebServiceAuthType::ANYSAFE;
-         else if (!strcmp(optarg, "basic"))
+         else if (!_tcscmp(optarg, _T("basic")))
             s_authType = WebServiceAuthType::BASIC;
-         else if (!strcmp(optarg, "bearer"))
+         else if (!_tcscmp(optarg, _T("bearer")))
             s_authType = WebServiceAuthType::BEARER;
-         else if (!strcmp(optarg, "digest"))
+         else if (!_tcscmp(optarg, _T("digest")))
             s_authType = WebServiceAuthType::DIGEST;
-         else if (!strcmp(optarg, "none"))
+         else if (!_tcscmp(optarg, _T("none")))
             s_authType = WebServiceAuthType::NONE;
-         else if (!strcmp(optarg, "ntlm"))
+         else if (!_tcscmp(optarg, _T("ntlm")))
             s_authType = WebServiceAuthType::NTLM;
          else
          {
-            _tprintf(_T("Invalid authentication method \"%hs\"\n"), optarg);
+            _tprintf(_T("Invalid authentication method \"%s\"\n"), optarg);
             start = false;
          }
          break;
@@ -231,7 +204,7 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *serverKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *serverKey)
 {
    int exitCode = 3, pos;
 
@@ -240,19 +213,9 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
       TCHAR *url;
       StringList parameters;
       pos = optind + 1;
-#ifdef UNICODE
-      url = WideStringFromMBStringSysLocale(argv[pos++]);
-#else
-      url = MemCopyStringA(argv[pos++]);
-#endif
+      url = MemCopyString(argv[pos++]);
       while (pos < argc)
-      {
-#ifdef UNICODE
-         parameters.addPreallocated(WideStringFromMBStringSysLocale(argv[pos++]));
-#else
          parameters.add(argv[pos++]);
-#endif
-      }
       exitCode = QueryWebService(conn, url, parameters);
       ThreadSleep(s_interval);
       MemFree(url);
@@ -264,7 +227,11 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
 /**
  * Startup
  */
+#ifdef _WIN32
+int _tmain(int argc, TCHAR *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
    ServerCommandLineTool tool;
    tool.argc = argc;

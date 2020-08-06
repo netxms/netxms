@@ -34,14 +34,15 @@ NETXMS_EXECUTABLE_HEADER(nxupload)
 /**
  * Static fields
  */
-static bool s_verbose = true, s_upgrade = false;
+static bool s_verbose = true;
+static bool s_upgrade = false;
 static TCHAR s_destinationFile[MAX_PATH] = {0};
 static NXCPStreamCompressionMethod s_compression = NXCP_STREAM_COMPRESSION_NONE;
 
 /**
  * Do agent upgrade
  */
-static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose, RSA *serverKey)
+static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *serverKey)
 {
    UINT32 dwError;
    int i;
@@ -52,7 +53,7 @@ static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose,
    {
       conn->disconnect();
 
-      if (bVerbose)
+      if (s_verbose)
       {
          _tprintf(_T("Agent upgrade started, waiting for completion...\n")
                   _T("[............................................................]\r["));
@@ -64,7 +65,7 @@ static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose,
             fflush(stdout);
             if ((i % 20 == 0) && (i > 30))
             {
-               if (conn->connect(serverKey, FALSE))
+               if (conn->connect(serverKey))
                {
                   bConnected = TRUE;
                   break;   // Connected successfully
@@ -79,7 +80,7 @@ static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose,
          for(i = 20; i < 120; i += 20)
          {
             ThreadSleep(20);
-            if (conn->connect(serverKey, FALSE))
+            if (conn->connect(serverKey))
             {
                bConnected = TRUE;
                break;   // Connected successfully
@@ -89,9 +90,9 @@ static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose,
 
       // Last attempt to reconnect
       if (!bConnected)
-         bConnected = conn->connect(serverKey, FALSE);
+         bConnected = conn->connect(serverKey);
 
-      if (bConnected && bVerbose)
+      if (bConnected && s_verbose)
       {
          _tprintf(_T("Successfully established connection to agent after upgrade\n"));
       }
@@ -102,7 +103,7 @@ static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose,
    }
    else
    {
-      if (bVerbose)
+      if (s_verbose)
          _ftprintf(stderr, _T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
 
@@ -124,23 +125,18 @@ static void ProgressCallback(INT64 bytesTransferred, void *cbArg)
 /**
  * Process nxuload specifuc parameters
  */
-static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
+static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 {
    switch(ch)
    {
       case 'd':
-#ifdef UNICODE
-        MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, s_destinationFile, MAX_PATH);
-        s_destinationFile[MAX_PATH - 1] = 0;
-#else
-        strlcpy(s_destinationFile, optarg, MAX_PATH);
-#endif
+        _tcslcpy(s_destinationFile, optarg, MAX_PATH);
         break;
       case 'q':   // Quiet mode
-         s_verbose = FALSE;
+         s_verbose = false;
          break;
       case 'u':   // Upgrade agent
-         s_upgrade = TRUE;
+         s_upgrade = true;
          break;
       case 'z':
          s_compression = NXCP_STREAM_COMPRESSION_LZ4;
@@ -165,23 +161,16 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *pServerKey)
 {
-   UINT32 dwError;
+   uint32_t dwError;
    int exitCode;
-   INT64 nElapsedTime;
+   int64_t nElapsedTime;
 
-#ifdef UNICODE
-   WCHAR fname[MAX_PATH];
-   MultiByteToWideCharSysLocale(argv[optind + 1], fname, MAX_PATH);
-   fname[MAX_PATH - 1] = 0;
-#else
-#define fname argv[optind + 1]
-#endif
    nElapsedTime = GetCurrentTimeMs();
    if (s_verbose)
       _tprintf(_T("Upload:                 "));
-   dwError = conn->uploadFile(fname, s_destinationFile[0] != 0 ? s_destinationFile : NULL, false, s_verbose ? ProgressCallback : NULL, NULL, s_compression);
+   dwError = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : NULL, false, s_verbose ? ProgressCallback : NULL, NULL, s_compression);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
    nElapsedTime = GetCurrentTimeMs() - nElapsedTime;
@@ -191,7 +180,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
       {
          QWORD qwBytes;
 
-         qwBytes = FileSize(fname);
+         qwBytes = FileSize(argv[optind + 1]);
          _tprintf(_T("File transferred successfully\n") UINT64_FMT _T(" bytes in %d.%03d seconds (%.2f KB/sec)\n"),
                   qwBytes, (LONG)(nElapsedTime / 1000),
                   (LONG)(nElapsedTime % 1000),
@@ -205,7 +194,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
 
    if (s_upgrade && (dwError == RCC_SUCCESS))
    {
-      exitCode = UpgradeAgent(conn, fname, s_verbose, pServerKey);
+      exitCode = UpgradeAgent(conn, argv[optind + 1], pServerKey);
    }
    else
    {
@@ -217,7 +206,11 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
 /**
  * Startup
  */
+#ifdef _WIN32
+int _tmain(int argc, TCHAR *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
    ServerCommandLineTool tool;
    tool.argc = argc;

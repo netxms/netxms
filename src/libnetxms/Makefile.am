@@ -3,7 +3,7 @@ lib_LTLIBRARIES = libnetxms.la
 libnetxms_la_SOURCES = \
 	array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
 	cc_ucs4.cpp cc_utf8.cpp cch.cpp config.cpp crypto.cpp debug_tag_tree.cpp diff.cpp \
-	dirw_unix.c geolocation.cpp getopt.c dload.cpp hash.cpp \
+	dirw_unix.c geolocation.cpp getopt.c getoptw.c dload.cpp hash.cpp \
 	hashmapbase.cpp hashsetbase.cpp ice.c icmp.cpp icmp6.cpp iconv.cpp inet_pton.c \
 	inetaddr.cpp log.cpp lz4.c main.cpp macaddr.cpp md5.cpp mempool.cpp message.cpp \
 	msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp npipe_unix.cpp \

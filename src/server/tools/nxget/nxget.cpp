@@ -208,23 +208,17 @@ static int GetConfig(AgentConnection *pConn)
 /**
  * Get screenshot
  */
-static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const char *fileName)
+static int GetScreenshot(AgentConnection *pConn, const TCHAR *sessionName, const TCHAR *fileName)
 {
    BYTE *data;
    size_t size;
-#ifdef UNICODE
-   WCHAR *wname = WideStringFromMBString(sessionName);
-   UINT32 dwError = pConn->takeScreenshot(wname, &data, &size);
-   MemFree(wname);
-#else
-   UINT32 dwError = pConn->takeScreenshot(sessionName, &data, &size);
-#endif
+   uint32_t dwError = pConn->takeScreenshot(sessionName, &data, &size);
    if (dwError == ERR_SUCCESS)
    {
-      FILE *f = fopen(fileName, "wb");
-      if (f != NULL)
+      FILE *f = _tfopen(fileName, _T("wb"));
+      if (f != nullptr)
       {
-         if (data != NULL)
+         if (data != nullptr)
             fwrite(data, 1, size, f);
          fclose(f);
       }
@@ -240,17 +234,11 @@ static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const 
 /**
  * Get information about file set
  */
-static int GetFileSetInfo(AgentConnection *conn, int argc, char **argv)
+static int GetFileSetInfo(AgentConnection *conn, int argc, TCHAR **argv)
 {
    StringList fileSet;
    for(int i = 0; i < argc; i++)
-   {
-#ifdef UNICODE
-      fileSet.addPreallocated(WideStringFromMBStringSysLocale(argv[i]));
-#else
       fileSet.add(argv[i]);
-#endif
-   }
 
    ObjectArray<RemoteFileInfo> *info;
    UINT32 rcc = conn->getFileSetInfo(fileSet, true, &info);
@@ -283,11 +271,11 @@ static int GetFileSetInfo(AgentConnection *conn, int argc, char **argv)
 /**
  * Parser for nxget specific options
  */
-static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
+static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 {
    int i;
    bool start = true;
-   char *eptr;
+   TCHAR *eptr;
    switch(ch)
    {
       case 'b':   // Batch mode
@@ -296,14 +284,11 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
       case 'd':   // Dump table
          s_tableOutputDelimiter = *optarg;
          break;
-      case 'D':   // debug level
-         nxlog_set_debug_level((int)strtol(optarg, NULL, 0));
-         break;
       case 'i':   // Interval
-         i = strtol(optarg, &eptr, 0);
+         i = _tcstol(optarg, &eptr, 0);
          if ((*eptr != 0) || (i <= 0))
          {
-            printf("Invalid interval \"%s\"\n", optarg);
+            _tprintf(_T("Invalid interval \"%s\"\n"), optarg);
             start = false;
          }
          else
@@ -334,18 +319,18 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          break;
       case 'N':   // Check service
          s_operation = CMD_CHECK_SERVICE;
-         s_serviceAddr = ntohl(inet_addr(optarg));
+         s_serviceAddr = ntohl(_t_inet_addr(optarg));
          if ((s_serviceAddr == INADDR_NONE) || (s_serviceAddr == INADDR_ANY))
          {
-            _tprintf(_T("Invalid IP address \"%hs\"\n"), optarg);
+            _tprintf(_T("Invalid IP address \"%s\"\n"), optarg);
             start = FALSE;
          }
          break;
       case 'P':   // Port number for service check
-         i = strtol(optarg, &eptr, 0);
+         i = _tcstol(optarg, &eptr, 0);
          if ((*eptr != 0) || (i < 0) || (i > 65535))
          {
-            printf("Invalid port number \"%s\"\n", optarg);
+            _tprintf(_T("Invalid port number \"%s\"\n"), optarg);
             start = FALSE;
          }
          else
@@ -354,82 +339,64 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          }
          break;
       case 'r':   // Service check request string
-#ifdef UNICODE
-#if HAVE_MBSTOWCS
-         mbstowcs(s_serviceRequest, optarg, MAX_DB_STRING);
-#else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, s_serviceRequest, MAX_DB_STRING);
-#endif
-         s_serviceRequest[MAX_DB_STRING - 1] = 0;
-#else
-         strlcpy(s_serviceRequest, optarg, MAX_DB_STRING);
-#endif
+         _tcslcpy(s_serviceRequest, optarg, MAX_DB_STRING);
          break;
       case 'R':   // Service check response string
-#ifdef UNICODE
-#if HAVE_MBSTOWCS
-         mbstowcs(s_serviceResponse, optarg, MAX_DB_STRING);
-#else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, s_serviceResponse, MAX_DB_STRING);
-#endif
-         s_serviceResponse[MAX_DB_STRING - 1] = 0;
-#else
-         strlcpy(s_serviceResponse, optarg, MAX_DB_STRING);
-#endif
+         _tcslcpy(s_serviceResponse, optarg, MAX_DB_STRING);
          break;
       case 't':   // Service type
-         s_serviceType = strtol(optarg, &eptr, 0);
+         s_serviceType = _tcstol(optarg, &eptr, 0);
          if (*eptr != 0)
          {
-            if (!stricmp(optarg, "custom"))
+            if (!_tcsicmp(optarg, _T("custom")))
             {
                s_serviceType = NETSRV_CUSTOM;
             }
-            else if (!stricmp(optarg, "ftp"))
+            else if (!_tcsicmp(optarg, _T("ftp")))
             {
                s_serviceType = NETSRV_FTP;
             }
-            else if (!stricmp(optarg, "http"))
+            else if (!_tcsicmp(optarg, _T("http")))
             {
                s_serviceType = NETSRV_HTTP;
             }
-            else if (!stricmp(optarg, "https"))
+            else if (!_tcsicmp(optarg, _T("https")))
             {
                s_serviceType = NETSRV_HTTPS;
             }
-            else if (!stricmp(optarg, "pop3"))
+            else if (!_tcsicmp(optarg, _T("pop3")))
             {
                s_serviceType = NETSRV_POP3;
             }
-            else if (!stricmp(optarg, "smtp"))
+            else if (!_tcsicmp(optarg, _T("smtp")))
             {
                s_serviceType = NETSRV_SMTP;
             }
-            else if (!stricmp(optarg, "ssh"))
+            else if (!_tcsicmp(optarg, _T("ssh")))
             {
                s_serviceType = NETSRV_SSH;
             }
-            else if (!stricmp(optarg, "telnet"))
+            else if (!_tcsicmp(optarg, _T("telnet")))
             {
                s_serviceType = NETSRV_TELNET;
             }
             else
             {
-               _tprintf(_T("Invalid service type \"%hs\"\n"), optarg);
+               _tprintf(_T("Invalid service type \"%s\"\n"), optarg);
                start = FALSE;
             }
          }
          break;
       case 'o':   // Protocol number for service check
-         i = strtol(optarg, &eptr, 0);
+         i = _tcstol(optarg, &eptr, 0);
          if ((*eptr != 0) || (i < 0) || (i > 65535))
          {
-            _tprintf(_T("Invalid protocol number \"%hs\"\n"), optarg);
+            _tprintf(_T("Invalid protocol number \"%s\"\n"), optarg);
             start = FALSE;
          }
          else
          {
-            s_serviceProto = (WORD)i;
+            s_serviceProto = (uint16_t)i;
          }
          break;
       default:
@@ -449,12 +416,9 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *serverKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *serverKey)
 {
    int exitCode = 3, pos;
-#ifdef UNICODE
-   WCHAR *wcValue;
-#endif
 
    do
    {
@@ -464,32 +428,14 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
             pos = optind + 1;
             do
             {
-#ifdef UNICODE
-               wcValue = WideStringFromMBStringSysLocale(argv[pos++]);
-               exitCode = Get(conn, wcValue, s_showNames);
-               MemFree(wcValue);
-#else
                exitCode = Get(conn, argv[pos++], s_showNames);
-#endif
             } while((exitCode == 0) && (s_batchMode) && (pos < argc));
             break;
          case CMD_LIST:
-#ifdef UNICODE
-            wcValue = WideStringFromMBStringSysLocale(argv[optind + 1]);
-            exitCode = List(conn, wcValue);
-            MemFree(wcValue);
-#else
             exitCode = List(conn, argv[optind + 1]);
-#endif
             break;
          case CMD_TABLE:
-#ifdef UNICODE
-            wcValue = WideStringFromMBStringSysLocale(argv[optind + 1]);
-            exitCode = GetTable(conn, wcValue);
-            MemFree(wcValue);
-#else
             exitCode = GetTable(conn, argv[optind + 1]);
-#endif
             break;
          case CMD_CHECK_SERVICE:
             exitCode = CheckService(conn, s_serviceType, s_serviceAddr,
@@ -502,7 +448,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
             exitCode = GetConfig(conn);
             break;
          case CMD_GET_SCREENSHOT:
-            exitCode = GetScreenshot(conn, (argc > optind + 2) ? argv[optind + 2] : "Console", argv[optind + 1]);
+            exitCode = GetScreenshot(conn, (argc > optind + 2) ? argv[optind + 2] : _T("Console"), argv[optind + 1]);
             break;
          case CMD_FILE_SET_INFO:
             exitCode = GetFileSetInfo(conn, argc - optind - 1, &argv[optind + 1]);
@@ -520,7 +466,11 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
 /**
  * Startup
  */
+#ifdef _WIN32
+int _tmain(int argc, TCHAR *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
    ServerCommandLineTool tool;
    tool.argc = argc;

@@ -83,7 +83,7 @@ static int UninstallPolicy(AgentConnection *conn, const uuid& guid)
 /**
  * Parse nxap specific parameters
  */
-static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
+static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 {
    switch(ch)
    {
@@ -92,14 +92,7 @@ static bool ParseAdditionalOptionCb(const char ch, const char *optarg)
          break;
       case 'u':   // Uninstall policy from agent
          s_action = 1;
-#ifdef UNICODE
-         WCHAR wguid[256];
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, wguid, 256);
-         wguid[255] = 0;
-         s_guid = uuid::parse(wguid);
-#else
          s_guid = uuid::parse(optarg);
-#endif
          break;
       default:
          break;
@@ -125,7 +118,7 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *pServerKey)
 {
    int exitCode;
    if (s_action == 0)
@@ -142,17 +135,21 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, char *argv[], RSA *
 /**
  * Startup
  */
+#ifdef _WIN32
+int _tmain(int argc, TCHAR *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
    tool.mainHelpText = _T("Usage: nxap [<options>] -l <host>\n")
-                           _T("   or: nxap [<options>] -u <guid> <host>\n")
-                           _T("Tool specific options are:\n")
-                           _T("   -l           : List policies.\n")
-                           _T("   -u <guid>    : Uninstall policy.\n")
-                           _T("\n");
+                       _T("   or: nxap [<options>] -u <guid> <host>\n")
+                       _T("Tool specific options are:\n")
+                       _T("   -l           : List policies.\n")
+                       _T("   -u <guid>    : Uninstall policy.\n")
+                       _T("\n");
    tool.additionalOptions = "lu:";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;

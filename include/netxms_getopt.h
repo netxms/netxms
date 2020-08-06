@@ -73,15 +73,14 @@
 #ifndef _NETXMS_GETOPT_H
 #define _NETXMS_GETOPT_H
 
-#include <nms_util.h>
-
 #undef HAVE_GETOPT_LONG
 #define HAVE_GETOPT_LONG 1
 
 #undef HAVE_DECL_GETOPT_LONG
 #define HAVE_DECL_GETOPT_LONG 1
 
-#if defined(_WIN32) && !defined(REPLACE_GETOPT)
+#if USE_BUNDLED_GETOPT
+#undef REPLACE_GETOPT
 #define REPLACE_GETOPT
 #endif
 
@@ -89,14 +88,35 @@
 extern "C" {
 #endif
 
+#ifdef REPLACE_GETOPT
 extern LIBNETXMS_EXPORTABLE char *optarg;
 extern LIBNETXMS_EXPORTABLE int optind;
 extern LIBNETXMS_EXPORTABLE int opterr;
 extern LIBNETXMS_EXPORTABLE int optopt;
+#endif
+
+extern LIBNETXMS_EXPORTABLE WCHAR *optargW;
+extern LIBNETXMS_EXPORTABLE int optindW;
+extern LIBNETXMS_EXPORTABLE int opterrW;
+extern LIBNETXMS_EXPORTABLE int optoptW;
+
+#ifdef UNICODE
+#define _toptarg optargW
+#define _toptind optindW
+#define _topterr opterrW
+#define _toptopt optoptW
+#else
+#define _toptarg optarg
+#define _toptind optind
+#define _topterr opterr
+#define _toptopt optopt
+#endif
+
+#ifdef REPLACE_GETOPT
 
 struct option
 {
-#if __STDC__
+#if __STDC__ || defined(_WIN32)
   const char *name;
 #else
   char *name;
@@ -110,13 +130,29 @@ struct option
 #define required_argument  1
 #define optional_argument  2
 
-#ifdef REPLACE_GETOPT
 int LIBNETXMS_EXPORTABLE nx_getopt(int nargc, char * const *nargv, const char *options);
-#define getopt nx_getopt
-#endif
+int LIBNETXMS_EXPORTABLE nx_getopt_long(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
+int LIBNETXMS_EXPORTABLE nx_getopt_long_only(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
 
-int LIBNETXMS_EXPORTABLE getopt_long(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
-int LIBNETXMS_EXPORTABLE getopt_long_only(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
+#define getopt nx_getopt
+#define getopt_long nx_getopt_long
+#define getopt_long_only nx_getopt_long_only
+
+#endif   /* REPLACE_GETOPT */
+
+int LIBNETXMS_EXPORTABLE getoptW(int nargc, WCHAR * const *nargv, const char *options);
+int LIBNETXMS_EXPORTABLE getopt_longW(int nargc, WCHAR * const *nargv, const char *options, const struct option *long_options, int *idx);
+int LIBNETXMS_EXPORTABLE getopt_long_onlyW(int nargc, WCHAR * const *nargv, const char *options, const struct option *long_options, int *idx);
+
+#ifdef UNICODE
+#define _tgetopt getoptW
+#define _tgetopt_long getopt_longW
+#define _tgetopt_long_only getopt_long_onlyW
+#else
+#define _tgetopt getopt
+#define _tgetopt_long getopt_long
+#define _tgetopt_long_only getopt_long_only
+#endif
 
 #ifdef	__cplusplus
 }
