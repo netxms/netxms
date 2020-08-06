@@ -118,7 +118,8 @@ static const char illoptstring[] = "unknown option -- %ls";
  */
 static int compare_option_name(const WCHAR *text, const char *option, size_t len)
 {
-   for (size_t i = 0; i < len; i++)
+   size_t i;
+   for (i = 0; i < len; i++)
    {
       if (text[i] != option[i])
          return (int)text[i] - (int)option[i];
