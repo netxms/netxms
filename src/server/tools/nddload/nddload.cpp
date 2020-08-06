@@ -24,6 +24,7 @@
 #include <nxsnmp.h>
 #include <nxsrvapi.h>
 #include <nddrv.h>
+#include <netxms_getopt.h>
 
 NETXMS_EXECUTABLE_HEADER(nddload)
 

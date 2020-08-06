@@ -22,10 +22,7 @@
 **/
 
 #include <nms_util.h>
-
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
+#include <netxms_getopt.h>
 
 NETXMS_EXECUTABLE_HEADER(nxdevcfg)
 

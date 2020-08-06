@@ -21,13 +21,10 @@
 **/
 
 #include "nxsagent.h"
+#include <netxms_getopt.h>
 
 #ifdef _WIN32
 #include <Psapi.h>
-#endif
-
-#if HAVE_GETOPT_H
-#include <getopt.h>
 #endif
 
 NETXMS_EXECUTABLE_HEADER(nxsagent)

@@ -22,10 +22,6 @@
 #include <nms_util.h>
 #include <jni.h>
 
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
-
 NETXMS_EXECUTABLE_HEADER(nxreportd)
 
 /**

@@ -24,10 +24,7 @@
 #include <nms_util.h>
 #include <nxcpapi.h>
 #include <nxproc.h>
-
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
+#include <netxms_getopt.h>
 
 NETXMS_EXECUTABLE_HEADER(nxapush)
 

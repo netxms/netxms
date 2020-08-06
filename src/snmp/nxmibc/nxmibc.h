@@ -31,10 +31,6 @@
 #include <nxsnmp.h>
 #include <stdarg.h>
 
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
-
 #endif
 
 

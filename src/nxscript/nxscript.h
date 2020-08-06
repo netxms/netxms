@@ -28,8 +28,4 @@
 #include <nms_util.h>
 #include <nxsl.h>
 
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
-
 #endif

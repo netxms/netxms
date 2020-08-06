@@ -27,8 +27,4 @@
 #include <nms_common.h>
 #include <nxclient.h>
 
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
-
 #endif

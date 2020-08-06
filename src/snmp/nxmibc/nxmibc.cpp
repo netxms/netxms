@@ -22,6 +22,7 @@
 **/
 
 #include "nxmibc.h"
+#include <netxms_getopt.h>
 
 #ifdef _WIN32
 #include <conio.h>

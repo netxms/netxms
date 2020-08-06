@@ -28,10 +28,6 @@
 #include <nms_util.h>
 #include <nxlpapi.h>
 
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
-
 #ifdef _WIN32
 #include <conio.h>
 #endif

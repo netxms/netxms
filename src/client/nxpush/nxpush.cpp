@@ -21,11 +21,8 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_util.h>
+#include <netxms_getopt.h>
 #include <nxclient.h>
-
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
 
 NETXMS_EXECUTABLE_HEADER(nxpush)
 

@@ -24,6 +24,7 @@
 #define _CRT_NONSTDC_NO_WARNINGS
 
 #include "nxscript.h"
+#include <netxms_getopt.h>
 
 NETXMS_EXECUTABLE_HEADER(nxscript)
 

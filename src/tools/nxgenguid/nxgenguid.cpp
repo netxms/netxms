@@ -21,6 +21,7 @@
 **/
 
 #include <nms_util.h>
+#include <netxms_getopt.h>
 #include <uuid.h>
 
 NETXMS_EXECUTABLE_HEADER(nxgenguid)

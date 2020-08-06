@@ -21,6 +21,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_util.h>
+#include <netxms_getopt.h>
 
 NETXMS_EXECUTABLE_HEADER(nxhwid)
 

@@ -22,6 +22,7 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
+#include <netxms_getopt.h>
 #include <ethernet_ip.h>
 
 NETXMS_EXECUTABLE_HEADER(nxethernetip)

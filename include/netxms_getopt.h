@@ -75,15 +75,16 @@
 
 #include <nms_util.h>
 
+#if USE_BUNDLED_GETOPT || !HAVE_DECL_GETOPT_LONG
+
+#define REPLACE_GETOPT 1
+
 #undef HAVE_GETOPT_LONG
 #define HAVE_GETOPT_LONG 1
 
 #undef HAVE_DECL_GETOPT_LONG
 #define HAVE_DECL_GETOPT_LONG 1
 
-#if USE_BUNDLED_GETOPT
-#undef REPLACE_GETOPT
-#define REPLACE_GETOPT 1
 #endif
 
 #if !REPLACE_GETOPT && HAVE_GETOPT_H
@@ -95,11 +96,18 @@ extern "C" {
 #endif
 
 #ifdef REPLACE_GETOPT
-extern LIBNETXMS_EXPORTABLE char *optarg;
-extern LIBNETXMS_EXPORTABLE int optind;
-extern LIBNETXMS_EXPORTABLE int opterr;
-extern LIBNETXMS_EXPORTABLE int optopt;
-#endif
+
+extern LIBNETXMS_EXPORTABLE char *optargA;
+extern LIBNETXMS_EXPORTABLE int optindA;
+extern LIBNETXMS_EXPORTABLE int opterrA;
+extern LIBNETXMS_EXPORTABLE int optoptA;
+
+#define optarg optargA
+#define optind optindA
+#define opterr opterrA
+#define optopt optoptA
+
+#endif   /* REPLACE_GETOPT */
 
 extern LIBNETXMS_EXPORTABLE WCHAR *optargW;
 extern LIBNETXMS_EXPORTABLE int optindW;
@@ -136,13 +144,13 @@ struct option
 #define required_argument  1
 #define optional_argument  2
 
-int LIBNETXMS_EXPORTABLE nx_getopt(int nargc, char * const *nargv, const char *options);
-int LIBNETXMS_EXPORTABLE nx_getopt_long(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
-int LIBNETXMS_EXPORTABLE nx_getopt_long_only(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
+int LIBNETXMS_EXPORTABLE getoptA(int nargc, char * const *nargv, const char *options);
+int LIBNETXMS_EXPORTABLE getopt_longA(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
+int LIBNETXMS_EXPORTABLE getopt_long_onlyA(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
 
-#define getopt nx_getopt
-#define getopt_long nx_getopt_long
-#define getopt_long_only nx_getopt_long_only
+#define getopt getoptA
+#define getopt_long getopt_longA
+#define getopt_long_only getopt_long_onlyA
 
 #endif   /* REPLACE_GETOPT */
 
