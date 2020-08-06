@@ -3314,7 +3314,7 @@ enum class BackgroundSocketPollResult
 {
    SUCCESS = 0,
    TIMEOUT = 1,
-   ERROR = 2,
+   FAILURE = 2,
    SHUTDOWN = 3
 };
 
@@ -3328,8 +3328,12 @@ struct BackgroundSocketPollRequest
    void (*callback)(BackgroundSocketPollResult, SOCKET, void*);
    void *context;
    int64_t queueTime;
-   int32_t timeout;
+   uint32_t timeout;
 };
+
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE SynchronizedObjectMemoryPool<BackgroundSocketPollRequest>;
+#endif
 
 /**
  * Background socket poller

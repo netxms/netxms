@@ -108,12 +108,8 @@ void LocalAdminListener()
 {
    ThreadSetName("DebugConsole");
 
-   SOCKET sock, sockClient;
-   struct sockaddr_in servAddr;
-   int errorCount = 0;
-   socklen_t iSize;
-
    // Create socket
+   SOCKET sock;
    if ((sock = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
@@ -128,6 +124,7 @@ void LocalAdminListener()
 #endif
 
    // Fill in local address structure
+   struct sockaddr_in servAddr;
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
    servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
@@ -148,6 +145,7 @@ void LocalAdminListener()
    nxlog_debug(1, _T("Local administration interface listener started"));
 
    // Wait for connection requests
+   int errorCount = 0;
    while(!IsShutdownInProgress())
    {
       SocketPoller sp;
@@ -163,7 +161,8 @@ void LocalAdminListener()
          continue;
       }
 
-      iSize = sizeof(struct sockaddr_in);
+      SOCKET sockClient;
+      socklen_t iSize = sizeof(struct sockaddr_in);
       if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
       {
          if (IsShutdownInProgress())

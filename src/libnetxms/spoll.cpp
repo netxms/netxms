@@ -175,10 +175,29 @@ void SocketPoller::reset()
 BackgroundSocketPoller::BackgroundSocketPoller()
 {
    m_mutex = MutexCreateFast();
-   m_head = m_memoryPool.allocate();
+   m_head = m_memoryPool.allocate();   // dummy element at list head
    m_head->next = nullptr;
 
 #ifdef _WIN32
+   m_controlSockets[0] = CreateSocket(AF_INET, SOCK_DGRAM, 0);
+   m_controlSockets[1] = CreateSocket(AF_INET, SOCK_DGRAM, 0);
+   if ((m_controlSockets[0] != INVALID_SOCKET) && (m_controlSockets[1] != INVALID_SOCKET))
+   {
+      struct sockaddr_in servAddr;
+      memset(&servAddr, 0, sizeof(struct sockaddr_in));
+      servAddr.sin_family = AF_INET;
+      servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+      servAddr.sin_port = 0;  // Dynamic port assignment
+
+      if (bind(m_controlSockets[0], (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) == 0)
+      {
+         int len = sizeof(struct sockaddr_in);
+         if (getsockname(m_controlSockets[0], (struct sockaddr *)&servAddr, &len) == 0)
+         {
+            connect(m_controlSockets[1], (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in));
+         }
+      }
+   }
 #else
    if (pipe(m_controlSockets) != 0)
    {
