@@ -14,6 +14,7 @@
 *
 
 - Added driver for SAF Tehnika Integra devices
+- Improved handling of UNICODE characters in external parameter output on Windows
 - Fixed issues:
 	NX-1916 (Device could be marked as supporting ENTITY MIB when it is in fact not supported)
 

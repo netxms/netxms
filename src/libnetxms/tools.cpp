@@ -2760,18 +2760,20 @@ RefCountObject::~RefCountObject()
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 {
 #ifdef UNICODE
-#if SAFE_FGETWS_WITH_POPEN
+#if SAFE_FGETWS_WITH_POPEN && !defined(_WIN32)
 	return fgetws(buffer, len, f);
 #else
 	char *mbBuffer = (char *)alloca(len);
 	char *s = fgets(mbBuffer, len, f);
-	if (s == NULL)
-		return NULL;
+	if (s == nullptr)
+		return nullptr;
 	mbBuffer[len - 1] = 0;
 #if HAVE_MBSTOWCS
 	mbstowcs(buffer, mbBuffer, len);
+#elif defined(_WIN32)
+   utf8_to_wchar(mbBuffer, -1, buffer, len);
 #else
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbBuffer, -1, buffer, len);
+	mb_to_wchar(mbBuffer, -1, buffer, len);
 #endif
 	return buffer;
 #endif
