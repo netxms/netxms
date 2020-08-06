@@ -30,6 +30,8 @@
 #include <sys/wait.h>
 #endif
 
+#define EXEC_DEBUG_TAG  _T("exec")
+
 /**
  * Information for process starter
  */
@@ -144,7 +146,7 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *args, pid_t *pid)
    TCHAR *pszCmdLine, *sptr;
    UINT32 i, dwSize, dwRetCode = ERR_SUCCESS;
 
-   DebugPrintf(4, _T("EXEC: Expanding command \"%s\""), pszCommand);
+   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("ExecuteCommand: expanding command \"%s\""), pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (args != NULL)
@@ -189,7 +191,7 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *args, pid_t *pid)
       pszCmdLine = pszCommand;
    }
 
-   DebugPrintf(4, _T("EXEC: Executing \"%s\""), pszCmdLine);
+   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("ExecuteCommand: executing \"%s\""), pszCmdLine);
 #if defined(_WIN32)
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
@@ -204,8 +206,7 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *args, pid_t *pid)
                       CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
-         pszCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug_tag(EXEC_DEBUG_TAG, 1, _T("Unable to create process \"%s\" (%s)"), pszCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
       dwRetCode = ERR_EXEC_FAILED;
    }
    else
@@ -320,17 +321,17 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
       while(true)
       {
          TCHAR *ret = safe_fgetts(value, 32768, hPipe);
-         if (ret == NULL)
+         if (ret == nullptr)
          {
             if (!feof(hPipe))
             {
-               DebugPrintf(4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read error: %s"), _tcserror(errno));
+               nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read error: %s"), _tcserror(errno));
                data->status = SYSINFO_RC_ERROR;
             }
             break;
          }
 
-         DebugPrintf(4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
+         nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
          RemoveTrailingCRLF(value);
          if (value[0] != 0)
          {
@@ -341,7 +342,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	}
 	else
 	{
-		nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"), data->cmdLine, _tcserror(errno));
+      nxlog_debug_tag(EXEC_DEBUG_TAG, 1, _T("Unable to create process \"%s\" (%s)"), data->cmdLine, _tcserror(errno));
 		data->status = SYSINFO_RC_ERROR;
 	}
 
@@ -365,7 +366,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 	const TCHAR *sptr;
 	int i, iSize, iStatus;
 
-   DebugPrintf(4, _T("RunExternal called for \"%s\" \"%s\""), pszCmd, pszArg);
+   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal called for \"%s\" \"%s\""), pszCmd, pszArg);
 
    // Substitute $1 .. $9 with actual arguments
    iSize = (int)_tcslen(pszArg) * sizeof(TCHAR);  // we don't need _tcslen + 1 because loop starts from &pszArg[1]
@@ -400,7 +401,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
          pszCmdLine[i++] = *sptr;
       }
    pszCmdLine[i] = 0;
-   DebugPrintf(4, _T("RunExternal: command line is \"%s\""), pszCmdLine);
+   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal: command line is \"%s\""), pszCmdLine);
 
 #if defined(_WIN32)
 	if (*pszArg == _T('E'))
@@ -418,7 +419,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 		sa.lpSecurityDescriptor = NULL;
 		sa.bInheritHandle = TRUE;
 		hOutput = CreateFile(szTempFile, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		                     &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL);
+            &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL);
 		if (hOutput != INVALID_HANDLE_VALUE)
 		{
 			// Fill in process startup info structure
@@ -445,22 +446,22 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 					buffer[size] = 0;
 
                char *line = strtok(buffer, "\n");
-               while(line != NULL)
+               while(line != nullptr)
                {
 					   char *eptr = strchr(line, '\r');
-					   if (eptr != NULL)
+					   if (eptr != nullptr)
 						   *eptr = 0;
                   StrStripA(line);
 
                   if (line[0] != 0)
                   {
 #ifdef UNICODE
-                     value->addPreallocated(WideStringFromMBString(line));
+                     value->addPreallocated(WideStringFromUTF8String(line));
 #else
-                     value->add(line);
+                     value->addPreallocated(MBStringFromUTF8String(line));
 #endif
                   }
-                  line = strtok(NULL, "\n");
+                  line = strtok(nullptr, "\n");
                }
 					iStatus = SYSINFO_RC_SUCCESS;
 				}
@@ -468,7 +469,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 				{
 					// Timeout waiting for external process to complete, kill it
 					TerminateProcess(pi.hProcess, 127);
-					nxlog_write(NXLOG_WARNING, _T("Process \"%s\" killed because of execution timeout"), pszCmdLine);
+					nxlog_write_tag(NXLOG_WARNING, EXEC_DEBUG_TAG, _T("Process \"%s\" killed because of execution timeout"), pszCmdLine);
 					iStatus = SYSINFO_RC_ERROR;
 				}
 
@@ -478,8 +479,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 			else
 			{
             TCHAR buffer[1024];
-				nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
-                  pszCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
+            nxlog_debug_tag(EXEC_DEBUG_TAG, 1, _T("RunExternal: unable to create process \"%s\" (%s)"), pszCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
 				iStatus = SYSINFO_RC_ERROR;
 			}
 
@@ -490,7 +490,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 		else
 		{
          TCHAR buffer[1024];
-			nxlog_write(NXLOG_ERROR, _T("Unable to create temporary file to hold process output (%s)"),
+         nxlog_debug_tag(EXEC_DEBUG_TAG, 1, _T("RunExternal: unable to create temporary file to hold process output (%s)"),
                GetSystemErrorText(GetLastError(), buffer, 1024));
 			iStatus = SYSINFO_RC_ERROR;
 		}
@@ -506,7 +506,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 			data->finished = ConditionCreate(TRUE);
 			data->released = ConditionCreate(TRUE);
 			ThreadCreate(POpenWorker, 0, data);
-		   DebugPrintf(4, _T("RunExternal (shell exec): worker thread created"));
+		   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal (shell exec): worker thread created"));
 			if (ConditionWait(data->finished, g_execTimeout))
 			{
 				iStatus = data->status;
@@ -518,11 +518,11 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 			else
 			{
 				// Timeout
-			   DebugPrintf(4, _T("RunExternal (shell exec): execution timeout"));
+			   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal (shell exec): execution timeout"));
 				iStatus = SYSINFO_RC_ERROR;
 			}
 			ConditionSet(data->released);	// Allow worker to destroy data
-		   DebugPrintf(4, _T("RunExternal (shell exec): execution status %d"), iStatus);
+		   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal (shell exec): execution status %d"), iStatus);
 		}
 
 #ifdef _WIN32
@@ -622,15 +622,16 @@ LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *args)
 {
    TCHAR *pszCmdLine, *sptr;
-   UINT32 i, dwSize, dwRetCode = ERR_SUCCESS;
+   uint32_t dwRetCode = ERR_SUCCESS;
 
-   DebugPrintf(4, _T("SH_EXEC: Expanding command \"%s\""), pszCommand);
+   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("ExecuteShellCommand: expanding command \"%s\""), pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
-   if (args != NULL)
+   if (args != nullptr)
    {
-      dwSize = ((UINT32)_tcslen(pszCommand) + 1) * sizeof(TCHAR);
-      pszCmdLine = (TCHAR *)malloc(dwSize);
+      size_t cmdLineLen = _tcslen(pszCommand) + 1;
+      pszCmdLine = MemAllocString(cmdLineLen);
+      size_t i;
       for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
          if (*sptr == _T('$'))
          {
@@ -643,14 +644,12 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *args)
 
                if (argNum < args->size())
                {
-                  int iArgLength;
-
                   // Extend resulting line
-						iArgLength = (int)_tcslen(args->get(argNum));
-                  dwSize += iArgLength * sizeof(TCHAR);
-                  pszCmdLine = (TCHAR *)realloc(pszCmdLine, dwSize);
+						size_t argLength = _tcslen(args->get(argNum));
+                  cmdLineLen += argLength;
+                  pszCmdLine = MemReallocArray(pszCmdLine, cmdLineLen);
                   _tcscpy(&pszCmdLine[i], args->get(argNum));
-                  i += iArgLength;
+                  i += argLength;
                }
             }
             else
@@ -669,7 +668,7 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *args)
       pszCmdLine = pszCommand;
    }
 
-   DebugPrintf(4, _T("SH_EXEC: Executing \"%s\""), pszCmdLine);
+   nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("ExecuteShellCommand: executing \"%s\""), pszCmdLine);
 
    if (_tsystem(pszCmdLine) == 0)
       dwRetCode = ERR_SUCCESS;
@@ -677,8 +676,8 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *args)
       dwRetCode = ERR_EXEC_FAILED;
 
    // Cleanup
-   if (args != NULL)
-      free(pszCmdLine);
+   if (args != nullptr)
+      MemFree(pszCmdLine);
 
    return dwRetCode;
 }
