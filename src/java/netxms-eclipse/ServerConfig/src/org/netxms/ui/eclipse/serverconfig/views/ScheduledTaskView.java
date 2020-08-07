@@ -386,7 +386,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<String> taskList = session.getScheudledTaskHandlers();
+            final List<String> taskList = session.getScheduledTaskHandlers();
             getDisplay().syncExec(new Runnable() {
                @Override
                public void run()
@@ -450,7 +450,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<String> taskList = session.getScheudledTaskHandlers();
+            final List<String> taskList = session.getScheduledTaskHandlers();
             getDisplay().syncExec(new Runnable() {
                @Override
                public void run()

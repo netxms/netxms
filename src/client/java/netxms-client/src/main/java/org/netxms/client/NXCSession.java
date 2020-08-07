@@ -10983,7 +10983,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<String> getScheudledTaskHandlers() throws NXCException, IOException
+   public List<String> getScheduledTaskHandlers() throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULE_CALLBACKS);
       sendMessage(msg);
@@ -11417,16 +11417,16 @@ public class NXCSession
    }
 
    /**
-    * Substitute macros in may strings and one context
+    * Substitute macros in multiple strings within one context.
     *
-    * @param context expansion context alarm and node
+    * @param context expansion context
     * @param textsToExpand texts to be expanded
     * @param inputValues input values provided by used used for %() expansion
     * @return same count and order of strings already expanded
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<String> substitureMacross(ObjectContextBase context, List<String> textsToExpand, Map<String, String> inputValues)
+   public List<String> substituteMacros(ObjectContextBase context, List<String> textsToExpand, Map<String, String> inputValues)
          throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPAND_MACROS);
@@ -11461,16 +11461,16 @@ public class NXCSession
    }
 
    /**
-    * Substitute macross in many constexts for one string
+    * Substitute macros in one string within multiple contexts.
     *
-    * @param context      expansion contexts alarm and node
+    * @param context expansion contexts
     * @param textToExpand text to be expanded
-    * @param inputValues  input values provided by used used for %() expansion
+    * @param inputValues input values provided by used used for %() expansion
     * @return same count and order of strings already expanded
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<String> substitureMacross(ObjectContextBase context[], String textToExpand, Map<String, String> inputValues)
+   public List<String> substituteMacros(ObjectContextBase context[], String textToExpand, Map<String, String> inputValues)
          throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPAND_MACROS);
