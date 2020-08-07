@@ -171,9 +171,9 @@ public class GraphTemplateCache
    {
       List<String> textsToExpand = new ArrayList<String>();
       textsToExpand.add(data.getTitle());
-      String name = session.substitureMacross(new ObjectContext(node, null), textsToExpand, new HashMap<String, String>()).get(0); 
+      String name = session.substituteMacros(new ObjectContext(node, null), textsToExpand, new HashMap<String, String>()).get(0);
       final GraphSettings result = new GraphSettings(data, name);
-      
+ 
       ChartDciConfig[] conf = result.getDciList();
       final HashSet<ChartDciConfig> newList = new HashSet<ChartDciConfig>();
       int foundByDescription = -1;
