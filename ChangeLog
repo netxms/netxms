@@ -7,6 +7,7 @@
 - Fixed UI crash when object query dashboard element is incorrectly configured
 - Fixed issues:
 	NX-1916 (Device could be marked as supporting ENTITY MIB when it is in fact not supported)
+	NX-1921 (SQL query failed into alarm_events: 22001 ERROR: value too long for type character varying(2000))
 	NX-1922 (Spelling mistakes in Java API)
 
 

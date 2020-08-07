@@ -939,7 +939,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message
    if (updateRelatedEvent)
    {
       // Add record to alarm_events table
-      TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
+      TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16], *msg = nullptr;
       const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, event->getName(), valSeverity, valSource, valTimestamp, event->getMessage() };
       _sntprintf(valAlarmId, 16, _T("%d"), (int)alarmId);
       _sntprintf(valEventId, 32, UINT64_FMT, event->getId());
@@ -947,9 +947,15 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message
       _sntprintf(valSeverity, 16, _T("%d"), (int)event->getSeverity());
       _sntprintf(valSource, 16, _T("%d"), event->getSourceId());
       _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)event->getTimestamp());
+      if (_tcslen(values[7]) > MAX_EVENT_MSG_LENGTH)
+      {
+         msg = MemAllocString(MAX_EVENT_MSG_LENGTH + 1);
+	 _tcslcpy(msg, values[7], MAX_EVENT_MSG_LENGTH + 1);
+         values[7] = msg;
+      }
       static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
-      QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
-                      8, sqlTypes, values);
+      QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"), 8, sqlTypes, values);
+      MemFree(msg);
    }
 
    if (s_rootCauseUpdateNeeded)
