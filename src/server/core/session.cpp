@@ -13516,20 +13516,21 @@ void ClientSession::getRoutingTable(NXCPMessage *request)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         ROUTING_TABLE *rt = static_cast<Node&>(*node).getRoutingTable();
+         RoutingTable *rt = static_cast<Node&>(*node).getRoutingTable();
          if (rt != nullptr)
          {
             msg.setField(VID_RCC, RCC_SUCCESS);
-            msg.setField(VID_NUM_ELEMENTS, (UINT32)rt->iNumEntries);
-            UINT32 id = VID_ELEMENT_LIST_BASE;
-            for(int i = 0; i < rt->iNumEntries; i++)
+            msg.setField(VID_NUM_ELEMENTS, (UINT32)rt->size());
+            uint32_t id = VID_ELEMENT_LIST_BASE;
+            for(int i = 0; i < rt->size(); i++)
             {
-               msg.setField(id++, rt->pRoutes[i].dwDestAddr);
-               msg.setField(id++, (UINT32)BitsInMask(rt->pRoutes[i].dwDestMask));
-               msg.setField(id++, rt->pRoutes[i].dwNextHop);
-               msg.setField(id++, rt->pRoutes[i].dwIfIndex);
-               msg.setField(id++, rt->pRoutes[i].dwRouteType);
-               shared_ptr<Interface> iface = static_cast<Node&>(*node).findInterfaceByIndex(rt->pRoutes[i].dwIfIndex);
+               ROUTE *route = rt->get(i);
+               msg.setField(id++, route->dwDestAddr);
+               msg.setField(id++, (UINT32)BitsInMask(route->dwDestMask));
+               msg.setField(id++, route->dwNextHop);
+               msg.setField(id++, route->dwIfIndex);
+               msg.setField(id++, route->dwRouteType);
+               shared_ptr<Interface> iface = static_cast<Node&>(*node).findInterfaceByIndex(route->dwIfIndex);
                if (iface != nullptr)
                {
                   msg.setField(id++, iface->getName());
@@ -13537,12 +13538,12 @@ void ClientSession::getRoutingTable(NXCPMessage *request)
                else
                {
                   TCHAR buffer[32];
-                  _sntprintf(buffer, 32, _T("[%d]"), rt->pRoutes[i].dwIfIndex);
+                  _sntprintf(buffer, 32, _T("[%u]"), route->dwIfIndex);
                   msg.setField(id++, buffer);
                }
                id += 4;
             }
-            DestroyRoutingTable(rt);
+            delete rt;
          }
          else
          {

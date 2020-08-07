@@ -1150,21 +1150,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  ROUTING_TABLE *pRT;
-                  TCHAR szIpAddr[16];
-                  int i;
-
                   ConsolePrintf(pCtx, _T("Routing table for node %s:\n\n"), pObject->getName());
-                  pRT = ((Node *)pObject.get())->getCachedRoutingTable();
-                  if (pRT != nullptr)
+                  auto routingTable = static_cast<Node&>(*pObject).getCachedRoutingTable();
+                  if (routingTable != nullptr)
                   {
-                     for(i = 0; i < pRT->iNumEntries; i++)
+                     for(int i = 0; i < routingTable->size(); i++)
                      {
-                        _sntprintf(szBuffer, 256, _T("%s/%d"), IpToStr(pRT->pRoutes[i].dwDestAddr, szIpAddr),
-                                   BitsInMask(pRT->pRoutes[i].dwDestMask));
-                        ConsolePrintf(pCtx, _T("%-18s %-15s %-6d %d\n"), szBuffer,
-                                      IpToStr(pRT->pRoutes[i].dwNextHop, szIpAddr),
-                                      pRT->pRoutes[i].dwIfIndex, pRT->pRoutes[i].dwRouteType);
+                        ROUTE *r = routingTable->get(i);
+                        TCHAR szIpAddr[16];
+                        _sntprintf(szBuffer, 256, _T("%s/%d"), IpToStr(r->dwDestAddr, szIpAddr), BitsInMask(r->dwDestMask));
+                        ConsolePrintf(pCtx, _T("%-18s %-15s %-6d %d\n"), szBuffer, IpToStr(r->dwNextHop, szIpAddr), r->dwIfIndex, r->dwRouteType);
                      }
                      ConsoleWrite(pCtx, _T("\n"));
                   }

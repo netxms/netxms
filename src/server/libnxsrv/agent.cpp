@@ -2000,19 +2000,20 @@ uint32_t AgentConnection::writeConfigFile(const TCHAR *content)
 /**
  * Get routing table from agent
  */
-ROUTING_TABLE *AgentConnection::getRoutingTable()
+RoutingTable *AgentConnection::getRoutingTable()
 {
    StringList *data;
    if (getList(_T("Net.IP.RoutingTable"), &data) != ERR_SUCCESS)
       return nullptr;
 
-   ROUTING_TABLE *pRT = (ROUTING_TABLE *)malloc(sizeof(ROUTING_TABLE));
-   pRT->iNumEntries = data->size();
-   pRT->pRoutes = (ROUTE *)calloc(data->size(), sizeof(ROUTE));
+   auto routingTable = new RoutingTable(data->size(), 64);
    for(int i = 0; i < data->size(); i++)
    {
       TCHAR *line = MemCopyString(data->get(i));
       TCHAR *pBuf = line;
+
+      ROUTE route;
+      memset(&route, 0, sizeof(route));
 
       // Destination address and mask
       TCHAR *pChar = _tcschr(pBuf, _T(' '));
@@ -2032,9 +2033,9 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
          {
             pSlash = defaultMask;
          }
-         pRT->pRoutes[i].dwDestAddr = ntohl(_t_inet_addr(pBuf));
-         UINT32 dwBits = _tcstoul(pSlash, nullptr, 10);
-         pRT->pRoutes[i].dwDestMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+         route.dwDestAddr = ntohl(_t_inet_addr(pBuf));
+         uint32_t dwBits = _tcstoul(pSlash, nullptr, 10);
+         route.dwDestMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
          pBuf = pChar + 1;
       }
 
@@ -2043,7 +2044,7 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
       if (pChar != nullptr)
       {
          *pChar = 0;
-         pRT->pRoutes[i].dwNextHop = ntohl(_t_inet_addr(pBuf));
+         route.dwNextHop = ntohl(_t_inet_addr(pBuf));
          pBuf = pChar + 1;
       }
 
@@ -2052,18 +2053,19 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
       if (pChar != nullptr)
       {
          *pChar = 0;
-         pRT->pRoutes[i].dwIfIndex = _tcstoul(pBuf, nullptr, 10);
+         route.dwIfIndex = _tcstoul(pBuf, nullptr, 10);
          pBuf = pChar + 1;
       }
 
       // Route type
-      pRT->pRoutes[i].dwRouteType = _tcstoul(pBuf, nullptr, 10);
+      route.dwRouteType = _tcstoul(pBuf, nullptr, 10);
 
-      free(line);
+      routingTable->add(&route);
+      MemFree(line);
    }
 
    delete data;
-   return pRT;
+   return routingTable;
 }
 
 /**

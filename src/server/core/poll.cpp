@@ -407,7 +407,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
  * Check host route
  * Host will be added if it is directly connected
  */
-static void CheckHostRoute(Node *node, ROUTE *route)
+static void CheckHostRoute(Node *node, const ROUTE *route)
 {
 	TCHAR buffer[16];
 	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
@@ -468,16 +468,17 @@ void DiscoveryPoller(PollerInfo *poller)
 	// Retrieve and analyze node's routing table
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll for node %s (%s) - reading routing table"),
              node->getName(), (const TCHAR *)node->getIpAddress().toString());
-	ROUTING_TABLE *rt = node->getRoutingTable();
+	RoutingTable *rt = node->getRoutingTable();
 	if (rt != nullptr)
 	{
-		for(int i = 0; i < rt->iNumEntries; i++)
+		for(int i = 0; i < rt->size(); i++)
 		{
-			CheckPotentialNode(node, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
-			if ((rt->pRoutes[i].dwDestMask == 0xFFFFFFFF) && (rt->pRoutes[i].dwDestAddr != 0))
-				CheckHostRoute(node, &rt->pRoutes[i]);
+         ROUTE *route = rt->get(i);
+			CheckPotentialNode(node, route->dwNextHop, route->dwIfIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
+			if ((route->dwDestMask == 0xFFFFFFFF) && (route->dwDestAddr != 0))
+				CheckHostRoute(node, route);
 		}
-		DestroyRoutingTable(rt);
+		delete rt;
 	}
 
 	node->executeHookScript(_T("DiscoveryPoll"));

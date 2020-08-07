@@ -2814,7 +2814,7 @@ protected:
    uint32_t m_icmpProxy;       // Node used as proxy for ICMP ping
    uint64_t m_lastEvents[MAX_LAST_EVENTS];
    ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
-   ROUTING_TABLE *m_routingTable;
+   RoutingTable *m_routingTable;
    shared_ptr<NetworkPath> m_lastKnownNetworkPath;
 	ForwardingDatabase *m_fdb;
 	ArpCache *m_arpCache;
@@ -3083,8 +3083,8 @@ public:
    bool isMyIP(const InetAddress& addr) const;
    void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
-   ROUTING_TABLE *getRoutingTable();
-   ROUTING_TABLE *getCachedRoutingTable() { return m_routingTable; }
+   RoutingTable *getRoutingTable();
+   RoutingTable *getCachedRoutingTable() { return m_routingTable; }
    shared_ptr<NetworkPath> getLastKnownNetworkPath() const { return GetAttributeWithLock(m_lastKnownNetworkPath, m_mutexProperties); }
    LinkLayerNeighbors *getLinkLayerNeighbors();
    shared_ptr<VlanList> getVlans();

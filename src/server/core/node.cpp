@@ -315,7 +315,7 @@ Node::~Node()
    delete m_driverParameters;
    MemFree(m_snmpObjectId);
    MemFree(m_sysDescription);
-   DestroyRoutingTable(m_routingTable);
+   delete m_routingTable;
    if (m_arpCache != nullptr)
       m_arpCache->decRefCount();
    if (m_linkLayerNeighbors != nullptr)
@@ -7706,33 +7706,33 @@ UINT32 Node::getInterfaceCount(Interface **ppInterface)
 /**
  * Get routing table from node
  */
-ROUTING_TABLE *Node::getRoutingTable()
+RoutingTable *Node::getRoutingTable()
 {
-   ROUTING_TABLE *pRT = nullptr;
+   RoutingTable *routingTable = nullptr;
 
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
       shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
-         pRT = conn->getRoutingTable();
+         routingTable = conn->getRoutingTable();
       }
    }
-   if ((pRT == nullptr) && (m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
+   if ((routingTable == nullptr) && (m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
    {
       SNMP_Transport *pTransport = createSnmpTransport();
       if (pTransport != nullptr)
       {
-         pRT = SnmpGetRoutingTable(pTransport);
+         routingTable = SnmpGetRoutingTable(pTransport);
          delete pTransport;
       }
    }
 
-   if (pRT != nullptr)
+   if (routingTable != nullptr)
    {
-      SortRoutingTable(pRT);
+      SortRoutingTable(routingTable);
    }
-   return pRT;
+   return routingTable;
 }
 
 /**
@@ -7744,12 +7744,13 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
    routingTableLock();
    if (m_routingTable != nullptr)
    {
-      for(int i = 0; i < m_routingTable->iNumEntries; i++)
+      for(int i = 0; i < m_routingTable->size(); i++)
       {
-         if ((destAddr.getAddressV4() & m_routingTable->pRoutes[i].dwDestMask) == m_routingTable->pRoutes[i].dwDestAddr)
+         ROUTE *route = m_routingTable->get(i);
+         if ((destAddr.getAddressV4() & route->dwDestMask) == route->dwDestAddr)
          {
-            *srcIfIndex = m_routingTable->pRoutes[i].dwIfIndex;
-            shared_ptr<Interface> iface = findInterfaceByIndex(m_routingTable->pRoutes[i].dwIfIndex);
+            *srcIfIndex = route->dwIfIndex;
+            shared_ptr<Interface> iface = findInterfaceByIndex(route->dwIfIndex);
             if (iface != nullptr)
             {
                *srcAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
@@ -7827,13 +7828,14 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
    routingTableLock();
    if (m_routingTable != nullptr)
    {
-      for(int i = 0; i < m_routingTable->iNumEntries; i++)
+      for(int i = 0; i < m_routingTable->size(); i++)
       {
-         if ((!nextHopFound || (m_routingTable->pRoutes[i].dwDestMask == 0xFFFFFFFF)) &&
-             ((destAddr.getAddressV4() & m_routingTable->pRoutes[i].dwDestMask) == m_routingTable->pRoutes[i].dwDestAddr))
+         ROUTE *entry = m_routingTable->get(i);
+         if ((!nextHopFound || (entry->dwDestMask == 0xFFFFFFFF)) &&
+             ((destAddr.getAddressV4() & entry->dwDestMask) == entry->dwDestAddr))
          {
-            shared_ptr<Interface> iface = findInterfaceByIndex(m_routingTable->pRoutes[i].dwIfIndex);
-            if ((m_routingTable->pRoutes[i].dwNextHop == 0) && (iface != nullptr) &&
+            shared_ptr<Interface> iface = findInterfaceByIndex(entry->dwIfIndex);
+            if ((entry->dwNextHop == 0) && (iface != nullptr) &&
                 (iface->getIpAddressList()->getFirstUnicastAddressV4().getHostBits() == 0))
             {
                // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
@@ -7842,11 +7844,11 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             }
             else
             {
-               *nextHop = m_routingTable->pRoutes[i].dwNextHop;
+               *nextHop = entry->dwNextHop;
             }
-            *route = m_routingTable->pRoutes[i].dwDestAddr;
-            route->setMaskBits(BitsInMask(m_routingTable->pRoutes[i].dwDestMask));
-            *ifIndex = m_routingTable->pRoutes[i].dwIfIndex;
+            *route = entry->dwDestAddr;
+            route->setMaskBits(BitsInMask(entry->dwDestMask));
+            *ifIndex = entry->dwIfIndex;
             *isVpn = false;
             if (iface != nullptr)
             {
@@ -7854,7 +7856,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             }
             else
             {
-               _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), m_routingTable->pRoutes[i].dwIfIndex);
+               _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), entry->dwIfIndex);
             }
             nextHopFound = true;
             break;
@@ -7903,12 +7905,12 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
    unlockProperties();
 
    pollerLock(routing);
-   ROUTING_TABLE *pRT = getRoutingTable();
-   if (pRT != nullptr)
+   auto routingTable = getRoutingTable();
+   if (routingTable != nullptr)
    {
       routingTableLock();
-      DestroyRoutingTable(m_routingTable);
-      m_routingTable = pRT;
+      delete m_routingTable;
+      m_routingTable = routingTable;
       routingTableUnlock();
       nxlog_debug_tag(DEBUG_TAG_ROUTES_POLL, 5, _T("Routing table updated for node %s [%d]"), m_name, m_id);
    }
