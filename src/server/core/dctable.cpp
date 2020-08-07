@@ -778,8 +778,8 @@ void DCTable::deleteFromDatabase()
    QueueSQLRequest(szQuery);
 
    auto owner = m_owner.lock();
-   if (owner->isDataCollectionTarget())
-      static_cast<DataCollectionTarget*>(owner.get())->scheduleItemDataCleanup(m_id);
+   if (owner->isDataCollectionTarget() && g_dbSyntax != DB_SYNTAX_TSDB)
+      static_cast<DataCollectionTarget*>(owner.get())->scheduleTableDataCleanup(m_id);
 }
 
 /**

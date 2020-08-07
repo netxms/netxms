@@ -351,6 +351,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
       tableCount++;
    }
    m_deletedTables->clear();
+   setModified(MODIFY_DATA_COLLECTION, false);  //To update cleanup lists in database
    unlockProperties();
 
    if (itemCount > 0)
@@ -413,6 +414,81 @@ void DataCollectionTarget::scheduleTableDataCleanup(UINT32 dciId)
    lockProperties();
    m_deletedTables->add(dciId);
    unlockProperties();
+}
+
+/**
+ * Save DCI list that should be cleared
+ */
+bool DataCollectionTarget::saveDCIListForCleanup(DB_HANDLE hdb)
+{
+   bool success = executeQueryOnObject(hdb, _T("DELETE FROM dci_delete_list WHERE node_id=?"));
+
+   if ((!m_deletedItems->isEmpty() || !m_deletedTables->isEmpty()) && success)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_delete_list (node_id,dci_id,type) VALUES (?,?,?)"), (m_deletedItems->size() + m_deletedTables->size()) > 1);
+
+      if (hStmt == nullptr)
+      {
+         return false;
+      }
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      for(int i = 0; i < m_deletedItems->size() && success; i++)
+      {
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deletedItems->get(i));
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("i"), 1);
+         success = DBExecute(hStmt);
+      }
+
+      for(int i = 0; i < m_deletedTables->size() && success; i++)
+      {
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deletedTables->get(i));
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("t"), 1);
+         success = DBExecute(hStmt);
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   return success;
+}
+
+/**
+ * Load DCI list that should be cleared
+ */
+void DataCollectionTarget::loadDCIListForCleanup(DB_HANDLE hdb)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+                 _T("SELECT dci_id FROM dci_delete_list WHERE type='i' AND node_id=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            m_deletedItems->add(DBGetFieldULong(hResult, i, 0));
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   hStmt = DBPrepare(hdb,
+                 _T("SELECT dci_id FROM dci_delete_list WHERE type='t' AND node_id=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+            m_deletedTables->add(DBGetFieldULong(hResult, i, 0));
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
 }
 
 /**

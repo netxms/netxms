@@ -23,11 +23,34 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 40.4 to 40.5
+ */
+static bool H_UpgradeFromV4()
+{
+   if (GetSchemaLevelForMajorVersion(34) < 16)
+   {
+      CHK_EXEC(CreateConfigParam(_T("FirstFreeDCIId"), _T("1"), 0, 1, FALSE));
+
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE dci_delete_list (")
+            _T("node_id integer not null,")
+            _T("dci_id integer not null,")
+            _T("type char(1) not null,")
+            _T("PRIMARY KEY (node_id,dci_id))")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(34, 16));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 40.3 to 40.4
  */
 static bool H_UpgradeFromV3()
 {
-   if (GetSchemaLevelForMajorVersion(34) < 14)
+   if (GetSchemaLevelForMajorVersion(34) < 15)
    {
       CHK_EXEC(CreateConfigParam(_T("DBWriter.HouseKeeperInterlock"), _T("0"), _T("Controls if server should block background write of collected performance data while housekeeper deletes expired records."), nullptr, 'C', true, false, false, false));
 
@@ -39,7 +62,7 @@ static bool H_UpgradeFromV3()
             _T("<END>");
       CHK_EXEC(SQLBatch(batch));
 
-      CHK_EXEC(SetSchemaLevelForMajorVersion(34, 14));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(34, 15));
    }
    CHK_EXEC(SetMinorSchemaVersion(4));
    return true;
@@ -197,6 +220,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4,  40, 5,  H_UpgradeFromV4  },
    { 3,  40, 4,  H_UpgradeFromV3  },
    { 2,  40, 3,  H_UpgradeFromV2  },
    { 1,  40, 2,  H_UpgradeFromV1  },

@@ -88,6 +88,7 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    for(i = 0; i < m_dcObjects->size(); i++)
       if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
          return false;
+   loadDCIListForCleanup(hdb);
 
    if (!m_isDeleted)
    {
@@ -224,6 +225,7 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 		readLockDciAccess();
       for(int i = 0; (i < m_dcObjects->size()) && success; i++)
          success = m_dcObjects->get(i)->saveToDatabase(hdb);
+      success = saveDCIListForCleanup(hdb);
 		unlockDciAccess();
    }
 

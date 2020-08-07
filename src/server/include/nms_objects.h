@@ -2000,6 +2000,9 @@ protected:
    virtual void collectProxyInfo(ProxyInfo *info);
    static void collectProxyInfoCallback(NetObj *object, void *data);
 
+   bool saveDCIListForCleanup(DB_HANDLE hdb);
+   void loadDCIListForCleanup(DB_HANDLE hdb);
+
 public:
    DataCollectionTarget();
    DataCollectionTarget(const TCHAR *name);
