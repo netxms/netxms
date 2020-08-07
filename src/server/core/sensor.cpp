@@ -227,6 +227,7 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    for(int i = 0; i < m_dcObjects->size(); i++)
       if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
          return false;
+   loadDCIListForCleanup(hdb);
 
    return true;
 }
@@ -285,6 +286,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
 		readLockDciAccess();
       for(int i = 0; i < m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDatabase(hdb);
+      success = saveDCIListForCleanup(hdb);
 		unlockDciAccess();
    }
 

@@ -229,6 +229,9 @@ bool InitIdTable()
    }
 
    // Get first available data collection object id
+   id = ConfigReadULong(_T("FirstFreeDCIId"), s_freeIdTable[IDG_ITEM]);
+   if (id > s_freeIdTable[IDG_ITEM])
+      s_freeIdTable[IDG_ITEM] = id;
    hResult = DBSelect(hdb, _T("SELECT max(item_id) FROM items"));
    if (hResult != NULL)
    {
@@ -237,6 +240,13 @@ bool InitIdTable()
       DBFreeResult(hResult);
    }
    hResult = DBSelect(hdb, _T("SELECT max(item_id) FROM dc_tables"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_ITEM] = std::max(s_freeIdTable[IDG_ITEM], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+   hResult = DBSelect(hdb, _T("SELECT max(dci_id) FROM dci_delete_list"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -540,7 +550,9 @@ uint64_t CreateUniqueEventId()
 void SaveCurrentFreeId()
 {
    MutexLock(s_mutexTableAccess);
-   uint32_t id = s_freeIdTable[IDG_NETWORK_OBJECT];
+   uint32_t objectId = s_freeIdTable[IDG_NETWORK_OBJECT];
+   uint32_t dciId = s_freeIdTable[IDG_ITEM];
    MutexUnlock(s_mutexTableAccess);
-	ConfigWriteULong(_T("FirstFreeObjectId"), id, TRUE, FALSE, TRUE);
+	ConfigWriteULong(_T("FirstFreeObjectId"), objectId, TRUE, FALSE, TRUE);
+   ConfigWriteULong(_T("FirstFreeDCIId"), dciId, TRUE, FALSE, TRUE);
 }

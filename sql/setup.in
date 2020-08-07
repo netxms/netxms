@@ -98,6 +98,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ExternalAuditServer','none','none',1,1,'S','External syslog server to send audit records to. If set to "none", external audit logging is disabled.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ExternalAuditSeverity','5','5',1,1,'I','Syslog severity to be used in audit log records sent to external server.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ExternalAuditTag','netxmsd-audit','netxmsd-audit',1,1,'S','Syslog tag to be used in audit log records sent to external server.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('FirstFreeDCIId','1','1',0,1,'I','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('FirstFreeObjectId','100','100',0,1,'I','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('FixedStatusValue','0','0',1,1,'I','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('GraceLoginCount','5','5',1,0,'I','User grace login count','logins');

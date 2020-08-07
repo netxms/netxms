@@ -23,6 +23,23 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 34.15 to 34.16
+ */
+static bool H_UpgradeFromV15()
+{
+   CHK_EXEC(CreateConfigParam(_T("FirstFreeDCIId"), _T("1"), 0, 1, FALSE));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE dci_delete_list (")
+         _T("node_id integer not null,")
+         _T("dci_id integer not null,")
+         _T("type char(1) not null,")
+         _T("PRIMARY KEY (node_id,dci_id))")));
+
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
 
 /**
  * Upgrade from 34.14 to 34.15
@@ -260,6 +277,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 14, 34, 16, H_UpgradeFromV15 },
    { 14, 34, 15, H_UpgradeFromV14 },
    { 13, 34, 14, H_UpgradeFromV13 },
    { 12, 34, 13, H_UpgradeFromV12 },

@@ -2268,3 +2268,15 @@ CREATE TABLE shared_secrets
    zone integer not null,
    PRIMARY KEY(id,zone)
 ) TABLE_TYPE;
+
+/**
+ * List of deleted DCIs to clear data on housekeeper
+ */
+CREATE TABLE dci_delete_list 
+(
+   node_id integer not null,
+   dci_id integer not null,
+   type char(1) not null,
+   PRIMARY KEY (node_id,dci_id)
+) TABLE_TYPE;
+
