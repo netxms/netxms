@@ -127,31 +127,19 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
 }
 
 /**
- * Destroy routing table
- */
-void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT)
-{
-   if (pRT != NULL)
-   {
-      MemFree(pRT->pRoutes);
-      free(pRT);
-   }
-}
-
-/**
  * Route comparision callback
  */
 static int CompareRoutes(const void *p1, const void *p2)
 {
-   return -(COMPARE_NUMBERS(((ROUTE *)p1)->dwDestMask, ((ROUTE *)p2)->dwDestMask));
+   return -(COMPARE_NUMBERS(static_cast<const ROUTE*>(p1)->dwDestMask, static_cast<const ROUTE*>(p2)->dwDestMask));
 }
 
 /**
  * Sort routing table (put most specific routes first)
  */
-void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT)
+void LIBNXSRV_EXPORTABLE SortRoutingTable(RoutingTable *routingTable)
 {
-   qsort(pRT->pRoutes, pRT->iNumEntries, sizeof(ROUTE), CompareRoutes);
+   routingTable->sort(CompareRoutes);
 }
 
 #ifdef _WIN32

@@ -660,21 +660,17 @@ template <class C, typename... Args> shared_ptr<C> MakeSharedNObject(Args&&... a
  */
 typedef struct
 {
-   UINT32 dwDestAddr;
-   UINT32 dwDestMask;
-   UINT32 dwNextHop;
-   UINT32 dwIfIndex;
-   UINT32 dwRouteType;
+   uint32_t dwDestAddr;
+   uint32_t dwDestMask;
+   uint32_t dwNextHop;
+   uint32_t dwIfIndex;
+   uint32_t dwRouteType;
 } ROUTE;
 
 /**
  * Routing table
  */
-typedef struct
-{
-   int iNumEntries;     // Number of entries
-   ROUTE *pRoutes;      // Route list
-} ROUTING_TABLE;
+typedef StructArray<ROUTE> RoutingTable;
 
 /**
  * Information about policies installed on agent
@@ -926,7 +922,7 @@ public:
 
    ArpCache *getArpCache();
    InterfaceList *getInterfaceList();
-   ROUTING_TABLE *getRoutingTable();
+   RoutingTable *getRoutingTable();
    uint32_t getParameter(const TCHAR *param, TCHAR *buffer, size_t size);
    uint32_t getList(const TCHAR *param, StringList **list);
    uint32_t getTable(const TCHAR *param, Table **table);
@@ -1088,8 +1084,7 @@ struct ServerCommandLineTool
  */
 int LIBNXSRV_EXPORTABLE ExecuteServerCommandLineTool(ServerCommandLineTool *tool);
 
-void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
-void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
+void LIBNXSRV_EXPORTABLE SortRoutingTable(RoutingTable *routingTable);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err);
 UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err);
 

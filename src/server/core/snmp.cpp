@@ -27,67 +27,68 @@
 /**
  * Handler for route enumeration
  */
-static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, RoutingTable *routingTable)
 {
-   UINT32 oidName[MAX_OID_LEN], dwResult;
-   ROUTE route;
-	ROUTING_TABLE *rt = (ROUTING_TABLE *)pArg;
-
    size_t nameLen = pVar->getName().length();
 	if ((nameLen < 5) || (nameLen > MAX_OID_LEN))
 	{
 		nxlog_debug_tag(_T("topo.ipv4"), 4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, pVar->getName().toString().cstr());
 		return SNMP_ERR_SUCCESS;
 	}
+
+   uint32_t oidName[MAX_OID_LEN];
    memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
-   route.dwDestAddr = ntohl(pVar->getValueAsUInt());
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
 
    oidName[nameLen - 5] = 2;  // Interface index
-   if ((dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen,
-                             &route.dwIfIndex, sizeof(UINT32), 0, NULL)) != SNMP_ERR_SUCCESS)
-      return dwResult;
+   request.bindVariable(new SNMP_Variable(oidName, nameLen));
 
    oidName[nameLen - 5] = 7;  // Next hop
-   if ((dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen,
-                             &route.dwNextHop, sizeof(UINT32), 0, NULL)) != SNMP_ERR_SUCCESS)
-      return dwResult;
+   request.bindVariable(new SNMP_Variable(oidName, nameLen));
 
    oidName[nameLen - 5] = 8;  // Route type
-   if ((dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen,
-                             &route.dwRouteType, sizeof(UINT32), 0, NULL)) != SNMP_ERR_SUCCESS)
-      return dwResult;
+   request.bindVariable(new SNMP_Variable(oidName, nameLen));
 
    oidName[nameLen - 5] = 11;  // Destination mask
-   if ((dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen,
-                             &route.dwDestMask, sizeof(UINT32), 0, NULL)) != SNMP_ERR_SUCCESS)
+   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+
+   uint32_t dwResult;
+   SNMP_PDU *response;
+   if ((dwResult = pTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   rt->iNumEntries++;
-   rt->pRoutes = (ROUTE *)realloc(rt->pRoutes, sizeof(ROUTE) * rt->iNumEntries);
-   memcpy(&rt->pRoutes[rt->iNumEntries - 1], &route, sizeof(ROUTE));
+   if (response->getNumVariables() != request.getNumVariables())
+   {
+      delete response;
+      return SNMP_ERR_NO_OBJECT;
+   }
+
+   ROUTE route;
+   route.dwDestAddr = ntohl(pVar->getValueAsUInt());
+   route.dwIfIndex = response->getVariable(0)->getValueAsUInt();
+   route.dwNextHop = ntohl(response->getVariable(1)->getValueAsUInt());
+   route.dwRouteType = response->getVariable(2)->getValueAsUInt();
+   route.dwDestMask = ntohl(response->getVariable(3)->getValueAsUInt());
+   routingTable->add(&route);
+   delete response;
    return SNMP_ERR_SUCCESS;
 }
 
 /**
  * Get routing table via SNMP
  */
-ROUTING_TABLE *SnmpGetRoutingTable(SNMP_Transport *pTransport)
+RoutingTable *SnmpGetRoutingTable(SNMP_Transport *pTransport)
 {
-   ROUTING_TABLE *pRT;
+   RoutingTable *routingTable = new RoutingTable(64, 64);
+   if (routingTable == nullptr)
+      return nullptr;
 
-   pRT = MemAllocStruct<ROUTING_TABLE>();
-   if (pRT == NULL)
-      return NULL;
-
-   pRT->iNumEntries = 0;
-   pRT->pRoutes = NULL;
-
-   if (SnmpWalk(pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), HandlerRoute, pRT) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), HandlerRoute, routingTable, false, true) != SNMP_ERR_SUCCESS)
    {
-      DestroyRoutingTable(pRT);
-      pRT = NULL;
+      delete_and_null(routingTable);
    }
-   return pRT;
+   return routingTable;
 }
 
 /**
