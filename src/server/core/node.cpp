@@ -1036,8 +1036,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       readLockDciAccess();
       for(int i = 0; success && (i < m_dcObjects->size()); i++)
          success = m_dcObjects->get(i)->saveToDatabase(hdb);
-      success = saveDCIListForCleanup(hdb);
       unlockDciAccess();
+      if (success)
+         success = saveDCIListForCleanup(hdb);
    }
 
    // Save ICMP pollers

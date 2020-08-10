@@ -166,10 +166,11 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
 		readLockDciAccess();
-      for(int i = 0; i < m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDatabase(hdb);
-      success = saveDCIListForCleanup(hdb);
+      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
+         success = m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
+      if (success)
+         success = saveDCIListForCleanup(hdb);
    }
 
    // Save access list

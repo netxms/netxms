@@ -423,26 +423,24 @@ bool DataCollectionTarget::saveDCIListForCleanup(DB_HANDLE hdb)
 {
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM dci_delete_list WHERE node_id=?"));
 
-   if ((!m_deletedItems->isEmpty() || !m_deletedTables->isEmpty()) && success)
+   if (success && (!m_deletedItems->isEmpty() || !m_deletedTables->isEmpty()))
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_delete_list (node_id,dci_id,type) VALUES (?,?,?)"), (m_deletedItems->size() + m_deletedTables->size()) > 1);
-
       if (hStmt == nullptr)
-      {
          return false;
-      }
+
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("i"), 1);
       for(int i = 0; i < m_deletedItems->size() && success; i++)
       {
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deletedItems->get(i));
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("i"), 1);
          success = DBExecute(hStmt);
       }
 
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("t"), 1);
       for(int i = 0; i < m_deletedTables->size() && success; i++)
       {
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deletedTables->get(i));
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("t"), 1);
          success = DBExecute(hStmt);
       }
       DBFreeStatement(hStmt);
