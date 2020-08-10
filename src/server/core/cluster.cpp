@@ -225,8 +225,9 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 		readLockDciAccess();
       for(int i = 0; (i < m_dcObjects->size()) && success; i++)
          success = m_dcObjects->get(i)->saveToDatabase(hdb);
-      success = saveDCIListForCleanup(hdb);
 		unlockDciAccess();
+      if (success)
+         success = saveDCIListForCleanup(hdb);
    }
 
    if (success)
