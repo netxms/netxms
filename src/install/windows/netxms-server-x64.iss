@@ -278,7 +278,9 @@ Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignor
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\music\*"; DestDir: "{app}\var\files"; Flags: ignoreversion; Components: server
-Source: "..\..\java-common\netxms-base\target\netxms-base.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
+Source: "..\..\java-common\lib\commons-codec-1.11.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server or tools
+Source: "..\..\java-common\lib\simple-xml-2.6.4.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server or tools
+Source: "..\..\java-common\netxms-base\target\netxms-base.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server or tools
 Source: "..\..\libnxjava\java\target\netxms-java-bridge.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
 ; Command line tools
 Source: "..\..\..\x64\Release\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
