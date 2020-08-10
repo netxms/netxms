@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.State;
 import org.eclipse.jface.action.Action;
@@ -33,6 +36,8 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
+import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
@@ -284,5 +289,19 @@ public class InterfacesTab extends NodeComponentViewerTab
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {
       return object instanceof Interface;
+   }
+
+   @Override
+   protected void syncAdditionalObjects() throws IOException, NXCException
+   {
+      List<Long> additionalSyncInterfaces = new ArrayList<Long>();
+      for (AbstractObject obj : getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE))
+      {
+         long id = ((Interface)obj).getPeerInterfaceId();
+         if(id != 0)
+            additionalSyncInterfaces.add(id);
+      }
+
+      session.syncMissingObjects(additionalSyncInterfaces, true, NXCSession.OBJECT_SYNC_WAIT);
    }
 }

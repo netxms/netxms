@@ -132,6 +132,11 @@ public abstract class NodeComponentTab extends ObjectTab
          }
       }      
    }
+   
+   /**
+    * Will synchronize additional objects if required
+    */
+   protected abstract void syncAdditionalObjects() throws IOException, NXCException;
 
    /**
     * Sync object children form server
@@ -163,6 +168,7 @@ public abstract class NodeComponentTab extends ObjectTab
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             session.syncChildren(object);
+            syncAdditionalObjects();
             runInUIThread(new Runnable() {
                @Override
                public void run()
