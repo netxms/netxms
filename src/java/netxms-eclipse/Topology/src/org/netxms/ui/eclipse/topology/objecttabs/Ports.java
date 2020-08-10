@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.topology.objecttabs;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.action.IMenuListener;
@@ -32,8 +33,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.NXCException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
@@ -101,6 +105,13 @@ public class Ports extends NodeComponentTab implements ISelectionProvider
 				scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 			}
 		});
+		
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      scroller.setLayoutData(fd);
 		
 		createPopupMenu();
 	}
@@ -201,4 +212,9 @@ public class Ports extends NodeComponentTab implements ISelectionProvider
 	{
 		this.selection = selection;
 	}
+
+   @Override
+   protected void syncAdditionalObjects() throws IOException, NXCException
+   {
+   }
 }

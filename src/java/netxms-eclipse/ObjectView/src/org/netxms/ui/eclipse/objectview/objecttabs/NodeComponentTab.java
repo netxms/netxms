@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
@@ -28,10 +31,12 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
@@ -132,6 +137,11 @@ public abstract class NodeComponentTab extends ObjectTab
          }
       }      
    }
+   
+   /**
+    * Will synchronize additional objects if required
+    */
+   protected abstract void syncAdditionalObjects() throws IOException, NXCException;
 
    /**
     * Sync object children form server
@@ -163,6 +173,7 @@ public abstract class NodeComponentTab extends ObjectTab
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             session.syncChildren(object);
+            syncAdditionalObjects();
             runInUIThread(new Runnable() {
                @Override
                public void run()

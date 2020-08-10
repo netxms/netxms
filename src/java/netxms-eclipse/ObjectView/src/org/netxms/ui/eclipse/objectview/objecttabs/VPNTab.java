@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
+import java.io.IOException;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -26,6 +27,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
+import org.netxms.client.NXCException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
@@ -117,5 +119,10 @@ public class VPNTab extends NodeComponentViewerTab
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {
       return object instanceof VPNConnector;
+   }
+
+   @Override
+   protected void syncAdditionalObjects() throws IOException, NXCException
+   {
    }
 }

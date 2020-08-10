@@ -121,4 +121,9 @@ public class NetworkServiceTab extends NodeComponentViewerTab
    {
       return object instanceof NetworkService;
    }
+
+   @Override
+   protected void syncAdditionalObjects() throws IOException, NXCException
+   {
+   }
 }

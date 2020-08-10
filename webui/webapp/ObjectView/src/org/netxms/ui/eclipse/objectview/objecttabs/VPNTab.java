@@ -117,4 +117,9 @@ public class VPNTab extends NodeComponentViewerTab
    {
       return object instanceof VPNConnector;
    }
+
+   @Override
+   protected void syncAdditionalObjects() throws IOException, NXCException
+   {
+   }
 }
