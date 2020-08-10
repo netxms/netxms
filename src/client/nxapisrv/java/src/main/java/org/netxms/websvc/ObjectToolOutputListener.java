@@ -30,7 +30,7 @@ public class ObjectToolOutputListener implements TextOutputListener
    private boolean completed = false;
    private Long streamId = 0L;
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.TextOutputListener#messageReceived(java.lang.String)
     */
    @Override
@@ -43,13 +43,21 @@ public class ObjectToolOutputListener implements TextOutputListener
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.TextOutputListener#setStreamId(long)
     */
    @Override
    public void setStreamId(long streamId)
    {
       this.streamId = streamId;
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
+   @Override
+   public void onError()
+   {
    }
 
    /**
