@@ -1000,7 +1000,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
       labelProvider.setShowLinkDirection((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_LINK_DIRECTION) > 0);
 		
-		refreshMap();
+      syncObjects();//refresh will be done after sync
 	}
 
 	/**
