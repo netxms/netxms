@@ -27,7 +27,7 @@ public class ExpansionTest extends AbstractSessionTest
       stringsToExpand.add("%g%I");
       stringsToExpand.add("%K%n%U");
       stringsToExpand.add("%(Key1)%(Key2)");
-      final List<String> expandedStrings = session.substitureMacross(new ObjectContextBase(object, alarm), stringsToExpand, inputValues);
+      final List<String> expandedStrings = session.substituteMacros(new ObjectContextBase(object, alarm), stringsToExpand, inputValues);
       
       assertEquals("%" + object.getPrimaryIP().getHostAddress().toString()+alarm.getMessage(), expandedStrings.get(0));
       assertEquals(object.getGuid().toString()+object.getObjectId(), expandedStrings.get(1));
