@@ -192,6 +192,10 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
             if (obj == null)
                return "[" + dci.getRelatedObject() + "]";
             return obj.getObjectName();
+         case DataCollectionEditor.COLUMN_STATUSCALC:
+            if (dci instanceof DataCollectionItem)
+               return ((DataCollectionItem)dci).isUsedForNodeStatusCalculation() ? "Yes" : "No";
+            return "No";
 		}
 		return null;
 	}
