@@ -462,24 +462,24 @@ static bool Upgrade_33_6()
 }
 
 /**
- * Online upgrade for version 40.2
+ * Online upgrade for version 35.2
  */
-static bool Upgrade_40_2()
+static bool Upgrade_35_2()
 {
    if (g_dbSyntax != DB_SYNTAX_TSDB)
       return true;   // not needed
 
    WriteToTerminalEx(_T("Converting table \x1b[1mevent_log\x1b[0m\n"));
-   CHK_EXEC_NO_SP(SQLQuery(_T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,event_tags,root_event_id,raw_data) SELECT event_id,event_code,to_timestamp(event_timestamp),origin,origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,event_tags,root_event_id,raw_data FROM event_log_v40_2")));
-   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE event_log_v40_2 CASCADE")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,event_tags,root_event_id,raw_data) SELECT event_id,event_code,to_timestamp(event_timestamp),origin,origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,event_tags,root_event_id,raw_data FROM event_log_v35_2")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE event_log_v35_2 CASCADE")));
 
    WriteToTerminalEx(_T("Converting table \x1b[1msyslog\x1b[0m\n"));
-   CHK_EXEC_NO_SP(SQLQuery(_T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) SELECT msg_id,to_timestamp(msg_timestamp),facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text FROM syslog_v40_2")));
-   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE syslog_v40_2 CASCADE")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) SELECT msg_id,to_timestamp(msg_timestamp),facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text FROM syslog_v35_2")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE syslog_v35_2 CASCADE")));
 
    WriteToTerminalEx(_T("Converting table \x1b[1msnmp_trap_log\x1b[0m\n"));
-   CHK_EXEC_NO_SP(SQLQuery(_T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,ip_addr,object_id,zone_uin,trap_oid,trap_varlist) SELECT trap_id,to_timestamp(trap_timestamp),ip_addr,object_id,zone_uin,trap_oid,trap_varlist FROM snmp_trap_log_v40_2")));
-   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE snmp_trap_log_v40_2 CASCADE")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,ip_addr,object_id,zone_uin,trap_oid,trap_varlist) SELECT trap_id,to_timestamp(trap_timestamp),ip_addr,object_id,zone_uin,trap_oid,trap_varlist FROM snmp_trap_log_v35_2")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE snmp_trap_log_v35_2 CASCADE")));
 
    return true;
 }
@@ -494,7 +494,7 @@ struct
    bool (*handler)();
 } s_handlers[] =
 {
-   { 40, 2,  Upgrade_40_2  },
+   { 35, 2,  Upgrade_35_2  },
    { 33, 6,  Upgrade_33_6  },
    { 30, 87, Upgrade_30_87 },
    { 22, 21, Upgrade_22_21 },
