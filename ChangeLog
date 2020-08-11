@@ -1,5 +1,5 @@
 *
-* 4.0-CURRENT
+* 3.5-CURRENT
 *
 
 - Access to NXSL object's class metadata via __class attribute
