@@ -3051,7 +3051,7 @@ void Node::updatePrimaryIpAddr()
       return;
 
    InetAddress ipAddr = ResolveHostName(m_zoneUIN, m_primaryHostName);
-   if (!ipAddr.equals(getIpAddress()) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryHostName, _T("0.0.0.0"))))
+   if (!ipAddr.equals(getIpAddress()) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryHostName, _T("0.0.0.0")) || ((m_capabilities & NC_IS_LOCAL_MGMT) && ipAddr.isLoopback())))
    {
       TCHAR buffer1[64], buffer2[64];
 
@@ -5439,7 +5439,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 
    // Check if tunnel is available
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
-   if ((tunnel == nullptr) && (!m_ipAddress.isValidUnicast() || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)))
+   if ((tunnel == nullptr) && ((!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback())) || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)))
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
                (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
@@ -7421,7 +7421,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
    }
    else
    {
-      if (!m_ipAddress.isValidUnicast() || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY))
+      if ((!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback())) || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY))
       {
          nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::createAgentConnection(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
                   (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
