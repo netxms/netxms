@@ -2504,7 +2504,7 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "certificateExpirationTime"))
    {
-      value = vm->createValue(tunnel->getCertificateExpirationTime());
+      value = vm->createValue(static_cast<INT64>(tunnel->getCertificateExpirationTime()));
    }
    else if (compareAttributeName(attr, "guid"))
    {
@@ -2548,7 +2548,7 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "startTime"))
    {
-      value = vm->createValue(tunnel->getStartTime());
+      value = vm->createValue(static_cast<INT64>(tunnel->getStartTime()));
    }
    else if (compareAttributeName(attr, "systemInfo"))
    {
