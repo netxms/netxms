@@ -25,11 +25,39 @@
 /**
  * Upgrade from 35.6 to 40.0
  */
-static bool H_UpgradeFromV6()
+static bool H_UpgradeFromV7()
 {
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
    return true;
 }
+
+/**
+ * Upgrade from 35.6 to 35.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(SQLQuery(
+         _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+         _T("VALUES ('9c2dba59-493b-4645-9159-2ad7a28ea611',23,'Hook::UnboundTunnelOpened','")
+         _T("/* Available global variables:\r\n")
+         _T(" *  $tunnel - incoming tunnel information (object of ''Tunnel'' class)\r\n")
+         _T(" *\r\n")
+         _T(" * Expected return value:\r\n")
+         _T(" *  none - returned value is ignored\r\n */\r\n')")));
+   CHK_EXEC(SQLQuery(
+         _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+         _T("VALUES ('64c90b92-27e9-4a96-98ea-d0e152d71262',24,'Hook::BoundTunnelOpened','")
+         _T("/* Available global variables:\r\n")
+         _T(" *  $node - node this tunnel was bound to (object of ''Node'' class)\r\n")
+         _T(" *  $tunnel - incoming tunnel information (object of ''Tunnel'' class)\r\n")
+         _T(" *\r\n")
+         _T(" * Expected return value:\r\n")
+         _T(" *  none - returned value is ignored\r\n */\r\n')")));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
 
 /**
  * Upgrade from 35.5 to 35.6
@@ -239,7 +267,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 6,  40, 0,  H_UpgradeFromV6  },
+   { 6,  40, 0,  H_UpgradeFromV7  },
+   { 6,  35, 7,  H_UpgradeFromV6  },
    { 5,  35, 6,  H_UpgradeFromV5  },
    { 4,  35, 5,  H_UpgradeFromV4  },
    { 3,  35, 4,  H_UpgradeFromV3  },

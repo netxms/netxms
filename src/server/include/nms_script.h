@@ -335,6 +335,18 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+/**
+ * NXSL class with tunnel information
+ */
+class NXSL_TunnelClass : public NXSL_Class
+{
+public:
+   NXSL_TunnelClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -424,6 +436,7 @@ extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 extern NXSL_SubnetClass g_nxslSubnetClass;
 extern NXSL_TemplateClass g_nxslTemplateClass;
+extern NXSL_TunnelClass g_nxslTunnelClass;
 extern NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 extern NXSL_UserClass g_nxslUserClass;
 extern NXSL_UserGroupClass g_nxslUserGroupClass;
