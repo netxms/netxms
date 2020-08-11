@@ -1194,7 +1194,7 @@ NXSL_METHOD_DEFINITION(Node, readWebServiceParameter)
 }
 
 /**
- * Node::readAgentList(name) method
+ * Node::readWebServiceList(name) method
  */
 NXSL_METHOD_DEFINITION(Node, readWebServiceList)
 {

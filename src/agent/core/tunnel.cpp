@@ -270,6 +270,7 @@ void Tunnel::recvThread()
          {
             m_reset = true;
             debugPrintf(4, _T("Receiver thread stopped (tunnel reset)"));
+            delete msg;
             break;
          }
 
