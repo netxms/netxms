@@ -144,6 +144,7 @@ public:
    void resetStartTime() { m_startTime = time(NULL); }
 
    uint32_t getId() const { return m_id; }
+   uuid getGUID() const { return m_guid; }
    const InetAddress& getAddress() const { return m_address; }
    const NodeHardwareId& getHardwareId() const { return m_hardwareId; }
    const TCHAR *getSystemName() const { return CHECK_NULL_EX(m_systemName); }
@@ -160,6 +161,11 @@ public:
    time_t getCertificateExpirationTime() const { return m_certificateExpirationTime; }
    AgentTunnelState getState() const { return m_state; }
    time_t getStartTime() const { return m_startTime; }
+
+   bool isAgentProxy() const { return m_agentProxy; }
+   bool isSnmpProxy() const { return m_snmpProxy; }
+   bool isSnmpTrapProxy() const { return m_snmpTrapProxy; }
+   bool isUserAgentInstalled() const { return m_userAgentInstalled; }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 

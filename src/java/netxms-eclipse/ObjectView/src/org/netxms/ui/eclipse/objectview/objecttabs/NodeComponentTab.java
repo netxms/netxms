@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
@@ -36,7 +34,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;

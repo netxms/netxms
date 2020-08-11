@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <entity_mib.h>
 #include <ethernet_ip.h>
+#include <agent_tunnel.h>
 
 /**
  * Get ICMP statistic for node sub-object
@@ -2458,6 +2459,113 @@ NXSL_Value *NXSL_TemplateClass::getAttr(NXSL_Object *object, const char *attr)
 }
 
 /**
+ * NXSL class Alarm: constructor
+ */
+NXSL_TunnelClass::NXSL_TunnelClass() : NXSL_Class()
+{
+   setName(_T("Tunnel"));
+}
+
+/**
+ * NXSL object destructor
+ */
+void NXSL_TunnelClass::onObjectDelete(NXSL_Object *object)
+{
+   static_cast<AgentTunnel*>(object->getData())->decRefCount();
+}
+
+/**
+ * NXSL class Alarm: get attribute
+ */
+NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   AgentTunnel *tunnel = static_cast<AgentTunnel*>(object->getData());
+
+   if (compareAttributeName(attr, "address"))
+   {
+      value = vm->createValue(NXSL_InetAddressClass::createObject(vm, tunnel->getAddress()));
+   }
+   else if (compareAttributeName(attr, "agentBuildTag"))
+   {
+      value = vm->createValue(tunnel->getAgentBuildTag());
+   }
+   else if (compareAttributeName(attr, "agentId"))
+   {
+      value = vm->createValue(tunnel->getAgentId().toString());
+   }
+   else if (compareAttributeName(attr, "agentVersion"))
+   {
+      value = vm->createValue(tunnel->getAgentVersion());
+   }
+   else if (compareAttributeName(attr, "certificateExpirationTime"))
+   {
+      value = vm->createValue(tunnel->getCertificateExpirationTime());
+   }
+   else if (compareAttributeName(attr, "guid"))
+   {
+      value = vm->createValue(tunnel->getGUID().toString());
+   }
+   else if (compareAttributeName(attr, "hostname"))
+   {
+      value = vm->createValue(tunnel->getHostname());
+   }
+   else if (compareAttributeName(attr, "hardwareId"))
+   {
+      value = vm->createValue(tunnel->getHostname());
+   }
+   else if (compareAttributeName(attr, "id"))
+   {
+      value = vm->createValue(tunnel->getId());
+   }
+   else if (compareAttributeName(attr, "isAgentProxy"))
+   {
+      value = vm->createValue(tunnel->isAgentProxy());
+   }
+   else if (compareAttributeName(attr, "isBound"))
+   {
+      value = vm->createValue(tunnel->isBound());
+   }
+   else if (compareAttributeName(attr, "isSnmpProxy"))
+   {
+      value = vm->createValue(tunnel->isSnmpProxy());
+   }
+   else if (compareAttributeName(attr, "isSnmpTrapProxy"))
+   {
+      value = vm->createValue(tunnel->isSnmpTrapProxy());
+   }
+   else if (compareAttributeName(attr, "isUserAgentInstalled"))
+   {
+      value = vm->createValue(tunnel->isUserAgentInstalled());
+   }
+   else if (compareAttributeName(attr, "platformName"))
+   {
+      value = vm->createValue(tunnel->getPlatformName());
+   }
+   else if (compareAttributeName(attr, "startTime"))
+   {
+      value = vm->createValue(tunnel->getStartTime());
+   }
+   else if (compareAttributeName(attr, "systemInfo"))
+   {
+      value = vm->createValue(tunnel->getSystemInfo());
+   }
+   else if (compareAttributeName(attr, "systemName"))
+   {
+      value = vm->createValue(tunnel->getSystemName());
+   }
+   else if (compareAttributeName(attr, "zoneUIN"))
+   {
+      value = vm->createValue(tunnel->getZoneUIN());
+   }
+   return value;
+}
+
+/**
  * Event::setMessage() method
  */
 NXSL_METHOD_DEFINITION(Event, setMessage)
@@ -3903,6 +4011,7 @@ NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 NXSL_SubnetClass g_nxslSubnetClass;
 NXSL_TemplateClass g_nxslTemplateClass;
+NXSL_TunnelClass g_nxslTunnelClass;
 NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 NXSL_UserClass g_nxslUserClass;
 NXSL_UserGroupClass g_nxslUserGroupClass;

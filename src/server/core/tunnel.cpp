@@ -56,6 +56,56 @@ static RefCountHashMap<uint32_t, AgentTunnel> s_boundTunnels(Ownership::True);
 static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
 
+
+/**
+ * Execute tunnel establishing hook script in the separate thread
+ */
+static void ExecuteHookScript(NXSL_VM *vm)
+{
+   if (!vm->run())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Tunnel::executeHookScript: hook script execution error (%s)"), vm->getErrorText());
+   }
+   delete vm;
+}
+
+/**
+ * Execute hook script when ubouned tunnel established
+ */
+void ExecuteUnboudTunnelHookScript(AgentTunnel *tunnel)
+{
+   ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::UnboundTunnelOpened"), shared_ptr<NetObj>());
+   if (!vm.isValid())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("ExecuteUnboudTunnelHookScript: hook script %s"),
+               (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
+      return;
+   }
+
+   tunnel->incRefCount();
+   vm->setGlobalVariable("$tunnel", vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, tunnel)));
+   ThreadPoolExecute(g_mainThreadPool, ExecuteHookScript, vm.vm());
+}
+
+/**
+ * Execute hook script when bound tunnel established
+ */
+void ExecuteBoudTunnelHookScript(AgentTunnel *tunnel)
+{
+   shared_ptr<NetObj> node = FindObjectById(tunnel->getNodeId(), OBJECT_NODE);
+   ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::BoundTunnelOpened"), node);
+   if (!vm.isValid())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("ExecuteBoudTunnelHookScript: hook script %s"),
+               (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
+      return;
+   }
+
+   tunnel->incRefCount();
+   vm->setGlobalVariable("$tunnel", vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, tunnel)));
+   ThreadPoolExecute(g_mainThreadPool, ExecuteHookScript, vm.vm());
+}
+
 /**
  * Register tunnel
  */
@@ -562,12 +612,17 @@ void AgentTunnel::setup(const NXCPMessage *request)
          PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
                   m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
                   m_agentVersion, &m_agentId);
+         ExecuteBoudTunnelHookScript(this);
          if (m_certificateExpirationTime - time(nullptr) <= 2592000) // 30 days
          {
             debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
             incRefCount();
             ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, this);
          }
+      }
+      else
+      {
+         ExecuteUnboudTunnelHookScript(this);
       }
    }
    else
