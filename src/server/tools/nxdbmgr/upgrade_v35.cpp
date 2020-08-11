@@ -16,14 +16,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: upgrade_v40.cpp
+** File: upgrade_v35.cpp
 **
 **/
 
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 40.4 to 40.5
+ * Upgrade from 35.4 to 35.5
  */
 static bool H_UpgradeFromV4()
 {
@@ -46,7 +46,7 @@ static bool H_UpgradeFromV4()
 }
 
 /**
- * Upgrade from 40.3 to 40.4
+ * Upgrade from 35.3 to 35.4
  */
 static bool H_UpgradeFromV3()
 {
@@ -69,7 +69,7 @@ static bool H_UpgradeFromV3()
 }
 
 /**
- * Upgrade from 40.2 to 40.3
+ * Upgrade from 35.2 to 35.3
  */
 static bool H_UpgradeFromV2()
 {
@@ -83,7 +83,7 @@ static bool H_UpgradeFromV2()
 }
 
 /**
- * Upgrade from 40.1 to 40.2
+ * Upgrade from 35.1 to 35.2
  */
 static bool H_UpgradeFromV1()
 {
@@ -126,7 +126,7 @@ static bool H_UpgradeFromV1()
       CHK_EXEC(SQLQuery(_T("INSERT INTO alarms (alarm_id,parent_alarm_id,alarm_state,hd_state,hd_ref,creation_time,last_change_time,rule_guid,source_object_id,zone_uin,source_event_code,source_event_id,dci_id,message,original_severity,current_severity,repeat_count,alarm_key,ack_by,resolved_by,term_by,timeout,timeout_event,ack_timeout,alarm_category_ids,event_tags,rca_script_name,impact) SELECT alarm_id,parent_alarm_id,alarm_state,hd_state,hd_ref,creation_time,last_change_time,rule_guid,source_object_id,zone_uin,source_event_code,source_event_id,dci_id,message,original_severity,current_severity,repeat_count,alarm_key,ack_by,resolved_by,term_by,timeout,timeout_event,ack_timeout,alarm_category_ids,event_tags,rca_script_name,impact FROM old_alarms")));
       CHK_EXEC(SQLQuery(_T("DROP TABLE old_alarms CASCADE")));
 
-      CHK_EXEC(SQLQuery(_T("ALTER TABLE event_log RENAME TO event_log_v40_2")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE event_log RENAME TO event_log_v35_2")));
       CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_event_log_event_timestamp")));
       CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_event_log_source")));
       CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_event_log_root_id")));
@@ -151,7 +151,7 @@ static bool H_UpgradeFromV1()
       CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0")));
       CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('event_log', 'event_timestamp', chunk_time_interval => interval '86400 seconds')")));
 
-      CHK_EXEC(SQLQuery(_T("ALTER TABLE syslog RENAME TO syslog_v40_2")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE syslog RENAME TO syslog_v35_2")));
       CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_syslog_msg_timestamp")));
       CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_syslog_source")));
       CHK_EXEC(CreateTable(
@@ -170,7 +170,7 @@ static bool H_UpgradeFromV1()
       CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_syslog_source ON syslog(source_object_id)")));
       CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('syslog', 'msg_timestamp', chunk_time_interval => interval '86400 seconds')")));
 
-      CHK_EXEC(SQLQuery(_T("ALTER TABLE snmp_trap_log RENAME TO snmp_trap_log_v40_2")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE snmp_trap_log RENAME TO snmp_trap_log_v35_2")));
       CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_snmp_trap_log_tt")));
       CHK_EXEC(SQLQuery(_T("DROP INDEX IF EXISTS idx_snmp_trap_log_oid")));
       CHK_EXEC(CreateTable(
@@ -187,7 +187,7 @@ static bool H_UpgradeFromV1()
       CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_snmp_trap_log_oid ON snmp_trap_log(object_id)")));
       CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('snmp_trap_log', 'trap_timestamp', chunk_time_interval => interval '86400 seconds')")));
 
-      RegisterOnlineUpgrade(40, 2);
+      RegisterOnlineUpgrade(35, 2);
    }
    else
    {
@@ -199,7 +199,7 @@ static bool H_UpgradeFromV1()
 }
 
 /**
- * Upgrade from 40.0 to 40.1
+ * Upgrade from 35.0 to 35.1
  */
 static bool H_UpgradeFromV0()
 {
@@ -220,24 +220,24 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 4,  40, 5,  H_UpgradeFromV4  },
-   { 3,  40, 4,  H_UpgradeFromV3  },
-   { 2,  40, 3,  H_UpgradeFromV2  },
-   { 1,  40, 2,  H_UpgradeFromV1  },
-   { 0,  40, 1,  H_UpgradeFromV0  },
+   { 4,  35, 5,  H_UpgradeFromV4  },
+   { 3,  35, 4,  H_UpgradeFromV3  },
+   { 2,  35, 3,  H_UpgradeFromV2  },
+   { 1,  35, 2,  H_UpgradeFromV1  },
+   { 0,  35, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };
 
 /**
  * Upgrade database to new version
  */
-bool MajorSchemaUpgrade_V40()
+bool MajorSchemaUpgrade_V35()
 {
    INT32 major, minor;
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while((major == 40) && (minor < DB_SCHEMA_VERSION_V40_MINOR))
+   while((major == 35) && (minor < DB_SCHEMA_VERSION_V35_MINOR))
    {
       // Find upgrade procedure
       int i;
@@ -246,10 +246,10 @@ bool MajorSchemaUpgrade_V40()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         _tprintf(_T("Unable to find upgrade procedure for version 40.%d\n"), minor);
+         _tprintf(_T("Unable to find upgrade procedure for version 35.%d\n"), minor);
          return false;
       }
-      _tprintf(_T("Upgrading from version 40.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
+      _tprintf(_T("Upgrading from version 35.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
       DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {
