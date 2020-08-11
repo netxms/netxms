@@ -2,6 +2,7 @@
 * 3.5-CURRENT
 *
 
+- Improved SNMP proxy performance
 - Roaming mode for server
 - Access to NXSL object's class metadata via __class attribute
 - Access to NXSL object's attributes via __get method
