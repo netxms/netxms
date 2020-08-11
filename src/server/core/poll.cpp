@@ -168,51 +168,70 @@ static bool LocalMgmtNodeComparator(NetObj *object, void *data)
  */
 void CheckForMgmtNode()
 {
-   InterfaceList *pIfList = GetLocalInterfaceList();
-   if (pIfList != nullptr)
-   {
-      int i;
-      for(i = 0; i < pIfList->size(); i++)
-      {
-         InterfaceInfo *iface = pIfList->get(i);
-         if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
-            continue;
+   bool roaming = ConfigReadBoolean(_T("RoamingServer"), false);
 
-         shared_ptr<Node> node = FindNodeByIP(0, &iface->ipAddrList);
-         if (node != nullptr)
-         {
-            // Check management node flag
-            if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT))
-            {
-               node->setLocalMgmtFlag();
-               nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Local management node %s [%d] was not have NC_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
-            }
-            g_dwMgmtNode = node->getId();   // Set local management node ID
-            break;
-         }
-      }
-      if (i == pIfList->size())   // No such node
+   if (roaming)
+   {
+      shared_ptr<NetObj> mgmtNode = g_idxNodeById.find(LocalMgmtNodeComparator, nullptr);
+      if (mgmtNode != nullptr)
       {
-         // Find interface with IP address
+         g_dwMgmtNode = mgmtNode->getId();
+         if (!mgmtNode->getPrimaryIpAddress().isLoopback())
+            static_cast<Node&>(*mgmtNode).setPrimaryHostName(_T("127.0.0.1"));
+      }
+      else
+      {
+         CreateManagementNode(InetAddress(0x7F000001));
+      }
+   }
+   else
+   {
+      InterfaceList *pIfList = GetLocalInterfaceList();
+      if (pIfList != nullptr)
+      {
+         int i;
          for(i = 0; i < pIfList->size(); i++)
          {
             InterfaceInfo *iface = pIfList->get(i);
-            if ((iface->type == IFTYPE_SOFTWARE_LOOPBACK) || iface->ipAddrList.isEmpty())
+            if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
                continue;
 
-            for(int j = 0; j < iface->ipAddrList.size(); j++)
+            shared_ptr<Node> node = FindNodeByIP(0, &iface->ipAddrList);
+            if (node != nullptr)
             {
-               const InetAddress& addr = iface->ipAddrList.get(j);
-               if (addr.isValidUnicast())
+               // Check management node flag
+               if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT))
                {
-   				   CreateManagementNode(addr);
-                  i = pIfList->size();    // stop walking interface list
-                  break;
+                  node->setLocalMgmtFlag();
+                  nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Local management node %s [%d] was not have NC_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
+               }
+               g_dwMgmtNode = node->getId();   // Set local management node ID
+               break;
+            }
+         }
+         if (i == pIfList->size())   // No such node
+         {
+            // Find interface with IP address
+            for(i = 0; i < pIfList->size(); i++)
+            {
+               InterfaceInfo *iface = pIfList->get(i);
+               if ((iface->type == IFTYPE_SOFTWARE_LOOPBACK) || iface->ipAddrList.isEmpty())
+                  continue;
+
+               for(int j = 0; j < iface->ipAddrList.size(); j++)
+               {
+                  const InetAddress& addr = iface->ipAddrList.get(j);
+                  if (addr.isValidUnicast())
+                  {
+                     CreateManagementNode(addr);
+                     i = pIfList->size();    // stop walking interface list
+                     break;
+                  }
                }
             }
          }
+         delete pIfList;
       }
-      delete pIfList;
    }
 
 	if (g_dwMgmtNode != 0)
