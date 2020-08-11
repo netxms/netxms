@@ -1341,7 +1341,7 @@ void NetObj::setModified(UINT32 flags, bool notify)
 UINT32 NetObj::modifyFromMessage(NXCPMessage *msg)
 {
    lockProperties();
-   UINT32 rcc = modifyFromMessageInternal(msg);
+   uint32_t rcc = modifyFromMessageInternal(msg);
    unlockProperties();
    if (rcc == RCC_SUCCESS)
       rcc = modifyFromMessageInternalStage2(msg);
@@ -1463,7 +1463,7 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       m_urls->clear();
       int count = pRequest->getFieldAsInt32(VID_NUM_URLS);
-      UINT32 fieldId = VID_URL_LIST_BASE;
+      uint32_t fieldId = VID_URL_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
          m_urls->add(new ObjectUrl(pRequest, fieldId));

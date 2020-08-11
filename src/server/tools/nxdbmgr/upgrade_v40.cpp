@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 40.0 to 40.1
+ */
+static bool H_UpgradeFromV0()
+{
+   if (GetSchemaLevelForMajorVersion(35) < 6)
+   {
+      CHK_EXEC(CreateConfigParam(_T("RoamingServer"), _T("0"), _T("Enable/disable roaming mode for server (when server can be disconnected from one network and connected to another or IP address of the server can change)."), nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 6));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(1));
+   return true;
+}
+
+/**
  * Upgrade map
  */
 static struct
@@ -33,6 +47,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 0,  40, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };
 

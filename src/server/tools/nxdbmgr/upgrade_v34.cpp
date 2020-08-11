@@ -288,7 +288,7 @@ static struct
 } s_dbUpgradeMap[] =
 {
    { 16, 35, 0,  H_UpgradeFromV16 },
-   { 14, 34, 16, H_UpgradeFromV15 },
+   { 15, 34, 16, H_UpgradeFromV15 },
    { 14, 34, 15, H_UpgradeFromV14 },
    { 13, 34, 14, H_UpgradeFromV13 },
    { 12, 34, 13, H_UpgradeFromV12 },
