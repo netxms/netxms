@@ -7,11 +7,12 @@
 #
 # Database driver to use
 #
-# UNIX example:
-# DBDriver = [path_to_netxms_install_dir]/lib/libnxddr_mysql.so
-#
-# Windows example:
+# DBDriver = mariadb.ddr
+# DBDriver = mssql.ddr
 # DBDriver = mysql.ddr
+# DBDriver = oracle.ddr
+# DBDriver = pgdql.ddr
+# DBDriver = sqlite.ddr
 
 #
 # DBServer
