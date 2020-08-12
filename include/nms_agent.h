@@ -919,13 +919,13 @@ private:
    TCHAR m_separator;
 
 protected:
-   virtual void onOutput(const char *text);
-   virtual void endOfOutput();
+   virtual void onOutput(const char *text) override;
+   virtual void endOfOutput() override;
 
 public:
    KeyValueOutputProcessExecutor(const TCHAR *command);
 
-   virtual bool execute() { m_data.clear(); return ProcessExecutor::execute(); }
+   virtual bool execute() override { m_data.clear(); return ProcessExecutor::execute(); }
 
    const StringMap *getData() const { return &m_data; }
 

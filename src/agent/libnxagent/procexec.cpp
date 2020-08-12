@@ -36,9 +36,6 @@ KeyValueOutputProcessExecutor::KeyValueOutputProcessExecutor(const TCHAR *comman
  */
 void KeyValueOutputProcessExecutor::onOutput(const char *text)
 {
-   if (text == NULL)
-      return;
-
    TCHAR *buffer;
 #ifdef UNICODE
    buffer = WideStringFromMBStringSysLocale(text);
@@ -91,7 +88,7 @@ void KeyValueOutputProcessExecutor::onOutput(const char *text)
       lineStartPtr = newLinePtr + 1;
    } while (*lineStartPtr != 0);
 
-   free(buffer);
+   MemFree(buffer);
 }
 
 /**
