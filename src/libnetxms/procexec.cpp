@@ -400,7 +400,16 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::readOutput(void *arg)
       HANDLE handles[2];
       handles[0] = ov.hEvent;
       handles[1] = static_cast<ProcessExecutor*>(arg)->m_phandle;
-      DWORD rc = WaitForMultipleObjects(2, handles, FALSE, 5000);
+      DWORD rc;
+
+do_wait:
+      rc = WaitForMultipleObjects(2, handles, FALSE, 5000);
+      if (rc == WAIT_TIMEOUT)
+      {
+         // Send empty output on timeout
+         static_cast<ProcessExecutor*>(arg)->onOutput("");
+         goto do_wait;
+      }
       if (rc == WAIT_OBJECT_0 + 1)
       {
          nxlog_debug(6, _T("ProcessExecutor::readOutput(): process termination detected"));
@@ -420,11 +429,6 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::readOutput(void *arg)
             nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on GetOverlappedResult (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
             break;
          }
-      }
-      else
-      {
-         // Send empty output on timeout
-         static_cast<ProcessExecutor*>(arg)->onOutput("");
       }
    }
 
