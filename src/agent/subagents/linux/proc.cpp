@@ -215,27 +215,11 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
 
       char fileName[MAX_PATH], procNameBuffer[MAX_PROCESS_NAME_LEN + 1];
 
-      snprintf(fileName, MAX_PATH, "/proc/%s/comm", nameList[count]->d_name);
-      int hFile = _open(fileName, O_RDONLY);
-      if (hFile != -1)
-      {
-         ssize_t bytes = _read(hFile, procNameBuffer, sizeof(procNameBuffer) - 1);
-         if (bytes > 0)
-         {
-            procNameBuffer[bytes] = 0;
-            char *p = strrchr(procNameBuffer, '\n');
-            if (p != NULL)
-               *p = 0;
-            pProcName = procNameBuffer;
-         }
-         _close(hFile);
-      }
-
       snprintf(fileName, MAX_PATH, "/proc/%s/stat", nameList[count]->d_name);
-      hFile = _open(fileName, O_RDONLY);
+      int hFile = _open(fileName, O_RDONLY);
+      char szProcStat[1024];
       if (hFile != -1)
       {
-         char szProcStat[1024];
          ssize_t bytes = _read(hFile, szProcStat, sizeof(szProcStat) - 1);
          if (bytes > 0)
          {
@@ -245,20 +229,12 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                char *procNamePos = strchr(szProcStat, '(');
                if (procNamePos != NULL)
                {
-                  if (pProcName != NULL)
+                  pProcStat = strrchr(procNamePos, ')');
+                  if (pProcStat != NULL)
                   {
-                     // Already got process name from comm file
-                     pProcStat = procNamePos + strlen(pProcName) + 2;   // process name plus 2 brackets
-                  }
-                  else
-                  {
-                     pProcStat = strchr(procNamePos, ')');
-                     if (pProcStat != NULL)
-                     {
-                        pProcName = procNamePos + 1;
-                        *pProcStat = 0;
-                        pProcStat++;
-                     }
+                     pProcName = procNamePos + 1;
+                     *pProcStat = 0;
+                     pProcStat++;
                   }
                   if (pProcName != NULL)
                   {
