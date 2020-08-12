@@ -932,8 +932,8 @@ private:
    UINT32 m_requestId;
    ClientSession *m_session;
 
-   virtual void onOutput(const char *text);
-   virtual void endOfOutput();
+   virtual void onOutput(const char *text) override;
+   virtual void endOfOutput() override;
 
 public:
    ServerCommandExec(NXCPMessage *msg, ClientSession *session);

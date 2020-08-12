@@ -1635,12 +1635,11 @@ void ServerCommandExec::onOutput(const char *text)
    TCHAR *buffer = WideStringFromMBStringSysLocale(text);
    msg.setField(VID_MESSAGE, buffer);
    m_session->sendMessage(&msg);
-   free(buffer);
+   MemFree(buffer);
 #else
    msg.setField(VID_MESSAGE, text);
    m_session->sendMessage(&msg);
 #endif
-
 }
 
 /**
