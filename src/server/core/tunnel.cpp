@@ -56,54 +56,33 @@ static RefCountHashMap<uint32_t, AgentTunnel> s_boundTunnels(Ownership::True);
 static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
 
-
 /**
  * Execute tunnel establishing hook script in the separate thread
  */
-static void ExecuteHookScript(NXSL_VM *vm)
+static void ExecuteScriptInBackground(NXSL_VM *vm)
 {
    if (!vm->run())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Tunnel::executeHookScript: hook script execution error (%s)"), vm->getErrorText());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Tunnel hook script execution error (%s)"), vm->getErrorText());
    }
    delete vm;
 }
 
 /**
- * Execute hook script when ubouned tunnel established
- */
-void ExecuteUnboudTunnelHookScript(AgentTunnel *tunnel)
-{
-   ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::UnboundTunnelOpened"), shared_ptr<NetObj>());
-   if (!vm.isValid())
-   {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("ExecuteUnboudTunnelHookScript: hook script %s"),
-               (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
-      return;
-   }
-
-   tunnel->incRefCount();
-   vm->setGlobalVariable("$tunnel", vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, tunnel)));
-   ThreadPoolExecute(g_mainThreadPool, ExecuteHookScript, vm.vm());
-}
-
-/**
  * Execute hook script when bound tunnel established
  */
-void ExecuteBoudTunnelHookScript(AgentTunnel *tunnel)
+static void ExecuteTunnelHookScript(AgentTunnel *tunnel)
 {
-   shared_ptr<NetObj> node = FindObjectById(tunnel->getNodeId(), OBJECT_NODE);
-   ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::BoundTunnelOpened"), node);
+   shared_ptr<NetObj> node = tunnel->isBound() ? FindObjectById(tunnel->getNodeId(), OBJECT_NODE) : shared_ptr<NetObj>();
+   ScriptVMHandle vm = CreateServerScriptVM(tunnel->isBound() ? _T("Hook::OpenBoundTunnel") : _T("Hook::OpenUnboundTunnel"), node);
    if (!vm.isValid())
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("ExecuteBoudTunnelHookScript: hook script %s"),
-               (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
+      tunnel->debugPrintf(5, _T("Hook script %s"), (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
       return;
    }
 
-   tunnel->incRefCount();
    vm->setGlobalVariable("$tunnel", vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, tunnel)));
-   ThreadPoolExecute(g_mainThreadPool, ExecuteHookScript, vm.vm());
+   ThreadPoolExecute(g_mainThreadPool, ExecuteScriptInBackground, vm.vm());
 }
 
 /**
@@ -606,23 +585,19 @@ void AgentTunnel::setup(const NXCPMessage *request)
       debugPrintf(4, _T("   SNMP trap proxy..........: %s"), m_snmpTrapProxy ? _T("YES") : _T("NO"));
       debugPrintf(4, _T("   User agent...............: %s"), m_userAgentInstalled ? _T("YES") : _T("NO"));
 
+      ExecuteTunnelHookScript(this);
       if (m_state == AGENT_TUNNEL_BOUND)
       {
          debugPrintf(4, _T("   Certificate expires at...: %s"), FormatTimestamp(m_certificateExpirationTime).cstr());
          PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
                   m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
                   m_agentVersion, &m_agentId);
-         ExecuteBoudTunnelHookScript(this);
          if (m_certificateExpirationTime - time(nullptr) <= 2592000) // 30 days
          {
             debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
             incRefCount();
             ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, this);
          }
-      }
-      else
-      {
-         ExecuteUnboudTunnelHookScript(this);
       }
    }
    else

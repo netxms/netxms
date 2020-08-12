@@ -344,6 +344,7 @@ public:
    NXSL_TunnelClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectCreate(NXSL_Object *object) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
