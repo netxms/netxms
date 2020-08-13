@@ -31,7 +31,7 @@ static bool H_UpgradeFromV1()
    {
       CHK_EXEC(SQLQuery(
             _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
-            _T("VALUES ('9c2dba59-493b-4645-9159-2ad7a28ea611',23,'Hook::UnboundTunnelOpened','")
+            _T("VALUES ('9c2dba59-493b-4645-9159-2ad7a28ea611',23,'Hook::OpenBoundTunnel','")
             _T("/* Available global variables:\r\n")
             _T(" *  $tunnel - incoming tunnel information (object of ''Tunnel'' class)\r\n")
             _T(" *\r\n")
@@ -39,7 +39,7 @@ static bool H_UpgradeFromV1()
             _T(" *  none - returned value is ignored\r\n */\r\n')")));
       CHK_EXEC(SQLQuery(
             _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
-            _T("VALUES ('64c90b92-27e9-4a96-98ea-d0e152d71262',24,'Hook::BoundTunnelOpened','")
+            _T("VALUES ('64c90b92-27e9-4a96-98ea-d0e152d71262',24,'Hook::OpenUnboundTunnel','")
             _T("/* Available global variables:\r\n")
             _T(" *  $node - node this tunnel was bound to (object of ''Node'' class)\r\n")
             _T(" *  $tunnel - incoming tunnel information (object of ''Tunnel'' class)\r\n")

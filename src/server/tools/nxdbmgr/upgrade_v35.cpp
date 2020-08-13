@@ -266,7 +266,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 6,  40, 0,  H_UpgradeFromV7  },
+   { 7,  40, 0,  H_UpgradeFromV7  },
    { 6,  35, 7,  H_UpgradeFromV6  },
    { 5,  35, 6,  H_UpgradeFromV5  },
    { 4,  35, 5,  H_UpgradeFromV4  },
