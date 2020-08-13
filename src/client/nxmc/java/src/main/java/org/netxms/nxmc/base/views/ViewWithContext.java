@@ -72,6 +72,21 @@ public abstract class ViewWithContext extends View
          contextChanged(null, context);
    }
 
+   @Override
+   public void globalizeId()
+   {
+      setId(getId() + "@" + context.hashCode());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getFullName()
+    */
+   @Override
+   public String getFullName()
+   {
+      return getName() + " - " + getContextName();
+   }
+
    /**
     * Check if this view is valid for given context. Default implementation accepts any non-null context.
     *
@@ -103,6 +118,16 @@ public abstract class ViewWithContext extends View
    protected Object getContext()
    {
       return context;
+   }
+
+   /**
+    * Get display name for current context.
+    *
+    * @return display name for current context
+    */
+   protected String getContextName()
+   {
+      return (context != null) ? context.toString() : "(null)";
    }
 
    /**

@@ -246,6 +246,7 @@ public class MainWindow extends ApplicationWindow
    public void pinView(View view)
    {
       logger.debug("Request to pin view with ID=" + view.getId());
+      view.globalizeId();
       pinboardPerspective.addMainView(view, true);
    }
 }

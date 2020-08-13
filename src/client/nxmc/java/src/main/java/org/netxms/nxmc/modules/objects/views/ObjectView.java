@@ -51,6 +51,15 @@ public abstract class ObjectView extends ViewWithContext
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#getContextName()
+    */
+   @Override
+   protected String getContextName()
+   {
+      return (getContext() != null) ? ((AbstractObject)getContext()).getObjectName() : "[none]";
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#isValidForContext(java.lang.Object)
     */
    @Override

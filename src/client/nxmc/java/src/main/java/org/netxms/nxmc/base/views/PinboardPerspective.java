@@ -48,5 +48,7 @@ public class PinboardPerspective extends Perspective
       configuration.hasNavigationArea = false;
       configuration.hasSupplementalArea = false;
       configuration.multiViewMainArea = true;
+      configuration.enableViewPinning = false;
+      configuration.allViewsAreCloseable = true;
    }
 }

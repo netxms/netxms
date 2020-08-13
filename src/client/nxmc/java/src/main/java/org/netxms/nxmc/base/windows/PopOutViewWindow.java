@@ -52,7 +52,7 @@ public class PopOutViewWindow extends Window
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(view.getName());
+      newShell.setText(view.getFullName());
    }
 
    /**

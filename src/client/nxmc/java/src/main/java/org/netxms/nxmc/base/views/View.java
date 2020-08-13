@@ -161,6 +161,7 @@ public abstract class View
     */
    public void dispose()
    {
+      logger.debug("View disposed - " + getId());
       for(ViewStateListener listener : stateListeners)
          listener.viewClosed(this);
       if ((viewArea != null) && !viewArea.isDisposed())
@@ -185,6 +186,16 @@ public abstract class View
     * @return view's name
     */
    public String getName()
+   {
+      return name;
+   }
+
+   /**
+    * Get view's full name that can be used outside context.
+    * 
+    * @return view's full name
+    */
+   public String getFullName()
    {
       return name;
    }
@@ -263,6 +274,33 @@ public abstract class View
    public String getId()
    {
       return id;
+   }
+
+   /**
+    * Change view ID.
+    *
+    * @param id new view ID
+    */
+   protected void setId(String id)
+   {
+      this.id = id;
+   }
+
+   /**
+    * Update ID to incorporate optional context. Default implementation does nothing.
+    */
+   public void globalizeId()
+   {
+   }
+
+   /**
+    * Check if this view can be closed by user.
+    *
+    * @return true if this view can be closed by user
+    */
+   public boolean isCloseable()
+   {
+      return false;
    }
 
    /**

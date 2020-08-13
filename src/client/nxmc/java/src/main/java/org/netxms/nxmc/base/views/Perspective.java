@@ -131,7 +131,7 @@ public abstract class Perspective
          verticalSplitter = new SashForm(content, SWT.HORIZONTAL);
          if (configuration.multiViewNavigationArea)
          {
-            navigationFolder = new ViewStack(null, this, verticalSplitter, false);
+            navigationFolder = new ViewStack(null, this, verticalSplitter, false, false);
             navigationFolder.addSelectionListener(new ViewStackSelectionListener() {
                @Override
                public void viewSelected(View view)
@@ -139,6 +139,7 @@ public abstract class Perspective
                   setNavigationSelectionProvider(((view != null) && (view instanceof NavigationView)) ? ((NavigationView)view).getSelectionProvider() : null);
                }
             });
+            navigationFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
          }
          else
          {
@@ -152,7 +153,9 @@ public abstract class Perspective
       if (configuration.multiViewMainArea)
       {
          mainFolder = new ViewStack(null, this, configuration.hasSupplementalArea ? horizontalSpliter
-               : (configuration.hasNavigationArea ? verticalSplitter : content), true);
+               : (configuration.hasNavigationArea ? verticalSplitter : content), configuration.enableViewExtraction,
+               configuration.enableViewPinning);
+         mainFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
       }
       else
       {
@@ -161,9 +164,15 @@ public abstract class Perspective
       if (configuration.hasSupplementalArea)
       {
          if (configuration.multiViewSupplementalArea)
-            supplementaryFolder = new ViewStack(null, this, horizontalSpliter, true);
+         {
+            supplementaryFolder = new ViewStack(null, this, horizontalSpliter, configuration.enableViewExtraction,
+                  configuration.enableViewPinning);
+            supplementaryFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
+         }
          else
+         {
             createSupplementalArea(horizontalSpliter);
+         }
       }
 
       if (verticalSplitter != null)

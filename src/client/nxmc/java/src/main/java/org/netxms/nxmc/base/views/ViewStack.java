@@ -26,6 +26,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -47,6 +49,7 @@ public class ViewStack extends Composite
    private CTabFolder tabFolder;
    private ToolBar viewControlBar;
    private Object context;
+   private boolean allViewsAreCloseable = false;
    private Map<String, View> views = new HashMap<String, View>();
    private Map<String, CTabItem> tabs = new HashMap<String, CTabItem>();
    private Set<ViewStackSelectionListener> selectionListeners = new HashSet<ViewStackSelectionListener>();
@@ -57,9 +60,11 @@ public class ViewStack extends Composite
     * @param window owning window
     * @param perspective owning perspective
     * @param parent parent composite
-    * @param enableViewExtraction enable/disable view extraction into "Pinned" perspective or separate window
+    * @param enableViewExtraction enable/disable view extraction into separate window
+    * @param enableViewPinning nable/disable view extraction into "Pinboard" perspective
     */
-   public ViewStack(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction)
+   public ViewStack(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction,
+         boolean enableViewPinning)
    {
       super(parent, SWT.NONE);
       this.window = window;
@@ -91,7 +96,7 @@ public class ViewStack extends Composite
       ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
       refreshView.setImage(SharedIcons.IMG_REFRESH);
 
-      if (enableViewExtraction)
+      if (enableViewPinning)
       {
          ToolItem pinView = new ToolItem(viewControlBar, SWT.PUSH);
          pinView.setImage(SharedIcons.IMG_PIN);
@@ -110,7 +115,9 @@ public class ViewStack extends Composite
                }
             }
          });
-
+      }
+      if (enableViewExtraction)
+      {
          ToolItem popOutView = new ToolItem(viewControlBar, SWT.PUSH);
          popOutView.setImage(SharedIcons.IMG_POP_OUT);
          popOutView.addSelectionListener(new SelectionAdapter() {
@@ -173,9 +180,17 @@ public class ViewStack extends Composite
 
          CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
          tabItem.setControl(view.getViewArea());
-         tabItem.setText(view.getName());
+         tabItem.setText(ignoreContext ? view.getFullName() : view.getName());
          tabItem.setImage(view.getImage());
          tabItem.setData("view", view);
+         tabItem.setShowClose(allViewsAreCloseable || view.isCloseable());
+         tabItem.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               ((View)e.widget.getData("view")).dispose();
+            }
+         });
          tabs.put(view.getId(), tabItem);
       }
    }
@@ -285,5 +300,25 @@ public class ViewStack extends Composite
    {
       for(ViewStackSelectionListener l : selectionListeners)
          l.viewSelected(view);
+   }
+
+   /**
+    * Check if all views are closeable.
+    *
+    * @return true if all views are closeable
+    */
+   public boolean areAllViewsCloseable()
+   {
+      return allViewsAreCloseable;
+   }
+
+   /**
+    * If set to true then all views will be marked as closeable and isCloseable() result will be ignored.
+    *
+    * @param allViewsAreCloseable if true all views will be marked as closeable
+    */
+   public void setAllViewsAaCloseable(boolean allViewsAreCloseable)
+   {
+      this.allViewsAreCloseable = allViewsAreCloseable;
    }
 }

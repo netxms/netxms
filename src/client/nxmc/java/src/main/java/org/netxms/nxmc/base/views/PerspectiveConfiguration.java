@@ -28,5 +28,8 @@ public class PerspectiveConfiguration
    public boolean multiViewMainArea = true;
    public boolean hasSupplementalArea = false;
    public boolean multiViewSupplementalArea = false;
+   public boolean enableViewPinning = true;
+   public boolean enableViewExtraction = true;
+   public boolean allViewsAreCloseable = false;
    public int priority = 255;
 }

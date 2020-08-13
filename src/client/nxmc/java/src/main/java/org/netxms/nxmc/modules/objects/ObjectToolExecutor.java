@@ -160,7 +160,7 @@ public final class ObjectToolExecutor
                      textToExpand.add(tool.getData());
                   }
                   ObjectContext node = nodes.iterator().next();
-                  expandedText = session.substitureMacross(node, textToExpand, inputValues);
+                  expandedText = session.substituteMacros(node, textToExpand, inputValues);
                   message = expandedText.remove(0);                  
                }
                else
@@ -176,14 +176,14 @@ public final class ObjectToolExecutor
 
                if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
                {
-                  expandedText = session.substitureMacross(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
+                  expandedText = session.substituteMacros(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
                }
             }
             else
             {
                if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
                {
-                  expandedText = session.substitureMacross(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
+                  expandedText = session.substituteMacros(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
                }
             }
             
