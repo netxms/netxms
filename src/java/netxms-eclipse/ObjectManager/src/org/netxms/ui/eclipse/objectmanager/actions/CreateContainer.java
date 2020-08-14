@@ -66,7 +66,7 @@ public class CreateContainer implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().CreateContainer_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
