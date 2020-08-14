@@ -1090,19 +1090,19 @@ public:
    const String &str() const
    {
       const String *s = m_string.get();
-      return (s != NULL) ? *s : String::empty;
+      return (s != nullptr) ? *s : String::empty;
    }
    const TCHAR *cstr() const
    {
       const String *s = m_string.get();
-      return (s != NULL) ? s->cstr() : _T("");
+      return (s != nullptr) ? s->cstr() : _T("");
    }
    operator const TCHAR*() const { return cstr(); }
    operator const String&() const { return str(); }
 
    bool isNull() const
    {
-      return m_string == nullptr;
+      return m_string.get() == nullptr;
    }
    bool isEmpty() const
    {
