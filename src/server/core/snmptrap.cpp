@@ -45,7 +45,7 @@ static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, Ownership::True);
 static bool s_logAllTraps = false;
 static VolatileCounter64 s_trapId = 0; // Next free trap ID
 static bool s_allowVarbindConversion = true;
-static UINT16 m_wTrapPort = 162;
+static uint16_t s_trapListenerPort = 162;
 
 /**
  * Create new SNMP trap configuration object
@@ -398,21 +398,21 @@ void LoadTrapCfg()
  */
 void InitTraps()
 {
-	LoadTrapCfg();
-	s_logAllTraps = ConfigReadBoolean(_T("LogAllSNMPTraps"), false);
-	s_allowVarbindConversion = ConfigReadBoolean(_T("AllowTrapVarbindsConversion"), true);
+   LoadTrapCfg();
+   s_logAllTraps = ConfigReadBoolean(_T("LogAllSNMPTraps"), false);
+   s_allowVarbindConversion = ConfigReadBoolean(_T("AllowTrapVarbindsConversion"), true);
 
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(trap_id) FROM snmp_trap_log"));
-	if (hResult != nullptr)
-	{
-		if (DBGetNumRows(hResult) > 0)
-		   s_trapId = DBGetFieldInt64(hResult, 0, 0);
-		DBFreeResult(hResult);
-	}
-	DBConnectionPoolReleaseConnection(hdb);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(trap_id) FROM snmp_trap_log"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_trapId = DBGetFieldInt64(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 
-	m_wTrapPort = (UINT16)ConfigReadULong(_T("SNMPTrapPort"), m_wTrapPort); // 162 by default;
+   s_trapListenerPort = static_cast<uint16_t>(ConfigReadULong(_T("SNMP.Traps.ListenerPort"), s_trapListenerPort)); // 162 by default;
 }
 
 /**
@@ -798,9 +798,9 @@ void SNMPTrapReceiver()
       }
 #endif
 	}
-   servAddr.sin_port = htons(m_wTrapPort);
+   servAddr.sin_port = htons(s_trapListenerPort);
 #ifdef WITH_IPV6
-   servAddr6.sin6_port = htons(m_wTrapPort);
+   servAddr6.sin6_port = htons(s_trapListenerPort);
 #endif
 
    // Bind socket
@@ -840,13 +840,13 @@ void SNMPTrapReceiver()
    if (hSocket != INVALID_SOCKET)
    {
       TCHAR ipAddrText[64];
-	   nxlog_write(NXLOG_INFO, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), m_wTrapPort);
+	   nxlog_write(NXLOG_INFO, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), s_trapListenerPort);
    }
 #ifdef WITH_IPV6
    if (hSocket6 != INVALID_SOCKET)
    {
       TCHAR ipAddrText[64];
-      nxlog_write(NXLOG_INFO, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), m_wTrapPort);
+      nxlog_write(NXLOG_INFO, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), s_trapListenerPort);
    }
 #endif
 
@@ -857,7 +857,7 @@ void SNMPTrapReceiver()
 
    SocketPoller sp;
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP Trap Receiver started on port %u"), m_wTrapPort);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP Trap Receiver started on port %u"), s_trapListenerPort);
 
    // Wait for packets
    while(!IsShutdownInProgress())

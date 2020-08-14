@@ -381,9 +381,9 @@ static void LoadGlobalConfig()
    }
    if (ConfigReadBoolean(_T("DeleteEmptySubnets"), true))
       g_flags |= AF_DELETE_EMPTY_SUBNETS;
-   if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
+   if (ConfigReadBoolean(_T("SNMP.Traps.Enable"), true))
       g_flags |= AF_ENABLE_SNMP_TRAPD;
-   if (ConfigReadBoolean(_T("ProcessTrapsFromUnmanagedNodes"), false))
+   if (ConfigReadBoolean(_T("SNMP.Traps.ProcessUnmanagedNodes"), false))
       g_flags |= AF_TRAPS_FROM_UNMANAGED_NODES;
    if (ConfigReadBoolean(_T("EnableZoning"), false))
       g_flags |= AF_ENABLE_ZONING;
@@ -1148,7 +1148,7 @@ retry_db_lock:
 
    // Start SNMP trapper
    InitTraps();
-   if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
+   if (ConfigReadBoolean(_T("SNMP.Traps.Enable"), true))
       ThreadCreate(SNMPTrapReceiver);
 
    // Start built-in syslog daemon
