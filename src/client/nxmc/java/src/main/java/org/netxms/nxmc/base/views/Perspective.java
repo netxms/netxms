@@ -176,9 +176,9 @@ public abstract class Perspective
       }
 
       if (verticalSplitter != null)
-         verticalSplitter.setWeights(new int[] { 3, 7 });
+         verticalSplitter.setWeights(new int[] { 25, 75 });
       if (horizontalSpliter != null)
-         horizontalSpliter.setWeights(new int[] { 8, 2 });
+         horizontalSpliter.setWeights(new int[] { 80, 20 });
 
       configureViews();
 

@@ -18,10 +18,14 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.NavigationView;
 import org.netxms.nxmc.modules.objects.SubtreeType;
@@ -61,6 +65,36 @@ public class ObjectBrowser extends NavigationView
    protected void createContent(Composite parent)
    {
       objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateRootObjects(), null, true, true);
+      createPopupMenu();
+   }
+
+   /**
+    * Create popup menu for object browser
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager.
+      MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = manager.createContextMenu(objectTree.getTreeControl());
+      objectTree.getTreeControl().setMenu(menu);
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param manager Menu manager
+    */
+   protected void fillContextMenu(IMenuManager manager)
+   {
    }
 
    /**
