@@ -23,11 +23,40 @@
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 35.7 to 40.0
+ * Upgrade from 35.8 to 40.0
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 35.7 to 35.8
  */
 static bool H_UpgradeFromV7()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   static const TCHAR *batch =
+         _T("UPDATE config SET description='A bitmask for encryption algorithms allowed in the server(sum the values to allow multiple algorithms at once): 1 = AES256, 2 = Blowfish-256, 4 = IDEA, 8 = 3DES, 16 = AES128, 32 = Blowfish-128.' WHERE var_name='AllowedCiphers'\n")
+         _T("UPDATE config SET description='Comma-separated list of hosts to be used as beacons for checking NetXMS server network connectivity. Either DNS names or IP addresses can be used. This list is pinged by NetXMS server and if none of the hosts have responded, server considers that connection with network is lost and generates specific event.' WHERE var_name='BeaconHosts'\n")
+         _T("UPDATE config SET description='The LdapConnectionString configuration parameter may be a comma- or whitespace-separated list of URIs containing only the schema, the host, and the port fields. Format: schema://host:port.' WHERE var_name='LDAP.ConnectionString'\n")
+         _T("UPDATE config SET units='minutes',description='The synchronization interval (in minutes) between the NetXMS server and the LDAP server. If the parameter is set to 0, no synchronization will take place.' WHERE var_name='LDAP.SyncInterval'\n")
+         _T("UPDATE config SET var_name='Client.MinViewRefreshInterval',default_value='300',units='milliseconds',description='Minimal interval between view refresh in milliseconds (hint for client).' WHERE var_name='MinViewRefreshInterval'\n")
+         _T("UPDATE config SET var_name='Beacon.Hosts' WHERE var_name='BeaconHosts'\n")
+         _T("UPDATE config SET var_name='Beacon.PollingInterval' WHERE var_name='BeaconPollingInterval'\n")
+         _T("UPDATE config SET var_name='Beacon.Timeout' WHERE var_name='BeaconTimeout'\n")
+         _T("UPDATE config SET var_name='SNMP.Traps.Enable' WHERE var_name='EnableSNMPTraps'\n")
+         _T("UPDATE config SET var_name='SNMP.Traps.ListenerPort' WHERE var_name='SNMPTrapPort'\n")
+         _T("UPDATE config_values SET var_name='SNMP.Traps.ListenerPort' WHERE var_name='SNMPTrapPort'\n")
+         _T("UPDATE config SET var_name='SNMP.Traps.ProcessUnmanagedNodes',default_value='0',data_type='B',description='Enable/disable processing of SNMP traps received from unmanaged nodes.' WHERE var_name='ProcessTrapsFromUnmanagedNodes'\n")
+         _T("DELETE FROM config WHERE var_name='SNMPPorts'\n")
+         _T("DELETE FROM config_values WHERE var_name='SNMPPorts'\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateConfigParam(_T("SNMP.Traps.ProcessUnmanagedNodes"), _T("0"), _T("Enable/disable processing of SNMP traps received from unmanaged nodes."), nullptr, 'B', true, true, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
 }
 
@@ -75,7 +104,7 @@ static bool H_UpgradeFromV4()
 {
    if (GetSchemaLevelForMajorVersion(34) < 16)
    {
-      CHK_EXEC(CreateConfigParam(_T("FirstFreeDCIId"), _T("1"), 0, 1, FALSE));
+      CHK_EXEC(CreateConfigParam(_T("FirstFreeDCIId"), _T("1"), false, true, false));
 
       CHK_EXEC(CreateTable(
             _T("CREATE TABLE dci_delete_list (")
@@ -266,7 +295,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 7,  40, 0,  H_UpgradeFromV7  },
+   { 8,  40, 0,  H_UpgradeFromV8  },
+   { 7,  35, 8,  H_UpgradeFromV7  },
    { 6,  35, 7,  H_UpgradeFromV6  },
    { 5,  35, 6,  H_UpgradeFromV5  },
    { 4,  35, 5,  H_UpgradeFromV4  },

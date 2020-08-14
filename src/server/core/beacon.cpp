@@ -29,12 +29,12 @@
  */
 void BeaconPoller()
 {
-	uint32_t interval = ConfigReadULong(_T("BeaconPollingInterval"), 1000);
-	uint32_t timeout = ConfigReadULong(_T("BeaconTimeout"), 1000);
+	uint32_t interval = ConfigReadULong(_T("Beacon.PollingInterval"), 1000);
+	uint32_t timeout = ConfigReadULong(_T("Beacon.Timeout"), 1000);
 	uint32_t packetSize = ConfigReadULong(_T("IcmpPingSize"), 46);
 
 	TCHAR hosts[MAX_CONFIG_VALUE];
-	ConfigReadStr(_T("BeaconHosts"), hosts, MAX_CONFIG_VALUE, _T(""));
+	ConfigReadStr(_T("Beacon.Hosts"), hosts, MAX_CONFIG_VALUE, _T(""));
 	StrStrip(hosts);
 	if (hosts[0] == 0)	// Empty list
 	{

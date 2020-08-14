@@ -1909,7 +1909,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 			msg.setField(VID_RETENTION_TIME, (INT32)DCObject::m_defaultRetentionTime);
 			msg.setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("StrictAlarmStatusFlow"), false));
 			msg.setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("EnableTimedAlarmAck"), false));
-			msg.setField(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
+			msg.setField(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("Client.MinViewRefreshInterval"), 300));
 			msg.setField(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
 			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
          msg.setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
