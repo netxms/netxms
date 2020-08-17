@@ -14,6 +14,14 @@
 
 
 *
+* 3.4.313
+*
+
+- Fixed issues:
+	NX-1938 (Changes in user groups are not saved to database)
+
+
+*
 * 3.4.310
 *
 

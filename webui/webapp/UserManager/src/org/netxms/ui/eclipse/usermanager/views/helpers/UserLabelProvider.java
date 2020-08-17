@@ -25,6 +25,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
 
@@ -91,10 +92,14 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
             return ((((AbstractUserObject)element).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? Messages.get().UserLabelProvider_LDAP : Messages.get().UserLabelProvider_Local;
 			case UserManagementView.COLUMN_TYPE:
 				return (element instanceof User) ? Messages.get().UserLabelProvider_User : Messages.get().UserLabelProvider_Group;
-         case UserManagementView.COLUMN_LAST_LOGIN:
-            return (element instanceof User) ? (((User)element).getLastLogin().getTime() == 0 ? "Never" : ((User)element).getLastLogin().toString()) : null;
-         case UserManagementView.COLUMN_CREATED:
-            return ((AbstractUserObject)element).getCreationTime().getTime() == 0 ? "" : ((AbstractUserObject)element).getCreationTime().toString();
+			case UserManagementView.COLUMN_LAST_LOGIN:
+            return (element instanceof User)
+                  ? (((User)element).getLastLogin().getTime() == 0 ? "Never"
+                        : RegionalSettings.getDateTimeFormat().format(((User)element).getLastLogin()))
+                  : "";
+			case UserManagementView.COLUMN_CREATED:
+            return ((AbstractUserObject)element).getCreationTime().getTime() == 0 ? ""
+                  : RegionalSettings.getDateTimeFormat().format(((AbstractUserObject)element).getCreationTime());
 		}
 		return null;
 	}

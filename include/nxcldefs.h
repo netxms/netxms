@@ -50,7 +50,7 @@
 #define MAX_NODE_SUBTYPE_LENGTH     128
 #define MAX_HYPERVISOR_TYPE_LENGTH  32
 #define MAX_HYPERVISOR_INFO_LENGTH  256
-#define GROUP_EVERYONE              ((uint32_t)0x80000000)
+#define GROUP_EVERYONE              ((uint32_t)0x40000000)
 #define INVALID_UID                 ((uint32_t)0xFFFFFFFF)
 #define OBJECT_STATUS_COUNT         9
 #define MAX_RCPT_ADDR_LEN           256

@@ -24,6 +24,34 @@
 #include <nxevent.h>
 
 /**
+ * Update group ID in given table
+ */
+bool UpdateGroupId(const TCHAR *table, const TCHAR *column);
+
+/**
+ * Upgrade from 40.4 to 40.5
+ */
+static bool H_UpgradeFromV4()
+{
+   if (GetSchemaLevelForMajorVersion(35) < 10)
+   {
+      CHK_EXEC(UpdateGroupId(_T("user_groups"), _T("id")));
+      CHK_EXEC(UpdateGroupId(_T("user_group_members"), _T("group_id")));
+      CHK_EXEC(UpdateGroupId(_T("userdb_custom_attributes"), _T("object_id")));
+      CHK_EXEC(UpdateGroupId(_T("acl"), _T("user_id")));
+      CHK_EXEC(UpdateGroupId(_T("dci_access"), _T("user_id")));
+      CHK_EXEC(UpdateGroupId(_T("alarm_category_acl"), _T("user_id")));
+      CHK_EXEC(UpdateGroupId(_T("object_tools_acl"), _T("user_id")));
+      CHK_EXEC(UpdateGroupId(_T("graph_acl"), _T("user_id")));
+      CHK_EXEC(UpdateGroupId(_T("object_access_snapshot"), _T("user_id")));
+      CHK_EXEC(UpdateGroupId(_T("responsible_users"), _T("user_id")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 9));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 40.3 to 40.4
  */
 static bool H_UpgradeFromV3()
@@ -33,25 +61,24 @@ static bool H_UpgradeFromV3()
       CHK_EXEC(CreateConfigParam(_T("SNMP.Traps.RateLimit.Threshold"), _T("0"), _T("Threshold for number of SNMP traps per second that defines SNMP trap flood condition. Detection is disabled if 0 is set."), _T("seconds"), 'I', true, false, false, false));
       CHK_EXEC(CreateConfigParam(_T("SNMP.Traps.RateLimit.Duration"), _T("15"), _T("Time period for SNMP traps per second to be above threshold that defines SNMP trap flood condition."), _T("seconds"), 'I', true, false, false, false));
 
-      CHK_EXEC(CreateEventTemplate(EVENT_SNMP_TRAP_FLOOD_DETECTED, _T("EVENT_SNMP_TRAP_FLOOD_DETECTED"),
+      CHK_EXEC(CreateEventTemplate(EVENT_SNMP_TRAP_FLOOD_DETECTED, _T("SNMP_TRAP_FLOOD_DETECTED"),
                SEVERITY_MAJOR, EF_LOG, _T("6b2bb689-23b7-4e7c-9128-5102f658e450"),
                _T("SNMP trap flood detected (Traps per second: %1)"),
                _T("Generated when system detects an SNMP trap flood.\r\n")
                _T("Parameters:\r\n")
-               _T("   1) SNMP traps per second")
-               _T("   2) Duration")
+               _T("   1) SNMP traps per second\r\n")
+               _T("   2) Duration\r\n")
                _T("   3) Threshold")
                ));
-      CHK_EXEC(CreateEventTemplate(EVENT_SNMP_TRAP_FLOOD_ENDED, _T("EVENT_SNMP_TRAP_FLOOD_DETECTED"),
+      CHK_EXEC(CreateEventTemplate(EVENT_SNMP_TRAP_FLOOD_ENDED, _T("SNMP_TRAP_FLOOD_DETECTED"),
                SEVERITY_NORMAL, EF_LOG, _T("f2c41199-9338-4c9a-9528-d65835c6c271"),
                _T("SNMP trap flood ended"),
-               _T("Generated when system clears an SNMP trap flood.\r\n")
+               _T("Generated after SNMP trap flood state is cleared.\r\n")
                _T("Parameters:\r\n")
-               _T("   1) SNMP traps per second")
-               _T("   2) Duration")
+               _T("   1) SNMP traps per second\r\n")
+               _T("   2) Duration\r\n")
                _T("   3) Threshold")
                ));
-
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(35, 9));
    }
@@ -150,6 +177,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4,  40, 5,  H_UpgradeFromV4  },
    { 3,  40, 4,  H_UpgradeFromV3  },
    { 2,  40, 3,  H_UpgradeFromV2  },
    { 1,  40, 2,  H_UpgradeFromV1  },
