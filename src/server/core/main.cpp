@@ -156,6 +156,8 @@ UINT32 g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
 UINT32 g_requiredPolls = 1;
 INT32 g_instanceRetentionTime = 0; // Default instance retention time
+UINT32 g_trapsPerSecond = 0;
+UINT32 g_duration = 15;
 DB_DRIVER g_dbDriver = nullptr;
 NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = nullptr;
 INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
@@ -477,6 +479,8 @@ static void LoadGlobalConfig()
    g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
    g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);
    g_instanceRetentionTime = ConfigReadInt(_T("InstanceRetentionTime"), 0); // Config values are in days
+   g_trapsPerSecond = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
+   g_duration = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);
 
    SnmpSetDefaultTimeout(ConfigReadInt(_T("SNMPRequestTimeout"), 1500));
 }

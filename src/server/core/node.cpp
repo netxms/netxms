@@ -25,12 +25,13 @@
 #include <entity_mib.h>
 #include <ethernet_ip.h>
 
-#define DEBUG_TAG_CONF_POLL      _T("poll.conf")
-#define DEBUG_TAG_AGENT          _T("node.agent")
-#define DEBUG_TAG_STATUS_POLL    _T("poll.status")
-#define DEBUG_TAG_ICMP_POLL      _T("poll.icmp")
-#define DEBUG_TAG_ROUTES_POLL    _T("poll.routes")
-#define DEBUG_TAG_TOPOLOGY_POLL  _T("poll.topology")
+#define DEBUG_TAG_CONF_POLL         _T("poll.conf")
+#define DEBUG_TAG_AGENT             _T("node.agent")
+#define DEBUG_TAG_STATUS_POLL       _T("poll.status")
+#define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
+#define DEBUG_TAG_ROUTES_POLL       _T("poll.routes")
+#define DEBUG_TAG_TOPOLOGY_POLL     _T("poll.topology")
+#define DRBUG_TAG_SNMP_TRAP_FLOOD   _T("snmp.trap.flood")
 
 /**
  * Performance counters
@@ -179,6 +180,9 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_cipDeviceType = 0;
    m_cipState = 0;
    m_cipStatus = 0;
+   m_snmpTrapLastCheckTime = 0;
+   m_snmpTrapLastTotal = 0;
+   m_snmpTrapActualDuration = 0;
 }
 
 /**
@@ -296,6 +300,9 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_cipDeviceType = 0;
    m_cipState = 0;
    m_cipStatus = 0;
+   m_snmpTrapLastCheckTime = 0;
+   m_snmpTrapLastTotal = 0;
+   m_snmpTrapActualDuration = 0;
 }
 
 /**
@@ -468,6 +475,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_lastAgentCommTime = DBGetFieldLong(hResult, 0, 34);
    m_syslogMessageCount = DBGetFieldInt64(hResult, 0, 35);
    m_snmpTrapCount = DBGetFieldInt64(hResult, 0, 36);
+   m_snmpTrapLastTotal = m_snmpTrapCount;
    m_type = (NodeType)DBGetFieldLong(hResult, 0, 37);
    DBGetField(hResult, 0, 38, m_subType, MAX_NODE_SUBTYPE_LENGTH);
    DBGetField(hResult, 0, 39, m_sshLogin, MAX_SSH_LOGIN_LEN);
@@ -1919,6 +1927,8 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    }
    // Poller can be called directly - in that case poll flag will not be set
    unlockProperties();
+
+   checkTrapShouldBeProcessed();
 
    UINT32 oldCapabilities = m_capabilities;
    UINT32 oldState = m_state;
@@ -9885,6 +9895,56 @@ void Node::incSnmpTrapCount()
    lockProperties();
    m_snmpTrapCount++;
    unlockProperties();
+}
+
+/**
+ * Increase number of received SNMP traps
+ */
+bool Node::checkTrapShouldBeProcessed()
+{
+   lockProperties();
+   bool dropSNMPTrap = m_state & NSF_SNMP_TRAP_FLOOD;
+   unlockProperties();
+   if (g_trapsPerSecond != 0 && time(nullptr) > m_snmpTrapLastCheckTime) //If last check was more than second ago
+   {
+      m_snmpTrapLastCheckTime = time(nullptr);
+      int newDiff = m_snmpTrapCount - m_snmpTrapLastTotal;
+      m_snmpTrapLastTotal = m_snmpTrapCount;
+      if (newDiff > g_trapsPerSecond)
+      {
+         if(m_snmpTrapActualDuration >= g_duration)
+         {
+            if(!dropSNMPTrap)
+            {
+               nxlog_debug_tag(DRBUG_TAG_SNMP_TRAP_FLOOD, 2, _T("SNMP trap flood detected for %s [%u] node: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, m_name, m_id, g_trapsPerSecond, newDiff);
+               PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_DETECTED, m_id, "DdD", newDiff, g_duration, g_trapsPerSecond);
+
+               lockProperties();
+               m_state |= NSF_SNMP_TRAP_FLOOD;
+               setModified(MODIFY_NODE_PROPERTIES);
+               unlockProperties();
+            }
+            dropSNMPTrap = true;
+         }
+         m_snmpTrapActualDuration++;
+      }
+      else
+      {
+         if (m_snmpTrapActualDuration != 0)
+         {
+            nxlog_debug_tag(DRBUG_TAG_SNMP_TRAP_FLOOD, 2, _T("SNMP trap flood condition cleared"));
+            PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_ENDED, m_id, "DdD", newDiff, g_duration, g_trapsPerSecond);
+            m_snmpTrapActualDuration = 0;
+            lockProperties();
+            m_state &= ~NSF_SNMP_TRAP_FLOOD;
+            setModified(MODIFY_NODE_PROPERTIES);
+            unlockProperties();
+            dropSNMPTrap = false;
+         }
+      }
+   }
+
+   return !dropSNMPTrap;
 }
 
 /**

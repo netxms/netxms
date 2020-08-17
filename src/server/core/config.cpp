@@ -440,6 +440,13 @@ void ConfigPreLoad()
    DBConnectionPoolReleaseConnection(hdb);
 }
 
+static UINT32 ConvertToUint32(const TCHAR *value, UINT32 defaultValue)
+{
+   TCHAR *eptr;
+   UINT32 i = _tcstoul(value, &eptr, 0);
+   return (*eptr == 0) ? i : defaultValue;
+}
+
 /**
  * Callback for configuration variables change
  */
@@ -556,6 +563,14 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
          g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
       else
          g_flags &= ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
+   }
+   else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Threshold")))
+   {
+      g_trapsPerSecond = ConvertToUint32(value, 0);
+   }
+   else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Duration")))
+   {
+      g_duration = ConvertToUint32(value, 15);
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {
