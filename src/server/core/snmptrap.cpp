@@ -615,64 +615,71 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: trap matched to node %s [%d]"), node->getName(), node->getId());
       node->incSnmpTrapCount();
-      if ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
+      if (node->checkTrapShouldBeProcessed())
       {
-         // Pass trap to loaded modules
-         ENUMERATE_MODULES(pfTrapHandler)
+         if ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
          {
-            if (CURRENT_MODULE.pfTrapHandler(pdu, node))
+            // Pass trap to loaded modules
+            ENUMERATE_MODULES(pfTrapHandler)
             {
-               processedByModule = true;
-               break;   // Trap was processed by the module
-            }
-         }
-
-         // Find if we have this trap in our list
-         s_trapCfgLock.lock();
-
-         // Try to find closest match
-         size_t matchLen = 0;
-         int matchIndex;
-         for(int i = 0; i < m_trapCfgList.size(); i++)
-         {
-            const SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(i);
-            if (trapCfg->getOid().length() > 0)
-            {
-               iResult = pdu->getTrapId()->compare(trapCfg->getOid());
-               if (iResult == OID_EQUAL)
+               if (CURRENT_MODULE.pfTrapHandler(pdu, node))
                {
-                  matchLen = trapCfg->getOid().length();
-                  matchIndex = i;
-                  break;   // Find exact match
+                  processedByModule = true;
+                  break;   // Trap was processed by the module
                }
-               else if (iResult == OID_LONGER)
+            }
+
+            // Find if we have this trap in our list
+            s_trapCfgLock.lock();
+
+            // Try to find closest match
+            size_t matchLen = 0;
+            int matchIndex;
+            for(int i = 0; i < m_trapCfgList.size(); i++)
+            {
+               const SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(i);
+               if (trapCfg->getOid().length() > 0)
                {
-                  if (trapCfg->getOid().length() > matchLen)
+                  iResult = pdu->getTrapId()->compare(trapCfg->getOid());
+                  if (iResult == OID_EQUAL)
                   {
                      matchLen = trapCfg->getOid().length();
                      matchIndex = i;
+                     break;   // Find exact match
+                  }
+                  else if (iResult == OID_LONGER)
+                  {
+                     if (trapCfg->getOid().length() > matchLen)
+                     {
+                        matchLen = trapCfg->getOid().length();
+                        matchIndex = i;
+                     }
                   }
                }
             }
-         }
 
-         if (matchLen > 0)
-         {
-            GenerateTrapEvent(node, matchIndex, pdu, srcPort);
+            if (matchLen > 0)
+            {
+               GenerateTrapEvent(node, matchIndex, pdu, srcPort);
+            }
+            else if (!processedByModule)    // Process unmatched traps not processed by module
+            {
+               // Generate default event for unmatched traps
+               const TCHAR *names[3] = { _T("oid"), nullptr, _T("sourcePort") };
+               TCHAR oidText[1024];
+               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, EventOrigin::SNMP, 0, node->getId(), "ssd", names,
+                  pdu->getTrapId()->toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
+            }
+            s_trapCfgLock.unlock();
          }
-         else if (!processedByModule)    // Process unmatched traps not processed by module
+         else
          {
-            // Generate default event for unmatched traps
-            const TCHAR *names[3] = { _T("oid"), nullptr, _T("sourcePort") };
-            TCHAR oidText[1024];
-            PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, EventOrigin::SNMP, 0, node->getId(), "ssd", names,
-               pdu->getTrapId()->toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), node->getName(), node->getId());
          }
-         s_trapCfgLock.unlock();
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), node->getName(), node->getId());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: Node %s [%d] is in trap flood state, trap is dropped"), node->getName(), node->getId());
       }
    }
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled

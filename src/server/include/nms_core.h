@@ -1493,6 +1493,8 @@ extern UINT32 g_requiredPolls;
 extern UINT32 g_slmPollingInterval;
 extern UINT32 g_offlineDataRelevanceTime;
 extern INT32 g_instanceRetentionTime;
+extern UINT32 g_trapsPerSecond;
+extern UINT32 g_duration;
 
 extern TCHAR g_szDbDriver[];
 extern TCHAR g_szDbDrvParams[];

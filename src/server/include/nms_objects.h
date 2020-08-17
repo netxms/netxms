@@ -2856,6 +2856,10 @@ protected:
    uint16_t m_cipDeviceType;
    uint16_t m_cipStatus;
    uint16_t m_cipState;
+   //SNMP trap statistic variables
+   time_t m_snmpTrapLastCheckTime;
+   int64_t m_snmpTrapLastTotal;
+   uint32_t m_snmpTrapActualDuration;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
@@ -3201,6 +3205,7 @@ public:
 
 	void incSyslogMessageCount();
 	void incSnmpTrapCount();
+	bool checkTrapShouldBeProcessed();
 
 	static const TCHAR *typeName(NodeType type);
 
