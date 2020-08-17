@@ -946,8 +946,16 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
 
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT id FROM user_groups WHERE id=%d"), m_id);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult == nullptr)
+      return false;
+   bool doUpdate = (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+
    DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("user_groups"), _T("id"), m_id))
+   if (doUpdate)
    {
       hStmt = DBPrepare(hdb, _T("UPDATE user_groups SET name=?,system_access=?,flags=?,description=?,guid=?,ldap_dn=?,ldap_unique_id=?,created=? WHERE id=?"));
    }
@@ -955,7 +963,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created,id) VALUES (?,?,?,?,?,?,?,?,?)"));
    }
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
@@ -965,8 +973,8 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_ldapDn, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
-   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (UINT32)m_created);
-   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (uint32_t)m_created);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (int32_t)m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -992,7 +1000,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
             hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"), m_memberCount > 1);
             if (hStmt != NULL)
             {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (int32_t)m_id);
 				   for(int i = 0; (i < m_memberCount) && success; i++)
 				   {
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members[i]);
