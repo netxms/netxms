@@ -907,7 +907,7 @@ public class NXCSession
          {
             case SessionNotification.USER_DB_OBJECT_CREATED:
             case SessionNotification.USER_DB_OBJECT_MODIFIED:
-               object = ((id & 0x80000000) != 0) ? new UserGroup(msg) : new User(msg);
+               object = ((id & 0x40000000) != 0) ? new UserGroup(msg) : new User(msg);
                synchronized(userDatabase)
                {
                   userDatabase.put(id, object);

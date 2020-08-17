@@ -35,7 +35,7 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
          {
             100, FIRST_USER_EVENT_ID, 1, 1,
             1, 1, 1, 1,
-            0x80000001, 1, 1, 1,
+            0x40000001, 1, 1, 1,
             1, 10000, 10000, 1,
             1, 1, 1, 1,
             1, 1, 1, 1,
@@ -44,8 +44,8 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
          {
             0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
-            0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
-            0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+            0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x3FFFFFFF,
+            0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
             0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
             0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE,
             0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,

@@ -120,7 +120,7 @@
 #define MAX_PASSWORD             256
 #define MAX_SSH_LOGIN_LEN        64
 #define MAX_SSH_PASSWORD_LEN     64
-#define GROUP_FLAG               ((UINT32)0x80000000)
+#define GROUP_FLAG               ((uint32_t)0x40000000)
 
 #define NETXMS_MAX_CIPHERS       6
 #define NETXMS_RSA_KEYLEN        2048

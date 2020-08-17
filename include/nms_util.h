@@ -2875,6 +2875,17 @@ template<typename T> json_t *json_integer_array(const T *values, size_t size)
 }
 
 /**
+ * Create JSON array from integer array
+ */
+template<typename T> json_t *json_integer_array(const IntegerArray<T>& values)
+{
+   json_t *a = json_array();
+   for(int i = 0; i < values.size(); i++)
+      json_array_append_new(a, json_integer(values.get(i)));
+   return a;
+}
+
+/**
  * Serialize ObjectArray as JSON
  */
 template<typename T> json_t *json_object_array(const ObjectArray<T> *a)

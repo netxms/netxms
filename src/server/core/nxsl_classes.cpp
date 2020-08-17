@@ -3855,14 +3855,8 @@ NXSL_Value *NXSL_UserGroupClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "members"))
    {
-      UINT32 *members = nullptr;
-      int count = group->getMembers(&members);
-      IntegerArray<UINT32> memberArray;
-      for(int i = 0; i < count; i++)
-         memberArray.add(members[i]);
-
       NXSL_Array *array = new NXSL_Array(vm);
-      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(&memberArray);
+      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(group->getMembers());
       userDB->setOwner(Ownership::False);
       for(int i = 0; i < userDB->size(); i++)
       {

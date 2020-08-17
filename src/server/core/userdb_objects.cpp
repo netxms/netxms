@@ -872,17 +872,13 @@ Group::Group(DB_HANDLE hdb, DB_RESULT hr, int row) : UserDatabaseObject(hdb, hr,
    hResult = DBSelect(hdb, query);
    if (hResult != NULL)
 	{
-		m_memberCount = DBGetNumRows(hResult);
-		if (m_memberCount > 0)
+		int count = DBGetNumRows(hResult);
+		m_members = new IntegerArray<uint32_t>(count);
+		if (count > 0)
 		{
-			m_members = (UINT32 *)malloc(sizeof(UINT32) * m_memberCount);
-			for(int i = 0; i < m_memberCount; i++)
-				m_members[i] = DBGetFieldULong(hResult, i, 0);
-			qsort(m_members, m_memberCount, sizeof(UINT32), CompareUserId);
-		}
-		else
-		{
-			m_members = NULL;
+			for(int i = 0; i < count; i++)
+				m_members->add(DBGetFieldULong(hResult, i, 0));
+			m_members->sort(CompareUserId);
 		}
 		DBFreeResult(hResult);
 	}
@@ -900,8 +896,7 @@ Group::Group() : UserDatabaseObject()
 	m_flags = UF_MODIFIED;
 	m_systemRights = (SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_VIEW_ALL_ALARMS);
 	_tcscpy(m_description, _T("Built-in everyone group"));
-	m_memberCount = 0;
-	m_members = NULL;
+	m_members = new IntegerArray<uint32_t>();
 }
 
 /**
@@ -909,8 +904,7 @@ Group::Group() : UserDatabaseObject()
  */
 Group::Group(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 {
-	m_memberCount = 0;
-	m_members = NULL;
+   m_members = new IntegerArray<uint32_t>();
 }
 
 /**
@@ -918,16 +912,7 @@ Group::Group(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
  */
 Group::Group(const Group *src) : UserDatabaseObject(src)
 {
-   m_memberCount = src->m_memberCount;
-   if (m_memberCount > 0)
-   {
-      m_members = static_cast<UINT32 *>(malloc(src->m_memberCount * sizeof(UINT32)));
-      memcpy(m_members, src->m_members, src->m_memberCount * sizeof(UINT32));
-   }
-   else
-   {
-      m_members = NULL;
-   }
+   m_members = new IntegerArray<uint32_t>(src->m_members);
 }
 
 /**
@@ -935,7 +920,7 @@ Group::Group(const Group *src) : UserDatabaseObject(src)
  */
 Group::~Group()
 {
-	free(m_members);
+	delete m_members;
 }
 
 /**
@@ -986,16 +971,16 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
             success = false;
          }
 
-			if (success && (m_memberCount > 0))
+			if (success && !m_members->isEmpty())
 			{
             DBFreeStatement(hStmt);
-            hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"), m_memberCount > 1);
-            if (hStmt != NULL)
+            hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"), m_members->size() > 1);
+            if (hStmt != nullptr)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-				   for(int i = 0; (i < m_memberCount) && success; i++)
+				   for(int i = 0; (i < m_members->size()) && success; i++)
 				   {
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members[i]);
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members->get(i));
                   success = DBExecute(hStmt);
 				   }
             }
@@ -1058,7 +1043,7 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Check if given user is a member
  */
-bool Group::isMember(UINT32 userId, IntegerArray<UINT32> *searchPath)
+bool Group::isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath) const
 {
    if (m_id == GROUP_EVERYONE)
       return true;
@@ -1067,10 +1052,10 @@ bool Group::isMember(UINT32 userId, IntegerArray<UINT32> *searchPath)
    if ((m_flags & UF_DISABLED))
       return false;
 
-   if (bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId) != NULL)
+   if (bsearch(&userId, m_members->getBuffer(), m_members->size(), sizeof(uint32_t), CompareUserId) != nullptr)
       return true;
 
-   if (searchPath != NULL)
+   if (searchPath != nullptr)
    {
       // To avoid going into a recursive loop (e.g. A->B->C->A)
       if (searchPath->contains(m_id))
@@ -1079,11 +1064,12 @@ bool Group::isMember(UINT32 userId, IntegerArray<UINT32> *searchPath)
       searchPath->add(m_id);
 
       // Loops backwards because groups will be at the end of the list, if userId is encountered, normal bsearch takes place
-      for(int i = m_memberCount - 1; i >= 0; i--)
+      for(int i = m_members->size() - 1; i >= 0; i--)
       {
-         if (!(m_members[i] & GROUP_FLAG))
+         uint32_t gid = m_members->get(i);
+         if (!(gid & GROUP_FLAG))
             break;
-         if (CheckUserMembershipInternal(userId, m_members[i], searchPath))
+         if (CheckUserMembershipInternal(userId, gid, searchPath))
             return true;
       }
    }
@@ -1094,16 +1080,14 @@ bool Group::isMember(UINT32 userId, IntegerArray<UINT32> *searchPath)
 /**
  * Add user to group
  */
-void Group::addUser(UINT32 userId)
+void Group::addUser(uint32_t userId)
 {
-   if (bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId) != NULL)
+   if (bsearch(&userId, m_members->getBuffer(), m_members->size(), sizeof(uint32_t), CompareUserId) != nullptr)
       return;  // already added
 
    // Not in group, add it
-	m_memberCount++;
-   m_members = (UINT32 *)realloc(m_members, sizeof(UINT32) * m_memberCount);
-   m_members[m_memberCount - 1] = userId;
-   qsort(m_members, m_memberCount, sizeof(UINT32), CompareUserId);
+   m_members->add(userId);
+   m_members->sort(CompareUserId);
 
 	m_flags |= UF_MODIFIED;
 
@@ -1113,26 +1097,16 @@ void Group::addUser(UINT32 userId)
 /**
  * Delete user from group
  */
-void Group::deleteUser(UINT32 userId)
+void Group::deleteUser(uint32_t userId)
 {
-   UINT32 *e = (UINT32 *)bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId);
-   if (e == NULL)
+   uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, m_members->getBuffer(), m_members->size(), sizeof(uint32_t), CompareUserId));
+   if (e == nullptr)
       return;  // not a member
 
-   int index = (int)((char *)e - (char *)m_members) / sizeof(UINT32);
-   m_memberCount--;
-   memmove(&m_members[index], &m_members[index + 1], sizeof(UINT32) * (m_memberCount - index));
+   int index = (int)((char *)e - (char *)m_members->getBuffer()) / sizeof(uint32_t);
+   m_members->remove(index);
    m_flags |= UF_MODIFIED;
    SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
-}
-
-/**
- * Get group members.
- */
-int Group::getMembers(UINT32 **members)
-{
-	*members = m_members;
-   return m_memberCount;
 }
 
 /**
@@ -1140,14 +1114,12 @@ int Group::getMembers(UINT32 **members)
  */
 void Group::fillMessage(NXCPMessage *msg)
 {
-   UINT32 varId;
-	int i;
-
 	UserDatabaseObject::fillMessage(msg);
 
-   msg->setField(VID_NUM_MEMBERS, (UINT32)m_memberCount);
-   for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
-      msg->setField(varId, m_members[i]);
+   msg->setField(VID_NUM_MEMBERS, static_cast<uint32_t>(m_members->size()));
+   uint32_t fieldId = VID_GROUP_MEMBER_BASE;
+   for(int i = 0; i < m_members->size(); i++)
+      msg->setField(fieldId++, m_members->get(i));
 }
 
 /**
@@ -1155,49 +1127,47 @@ void Group::fillMessage(NXCPMessage *msg)
  */
 void Group::modifyFromMessage(NXCPMessage *msg)
 {
-	int i;
-	UINT32 varId, fields;
-
 	UserDatabaseObject::modifyFromMessage(msg);
 
-	fields = msg->getFieldAsUInt32(VID_FIELDS);
+	uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
 	if (fields & USER_MODIFY_MEMBERS)
 	{
-      UINT32 *members = m_members;
-      int count = m_memberCount;
-		m_memberCount = msg->getFieldAsUInt32(VID_NUM_MEMBERS);
-		if (m_memberCount > 0)
+      auto members = m_members;
+		int count = msg->getFieldAsInt32(VID_NUM_MEMBERS);
+		if (count > 0)
 		{
-			m_members = (UINT32 *)malloc(sizeof(UINT32) * m_memberCount);
-			for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
+			m_members = new IntegerArray<uint32_t>(count);
+			uint32_t varId = VID_GROUP_MEMBER_BASE;
+			for(int i = 0; i < count; i++, varId++)
          {
-				m_members[i] = msg->getFieldAsUInt32(varId);
+				uint32_t userId = msg->getFieldAsUInt32(varId);
+				m_members->add(userId);
 
             // check if new member
-			   UINT32 *e = (UINT32 *)bsearch(&m_members[i], members, count, sizeof(UINT32), CompareUserId);
-			   if (e != NULL)
+			   uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, members->getBuffer(), members->size(), sizeof(uint32_t), CompareUserId));
+			   if (e != nullptr)
 			   {
-			      *((UINT32 *)e) = 0xFFFFFFFF;    // mark as found
+			      *e = 0xFFFFFFFF;    // mark as found
 			   }
 			   else
 			   {
-               SendUserDBUpdate(USER_DB_MODIFY, m_members[i]);  // new member added
+               SendUserDBUpdate(USER_DB_MODIFY, userId);  // new member added
 			   }
          }
-			for(i = 0; i < count; i++)
-            if (members[i] != 0xFFFFFFFF)  // not present in new list
-               SendUserDBUpdate(USER_DB_MODIFY, members[i]);
-		   qsort(m_members, m_memberCount, sizeof(UINT32), CompareUserId);
+			for(int i = 0; i < members->size(); i++)
+            if (members->get(i) != 0xFFFFFFFF)  // not present in new list
+               SendUserDBUpdate(USER_DB_MODIFY, members->get(i));
+		   m_members->sort(CompareUserId);
 		}
 		else
 		{
-         m_members = NULL;
+         m_members->clear();
 
          // notify change for all old members
-			for(i = 0; i < count; i++)
-            SendUserDBUpdate(USER_DB_MODIFY, members[i]);
+			for(int i = 0; i < members->size(); i++)
+            SendUserDBUpdate(USER_DB_MODIFY, members->get(i));
 		}
-		free(members);
+		delete members;
 	}
 }
 
@@ -1207,7 +1177,7 @@ void Group::modifyFromMessage(NXCPMessage *msg)
 json_t *Group::toJson() const
 {
    json_t *root = UserDatabaseObject::toJson();
-   json_object_set_new(root, "members", json_integer_array(m_members, m_memberCount));
+   json_object_set_new(root, "members", json_integer_array(*m_members));
    return root;
 }
 

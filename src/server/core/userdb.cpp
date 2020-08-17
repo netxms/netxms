@@ -231,41 +231,39 @@ void CleanupUsers()
 /**
  * Load user list from database
  */
-BOOL LoadUsers()
+bool LoadUsers()
 {
-   int i;
-   DB_RESULT hResult;
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    // Load users
-   hResult = DBSelect(hdb,
+   DB_RESULT hResult = DBSelect(hdb,
 	                   _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,")
 							 _T("ldap_unique_id,created,password,full_name,grace_logins,auth_method,")
 							 _T("cert_mapping_method,cert_mapping_data,auth_failures,")
 							 _T("last_passwd_change,min_passwd_length,disabled_until,")
 							 _T("last_login,xmpp_id FROM users"));
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
       return false;
    }
 
-   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
-   if (cachedb != NULL)
+   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : nullptr;
+   if (cachedb != nullptr)
    {
       nxlog_debug(2, _T("Caching user configuration tables"));
       if (!DBCacheTable(cachedb, hdb, _T("userdb_custom_attributes"), _T("object_id,attr_name"), _T("*")) ||
           !DBCacheTable(cachedb, hdb, _T("user_group_members"), _T("group_id,user_id"), _T("*")))
       {
          DBCloseInMemoryDatabase(cachedb);
-         cachedb = NULL;
+         cachedb = nullptr;
       }
    }
 
    int count = DBGetNumRows(hResult);
-   for(i = 0; i < count; i++)
+   for(int i = 0; i < count; i++)
    {
-		User *user = new User((cachedb != NULL) ? cachedb : hdb, hResult, i);
+		User *user = new User((cachedb != nullptr) ? cachedb : hdb, hResult, i);
 		AddDatabaseObject(user);
    }
 
@@ -281,18 +279,18 @@ BOOL LoadUsers()
 
    // Load groups
    hResult = DBSelect(hdb, _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created FROM user_groups"));
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
-      if (cachedb != NULL)
+      if (cachedb != nullptr)
          DBCloseInMemoryDatabase(cachedb);
-      return FALSE;
+      return false;
    }
 
    count = DBGetNumRows(hResult);
-   for(i = 0; i < count; i++)
+   for(int i = 0; i < count; i++)
    {
-		Group *group = new Group((cachedb != NULL) ? cachedb : hdb, hResult, i);
+		Group *group = new Group((cachedb != nullptr) ? cachedb : hdb, hResult, i);
 		AddDatabaseObject(group);
    }
 
@@ -308,9 +306,9 @@ BOOL LoadUsers()
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   if (cachedb != NULL)
+   if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
-   return TRUE;
+   return true;
 }
 
 /**
@@ -756,7 +754,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *
 
    // Check for duplicate name
    UserDatabaseObject *object = isGroup ? (UserDatabaseObject *)s_groups.get(name) : (UserDatabaseObject *)s_users.get(name);
-   if (object != NULL)
+   if (object != nullptr)
    {
       dwResult = RCC_OBJECT_ALREADY_EXISTS;
    }
@@ -1061,35 +1059,33 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
       return;
    }
 
-   Group *group = (Group *)object;
+   Group *group = static_cast<Group*>(object);
 
    DbgPrintf(4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), dn);
 
    StringSet *newMembers = ldapObject->m_memberList;
-   UINT32 *oldMembers = NULL;
-   int count = group->getMembers(&oldMembers);
+   const IntegerArray<uint32_t>& oldMembers = group->getMembers();
 
    /**
     * Go through existing group member list checking each LDAP user/group by DN
     * with new gotten group member list and removing LDAP users/groups not existing in last list.
     */
-   for(int i = 0; i < count; i++)
+   for(int i = 0; i < oldMembers.size(); i++)
    {
-      UserDatabaseObject *user = s_userDatabase.get(oldMembers[i]);
-      if ((user == NULL) || !user->isLDAPUser())
+      UserDatabaseObject *user = s_userDatabase.get(oldMembers.get(i));
+      if ((user == nullptr) || !user->isLDAPUser())
          continue;
 
       if (!newMembers->contains(user->getDn()))
       {
          DbgPrintf(4, _T("SyncGroupMembers: Remove from %s group deleted user: %s"), group->getDn(), user->getDn());
-         group->deleteUser(user->getId());
-         count = group->getMembers(&oldMembers);
+         group->deleteUser(user->getId());   // oldMembers is a reference to actual member list, Group::deleteUser will update it
          i--;
       }
    }
 
    /**
-    * Go through new gotten group member list checking each LDAP user/group by DN
+    * Go through newly received group member list checking each LDAP user/group by DN
     * with existing group member list and adding users/groups not existing in last list.
     */
    Iterator<const TCHAR> *it = newMembers->iterator();
@@ -1561,13 +1557,13 @@ void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it)
 /**
  * Find a list of UserDatabaseObjects of specific id`s
  */
-ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids)
+ObjectArray<UserDatabaseObject> *FindUserDBObjects(const IntegerArray<uint32_t>& ids)
 {
-   ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(ids->size(), 16, Ownership::True);
+   ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(ids.size(), 16, Ownership::True);
    RWLockReadLock(s_userDatabaseLock);
-   for(int i = 0; i < ids->size(); i++)
+   for(int i = 0; i < ids.size(); i++)
    {
-      UserDatabaseObject *object = s_userDatabase.get(ids->get(i));
+      UserDatabaseObject *object = s_userDatabase.get(ids.get(i));
       if (object != NULL)
       {
          if (object->isGroup())

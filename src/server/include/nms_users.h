@@ -352,14 +352,13 @@ public:
 class NXCORE_EXPORTABLE Group : public UserDatabaseObject
 {
 protected:
-	int m_memberCount;
-	UINT32 *m_members;
+   IntegerArray<uint32_t> *m_members;
 
 public:
 	Group();
 	Group(const Group *src);
 	Group(DB_HANDLE hdb, DB_RESULT hResult, int row);
-	Group(UINT32 id, const TCHAR *name);
+	Group(uint32_t id, const TCHAR *name);
 	virtual ~Group();
 
 	virtual void fillMessage(NXCPMessage *msg);
@@ -370,11 +369,11 @@ public:
 
    virtual json_t *toJson() const;
 
-	void addUser(UINT32 userId);
-	void deleteUser(UINT32 userId);
-	bool isMember(UINT32 userId, IntegerArray<UINT32> *searchPath = NULL);
-	int getMembers(UINT32 **members);
-	UINT32 getMemberCount() { return m_memberCount; }
+	void addUser(uint32_t userId);
+	void deleteUser(uint32_t userId);
+	bool isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath = nullptr) const;
+	const IntegerArray<uint32_t>& getMembers() const { return *m_members; }
+	int getMemberCount() const { return m_members->size(); }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 };
@@ -417,7 +416,7 @@ public:
 /**
  * Functions
  */
-BOOL LoadUsers();
+bool LoadUsers();
 void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
@@ -449,7 +448,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject);
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
-ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids);
+ObjectArray<UserDatabaseObject> *FindUserDBObjects(const IntegerArray<uint32_t>& ids);
 
 /**
  * CAS API
