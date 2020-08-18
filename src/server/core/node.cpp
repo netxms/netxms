@@ -6141,6 +6141,33 @@ static void DciCountCallback(NetObj *object, void *data)
 }
 
 /**
+ * Get value for server's internal table parameter
+ */
+DataCollectionError Node::getInternalTableMetric(const TCHAR *param, Table **result)
+{
+   DataCollectionError rc = super::getInternalTableMetric(param, result);
+   if (rc != DCE_NOT_SUPPORTED)
+      return rc;
+   rc = DCE_SUCCESS;
+
+   if (!_tcsicmp(param, _T("WirlessStations")))
+   {
+      if (isWirelessController())
+      {
+         *result = wsListAsTable();
+      }
+      else
+         rc = DCE_NOT_SUPPORTED;
+   }
+   else
+   {
+      rc = DCE_NOT_SUPPORTED;
+   }
+
+   return rc;
+}
+
+/**
  * Get value for server's internal parameter
  */
 DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer)
@@ -8776,13 +8803,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
                shared_ptr<Node> node = FindNodeByMAC(ws->macAddr);
                ws->nodeId = (node != nullptr) ? node->getId() : 0;
-               if ((node != nullptr) && (ws->ipAddr == 0))
+               if ((node != nullptr) && (!ws->ipAddr.isValid()))
                {
                   shared_ptr<Interface> iface = node->findInterfaceByMAC(MacAddress(ws->macAddr, MAC_ADDR_LENGTH));
                   if ((iface != nullptr) && iface->getIpAddressList()->getFirstUnicastAddressV4().isValid())
-                     ws->ipAddr = iface->getIpAddressList()->getFirstUnicastAddressV4().getAddressV4();
+                     ws->ipAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
                   else
-                     ws->ipAddr = node->getIpAddress().getAddressV4();
+                     ws->ipAddr = node->getIpAddress();
                }
             }
          }
@@ -9557,6 +9584,78 @@ void Node::writeHardwareListToMessage(NXCPMessage *msg)
       msg->setField(VID_RCC, RCC_NO_HARDWARE_DATA);
    }
    unlockProperties();
+}
+
+/**
+ * Write list of registered wireless stations to NXCP message
+ */
+Table *Node::wsListAsTable()
+{
+   Table *result = new Table();
+   lockProperties();
+   if (m_wirelessStations != nullptr)
+   {
+      result->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("Mac address"), true);
+      result->addColumn(_T("IP_ADDRESS"), DCI_DT_STRING, _T("IP address"), true);
+      result->addColumn(_T("NODE_ID"), DCI_DT_UINT, _T("Node id"));
+      result->addColumn(_T("NODE_NAME"), DCI_DT_STRING, _T("Node name"));
+      result->addColumn(_T("ZONE_UIN"), DCI_DT_INT, _T("Zone UIN"));
+      result->addColumn(_T("ZONE_NAME"), DCI_DT_STRING, _T("Zone name"));
+      result->addColumn(_T("AP_ID"), DCI_DT_STRING, _T("Access point id"));
+      result->addColumn(_T("AP"), DCI_DT_STRING, _T("Access point"));
+      result->addColumn(_T("RADIO"), DCI_DT_STRING, _T("Radio"));
+      result->addColumn(_T("RADIO_INDEX"), DCI_DT_UINT, _T("Radio index"));
+      result->addColumn(_T("SSID"), DCI_DT_STRING, _T("SSID"));
+      result->addColumn(_T("VLAN"), DCI_DT_UINT, _T("VLAN"));
+
+      for(int i = 0; i < m_wirelessStations->size(); i++)
+      {
+         result->addRow();
+         WirelessStationInfo *ws = m_wirelessStations->get(i);
+
+         TCHAR mac[64];
+         result->set(0, MACToStr(ws->macAddr, mac));
+         result->set(1, ws->ipAddr.toString());
+         result->set(2, ws->nodeId);
+         shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(ws->nodeId, OBJECT_NODE));
+         if (node != nullptr)
+         {
+            result->set(3, node->getName());
+            result->set(4, node->getZoneUIN());
+            shared_ptr<Zone> zone = FindZoneByUIN(node->getZoneUIN());
+            if (zone != nullptr)
+            {
+               result->set(5, zone->getName());
+            }
+            else
+            {
+               result->set(5, _T(""));
+            }
+         }
+         else
+         {
+            result->set(3, _T(""));
+            result->set(4, _T(""));
+            result->set(5, _T(""));
+         }
+         result->set(6, ws->apObjectId);
+         shared_ptr<NetObj> interface = FindObjectById(ws->apObjectId, OBJECT_ACCESSPOINT);
+         if (interface != nullptr)
+         {
+            result->set(7, interface->getName());
+         }
+         else
+         {
+            result->set(7, _T(""));
+         }
+         result->set(8, ws->rfName);
+         result->set(9, (UINT32)ws->rfIndex);
+         result->set(10, ws->ssid);
+         result->set(11, (WORD)ws->vlan);
+      }
+   }
+   unlockProperties();
+   return result;
 }
 
 /**

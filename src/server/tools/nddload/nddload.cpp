@@ -93,7 +93,7 @@ void PrintMobileUnits(NetworkDeviceDriver *driver, SNMP_Transport *transport)
          TCHAR ipBuff[64];
          _tprintf(_T("   %s - %-15s - vlan %-3d - rf %-2d - %s\n"),
                MACToStr(info->macAddr, macBuff),
-               IpToStr(info->ipAddr, ipBuff),
+               info->ipAddr.toString(ipBuff),
                info->vlan,
                info->rfIndex,
                info->ssid

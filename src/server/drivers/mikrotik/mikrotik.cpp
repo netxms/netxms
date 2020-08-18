@@ -315,7 +315,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
    WirelessStationInfo *info = new WirelessStationInfo;
    memset(info, 0, sizeof(WirelessStationInfo));
    var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
-   info->ipAddr = 0;
+   info->ipAddr = InetAddress();
    info->vlan = 1;
    info->rfIndex = apIndex;
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;

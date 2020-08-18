@@ -169,7 +169,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
    memset(info, 0, sizeof(WirelessStationInfo));
    for(int i = 0; i < MAC_ADDR_LENGTH; i++)
       info->macAddr[i] = name.getElement(i + 13);
-   info->ipAddr = 0;
+   info->ipAddr = InetAddress();
    info->vlan = 1;
    info->signalStrength = var->getValueAsInt();
    info->rfIndex = apIndex;
