@@ -26,25 +26,24 @@
  */
 LONG H_FileSystemInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	struct statvfs s;
-	char szArg[512] = "";
+   char fsname[512] = "";
+   if (!AgentGetParameterArgA(pszParam, 1, fsname, sizeof(fsname)))
+      return SYSINFO_RC_UNSUPPORTED;
 
-	if (!AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg)))
-		return SYSINFO_RC_UNSUPPORTED;
-
-	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
+   int nRet = SYSINFO_RC_ERROR;
+   struct statvfs s;
+   if ((fsname[0] != 0) && statvfs(fsname, &s) == 0)
+   {
+      nRet = SYSINFO_RC_SUCCESS;
 		
-		UINT64 usedBlocks = (s.f_blocks == (fsblkcnt_t)(-1)) ? _ULL(0) : (UINT64)(s.f_blocks - s.f_bfree);
-		UINT64 totalBlocks = (s.f_blocks == (fsblkcnt_t)(-1)) ? _ULL(0) : (UINT64)s.f_blocks;
-		UINT64 blockSize = (UINT64)s.f_bsize;
-		UINT64 freeBlocks = (UINT64)s.f_bfree;
-		UINT64 availableBlocks = (UINT64)s.f_bavail;
+      uint64_t usedBlocks = (s.f_blocks == (fsblkcnt_t)(-1)) ? _ULL(0) : (uint64_t)(s.f_blocks - s.f_bfree);
+      uint64_t totalBlocks = (s.f_blocks == (fsblkcnt_t)(-1)) ? _ULL(0) : (uint64_t)s.f_blocks;
+      uint64_t blockSize = (uint64_t)s.f_frsize;
+      uint64_t freeBlocks = (uint64_t)s.f_bfree;
+      uint64_t availableBlocks = (uint64_t)s.f_bavail;
 		
-		switch((long)pArg)
-		{
+      switch((long)pArg)
+      {
 			case FS_TOTAL:
 				ret_uint64(pValue, totalBlocks * blockSize);
 				break;
@@ -84,19 +83,19 @@ LONG H_FileSystemInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 			case FS_FREE_INODES_PERC:
 				ret_double(pValue, (s.f_files > 0) ? (s.f_ffree * 100.0 / s.f_files) : 0);
 				break;
-			case FS_AVAIL_INODES_PERC:
-				ret_double(pValue, (s.f_files > 0) ? (s.f_favail * 100.0 / s.f_files) : 0);
-				break;
+         case FS_AVAIL_INODES_PERC:
+            ret_double(pValue, (s.f_files > 0) ? (s.f_favail * 100.0 / s.f_files) : 0);
+            break;
          case FS_FSTYPE:
             ret_mbstring(pValue, s.f_basetype);
             break;
-			default:
-				nRet = SYSINFO_RC_ERROR;
-				break;
-		}
-	}
+         default:
+            nRet = SYSINFO_RC_ERROR;
+            break;
+      }
+   }
 
-	return nRet;
+   return nRet;
 }
 
 /**
@@ -108,7 +107,7 @@ LONG H_FileSystemInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 static struct vmount *GetMountPoints(int *count)
 {
    int size = 8192;
-   char *buffer = (char *)malloc(size);
+   char *buffer = (char *)MemAlloc(size);
    while(size <= 65536)
    {
       int rc = mntctl(MCTL_QUERY, size, buffer);
@@ -123,10 +122,10 @@ static struct vmount *GetMountPoints(int *count)
       }
 
       size += 8192;
-      buffer = (char *)realloc(buffer, size);
+      buffer = (char *)MemRealloc(buffer, size);
    }
-   free(buffer);
-   return NULL;
+   MemFree(buffer);
+   return nullptr;
 }
 
 /**
@@ -165,57 +164,68 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
          table->set(1, (char *)vmt2dataptr(curr, VMT_OBJECT));
 #endif
 
+         const TCHAR *fstype = nullptr;
          switch(curr->vmt_gfstype)
          {
+            case MNT_AHAFS:
+               fstype = _T("ahafs");
+               break;
             case MNT_CACHEFS:
-               table->set(3, _T("cachefs"));
+               fstype = _T("cachefs");
                break;
             case MNT_CDROM:
-               table->set(3, _T("cdrom"));
+               fstype = _T("cdrom");
                break;
             case MNT_CIFS:
-               table->set(3, _T("cifs"));
+               fstype = _T("cifs");
                break;
             case MNT_J2:
-               table->set(3, _T("jfs2"));
+               fstype = _T("jfs2");
                break;
             case MNT_JFS:
-               table->set(3, _T("jfs"));
+               fstype = _T("jfs");
                break;
             case MNT_NAMEFS:
-               table->set(3, _T("namefs"));
+               fstype = _T("namefs");
                break;
             case MNT_NFS:
-               table->set(3, _T("nfs"));
+               fstype = _T("nfs");
                break;
             case MNT_NFS3:
-               table->set(3, _T("nfs3"));
+               fstype = _T("nfs3");
                break;
             case MNT_NFS4:
-               table->set(3, _T("nfs4"));
+               fstype = _T("nfs4");
+               break;
+            case MNT_POOLFS:
+               fstype = _T("poolfs");
                break;
             case MNT_PROCFS:
-               table->set(3, _T("procfs"));
+               fstype = _T("procfs");
                break;
             case MNT_UDF:
-               table->set(3, _T("udfs"));
+               fstype = _T("udfs");
                break;
             case MNT_VXFS:
-               table->set(3, _T("vxfs"));
+               fstype = _T("vxfs");
                break;
             default:
-               table->set(3, (DWORD)curr->vmt_gfstype);
                break;
          }
 
          struct statvfs s;
          if (statvfs(mountPoint, &s) == 0)
          {
-            UINT64 usedBlocks = (s.f_blocks == (fsblkcnt_t)(-1)) ? _ULL(0) : (UINT64)(s.f_blocks - s.f_bfree);
-            UINT64 totalBlocks = (s.f_blocks == (fsblkcnt_t)(-1)) ? _ULL(0) : (UINT64)s.f_blocks;
-            UINT64 blockSize = (UINT64)s.f_bsize;
-            UINT64 freeBlocks = (UINT64)s.f_bfree;
-            UINT64 availableBlocks = (UINT64)s.f_bavail;
+            if (fstype != nullptr)
+               table->set(3, fstype);
+            else
+               table->set(3, s.f_basetype);
+
+            uint64_t usedBlocks = (s.f_blocks == (fsblkcnt_t)(-1)) ? _ULL(0) : (uint64_t)(s.f_blocks - s.f_bfree);
+            uint64_t totalBlocks = (s.f_blocks == (fsblkcnt_t)(-1)) ? _ULL(0) : (uint64_t)s.f_blocks;
+            uint64_t blockSize = (uint64_t)s.f_frsize;
+            uint64_t freeBlocks = (uint64_t)s.f_bfree;
+            uint64_t availableBlocks = (uint64_t)s.f_bavail;
 
             table->set(4, totalBlocks * blockSize);
             table->set(5, freeBlocks * blockSize);
@@ -230,25 +240,29 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
             TCHAR buffer[1024];
             nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("H_FileSystems: Call to statvfs(\"%hs\") failed (%s)"), mountPoint, _tcserror(errno));
 
-            table->set(4, (QWORD)0);
-            table->set(5, (QWORD)0);
-            table->set(6, (QWORD)0);
-            table->set(7, (QWORD)0);
-            table->set(8, (QWORD)0);
-            table->set(9, (QWORD)0);
-            table->set(10, (QWORD)0);
+            if (fstype != nullptr)
+               table->set(3, fstype);
+            else
+               table->set(3, (uint32_t)curr->vmt_gfstype);
+            table->set(4, (uint64_t)0);
+            table->set(5, (uint64_t)0);
+            table->set(6, (uint64_t)0);
+            table->set(7, (uint64_t)0);
+            table->set(8, (uint64_t)0);
+            table->set(9, (uint64_t)0);
+            table->set(10, (uint64_t)0);
          }
 
          curr = (struct vmount *)((char *)curr + curr->vmt_length);
       }
-      free(mountPoints);
+      MemFree(mountPoints);
    }
    else
    {
       nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("H_FileSystems: Call to GetMountPoints failed"));
       rc = SYSINFO_RC_ERROR;
    }
-	return rc;
+   return rc;
 }
 
 /**
