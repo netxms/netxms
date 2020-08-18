@@ -43,10 +43,10 @@ static ObjectQueue<Event> s_loggerQueue;
 /**
  * Handler for EnumerateSessions()
  */
-static void BroadcastEvent(ClientSession *pSession, void *pArg)
+static void BroadcastEvent(ClientSession *pSession, Event *event)
 {
    if (pSession->isAuthenticated())
-      pSession->onNewEvent((Event *)pArg);
+      pSession->onNewEvent(event);
 }
 
 /**

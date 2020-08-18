@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 **/
 
 #include "nxcore.h"
+
+#define DEBUG_TAG _T("userdb")
 
 /**
  * Compare user IDs (for qsort)
@@ -189,7 +191,7 @@ void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 	UINT32 flags, fields;
 
 	fields = msg->getFieldAsUInt32(VID_FIELDS);
-	DbgPrintf(5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
 
 	if (fields & USER_MODIFY_DESCRIPTION)
 	   msg->getFieldAsString(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
@@ -479,7 +481,7 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
    }
    if (!validHash)
    {
-	   nxlog_write(NXLOG_WARNING, _T("Invalid password hash for user %s; password reset to default"), m_name);
+	   nxlog_write(NXLOG_WARNING, DEBUG_TAG, _T("Invalid password hash for user %s; password reset to default"), m_name);
 	   CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
    }
@@ -770,12 +772,12 @@ void User::modifyFromMessage(NXCPMessage *msg)
 		msg->getFieldAsString(VID_XMPP_ID, m_xmppId, MAX_XMPP_ID_LEN);
    if (fields & USER_MODIFY_GROUP_MEMBERSHIP)
    {
-      int count = (int)msg->getFieldAsUInt32(VID_NUM_GROUPS);
-      UINT32 *groups = NULL;
+      size_t count = msg->getFieldAsUInt32(VID_NUM_GROUPS);
+      uint32_t *groups = nullptr;
       if (count > 0)
       {
-         groups = (UINT32 *)malloc(sizeof(UINT32) * count);
-         msg->getFieldAsInt32Array(VID_GROUPS, (UINT32)count, groups);
+         groups = MemAllocArrayNoInit<uint32_t>(count);
+         msg->getFieldAsInt32Array(VID_GROUPS, count, groups);
       }
       UpdateGroupMembership(m_id, count, groups);
       MemFree(groups);

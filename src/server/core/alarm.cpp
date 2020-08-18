@@ -136,29 +136,19 @@ static bool s_rootCauseUpdateNeeded = false;
 static bool s_rootCauseUpdatePossible = false;
 
 /**
- * Client notification data
- */
-struct CLIENT_NOTIFICATION_DATA
-{
-   uint32_t code;
-   const Alarm *alarm;
-};
-
-/**
  * Callback for client session enumeration
  */
-static void SendAlarmNotification(ClientSession *session, void *arg)
+static void SendAlarmNotification(ClientSession *session, std::pair<uint32_t, const Alarm*> *data)
 {
-   session->onAlarmUpdate(((CLIENT_NOTIFICATION_DATA *)arg)->code,
-                          ((CLIENT_NOTIFICATION_DATA *)arg)->alarm);
+   session->onAlarmUpdate(data->first, data->second);
 }
 
 /**
  * Callback for client session enumeration
  */
-static void SendBulkAlarmTerminateNotification(ClientSession *session, void *arg)
+static void SendBulkAlarmTerminateNotification(ClientSession *session, NXCPMessage *msg)
 {
-   session->sendMessage((NXCPMessage *)arg);
+   session->sendMessage(msg);
 }
 
 /**
@@ -168,9 +158,7 @@ static void NotifyClients(uint32_t code, const Alarm *alarm)
 {
    CALL_ALL_MODULES(pfAlarmChangeHook, (code, alarm));
 
-   CLIENT_NOTIFICATION_DATA data;
-   data.code = code;
-   data.alarm = alarm;
+   std::pair<uint32_t, const Alarm*> data(code, alarm);
    EnumerateClientSessions(SendAlarmNotification, &data);
 }
 

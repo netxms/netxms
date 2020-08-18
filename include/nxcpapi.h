@@ -133,15 +133,16 @@ public:
    void setField(UINT32 fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
    void setField(UINT32 fieldId, const MacAddress& value) { set(fieldId, NXCP_DT_BINARY, value.value(), false, value.length()); }
 #ifdef UNICODE
-   void setFieldFromMBString(UINT32 fieldId, const char *value);
+   void setFieldFromMBString(uint32_t fieldId, const char *value);
 #else
-   void setFieldFromMBString(UINT32 fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
+   void setFieldFromMBString(uint32_t fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
 #endif
-   void setFieldFromUtf8String(UINT32 fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value, false, 0, true); }
-   void setFieldFromTime(UINT32 fieldId, time_t value) { UINT64 t = (UINT64)value; set(fieldId, NXCP_DT_INT64, &t); }
-   void setFieldFromInt32Array(UINT32 fieldId, size_t numElements, const UINT32 *elements);
-   void setFieldFromInt32Array(UINT32 fieldId, const IntegerArray<UINT32> *data);
-   bool setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName);
+   void setFieldFromUtf8String(uint32_t fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value, false, 0, true); }
+   void setFieldFromTime(uint32_t fieldId, time_t value) { uint64_t t = static_cast<uint64_t>(value); set(fieldId, NXCP_DT_INT64, &t); }
+   void setFieldFromInt32Array(uint32_t fieldId, size_t numElements, const uint32_t *elements);
+   void setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t>& data);
+   void setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t> *data) { if (data != nullptr) { setFieldFromInt32Array(fieldId, *data); } else { set(fieldId, NXCP_DT_BINARY, NULL, false, 0); } }
+   bool setFieldFromFile(uint32_t fieldId, const TCHAR *fileName);
 
    INT16 getFieldAsInt16(UINT32 fieldId) const;
    UINT16 getFieldAsUInt16(UINT32 fieldId) const;
@@ -152,8 +153,8 @@ public:
    double getFieldAsDouble(UINT32 fieldId) const;
    bool getFieldAsBoolean(UINT32 fieldId) const;
    time_t getFieldAsTime(UINT32 fieldId) const;
-   size_t getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const;
-   size_t getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const;
+   size_t getFieldAsInt32Array(uint32_t fieldId, size_t numElements, uint32_t *buffer) const;
+   size_t getFieldAsInt32Array(uint32_t fieldId, IntegerArray<uint32_t> *data) const;
    const BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size) const;
    TCHAR *getFieldAsString(UINT32 fieldId, MemoryPool *pool) const { return getFieldAsString(fieldId, pool, nullptr, 0); }
    TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = nullptr, size_t bufferSize = 0) const { return getFieldAsString(fieldId, nullptr, buffer, bufferSize); }

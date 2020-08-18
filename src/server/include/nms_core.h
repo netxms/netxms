@@ -1161,10 +1161,22 @@ void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAd
 shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData);
 INT64 GetDiscoveryPollerQueueSize();
 
-void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, void *), void *context);
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession*, void*), void *context);
 template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession *, C *), C *context)
 {
-   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession *, void *)>(handler), context);
+   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(handler), context);
+}
+template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession *, const C *), const C *context)
+{
+   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession*, void*)>(handler), const_cast<C*>(context));
+}
+static inline void EnumerateClientSessions_WrapperHandler(ClientSession *session, void *context)
+{
+   reinterpret_cast<void (*)(ClientSession*)>(context)(session);
+}
+static inline void EnumerateClientSessions(void (*handler)(ClientSession*))
+{
+   EnumerateClientSessions(EnumerateClientSessions_WrapperHandler, reinterpret_cast<void*>(handler));
 }
 
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);

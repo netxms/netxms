@@ -1799,7 +1799,49 @@ template <typename T, typename B, typename R> inline void ThreadPoolScheduleRela
 }
 
 /**
- * Wrapper data for ThreadPoolExecute (two arguments)
+ * Wrapper data for ThreadPoolExecute (function with two arguments)
+ */
+template <typename R1, typename R2> class __ThreadPoolExecute_WrapperData_2F
+{
+public:
+   void (*m_func)(R1, R2);
+   R1 m_arg1;
+   R2 m_arg2;
+
+   __ThreadPoolExecute_WrapperData_2F(void (*func)(R1, R2), R1 arg1, R2 arg2) : m_arg1(arg1), m_arg2(arg2)
+   {
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (function with two arguments)
+ */
+template <typename R1, typename R2> void __ThreadPoolExecute_Wrapper_2F(void *arg)
+{
+   auto wd = static_cast<__ThreadPoolExecute_WrapperData_2F<R1, R2>*>(arg);
+   wd->m_func(wd->m_arg1, wd->m_arg2);
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (function with two arguments)
+ */
+template <typename R1, typename R2> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(R1, R2), R1 arg1, R2 arg2)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_2F<R1, R2>, new __ThreadPoolExecute_WrapperData_2F<R1, R2>(f, arg1, arg2));
+}
+
+/**
+ * Execute serialized task as soon as possible (function with two arguments)
+ */
+template <typename R1, typename R2> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(R1, R2), R1 arg1, R2 arg2)
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_2F<R1, R2>, new __ThreadPoolExecute_WrapperData_2F<R1, R2>(f, arg1, arg2));
+}
+
+/**
+ * Wrapper data for ThreadPoolExecute (class method with two arguments)
  */
 template <typename T, typename R1, typename R2> class __ThreadPoolExecute_WrapperData_2
 {
@@ -1817,17 +1859,17 @@ public:
 };
 
 /**
- * Wrapper for ThreadPoolExecute (two arguments)
+ * Wrapper for ThreadPoolExecute (class method with two arguments)
  */
 template <typename T, typename R1, typename R2> void __ThreadPoolExecute_Wrapper_2(void *arg)
 {
-   __ThreadPoolExecute_WrapperData_2<T, R1, R2> *wd = static_cast<__ThreadPoolExecute_WrapperData_2<T, R1, R2> *>(arg);
+   auto wd = static_cast<__ThreadPoolExecute_WrapperData_2<T, R1, R2>*>(arg);
    ((*wd->m_object).*(wd->m_func))(wd->m_arg1, wd->m_arg2);
    delete wd;
 }
 
 /**
- * Execute task as soon as possible (use class member with two arguments)
+ * Execute task as soon as possible (class method with two arguments)
  */
 template <typename T, typename B, typename R1, typename R2> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
 {

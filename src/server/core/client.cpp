@@ -233,14 +233,14 @@ bool NXCORE_EXPORTABLE KillClientSession(session_id_t id)
 /**
  * Enumerate active sessions
  */
-void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, void *), void *context)
 {
    RWLockReadLock(s_sessionListLock);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if ((s_sessionList[i] != NULL) && !s_sessionList[i]->isTerminated())
+      if ((s_sessionList[i] != nullptr) && !s_sessionList[i]->isTerminated())
       {
-         pHandler(s_sessionList[i], pArg);
+         handler(s_sessionList[i], context);
       }
    }
    RWLockUnlock(s_sessionListLock);
