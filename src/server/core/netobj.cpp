@@ -1313,9 +1313,9 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
 /**
  * Handler for EnumerateSessions()
  */
-static void BroadcastObjectChange(ClientSession *session, void *context)
+static void BroadcastObjectChange(ClientSession *session, NetObj *object)
 {
-   session->onObjectChange(static_cast<NetObj*>(context)->self());
+   session->onObjectChange(object->self());
 }
 
 /**

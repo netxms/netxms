@@ -1274,7 +1274,7 @@ void NXCPMessage::deleteAllFields()
 /**
  * Set field from multibyte string
  */
-void NXCPMessage::setFieldFromMBString(UINT32 fieldId, const char *value)
+void NXCPMessage::setFieldFromMBString(uint32_t fieldId, const char *value)
 {
    size_t l = strlen(value) + 1;
 #if HAVE_ALLOCA
@@ -1296,46 +1296,38 @@ void NXCPMessage::setFieldFromMBString(UINT32 fieldId, const char *value)
 /**
  * set binary field to an array of UINT32s
  */
-void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, size_t numElements, const UINT32 *elements)
+void NXCPMessage::setFieldFromInt32Array(uint32_t fieldId, size_t numElements, const uint32_t *elements)
 {
-   UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, elements, false, numElements * sizeof(UINT32));
-   if (pdwBuffer != NULL)
+   uint32_t *buffer = static_cast<uint32_t*>(set(fieldId, NXCP_DT_BINARY, elements, false, numElements * sizeof(uint32_t)));
+   if (buffer != nullptr)
    {
-      pdwBuffer++;   // First UINT32 is a length field
+      buffer++;   // First UINT32 is a length field
       for(size_t i = 0; i < numElements; i++)  // Convert UINT32s to network byte order
-         pdwBuffer[i] = htonl(pdwBuffer[i]);
+         buffer[i] = htonl(buffer[i]);
    }
 }
 
 /**
  * set binary field to an array of UINT32s
  */
-void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, const IntegerArray<UINT32> *data)
+void NXCPMessage::setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t>& data)
 {
-   if (data != NULL)
+   uint32_t *buffer = static_cast<uint32_t*>(set(fieldId, NXCP_DT_BINARY, data.getBuffer(), false, data.size() * sizeof(uint32_t)));
+   if (buffer != nullptr)
    {
-      UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, data->getBuffer(), false, data->size() * sizeof(UINT32));
-      if (pdwBuffer != NULL)
-      {
-         pdwBuffer++;   // First UINT32 is a length field
-         for (int i = 0; i < data->size(); i++)  // Convert UINT32s to network byte order
-            pdwBuffer[i] = htonl(pdwBuffer[i]);
-      }
-   }
-   else
-   {
-      // Encode empty array
-      set(fieldId, NXCP_DT_BINARY, NULL, false, 0);
+      buffer++;   // First UINT32 is a length field
+      for(int i = 0; i < data.size(); i++)  // Convert UINT32s to network byte order
+         buffer[i] = htonl(buffer[i]);
    }
 }
 
 /**
  * get binary field as an array of 32 bit unsigned integers
  */
-size_t NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const
+size_t NXCPMessage::getFieldAsInt32Array(uint32_t fieldId, size_t numElements, uint32_t *buffer) const
 {
-   size_t size = getFieldAsBinary(fieldId, (BYTE *)buffer, numElements * sizeof(UINT32));
-   size /= sizeof(UINT32);   // Convert bytes to elements
+   size_t size = getFieldAsBinary(fieldId, reinterpret_cast<BYTE*>(buffer), numElements * sizeof(uint32_t));
+   size /= sizeof(uint32_t);   // Convert bytes to elements
    for(size_t i = 0; i < size; i++)
       buffer[i] = ntohl(buffer[i]);
    return size;
@@ -1344,14 +1336,14 @@ size_t NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UIN
 /**
  * get binary field as an array of 32 bit unsigned integers
  */
-size_t NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const
+size_t NXCPMessage::getFieldAsInt32Array(uint32_t fieldId, IntegerArray<uint32_t> *data) const
 {
    data->clear();
 
-   UINT32 *value = (UINT32 *)get(fieldId, NXCP_DT_BINARY);
-   if (value != NULL)
+   uint32_t *value = static_cast<uint32_t*>(get(fieldId, NXCP_DT_BINARY));
+   if (value != nullptr)
    {
-      size_t size = *value / sizeof(UINT32);
+      size_t size = *value / sizeof(uint32_t);
       value++;
       for(size_t i = 0; i < size; i++)
       {
@@ -1365,26 +1357,22 @@ size_t NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *d
 /**
  * set binary field from file
  */
-bool NXCPMessage::setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName)
+bool NXCPMessage::setFieldFromFile(uint32_t fieldId, const TCHAR *fileName)
 {
-   FILE *pFile;
-   BYTE *pBuffer;
-   UINT32 size;
-   bool bResult = false;
-
-   size = (UINT32)FileSize(pszFileName);
-   pFile = _tfopen(pszFileName, _T("rb"));
-   if (pFile != NULL)
+   bool success = false;
+   uint32_t size = static_cast<uint32_t>(FileSize(fileName));
+   FILE *handle = _tfopen(fileName, _T("rb"));
+   if (handle != nullptr)
    {
-      pBuffer = (BYTE *)set(fieldId, NXCP_DT_BINARY, NULL, false, size);
-      if (pBuffer != NULL)
+      BYTE *buffer = static_cast<BYTE*>(set(fieldId, NXCP_DT_BINARY, nullptr, false, size));
+      if (buffer != nullptr)
       {
-         if (fread(pBuffer + sizeof(UINT32), 1, size, pFile) == size)
-            bResult = true;
+         if (fread(buffer + sizeof(uint32_t), 1, size, handle) == size)
+            success = true;
       }
-      fclose(pFile);
+      fclose(handle);
    }
-   return bResult;
+   return success;
 }
 
 /**

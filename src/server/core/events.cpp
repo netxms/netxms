@@ -1548,13 +1548,13 @@ const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)
 /**
  * Callback for sending event configuration change notifications
  */
-static void SendEventDBChangeNotification(ClientSession *session, void *arg)
+static void SendEventDBChangeNotification(ClientSession *session, NXCPMessage *msg)
 {
    if (session->isAuthenticated() &&
        (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) ||
         session->checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) ||
         session->checkSysAccessRights(SYSTEM_ACCESS_EPP)))
-      session->postMessage((NXCPMessage *)arg);
+      session->postMessage(msg);
 }
 
 /**

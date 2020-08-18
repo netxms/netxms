@@ -135,9 +135,9 @@ static uint32_t s_updateCode;
 /**
  * Send updates to all connected clients
  */
-static void SendActionDBUpdate(ClientSession *pSession, void *pArg)
+static void SendActionDBUpdate(ClientSession *session, const Action *action)
 {
-   pSession->onActionDBUpdate(s_updateCode, (const Action *)pArg);
+   session->onActionDBUpdate(s_updateCode, action);
 }
 
 /**

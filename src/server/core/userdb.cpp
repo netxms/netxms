@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("userdb")
+
 /**
  * Password complexity options
  */
@@ -150,9 +152,9 @@ static UINT64 GetEffectiveSystemRights(User *user)
 /**
  * Get effective system rights for user
  */
-UINT64 NXCORE_EXPORTABLE GetEffectiveSystemRights(UINT32 userId)
+uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId)
 {
-   UINT64 systemRights = 0;
+   uint64_t systemRights = 0;
    RWLockReadLock(s_userDatabaseLock);
    UserDatabaseObject *user = s_userDatabase.get(userId);
    if ((user != NULL) && !user->isGroup())
@@ -169,10 +171,10 @@ UINT64 NXCORE_EXPORTABLE GetEffectiveSystemRights(UINT32 userId)
 static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 {
    ThreadSetName("AccountUpdate");
-	DbgPrintf(2, _T("User account status update thread started"));
+	nxlog_debug_tag(DEBUG_TAG, 2, _T("User account status update thread started"));
 	while(!SleepAndCheckForShutdown(60))
 	{
-		DbgPrintf(8, _T("AccountStatusUpdater: wakeup"));
+		nxlog_debug_tag(DEBUG_TAG, 8, _T("AccountStatusUpdater: wakeup"));
 
 		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
 
@@ -192,21 +194,21 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 				// Re-enable temporary disabled user
 				user->enable();
             WriteAuditLog(AUDIT_SECURITY, true, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
-				DbgPrintf(3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
+				nxlog_debug_tag(DEBUG_TAG, 3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
 			if (!user->isDisabled() && (blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
 			{
 				user->disable();
             WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());
-				DbgPrintf(3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
+				nxlog_debug_tag(DEBUG_TAG, 3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
 		delete it;
 		RWLockUnlock(s_userDatabaseLock);
 	}
 
-	DbgPrintf(2, _T("User account status update thread stopped"));
+	nxlog_debug_tag(DEBUG_TAG, 2, _T("User account status update thread stopped"));
 	return THREAD_OK;
 }
 
@@ -251,7 +253,7 @@ bool LoadUsers()
    DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : nullptr;
    if (cachedb != nullptr)
    {
-      nxlog_debug(2, _T("Caching user configuration tables"));
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Caching user configuration tables"));
       if (!DBCacheTable(cachedb, hdb, _T("userdb_custom_attributes"), _T("object_id,attr_name"), _T("*")) ||
           !DBCacheTable(cachedb, hdb, _T("user_group_members"), _T("group_id,user_id"), _T("*")))
       {
@@ -274,7 +276,7 @@ bool LoadUsers()
    {
 		User *user = new User();
 		AddDatabaseObject(user);
-      nxlog_write(NXLOG_INFO, _T("System account was created because it was not presented in database"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("System account was created because it was not presented in database"));
    }
 
    // Load groups
@@ -302,7 +304,7 @@ bool LoadUsers()
 		Group *group = new Group();
 		group->saveToDatabase(hdb);
 		AddDatabaseObject(group);
-      nxlog_write(NXLOG_INFO, _T("User group \"Everyone\" was created because it was not presented in database"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("User group \"Everyone\" was created because it was not presented in database"));
    }
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -442,14 +444,14 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
             }
             break;
          default:
-            nxlog_write(NXLOG_WARNING, _T("Unsupported authentication method %d requested for user %s"), user->getAuthMethod(), login);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Unsupported authentication method %d requested for user %s"), user->getAuthMethod(), login);
             bPasswordValid = FALSE;
             break;
       }
    }
    else
    {
-      DbgPrintf(4, _T("User \"%s\" already authenticated by SSO server"), user->getName());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" already authenticated by SSO server"), user->getName());
       bPasswordValid = TRUE;
    }
 
@@ -472,12 +474,12 @@ result:
          {
             if (user->getFlags() & UF_CHANGE_PASSWORD)
             {
-               DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Password for user \"%s\" need to be changed"), user->getName());
                if (user->getId() != 0)	// Do not check grace logins for built-in system user
                {
                   if (user->getGraceLogins() <= 0)
                   {
-                     DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" has no grace logins left"), user->getName());
                      dwResult = RCC_NO_GRACE_LOGINS;
                   }
                   else
@@ -496,12 +498,12 @@ result:
                    ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
                    (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
                {
-                  DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Password for user \"%s\" has expired"), user->getName());
                   if (user->getId() != 0)	// Do not check grace logins for built-in system user
                   {
                      if (user->getGraceLogins() <= 0)
                      {
-                        DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" has no grace logins left"), user->getName());
                         dwResult = RCC_NO_GRACE_LOGINS;
                      }
                      else
@@ -586,9 +588,9 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId)
  * Fill message with group membership information for given user.
  * Access to user database must be locked.
  */
-void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId)
+void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId)
 {
-   IntegerArray<UINT32> list;
+   IntegerArray<uint32_t> list;
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
    while(it->hasNext())
    {
@@ -599,7 +601,7 @@ void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId)
 		}
    }
    delete it;
-   msg->setField(VID_NUM_GROUPS, (INT32)list.size());
+   msg->setField(VID_NUM_GROUPS, list.size());
    if (list.size() > 0)
       msg->setFieldFromInt32Array(VID_GROUPS, &list);
 }
@@ -607,7 +609,7 @@ void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId)
 /**
  * Update group membership for user
  */
-void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
+void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)
 {
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
    while(it->hasNext())
@@ -616,7 +618,7 @@ void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
 		if (object->isGroup() && (object->getId() != GROUP_EVERYONE))
 		{
          bool found = false;
-         for(int j = 0; j < numGroups; j++)
+         for(size_t j = 0; j < numGroups; j++)
          {
             if (object->getId() == groups[j])
             {
@@ -642,32 +644,24 @@ void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
  * Buffer must be at least MAX_USER_NAME characters long.
  * If "noFail" flag is set, return string in form {id} if user cannot be found.
  */
-TCHAR NXCORE_EXPORTABLE *ResolveUserId(UINT32 id, TCHAR *buffer, bool noFail)
+TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail)
 {
    RWLockReadLock(s_userDatabaseLock);
    UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
+   if (object != nullptr)
       _tcslcpy(buffer, object->getName(), MAX_USER_NAME);
    else if (noFail)
       _sntprintf(buffer, MAX_USER_NAME, _T("{%u}"), id);
    RWLockUnlock(s_userDatabaseLock);
-	return ((object != NULL) || noFail) ? buffer : NULL;
+	return ((object != nullptr) || noFail) ? buffer : nullptr;
 }
 
 /**
  * Update system-wide access rights in user sessions
  */
-static void UpdateGlobalAccessRights(ClientSession *session, void *context)
+static void UpdateGlobalAccessRights(ClientSession *session)
 {
    session->updateSystemAccessRights();
-}
-
-/**
- * Thread pool wrapper for UpdateGlobalAccessRights
- */
-static void UpdateGlobalAccessRightsWrapper(void *context)
-{
-   EnumerateClientSessions(UpdateGlobalAccessRights, context);
 }
 
 /**
@@ -675,7 +669,7 @@ static void UpdateGlobalAccessRightsWrapper(void *context)
  */
 static void DeleteUserFromAllObjectsWrapper(void *uid)
 {
-   DeleteUserFromAllObjects(CAST_FROM_POINTER(uid, UINT32));
+   DeleteUserFromAllObjects(CAST_FROM_POINTER(uid, uint32_t));
 }
 
 /**
@@ -685,7 +679,7 @@ static void DeleteUserFromAllObjectsWrapper(void *uid)
  * @param alreadyLocked true if user database lock already acquired
  * @return RCC ready to be sent to client
  */
-static UINT32 DeleteUserDatabaseObjectInternal(UINT32 id, bool alreadyLocked)
+static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked)
 {
    if (alreadyLocked)
    {
@@ -702,7 +696,7 @@ static UINT32 DeleteUserDatabaseObjectInternal(UINT32 id, bool alreadyLocked)
       RWLockWriteLock(s_userDatabaseLock);
 
    UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
+   if (object != nullptr)
    {
       object->setDeleted();
       if (!(id & GROUP_FLAG))
@@ -726,9 +720,9 @@ static UINT32 DeleteUserDatabaseObjectInternal(UINT32 id, bool alreadyLocked)
    // Update system access rights in all connected sessions
    // Use separate thread to avoid deadlocks
    if (id & GROUP_FLAG)
-      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRightsWrapper, NULL);
+      ThreadPoolExecute(g_mainThreadPool, EnumerateClientSessions, UpdateGlobalAccessRights);
 
-   SendUserDBUpdate(USER_DB_DELETE, id, NULL);
+   SendUserDBUpdate(USER_DB_DELETE, id, nullptr);
    return RCC_SUCCESS;
 }
 
@@ -781,12 +775,12 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *
 /**
  * Modify user database object
  */
-UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData)
+uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData)
 {
-   UINT32 rcc = RCC_INVALID_USER_ID;
+   uint32_t rcc = RCC_INVALID_USER_ID;
    bool updateAccessRights = false;
 
-   UINT32 id = msg->getFieldAsUInt32(VID_USER_ID);
+   uint32_t id = msg->getFieldAsUInt32(VID_USER_ID);
 
    RWLockWriteLock(s_userDatabaseLock);
 
@@ -795,7 +789,7 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **old
    {
       TCHAR name[MAX_USER_NAME], prevName[MAX_USER_NAME];
 
-      UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
+      uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
       if (fields & USER_MODIFY_LOGIN_NAME)
       {
          msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
@@ -826,13 +820,13 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **old
          {
             if (object->isGroup())
             {
-               nxlog_debug(4, _T("Group rename: %s -> %s"), prevName, object->getName());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Group rename: %s -> %s"), prevName, object->getName());
                s_groups.remove(prevName);
                s_groups.set(object->getName(), (Group *)object);
             }
             else
             {
-               nxlog_debug(4, _T("User rename: %s -> %s"), prevName, object->getName());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("User rename: %s -> %s"), prevName, object->getName());
                s_users.remove(prevName);
                s_users.set(object->getName(), (User *)object);
             }
@@ -844,7 +838,7 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **old
 
    // Use separate thread to avoid deadlocks
    if (updateAccessRights)
-      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRightsWrapper, NULL);
+      ThreadPoolExecute(g_mainThreadPool, EnumerateClientSessions, UpdateGlobalAccessRights);
 
    return rcc;
 }
@@ -856,7 +850,7 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **old
 inline bool UserNameIsUnique(const TCHAR *name, User *user)
 {
    User *u = s_users.get(name);
-   return (u == NULL) || ((user != NULL) && (user->getId() == u->getId()));
+   return (u == nullptr) || ((user != nullptr) && (user->getId() == u->getId()));
 }
 
 /**
@@ -866,16 +860,16 @@ inline bool UserNameIsUnique(const TCHAR *name, User *user)
 inline bool GroupNameIsUnique(const TCHAR *name, Group *group)
 {
    Group *g = s_groups.get(name);
-   return (g == NULL) || ((group != NULL) && (group->getId() == g->getId()));
+   return (g == nullptr) || ((group != nullptr) && (group->getId() == g->getId()));
 }
 
 /**
  * Generates unique name for LDAP user
  */
-static TCHAR *GenerateUniqueName(const TCHAR *oldName, UINT32 id)
+static TCHAR *GenerateUniqueName(const TCHAR *oldName, uint32_t id)
 {
    TCHAR *name = MemAllocString(256);
-   _sntprintf(name, 256, _T("%s_LDAP%d"), oldName, id);
+   _sntprintf(name, 256, _T("%s_LDAP%u"), oldName, id);
    return name;
 }
 
@@ -892,18 +886,18 @@ void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
    TCHAR guid[64];
 
    // Check existing user with same DN
-   UserDatabaseObject *object = NULL;
-   if (ldapObject->m_id != NULL)
+   UserDatabaseObject *object = nullptr;
+   if (ldapObject->m_id != nullptr)
       object = s_ldapUserId.get(ldapObject->m_id);
    else
       object = s_ldapNames.get(dn);
 
-   if ((object != NULL) && object->isGroup())
+   if ((object != nullptr) && object->isGroup())
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got user with DN=%s but found existing group %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
       PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
-      DbgPrintf(4, _T("UpdateLDAPUser(): %s"), description);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): %s"), description);
       conflict = true;
    }
 
@@ -922,7 +916,7 @@ void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
                _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
                object->getGuidAsText(guid);
                PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
-               DbgPrintf(4, _T("UpdateLDAPUser(): %s"), description);
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): %s"), description);
             }
             user->setFullName(ldapObject->m_fullName);
             user->setDescription(ldapObject->m_description);
@@ -945,7 +939,7 @@ void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
                user->setDn(dn);
                s_ldapNames.set(dn, user);
             }
-            DbgPrintf(4, _T("UpdateLDAPUser(): User updated: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User updated: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
          }
          if (user->isModified())
          {
@@ -968,14 +962,14 @@ void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
             user->setLdapId(ldapObject->m_id);
          AddDatabaseObject(user);
          SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
-         DbgPrintf(4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
       }
       else
       {
          UINT32 userId = CreateUniqueId(IDG_USER);
          TCHAR *userName = GenerateUniqueName(ldapObject->m_loginName, userId);
          _sntprintf(description, MAX_USER_DESCR, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
-         DbgPrintf(4,  _T("UpdateLDAPUser(): %s"), description);
+         nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPUser(): %s"), description);
          User *user = new User(userId, userName);
          user->setFullName(ldapObject->m_fullName);
          user->setDescription(ldapObject->m_description);
@@ -987,7 +981,7 @@ void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
          SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
          user->getGuidAsText(guid);
          PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", user->getId(), guid, user->getDn(), user->getName(), description);
-         DbgPrintf(4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, userName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, userName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
          MemFree(userName);
       }
    }
@@ -1014,12 +1008,12 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectM
          {
             if (m_action == USER_DELETE)
             {
-               DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was removed from user database"), isUser ? _T("user") : _T("group"), object->getDn());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was removed from user database"), isUser ? _T("user") : _T("group"), object->getDn());
                DeleteUserDatabaseObjectInternal(object->getId(), true);
             }
             else if (m_action == USER_DISABLE)
             {
-               DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was disabled"), isUser ? _T("user") : _T("group"), object->getDn());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was disabled"), isUser ? _T("user") : _T("group"), object->getDn());
                object->disable();
                object->setDescription(_T("LDAP entry was deleted."));
             }
@@ -1047,21 +1041,21 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
 
    if ((object != NULL) && !object->isGroup())
    {
-      DbgPrintf(4, _T("SyncGroupMembers(): Ignore LDAP object: %s"), dn);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Ignore LDAP object: %s"), dn);
       RWLockUnlock(s_userDatabaseLock);
       return;
    }
 
    if (object == NULL)
    {
-      DbgPrintf(4, _T("SyncGroupMembers(): Unable to find LDAP object: %s"), dn);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Unable to find LDAP object: %s"), dn);
       RWLockUnlock(s_userDatabaseLock);
       return;
    }
 
    Group *group = static_cast<Group*>(object);
 
-   DbgPrintf(4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), dn);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), dn);
 
    StringSet *newMembers = ldapObject->m_memberList;
    const IntegerArray<uint32_t>& oldMembers = group->getMembers();
@@ -1078,7 +1072,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
 
       if (!newMembers->contains(user->getDn()))
       {
-         DbgPrintf(4, _T("SyncGroupMembers: Remove from %s group deleted user: %s"), group->getDn(), user->getDn());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: Remove from %s group deleted user: %s"), group->getDn(), user->getDn());
          group->deleteUser(user->getId());   // oldMembers is a reference to actual member list, Group::deleteUser will update it
          i--;
       }
@@ -1098,7 +1092,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
 
       if (!group->isMember(user->getId()))
       {
-         DbgPrintf(4, _T("SyncGroupMembers: LDAP user %s added to LDAP group %s"), user->getDn(), group->getDn());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: LDAP user %s added to LDAP group %s"), user->getDn(), group->getDn());
          group->addUser(user->getId());
       }
    }
@@ -1130,7 +1124,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, a
       _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
       PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
-      DbgPrintf(4,  _T("UpdateLDAPGroup(): %s"), description);
+      nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"), description);
       conflict = true;
    }
 
@@ -1149,7 +1143,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, a
                _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
                object->getGuidAsText(guid);
                PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
-               DbgPrintf(4,  _T("UpdateLDAPGroup(): %s"),description);
+               nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"),description);
             }
             group->setDescription(ldapObject->m_description);
             if(_tcscmp(group->getDn(), dn))
@@ -1170,7 +1164,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, a
                group->setDn(dn);
                s_ldapNames.set(dn, group);
             }
-            DbgPrintf(4, _T("UpdateLDAPGroup(): Group updated: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group updated: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
          }
          if (group->isModified())
          {
@@ -1192,14 +1186,14 @@ void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, a
             group->setLdapId(ldapObject->m_id);
          SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
          AddDatabaseObject(group);
-         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
       }
       else
       {
          UINT32 id = CreateUniqueId(IDG_USER_GROUP);
          TCHAR *groupName = GenerateUniqueName(ldapObject->m_loginName, id);
          _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
-         DbgPrintf(4,  _T("UpdateLDAPGroup(): %s"),description);
+         nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"),description);
          Group *group = new Group(id, groupName);
          group->setDescription(ldapObject->m_description);
          group->setFlags(UF_MODIFIED | UF_LDAP_USER);
@@ -1210,7 +1204,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, a
          AddDatabaseObject(group);
          group->getGuidAsText(guid);
          PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", group->getId(), guid, group->getDn(), group->getName(), description);
-         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
          MemFree(groupName);
       }
    }
@@ -1648,7 +1642,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
           !object->isDisabled() && !object->isDeleted() &&
 			 !_tcsicmp(_xmppId, ((User *)object)->getXmppId()))
       {
-         DbgPrintf(4, _T("User %s authenticated for XMPP subscription"), object->getName());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("User %s authenticated for XMPP subscription"), object->getName());
 
          TCHAR workstation[256];
          _tcscpy(workstation, _T("XMPP:"));
@@ -1704,13 +1698,13 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
 
          if (systemRights & SYSTEM_ACCESS_XMPP_COMMANDS)
          {
-            DbgPrintf(4, _T("User %s authenticated for XMPP commands"), object->getName());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("User %s authenticated for XMPP commands"), object->getName());
             WriteAuditLog(AUDIT_SECURITY, TRUE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
             success = true;
          }
          else
          {
-            DbgPrintf(4, _T("Access to XMPP commands denied for user %s"), object->getName());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Access to XMPP commands denied for user %s"), object->getName());
             WriteAuditLog(AUDIT_SECURITY, FALSE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
          }
          break;

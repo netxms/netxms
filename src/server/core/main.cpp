@@ -677,14 +677,13 @@ static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *psz
 /**
  * Send console message to session with open console
  */
-static void SendConsoleMessage(ClientSession *session, void *arg)
+static void SendConsoleMessage(ClientSession *session, TCHAR *message)
 {
 	if (session->isConsoleOpen())
 	{
 		NXCPMessage msg;
-
 		msg.setCode(CMD_ADM_MESSAGE);
-		msg.setField(VID_MESSAGE, (TCHAR *)arg);
+		msg.setField(VID_MESSAGE, message);
 		session->postMessage(&msg);
 	}
 }

@@ -188,10 +188,10 @@ static RWLock s_lock;
 /**
  * Callback for sending alarm category configuration change notifications
  */
-static void SendAlarmCategoryDBChangeNotification(ClientSession *session, void *arg)
+static void SendAlarmCategoryDBChangeNotification(ClientSession *session, NXCPMessage *msg)
 {
    if (session->isAuthenticated())
-      session->postMessage((NXCPMessage *)arg);
+      session->postMessage(msg);
 }
 
 /**
