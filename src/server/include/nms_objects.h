@@ -2020,6 +2020,7 @@ public:
    virtual void leaveMaintenanceMode(uint32_t userId) override;
 
    virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+   virtual DataCollectionError getInternalTableMetric(const TCHAR *param, Table **result);
 
    DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject);
    DataCollectionError getTableFromScript(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
@@ -3126,6 +3127,7 @@ public:
    bool connectToSMCLP();
 
    virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
+   virtual DataCollectionError getInternalTableMetric(const TCHAR *param, Table **result) override;
 
    DataCollectionError getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
    DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table);
@@ -3172,6 +3174,8 @@ public:
 	void writePackageListToMessage(NXCPMessage *msg);
 	void writeWsListToMessage(NXCPMessage *msg);
 	void writeHardwareListToMessage(NXCPMessage *msg);
+
+	Table *wsListAsTable();
 
    UINT32 wakeUp();
 

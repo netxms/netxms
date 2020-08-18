@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.dialogs;
 import java.util.ArrayList;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
+import org.netxms.client.AgentTable;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.MobileDevice;
@@ -31,16 +32,42 @@ import org.netxms.ui.eclipse.datacollection.Messages;
  * Dialog for selecting parameters with "Internal" source
  */
 public class SelectInternalParamDlg extends AbstractSelectParamDlg
-{
-	public SelectInternalParamDlg(Shell parentShell, long nodeId)
+{   
+   public SelectInternalParamDlg(Shell parentShell, long nodeId, boolean selectTables)
 	{
-		super(parentShell, nodeId, false);
+		super(parentShell, nodeId, selectTables);
+		
 	}
 
 	/**
 	 * Fill parameter list
 	 */
 	protected void fillParameterList()
+	{
+	   if (selectTables)
+	      tableList();
+	   else
+	      parameterList();
+	   
+	}
+	
+
+   /**
+    * Fill table parameter list
+    */
+   private void tableList()
+   {
+      ArrayList<AgentTable> list = new ArrayList<AgentTable>(10);
+      String[] instanceColumns = {"MAC_ADDRESS", "IP_ADDRESS"}; 
+      list.add(new AgentTable("WirlessStations", "Wirless stations table", instanceColumns));
+
+      viewer.setInput(list.toArray());
+   }
+
+   /**
+    * Fill parameter list
+    */
+   private void parameterList()
 	{
 		ArrayList<AgentParameter> list = new ArrayList<AgentParameter>(10);
 

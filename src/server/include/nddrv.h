@@ -232,7 +232,7 @@ struct WirelessStationInfo
 {
 	// This part filled by driver
    BYTE macAddr[MAC_ADDR_LENGTH];
-	uint32_t ipAddr;	// IP address, must be in host byte order
+	InetAddress ipAddr;
 	int rfIndex;	// radio interface index
    BYTE bssid[MAC_ADDR_LENGTH];
    short apMatchPolicy;

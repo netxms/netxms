@@ -540,9 +540,9 @@ public class General extends DCIPropertyPageDialog
 		{
          case INTERNAL:
 			   if (sourceNode.getObjectId() != 0)
-			      dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId());
+			      dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId(), false);
 			   else
-			      dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId());
+			      dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId(), false);
 				break;
          case AGENT:
          case DEVICE_DRIVER:

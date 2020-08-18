@@ -173,6 +173,9 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
    {
       switch(table->getDataSource())
       {
+         case DS_INTERNAL:    // Server internal parameter tables
+            *error = dcTarget->getInternalTableMetric(table->getName(), &result);
+            break;
 		   case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {

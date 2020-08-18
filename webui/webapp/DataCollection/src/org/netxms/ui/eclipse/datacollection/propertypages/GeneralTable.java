@@ -56,6 +56,7 @@ import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
@@ -522,6 +523,12 @@ public class GeneralTable extends DCIPropertyPageDialog
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
       switch(dataOrigin)
 		{
+         case INTERNAL:
+            if (sourceNode.getObjectId() != 0)
+               dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId(), true);
+            else
+               dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId(), true);
+            break;            
          case AGENT:
 			   if (sourceNode.getObjectId() != 0)
                dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), dataOrigin, true);
