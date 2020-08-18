@@ -1,4 +1,12 @@
 *
+* 3.4.314
+*
+
+- Fixed issues:
+	NX-1940 (AIX subagent may report incorrect file system size)
+
+
+*
 * 3.4.313
 *
 
