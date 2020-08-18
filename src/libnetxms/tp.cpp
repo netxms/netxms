@@ -332,6 +332,7 @@ static void MaintenanceThread(ThreadPool *p)
             }
             p->schedulerQueue.remove(0);
             InterlockedIncrement(&p->activeRequests);
+            InterlockedIncrement64(&p->taskExecutionCount);
             rq->queueTime = now;
             p->queue.put(rq);
          }
@@ -490,6 +491,10 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR
       data->pool = p;
       data->queue = q;
       ThreadPoolExecute(p, ProcessSerializedRequests, data);
+   }
+   else
+   {
+      InterlockedIncrement64(&p->taskExecutionCount);
    }
 
    WorkRequest *rq = p->workRequestMemoryPool.create();
