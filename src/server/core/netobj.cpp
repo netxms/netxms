@@ -2605,13 +2605,32 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                case 'y': // alarm state
                   if (alarm != nullptr)
                   {
-                     output.append(static_cast<INT32>(alarm->getState()));
+                     output.append(static_cast<int32_t>(alarm->getState()));
                   }
                   break;
                case 'Y': // alarm ID
                   if (alarm != nullptr)
                   {
                      output.append(alarm->getAlarmId());
+                  }
+                  break;
+               case 'z':   // Zone UIN
+                  output.append(getZoneUIN());
+                  break;
+               case 'Z':   // Zone name
+                  if (getZoneUIN() != 0)
+                  {
+                     shared_ptr<Zone> zone = FindZoneByUIN(getZoneUIN());
+                     if (zone != nullptr)
+                     {
+                        output.append(zone->getName());
+                     }
+                     else
+                     {
+                        output.append(_T('['));
+                        output.append(getZoneUIN());
+                        output.append(_T(']'));
+                     }
                   }
                   break;
                case '0':
