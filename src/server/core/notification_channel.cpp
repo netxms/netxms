@@ -479,7 +479,7 @@ bool DeleteNotificationChannel(const TCHAR *name)
    s_channelListLock.unlock();
    if (contains)
    {
-      ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, DeleteNotificationChannelInternal, MemCopyString(name));
+      ThreadPoolExecuteSerialized(g_mainThreadPool, NC_THREAD_KEY, DeleteNotificationChannelInternal, MemCopyString(name));
    }
    return contains;
 }
@@ -629,7 +629,7 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
       s_channelList.set(newName, nc);
       auto pair = new std::pair<TCHAR *, TCHAR *>(name, newName);
       UpdateChannelNameInActions(pair);
-      ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, RenameNotificationChannelInDB, pair);
+      ThreadPoolExecuteSerialized(g_mainThreadPool, NC_THREAD_KEY, RenameNotificationChannelInDB, pair);
    }
    else
    {

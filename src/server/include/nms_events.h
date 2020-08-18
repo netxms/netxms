@@ -338,9 +338,9 @@ UINT32 DeleteEventTemplate(UINT32 eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
 void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode);
 
-void CorrelateEvent(Event *pEvent);
-Event *LoadEventFromDatabase(UINT64 eventId);
-Event *FindEventInLoggerQueue(UINT64 eventId);
+void CorrelateEvent(Event *event);
+Event *LoadEventFromDatabase(uint64_t eventId);
+Event *FindEventInLoggerQueue(uint64_t eventId);
 
 bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
@@ -376,6 +376,6 @@ const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
  */
 extern ObjectQueue<Event> g_eventQueue;
 extern EventPolicy *g_pEventPolicy;
-extern UINT64 g_totalEventsProcessed;
+extern VolatileCounter64 g_totalEventsProcessed;
 
 #endif   /* _nms_events_h_ */

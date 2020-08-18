@@ -31,7 +31,7 @@
 /**
  * Number of processed events since start
  */
-UINT64 g_totalEventsProcessed = 0;
+VolatileCounter64 g_totalEventsProcessed = 0;
 
 /**
  * Static data
@@ -39,41 +39,40 @@ UINT64 g_totalEventsProcessed = 0;
 static THREAD s_threadStormDetector = INVALID_THREAD_HANDLE;
 static THREAD s_threadLogger = INVALID_THREAD_HANDLE;
 static ObjectQueue<Event> s_loggerQueue;
+static ThreadPool *s_eventProcessingThreadPool = nullptr;
 
 /**
  * Handler for EnumerateSessions()
  */
-static void BroadcastEvent(ClientSession *pSession, Event *event)
+static void BroadcastEvent(ClientSession *session, Event *event)
 {
-   if (pSession->isAuthenticated())
-      pSession->onNewEvent(event);
+   if (session->isAuthenticated())
+      session->onNewEvent(event);
 }
 
 /**
  * Event storm detector thread
  */
-static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
+static void EventStormDetector()
 {
    ThreadSetName("EvtStormDetect");
 
-	UINT64 numEvents, prevEvents, eventsPerSecond;
-	int duration, actualDuration = 0;
-	
 	if (!ConfigReadBoolean(_T("EventStorm.EnableDetection"), false))
 	{
 		// Event storm detection is off
 	   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped because event storm detection is off"));
-		return THREAD_OK;
+		return;
 	}
 
-	eventsPerSecond = ConfigReadInt(_T("EventStorm.EventsPerSecond"), 100);
-	duration = ConfigReadInt(_T("EventStorm.Duration"), 15);
+	uint64_t eventsPerSecond = ConfigReadInt(_T("EventStorm.EventsPerSecond"), 100);
+	int duration = ConfigReadInt(_T("EventStorm.Duration"), 15);
 
-	prevEvents = g_totalEventsProcessed;	
+	int actualDuration = 0;
+	uint64_t prevEvents = g_totalEventsProcessed;
 	while(!(g_flags & AF_SHUTDOWN))
 	{
 		ThreadSleepMs(1000);
-		numEvents = g_totalEventsProcessed - prevEvents;
+		uint64_t numEvents = g_totalEventsProcessed - prevEvents;
 		prevEvents = g_totalEventsProcessed;
 		if ((numEvents >= eventsPerSecond) && (!(g_flags & AF_EVENT_STORM_DETECTED)))
 		{
@@ -94,13 +93,12 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 		}
 	}
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped"));
-	return THREAD_OK;
 }
 
 /**
  * Event logger
  */
-static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
+static void EventLogger()
 {
    ThreadSetName("EventLogger");
 
@@ -195,7 +193,86 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator (need second check if got it in inner loop)
 	}
-	return THREAD_OK;
+}
+
+/**
+ * Process event
+ */
+static void ProcessEvent(Event *event)
+{
+   // Expand message text
+   // We cannot expand message text in PostEvent because of
+   // possible deadlock on g_rwlockIdIndex
+   event->expandMessageText();
+
+   // Attempt to correlate event to some of previous events
+   CorrelateEvent(event);
+
+   // Pass event to modules
+   CALL_ALL_MODULES(pfEventHandler, (event));
+
+   shared_ptr<NetObj> sourceObject = FindObjectById(event->getSourceId());
+   if (sourceObject == nullptr)
+   {
+      sourceObject = FindObjectById(g_dwMgmtNode);
+      if (sourceObject == nullptr)
+         sourceObject = g_entireNetwork;
+   }
+
+   ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::EventProcessor"), sourceObject);
+   if (vm.isValid())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Running event processor hook script"));
+      vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+      if (!vm->run())
+      {
+         if (event->getCode() != EVENT_SCRIPT_ERROR) // To avoid infinite loop
+         {
+            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::EventProcessor"), vm->getErrorText(), 0);
+         }
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Event processor hook script execution error (%s)"), vm->getErrorText());
+      }
+   }
+
+   // Send event to all connected clients
+   EnumerateClientSessions(BroadcastEvent, event);
+
+   // Write event information to debug
+   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 5)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAGS:\"%s\"%s) FROM %s: %s"),
+                      event->getName(), event->getCode(), event->getId(), event->getFlags(), event->getSeverity(),
+                      (const TCHAR *)event->getTagsAsList(),
+                      (event->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
+                      sourceObject->getName(), event->getMessage());
+   }
+
+   // Pass event through event processing policy if it is not correlated
+   if (event->getRootId() == 0)
+   {
+#ifdef WITH_ZMQ
+      ZmqPublishEvent(event);
+#endif
+
+      g_pEventPolicy->processEvent(event);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), event->getId(), event->getCode());
+   }
+
+   // Write event to log if required, otherwise destroy it
+   // Don't write SYS_DB_QUERY_FAILED to log to prevent
+   // possible event recursion in case of severe DB failure
+   // Logger will destroy event object after logging
+   if ((event->getFlags() & EF_LOG) && (event->getCode() != EVENT_DB_QUERY_FAILED))
+   {
+      s_loggerQueue.put(event);
+   }
+   else
+   {
+      delete event;
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Event object destroyed"));
+   }
+
+   InterlockedIncrement64(&g_totalEventsProcessed);
 }
 
 /**
@@ -205,95 +282,51 @@ void EventProcessor()
 {
    ThreadSetName("EventProcessor");
 
-	s_threadLogger = ThreadCreateEx(EventLogger, 0, nullptr);
-	s_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, nullptr);
+	s_threadLogger = ThreadCreateEx(EventLogger);
+	s_threadStormDetector = ThreadCreateEx(EventStormDetector);
+
+	bool parallelProcessing;
+	TCHAR queueSelector[256];
+	int poolSize = ConfigReadInt(_T("Events.Processor.PoolSize"), 1);
+	if (poolSize > 1)
+	{
+	   parallelProcessing = true;
+	   ConfigReadStr(_T("Events.Processor.QueueSelector"), queueSelector, 256, _T("%z"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing enabled (queue selector \"%s\")"), queueSelector);
+      s_eventProcessingThreadPool = ThreadPoolCreate(_T("EVENTPROC"), poolSize, poolSize);
+	}
+	else
+	{
+	   parallelProcessing = false;
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing disabled"));
+	}
+
    while(true)
    {
-      Event *pEvent = g_eventQueue.getOrBlock();
-      if (pEvent == INVALID_POINTER_VALUE)
+      Event *event = g_eventQueue.getOrBlock();
+      if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
 		if (g_flags & AF_EVENT_STORM_DETECTED)
 		{
-	      delete pEvent;
-	      g_totalEventsProcessed++;
+	      delete event;
+	      InterlockedIncrement64(&g_totalEventsProcessed);
 			continue;
 		}
 
-      // Expand message text
-      // We cannot expand message text in PostEvent because of
-      // possible deadlock on g_rwlockIdIndex
-      pEvent->expandMessageText();
-
-      // Attempt to correlate event to some of previous events
-      CorrelateEvent(pEvent);
-
-		// Pass event to modules
-      CALL_ALL_MODULES(pfEventHandler, (pEvent));
-
-      shared_ptr<NetObj> sourceObject = FindObjectById(pEvent->getSourceId());
-      if (sourceObject == nullptr)
-      {
-         sourceObject = FindObjectById(g_dwMgmtNode);
-         if (sourceObject == nullptr)
-            sourceObject = g_entireNetwork;
-      }
-
-      ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::EventProcessor"), sourceObject);
-      if (vm.isValid())
-      {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Running event processor hook script"));
-         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, pEvent, true)));
-         if (!vm->run())
-         {
-            if (pEvent->getCode() != EVENT_SCRIPT_ERROR) // To avoid infinite loop
-            {
-               PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::EventProcessor"), vm->getErrorText(), 0);
-            }
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Event processor hook script execution error (%s)"), vm->getErrorText());
-         }
-      }
-
-      // Send event to all connected clients
-      EnumerateClientSessions(BroadcastEvent, pEvent);
-
-      // Write event information to debug
-      if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 5)
-      {
-			nxlog_debug_tag(DEBUG_TAG, 5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAGS:\"%s\"%s) FROM %s: %s"),
-                         pEvent->getName(), pEvent->getCode(), pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
-						       (const TCHAR *)pEvent->getTagsAsList(),
-                         (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
-                         sourceObject->getName(), pEvent->getMessage());
-      }
-
-      // Pass event through event processing policy if it is not correlated
-      if (pEvent->getRootId() == 0)
+		if (parallelProcessing)
 		{
-#ifdef WITH_ZMQ
-         ZmqPublishEvent(pEvent);
-#endif
-
-         g_pEventPolicy->processEvent(pEvent);
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
-		}
-
-      // Write event to log if required, otherwise destroy it
-		// Don't write SYS_DB_QUERY_FAILED to log to prevent
-		// possible event recursion in case of severe DB failure
-		// Logger will destroy event object after logging
-		if ((pEvent->getFlags() & EF_LOG) && (pEvent->getCode() != EVENT_DB_QUERY_FAILED))
-		{
-			s_loggerQueue.put(pEvent);
+		   StringBuffer key = event->expandText(queueSelector, nullptr);
+		   ThreadPoolExecuteSerialized(s_eventProcessingThreadPool, key, ProcessEvent, event);
 		}
 		else
-      {
-			delete pEvent;
-			nxlog_debug_tag(DEBUG_TAG, 7, _T("Event object destroyed"));
+		{
+		   ProcessEvent(event);
 		}
-      
-      g_totalEventsProcessed++;
    }
+
+	if (parallelProcessing)
+	   ThreadPoolDestroy(s_eventProcessingThreadPool);
 
 	s_loggerQueue.put(INVALID_POINTER_VALUE);
 	ThreadJoin(s_threadStormDetector);
@@ -304,7 +337,7 @@ void EventProcessor()
 /**
  * Compare event with ID
  */
-static bool CompareEvent(const UINT64 *id, const Event *event)
+static bool CompareEvent(const uint64_t *id, const Event *event)
 {
    return event->getId() == *id;
 }
@@ -321,7 +354,7 @@ static Event *CopyEvent(Event *event)
  * Find event in logger's queue. If found, copy of queued event is returned.
  * Returned event object should be destroyed by caller.
  */
-Event *FindEventInLoggerQueue(UINT64 eventId)
+Event *FindEventInLoggerQueue(uint64_t eventId)
 {
    return s_loggerQueue.find(&eventId, CompareEvent, CopyEvent);
 }

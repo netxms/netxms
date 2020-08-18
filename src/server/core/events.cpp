@@ -715,7 +715,7 @@ json_t *Event::toJson()
 /**
  * Load event from database
  */
-Event *LoadEventFromDatabase(UINT64 eventId)
+Event *LoadEventFromDatabase(uint64_t eventId)
 {
    if (eventId == 0)
       return nullptr;
