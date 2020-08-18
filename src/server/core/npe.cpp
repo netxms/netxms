@@ -168,14 +168,14 @@ static StringObjectMap<PredictionEngine> s_engines(Ownership::True);
 /**
  * Prediction engine thread pool
  */
-ThreadPool *g_npeThreadPool = nullptr;
+static ThreadPool *s_npeThreadPool = nullptr;
 
 /**
  * Register prediction engines on startup
  */
 void RegisterPredictionEngines()
 {
-   g_npeThreadPool = ThreadPoolCreate(_T("NPE"), 0, 1024);
+   s_npeThreadPool = ThreadPoolCreate(_T("NPE"), 0, 1024);
    ENUMERATE_MODULES(pfGetPredictionEngines)
    {
       ObjectArray<PredictionEngine> *engines = CURRENT_MODULE.pfGetPredictionEngines();
@@ -204,7 +204,7 @@ void RegisterPredictionEngines()
  */
 void ShutdownPredictionEngines()
 {
-   ThreadPoolDestroy(g_npeThreadPool);
+   ThreadPoolDestroy(s_npeThreadPool);
    s_engines.clear();
 }
 
@@ -360,5 +360,5 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
  */
 void QueuePredictionEngineTraining(PredictionEngine *engine, DCItem *dci)
 {
-   ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::train, dci->getOwner()->getId(), dci->getId(), dci->getStorageClass());
+   ThreadPoolExecute(s_npeThreadPool, engine, &PredictionEngine::train, dci->getOwner()->getId(), dci->getId(), dci->getStorageClass());
 }

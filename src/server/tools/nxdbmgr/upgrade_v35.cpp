@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 35.10 to 40.0
+ * Upgrade from 35.11 to 40.0
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 35.10 to 35.11
  */
 static bool H_UpgradeFromV10()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(CreateConfigParam(_T("Events.Processor.PoolSize"), _T("1"), _T("Number of threads for parallel event processing."), _T("threads"), 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Events.Processor.QueueSelector"), _T("%z"), _T("Queue selector for parallel event processing."), nullptr, 'S', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(11));
    return true;
 }
 
@@ -373,7 +384,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 10, 40, 0,  H_UpgradeFromV10 },
+   { 11, 40, 0,  H_UpgradeFromV11 },
+   { 10, 35, 11, H_UpgradeFromV10 },
    { 9,  35, 10, H_UpgradeFromV9  },
    { 8,  35, 9,  H_UpgradeFromV8  },
    { 7,  35, 8,  H_UpgradeFromV7  },

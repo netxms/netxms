@@ -1310,7 +1310,7 @@ void ShowServerStats(CONSOLE_CTX console);
 void ShowQueueStats(CONSOLE_CTX console, const Queue *queue, const TCHAR *name);
 void ShowQueueStats(CONSOLE_CTX console, size_t size, const TCHAR *name);
 void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *name);
-void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p);
+void ShowThreadPool(CONSOLE_CTX console, const TCHAR *p);
 DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value);
 void DumpProcess(CONSOLE_CTX console);
 

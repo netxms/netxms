@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.5 to 40.6
+ */
+static bool H_UpgradeFromV5()
+{
+   if (GetSchemaLevelForMajorVersion(35) < 11)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Events.Processor.PoolSize"), _T("1"), _T("Number of threads for parallel event processing."), _T("threads"), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("Events.Processor.QueueSelector"), _T("%z"), _T("Queue selector for parallel event processing."), nullptr, 'S', true, true, false, false));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Update group ID in given table
  */
 bool UpdateGroupId(const TCHAR *table, const TCHAR *column);
@@ -177,6 +191,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 5,  40, 6,  H_UpgradeFromV5  },
    { 4,  40, 5,  H_UpgradeFromV4  },
    { 3,  40, 4,  H_UpgradeFromV3  },
    { 2,  40, 3,  H_UpgradeFromV2  },
