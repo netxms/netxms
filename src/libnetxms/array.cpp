@@ -47,11 +47,11 @@ Array::Array(int initial, int grow, Ownership owner, void (*objectDestructor)(vo
    m_grow = (grow > 0) ? grow : 16;
    m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = sizeof(void *);
-   m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : NULL;
+   m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : nullptr;
    m_objectOwner = (owner == Ownership::True);
    m_objectDestructor = (objectDestructor != NULL) ? objectDestructor : DefaultObjectDestructor;
    m_storePointers = true;
-   m_context = NULL;
+   m_context = nullptr;
 }
 
 /**
@@ -66,19 +66,19 @@ Array::Array(void *data, int initial, int grow, size_t elementSize)
    if (m_allocated > 0)
    {
       m_data = (void **)MemAlloc(m_elementSize * m_allocated);
-      if (data != NULL)
+      if (data != nullptr)
       {
          memcpy(m_data, data, initial * m_elementSize);
       }
    }
    else
    {
-      m_data = NULL;
+      m_data = nullptr;
    }
    m_objectOwner = false;
    m_objectDestructor = DefaultObjectDestructor;
    m_storePointers = false;
-   m_context = NULL;
+   m_context = nullptr;
 }
 
 /**
@@ -138,6 +138,22 @@ int Array::add(void *element)
       m_size++;
    }
 	return m_size - 1;
+}
+
+/**
+ * Add all elements from source array
+ */
+void Array::addAll(const Array& src)
+{
+   if ((src.m_elementSize != m_elementSize) || (src.m_size == 0))
+      return;
+   if (m_size + src.m_size > m_allocated)
+   {
+      m_allocated += std::max(m_grow, src.m_size - (m_allocated - m_size));
+      m_data = MemRealloc(m_data, m_elementSize * m_allocated);
+   }
+   memcpy(ADDR(m_size), src.m_data, src.m_size * m_elementSize);
+   m_size += src.m_size;
 }
 
 /**

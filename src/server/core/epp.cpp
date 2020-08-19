@@ -28,7 +28,7 @@
 /**
  * Default event policy rule constructor
  */
-EPRule::EPRule(UINT32 id) : m_actions(0, 16, Ownership::True)
+EPRule::EPRule(uint32_t id) : m_actions(0, 16, Ownership::True)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -48,15 +48,15 @@ EPRule::EPRule(UINT32 id) : m_actions(0, 16, Ownership::True)
 /**
  * Create rule from config entry
  */
-EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
 {
    m_id = 0;
-   m_guid = config->getSubEntryValueAsUUID(_T("guid"));
+   m_guid = config.getSubEntryValueAsUUID(_T("guid"));
    if (m_guid.isNull())
       m_guid = uuid::generate(); // generate random GUID if rule was imported without GUID
-   m_flags = config->getSubEntryValueAsUInt(_T("flags"));
+   m_flags = config.getSubEntryValueAsUInt(_T("flags"));
 
-	ConfigEntry *eventsRoot = config->findEntry(_T("events"));
+	ConfigEntry *eventsRoot = config.findEntry(_T("events"));
    if (eventsRoot != nullptr)
    {
 		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
@@ -71,16 +71,16 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
       delete events;
    }
 
-   m_comments = _tcsdup(config->getSubEntryValue(_T("comments"), 0, _T("")));
-   m_alarmSeverity = config->getSubEntryValueAsInt(_T("alarmSeverity"));
-	m_alarmTimeout = config->getSubEntryValueAsUInt(_T("alarmTimeout"));
-	m_alarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
-   m_alarmKey = MemCopyString(config->getSubEntryValue(_T("alarmKey")));
-   m_alarmMessage = MemCopyString(config->getSubEntryValue(_T("alarmMessage")));
-   m_alarmImpact = MemCopyString(config->getSubEntryValue(_T("alarmImpact")));
-   m_rcaScriptName = MemCopyString(config->getSubEntryValue(_T("rootCauseAnalysisScript")));
+   m_comments = _tcsdup(config.getSubEntryValue(_T("comments"), 0, _T("")));
+   m_alarmSeverity = config.getSubEntryValueAsInt(_T("alarmSeverity"));
+	m_alarmTimeout = config.getSubEntryValueAsUInt(_T("alarmTimeout"));
+	m_alarmTimeoutEvent = config.getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
+   m_alarmKey = MemCopyString(config.getSubEntryValue(_T("alarmKey")));
+   m_alarmMessage = MemCopyString(config.getSubEntryValue(_T("alarmMessage")));
+   m_alarmImpact = MemCopyString(config.getSubEntryValue(_T("alarmImpact")));
+   m_rcaScriptName = MemCopyString(config.getSubEntryValue(_T("rootCauseAnalysisScript")));
 
-   ConfigEntry *pStorageEntry = config->findEntry(_T("pStorageActions"));
+   ConfigEntry *pStorageEntry = config.findEntry(_T("pStorageActions"));
    if (pStorageEntry != nullptr)
    {
       ObjectArray<ConfigEntry> *tmp = pStorageEntry->getSubEntries(_T("set#*"));
@@ -98,7 +98,7 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
       delete tmp;
    }
 
-   ConfigEntry *alarmCategoriesEntry = config->findEntry(_T("alarmCategories"));
+   ConfigEntry *alarmCategoriesEntry = config.findEntry(_T("alarmCategories"));
    if(alarmCategoriesEntry != nullptr)
    {
       ObjectArray<ConfigEntry> *categories = alarmCategoriesEntry->getSubEntries(_T("category#*"));
@@ -126,19 +126,14 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
       }
    }
 
-   m_scriptSource = _tcsdup(config->getSubEntryValue(_T("script"), 0, _T("")));
+   m_scriptSource = _tcsdup(config.getSubEntryValue(_T("script"), 0, _T("")));
    if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
-      TCHAR szError[256];
-
-      m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 256, new NXSL_ServerEnv);
-      if (m_script != nullptr)
+      TCHAR errorText[256];
+      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr);
+      if (m_script == nullptr)
       {
-      	m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue(_T("")));
-      }
-      else
-      {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, szError);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
       }
    }
    else
@@ -146,7 +141,7 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
       m_script = nullptr;
    }
 
-   ConfigEntry *actionsRoot = config->findEntry(_T("actions"));
+   ConfigEntry *actionsRoot = config.findEntry(_T("actions"));
    if (actionsRoot != nullptr)
    {
       ObjectArray<ConfigEntry> *actions = actionsRoot->getSubEntries(_T("action#*"));
@@ -171,7 +166,7 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, Ownership::True)
       delete actions;
    }
 
-   ConfigEntry *timerCancellationsRoot = config->findEntry(_T("timerCancellations"));
+   ConfigEntry *timerCancellationsRoot = config.findEntry(_T("timerCancellations"));
    if (timerCancellationsRoot != nullptr)
    {
       ConfigEntry *keys = timerCancellationsRoot->findEntry(_T("timerKey"));
@@ -205,16 +200,11 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
    m_scriptSource = DBGetField(hResult, row, 7, nullptr, 0);
    if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
-      TCHAR szError[256];
-
-      m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 256, new NXSL_ServerEnv);
-      if (m_script != nullptr)
+      TCHAR errorText[256];
+      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr);
+      if (m_script == nullptr)
       {
-      	m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue(_T("")));
-      }
-      else
-      {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, szError);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
       }
    }
    else
@@ -230,17 +220,17 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
 /**
  * Construct event policy rule from NXCP message
  */
-EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
 {
-   m_flags = msg->getFieldAsUInt32(VID_FLAGS);
-   m_id = msg->getFieldAsUInt32(VID_RULE_ID);
-   m_guid = msg->getFieldAsGUID(VID_GUID);
-   m_comments = msg->getFieldAsString(VID_COMMENTS);
+   m_flags = msg.getFieldAsUInt32(VID_FLAGS);
+   m_id = msg.getFieldAsUInt32(VID_RULE_ID);
+   m_guid = msg.getFieldAsGUID(VID_GUID);
+   m_comments = msg.getFieldAsString(VID_COMMENTS);
 
-   if (msg->isFieldExist(VID_RULE_ACTIONS))
+   if (msg.isFieldExist(VID_RULE_ACTIONS))
    {
       IntegerArray<UINT32> actions;
-      msg->getFieldAsInt32Array(VID_RULE_ACTIONS, &actions);
+      msg.getFieldAsInt32Array(VID_RULE_ACTIONS, &actions);
       for(int i = 0; i < actions.size(); i++)
       {
          m_actions.add(new ActionExecutionConfiguration(actions.get(i), 0, nullptr));
@@ -248,63 +238,58 @@ EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, Ownership::True)
    }
    else
    {
-      int count = msg->getFieldAsInt32(VID_NUM_ACTIONS);
+      int count = msg.getFieldAsInt32(VID_NUM_ACTIONS);
       UINT32 fieldId = VID_ACTION_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         UINT32 actionId = msg->getFieldAsUInt32(fieldId++);
-         UINT32 timerDelay = msg->getFieldAsUInt32(fieldId++);
-         TCHAR *timerKey = msg->getFieldAsString(fieldId++);
+         UINT32 actionId = msg.getFieldAsUInt32(fieldId++);
+         UINT32 timerDelay = msg.getFieldAsUInt32(fieldId++);
+         TCHAR *timerKey = msg.getFieldAsString(fieldId++);
          fieldId += 7;
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, timerKey));
       }
    }
-   if (msg->isFieldExist(VID_TIMER_COUNT))
+   if (msg.isFieldExist(VID_TIMER_COUNT))
    {
       StringList list(msg, VID_TIMER_LIST_BASE, VID_TIMER_COUNT);
       m_timerCancellations.addAll(&list);
    }
 
-   msg->getFieldAsInt32Array(VID_RULE_EVENTS, &m_events);
-   msg->getFieldAsInt32Array(VID_RULE_SOURCES, &m_sources);
+   msg.getFieldAsInt32Array(VID_RULE_EVENTS, &m_events);
+   msg.getFieldAsInt32Array(VID_RULE_SOURCES, &m_sources);
 
-   m_alarmKey = msg->getFieldAsString(VID_ALARM_KEY);
-   m_alarmMessage = msg->getFieldAsString(VID_ALARM_MESSAGE);
-   m_alarmImpact = msg->getFieldAsString(VID_IMPACT);
-   m_alarmSeverity = msg->getFieldAsUInt16(VID_ALARM_SEVERITY);
-	m_alarmTimeout = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT);
-	m_alarmTimeoutEvent = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
-	m_rcaScriptName = msg->getFieldAsString(VID_RCA_SCRIPT_NAME);
+   m_alarmKey = msg.getFieldAsString(VID_ALARM_KEY);
+   m_alarmMessage = msg.getFieldAsString(VID_ALARM_MESSAGE);
+   m_alarmImpact = msg.getFieldAsString(VID_IMPACT);
+   m_alarmSeverity = msg.getFieldAsUInt16(VID_ALARM_SEVERITY);
+	m_alarmTimeout = msg.getFieldAsUInt32(VID_ALARM_TIMEOUT);
+	m_alarmTimeoutEvent = msg.getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
+	m_rcaScriptName = msg.getFieldAsString(VID_RCA_SCRIPT_NAME);
 
-   msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
+   msg.getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
 
-   int count = msg->getFieldAsInt32(VID_NUM_SET_PSTORAGE);
+   int count = msg.getFieldAsInt32(VID_NUM_SET_PSTORAGE);
    int base = VID_PSTORAGE_SET_LIST_BASE;
    for(int i = 0; i < count; i++, base+=2)
    {
-      m_pstorageSetActions.setPreallocated(msg->getFieldAsString(base), msg->getFieldAsString(base+1));
+      m_pstorageSetActions.setPreallocated(msg.getFieldAsString(base), msg.getFieldAsString(base+1));
    }
 
-   count = msg->getFieldAsInt32(VID_NUM_DELETE_PSTORAGE);
+   count = msg.getFieldAsInt32(VID_NUM_DELETE_PSTORAGE);
    base = VID_PSTORAGE_DELETE_LIST_BASE;
    for(int i = 0; i < count; i++, base++)
    {
-      m_pstorageDeleteActions.addPreallocated(msg->getFieldAsString(base));
+      m_pstorageDeleteActions.addPreallocated(msg.getFieldAsString(base));
    }
 
-   m_scriptSource = msg->getFieldAsString(VID_SCRIPT);
+   m_scriptSource = msg.getFieldAsString(VID_SCRIPT);
    if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
    {
-      TCHAR szError[256];
-
-      m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 256, new NXSL_ServerEnv);
-      if (m_script != nullptr)
+      TCHAR errorText[256];
+      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr);
+      if (m_script == nullptr)
       {
-      	m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue(_T("")));
-      }
-      else
-      {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, szError);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
       }
    }
    else
@@ -448,7 +433,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
 /**
  * Check if source object's id match to the rule
  */
-bool EPRule::matchSource(UINT32 objectId)
+bool EPRule::matchSource(uint32_t objectId) const
 {
    if (m_sources.isEmpty())
       return (m_flags & RF_NEGATED_SOURCE) ? false : true;
@@ -482,7 +467,7 @@ bool EPRule::matchSource(UINT32 objectId)
 /**
  * Check if event's id match to the rule
  */
-bool EPRule::matchEvent(UINT32 eventCode)
+bool EPRule::matchEvent(uint32_t eventCode) const
 {
    if (m_events.isEmpty())
       return (m_flags & RF_NEGATED_EVENTS) ? false : true;
@@ -502,7 +487,7 @@ bool EPRule::matchEvent(UINT32 eventCode)
 /**
  * Check if event's severity match to the rule
  */
-bool EPRule::matchSeverity(UINT32 severity)
+bool EPRule::matchSeverity(uint32_t severity) const
 {
    static UINT32 severityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_WARNING,
                                     RF_SEVERITY_MINOR, RF_SEVERITY_MAJOR,
@@ -513,44 +498,55 @@ bool EPRule::matchSeverity(UINT32 severity)
 /**
  * Check if event match to the script
  */
-bool EPRule::matchScript(Event *pEvent)
+bool EPRule::matchScript(Event *event) const
 {
    bool bRet = true;
 
    if (m_script == nullptr)
       return true;
 
-   SetupServerScriptVM(m_script, FindObjectById(pEvent->getSourceId()), shared_ptr<DCObjectInfo>());
-   m_script->setGlobalVariable("$event", m_script->createValue(new NXSL_Object(m_script, &g_nxslEventClass, pEvent, true)));
-   m_script->setGlobalVariable("CUSTOM_MESSAGE", m_script->createValue());
-   m_script->setGlobalVariable("EVENT_CODE", m_script->createValue(pEvent->getCode()));
-   m_script->setGlobalVariable("SEVERITY", m_script->createValue(pEvent->getSeverity()));
-   m_script->setGlobalVariable("SEVERITY_TEXT", m_script->createValue(GetStatusAsText(pEvent->getSeverity(), true)));
-   m_script->setGlobalVariable("OBJECT_ID", m_script->createValue(pEvent->getSourceId()));
-   m_script->setGlobalVariable("EVENT_TEXT", m_script->createValue((TCHAR *)pEvent->getMessage()));
+   ScriptVMHandle vm = CreateServerScriptVM(m_script, FindObjectById(event->getSourceId()), shared_ptr<DCObjectInfo>());
+   if (!vm.isValid())
+   {
+      if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
+      {
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("EPP::%d"), m_id + 1);
+         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load failed"), 0);
+         nxlog_write(NXLOG_ERROR, _T("Cannot create NXSL VM for evaluation script for event processing policy rule #%u"), m_id + 1);
+      }
+      return true;
+   }
+
+   vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
+   vm->setGlobalVariable("CUSTOM_MESSAGE", vm->createValue());
+   vm->setGlobalVariable("EVENT_CODE", vm->createValue(event->getCode()));
+   vm->setGlobalVariable("SEVERITY", vm->createValue(event->getSeverity()));
+   vm->setGlobalVariable("SEVERITY_TEXT", vm->createValue(GetStatusAsText(event->getSeverity(), true)));
+   vm->setGlobalVariable("OBJECT_ID", vm->createValue(event->getSourceId()));
+   vm->setGlobalVariable("EVENT_TEXT", vm->createValue((TCHAR *)event->getMessage()));
 
    // Pass event's parameters as arguments and
    // other information as variables
-   NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->getParametersCount());
-   memset(ppValueList, 0, sizeof(NXSL_Value *) * pEvent->getParametersCount());
-   for(int i = 0; i < pEvent->getParametersCount(); i++)
-      ppValueList[i] = m_script->createValue(pEvent->getParameter(i));
+   ObjectRefArray<NXSL_Value> args(event->getParametersCount());
+   for(int i = 0; i < event->getParametersCount(); i++)
+      args.add(vm->createValue(event->getParameter(i)));
 
    // Run script
    NXSL_VariableSystem *globals = nullptr;
-   if (m_script->run(pEvent->getParametersCount(), ppValueList, &globals))
+   if (vm->run(args, &globals))
    {
-      NXSL_Value *value = m_script->getResult();
+      NXSL_Value *value = vm->getResult();
       if (value != nullptr)
       {
          bRet = value->getValueAsBoolean();
          if (bRet)
          {
          	NXSL_Variable *var = globals->find("CUSTOM_MESSAGE");
-         	if (var != nullptr)
+         	if ((var != nullptr) && var->getValue()->isString())
          	{
          		// Update custom message in event
-         		pEvent->setCustomMessage(CHECK_NULL_EX(var->getValue()->getValueAsCString()));
+         		event->setCustomMessage(CHECK_NULL_EX(var->getValue()->getValueAsCString()));
          	}
          }
       }
@@ -559,11 +555,11 @@ bool EPRule::matchScript(Event *pEvent)
    {
       TCHAR buffer[1024];
       _sntprintf(buffer, 1024, _T("EPP::%d"), m_id + 1);
-      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_script->getErrorText(), 0);
-      nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for event processing policy rule #%u (%s)"), m_id + 1, m_script->getErrorText());
+      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, vm->getErrorText(), 0);
+      nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
    }
-   free(ppValueList);
    delete globals;
+   vm.destroy();
 
    return bRet;
 }
@@ -584,7 +580,7 @@ static EnumerationCallbackResult ExecutePstorageSetAction(const TCHAR *key, cons
  * Check if event match to rule and perform required actions if yes
  * Method will return TRUE if event matched and RF_STOP_PROCESSING flag is set
  */
-bool EPRule::processEvent(Event *event)
+bool EPRule::processEvent(Event *event) const
 {
    if (m_flags & RF_DISABLED)
       return false;
@@ -660,9 +656,9 @@ bool EPRule::processEvent(Event *event)
 /**
  * Generate alarm from event
  */
-UINT32 EPRule::generateAlarm(Event *event)
+uint32_t EPRule::generateAlarm(Event *event) const
 {
-   UINT32 alarmId = 0;
+   uint32_t alarmId = 0;
    // Terminate alarms with key == our ack_key
 	if ((m_alarmSeverity == SEVERITY_RESOLVE) || (m_alarmSeverity == SEVERITY_TERMINATE))
 	{
@@ -672,7 +668,7 @@ UINT32 EPRule::generateAlarm(Event *event)
 	}
 	else	// Generate new alarm
 	{
-	   UINT32 parentAlarmId = 0;
+	   uint32_t parentAlarmId = 0;
 	   if ((m_rcaScriptName != nullptr) && (m_rcaScriptName[0] != 0))
 	   {
 	      shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
@@ -842,7 +838,7 @@ static EnumerationCallbackResult SavePstorageSetActions(const TCHAR *key, const 
 /**
  * Save rule to database
  */
-bool EPRule::saveToDB(DB_HANDLE hdb)
+bool EPRule::saveToDB(DB_HANDLE hdb) const
 {
    bool success;
 	int i;
@@ -986,12 +982,12 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with rule's data
  */
-void EPRule::createMessage(NXCPMessage *msg)
+void EPRule::createMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_FLAGS, m_flags);
    msg->setField(VID_RULE_ID, m_id);
    msg->setField(VID_GUID, m_guid);
-   msg->setField(VID_ALARM_SEVERITY, (WORD)m_alarmSeverity);
+   msg->setField(VID_ALARM_SEVERITY, static_cast<int16_t>(m_alarmSeverity));
    msg->setField(VID_ALARM_KEY, m_alarmKey);
    msg->setField(VID_ALARM_MESSAGE, m_alarmMessage);
    msg->setField(VID_IMPACT, m_alarmImpact);
@@ -1000,8 +996,8 @@ void EPRule::createMessage(NXCPMessage *msg)
    msg->setFieldFromInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
    msg->setField(VID_RCA_SCRIPT_NAME, m_rcaScriptName);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
-   msg->setField(VID_NUM_ACTIONS, (UINT32)m_actions.size());
-   UINT32 fieldId = VID_ACTION_LIST_BASE;
+   msg->setField(VID_NUM_ACTIONS, static_cast<uint32_t>(m_actions.size()));
+   uint32_t fieldId = VID_ACTION_LIST_BASE;
    for(int i = 0; i < m_actions.size(); i++)
    {
       const ActionExecutionConfiguration *a = m_actions.get(i);

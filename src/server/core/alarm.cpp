@@ -256,7 +256,8 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
  * Create new alarm from event
  */
 Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& rule, const TCHAR *message, const TCHAR *key,
-         const TCHAR *impact, int state, int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t ackTimeout, IntegerArray<uint32_t> *alarmCategoryList)
+         const TCHAR *impact, int state, int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t ackTimeout,
+         const IntegerArray<uint32_t>& alarmCategoryList) : m_alarmCategoryList(alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
    m_parentAlarmId = parentAlarmId;
@@ -288,7 +289,6 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_relatedEvents->add(event->getId());
    _tcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
    _tcslcpy(m_key, key, MAX_DB_STRING);
-   m_alarmCategoryList = new IntegerArray<uint32_t>(alarmCategoryList);
    m_notificationCode = 0;
    m_subordinateAlarms = new IntegerArray<uint32_t>(0, 16);
 }
@@ -322,13 +322,12 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
 
    TCHAR categoryList[MAX_DB_STRING];
    DBGetField(hResult, row, 21, categoryList, MAX_DB_STRING);
-   m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
 
    int count;
    TCHAR **ids = SplitString(categoryList, _T(','), &count);
    for(int i = 0; i < count; i++)
    {
-      m_alarmCategoryList->add(_tcstoul(ids[i], nullptr, 10));
+      m_alarmCategoryList.add(_tcstoul(ids[i], nullptr, 10));
       MemFree(ids[i]);
    }
    MemFree(ids);
@@ -364,7 +363,7 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
 /**
  * Copy constructor
  */
-Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode)
+Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_alarmCategoryList(src->m_alarmCategoryList)
 {
    m_sourceEventId = src->m_sourceEventId;
    m_alarmId = src->m_alarmId;
@@ -402,7 +401,6 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode)
    {
       m_relatedEvents = nullptr;
    }
-   m_alarmCategoryList = new IntegerArray<uint32_t>(src->m_alarmCategoryList);
    m_notificationCode = notificationCode;
    m_subordinateAlarms = new IntegerArray<uint32_t>(src->m_subordinateAlarms);
 }
@@ -413,7 +411,6 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode)
 Alarm::~Alarm()
 {
    delete m_relatedEvents;
-   delete m_alarmCategoryList;
    MemFree(m_eventTags);
    delete m_subordinateAlarms;
    MemFree(m_impact);
@@ -454,7 +451,7 @@ void Alarm::executeHookScript()
  */
 uint64_t Alarm::getMemoryUsage() const
 {
-   uint64_t mu = sizeof(Alarm) + m_alarmCategoryList->memoryUsage() + m_subordinateAlarms->memoryUsage() + sizeof(IntegerArray<uint32_t>) * 2;
+   uint64_t mu = sizeof(Alarm) + m_alarmCategoryList.memoryUsage() + m_subordinateAlarms->memoryUsage() + sizeof(IntegerArray<uint32_t>);
    if (m_relatedEvents != nullptr)
       mu += m_relatedEvents->memoryUsage() + sizeof(IntegerArray<uint32_t>);
    if (m_rcaScriptName != nullptr)
@@ -491,11 +488,11 @@ void Alarm::removeSubordinateAlarm(uint32_t alarmId)
 StringBuffer Alarm::categoryListToString()
 {
    StringBuffer buffer;
-   for(int i = 0; i < m_alarmCategoryList->size(); i++)
+   for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
       if (buffer.length() > 0)
          buffer.append(_T(','));
-      buffer.append(m_alarmCategoryList->get(i));
+      buffer.append(m_alarmCategoryList.get(i));
    }
    return buffer;
 }
@@ -508,9 +505,9 @@ bool Alarm::checkCategoryAccess(ClientSession *session) const
    if (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_ALL_ALARMS))
       return true;
 
-   for(int i = 0; i < m_alarmCategoryList->size(); i++)
+   for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
-      if (CheckAlarmCategoryAccess(session->getUserId(), m_alarmCategoryList->get(i)))
+      if (CheckAlarmCategoryAccess(session->getUserId(), m_alarmCategoryList.get(i)))
          return true;
    }
    return false;
@@ -794,7 +791,7 @@ static void FillAlarmEventsMessage(NXCPMessage *msg, uint32_t alarmId)
  * Update existing alarm from event
  */
 void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, int state, int severity, uint32_t timeout, uint32_t timeoutEvent,
-         uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, IntegerArray<uint32_t> *alarmCategoryList)
+         uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList)
 {
    m_repeatCount++;
    m_parentAlarmId = parentAlarmId;
@@ -817,8 +814,8 @@ void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *r
    _tcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
    MemFree(m_impact);
    m_impact = MemCopyString(impact);
-   delete m_alarmCategoryList;
-   m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
+   m_alarmCategoryList.clear();
+   m_alarmCategoryList.addAll(alarmCategoryList);
 
    NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
    updateInDatabase();
@@ -853,9 +850,9 @@ void Alarm::updateParentAlarm(UINT32 parentAlarmId)
  */
 uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
-         uint32_t ackTimeout, IntegerArray<uint32_t> *alarmCategoryList, bool openHelpdeskIssue)
+         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue)
 {
-   UINT32 alarmId = 0;
+   uint32_t alarmId = 0;
    bool newAlarm = true;
    bool updateRelatedEvent = false;
 

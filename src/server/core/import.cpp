@@ -611,7 +611,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
 		   ObjectArray<uuid> *ruleOrdering = GetRuleOrdering(config.getEntry(_T("/ruleOrdering")));
          for(int i = 0; i < rules->size(); i++)
          {
-            EPRule *rule = new EPRule(rules->get(i));
+            EPRule *rule = new EPRule(*rules->get(i));
             g_pEventPolicy->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
          }
          delete ruleOrdering;
