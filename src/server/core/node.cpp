@@ -6143,20 +6143,17 @@ static void DciCountCallback(NetObj *object, void *data)
 /**
  * Get value for server's internal table parameter
  */
-DataCollectionError Node::getInternalTableMetric(const TCHAR *param, Table **result)
+DataCollectionError Node::getInternalTable(const TCHAR *param, Table **result)
 {
-   DataCollectionError rc = super::getInternalTableMetric(param, result);
+   DataCollectionError rc = super::getInternalTable(param, result);
    if (rc != DCE_NOT_SUPPORTED)
       return rc;
    rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(param, _T("WirlessStations")))
+   if (!_tcsicmp(param, _T("Topology.WirelessStations")))
    {
-      if (isWirelessController())
-      {
-         *result = wsListAsTable();
-      }
-      else
+      *result = wsListAsTable();
+      if (result == nullptr)
          rc = DCE_NOT_SUPPORTED;
    }
    else
@@ -9587,16 +9584,17 @@ void Node::writeHardwareListToMessage(NXCPMessage *msg)
 }
 
 /**
- * Write list of registered wireless stations to NXCP message
+ * Create DCI Table form list of registered wireless stations
  */
 Table *Node::wsListAsTable()
 {
-   Table *result = new Table();
+   Table *result = nullptr;
    lockProperties();
    if (m_wirelessStations != nullptr)
    {
+      result = new Table();
       result->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("Mac address"), true);
-      result->addColumn(_T("IP_ADDRESS"), DCI_DT_STRING, _T("IP address"), true);
+      result->addColumn(_T("IP_ADDRESS"), DCI_DT_STRING, _T("IP address"));
       result->addColumn(_T("NODE_ID"), DCI_DT_UINT, _T("Node id"));
       result->addColumn(_T("NODE_NAME"), DCI_DT_STRING, _T("Node name"));
       result->addColumn(_T("ZONE_UIN"), DCI_DT_INT, _T("Zone UIN"));
@@ -9639,10 +9637,10 @@ Table *Node::wsListAsTable()
             result->set(5, _T(""));
          }
          result->set(6, ws->apObjectId);
-         shared_ptr<NetObj> interface = FindObjectById(ws->apObjectId, OBJECT_ACCESSPOINT);
-         if (interface != nullptr)
+         shared_ptr<NetObj> accessPoint = FindObjectById(ws->apObjectId, OBJECT_ACCESSPOINT);
+         if (accessPoint != nullptr)
          {
-            result->set(7, interface->getName());
+            result->set(7, accessPoint->getName());
          }
          else
          {
