@@ -1748,6 +1748,7 @@ if test "x$CXX" = "xxlC_r" ; then
 
 	AC_CXX_CHECK_OPTION(-qlanglvl=extended0x)
 	AC_CXX_CHECK_OPTION(-qnoeh)
+	AC_CXX_CHECK_OPTION(-qsuppress=1540-0216)
 	AC_CXX_CHECK_OPTION(-qsuppress=1540-1090)
 
 	AC_C_CHECK_OPTION(-qlanglvl=extc1x)
