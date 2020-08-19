@@ -58,8 +58,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
    private void tableList()
    {
       ArrayList<AgentTable> list = new ArrayList<AgentTable>(10);
-      String[] instanceColumns = {"MAC_ADDRESS", "IP_ADDRESS"}; 
-      list.add(new AgentTable("WirlessStations", "Wirless stations table", instanceColumns));
+      String[] instanceColumns = {"MAC_ADDRESS"}; 
+      list.add(new AgentTable("Topology.WirelessStations", "Wireless stations table", instanceColumns));
 
       viewer.setInput(list.toArray());
    }

@@ -872,7 +872,7 @@ shared_ptr<NetObj> DataCollectionTarget::objectFromParameter(const TCHAR *param)
 /**
  * Get value for server's internal table parameter
  */
-DataCollectionError DataCollectionTarget::getInternalTableMetric(const TCHAR *param, Table **result)
+DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *param, Table **result)
 {
    return DCE_NOT_SUPPORTED;
 }
