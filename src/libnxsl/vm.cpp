@@ -292,7 +292,7 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
 
    // Delete previous return value
 	destroyValue(m_pRetValue);
-	m_pRetValue = NULL;
+	m_pRetValue = nullptr;
 
    // Create stacks
    m_dataStack = new NXSL_ObjectStack<NXSL_Value>();
@@ -302,7 +302,7 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
    // Preserve original global variables and constants
    NXSL_VariableSystem *savedGlobals = new NXSL_VariableSystem(this, m_globalVariables);
    NXSL_VariableSystem *savedConstants = new NXSL_VariableSystem(this, m_constants);
-   if (constants != NULL)
+   if (constants != nullptr)
       m_constants->merge(constants);
 
    // Create local variable system for main() and bind arguments
@@ -324,7 +324,7 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
 
    // Locate entry point and run
    UINT32 entryAddr = INVALID_ADDRESS;
-	if (entryPoint != NULL)
+	if (entryPoint != nullptr)
 	{
       entryAddr = getFunctionAddress(entryPoint);
 	}
@@ -376,14 +376,14 @@ resume:
    m_constants->restoreVariableReferences(m_instructionSet);
 
    // Restore global variables
-   if (globals == NULL)
+   if (globals == nullptr)
 	   delete m_globalVariables;
 	else
 		*globals = m_globalVariables;
    m_globalVariables = savedGlobals;
 
 	// Restore constants
-	if (savedConstants != NULL)
+	if (savedConstants != nullptr)
 	{
 		delete m_constants;
 		m_constants = savedConstants;
@@ -391,7 +391,7 @@ resume:
 
    // Cleanup
 	NXSL_Value *v;
-   while((v = m_dataStack->pop()) != NULL)
+   while((v = m_dataStack->pop()) != nullptr)
       destroyValue(v);
    
    while(m_subLevel > 0)
@@ -403,7 +403,7 @@ resume:
    }
    
    NXSL_CatchPoint *p;
-   while((p = (NXSL_CatchPoint *)m_catchStack->pop()) != NULL)
+   while((p = (NXSL_CatchPoint *)m_catchStack->pop()) != nullptr)
       delete p;
    
    delete_and_null(m_localVariables);
@@ -421,7 +421,7 @@ resume:
 bool NXSL_VM::unwind()
 {
    NXSL_CatchPoint *p = (NXSL_CatchPoint *)m_catchStack->pop();
-   if (p == NULL)
+   if (p == nullptr)
       return false;
 
    while(m_subLevel > p->subLevel)

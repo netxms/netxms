@@ -81,15 +81,15 @@ StringList::StringList(const TCHAR *src, const TCHAR *separator)
 /**
  * Constructor: create string list from NXCP message
  */
-StringList::StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
+StringList::StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId)
 {
-   m_count = msg->getFieldAsInt32(countId);
+   m_count = msg.getFieldAsInt32(countId);
    m_allocated = m_count;
    m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    UINT32 fieldId = baseId;
    for(int i = 0; i < m_count; i++)
    {
-      m_values[i] = msg->getFieldAsString(fieldId++, &m_pool);
+      m_values[i] = msg.getFieldAsString(fieldId++, &m_pool);
       if (m_values[i] == NULL)
          m_values[i] = m_pool.copyString(_T(""));
    }

@@ -1270,16 +1270,18 @@ protected:
    void *__getBuffer() const { return m_data; }
 
 public:
-	Array(int initial = 0, int grow = 16, Ownership owner = Ownership::False, void (*objectDestructor)(void *, Array *) = NULL);
+	Array(int initial = 0, int grow = 16, Ownership owner = Ownership::False, void (*objectDestructor)(void *, Array *) = nullptr);
 	virtual ~Array();
 
-   void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): nullptr; }
    void *first() const { return get(0); }
    void *last() const { return get(m_size - 1); }
    int indexOf(void *element) const;
    void *find(const void *key, int (*cb)(const void *, const void *)) const;
 
 	int add(void *element);
+	void addAll(const Array& src);
+	void addAll(const Array *src) { if (src != nullptr) addAll(*src); }
 	void set(int index, void *element);
 	void replace(int index, void *element);
    void insert(int index, void *element);
@@ -1412,6 +1414,8 @@ public:
 	virtual ~IntegerArray() { }
 
    int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void addAll(const IntegerArray<T>& src) { Array::addAll(src); }
+   void addAll(const IntegerArray<T>* src) { Array::addAll(src); }
    T get(int index) const { if (m_storePointers) return CAST_FROM_POINTER(Array::get(index), T); T *p = (T*)Array::get(index); return (p != NULL) ? *p : 0; }
    int indexOf(T value) const { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
    bool contains(T value) const { return indexOf(value) >= 0; }
@@ -1826,7 +1830,7 @@ public:
 	StringList(const StringList *src);
    StringList(const StringList &src);
 	StringList(const TCHAR *src, const TCHAR *separator);
-   StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId);
+   StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
 	~StringList();
 
 	void add(const TCHAR *value);

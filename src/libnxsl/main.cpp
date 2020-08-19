@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,11 +30,11 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMe
 {
    NXSL_Compiler compiler;
    NXSL_Program *pResult = compiler.compile(source);
-   if (pResult == NULL)
+   if (pResult == nullptr)
    {
-      if (errorMessage != NULL)
+      if (errorMessage != nullptr)
          _tcslcpy(errorMessage, compiler.getErrorText(), errorMessageLen);
-      if (errorLine != NULL)
+      if (errorLine != nullptr)
          *errorLine = compiler.getErrorLineNumber();
    }
    return pResult;
@@ -45,8 +45,8 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMe
  */
 NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, NXSL_Environment *env)
 {
-   NXSL_Program *p = NXSLCompile(source, errorMessage, errorMessageLen, NULL);
-   if (p == NULL)
+   NXSL_Program *p = NXSLCompile(source, errorMessage, errorMessageLen, nullptr);
+   if (p == nullptr)
    {
       delete env;
       return NULL;
@@ -55,12 +55,12 @@ NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *e
    NXSL_VM *vm = new NXSL_VM(env);
    if (!vm->load(p))
    {
-      if (errorMessage != NULL)
+      if (errorMessage != nullptr)
       {
          _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);
       }
       delete vm;
-      vm = NULL;
+      vm = nullptr;
    }
    delete p;
    return vm;

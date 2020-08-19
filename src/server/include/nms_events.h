@@ -241,56 +241,56 @@ struct ActionExecutionConfiguration
 class EPRule
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    uuid m_guid;
-   UINT32 m_flags;
-   IntegerArray<UINT32> m_sources;
-   IntegerArray<UINT32> m_events;
+   uint32_t m_flags;
+   IntegerArray<uint32_t> m_sources;
+   IntegerArray<uint32_t> m_events;
    ObjectArray<ActionExecutionConfiguration> m_actions;
    StringList m_timerCancellations;
    TCHAR *m_comments;
    TCHAR *m_scriptSource;
-   NXSL_VM *m_script;
+   NXSL_Program *m_script;
 
    TCHAR *m_alarmMessage;
    TCHAR *m_alarmImpact;
    int m_alarmSeverity;
    TCHAR *m_alarmKey;
-	UINT32 m_alarmTimeout;
-	UINT32 m_alarmTimeoutEvent;
-	IntegerArray<UINT32> m_alarmCategoryList;
+   uint32_t m_alarmTimeout;
+   uint32_t m_alarmTimeoutEvent;
+	IntegerArray<uint32_t> m_alarmCategoryList;
 	TCHAR *m_rcaScriptName;    // Name of library script used for root cause analysis
 
 	StringMap m_pstorageSetActions;
 	StringList m_pstorageDeleteActions;
 
-   bool matchSource(UINT32 objectId);
-   bool matchEvent(UINT32 eventCode);
-   bool matchSeverity(UINT32 severity);
-   bool matchScript(Event *event);
+   bool matchSource(uint32_t objectId) const;
+   bool matchEvent(uint32_t eventCode) const;
+   bool matchSeverity(uint32_t severity) const;
+   bool matchScript(Event *event) const;
 
-   UINT32 generateAlarm(Event *event);
+   uint32_t generateAlarm(Event *event) const;
 
 public:
-   EPRule(UINT32 id);
+   EPRule(uint32_t id);
    EPRule(DB_RESULT hResult, int row);
-   EPRule(NXCPMessage *msg);
-   EPRule(ConfigEntry *config);
+   EPRule(const NXCPMessage& msg);
+   EPRule(const ConfigEntry& config);
    ~EPRule();
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
-   void setId(UINT32 newId) { m_id = newId; }
+   void setId(uint32_t newId) { m_id = newId; }
    bool loadFromDB(DB_HANDLE hdb);
-	bool saveToDB(DB_HANDLE hdb);
-   bool processEvent(Event *pEvent);
-   void createMessage(NXCPMessage *pMsg);
+	bool saveToDB(DB_HANDLE hdb) const;
+   bool processEvent(Event *event) const;
+   void createMessage(NXCPMessage *msg) const;
    void createExportRecord(StringBuffer &xml) const;
    void createOrderingExportRecord(StringBuffer &xml) const;
    json_t *toJson() const;
 
-   bool isActionInUse(UINT32 actionId) const;
-   bool isCategoryInUse(UINT32 categoryId) const { return m_alarmCategoryList.contains(categoryId); }
+   bool isActionInUse(uint32_t actionId) const;
+   bool isCategoryInUse(uint32_t categoryId) const { return m_alarmCategoryList.contains(categoryId); }
 };
 
 /**
