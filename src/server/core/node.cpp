@@ -6153,7 +6153,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *param, Table **result)
    if (!_tcsicmp(param, _T("Topology.WirelessStations")))
    {
       *result = wsListAsTable();
-      if (result == nullptr)
+      if (*result == nullptr)
          rc = DCE_NOT_SUPPORTED;
    }
    else
