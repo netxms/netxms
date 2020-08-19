@@ -630,6 +630,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 #else
       BYTE *resourceFound = MemAllocArray<BYTE>(m_dwNumResources);
 #endif
+      memset(resourceFound, 0, m_dwNumResources);
 
       poller->setStatus(_T("resource poll"));
 	   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Polling resources\r\n"), m_name);
