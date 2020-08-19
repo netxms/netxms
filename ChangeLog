@@ -11,6 +11,7 @@
 - Added per node trap flood detection
 - New event processing macros %z (zone UIN) and %Z (zone name)
 - Added Topology.WirelessStations internal table metric
+- Option to disable reading of Windows performance counters metadata on configuration poll
 - Fixed issues:
 	NX-1841 (Option to enumerate all attributes and methods of an object in NXSL)
 

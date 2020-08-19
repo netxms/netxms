@@ -4160,7 +4160,7 @@ bool Node::confPollAgent(UINT32 rqId)
       }
 
       // Get supported Windows Performance Counters
-      if (!_tcsncmp(m_platformName, _T("windows-"), 8))
+      if (!_tcsncmp(m_platformName, _T("windows-"), 8) && (!(m_flags & NF_DISABLE_PERF_COUNT)))
       {
          sendPollerMsg(rqId, _T("   Reading list of available Windows Performance Counters...\r\n"));
          ObjectArray<WinPerfObject> *perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, pAgentConn.get());
