@@ -657,11 +657,19 @@ TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail)
 }
 
 /**
- * Update system-wide access rights in user sessions
+ * Update system-wide access rights in given session
  */
-static void UpdateGlobalAccessRights(ClientSession *session)
+static void UpdateGlobalAccessRightsCallback(ClientSession *session)
 {
    session->updateSystemAccessRights();
+}
+
+/**
+ * Update system-wide access rights in all user sessions
+ */
+static void UpdateGlobalAccessRights()
+{
+   EnumerateClientSessions(UpdateGlobalAccessRightsCallback);
 }
 
 /**
@@ -720,7 +728,7 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
    // Update system access rights in all connected sessions
    // Use separate thread to avoid deadlocks
    if (id & GROUP_FLAG)
-      ThreadPoolExecute(g_mainThreadPool, EnumerateClientSessions, UpdateGlobalAccessRights);
+      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRights);
 
    SendUserDBUpdate(USER_DB_DELETE, id, nullptr);
    return RCC_SUCCESS;
@@ -838,7 +846,7 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **o
 
    // Use separate thread to avoid deadlocks
    if (updateAccessRights)
-      ThreadPoolExecute(g_mainThreadPool, EnumerateClientSessions, UpdateGlobalAccessRights);
+      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRights);
 
    return rcc;
 }
