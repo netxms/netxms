@@ -145,6 +145,8 @@ public class ObjectPolling extends PropertyPage
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, Messages.get().NodePolling_OptDisableDiscoveryPoll);
       }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, Messages.get().NodePolling_OptDisableDataCollection);
+      if (object.canHaveAgent())
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of Windows performance counters metadata");
 
 		/* use ifXTable */
 		if(object.canHaveInterfaces())

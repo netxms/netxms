@@ -229,6 +229,7 @@
 #define NF_SNMP_SETTINGS_LOCKED   0x02000000
 #define NF_PING_PRIMARY_IP        0x04000000
 #define NF_DISABLE_ETHERNET_IP    0x08000000
+#define NF_DISABLE_PERF_COUNT     0x10000000
 
 /**
  * Data Collection flags first half of int
