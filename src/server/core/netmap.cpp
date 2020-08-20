@@ -226,7 +226,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
    }
    else
    {
-      if (m_status != STATUS_NORMAL)
+      if (m_status != STATUS_NORMAL && m_status != STATUS_UNMANAGED)
       {
          m_status = STATUS_NORMAL;
          readLockParentList();
@@ -697,7 +697,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 void NetworkMap::updateContent()
 {
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): map type %d"), m_name, m_id, m_mapType);
-   if (m_mapType != MAP_TYPE_CUSTOM)
+   if (m_mapType != MAP_TYPE_CUSTOM && m_status != STATUS_UNMANAGED)
    {
       NetworkMapObjectList objects;
       bool topologyRecieved = true;
