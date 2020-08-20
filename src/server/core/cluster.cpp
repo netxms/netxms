@@ -22,6 +22,9 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG_CONF_POLL         _T("poll.conf")
+#define DEBUG_TAG_STATUS_POLL       _T("poll.status")
+
 /**
  * Cluster class default constructor
  */
@@ -528,21 +531,21 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
    }
 
    m_pollRequestor = pSession;
-   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Applying templates\r\n"), m_name);
-   DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Applying templates"), m_name);
+   sendPollerMsg(dwRqId, _T("Applying templates\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterConfPoll(%s): applying templates"), m_name);
    if (ConfigReadBoolean(_T("ClusterTemplateAutoApply"), false))
       applyUserTemplates();
 
-   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Updating container bindings\r\n"), m_name);
-   DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Updating container bindings"), m_name);
+   sendPollerMsg(dwRqId, _T("Updating container bindings\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterConfPoll(%s): Updating container bindings"), m_name);
    if (ConfigReadBoolean(_T("ClusterContainerAutoBind"), false))
       updateContainerMembership();
 
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"));
 
-   sendPollerMsg(dwRqId, _T("CLUSTER CONFIGURATION POLL [%s]: Finished\r\n"), m_name);
-   DbgPrintf(6, _T("CLUSTER CONFIGURATION POLL [%s]: Finished"), m_name);
+   sendPollerMsg(dwRqId, _T("Configuration poll finished\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ClusterConfPoll(%s): finished"), m_name);
 
    lockProperties();
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
@@ -594,8 +597,8 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 
 	// Perform status poll on all member nodes
    m_pollRequestor = pSession;
-   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Polling member nodes\r\n"), m_name);
-	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_name);
+   sendPollerMsg(dwRqId, _T("Polling member nodes\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterStatusPoll(%s): Polling member nodes"), m_name);
 	bool allDown = true;
 	for(i = 0; i < pollList.size(); i++)
 	{
@@ -610,7 +613,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 		if (!(m_state & CLSF_DOWN))
 		{
 		   m_state |= CLSF_DOWN;
-			PostSystemEvent(EVENT_CLUSTER_DOWN, m_id, NULL);
+			PostSystemEvent(EVENT_CLUSTER_DOWN, m_id, nullptr);
 		}
 	}
 	else
@@ -618,7 +621,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 		if (m_state & CLSF_DOWN)
 		{
 		   m_state &= ~CLSF_DOWN;
-			PostSystemEvent(EVENT_CLUSTER_UP, m_id, NULL);
+			PostSystemEvent(EVENT_CLUSTER_UP, m_id, nullptr);
 		}
 	}
 
@@ -627,14 +630,14 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	{
 #if HAVE_ALLOCA
       BYTE *resourceFound = reinterpret_cast<BYTE*>(alloca(m_dwNumResources));
+      memset(resourceFound, 0, m_dwNumResources);
 #else
       BYTE *resourceFound = MemAllocArray<BYTE>(m_dwNumResources);
 #endif
-      memset(resourceFound, 0, m_dwNumResources);
 
       poller->setStatus(_T("resource poll"));
-	   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Polling resources\r\n"), m_name);
-		DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_name);
+	   sendPollerMsg(dwRqId, _T("Polling resources\r\n"));
+	   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterStatusPoll(%s): polling resources"), m_name);
 		for(i = 0; i < pollList.size(); i++)
 		{
 		   if (pollList.get(i)->getObjectClass() != OBJECT_NODE)
@@ -653,8 +656,8 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 						{
 							if (m_pResourceList[k].dwCurrOwner != node->getId())
 							{
-						      sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed\r\n"), m_name, m_pResourceList[k].szName);
-								DbgPrintf(5, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed"),
+						      sendPollerMsg(dwRqId, _T("Resource %s owner changed\r\n"), m_pResourceList[k].szName);
+						      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterStatusPoll(%s): Resource %s owner changed"),
 											 m_name, m_pResourceList[k].szName);
 
 								// Resource moved or go up
@@ -687,8 +690,8 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 			}
 			else
 			{
-		      sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s\r\n"), m_name, node->getName());
-				DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s"),
+		      sendPollerMsg(dwRqId, _T("Cannot get interface list from %s\r\n"), node->getName());
+		      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterStatusPoll(%s): Cannot get interface list from %s"),
 							 m_name, node->getName());
 			}
 		}
@@ -703,7 +706,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 				PostSystemEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_id, "dsds",
 							 m_pResourceList[i].dwId, m_pResourceList[i].szName,
 							 m_pResourceList[i].dwCurrOwner,
-							 (pObject != NULL) ? pObject->getName() : _T("<unknown>"));
+							 (pObject != nullptr) ? pObject->getName() : _T("<unknown>"));
 				m_pResourceList[i].dwCurrOwner = 0;
             modified |= MODIFY_CLUSTER_RESOURCES;
 			}
@@ -726,8 +729,8 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 		setModified(modified);
 	unlockProperties();
 
-   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Finished\r\n"), m_name);
-	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Finished"), m_name);
+   sendPollerMsg(dwRqId, _T("Status poll finished\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterStatusPoll(%s): finished"), m_name);
 
    pollerUnlock();
 }
