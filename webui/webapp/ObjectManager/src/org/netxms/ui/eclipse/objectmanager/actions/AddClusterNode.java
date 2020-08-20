@@ -28,7 +28,9 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -74,7 +76,19 @@ public class AddClusterNode implements IObjectActionDelegate
 				{
 					List<AbstractObject> objects = dlg.getSelectedObjects();
 					for(AbstractObject o : objects)
-						session.addClusterNode(clusterId, o.getObjectId());
+					{
+					   try 
+					   {
+	                  session.addClusterNode(clusterId, o.getObjectId());					      
+					   }
+					   catch (NXCException exception)
+					   {
+					      if(exception.getErrorCode() != RCC.CLUSTER_MEMBER_ALREADY)
+					      {
+					         throw(exception);
+					      }
+					   }					
+					}
 				}
 			}.start();
 		}
