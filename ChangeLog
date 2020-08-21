@@ -14,6 +14,8 @@
 - Option to disable reading of Windows performance counters metadata on configuration poll
 - Fixed issues:
 	NX-1841 (Option to enumerate all attributes and methods of an object in NXSL)
+	NX-1879 (Unmanaged automatic network map is no more auto updated)
+	NX-1884 (Do not show error while node is added to the cluster if the node is already there)
 
 
 *
