@@ -1225,11 +1225,11 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
 {
    bool success;
    size_t size;
-   BYTE *xml = LoadFile(file, &size);
-   if (xml != nullptr)
+   BYTE *content = LoadFile(file, &size);
+   if (content != nullptr)
    {
-      success = loadIniConfigFromMemory((char *)xml, (int)size, file, defaultIniSection, ignoreErrors);
-      MemFree(xml);
+      success = loadIniConfigFromMemory((char *)content, (int)size, file, defaultIniSection, ignoreErrors);
+      MemFree(content);
    }
    else
    {

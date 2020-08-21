@@ -1343,6 +1343,58 @@ template<typename T, typename B> THREAD ThreadCreateEx(T *object, void (B::*meth
 }
 
 /**
+ * Wrapper data for ThreadCreate/ThreadCreateEx on object method using pointer to object (no arguments)
+ */
+template <typename T, typename R> class ThreadCreate_ObjectPtr_WrapperData_1
+{
+public:
+   T *m_object;
+   void (T::*m_func)(R);
+   R m_arg;
+
+   ThreadCreate_ObjectPtr_WrapperData_1(T *object, void (T::*func)(R), const R& arg) : m_arg(arg)
+   {
+      m_object = object;
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadCreate/ThreadCreateEx on object method using pointer to object (one argument)
+ */
+template <typename T, typename R> THREAD_RESULT THREAD_CALL ThreadCreate_ObjectPtr_Wrapper_1(void *arg)
+{
+   auto wd = static_cast<ThreadCreate_ObjectPtr_WrapperData_1<T, R>*>(arg);
+   ((*wd->m_object).*(wd->m_func))(wd->m_arg);
+   delete wd;
+   return THREAD_OK;
+}
+
+/**
+ * Template wrapper for ThreadCreate on object method using pointer to object (one argument)
+ */
+template<typename T, typename B, typename R> bool ThreadCreate(T *object, void (B::*method)(R), const R& arg, int stackSize = 0)
+{
+   auto wd = new ThreadCreate_ObjectPtr_WrapperData_1<B, R>(object, method, arg);
+   bool success = ThreadCreate(ThreadCreate_ObjectPtr_Wrapper_1<B, R>, stackSize, wd);
+   if (!success)
+      delete wd;
+   return success;
+}
+
+/**
+ * Template wrapper for ThreadCreateEx on object method using pointer to object (one argument)
+ */
+template<typename T, typename B, typename R> THREAD ThreadCreateEx(T *object, void (B::*method)(R), const R& arg, int stackSize = 0)
+{
+   auto wd = new ThreadCreate_ObjectPtr_WrapperData_1<B, R>(object, method, arg);
+   THREAD thread = ThreadCreateEx(ThreadCreate_ObjectPtr_Wrapper_1<B, R>, stackSize, wd);
+   if (thread == INVALID_THREAD_HANDLE)
+      delete wd;
+   return thread;
+}
+
+/**
  * Wrapper data for ThreadCreate/ThreadCreateEx on object method using smart pointer to object (no arguments)
  */
 template <typename T> class ThreadCreate_SharedPtr_WrapperData_0

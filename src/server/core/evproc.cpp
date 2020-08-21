@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <uthash.h>
 
 #define DEBUG_TAG _T("event.proc")
 
@@ -38,8 +39,7 @@ VolatileCounter64 g_totalEventsProcessed = 0;
  */
 static THREAD s_threadStormDetector = INVALID_THREAD_HANDLE;
 static THREAD s_threadLogger = INVALID_THREAD_HANDLE;
-static ObjectQueue<Event> s_loggerQueue;
-static ThreadPool *s_eventProcessingThreadPool = nullptr;
+static ObjectQueue<Event> s_loggerQueue(4096, Ownership::True);
 
 /**
  * Handler for EnumerateSessions()
@@ -198,7 +198,7 @@ static void EventLogger()
 /**
  * Process event
  */
-static void ProcessEvent(Event *event)
+static void ProcessEvent(Event *event, int processorId)
 {
    // Expand message text
    // We cannot expand message text in PostEvent because of
@@ -240,8 +240,8 @@ static void ProcessEvent(Event *event)
    // Write event information to debug
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 5)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAGS:\"%s\"%s) FROM %s: %s"),
-                      event->getName(), event->getCode(), event->getId(), event->getFlags(), event->getSeverity(),
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("EVENT %s [%d] at {%d} (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAGS:\"%s\"%s) FROM %s: %s"),
+                      event->getName(), event->getCode(), processorId, event->getId(), event->getFlags(), event->getSeverity(),
                       (const TCHAR *)event->getTagsAsList(),
                       (event->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
                       sourceObject->getName(), event->getMessage());
@@ -276,30 +276,111 @@ static void ProcessEvent(Event *event)
 }
 
 /**
- * Event processing thread
+ * Event processing thread for serial processing
  */
-void EventProcessor()
+static void SerialEventProcessor()
 {
    ThreadSetName("EventProcessor");
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing disabled"));
+
+   while(true)
+   {
+      Event *event = g_eventQueue.getOrBlock();
+      if (event == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      if (g_flags & AF_EVENT_STORM_DETECTED)
+      {
+         delete event;
+         InterlockedIncrement64(&g_totalEventsProcessed);
+         continue;
+      }
+
+      ProcessEvent(event, 0);
+   }
+
+   s_loggerQueue.put(INVALID_POINTER_VALUE);
+   ThreadJoin(s_threadStormDetector);
+   ThreadJoin(s_threadLogger);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event processing thread stopped"));
+}
+
+/**
+ * Event processing thread
+ */
+struct EventProcessingThread
+{
+   ObjectQueue<Event> queue;
+   THREAD thread;
+   int64_t averageWaitTime;
+
+   EventProcessingThread() : queue(4096, Ownership::True)
+   {
+      thread = INVALID_THREAD_HANDLE;
+      averageWaitTime = 0;
+   }
+
+   void run(int id);
+
+   uint32_t getAverageWaitTime() { return static_cast<uint32_t>(averageWaitTime / EMA_FP_1); }
+};
+
+/**
+ * Event processing thread main loop
+ */
+void EventProcessingThread::run(int id)
+{
+   char tname[32];
+   snprintf(tname, 32, "EP-%d", id);
+   ThreadSetName(tname);
+
+   while(true)
+   {
+      Event *event = g_eventQueue.getOrBlock();
+      if (event == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, GetCurrentTimeMs() - event->getQueueTime());
+      ProcessEvent(event, id);
+   }
+}
+
+/**
+ * Event queue binding
+ */
+struct EventQueueBinding
+{
+   UT_hash_handle hh;
+   size_t keyLength;
+   char key[128];
+   ObjectQueue<Event> *queue;
+   time_t lastUse;
+};
+
+/**
+ * Event processing thread for parallel processing
+ */
+static void ParallelEventProcessor()
+{
+   ThreadSetName("EPMaster");
 
 	s_threadLogger = ThreadCreateEx(EventLogger);
 	s_threadStormDetector = ThreadCreateEx(EventStormDetector);
 
-	bool parallelProcessing;
-	TCHAR queueSelector[256];
 	int poolSize = ConfigReadInt(_T("Events.Processor.PoolSize"), 1);
-	if (poolSize > 1)
-	{
-	   parallelProcessing = true;
-	   ConfigReadStr(_T("Events.Processor.QueueSelector"), queueSelector, 256, _T("%z"));
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing enabled (queue selector \"%s\")"), queueSelector);
-      s_eventProcessingThreadPool = ThreadPoolCreate(_T("EVENTPROC"), poolSize, poolSize);
-	}
-	else
-	{
-	   parallelProcessing = false;
-	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing disabled"));
-	}
+   TCHAR queueSelector[256];
+   ConfigReadStr(_T("Events.Processor.QueueSelector"), queueSelector, 256, _T("%z"));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing enabled (queue selector \"%s\")"), queueSelector);
+
+   EventQueueBinding *queueBindings = nullptr;
+   ObjectMemoryPool<EventQueueBinding> memoryPool(1024);
+
+   auto processingThreads = new EventProcessingThread[poolSize];
+   for(int i = 0; i < poolSize; i++)
+      processingThreads[i].thread = ThreadCreateEx(&processingThreads[i], &EventProcessingThread::run, i + 1);
+
+   time_t lastCleanupTime = time(nullptr);
 
    while(true)
    {
@@ -314,24 +395,88 @@ void EventProcessor()
 			continue;
 		}
 
-		if (parallelProcessing)
-		{
-		   StringBuffer key = event->expandText(queueSelector, nullptr);
-		   ThreadPoolExecuteSerialized(s_eventProcessingThreadPool, key, ProcessEvent, event);
-		}
-		else
-		{
-		   ProcessEvent(event);
-		}
+		time_t now = event->getTimestamp(); // Get current time from event, it should be (almost) current
+
+      StringBuffer key = event->expandText(queueSelector, nullptr);
+#ifdef UNICODE
+      char keyBytes[128];
+      size_t keyLen = wchar_to_utf8(key.cstr(), key.length(), keyBytes, 128);
+#else
+      char *keyBytes = key.getBuffer();
+      size_t keyLen = key.length();
+      if (keyLen > 128)
+         keyLen = 128;
+#endif
+
+      EventQueueBinding *qb;
+      HASH_FIND(hh, queueBindings, keyBytes, keyLen, qb);
+      if (qb == nullptr)
+      {
+         // Select less loaded queue
+         uint32_t bestWaitTime = 0xFFFFFFFF;
+         int bestIndex = 0;
+         for(int i = 0; (i < poolSize) && (bestWaitTime > 0); i++)
+         {
+            uint32_t waitTime = processingThreads[i].getAverageWaitTime();
+            if (waitTime < bestWaitTime)
+            {
+               bestWaitTime = waitTime;
+               bestIndex = i;
+            }
+         }
+
+         qb = memoryPool.allocate();
+         memset(qb, 0, sizeof(EventQueueBinding));
+         qb->keyLength = keyLen;
+         memcpy(qb->key, keyBytes, keyLen);
+         qb->queue = &processingThreads[bestIndex].queue;
+         HASH_ADD_KEYPTR(hh, queueBindings, qb->key, keyLen, qb);
+      }
+      qb->lastUse = now;
+      event->setQueueTime(GetCurrentTimeMs());
+      qb->queue->put(event);
+
+      // Remove outdated bindings
+      if (lastCleanupTime < now - 60)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Running event queues binding cleanup"));
+
+         EventQueueBinding *curr, *tmp;
+         HASH_ITER(hh, queueBindings, curr, tmp)
+         {
+            if (curr->lastUse < now - 300)
+            {
+               HASH_DEL(queueBindings, curr);
+               memoryPool.free(curr);
+            }
+         }
+
+         lastCleanupTime = now;
+      }
    }
 
-	if (parallelProcessing)
-	   ThreadPoolDestroy(s_eventProcessingThreadPool);
+   for(int i = 0; i < poolSize; i++)
+   {
+      processingThreads[i].queue.put(INVALID_POINTER_VALUE);
+      ThreadJoin(processingThreads[i].thread);
+   }
+   delete[] processingThreads;
+   HASH_CLEAR(hh, queueBindings);
 
 	s_loggerQueue.put(INVALID_POINTER_VALUE);
 	ThreadJoin(s_threadStormDetector);
 	ThreadJoin(s_threadLogger);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Event processing thread stopped"));
+}
+
+/**
+ * Start event processor
+ */
+THREAD StartEventProcessor()
+{
+   s_threadLogger = ThreadCreateEx(EventLogger);
+   s_threadStormDetector = ThreadCreateEx(EventStormDetector);
+   return (ConfigReadInt(_T("Events.Processor.PoolSize"), 1) > 1) ? ThreadCreateEx(ParallelEventProcessor) : ThreadCreateEx(SerialEventProcessor);
 }
 
 /**

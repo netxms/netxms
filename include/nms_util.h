@@ -4271,6 +4271,18 @@ inline String GetStringAttributeWithLock(const TCHAR *attr, MUTEX mutex)
    return value;
 }
 
+/**
+ * DJB2 hash algorithm
+ */
+static inline uint32_t CalculateDJB2Hash(const void *data, size_t size)
+{
+   uint32_t hash = 5381;
+   const uint8_t *p = static_cast<const uint8_t*>(data);
+   while(size-- > 0)
+      hash = ((hash << 5) + hash) + *p++;
+   return hash;
+}
+
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();
 INT64 LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory();
 INT64 LIBNETXMS_EXPORTABLE GetActiveHeapMemory();
