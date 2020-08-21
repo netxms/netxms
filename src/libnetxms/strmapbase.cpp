@@ -80,18 +80,12 @@ StringMapEntry *StringMapBase::find(const TCHAR *key, size_t keyLen) const
    StringMapEntry *entry;
    if (m_ignoreCase)
    {
-#if HAVE_ALLOCA
-      TCHAR *ukey = (TCHAR *)alloca(keyLen + sizeof(TCHAR));
-#else
-      TCHAR *ukey = (TCHAR *)MemAlloc(keyLen + sizeof(TCHAR));
-#endif
+      TCHAR *ukey = static_cast<TCHAR*>(MemAllocLocal(keyLen + sizeof(TCHAR)));
       memcpy(ukey, key, keyLen);
       *((TCHAR *)((BYTE *)ukey + keyLen)) = 0;
       _tcsupr(ukey);
       HASH_FIND(hh, m_data, ukey, (unsigned int)keyLen, entry);
-#if !HAVE_ALLOCA
-      MemFree(ukey);
-#endif
+      MemFreeLocal(ukey);
    }
    else
    {

@@ -93,7 +93,7 @@ static void JNICALL J_postEvent(JNIEnv *jenv, jclass jcls, jint event, jstring j
       TCHAR *name = CStringFromJavaString(jenv, jname);
       int numArgs = (jargs != NULL) ? jenv->GetArrayLength(jargs) : 0;
 
-      TCHAR **arrayOfString = (numArgs > 0) ? (TCHAR **)alloca(sizeof(TCHAR *) * numArgs) : NULL;
+      TCHAR **arrayOfString = (numArgs > 0) ? (TCHAR **)MemAllocLocal(sizeof(TCHAR *) * numArgs) : nullptr;
       for(jsize i = 0; i < numArgs; i++)
       {
          jstring resString = reinterpret_cast<jstring>(jenv->GetObjectArrayElement(jargs, i));
@@ -104,6 +104,7 @@ static void JNICALL J_postEvent(JNIEnv *jenv, jclass jcls, jint event, jstring j
       MemFree(name);
       for(jsize i = 0; i < numArgs; i++)
          MemFree(arrayOfString[i]);
+      MemFreeLocal(arrayOfString);
    }
 }
 

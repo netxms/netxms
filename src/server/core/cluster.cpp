@@ -628,12 +628,8 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	// Check for cluster resource movement
 	if (!allDown)
 	{
-#if HAVE_ALLOCA
-      BYTE *resourceFound = reinterpret_cast<BYTE*>(alloca(m_dwNumResources));
+      BYTE *resourceFound = reinterpret_cast<BYTE*>(MemAllocLocal(m_dwNumResources));
       memset(resourceFound, 0, m_dwNumResources);
-#else
-      BYTE *resourceFound = MemAllocArray<BYTE>(m_dwNumResources);
-#endif
 
       poller->setStatus(_T("resource poll"));
 	   sendPollerMsg(dwRqId, _T("Polling resources\r\n"));
@@ -712,9 +708,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 			}
 		}
 		unlockProperties();
-#if !HAVE_ALLOCA
-		MemFree(resourceFound);
-#endif
+		MemFreeLocal(resourceFound);
 	}
 
    // Execute hook script

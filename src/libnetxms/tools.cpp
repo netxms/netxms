@@ -2763,10 +2763,13 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 #if SAFE_FGETWS_WITH_POPEN && !defined(_WIN32)
 	return fgetws(buffer, len, f);
 #else
-	char *mbBuffer = (char *)alloca(len);
+	char *mbBuffer = static_cast<char*>(MemAllocLocal(len));
 	char *s = fgets(mbBuffer, len, f);
 	if (s == nullptr)
+	{
+	   MemFreeLocal(mbBuffer);
 		return nullptr;
+	}
 	mbBuffer[len - 1] = 0;
 #if HAVE_MBSTOWCS
 	mbstowcs(buffer, mbBuffer, len);
@@ -2775,6 +2778,7 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 #else
 	mb_to_wchar(mbBuffer, -1, buffer, len);
 #endif
+   MemFreeLocal(mbBuffer);
 	return buffer;
 #endif
 #else

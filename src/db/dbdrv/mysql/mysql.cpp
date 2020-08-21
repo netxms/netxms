@@ -707,11 +707,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 #endif
 
 		memset(&b, 0, sizeof(MYSQL_BIND));
-#if HAVE_ALLOCA
-		b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
-#else
-		b.buffer = MemAlloc(hResult->lengthFields[iColumn] + 1);
-#endif
+		b.buffer = MemAllocLocal(hResult->lengthFields[iColumn] + 1);
 		b.buffer_length = hResult->lengthFields[iColumn] + 1;
 		b.buffer_type = MYSQL_TYPE_STRING;
 		b.length = &l;
@@ -742,9 +738,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 			pRet = pBuffer;
 		}
       MutexUnlock(hResult->connection->mutexQueryLock);
-#if !HAVE_ALLOCA
-		free(b.buffer);
-#endif
+		MemFreeLocal(b.buffer);
 	}
 	else
 	{
@@ -1071,11 +1065,7 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
 #endif
 
       memset(&b, 0, sizeof(MYSQL_BIND));
-#if HAVE_ALLOCA
-      b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
-#else
-      b.buffer = MemAlloc(hResult->lengthFields[iColumn] + 1);
-#endif
+      b.buffer = MemAllocLocal(hResult->lengthFields[iColumn] + 1);
       b.buffer_length = hResult->lengthFields[iColumn] + 1;
       b.buffer_type = MYSQL_TYPE_STRING;
       b.length = &l;
@@ -1105,9 +1095,7 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
          }
          value = pBuffer;
       }
-#if !HAVE_ALLOCA
-      MemFree(b.buffer);
-#endif
+      MemFreeLocal(b.buffer);
    }
    else
    {
