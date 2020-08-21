@@ -308,6 +308,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_agentProxy = false;
    m_snmpProxy = false;
    m_snmpTrapProxy = false;
+   m_syslogProxy = false;
 }
 
 /**
@@ -547,6 +548,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       m_agentProxy = request->getFieldAsBoolean(VID_AGENT_PROXY);
       m_snmpProxy = request->getFieldAsBoolean(VID_SNMP_PROXY);
       m_snmpTrapProxy = request->getFieldAsBoolean(VID_SNMP_TRAP_PROXY);
+      m_syslogProxy = request->getFieldAsBoolean(VID_SYSLOG_PROXY);
       request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
       m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
       m_agentBuildTag = request->getFieldAsString(VID_AGENT_BUILD_TAG);
@@ -583,6 +585,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       debugPrintf(4, _T("   Agent proxy..............: %s"), m_agentProxy ? _T("YES") : _T("NO"));
       debugPrintf(4, _T("   SNMP proxy...............: %s"), m_snmpProxy ? _T("YES") : _T("NO"));
       debugPrintf(4, _T("   SNMP trap proxy..........: %s"), m_snmpTrapProxy ? _T("YES") : _T("NO"));
+      debugPrintf(4, _T("   Syslog proxy.............: %s"), m_syslogProxy ? _T("YES") : _T("NO"));
       debugPrintf(4, _T("   User agent...............: %s"), m_userAgentInstalled ? _T("YES") : _T("NO"));
 
       ExecuteTunnelHookScript(this);
@@ -872,6 +875,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 15, m_snmpTrapProxy);
    msg->setFieldFromTime(baseId + 16, m_certificateExpirationTime);
    msg->setField(baseId + 17, m_hardwareId.value(), HARDWARE_ID_LENGTH);
+   msg->setField(baseId + 18, m_syslogProxy);
 }
 
 /**
@@ -1660,4 +1664,37 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
                   t->getDisplayName(), t->getAddress().toString().cstr(), rcc);
       t->decRefCount();
    }
+}
+
+int GetTunnelCount(TunnelType type)
+{
+   int count = 0;
+
+   if(type == TunnelType::TOTAL)
+   {
+      s_tunnelListLock.lock();
+      count = s_boundTunnels.size();
+      s_tunnelListLock.unlock();
+   }
+   else
+   {
+      s_tunnelListLock.lock();
+      Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
+      while (it->hasNext())
+      {
+         AgentTunnel *t = it->next();
+         if ((type == TunnelType::AGENT_PROXY && t->isAgentProxy()) ||
+               (type == TunnelType::SNMP_PROXY && t->isSnmpProxy()) ||
+               (type == TunnelType::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||
+               (type == TunnelType::SYSLOG_PROXY && t->isSyslogProxy()) ||
+               (type == TunnelType::USER_AGENT && t->isUserAgentInstalled()))
+         {
+            count++;
+         }
+      }
+      delete it;
+      s_tunnelListLock.unlock();
+   }
+
+   return count;
 }

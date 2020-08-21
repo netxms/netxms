@@ -680,6 +680,7 @@ bool Tunnel::connectToServer()
    msg.setField(VID_AGENT_PROXY, (g_dwFlags & AF_ENABLE_PROXY) ? true : false);
    msg.setField(VID_SNMP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_PROXY) ? true : false);
    msg.setField(VID_SNMP_TRAP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY) ? true : false);
+   msg.setField(VID_SYSLOG_PROXY, (g_dwFlags & AF_ENABLE_SYSLOG_PROXY) ? true : false);
 
    TCHAR fqdn[256];
    if (GetLocalHostName(fqdn, 256, true))

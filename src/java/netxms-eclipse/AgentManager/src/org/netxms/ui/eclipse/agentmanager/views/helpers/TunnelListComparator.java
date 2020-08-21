@@ -84,6 +84,8 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_SNMP_TRAP_PROXY:
             result = Boolean.compare(t1.isSnmpTrapProxy(), t2.isSnmpTrapProxy());
             break;
+         case TunnelManager.COL_SYSLOG_PROXY:
+            result = Boolean.compare(t1.isSyslogProxy(), t2.isSnmpProxy());
          case TunnelManager.COL_STATE:
             result = (t1.isBound() ? 1 : 0) - (t2.isBound() ? 1 : 0);
             break;

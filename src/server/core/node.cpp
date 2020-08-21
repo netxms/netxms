@@ -6406,6 +6406,30 @@ DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, 
       {
          ret_int(buffer, GetAlarmCount());
       }
+      else if (!_tcsicmp(param, _T("Server.AgentTunnel.Total")))
+      {
+         ret_int(buffer, GetTunnelCount(TunnelType::TOTAL));
+      }
+      else if (!_tcsicmp(param, _T("Server.AgentTunnel.AgentProxy")))
+      {
+         ret_int(buffer, GetTunnelCount(TunnelType::AGENT_PROXY));
+      }
+      else if (!_tcsicmp(param, _T("Server.AgentTunnel.SnmpProxy")))
+      {
+         ret_int(buffer, GetTunnelCount(TunnelType::SNMP_PROXY));
+      }
+      else if (!_tcsicmp(param, _T("Server.AgentTunnel.SnmpTrapProxy")))
+      {
+         ret_int(buffer, GetTunnelCount(TunnelType::SNMP_TRAP_PROXY));
+      }
+      else if (!_tcsicmp(param, _T("Server.AgentTunnel.Syslog")))
+      {
+         ret_int(buffer, GetTunnelCount(TunnelType::SYSLOG_PROXY));
+      }
+      else if (!_tcsicmp(param, _T("Server.AgentTunnel.UserAgent")))
+      {
+         ret_int(buffer, GetTunnelCount(TunnelType::USER_AGENT));
+      }
       else if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
       {
          _sntprintf(buffer, bufSize, _T("%u"), g_averageDCIQueuingTime);

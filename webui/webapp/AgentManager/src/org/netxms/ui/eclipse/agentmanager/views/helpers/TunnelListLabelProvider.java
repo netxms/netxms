@@ -82,6 +82,8 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.isSnmpProxy() ? "Yes" : "No";
          case TunnelManager.COL_SNMP_TRAP_PROXY:
             return t.isSnmpTrapProxy() ? "Yes" : "No";
+         case TunnelManager.COL_SYSLOG_PROXY:
+            return t.isSyslogProxy() ? "Yes" : "No";
          case TunnelManager.COL_STATE:
             return t.isBound() ? "Bound" : "Unbound";
          case TunnelManager.COL_SYSINFO:

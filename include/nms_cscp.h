@@ -1379,6 +1379,7 @@ typedef struct
 #define VID_RAW_VALUE               ((UINT32)707)
 #define VID_LICENSE_PROBLEM_COUNT   ((UINT32)708)
 #define VID_USE_TEXT_PARSING        ((UINT32)709)
+#define VID_SYSLOG_PROXY            ((UINT32)710)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

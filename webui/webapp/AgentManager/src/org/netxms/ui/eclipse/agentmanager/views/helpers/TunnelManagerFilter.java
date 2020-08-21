@@ -43,7 +43,7 @@ public class TunnelManagerFilter extends ViewerFilter
       if (hideNonUA && !t.isUserAgentInstalled())
          return false;
 
-      if (hideNonProxy && !t.isAgentProxy() && !t.isSnmpProxy() && !t.isSnmpTrapProxy())
+      if (hideNonProxy && !t.isAgentProxy() && !t.isSnmpProxy() && !t.isSnmpTrapProxy() && !t.isSyslogProxy())
          return false;
       
       if ((filterString == null) || (filterString.isEmpty()))
