@@ -1284,21 +1284,21 @@ using std::static_pointer_cast;
  */
 #ifdef __cplusplus
 
-inline void *MemAlloc(size_t size) { return malloc(size); }
-inline void *MemAllocZeroed(size_t size) { return calloc(size, 1); }
-inline char *MemAllocStringA(size_t size) { return static_cast<char*>(MemAlloc(size)); }
-inline WCHAR *MemAllocStringW(size_t size) { return static_cast<WCHAR*>(MemAlloc(size * sizeof(WCHAR))); }
-template <typename T> T *MemAllocStruct() { return (T*)calloc(1, sizeof(T)); }
-template <typename T> T *MemAllocArray(size_t count) { return (T*)calloc(count, sizeof(T)); }
-template <typename T> T *MemAllocArrayNoInit(size_t count) { return (T*)MemAlloc(count * sizeof(T)); }
-template <typename T> T *MemRealloc(T *p, size_t size) { return (T*)realloc(p, size); }
-template <typename T> T *MemReallocArray(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
+static inline void *MemAlloc(size_t size) { return malloc(size); }
+static inline void *MemAllocZeroed(size_t size) { return calloc(size, 1); }
+static inline char *MemAllocStringA(size_t size) { return static_cast<char*>(MemAlloc(size)); }
+static inline WCHAR *MemAllocStringW(size_t size) { return static_cast<WCHAR*>(MemAlloc(size * sizeof(WCHAR))); }
+template <typename T> static inline T *MemAllocStruct() { return (T*)calloc(1, sizeof(T)); }
+template <typename T> static inline T *MemAllocArray(size_t count) { return (T*)calloc(count, sizeof(T)); }
+template <typename T> static inline T *MemAllocArrayNoInit(size_t count) { return (T*)MemAlloc(count * sizeof(T)); }
+template <typename T> static inline T *MemRealloc(T *p, size_t size) { return (T*)realloc(p, size); }
+template <typename T> static inline T *MemReallocArray(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
 #if FREE_IS_NULL_SAFE
-inline void MemFree(void *p) { free(p); }
-template <typename T> void MemFreeAndNull(T* &p) { free(p); p = nullptr; }
+static inline void MemFree(void *p) { free(p); }
+template <typename T> static inline void MemFreeAndNull(T* &p) { free(p); p = nullptr; }
 #else
-inline void MemFree(void *p) { if (p != nullptr) free(p); }
-template <typename T> void MemFreeAndNull(T* &p) { if (p != nullptr) { free(p); p = nullptr; } }
+static inline void MemFree(void *p) { if (p != nullptr) free(p); }
+template <typename T> static inline void MemFreeAndNull(T* &p) { if (p != nullptr) { free(p); p = nullptr; } }
 #endif
 
 #else /* __cplusplus */
@@ -1346,6 +1346,14 @@ template<typename T> T *MemCopyArray(const T *data, size_t count)
 }
 
 #endif
+
+#if HAVE_ALLOCA
+#define MemAllocLocal(size) ((void*)alloca(size))
+#define MemFreeLocal(p)
+#else
+#define MemAllocLocal(size) MemAlloc(size)
+#define MemFreeLocal(p) MemFree(p)
+#endif   /* HAVE_ALLOCA */
 
 /******* C string copy functions *******/
 

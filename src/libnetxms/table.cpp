@@ -834,11 +834,7 @@ void Table::merge(const Table *src)
 {
    // Create column index translation and add missing columns
    int numSrcColumns = src->m_columns->size();
-#if HAVE_ALLOCA
-   int *tran = (int *)alloca(numSrcColumns * sizeof(int));
-#else
-   int *tran = MemAllocArray<int>(numSrcColumns);
-#endif
+   int *tran = static_cast<int*>(MemAllocLocal(numSrcColumns * sizeof(int)));
    for(int i = 0; i < numSrcColumns; i++)
    {
       TableColumnDefinition *sc = src->m_columns->get(i);
@@ -861,9 +857,7 @@ void Table::merge(const Table *src)
       m_data->add(dstRow);
    }
 
-#if !HAVE_ALLOCA
-   MemFree(tran);
-#endif
+   MemFreeLocal(tran);
 }
 
 /**
@@ -877,11 +871,7 @@ int Table::mergeRow(const Table *src, int row)
 
    // Create column index translation and add missing columns
    int numSrcColumns = src->m_columns->size();
-#if HAVE_ALLOCA
-   int *tran = (int *)alloca(numSrcColumns * sizeof(int));
-#else
-   int *tran = MemAllocArray<int>(numSrcColumns);
-#endif
+   int *tran = static_cast<int*>(MemAllocLocal(numSrcColumns * sizeof(int)));
    for(int i = 0; i < numSrcColumns; i++)
    {
       TableColumnDefinition *sc = src->m_columns->get(i);
@@ -899,10 +889,7 @@ int Table::mergeRow(const Table *src, int row)
       dstRow->set(tran[c], srcRow->getValue(c), srcRow->getStatus(c), srcRow->getCellObjectId(c));
    }
 
-#if !HAVE_ALLOCA
-   MemFree(tran);
-#endif
-
+   MemFreeLocal(tran);
    return m_data->add(dstRow);
 }
 

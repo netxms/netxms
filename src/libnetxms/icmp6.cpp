@@ -166,11 +166,7 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
    UINT32 rtt = 0;
    UINT32 result = ICMP_TIMEOUT;
    UINT32 dwTimeLeft, dwElapsedTime;
-#if HAVE_ALLOCA
-   char *buffer = (char *)alloca(MAX_PACKET_SIZE);
-#else
-   char *buffer = (char *)malloc(MAX_PACKET_SIZE);
-#endif
+   char *buffer = static_cast<char*>(MemAllocLocal(MAX_PACKET_SIZE));
 
    SocketPoller sp;
    socklen_t iAddrLen;
@@ -221,9 +217,7 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
          dwTimeLeft = 0;
       }
    }
-#if !HAVE_ALLOCA
-   free(buffer);
-#endif
+   MemFreeLocal(buffer);
    return result;
 }
 
@@ -258,11 +252,7 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
    // Prepare packet and calculate checksum
    static char payload[64] = "NetXMS ICMPv6 probe [01234567890]";
    size_t size = MAX(sizeof(PACKET_HEADER), MIN(packetSize, MAX_PACKET_SIZE));
-#if HAVE_ALLOCA
-   PACKET_HEADER *p = (PACKET_HEADER *)alloca(size);
-#else
-   PACKET_HEADER *p = (PACKET_HEADER *)MemAlloc(size);
-#endif
+   PACKET_HEADER *p = static_cast<PACKET_HEADER*>(MemAllocLocal(size));
    memset(p, 0, size);
    memcpy(p->srcAddr, src.sin6_addr.s6_addr, 16);
    memcpy(p->destAddr, dest.sin6_addr.s6_addr, 16);
@@ -304,9 +294,7 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
    }
 
    close(sd);
-#if !HAVE_ALLOCA
-   MemFree(p);
-#endif
+   MemFreeLocal(p);
    return result;
 }
 

@@ -233,17 +233,11 @@ void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_ZONE_UIN, m_uin);
 
-#if HAVE_ALLOCA
-   UINT32 *idList = reinterpret_cast<UINT32*>(alloca(m_proxyNodes->size() * sizeof(UINT32)));
-#else
-   UINT32 *idList = MemAllocArrayNoInit<UINT32>(m_proxyNodes->size());
-#endif
+   auto idList = reinterpret_cast<uint32_t*>(MemAllocLocal(m_proxyNodes->size() * sizeof(uint32_t)));
    for (int i = 0; i < m_proxyNodes->size(); i++)
       idList[i] = m_proxyNodes->get(i)->nodeId;
    msg->setFieldFromInt32Array(VID_ZONE_PROXY_LIST, m_proxyNodes->size(), idList);
-#if !HAVE_ALLOCA
-   MemFree(idList);
-#endif
+   MemFreeLocal(idList);
 }
 
 /**

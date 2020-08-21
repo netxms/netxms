@@ -776,11 +776,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
 		my_bool isNull;
 
 		memset(&b, 0, sizeof(MYSQL_BIND));
-#if HAVE_ALLOCA
-		b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
-#else
-		b.buffer = MemAlloc(hResult->lengthFields[iColumn] + 1);
-#endif
+		b.buffer = MemAllocLocal(hResult->lengthFields[iColumn] + 1);
 		b.buffer_length = hResult->lengthFields[iColumn] + 1;
 		b.buffer_type = MYSQL_TYPE_STRING;
 		b.length = &l;
@@ -811,9 +807,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
 			pRet = pBuffer;
 		}
       MutexUnlock(hResult->connection->mutexQueryLock);
-#if !HAVE_ALLOCA
-		MemFree(b.buffer);
-#endif
+		MemFreeLocal(b.buffer);
 	}
 	else
 	{
@@ -1141,11 +1135,7 @@ static void *GetFieldUnbufferedInternal(MARIADB_UNBUFFERED_RESULT *hResult, int 
       my_bool isNull;
 
       memset(&b, 0, sizeof(MYSQL_BIND));
-#if HAVE_ALLOCA
-      b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
-#else
-      b.buffer = MemAlloc(hResult->lengthFields[iColumn] + 1);
-#endif
+      b.buffer = MemAllocLocal(hResult->lengthFields[iColumn] + 1);
       b.buffer_length = hResult->lengthFields[iColumn] + 1;
       b.buffer_type = MYSQL_TYPE_STRING;
       b.length = &l;
@@ -1175,9 +1165,7 @@ static void *GetFieldUnbufferedInternal(MARIADB_UNBUFFERED_RESULT *hResult, int 
          }
          value = pBuffer;
       }
-#if !HAVE_ALLOCA
-      MemFree(b.buffer);
-#endif
+      MemFreeLocal(b.buffer);
    }
    else
    {

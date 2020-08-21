@@ -340,11 +340,7 @@ static void qsort_nonaligned(void *base, size_t nmemb, size_t size, void *contex
    stack_entry stack[STACK_SIZE];
    int stacktop = 0;
    char *first, *last;
-#if HAVE_ALLOCA
-   char *pivot = alloca(size);
-#else
-   char *pivot = malloc(size);
-#endif
+   char *pivot = (char*)MemAllocLocal(size);
    size_t trunc = TRUNC_nonaligned * size;
 
    first = (char*)base; last = first + (nmemb - 1)*size;
@@ -365,9 +361,7 @@ static void qsort_nonaligned(void *base, size_t nmemb, size_t size, void *contex
    }
    PreInsertion(SWAP_nonaligned, TRUNC_nonaligned, size);
    Insertion(SWAP_nonaligned);
-#if !HAVE_ALLOCA
-   free(pivot);
-#endif
+   MemFreeLocal(pivot);
 }
 
 static void qsort_aligned(void *base, size_t nmemb, size_t size, void *context, int (*compare)(void *, const void *, const void *))
@@ -375,11 +369,7 @@ static void qsort_aligned(void *base, size_t nmemb, size_t size, void *context, 
    stack_entry stack[STACK_SIZE];
    int stacktop = 0;
    char *first, *last;
-#if HAVE_ALLOCA
-   char *pivot = alloca(size);
-#else
-   char *pivot = malloc(size);
-#endif
+   char *pivot = (char*)MemAllocLocal(size);
    size_t trunc = TRUNC_aligned * size;
 
    first = (char*)base; last = first + (nmemb - 1)*size;
@@ -400,9 +390,7 @@ static void qsort_aligned(void *base, size_t nmemb, size_t size, void *context, 
    }
    PreInsertion(SWAP_aligned, TRUNC_aligned, size);
    Insertion(SWAP_aligned);
-#if !HAVE_ALLOCA
-   free(pivot);
-#endif
+   MemFreeLocal(pivot);
 }
 
 static void qsort_words(void *base, size_t nmemb, void *context, int (*compare)(void *, const void *, const void *))
@@ -410,11 +398,7 @@ static void qsort_words(void *base, size_t nmemb, void *context, int (*compare)(
    stack_entry stack[STACK_SIZE];
    int stacktop = 0;
    char *first, *last;
-#if HAVE_ALLOCA
-   char *pivot = alloca(WORD_BYTES);
-#else
-   char *pivot = malloc(WORD_BYTES);
-#endif
+   char *pivot = (char*)MemAllocLocal(WORD_BYTES);
 
    first = (char*)base; last = first + (nmemb - 1)*WORD_BYTES;
 
@@ -455,9 +439,7 @@ static void qsort_words(void *base, size_t nmemb, void *context, int (*compare)(
       }
       if (pr != (int*)first) *pr = *(int*)pivot;
    }
-#if !HAVE_ALLOCA
-   free(pivot);
-#endif
+   MemFreeLocal(pivot);
 }
 
 /* ---------------------------------------------------------------------- */

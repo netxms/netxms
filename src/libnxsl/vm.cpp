@@ -2489,20 +2489,16 @@ UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
    }
 
    int err, selection = -1;
-   UINT32 addr = 0;
+   uint32_t addr = 0;
    NXSL_Value *options = NULL;
-#if HAVE_ALLOCA
-   UINT32 *addrList = (UINT32 *)alloca(sizeof(UINT32) * numElements);
-#else
-   UINT32 *addrList = (UINT32 *)malloc(sizeof(UINT32) * numElements);
-#endif
-   NXSL_Value **valueList = (NXSL_Value **)alloca(sizeof(NXSL_Value *) * numElements);
+   uint32_t *addrList = static_cast<uint32_t*>(MemAllocLocal(sizeof(uint32_t) * numElements));
+   NXSL_Value **valueList = static_cast<NXSL_Value**>(MemAllocLocal(sizeof(NXSL_Value *) * numElements));
    memset(valueList, 0, sizeof(NXSL_Value *) * numElements);
 
    for(int i = numElements - 1; i >= 0; i--)
    {
       NXSL_Value *v = m_dataStack->pop();
-      if (v == NULL)
+      if (v == nullptr)
       {
          error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          goto cleanup;
@@ -2518,7 +2514,7 @@ UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
       destroyValue(v);
 
       valueList[i] = m_dataStack->pop();
-      if (valueList[i] == NULL)
+      if (valueList[i] == nullptr)
       {
          error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          goto cleanup;
@@ -2526,7 +2522,7 @@ UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
    }
 
    options = m_dataStack->pop();
-   if (options == NULL)
+   if (options == nullptr)
    {
       error(NXSL_ERR_DATA_STACK_UNDERFLOW);
       goto cleanup;
@@ -2554,9 +2550,8 @@ cleanup:
       destroyValue(valueList[j]);
    destroyValue(options);
 
-#if !HAVE_ALLOCA
-   free(addrList);
-#endif
+   MemFreeLocal(addrList);
+   MemFreeLocal(valueList);
 
    return addr;
 }
