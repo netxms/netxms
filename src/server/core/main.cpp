@@ -75,6 +75,7 @@ void CloseAgentTunnels();
 void StopDataCollection();
 void StopObjectMaintenanceThreads();
 bool LoadPhysicalLinks();
+THREAD StartEventProcessor();
 
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -103,7 +104,6 @@ void StopSyslogServer();
 void Syncer();
 void NodePoller();
 void PollManager(CONDITION startCondition);
-void EventProcessor();
 void ClientListenerThread();
 void MobileDeviceListenerThread();
 void ISCListener();
@@ -1147,7 +1147,7 @@ retry_db_lock:
    StartHouseKeeper();
 
    // Start event processor
-   s_eventProcessorThread = ThreadCreateEx(EventProcessor);
+   s_eventProcessorThread = StartEventProcessor();
 
    // Start SNMP trapper
    InitTraps();

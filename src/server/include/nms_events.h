@@ -102,6 +102,7 @@ private:
 	TCHAR *m_customMessage;
 	Array m_parameters;
 	StringList m_parameterNames;
+	int64_t m_queueTime;
 
 	void init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, UINT32 dciId, const TCHAR *tag);
 
@@ -131,6 +132,9 @@ public:
    const StringList *getParameterNames() const { return &m_parameterNames; }
 
    void setSeverity(int severity) { m_severity = severity; }
+
+   int64_t getQueueTime() const { return m_queueTime; }
+   void setQueueTime(int64_t t) { m_queueTime = t; }
 
    uint64_t getRootId() const { return m_rootId; }
    void setRootId(uint64_t id) { m_rootId = id; }
