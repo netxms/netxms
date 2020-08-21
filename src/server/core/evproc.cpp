@@ -337,7 +337,7 @@ void EventProcessingThread::run(int id)
 
    while(true)
    {
-      Event *event = g_eventQueue.getOrBlock();
+      Event *event = queue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -364,9 +364,6 @@ struct EventQueueBinding
 static void ParallelEventProcessor()
 {
    ThreadSetName("EPMaster");
-
-	s_threadLogger = ThreadCreateEx(EventLogger);
-	s_threadStormDetector = ThreadCreateEx(EventStormDetector);
 
 	int poolSize = ConfigReadInt(_T("Events.Processor.PoolSize"), 1);
    TCHAR queueSelector[256];
