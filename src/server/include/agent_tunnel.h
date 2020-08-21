@@ -113,6 +113,7 @@ protected:
    bool m_agentProxy;
    bool m_snmpProxy;
    bool m_snmpTrapProxy;
+   bool m_syslogProxy;
    RefCountHashMap<UINT32, AgentTunnelCommChannel> m_channels;
    MUTEX m_channelLock;
    
@@ -165,6 +166,7 @@ public:
    bool isAgentProxy() const { return m_agentProxy; }
    bool isSnmpProxy() const { return m_snmpProxy; }
    bool isSnmpTrapProxy() const { return m_snmpTrapProxy; }
+   bool isSyslogProxy() const { return m_syslogProxy; }
    bool isUserAgentInstalled() const { return m_userAgentInstalled; }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
@@ -181,5 +183,23 @@ bool SetupServerTlsContext(SSL_CTX *context);
  * Get tunnel for node
  */
 AgentTunnel *GetTunnelForNode(uint32_t nodeId);
+
+/**
+ * Tunnel types
+ */
+enum class TunnelType
+{
+   TOTAL = 0,
+   AGENT_PROXY = 1,
+   SNMP_PROXY = 2,
+   SNMP_TRAP_PROXY = 3,
+   SYSLOG_PROXY = 4,
+   USER_AGENT = 5
+};
+
+/**
+ * Get tunnel type by type
+ */
+int GetTunnelCount(TunnelType type);
 
 #endif

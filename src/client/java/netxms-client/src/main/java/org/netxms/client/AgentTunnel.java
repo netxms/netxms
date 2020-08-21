@@ -47,6 +47,7 @@ public class AgentTunnel
    private boolean snmpProxy;
    private boolean snmpTrapProxy;
    private boolean userAgentInstalled;
+   private boolean syslogProxy;
    
    /**
     * Create from NXCP message
@@ -74,6 +75,7 @@ public class AgentTunnel
       snmpTrapProxy = msg.getFieldAsBoolean(baseId + 15);
       certificateExpirationTime = msg.getFieldAsDate(baseId + 16);
       hardwareId = msg.getFieldAsBinary(baseId + 17);
+      syslogProxy = msg.getFieldAsBoolean(baseId + 18);
    }
    
    /**
@@ -265,6 +267,16 @@ public class AgentTunnel
       return snmpTrapProxy;
    }
 
+   /**
+    * Check if syslog proxy is enabled on this agent
+    * 
+    * @return true if syslog proxy is enabled on this agent
+    */
+   public boolean isSyslogProxy()
+   {
+      return syslogProxy;
+   }
+   
    /**
     * Check if user agent is installed on remote system.
     * 
