@@ -185,11 +185,11 @@ bool SetupServerTlsContext(SSL_CTX *context);
 AgentTunnel *GetTunnelForNode(uint32_t nodeId);
 
 /**
- * Tunnel types
+ * Tunnel capability filter
  */
-enum class TunnelType
+enum class TunnelCapabilityFilter
 {
-   TOTAL = 0,
+   ANY = 0,
    AGENT_PROXY = 1,
    SNMP_PROXY = 2,
    SNMP_TRAP_PROXY = 3,
@@ -200,6 +200,6 @@ enum class TunnelType
 /**
  * Get tunnel type by type
  */
-int GetTunnelCount(TunnelType type);
+int GetTunnelCount(TunnelCapabilityFilter filter);
 
 #endif

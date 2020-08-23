@@ -1666,11 +1666,14 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
    }
 }
 
-int GetTunnelCount(TunnelType type)
+/**
+ * Get number of bound agent tunnels matching given filter
+ */
+int GetTunnelCount(TunnelCapabilityFilter filter)
 {
    int count = 0;
 
-   if(type == TunnelType::TOTAL)
+   if (filter == TunnelCapabilityFilter::ANY)
    {
       s_tunnelListLock.lock();
       count = s_boundTunnels.size();
@@ -1683,11 +1686,11 @@ int GetTunnelCount(TunnelType type)
       while (it->hasNext())
       {
          AgentTunnel *t = it->next();
-         if ((type == TunnelType::AGENT_PROXY && t->isAgentProxy()) ||
-               (type == TunnelType::SNMP_PROXY && t->isSnmpProxy()) ||
-               (type == TunnelType::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||
-               (type == TunnelType::SYSLOG_PROXY && t->isSyslogProxy()) ||
-               (type == TunnelType::USER_AGENT && t->isUserAgentInstalled()))
+         if ((filter == TunnelCapabilityFilter::AGENT_PROXY && t->isAgentProxy()) ||
+               (filter == TunnelCapabilityFilter::SNMP_PROXY && t->isSnmpProxy()) ||
+               (filter == TunnelCapabilityFilter::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||
+               (filter == TunnelCapabilityFilter::SYSLOG_PROXY && t->isSyslogProxy()) ||
+               (filter == TunnelCapabilityFilter::USER_AGENT && t->isUserAgentInstalled()))
          {
             count++;
          }

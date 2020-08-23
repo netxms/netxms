@@ -127,12 +127,12 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
 		{
          list.add(new AgentParameter("Server.ActiveAlarms", "Number of active alarms in the system", DataType.UINT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AgentTunnel.Total", "Total count of boud agent tunnels", DataType.UINT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AgentTunnel.AgentProxy", "Count of boud agent tunnels with enabled agent proxy support", DataType.UINT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AgentTunnel.SnmpProxy", "Count of boud agent tunnels with enabled SNMP proxy support", DataType.UINT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AgentTunnel.SnmpTrapProxy", "Count of boud agent tunnels with enabled SNMP trap proxy support", DataType.UINT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AgentTunnel.Syslog", "Count of boud agent tunnels with enabled agent syslog support", DataType.UINT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AgentTunnel.UserAgent", "Count of boud agent tunnels with user agent installed on them", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AgentTunnels.Total", "Total count of bound agent tunnels", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AgentTunnels.AgentProxy", "Number of bound agent tunnels with enabled agent proxy", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AgentTunnels.SnmpProxy", "Number of bound agent tunnels with enabled SNMP proxy", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AgentTunnels.SnmpTrapProxy", "Number of bound agent tunnels with enabled SNMP trap proxy", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AgentTunnels.SyslogProxy", "Number of bound agent tunnels with enabled syslog proxy", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AgentTunnels.UserAgent", "Number of bound agent tunnels with installed user agent", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageDCIQueuingTime", Messages.get().SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ClientSessions.Authenticated", "Client sessions: authenticated", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ClientSessions.Authenticated(*)", "Client sessions for user {instance}: authenticated", DataType.UINT32)); //$NON-NLS-1$
