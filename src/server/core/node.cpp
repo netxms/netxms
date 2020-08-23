@@ -6406,29 +6406,29 @@ DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, 
       {
          ret_int(buffer, GetAlarmCount());
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnel.Total")))
+      else if (!_tcsicmp(param, _T("Server.AgentTunnels.Total")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelType::TOTAL));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::ANY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnel.AgentProxy")))
+      else if (!_tcsicmp(param, _T("Server.AgentTunnels.AgentProxy")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelType::AGENT_PROXY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::AGENT_PROXY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnel.SnmpProxy")))
+      else if (!_tcsicmp(param, _T("Server.AgentTunnels.SnmpProxy")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelType::SNMP_PROXY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_PROXY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnel.SnmpTrapProxy")))
+      else if (!_tcsicmp(param, _T("Server.AgentTunnels.SnmpTrapProxy")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelType::SNMP_TRAP_PROXY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_TRAP_PROXY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnel.Syslog")))
+      else if (!_tcsicmp(param, _T("Server.AgentTunnels.SyslogProxy")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelType::SYSLOG_PROXY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SYSLOG_PROXY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnel.UserAgent")))
+      else if (!_tcsicmp(param, _T("Server.AgentTunnels.UserAgent")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelType::USER_AGENT));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::USER_AGENT));
       }
       else if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
       {
