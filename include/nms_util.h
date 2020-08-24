@@ -1438,7 +1438,7 @@ private:
 	static void destructor(void *element, Array *array) { }
 
 public:
-	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
+	StructArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
 	StructArray(T *data, int size, int grow = 16) : Array(data, size, grow, sizeof(T)) { m_objectDestructor = destructor; }
 	StructArray(const StructArray<T> *src) : Array(src) { }
 	virtual ~StructArray() { }

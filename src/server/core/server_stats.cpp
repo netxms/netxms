@@ -44,7 +44,8 @@ extern ThreadPool *g_dataCollectorThreadPool;
 extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 
-INT64 GetEventLogWriterQueueSize();
+int64_t GetEventLogWriterQueueSize();
+int64_t GetEventProcessorQueueSize();
 
 /**
  * Internal queue statistic
@@ -87,7 +88,7 @@ inline void AddQueueToCollector(const TCHAR *name, ThreadPool *pool)
 /**
  * Add queue to collector (using callback function)
  */
-inline void AddQueueToCollector(const TCHAR *name, INT64 (*function)())
+inline void AddQueueToCollector(const TCHAR *name, int64_t (*function)())
 {
    Gauge64 *gauge = new GaugeFunction(name, function, QUEUE_STATS_COLLECTION_INTERVAL, QUEUE_STATS_AVERAGE_PERIOD);
    s_queues.set(name, gauge);
@@ -96,7 +97,7 @@ inline void AddQueueToCollector(const TCHAR *name, INT64 (*function)())
 /**
  * Get total size of all DB writer queues
  */
-static INT64 GetTotalDBWriterQueueSize()
+static int64_t GetTotalDBWriterQueueSize()
 {
    return GetIDataWriterQueueSize() + GetRawDataWriterQueueSize() + g_dbWriterQueue.size();
 }
@@ -124,7 +125,7 @@ void ServerStatCollector()
    AddQueueToCollector(_T("DBWriter.RawData"), GetRawDataWriterQueueSize);
    AddQueueToCollector(_T("DBWriter.Total"), GetTotalDBWriterQueueSize);
    AddQueueToCollector(_T("EventLogWriter"), GetEventLogWriterQueueSize);
-   AddQueueToCollector(_T("EventProcessor"), &g_eventQueue);
+   AddQueueToCollector(_T("EventProcessor"), GetEventProcessorQueueSize);
    AddQueueToCollector(_T("NodeDiscoveryPoller"), GetDiscoveryPollerQueueSize);
    AddQueueToCollector(_T("Poller"), g_pollerThreadPool);
    AddQueueToCollector(_T("Scheduler"), g_schedulerThreadPool);
@@ -137,7 +138,7 @@ void ServerStatCollector()
    while(!SleepAndCheckForShutdown(QUEUE_STATS_COLLECTION_INTERVAL))
    {
       s_queuesLock.lock();
-      s_queues.forEach(UpdateGauge, NULL);
+      s_queues.forEach(UpdateGauge, nullptr);
       s_queuesLock.unlock();
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Server statistic collector thread stopped"));

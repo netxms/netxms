@@ -37,7 +37,8 @@ void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
-INT64 GetEventLogWriterQueueSize();
+int64_t GetEventLogWriterQueueSize();
+int64_t GetEventProcessorQueueSize();
 void DiscoveryPoller(PollerInfo *poller);
 void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context);
 void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
@@ -807,6 +808,26 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             ConsoleWrite(pCtx, _T("Invalid subcommand\n"));
          }
       }
+      else if (IsCommand(_T("EP"), szBuffer, 2))
+      {
+         StructArray<EventProcessingThreadStats> *stats = GetEventProcessingThreadStats();
+         if (stats->size() > 0)
+         {
+            ConsoleWrite(pCtx,
+                     _T(" \x1b[1mID\x1b[0m  | \x1b[1mQueue\x1b[0m | \x1b[1mWait time\x1b[0m | \x1b[1mProcessed\x1b[0m\n")
+                     _T("-----+-------+-----------+-----------\n"));
+            for(int i = 0; i < stats->size(); i++)
+            {
+               EventProcessingThreadStats *s = stats->get(i);
+               ConsolePrintf(pCtx, _T(" %-3d | %-5u | %-9u | ") UINT64_FMT _T("\n"), i + 1, s->queueSize, s->averageWaitTime, s->processedEvents);
+            }
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("Parallel event processing is disabled\n"));
+         }
+         delete stats;
+      }
       else if (IsCommand(_T("FDB"), szBuffer, 3))
       {
          // Get argument
@@ -1127,7 +1148,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ShowQueueStats(pCtx, &g_dbWriterQueue, _T("Database writer"));
          ShowQueueStats(pCtx, GetIDataWriterQueueSize(), _T("Database writer (IData)"));
          ShowQueueStats(pCtx, GetRawDataWriterQueueSize(), _T("Database writer (raw DCI values)"));
-         ShowQueueStats(pCtx, &g_eventQueue, _T("Event processor"));
+         ShowQueueStats(pCtx, GetEventProcessorQueueSize(), _T("Event processor"));
          ShowQueueStats(pCtx, GetEventLogWriterQueueSize(), _T("Event log writer"));
          ShowThreadPoolPendingQueue(pCtx, g_pollerThreadPool, _T("Poller"));
          ShowQueueStats(pCtx, GetDiscoveryPollerQueueSize(), _T("Node discovery poller"));
@@ -1610,6 +1631,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show dbcp                         - Show active sessions in database connection pool\n")
             _T("   show dbstats                      - Show DB library statistics\n")
             _T("   show discovery queue              - Show content of network discovery queue\n")
+            _T("   show ep                           - Show event processing threads statistics\n")
             _T("   show fdb <node>                   - Show forwarding database for node\n")
             _T("   show flags                        - Show internal server flags\n")
             _T("   show heap details                 - Show detailed heap information\n")

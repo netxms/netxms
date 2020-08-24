@@ -332,6 +332,16 @@ public:
 };
 
 /**
+ * Stats for event processing thread
+ */
+struct EventProcessingThreadStats
+{
+   uint64_t processedEvents;
+   uint32_t averageWaitTime;
+   uint32_t queueSize;
+};
+
+/**
  * Functions
  */
 bool InitEventSubsystem();
@@ -345,6 +355,7 @@ void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode);
 void CorrelateEvent(Event *event);
 Event *LoadEventFromDatabase(uint64_t eventId);
 Event *FindEventInLoggerQueue(uint64_t eventId);
+StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats();
 
 bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
