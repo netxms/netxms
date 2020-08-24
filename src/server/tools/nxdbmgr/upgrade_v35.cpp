@@ -24,11 +24,23 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 35.11 to 40.0
+ * Upgrade from 35.12 to 40.0
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade form 35.11 to 35.12
  */
 static bool H_UpgradeFromV11()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD cip_vendor_code integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE nodes SET cip_vendor_code=0")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_vendor_code")));
+   CHK_EXEC(SetMinorSchemaVersion(12));
    return true;
 }
 
@@ -384,7 +396,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 11, 40, 0,  H_UpgradeFromV11 },
+   { 12, 40, 0,  H_UpgradeFromV12 },
+   { 11, 35, 12, H_UpgradeFromV11 },
    { 10, 35, 11, H_UpgradeFromV10 },
    { 9,  35, 10, H_UpgradeFromV9  },
    { 8,  35, 9,  H_UpgradeFromV8  },

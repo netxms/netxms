@@ -397,6 +397,7 @@ CREATE TABLE nodes
   cip_device_type integer not null,
   cip_status integer not null,
   cip_state integer not null,
+  cip_vendor_code integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

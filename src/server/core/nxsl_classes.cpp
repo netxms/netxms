@@ -1327,6 +1327,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(CIP_DeviceStateTextFromCode(node->getCipState()));
    }
+   else if (compareAttributeName(attr, "cipVendorCode"))
+   {
+      value = vm->createValue(node->getCipVendorCode());
+   }
    else if (compareAttributeName(attr, "components"))
    {
       shared_ptr<ComponentTree> components = node->getComponents();

@@ -176,6 +176,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    protected String cipExtendedStatusText;
    protected int cipState;
    protected String cipStateText;
+   protected int cipVendorCode;
 
 	/**
 	 * Create new node object.
@@ -272,6 +273,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       cipExtendedStatusText = msg.getFieldAsString(NXCPCodes.VID_CIP_EXT_STATUS_TEXT);
       cipState = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATE);
       cipStateText = msg.getFieldAsString(NXCPCodes.VID_CIP_STATE_TEXT);
+      cipVendorCode = msg.getFieldAsInt32(NXCPCodes.VID_CIP_VENDOR_CODE);
       
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -1193,5 +1195,13 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    public ChassisPlacement getChassisPlacement()
    {
       return chassisPlacement;
+   }
+
+   /**
+    * @return the cipVendorCode
+    */
+   public int getCipVendorCode()
+   {
+      return cipVendorCode;
    }
 }

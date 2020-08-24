@@ -2857,6 +2857,7 @@ protected:
    uint16_t m_cipDeviceType;
    uint16_t m_cipStatus;
    uint16_t m_cipState;
+   uint16_t m_cipVendorCode;
    //SNMP trap statistic variables
    time_t m_snmpTrapLastCheckTime;
    int64_t m_snmpTrapLastTotal;
@@ -3050,6 +3051,7 @@ public:
    uint16_t getCipDeviceType() const { return m_cipDeviceType; }
    uint16_t getCipStatus() const { return m_cipStatus; }
    uint16_t getCipState() const { return m_cipState; }
+   uint16_t getCipVendorCode() const { return m_cipVendorCode; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
    time_t getDownSince() const { return m_downSince; }

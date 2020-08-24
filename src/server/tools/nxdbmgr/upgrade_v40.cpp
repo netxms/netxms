@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.6 to 40.7
+ */
+static bool H_UpgradeFromV6()
+{
+   if (GetSchemaLevelForMajorVersion(35) < 12)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD cip_vendor_code integer")));
+      CHK_EXEC(SQLQuery(_T("UPDATE nodes SET cip_vendor_code=0")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_vendor_code")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 40.5 to 40.6
  */
 static bool H_UpgradeFromV5()
@@ -191,6 +206,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 6,  40, 7,  H_UpgradeFromV6  },
    { 5,  40, 6,  H_UpgradeFromV5  },
    { 4,  40, 5,  H_UpgradeFromV4  },
    { 3,  40, 4,  H_UpgradeFromV3  },
