@@ -36,6 +36,7 @@ import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -63,6 +64,9 @@ public class ShowObjectEvents extends AbstractHandler
          if (!(o instanceof AbstractObject))
             continue;
          cf.addSubFilter(new ColumnFilter((o instanceof AbstractNode) ? ColumnFilterType.EQUALS : ColumnFilterType.CHILDOF, ((AbstractObject)o).getObjectId()));
+         if (o instanceof Cluster)
+            cf.addSubFilter(new ColumnFilter(ColumnFilterType.EQUALS, ((AbstractObject)o).getObjectId()));
+            
       }
       
       try
