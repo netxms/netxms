@@ -1103,7 +1103,7 @@ void NodePoller()
 /**
  * Get total size of discovery poller queue (all stages)
  */
-INT64 GetDiscoveryPollerQueueSize()
+int64_t GetDiscoveryPollerQueueSize()
 {
    int poolQueueSize;
    if (g_discoveryThreadPool != nullptr)

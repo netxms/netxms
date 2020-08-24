@@ -1159,7 +1159,7 @@ bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *la
 void CheckForMgmtNode();
 void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId);
 shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData);
-INT64 GetDiscoveryPollerQueueSize();
+int64_t GetDiscoveryPollerQueueSize();
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession*, void*), void *context);
 template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession *, C *), C *context)

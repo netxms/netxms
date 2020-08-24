@@ -59,7 +59,7 @@ Array::Array(int initial, int grow, Ownership owner, void (*objectDestructor)(vo
  */
 Array::Array(void *data, int initial, int grow, size_t elementSize)
 {
-   m_size = (data != NULL) ? initial : 0;
+   m_size = (data != nullptr) ? initial : 0;
    m_grow = (grow > 0) ? grow : 16;
    m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = elementSize;

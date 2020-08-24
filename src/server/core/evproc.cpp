@@ -314,11 +314,13 @@ struct EventProcessingThread
    ObjectQueue<Event> queue;
    THREAD thread;
    int64_t averageWaitTime;
+   uint64_t processedEvents;
 
    EventProcessingThread() : queue(4096, Ownership::True)
    {
       thread = INVALID_THREAD_HANDLE;
       averageWaitTime = 0;
+      processedEvents = 0;
    }
 
    void run(int id);
@@ -343,6 +345,7 @@ void EventProcessingThread::run(int id)
 
       UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, GetCurrentTimeMs() - event->getQueueTime());
       ProcessEvent(event, id);
+      processedEvents++;
    }
 }
 
@@ -359,6 +362,12 @@ struct EventQueueBinding
 };
 
 /**
+ * Event processing threads
+ */
+static EventProcessingThread *s_processingThreads = nullptr;
+static int s_processingThreadCount = 0;
+
+/**
  * Event processing thread for parallel processing
  */
 static void ParallelEventProcessor()
@@ -373,9 +382,10 @@ static void ParallelEventProcessor()
    EventQueueBinding *queueBindings = nullptr;
    ObjectMemoryPool<EventQueueBinding> memoryPool(1024);
 
-   auto processingThreads = new EventProcessingThread[poolSize];
+   s_processingThreads = new EventProcessingThread[poolSize];
    for(int i = 0; i < poolSize; i++)
-      processingThreads[i].thread = ThreadCreateEx(&processingThreads[i], &EventProcessingThread::run, i + 1);
+      s_processingThreads[i].thread = ThreadCreateEx(&s_processingThreads[i], &EventProcessingThread::run, i + 1);
+   s_processingThreadCount = poolSize;
 
    time_t lastCleanupTime = time(nullptr);
 
@@ -414,7 +424,7 @@ static void ParallelEventProcessor()
          int bestIndex = 0;
          for(int i = 0; (i < poolSize) && (bestWaitTime > 0); i++)
          {
-            uint32_t waitTime = processingThreads[i].getAverageWaitTime();
+            uint32_t waitTime = s_processingThreads[i].getAverageWaitTime();
             if (waitTime < bestWaitTime)
             {
                bestWaitTime = waitTime;
@@ -426,7 +436,7 @@ static void ParallelEventProcessor()
          memset(qb, 0, sizeof(EventQueueBinding));
          qb->keyLength = keyLen;
          memcpy(qb->key, keyBytes, keyLen);
-         qb->queue = &processingThreads[bestIndex].queue;
+         qb->queue = &s_processingThreads[bestIndex].queue;
          HASH_ADD_KEYPTR(hh, queueBindings, qb->key, keyLen, qb);
       }
       qb->lastUse = now;
@@ -454,10 +464,11 @@ static void ParallelEventProcessor()
 
    for(int i = 0; i < poolSize; i++)
    {
-      processingThreads[i].queue.put(INVALID_POINTER_VALUE);
-      ThreadJoin(processingThreads[i].thread);
+      s_processingThreads[i].queue.put(INVALID_POINTER_VALUE);
+      ThreadJoin(s_processingThreads[i].thread);
    }
-   delete[] processingThreads;
+   s_processingThreadCount = 0;
+   delete[] s_processingThreads;
    HASH_CLEAR(hh, queueBindings);
 
 	s_loggerQueue.put(INVALID_POINTER_VALUE);
@@ -474,6 +485,34 @@ THREAD StartEventProcessor()
    s_threadLogger = ThreadCreateEx(EventLogger);
    s_threadStormDetector = ThreadCreateEx(EventStormDetector);
    return (ConfigReadInt(_T("Events.Processor.PoolSize"), 1) > 1) ? ThreadCreateEx(ParallelEventProcessor) : ThreadCreateEx(SerialEventProcessor);
+}
+
+/**
+ * Get size of event processor queue
+ */
+int64_t GetEventProcessorQueueSize()
+{
+   int64_t size = g_eventQueue.size();
+   for(int i = 0; i < s_processingThreadCount; i++)
+      size += s_processingThreads[i].queue.size();
+   return size;
+}
+
+/**
+ * Get stats for event processing threads. Returned array should be deleted by caller.
+ */
+StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats()
+{
+   auto stats = new StructArray<EventProcessingThreadStats>(s_processingThreadCount);
+   for(int i = 0; i < s_processingThreadCount; i++)
+   {
+      EventProcessingThreadStats s;
+      s.processedEvents = s_processingThreads[i].processedEvents;
+      s.averageWaitTime = s_processingThreads[i].getAverageWaitTime();
+      s.queueSize = s_processingThreads[i].queue.size();
+      stats->add(&s);
+   }
+   return stats;
 }
 
 /**
@@ -504,7 +543,7 @@ Event *FindEventInLoggerQueue(uint64_t eventId)
 /**
  * Get size of event log writer queue
  */
-INT64 GetEventLogWriterQueueSize()
+int64_t GetEventLogWriterQueueSize()
 {
    return s_loggerQueue.size();
 }

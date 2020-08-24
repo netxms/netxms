@@ -80,7 +80,7 @@ static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, Rout
  */
 RoutingTable *SnmpGetRoutingTable(SNMP_Transport *pTransport)
 {
-   RoutingTable *routingTable = new RoutingTable(64, 64);
+   RoutingTable *routingTable = new RoutingTable(0, 64);
    if (routingTable == nullptr)
       return nullptr;
 
