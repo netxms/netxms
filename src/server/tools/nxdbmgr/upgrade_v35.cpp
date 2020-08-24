@@ -24,6 +24,18 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 35.11 to 35.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD cip_vendor_code integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE nodes SET cip_vendor_code=0")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_vendor_code")));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 35.10 to 35.11
  */
 static bool H_UpgradeFromV10()
@@ -375,6 +387,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 11, 35, 12, H_UpgradeFromV11 },
    { 10, 35, 11, H_UpgradeFromV10 },
    { 9,  35, 10, H_UpgradeFromV9  },
    { 8,  35, 9,  H_UpgradeFromV8  },

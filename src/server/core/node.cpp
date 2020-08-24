@@ -180,6 +180,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_cipDeviceType = 0;
    m_cipState = 0;
    m_cipStatus = 0;
+   m_cipVendorCode = 0;
    m_snmpTrapLastCheckTime = 0;
    m_snmpTrapLastTotal = 0;
    m_snmpTrapActualDuration = 0;
@@ -300,6 +301,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_cipDeviceType = 0;
    m_cipState = 0;
    m_cipStatus = 0;
+   m_cipVendorCode = 0;
    m_snmpTrapLastCheckTime = 0;
    m_snmpTrapLastTotal = 0;
    m_snmpTrapActualDuration = 0;
@@ -381,7 +383,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("hypervisor_type,hypervisor_info,icmp_poll_mode,chassis_placement_config,")
       _T("vendor,product_code,product_name,product_version,serial_number,")
       _T("cip_device_type,cip_status,cip_state,eip_proxy,eip_port,")
-      _T("hardware_id FROM nodes WHERE id=?"));
+      _T("hardware_id,cip_vendor_code FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -527,6 +529,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    BYTE hardwareId[HARDWARE_ID_LENGTH];
    DBGetFieldByteArray2(hResult, 0, 68, hardwareId, HARDWARE_ID_LENGTH, 0);
    m_hardwareId = NodeHardwareId(hardwareId);
+   m_cipVendorCode = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 69));
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -856,7 +859,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
-         _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"),
+         _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
          nullptr
       };
 
@@ -958,7 +961,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_eipProxy);
          DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_eipPort);
          DBBind(hStmt, 69, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
-         DBBind(hStmt, 70, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 70, DB_SQLTYPE_INTEGER, m_cipVendorCode);
+         DBBind(hStmt, 71, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -4277,6 +4281,12 @@ bool Node::confPollEthernetIP(uint32_t requestId)
          sendPollerMsg(requestId, POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
       }
 
+      if (m_cipVendorCode != identity->vendor)
+      {
+         m_cipVendorCode = identity->vendor;
+         hasChanges = true;
+      }
+
       if (_tcscmp(m_vendor, vendorName))
       {
          m_vendor = vendorName;
@@ -6851,6 +6861,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       pMsg->setField(VID_CIP_EXT_STATUS_TEXT, CIP_DecodeExtendedDeviceStatus(m_cipStatus));
       pMsg->setField(VID_CIP_STATE, m_cipState);
       pMsg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(static_cast<uint8_t>(m_cipState)));
+      pMsg->setField(VID_CIP_VENDOR_CODE, m_cipVendorCode);
    }
 }
 
