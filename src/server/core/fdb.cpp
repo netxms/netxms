@@ -184,7 +184,7 @@ void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
    ConsolePrintf(ctx, _T("\n%d entries\n\n"), m_fdbSize);
 }
 
-String ForwardingDatabase::interfaceIndexToName(shared_ptr<NetObj> node, uint32_t index)
+String ForwardingDatabase::interfaceIndexToName(const shared_ptr<NetObj>& node, uint32_t index)
 {
    StringBuffer name;
    shared_ptr<Interface> iface = (node != nullptr) ? static_cast<Node*>(node.get())->findInterfaceByIndex(index) : shared_ptr<Interface>();
@@ -253,7 +253,7 @@ Table *ForwardingDatabase::getAsTable()
    result->addColumn(_T("ZONE_NAME"), DCI_DT_STRING, _T("Zone name"));
    result->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
 
-   shared_ptr<NetObj> node = FindObjectById(m_nodeId, OBJECT_NODE);
+   shared_ptr<NetObj> sourceNode = FindObjectById(m_nodeId, OBJECT_NODE);
    for(int i = 0; i < m_fdbSize; i++)
    {
       result->addRow();
@@ -262,7 +262,7 @@ Table *ForwardingDatabase::getAsTable()
       result->set(0, MACToStr(m_fdb[i].macAddr, mac));
       result->set(1, m_fdb[i].port);
       result->set(2, m_fdb[i].ifIndex);
-      result->set(3, interfaceIndexToName(node, m_fdb[i].ifIndex));
+      result->set(3, interfaceIndexToName(sourceNode, m_fdb[i].ifIndex));
       result->set(4, m_fdb[i].vlanId);
       result->set(5, m_fdb[i].nodeObject);
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_fdb[i].nodeObject, OBJECT_NODE));
