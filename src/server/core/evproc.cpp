@@ -315,12 +315,14 @@ struct EventProcessingThread
    THREAD thread;
    int64_t averageWaitTime;
    uint64_t processedEvents;
+   uint32_t bindings;
 
    EventProcessingThread() : queue(4096, Ownership::True)
    {
       thread = INVALID_THREAD_HANDLE;
       averageWaitTime = 0;
       processedEvents = 0;
+      bindings = 0;
    }
 
    void run(int id);
@@ -359,6 +361,7 @@ struct EventQueueBinding
    char key[128];
    ObjectQueue<Event> *queue;
    time_t lastUse;
+   int processingThread;
 };
 
 /**
@@ -386,6 +389,7 @@ static void ParallelEventProcessor()
    for(int i = 0; i < poolSize; i++)
       s_processingThreads[i].thread = ThreadCreateEx(&s_processingThreads[i], &EventProcessingThread::run, i + 1);
    s_processingThreadCount = poolSize;
+   int *weights = static_cast<int*>(MemAllocLocal(sizeof(int) * poolSize));
 
    time_t lastCleanupTime = time(nullptr);
 
@@ -420,24 +424,45 @@ static void ParallelEventProcessor()
       if (qb == nullptr)
       {
          // Select less loaded queue
-         uint32_t bestWaitTime = 0xFFFFFFFF;
-         int bestIndex = 0;
-         for(int i = 0; (i < poolSize) && (bestWaitTime > 0); i++)
+         memset(weights, 0, sizeof(int) * poolSize);
+         for(int i = 0; i < poolSize; i++)
          {
             uint32_t waitTime = s_processingThreads[i].getAverageWaitTime();
-            if (waitTime < bestWaitTime)
-            {
-               bestWaitTime = waitTime;
-               bestIndex = i;
-            }
+            if (waitTime == 0)
+               weights[i]++;
+            else
+               weights[i] -= waitTime / 100 + 1;
+
+            uint32_t size = s_processingThreads[i].queue.size();
+            if (size == 0)
+               weights[i] += 2;
+            else
+               weights[i] -= size / 100 + 1;
+
+            uint32_t load = s_processingThreads[i].bindings;
+            if (load == 0)
+               weights[i] += 100;
+            else
+               weights[i] -= load / 10;
          }
+
+         int selectedThread = 0;
+         int bestWeight = INT_MIN;
+         for(int i = 0; i < poolSize; i++)
+            if (weights[i] > bestWeight)
+            {
+               bestWeight = weights[i];
+               selectedThread = i;
+            }
 
          qb = memoryPool.allocate();
          memset(qb, 0, sizeof(EventQueueBinding));
          qb->keyLength = keyLen;
          memcpy(qb->key, keyBytes, keyLen);
-         qb->queue = &s_processingThreads[bestIndex].queue;
+         qb->queue = &s_processingThreads[selectedThread].queue;
+         qb->processingThread = selectedThread;
          HASH_ADD_KEYPTR(hh, queueBindings, qb->key, keyLen, qb);
+         s_processingThreads[selectedThread].bindings++;
       }
       qb->lastUse = now;
       event->setQueueTime(GetCurrentTimeMs());
@@ -453,6 +478,7 @@ static void ParallelEventProcessor()
          {
             if (curr->lastUse < now - 300)
             {
+               s_processingThreads[curr->processingThread].bindings--;
                HASH_DEL(queueBindings, curr);
                memoryPool.free(curr);
             }
@@ -470,6 +496,7 @@ static void ParallelEventProcessor()
    s_processingThreadCount = 0;
    delete[] s_processingThreads;
    HASH_CLEAR(hh, queueBindings);
+   MemFreeLocal(weights);
 
 	s_loggerQueue.put(INVALID_POINTER_VALUE);
 	ThreadJoin(s_threadStormDetector);
@@ -510,6 +537,7 @@ StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats()
       s.processedEvents = s_processingThreads[i].processedEvents;
       s.averageWaitTime = s_processingThreads[i].getAverageWaitTime();
       s.queueSize = s_processingThreads[i].queue.size();
+      s.bindings = s_processingThreads[i].bindings;
       stats->add(&s);
    }
    return stats;

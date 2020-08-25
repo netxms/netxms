@@ -339,6 +339,7 @@ struct EventProcessingThreadStats
    uint64_t processedEvents;
    uint32_t averageWaitTime;
    uint32_t queueSize;
+   uint32_t bindings;
 };
 
 /**
