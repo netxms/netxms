@@ -184,6 +184,37 @@ void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
    ConsolePrintf(ctx, _T("\n%d entries\n\n"), m_fdbSize);
 }
 
+String ForwardingDatabase::interfaceIndexToName(shared_ptr<NetObj> node, uint32_t index)
+{
+   StringBuffer name;
+   shared_ptr<Interface> iface = (node != nullptr) ? static_cast<Node*>(node.get())->findInterfaceByIndex(index) : shared_ptr<Interface>();
+   if (iface != nullptr)
+   {
+     if (iface->getParentInterfaceId() != 0)
+     {
+        shared_ptr<Interface> parentIface = static_pointer_cast<Interface>(FindObjectById(iface->getParentInterfaceId(), OBJECT_INTERFACE));
+        if ((parentIface != nullptr) &&
+            ((parentIface->getIfType() == IFTYPE_ETHERNET_CSMACD) || (parentIface->getIfType() == IFTYPE_IEEE8023ADLAG)))
+        {
+           name = parentIface->getName();
+        }
+        else
+        {
+           name = iface->getName();
+        }
+     }
+     else
+     {
+        name = iface->getName();
+     }
+   }
+   else
+   {
+      name.appendFormattedString(_T("[%d]"), index);
+   }
+   return name;
+}
+
 /**
  * Fill NXCP message with FDB data
  */
@@ -200,35 +231,65 @@ void ForwardingDatabase::fillMessage(NXCPMessage *msg)
       msg->setField(fieldId++, m_fdb[i].nodeObject);
       msg->setField(fieldId++, m_fdb[i].vlanId);
       msg->setField(fieldId++, m_fdb[i].type);
-      shared_ptr<Interface> iface = (node != nullptr) ? static_cast<Node*>(node.get())->findInterfaceByIndex(m_fdb[i].ifIndex) : shared_ptr<Interface>();
-      if (iface != nullptr)
+      msg->setField(fieldId++, interfaceIndexToName(node, m_fdb[i].ifIndex));
+      fieldId += 3;
+   }
+}
+
+/**
+ * Get Table filled with switch forwarding database information
+ */
+Table *ForwardingDatabase::getAsTable()
+{
+   Table *result = new Table();
+   result->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("Mac address"), true);
+   result->addColumn(_T("PORT"), DCI_DT_UINT, _T("Port"));
+   result->addColumn(_T("IF_INDEX"), DCI_DT_UINT, _T("Interface index"));
+   result->addColumn(_T("IF_NAME"), DCI_DT_STRING, _T("Interface name"));
+   result->addColumn(_T("VLAN"), DCI_DT_UINT, _T("VLAN"));
+   result->addColumn(_T("NODE_ID"), DCI_DT_UINT, _T("Node id"));
+   result->addColumn(_T("NODE_NAME"), DCI_DT_STRING, _T("Node name"));
+   result->addColumn(_T("ZONE_UIN"), DCI_DT_INT, _T("Zone UIN"));
+   result->addColumn(_T("ZONE_NAME"), DCI_DT_STRING, _T("Zone name"));
+   result->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
+
+   shared_ptr<NetObj> node = FindObjectById(m_nodeId, OBJECT_NODE);
+   for(int i = 0; i < m_fdbSize; i++)
+   {
+      result->addRow();
+
+      TCHAR mac[64];
+      result->set(0, MACToStr(m_fdb[i].macAddr, mac));
+      result->set(1, m_fdb[i].port);
+      result->set(2, m_fdb[i].ifIndex);
+      result->set(3, interfaceIndexToName(node, m_fdb[i].ifIndex));
+      result->set(4, m_fdb[i].vlanId);
+      result->set(5, m_fdb[i].nodeObject);
+      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_fdb[i].nodeObject, OBJECT_NODE));
+      if (node != nullptr)
       {
-         if (iface->getParentInterfaceId() != 0)
+         result->set(6, node->getName());
+         result->set(7, node->getZoneUIN());
+         shared_ptr<Zone> zone = FindZoneByUIN(node->getZoneUIN());
+         if (zone != nullptr)
          {
-            shared_ptr<Interface> parentIface = static_pointer_cast<Interface>(FindObjectById(iface->getParentInterfaceId(), OBJECT_INTERFACE));
-            if ((parentIface != nullptr) &&
-                ((parentIface->getIfType() == IFTYPE_ETHERNET_CSMACD) || (parentIface->getIfType() == IFTYPE_IEEE8023ADLAG)))
-            {
-               msg->setField(fieldId++, parentIface->getName());
-            }
-            else
-            {
-               msg->setField(fieldId++, iface->getName());
-            }
+            result->set(8, zone->getName());
          }
          else
          {
-            msg->setField(fieldId++, iface->getName());
+            result->set(8, _T(""));
          }
       }
       else
       {
-         TCHAR buffer[32];
-         _sntprintf(buffer, 32, _T("[%d]"), m_fdb[i].ifIndex);
-         msg->setField(fieldId++, buffer);
+         result->set(6, _T(""));
+         result->set(7, _T(""));
+         result->set(8, _T(""));
       }
-      fieldId += 3;
+      result->set(9, (m_fdb[i].type) == 3 ? _T("Dynamic") : ((m_fdb[i].type == 5) ? _T("Static") : _T("Unknown")));
    }
+
+   return result;
 }
 
 /**

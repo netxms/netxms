@@ -10,7 +10,7 @@
 - Added Hook::UnboundTunnelOpened and Hook::BoundTunnelOpened NXSL hooks
 - Added per node trap flood detection
 - New event processing macros %z (zone UIN) and %Z (zone name)
-- Added Topology.WirelessStations internal table metric
+- Added Topology.WirelessStations and Topology.SwitchForwardingDatabase internal table metrics
 - Option to disable reading of Windows performance counters metadata on configuration poll
 - Wildcards in nxdbmgr "get" command
 - Fixed issues:
