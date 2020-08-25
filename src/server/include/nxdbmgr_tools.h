@@ -68,13 +68,14 @@ void LIBNXDBMGR_EXPORTABLE SetOperationInProgress(bool inProgress);
 // Config and metadata API
 bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStr(const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue);
 bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStrEx(DB_HANDLE hdb, const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue);
-INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32(const TCHAR *variable, INT32 defaultValue);
-INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32Ex(DB_HANDLE hdb, const TCHAR *variable, INT32 defaultValue);
+int32_t LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32(const TCHAR *variable, int32_t defaultValue);
+int32_t LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32Ex(DB_HANDLE hdb, const TCHAR *variable, int32_t defaultValue);
 bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TCHAR *value);
-bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const TCHAR *variable, INT32 value);
+bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const TCHAR *variable, int32_t value);
 bool LIBNXDBMGR_EXPORTABLE DBMgrConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue);
-INT32 LIBNXDBMGR_EXPORTABLE DBMgrConfigReadInt32(const TCHAR *variable, INT32 defaultValue);
-UINT32 LIBNXDBMGR_EXPORTABLE DBMgrConfigReadUInt32(const TCHAR *variable, UINT32 defaultValue);
+int32_t LIBNXDBMGR_EXPORTABLE DBMgrConfigReadInt32(const TCHAR *variable, int32_t defaultValue);
+uint32_t LIBNXDBMGR_EXPORTABLE DBMgrConfigReadUInt32(const TCHAR *variable, uint32_t defaultValue);
+StringMap LIBNXDBMGR_EXPORTABLE *DBMgrGetConfigurationVariables(const TCHAR *pattern);
 
 // Upgrade tools
 bool LIBNXDBMGR_EXPORTABLE GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR *guidColumn, const GUID_MAPPING *mapping);

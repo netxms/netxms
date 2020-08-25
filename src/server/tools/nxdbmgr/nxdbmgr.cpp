@@ -228,6 +228,34 @@ static const char *SelectDatabaseType(const char *driver)
 }
 
 /**
+ * Print configuration variable(s)
+ */
+static void PrintConfig(const TCHAR *pattern)
+{
+   StringMap *variables = DBMgrGetConfigurationVariables(pattern);
+   if (variables == nullptr)
+   {
+      _tprintf(_T("Error reading configuration variables from database\n"));
+      return;
+   }
+
+   int flen = 0;
+   auto it = variables->iterator();
+   while(it->hasNext())
+      flen = std::max(flen, static_cast<int>(_tcslen(it->next()->first)));
+   delete it;
+
+   it = variables->iterator();
+   while(it->hasNext())
+   {
+      auto v = it->next();
+      _tprintf(_T("%*s = %s\n"), -flen, v->first, v->second);
+   }
+   delete it;
+   delete variables;
+}
+
+/**
  * Startup
  */
 int main(int argc, char *argv[])
@@ -659,7 +687,7 @@ stop_search:
       else if (!strcmp(argv[optind], "migrate"))
 		{
 #ifdef UNICODE
-			WCHAR *sourceConfig = WideStringFromMBString(argv[optind + 1]);
+			WCHAR *sourceConfig = WideStringFromMBStringSysLocale(argv[optind + 1]);
 #else
 			char *sourceConfig = argv[optind + 1];
 #endif
@@ -673,13 +701,11 @@ stop_search:
       else if (!strcmp(argv[optind], "get"))
 		{
 #ifdef UNICODE
-			WCHAR *var = WideStringFromMBString(argv[optind + 1]);
+			WCHAR *var = WideStringFromMBStringSysLocale(argv[optind + 1]);
 #else
 			char *var = argv[optind + 1];
 #endif
-			TCHAR buffer[MAX_CONFIG_VALUE];
-			DBMgrConfigReadStr(var, buffer, MAX_CONFIG_VALUE, _T(""));
-			_tprintf(_T("%s\n"), buffer);
+			PrintConfig(var);
 #ifdef UNICODE
 			MemFree(var);
 #endif
@@ -687,8 +713,8 @@ stop_search:
       else if (!strcmp(argv[optind], "set"))
 		{
 #ifdef UNICODE
-			WCHAR *var = WideStringFromMBString(argv[optind + 1]);
-			WCHAR *value = WideStringFromMBString(argv[optind + 2]);
+			WCHAR *var = WideStringFromMBStringSysLocale(argv[optind + 1]);
+			WCHAR *value = WideStringFromMBStringSysLocale(argv[optind + 2]);
 #else
 			char *var = argv[optind + 1];
 			char *value = argv[optind + 2];

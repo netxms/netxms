@@ -59,7 +59,7 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStrEx(DB_HANDLE hdb, const TCHAR *va
 /**
  * Read integer value from configuration table
  */
-INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32(const TCHAR *variable, INT32 defaultValue)
+int32_t LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32(const TCHAR *variable, int32_t defaultValue)
 {
    return DBMgrMetaDataReadInt32Ex(g_dbHandle, variable, defaultValue);
 }
@@ -67,7 +67,7 @@ INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32(const TCHAR *variable, INT32 
 /**
  * Read integer value from configuration table
  */
-INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32Ex(DB_HANDLE hdb, const TCHAR *variable, INT32 defaultValue)
+int32_t LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32Ex(DB_HANDLE hdb, const TCHAR *variable, int32_t defaultValue)
 {
    TCHAR szBuffer[64];
    if (DBMgrMetaDataReadStrEx(hdb, variable, szBuffer, 64, _T("")))
@@ -122,7 +122,7 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TC
 /**
  * Write integer value to metadata table
  */
-bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const TCHAR *variable, INT32 value)
+bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const TCHAR *variable, int32_t value)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, _T("%d"), value);
@@ -160,7 +160,7 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrConfigReadStr(const TCHAR *variable, TCHAR *buff
 /**
  * Read integer value from configuration table
  */
-INT32 LIBNXDBMGR_EXPORTABLE DBMgrConfigReadInt32(const TCHAR *variable, INT32 defaultValue)
+int32_t LIBNXDBMGR_EXPORTABLE DBMgrConfigReadInt32(const TCHAR *variable, int32_t defaultValue)
 {
    TCHAR buffer[64];
    if (DBMgrConfigReadStr(variable, buffer, 64, _T("")))
@@ -172,11 +172,41 @@ INT32 LIBNXDBMGR_EXPORTABLE DBMgrConfigReadInt32(const TCHAR *variable, INT32 de
 /**
  * Read unsigned long value from configuration table
  */
-UINT32 LIBNXDBMGR_EXPORTABLE DBMgrConfigReadUInt32(const TCHAR *variable, UINT32 defaultValue)
+uint32_t LIBNXDBMGR_EXPORTABLE DBMgrConfigReadUInt32(const TCHAR *variable, uint32_t defaultValue)
 {
    TCHAR buffer[64];
    if (DBMgrConfigReadStr(variable, buffer, 64, _T("")))
       return _tcstoul(buffer, NULL, 0);
    else
       return defaultValue;
+}
+
+/**
+ * Read all configuration variables that match specific pattern
+ */
+StringMap LIBNXDBMGR_EXPORTABLE *DBMgrGetConfigurationVariables(const TCHAR *pattern)
+{
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("SELECT var_name,var_value FROM config WHERE var_name LIKE ? ORDER BY var_name"));
+   if (hStmt == nullptr)
+      return nullptr;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, pattern, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+   {
+      DBFreeStatement(hStmt);
+      return nullptr;
+   }
+
+   StringMap *variables = new StringMap();
+   int count = DBGetNumRows(hResult);
+   for (int i = 0; i < count; i++)
+   {
+      variables->setPreallocated(DBGetField(hResult, i, 0, nullptr, 0), DBGetField(hResult, i, 1, nullptr, 0));
+   }
+
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   return variables;
 }
