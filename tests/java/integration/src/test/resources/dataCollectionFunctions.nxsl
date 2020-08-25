@@ -43,8 +43,10 @@ val = GetAvgDCIValue(preCreatedNode, dciId, 0, period1Time);
 println "GetAvgDCIValue(should be 19): " . val;
 assert(val == 19);
 val = GetAvgDCIValue(preCreatedNode, dciId, startTime, period1Time);
+println "GetAvgDCIValue(should be 19): " . val;
 assert(val == 19);
 val = GetAvgDCIValue(preCreatedNode, dciId, period1Time, time());
+println "GetAvgDCIValue(should be 1.5): " . val;
 assert(val == 1.5);
 
 val = GetMaxDCIValue(preCreatedNode, dciId, 0, period1Time);
