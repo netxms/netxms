@@ -10237,7 +10237,7 @@ void ClientSession::sendNotification(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_systemAccessRights & SYSTEM_ACCESS_SEND_NOTIFICATION) && ConfigReadBoolean(_T("AllowDirectNotifications"), false))
+	if ((m_systemAccessRights & SYSTEM_ACCESS_SEND_NOTIFICATION))
 	{
 	   pRequest->getFieldAsString(VID_CHANNEL_NAME, channelName, MAX_OBJECT_NAME);
 	   if (IsNotificationChannelExists(channelName))
