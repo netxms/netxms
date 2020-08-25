@@ -130,6 +130,7 @@ private:
 	uint16_t m_currentVlanId;
 
 	uint32_t ifIndexFromPort(uint32_t port);
+	static String interfaceIndexToName(shared_ptr<NetObj> node, uint32_t index);
 
 public:
 	ForwardingDatabase(uint32_t nodeId);
@@ -153,6 +154,7 @@ public:
 
    void print(CONSOLE_CTX ctx, Node *owner);
    void fillMessage(NXCPMessage *msg);
+   Table *getAsTable();
 };
 
 /**

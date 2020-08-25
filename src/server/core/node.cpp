@@ -6160,11 +6160,30 @@ DataCollectionError Node::getInternalTable(const TCHAR *param, Table **result)
       return rc;
    rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(param, _T("Topology.WirelessStations")))
+   if (!_tcsicmp(param, _T("Topology.SwitchForwardingDatabase")))
+   {
+      ForwardingDatabase *fdb = getSwitchForwardingDatabase();
+      if (fdb != nullptr)
+      {
+         *result = fdb->getAsTable();
+         fdb->decRefCount();
+      }
+      else if (isBridge())
+         rc = DCE_COLLECTION_ERROR;
+      else
+         rc = DCE_NOT_SUPPORTED;
+
+   }
+   else if (!_tcsicmp(param, _T("Topology.WirelessStations")))
    {
       *result = wsListAsTable();
       if (*result == nullptr)
-         rc = DCE_NOT_SUPPORTED;
+      {
+         if(isWirelessController())
+            rc = DCE_COLLECTION_ERROR;
+         else
+            rc = DCE_NOT_SUPPORTED;
+      }
    }
    else
    {

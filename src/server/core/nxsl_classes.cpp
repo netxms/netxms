@@ -1180,6 +1180,34 @@ NXSL_METHOD_DEFINITION(Node, readDriverParameter)
 }
 
 /**
+ * Node::readInternalParameter(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readInternalParameter)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalMetric(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::readInternalTable(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readInternalTable)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Table *table;
+   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalTable(argv[0]->getValueAsCString(), &table);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
+   return 0;
+}
+
+/**
  * Node::readWebServiceParameter(name) method
  */
 NXSL_METHOD_DEFINITION(Node, readWebServiceParameter)
@@ -1236,6 +1264,8 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, readAgentParameter, 1);
    NXSL_REGISTER_METHOD(Node, readAgentTable, 1);
    NXSL_REGISTER_METHOD(Node, readDriverParameter, 1);
+   NXSL_REGISTER_METHOD(Node, readInternalParameter, 1);
+   NXSL_REGISTER_METHOD(Node, readInternalTable, 1);
    NXSL_REGISTER_METHOD(Node, readWebServiceList, 1);
    NXSL_REGISTER_METHOD(Node, readWebServiceParameter, 1);
 }
