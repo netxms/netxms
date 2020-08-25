@@ -814,12 +814,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if (stats->size() > 0)
          {
             ConsoleWrite(pCtx,
-                     _T(" \x1b[1mID\x1b[0m  | \x1b[1mQueue\x1b[0m | \x1b[1mWait time\x1b[0m | \x1b[1mProcessed\x1b[0m\n")
-                     _T("-----+-------+-----------+-----------\n"));
+                     _T(" \x1b[1mID\x1b[0m  | \x1b[1mQueue\x1b[0m | \x1b[1mBindings\x1b[0m | \x1b[1mWait time\x1b[0m | \x1b[1mProcessed\x1b[0m\n")
+                     _T("-----+-------+----------+-----------+-----------\n"));
             for(int i = 0; i < stats->size(); i++)
             {
                EventProcessingThreadStats *s = stats->get(i);
-               ConsolePrintf(pCtx, _T(" %-3d | %-5u | %-9u | ") UINT64_FMT _T("\n"), i + 1, s->queueSize, s->averageWaitTime, s->processedEvents);
+               ConsolePrintf(pCtx, _T(" %-3d | %-5u | %-8u | %-9u | ") UINT64_FMT _T("\n"),
+                        i + 1, s->queueSize, s->bindings, s->averageWaitTime, s->processedEvents);
             }
          }
          else
