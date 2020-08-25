@@ -111,7 +111,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;zoneProxyStatus</filter>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;zoneProxyStatus;</filter>
 		</template>
 		<template id="104">
 			<guid>b33a2d86-75c3-4987-a45a-8f4cdb9da783</guid>
