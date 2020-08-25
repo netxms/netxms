@@ -130,7 +130,7 @@ private:
 	uint16_t m_currentVlanId;
 
 	uint32_t ifIndexFromPort(uint32_t port);
-	static String interfaceIndexToName(shared_ptr<NetObj> node, uint32_t index);
+	static String interfaceIndexToName(const shared_ptr<NetObj>& node, uint32_t index);
 
 public:
 	ForwardingDatabase(uint32_t nodeId);
