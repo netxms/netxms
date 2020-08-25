@@ -24,11 +24,21 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 35.12 to 40.0
+ * Upgrade from 35.13 to 40.0
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade form 35.12 to 35.13
  */
 static bool H_UpgradeFromV12()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='AllowDirectNotifications'")));
+   CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }
 
@@ -396,7 +406,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 12, 40, 0,  H_UpgradeFromV12 },
+   { 13, 40, 0,  H_UpgradeFromV13 },
+   { 12, 35, 13, H_UpgradeFromV12 },
    { 11, 35, 12, H_UpgradeFromV11 },
    { 10, 35, 11, H_UpgradeFromV10 },
    { 9,  35, 10, H_UpgradeFromV9  },

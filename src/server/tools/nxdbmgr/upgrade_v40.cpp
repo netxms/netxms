@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.7 to 40.8
+ */
+static bool H_UpgradeFromV7()
+{
+   if (GetSchemaLevelForMajorVersion(35) < 13)
+   {
+      CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='AllowDirectNotifications'")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade form 40.6 to 40.7
  */
 static bool H_UpgradeFromV6()
@@ -206,6 +219,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 7,  40, 8,  H_UpgradeFromV7  },
    { 6,  40, 7,  H_UpgradeFromV6  },
    { 5,  40, 6,  H_UpgradeFromV5  },
    { 4,  40, 5,  H_UpgradeFromV4  },
