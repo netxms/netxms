@@ -395,14 +395,9 @@ static void ParallelEventProcessor()
 
    while(true)
    {
-      Event *event = g_eventQueue.getOrBlock(1000);
+      Event *event = g_eventQueue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
-
-      if (event == nullptr)
-      {
-         // Idle loop
-      }
 
 		if (g_flags & AF_EVENT_STORM_DETECTED)
 		{
