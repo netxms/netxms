@@ -24,6 +24,7 @@
 	NX-1908 (Expose FDB to NXSL)
 	NX-1914 (Removed deprecate AllowDirectNotifications server configuration setting)
 	NX-1919 (Internal parameters to count number of tunnels with agent, snmp, snmp trap, syslog proxies or with installed user agents)
+	NX-1942 (Add property to actions in EPP "Do not run if timer is active")
 
 
 *

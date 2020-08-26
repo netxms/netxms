@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.8 to 40.9
+ */
+static bool H_UpgradeFromV8()
+{
+   if (GetSchemaLevelForMajorVersion(35) < 14)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE policy_action_list ADD blocking_timer_key varchar(127)")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade form 40.7 to 40.8
  */
 static bool H_UpgradeFromV7()
@@ -219,6 +232,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 8,  40, 9,  H_UpgradeFromV8  },
    { 7,  40, 8,  H_UpgradeFromV7  },
    { 6,  40, 7,  H_UpgradeFromV6  },
    { 5,  40, 6,  H_UpgradeFromV5  },

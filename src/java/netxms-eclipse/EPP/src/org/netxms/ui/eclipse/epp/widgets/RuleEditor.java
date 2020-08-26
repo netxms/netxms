@@ -818,6 +818,12 @@ public class RuleEditor extends Composite
                   clabel.setText(String.format("Delayed by %d seconds with timer key set to \"%s\"", c.getTimerDelay(), c.getTimerKey()));
                }
             }
+            if (!c.getBlockingTimerKey().isEmpty())
+            {
+               clabel = createCLabel(clientArea, 2, false);
+               clabel.addMouseListener(listener);
+               clabel.setText(String.format("Do not run if timer with key \"%s\" is active", c.getBlockingTimerKey()));                  
+            }
          }
       }
       

@@ -28,6 +28,7 @@ public class ActionExecutionConfiguration
    private long actionId;
    private int timerDelay;
    private String timerKey;
+   private String blockingTimerKey;
    
    /**
     * Create new action execution configuration without timer delay and key.
@@ -39,6 +40,7 @@ public class ActionExecutionConfiguration
       this.actionId = actionId;
       this.timerDelay = 0;
       this.timerKey = null;
+      this.blockingTimerKey = null;
    }
    
    /**
@@ -48,11 +50,12 @@ public class ActionExecutionConfiguration
     * @param timerDelay timer delay in seconds
     * @param timerKey timer key
     */
-   public ActionExecutionConfiguration(long actionId, int timerDelay, String timerKey)
+   public ActionExecutionConfiguration(long actionId, int timerDelay, String timerKey, String blockTimerKey)
    {
       this.actionId = actionId;
       this.timerDelay = timerDelay;
       this.timerKey = timerKey;
+      this.blockingTimerKey = blockTimerKey;
    }
 
    /**
@@ -66,6 +69,7 @@ public class ActionExecutionConfiguration
       actionId = msg.getFieldAsInt64(baseId);
       timerDelay = msg.getFieldAsInt32(baseId + 1);
       timerKey = msg.getFieldAsString(baseId + 2);
+      blockingTimerKey = msg.getFieldAsString(baseId + 3);
    }
 
    /**
@@ -78,6 +82,7 @@ public class ActionExecutionConfiguration
       this.actionId = src.actionId;
       this.timerDelay = src.timerDelay;
       this.timerKey = src.timerKey;
+      this.blockingTimerKey = src.blockingTimerKey;
    }
 
    /**
@@ -91,6 +96,7 @@ public class ActionExecutionConfiguration
       msg.setFieldInt32(baseId, (int)actionId);
       msg.setFieldInt32(baseId + 1, timerDelay);
       msg.setField(baseId + 2, timerKey);
+      msg.setField(baseId + 3, blockingTimerKey);
    }
    
    /**
@@ -141,5 +147,21 @@ public class ActionExecutionConfiguration
    public long getActionId()
    {
       return actionId;
+   }
+
+   /**
+    * @return the blockTimerKey
+    */
+   public String getBlockingTimerKey()
+   {
+      return (blockingTimerKey != null) ? blockingTimerKey : "";
+   }
+
+   /**
+    * @param blockTimerKey the blockTimerKey to set
+    */
+   public void setBlockingTimerKey(String blockingTimerKey)
+   {
+      this.blockingTimerKey = blockingTimerKey;
    }
 }

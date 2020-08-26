@@ -72,6 +72,8 @@ public class ActionListLabelProvider extends LabelProvider implements ITableLabe
             return Integer.toString(c.getTimerDelay());
          case 2:
             return c.getTimerKey();
+         case 3:
+            return c.getBlockingTimerKey();
       }
       return null;
    }
