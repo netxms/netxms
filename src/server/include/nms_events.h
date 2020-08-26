@@ -79,6 +79,11 @@ public:
 };
 
 /**
+ * Event queue binding (used for parallel event processing)
+ */
+struct EventQueueBinding;
+
+/**
  * Event
  */
 class NXCORE_EXPORTABLE Event
@@ -103,6 +108,7 @@ private:
 	Array m_parameters;
 	StringList m_parameterNames;
 	int64_t m_queueTime;
+	EventQueueBinding *m_queueBinding;
 
 	void init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, UINT32 dciId, const TCHAR *tag);
 
@@ -135,6 +141,9 @@ public:
 
    int64_t getQueueTime() const { return m_queueTime; }
    void setQueueTime(int64_t t) { m_queueTime = t; }
+
+   EventQueueBinding *getQueueBinding() const { return m_queueBinding; }
+   void setQueueBinding(EventQueueBinding *b) { m_queueBinding = b; }
 
    uint64_t getRootId() const { return m_rootId; }
    void setRootId(uint64_t id) { m_rootId = id; }

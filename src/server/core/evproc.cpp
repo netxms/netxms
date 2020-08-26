@@ -307,6 +307,19 @@ static void SerialEventProcessor()
 }
 
 /**
+ * Event queue binding
+ */
+struct EventQueueBinding
+{
+   UT_hash_handle hh;
+   size_t keyLength;
+   char key[128];
+   ObjectQueue<Event> *queue;
+   VolatileCounter usage;
+   int processingThread;
+};
+
+/**
  * Event processing thread
  */
 struct EventProcessingThread
@@ -341,28 +354,25 @@ void EventProcessingThread::run(int id)
 
    while(true)
    {
-      Event *event = queue.getOrBlock();
+      Event *event = queue.getOrBlock(1000);
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, GetCurrentTimeMs() - event->getQueueTime());
-      ProcessEvent(event, id);
-      processedEvents++;
+      if (event != nullptr)
+      {
+         UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, GetCurrentTimeMs() - event->getQueueTime());
+         EventQueueBinding *binding = event->getQueueBinding();
+         ProcessEvent(event, id);
+         InterlockedDecrement(&binding->usage);
+         processedEvents++;
+      }
+      else
+      {
+         // Idle loop
+         UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, static_cast<int64_t>(0));
+      }
    }
 }
-
-/**
- * Event queue binding
- */
-struct EventQueueBinding
-{
-   UT_hash_handle hh;
-   size_t keyLength;
-   char key[128];
-   ObjectQueue<Event> *queue;
-   time_t lastUse;
-   int processingThread;
-};
 
 /**
  * Event processing threads
@@ -437,7 +447,7 @@ static void ParallelEventProcessor()
             if (size == 0)
                weights[i] += 2;
             else
-               weights[i] -= size / 100 + 1;
+               weights[i] -= size / 10 + 1;
 
             uint32_t load = s_processingThreads[i].bindings;
             if (load == 0)
@@ -461,11 +471,16 @@ static void ParallelEventProcessor()
          memcpy(qb->key, keyBytes, keyLen);
          qb->queue = &s_processingThreads[selectedThread].queue;
          qb->processingThread = selectedThread;
+         qb->usage = 1;
          HASH_ADD_KEYPTR(hh, queueBindings, qb->key, keyLen, qb);
          s_processingThreads[selectedThread].bindings++;
       }
-      qb->lastUse = now;
+      else
+      {
+         InterlockedIncrement(&qb->usage);
+      }
       event->setQueueTime(GetCurrentTimeMs());
+      event->setQueueBinding(qb);
       qb->queue->put(event);
 
       // Remove outdated bindings
@@ -476,9 +491,13 @@ static void ParallelEventProcessor()
          EventQueueBinding *curr, *tmp;
          HASH_ITER(hh, queueBindings, curr, tmp)
          {
-            if (curr->lastUse < now - 300)
+            if (curr->usage == 0)
             {
                s_processingThreads[curr->processingThread].bindings--;
+               if (s_processingThreads[curr->processingThread].bindings == 0)
+               {
+                  s_processingThreads[curr->processingThread].averageWaitTime = 0;
+               }
                HASH_DEL(queueBindings, curr);
                memoryPool.free(curr);
             }
