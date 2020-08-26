@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
-import java.io.IOException;
-
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -28,7 +26,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
-import org.netxms.client.NXCException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
@@ -64,9 +61,9 @@ public class VPNTab extends NodeComponentViewerTab
 		ObjectContextMenu.fill(manager, getViewPart().getSite(), viewer);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+    */
 	@Override
 	public void refresh()
 	{
@@ -76,6 +73,9 @@ public class VPNTab extends NodeComponentViewerTab
 			viewer.setInput(new VPNConnector[0]);
 	}
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentViewerTab#createViewer()
+    */
    @Override
    protected void createViewer()
    {
@@ -109,20 +109,21 @@ public class VPNTab extends NodeComponentViewerTab
       viewer.getControl().setLayoutData(fd);      
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentViewerTab#getFilterSettingName()
+    */
    @Override
    public String getFilterSettingName()
    {
       return "VPNTab.showFilter";
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentTab#needRefreshOnObjectChange(org.netxms.client.objects.AbstractObject)
+    */
    @Override
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {
       return object instanceof VPNConnector;
-   }
-
-   @Override
-   protected void syncAdditionalObjects() throws IOException, NXCException
-   {
    }
 }

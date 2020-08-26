@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.topology.objecttabs;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.action.IMenuListener;
@@ -37,7 +36,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
@@ -57,9 +55,9 @@ public class Ports extends NodeComponentTab implements ISelectionProvider
 	private ISelection selection = new StructuredSelection();
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
@@ -135,9 +133,9 @@ public class Ports extends NodeComponentTab implements ISelectionProvider
       return (object instanceof Interface) && object.isDirectChildOf(deviceView.getNodeId());
    }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
@@ -177,44 +175,39 @@ public class Ports extends NodeComponentTab implements ISelectionProvider
 	   ObjectContextMenu.fill(manager, getViewPart().getSite(), this);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
 	@Override
 	public void addSelectionChangedListener(ISelectionChangedListener listener)
 	{
 		selectionListeners.add(listener);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+    */
 	@Override
 	public ISelection getSelection()
 	{
 		return selection;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
 	@Override
 	public void removeSelectionChangedListener(ISelectionChangedListener listener)
 	{
 		selectionListeners.remove(listener);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void setSelection(ISelection selection)
 	{
 		this.selection = selection;
 	}
-
-   @Override
-   protected void syncAdditionalObjects() throws IOException, NXCException
-   {
-   }
 }
