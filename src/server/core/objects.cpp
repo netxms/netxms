@@ -2564,7 +2564,7 @@ bool IsEventSource(int objectClass)
 }
 
 /**
- * Check of object1 is parent of object2 (also indirect parent)
+ * Check if object1 is parent of object2 (also indirect parent)
  */
 bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2)
 {
