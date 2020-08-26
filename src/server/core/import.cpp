@@ -218,6 +218,7 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite)
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 	UINT32 code = 0;
+	bool checkByName = false;
 	uuid guid = event->getSubEntryValueAsUUID(_T("guid"));
 	if (!guid.isNull())
 	{
@@ -247,6 +248,7 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite)
 	}
 	else
 	{
+	   checkByName = true;
 	   code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
 	   if (code >= FIRST_USER_EVENT_ID)
 	   {
@@ -279,7 +281,7 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite)
          query[0] = 0;
       }
    }
-   else if (IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_name"), name))
+   else if (checkByName && IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_name"), name))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: found existing event with name %s (%s)"), name, overwrite ? _T("updating") : _T("skipping"));
       if (overwrite)
