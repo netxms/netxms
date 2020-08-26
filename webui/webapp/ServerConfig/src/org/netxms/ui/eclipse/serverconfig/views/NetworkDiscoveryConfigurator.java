@@ -347,14 +347,19 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
-      passiveDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, "Passive discovery interval", 0,
-            0xffffff, gd);
+      passiveDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, "Passive discovery interval", 0, 0xffffff, gd);
       passiveDiscoveryInterval.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
-            config.setPassiveDiscoveryPollInterval(Integer.parseInt(passiveDiscoveryInterval.getText()));
-            setModified();
+            try
+            {
+               config.setPassiveDiscoveryPollInterval(Integer.parseInt(passiveDiscoveryInterval.getText()));
+               setModified();
+            }
+            catch(NumberFormatException ex)
+            {
+            }
          }
       });
       toolkit.adapt(passiveDiscoveryInterval, true, true);

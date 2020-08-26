@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectview.objecttabs;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.State;
 import org.eclipse.jface.action.IMenuManager;
@@ -204,9 +203,9 @@ public class InterfacesTab extends NodeComponentViewerTab
          viewer.getControl().setLayoutData(fd);
    }
    
-  /* (non-Javadoc)
-   * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
-   */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
+    */
   @Override
   public void objectChanged(final AbstractObject object)
   {
@@ -232,20 +231,21 @@ public class InterfacesTab extends NodeComponentViewerTab
       return object instanceof Interface;
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentTab#syncAdditionalObjects(org.netxms.client.objects.AbstractObject)
+    */
    @Override
-   protected void syncAdditionalObjects() throws IOException, NXCException
+   protected void syncAdditionalObjects(AbstractObject object) throws IOException, NXCException
    {
       List<Long> additionalSyncInterfaces = new ArrayList<Long>();
-      if (getObject() != null)
+      for(AbstractObject obj : getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE))
       {
-         for (AbstractObject obj : getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE))
-         {
-            long id = ((Interface)obj).getPeerInterfaceId();
-            if(id != 0)
-               additionalSyncInterfaces.add(id);
-         }
+         long id = ((Interface)obj).getPeerInterfaceId();
+         if (id != 0)
+            additionalSyncInterfaces.add(id);
       }
 
-      session.syncMissingObjects(additionalSyncInterfaces, true, NXCSession.OBJECT_SYNC_WAIT);
+      if (!additionalSyncInterfaces.isEmpty())
+         session.syncMissingObjects(additionalSyncInterfaces, true, NXCSession.OBJECT_SYNC_WAIT);
    }
 }
