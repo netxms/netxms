@@ -354,7 +354,7 @@ void EventProcessingThread::run(int id)
 
    while(true)
    {
-      Event *event = queue.getOrBlock(1000);
+      Event *event = queue.getOrBlock(5000);
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -405,88 +405,96 @@ static void ParallelEventProcessor()
 
    while(true)
    {
-      Event *event = g_eventQueue.getOrBlock();
+      Event *event = g_eventQueue.getOrBlock(10000);
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-		if (g_flags & AF_EVENT_STORM_DETECTED)
-		{
-	      delete event;
-	      InterlockedIncrement64(&g_totalEventsProcessed);
-			continue;
-		}
-
-		time_t now = event->getTimestamp(); // Get current time from event, it should be (almost) current
-
-      StringBuffer key = event->expandText(queueSelector, nullptr);
-#ifdef UNICODE
-      char keyBytes[128];
-      size_t keyLen = wchar_to_utf8(key.cstr(), key.length(), keyBytes, 128);
-#else
-      char *keyBytes = key.getBuffer();
-      size_t keyLen = key.length();
-      if (keyLen > 128)
-         keyLen = 128;
-#endif
-
-      EventQueueBinding *qb;
-      HASH_FIND(hh, queueBindings, keyBytes, keyLen, qb);
-      if (qb == nullptr)
+      time_t now;
+      if (event != nullptr)
       {
-         // Select less loaded queue
-         memset(weights, 0, sizeof(int) * poolSize);
-         for(int i = 0; i < poolSize; i++)
+         if (g_flags & AF_EVENT_STORM_DETECTED)
          {
-            uint32_t waitTime = s_processingThreads[i].getAverageWaitTime();
-            if (waitTime == 0)
-               weights[i]++;
-            else
-               weights[i] -= waitTime / 100 + 1;
-
-            uint32_t size = s_processingThreads[i].queue.size();
-            if (size == 0)
-               weights[i] += 2;
-            else
-               weights[i] -= size / 10 + 1;
-
-            uint32_t load = s_processingThreads[i].bindings;
-            if (load == 0)
-               weights[i] += 100;
-            else
-               weights[i] -= load / 10;
+            delete event;
+            InterlockedIncrement64(&g_totalEventsProcessed);
+            continue;
          }
 
-         int selectedThread = 0;
-         int bestWeight = INT_MIN;
-         for(int i = 0; i < poolSize; i++)
-            if (weights[i] > bestWeight)
+         time_t now = event->getTimestamp(); // Get current time from event, it should be (almost) current
+
+         StringBuffer key = event->expandText(queueSelector, nullptr);
+#ifdef UNICODE
+         char keyBytes[128];
+         size_t keyLen = wchar_to_utf8(key.cstr(), key.length(), keyBytes, 128);
+#else
+         char *keyBytes = key.getBuffer();
+         size_t keyLen = key.length();
+         if (keyLen > 128)
+            keyLen = 128;
+#endif
+
+         EventQueueBinding *qb;
+         HASH_FIND(hh, queueBindings, keyBytes, keyLen, qb);
+         if (qb == nullptr)
+         {
+            // Select less loaded queue
+            memset(weights, 0, sizeof(int) * poolSize);
+            for(int i = 0; i < poolSize; i++)
             {
-               bestWeight = weights[i];
-               selectedThread = i;
+               uint32_t waitTime = s_processingThreads[i].getAverageWaitTime();
+               if (waitTime == 0)
+                  weights[i]++;
+               else
+                  weights[i] -= waitTime / 100 + 1;
+
+               uint32_t size = s_processingThreads[i].queue.size();
+               if (size == 0)
+                  weights[i] += 2;
+               else
+                  weights[i] -= size / 10 + 1;
+
+               uint32_t load = s_processingThreads[i].bindings;
+               if (load == 0)
+                  weights[i] += 100;
+               else
+                  weights[i] -= load / 10;
             }
 
-         qb = memoryPool.allocate();
-         memset(qb, 0, sizeof(EventQueueBinding));
-         qb->keyLength = keyLen;
-         memcpy(qb->key, keyBytes, keyLen);
-         qb->queue = &s_processingThreads[selectedThread].queue;
-         qb->processingThread = selectedThread;
-         qb->usage = 1;
-         HASH_ADD_KEYPTR(hh, queueBindings, qb->key, keyLen, qb);
-         s_processingThreads[selectedThread].bindings++;
+            int selectedThread = 0;
+            int bestWeight = INT_MIN;
+            for(int i = 0; i < poolSize; i++)
+               if (weights[i] > bestWeight)
+               {
+                  bestWeight = weights[i];
+                  selectedThread = i;
+               }
+
+            qb = memoryPool.allocate();
+            memset(qb, 0, sizeof(EventQueueBinding));
+            qb->keyLength = keyLen;
+            memcpy(qb->key, keyBytes, keyLen);
+            qb->queue = &s_processingThreads[selectedThread].queue;
+            qb->processingThread = selectedThread;
+            qb->usage = 1;
+            HASH_ADD_KEYPTR(hh, queueBindings, qb->key, keyLen, qb);
+            s_processingThreads[selectedThread].bindings++;
+         }
+         else
+         {
+            InterlockedIncrement(&qb->usage);
+         }
+         event->setQueueTime(GetCurrentTimeMs());
+         event->setQueueBinding(qb);
+         qb->queue->put(event);
       }
       else
       {
-         InterlockedIncrement(&qb->usage);
+         now = time(nullptr);
       }
-      event->setQueueTime(GetCurrentTimeMs());
-      event->setQueueBinding(qb);
-      qb->queue->put(event);
 
       // Remove outdated bindings
-      if (lastCleanupTime < now - 60)
+      if ((event == nullptr) || (lastCleanupTime < now - 30))
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Running event queues binding cleanup"));
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("Running event queues binding cleanup"));
 
          EventQueueBinding *curr, *tmp;
          HASH_ITER(hh, queueBindings, curr, tmp)
