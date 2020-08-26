@@ -397,9 +397,9 @@ void EPRule::createExportRecord(StringBuffer &xml) const
       xml.append(_T("</guid>\n\t\t\t\t\t<timerDelay>"));
       xml.append(a->timerDelay);
       xml.append(_T("</timerDelay>\n\t\t\t\t\t<timerKey>"));
-      xml.append(a->timerKey);
+      xml.append((const TCHAR *)EscapeStringForXML2(a->timerKey));
       xml.append(_T("</timerKey>\n\t\t\t\t\t<blockingTimerKey>"));
-      xml.append(a->blockingTimerKey);
+      xml.append((const TCHAR *)EscapeStringForXML2(a->blockingTimerKey));
       xml.append(_T("</blockingTimerKey>\n\t\t\t\t</action>\n"));
    }
 
@@ -615,7 +615,7 @@ bool EPRule::processEvent(Event *event) const
             if (CountScheduledTasksByKey(key) > 0)
             {
                execute = false;
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Action %u execution blocked by blocking \"%s\" key"), a->actionId, (const TCHAR *)key);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("Action %u execution blocked by timer \"%s\" key"), a->actionId, (const TCHAR *)key);
             }
          }
 

@@ -89,7 +89,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
       timerKey.setLayoutData(gd);
       
       blockingTimerKey = new LabeledText(dialogArea, SWT.NONE);
-      blockingTimerKey.setLabel("Blocking timer key (Do not run action if timer exists)");
+      blockingTimerKey.setLabel("Blocking timer key (Do not run action if this timer exists)");
       blockingTimerKey.setText(configuration.getBlockingTimerKey());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
