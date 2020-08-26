@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import java.io.IOException;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
@@ -137,9 +136,13 @@ public abstract class NodeComponentTab extends ObjectTab
    }
    
    /**
-    * Will synchronize additional objects if required
+    * Hook for subclasses to synchronize additional objects if needed. Default implementation does nothing.
+    *
+    * @param object current object
     */
-   protected abstract void syncAdditionalObjects() throws IOException, NXCException;
+   protected void syncAdditionalObjects(AbstractObject object) throws IOException, NXCException
+   {
+   }
 
    /**
     * Sync object children form server
@@ -171,7 +174,7 @@ public abstract class NodeComponentTab extends ObjectTab
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             session.syncChildren(object);
-            syncAdditionalObjects();
+            syncAdditionalObjects(object);
             runInUIThread(new Runnable() {
                @Override
                public void run()
