@@ -569,10 +569,31 @@ public class LogParserRuleEditor extends DashboardComposite
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		agentAction.setLayoutData(gd);
+      agentAction.getTextControl().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      });
 		
 		checkboxBreak = toolkit.createButton(area, "Process all", SWT.CHECK);
 		checkboxBreak.setText("Break");
 		checkboxBreak.setSelection(rule.isBreakProcessing());
+		checkboxBreak.addSelectionListener(new SelectionListener() {
+         
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editor.fireModifyListeners();            
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
 		
 		return area;
 	}
