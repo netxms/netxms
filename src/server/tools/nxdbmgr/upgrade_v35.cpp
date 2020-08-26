@@ -22,6 +22,17 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+/**
+ * Upgrade form 35.13 to 35.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE policy_action_list ADD blocking_timer_key varchar(127)")));
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
 /**
  * Upgrade form 35.12 to 35.13
  */
@@ -396,6 +407,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 13, 35, 14, H_UpgradeFromV13 },
    { 12, 35, 13, H_UpgradeFromV12 },
    { 11, 35, 12, H_UpgradeFromV11 },
    { 10, 35, 11, H_UpgradeFromV10 },

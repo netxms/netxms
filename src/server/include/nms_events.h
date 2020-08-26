@@ -234,17 +234,20 @@ struct ActionExecutionConfiguration
    UINT32 actionId;
    UINT32 timerDelay;
    TCHAR *timerKey;
+   TCHAR *blockingTimerKey;
 
-   ActionExecutionConfiguration(UINT32 i, UINT32 d, TCHAR *k)
+   ActionExecutionConfiguration(UINT32 i, UINT32 d, TCHAR *k, TCHAR *bk)
    {
       actionId = i;
       timerDelay = d;
       timerKey = k;
+      blockingTimerKey = bk;
    }
 
    ~ActionExecutionConfiguration()
    {
       MemFree(timerKey);
+      MemFree(blockingTimerKey);
    }
 };
 

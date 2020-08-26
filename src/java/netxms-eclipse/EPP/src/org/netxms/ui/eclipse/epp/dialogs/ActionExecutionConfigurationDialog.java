@@ -38,6 +38,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
    private ActionExecutionConfiguration configuration;
    private LabeledSpinner timerDelay;
    private LabeledText timerKey;
+   private LabeledText blockingTimerKey;
 
    /**
     * @param parentShell
@@ -87,6 +88,16 @@ public class ActionExecutionConfigurationDialog extends Dialog
       gd.widthHint = 400;
       timerKey.setLayoutData(gd);
       
+      blockingTimerKey = new LabeledText(dialogArea, SWT.NONE);
+      blockingTimerKey.setLabel("Blocking timer key (Do not run action if timer exists)");
+      blockingTimerKey.setText(configuration.getBlockingTimerKey());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.widthHint = 400;
+      gd.horizontalSpan = 2;
+      blockingTimerKey.setLayoutData(gd);      
+      
       return dialogArea;
    }
 
@@ -98,6 +109,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
    {
       configuration.setTimerDelay(timerDelay.getSelection());
       configuration.setTimerKey(timerKey.getText().trim());
+      configuration.setBlockingTimerKey(blockingTimerKey.getText().trim());
       super.okPressed();
    }
 }
