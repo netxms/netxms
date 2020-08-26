@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,9 +72,9 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)
+    */
 	@Override
 	protected void setupViewer(TableViewer viewer)
 	{
@@ -94,9 +94,9 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		setFilter(new EventMonitorFilter());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#saveConfig()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#saveConfig()
+    */
 	@Override
 	protected void saveConfig()
 	{
@@ -107,27 +107,27 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		ps.setValue("EventMonitor.showIcons", labelProvider.isShowIcons()); //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getDialogSettings()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getDialogSettings()
+    */
 	@Override
 	protected IDialogSettings getDialogSettings()
 	{
 		return Activator.getDefault().getDialogSettings();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getConfigPrefix()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getConfigPrefix()
+    */
 	@Override
 	protected String getConfigPrefix()
 	{
 		return "EventMonitor"; //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#createActions()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#createActions()
+    */
 	@Override
 	protected void createActions()
 	{
@@ -154,23 +154,24 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		actionShowIcons.setChecked(labelProvider.isShowIcons());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
-	 */
-	@Override
-	public void notificationHandler(final SessionNotification n)
-	{
-		if (n.getCode() == SessionNotification.NEW_EVENTLOG_RECORD)
-		{
-			runInUIThread(new Runnable() {
-				@Override
-				public void run()
-				{
-					addElement(n.getObject());
-				}
-			});
-		}
-	}
+   /**
+    * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+    */
+   @Override
+   public void notificationHandler(final SessionNotification n)
+   {
+      if (n.getCode() == SessionNotification.NEW_EVENTLOG_RECORD)
+      {
+         runInUIThread(new Runnable() {
+            @Override
+            public void run()
+            {
+               if (!isDisposed())
+                  addElement(n.getObject());
+            }
+         });
+      }
+   }
 
 	/**
 	 * @return the actionShowColor
@@ -189,8 +190,9 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	}
 	
 	/**
-    *  sets root ID
-    * @param objectId
+    * Set root object ID
+    *
+    * @param objectId new root object ID
     */
    public void setRootObject(long objectId)
    {
