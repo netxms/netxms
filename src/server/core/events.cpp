@@ -211,6 +211,7 @@ Event::Event()
    m_originTimestamp = 0;
 	m_customMessage = nullptr;
 	m_queueTime = 0;
+	m_queueBinding = nullptr;
 	m_parameters.setOwner(Ownership::True);
 }
 
@@ -236,6 +237,7 @@ Event::Event(const Event *src)
    m_tags.addAll(src->m_tags);
 	m_customMessage = MemCopyString(src->m_customMessage);
    m_queueTime = src->m_queueTime;
+   m_queueBinding = src->m_queueBinding;
 	m_parameters.setOwner(Ownership::True);
    for(int i = 0; i < src->m_parameters.size(); i++)
    {
@@ -484,6 +486,7 @@ void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t 
    m_sourceId = sourceId;
    m_dciId = dciId;
    m_queueTime = 0;
+   m_queueBinding = nullptr;
    m_messageText = nullptr;
    m_messageTemplate = MemCopyString(eventTemplate->getMessageTemplate());
 
