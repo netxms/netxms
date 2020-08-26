@@ -49,13 +49,14 @@ public class ActionExecutionConfiguration
     * @param actionId action ID
     * @param timerDelay timer delay in seconds
     * @param timerKey timer key
+    * @param blockingTimerKey timer key for blocking the action
     */
-   public ActionExecutionConfiguration(long actionId, int timerDelay, String timerKey, String blockTimerKey)
+   public ActionExecutionConfiguration(long actionId, int timerDelay, String timerKey, String blockingTimerKey)
    {
       this.actionId = actionId;
       this.timerDelay = timerDelay;
       this.timerKey = timerKey;
-      this.blockingTimerKey = blockTimerKey;
+      this.blockingTimerKey = blockingTimerKey;
    }
 
    /**

@@ -31,6 +31,7 @@ static bool H_UpgradeFromV8()
    if (GetSchemaLevelForMajorVersion(35) < 14)
    {
       CHK_EXEC(SQLQuery(_T("ALTER TABLE policy_action_list ADD blocking_timer_key varchar(127)")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 14));
    }
    CHK_EXEC(SetMinorSchemaVersion(9));
    return true;
@@ -44,6 +45,7 @@ static bool H_UpgradeFromV7()
    if (GetSchemaLevelForMajorVersion(35) < 13)
    {
       CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='AllowDirectNotifications'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 13));
    }
    CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
@@ -59,6 +61,7 @@ static bool H_UpgradeFromV6()
       CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD cip_vendor_code integer")));
       CHK_EXEC(SQLQuery(_T("UPDATE nodes SET cip_vendor_code=0")));
       CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("cip_vendor_code")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 12));
    }
    CHK_EXEC(SetMinorSchemaVersion(7));
    return true;
@@ -73,6 +76,7 @@ static bool H_UpgradeFromV5()
    {
       CHK_EXEC(CreateConfigParam(_T("Events.Processor.PoolSize"), _T("1"), _T("Number of threads for parallel event processing."), _T("threads"), 'I', true, true, false, false));
       CHK_EXEC(CreateConfigParam(_T("Events.Processor.QueueSelector"), _T("%z"), _T("Queue selector for parallel event processing."), nullptr, 'S', true, true, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 11));
    }
    CHK_EXEC(SetMinorSchemaVersion(6));
    return true;
@@ -100,7 +104,7 @@ static bool H_UpgradeFromV4()
       CHK_EXEC(UpdateGroupId(_T("graph_acl"), _T("user_id")));
       CHK_EXEC(UpdateGroupId(_T("object_access_snapshot"), _T("user_id")));
       CHK_EXEC(UpdateGroupId(_T("responsible_users"), _T("user_id")));
-      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 9));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 10));
    }
    CHK_EXEC(SetMinorSchemaVersion(5));
    return true;
