@@ -474,6 +474,7 @@ static void ParallelEventProcessor()
                memset(qb, 0, sizeof(EventQueueBinding));
                qb->keyLength = keyLen;
                memcpy(qb->key, keyBytes, keyLen);
+               HASH_ADD_KEYPTR(hh, queueBindings, qb->key, keyLen, qb);
             }
             else
             {
@@ -482,7 +483,6 @@ static void ParallelEventProcessor()
             qb->queue = &s_processingThreads[selectedThread].queue;
             qb->processingThread = selectedThread;
             qb->usage = 1;
-            HASH_ADD_KEYPTR(hh, queueBindings, qb->key, keyLen, qb);
             s_processingThreads[selectedThread].bindings++;
          }
          else
