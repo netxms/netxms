@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="mikrotik.cpp">
+    <ClCompile Include="net-snmp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -23,10 +23,10 @@
     <ClInclude Include="..\..\include\nddrv.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mikrotik.h">
+    <ClInclude Include="..\..\include\nxsrvapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\nxsrvapi.h">
+    <ClInclude Include="net-snmp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
