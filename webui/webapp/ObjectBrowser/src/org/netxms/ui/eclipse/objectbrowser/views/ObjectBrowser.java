@@ -236,14 +236,6 @@ public class ObjectBrowser extends ViewPart
 		objectTree.enableDragSupport();
 		getSite().setSelectionProvider(objectTree.getTreeViewer());
 		
-		objectTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
-			{
-				int size = ((IStructuredSelection)objectTree.getTreeViewer().getSelection()).size();
-				actionMoveObject.setEnabled(size == 1);
-			}
-		});
 		objectTree.setFilterCloseAction(new Action() {
          @Override
          public void run()

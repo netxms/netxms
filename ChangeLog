@@ -16,6 +16,7 @@
 - Fixed modification flag for "Break" and "Action" fields in log praser policy
 - Added cipVendorCode attribute and readInternalParameter, readInternalTable methods to NXSL node class
 - Added cluster object itself to event log filter opened on the cluster
+- Removed the limitation of one object for "Move to another container" action
 - Fixed issues:
 	NX-1841 (Option to enumerate all attributes and methods of an object in NXSL)
 	NX-1879 (Unmanaged automatic network map is no more auto updated)
