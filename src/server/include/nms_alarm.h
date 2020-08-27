@@ -28,6 +28,10 @@
  */
 #define ALARM_SUMMARY_EMAIL_TASK_ID _T("Alarms.SendSummaryEmail")
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE IntegerArray<uint32_t>;
+#endif
+
 /**
  * Alarm class
  */
