@@ -434,7 +434,7 @@ static void ParallelEventProcessor()
 
          EventQueueBinding *qb;
          HASH_FIND(hh, queueBindings, keyBytes, keyLen, qb);
-         if (qb == nullptr)
+         if ((qb == nullptr) || ((qb->usage == 0) && (qb->queue->size() > 0)))
          {
             // Select less loaded queue
             memset(weights, 0, sizeof(int) * poolSize);
@@ -468,10 +468,17 @@ static void ParallelEventProcessor()
                   selectedThread = i;
                }
 
-            qb = memoryPool.allocate();
-            memset(qb, 0, sizeof(EventQueueBinding));
-            qb->keyLength = keyLen;
-            memcpy(qb->key, keyBytes, keyLen);
+            if (qb == nullptr)
+            {
+               qb = memoryPool.allocate();
+               memset(qb, 0, sizeof(EventQueueBinding));
+               qb->keyLength = keyLen;
+               memcpy(qb->key, keyBytes, keyLen);
+            }
+            else
+            {
+               s_processingThreads[qb->processingThread].bindings--;
+            }
             qb->queue = &s_processingThreads[selectedThread].queue;
             qb->processingThread = selectedThread;
             qb->usage = 1;
