@@ -48,11 +48,11 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
 
    DWORD scanlineSize = ((bitmap.bmWidth * 4) + (4 - 1)) & ~(4 - 1);
    DWORD bufferSize = scanlineSize * bitmap.bmHeight;
-   BYTE *buffer = (BYTE *)MemAlloc(bufferSize);
-   if (buffer == NULL)
-      return NULL;
+   BYTE *buffer = static_cast<BYTE*>(MemAlloc(bufferSize));
+   if (buffer == nullptr)
+      return nullptr;
 
-   HDC hDC = GetDC(NULL);
+   HDC hDC = GetDC(nullptr);
 
    BITMAPINFO bitmapInfo;
    memset(&bitmapInfo, 0, sizeof(bitmapInfo));
@@ -66,9 +66,9 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
    bitmapInfo.bmiHeader.biClrImportant = 0;
    if (!GetDIBits(hDC, hBitmap, 0, bitmap.bmHeight, buffer, &bitmapInfo, DIB_RGB_COLORS))
    {
-      ReleaseDC(NULL, hDC);
+      ReleaseDC(nullptr, hDC);
       MemFree(buffer);
-      return NULL;
+      return nullptr;
    }
 
    const int width = bitmap.bmWidth;
@@ -76,16 +76,16 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
    const int depth = 8;
    const int bytesPerPixel = 4;
 
-   png_structp png_ptr = NULL;
-   png_infop info_ptr = NULL;
-   ByteStream *pngData = NULL;
+   png_structp png_ptr = nullptr;
+   png_infop info_ptr = nullptr;
+   ByteStream *pngData = nullptr;
 
-   png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-   if (png_ptr == NULL)
+   png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+   if (png_ptr == nullptr)
       goto png_create_write_struct_failed;
 
    info_ptr = png_create_info_struct(png_ptr);
-   if (info_ptr == NULL)
+   if (info_ptr == nullptr)
       goto png_create_info_struct_failed;
 
    if (setjmp(png_jmpbuf(png_ptr)))
@@ -125,13 +125,13 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
    pngData->setAllocationStep(65536);
    png_set_write_fn(png_ptr, pngData, WriteData, FlushBuffer);
    png_set_rows(png_ptr, info_ptr, row_pointers);
-   png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+   png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, nullptr);
 
 png_failure:
 png_create_info_struct_failed:
    png_destroy_write_struct (&png_ptr, &info_ptr);
 png_create_write_struct_failed:
-   ReleaseDC(NULL, hDC);
+   ReleaseDC(nullptr, hDC);
    MemFree(buffer);
    return pngData;
 }

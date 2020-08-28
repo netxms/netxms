@@ -1,6 +1,6 @@
 /*
 ** NetXMS Session Agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,13 +27,13 @@
  */
 void TakeScreenshot(NXCPMessage *response)
 {
-   UINT32 rcc = ERR_INTERNAL_ERROR;
+   uint32_t rcc = ERR_INTERNAL_ERROR;
 
-   HDC dc = CreateDC(_T("DISPLAY"), NULL, NULL, NULL);
-   if (dc != NULL)
+   HDC dc = CreateDC(_T("DISPLAY"), nullptr, nullptr, nullptr);
+   if (dc != nullptr)
    {
       HDC memdc = CreateCompatibleDC(dc);
-      if (memdc != NULL)
+      if (memdc != nullptr)
       {
          int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
          int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
@@ -41,7 +41,7 @@ void TakeScreenshot(NXCPMessage *response)
          int cy = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
          HBITMAP bitmap = CreateCompatibleBitmap(dc, cx, cy);
-         if (bitmap != NULL)
+         if (bitmap != nullptr)
          {
             SelectObject(memdc, bitmap);
             BitBlt(memdc, 0, 0, cx, cy, dc, x, y, SRCCOPY | CAPTUREBLT);
@@ -50,7 +50,7 @@ void TakeScreenshot(NXCPMessage *response)
          DeleteDC(memdc);
 
          ByteStream *png = SaveBitmapToPng(bitmap);
-         if (png != NULL)
+         if (png != nullptr)
          {
             rcc = ERR_SUCCESS;
             response->setField(VID_FILE_DATA, png->buffer(), png->size());
