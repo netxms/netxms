@@ -354,23 +354,15 @@ void EventProcessingThread::run(int id)
 
    while(true)
    {
-      Event *event = queue.getOrBlock(5000);
+      Event *event = queue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      if (event != nullptr)
-      {
-         UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, GetCurrentTimeMs() - event->getQueueTime());
-         EventQueueBinding *binding = event->getQueueBinding();
-         ProcessEvent(event, id);
-         InterlockedDecrement(&binding->usage);
-         processedEvents++;
-      }
-      else
-      {
-         // Idle loop
-         UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, static_cast<int64_t>(0));
-      }
+      UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, GetCurrentTimeMs() - event->getQueueTime());
+      EventQueueBinding *binding = event->getQueueBinding();
+      ProcessEvent(event, id);
+      InterlockedDecrement(&binding->usage);
+      processedEvents++;
    }
 }
 
@@ -479,6 +471,10 @@ static void ParallelEventProcessor()
             else
             {
                s_processingThreads[qb->processingThread].bindings--;
+               if (s_processingThreads[qb->processingThread].bindings == 0)
+               {
+                  s_processingThreads[qb->processingThread].averageWaitTime = 0;
+               }
             }
             qb->queue = &s_processingThreads[selectedThread].queue;
             qb->processingThread = selectedThread;
