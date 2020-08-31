@@ -14,6 +14,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 DisableDirPage=auto
 DisableProgramGroupPage=auto
+WizardStyle = modern
 AllowNoIcons=yes
 Compression=lzma
 SolidCompression=yes
