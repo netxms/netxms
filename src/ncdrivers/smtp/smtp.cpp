@@ -1,6 +1,7 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Notification drivder that sends e-mails
+** Copyright (C) 2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,11 +17,17 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: email.cpp
+** File: text_file.cpp
 **
 **/
 
-#include "nxcore.h"
+#include <ncdrv.h>
+#include <nms_util.h>
+#include <nxcldefs.h>
+
+#define DEBUG_TAG _T("ncd.smtp")
+
+static const NCConfigurationTemplate s_config(true, true);
 
 /**
  * Receive buffer size
@@ -63,11 +70,120 @@ struct MAIL_ENVELOPE
 };
 
 /**
- * Static data
+ * Mail sending error text
  */
-static ObjectQueue<MAIL_ENVELOPE> s_mailerQueue(64, Ownership::False);
-static THREAD s_mailerThread = INVALID_THREAD_HANDLE;
+static const TCHAR *s_szErrorText[] =
+{
+   _T("Sent successfully"),
+   _T("Unable to resolve SMTP server name"),
+   _T("Communication failure"),
+   _T("SMTP conversation failure")
+};
 
+/**
+ * SMTP driver class
+ */
+class SmtpDriver : public NCDriver
+{
+private:
+   TCHAR m_server[MAX_STRING_VALUE];
+   uint32_t m_retryCount;
+   uint16_t m_port;
+   char m_localHostName[MAX_STRING_VALUE];
+   char m_fromName[MAX_STRING_VALUE];
+   char m_fromAddr[MAX_STRING_VALUE];
+   char m_encoding[64];
+   int m_isHtml;
+
+   SmtpDriver();
+   UINT32 sendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8);
+
+public:
+   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   MAIL_ENVELOPE *prepareMail(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
+   static SmtpDriver *createInstance(Config *config);
+};
+
+
+
+/**
+ * Create driver instance
+ */
+SmtpDriver *SmtpDriver::createInstance(Config *config)
+{
+   SmtpDriver *driver = new SmtpDriver();
+
+   NX_CFG_TEMPLATE configTemplate[] =
+   {
+      { _T("Server"), CT_STRING, 0, 0, sizeof(driver->m_server)/sizeof(TCHAR), 0, driver->m_server },
+      { _T("RetryCount"), CT_LONG, 0, 0, 0, 0, &(driver->m_retryCount) }, //1
+      { _T("Port"), CT_LONG, 0, 0, 0, 0, &(driver->m_port) }, //25
+      { _T("LocalHostName"), CT_MB_STRING, 0, 0, sizeof(driver->m_localHostName)/sizeof(TCHAR), 0, driver->m_localHostName },
+      { _T("FromName"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromName)/sizeof(TCHAR), 0, driver->m_fromName }, //NetXMS Server
+      { _T("FromAddr"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromAddr)/sizeof(TCHAR), 0, driver->m_fromAddr }, //netxms@localhost
+      { _T("MailEncoding"), CT_MB_STRING, 0, 0, sizeof(driver->m_encoding)/sizeof(TCHAR), 0, driver->m_encoding }, //utf8
+      { _T("IsHTML"), CT_BOOLEAN, 0, 0, 1, 0, &(driver->m_isHtml) },
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   };
+
+   if (!config->parseTemplate(_T("SMTP"), configTemplate))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
+      delete driver;
+      return NULL;
+   }
+
+   return driver;
+}
+
+/**
+ * Constructor for SMTP diver
+ */
+SmtpDriver::SmtpDriver()
+{
+   _tcscmp(m_server, _T("localhost"));
+   m_retryCount = 1;
+   m_port = 25;
+   m_localHostName[0] = 0;
+   strcmp(m_fromName, "NetXMS Server");
+   strcmp(m_fromAddr, "netxms@localhost");
+   strcmp(m_encoding, "utf8");
+   m_isHtml = false;
+
+}
+
+MAIL_ENVELOPE *SmtpDriver::prepareMail(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+{
+   auto envelope = MemAllocStruct<MAIL_ENVELOPE>();
+   strncpy(envelope->encoding, m_encoding, 64);
+   envelope->isUtf8 = m_isHtml || !stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8");
+
+#ifdef UNICODE
+   WideCharToMultiByte(envelope->isUtf8 ? CP_UTF8 : CP_ACP, envelope->isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, recipient, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN, NULL, NULL);
+   envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
+   WideCharToMultiByte(envelope->isUtf8 ? CP_UTF8 : CP_ACP, envelope->isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, subject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN, NULL, NULL);
+   envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
+   envelope->text = envelope->isUtf8 ? UTF8StringFromWideString(body) : MBStringFromWideString(body);
+#else
+   if (envelope->isUtf8)
+   {
+      mb_to_utf8(recipient, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN);
+      envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
+      mb_to_utf8(subject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN);
+      envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
+      envelope->text = UTF8StringFromMBString(body);
+   }
+   else
+   {
+      nx_strncpy(envelope->rcptAddr, recipient, MAX_RCPT_ADDR_LEN);
+      nx_strncpy(envelope->subject, subject, MAX_EMAIL_SUBJECT_LEN);
+      envelope->text = strdup(body);
+   }
+#endif
+   envelope->retryCount = m_retryCount;
+   envelope->isHtml = m_isHtml;
+   return envelope;
+}
 /**
  * Find end-of-line character
  */
@@ -171,42 +287,34 @@ static char *EncodeHeader(const char *header, const char *encoding, const char *
 /**
  * Send e-mail
  */
-static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8)
+UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8)
 {
-   TCHAR smtpServer[256];
-   char fromName[256], fromAddr[256], localHostName[256];
-   ConfigReadStr(_T("SMTP.Server"), smtpServer, 256, _T("localhost"));
-   ConfigReadStrA(_T("SMTP.FromAddr"), fromAddr, 256, "netxms@localhost");
+   char fromName[256];
    if (isUtf8)
    {
-      ConfigReadStrUTF8(_T("SMTP.FromName"), fromName, 256, "NetXMS Server");
+      mb_to_utf8(m_fromName, -1, fromName, 256);
    }
-   else
-   {
-      ConfigReadStrA(_T("SMTP.FromName"), fromName, 256, "NetXMS Server");
-   }
-   uint16_t smtpPort = static_cast<uint16_t>(ConfigReadInt(_T("SMTP.Port"), 25));
-   ConfigReadStrA(_T("SMTP.LocalHostName"), localHostName, 256, "");
-   if (localHostName[0] == 0)
+   if (m_localHostName[0] == 0)
    {
 #ifdef UNICODE
       WCHAR localHostNameW[256] = L"";
       GetLocalHostName(localHostNameW, 256, true);
-      wchar_to_utf8(localHostNameW, -1, localHostName, 256);
+      wchar_to_utf8(localHostNameW, -1, m_localHostName, 256);
 #else
-      GetLocalHostName(localHostName, 256, true);
+      GetLocalHostName(m_localHostName, 256, true);
 #endif
-      if (localHostName[0] == 0)
-         strcpy(localHostName, "localhost");
+      if (m_localHostName[0] == 0)
+         strcpy(m_localHostName, "localhost");
    }
 
    // Resolve hostname
-	InetAddress addr = InetAddress::resolveHostName(smtpServer);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("### Server name: %s"), m_server);
+   InetAddress addr = InetAddress::resolveHostName(m_server);
    if (!addr.isValid() || addr.isBroadcast() || addr.isMulticast())
       return SMTP_ERR_BAD_SERVER_NAME;
 
    // Create socket and connect to server
-   SOCKET hSocket = ConnectToHost(addr, smtpPort, 3000);
+   SOCKET hSocket = ConnectToHost(addr, m_port, 3000);
    if (hSocket == INVALID_SOCKET)
       return SMTP_ERR_COMM_FAILURE;
 
@@ -216,7 +324,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
    while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
    {
       int iResp = GetSMTPResponse(hSocket, szBuffer, &nBufPos);
-      DbgPrintf(8, _T("SMTP RESPONSE: %03d (state=%d)"), iResp, iState);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("SMTP RESPONSE: %03d (state=%d)"), iResp, iState);
       if (iResp > 0)
       {
          switch(iState)
@@ -227,7 +335,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                {
                   iState = STATE_HELLO;
                   char command[280];
-                  snprintf(command, 280, "HELO %s\r\n", localHostName);
+                  snprintf(command, 280, "HELO %s\r\n", m_localHostName);
                   SendEx(hSocket, command, strlen(command), 0, nullptr);
                }
                else
@@ -240,7 +348,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                if (iResp == 250)
                {
                   iState = STATE_FROM;
-                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", fromAddr);
+                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", m_fromAddr);
                   SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                }
                else
@@ -282,7 +390,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                   // Mail headers
                   // from
                   char from[512];
-                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: \"%s\" <%s>\r\n", EncodeHeader(NULL, encoding, fromName, from, 512), fromAddr);
+                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: \"%s\" <%s>\r\n", EncodeHeader(NULL, encoding, fromName, from, 512), m_fromAddr);
                   SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                   // to
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
@@ -319,7 +427,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                      case TIME_ZONE_ID_UNKNOWN:
                         effectiveBias = tzi.Bias;
                         break;
-                     default:		// error
+                     default:    // error
                         effectiveBias = 0;
                         DbgPrintf(4, _T("GetTimeZoneInformation() call failed"));
                         break;
@@ -387,107 +495,56 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
    return (iState == STATE_FINISHED) ? SMTP_ERR_SUCCESS : SMTP_ERR_PROTOCOL_FAILURE;
 }
 
+
 /**
- * Mailer thread
+ * Driver send method
  */
-static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
+bool SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
 {
-   static const TCHAR *m_szErrorText[] =
+   bool success = false;
+
+   MAIL_ENVELOPE *pEnvelope = prepareMail(recipient, subject, body);
+   nxlog_debug(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
+   while (pEnvelope->retryCount > 0)
    {
-      _T("Sent successfully"),
-      _T("Unable to resolve SMTP server name"),
-      _T("Communication failure"),
-      _T("SMTP conversation failure")
-   };
-
-   ThreadSetName("Mailer");
-	DbgPrintf(1, _T("SMTP mailer thread started"));
-   while(1)
-   {
-      MAIL_ENVELOPE *pEnvelope = s_mailerQueue.getOrBlock();
-      if (pEnvelope == INVALID_POINTER_VALUE)
-         break;
-
-		nxlog_debug(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
-
-      UINT32 dwResult = SendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml, pEnvelope->isUtf8);
+      UINT32 dwResult = sendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml, pEnvelope->isUtf8);
       if (dwResult != SMTP_ERR_SUCCESS)
-		{
-			pEnvelope->retryCount--;
-			DbgPrintf(6, _T("SMTP(%p): Failed to send e-mail, remaining retries: %d"), pEnvelope, pEnvelope->retryCount);
-			if (pEnvelope->retryCount > 0)
-			{
-				// Try posting again
-			   s_mailerQueue.put(pEnvelope);
-			}
-			else
-			{
-				PostSystemEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsmm", dwResult,
-							 m_szErrorText[dwResult], pEnvelope->rcptAddr, pEnvelope->subject);
-				MemFree(pEnvelope->text);
-				MemFree(pEnvelope);
-			}
-		}
-		else
-		{
-			DbgPrintf(6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
-			MemFree(pEnvelope->text);
-			MemFree(pEnvelope);
-		}
+      {
+         pEnvelope->retryCount--;
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): Failed to send e-mail with error \"%s\", remaining retries: %d"), pEnvelope, s_szErrorText[dwResult], pEnvelope->retryCount);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
+         success = true;
+         break;
+      }
+      if (pEnvelope->retryCount > 0)
+         sleep(1);//TODO: correct?
    }
-   return THREAD_OK;
+   MemFree(pEnvelope->text);
+   MemFree(pEnvelope);
+   return success;
 }
 
 /**
- * Initialize mailer subsystem
+ * Driver entry point
  */
-void InitMailer()
+DECLARE_NCD_ENTRY_POINT(SMTP, &s_config)
 {
-   s_mailerThread = ThreadCreateEx(MailerThread, 0, NULL);
+   return SmtpDriver::createInstance(config);
 }
 
+#ifdef _WIN32
+
 /**
- * Shutdown mailer
+ * DLL Entry point
  */
-void ShutdownMailer()
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-   s_mailerQueue.clear();
-   s_mailerQueue.put(INVALID_POINTER_VALUE);
-   ThreadJoin(s_mailerThread);
+	if (dwReason == DLL_PROCESS_ATTACH)
+		DisableThreadLibraryCalls(hInstance);
+	return TRUE;
 }
 
-/**
- * Post e-mail to queue
- */
-void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText, bool isHtml)
-{
-   auto envelope = MemAllocStruct<MAIL_ENVELOPE>();
-   ConfigReadStrA(_T("MailEncoding"), envelope->encoding, 64, "utf8");
-   envelope->isUtf8 = isHtml || !stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8");
-
-#ifdef UNICODE
-	WideCharToMultiByte(envelope->isUtf8 ? CP_UTF8 : CP_ACP, envelope->isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszRcpt, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN, NULL, NULL);
-	envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
-	WideCharToMultiByte(envelope->isUtf8 ? CP_UTF8 : CP_ACP, envelope->isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszSubject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN, NULL, NULL);
-	envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
-	envelope->text = envelope->isUtf8 ? UTF8StringFromWideString(pszText) : MBStringFromWideString(pszText);
-#else
-	if (envelope->isUtf8)
-	{
-	   mb_to_utf8(pszRcpt, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN);
-	   envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
-      mb_to_utf8(pszSubject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN);
-      envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
-	   envelope->text = UTF8StringFromMBString(pszText);
-	}
-	else
-	{
-      nx_strncpy(envelope->rcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
-      nx_strncpy(envelope->subject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
-      envelope->text = strdup(pszText);
-	}
 #endif
-	envelope->retryCount = ConfigReadInt(_T("SMTP.RetryCount"), 1);
-	envelope->isHtml = isHtml;
-	s_mailerQueue.put(envelope);
-}

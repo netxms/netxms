@@ -318,6 +318,8 @@ THREAD_RESULT THREAD_CALL NotificationChannel::sendNotificationThread(void *arg)
          }
          else
          {
+            PostSystemEvent(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode, "ssss", nc->m_name,
+                  notification->getRecipient(), notification->getSubject(), notification->getBody());
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), nc->m_name);
             nc->setError(_T("Driver error"));
          }

@@ -60,7 +60,6 @@ public class EditActionDlg extends Dialog
 	private Button typeLocalExec;
 	private Button typeRemoteExec;
 	private Button typeExecScript;
-	private Button typeEMail;
 	private Button typeNotification;
 	private Button typeXMPP;
 	private Button typeForward;
@@ -144,11 +143,6 @@ public class EditActionDlg extends Dialog
 		typeExecScript.setText(Messages.get().EditActionDlg_ExecuteScript);
 		typeExecScript.setSelection(action.getType() == ServerAction.EXEC_NXSL_SCRIPT);
 		typeExecScript.addSelectionListener(new TypeButtonSelectionListener());
-		
-		typeEMail = new Button(typeGroup, SWT.RADIO);
-		typeEMail.setText(Messages.get().EditActionDlg_SenMail);
-		typeEMail.setSelection(action.getType() == ServerAction.SEND_EMAIL);
-		typeEMail.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeNotification = new Button(typeGroup, SWT.RADIO);
 		typeNotification.setText("Send notification");
@@ -308,8 +302,6 @@ public class EditActionDlg extends Dialog
 			action.setType(ServerAction.EXEC_REMOTE);
 		else if (typeExecScript.getSelection())
 			action.setType(ServerAction.EXEC_NXSL_SCRIPT);
-		else if (typeEMail.getSelection())
-			action.setType(ServerAction.SEND_EMAIL);
 		else if (typeNotification.getSelection())
 			action.setType(ServerAction.SEND_NOTIFICATION);
       else if (typeXMPP.getSelection())
@@ -369,8 +361,6 @@ public class EditActionDlg extends Dialog
 			type = ServerAction.EXEC_REMOTE;
 		else if (typeExecScript.getSelection())
 			type = ServerAction.EXEC_NXSL_SCRIPT;
-		else if (typeEMail.getSelection())
-			type = ServerAction.SEND_EMAIL;
 		else if (typeNotification.getSelection())
 			type = ServerAction.SEND_NOTIFICATION;
       else if (typeXMPP.getSelection())
@@ -391,12 +381,6 @@ public class EditActionDlg extends Dialog
             channelName.setEnabled(false);
 				recipient.setEnabled(true);
 				subject.setEnabled(false);
-				data.setEnabled(true);
-				break;
-			case ServerAction.SEND_EMAIL:
-            channelName.setEnabled(false);
-				recipient.setEnabled(true);
-				subject.setEnabled(true);
 				data.setEnabled(true);
 				break;
 			case ServerAction.FORWARD_EVENT:

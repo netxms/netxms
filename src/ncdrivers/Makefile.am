@@ -8,5 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = dbtable dummy gsm portech textfile ${NCDRV_DIRS}
+SUBDIRS = dbtable dummy gsm portech smtp textfile ${NCDRV_DIRS}
 

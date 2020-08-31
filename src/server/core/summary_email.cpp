@@ -134,17 +134,8 @@ void SendAlarmSummaryEmail(const shared_ptr<ScheduledTaskParameters>& parameters
    FormatTimestamp(currTime, timeFmt);
    _sntprintf(subject, 64, _T("NetXMS Alarm Summary for %s"), timeFmt);
 
-   TCHAR *next, *curr;
-
-   ConfigReadStr(_T("AlarmSummaryEmailRecipients"), s_recipients, MAX_CONFIG_VALUE, _T("0"));
-   curr = s_recipients;
-   do
-   {
-      next = _tcschr(curr, _T(';'));
-      if (next != nullptr)
-         *next = 0;
-      StrStrip(curr);
-      PostMail(curr, subject, summary, true);
-      curr = next + 1;
-   } while(next != nullptr);
+   TCHAR channelName[MAX_OBJECT_NAME];
+   ConfigReadStr(_T("DefaultNotificationChannel.SMTP.Html"), channelName, MAX_OBJECT_NAME, _T("SMTP-HTML"));
+   ConfigReadStr(_T("AlarmSummaryEmailRecipients"), s_recipients, MAX_CONFIG_VALUE, _T(""));
+   SendNotification(channelName, s_recipients, subject, summary);
 }

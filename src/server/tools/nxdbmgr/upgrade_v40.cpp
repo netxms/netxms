@@ -24,6 +24,92 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.9 to 40.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET event_name='SYS_NOTIFICATION_FAILURE',")
+         _T("message='Unable to send notification using notification channel %1 to %2',description='")
+         _T("Generated when server is unable to send notification.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) Notification channel name\r\n")
+         _T("   2) Recipient address\r\n")
+         _T("   3) Notification subject")
+         _T("   4) Notification message")
+         _T("' WHERE event_code=22")));
+
+   //TODO: add to init procedure
+   CHK_EXEC(CreateConfigParam(_T("DefaultNotificationChannel.SMTP.Html"), _T("SMTP-HTML"), _T("Default notification channel for SMTP HTML formatted messages"), nullptr, 'S', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DefaultNotificationChannel.SMTP.Text"), _T("SMTP-Text"), _T("Default notification channel for SMTP Text formatted messages"), nullptr, 'S', true, true, false, false));
+
+
+   TCHAR server[MAX_STRING_VALUE];
+   TCHAR localHostName[MAX_STRING_VALUE];
+   TCHAR fromName[MAX_STRING_VALUE];
+   TCHAR fromAddr[MAX_STRING_VALUE];
+   TCHAR mailEncoding[MAX_STRING_VALUE];
+   DBMgrConfigReadStr(_T("SMTP.Server"), server, MAX_STRING_VALUE, _T("localhost"));
+   DBMgrConfigReadStr(_T("SMTP.LocalHostName"), localHostName, MAX_STRING_VALUE, _T(""));
+   DBMgrConfigReadStr(_T("SMTP.FromName"), fromName, MAX_STRING_VALUE, _T("NetXMS Server"));
+   DBMgrConfigReadStr(_T("SMTP.FromAddr"), fromAddr, MAX_STRING_VALUE, _T("netxms@localhost"));
+   DBMgrConfigReadStr(_T("MailEncoding"), mailEncoding, MAX_STRING_VALUE, _T("utf8"));
+   uint32_t retryCount = DBMgrConfigReadUInt32(_T("SMTP.RetryCount"), 1);
+   uint16_t port = static_cast<uint16_t>(DBMgrConfigReadUInt32(_T("SMTP.Port"), 25));
+
+   const TCHAR *configTemplate = _T("Server=%s\r\n")
+         _T("RetryCount=%u\r\n")
+         _T("Port=%hu\r\n")
+         _T("LocalHostName=%s\r\n")
+         _T("FromName=%s\r\n")
+         _T("FromAddr=%s\r\n")
+         _T("MailEncoding=%s\r\n")
+         _T("IsHTML=%s");
+
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES (?,'SMTP',?,?)"), true);
+   if (hStmt != NULL)
+   {
+      TCHAR tmpConfig[1024];
+      _sntprintf(tmpConfig, 1024, configTemplate, server, retryCount, port, localHostName, fromName, fromAddr, mailEncoding, _T("no"));
+     DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, _T("SMTP-Text"), DB_BIND_STATIC);
+     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, _T("Default SMTP text channel (automatically migrated)"), DB_BIND_STATIC);
+     DBBind(hStmt, 3, DB_SQLTYPE_TEXT, tmpConfig, DB_BIND_STATIC);
+     if (!SQLExecute(hStmt) && !g_ignoreErrors)
+     {
+        DBFreeStatement(hStmt);
+        return false;
+     }
+
+     _sntprintf(tmpConfig, 1024, configTemplate, server, retryCount, port, localHostName, fromName, fromAddr, mailEncoding, _T("yes"));
+    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, _T("SMTP-HTML"), DB_BIND_STATIC);
+    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, _T("Default SMTP HTML channel (automatically migrated)"), DB_BIND_STATIC);
+    DBBind(hStmt, 3, DB_SQLTYPE_TEXT, tmpConfig, DB_BIND_STATIC);
+    if (!SQLExecute(hStmt) && !g_ignoreErrors)
+    {
+       DBFreeStatement(hStmt);
+       return false;
+    }
+
+     DBFreeStatement(hStmt);
+   }
+   else if (!g_ignoreErrors)
+     return false;
+
+   //Delete old configuration parameters
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='SMTP.Server'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='SMTP.LocalHostName'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='SMTP.FromName'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='SMTP.FromAddr'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='SMTP.RetryCount'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='SMTP.Port'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='MailEncoding'")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE actions SET action_type=3,channel_name='SMTP-Text' WHERE action_type=2")));
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade form 40.8 to 40.9
  */
 static bool H_UpgradeFromV8()
@@ -236,6 +322,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 9,  40, 10,  H_UpgradeFromV9  },
    { 8,  40, 9,  H_UpgradeFromV8  },
    { 7,  40, 8,  H_UpgradeFromV7  },
    { 6,  40, 7,  H_UpgradeFromV6  },

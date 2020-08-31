@@ -413,28 +413,6 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
                }
 					success = true;
                break;
-            case ACTION_SEND_EMAIL:
-               if (!expandedRcpt.isEmpty())
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending mail to %s: \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
-                  String expandedSubject = event->expandText(action->emailSubject, alarm);
-					   TCHAR *curr = expandedRcpt.getBuffer(), *next;
-					   do
-					   {
-						   next = _tcschr(curr, _T(';'));
-						   if (next != nullptr)
-							   *next = 0;
-						   StrStrip(curr);
-						   PostMail(curr, expandedSubject, expandedData);
-						   curr = next + 1;
-					   } while(next != nullptr);
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty recipients list - mail will not be sent"));
-               }
-               success = true;
-               break;
             case ACTION_NOTIFICATION:
                if (action->channelName[0] != 0)
                {

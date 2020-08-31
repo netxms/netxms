@@ -322,15 +322,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
-		EVENT_SMTP_FAILURE, 'SYS_SMTP_FAILURE', '1e376009-0d26-4b86-87a2-f4715a02fb38',
+		EVENT_NOTIFICATION_FAILURE, 'SYS_NOTIFICATION_FAILURE', '1e376009-0d26-4b86-87a2-f4715a02fb38',
 		EVENT_SEVERITY_WARNING, 1,
-		'Unable to send e-mail to <%3>: %2',
-		'Generated when server is unable to send e-mail.' CONCAT CRLF CONCAT
+		'Unable to send notification using notification channel %1 to %2',
+		'Generated when server is unable to send notification.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Error code' CONCAT CRLF CONCAT
-		'   2) Error text' CONCAT CRLF CONCAT
-		'   3) Recipient address' CONCAT CRLF CONCAT
-		'   4) Mail subject'
+		'   1) Notification channel name' CONCAT CRLF CONCAT
+		'   2) Recipient address' CONCAT CRLF CONCAT
+		'   3) Notification subject' CONCAT CRLF CONCAT
+		'   4) Notification message'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

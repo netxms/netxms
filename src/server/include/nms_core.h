@@ -1208,10 +1208,6 @@ uint32_t CreateUniqueId(int group);
 uint64_t CreateUniqueEventId();
 void SaveCurrentFreeId();
 
-void InitMailer();
-void ShutdownMailer();
-void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText, bool isHtml = false);
-
 void InitTraps();
 void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId);
 void CreateTrapCfgMessage(NXCPMessage *msg);

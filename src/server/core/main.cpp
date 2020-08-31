@@ -1045,9 +1045,6 @@ retry_db_lock:
       return FALSE;   // Mandatory module not loaded
    RegisterPredictionEngines();
 
-   // Initialize mailer
-   InitMailer();
-
    // Load users from database
    InitUsers();
    if (!LoadUsers())
@@ -1289,8 +1286,6 @@ void NXCORE_EXPORTABLE Shutdown()
    nxlog_debug(2, _T("Waiting for event processor to stop"));
 	g_eventQueue.put(INVALID_POINTER_VALUE);
 	ThreadJoin(s_eventProcessorThread);
-
-	ShutdownMailer();
 
 #if XMPP_SUPPORTED
    StopXMPPConnector();

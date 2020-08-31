@@ -68,6 +68,8 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DefaultDCIRetentionTime','30','30',1,0,'I','Default retention time for newly created DCI (in days).','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DefaultEncryptionPolicy','1','1',1,1,'C','Set the default encryption policy for communications with agents.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DefaultMapBackgroundColor','0xffffff','0xffffff',1,0,'H','Default background color for new network map objects.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DefaultNotificationChannel.SMTP.Html','SMTP-HTML','SMTP-HTML',1,0,'S','Default notification channel for SMTP HTML formatted messages','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DefaultNotificationChannel.SMTP.Text','SMTP-Text','SMTP-Text',1,0,'S','Default notification channel for SMTP Text formatted messages','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DefaultSubnetMaskIPv4','24','24',1,0,'I','Default mask for synthetic IPv4 subnets.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DefaultSubnetMaskIPv6','64','64',1,0,'I','Default mask for synthetic IPv6 subnets.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('DeleteAlarmsOfDeletedObject','1','1',1,0,'B','Enable/disable automatic alarm removal of an object when it is deleted.','');
@@ -370,3 +372,32 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,1073741825,524287);
 ** Default community string
 */
 INSERT INTO snmp_communities (id,community,zone) VALUES(1,'public',-1);
+
+/*
+**Notificaiotn channels
+*/
+INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
+   (
+      'SMTP-Text','SMTP','Default SMTP text channel',
+      'Server=localhost' CONCAT CRLF CONCAT
+		'RetryCount=1' CONCAT CRLF CONCAT
+		'Port=25' CONCAT CRLF CONCAT
+		'LocalHostName=' CONCAT CRLF CONCAT
+		'FromName=NetXMS Server' CONCAT CRLF CONCAT
+		'FromAddr=netxms@localhost' CONCAT CRLF CONCAT
+		'MailEncoding=utf8' CONCAT CRLF CONCAT
+		'IsHTML=no'
+   );
+INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
+   (
+      'SMTP-HTML','SMTP','Default SMTP HTML channel',
+      'Server=localhost' CONCAT CRLF CONCAT
+		'RetryCount=1' CONCAT CRLF CONCAT
+		'Port=25' CONCAT CRLF CONCAT
+		'LocalHostName=' CONCAT CRLF CONCAT
+		'FromName=NetXMS Server' CONCAT CRLF CONCAT
+		'FromAddr=netxms@localhost' CONCAT CRLF CONCAT
+		'MailEncoding=utf8' CONCAT CRLF CONCAT
+		'IsHTML=yes'
+   );
+

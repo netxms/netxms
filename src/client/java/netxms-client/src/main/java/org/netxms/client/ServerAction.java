@@ -29,7 +29,7 @@ public class ServerAction
 {
 	public static final int EXEC_LOCAL = 0;
 	public static final int EXEC_REMOTE = 1;
-	public static final int SEND_EMAIL = 2;
+//	public static final int SEND_EMAIL = 2;
 	public static final int SEND_NOTIFICATION = 3;
 	public static final int FORWARD_EVENT = 4;
 	public static final int EXEC_NXSL_SCRIPT = 5;

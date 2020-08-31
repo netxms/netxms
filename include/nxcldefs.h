@@ -1021,7 +1021,7 @@ enum AggregationFunction
  */
 #define ACTION_EXEC           0
 #define ACTION_REMOTE         1
-#define ACTION_SEND_EMAIL     2
+//#define ACTION_SEND_EMAIL     2 removed
 #define ACTION_NOTIFICATION   3
 #define ACTION_FORWARD_EVENT  4
 #define ACTION_NXSL_SCRIPT    5
