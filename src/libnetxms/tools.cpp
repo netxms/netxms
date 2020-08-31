@@ -2302,7 +2302,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
       return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
 
    // check that password contains only allowed symbols
-   int invalidSymbolIndex = (int)strspn(encryptedPasswd, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+   size_t invalidSymbolIndex = strspn(encryptedPasswd, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
    if ((invalidSymbolIndex < plen - 2) || ((invalidSymbolIndex != plen) && ((encryptedPasswd[invalidSymbolIndex] != '=') || ((invalidSymbolIndex == plen - 2) && (encryptedPasswd[plen - 1] != '=')))))
       return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
 

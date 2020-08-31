@@ -171,7 +171,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    while (follow)
    {
       NX_FSTAT(hFile, &st);
-      ssize_t newOffset = st.st_size;
+      ssize_t newOffset = static_cast<ssize_t>(st.st_size);
       if (flData->getOffset() < newOffset)
       {
          size_t readSize = newOffset - flData->getOffset();

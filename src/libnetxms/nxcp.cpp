@@ -844,7 +844,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             stream->read(reinterpret_cast<char*>(compBuffer), bufferSize);
             if (stream->bad())
                break;
-            bytes = stream->gcount();
+            bytes = static_cast<size_t>(stream->gcount());
 
             // Each compressed data block prepended with 4 bytes header
             // First byte contains compression method, second is always 0,
@@ -859,7 +859,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             stream->read(reinterpret_cast<char*>(msg->fields), bufferSize);
             if (stream->bad())
                break;
-            bytes = stream->gcount();
+            bytes = static_cast<size_t>(stream->gcount());
          }
 
          // Message should be aligned to 8 bytes boundary

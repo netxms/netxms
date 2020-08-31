@@ -61,6 +61,11 @@ struct identifier_t
    char v[MAX_IDENTIFIER_LENGTH];
 };
 
+// Disable strncpy warning on Windows
+#ifdef _WIN32
+#pragma warning(disable: 4996)
+#endif
+
 /**
  * NXSL identifier
  */
@@ -103,6 +108,10 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
       return (i.length == length) && !strcmp(i.value, value);
    }
 };
+
+#ifdef _WIN32
+#pragma warning(default: 4996)
+#endif
 
 /**
  * NXSL stack class

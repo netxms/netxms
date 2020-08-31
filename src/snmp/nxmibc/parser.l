@@ -67,6 +67,7 @@ WHITESPC  [[:blank:]\t\n\r]
 #pragma warning(disable: 4244 4267)
 #endif
 #define read	_read
+#define fileno	_fileno
 #endif
 
 #ifdef __HP_aCC

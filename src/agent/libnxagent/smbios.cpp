@@ -731,8 +731,8 @@ static void ParseSystemInformation(TableHeader *t)
       // UEFI, and Microsoft specifications) has consistently used little-endian byte encoding for the first three
       // fields: time_low, time_mid, time_hi_and_version.
       *reinterpret_cast<uint32_t*>(&guid) = htonl(*reinterpret_cast<uint32_t*>(&guid));
-      *reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 4) = htonl(*reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 4));
-      *reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 6) = htonl(*reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 6));
+      *reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 4) = htons(*reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 4));
+      *reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 6) = htons(*reinterpret_cast<uint16_t*>(reinterpret_cast<BYTE*>(&guid) + 6));
       s_hardwareUUID = uuid(guid);
    }
 
