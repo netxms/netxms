@@ -537,7 +537,7 @@ void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, size_t inLen, BYTE *out
 	ice_key_set(ice, key);
 
 	size_t stopPos = inLen - (inLen % 8);
-	for(int pos = 0; pos < stopPos; pos += 8)
+	for(size_t pos = 0; pos < stopPos; pos += 8)
 		ice_key_encrypt(ice, &in[pos], &out[pos]);
 
 	if (stopPos < inLen)
@@ -561,7 +561,7 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, size_t inLen, BYTE *out
 	ice_key_set(ice, key);
 
 	size_t stopPos = inLen - (inLen % 8);
-	for(int pos = 0; pos < stopPos; pos += 8)
+	for(size_t pos = 0; pos < stopPos; pos += 8)
 		ice_key_decrypt(ice, &in[pos], &out[pos]);
 
 	if (stopPos < inLen)

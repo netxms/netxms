@@ -186,7 +186,11 @@ typedef int bool;
 #define HAVE_THREAD_LOCAL_STORAGE 1
 
 // Disable some warnings:
-//   4577 -  'noexcept' used with no exception handling mode specified
+//   4293 - 'function xxx' not available as intrinsic function
+//   4530 - C++ exception handler used, but unwind semantics are not enabled
+//   4577 - 'noexcept' used with no exception handling mode specified
+#pragma warning(disable: 4293)
+#pragma warning(disable: 4530)
 #pragma warning(disable: 4577)
 
 // Set API version to Windows 7

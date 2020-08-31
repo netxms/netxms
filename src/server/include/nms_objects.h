@@ -2841,9 +2841,12 @@ protected:
 	UINT32 m_physicalContainer;
 	uuid m_rackImageFront;
    uuid m_rackImageRear;
-	INT64 m_syslogMessageCount;
-	INT64 m_snmpTrapCount;
-	TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
+	int64_t m_syslogMessageCount;
+   int64_t m_snmpTrapCount;
+   int64_t m_snmpTrapLastTotal;
+   time_t m_snmpTrapStormLastCheckTime;
+   uint32_t m_snmpTrapStormActualDuration;
+   TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
 	TCHAR m_sshPassword[MAX_SSH_PASSWORD_LEN];
 	UINT32 m_sshProxy;
 	UINT32 m_portNumberingScheme;
@@ -2858,10 +2861,6 @@ protected:
    uint16_t m_cipStatus;
    uint16_t m_cipState;
    uint16_t m_cipVendorCode;
-   //SNMP trap statistic variables
-   time_t m_snmpTrapLastCheckTime;
-   int64_t m_snmpTrapLastTotal;
-   uint32_t m_snmpTrapActualDuration;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;

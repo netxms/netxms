@@ -501,11 +501,11 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
  */
 InetAddress InetAddress::parse(const WCHAR *str)
 {
-   if ((str == NULL) || (*str == 0))
+   if ((str == nullptr) || (*str == 0))
       return InetAddress();
 
    char mb[256];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, -1, mb, 256, NULL, NULL);
+   wchar_to_mb(str, -1, mb, 256);
    return parse(mb);
 }
 
@@ -514,18 +514,18 @@ InetAddress InetAddress::parse(const WCHAR *str)
  */
 InetAddress InetAddress::parse(const char *str)
 {
-   if ((str == NULL) || (*str == 0))
+   if ((str == nullptr) || (*str == 0))
       return InetAddress();
 
    // Check for IPv4 address
 #ifdef _WIN32
    char strCopy[256];
-   strlcpy(strCopy, str, 255);
+   strlcpy(strCopy, str, 256);
 
    struct sockaddr_in addr4;
    addr4.sin_family = AF_INET;
    INT addrLen = sizeof(addr4);
-   if (WSAStringToAddressA(strCopy, AF_INET, NULL, (struct sockaddr *)&addr4, &addrLen) == 0)
+   if (WSAStringToAddressA(strCopy, AF_INET, nullptr, (struct sockaddr *)&addr4, &addrLen) == 0)
    {
       return InetAddress(ntohl(addr4.sin_addr.s_addr));
    }
@@ -551,6 +551,52 @@ InetAddress InetAddress::parse(const char *str)
    if (inet_pton(AF_INET6, str, &addr6))
    {
       return InetAddress(addr6.s6_addr);
+   }
+#endif
+   return InetAddress();
+}
+
+/**
+ * Parse IPv4 address with mask in dotted notation
+ */
+InetAddress InetAddress::parse(const WCHAR *addrStr, const WCHAR *maskStr)
+{
+   if ((addrStr == nullptr) || (*addrStr == 0) || (maskStr == nullptr) || (*maskStr == 0))
+      return InetAddress();
+
+   char mbAddr[256], mbMask[256];
+   wchar_to_mb(addrStr, -1, mbAddr, 256);
+   wchar_to_mb(maskStr, -1, mbMask, 256);
+   return parse(mbAddr, mbMask);
+}
+
+/**
+ * Parse IPv4 address with mask in dotted notation
+ */
+InetAddress InetAddress::parse(const char *addrStr, const char *maskStr)
+{
+   if ((addrStr == nullptr) || (*addrStr == 0) || (maskStr == nullptr) || (*maskStr == 0))
+      return InetAddress();
+
+#ifdef _WIN32
+   char addrCopy[256], maskCopy[256];
+   strlcpy(addrCopy, addrStr, 256);
+   strlcpy(maskCopy, maskStr, 256);
+
+   struct sockaddr_in addr, mask;
+   addr.sin_family = AF_INET;
+   mask.sin_family = AF_INET;
+   INT addrLen = sizeof(addr), maskLen = sizeof(mask);
+   if ((WSAStringToAddressA(addrCopy, AF_INET, nullptr, (struct sockaddr *)&addr, &addrLen) == 0) &&
+       (WSAStringToAddressA(maskCopy, AF_INET, nullptr, (struct sockaddr *)&mask, &maskLen) == 0))
+   {
+      return InetAddress(ntohl(addr.sin_addr.s_addr), BitsInMask(ntohl(mask.sin_addr.s_addr)));
+   }
+#else
+   struct in_addr addr, mask;
+   if (inet_aton(addrStr, &addr) && inet_aton(maskStr, &mask))
+   {
+      return InetAddress(ntohl(addr.s_addr), BitsInMask(ntohl(mask.s_addr)));
    }
 #endif
    return InetAddress();

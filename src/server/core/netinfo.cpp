@@ -211,12 +211,12 @@ static InterfaceList *SysGetLocalIfList()
       return NULL;
    }
 
-   pBuffer = (IP_ADAPTER_INFO *)malloc(dwSize);
+   pBuffer = (IP_ADAPTER_INFO *)MemAlloc(dwSize);
    if (GetAdaptersInfo(pBuffer, &dwSize) == ERROR_SUCCESS)
    {
       pIfList = new InterfaceList;
 
-      for(pInfo = pBuffer; pInfo != NULL; pInfo = pInfo->Next)
+      for(pInfo = pBuffer; pInfo != nullptr; pInfo = pInfo->Next)
       {
          // Get network connection name from adapter name, if possible
          if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
@@ -230,7 +230,7 @@ static InterfaceList *SysGetLocalIfList()
             if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
             {
 #ifdef UNICODE
-					nx_strncpy(szAdapterName, wName, MAX_OBJECT_NAME);
+					wcslcpy(szAdapterName, wName, MAX_OBJECT_NAME);
 #else
                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                                    wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
@@ -243,7 +243,7 @@ static InterfaceList *SysGetLocalIfList()
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
                szAdapterName[MAX_OBJECT_NAME - 1] = 0;
 #else
-               nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+               strlcpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
 #endif
             }
          }
@@ -261,19 +261,19 @@ static InterfaceList *SysGetLocalIfList()
          BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);
 
          // Compose result for each ip address
-         for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
+         for(pAddr = &pInfo->IpAddressList; pAddr != nullptr; pAddr = pAddr->Next)
          {
             InterfaceInfo *iface = pIfList->findByIfIndex(pInfo->Index);
-            if (iface != NULL)
+            if (iface != nullptr)
             {
-               iface->ipAddrList.add(InetAddress(ntohl(inet_addr(pAddr->IpAddress.String)), ntohl(inet_addr(pAddr->IpMask.String))));
+               iface->ipAddrList.add(InetAddress::parse(pAddr->IpAddress.String, pAddr->IpMask.String));
             }
             else
             {
                iface = new InterfaceInfo(pInfo->Index);
-               nx_strncpy(iface->name, szAdapterName, MAX_OBJECT_NAME);
+               _tcslcpy(iface->name, szAdapterName, MAX_OBJECT_NAME);
                memcpy(iface->macAddr, pInfo->Address, MAC_ADDR_LENGTH);
-               iface->ipAddrList.add(InetAddress(ntohl(inet_addr(pAddr->IpAddress.String)), ntohl(inet_addr(pAddr->IpMask.String))));
+               iface->ipAddrList.add(InetAddress::parse(pAddr->IpAddress.String, pAddr->IpMask.String));
                iface->type = pInfo->Type;
 				   pIfList->add(iface);
             }
@@ -281,7 +281,7 @@ static InterfaceList *SysGetLocalIfList()
       }
    }
 
-   free(pBuffer);
+   MemFree(pBuffer);
 
 #else
    TCHAR *pChar;
@@ -361,8 +361,8 @@ static InterfaceList *SysGetLocalIfList()
                }
 
                // Name
-               nx_strncpy(iface->name, pBuf, MAX_DB_STRING);
-   			   nx_strncpy(iface->description, pBuf, MAX_DB_STRING);
+               _tcslcpy(iface->name, pBuf, MAX_DB_STRING);
+               _tcslcpy(iface->description, pBuf, MAX_DB_STRING);
 
                pIfList->add(iface);
             }
@@ -379,7 +379,7 @@ static InterfaceList *SysGetLocalIfList()
  */
 ArpCache *GetLocalArpCache()
 {
-   ArpCache *pArpCache = NULL;
+   ArpCache *pArpCache = nullptr;
 
    // Get ARP cache from built-in code or platform subagent
    pArpCache = SysGetLocalArpCache();

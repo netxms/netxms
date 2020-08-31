@@ -31,7 +31,7 @@
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
 #define DEBUG_TAG_ROUTES_POLL       _T("poll.routes")
 #define DEBUG_TAG_TOPOLOGY_POLL     _T("poll.topology")
-#define DRBUG_TAG_SNMP_TRAP_FLOOD   _T("snmp.trap.flood")
+#define DEBUG_TAG_SNMP_TRAP_FLOOD   _T("snmp.trap.flood")
 
 /**
  * Performance counters
@@ -166,6 +166,9 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_rackHeight = 1;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
+   m_snmpTrapLastTotal = 0;
+   m_snmpTrapStormLastCheckTime = 0;
+   m_snmpTrapStormActualDuration = 0;
    m_sshLogin[0] = 0;
    m_sshPassword[0] = 0;
    m_sshProxy = 0;
@@ -181,9 +184,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
-   m_snmpTrapLastCheckTime = 0;
-   m_snmpTrapLastTotal = 0;
-   m_snmpTrapActualDuration = 0;
 }
 
 /**
@@ -285,6 +285,9 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_rackHeight = 1;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
+   m_snmpTrapLastTotal = 0;
+   m_snmpTrapStormLastCheckTime = 0;
+   m_snmpTrapStormActualDuration = 0;
    _tcslcpy(m_sshLogin, newNodeData->sshLogin, MAX_SSH_LOGIN_LEN);
    _tcslcpy(m_sshPassword, newNodeData->sshPassword, MAX_SSH_PASSWORD_LEN);
    m_sshProxy = newNodeData->sshProxyId;
@@ -302,9 +305,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
-   m_snmpTrapLastCheckTime = 0;
-   m_snmpTrapLastTotal = 0;
-   m_snmpTrapActualDuration = 0;
 }
 
 /**
@@ -10056,19 +10056,20 @@ bool Node::checkTrapShouldBeProcessed()
    lockProperties();
    bool dropSNMPTrap = m_state & NSF_SNMP_TRAP_FLOOD;
    unlockProperties();
-   if (g_trapsPerSecond != 0 && time(nullptr) > m_snmpTrapLastCheckTime) //If last check was more than second ago
+   time_t now = time(nullptr);
+   if ((g_snmpTrapStormCountThreshold != 0) && (now > m_snmpTrapStormLastCheckTime)) // If last check was more than second ago
    {
-      m_snmpTrapLastCheckTime = time(nullptr);
-      int newDiff = m_snmpTrapCount - m_snmpTrapLastTotal;
+      m_snmpTrapStormLastCheckTime = time(nullptr);
+      auto newDiff = static_cast<uint32_t>(m_snmpTrapCount - m_snmpTrapLastTotal);
       m_snmpTrapLastTotal = m_snmpTrapCount;
-      if (newDiff > g_trapsPerSecond)
+      if (newDiff > g_snmpTrapStormCountThreshold)
       {
-         if(m_snmpTrapActualDuration >= g_duration)
+         if (m_snmpTrapStormActualDuration >= g_snmpTrapStormDurationThreshold)
          {
-            if(!dropSNMPTrap)
+            if (!dropSNMPTrap)
             {
-               nxlog_debug_tag(DRBUG_TAG_SNMP_TRAP_FLOOD, 2, _T("SNMP trap flood detected for %s [%u] node: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, m_name, m_id, g_trapsPerSecond, newDiff);
-               PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_DETECTED, m_id, "DdD", newDiff, g_duration, g_trapsPerSecond);
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_SNMP_TRAP_FLOOD, _T("SNMP trap flood detected for node %s [%u]: threshold=%u eventsPerSecond=%d"), m_name, m_id, g_snmpTrapStormCountThreshold, newDiff);
+               PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_DETECTED, m_id, "ddd", newDiff, g_snmpTrapStormDurationThreshold, g_snmpTrapStormCountThreshold);
 
                lockProperties();
                m_state |= NSF_SNMP_TRAP_FLOOD;
@@ -10077,21 +10078,18 @@ bool Node::checkTrapShouldBeProcessed()
             }
             dropSNMPTrap = true;
          }
-         m_snmpTrapActualDuration++;
+         m_snmpTrapStormActualDuration++;
       }
-      else
+      else if (m_snmpTrapStormActualDuration != 0)
       {
-         if (m_snmpTrapActualDuration != 0)
-         {
-            nxlog_debug_tag(DRBUG_TAG_SNMP_TRAP_FLOOD, 2, _T("SNMP trap flood condition cleared"));
-            PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_ENDED, m_id, "DdD", newDiff, g_duration, g_trapsPerSecond);
-            m_snmpTrapActualDuration = 0;
-            lockProperties();
-            m_state &= ~NSF_SNMP_TRAP_FLOOD;
-            setModified(MODIFY_NODE_PROPERTIES);
-            unlockProperties();
-            dropSNMPTrap = false;
-         }
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SNMP_TRAP_FLOOD, _T("SNMP trap flood condition cleared for node %s [%u]"), m_name, m_id);
+         PostSystemEvent(EVENT_SNMP_TRAP_FLOOD_ENDED, m_id, "DdD", newDiff, g_snmpTrapStormDurationThreshold, g_snmpTrapStormCountThreshold);
+         m_snmpTrapStormActualDuration = 0;
+         lockProperties();
+         m_state &= ~NSF_SNMP_TRAP_FLOOD;
+         setModified(MODIFY_NODE_PROPERTIES);
+         unlockProperties();
+         dropSNMPTrap = false;
       }
    }
 

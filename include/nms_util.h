@@ -3153,6 +3153,8 @@ public:
    static InetAddress resolveHostName(const char *hostname, int af = AF_UNSPEC);
    static InetAddress parse(const WCHAR *str);
    static InetAddress parse(const char *str);
+   static InetAddress parse(const WCHAR *addrStr, const WCHAR *maskStr);
+   static InetAddress parse(const char *addrStr, const char *maskStr);
    static InetAddress createFromSockaddr(struct sockaddr *s);
 
    static const InetAddress INVALID;

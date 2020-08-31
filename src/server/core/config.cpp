@@ -440,10 +440,13 @@ void ConfigPreLoad()
    DBConnectionPoolReleaseConnection(hdb);
 }
 
-static UINT32 ConvertToUint32(const TCHAR *value, UINT32 defaultValue)
+/**
+ * Convert given text to uint32_t or use default value on conversion failure
+ */
+static uint32_t ConvertToUint32(const TCHAR *value, uint32_t defaultValue)
 {
    TCHAR *eptr;
-   UINT32 i = _tcstoul(value, &eptr, 0);
+   uint32_t i = _tcstoul(value, &eptr, 0);
    return (*eptr == 0) ? i : defaultValue;
 }
 
@@ -555,7 +558,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.PassiveDiscovery.Interval")))
    {
-      g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
+      g_discoveryPollingInterval = ConvertToUint32(value, 900);
    }
    else if (!_tcscmp(name, _T("NXSL.EnableContainerFunctions")))
    {
@@ -566,11 +569,11 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Threshold")))
    {
-      g_trapsPerSecond = ConvertToUint32(value, 0);
+      g_snmpTrapStormCountThreshold = ConvertToUint32(value, 0);
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Duration")))
    {
-      g_duration = ConvertToUint32(value, 15);
+      g_snmpTrapStormDurationThreshold = ConvertToUint32(value, 15);
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {

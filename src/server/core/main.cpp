@@ -140,24 +140,24 @@ UINT32 g_topologyPollingInterval;
 UINT32 g_conditionPollingInterval;
 UINT32 g_instancePollingInterval;
 UINT32 g_icmpPollingInterval;
-UINT32 g_icmpPingSize;
-UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
-UINT32 g_auditFlags;
-UINT32 g_slmPollingInterval;
-UINT32 g_offlineDataRelevanceTime = 86400;
+uint32_t g_icmpPingSize;
+uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
+uint32_t g_auditFlags;
+uint32_t g_slmPollingInterval;
+uint32_t g_offlineDataRelevanceTime = 86400;
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(int g_dbSyntax) = DB_SYNTAX_UNKNOWN;
 NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
-UINT64 g_serverId = 0;
+uint64_t g_serverId = 0;
 RSA *g_pServerKey = nullptr;
 time_t g_serverStartTime = 0;
-UINT32 g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
-UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
-UINT32 g_requiredPolls = 1;
-INT32 g_instanceRetentionTime = 0; // Default instance retention time
-UINT32 g_trapsPerSecond = 0;
-UINT32 g_duration = 15;
+uint32_t g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
+uint32_t g_thresholdRepeatInterval = 0;	// Disabled by default
+uint32_t g_requiredPolls = 1;
+int32_t g_instanceRetentionTime = 0; // Default instance retention time
+uint32_t g_snmpTrapStormCountThreshold = 0;
+uint32_t g_snmpTrapStormDurationThreshold = 15;
 DB_DRIVER g_dbDriver = nullptr;
 NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = nullptr;
 INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
@@ -479,8 +479,8 @@ static void LoadGlobalConfig()
    g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
    g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);
    g_instanceRetentionTime = ConfigReadInt(_T("InstanceRetentionTime"), 0); // Config values are in days
-   g_trapsPerSecond = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
-   g_duration = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);
+   g_snmpTrapStormCountThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
+   g_snmpTrapStormDurationThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);
 
    SnmpSetDefaultTimeout(ConfigReadInt(_T("SNMPRequestTimeout"), 1500));
 }

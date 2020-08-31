@@ -71,7 +71,7 @@ static bool ConnectToMasterAgent()
    struct sockaddr_in sa;
    memset(&sa, 0, sizeof(sa));
    sa.sin_family = AF_INET;
-   sa.sin_addr.s_addr = inet_addr("127.0.0.1");
+   sa.sin_addr.s_addr = htonl(0x7F000001);
    sa.sin_port = htons(s_port);
 
    // Connect to server

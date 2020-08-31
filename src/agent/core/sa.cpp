@@ -513,7 +513,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-	servAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	servAddr.sin_addr.s_addr = htonl(0x7F000001);
    servAddr.sin_port = htons(g_sessionAgentPort);
 
    // Bind socket
