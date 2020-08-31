@@ -15,6 +15,7 @@ DefaultGroupName=NetXMS
 DisableDirPage=auto
 DisableProgramGroupPage=auto
 AllowNoIcons=yes
+WizardStyle=modern
 LicenseFile=..\..\..\GPL.txt
 Compression=lzma
 SolidCompression=yes
