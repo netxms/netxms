@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification drivder that writes messages to text file
-** Copyright (C) 2019 Raden Solutions
+** Copyright (C) 2019-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: text_file.cpp
+** File: textfile.cpp
 **
 **/
 

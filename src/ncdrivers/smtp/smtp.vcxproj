@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{2B1219CB-C1DA-4F43-1B16-98B88AC85678}</ProjectGuid>
-    <RootNamespace>textfile</RootNamespace>
+    <ProjectGuid>{46B3AD90-68DA-119C-8D26-28C88AC8561C}</ProjectGuid>
+    <RootNamespace>smtp</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -138,7 +138,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="textfile.cpp" />
+    <ClCompile Include="smtp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\libnetxms\libnetxms.vcxproj">

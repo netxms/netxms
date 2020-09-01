@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
-** Notification drivder that sends e-mails
-** Copyright (C) 2019 Raden Solutions
+** Notification driver for SMTP protocol
+** Copyright (C) 2019-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: text_file.cpp
+** File: smtp.cpp
 **
 **/
 
@@ -308,10 +308,12 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
    }
 
    // Resolve hostname
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("### Server name: %s"), m_server);
    InetAddress addr = InetAddress::resolveHostName(m_server);
    if (!addr.isValid() || addr.isBroadcast() || addr.isMulticast())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot resolve server name %s"), m_server);
       return SMTP_ERR_BAD_SERVER_NAME;
+   }
 
    // Create socket and connect to server
    SOCKET hSocket = ConnectToHost(addr, m_port, 3000);
@@ -349,7 +351,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                {
                   iState = STATE_FROM;
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", m_fromAddr);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, nullptr);
                }
                else
                {
@@ -362,7 +364,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                {
                   iState = STATE_RCPT;
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "RCPT TO: <%s>\r\n", pszRcpt);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, nullptr);
                }
                else
                {
@@ -374,7 +376,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                if (iResp == 250)
                {
                   iState = STATE_DATA;
-                  SendEx(hSocket, "DATA\r\n", 6, 0, NULL);
+                  SendEx(hSocket, "DATA\r\n", 6, 0, nullptr);
                }
                else
                {
@@ -390,14 +392,14 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                   // Mail headers
                   // from
                   char from[512];
-                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: \"%s\" <%s>\r\n", EncodeHeader(NULL, encoding, fromName, from, 512), m_fromAddr);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: \"%s\" <%s>\r\n", EncodeHeader(nullptr, encoding, fromName, from, 512), m_fromAddr);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, nullptr);
                   // to
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, nullptr);
                   // subject
                   EncodeHeader("Subject", encoding, pszSubject, szBuffer, SMTP_BUFFER_SIZE);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, nullptr);
 
                   // date
                   time_t currentTime;
@@ -429,7 +431,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                         break;
                      default:    // error
                         effectiveBias = 0;
-                        DbgPrintf(4, _T("GetTimeZoneInformation() call failed"));
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("GetTimeZoneInformation() call failed"));
                         break;
                   }
                   int offset = abs(effectiveBias);
@@ -438,16 +440,16 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                   strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
 #endif
 
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, nullptr);
                   // content-type
                   snprintf(szBuffer, SMTP_BUFFER_SIZE,
                                     "Content-Type: text/%s; charset=%s\r\n"
                                     "Content-Transfer-Encoding: 8bit\r\n\r\n", isHtml ? "html" : "plain", encoding);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, nullptr);
 
                   // Mail body
-                  SendEx(hSocket, pszText, strlen(pszText), 0, NULL);
-                  SendEx(hSocket, "\r\n.\r\n", 5, 0, NULL);
+                  SendEx(hSocket, pszText, strlen(pszText), 0, nullptr);
+                  SendEx(hSocket, "\r\n.\r\n", 5, 0, nullptr);
                }
                else
                {
@@ -459,7 +461,7 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
                if (iResp == 250)
                {
                   iState = STATE_QUIT;
-                  SendEx(hSocket, "QUIT\r\n", 6, 0, NULL);
+                  SendEx(hSocket, "QUIT\r\n", 6, 0, nullptr);
                }
                else
                {
@@ -507,11 +509,11 @@ bool SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR 
    nxlog_debug(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
    while (pEnvelope->retryCount > 0)
    {
-      UINT32 dwResult = sendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml, pEnvelope->isUtf8);
-      if (dwResult != SMTP_ERR_SUCCESS)
+      uint32_t result = sendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml, pEnvelope->isUtf8);
+      if (result != SMTP_ERR_SUCCESS)
       {
          pEnvelope->retryCount--;
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): Failed to send e-mail with error \"%s\", remaining retries: %d"), pEnvelope, s_szErrorText[dwResult], pEnvelope->retryCount);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): Failed to send e-mail with error \"%s\", remaining retries: %d"), pEnvelope, s_szErrorText[result], pEnvelope->retryCount);
       }
       else
       {
@@ -519,8 +521,9 @@ bool SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR 
          success = true;
          break;
       }
+
       if (pEnvelope->retryCount > 0)
-         sleep(1);//TODO: correct?
+         ThreadSleep(1);
    }
    MemFree(pEnvelope->text);
    MemFree(pEnvelope);

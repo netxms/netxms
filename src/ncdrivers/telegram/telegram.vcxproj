@@ -181,6 +181,7 @@
     <ClInclude Include="..\..\..\..\include\netxms-version.h" />
     <ClInclude Include="..\..\..\..\include\nms_common.h" />
     <ClInclude Include="..\..\..\..\include\nms_util.h" />
+    <ClInclude Include="..\..\..\include\ncdrv.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\jansson\jansson.vcxproj">
