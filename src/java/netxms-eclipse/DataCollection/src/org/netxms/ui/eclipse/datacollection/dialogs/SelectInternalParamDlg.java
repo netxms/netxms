@@ -36,31 +36,35 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
    public SelectInternalParamDlg(Shell parentShell, long nodeId, boolean selectTables)
 	{
 		super(parentShell, nodeId, selectTables);
-		
 	}
 
-	/**
-	 * Fill parameter list
-	 */
-	protected void fillParameterList()
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillList()
+    */
+   @Override
+	protected void fillList()
 	{
 	   if (selectTables)
-	      tableList();
+	      fillTableList();
 	   else
-	      parameterList();
-	   
+	      fillMetricList();
 	}
-	
 
    /**
     * Fill table parameter list
     */
-   private void tableList()
+   private void fillTableList()
    {
       ArrayList<AgentTable> list = new ArrayList<AgentTable>(10);
-      String[] instanceColumns = {"MAC_ADDRESS"}; //Same for both tables
-      list.add(new AgentTable("Topology.SwitchForwardingDatabase", "Switch forwarding database", instanceColumns));
-      list.add(new AgentTable("Topology.WirelessStations", "Wireless stations table", instanceColumns));
+
+      String[] topologyInstanceColumns = { "MAC_ADDRESS" }; // Same for both topology tables
+      list.add(new AgentTable("Topology.SwitchForwardingDatabase", "Switch forwarding database", topologyInstanceColumns));
+      list.add(new AgentTable("Topology.WirelessStations", "Wireless stations table", topologyInstanceColumns));
+
+      if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
+      {
+         list.add(new AgentTable("Server.EventProcessors", "Event processors", new String[] { "ID" }));
+      }
 
       viewer.setInput(list.toArray());
    }
@@ -68,7 +72,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
    /**
     * Fill parameter list
     */
-   private void parameterList()
+   private void fillMetricList()
 	{
 		ArrayList<AgentParameter> list = new ArrayList<AgentParameter>(10);
 
@@ -145,14 +149,18 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.ClientSessions.Web", "Client sessions: web clients", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ClientSessions.Web(*)", "Client sessions for user {instance}: web clients", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DataCollectionItems", "Number of data collection items in the system", DataType.UINT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.Failed", "Failed DB queries", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.LongRunning", "Long running DB queries", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.NonSelect", "Non-SELECT DB queries", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.Select", "SELECT DB queries", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.Total", "Total DB queries", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DBWriter.Requests.IData", "DB writer requests (DCI data)", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DBWriter.Requests.Other", "DB writer requests (other queries)", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DBWriter.Requests.RawData", "DB writer requests (raw DCI data)", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Failed", "Failed DB queries", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.LongRunning", "Long running DB queries", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.NonSelect", "Non-SELECT DB queries", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Select", "SELECT DB queries", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Total", "Total DB queries", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.IData", "DB writer requests (DCI data)", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.Other", "DB writer requests (other queries)", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.RawData", "DB writer requests (raw DCI data)", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.EventProcessor.AverageWaitTime(*)", "Event processor {instance}: average event wait time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.EventProcessor.Bindings(*)", "Event processor {instance}: active bindings", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.EventProcessor.ProcessedEvents(*)", "Event processor {instance}: total number of processed events", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.EventProcessor.QueueSize(*)", "Event processor {instance}: queue size", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.Heap.Active", "Active server heap memory", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.Heap.Allocated", "Allocated server heap memory", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.Heap.Mapped", "Mapped server heap memory", DataType.UINT64)); //$NON-NLS-1$
@@ -210,9 +218,9 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		viewer.setInput(list.toArray());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#getConfigurationPrefix()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#getConfigurationPrefix()
+    */
 	@Override
 	protected String getConfigurationPrefix()
 	{
