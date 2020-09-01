@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DciValue;
@@ -285,5 +286,86 @@ public class Alarms extends AbstractHandler
       }
       
       return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
+    */
+   @Override
+   protected Object get(String id, Map<String, String> query) throws Exception
+   {
+      NXCSession session = getSession();
+      if (!session.isObjectsSynchronized())
+         session.syncObjects();
+      if (!session.isUserDatabaseSynchronized())
+         session.syncUserDatabase();
+      if (!session.isAlarmCategoriesSynchronized())
+         session.syncAlarmCategories();
+      if (!session.isEventObjectsSynchronized())
+         session.syncEventTemplates();
+      
+      Alarm alarm;
+      try
+      {
+         long alarmId = Long.parseLong(id);
+         alarm = session.getAlarm(alarmId);
+      }
+      catch(NumberFormatException e)
+      {
+         throw new NXCException(RCC.INVALID_ALARM_ID); 
+      }
+      
+      if (alarm == null)
+         throw new NXCException(RCC.INVALID_ALARM_ID);      
+
+      Gson gson = JsonTools.createGsonInstance();
+      JsonObject json = (JsonObject)gson.toJsonTree(alarm);
+      AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+      if (object != null)
+      {
+         json.add("sourceObject", gson.toJsonTree(object));
+         if (alarm.getDciId() != 0)
+         {
+            DciValue[] values = session.getLastValues(object.getObjectId());
+            
+            for(DciValue v : values)
+            {
+               if (v.getId() == alarm.getDciId())
+               {
+                  json.add("dci", gson.toJsonTree(v));
+                  break;
+               }
+            }
+         }
+         if (session.isZoningEnabled() && (object instanceof Node))
+         {
+            json.addProperty("zoneUIN", ((Node)object).getZoneId());
+            json.addProperty("zoneName", ((Node)object).getZoneName());
+         }
+      }
+
+      addUserName(json, session, alarm.getAcknowledgedByUser(), "acknowledgedByUserName");
+      addUserName(json, session, alarm.getResolvedByUser(), "resolvedByUserName");
+      addUserName(json, session, alarm.getTerminatedByUser(), "terminatedByUserName");
+
+      EventTemplate e = session.findEventTemplateByCode(alarm.getSourceEventCode());
+      if (e != null)
+      {
+         json.addProperty("sourceEventName", e.getName());
+      }
+      
+      json.remove("categories");
+      JsonArray categories = new JsonArray();
+      for(long cid : alarm.getCategories())
+      {
+         JsonObject c = new JsonObject();
+         c.addProperty("id", cid);
+         AlarmCategory category = session.findAlarmCategoryById(cid);
+         c.addProperty("name", (category != null) ? category.getName() : Long.toString(cid));
+         categories.add(c);
+      }
+      json.add("categories", categories);
+      
+      return json;
    }
 }
