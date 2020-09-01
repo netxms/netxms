@@ -17,6 +17,7 @@
 - Added cipVendorCode attribute and readInternalParameter, readInternalTable methods to NXSL node class
 - Added cluster object itself to event log filter opened on the cluster
 - Removed the limitation of one object for "Move to another container" action
+- Implemented '/alarms/{alarm-id}' path for REST API
 - Fixed issues:
 	NX-1841 (Option to enumerate all attributes and methods of an object in NXSL)
 	NX-1879 (Unmanaged automatic network map is no more auto updated)
