@@ -127,12 +127,12 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
    /*
     * (non-Javadoc)
     * 
-    * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillParameterList()
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillList()
     */
    @Override
-   protected void fillParameterList()
+   protected void fillList()
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob(Messages.get().SelectAgentParamDlg_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()

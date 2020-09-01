@@ -87,9 +87,9 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -106,9 +106,9 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -184,7 +184,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	   gd.horizontalAlignment = SWT.FILL;
 	   viewer.getControl().setLayoutData(gd);
 	   
-	   fillParameterList();
+	   fillList();
 	   
 		return dialogArea;
 	}
@@ -216,45 +216,45 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
+    */
 	@Override
 	public DataType getParameterDataType()
 	{
 		return selectTables ? DataType.NULL : ((AgentParameter)selection).getDataType();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDescription()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDescription()
+    */
 	@Override
 	public String getParameterDescription()
 	{
 		return selectTables ? ((AgentTable)selection).getDescription() : ((AgentParameter)selection).getDescription();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterName()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterName()
+    */
 	@Override
 	public String getParameterName()
 	{
 		return selectTables ? ((AgentTable)selection).getName() : ((AgentParameter)selection).getName();
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getInstanceColumn()
+    */
 	@Override
 	public String getInstanceColumn()
 	{
 		return selectTables ? ((AgentTable)selection).getInstanceColumnsAsList() : ""; //$NON-NLS-1$
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -269,9 +269,9 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		super.okPressed();
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{
@@ -294,7 +294,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	/**
 	 * Fill list with parameters
 	 */
-	protected abstract void fillParameterList();
+	protected abstract void fillList();
 	
 	/**
 	 * Get configuration prefix for saving/restoring configuration

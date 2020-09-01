@@ -6168,21 +6168,48 @@ DataCollectionError Node::getInternalTable(const TCHAR *param, Table **result)
          *result = fdb->getAsTable();
          fdb->decRefCount();
       }
-      else if (isBridge())
-         rc = DCE_COLLECTION_ERROR;
       else
-         rc = DCE_NOT_SUPPORTED;
-
+      {
+         rc = isBridge() ? DCE_COLLECTION_ERROR : DCE_NOT_SUPPORTED;
+      }
    }
    else if (!_tcsicmp(param, _T("Topology.WirelessStations")))
    {
       *result = wsListAsTable();
       if (*result == nullptr)
       {
-         if(isWirelessController())
-            rc = DCE_COLLECTION_ERROR;
-         else
-            rc = DCE_NOT_SUPPORTED;
+         rc = isWirelessController() ? DCE_COLLECTION_ERROR : DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (m_capabilities & NC_IS_LOCAL_MGMT)
+   {
+      if (!_tcsicmp(param, _T("Server.EventProcessors")))
+      {
+         auto table = new Table();
+         table->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
+         table->addColumn(_T("BINDINGS"), DCI_DT_UINT, _T("Bindings"));
+         table->addColumn(_T("QUEUE_SIZE"), DCI_DT_UINT, _T("Queue Size"));
+         table->addColumn(_T("AVG_WAIT_TIME"), DCI_DT_UINT, _T("Avg. Wait Time"));
+         table->addColumn(_T("PROCESSED_EVENTS"), DCI_DT_COUNTER64, _T("Processed Events"));
+
+         StructArray<EventProcessingThreadStats> *stats = GetEventProcessingThreadStats();
+         for(int i = 0; i < stats->size(); i++)
+         {
+            EventProcessingThreadStats *s = stats->get(i);
+            table->addRow();
+            table->set(0, i + 1);
+            table->set(1, s->bindings);
+            table->set(2, s->queueSize);
+            table->set(3, s->averageWaitTime);
+            table->set(4, s->processedEvents);
+         }
+         delete stats;
+
+         *result = table;
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
       }
    }
    else
@@ -6191,6 +6218,46 @@ DataCollectionError Node::getInternalTable(const TCHAR *param, Table **result)
    }
 
    return rc;
+}
+
+/**
+ * Get statistic for specific event processor
+ */
+static DataCollectionError GetEventProcessorStatistic(const TCHAR *param, int type, TCHAR *value)
+{
+   TCHAR pidText[64];
+   if (!AgentGetParameterArg(param, 1, pidText, 64))
+      return DCE_NOT_SUPPORTED;
+   int pid = _tcstol(pidText, nullptr, 0);
+   if (pid < 1)
+      return DCE_NOT_SUPPORTED;
+
+   StructArray<EventProcessingThreadStats> *stats = GetEventProcessingThreadStats();
+   if (pid > stats->size())
+   {
+      delete stats;
+      return DCE_NOT_SUPPORTED;
+   }
+
+   auto s = stats->get(pid - 1);
+   switch(type)
+   {
+      case 'B':
+         ret_uint(value, s->bindings);
+         break;
+      case 'P':
+         ret_uint64(value, s->processedEvents);
+         break;
+      case 'Q':
+         ret_uint(value, s->queueSize);
+         break;
+      case 'W':
+         ret_uint(value, s->averageWaitTime);
+         break;
+   }
+
+   delete stats;
+   return DCE_SUCCESS;
 }
 
 /**
@@ -6554,6 +6621,22 @@ DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, 
       else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.RawData")))
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_rawDataWriteRequests);
+      }
+      else if (MatchString(_T("Server.EventProcessor.AverageWaitTime(*)"), param, false))
+      {
+         rc = GetEventProcessorStatistic(param, 'W', buffer);
+      }
+      else if (MatchString(_T("Server.EventProcessor.Bindings(*)"), param, false))
+      {
+         rc = GetEventProcessorStatistic(param, 'B', buffer);
+      }
+      else if (MatchString(_T("Server.EventProcessor.ProcessedEvents(*)"), param, false))
+      {
+         rc = GetEventProcessorStatistic(param, 'P', buffer);
+      }
+      else if (MatchString(_T("Server.EventProcessor.QueueSize(*)"), param, false))
+      {
+         rc = GetEventProcessorStatistic(param, 'Q', buffer);
       }
       else if (!_tcsicmp(param, _T("Server.Heap.Active")))
       {
