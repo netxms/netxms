@@ -247,6 +247,7 @@ void EventProcessor()
             }
             nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Event processor hook script execution error (%s)"), vm->getErrorText());
          }
+         vm.destroy();
       }
 
       // Send event to all connected clients
