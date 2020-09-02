@@ -20,6 +20,7 @@
 - Added cluster object itself to event log filter opened on the cluster
 - Removed the limitation of one object for "Move to another container" action
 - Implemented '/alarms/{alarm-id}' path for REST API
+- Old exported templates without GUID are imported with newly generated GUID
 - Fixed issues:
 	NX-1594 (Alias (secondary name) for all network objects)
 	NX-1841 (Option to enumerate all attributes and methods of an object in NXSL)

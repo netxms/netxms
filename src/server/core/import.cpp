@@ -531,7 +531,11 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
 		{
 		   ConfigEntry *tc = templates->get(i);
 		   uuid guid = tc->getSubEntryValueAsUUID(_T("guid"));
-		   shared_ptr<Template> object = static_pointer_cast<Template>(FindObjectByGUID(guid, OBJECT_TEMPLATE));
+		   shared_ptr<Template> object = shared_ptr<Template>();
+		   if (guid.isNull())
+		      guid = uuid::generate();
+		   else
+		      object = static_pointer_cast<Template>(FindObjectByGUID(guid, OBJECT_TEMPLATE));
 		   if (object != nullptr)
 		   {
 		      if (flags & CFG_IMPORT_REPLACE_TEMPLATES)
@@ -578,7 +582,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
             ObjectTransactionStart();
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
             shared_ptr<NetObj> parent = FindTemplateRoot(tc);
-            object = MakeSharedNObject<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), tc->getSubEntryValueAsUUID(_T("guid")));
+            object = MakeSharedNObject<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
             NetObjInsert(object, true, true);
             object->updateFromImport(tc);
             object->addParent(parent);
