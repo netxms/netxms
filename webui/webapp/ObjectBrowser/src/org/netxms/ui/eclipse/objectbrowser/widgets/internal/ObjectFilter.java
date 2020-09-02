@@ -119,7 +119,7 @@ public class ObjectFilter extends ViewerFilter
             }
 			   return false;
          case NAME:
-            return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getObjectName()) : object.getObjectName().toLowerCase().contains(filterString);
+            return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getNameWithAlias()) : object.getNameWithAlias().toLowerCase().contains(filterString);
 			case OBJECT_ID:
 			   if (object instanceof AbstractObject)
 			   {

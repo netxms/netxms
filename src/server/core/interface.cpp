@@ -30,7 +30,6 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
 {
    m_parentInterfaceId = 0;
    _tcslcpy(m_description, m_name, MAX_DB_STRING);
-   m_alias[0] = 0;
    m_index = 0;
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
@@ -68,7 +67,6 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
 
 	_tcscpy(m_name, _T("unknown"));
    _tcscpy(m_description, _T("unknown"));
-   m_alias[0] = 0;
    m_ipAddressList.add(addrList);
    m_index = 1;
    m_type = IFTYPE_OTHER;
@@ -111,7 +109,6 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
    m_parentInterfaceId = 0;
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    _tcslcpy(m_description, descr, MAX_DB_STRING);
-   m_alias[0] = 0;
    m_index = index;
    m_type = ifType;
    m_mtu = 0;
@@ -166,7 +163,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_T("mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,")
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
-      _T("oper_state,peer_proto,alias,mtu,speed,parent_iface,")
+      _T("oper_state,peer_proto,mtu,speed,parent_iface,")
       _T("iftable_suffix FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
@@ -200,13 +197,12 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		m_operState = (WORD)DBGetFieldLong(hResult, 0, 16);
 		m_confirmedOperState = m_operState;
 		m_peerDiscoveryProtocol = (LinkLayerProtocol)DBGetFieldLong(hResult, 0, 17);
-		DBGetField(hResult, 0, 18, m_alias, MAX_DB_STRING);
-		m_mtu = DBGetFieldULong(hResult, 0, 19);
-      m_speed = DBGetFieldUInt64(hResult, 0, 20);
-      m_parentInterfaceId = DBGetFieldULong(hResult, 0, 21);
+		m_mtu = DBGetFieldULong(hResult, 0, 18);
+      m_speed = DBGetFieldUInt64(hResult, 0, 19);
+      m_parentInterfaceId = DBGetFieldULong(hResult, 0, 20);
 
       TCHAR suffixText[128];
-      DBGetField(hResult, 0, 22, suffixText, 128);
+      DBGetField(hResult, 0, 21, suffixText, 128);
       StrStrip(suffixText);
       if (suffixText[0] == 0)
       {
@@ -255,7 +251,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          int count = DBGetNumRows(hResult);
          if (count > 0)
          {
-            m_vlans = new IntegerArray<UINT32>(count);
+            m_vlans = new IntegerArray<uint32_t>(count);
             for (int i = 0; i < count; i++)
             {
                m_vlans->add(DBGetFieldULong(hResult, i, 0));
@@ -336,7 +332,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          _T("node_id"), _T("if_type"), _T("if_index"), _T("mac_addr"), _T("required_polls"), _T("bridge_port"),
          _T("phy_chassis"), _T("phy_module"), _T("phy_pic"), _T("phy_port"), _T("peer_node_id"), _T("peer_if_id"),
          _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
-         _T("peer_proto"), _T("alias"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"),
+         _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"),
          nullptr
       };
 
@@ -351,7 +347,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_macAddr);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_requiredPollCount);
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_physicalLocation.chassis);
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_physicalLocation.module);
@@ -360,25 +356,24 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_peerNodeId);
       DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
       DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_adminState);
-      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_operState);
-      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xPaeAuthState);
-      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xBackendAuthState);
-      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (INT32)m_peerDiscoveryProtocol);
-      DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
-      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_mtu);
-      DBBind(hStmt, 21, DB_SQLTYPE_BIGINT, m_speed);
-      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
+      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_adminState));
+      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_operState));
+      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_dot1xPaeAuthState));
+      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_dot1xBackendAuthState));
+      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_peerDiscoveryProtocol));
+      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_mtu);
+      DBBind(hStmt, 20, DB_SQLTYPE_BIGINT, m_speed);
+      DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
       if (m_ifTableSuffixLen > 0)
       {
          TCHAR buffer[128];
-         DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
+         DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
       }
       else
       {
-         DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
       }
-      DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
 
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -929,7 +924,6 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 	msg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
 	msg->setField(VID_PEER_PROTOCOL, (INT16)m_peerDiscoveryProtocol);
 	msg->setField(VID_DESCRIPTION, m_description);
-   msg->setField(VID_ALIAS, m_alias);
 	msg->setField(VID_ADMIN_STATE, m_adminState);
 	msg->setField(VID_OPER_STATE, m_operState);
 	msg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
@@ -1015,9 +1009,9 @@ void Interface::setIncludeInIcmpPoll(bool included)
 /**
  * Wake up node bound to this interface by sending magic packet
  */
-UINT32 Interface::wakeUp()
+uint32_t Interface::wakeUp()
 {
-   UINT32 rcc = RCC_NO_MAC_ADDRESS;
+   uint32_t rcc = RCC_NO_MAC_ADDRESS;
 
    if (m_macAddr.isValid())
    {
@@ -1299,12 +1293,12 @@ void Interface::setPhysicalLocation(const InterfacePhysicalLocation& location)
 /**
  * Add VLAN
  */
-void Interface::addVlan(UINT32 id)
+void Interface::addVlan(uint32_t id)
 {
    lockProperties();
    if (m_vlans == nullptr)
    {
-      m_vlans = new IntegerArray<UINT32>();
+      m_vlans = new IntegerArray<uint32_t>();
    }
    if (!m_vlans->contains(id))
    {
@@ -1409,7 +1403,6 @@ json_t *Interface::toJson()
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "description", json_string_t(m_description));
-   json_object_set_new(root, "alias", json_string_t(m_alias));
    json_object_set_new(root, "type", json_integer(m_type));
    json_object_set_new(root, "mtu", json_integer(m_mtu));
    json_object_set_new(root, "speed", json_integer(m_speed));

@@ -149,6 +149,7 @@ CREATE TABLE object_properties
   object_id integer not null,
   guid varchar(36) not null,
   name varchar(63) not null,
+  alias varchar(255) null,
   flags integer not null,
   state integer not null,
   status integer not null,
@@ -553,7 +554,6 @@ CREATE TABLE interfaces
   dot1x_pae_state integer not null,
   dot1x_backend_state integer not null,
   description varchar(255) null,
-  alias varchar(255) null,
   iftable_suffix varchar(127) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;

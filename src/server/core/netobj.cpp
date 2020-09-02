@@ -116,7 +116,6 @@ NetObj::~NetObj()
    MutexDestroy(m_mutexACL);
    delete m_accessList;
 	delete m_trustedNodes;
-   MemFree(m_comments);
    delete m_moduleData;
    delete m_postalAddress;
    delete m_dashboards;
@@ -312,7 +311,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 									  _T("location_type,latitude,longitude,location_accuracy,")
 									  _T("location_timestamp,guid,image,submap_id,country,city,")
                              _T("street_address,postcode,maint_event_id,state_before_maint,")
-                             _T("maint_initiator,state,flags,creation_time FROM object_properties ")
+                             _T("maint_initiator,state,flags,creation_time,alias FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -334,8 +333,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 				DBGetFieldByteArray(hResult, 0, 9, m_statusTranslation, 4, STATUS_WARNING);
 				m_statusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
 				DBGetFieldByteArray(hResult, 0, 11, m_statusThresholds, 4, 50);
-				MemFree(m_comments);
-				m_comments = DBGetField(hResult, 0, 12, NULL, 0);
+				m_comments = DBGetFieldAsSharedString(hResult, 0, 12);
 				m_isSystem = DBGetFieldLong(hResult, 0, 13) ? true : false;
 
 				int locType = DBGetFieldLong(hResult, 0, 14);
@@ -372,6 +370,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             m_runtimeFlags = 0;
             m_flags = DBGetFieldULong(hResult, 0, 30);
             m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 31));
+            m_alias = DBGetFieldAsSharedString(hResult, 0, 32);
 
 				success = true;
 			}
@@ -569,11 +568,11 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
       _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("image"), _T("submap_id"), _T("country"), _T("city"),
       _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
-      _T("creation_time"), _T("maint_initiator"), nullptr
+      _T("creation_time"), _T("maint_initiator"), _T("alias"), nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		return false;
 
    TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
@@ -617,7 +616,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)m_creationTime);
    DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
-	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
+	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
 
    success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1191,6 +1191,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_OBJECT_ID, m_id);
 	pMsg->setField(VID_GUID, m_guid);
    pMsg->setField(VID_OBJECT_NAME, m_name);
+   pMsg->setField(VID_ALIAS, m_alias);
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_status);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
@@ -1322,7 +1323,7 @@ static void BroadcastObjectChange(ClientSession *session, NetObj *object)
  * Mark object as modified and put on client's notification queue
  * We assume that object is locked at the time of function call
  */
-void NetObj::setModified(UINT32 flags, bool notify)
+void NetObj::setModified(uint32_t flags, bool notify)
 {
    if (g_bModificationsLocked)
       return;
@@ -1365,6 +1366,11 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
          if (m_name[i] < 0x20)
             m_name[i] = ' ';
       }
+   }
+
+   if (pRequest->isFieldExist(VID_ALIAS))
+   {
+      m_alias = pRequest->getFieldAsSharedString(VID_ALIAS);
    }
 
    // Change object's status calculation/propagation algorithms
@@ -1792,14 +1798,23 @@ void NetObj::prepareForDeletion()
 }
 
 /**
- * Set object's comments.
- * NOTE: pszText should be dynamically allocated or NULL
+ * Set object's description.
  */
-void NetObj::setComments(TCHAR *text)
+void NetObj::setAlias(const TCHAR *alias)
 {
    lockProperties();
-   MemFree(m_comments);
-   m_comments = text;
+   m_alias = alias;
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Set object's comments.
+ */
+void NetObj::setComments(const TCHAR *comments)
+{
+   lockProperties();
+   m_comments = comments;
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }
@@ -1810,7 +1825,7 @@ void NetObj::setComments(TCHAR *text)
 void NetObj::commentsToMessage(NXCPMessage *pMsg)
 {
    lockProperties();
-   pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
+   pMsg->setField(VID_COMMENTS, m_comments);
    unlockProperties();
 }
 
@@ -1835,7 +1850,7 @@ bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
 		}
 		DBFreeResult(hResult);
 	}
-	return (hResult != NULL);
+	return (hResult != nullptr);
 }
 
 /**
@@ -1844,10 +1859,10 @@ bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
 bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 {
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_nodes WHERE source_object_id=?"));
-	if (success && (m_trustedNodes != NULL) && (m_trustedNodes->size() > 0))
+	if (success && (m_trustedNodes != nullptr) && (m_trustedNodes->size() > 0))
 	{
 	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (?,?)"), m_trustedNodes->size() > 1);
-	   if (hStmt != NULL)
+	   if (hStmt != nullptr)
 	   {
 	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for(int i = 0; (i < m_trustedNodes->size()) && success; i++)
@@ -2442,6 +2457,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "timestamp", json_integer(m_timestamp));
    json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "alias", json_string_t(m_alias));
    json_object_set_new(root, "comments", json_string_t(m_comments));
    json_object_set_new(root, "status", json_integer(m_status));
    json_object_set_new(root, "statusCalcAlg", json_integer(m_statusCalcAlg));

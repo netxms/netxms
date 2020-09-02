@@ -238,7 +238,7 @@ public class InterfacesTab extends NodeComponentViewerTab
    protected void syncAdditionalObjects(AbstractObject object) throws IOException, NXCException
    {
       List<Long> additionalSyncInterfaces = new ArrayList<Long>();
-      for(AbstractObject obj : getObject().getAllChildren(AbstractObject.OBJECT_INTERFACE))
+      for(AbstractObject obj : object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
       {
          long id = ((Interface)obj).getPeerInterfaceId();
          if (id != 0)

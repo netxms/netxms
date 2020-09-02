@@ -5450,7 +5450,10 @@ void ClientSession::createObject(NXCPMessage *request)
 
                      TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
                      if (comments != nullptr)
+                     {
                         object->setComments(comments);
+                        MemFree(comments);
+                     }
 
                      object->unhide();
                      msg.setField(VID_RCC, RCC_SUCCESS);
@@ -9117,7 +9120,9 @@ void ClientSession::updateObjectComments(NXCPMessage *pRequest)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         object->setComments(pRequest->getFieldAsString(VID_COMMENTS));
+         TCHAR *comments = pRequest->getFieldAsString(VID_COMMENTS);
+         object->setComments(comments);
+         MemFree(comments);
       }
       else
       {

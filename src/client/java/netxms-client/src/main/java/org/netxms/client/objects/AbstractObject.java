@@ -123,6 +123,7 @@ public abstract class AbstractObject
 	protected long objectId = 0;
 	protected UUID guid;
 	protected String objectName;
+   protected String alias;
 	protected int objectClass;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
@@ -207,6 +208,7 @@ public abstract class AbstractObject
 		objectId = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_ID);
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		objectName = msg.getFieldAsString(NXCPCodes.VID_OBJECT_NAME);
+      alias = msg.getFieldAsString(NXCPCodes.VID_ALIAS);
 		objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
@@ -414,6 +416,24 @@ public abstract class AbstractObject
 	{
 		return objectName;
 	}
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return (alias != null) ? alias : "";
+   }
+
+   /**
+    * Get name concatenated with alias in brackets if alias is not empty or just name otherwise.
+    *
+    * @return name concatenated with alias in brackets if alias is not empty or just name otherwise
+    */
+   public String getNameWithAlias()
+   {
+      return ((alias == null) || alias.isEmpty()) ? objectName : objectName + " (" + alias + ")";
+   }
 
 	/**
 	 * Get object status.
@@ -1064,6 +1084,7 @@ public abstract class AbstractObject
       Set<String> strings = new HashSet<String>();
       addString(strings, comments);
       addString(strings, objectName);
+      addString(strings, alias);
       if ((postalAddress != null) && !postalAddress.isEmpty())
          strings.add(postalAddress.getAddressLine());
       for(CustomAttribute s : customAttributes.values())

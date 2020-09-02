@@ -873,21 +873,22 @@ private:
 	void getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly) const;
 
 protected:
-   time_t m_timestamp;       // Last change time stamp
-   TCHAR *m_comments;      // User comments
+   time_t m_timestamp;           // Last change time stamp
+   SharedString m_alias;         // Object's alias
+   SharedString m_comments;      // User comments
    int m_status;
-   int m_savedStatus;      // Object status in database
-   int m_statusCalcAlg;      // Status calculation algorithm
-   int m_statusPropAlg;      // Status propagation algorithm
-   int m_fixedStatus;        // Status if propagation is "Fixed"
-   int m_statusShift;        // Shift value for "shifted" status propagation
+   int m_savedStatus;            // Object status in database
+   int m_statusCalcAlg;          // Status calculation algorithm
+   int m_statusPropAlg;          // Status propagation algorithm
+   int m_fixedStatus;            // Status if propagation is "Fixed"
+   int m_statusShift;            // Shift value for "shifted" status propagation
    int m_statusTranslation[4];
    int m_statusSingleThreshold;
    int m_statusThresholds[4];
-   UINT32 m_flags;
-   UINT32 m_runtimeFlags;
-   UINT32 m_state;
-   UINT32 m_stateBeforeMaintenance;
+   uint32_t m_flags;
+   uint32_t m_runtimeFlags;
+   uint32_t m_state;
+   uint32_t m_stateBeforeMaintenance;
    uint64_t m_maintenanceEventId;
    uint32_t m_maintenanceInitiator;
    VolatileCounter m_modified;
@@ -900,11 +901,11 @@ protected:
 	GeoLocation m_geoLocation;
    PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
-	UINT32 m_submapId;				// Map object which should be open on drill-down request
+   uint32_t m_submapId;				// Map object which should be open on drill-down request
 	IntegerArray<UINT32> *m_dashboards; // Dashboards associated with this object
 	ObjectArray<ObjectUrl> *m_urls;  // URLs associated with this object
-	UINT32 m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
-   UINT32 m_backupZoneProxyId;      // ID of assigned backup zone proxy node
+	uint32_t m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
+	uint32_t m_backupZoneProxyId;      // ID of assigned backup zone proxy node
 
    AccessList *m_accessList;
    bool m_inheritAccessRights;
@@ -933,7 +934,7 @@ protected:
    }
    void unlockResponsibleUsersList() { RWLockUnlock(m_rwlockResponsibleUsers); }
 
-   void setModified(UINT32 flags, bool notify = true);                  // Used to mark object as modified
+   void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
    bool loadACLFromDB(DB_HANDLE hdb);
    bool saveACLToDB(DB_HANDLE hdb);
@@ -983,7 +984,8 @@ public:
    uint32_t getFlags() const { return m_flags; }
    int getPropagatedStatus();
    time_t getTimeStamp() const { return m_timestamp; }
-	const TCHAR *getComments() const { return CHECK_NULL_EX(m_comments); }
+   SharedString getAlias() const { return GetAttributeWithLock(m_alias, m_mutexProperties); }
+	SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutexProperties); }
 
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
 	void setGeoLocation(const GeoLocation& geoLocation);
@@ -1033,11 +1035,12 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual void linkObjects();
 
-   void setId(UINT32 dwId) { m_id = dwId; setModified(MODIFY_ALL); }
+   void setId(uint32_t dwId) { m_id = dwId; setModified(MODIFY_ALL); }
    void generateGuid() { m_guid = uuid::generate(); }
-   void setName(const TCHAR *pszName) { lockProperties(); _tcslcpy(m_name, pszName, MAX_OBJECT_NAME); setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
+   void setName(const TCHAR *name) { lockProperties(); _tcslcpy(m_name, name, MAX_OBJECT_NAME); setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
    void resetStatus() { lockProperties(); m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); unlockProperties(); }
-   void setComments(TCHAR *text);	/* text must be dynamically allocated */
+   void setAlias(const TCHAR *alias);
+   void setComments(const TCHAR *comments);
    void setCreationTime() { m_creationTime = time(nullptr); }
    time_t getCreationTime() { return m_creationTime; }
 
@@ -1463,35 +1466,34 @@ private:
    typedef NetObj super;
 
 protected:
-   UINT32 m_parentInterfaceId;
-   UINT32 m_index;
+   uint32_t m_parentInterfaceId;
+   uint32_t m_index;
    MacAddress m_macAddr;
    InetAddressList m_ipAddressList;
 	TCHAR m_description[MAX_DB_STRING];	// Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
-	TCHAR m_alias[MAX_DB_STRING];	// Interface alias - value of ifAlias for SNMP, empty for NetXMS agent
-   UINT32 m_type;
-   UINT32 m_mtu;
-   UINT64 m_speed;
-	UINT32 m_bridgePortNumber;		 // 802.1D port number
+	uint32_t m_type;
+	uint32_t m_mtu;
+   uint64_t m_speed;
+   uint32_t m_bridgePortNumber;		 // 802.1D port number
 	InterfacePhysicalLocation m_physicalLocation;
-	UINT32 m_peerNodeId;				 // ID of peer node object, or 0 if unknown
-	UINT32 m_peerInterfaceId;		 // ID of peer interface object, or 0 if unknown
+	uint32_t m_peerNodeId;				 // ID of peer node object, or 0 if unknown
+	uint32_t m_peerInterfaceId;		 // ID of peer interface object, or 0 if unknown
    LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
-	INT16 m_adminState;				 // interface administrative state
-	INT16 m_operState;				 // interface operational state
-   INT16 m_pendingOperState;
-	INT16 m_confirmedOperState;
-	INT16 m_dot1xPaeAuthState;		 // 802.1x port auth state
-	INT16 m_dot1xBackendAuthState; // 802.1x backend auth state
-   UINT64 m_lastDownEventId;
-	int m_pendingStatus;
-	int m_statusPollCount;
-	int m_operStatePollCount;
-	int m_requiredPollCount;
+	int16_t m_adminState;				 // interface administrative state
+	int16_t m_operState;				 // interface operational state
+	int16_t m_pendingOperState;
+	int16_t m_confirmedOperState;
+	int16_t m_dot1xPaeAuthState;		 // 802.1x port auth state
+	int16_t m_dot1xBackendAuthState; // 802.1x backend auth state
+   uint64_t m_lastDownEventId;
+   int32_t m_pendingStatus;
+   int32_t m_statusPollCount;
+   int32_t m_operStatePollCount;
+	int32_t m_requiredPollCount;
 	int32_t m_zoneUIN;
-   int m_ifTableSuffixLen;
-   UINT32 *m_ifTableSuffix;
-   IntegerArray<UINT32> *m_vlans;
+	int32_t m_ifTableSuffixLen;
+   uint32_t *m_ifTableSuffix;
+   IntegerArray<uint32_t> *m_vlans;
 
    void icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
 	void paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *node);
@@ -1533,18 +1535,18 @@ public:
 
    const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
    InetAddress getFirstIpAddress() const;
-   UINT32 getIfIndex() const { return m_index; }
-   UINT32 getIfType() const { return m_type; }
-   UINT32 getMTU() const { return m_mtu; }
-   UINT64 getSpeed() const { return m_speed; }
-	UINT32 getBridgePortNumber() const { return m_bridgePortNumber; }
-   UINT32 getChassis() const { return m_physicalLocation.chassis; }
-	UINT32 getModule() const { return m_physicalLocation.module; }
-   UINT32 getPIC() const { return m_physicalLocation.pic; }
-	UINT32 getPort() const { return m_physicalLocation.port; }
+   uint32_t getIfIndex() const { return m_index; }
+   uint32_t getIfType() const { return m_type; }
+   uint32_t getMTU() const { return m_mtu; }
+   uint64_t getSpeed() const { return m_speed; }
+   uint32_t getBridgePortNumber() const { return m_bridgePortNumber; }
+   uint32_t getChassis() const { return m_physicalLocation.chassis; }
+   uint32_t getModule() const { return m_physicalLocation.module; }
+   uint32_t getPIC() const { return m_physicalLocation.pic; }
+   uint32_t getPort() const { return m_physicalLocation.port; }
 	InterfacePhysicalLocation getPhysicalLocation() const { return GetAttributeWithLock(m_physicalLocation, m_mutexProperties); }
-	UINT32 getPeerNodeId() const { return m_peerNodeId; }
-	UINT32 getPeerInterfaceId() const { return m_peerInterfaceId; }
+	uint32_t getPeerNodeId() const { return m_peerNodeId; }
+	uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
 	int getExpectedState() const { return (int)((m_flags & IF_EXPECTED_STATE_MASK) >> 28); }
 	int getAdminState() const { return (int)m_adminState; }
@@ -1553,10 +1555,9 @@ public:
 	int getDot1xPaeAuthState() const { return (int)m_dot1xPaeAuthState; }
 	int getDot1xBackendAuthState() const { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() const { return m_description; }
-	const TCHAR *getAlias() const { return m_alias; }
    const MacAddress& getMacAddr() const { return m_macAddr; }
    int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
-   const UINT32 *getIfTableSuffix() const { return m_ifTableSuffix; }
+   const uint32_t *getIfTableSuffix() const { return m_ifTableSuffix; }
 	bool isSyntheticMask() const { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() const { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
 	bool isLoopback() const { return (m_flags & IF_LOOPBACK) ? true : false; }
@@ -1573,12 +1574,12 @@ public:
    bool isIncludedInIcmpPoll() const { return (m_flags & IF_INCLUDE_IN_ICMP_POLL) ? true : false; }
    NXSL_Value *getVlanListForNXSL(NXSL_VM *vm);
 
-   UINT64 getLastDownEventId() const { return m_lastDownEventId; }
-   void setLastDownEventId(UINT64 id) { m_lastDownEventId = id; }
+   uint64_t getLastDownEventId() const { return m_lastDownEventId; }
+   void setLastDownEventId(uint64_t id) { m_lastDownEventId = id; }
 
    void setMacAddr(const MacAddress& macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
-   void setBridgePortNumber(UINT32 bpn)
+   void setBridgePortNumber(uint32_t bpn)
    {
       lockProperties();
       m_bridgePortNumber = bpn;
@@ -1617,17 +1618,10 @@ public:
       setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
       unlockProperties();
    }
-   void setDescription(const TCHAR *descr)
+   void setDescription(const TCHAR *description)
    {
       lockProperties();
-      _tcslcpy(m_description, descr, MAX_DB_STRING);
-      setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
-   }
-   void setAlias(const TCHAR *alias)
-   {
-      lockProperties();
-      _tcslcpy(m_alias, alias, MAX_DB_STRING);
+      _tcslcpy(m_description, description, MAX_DB_STRING);
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
@@ -1641,14 +1635,14 @@ public:
 	   setModified(MODIFY_INTERFACE_PROPERTIES);
 	   unlockProperties();
 	}
-	void setSpeed(UINT64 speed)
+	void setSpeed(uint64_t speed)
 	{
 	   lockProperties();
 	   m_speed = speed;
 	   setModified(MODIFY_INTERFACE_PROPERTIES);
 	   unlockProperties();
 	}
-   void setIfTableSuffix(int len, const UINT32 *suffix)
+   void setIfTableSuffix(int len, const uint32_t *suffix)
    {
       lockProperties();
       MemFree(m_ifTableSuffix);
@@ -1657,14 +1651,14 @@ public:
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
-   void setParentInterface(UINT32 parentInterfaceId)
+   void setParentInterface(uint32_t parentInterfaceId)
    {
       lockProperties();
       m_parentInterfaceId = parentInterfaceId;
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
-   void addVlan(UINT32 id);
+   void addVlan(uint32_t id);
    void clearVlanList()
    {
       lockProperties();
@@ -1677,7 +1671,7 @@ public:
 
    void statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
-   UINT32 wakeUp();
+   uint32_t wakeUp();
 	void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
    void setExcludeFromTopology(bool excluded);
    void setIncludeInIcmpPoll(bool included);

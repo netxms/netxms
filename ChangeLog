@@ -13,6 +13,7 @@
 - New event processing macros %z (zone UIN) and %Z (zone name)
 - Added Topology.WirelessStations and Topology.SwitchForwardingDatabase internal table metrics
 - Option to disable reading of Windows performance counters metadata on configuration poll
+- Alias (secondary name) for all network objects
 - Wildcards in nxdbmgr "get" command
 - Fixed modification flag for "Break" and "Action" fields in log praser policy
 - Added cipVendorCode attribute and readInternalParameter, readInternalTable methods to NXSL node class
@@ -20,6 +21,7 @@
 - Removed the limitation of one object for "Move to another container" action
 - Implemented '/alarms/{alarm-id}' path for REST API
 - Fixed issues:
+	NX-1594 (Alias (secondary name) for all network objects)
 	NX-1841 (Option to enumerate all attributes and methods of an object in NXSL)
 	NX-1879 (Unmanaged automatic network map is no more auto updated)
 	NX-1884 (Do not show error while node is added to the cluster if the node is already there)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,18 +34,18 @@ public class ObjectAdapterFactory implements IAdapterFactory
 		IWorkbenchAdapter.class
 	};
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
-	 */
+   /**
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
+    */
 	@Override
 	public Class<?>[] getAdapterList()
 	{
 		return supportedClasses;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
-	 */
+   /**
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
+    */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
    @Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)

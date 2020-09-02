@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,22 +39,24 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class General extends PropertyPage
 {
-	private Text textName;
+   private Text name;
+   private Text alias;
 	private String initialName;
+   private String initialAlias;
 	private AbstractObject object;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -62,22 +64,27 @@ public class General extends PropertyPage
       dialogArea.setLayout(layout);
       
       // Object ID
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.get().General_ObjectID,
-                                     Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
+            Messages.get().General_ObjectID, Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object class
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, Messages.get().General_ObjectClass,
-                                     object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
+            Messages.get().General_ObjectClass, object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Object name
       initialName = object.getObjectName();
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_ObjectName,
-      		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      name = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_ObjectName,
+            initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
       
+      // Object alias
+      initialAlias = object.getAlias();
+      alias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Alias", initialAlias, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
 		return dialogArea;
 	}
-	
-	/* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -94,13 +101,18 @@ public class General extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+      final String newName = name.getText();
+      final String newAlias = alias.getText();
+      if (newName.equals(initialName) && newAlias.equals(initialAlias))
+         return; // nothing to change
+
 		if (isApply)
 			setValid(false);
-		
-		final String newName = textName.getText();
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setName(newName);
+      data.setAlias(newAlias);
 		new ConsoleJob(Messages.get().General_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -124,6 +136,7 @@ public class General extends PropertyPage
 						public void run()
 						{
 							initialName = newName;
+                     initialAlias = newAlias;
 							General.this.setValid(true);
 						}
 					});
@@ -132,9 +145,9 @@ public class General extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -142,9 +155,9 @@ public class General extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{

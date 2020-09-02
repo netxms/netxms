@@ -103,6 +103,7 @@ public class GeneralInfo extends TableElement
          if (((((AbstractNode)object).getCipStatus() >> 4) & 0x0F) != 0)
             addPair("Extended device status", ((AbstractNode)object).getCipExtendedStatusText(), false);
       }
+      addPair(Messages.get().GeneralInfo_Alias, object.getAlias(), false);
       if (object.getCreationTime() != null && object.getCreationTime().getTime() != 0)
          addPair("Creation time", RegionalSettings.getDateTimeFormat().format(object.getCreationTime()), false);
 		switch(object.getObjectClass())
@@ -137,7 +138,6 @@ public class GeneralInfo extends TableElement
 				String typeName = iface.getIfTypeName();
 				addPair(Messages.get().GeneralInfo_IfType, (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType())); //$NON-NLS-1$
 				addPair(Messages.get().GeneralInfo_Description, iface.getDescription(), false);
-            addPair(Messages.get().GeneralInfo_Alias, iface.getAlias(), false);
             if (iface.getMtu() > 0)
                addPair(Messages.get().GeneralInfo_MTU, Integer.toString(iface.getMtu()));
             if (iface.getSpeed() > 0)
