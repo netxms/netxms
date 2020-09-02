@@ -250,7 +250,10 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
       if (m_flags & 0x200) // for compatibility with old format
          m_retentionType = DC_RETENTION_NONE;
    }
-   m_status = ITEM_STATUS_ACTIVE;
+   if (config->getSubEntryValueAsBoolean(_T("isDisabled")))
+      m_status = ITEM_STATUS_DISABLED;
+   else
+      m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
@@ -1162,6 +1165,8 @@ void DCObject::updateFromImport(ConfigEntry *config)
    m_pszPerfTabSettings = MemCopyString(perfTabSettings);
    m_snmpPort = static_cast<UINT16>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
+   if (config->getSubEntryValueAsBoolean(_T("isDisabled")))
+      m_status = ITEM_STATUS_DISABLED;
 
    MemFree(m_pollingIntervalSrc);
    MemFree(m_retentionTimeSrc);
