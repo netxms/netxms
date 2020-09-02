@@ -1863,7 +1863,8 @@ void DCItem::createExportRecord(StringBuffer &xml)
                           _T("\t\t\t\t\t<snmpVersion>%d</snmpVersion>\n")
                           _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n")
                           _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n")
-                          _T("\t\t\t\t\t<comments>%s</comments>\n"),
+                          _T("\t\t\t\t\t<comments>%s</comments>\n")
+                          _T("\t\t\t\t\t<isDisabled>%s</isDisabled>\n"),
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
@@ -1877,7 +1878,8 @@ void DCItem::createExportRecord(StringBuffer &xml)
 								  (int)m_deltaCalculation, (int)m_flags,
 								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_snmpVersion,
 								  (int)m_instanceDiscoveryMethod, m_instanceRetentionTime,
-								  (const TCHAR *)EscapeStringForXML2(m_comments));
+								  (const TCHAR *)EscapeStringForXML2(m_comments),
+								  (m_status == ITEM_STATUS_DISABLED) ? _T("true") : _T("false"));
 
 	if (m_transformationScriptSource != nullptr)
 	{
