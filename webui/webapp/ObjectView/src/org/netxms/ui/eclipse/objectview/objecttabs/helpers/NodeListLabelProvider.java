@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ public class NodeListLabelProvider extends LabelProvider implements ITableLabelP
 {
    private NXCSession session = ConsoleSharedData.getSession();
    
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -61,7 +61,7 @@ public class NodeListLabelProvider extends LabelProvider implements ITableLabelP
 			case NodesTab.COLUMN_ID:
 				return Long.toString(node.getObjectId());
 			case NodesTab.COLUMN_NAME:
-				return node.getObjectName();
+            return node.getNameWithAlias();
 			case NodesTab.COLUMN_STATUS:
 				return StatusDisplayInfo.getStatusText(node.getStatus());
 			case NodesTab.COLUMN_IP_ADDRESS:

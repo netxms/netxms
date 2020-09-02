@@ -116,22 +116,22 @@ public class ObjectAdapter implements IWorkbenchAdapter
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.model.IWorkbenchAdapter#getLabel(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.ui.model.IWorkbenchAdapter#getLabel(java.lang.Object)
+    */
 	@Override
 	public String getLabel(Object o)
 	{
-		return ((AbstractObject)o).getObjectName();
+      return ((AbstractObject)o).getNameWithAlias();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.model.IWorkbenchAdapter#getParent(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.ui.model.IWorkbenchAdapter#getParent(java.lang.Object)
+    */
 	@Override
 	public Object getParent(Object o)
 	{
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      NXCSession session = ConsoleSharedData.getSession();
 		if (session != null)
 		{
 			Iterator<Long> it = ((AbstractObject)o).getParents();

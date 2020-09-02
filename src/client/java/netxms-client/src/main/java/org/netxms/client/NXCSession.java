@@ -5476,6 +5476,12 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_OBJECT_NAME, data.getName());
       }
 
+      // Object alias
+      if (data.isFieldSet(NXCObjectModificationData.ALIAS))
+      {
+         msg.setField(NXCPCodes.VID_ALIAS, data.getAlias());
+      }
+
       // Primary IP
       if (data.isFieldSet(NXCObjectModificationData.PRIMARY_IP))
       {

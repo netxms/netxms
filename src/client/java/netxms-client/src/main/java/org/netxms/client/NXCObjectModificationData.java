@@ -142,11 +142,13 @@ public class NXCObjectModificationData
    public static final int CHASSIS_PLACEMENT      = 84;
    public static final int ETHERNET_IP_PORT       = 85;
    public static final int ETHERNET_IP_PROXY      = 86;
+   public static final int ALIAS = 87;
 
    private Set<Integer> fieldSet;
    private long objectId;
    private String name;
    private String primaryName;
+   private String alias;
    private AccessListElement[] acl;
    private boolean inheritAccessRights;
    private Map<String, CustomAttribute> customAttributes;
@@ -297,6 +299,23 @@ public class NXCObjectModificationData
    {
       this.name = name;
       fieldSet.add(NAME);
+   }
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
+   }
+
+   /**
+    * @param alias the alias to set
+    */
+   public void setAlias(String alias)
+   {
+      this.alias = alias;
+      fieldSet.add(ALIAS);
    }
 
    /**

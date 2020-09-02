@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.10 to 40.11
+ */
+static bool H_UpgradeFromV10()
+{
+   if (GetSchemaLevelForMajorVersion(35) < 15)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD alias varchar(255)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET alias=(SELECT alias FROM interfaces WHERE interfaces.id=object_properties.object_id)")));
+      CHK_EXEC(DBDropColumn(g_dbHandle, _T("interfaces"), _T("alias")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 15));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade form 40.9 to 40.10
  */
 static bool H_UpgradeFromV9()
@@ -38,10 +54,8 @@ static bool H_UpgradeFromV9()
          _T("   4) Notification message")
          _T("' WHERE event_code=22")));
 
-   //TODO: add to init procedure
    CHK_EXEC(CreateConfigParam(_T("DefaultNotificationChannel.SMTP.Html"), _T("SMTP-HTML"), _T("Default notification channel for SMTP HTML formatted messages"), nullptr, 'S', true, true, false, false));
    CHK_EXEC(CreateConfigParam(_T("DefaultNotificationChannel.SMTP.Text"), _T("SMTP-Text"), _T("Default notification channel for SMTP Text formatted messages"), nullptr, 'S', true, true, false, false));
-
 
    TCHAR server[MAX_STRING_VALUE];
    TCHAR localHostName[MAX_STRING_VALUE];
@@ -322,7 +336,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 9,  40, 10,  H_UpgradeFromV9  },
+   { 10, 40, 11, H_UpgradeFromV10 },
+   { 9,  40, 10, H_UpgradeFromV9  },
    { 8,  40, 9,  H_UpgradeFromV8  },
    { 7,  40, 8,  H_UpgradeFromV7  },
    { 6,  40, 7,  H_UpgradeFromV6  },

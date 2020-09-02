@@ -418,7 +418,6 @@ public class Interface extends GenericObject implements ZoneMember
 	private LinkLayerDiscoveryProtocol peerDiscoveryProtocol;
 	private int zoneId;
 	private String description;
-	private String alias;
 	private int adminState;
 	private int operState;
 	private int dot1xPaeState;
@@ -450,7 +449,6 @@ public class Interface extends GenericObject implements ZoneMember
 		peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_PEER_PROTOCOL));
 		zoneId = msg.getFieldAsInt32(NXCPCodes.VID_ZONE_UIN);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
-		alias = msg.getFieldAsString(NXCPCodes.VID_ALIAS);
 		adminState = msg.getFieldAsInt32(NXCPCodes.VID_ADMIN_STATE);
 		operState = msg.getFieldAsInt32(NXCPCodes.VID_OPER_STATE);
 		dot1xPaeState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_PAE_STATE);
@@ -841,14 +839,6 @@ public class Interface extends GenericObject implements ZoneMember
    }
 
    /**
-    * @return the alias
-    */
-   public String getAlias()
-   {
-      return alias;
-   }
-
-   /**
     * @return the ipAddressList
     */
    public List<InetAddressEx> getIpAddressList()
@@ -961,14 +951,13 @@ public class Interface extends GenericObject implements ZoneMember
       return (vlans != null) ? vlans : new long[0];
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override
    public Set<String> getStrings()
    {
       Set<String> strings = super.getStrings();
-      addString(strings, alias);
       addString(strings, description);
       addString(strings, ifTypeNames.get(ifType));
       return strings;

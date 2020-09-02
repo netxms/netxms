@@ -76,7 +76,7 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 			{
 				case ThresholdSummaryWidget.COLUMN_NODE:
 				   AbstractObject node = session.findObjectById(((ThresholdViolationSummary)element).getNodeId());					
-					return (node != null) ? node.getObjectName() : null;
+               return (node != null) ? node.getNameWithAlias() : null;
 				case ThresholdSummaryWidget.COLUMN_STATUS:
 					return StatusDisplayInfo.getStatusText(((ThresholdViolationSummary)element).getCurrentSeverity());
 				default:

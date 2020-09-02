@@ -24,11 +24,23 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 35.14 to 40.0
+ * Upgrade from 35.15 to 40.0
+ */
+static bool H_UpgradeFromV15()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade form 35.14 to 35.15
  */
 static bool H_UpgradeFromV14()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD alias varchar(255)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET alias=(SELECT alias FROM interfaces WHERE interfaces.id=object_properties.object_id)")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("interfaces"), _T("alias")));
+   CHK_EXEC(SetMinorSchemaVersion(15));
    return true;
 }
 
@@ -416,7 +428,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 14, 40, 0,  H_UpgradeFromV14 },
+   { 15, 40, 0,  H_UpgradeFromV15 },
+   { 14, 35, 15, H_UpgradeFromV14 },
    { 13, 35, 14, H_UpgradeFromV13 },
    { 12, 35, 13, H_UpgradeFromV12 },
    { 11, 35, 12, H_UpgradeFromV11 },

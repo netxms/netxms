@@ -237,6 +237,19 @@ NXSL_METHOD_DEFINITION(NetObj, rename)
 }
 
 /**
+ * setAlias(text)
+ */
+NXSL_METHOD_DEFINITION(NetObj, setAlias)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setAlias(argv[0]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * setComments(text)
  */
 NXSL_METHOD_DEFINITION(NetObj, setComments)
@@ -244,7 +257,7 @@ NXSL_METHOD_DEFINITION(NetObj, setComments)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(MemCopyString(argv[0]->getValueAsCString()));
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(argv[0]->getValueAsCString());
    *result = vm->createValue();
    return 0;
 }
@@ -500,6 +513,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, leaveMaintenance, 0);
    NXSL_REGISTER_METHOD(NetObj, manage, 0);
    NXSL_REGISTER_METHOD(NetObj, rename, 1);
+   NXSL_REGISTER_METHOD(NetObj, setAlias, 1);
    NXSL_REGISTER_METHOD(NetObj, setComments, 1);
    NXSL_REGISTER_METHOD(NetObj, setCustomAttribute, -1);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
@@ -539,6 +553,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
          array->append(vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarms->get(i))));
       value = vm->createValue(array);
       delete alarms;
+   }
+   else if (compareAttributeName(attr, "alias"))
+   {
+      value = vm->createValue(object->getAlias());
    }
    else if (compareAttributeName(attr, "backupZoneProxy"))
    {
@@ -1816,10 +1834,6 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
    if (compareAttributeName(attr, "adminState"))
    {
 		value = vm->createValue((LONG)iface->getAdminState());
-   }
-   else if (compareAttributeName(attr, "alias"))
-   {
-      value = vm->createValue(iface->getAlias());
    }
    else if (compareAttributeName(attr, "bridgePortNumber"))
    {

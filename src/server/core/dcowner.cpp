@@ -956,7 +956,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
    _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);
    m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, m_flags);
    unlockProperties();
-   setComments(MemCopyString(config->getSubEntryValue(_T("comments"), 0, _T(""))));
+   setComments(config->getSubEntryValue(_T("comments"), 0, nullptr));
 
    // Data collection
    ObjectArray<uuid> guidList(32, 32, Ownership::True);
