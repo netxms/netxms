@@ -33,15 +33,15 @@ static Mutex s_snmpTargetsLock;
 /**
  * Create SNMP target from NXCP message
  */
-SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId)
+SNMPTarget::SNMPTarget(uint64_t serverId, NXCPMessage *msg, uint32_t baseId)
 {
    m_guid = msg->getFieldAsGUID(baseId);
    m_serverId = serverId;
    m_ipAddress = msg->getFieldAsInetAddress(baseId + 1);
    m_snmpVersion = static_cast<SNMP_Version>(msg->getFieldAsInt16(baseId + 2));
    m_port = msg->getFieldAsUInt16(baseId + 3);
-   m_authType = static_cast<BYTE>(msg->getFieldAsInt16(baseId + 4));
-   m_encType = static_cast<BYTE>(msg->getFieldAsInt16(baseId + 5));
+   m_authType = static_cast<SNMP_AuthMethod>(msg->getFieldAsInt16(baseId + 4));
+   m_encType = static_cast<SNMP_EncryptionMethod>(msg->getFieldAsInt16(baseId + 5));
    m_authName = msg->getFieldAsUtf8String(baseId + 6);
    m_authPassword = msg->getFieldAsUtf8String(baseId + 7);
    m_encPassword = msg->getFieldAsUtf8String(baseId + 8);
@@ -59,12 +59,12 @@ SNMPTarget::SNMPTarget(DB_RESULT hResult, int row)
    m_serverId = DBGetFieldUInt64(hResult, row, 1);
    m_ipAddress = DBGetFieldInetAddr(hResult, row, 2);
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 3));
-   m_port = static_cast<UINT16>(DBGetFieldLong(hResult, row, 4));
-   m_authType = static_cast<BYTE>(DBGetFieldLong(hResult, row, 5));
-   m_encType = static_cast<BYTE>(DBGetFieldLong(hResult, row, 6));
-   m_authName = DBGetFieldUTF8(hResult, row, 7, NULL, 0);
-   m_authPassword = DBGetFieldUTF8(hResult, row, 8, NULL, 0);
-   m_encPassword = DBGetFieldUTF8(hResult, row, 9, NULL, 0);
+   m_port = static_cast<uint16_t>(DBGetFieldLong(hResult, row, 4));
+   m_authType = static_cast<SNMP_AuthMethod>(DBGetFieldLong(hResult, row, 5));
+   m_encType = static_cast<SNMP_EncryptionMethod>(DBGetFieldLong(hResult, row, 6));
+   m_authName = DBGetFieldUTF8(hResult, row, 7, nullptr, 0);
+   m_authPassword = DBGetFieldUTF8(hResult, row, 8, nullptr, 0);
+   m_encPassword = DBGetFieldUTF8(hResult, row, 9, nullptr, 0);
    m_transport = nullptr;
 }
 
@@ -94,10 +94,10 @@ bool SNMPTarget::saveToDatabase(DB_HANDLE hdb)
 
    DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, (const TCHAR *)m_ipAddress.toString(), DB_BIND_TRANSIENT);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)m_snmpVersion);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_port);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_authType);
-   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_encType);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpVersion));
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_port));
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_authType));
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_encType));
 #ifdef UNICODE
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromUTF8String(m_authName), DB_BIND_DYNAMIC);
    DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromUTF8String(m_authPassword), DB_BIND_DYNAMIC);
@@ -117,7 +117,7 @@ bool SNMPTarget::saveToDatabase(DB_HANDLE hdb)
 /**
  * Get SNMP transport (create if needed)
  */
-SNMP_Transport *SNMPTarget::getTransport(UINT16 port)
+SNMP_Transport *SNMPTarget::getTransport(uint16_t port)
 {
    if (m_transport != nullptr)
       return m_transport;

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,16 +28,16 @@
  */
 SNMP_SecurityContext::SNMP_SecurityContext()
 {
-	m_securityModel = 0;
-	m_authName = NULL;
-	m_authPassword = NULL;
-	m_privPassword = NULL;
-	m_contextName = NULL;
+	m_securityModel = SNMP_SECURITY_MODEL_V2C;
+	m_authName = nullptr;
+	m_authPassword = nullptr;
+	m_privPassword = nullptr;
+	m_contextName = nullptr;
 	m_authMethod = SNMP_AUTH_NONE;
 	m_privMethod = SNMP_ENCRYPT_NONE;
-	memset(m_authKeyMD5, 0, 16);
-	memset(m_authKeySHA1, 0, 20);
-	memset(m_privKey, 0, 20);
+	memset(m_authKey, 0, sizeof(m_authKey));
+	memset(m_privKey, 0, sizeof(m_privKey));
+	m_validKeys = false;
 }
 
 /**
@@ -52,9 +52,9 @@ SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src)
 	m_contextName = MemCopyStringA(src->m_contextName);
 	m_authMethod = src->m_authMethod;
 	m_privMethod = src->m_privMethod;
-	memcpy(m_authKeyMD5, src->m_authKeyMD5, 16);
-	memcpy(m_authKeySHA1, src->m_authKeySHA1, 20);
-	memcpy(m_privKey, src->m_privKey, 20);
+	memcpy(m_authKey, src->m_authKey, sizeof(m_authKey));
+	memcpy(m_privKey, src->m_privKey, sizeof(m_privKey));
+	m_validKeys = src->m_validKeys;
 	m_authoritativeEngine = src->m_authoritativeEngine;
 }
 
@@ -65,45 +65,49 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_V2C;
 	m_authName = MemCopyStringA(CHECK_NULL_EX_A(community));
-	m_authPassword = NULL;
-	m_privPassword = NULL;
-	m_contextName = NULL;
+	m_authPassword = nullptr;
+	m_privPassword = nullptr;
+	m_contextName = nullptr;
 	m_authMethod = SNMP_AUTH_NONE;
 	m_privMethod = SNMP_ENCRYPT_NONE;
-	memset(m_authKeyMD5, 0, 16);
-	memset(m_authKeySHA1, 0, 20);
-	memset(m_privKey, 0, 20);
+   memset(m_authKey, 0, sizeof(m_authKey));
+   memset(m_privKey, 0, sizeof(m_privKey));
+   m_validKeys = false;
 }
 
 /**
  * Create authNoPriv V3 security context
  */
-SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod)
+SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, SNMP_AuthMethod authMethod)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
 	m_authName = MemCopyStringA(CHECK_NULL_EX_A(user));
 	m_authPassword = MemCopyStringA(CHECK_NULL_EX_A(authPassword));
-	m_privPassword = NULL;
-	m_contextName = NULL;
+	m_privPassword = nullptr;
+	m_contextName = nullptr;
 	m_authMethod = authMethod;
 	m_privMethod = SNMP_ENCRYPT_NONE;
-	recalculateKeys();
+   memset(m_authKey, 0, sizeof(m_authKey));
+   memset(m_privKey, 0, sizeof(m_privKey));
+   m_validKeys = false;
 }
 
 /**
  * Create authPriv V3 security context
  */
 SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
-														 int authMethod, int encryptionMethod)
+         SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
 	m_authName = MemCopyStringA(CHECK_NULL_EX_A(user));
 	m_authPassword = MemCopyStringA(CHECK_NULL_EX_A(authPassword));
 	m_privPassword = MemCopyStringA(CHECK_NULL_EX_A(encryptionPassword));
-	m_contextName = NULL;
+	m_contextName = nullptr;
 	m_authMethod = authMethod;
 	m_privMethod = encryptionMethod;
-	recalculateKeys();
+   memset(m_authKey, 0, sizeof(m_authKey));
+   memset(m_privKey, 0, sizeof(m_privKey));
+   m_validKeys = false;
 }
 
 /**
@@ -123,7 +127,7 @@ SNMP_SecurityContext::~SNMP_SecurityContext()
 void SNMP_SecurityContext::setContextName(const TCHAR *name)
 {
 	MemFree(m_contextName);
-	if (name != NULL)
+	if (name != nullptr)
 	{
 #ifdef UNICODE
 		m_contextName = MBStringFromWideString(name);
@@ -133,7 +137,7 @@ void SNMP_SecurityContext::setContextName(const TCHAR *name)
 	}
 	else
 	{
-		m_contextName = NULL;
+		m_contextName = nullptr;
 	}
 }
 
@@ -153,10 +157,10 @@ void SNMP_SecurityContext::setContextNameA(const char *name)
 /**
  * Set security model
  */
-void SNMP_SecurityContext::setSecurityModel(int model)
+void SNMP_SecurityContext::setSecurityModel(SNMP_SecurityModel model)
 {
    m_securityModel = model;
-   recalculateKeys();
+   m_validKeys = false;
 }
 
 /**
@@ -173,11 +177,11 @@ void SNMP_SecurityContext::setAuthName(const char *name)
  */
 void SNMP_SecurityContext::setAuthPassword(const char *password)
 {
-   if ((m_authPassword != NULL) && !strcmp(CHECK_NULL_EX_A(password), m_authPassword))
+   if ((m_authPassword != nullptr) && !strcmp(CHECK_NULL_EX_A(password), m_authPassword))
       return;
 	MemFree(m_authPassword);
 	m_authPassword = MemCopyStringA(CHECK_NULL_EX_A(password));
-	recalculateKeys();
+   m_validKeys = false;
 }
 
 /**
@@ -185,11 +189,11 @@ void SNMP_SecurityContext::setAuthPassword(const char *password)
  */
 void SNMP_SecurityContext::setPrivPassword(const char *password)
 {
-   if ((m_privPassword != NULL) && !strcmp(CHECK_NULL_EX_A(password), m_privPassword))
+   if ((m_privPassword != nullptr) && !strcmp(CHECK_NULL_EX_A(password), m_privPassword))
       return;
 	MemFree(m_privPassword);
 	m_privPassword = MemCopyStringA(CHECK_NULL_EX_A(password));
-	recalculateKeys();
+   m_validKeys = false;
 }
 
 /**
@@ -198,7 +202,40 @@ void SNMP_SecurityContext::setPrivPassword(const char *password)
 void SNMP_SecurityContext::setAuthoritativeEngine(const SNMP_Engine &engine)
 {
 	m_authoritativeEngine = engine;
-	recalculateKeys();
+   m_validKeys = false;
+}
+
+/**
+ * Get authentication key
+ */
+const BYTE *SNMP_SecurityContext::getAuthKey()
+{
+   if (!m_validKeys)
+      recalculateKeys();
+   return m_authKey;
+}
+
+/**
+ * Get encryption key
+ */
+const BYTE *SNMP_SecurityContext::getPrivKey()
+{
+   if (!m_validKeys)
+      recalculateKeys();
+   return m_privKey;
+}
+
+/**
+ * Generate user key from password using provided hash function
+ */
+template<void (*__HashForPattern)(const void*, size_t, size_t, BYTE*), void (*__Hash)(const void*, size_t, BYTE*), size_t __hashSize>
+static inline void GenerateUserKey(const char *password, const SNMP_Engine& authoritativeEngine, BYTE *key)
+{
+   BYTE buffer[1024];
+   __HashForPattern(password, strlen(password), 1048576, buffer);
+   memcpy(&buffer[__hashSize], authoritativeEngine.getId(), authoritativeEngine.getIdLen());
+   memcpy(&buffer[__hashSize + authoritativeEngine.getIdLen()], buffer, __hashSize);
+   __Hash(buffer, authoritativeEngine.getIdLen() + __hashSize * 2, key);
 }
 
 /**
@@ -209,37 +246,38 @@ void SNMP_SecurityContext::recalculateKeys()
    if (m_securityModel != SNMP_SECURITY_MODEL_USM)
       return;  // no need to recalculate keys
 
-	BYTE buffer[256];
-	const char *authPassword = (m_authPassword != NULL) ? m_authPassword : "";
-	const char *privPassword = (m_privPassword != NULL) ? m_privPassword : "";
+	const char *authPassword = (m_authPassword != nullptr) ? m_authPassword : "";
+	const char *privPassword = (m_privPassword != nullptr) ? m_privPassword : "";
 
-	// MD5 auth key
-	MD5HashForPattern((const BYTE *)authPassword, strlen(authPassword), 1048576, buffer);
-	memcpy(&buffer[16], m_authoritativeEngine.getId(), m_authoritativeEngine.getIdLen());
-	memcpy(&buffer[16 + m_authoritativeEngine.getIdLen()], buffer, 16);
-	CalculateMD5Hash(buffer, m_authoritativeEngine.getIdLen() + 32, m_authKeyMD5);
-
-	// SHA1 auth key
-	SHA1HashForPattern((BYTE *)authPassword, strlen(authPassword), 1048576, buffer);
-	memcpy(&buffer[20], m_authoritativeEngine.getId(), m_authoritativeEngine.getIdLen());
-	memcpy(&buffer[20 + m_authoritativeEngine.getIdLen()], buffer, 20);
-	CalculateSHA1Hash(buffer, m_authoritativeEngine.getIdLen() + 40, m_authKeySHA1);
-
-	// Priv key
-	if (m_authMethod == SNMP_AUTH_MD5)
+	switch(m_authMethod)
 	{
-		MD5HashForPattern((const BYTE *)privPassword, strlen(privPassword), 1048576, buffer);
-		memcpy(&buffer[16], m_authoritativeEngine.getId(), m_authoritativeEngine.getIdLen());
-		memcpy(&buffer[16 + m_authoritativeEngine.getIdLen()], buffer, 16);
-		CalculateMD5Hash(buffer, m_authoritativeEngine.getIdLen() + 32, m_privKey);
+	   case SNMP_AUTH_MD5:
+	      GenerateUserKey<MD5HashForPattern, CalculateMD5Hash, MD5_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
+         GenerateUserKey<MD5HashForPattern, CalculateMD5Hash, MD5_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+	      break;
+      case SNMP_AUTH_SHA1:
+         GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         break;
+      case SNMP_AUTH_SHA224:
+         GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         break;
+      case SNMP_AUTH_SHA256:
+         GenerateUserKey<SHA256HashForPattern, CalculateSHA256Hash, SHA256_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA256HashForPattern, CalculateSHA256Hash, SHA256_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         break;
+      case SNMP_AUTH_SHA384:
+         GenerateUserKey<SHA384HashForPattern, CalculateSHA384Hash, SHA384_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA384HashForPattern, CalculateSHA384Hash, SHA384_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         break;
+      case SNMP_AUTH_SHA512:
+         GenerateUserKey<SHA512HashForPattern, CalculateSHA512Hash, SHA512_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA512HashForPattern, CalculateSHA512Hash, SHA512_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         break;
 	}
-	else
-	{
-		SHA1HashForPattern((BYTE *)privPassword, strlen(privPassword), 1048576, buffer);
-		memcpy(&buffer[20], m_authoritativeEngine.getId(), m_authoritativeEngine.getIdLen());
-		memcpy(&buffer[20 + m_authoritativeEngine.getIdLen()], buffer, 20);
-		CalculateSHA1Hash(buffer, m_authoritativeEngine.getIdLen() + 40, m_privKey);
-	}
+
+	m_validKeys = true;
 }
 
 /**

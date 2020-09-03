@@ -37,17 +37,15 @@ static char m_community[256] = "public";
 static char m_user[256] = "";
 static char m_authPassword[256] = "";
 static char m_encryptionPassword[256] = "";
-static int m_authMethod = SNMP_AUTH_NONE;
-static int m_encryptionMethod = SNMP_ENCRYPT_NONE;
-static UINT16 m_port = 161;
+static SNMP_AuthMethod m_authMethod = SNMP_AUTH_NONE;
+static SNMP_EncryptionMethod m_encryptionMethod = SNMP_ENCRYPT_NONE;
+static uint16_t m_port = 161;
 static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
-static DWORD m_timeout = 3000;
+static uint32_t m_timeout = 3000;
 
-
-//
-// Get data
-//
-
+/**
+ * Get data
+ */
 int GetData(int argc, TCHAR *argv[])
 {
    SNMP_UDPTransport *pTransport;
@@ -148,7 +146,7 @@ int GetData(int argc, TCHAR *argv[])
 int main(int argc, char *argv[])
 {
    int ch, iExit = 1;
-   DWORD dwValue;
+   uint32_t value;
    char *eptr;
    BOOL bStart = TRUE;
 
@@ -163,7 +161,7 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxsnmpget [<options>] <host> <variables>\n")
                      _T("Valid options are:\n")
-						   _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5 and SHA1\n")
+						   _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
                      _T("   -A <passwd>  : User's authentication password for SNMP v3 USM\n")
                      _T("   -c <string>  : Community string. Default is \"public\"\n")
 						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
@@ -178,12 +176,10 @@ int main(int argc, char *argv[])
             bStart = FALSE;
             break;
          case 'c':   // Community
-            strncpy(m_community, optarg, 256);
-				m_community[255] = 0;
+            strlcpy(m_community, optarg, 256);
             break;
          case 'u':   // User
-            strncpy(m_user, optarg, 256);
-				m_user[255] = 0;
+            strlcpy(m_user, optarg, 256);
             break;
 			case 'a':   // authentication method
 				if (!stricmp(optarg, "md5"))
@@ -194,6 +190,22 @@ int main(int argc, char *argv[])
 				{
 					m_authMethod = SNMP_AUTH_SHA1;
 				}
+            else if (!stricmp(optarg, "sha224"))
+            {
+               m_authMethod = SNMP_AUTH_SHA224;
+            }
+            else if (!stricmp(optarg, "sha256"))
+            {
+               m_authMethod = SNMP_AUTH_SHA256;
+            }
+            else if (!stricmp(optarg, "sha384"))
+            {
+               m_authMethod = SNMP_AUTH_SHA384;
+            }
+            else if (!stricmp(optarg, "sha512"))
+            {
+               m_authMethod = SNMP_AUTH_SHA512;
+            }
 				else if (!stricmp(optarg, "none"))
 				{
 					m_authMethod = SNMP_AUTH_NONE;
@@ -205,8 +217,7 @@ int main(int argc, char *argv[])
 				}
 				break;
          case 'A':   // authentication password
-            strncpy(m_authPassword, optarg, 256);
-				m_authPassword[255] = 0;
+            strlcpy(m_authPassword, optarg, 256);
 				if (strlen(m_authPassword) < 8)
 				{
                _tprintf(_T("Authentication password should be at least 8 characters long\n"));
@@ -233,8 +244,7 @@ int main(int argc, char *argv[])
 				}
 				break;
          case 'E':   // encription password
-            strncpy(m_encryptionPassword, optarg, 256);
-				m_encryptionPassword[255] = 0;
+            strlcpy(m_encryptionPassword, optarg, 256);
 				if (strlen(m_encryptionPassword) < 8)
 				{
                _tprintf(_T("Encryption password should be at least 8 characters long\n"));
@@ -242,15 +252,15 @@ int main(int argc, char *argv[])
 				}
             break;
          case 'p':   // Port number
-            dwValue = strtoul(optarg, &eptr, 0);
-            if ((*eptr != 0) || (dwValue > 65535) || (dwValue == 0))
+            value = strtoul(optarg, &eptr, 0);
+            if ((*eptr != 0) || (value > 65535) || (value == 0))
             {
                _tprintf(_T("Invalid port number %hs\n"), optarg);
                bStart = FALSE;
             }
             else
             {
-               m_port = (WORD)dwValue;
+               m_port = static_cast<uint16_t>(value);
             }
             break;
          case 'v':   // Version
@@ -273,15 +283,15 @@ int main(int argc, char *argv[])
             }
             break;
          case 'w':   // Timeout
-            dwValue = strtoul(optarg, &eptr, 0);
-            if ((*eptr != 0) || (dwValue > 60) || (dwValue == 0))
+            value = strtoul(optarg, &eptr, 0);
+            if ((*eptr != 0) || (value > 60) || (value == 0))
             {
                _tprintf(_T("Invalid timeout value %hs\n"), optarg);
                bStart = FALSE;
             }
             else
             {
-               m_timeout = dwValue;
+               m_timeout = value;
             }
             break;
          case '?':
@@ -303,10 +313,10 @@ int main(int argc, char *argv[])
 #ifdef UNICODE
 			WCHAR *wargv[256];
 			for(int i = optind; i < argc; i++)
-				wargv[i - optind] = WideStringFromMBString(argv[i]);
+				wargv[i - optind] = WideStringFromMBStringSysLocale(argv[i]);
          iExit = GetData(argc - optind, wargv);
 			for(int i = 0; i < argc - optind; i++)
-				free(wargv[i]);
+				MemFree(wargv[i]);
 #else
          iExit = GetData(argc - optind, &argv[optind]);
 #endif

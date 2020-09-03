@@ -3761,8 +3761,8 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, size_t *fileSize);
 #endif
 char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName);
 
-UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, UINT32 size, UINT32 dwCRC);
-BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult);
+uint32_t LIBNETXMS_EXPORTABLE CalculateCRC32(const BYTE *data, size_t size, uint32_t crc);
+bool LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *fileName, uint32_t *result);
 
 typedef unsigned char MD5_STATE[128];
 
@@ -3782,12 +3782,37 @@ void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA1Finish(SHA1_STATE *state, BYTE *hash);
 
-typedef unsigned char SHA256_STATE[256];
+typedef unsigned char SHA224_STATE[192];
+
+void LIBNETXMS_EXPORTABLE CalculateSHA224Hash(const void *data, size_t len, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA224HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA224Init(SHA224_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA224Update(SHA224_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA224Finish(SHA224_STATE *state, BYTE *hash);
+
+typedef unsigned char SHA256_STATE[192];
 
 void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const void *data, size_t len, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA256HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
 void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA256Finish(SHA256_STATE *state, BYTE *hash);
+
+typedef unsigned char SHA384_STATE[384];
+
+void LIBNETXMS_EXPORTABLE CalculateSHA384Hash(const void *data, size_t len, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA384HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA384Init(SHA384_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA384Update(SHA384_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA384Finish(SHA384_STATE *state, BYTE *hash);
+
+typedef unsigned char SHA512_STATE[384];
+
+void LIBNETXMS_EXPORTABLE CalculateSHA512Hash(const void *data, size_t len, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA512HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA512Init(SHA512_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA512Update(SHA512_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA512Finish(SHA512_STATE *state, BYTE *hash);
 
 void LIBNETXMS_EXPORTABLE SignMessage(const void *message, size_t mlen, const BYTE *key, size_t klen, BYTE *signature);
 bool LIBNETXMS_EXPORTABLE ValidateMessageSignature(const void *message, size_t mlen, const BYTE *key, size_t klen, const BYTE *signature);

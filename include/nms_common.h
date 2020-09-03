@@ -132,7 +132,10 @@
 #define INVALID_INDEX         0xFFFFFFFF
 #define MD5_DIGEST_SIZE       16
 #define SHA1_DIGEST_SIZE      20
+#define SHA224_DIGEST_SIZE    28
 #define SHA256_DIGEST_SIZE    32
+#define SHA384_DIGEST_SIZE    48
+#define SHA512_DIGEST_SIZE    64
 
 #define FILE_BUFFER_SIZE      ((size_t)32768)
 

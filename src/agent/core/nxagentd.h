@@ -559,24 +559,24 @@ class SNMPTarget
 {
 private:
    uuid m_guid;
-   UINT64 m_serverId;
+   uint64_t m_serverId;
    InetAddress m_ipAddress;
    SNMP_Version m_snmpVersion;
-   UINT16 m_port;
-   BYTE m_authType;
-   BYTE m_encType;
+   uint16_t m_port;
+   SNMP_AuthMethod m_authType;
+   SNMP_EncryptionMethod m_encType;
    char *m_authName;
    char *m_authPassword;
    char *m_encPassword;
    SNMP_Transport *m_transport;
 
 public:
-   SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId);
+   SNMPTarget(uint64_t serverId, NXCPMessage *msg, uint32_t baseId);
    SNMPTarget(DB_RESULT hResult, int row);
    ~SNMPTarget();
 
    const uuid& getGuid() const { return m_guid; }
-   SNMP_Transport *getTransport(UINT16 port);
+   SNMP_Transport *getTransport(uint16_t port);
 
    bool saveToDatabase(DB_HANDLE hdb);
 };

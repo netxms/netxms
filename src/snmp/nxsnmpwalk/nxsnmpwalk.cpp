@@ -36,16 +36,16 @@ static char m_user[256] = "";
 static char m_authPassword[256] = "";
 static char m_encryptionPassword[256] = "";
 static char m_contextName[256] = "";
-static int m_authMethod = SNMP_AUTH_NONE;
-static int m_encryptionMethod = SNMP_ENCRYPT_NONE;
-static UINT16 m_port = 161;
+static SNMP_AuthMethod m_authMethod = SNMP_AUTH_NONE;
+static SNMP_EncryptionMethod m_encryptionMethod = SNMP_ENCRYPT_NONE;
+static uint16_t m_port = 161;
 static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
-static UINT32 m_timeout = 3000;
+static uint32_t m_timeout = 3000;
 
 /**
  * Walk callback
  */
-static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *userArg)
+static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
    TCHAR buffer[1024], typeName[256];
    bool convert = true;
@@ -68,11 +68,11 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
 #endif
 
    // Create SNMP transport
-   SNMP_UDPTransport *transport = new SNMP_UDPTransport();
-   UINT32 dwResult = transport->createUDPTransport(pszHost, m_port);
-   if (dwResult != SNMP_ERR_SUCCESS)
+   auto transport = new SNMP_UDPTransport();
+   uint32_t result = transport->createUDPTransport(pszHost, m_port);
+   if (result != SNMP_ERR_SUCCESS)
    {
-      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(dwResult));
+      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(result));
       delete transport;
       return 2;
    }
@@ -91,10 +91,10 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
    }
 
    int iExit = 0;
-   dwResult = SnmpWalk(transport, pszRootOid, WalkCallback, NULL);
-   if (dwResult != SNMP_ERR_SUCCESS)
+   result = SnmpWalk(transport, pszRootOid, WalkCallback, NULL);
+   if (result != SNMP_ERR_SUCCESS)
    {
-      _tprintf(_T("SNMP Error: %s\n"), SNMPGetErrorText(dwResult));
+      _tprintf(_T("SNMP Error: %s\n"), SNMPGetErrorText(result));
       iExit = 3;
    }
 
@@ -108,7 +108,7 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
 int main(int argc, char *argv[])
 {
    int ch, iExit = 1;
-   UINT32 dwValue;
+   uint32_t value;
    char *eptr;
    BOOL bStart = TRUE;
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxsnmpwalk [<options>] <host> <start_oid>\n")
                      _T("Valid options are:\n")
-						   _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5 and SHA1\n")
+                     _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
                      _T("   -A <passwd>  : User's authentication password for SNMP v3 USM\n")
                      _T("   -c <string>  : Community string. Default is \"public\"\n")
 						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
@@ -139,12 +139,10 @@ int main(int argc, char *argv[])
             bStart = FALSE;
             break;
          case 'c':   // Community
-            strncpy(m_community, optarg, 256);
-				m_community[255] = 0;
+            strlcpy(m_community, optarg, 256);
             break;
          case 'u':   // User
-            strncpy(m_user, optarg, 256);
-				m_user[255] = 0;
+            strlcpy(m_user, optarg, 256);
             break;
 			case 'a':   // authentication method
 				if (!stricmp(optarg, "md5"))
@@ -155,6 +153,22 @@ int main(int argc, char *argv[])
 				{
 					m_authMethod = SNMP_AUTH_SHA1;
 				}
+            else if (!stricmp(optarg, "sha224"))
+            {
+               m_authMethod = SNMP_AUTH_SHA224;
+            }
+            else if (!stricmp(optarg, "sha256"))
+            {
+               m_authMethod = SNMP_AUTH_SHA256;
+            }
+            else if (!stricmp(optarg, "sha384"))
+            {
+               m_authMethod = SNMP_AUTH_SHA384;
+            }
+            else if (!stricmp(optarg, "sha512"))
+            {
+               m_authMethod = SNMP_AUTH_SHA512;
+            }
 				else if (!stricmp(optarg, "none"))
 				{
 					m_authMethod = SNMP_AUTH_NONE;
@@ -166,8 +180,7 @@ int main(int argc, char *argv[])
 				}
 				break;
          case 'A':   // authentication password
-            strncpy(m_authPassword, optarg, 256);
-				m_authPassword[255] = 0;
+            strlcpy(m_authPassword, optarg, 256);
 				if (strlen(m_authPassword) < 8)
 				{
                _tprintf(_T("Authentication password should be at least 8 characters long\n"));
@@ -194,8 +207,7 @@ int main(int argc, char *argv[])
 				}
 				break;
          case 'E':   // encription password
-            strncpy(m_encryptionPassword, optarg, 256);
-				m_encryptionPassword[255] = 0;
+            strlcpy(m_encryptionPassword, optarg, 256);
 				if (strlen(m_encryptionPassword) < 8)
 				{
                _tprintf(_T("Encryption password should be at least 8 characters long\n"));
@@ -203,19 +215,18 @@ int main(int argc, char *argv[])
 				}
             break;
          case 'n':   // context name
-            strncpy(m_contextName, optarg, 256);
-				m_contextName[255] = 0;
+            strlcpy(m_contextName, optarg, 256);
             break;
          case 'p':   // Port number
-            dwValue = strtoul(optarg, &eptr, 0);
-            if ((*eptr != 0) || (dwValue > 65535) || (dwValue == 0))
+            value = strtoul(optarg, &eptr, 0);
+            if ((*eptr != 0) || (value > 65535) || (value == 0))
             {
                _tprintf(_T("Invalid port number %hs\n"), optarg);
                bStart = FALSE;
             }
             else
             {
-               m_port = (WORD)dwValue;
+               m_port = static_cast<uint16_t>(value);
             }
             break;
          case 'v':   // Version
@@ -238,15 +249,15 @@ int main(int argc, char *argv[])
             }
             break;
          case 'w':   // Timeout
-            dwValue = strtoul(optarg, &eptr, 0);
-            if ((*eptr != 0) || (dwValue > 60) || (dwValue == 0))
+            value = strtoul(optarg, &eptr, 0);
+            if ((*eptr != 0) || (value > 60) || (value == 0))
             {
                _tprintf(_T("Invalid timeout value %hs\n"), optarg);
                bStart = FALSE;
             }
             else
             {
-               m_timeout = dwValue;
+               m_timeout = value;
             }
             break;
          case '?':
@@ -269,8 +280,8 @@ int main(int argc, char *argv[])
 			WCHAR *host = WideStringFromMBStringSysLocale(argv[optind]);
 			WCHAR *rootOid = WideStringFromMBStringSysLocale(argv[optind + 1]);
          iExit = DoWalk(host, rootOid);
-			free(host);
-			free(rootOid);
+			MemFree(host);
+			MemFree(rootOid);
 #else
          iExit = DoWalk(argv[optind], argv[optind + 1]);
 #endif

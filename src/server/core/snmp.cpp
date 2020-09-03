@@ -166,7 +166,9 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
             DBGetFieldA(hResult, i, 0, name, MAX_DB_STRING);
             DBGetFieldA(hResult, i, 3, authPasswd, MAX_DB_STRING);
             DBGetFieldA(hResult, i, 4, privPasswd, MAX_DB_STRING);
-            contexts.add(new SNMP_SecurityContext(name, authPasswd, privPasswd, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2)));
+            contexts.add(new SNMP_SecurityContext(name, authPasswd, privPasswd,
+                     static_cast<SNMP_AuthMethod>(DBGetFieldLong(hResult, i, 1)),
+                     static_cast<SNMP_EncryptionMethod>(DBGetFieldLong(hResult, i, 2))));
          }
 
          DBFreeResult(hResult);

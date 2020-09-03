@@ -210,7 +210,7 @@ uint32 i, j;	/* JHB */
 
 /* Add padding and return the message digest. */
 
-void I_SHA1Final(unsigned char digest[20], SHA1_CTX* context)
+void I_SHA1Final(SHA1_CTX *context, unsigned char *digest)
 {
 uint32 i;	/* JHB */
 unsigned char finalcount[8];

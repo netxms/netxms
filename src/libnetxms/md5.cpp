@@ -322,41 +322,42 @@ void I_md5_init(md5_state_t *pms)
     pms->abcd[3] = 0x10325476;
 }
 
-void I_md5_append(md5_state_t *pms, const md5_byte_t *data, int nbytes)
+void I_md5_append(md5_state_t *pms, const md5_byte_t *data, unsigned int nbytes)
 {
-    const md5_byte_t *p = data;
-    int left = nbytes;
-    int offset = (pms->count[0] >> 3) & 63;
-    md5_word_t nbits = (md5_word_t)(nbytes << 3);
+   const md5_byte_t *p = data;
+   int left = (int)nbytes;
+   int offset = (pms->count[0] >> 3) & 63;
+   md5_word_t nbits = (md5_word_t)(nbytes << 3);
 
-    if (nbytes <= 0)
-	return;
+   if (nbytes <= 0)
+      return;
 
-    /* Update the message length. */
-    pms->count[1] += nbytes >> 29;
-    pms->count[0] += nbits;
-    if (pms->count[0] < nbits)
-	pms->count[1]++;
+   /* Update the message length. */
+   pms->count[1] += nbytes >> 29;
+   pms->count[0] += nbits;
+   if (pms->count[0] < nbits)
+      pms->count[1]++;
 
-    /* Process an initial partial block. */
-    if (offset) {
-	int copy = (offset + nbytes > 64 ? 64 - offset : nbytes);
+   /* Process an initial partial block. */
+   if (offset)
+   {
+      int copy = (offset + nbytes > 64 ? 64 - offset : nbytes);
 
-	memcpy(pms->buf + offset, p, copy);
-	if (offset + copy < 64)
-	    return;
-	p += copy;
-	left -= copy;
-	md5_process(pms, pms->buf);
-    }
+      memcpy(pms->buf + offset, p, copy);
+      if (offset + copy < 64)
+         return;
+      p += copy;
+      left -= copy;
+      md5_process(pms, pms->buf);
+   }
 
-    /* Process full blocks. */
-    for (; left >= 64; p += 64, left -= 64)
-	md5_process(pms, p);
+   /* Process full blocks. */
+   for (; left >= 64; p += 64, left -= 64)
+      md5_process(pms, p);
 
-    /* Process a final partial block. */
-    if (left)
-	memcpy(pms->buf, p, left);
+   /* Process a final partial block. */
+   if (left)
+      memcpy(pms->buf, p, left);
 }
 
 void I_md5_finish(md5_state_t *pms, md5_byte_t digest[16])
