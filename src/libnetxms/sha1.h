@@ -82,17 +82,9 @@ A million repetitions of "a"
 
 #ifdef _WIN32
 
-typedef unsigned long uint32;
-
 #define LITTLE_ENDIAN
 
 #else
-
-#if SIZEOF_LONG == 4
-typedef unsigned long uint32;
-#elif SIZEOF_INT == 4
-typedef unsigned int uint32;
-#endif
 
 #if WORDS_BIGENDIAN
 #undef LITTLE_ENDIAN
@@ -104,10 +96,11 @@ typedef unsigned int uint32;
 
 #endif   /* _WIN32 */
 
-typedef struct {
-    uint32 state[5];
-    uint32 count[2];
-    unsigned char buffer[64];
+typedef struct
+{
+   uint32_t state[5];
+   uint32_t count[2];
+   unsigned char buffer[64];
 } SHA1_CTX;
 
 #ifdef __cplusplus
@@ -116,9 +109,8 @@ extern "C"
 #endif
 
 void I_SHA1Init(SHA1_CTX* context);
-void I_SHA1Update(SHA1_CTX* context, const unsigned char* data, uint32 len);	/*
-JHB */
-void I_SHA1Final(unsigned char digest[20], SHA1_CTX* context);
+void I_SHA1Update(SHA1_CTX* context, const unsigned char* data, unsigned int len);
+void I_SHA1Final(SHA1_CTX* context, unsigned char *digest);
 
 #ifdef __cplusplus
 }

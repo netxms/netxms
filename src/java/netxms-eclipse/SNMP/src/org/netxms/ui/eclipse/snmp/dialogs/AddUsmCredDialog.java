@@ -93,6 +93,10 @@ public class AddUsmCredDialog extends Dialog
 		authMethod.add(Messages.get().AddUsmCredDialog_AuthTypeNone);
 		authMethod.add(Messages.get().AddUsmCredDialog_AuthTypeMD5);
 		authMethod.add(Messages.get().AddUsmCredDialog_AuthTypeSHA1);
+      authMethod.add("SHA224");
+      authMethod.add("SHA256");
+      authMethod.add("SHA384");
+      authMethod.add("SHA512");
 		authMethod.select(2);
 
 		privMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().AddUsmCredDialog_Encryption, WidgetHelper.DEFAULT_LAYOUT_DATA);

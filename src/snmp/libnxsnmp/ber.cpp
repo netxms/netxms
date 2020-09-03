@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -307,7 +307,8 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
 			}
          break;
       default:
-         memcpy(pResult, data, dataLength);
+         if (dataLength > 0)
+            memcpy(pResult, data, dataLength);
          nBytes = dataLength;
          break;
    }

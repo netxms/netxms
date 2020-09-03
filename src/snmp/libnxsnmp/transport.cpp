@@ -285,7 +285,7 @@ SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
 /**
  * Create SNMP_UDPTransport transport connected to given host using host name
  */
-UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *hostName, UINT16 port)
+uint32_t SNMP_UDPTransport::createUDPTransport(const TCHAR *hostName, uint16_t port)
 {
    return createUDPTransport(InetAddress::resolveHostName(hostName), port);
 }
@@ -293,7 +293,7 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *hostName, UINT16 port)
 /**
  * Create SNMP_UDPTransport transport connected to given host
  */
-UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, UINT16 port)
+uint32_t SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, uint16_t port)
 {
    if (!hostAddr.isValid())
       return SNMP_ERR_HOSTNAME;
@@ -301,7 +301,7 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, UINT16
    m_port = port;
    hostAddr.fillSockAddr(&m_peerAddr, port);
 
-   UINT32 dwResult;
+   uint32_t result;
 
    // Create and connect socket
    m_hSocket = CreateSocket(hostAddr.getFamily(), SOCK_DGRAM, 0);
@@ -334,20 +334,20 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, UINT16
 			ioctlsocket(m_hSocket, FIONBIO, &one);
 #endif
 			m_connected = true;
-         dwResult = SNMP_ERR_SUCCESS;
+         result = SNMP_ERR_SUCCESS;
       }
       else
       {
          closesocket(m_hSocket);
          m_hSocket = -1;
-         dwResult = SNMP_ERR_SOCKET;
+         result = SNMP_ERR_SOCKET;
       }
    }
    else
    {
-      dwResult = SNMP_ERR_SOCKET;
+      result = SNMP_ERR_SOCKET;
    }
-   return dwResult;
+   return result;
 }
 
 #undef HOSTNAME_VAR

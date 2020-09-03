@@ -88,7 +88,7 @@ extern "C"
 void I_md5_init(md5_state_t *pms);
 
 /* Append a string to the message. */
-void I_md5_append(md5_state_t *pms, const md5_byte_t *data, int nbytes);
+void I_md5_append(md5_state_t *pms, const md5_byte_t *data, unsigned int nbytes);
 
 /* Finish the message and return the digest. */
 void I_md5_finish(md5_state_t *pms, md5_byte_t digest[16]);

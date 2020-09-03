@@ -60,11 +60,9 @@
 #define SNMP_MAX_ENGINEID_LEN       ((size_t)256)
 #define SNMP_DEFAULT_MSG_MAX_SIZE   ((size_t)65536)
 
-
 //
 // OID comparision results
 //
-
 #define OID_ERROR          -1
 #define OID_EQUAL          0
 #define OID_PRECEDING      1
@@ -203,13 +201,15 @@ enum SNMP_ErrorCode
 #define ASN_TRAP_V2_PDU             0xA7
 #define ASN_REPORT_PDU              0xA8
 
-//
-// Security models
-//
-#define SNMP_SECURITY_MODEL_V1      1
-#define SNMP_SECURITY_MODEL_V2C     2
-#define SNMP_SECURITY_MODEL_USM     3
-
+/**
+ * Security models
+ */
+enum SNMP_SecurityModel
+{
+   SNMP_SECURITY_MODEL_V1  = 1,
+   SNMP_SECURITY_MODEL_V2C = 2,
+   SNMP_SECURITY_MODEL_USM = 3
+};
 
 //
 // SNMP V3 header flags
@@ -218,29 +218,33 @@ enum SNMP_ErrorCode
 #define SNMP_PRIV_FLAG           0x02
 #define SNMP_REPORTABLE_FLAG     0x04
 
+/**
+ * SNMP v3 authentication methods
+ */
+enum SNMP_AuthMethod
+{
+   SNMP_AUTH_NONE   = 0,
+   SNMP_AUTH_MD5    = 1,
+   SNMP_AUTH_SHA1   = 2,
+   SNMP_AUTH_SHA224 = 3,
+   SNMP_AUTH_SHA256 = 4,
+   SNMP_AUTH_SHA384 = 5,
+   SNMP_AUTH_SHA512 = 6
+};
 
-//
-// SNMP v3 authentication methods
-//
-
-#define SNMP_AUTH_NONE           0
-#define SNMP_AUTH_MD5            1
-#define SNMP_AUTH_SHA1           2
-
-
-//
-// SNMP v3 encryption methods
-//
-
-#define SNMP_ENCRYPT_NONE        0
-#define SNMP_ENCRYPT_DES         1
-#define SNMP_ENCRYPT_AES         2
-
+/**
+ * SNMP v3 encryption methods
+ */
+enum SNMP_EncryptionMethod
+{
+   SNMP_ENCRYPT_NONE = 0,
+   SNMP_ENCRYPT_DES = 1,
+   SNMP_ENCRYPT_AES = 2
+};
 
 //
 // MIB object access types
 //
-
 #define MIB_ACCESS_READONLY      1
 #define MIB_ACCESS_READWRITE     2
 #define MIB_ACCESS_WRITEONLY     3
@@ -248,22 +252,18 @@ enum SNMP_ErrorCode
 #define MIB_ACCESS_NOTIFY        5
 #define MIB_ACCESS_CREATE        6
 
-
 //
 // MIB object status codes
 //
-
 #define MIB_STATUS_MANDATORY     1
 #define MIB_STATUS_OPTIONAL      2
 #define MIB_STATUS_OBSOLETE      3
 #define MIB_STATUS_DEPRECATED    4
 #define MIB_STATUS_CURRENT       5
 
-
 //
 // MIB object data types
 //
-
 #define MIB_TYPE_OTHER                 0
 #define MIB_TYPE_IMPORT_ITEM           1
 #define MIB_TYPE_OBJID                 2
@@ -321,12 +321,11 @@ enum SNMP_ErrorCode
 
 #ifdef __cplusplus
 
-//
-// MIB tree node
-//
-
 class ZFile;
 
+/**
+ * MIB tree node
+ */
 class LIBNXSNMP_EXPORTABLE SNMP_MIBObject
 {
 private:
@@ -475,8 +474,9 @@ private:
 
 public:
 	SNMP_Engine();
-	SNMP_Engine(BYTE *id, size_t idLen, int engineBoots = 0, int engineTime = 0);
+	SNMP_Engine(const BYTE *id, size_t idLen, int engineBoots = 0, int engineTime = 0);
 	SNMP_Engine(const SNMP_Engine *src);
+   SNMP_Engine(const SNMP_Engine& src);
 	~SNMP_Engine();
 
 	const BYTE *getId() const { return m_id; }
@@ -494,17 +494,17 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_SecurityContext
 {
 private:
-	int m_securityModel;
+   SNMP_SecurityModel m_securityModel;
 	char *m_authName;	// community for V1/V2c, user for V3 USM
 	char *m_authPassword;
 	char *m_privPassword;
 	char *m_contextName;
-	BYTE m_authKeyMD5[16];
-	BYTE m_authKeySHA1[20];
-	BYTE m_privKey[20];
+	BYTE m_authKey[64];
+	BYTE m_privKey[64];
+	bool m_validKeys;
 	SNMP_Engine m_authoritativeEngine;
-	int m_authMethod;
-	int m_privMethod;
+	SNMP_AuthMethod m_authMethod;
+	SNMP_EncryptionMethod m_privMethod;
 
 	void recalculateKeys();
 
@@ -512,46 +512,67 @@ public:
 	SNMP_SecurityContext();
 	SNMP_SecurityContext(const SNMP_SecurityContext *src);
 	SNMP_SecurityContext(const char *community);
-	SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod);
+	SNMP_SecurityContext(const char *user, const char *authPassword, SNMP_AuthMethod authMethod);
 	SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
-	                     int authMethod, int encryptionMethod);
+	         SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod);
 	~SNMP_SecurityContext();
 
-	int getSecurityModel() { return m_securityModel; }
-	const char *getCommunity() { return CHECK_NULL_EX_A(m_authName); }
-	const char *getUser() { return CHECK_NULL_EX_A(m_authName); }
-	const char *getAuthPassword() { return CHECK_NULL_EX_A(m_authPassword); }
-	const char *getPrivPassword() { return CHECK_NULL_EX_A(m_privPassword); }
-	const char *getContextName() { return m_contextName; }
+	SNMP_SecurityModel getSecurityModel() const { return m_securityModel; }
+	const char *getCommunity() const { return CHECK_NULL_EX_A(m_authName); }
+	const char *getUser() const { return CHECK_NULL_EX_A(m_authName); }
+	const char *getAuthPassword() const { return CHECK_NULL_EX_A(m_authPassword); }
+	const char *getPrivPassword() const { return CHECK_NULL_EX_A(m_privPassword); }
+	const char *getContextName() const { return m_contextName; }
 
-	bool needAuthentication() { return (m_authMethod != SNMP_AUTH_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
-	bool needEncryption() { return (m_privMethod != SNMP_ENCRYPT_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
-	int getAuthMethod() { return m_authMethod; }
-	int getPrivMethod() { return m_privMethod; }
-	BYTE *getAuthKeyMD5() { return m_authKeyMD5; }
-	BYTE *getAuthKeySHA1() { return m_authKeySHA1; }
-	BYTE *getPrivKey() { return m_privKey; }
+	bool needAuthentication() const { return (m_authMethod != SNMP_AUTH_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
+	bool needEncryption() const { return (m_privMethod != SNMP_ENCRYPT_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
+	SNMP_AuthMethod getAuthMethod() const { return m_authMethod; }
+	SNMP_EncryptionMethod getPrivMethod() const { return m_privMethod; }
+	const BYTE *getAuthKey();
+	const BYTE *getPrivKey();
 
 	json_t *toJson() const;
 
-	void setAuthName(const char *name);
-	void setCommunity(const char *community) { setAuthName(community); }
-	void setUser(const char *user) { setAuthName(user); }
-	void setAuthPassword(const char *password);
-	void setPrivPassword(const char *password);
-	void setAuthMethod(int method) { m_authMethod = method; }
-	void setPrivMethod(int method) { m_privMethod = method; }
-	void setSecurityModel(int model);
-	void setContextName(const TCHAR *name);
+   void setAuthName(const char *name);
+   void setCommunity(const char *community) { setAuthName(community); }
+   void setUser(const char *user) { setAuthName(user); }
+   void setAuthPassword(const char *password);
+   void setPrivPassword(const char *password);
+   void setAuthMethod(SNMP_AuthMethod method) { m_authMethod = method; m_validKeys = false; }
+   void setPrivMethod(SNMP_EncryptionMethod method) { m_privMethod = method; m_validKeys = false; }
+   void setSecurityModel(SNMP_SecurityModel model);
+   void setContextName(const TCHAR *name);
 #ifdef UNICODE
-	void setContextNameA(const char *name);
+   void setContextNameA(const char *name);
 #else
-	void setContextNameA(const char *name) { setContextName(name); }
+   void setContextNameA(const char *name) { setContextName(name); }
 #endif
 
-	void setAuthoritativeEngine(const SNMP_Engine &engine);
-	const SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
+   void setAuthoritativeEngine(const SNMP_Engine &engine);
+   const SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
+
+   size_t getSignatureSize() const;
 };
+
+/**
+ * Get signature size for selected authentication method
+ */
+inline size_t SNMP_SecurityContext::getSignatureSize() const
+{
+   switch(m_authMethod)
+   {
+      case SNMP_AUTH_SHA224:
+         return 16;
+      case SNMP_AUTH_SHA256:
+         return 24;
+      case SNMP_AUTH_SHA384:
+         return 32;
+      case SNMP_AUTH_SHA512:
+         return 48;
+      default:
+         return 12;
+   }
+}
 
 /**
  * SNMP PDU
@@ -559,19 +580,19 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_PDU
 {
 private:
-   UINT32 m_version;
-   UINT32 m_command;
+   SNMP_Version m_version;
+   uint32_t m_command;
    ObjectArray<SNMP_Variable> *m_variables;
    SNMP_ObjectId *m_pEnterprise;
    int m_trapType;
    int m_specificTrap;
-   UINT32 m_dwTimeStamp;
-   UINT32 m_dwAgentAddr;
-   UINT32 m_dwRqId;
-   UINT32 m_errorCode;
-   UINT32 m_errorIndex;
-	UINT32 m_msgId;
-	UINT32 m_msgMaxSize;
+   uint32_t m_timestamp;
+   uint32_t m_dwAgentAddr;
+   uint32_t m_requestId;
+   uint32_t m_errorCode;
+   uint32_t m_errorIndex;
+   uint32_t m_msgId;
+   uint32_t m_msgMaxSize;
 	BYTE m_contextEngineId[SNMP_MAX_ENGINEID_LEN];
 	size_t m_contextEngineIdLen;
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
@@ -583,8 +604,8 @@ private:
 	BYTE m_flags;
 	char *m_authObject;
 	SNMP_Engine m_authoritativeEngine;
-	int m_securityModel;
-	BYTE m_signature[12];
+	SNMP_SecurityModel m_securityModel;
+	BYTE m_signature[48];
 	size_t m_signatureOffset;
 
    bool parseVariable(const BYTE *pData, size_t varLength);
@@ -599,52 +620,52 @@ private:
 	bool validateSignedMessage(const BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext);
 	size_t encodeV3Header(BYTE *buffer, size_t bufferSize, SNMP_SecurityContext *securityContext);
 	size_t encodeV3SecurityParameters(BYTE *buffer, size_t bufferSize, SNMP_SecurityContext *securityContext);
-	size_t encodeV3ScopedPDU(UINT32 pduType, BYTE *pdu, size_t pduSize, BYTE *buffer, size_t bufferSize);
+	size_t encodeV3ScopedPDU(uint32_t pduType, BYTE *pdu, size_t pduSize, BYTE *buffer, size_t bufferSize);
 	void signMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext);
 	bool decryptData(const BYTE *data, size_t length, BYTE *decryptedData, SNMP_SecurityContext *securityContext);
 
 public:
    SNMP_PDU();
-   SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion = SNMP_VERSION_2C);
-   SNMP_PDU(SNMP_PDU *src);
+   SNMP_PDU(uint32_t command, uint32_t requestId, SNMP_Version version = SNMP_VERSION_2C);
+   SNMP_PDU(const SNMP_PDU *src);
    ~SNMP_PDU();
 
    bool parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
    size_t encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
 
-   UINT32 getCommand() { return m_command; }
-   SNMP_ObjectId *getTrapId() { return m_pEnterprise; }
-   int getTrapType() { return m_trapType; }
-   int getSpecificTrapType() { return m_specificTrap; }
-   int getNumVariables() { return m_variables->size(); }
-   SNMP_Variable *getVariable(int index) { return m_variables->get(index); }
-   UINT32 getVersion() { return m_version; }
-   SNMP_ErrorCode getErrorCode() { return static_cast<SNMP_ErrorCode>(m_errorCode); }
+   uint32_t getCommand() const { return m_command; }
+   const SNMP_ObjectId *getTrapId() const { return m_pEnterprise; }
+   int getTrapType() const { return m_trapType; }
+   int getSpecificTrapType() const { return m_specificTrap; }
+   int getNumVariables() const { return m_variables->size(); }
+   SNMP_Variable *getVariable(int index) const { return m_variables->get(index); }
+   SNMP_Version getVersion() const { return m_version; }
+   SNMP_ErrorCode getErrorCode() const { return static_cast<SNMP_ErrorCode>(m_errorCode); }
 
-	void setMessageId(UINT32 msgId) { m_msgId = msgId; }
-	UINT32 getMessageId() { return m_msgId; }
+	void setMessageId(uint32_t msgId) { m_msgId = msgId; }
+	uint32_t getMessageId() const { return m_msgId; }
 
-	bool isReportable() { return m_reportable; }
+	bool isReportable() const { return m_reportable; }
 	void setReportable(bool value) { m_reportable = value; }
 
-	const char *getCommunity() { return (m_authObject != NULL) ? m_authObject : ""; }
-	const char *getUser() { return (m_authObject != NULL) ? m_authObject : ""; }
-	SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
-	int getSecurityModel() { return m_securityModel; }
-	int getFlags() { return (int)m_flags; }
+	const char *getCommunity() const { return CHECK_NULL_EX_A(m_authObject); }
+	const char *getUser() const { return CHECK_NULL_EX_A(m_authObject); }
+	const SNMP_Engine& getAuthoritativeEngine() const { return m_authoritativeEngine; }
+	SNMP_SecurityModel getSecurityModel() const { return m_securityModel; }
+	int getFlags() const { return (int)m_flags; }
 
-   UINT32 getRequestId() { return m_dwRqId; }
-   void setRequestId(UINT32 dwId) { m_dwRqId = dwId; }
+	uint32_t getRequestId() const { return m_requestId; }
+   void setRequestId(uint32_t requestId) { m_requestId = requestId; }
 
 	void setContextEngineId(const BYTE *id, size_t len);
 	void setContextEngineId(const char *id);
-	void setContextName(const char *name);
-	const char *getContextName() { return m_contextName; }
-	size_t getContextEngineIdLength() { return m_contextEngineIdLen; }
-	BYTE *getContextEngineId() { return m_contextEngineId; }
+	void setContextName(const char *name) { strlcpy(m_contextName, name, SNMP_MAX_CONTEXT_NAME); }
+	const char *getContextName() const { return m_contextName; }
+	size_t getContextEngineIdLength() const { return m_contextEngineIdLen; }
+	const BYTE *getContextEngineId() const { return m_contextEngineId; }
 
    void unlinkVariables() { m_variables->setOwner(Ownership::False); m_variables->clear(); m_variables->setOwner(Ownership::True); }
-   void bindVariable(SNMP_Variable *pVar);
+   void bindVariable(SNMP_Variable *var);
 };
 
 /**
@@ -720,9 +741,9 @@ public:
    virtual uint16_t getPort() override;
    virtual bool isProxyTransport() override;
 
-   UINT32 createUDPTransport(const TCHAR *hostName, UINT16 port = SNMP_DEFAULT_PORT);
-   UINT32 createUDPTransport(const InetAddress& hostAddr, UINT16 port = SNMP_DEFAULT_PORT);
-	bool isConnected() { return m_connected; }
+   uint32_t createUDPTransport(const TCHAR *hostName, uint16_t port = SNMP_DEFAULT_PORT);
+   uint32_t createUDPTransport(const InetAddress& hostAddr, uint16_t port = SNMP_DEFAULT_PORT);
+   bool isConnected() const { return m_connected; }
 };
 
 struct SNMP_SnapshotIndexEntry;

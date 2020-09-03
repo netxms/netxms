@@ -432,16 +432,17 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    delete m_snmpSecurity;
    if (m_snmpVersion == SNMP_VERSION_3)
    {
-      m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword, snmpMethods & 0xFF, snmpMethods >> 8);
+      m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword,
+               static_cast<SNMP_AuthMethod>(snmpMethods & 0xFF), static_cast<SNMP_EncryptionMethod>(snmpMethods >> 8));
    }
    else
    {
       // This will create security context with V2C security model
       // USM fields will be loaded but keys will not be calculated
       m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject);
-      m_snmpSecurity->setAuthMethod(snmpMethods & 0xFF);
+      m_snmpSecurity->setAuthMethod(static_cast<SNMP_AuthMethod>(snmpMethods & 0xFF));
       m_snmpSecurity->setAuthPassword(snmpAuthPassword);
-      m_snmpSecurity->setPrivMethod(snmpMethods >> 8);
+      m_snmpSecurity->setPrivMethod(static_cast<SNMP_EncryptionMethod>(snmpMethods >> 8));
       m_snmpSecurity->setPrivPassword(snmpPrivPassword);
    }
 
@@ -7169,8 +7170,8 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_snmpSecurity->setPrivPassword(mbBuffer);
 
       WORD methods = pRequest->getFieldAsUInt16(VID_SNMP_USM_METHODS);
-      m_snmpSecurity->setAuthMethod((int)(methods & 0xFF));
-      m_snmpSecurity->setPrivMethod((int)(methods >> 8));
+      m_snmpSecurity->setAuthMethod(static_cast<SNMP_AuthMethod>(methods & 0xFF));
+      m_snmpSecurity->setPrivMethod(static_cast<SNMP_EncryptionMethod>(methods >> 8));
    }
 
    // Change EtherNet/IP port

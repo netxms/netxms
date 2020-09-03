@@ -152,11 +152,11 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
 	// Try pre-configured SNMP v3 USM credentials
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          ObjectArray<SNMP_SecurityContext> contexts(count);
@@ -166,10 +166,13 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
             DBGetFieldA(hResult, i, 0, name, MAX_DB_STRING);
             DBGetFieldA(hResult, i, 3, authPasswd, MAX_DB_STRING);
             DBGetFieldA(hResult, i, 4, privPasswd, MAX_DB_STRING);
-            contexts.add(new SNMP_SecurityContext(name, authPasswd, privPasswd, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2)));
+            contexts.add(new SNMP_SecurityContext(name, authPasswd, privPasswd,
+                     static_cast<SNMP_AuthMethod>(DBGetFieldLong(hResult, i, 1)),
+                     static_cast<SNMP_EncryptionMethod>(DBGetFieldLong(hResult, i, 2))));
          }
 
          DBFreeResult(hResult);
+         DBFreeStatement(hStmt);
          DBConnectionPoolReleaseConnection(hdb);
 
          bool found = false;
@@ -196,11 +199,10 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
       }
       else
       {
+         DBFreeStatement(hStmt);
          DBConnectionPoolReleaseConnection(hdb);
          nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 3, _T("SnmpCheckV3CommSettings(%s): DBSelect() failed"), id);
       }
-
-      DBFreeStatement(hStmt);
    }
    else
    {
@@ -223,22 +225,19 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
    TCHAR ipAddrText[64];
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): starting check (proxy=%d, originalPort=%d)"), ipAddr.toString(ipAddrText), snmpProxy, (int)originalPort);
 
-   SNMP_Transport *pTransport = NULL;
-   StringList *communities = NULL;
-
-
-   bool separateRequests = ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false);
-
+   SNMP_Transport *pTransport = nullptr;
+   StringList *communities = nullptr;
    IntegerArray<uint16_t> ports;
+   bool separateRequests = ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port FROM snmp_ports WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
 
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)

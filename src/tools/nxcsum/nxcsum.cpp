@@ -28,9 +28,12 @@ NETXMS_EXECUTABLE_HEADER(nxcsum)
 
 union HashState
 {
-	MD5_STATE md5;
+   MD5_STATE md5;
    SHA1_STATE sha1;
+   SHA224_STATE sha224;
    SHA256_STATE sha256;
+   SHA384_STATE sha384;
+   SHA512_STATE sha512;
 };
 
 static bool PrintHash(const char *fileName, size_t digestSize, void (*init)(HashState*), void (*update)(HashState*, BYTE*, size_t), void (*finish)(HashState*, BYTE*))
@@ -67,7 +70,7 @@ static bool PrintHash(const char *fileName, size_t digestSize, void (*init)(Hash
       int readSize = _read(hFile, buffer, MAX_READ_SIZE);
       if (readSize <= 0)
          break;
-	   update(&state, buffer, readSize);
+      update(&state, buffer, readSize);
    }
 
    if (!useStdin)
@@ -102,7 +105,7 @@ int main(int argc, char *argv[])
    {
       printf("Invalid count of arguments\n"
              "Usage: nxcsum <method> <file>\n"
-             "Valid methods are: md5, sha1, sha256\n"
+             "Valid methods are: md5, sha1, sha224, sha256, sha384, sha512\n"
              "\n");
       return 1;
    }
@@ -116,14 +119,26 @@ int main(int argc, char *argv[])
    {
       success = CallPrintHash(argv[2], SHA1);
    }
+   else if(!strcmp(argv[1], "sha224"))
+   {
+      success = CallPrintHash(argv[2], SHA224);
+   }
    else if(!strcmp(argv[1], "sha256"))
    {
       success = CallPrintHash(argv[2], SHA256);
    }
+   else if(!strcmp(argv[1], "sha384"))
+   {
+      success = CallPrintHash(argv[2], SHA384);
+   }
+   else if(!strcmp(argv[1], "sha512"))
+   {
+      success = CallPrintHash(argv[2], SHA512);
+   }
    else
    {
       printf("Invalid method\n"
-             "Valid methods are: md5, sha1, sha256\n"
+             "Valid methods are: md5, sha1, sha224, sha256, sha384, sha512\n"
              "\n");
       return 1;
    }
