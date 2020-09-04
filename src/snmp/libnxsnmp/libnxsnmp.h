@@ -36,12 +36,27 @@
 #define LIBNXSNMP_DEBUG_TAG   _T("snmp.lib")
 
 /**
+ * Max number of bytes to be allocated on stack instead of heap
+ */
+#define LIBNXSNMP_MAX_LOCAL_ALLOC    4096
+
+/**
+ * Allocate memory on stack or in heap depending on size
+ */
+#define SNMP_MemAlloc(n) (((n) <= LIBNXSNMP_MAX_LOCAL_ALLOC) ? MemAllocLocal(n) : MemAlloc(n))
+
+/**
+ * Free memory previously allocated by SNMP_MemAlloc
+ */
+#define SNMP_MemFree(p, n) do { if ((n) <= LIBNXSNMP_MAX_LOCAL_ALLOC) MemFreeLocal(p); else MemFree(p); } while(0)
+
+/**
  * Buffer structure for BER_DecodeContent for ASN_OBJECT_ID type
  */
 typedef struct
 {
-   UINT32 length;
-   UINT32 *value;
+   uint32_t length;
+   uint32_t *value;
 } SNMP_OID;
 
 /**
@@ -121,8 +136,8 @@ public:
 /**
  * Functions
  */
-bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, UINT32 *type, size_t *length, const BYTE **data, size_t *idLength);
-bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffer);
-size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize);
+bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, uint32_t *type, size_t *length, const BYTE **data, size_t *idLength);
+bool BER_DecodeContent(uint32_t type, const BYTE *data, size_t length, BYTE *buffer);
+size_t BER_Encode(uint32_t type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize);
 
 #endif   /* _libnxsnmp_h_ */

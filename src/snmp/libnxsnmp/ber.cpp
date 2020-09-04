@@ -26,13 +26,13 @@
 /**
  * Decode BER-encoded variable
  */
-bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, UINT32 *type, size_t *dataLength, const BYTE **data, size_t *idLength)
+bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, uint32_t *type, size_t *dataLength, const BYTE **data, size_t *idLength)
 {
    bool bResult = false;
    const BYTE *pbCurrPos = rawData;
-   UINT32 dwIdLength = 0;
+   uint32_t dwIdLength = 0;
 
-   *type = (UINT32)(*pbCurrPos);
+   *type = (uint32_t)(*pbCurrPos);
    pbCurrPos++;
    dwIdLength++;
 
@@ -46,21 +46,18 @@ bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, UINT32 *type, siz
    }
    else
    {
-      UINT32 length = 0;
-      BYTE *pbTemp;
-      int iNumBytes;
-
-      iNumBytes = *pbCurrPos & 0x7F;
+      uint32_t length = 0;
+      int numBytes = *pbCurrPos & 0x7F;
       pbCurrPos++;
       dwIdLength++;
-      pbTemp = ((BYTE *)&length) + (4 - iNumBytes);
-      if ((iNumBytes >= 1) && (iNumBytes <= 4))
+      BYTE *temp = ((BYTE *)&length) + (4 - numBytes);
+      if ((numBytes >= 1) && (numBytes <= 4))
       {
-         while(iNumBytes > 0)
+         while(numBytes > 0)
          {
-            *pbTemp++ = *pbCurrPos++;
+            *temp++ = *pbCurrPos++;
             dwIdLength++;
-            iNumBytes--;
+            numBytes--;
          }
          *dataLength = (size_t)ntohl(length);
          bResult = true;
@@ -76,7 +73,7 @@ bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, UINT32 *type, siz
 /**
  * Decode content of specified types
  */
-bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffer)
+bool BER_DecodeContent(uint32_t type, const BYTE *data, size_t length, BYTE *buffer)
 {
    bool bResult = true;
 
@@ -89,11 +86,8 @@ bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffe
       case ASN_UINTEGER32:
          if ((length >= 1) && (length <= 5))
          {
-            UINT32 dwValue;
-            BYTE *pbTemp;
-
             // Pre-fill buffer with 1's for negative values and 0's for positive
-            dwValue = (*data & 0x80) ? 0xFFFFFFFF : 0;
+            uint32_t value = (*data & 0x80) ? 0xFFFFFFFF : 0;
 
             // For large unsigned integers, we can have length of 5, and first byte
             // is usually 0. In this case, we skip first byte.
@@ -103,14 +97,14 @@ bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffe
                length--;
             }
 
-            pbTemp = ((BYTE *)&dwValue) + (4 - length);
+            BYTE *temp = ((BYTE *)&value) + (4 - length);
             while(length > 0)
             {
-               *pbTemp++ = *data++;
+               *temp++ = *data++;
                length--;
             }
-            dwValue = ntohl(dwValue);
-            memcpy(buffer, &dwValue, sizeof(UINT32));
+            value = ntohl(value);
+            memcpy(buffer, &value, sizeof(UINT32));
          }
          else
          {
@@ -120,11 +114,8 @@ bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffe
       case ASN_COUNTER64:
          if ((length >= 1) && (length <= 9))
          {
-            QWORD qwValue;
-            BYTE *pbTemp;
-
             // Pre-fill buffer with 1's for negative values and 0's for positive
-            qwValue = (*data & 0x80) ? _ULL(0xFFFFFFFFFFFFFFFF) : 0;
+            uint64_t value = (*data & 0x80) ? _ULL(0xFFFFFFFFFFFFFFFF) : 0;
 
             // For large unsigned integers, we can have length of 9, and first byte
             // is usually 0. In this case, we skip first byte.
@@ -134,28 +125,25 @@ bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffe
                length--;
             }
 
-            pbTemp = ((BYTE *)&qwValue) + (8 - length);
+            BYTE *temp = ((BYTE *)&value) + (8 - length);
             while(length > 0)
             {
-               *pbTemp++ = *data++;
+               *temp++ = *data++;
                length--;
             }
-            qwValue = ntohq(qwValue);
-            memcpy(buffer, &qwValue, sizeof(QWORD));
+            value = ntohq(value);
+            memcpy(buffer, &value, sizeof(QWORD));
          }
          else
          {
-            bResult = FALSE;  // We didn't expect more than 64 bit integers
+            bResult = false;  // We didn't expect more than 64 bit integers
          }
          break;
       case ASN_OBJECT_ID:
          if (length > 0)
          {
-            SNMP_OID *oid;
-            UINT32 dwValue;
-
-            oid = (SNMP_OID *)buffer;
-            oid->value = (UINT32 *)malloc(sizeof(UINT32) * (length + 1));
+            SNMP_OID *oid = reinterpret_cast<SNMP_OID*>(buffer);
+            oid->value = MemAllocArrayNoInit<uint32_t>(length + 1);
 
             // First octet need special handling
             oid->value[0] = *data / 40;
@@ -167,12 +155,12 @@ bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffe
             // Parse remaining octets
             while(length > 0)
             {
-               dwValue = 0;
+               uint32_t value = 0;
 
                // Loop through octets with 8th bit set to 1
                while((*data & 0x80) && (length > 0))
                {
-                  dwValue = (dwValue << 7) | (*data & 0x7F);
+                  value = (value << 7) | (*data & 0x7F);
                   data++;
                   length--;
                }
@@ -180,7 +168,7 @@ bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffe
                // Last octet in element
                if (length > 0)
                {
-                  oid->value[oid->length++] = (dwValue << 7) | *data;
+                  oid->value[oid->length++] = (value << 7) | *data;
                   data++;
                   length--;
                }
@@ -322,19 +310,18 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
  */
 size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize)
 {
-   size_t bytes = 0;
-   BYTE *pbCurrPos = buffer, *pEncodedData;
-   size_t nDataBytes;
-
    if (bufferSize < 2)
       return 0;
+
+   size_t bytes = 0;
+   BYTE *pbCurrPos = buffer;
 
    *pbCurrPos++ = (BYTE)type;
    bytes++;
 
    // Encode content
-   pEncodedData = (BYTE *)malloc(dataLength);
-   nDataBytes = EncodeContent(type, data, dataLength, pEncodedData);
+   BYTE *pEncodedData = static_cast<BYTE*>(SNMP_MemAlloc(dataLength));
+   size_t nDataBytes = EncodeContent(type, data, dataLength, pEncodedData);
 
    // Encode length
    if (nDataBytes < 128)
@@ -356,7 +343,7 @@ size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer
       // Check for available buffer size
       if (bufferSize < (UINT32)nHdrBytes + bytes + 1)
       {
-         free(pEncodedData);
+         SNMP_MemFree(pEncodedData, dataLength);
          return 0;
       }
 
@@ -378,6 +365,6 @@ size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer
       bytes = 0;   // Buffer is too small
    }
 
-   free(pEncodedData);
+   SNMP_MemFree(pEncodedData, dataLength);
    return bytes;
 }

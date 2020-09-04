@@ -29,7 +29,7 @@
 SNMP_ObjectId::SNMP_ObjectId()
 {
    m_length = 0;
-   m_value = NULL;
+   m_value = nullptr;
 }
 
 /**
@@ -44,9 +44,9 @@ SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &src)
 /**
  * Create OID from existing binary value
  */
-SNMP_ObjectId::SNMP_ObjectId(const UINT32 *value, size_t length)
+SNMP_ObjectId::SNMP_ObjectId(const uint32_t *value, size_t length)
 {
-   m_length = (UINT32)length;
+   m_length = length;
    m_value = MemCopyArray(value, length);
 }
 
@@ -55,7 +55,7 @@ SNMP_ObjectId::SNMP_ObjectId(const UINT32 *value, size_t length)
  */
 SNMP_ObjectId::~SNMP_ObjectId()
 {
-   free(m_value);
+   MemFree(m_value);
 }
 
 /**
@@ -65,7 +65,7 @@ SNMP_ObjectId& SNMP_ObjectId::operator =(const SNMP_ObjectId &src)
 {
    if (&src == this)
       return *this;
-   free(m_value);
+   MemFree(m_value);
    m_length = src.m_length;
    m_value = MemCopyArray(src.m_value, m_length);
    return *this;
@@ -95,11 +95,11 @@ TCHAR *SNMP_ObjectId::toString(TCHAR *buffer, size_t bufferSize) const
  */
 int SNMP_ObjectId::compare(const TCHAR *pszOid) const
 {
-   UINT32 dwBuffer[MAX_OID_LEN];
-   size_t length = SNMPParseOID(pszOid, dwBuffer, MAX_OID_LEN);
+   uint32_t buffer[MAX_OID_LEN];
+   size_t length = SNMPParseOID(pszOid, buffer, MAX_OID_LEN);
    if (length == 0)
       return OID_ERROR;
-   return compare(dwBuffer, length);
+   return compare(buffer, length);
 }
 
 /**
@@ -110,9 +110,9 @@ int SNMP_ObjectId::compare(const TCHAR *pszOid) const
  *    OID_PRECEDING this OID preceding given OID (less than given OID)
  *    OID_FOLLOWING this OID following given OID (greater than given OID)
  */
-int SNMP_ObjectId::compare(const UINT32 *oid, size_t length) const
+int SNMP_ObjectId::compare(const uint32_t *oid, size_t length) const
 {
-   if ((oid == NULL) || (length == 0) || (m_value == NULL))
+   if ((oid == nullptr) || (length == 0) || (m_value == nullptr))
       return OID_ERROR;
 
    size_t stop = std::min(length, m_length);
@@ -136,10 +136,10 @@ int SNMP_ObjectId::compare(const SNMP_ObjectId& oid) const
 /**
  * Set new value
  */
-void SNMP_ObjectId::setValue(const UINT32 *value, size_t length)
+void SNMP_ObjectId::setValue(const uint32_t *value, size_t length)
 {
-   free(m_value);
-   m_length = (UINT32)length;
+   MemFree(m_value);
+   m_length = length;
    m_value = MemCopyArray(value, length);
 }
 
@@ -148,9 +148,9 @@ void SNMP_ObjectId::setValue(const UINT32 *value, size_t length)
  *
  * @param subId sub-identifier to add
  */
-void SNMP_ObjectId::extend(UINT32 subId)
+void SNMP_ObjectId::extend(uint32_t subId)
 {
-   m_value = (UINT32 *)realloc(m_value, sizeof(UINT32) * (m_length + 1));
+   m_value = MemReallocArray(m_value, m_length + 1);
    m_value[m_length++] = subId;
 }
 
@@ -160,10 +160,10 @@ void SNMP_ObjectId::extend(UINT32 subId)
  * @param subId sub-identifier to add
  * @param length length of sub-identifier to add
  */
-void SNMP_ObjectId::extend(const UINT32 *subId, size_t length)
+void SNMP_ObjectId::extend(const uint32_t *subId, size_t length)
 {
-   m_value = (UINT32 *)realloc(m_value, sizeof(UINT32) * (m_length + length));
-   memcpy(&m_value[m_length], subId, length * sizeof(UINT32));
+   m_value = MemReallocArray(m_value, m_length + length);
+   memcpy(&m_value[m_length], subId, length * sizeof(uint32_t));
    m_length += length;
 }
 
@@ -185,7 +185,7 @@ void SNMP_ObjectId::truncate(size_t count)
  */
 SNMP_ObjectId SNMP_ObjectId::parse(const TCHAR *oid)
 {
-   UINT32 buffer[MAX_OID_LEN];
+   uint32_t buffer[MAX_OID_LEN];
    size_t length = SNMPParseOID(oid, buffer, MAX_OID_LEN);
    return SNMP_ObjectId(buffer, length);
 }
