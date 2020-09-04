@@ -12,6 +12,7 @@
 
 - Added support for parallel event processing
 - Improved SNMP proxy performance
+- Support for SHA-2 based authentication in SNMP (SHA224, SHA256, SHA384, SHA512)
 - Roaming mode for server
 - Access to NXSL object's class metadata via __class attribute
 - Access to NXSL object's attributes via __get method
