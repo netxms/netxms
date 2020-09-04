@@ -147,7 +147,7 @@ void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state)
  */
 void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const void *data, size_t size)
 {
-   I_md5_append((md5_state_t *)state, (const md5_byte_t *)data, (int)size);
+   I_md5_append((md5_state_t *)state, (const md5_byte_t *)data, static_cast<unsigned int>(size));
 }
 
 /**
@@ -161,12 +161,11 @@ void LIBNETXMS_EXPORTABLE MD5Finish(MD5_STATE *state, BYTE *hash)
 /**
  * Calculate MD5 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const void *data, size_t nbytes, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const void *data, size_t size, BYTE *hash)
 {
 	md5_state_t state;
-
 	I_md5_init(&state);
-	I_md5_append(&state, (const md5_byte_t *)data, (int)nbytes);
+	I_md5_append(&state, (const md5_byte_t *)data, static_cast<unsigned int>(size));
 	I_md5_finish(&state, (md5_byte_t *)hash);
 }
 
@@ -183,7 +182,7 @@ void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state)
  */
 void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t size)
 {
-   I_SHA1Update(reinterpret_cast<SHA1_CTX*>(state), static_cast<const unsigned char*>(data), static_cast<uint32>(size));
+   I_SHA1Update(reinterpret_cast<SHA1_CTX*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
 }
 
 /**
@@ -197,76 +196,12 @@ void LIBNETXMS_EXPORTABLE SHA1Finish(SHA1_STATE *state, BYTE *hash)
 /**
  * Calculate SHA1 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const void *data, size_t nbytes, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const void *data, size_t size, BYTE *hash)
 {
    SHA1_CTX context;
    I_SHA1Init(&context);
-   I_SHA1Update(&context, static_cast<const unsigned char*>(data), (uint32)nbytes);
+   I_SHA1Update(&context, static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
    I_SHA1Final(&context, hash);
-}
-
-/**
- * Calculate MD5 hash for given file
- */
-BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash)
-{
-	size_t iSize;
-	md5_state_t state;
-	char szBuffer[FILE_BLOCK_SIZE];
-	BOOL bSuccess = FALSE;
-	FILE *fileHandle;
-
-   fileHandle = _tfopen(pszFileName, _T("rb"));
-   if (fileHandle != NULL)
-   {
-      I_md5_init(&state);
-      while(1)
-      {
-         iSize = fread(szBuffer, 1, FILE_BLOCK_SIZE, fileHandle);
-         if (iSize <= 0)
-            break;
-      	I_md5_append(&state, (const md5_byte_t *)szBuffer, (int)iSize);
-      }
-      fclose(fileHandle);
-      if (iSize == 0)
-      {
-         I_md5_finish(&state, (md5_byte_t *)pHash);
-         bSuccess = TRUE;
-      }
-   }
-   return bSuccess;
-}
-
-/**
- * Calculate SHA1 hash for given file
- */
-BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash)
-{
-   size_t iSize;
-   FILE *fileHandle;
-   SHA1_CTX context;
-   char szBuffer[FILE_BLOCK_SIZE];
-   BOOL bSuccess = FALSE;
-
-   fileHandle = _tfopen(pszFileName, _T("rb"));
-   if (fileHandle != NULL)
-   {
-      I_SHA1Init(&context);
-      while(1)
-      {
-         iSize = fread(szBuffer, 1, FILE_BLOCK_SIZE, fileHandle);
-         if (iSize <= 0)
-            break;
-         I_SHA1Update(&context, (BYTE *)szBuffer, (uint32)iSize);
-      }
-      fclose(fileHandle);
-      if (iSize == 0)
-      {
-         I_SHA1Final(&context, pHash);
-         bSuccess = TRUE;
-      }
-   }
-   return bSuccess;
 }
 
 /**
@@ -486,4 +421,81 @@ void LIBNETXMS_EXPORTABLE SHA384HashForPattern(const void *data, size_t patternS
 void LIBNETXMS_EXPORTABLE SHA512HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
    HashForPattern<sha512_ctx, I_sha512_init, I_sha512_update, I_sha512_final, SHA512_BLOCK_SIZE>(data, patternSize, fullSize, hash);
+}
+
+/**
+ * Calculate hash for given file with provided hash function
+ */
+template<typename C, void (*__Init)(C*), void (*__Update)(C*, const unsigned char*, unsigned int), void (*__Final)(C*, unsigned char*)>
+static inline bool CalculateFileHash(const TCHAR *fileName, BYTE *hash)
+{
+   bool success = false;
+   FILE *fileHandle = _tfopen(fileName, _T("rb"));
+   if (fileHandle != nullptr)
+   {
+      BYTE buffer[FILE_BLOCK_SIZE];
+      C context;
+      __Init(&context);
+      while(true)
+      {
+         size_t size = fread(buffer, 1, FILE_BLOCK_SIZE, fileHandle);
+         if (size == 0)
+         {
+            __Final(&context, hash);
+            success = true;
+            break;
+         }
+         __Update(&context, buffer, static_cast<unsigned int>(size));
+      }
+      fclose(fileHandle);
+   }
+   return success;
+}
+
+/**
+ * Calculate MD5 hash for given file
+ */
+bool LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *fileName, BYTE *hash)
+{
+   return CalculateFileHash<md5_state_t, I_md5_init, I_md5_append, I_md5_finish>(fileName, hash);
+}
+
+/**
+ * Calculate SHA1 hash for given file
+ */
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *fileName, BYTE *hash)
+{
+   return CalculateFileHash<SHA1_CTX, I_SHA1Init, I_SHA1Update, I_SHA1Final>(fileName, hash);
+}
+
+/**
+ * Calculate SHA224 hash for given file
+ */
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA224Hash(const TCHAR *fileName, BYTE *hash)
+{
+   return CalculateFileHash<sha224_ctx, I_sha224_init, I_sha224_update, I_sha224_final>(fileName, hash);
+}
+
+/**
+ * Calculate SHA256 hash for given file
+ */
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA256Hash(const TCHAR *fileName, BYTE *hash)
+{
+   return CalculateFileHash<sha256_ctx, I_sha256_init, I_sha256_update, I_sha256_final>(fileName, hash);
+}
+
+/**
+ * Calculate SHA384 hash for given file
+ */
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA384Hash(const TCHAR *fileName, BYTE *hash)
+{
+   return CalculateFileHash<sha384_ctx, I_sha384_init, I_sha384_update, I_sha384_final>(fileName, hash);
+}
+
+/**
+ * Calculate SHA512 hash for given file
+ */
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA512Hash(const TCHAR *fileName, BYTE *hash)
+{
+   return CalculateFileHash<sha512_ctx, I_sha512_init, I_sha512_update, I_sha512_final>(fileName, hash);
 }
