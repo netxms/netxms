@@ -438,11 +438,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 		snmpUsmCredList.setContentProvider(new ArrayContentProvider());
 		snmpUsmCredList.setLabelProvider(new SnmpUsmLabelProvider());
 		snmpUsmCredList.addDoubleClickListener(new IDoubleClickListener() {
-         
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            editUsmCredzantial();
+            editUsmCredentials();
          }
       });
 
@@ -470,10 +469,10 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            editUsmCredzantial();
+            editUsmCredentials();
          }
       });
-		
+
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -487,7 +486,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
 				removeUsmCredentials();
 			}
 		});
-      
+
       final ImageHyperlink linkUp = toolkit.createImageHyperlink(clientArea, SWT.NONE);
       linkUp.setText("Up");
       linkUp.setImage(SharedIcons.IMG_UP);
@@ -919,7 +918,7 @@ public class NetworkCredentials extends ViewPart implements ISaveablePart
    /**
     * Edit SNMP USM credential
     */
-   private void editUsmCredzantial()
+   private void editUsmCredentials()
    {
       IStructuredSelection selection = (IStructuredSelection)snmpUsmCredList.getSelection();
       if (selection.size() != 1)

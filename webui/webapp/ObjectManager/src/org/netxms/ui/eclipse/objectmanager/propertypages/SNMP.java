@@ -99,7 +99,7 @@ public class SNMP extends PropertyPage
       snmpPort = new LabeledText(dialogArea, SWT.NONE);
       snmpPort.setLabel(Messages.get().Communication_UDPPort);
       snmpPort.setText(Integer.toString(node.getSnmpPort()));
-      
+
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(snmpVersion.getParent(), 0, SWT.BOTTOM);
@@ -107,9 +107,13 @@ public class SNMP extends PropertyPage
       snmpAuth.add(Messages.get().Communication_AuthNone);
       snmpAuth.add(Messages.get().Communication_AuthMD5);
       snmpAuth.add(Messages.get().Communication_AuthSHA1);
+      snmpAuth.add("SHA224");
+      snmpAuth.add("SHA256");
+      snmpAuth.add("SHA384");
+      snmpAuth.add("SHA512");
       snmpAuth.select(node.getSnmpAuthMethod());
       snmpAuth.setEnabled(node.getSnmpVersion() == SnmpVersion.V3);
-      
+
       fd = new FormData();
       fd.left = new FormAttachment(snmpAuth.getParent(), 0, SWT.RIGHT);
       fd.top = new FormAttachment(snmpVersion.getParent(), 0, SWT.BOTTOM);
@@ -290,7 +294,7 @@ public class SNMP extends PropertyPage
       return true;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
@@ -299,7 +303,7 @@ public class SNMP extends PropertyPage
       return applyChanges(false);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performApply()
     */
    @Override
@@ -308,7 +312,7 @@ public class SNMP extends PropertyPage
       applyChanges(true);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
    @Override
