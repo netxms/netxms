@@ -78,7 +78,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
 	DBDRV_CONNECTION hDrvConn = driver->m_fpDrvConnect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, errorText);
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
-	DBDRV_CONNECTION hDrvConn = driver->m_fpDrvConnect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, errorText);
+	DBDRV_CONNECTION hDrvConn = driver->m_fpDrvConnect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, wcErrorText);
 	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
