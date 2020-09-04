@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -148,10 +148,10 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                else if (dwFlags & SG_HSTRING_RESULT)
                {
 						size_t rawLen = (bufferSize - sizeof(TCHAR)) / 2 / sizeof(TCHAR);
-						BYTE *raw = (BYTE *)malloc(rawLen);
+						BYTE *raw = static_cast<BYTE*>(SNMP_MemAlloc(rawLen));
 						rawLen = (int)pVar->getRawValue(raw, rawLen);
 						BinToStr(raw, rawLen, (TCHAR *)pValue);
-						free(raw);
+						SNMP_MemFree(raw, rawLen);
                }
                else if (dwFlags & SG_STRING_RESULT)
                {
@@ -167,24 +167,24 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                   switch(pVar->getType())
                   {
                      case ASN_INTEGER:
-                        if (bufferSize >= sizeof(INT32))
+                        if (bufferSize >= sizeof(uint32_t))
                            *((INT32 *)pValue) = pVar->getValueAsInt();
                         break;
                      case ASN_COUNTER32:
                      case ASN_GAUGE32:
                      case ASN_TIMETICKS:
                      case ASN_UINTEGER32:
-                        if (bufferSize >= sizeof(UINT32))
+                        if (bufferSize >= sizeof(uint32_t))
                            *((UINT32 *)pValue) = pVar->getValueAsUInt();
                         break;
                      case ASN_COUNTER64:
-                        if (bufferSize >= sizeof(UINT64))
+                        if (bufferSize >= sizeof(uint64_t))
                            *((UINT64 *)pValue) = pVar->getValueAsUInt64();
-                        else if (bufferSize >= sizeof(UINT32))
+                        else if (bufferSize >= sizeof(uint32_t))
                            *((UINT32 *)pValue) = pVar->getValueAsUInt();
                         break;
                      case ASN_IP_ADDR:
-                        if (bufferSize >= sizeof(UINT32))
+                        if (bufferSize >= sizeof(uint32_t))
                            *((UINT32 *)pValue) = ntohl(pVar->getValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:

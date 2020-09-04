@@ -91,7 +91,6 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
    const BYTE *pbCurrPos;
    UINT32 type;
    size_t length, dwIdLength;
-   SNMP_OID *oid;
    bool bResult = false;
 
    // Object ID
@@ -100,17 +99,16 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
    if (type != ASN_OBJECT_ID)
       return false;
 
-   oid = (SNMP_OID *)malloc(sizeof(SNMP_OID));
-   memset(oid, 0, sizeof(SNMP_OID));
-   if (BER_DecodeContent(type, pbCurrPos, length, (BYTE *)oid))
+   SNMP_OID oid;
+   memset(&oid, 0, sizeof(SNMP_OID));
+   if (BER_DecodeContent(type, pbCurrPos, length, (BYTE *)&oid))
    {
-      m_name.setValue(oid->value, (size_t)oid->length);
+      m_name.setValue(oid.value, (size_t)oid.length);
       varLength -= length + dwIdLength;
       pbCurrPos += length;
       bResult = TRUE;
    }
-   MemFree(oid->value);
-   free(oid);
+   MemFree(oid.value);
 
    if (bResult)
    {
@@ -120,32 +118,30 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
          switch(m_type)
          {
             case ASN_OBJECT_ID:
-               oid = (SNMP_OID *)malloc(sizeof(SNMP_OID));
-               memset(oid, 0, sizeof(SNMP_OID));
-               if (BER_DecodeContent(m_type, pbCurrPos, length, (BYTE *)oid))
+               memset(&oid, 0, sizeof(SNMP_OID));
+               if (BER_DecodeContent(m_type, pbCurrPos, length, (BYTE *)&oid))
                {
-                  m_valueLength = oid->length * sizeof(UINT32);
-                  m_value = (BYTE *)oid->value;
+                  m_valueLength = oid.length * sizeof(uint32_t);
+                  m_value = (BYTE *)oid.value;
                   bResult = true;
                }
                else
                {
-                  MemFree(oid->value);
+                  MemFree(oid.value);
                }
-               free(oid);
                break;
             case ASN_INTEGER:
             case ASN_COUNTER32:
             case ASN_GAUGE32:
             case ASN_TIMETICKS:
             case ASN_UINTEGER32:
-               m_valueLength = sizeof(UINT32);
-               m_value = (BYTE *)malloc(8);
+               m_valueLength = sizeof(uint32_t);
+               m_value = (BYTE *)MemAlloc(8);
                bResult = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
                break;
 		      case ASN_COUNTER64:
-               m_valueLength = sizeof(QWORD);
-               m_value = (BYTE *)malloc(16);
+               m_valueLength = sizeof(uint64_t);
+               m_value = (BYTE *)MemAlloc(16);
                bResult = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
                break;
             default:
@@ -396,8 +392,9 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
 
          if (conversionNeeded)
          {
-            TCHAR *hexString = (TCHAR *)malloc((length * 3 + 1) * sizeof(TCHAR));
-            UINT32 i, j;
+            size_t bufferLen = (length * 3 + 1) * sizeof(TCHAR);
+            TCHAR *hexString = static_cast<TCHAR*>(SNMP_MemAlloc(bufferLen));
+            size_t i, j;
             for(i = 0, j = 0; i < length; i++)
             {
                hexString[j++] = bin2hex(m_value[i] >> 4);
@@ -405,8 +402,8 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
                hexString[j++] = _T(' ');
             }
             hexString[j] = 0;
-            nx_strncpy(buffer, hexString, bufferSize);
-            free(hexString);
+            _tcslcpy(buffer, hexString, bufferSize);
+            SNMP_MemFree(hexString, bufferLen);
             *convertToHex = true;
          }
          else
@@ -484,14 +481,11 @@ size_t SNMP_Variable::encode(BYTE *pBuffer, size_t bufferSize)
    BYTE *pWorkBuf;
 
    dwWorkBufSize = (UINT32)(m_valueLength + m_name.length() * 4 + 16);
-   pWorkBuf = (BYTE *)malloc(dwWorkBufSize);
-   bytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_name.value(),
-                        m_name.length() * sizeof(UINT32),
-                        pWorkBuf, dwWorkBufSize);
-   bytes += BER_Encode(m_type, m_value, m_valueLength, 
-                         pWorkBuf + bytes, dwWorkBufSize - bytes);
+   pWorkBuf = static_cast<BYTE*>(SNMP_MemAlloc(dwWorkBufSize));
+   bytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_name.value(), m_name.length() * sizeof(uint32_t), pWorkBuf, dwWorkBufSize);
+   bytes += BER_Encode(m_type, m_value, m_valueLength, pWorkBuf + bytes, dwWorkBufSize - bytes);
    bytes = BER_Encode(ASN_SEQUENCE, pWorkBuf, bytes, pBuffer, bufferSize);
-   free(pWorkBuf);
+   SNMP_MemFree(pWorkBuf, dwWorkBufSize);
    return bytes;
 }
 

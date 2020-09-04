@@ -268,25 +268,25 @@ void SNMP_MIBObject::writeToFile(ZFile *pFile, UINT32 dwFlags)
 /**
  * Save MIB tree to file
  */
-UINT32 LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, UINT32 dwFlags)
+uint32_t LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, uint32_t flags)
 {
    FILE *pFile;
    ZFile *pZFile;
    SNMP_MIB_HEADER header;
-   UINT32 dwRet = SNMP_ERR_SUCCESS;
+   uint32_t dwRet = SNMP_ERR_SUCCESS;
 
    pFile = _tfopen(pszFile, _T("wb"));
-   if (pFile != NULL)
+   if (pFile != nullptr)
    {
       memcpy(header.chMagic, MIB_FILE_MAGIC, 6);
       header.bVersion = MIB_FILE_VERSION;
       header.bHeaderSize = sizeof(SNMP_MIB_HEADER);
-      header.flags = htons((WORD)dwFlags);
-      header.dwTimeStamp = htonl((UINT32)time(NULL));
+      header.flags = htons((WORD)flags);
+      header.dwTimeStamp = htonl((UINT32)time(nullptr));
       memset(header.bReserved, 0, sizeof(header.bReserved));
       fwrite(&header, sizeof(SNMP_MIB_HEADER), 1, pFile);
-      pZFile = new ZFile(pFile, dwFlags & SMT_COMPRESS_DATA, TRUE);
-      pRoot->writeToFile(pZFile, dwFlags);
+      pZFile = new ZFile(pFile, flags & SMT_COMPRESS_DATA, TRUE);
+      pRoot->writeToFile(pZFile, flags);
       pZFile->close();
       delete pZFile;
    }
@@ -414,23 +414,20 @@ BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
 /**
  * Load MIB tree from file
  */
-UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot)
+uint32_t LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot)
 {
-   FILE *pFile;
-   ZFile *pZFile;
-   SNMP_MIB_HEADER header;
-   UINT32 dwRet = SNMP_ERR_SUCCESS;
-
-   pFile = _tfopen(pszFile, _T("rb"));
-   if (pFile != NULL)
+   uint32_t dwRet = SNMP_ERR_SUCCESS;
+   FILE *pFile = _tfopen(pszFile, _T("rb"));
+   if (pFile != nullptr)
    {
+      SNMP_MIB_HEADER header;
       if (fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile) == sizeof(SNMP_MIB_HEADER))
       {
          if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
          {
             header.flags = ntohs(header.flags);
             fseek(pFile, header.bHeaderSize, SEEK_SET);
-            pZFile = new ZFile(pFile, header.flags & SMT_COMPRESS_DATA, FALSE);
+            ZFile *pZFile = new ZFile(pFile, header.flags & SMT_COMPRESS_DATA, FALSE);
             if (pZFile->readByte() == MIB_TAG_OBJECT)
             {
                *ppRoot = new SNMP_MIBObject;
@@ -469,7 +466,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject
 /**
  * Get timestamp from saved MIB tree
  */
-UINT32 LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, UINT32 *pdwTimestamp)
+uint32_t LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, uint32_t *pdwTimestamp)
 {
    FILE *pFile;
    SNMP_MIB_HEADER header;

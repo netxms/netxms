@@ -26,7 +26,7 @@
 /**
  * Convert OID to text
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const UINT32 *value, TCHAR *buffer, size_t bufferSize)
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize)
 {
    buffer[0] = 0;
    for(size_t i = 0, bufPos = 0; (i < length) && (bufPos < bufferSize); i++)
