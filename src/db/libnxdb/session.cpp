@@ -26,21 +26,21 @@
 /**
  * Check if statement handle is valid
  */
-#define IS_VALID_STATEMENT_HANDLE(s) ((s != NULL) && (s->m_connection != NULL))
+#define IS_VALID_STATEMENT_HANDLE(s) ((s != nullptr) && (s->m_connection != nullptr))
 
 /**
  * Performance counters
  */
-static UINT64 s_perfSelectQueries = 0;
-static UINT64 s_perfNonSelectQueries = 0;
-static UINT64 s_perfTotalQueries = 0;
-static UINT64 s_perfLongRunningQueries = 0;
-static UINT64 s_perfFailedQueries = 0;
+static uint64_t s_perfSelectQueries = 0;
+static uint64_t s_perfNonSelectQueries = 0;
+static uint64_t s_perfTotalQueries = 0;
+static uint64_t s_perfLongRunningQueries = 0;
+static uint64_t s_perfFailedQueries = 0;
 
 /**
  * Session init callback
  */
-static void (*s_sessionInitCb)(DB_HANDLE session) = NULL;
+static void (*s_sessionInitCb)(DB_HANDLE session) = nullptr;
 
 /**
  * Invalidate all prepared statements on connection
@@ -52,8 +52,8 @@ static void InvalidatePreparedStatements(DB_HANDLE hConn)
    {
       db_statement_t *stmt = hConn->m_preparedStatements->get(i);
       hConn->m_driver->m_fpDrvFreeStatement(stmt->m_statement);
-      stmt->m_statement = NULL;
-      stmt->m_connection = NULL;
+      stmt->m_statement = nullptr;
+      stmt->m_connection = nullptr;
    }
    hConn->m_preparedStatements->clear();
    MutexUnlock(hConn->m_preparedStatementsLock);
@@ -63,30 +63,29 @@ static void InvalidatePreparedStatements(DB_HANDLE hConn)
  * Connect to database
  */
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
-                                       const TCHAR *login, const TCHAR *password, const TCHAR *schema, TCHAR *errorText)
+         const TCHAR *login, const TCHAR *password, const TCHAR *schema, TCHAR *errorText)
 {
-   DBDRV_CONNECTION hDrvConn;
-   DB_HANDLE hConn = NULL;
+   DB_HANDLE hConn = nullptr;
 
 	nxlog_debug_tag(DEBUG_TAG_CONNECTION, 8, _T("DBConnect: server=%s db=%s login=%s schema=%s"), CHECK_NULL(server), CHECK_NULL(dbName), CHECK_NULL(login), CHECK_NULL(schema));
+	char *utfServer = UTF8StringFromTString(server);
+	char *utfDatabase = UTF8StringFromTString(dbName);
+	char *utfLogin = UTF8StringFromTString(login);
+	char *utfPassword = UTF8StringFromTString(password);
+	char *utfSchema = UTF8StringFromTString(schema);
 #ifdef UNICODE
-	char *mbServer = (server == NULL) ? NULL : MBStringFromWideString(server);
-	char *mbDatabase = (dbName == NULL) ? NULL : MBStringFromWideString(dbName);
-	char *mbLogin = (login == NULL) ? NULL : MBStringFromWideString(login);
-	char *mbPassword = (password == NULL) ? NULL : MBStringFromWideString(password);
-	char *mbSchema = (schema == NULL) ? NULL : MBStringFromWideString(schema);
 	errorText[0] = 0;
-   hDrvConn = driver->m_fpDrvConnect(mbServer, mbLogin, mbPassword, mbDatabase, mbSchema, errorText);
+	DBDRV_CONNECTION hDrvConn = driver->m_fpDrvConnect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, errorText);
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
-   hDrvConn = driver->m_fpDrvConnect(server, login, password, dbName, schema, wcErrorText);
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+	DBDRV_CONNECTION hDrvConn = driver->m_fpDrvConnect(utfServer, utfLogin, utfPassword, utfDatabase, utfSchema, errorText);
+	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
-   if (hDrvConn != NULL)
+   if (hDrvConn != nullptr)
    {
-      hConn = (DB_HANDLE)malloc(sizeof(struct db_handle_t));
-      if (hConn != NULL)
+      hConn = MemAllocStruct<db_handle_t>();
+      if (hConn != nullptr)
       {
 			hConn->m_driver = driver;
 			hConn->m_dumpSql = driver->m_dumpSql;
@@ -96,23 +95,15 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          hConn->m_transactionLevel = 0;
          hConn->m_preparedStatements = new ObjectArray<db_statement_t>(4, 4, Ownership::False);
          hConn->m_preparedStatementsLock = MutexCreateFast();
-#ifdef UNICODE
-         hConn->m_dbName = mbDatabase;
-         hConn->m_login = mbLogin;
-         hConn->m_password = mbPassword;
-         hConn->m_server = mbServer;
-         hConn->m_schema = mbSchema;
-#else
-         hConn->m_dbName = MemCopyStringA(dbName);
-         hConn->m_login = MemCopyStringA(login);
-         hConn->m_password = MemCopyStringA(password);
-         hConn->m_server = MemCopyStringA(server);
-         hConn->m_schema = MemCopyStringA(schema);
-#endif
-         if (driver->m_fpDrvSetPrefetchLimit != NULL)
+         hConn->m_dbName = utfDatabase;
+         hConn->m_login = utfLogin;
+         hConn->m_password = utfPassword;
+         hConn->m_server = utfServer;
+         hConn->m_schema = utfSchema;
+         if (driver->m_fpDrvSetPrefetchLimit != nullptr)
             driver->m_fpDrvSetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
 		   nxlog_debug_tag(DEBUG_TAG_CONNECTION, 4, _T("New DB connection opened: handle=%p"), hConn);
-         if (s_sessionInitCb != NULL)
+         if (s_sessionInitCb != nullptr)
             s_sessionInitCb(hConn);
       }
       else
@@ -120,16 +111,14 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          driver->m_fpDrvDisconnect(hDrvConn);
       }
    }
-#ifdef UNICODE
-	if (hConn == NULL)
+	if (hConn == nullptr)
 	{
-		MemFree(mbServer);
-		MemFree(mbDatabase);
-		MemFree(mbLogin);
-		MemFree(mbPassword);
-		MemFree(mbSchema);
+		MemFree(utfServer);
+		MemFree(utfDatabase);
+		MemFree(utfLogin);
+		MemFree(utfPassword);
+		MemFree(utfSchema);
 	}
-#endif
    return hConn;
 }
 
@@ -162,10 +151,8 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
  */
 void LIBNXDB_EXPORTABLE DBEnableReconnect(DB_HANDLE hConn, bool enabled)
 {
-	if (hConn != NULL)
-	{
+	if (hConn != nullptr)
 		hConn->m_reconnectEnabled = enabled;
-	}
 }
 
 /**
@@ -183,7 +170,7 @@ static void DBReconnect(DB_HANDLE hConn)
    for(nCount = 0; ; nCount++)
    {
 		hConn->m_connection = hConn->m_driver->m_fpDrvConnect(hConn->m_server, hConn->m_login,
-                                                            hConn->m_password, hConn->m_dbName, hConn->m_schema, errorText);
+		         hConn->m_password, hConn->m_dbName, hConn->m_schema, errorText);
       if (hConn->m_connection != NULL)
       {
          if (hConn->m_driver->m_fpDrvSetPrefetchLimit != NULL)
@@ -233,7 +220,7 @@ void LIBNXDB_EXPORTABLE DBSetDefaultPrefetchLimit(DB_DRIVER driver, int limit)
  */
 bool LIBNXDB_EXPORTABLE DBSetPrefetchLimit(DB_HANDLE hConn, int limit)
 {
-   if (hConn->m_driver->m_fpDrvSetPrefetchLimit == NULL)
+   if (hConn->m_driver->m_fpDrvSetPrefetchLimit == nullptr)
       return false;  // Not supported by driver
    return hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, limit);
 }

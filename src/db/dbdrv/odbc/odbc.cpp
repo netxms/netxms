@@ -189,14 +189,13 @@ extern "C" void __EXPORT DrvUnload()
  * Connect to database
  * pszHost should be set to ODBC source name, and pszDatabase is ignored
  */
-extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *pszHost, const char *pszLogin, const char *pszPassword, 
-                                              const char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *pszHost, const char *pszLogin, const char *pszPassword,
+         const char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
 {
    long iResult;
-   ODBCDRV_CONN *pConn;
 
    // Allocate our connection structure
-   pConn = (ODBCDRV_CONN *)malloc(sizeof(ODBCDRV_CONN));
+   ODBCDRV_CONN *pConn = MemAllocStruct<ODBCDRV_CONN>();
 
    // Allocate environment
    iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
@@ -226,15 +225,20 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *pszHost, const char 
 
 	// Connect to the datasource
 	// If DSN name contains = character, assume that it's a connection string
-	if (strchr(pszHost, '=') != NULL)
+	if (strchr(pszHost, '=') != nullptr)
 	{
 		SQLSMALLINT outLen;
-		iResult = SQLDriverConnectA(pConn->sqlConn, NULL, (SQLCHAR*)pszHost, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+		iResult = SQLDriverConnectA(pConn->sqlConn, nullptr, (SQLCHAR*)pszHost, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 	}
 	else
 	{
-		iResult = SQLConnectA(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS,
-									(SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
+	   SQLWCHAR *wcHost = UCS2StringFromUTF8String(pszHost);
+      SQLWCHAR *wcLogin = UCS2StringFromUTF8String(pszLogin);
+      SQLWCHAR *wcPassword = UCS2StringFromUTF8String(pszPassword);
+		iResult = SQLConnectW(pConn->sqlConn, wcHost, SQL_NTS, wcLogin, SQL_NTS, wcPassword, SQL_NTS);
+		MemFree(wcHost);
+      MemFree(wcLogin);
+      MemFree(wcPassword);
 	}
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{

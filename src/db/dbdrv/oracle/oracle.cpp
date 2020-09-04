@@ -240,37 +240,36 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password, 
-                                              const char *database, const char *schema, WCHAR *errorText)
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password,
+         const char *database, const char *schema, WCHAR *errorText)
 {
 	ORACLE_CONN *pConn = MemAllocStruct<ORACLE_CONN>();
-	if (pConn != NULL)
+	if (pConn != nullptr)
 	{
-      OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleError, OCI_HTYPE_ERROR, 0, NULL);
-		OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleServer, OCI_HTYPE_SERVER, 0, NULL);
-		UCS2CHAR *pwszStr = UCS2StringFromMBString(host);
+      OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleError, OCI_HTYPE_ERROR, 0, nullptr);
+		OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleServer, OCI_HTYPE_SERVER, 0, nullptr);
+		UCS2CHAR *pwszStr = UCS2StringFromUTF8String(host);
 		if (IsSuccess(OCIServerAttach(pConn->handleServer, pConn->handleError,
 		                    (text *)pwszStr, (sb4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_DEFAULT)))
 		{
 			MemFree(pwszStr);
 
 			// Initialize service handle
-			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleService, OCI_HTYPE_SVCCTX, 0, NULL);
+			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleService, OCI_HTYPE_SVCCTX, 0, nullptr);
 			OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleServer, 0, OCI_ATTR_SERVER, pConn->handleError);
 			
 			// Initialize session handle
-			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleSession, OCI_HTYPE_SESSION, 0, NULL);
-			pwszStr = UCS2StringFromMBString(login);
+			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleSession, OCI_HTYPE_SESSION, 0, nullptr);
+			pwszStr = UCS2StringFromUTF8String(login);
 			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
 			           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_USERNAME, pConn->handleError);
 			MemFree(pwszStr);
-			pwszStr = UCS2StringFromMBString(password);
-			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
-			           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_PASSWORD, pConn->handleError);
+			pwszStr = UCS2StringFromUTF8String(password);
+			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr, (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_PASSWORD, pConn->handleError);
 
 			// Authenticate
-			if (IsSuccess(OCISessionBegin(pConn->handleService, pConn->handleError,
-			                    pConn->handleSession, OCI_CRED_RDBMS, OCI_STMT_CACHE), pConn, _T("Connected to database with warning (%s)")))
+			if (IsSuccess(OCISessionBegin(pConn->handleService, pConn->handleError, pConn->handleSession,
+			         OCI_CRED_RDBMS, OCI_STMT_CACHE), pConn, _T("Connected to database with warning (%s)")))
 			{
 				OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0, OCI_ATTR_SESSION, pConn->handleError);
 				pConn->mutexQueryLock = MutexCreate();
@@ -279,10 +278,10 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 				pConn->lastErrorText[0] = 0;
             pConn->prefetchLimit = 10;
 
-				if ((schema != NULL) && (schema[0] != 0))
+				if ((schema != nullptr) && (schema[0] != 0))
 				{
-					free(pwszStr);
-					pwszStr = UCS2StringFromMBString(schema);
+					MemFree(pwszStr);
+					pwszStr = UCS2StringFromUTF8String(schema);
 					OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
 								  (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
 				}
@@ -335,8 +334,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 	{
 		wcscpy(errorText, L"Memory allocation error");
 	}
-
-   return (DBDRV_CONNECTION)pConn;
+   return pConn;
 }
 
 /**

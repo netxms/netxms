@@ -36,8 +36,8 @@ extern "C" void __EXPORT DrvDisconnect(DBDRV_CONNECTION pConn);
 static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
 #ifndef _WIN32
-static void *s_libpq = NULL;
-static int (*s_PQsetSingleRowMode)(PGconn *) = NULL;
+static void *s_libpq = nullptr;
+static int (*s_PQsetSingleRowMode)(PGconn *) = nullptr;
 #endif
 
 #if !HAVE_DECL_PGRES_SINGLE_TUPLE
@@ -221,7 +221,7 @@ extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 extern "C" void __EXPORT DrvUnload()
 {
 #ifndef _WIN32
-   if (s_libpq != NULL)
+   if (s_libpq != nullptr)
       dlclose(s_libpq);
 #endif
 }
@@ -229,40 +229,46 @@ extern "C" void __EXPORT DrvUnload()
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost,	const char *szLogin,	const char *szPassword, 
-															 const char *szDatabase, const char *schema, WCHAR *errorText)
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const char *login, const char *password,
+         const char *database, const char *schema, WCHAR *errorText)
 {
-	PG_CONN *pConn;	
-	char *port = NULL;
-
-	if (szDatabase == NULL || *szDatabase == 0)
+	if ((database == nullptr) || (*database == 0))
 	{
 		wcscpy(errorText, L"Database name is empty");
-		return NULL;
+		return nullptr;
 	}
 
-	if (szHost == NULL || *szHost == 0)
+	if ((serverAddress == nullptr) || (*serverAddress == 0))
 	{
 		wcscpy(errorText, L"Host name is empty");
-		return NULL;
+		return nullptr;
 	}
 
-	if((port = (char *)strchr(szHost, ':'))!=NULL)
-	{
-		port[0]=0;
-		port++;
-	}
+	const char *host, *port;
+	char hostBuffer[1024];
+   const char *p = strchr(serverAddress, ':');
+   if (p != nullptr)
+   {
+      strlcpy(hostBuffer, serverAddress, 1024);
+      host = hostBuffer;
+      hostBuffer[p - serverAddress] = 0;
+      port = p + 1;
+   }
+   else
+   {
+      host = serverAddress;
+      port = nullptr;
+   }
 	
-	pConn = MemAllocStruct<PG_CONN>();
-	
-	if (pConn != NULL)
+	PG_CONN *pConn = MemAllocStruct<PG_CONN>();
+	if (pConn != nullptr)
 	{
 		// should be replaced with PQconnectdb();
-		pConn->handle = PQsetdbLogin(szHost, port, NULL, NULL, szDatabase, szLogin, szPassword);
+		pConn->handle = PQsetdbLogin(host, port, nullptr, nullptr, database, login, password);
 
 		if (PQstatus(pConn->handle) == CONNECTION_BAD)
 		{
-			MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			utf8_to_wchar(PQerrorMessage(pConn->handle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
 			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 			RemoveTrailingCRLFW(errorText);
 			PQfinish(pConn->handle);
@@ -270,9 +276,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost,	const char *
 		}
 		else
 		{
-			PGresult	*pResult;
-
-			pResult = PQexec(pConn->handle, "SET standard_conforming_strings TO off");
+			PGresult	*pResult = PQexec(pConn->handle, "SET standard_conforming_strings TO off");
 			PQclear(pResult);
 			
 			pResult = PQexec(pConn->handle, "SET escape_string_warning TO off");
@@ -282,14 +286,14 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost,	const char *
 
    		pConn->mutexQueryLock = MutexCreate();
 
-			if ((schema != NULL) && (schema[0] != 0))
+			if ((schema != nullptr) && (schema[0] != 0))
 			{
 				char query[256];
 				snprintf(query, 256, "SET search_path=%s", schema);
 				if (!UnsafeDrvQuery(pConn, query, errorText))
 				{
 					DrvDisconnect(pConn);
-					pConn = NULL;
+					pConn = nullptr;
 				}
 			}
 		}
@@ -299,7 +303,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost,	const char *
 		wcscpy(errorText, L"Memory allocation error");
 	}
 
-   return (DBDRV_CONNECTION)pConn;
+   return pConn;
 }
 
 /**
@@ -307,7 +311,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost,	const char *
  */
 extern "C" void __EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
 {
-	if (pConn != NULL)
+	if (pConn != nullptr)
 	{
    	PQfinish(((PG_CONN *)pConn)->handle);
      	MutexDestroy(((PG_CONN *)pConn)->mutexQueryLock);
