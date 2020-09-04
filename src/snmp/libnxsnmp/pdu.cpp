@@ -1219,19 +1219,19 @@ size_t SNMP_PDU::encodeV3ScopedPDU(uint32_t pduType, BYTE *pdu, size_t pduSize, 
 /**
  * Message hash calculation for SNMP_PDU::signMessage and SNMP_PDU::validateSignedMessage using provided hash function
  */
-template<typename C, void (*__Init)(C*), void (*__Update)(C*, const void*, size_t), void (*__Final)(C*, unsigned char*), size_t __hashSize>
+template<typename C, void (*__Init)(C*), void (*__Update)(C*, const void*, size_t), void (*__Final)(C*, unsigned char*), size_t __hashSize, size_t __blockSize>
 static inline void CalculateMessageHash(const BYTE *msg, size_t msgLen, size_t signatureOffset,
          size_t signatureSize, SNMP_SecurityContext *securityContext, BYTE *hash)
 {
    static char zeroSignature[] = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 
-   BYTE k1[64], k2[64];
+   BYTE k1[__blockSize], k2[__blockSize];
 
    // Create K1 and K2
    memcpy(k1, securityContext->getAuthKey(), __hashSize);
-   memset(&k1[__hashSize], 0, 64 - __hashSize);
-   memcpy(k2, k1, 64);
-   for(int i = 0; i < 64; i++)
+   memset(&k1[__hashSize], 0, __blockSize - __hashSize);
+   memcpy(k2, k1, __blockSize);
+   for(int i = 0; i < __blockSize; i++)
    {
       k1[i] ^= 0x36;
       k2[i] ^= 0x5C;
@@ -1240,7 +1240,7 @@ static inline void CalculateMessageHash(const BYTE *msg, size_t msgLen, size_t s
    // Calculate first hash (step 3)
    C context;
    __Init(&context);
-   __Update(&context, k1, 64);
+   __Update(&context, k1, __blockSize);
    __Update(&context, msg, signatureOffset);
    __Update(&context, zeroSignature, signatureSize); // Replace signature with 0 to generate correct hash
    if (msgLen > signatureOffset + signatureSize)
@@ -1249,7 +1249,7 @@ static inline void CalculateMessageHash(const BYTE *msg, size_t msgLen, size_t s
 
    // Calculate second hash
    __Init(&context);
-   __Update(&context, k2, 64);
+   __Update(&context, k2, __blockSize);
    __Update(&context, hash, __hashSize);
    __Final(&context, hash);
 }
@@ -1291,22 +1291,22 @@ void SNMP_PDU::signMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *secur
    switch(securityContext->getAuthMethod())
    {
       case SNMP_AUTH_MD5:
-         CalculateMessageHash<MD5_STATE, MD5Init, MD5Update, MD5Finish, MD5_DIGEST_SIZE>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
+         CalculateMessageHash<MD5_STATE, MD5Init, MD5Update, MD5Finish, MD5_DIGEST_SIZE, 64>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA1:
-         CalculateMessageHash<SHA1_STATE, SHA1Init, SHA1Update, SHA1Finish, SHA1_DIGEST_SIZE>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA1_STATE, SHA1Init, SHA1Update, SHA1Finish, SHA1_DIGEST_SIZE, 64>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA224:
-         CalculateMessageHash<SHA224_STATE, SHA224Init, SHA224Update, SHA224Finish, SHA224_DIGEST_SIZE>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA224_STATE, SHA224Init, SHA224Update, SHA224Finish, SHA224_DIGEST_SIZE, 64>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA256:
-         CalculateMessageHash<SHA256_STATE, SHA256Init, SHA256Update, SHA256Finish, SHA256_DIGEST_SIZE>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA256_STATE, SHA256Init, SHA256Update, SHA256Finish, SHA256_DIGEST_SIZE, 64>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA384:
-         CalculateMessageHash<SHA384_STATE, SHA384Init, SHA384Update, SHA384Finish, SHA384_DIGEST_SIZE>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA384_STATE, SHA384Init, SHA384Update, SHA384Finish, SHA384_DIGEST_SIZE, 128>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA512:
-         CalculateMessageHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Finish, SHA512_DIGEST_SIZE>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Finish, SHA512_DIGEST_SIZE, 128>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
          break;
    }
 
@@ -1331,22 +1331,22 @@ bool SNMP_PDU::validateSignedMessage(const BYTE *msg, size_t msgLen, SNMP_Securi
    switch(securityContext->getAuthMethod())
    {
       case SNMP_AUTH_MD5:
-         CalculateMessageHash<MD5_STATE, MD5Init, MD5Update, MD5Finish, MD5_DIGEST_SIZE>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
+         CalculateMessageHash<MD5_STATE, MD5Init, MD5Update, MD5Finish, MD5_DIGEST_SIZE, 64>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA1:
-         CalculateMessageHash<SHA1_STATE, SHA1Init, SHA1Update, SHA1Finish, SHA1_DIGEST_SIZE>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA1_STATE, SHA1Init, SHA1Update, SHA1Finish, SHA1_DIGEST_SIZE, 64>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA224:
-         CalculateMessageHash<SHA224_STATE, SHA224Init, SHA224Update, SHA224Finish, SHA224_DIGEST_SIZE>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA224_STATE, SHA224Init, SHA224Update, SHA224Finish, SHA224_DIGEST_SIZE, 64>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA256:
-         CalculateMessageHash<SHA256_STATE, SHA256Init, SHA256Update, SHA256Finish, SHA256_DIGEST_SIZE>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA256_STATE, SHA256Init, SHA256Update, SHA256Finish, SHA256_DIGEST_SIZE, 64>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA384:
-         CalculateMessageHash<SHA384_STATE, SHA384Init, SHA384Update, SHA384Finish, SHA384_DIGEST_SIZE>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA384_STATE, SHA384Init, SHA384Update, SHA384Finish, SHA384_DIGEST_SIZE, 128>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
          break;
       case SNMP_AUTH_SHA512:
-         CalculateMessageHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Finish, SHA512_DIGEST_SIZE>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
+         CalculateMessageHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Finish, SHA512_DIGEST_SIZE, 128>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
          break;
    }
 
