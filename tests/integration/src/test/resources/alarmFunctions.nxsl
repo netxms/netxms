@@ -2,8 +2,10 @@ alarmId = $1;
 alarmKey = $2;
 alarmKeyRegexp = $3;
 
+println("alarmFunctions.nxsl: ID=" . alarmId . " key=\"" . alarmKey . "\" regexp=\"" . alarmKeyRegexp . "\"");
+
 //Non existing
-alarm = FindAlarmById(000);
+alarm = FindAlarmById(0);
 assert(alarm == null);
 alarm = FindAlarmByKey("Non existing key");
 assert(alarm == null);
