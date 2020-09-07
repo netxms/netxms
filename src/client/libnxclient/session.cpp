@@ -231,13 +231,13 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
          {
             response->getFieldAsBinary(VID_SERVER_ID, m_serverId, 8);
             response->getFieldAsString(VID_SERVER_VERSION, m_serverVersion, 64);
-				response->getFieldAsString(VID_TIMEZONE, m_serverTimeZone, MAX_TZ_LEN);
+            response->getFieldAsString(VID_TIMEZONE, m_serverTimeZone, MAX_TZ_LEN);
 
-				if (!(flags & NXCF_IGNORE_PROTOCOL_VERSION))
-				{
-					if (response->getFieldAsUInt32(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION_BASE)
-						rcc = RCC_BAD_PROTOCOL;
-				}
+            if (!(flags & NXCF_IGNORE_PROTOCOL_VERSION))
+            {
+               if (response->getFieldAsUInt32(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION_BASE)
+                  rcc = RCC_BAD_PROTOCOL;
+            }
             if ((rcc == RCC_SUCCESS) && (flags & NXCF_EXACT_VERSION_MATCH))
             {
                if (_tcsncmp(m_serverVersion, NETXMS_VERSION_STRING, 64))
@@ -262,7 +262,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
                      int idx = cpvIndexList[i];
                      if ((idx >= sizeof(currentProtocolVersions) / sizeof(UINT32)) || (m_protocolVersions->get(idx) != currentProtocolVersions[idx]))
                      {
-      						rcc = RCC_BAD_PROTOCOL;
+                        rcc = RCC_BAD_PROTOCOL;
                         break;
                      }
                   }

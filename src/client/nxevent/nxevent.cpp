@@ -37,6 +37,7 @@ static DWORD m_dwEventCode = 0;
 static TCHAR m_eventName[MAX_EVENT_NAME] = _T("");
 static DWORD m_dwObjectId = 0;
 static DWORD m_dwTimeOut = 3;
+static bool s_ignoreProtocolVersion = false;
 
 /**
  * Callback function for debug printing
@@ -64,8 +65,10 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 
       NXCSession *session = new NXCSession();
       static UINT32 protocolVersions[] = { CPV_INDEX_TRAP };
-      dwResult = session->connect(m_szServer, m_szLogin, m_szPassword, bEncrypt ? NXCF_ENCRYPT : 0, _T("nxevent/") NETXMS_VERSION_STRING,
-                                  protocolVersions, sizeof(protocolVersions) / sizeof(UINT32));
+      dwResult = session->connect(m_szServer, m_szLogin, m_szPassword,
+            (bEncrypt ? NXCF_ENCRYPT : 0) | (s_ignoreProtocolVersion ? NXCF_IGNORE_PROTOCOL_VERSION : 0),
+            _T("nxevent/") NETXMS_VERSION_STRING, s_ignoreProtocolVersion ? NULL : protocolVersions,
+            s_ignoreProtocolVersion ? 0 : sizeof(protocolVersions) / sizeof(UINT32));
       if (dwResult != RCC_SUCCESS)
       {
          _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
@@ -95,9 +98,9 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 }
 
 #ifdef _WIN32
-#define CMDLINE_OPTIONS "deho:P:T:u:vw:"
+#define CMDLINE_OPTIONS "deho:P:ST:u:vw:"
 #else
-#define CMDLINE_OPTIONS "c:deho:P:T:u:vw:"
+#define CMDLINE_OPTIONS "c:deho:P:ST:u:vw:"
 #endif
 
 /**
@@ -127,6 +130,7 @@ int main(int argc, char *argv[])
                    "   -h            : Display help and exit.\n"
                    "   -o <id>       : Specify source object ID.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
+                   "   -S            : Skip protocol version check (use with care).\n"
                    "   -T <tag>      : User tag to be associated with the message. Default is empty.\n"
                    "   -u <user>     : Login to server as <user>. Default is \"guest\".\n"
                    "   -v            : Display version and exit.\n"
@@ -162,15 +166,18 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szPassword, MAX_DB_STRING);
 				m_szPassword[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(m_szPassword, optarg, MAX_DB_STRING);
+            strlcpy(m_szPassword, optarg, MAX_DB_STRING);
 #endif
+            break;
+         case 'S':
+            s_ignoreProtocolVersion = true;
             break;
          case 'T':
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_szUserTag, MAX_USERTAG_LENGTH);
 				m_szUserTag[MAX_USERTAG_LENGTH - 1] = 0;
 #else
-            nx_strncpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
+            strlcpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
 #endif
             break;
          case 'w':
@@ -215,7 +222,7 @@ int main(int argc, char *argv[])
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, m_szServer, 256);
 			m_szServer[255] = 0;
 #else
-         nx_strncpy(m_szServer, argv[optind], 256);
+         strlcpy(m_szServer, argv[optind], 256);
 #endif
 
          char *eptr;
@@ -228,7 +235,7 @@ int main(int argc, char *argv[])
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, m_eventName, MAX_EVENT_NAME);
             m_eventName[MAX_EVENT_NAME - 1] = 0;
 #else
-            nx_strncpy(m_eventName, argv[optind + 1], MAX_EVENT_NAME);
+            strlcpy(m_eventName, argv[optind + 1], MAX_EVENT_NAME);
 #endif
          }
 
