@@ -46,6 +46,7 @@ static const char *s_optPassword = "";
 static bool s_optEncrypt = false;
 static int s_optBatchSize = 0;
 static time_t s_timestamp = 0;
+static bool s_ignoreProtocolVersion = false;
 
 /**
  * Split IDs, cleanup and add to the send s_data
@@ -228,13 +229,15 @@ static BOOL Startup()
 
       s_session = new NXCSession();
       static UINT32 protocolVersions[] = { CPV_INDEX_PUSH };
-      dwResult = s_session->connect(_HOST, _USER, _PASSWD, s_optEncrypt ? NXCF_ENCRYPT : 0, _T("nxpush/") NETXMS_VERSION_STRING,
-                                  protocolVersions, sizeof(protocolVersions) / sizeof(UINT32));
+      dwResult = s_session->connect(_HOST, _USER, _PASSWD,
+            (s_optEncrypt ? NXCF_ENCRYPT : 0) | (s_ignoreProtocolVersion ? NXCF_IGNORE_PROTOCOL_VERSION : 0),
+            _T("nxpush/") NETXMS_VERSION_STRING, s_ignoreProtocolVersion ? NULL : protocolVersions,
+            s_ignoreProtocolVersion ? 0 : sizeof(protocolVersions) / sizeof(UINT32));
 
 #ifdef UNICODE
-		free(wHost);
-		free(wUser);
-		free(wPassword);
+		MemFree(wHost);
+		MemFree(wUser);
+		MemFree(wPassword);
 #endif
 		if (dwResult != RCC_SUCCESS)
 		{
@@ -353,28 +356,29 @@ static BOOL Teardown()
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
-	{ (char *)"batchsize",      required_argument, NULL,        'b' },
+	{ (char *)"batchsize",          required_argument, NULL,        'b' },
 #ifndef _WIN32
-	{ (char *)"codepage",       required_argument, NULL,        'c' },
+	{ (char *)"codepage",           required_argument, NULL,        'c' },
 #endif
-	{ (char *)"encrypt",        no_argument,       NULL,        'e' },
-	{ (char *)"help",           no_argument,       NULL,        'h' },
-	{ (char *)"host",           required_argument, NULL,        'H' },
-	{ (char *)"password",       required_argument, NULL,        'P' },
-	{ (char *)"quiet",          no_argument,       NULL,        'q' },
-	{ (char *)"timestamp-unix", required_argument, NULL,        't' },
-	{ (char *)"timestamp-text", required_argument, NULL,        'T' },
-	{ (char *)"user",           required_argument, NULL,        'u' },
-	{ (char *)"verbose",        no_argument,       NULL,        'v' },
-	{ (char *)"version",        no_argument,       NULL,        'V' },
+	{ (char *)"encrypt",            no_argument,       NULL,        'e' },
+	{ (char *)"help",               no_argument,       NULL,        'h' },
+	{ (char *)"host",               required_argument, NULL,        'H' },
+	{ (char *)"password",           required_argument, NULL,        'P' },
+	{ (char *)"quiet",              no_argument,       NULL,        'q' },
+	{ (char *)"skip-version-check", no_argument,       NULL,        'S' },
+	{ (char *)"timestamp-unix",     required_argument, NULL,        't' },
+	{ (char *)"timestamp-text",     required_argument, NULL,        'T' },
+	{ (char *)"user",               required_argument, NULL,        'u' },
+	{ (char *)"verbose",            no_argument,       NULL,        'v' },
+	{ (char *)"version",            no_argument,       NULL,        'V' },
 	{ NULL, 0, NULL, 0 }
 };
 #endif
 
 #ifdef _WIN32
-#define SHORT_OPTIONS "b:ehH:P:qt:T:u:vV"
+#define SHORT_OPTIONS "b:ehH:P:qSt:T:u:vV"
 #else
-#define SHORT_OPTIONS "b:c:ehH:P:qt:T:u:vV"
+#define SHORT_OPTIONS "b:c:ehH:P:qSt:T:u:vV"
 #endif
 
 /**
@@ -384,7 +388,7 @@ static void usage(char *argv0)
 {
 	_tprintf(
       _T("NetXMS PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
-      _T("Copyright (c) 2006-2015 Raden Solutions\n\n")
+      _T("Copyright (c) 2006-2020 Raden Solutions\n\n")
       _T("Usage: %hs [OPTIONS] [server] [@batch_file] [values]\n")
       _T("  \n")
       _T("Options:\n")
@@ -398,6 +402,7 @@ static void usage(char *argv0)
       _T("  -H, --host <host>           Server address.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
       _T("  -q, --quiet                 Suppress all messages.\n")
+      _T("  -S, --skip-version-check    Skip protocol version check (use with care).\n")
       _T("  -t, --timestamp-unix <time> Specify timestamp for data as UNIX timestamp.\n")
       _T("  -T, --timestamp-text <time> Specify timestamp for data as YYYYMMDDhhmmss.\n")
       _T("  -u, --user <user>           Login to server as user. Default is \"guest\".\n")
@@ -411,6 +416,7 @@ static void usage(char *argv0)
       _T("  -H <host>      Server address.\n")
       _T("  -P <password>  Specify user's password. Default is empty.\n")
       _T("  -q             Suppress all messages.\n")
+      _T("  -S             Skip protocol version check (use with care).\n")
       _T("  -t <time>      Specify timestamp for data as UNIX timestamp.\n")
       _T("  -T <time>      Specify timestamp for data as YYYYMMDDhhmmss.\n")
       _T("  -u <user>      Login to server as user. Default is \"guest\".\n")
@@ -477,9 +483,12 @@ int main(int argc, char *argv[])
 		   case 'P': // password
 			   s_optPassword = optarg;
 			   break;
-		   case 'q': // quiet
-			   s_optVerbose = 0;
-			   break;
+         case 'q': // quiet
+            s_optVerbose = 0;
+            break;
+         case 'S': // skip version check
+            s_ignoreProtocolVersion = true;
+            break;
 		   case 't': // timestamp as UNIX time
 			   s_timestamp = (time_t)strtoull(optarg, NULL, 0);
 			   break;
