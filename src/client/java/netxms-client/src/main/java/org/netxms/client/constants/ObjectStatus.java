@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Status codes
@@ -37,9 +38,8 @@ public enum ObjectStatus
    DISABLED(7),
    TESTING(8);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(ObjectStatus.class);
    private static Map<Integer, ObjectStatus> lookupTable = new HashMap<Integer, ObjectStatus>();
-
    static
    {
       for(ObjectStatus element : ObjectStatus.values())
@@ -47,6 +47,8 @@ public enum ObjectStatus
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -79,7 +81,7 @@ public enum ObjectStatus
       final ObjectStatus element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(ObjectStatus.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return UNKNOWN; // fallback
       }
       return element;

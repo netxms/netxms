@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Data origins for DCI
@@ -39,6 +40,7 @@ public enum DataOrigin
    MQTT(9),
    DEVICE_DRIVER(10);
 
+   private static Logger logger = LoggerFactory.getLogger(DataOrigin.class);
    private static Map<Integer, DataOrigin> lookupTable = new HashMap<Integer, DataOrigin>();
    static
    {
@@ -81,7 +83,7 @@ public enum DataOrigin
       final DataOrigin element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(DataOrigin.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return INTERNAL; // fallback
       }
       return element;

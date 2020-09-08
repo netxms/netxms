@@ -20,7 +20,8 @@ package org.netxms.ui.eclipse.dashboard.propertypages.helpers;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Rack view
@@ -31,9 +32,8 @@ public enum RackView
    FRONT(1),
    BACK(2);
    
-   private int value;
-   private static Map<Integer, RackView> lookupTable = new HashMap<Integer, RackView>();
-   
+   private static final Logger logger = LoggerFactory.getLogger(RackView.class);
+   private static final Map<Integer, RackView> lookupTable = new HashMap<Integer, RackView>();
    static
    {
       for(RackView element : RackView.values())
@@ -41,7 +41,9 @@ public enum RackView
          lookupTable.put(element.value, element);
       }
    }
-   
+
+   private int value;
+
    /**
     * Internal constructor
     *  
@@ -73,7 +75,7 @@ public enum RackView
       final RackView element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(RackView.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return FULL; // fall-back
       }
       return element;

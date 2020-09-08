@@ -20,7 +20,8 @@ package org.netxms.client.snmp;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SNMP version constants
@@ -32,9 +33,8 @@ public enum SnmpVersion
    V3(3),
    DEFAULT(127);
 
-   private int value;
-   private static Map<Integer, SnmpVersion> lookupTable = new HashMap<Integer, SnmpVersion>();
-
+   private static final Logger logger = LoggerFactory.getLogger(SnmpVersion.class);
+   private static final Map<Integer, SnmpVersion> lookupTable = new HashMap<Integer, SnmpVersion>();
    static
    {
       for(SnmpVersion element : SnmpVersion.values())
@@ -42,6 +42,8 @@ public enum SnmpVersion
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -74,7 +76,7 @@ public enum SnmpVersion
       final SnmpVersion element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(SnmpVersion.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return V1; // fall-back
       }
       return element;

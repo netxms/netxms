@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Data types for server configuration variables
@@ -33,10 +34,9 @@ public enum ServerVariableDataType
    CHOICE(3),
    COLOR(4);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(ServerVariableDataType.class);
    private static Map<Integer, ServerVariableDataType> lookupTableValue = new HashMap<Integer, ServerVariableDataType>();
    private static Map<Integer, ServerVariableDataType> lookupTableCode = new HashMap<Integer, ServerVariableDataType>();
-
    static
    {
       for(ServerVariableDataType element : ServerVariableDataType.values())
@@ -50,6 +50,8 @@ public enum ServerVariableDataType
       lookupTableCode.put((int)'C', CHOICE);
       lookupTableCode.put((int)'H', COLOR);
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -82,18 +84,24 @@ public enum ServerVariableDataType
       final ServerVariableDataType element = lookupTableValue.get(value);
       if (element == null)
       {
-         Logger.warning(ServerVariableDataType.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return STRING; // fallback
       }
       return element;
    }
 
+   /**
+    * Get enum element by data type code.
+    *
+    * @param code data type code
+    * @return enum element
+    */
    public static ServerVariableDataType getByCode(char code)
    {
       final ServerVariableDataType element = lookupTableCode.get((int)code);
       if (element == null)
       {
-         Logger.warning(ServerVariableDataType.class.getName(), "Unknown type code " + code);
+         logger.warn("Unknown type code " + code);
          return STRING; // fallback
       }
       return element;

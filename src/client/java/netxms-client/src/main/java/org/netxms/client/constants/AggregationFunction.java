@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Data aggregation function
@@ -33,9 +34,8 @@ public enum AggregationFunction
    AVERAGE(3),
    SUM(4);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(AggregationFunction.class);
    private static Map<Integer, AggregationFunction> lookupTable = new HashMap<Integer, AggregationFunction>();
-
    static
    {
       for(AggregationFunction element : AggregationFunction.values())
@@ -43,6 +43,8 @@ public enum AggregationFunction
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -75,7 +77,7 @@ public enum AggregationFunction
       final AggregationFunction element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(AggregationFunction.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return LAST; // fallback
       }
       return element;

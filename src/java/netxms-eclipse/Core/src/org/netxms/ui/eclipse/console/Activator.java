@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@ import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.base.Logger;
-import org.netxms.base.LoggingFacility;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.osgi.framework.BundleContext;
@@ -50,45 +48,19 @@ public class Activator extends AbstractUIPlugin
 	// Status line
    private IStatusLineManager statusLine;
 	
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
-	 */
+   /**
+    * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
+    */
 	public void start(BundleContext context) throws Exception
 	{
 		super.start(context);
 		plugin = this;
 		SharedIcons.init();
-		
-		Logger.setLoggingFacility(new LoggingFacility() {
-         @Override
-         public void writeLog(int level, String tag, String message, Throwable t)
-         {
-            int s;
-            switch(level)
-            {
-               case LoggingFacility.ERROR:
-                  s = Status.ERROR;
-                  break;
-               case LoggingFacility.WARNING:
-                  s = Status.WARNING;
-                  break;
-               case LoggingFacility.INFO:
-                  s = Status.INFO;
-                  break;
-               default:
-                  s = Status.OK;
-                  break;
-            }
-            log(s, tag + ": " + message, t); //$NON-NLS-1$
-         }
-      });
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
-	 */
+   /**
+    * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
+    */
 	public void stop(BundleContext context) throws Exception
 	{
 		plugin = null;

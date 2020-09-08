@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * User authentication types
@@ -31,9 +32,8 @@ public enum AuthenticationType
    CERTIFICATE(1),
    SSO_TICKET(2);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(AuthenticationType.class);
    private static Map<Integer, AuthenticationType> lookupTable = new HashMap<Integer, AuthenticationType>();
-
    static
    {
       for(AuthenticationType element : AuthenticationType.values())
@@ -41,6 +41,8 @@ public enum AuthenticationType
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -73,7 +75,7 @@ public enum AuthenticationType
       final AuthenticationType element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(AuthenticationType.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return PASSWORD; // fallback
       }
       return element;

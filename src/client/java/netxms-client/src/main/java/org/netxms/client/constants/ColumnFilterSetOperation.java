@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Operations for column filter condition set
@@ -31,9 +32,8 @@ public enum ColumnFilterSetOperation
    OR(1),
    UNKNOWN(2);
    
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(ColumnFilterSetOperation.class);
    private static Map<Integer, ColumnFilterSetOperation> lookupTable = new HashMap<Integer, ColumnFilterSetOperation>();
-
    static
    {
       for(ColumnFilterSetOperation element : ColumnFilterSetOperation.values())
@@ -42,6 +42,8 @@ public enum ColumnFilterSetOperation
       }
    }
    
+   private int value;
+
    /**
     * Internal constructor
     *  
@@ -73,7 +75,7 @@ public enum ColumnFilterSetOperation
       final ColumnFilterSetOperation element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(ColumnFilterSetOperation.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return UNKNOWN; //fallback
       }
       return element;

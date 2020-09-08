@@ -21,8 +21,6 @@ package org.netxms.client.datacollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.annotations.Internal;
@@ -33,6 +31,8 @@ import org.netxms.client.objecttools.ObjectAction;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.core.Persister;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Settings for predefined graph
@@ -68,6 +68,8 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    public static final int ACCESS_WRITE = 0x02;
 
    public static final int GRAPH_FLAG_TEMPLATE = 1;
+
+   private static Logger logger = LoggerFactory.getLogger(GraphSettings.class);
 
    @Internal private GraphFolder parent;  // Used by predefined graph tree
 
@@ -186,7 +188,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       catch(Exception e)
       {
          gs = new GraphSettings();
-         Logger.debug("GraphSettings.CreateGraphSettings", "Cannot parse ChartConfig XML", e);
+         logger.debug("Cannot create GraphSettings object from XML", e);
       }
       gs.id = msg.getFieldAsInt64(baseId);
       gs.ownerId = msg.getFieldAsInt64(baseId + 1);
@@ -202,7 +204,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
          }
          catch(Exception e)
          {
-            Logger.debug("GraphSettings.CreateGraphSettings", "Cannot parse ObjectMenuFilter XML: ", e);
+            logger.debug("Cannot create ObjectMenuFilter object from XML", e);
             gs.filter = new ObjectMenuFilter();
          }
       }
@@ -244,7 +246,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       }
       catch(Exception e)
       {
-         Logger.debug("GraphSettings.CreateGraphSettings", "Cannot convert ChartConfig to XML: ", e);
+         logger.debug("Cannot convert GraphSettings object to XML", e);
          msg.setField(NXCPCodes.VID_GRAPH_CONFIG, "");
       }
       msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, accessList.size());

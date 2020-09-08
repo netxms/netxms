@@ -20,7 +20,8 @@ package org.netxms.client.maps;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Map object display mode
@@ -33,9 +34,8 @@ public enum MapObjectDisplayMode
 	STATUS(3),
 	FLOOR_PLAN(4);
 
-	private int value;
+   private static Logger logger = LoggerFactory.getLogger(MapObjectDisplayMode.class);
 	private static Map<Integer, MapObjectDisplayMode> lookupTable = new HashMap<Integer, MapObjectDisplayMode>();
-
 	static
 	{
 		for(MapObjectDisplayMode element : MapObjectDisplayMode.values())
@@ -43,6 +43,8 @@ public enum MapObjectDisplayMode
 			lookupTable.put(element.value, element);
 		}
 	}
+
+   private int value;
 
 	private MapObjectDisplayMode(int value)
 	{
@@ -59,7 +61,7 @@ public enum MapObjectDisplayMode
 		final MapObjectDisplayMode element = lookupTable.get(value);
 		if (element == null)
 		{
-         Logger.warning(MapObjectDisplayMode.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
 			return ICON; // fallback
 		}
 		return element;

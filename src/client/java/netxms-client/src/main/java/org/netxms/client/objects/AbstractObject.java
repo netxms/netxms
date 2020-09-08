@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
-import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCommon;
@@ -43,6 +42,8 @@ import org.netxms.client.ObjectUrl;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.services.ServiceManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract base class for all NetXMS objects (both built-in and provided by extensions)
@@ -119,6 +120,8 @@ public abstract class AbstractObject
 	public static final int PROPAGATE_RELATIVE = 3;
 	public static final int PROPAGATE_TRANSLATED = 4;
 	
+   private static final Logger logger = LoggerFactory.getLogger(AbstractObject.class);
+
 	@Internal protected NXCSession session = null;
 	protected long objectId = 0;
 	protected UUID guid;
@@ -312,7 +315,7 @@ public abstract class AbstractObject
 		      }
 		      else
 		      {
-		         Logger.error("AbstractObject", "Unable to find data provider for module " + module);
+               logger.error("Unable to find data provider for module " + module);
 		      }
 		   }
 		}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Link layer discovery protocols
@@ -35,9 +36,8 @@ public enum LinkLayerDiscoveryProtocol
    EDP(5),
    STP(6);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(LinkLayerDiscoveryProtocol.class);
    private static Map<Integer, LinkLayerDiscoveryProtocol> lookupTable = new HashMap<Integer, LinkLayerDiscoveryProtocol>();
-
    static
    {
       for(LinkLayerDiscoveryProtocol element : LinkLayerDiscoveryProtocol.values())
@@ -45,6 +45,8 @@ public enum LinkLayerDiscoveryProtocol
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -77,7 +79,7 @@ public enum LinkLayerDiscoveryProtocol
       final LinkLayerDiscoveryProtocol element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(LinkLayerDiscoveryProtocol.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return UNKNOWN; // fallback
       }
       return element;

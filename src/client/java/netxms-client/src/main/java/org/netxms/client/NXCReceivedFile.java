@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@ package org.netxms.client;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.jcraft.jzlib.Inflater;
 import com.jcraft.jzlib.JZlib;
 
@@ -36,6 +37,8 @@ final class NXCReceivedFile
 	public static final int FAILED = 2;
    public static final int CANCELLED = 3;
 	
+   private static Logger logger = LoggerFactory.getLogger(NXCReceivedFile.class);
+
 	private long id;
 	private File file;
 	private FileOutputStream stream;
@@ -90,7 +93,7 @@ final class NXCReceivedFile
 			      if (decompressor == null)
 			      {
 			         decompressor = new Inflater();
-			         Logger.debug(getClass().getName(), "Decompressor created for file " + file.getAbsolutePath());
+                  logger.debug("Decompressor created for file " + file.getAbsolutePath());
 			      }
 			      decompressor.setInput(data, 4, data.length - 4, false);
 
@@ -114,7 +117,7 @@ final class NXCReceivedFile
 			}
 			catch(Exception e)
 			{
-			   Logger.error(getClass().getName(), "Exception during file processing", e);
+            logger.error("Exception during file processing", e);
 				try
 				{
 					stream.close();

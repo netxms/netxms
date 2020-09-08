@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.maps;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Map layout algorithm
@@ -29,9 +30,8 @@ public enum MapLayoutAlgorithm
 {
 	MANUAL(0x7FFF), SPRING(0), RADIAL(1), HTREE(2), VTREE(3), SPARSE_VTREE(4);
 
-	private int value;
+   private static Logger logger = LoggerFactory.getLogger(MapLayoutAlgorithm.class);
 	private static Map<Integer, MapLayoutAlgorithm> lookupTable = new HashMap<Integer, MapLayoutAlgorithm>();
-
 	static
 	{
 		for(MapLayoutAlgorithm element : MapLayoutAlgorithm.values())
@@ -39,6 +39,8 @@ public enum MapLayoutAlgorithm
 			lookupTable.put(element.value, element);
 		}
 	}
+
+   private int value;
 
 	private MapLayoutAlgorithm(int value)
 	{
@@ -55,7 +57,7 @@ public enum MapLayoutAlgorithm
 		final MapLayoutAlgorithm layout = lookupTable.get(value);
 		if (layout == null)
 		{
-			Logger.warning("LayoutAlgorithm", "Unknown layout alghoritm: " + value);
+         logger.warn("Unknown layout alghoritm: " + value);
 			return SPRING; // fallback
 		}
 		return layout;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@ package org.netxms.client.maps;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.netxms.base.Logger;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.LinkConfig;
 import org.netxms.client.maps.configs.SingleDciConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents link between two elements on map
@@ -48,6 +48,8 @@ public class NetworkMapLink
    public static final int ROUTING_DIRECT = 1;
    public static final int ROUTING_MANHATTAN = 2;
    public static final int ROUTING_BENDPOINTS = 3;
+
+   private static Logger logger = LoggerFactory.getLogger(NetworkMapLink.class);
 
    private String name;
    private int type;
@@ -153,7 +155,8 @@ public class NetworkMapLink
       }
       catch(Exception e)
       {
-         Logger.warning("NetworkMapLink", "Cannot create data from XML (" + xml + ")", e);
+         logger.warn("Cannot create NetworkMapLink object from XML document", e);
+         logger.debug("Source XML: " + xml);
          config = new LinkConfig();
       }
    }
@@ -173,7 +176,7 @@ public class NetworkMapLink
       }
       catch(Exception e)
       {
-         Logger.warning("NetworkMapLink", "Cannot create XML from config (" + config.toString() + ")", e);
+         logger.warn("Cannot create XML from LinkConfig object (" + config.toString() + ")", e);
       }
       msg.setFieldInt16(baseId, type);
       msg.setField(baseId + 1, name);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.objecttools;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Input field types for object tools
@@ -31,9 +32,8 @@ public enum InputFieldType
    PASSWORD(1),
    NUMBER(2);
 
-   private int value;
+   private static final Logger logger = LoggerFactory.getLogger(InputFieldType.class);
    private static Map<Integer, InputFieldType> lookupTable = new HashMap<Integer, InputFieldType>();
-
    static
    {
       for(InputFieldType element : InputFieldType.values())
@@ -41,6 +41,8 @@ public enum InputFieldType
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * @param value integer value
@@ -71,7 +73,7 @@ public enum InputFieldType
       final InputFieldType element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(InputFieldType.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return TEXT; // fallback
       }
       return element;

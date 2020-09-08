@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Event/alarm severity
@@ -36,9 +37,8 @@ public enum Severity
    TERMINATE(6),
    RESOLVE(7);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(Severity.class);
    private static Map<Integer, Severity> lookupTable = new HashMap<Integer, Severity>();
-
    static
    {
       for(Severity element : Severity.values())
@@ -46,6 +46,8 @@ public enum Severity
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -78,7 +80,7 @@ public enum Severity
       final Severity element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(Severity.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return NORMAL; // fallback
       }
       return element;
