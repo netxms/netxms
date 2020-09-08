@@ -5,6 +5,8 @@
 	"__1cFQdDueueKgetOrBlock6MI_pv_",
 	"ConditionWait",
 	"__1cNConditionWait6FpnSnetxms_condition_t_I_b_",
+	"pthread_cond_reltimedwait_np",
+	"pthread_cond_wait",
         "SleepAndCheckForShutdown",
 	"poll",
 	"select",
@@ -26,7 +28,7 @@ while(<STDIN>)
    chomp;
    $line = $_;
 
-   if (($line =~ /^Thread .*/) || ($line =~ /^-----------------  lwp# [0-9]+.*/) || ($line =~ /^---------- tid# [0-9]+.*/))
+   if (($line =~ /^Thread .*/) || ($line =~ /^-+  lwp# [0-9]+.*/) || ($line =~ /^---------- tid# [0-9]+.*/))
    {
       if ($ignore == 0)
       {
