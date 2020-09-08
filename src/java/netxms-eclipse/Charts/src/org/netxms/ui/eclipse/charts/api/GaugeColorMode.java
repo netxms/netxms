@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.ui.eclipse.charts.api;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Gauge color mode
@@ -31,9 +32,8 @@ public enum GaugeColorMode
    CUSTOM(1),
    THRESHOLD(2);
    
-   private int value;
-   private static Map<Integer, GaugeColorMode> lookupTable = new HashMap<Integer, GaugeColorMode>();
-
+   private static final Logger logger = LoggerFactory.getLogger(GaugeColorMode.class);
+   private static final Map<Integer, GaugeColorMode> lookupTable = new HashMap<Integer, GaugeColorMode>();
    static
    {
       for(GaugeColorMode element : GaugeColorMode.values())
@@ -41,6 +41,8 @@ public enum GaugeColorMode
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * @param value
@@ -67,7 +69,7 @@ public enum GaugeColorMode
       final GaugeColorMode element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(GaugeColorMode.class.getName(), "Unknown element " + value); //$NON-NLS-1$
+         logger.warn("Unknown element " + value); //$NON-NLS-1$
          return ZONE; // fallback
       }
       return element;

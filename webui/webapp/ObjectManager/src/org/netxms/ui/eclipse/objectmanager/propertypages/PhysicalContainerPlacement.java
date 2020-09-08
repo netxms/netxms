@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.base.Logger;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -52,12 +51,16 @@ import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * "Rack" property page for NetXMS object
  */
 public class PhysicalContainerPlacement extends PropertyPage
 {
+   private static final Logger logger = LoggerFactory.getLogger(PhysicalContainerPlacement.class);
+
    private final static String[] ORIENTATION = { "Fill", "Front", "Rear" };
    private final static String[] CHASSIS_ORIENTATION = { "Front", "Rear" };
    private final static String[] VERTICAL_UNITS = { "RU", "mm" };
@@ -451,7 +454,7 @@ public class PhysicalContainerPlacement extends PropertyPage
             }
             catch(Exception e)
             {
-               Logger.debug("PhysicalContainerPlacement.applyChanges", "Cannot convert ChassisPlacement to XML: ", e);
+               logger.debug("Cannot create XML document from ChassisPlacement object", e);
             }
             md.setChassisPlacement(placementConfig);
          }

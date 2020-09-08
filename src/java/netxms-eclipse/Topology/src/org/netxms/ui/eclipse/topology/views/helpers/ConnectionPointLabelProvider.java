@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,9 +54,9 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	private Map<Long, String> cachedObjectNames = new HashMap<Long, String>();
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -82,9 +82,9 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		return name;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -139,9 +139,9 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
 	@Override
 	public Color getForeground(Object element)
 	{

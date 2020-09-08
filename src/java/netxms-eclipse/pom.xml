@@ -21,6 +21,7 @@
         <module>EventManager</module>
         <module>FileManager</module>
         <module>ImageLibrary</module>
+        <module>Logger</module>
         <module>LogViewer</module>
         <!--<module>Market</module>-->
         <module>NXSL</module>

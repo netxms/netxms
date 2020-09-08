@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ICMP statistic collection mode
@@ -31,9 +32,8 @@ public enum IcmpStatCollectionMode
    ON(1),
    OFF(2);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(IcmpStatCollectionMode.class);
    private static Map<Integer, IcmpStatCollectionMode> lookupTable = new HashMap<Integer, IcmpStatCollectionMode>();
-
    static
    {
       for(IcmpStatCollectionMode element : IcmpStatCollectionMode.values())
@@ -41,6 +41,8 @@ public enum IcmpStatCollectionMode
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -73,7 +75,7 @@ public enum IcmpStatCollectionMode
       final IcmpStatCollectionMode element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(IcmpStatCollectionMode.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return DEFAULT; // fall-back
       }
       return element;

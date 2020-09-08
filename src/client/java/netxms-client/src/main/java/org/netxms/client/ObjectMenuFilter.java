@@ -5,13 +5,14 @@ import java.io.Writer;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.netxms.base.Glob;
-import org.netxms.base.Logger;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class created to store menu filter
@@ -19,6 +20,16 @@ import org.simpleframework.xml.core.Persister;
 @Root(name="objectMenuFilter")
 public class ObjectMenuFilter
 {
+   public static final int REQUIRES_SNMP                    = 0x00000001;
+   public static final int REQUIRES_AGENT                   = 0x00000002;
+   public static final int REQUIRES_OID_MATCH               = 0x00000004;
+   public static final int REQUIRES_NODE_OS_MATCH           = 0x00000008;
+   public static final int REQUIRES_TEMPLATE_MATCH          = 0x00000010;
+   public static final int REQUIRES_WORKSTATION_OS_MATCH    = 0x00000020;
+   public static final int REQUIRES_CUSTOM_ATTRIBUTE_MATCH  = 0x00000040;
+   
+   private static Logger logger = LoggerFactory.getLogger(ObjectMenuFilter.class);
+
    @Element(required=false, name="toolOS")
    public String toolNodeOS;
 
@@ -37,14 +48,6 @@ public class ObjectMenuFilter
    @Element(required=false)
    public int flags;
 
-   public static final int REQUIRES_SNMP                    = 0x00000001;
-   public static final int REQUIRES_AGENT                   = 0x00000002;
-   public static final int REQUIRES_OID_MATCH               = 0x00000004;
-   public static final int REQUIRES_NODE_OS_MATCH           = 0x00000008;
-   public static final int REQUIRES_TEMPLATE_MATCH          = 0x00000010;
-   public static final int REQUIRES_WORKSTATION_OS_MATCH    = 0x00000020;
-   public static final int REQUIRES_CUSTOM_ATTRIBUTE_MATCH  = 0x00000040;
-   
    /**
     * Create ObjectToolFilter object from XML document
     * 
@@ -86,7 +89,7 @@ public class ObjectMenuFilter
       }
       catch(Exception e)
       {
-         Logger.warning("ObjectMenuFilter", "Exception during object menu filter serialization", e);
+         logger.warn("Exception during object menu filter serialization", e);
          return "";
       }
    }

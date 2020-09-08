@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Rack attribute
@@ -31,9 +32,8 @@ public enum RackElementType
    FILLER_PANEL(1),
    ORGANISER(2);
    
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(RackElementType.class);
    private static Map<Integer, RackElementType> lookupTable = new HashMap<Integer, RackElementType>();
-   
    static
    {
       for(RackElementType element : RackElementType.values())
@@ -41,7 +41,9 @@ public enum RackElementType
          lookupTable.put(element.value, element);
       }
    }
-   
+
+   private int value;
+
    /**
     * Internal constructor
     * 
@@ -73,7 +75,7 @@ public enum RackElementType
       final RackElementType element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(RackElementType.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return FILLER_PANEL; // fall-back
       }
       return element;

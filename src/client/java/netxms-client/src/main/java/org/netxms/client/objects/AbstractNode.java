@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.InetAddressEx;
-import org.netxms.base.Logger;
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -37,6 +36,8 @@ import org.netxms.client.constants.NodeType;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.configs.ChassisPlacement;
 import org.netxms.client.snmp.SnmpVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract base class for node objects.
@@ -98,6 +99,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 	public static final int IFXTABLE_DEFAULT = 0;
 	public static final int IFXTABLE_ENABLED = 1;
 	public static final int IFXTABLE_DISABLED = 2;
+
+   private static final Logger logger = LoggerFactory.getLogger(AbstractNode.class);
 
 	protected InetAddressEx primaryIP;
 	protected String primaryName;
@@ -285,7 +288,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
          }
          catch(Exception e)
          {
-            Logger.debug("AbstractNode.AbstractNode", "Cannot parse ChassisPlacement XML: ", e);
+            logger.debug("Cannot create ChassisPlacement object from XML document", e);
          }
       }
       

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.ObjectMenuFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Detailed information about object tool
@@ -34,6 +35,8 @@ import org.netxms.client.ObjectMenuFilter;
  */
 public class ObjectToolDetails extends ObjectTool
 {
+   private static final Logger logger = LoggerFactory.getLogger(ObjectToolDetails.class);
+
 	private boolean modified;
 	private List<Long> accessList;
 	private List<ObjectToolTableColumn> columns;
@@ -94,7 +97,7 @@ public class ObjectToolDetails extends ObjectTool
       catch(Exception e)
       {
          filter = new ObjectMenuFilter();
-         Logger.debug("ObjectToolDetails.ObjectToolDetails", "Failed to convert object tool filter to string");
+         logger.debug("Cannot create ObjectMenuFilter object from XML document", e);
       }
 		
 		Long[] acl = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);

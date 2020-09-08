@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.netxms.base.Logger;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * NetXMS object tool representation
@@ -49,7 +50,9 @@ public class ObjectTool implements ObjectAction
    public static final int DISABLED                  = 0x00000004;
    public static final int SHOW_IN_COMMANDS          = 0x00000008;
    public static final int SNMP_INDEXED_BY_VALUE     = 0x00000010;
-	
+
+   private static final Logger logger = LoggerFactory.getLogger(ObjectTool.class);
+
 	protected long id;
 	protected String name;
 	protected String displayName;
@@ -100,7 +103,7 @@ public class ObjectTool implements ObjectAction
       {
          filter = new ObjectMenuFilter();
          if (!filterData.isEmpty())
-            Logger.debug("ObjectTool.ObjectTool", "Failed to create object tool filter from XML");
+            logger.debug("Cannot create ObjectMenuFilter object from XML document", e);
       }
 		
 		int count = msg.getFieldAsInt32(baseId + 11);

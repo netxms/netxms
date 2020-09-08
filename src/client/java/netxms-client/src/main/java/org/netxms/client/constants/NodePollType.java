@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Node poll types
@@ -35,9 +36,8 @@ public enum NodePollType
    CONFIGURATION_NORMAL(5),
    INSTANCE_DISCOVERY(6);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(NodePollType.class);
    private static Map<Integer, NodePollType> lookupTable = new HashMap<Integer, NodePollType>();
-
    static
    {
       for(NodePollType element : NodePollType.values())
@@ -45,6 +45,8 @@ public enum NodePollType
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -77,7 +79,7 @@ public enum NodePollType
       final NodePollType element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(NodePollType.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return UNKNOWN; // fallback
       }
       return element;

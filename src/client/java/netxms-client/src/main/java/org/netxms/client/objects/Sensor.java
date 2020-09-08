@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.netxms.client.objects;
 
 import java.util.Date;
 import java.util.Set;
-import org.netxms.base.Logger;
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -31,6 +30,8 @@ import org.netxms.client.sensor.configs.LoraWanConfig;
 import org.netxms.client.sensor.configs.LoraWanRegConfig;
 import org.netxms.client.sensor.configs.SensorConfig;
 import org.netxms.client.sensor.configs.SensorRegistrationConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Mobile device object
@@ -56,13 +57,18 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    /**
     * Sensor device class
     */
-   public final static int  SENSOR_CLASS_UNKNOWN   = 0;
-   public final static int  SENSOR_UPS             = 1;
-   public final static int  SENSOR_WATER_METER     = 2;
-   public final static int  SENSOR_ELECTR_METER    = 3;   
-   public final static String[] DEV_CLASS_NAMES = { "Unknown", "UPS", "Water meter", "Electricity meter" };
-   
-   
+   public static final int SENSOR_CLASS_UNKNOWN = 0;
+   public static final int SENSOR_UPS = 1;
+   public static final int SENSOR_WATER_METER = 2;
+   public static final int SENSOR_ELECTR_METER = 3;
+
+   /**
+    * Sensor device class names
+    */
+   public static final String[] DEV_CLASS_NAMES = { "Unknown", "UPS", "Water meter", "Electricity meter" };
+
+   private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
+
    private int flags;
    protected MacAddress macAddress;
 	private int deviceClass;
@@ -170,7 +176,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
             catch(Exception e)
             {
                regConfig = new LoraWanRegConfig();
-               Logger.debug("Sensor.Sensor", "Cannot parse LoraWanConfig XML", e);
+               logger.debug("Cannot create LoraWanRegConfig object from XML document", e);
             }
             break;
          default:
@@ -195,7 +201,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
             catch(Exception e)
             {
                config = new LoraWanConfig();
-               Logger.debug("Sensor.Sensor", "Cannot parse LoraWanConfig XML", e);
+               logger.debug("Cannot create LoraWanConfig object from XML document", e);
             }
             break;
          case COMM_DLMS:

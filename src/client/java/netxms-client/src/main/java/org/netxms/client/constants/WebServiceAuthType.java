@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Web service authentication types
@@ -35,9 +36,8 @@ public enum WebServiceAuthType
    ANY(5),
    ANYSAFE(6);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(WebServiceAuthType.class);
    private static Map<Integer, WebServiceAuthType> lookupTable = new HashMap<Integer, WebServiceAuthType>();
-
    static
    {
       for(WebServiceAuthType element : WebServiceAuthType.values())
@@ -45,6 +45,8 @@ public enum WebServiceAuthType
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -77,7 +79,7 @@ public enum WebServiceAuthType
       final WebServiceAuthType element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(Severity.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return NONE; // fallback
       }
       return element;

@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Agent cache mode
@@ -31,9 +32,8 @@ public enum AgentCacheMode
    ON(1),
    OFF(2);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(AgentCacheMode.class);
    private static Map<Integer, AgentCacheMode> lookupTable = new HashMap<Integer, AgentCacheMode>();
-
    static
    {
       for(AgentCacheMode element : AgentCacheMode.values())
@@ -41,6 +41,8 @@ public enum AgentCacheMode
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -73,7 +75,7 @@ public enum AgentCacheMode
       final AgentCacheMode element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(AgentCacheMode.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return DEFAULT; // fallback
       }
       return element;

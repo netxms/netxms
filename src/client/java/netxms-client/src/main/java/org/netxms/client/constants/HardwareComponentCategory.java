@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Categories of hardware components
@@ -35,6 +36,7 @@ public enum HardwareComponentCategory
    BATTERY(5),
    NETWORK_ADAPTER(6);
    
+   private static Logger logger = LoggerFactory.getLogger(HardwareComponentCategory.class);
    private static Map<Integer, HardwareComponentCategory> lookupTable = new HashMap<Integer, HardwareComponentCategory>();
    static
    {
@@ -77,7 +79,7 @@ public enum HardwareComponentCategory
       final HardwareComponentCategory element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(HardwareComponentCategory.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return OTHER; // fallback
       }
       return element;

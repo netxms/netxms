@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Access point state
@@ -32,9 +33,8 @@ public enum AccessPointState
    DOWN(2),
    UNKNOWN(3);
 
-   private int value;
+   private static Logger logger = LoggerFactory.getLogger(AccessPointState.class);
    private static Map<Integer, AccessPointState> lookupTable = new HashMap<Integer, AccessPointState>();
-
    static
    {
       for(AccessPointState element : AccessPointState.values())
@@ -42,6 +42,8 @@ public enum AccessPointState
          lookupTable.put(element.value, element);
       }
    }
+
+   private int value;
 
    /**
     * Internal constructor
@@ -74,7 +76,7 @@ public enum AccessPointState
       final AccessPointState element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(AccessPointState.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return UNKNOWN; // fall-back
       }
       return element;

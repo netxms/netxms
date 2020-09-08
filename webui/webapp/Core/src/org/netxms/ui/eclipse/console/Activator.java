@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ package org.netxms.ui.eclipse.console;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.base.Logger;
-import org.netxms.base.LoggingFacility;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -36,8 +34,7 @@ public class Activator extends AbstractUIPlugin
 	// The shared instance
 	private static Activator plugin;
 
-	/*
-	 * (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
 	 */
 	public void start(BundleContext context) throws Exception
@@ -46,36 +43,11 @@ public class Activator extends AbstractUIPlugin
 		plugin = this;
 		BrandingManager.create();
       ColorManager.create();
-
-      Logger.setLoggingFacility(new LoggingFacility() {
-         @Override
-         public void writeLog(int level, String tag, String message, Throwable t)
-         {
-            int s;
-            switch(level)
-            {
-               case LoggingFacility.ERROR:
-                  s = Status.ERROR;
-                  break;
-               case LoggingFacility.WARNING:
-                  s = Status.WARNING;
-                  break;
-               case LoggingFacility.INFO:
-                  s = Status.INFO;
-                  break;
-               default:
-                  s = Status.OK;
-                  break;
-            }
-            log(s, tag + ": " + message, t); //$NON-NLS-1$
-         }
-      });
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
-	 */
+   /**
+    * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
+    */
 	public void stop(BundleContext context) throws Exception
 	{
 		plugin = null;
@@ -103,7 +75,7 @@ public class Activator extends AbstractUIPlugin
 	{
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
-	
+
 	/**
 	 * Log via platform logging facilities
 	 * 

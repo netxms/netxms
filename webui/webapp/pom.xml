@@ -22,6 +22,7 @@
     <module>EventManager</module>
     <module>FileManager</module>
     <module>ImageLibrary</module>
+    <module>Logger</module>
     <module>LogViewer</module>
     <module>NXSL</module>
     <module>NetworkMaps</module>

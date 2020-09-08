@@ -59,7 +59,6 @@ import java.util.regex.Pattern;
 import org.netxms.base.EncryptionContext;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
-import org.netxms.base.Logger;
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPDataInputStream;
@@ -195,6 +194,8 @@ import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
 import org.netxms.client.zeromq.ZmqSubscription;
 import org.netxms.client.zeromq.ZmqSubscriptionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.jcraft.jzlib.Deflater;
 import com.jcraft.jzlib.JZlib;
 
@@ -256,6 +257,9 @@ public class NXCSession
    private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
    private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
    private static final int FILE_BUFFER_SIZE = 32768; // 32KB
+
+   // Logger
+   private static Logger logger = LoggerFactory.getLogger(NXCSession.class);
 
    // Internal synchronization objects
    private final Semaphore syncObjects = new Semaphore(1);
@@ -1211,7 +1215,7 @@ public class NXCSession
                }
                catch(Exception e)
                {
-                  Logger.error("NXCSession.NotificationProcessor", "Unhandled exception in notification handler", e);
+                  logger.error("Unhandled exception in notification handler", e);
                }
             }
          }
@@ -1281,7 +1285,7 @@ public class NXCSession
             }
             catch(Exception e)
             {
-               Logger.error("NXCSession", "Exception while synchronizing user database objects", e);
+               logger.error("Exception while synchronizing user database objects", e);
                continue;
             }
          }         
@@ -1486,9 +1490,8 @@ public class NXCSession
          response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
          response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
          response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
-         Logger.debug("NXCSession.setupEncryption",
-               "Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
-         Logger.debug("NXCSession.setupEncryption", "Server key fingerprint: " + encryptionContext.getServerKeyFingerprint());
+         logger.debug("Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
+         logger.debug("Server key fingerprint: " + encryptionContext.getServerKeyFingerprint());
       }
       catch(Exception e)
       {
@@ -1640,7 +1643,7 @@ public class NXCSession
    {
       if (!notificationQueue.offer(n))
       {
-         Logger.debug("NXCSession.sendNotification", "Notification processing queue is full");
+         logger.warn("Notification processing queue is full");
       }
    }
 
@@ -2053,7 +2056,7 @@ public class NXCSession
          throw new IllegalStateException("Session already disconnected and cannot be reused");
 
       encryptionContext = null;
-      Logger.info("NXCSession.connect", "Connecting to " + connAddress + ":" + connPort);
+      logger.info("Connecting to " + connAddress + ":" + connPort);
       try
       {
          socket = new Socket();
@@ -2065,7 +2068,7 @@ public class NXCSession
          new BackgroundUserSync();
 
          // get server information
-         Logger.debug("NXCSession.connect", "connection established, retrieving server info");
+         logger.debug("Connection established, retrieving server info");
          NXCPMessage request = newMessage(NXCPCodes.CMD_GET_SERVER_INFO);
          sendMessage(request);
          NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
@@ -2076,13 +2079,13 @@ public class NXCSession
             if (!protocolVersion.isCorrectVersion(ProtocolVersion.INDEX_BASE) || ((componentVersions != null)
                   && !validateProtocolVersions(componentVersions)))
             {
-               Logger.warning("NXCSession.connect", "connection failed (" + protocolVersion.toString() + ")");
+               logger.warn("Connection failed (" + protocolVersion.toString() + ")");
                throw new NXCException(RCC.BAD_PROTOCOL, protocolVersion.toString());
             }
          }
          else
          {
-            Logger.debug("NXCSession.connect", "protocol version ignored");
+            logger.info("Protocol version ignored");
          }
 
          serverVersion = response.getFieldAsString(NXCPCodes.VID_SERVER_VERSION);
@@ -2129,7 +2132,7 @@ public class NXCSession
             waitForRCC(request.getMessageId());
          }
 
-         Logger.debug("NXCSession.connect", "Connected to server version " + serverVersion);
+         logger.info("Connected to server version " + serverVersion);
          connected = true;
       }
       finally
@@ -2232,10 +2235,10 @@ public class NXCSession
 
       final NXCPMessage response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
       int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
-      Logger.debug("NXCSession.login", "CMD_LOGIN_RESP received, RCC=" + rcc);
+      logger.debug("CMD_LOGIN_RESP received, RCC=" + rcc);
       if (rcc != RCC.SUCCESS)
       {
-         Logger.warning("NXCSession.login", "Login failed, RCC=" + rcc);
+         logger.warn("Login failed, RCC=" + rcc);
          throw new NXCException(rcc);
       }
       userId = response.getFieldAsInt32(NXCPCodes.VID_USER_ID);
@@ -2280,7 +2283,7 @@ public class NXCSession
             String key = response.getFieldAsString(fieldId++);
             String value = response.getFieldAsString(fieldId++);
             clientConfigurationHints.put(key, value);
-            Logger.info("NXCSession.login", "configuration hint: " + key + " = " + value);
+            logger.info("Configuration hint: " + key + " = " + value);
          }
       }
 
@@ -2295,13 +2298,13 @@ public class NXCSession
          {
             licenseProblems[i] = new LicenseProblem(response, fieldId);
             fieldId++;
-            Logger.warning("NXCSession.login", "License problem reported by server: " + licenseProblems[i].getDescription());
+            logger.warn("License problem reported by server: " + licenseProblems[i].getDescription());
          }
       }
 
       allowCompression = response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION);
 
-      Logger.info("NXCSession.login", "succesfully logged in, userId=" + userId);
+      logger.info("Succesfully logged in, userId=" + userId);
    }
 
    /**
@@ -7426,7 +7429,7 @@ public class NXCSession
             }
             catch(Exception e)
             {
-               Logger.error("NXCSession.resyncEventObjects", "Exception in worker thread", e);
+               logger.error("Exception in worker thread", e);
             }
          }
       }).start();

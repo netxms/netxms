@@ -20,7 +20,8 @@ package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.netxms.base.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Data types for DCI
@@ -37,6 +38,7 @@ public enum DataType
    COUNTER32(7),
    COUNTER64(8);
 
+   private static Logger logger = LoggerFactory.getLogger(DataType.class);
    private static Map<Integer, DataType> lookupTable = new HashMap<Integer, DataType>();
    static
    {
@@ -99,7 +101,7 @@ public enum DataType
       final DataType element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(DataType.class.getName(), "Unknown element " + value);
+         logger.warn("Unknown element " + value);
          return INT32; // fallback
       }
       return element;

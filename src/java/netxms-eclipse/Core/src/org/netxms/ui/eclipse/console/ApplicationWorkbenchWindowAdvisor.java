@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -164,9 +164,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       TweakletManager.postWindowCreate(configurer);
    }
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowOpen()
-	 */
+   /**
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowOpen()
+    */
 	@Override
 	public void postWindowOpen()
 	{
