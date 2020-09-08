@@ -23,6 +23,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -61,6 +62,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionCreateNode;
    private Action actionCreateRack;
    private Action actionCreateVpnConnector;
+   private Action actionProperties;
 
    public ObjectContextMenuManager(View view, ISelectionProvider selectionProvider)
    {
@@ -189,6 +191,14 @@ public class ObjectContextMenuManager extends MenuManager
 
       actionCreateRack = new GenericObjectCreationAction(i18n.tr("&Rack..."), AbstractObject.OBJECT_RACK, i18n.tr("Rack"));
       actionCreateVpnConnector = new GenericObjectCreationAction(i18n.tr("&VPN connector..."), AbstractObject.OBJECT_VPNCONNECTOR, i18n.tr("VPN Connector"));
+
+      actionProperties = new Action("&Properties...") {
+         @Override
+         public void run()
+         {
+            ObjectPropertiesManager.openObjectPropertiesDialog(getObjectFromSelection(), getShell());
+         }
+      };
    }
 
    /**
@@ -207,6 +217,8 @@ public class ObjectContextMenuManager extends MenuManager
       addAction(createMenu, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
       if (!createMenu.isEmpty())
          add(createMenu);
+      add(new Separator());
+      add(actionProperties);
    }
 
    /**
