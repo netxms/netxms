@@ -6,8 +6,6 @@ package org.netxms.tcpproxy;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import org.netxms.base.Logger;
-import org.netxms.base.LoggingFacility;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
 import org.netxms.client.TcpProxy;
@@ -103,16 +101,6 @@ public class TcpProxyApp
          print("Required arguments: server login password proxy_node remote_address remote_port local_port");
          return;
       }
-      
-      Logger.setLoggingFacility(new LoggingFacility() {
-         @Override
-         public void writeLog(int level, String tag, String message, Throwable t)
-         {
-            System.out.println(tag + ": " + message);
-            if (t != null)
-               t.printStackTrace();
-         }
-      });
       
       try
       {
