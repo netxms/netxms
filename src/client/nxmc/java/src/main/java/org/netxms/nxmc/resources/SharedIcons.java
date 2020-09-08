@@ -50,6 +50,7 @@ public class SharedIcons
 	public static ImageDescriptor EXPAND_ALL;
    public static ImageDescriptor FILTER;
 	public static ImageDescriptor FIND;
+   public static ImageDescriptor GROUP;
    public static ImageDescriptor INFORMATION;
 	public static ImageDescriptor IP_ADDRESS;
 	public static ImageDescriptor NAV_BACKWARD;
@@ -94,6 +95,7 @@ public class SharedIcons
 	public static Image IMG_EXPAND_ALL;
 	public static Image IMG_FILTER;
    public static Image IMG_FIND;
+   public static Image IMG_GROUP;
    public static Image IMG_INFORMATION;
 	public static Image IMG_IP_ADDRESS;
 	public static Image IMG_NAV_BACKWARD;
@@ -143,6 +145,7 @@ public class SharedIcons
       EXPAND_ALL = ResourceManager.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
       FILTER = ResourceManager.getImageDescriptor("icons/filter.gif"); //$NON-NLS-1$
       FIND = ResourceManager.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
+      GROUP = ResourceManager.getImageDescriptor("icons/group.png"); //$NON-NLS-1$
       INFORMATION = ResourceManager.getImageDescriptor("icons/information.png"); //$NON-NLS-1$
       IP_ADDRESS = ResourceManager.getImageDescriptor("icons/ipaddr.png"); //$NON-NLS-1$
       NAV_BACKWARD = ResourceManager.getImageDescriptor("icons/nav_backward.gif"); //$NON-NLS-1$
@@ -187,6 +190,7 @@ public class SharedIcons
 		IMG_EXPAND_ALL = EXPAND_ALL.createImage();
 		IMG_FILTER = FILTER.createImage();
       IMG_FIND = FIND.createImage();
+      IMG_GROUP = GROUP.createImage();
       IMG_INFORMATION = INFORMATION.createImage();
 		IMG_IP_ADDRESS = IP_ADDRESS.createImage();
 		IMG_NAV_BACKWARD = NAV_BACKWARD.createImage();

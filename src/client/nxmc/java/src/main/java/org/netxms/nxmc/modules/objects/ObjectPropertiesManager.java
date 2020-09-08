@@ -18,6 +18,11 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -25,7 +30,12 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.propertypages.AccessControl;
+import org.netxms.nxmc.modules.objects.propertypages.Communication;
 import org.netxms.nxmc.modules.objects.propertypages.General;
+import org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -33,12 +43,45 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ObjectPropertiesManager
 {
+   private static final Logger logger = LoggerFactory.getLogger(ObjectPropertiesManager.class);
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectPropertiesManager.class);
+
+   private static Set<Class<? extends ObjectPropertyPage>> pageClasses = new HashSet<Class<? extends ObjectPropertyPage>>();
+   static
+   {
+      pageClasses.add(AccessControl.class);
+      pageClasses.add(Communication.class);
+      pageClasses.add(General.class);
+   }
 
    public static boolean openObjectPropertiesDialog(AbstractObject object, Shell shell)
    {
+      List<ObjectPropertyPage> pages = new ArrayList<ObjectPropertyPage>(pageClasses.size());
+      for(Class<? extends ObjectPropertyPage> c : pageClasses)
+      {
+         try
+         {
+            ObjectPropertyPage p = c.getConstructor(AbstractObject.class).newInstance(object);
+            if (p.isVisible())
+               pages.add(p);
+         }
+         catch(Exception e)
+         {
+            logger.error("Error instantiating object property page", e);
+         }
+      }
+      pages.sort(new Comparator<ObjectPropertyPage>() {
+         @Override
+         public int compare(ObjectPropertyPage p1, ObjectPropertyPage p2)
+         {
+            int rc = p1.getPriority() - p2.getPriority();
+            return (rc != 0) ? rc : p1.getTitle().compareToIgnoreCase(p2.getTitle());
+         }
+      });
+
       PreferenceManager pm = new PreferenceManager();
-      pm.addToRoot(new PreferenceNode("general", new General(object)));
+      for(ObjectPropertyPage p : pages)
+         pm.addToRoot(new PreferenceNode(p.getId(), p));
 
       PreferenceDialog dlg = new PreferenceDialog(shell, pm) {
          @Override

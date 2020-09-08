@@ -39,4 +39,59 @@ public abstract class ObjectPropertyPage extends PreferencePage
       super(title);
       this.object = object;
    }
+
+   /**
+    * Get page ID.
+    *
+    * @return page ID
+    */
+   public abstract String getId();
+
+   /**
+    * Check if this page should be visible for current object.
+    *
+    * @return true if this page should be visible
+    */
+   public boolean isVisible()
+   {
+      return true;
+   }
+
+   /**
+    * Get page priority. Default is 65535.
+    *
+    * @return page priority
+    */
+   public int getPriority()
+   {
+      return 65535;
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
+   @Override
+   public boolean performOk()
+   {
+      if (isControlCreated())
+         return applyChanges(false);
+      return true;
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
+   @Override
+   protected void performApply()
+   {
+      if (isControlCreated())
+         applyChanges(true);
+   }
+
+   /**
+    * Apply changes
+    * 
+    * @param isApply true if update operation caused by "Apply" button
+    */
+   protected abstract boolean applyChanges(final boolean isApply);
 }

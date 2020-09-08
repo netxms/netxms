@@ -38,7 +38,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class General extends ObjectPropertyPage
 {
-   private I18n i18n = LocalizationHelper.getI18n(General.class);
+   private static I18n i18n = LocalizationHelper.getI18n(General.class);
+
    private Text name;
    private Text alias;
 	private String initialName;
@@ -51,7 +52,25 @@ public class General extends ObjectPropertyPage
     */
    public General(AbstractObject object)
    {
-      super("General", object);
+      super(i18n.tr("General"), object);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getId()
+    */
+   @Override
+   public String getId()
+   {
+      return "general";
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 1;
    }
 
    /**
@@ -101,16 +120,15 @@ public class General extends ObjectPropertyPage
    }
 
    /**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 */
-	protected void applyChanges(final boolean isApply)
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#applyChanges(boolean)
+    */
+   @Override
+   protected boolean applyChanges(final boolean isApply)
 	{
       final String newName = name.getText();
       final String newAlias = alias.getText();
       if (newName.equals(initialName) && newAlias.equals(initialAlias))
-         return; // nothing to change
+         return true; // nothing to change
 
 		if (isApply)
 			setValid(false);
@@ -149,24 +167,7 @@ public class General extends ObjectPropertyPage
 				}
 			}
 		}.start();
-	}
 
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		applyChanges(false);
-		return true;
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
+      return true;
 	}
 }

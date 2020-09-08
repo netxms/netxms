@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
+import org.netxms.nxmc.base.views.ConfigurationPerspective;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PinboardPerspective;
 import org.netxms.nxmc.base.windows.MainWindow;
@@ -104,6 +105,7 @@ public final class Registry
    {
       perspectives.add(new AlarmsPerspective());
       perspectives.add(new ObjectsPerspective());
+      perspectives.add(new ConfigurationPerspective());
       perspectives.add(new PinboardPerspective());
    }
 
