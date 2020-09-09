@@ -358,6 +358,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cambium", "src\server\drive
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "saf", "src\server\drivers\saf\saf.vcxproj", "{12D50869-B637-4772-B86C-A45A99B18B14}"
 EndProject
+<<<<<<< HEAD
+=======
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smtp", "src\ncdrivers\smtp\smtp.vcxproj", "{46B3AD90-68DA-119C-8D26-28C88AC8561C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "westerstrand", "src\server\drivers\westerstrand\westerstrand.vcxproj", "{B797F799-E0E0-4188-8F96-E9B643BE7D84}"
+EndProject
+>>>>>>> 5b1683b9d8... Westerstrand driver added to Windows build
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1378,6 +1385,25 @@ Global
 		{12D50869-B637-4772-B86C-A45A99B18B14}.Release|Win32.ActiveCfg = Release|Win32
 		{12D50869-B637-4772-B86C-A45A99B18B14}.Release|x64.ActiveCfg = Release|x64
 		{12D50869-B637-4772-B86C-A45A99B18B14}.Release|x64.Build.0 = Release|x64
+<<<<<<< HEAD
+=======
+		{46B3AD90-68DA-119C-8D26-28C88AC8561C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{46B3AD90-68DA-119C-8D26-28C88AC8561C}.Debug|Win32.Build.0 = Debug|Win32
+		{46B3AD90-68DA-119C-8D26-28C88AC8561C}.Debug|x64.ActiveCfg = Debug|x64
+		{46B3AD90-68DA-119C-8D26-28C88AC8561C}.Debug|x64.Build.0 = Debug|x64
+		{46B3AD90-68DA-119C-8D26-28C88AC8561C}.Release|Win32.ActiveCfg = Release|Win32
+		{46B3AD90-68DA-119C-8D26-28C88AC8561C}.Release|Win32.Build.0 = Release|Win32
+		{46B3AD90-68DA-119C-8D26-28C88AC8561C}.Release|x64.ActiveCfg = Release|x64
+		{46B3AD90-68DA-119C-8D26-28C88AC8561C}.Release|x64.Build.0 = Release|x64
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84}.Debug|Win32.Build.0 = Debug|Win32
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84}.Debug|x64.ActiveCfg = Debug|x64
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84}.Debug|x64.Build.0 = Debug|x64
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84}.Release|Win32.ActiveCfg = Release|Win32
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84}.Release|Win32.Build.0 = Release|Win32
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84}.Release|x64.ActiveCfg = Release|x64
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84}.Release|x64.Build.0 = Release|x64
+>>>>>>> 5b1683b9d8... Westerstrand driver added to Windows build
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1533,6 +1559,7 @@ Global
 		{11B762A4-07BA-42D6-9819-D287AB3F59E1} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
 		{711DE9BF-60CD-41CB-9F12-318BA1D38F38} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{12D50869-B637-4772-B86C-A45A99B18B14} = {53997B2A-D94C-428C-816D-938C297A1866}
+		{B797F799-E0E0-4188-8F96-E9B643BE7D84} = {53997B2A-D94C-428C-816D-938C297A1866}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
