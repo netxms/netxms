@@ -29,6 +29,10 @@
 
 #ifdef _WITH_ENCRYPTION
 
+#ifndef _WIN32
+#define DEFAULT_STORE "/etc/ssl/certs"
+#endif
+
 /**
  * Check if server address is valid
  */
@@ -515,6 +519,87 @@ static void SSLInfoCallback(const SSL *ssl, int where, int ret)
 }
 
 /**
+ * Validate agent certificate
+ */
+static bool ValidateServerCertificate(X509 *cert)
+{
+   bool valid = false;
+   //Load certificates
+   X509_STORE *trustedCertificateStore = X509_STORE_new();
+   if (trustedCertificateStore == nullptr)
+   {
+      nxlog_write(NXLOG_INFO, _T("ValidateServerCertificate: cannot create certificate store"));
+      return valid;
+   }
+
+   X509_LOOKUP *dirLookup = X509_STORE_add_lookup(trustedCertificateStore, X509_LOOKUP_hash_dir());
+   X509_LOOKUP *fileLookup = X509_STORE_add_lookup(trustedCertificateStore,X509_LOOKUP_file());
+
+   if((g_trustedCACertificate != NULL))
+   {
+
+      TCHAR *item, *end;
+      for(item = end = g_trustedCACertificate; end != NULL && *item != 0; item = end + 1)
+      {
+         end = _tcschr(item, _T('\n'));
+         if (end != NULL)
+            *end = 0;
+         Trim(item);
+         NX_STAT_STRUCT st;
+         if (CALL_STAT(item, &st) != 0)
+            continue;
+
+#ifdef UNICODE
+         char __buffer[MAX_PATH];
+         WideCharToMultiByteSysLocale(item, __buffer, MAX_PATH);
+#else
+#define __buffer item
+#endif
+         int added = 0;
+         if (S_ISDIR(st.st_mode))
+         {
+            added = X509_LOOKUP_add_dir(dirLookup, __buffer, X509_FILETYPE_PEM);
+         }
+         else
+         {
+            added = X509_LOOKUP_load_file(fileLookup, __buffer, X509_FILETYPE_PEM);
+         }
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ValidateServerCertificate: %s '%hs' loaded"), S_ISDIR(st.st_mode) ? _T("directory") : _T("certificate"), __buffer);
+      }
+   }
+
+#ifdef _WIN32
+   //TODO: load default store from win api
+#else
+   struct stat fileInfo;
+   if (stat(DEFAULT_STORE, &fileInfo) == 0)
+   {
+      X509_LOOKUP_add_dir(dirLookup, DEFAULT_STORE, X509_FILETYPE_PEM);
+   }
+#endif
+
+   X509_STORE_CTX *ctx = X509_STORE_CTX_new();
+   if (ctx != nullptr)
+   {
+      X509_STORE_CTX_init(ctx, trustedCertificateStore, cert, nullptr);
+      int result = X509_verify_cert(ctx);
+      valid = (result == 1);
+      if (!valid)
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ValidateServerCertificate: validation failed with reason: %hs"), X509_verify_cert_error_string(X509_STORE_CTX_get_error(ctx)));
+
+      X509_STORE_CTX_free(ctx);
+   }
+   else
+   {
+      TCHAR buffer[256];
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("ValidateServerCertificate: X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), buffer));
+   }
+   X509_STORE_free(trustedCertificateStore);
+
+   return valid;
+}
+
+/**
  * Connect to server
  */
 bool Tunnel::connectToServer()
@@ -654,10 +739,23 @@ bool Tunnel::connectToServer()
    char *issuer = X509_NAME_oneline(X509_get_issuer_name(cert), NULL ,0);
    debugPrintf(4, _T("Server certificate subject is %hs"), subj);
    debugPrintf(4, _T("Server certificate issuer is %hs"), issuer);
+
+   bool isValid = true;
+   if (g_dwFlags & AF_CHECK_SERVER_CERTIFICATE)
+   {
+      isValid = ValidateServerCertificate(cert);
+      debugPrintf(3, _T("Certificate \"%hs\" for issuer %hs - validation %s"),
+            subj, issuer, isValid ? _T("successful") : _T("failed"));
+   }
    OPENSSL_free(subj);
    OPENSSL_free(issuer);
 
    X509_free(cert);
+   if (!isValid)
+   {
+      MutexUnlock(m_stateLock);
+      return false;
+   }
 
    // Setup receiver
    delete m_queue;
