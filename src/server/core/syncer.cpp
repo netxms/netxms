@@ -83,8 +83,8 @@ void ShowSyncerStats(ServerConsole *console)
    s_syncerGaugeLock.lock();
    console->printf(
             _T("Last run at .........: %s\n")
-            _T("Average run time ....: %d ms\n")
             _T("Last run time .......: %d ms\n")
+            _T("Average run time ....: %d ms\n")
             _T("Max run time ........: %d ms\n")
             _T("Min run time ........: %d ms\n")
             _T("\n"), FormatTimestamp(s_lastRunTime, runTime),
