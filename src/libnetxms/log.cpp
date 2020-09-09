@@ -367,7 +367,7 @@ static TCHAR *FormatLogTimestamp(TCHAR *buffer)
 static inline TCHAR *FormatTag(const TCHAR *tag, TCHAR *tagf)
 {
    int i;
-   if (tag != NULL)
+   if (tag != nullptr)
    {
       for(i = 0; (i < 19) && tag[i] != 0; i++)
          tagf[i] = tag[i];

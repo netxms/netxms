@@ -10,5 +10,4 @@
 
 SUBDIRS = at avaya cambium cisco dell-pwc dlink extreme hpe huawei \
           ignitenet juniper mikrotik moxa net-snmp netonix ping3 qtech-olt \
-          rittal saf symbol-ws tb ubnt
-
+          rittal saf symbol-ws tb ubnt westerstrand
