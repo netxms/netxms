@@ -204,6 +204,7 @@ UINT32 g_dcOfflineExpirationTime = 10; // 10 days
 int32_t g_zoneUIN = 0;
 uint32_t g_tunnelKeepaliveInterval = 30;
 uint16_t g_syslogListenPort = 514;
+TCHAR *g_trustedCACertificate = nullptr;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
 #else
@@ -330,7 +331,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, nullptr },
    { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, nullptr },
    { _T("SystemName"), CT_STRING, 0, 0, MAX_OBJECT_NAME, 0, g_systemName, nullptr },
+   { _T("TrustedCACertificate"), CT_STRING_LIST, '\n', 0, 0, 0, &g_trustedCACertificate, nullptr },
    { _T("TunnelKeepaliveInterval"), CT_LONG, 0, 0, 0, 0, &g_tunnelKeepaliveInterval, nullptr },
+   { _T("VerifyServerCeritifcate"), CT_BOOLEAN, 0, 0, AF_CHECK_SERVER_CERTIFICATE, 0, &g_dwFlags, nullptr },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN, 0, 0, AF_JSON_LOG, 0, &g_dwFlags, nullptr },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr }, // for backward compatibility
@@ -1424,6 +1427,8 @@ void Shutdown()
       ThreadPoolDestroy(g_commThreadPool);
    }
    ThreadPoolDestroy(g_executorThreadPool);
+
+   MemFree(g_trustedCACertificate);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

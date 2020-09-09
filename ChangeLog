@@ -3,6 +3,7 @@
 *
 
 - New instance discovery method "internal table"
+- Added option to validate server certificate on agent
 - Fixed issues:
 	NX-1416 (NetXMS Agents shutdown does not end ExternalParametersProviders)
 	NX-1911 (Separate object name for use on maps)

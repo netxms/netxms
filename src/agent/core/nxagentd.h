@@ -107,6 +107,7 @@
 #define AF_JSON_LOG                 0x10000000
 #define AF_LOG_TO_STDOUT            0x20000000
 #define AF_ENABLE_SSL_TRACE         0x40000000
+#define AF_CHECK_SERVER_CERTIFICATE 0x80000000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
@@ -873,6 +874,7 @@ extern UINT16 g_sessionAgentPort;
 extern int32_t g_zoneUIN;
 extern uint32_t g_tunnelKeepaliveInterval;
 extern uint16_t g_syslogListenPort;
+extern TCHAR *g_trustedCACertificate;
 extern shared_ptr_store<Config> g_config;
 
 extern UINT32 g_acceptErrors;
