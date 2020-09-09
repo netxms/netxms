@@ -4749,6 +4749,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/symbol-ws/Makefile
 	src/server/drivers/tb/Makefile
 	src/server/drivers/ubnt/Makefile
+	src/server/drivers/westerstrand/Makefile
 	src/server/hdlink/Makefile
 	src/server/hdlink/jira/Makefile
 	src/server/hdlink/redmine/Makefile
