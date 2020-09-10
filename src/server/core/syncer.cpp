@@ -88,7 +88,7 @@ void ShowSyncerStats(ServerConsole *console)
             _T("Max run time ........: %d ms\n")
             _T("Min run time ........: %d ms\n")
             _T("\n"), FormatTimestamp(s_lastRunTime, runTime),
-            s_syncerRunTime.getCurrent(), s_syncerRunTime.getAverage(),
+            s_syncerRunTime.getCurrent(), static_cast<int>(s_syncerRunTime.getAverage()),
             s_syncerRunTime.getMax(), s_syncerRunTime.getMin());
    s_syncerGaugeLock.unlock();
 }
