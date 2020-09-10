@@ -270,9 +270,9 @@ target
 /status
 /tests/config/netxmsd.conf
 /tests/config/nxagentd.conf
-tests/java/integration/.classpath
-tests/java/integration/.project
-tests/java/integration/.settings/
+tests/integration/.classpath
+tests/integration/.project
+tests/integration/.settings/
 /tests/suite/netxms-test-suite
 /tests/test-libnetxms/test-libnetxms
 /tests/test-libnxcc/test-libnxcc
