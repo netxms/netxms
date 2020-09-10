@@ -18,8 +18,6 @@
  */
 package org.netxms.tests;
 
-import org.netxms.base.Logger;
-import org.netxms.base.LoggingFacility;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
 import junit.framework.TestCase;
@@ -35,14 +33,6 @@ public abstract class AbstractSessionTest extends TestCase
 {
     protected NXCSession connect(boolean useEncryption) throws Exception
     {
-        Logger.setLoggingFacility(new LoggingFacility() {
-            @Override
-            public void writeLog(int level, String tag, String message, Throwable t)
-            {
-                System.out.println("[" + tag + "] " + message);
-            }
-        });
-
         NXCSession session = new NXCSession(TestConstants.serverAddress, TestConstants.serverPort, useEncryption);
         session.setRecvBufferSize(65536, 33554432);
         session.connect(new int[]{ProtocolVersion.INDEX_FULL});
