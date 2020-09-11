@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.netxms.ui.android.main.fragments;
 
@@ -9,17 +9,17 @@ import org.netxms.ui.android.loaders.GenericObjectLoader;
 import org.netxms.ui.android.main.adapters.OverviewAdapter;
 
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 /**
  * Fragment for overview info
- * 
+ *
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- * 
+ *
  */
 
 public class OverviewFragment extends ExpandableListFragment implements LoaderManager.LoaderCallbacks<AbstractObject>

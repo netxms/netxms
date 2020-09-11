@@ -13,7 +13,7 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.FragmentActivity;
+import androidx.fragment.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,9 +23,9 @@ import android.view.MenuItem;
  * Abstract base class for all activities in the client. Implements
  * common functionality for connecting to service and handling common items
  * in options menu.
- * 
+ *
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- * 
+ *
  */
 public abstract class AbstractFragmentActivity extends FragmentActivity implements ServiceConnection
 {
@@ -53,7 +53,7 @@ public abstract class AbstractFragmentActivity extends FragmentActivity implemen
 	/**
 	 * Called by AbstractClientActivity.onCreate before service binding
 	 * to allow inherited classes to do initialization before onServiceConnected call
-	 * 
+	 *
 	 * @param savedInstanceState
 	 */
 	protected abstract void onCreateStep2(Bundle savedInstanceState);

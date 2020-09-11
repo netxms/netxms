@@ -5,12 +5,12 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
+import androidx.loader.content.AsyncTaskLoader;
 import android.util.Log;
 
 /**
  * Background loader for DciValue objects. Notifies the fragment on job complete
- * 
+ *
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  *
  */

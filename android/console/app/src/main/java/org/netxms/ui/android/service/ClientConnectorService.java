@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.netxms.ui.android.service;
 
@@ -48,17 +48,17 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.Loader;
+import androidx.core.app.NotificationCompat;
+import androidx.loader.content.Loader;
 import android.util.Log;
 import android.widget.Toast;
 
 /**
  * Background communication service for NetXMS client.
- * 
+ *
  * @author Victor Kirhenshtein
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- * 
+ *
  */
 
 public class ClientConnectorService extends Service implements SessionListener
@@ -158,7 +158,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see android.app.Service#onCreate()
 	 */
 	@Override
@@ -193,7 +193,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see android.app.Service#onStartCommand(android.content.Intent, int, int)
 	 */
 	@Override
@@ -250,7 +250,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see android.app.Service#onBind(android.content.Intent)
 	 */
 	@Override
@@ -261,7 +261,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see android.app.Service#onDestroy()
 	 */
 	@Override
@@ -283,7 +283,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Save status for intentional exit from app 
+	 * Save status for intentional exit from app
 	 */
 	public void saveSatusOnExit()
 	{
@@ -295,7 +295,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Show alarm notification (status bar, LED, sound and vibration)
-	 * 
+	 *
 	 * @param alarm	alarm object
 	 * @param text	notification text
 	 */
@@ -334,7 +334,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Creates pending intent for notification area buttons
-	 * 
+	 *
 	 * @param action	intent action
 	 * @param id	alarm id on which to execute the action
 	 */
@@ -345,7 +345,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Show status notification
-	 * 
+	 *
 	 * @param status	connection status
 	 * @param extra	extra text to add at the end of the toast
 	 */
@@ -410,7 +410,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Hide notification
-	 * 
+	 *
 	 * @param id notification id
 	 */
 	private void hideNotification(int id)
@@ -427,9 +427,9 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Check if it is necessary to reconnect depending if a 
+	 * Check if it is necessary to reconnect depending if a
 	 * particular subset of parameters have been changed.
-	 * 
+	 *
 	 * @return true If it is necessary to force a reconnection
 	 */
 	private boolean hasToReconnect()
@@ -501,7 +501,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Reconnect to server.
-	 * 
+	 *
 	 * @param forceReconnect if set to true forces disconnection before connecting
 	 */
 	public void reconnect(boolean force)
@@ -523,7 +523,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Disconnect from server. Only when scheduler is enabled and connected.
-	 * 
+	 *
 	 */
 	public void disconnect(boolean force)
 	{
@@ -538,7 +538,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Called by connect task after successful connection
-	 * 
+	 *
 	 * @param session
 	 *           new session object
 	 */
@@ -725,7 +725,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Process alarm change
-	 * 
+	 *
 	 * @param alarm
 	 */
 	private void processAlarmChange(Alarm alarm)
@@ -746,7 +746,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Process alarm change
-	 * 
+	 *
 	 * @param alarm
 	 */
 	private void processAlarmDelete(long id)
@@ -763,7 +763,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Synchronize information about specific object in background
-	 * 
+	 *
 	 * @param objectId object ID
 	 */
 	private void doBackgroundObjectSync(final long objectId)
@@ -797,7 +797,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Find object by ID with class filter
-	 * 
+	 *
 	 * @param objectId
 	 * @param classFilter
 	 * @return
@@ -960,7 +960,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Determine the notification of alarm based on alarm severity
-	 * 
+	 *
 	 * @param severity
 	 */
 	private boolean NotifyAlarm(Severity severity)
@@ -989,7 +989,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Determine the notification in status bar based on alarm severity
-	 * 
+	 *
 	 * @param severity
 	 */
 	private boolean NotifyAlarmInStatusBar(Severity severity)
@@ -1018,7 +1018,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Get alarm color based on alarm severity
-	 * 
+	 *
 	 * @param severity
 	 */
 	int GetAlarmColor(Severity severity)
@@ -1065,37 +1065,37 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Get alarm vibration pattern 
+	 * Get alarm vibration pattern
 	 */
 	private long[] GetAlarmVibrationPattern()
 	{
 		if (sp.getBoolean("global.vibration.alarm", false))
 		{
-			// In Morse Code, "s" = "dot-dot-dot", "o" = "dash-dash-dash" 
-			int dot = 100;// Length of a Morse Code "dot" in milliseconds (real is 200) 
+			// In Morse Code, "s" = "dot-dot-dot", "o" = "dash-dash-dash"
+			int dot = 100;// Length of a Morse Code "dot" in milliseconds (real is 200)
 			int dash = 250;// Length of a Morse Code "dash" in milliseconds (real is 500)
 			int short_gap = 100;// Length of Gap Between dots/dashes (real is 200)
 			int medium_gap = 250;// Length of Gap Between Letters (real is 500)
 			//int long_gap = 500;// Length of Gap Between Words (real is 1000)
 			long[] pattern = {
-					0, // Start immediately 
+					0, // Start immediately
 					dot,
 					short_gap,
 					dot,
 					short_gap,
-					dot, // s 
+					dot, // s
 					medium_gap,
 					dash,
 					short_gap,
 					dash,
 					short_gap,
-					dash, // o 
+					dash, // o
 					medium_gap,
 					dot,
 					short_gap,
 					dot,
 					short_gap,
-					dot// s 
+					dot// s
 			};
 			return pattern;
 		}
@@ -1104,7 +1104,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Get alarm sound based on alarm severity
-	 * 
+	 *
 	 * @param severity
 	 */
 	private String GetAlarmSound(Severity severity)
@@ -1134,7 +1134,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Get alarm icon based on alarm severity
-	 * 
+	 *
 	 * @param severity
 	 */
 	private int getAlarmIcon(Severity severity)
@@ -1163,7 +1163,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api
 	 * .client.SessionNotification)
@@ -1199,7 +1199,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Get list of active alarms
-	 * 
+	 *
 	 * @return list of active alarms
 	 */
 	public Alarm[] getAlarms()
@@ -1217,7 +1217,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * @param id	id of alarm
-	 * @param sticky	true for sticky acknowledge 
+	 * @param sticky	true for sticky acknowledge
 	 */
 	public void acknowledgeAlarm(long id, boolean sticky)
 	{
@@ -1309,7 +1309,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public void loadTools()
 	{
@@ -1326,7 +1326,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Execute object tool. Communication with server will be done in separate worker thread.
-	 * 
+	 *
 	 * @param nodeId
 	 * @param tool
 	 */
@@ -1519,7 +1519,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * Show toast with given text
-	 * 
+	 *
 	 * @param text message text
 	 */
 	public void showToast(final String text)
