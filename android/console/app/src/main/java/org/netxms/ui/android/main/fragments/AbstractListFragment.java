@@ -7,7 +7,7 @@ import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
+import androidx.fragment.app.ListFragment;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
@@ -18,9 +18,9 @@ import android.widget.TextView;
  * Abstract base class for list fragments in the client.
  * Implements functionality for passing common parameters and
  * for handling common tasks.
- * 
+ *
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- * 
+ *
  */
 
 public abstract class AbstractListFragment extends ListFragment

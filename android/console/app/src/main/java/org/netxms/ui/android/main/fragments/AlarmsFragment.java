@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.netxms.ui.android.main.fragments;
 
@@ -15,8 +15,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 import android.util.SparseBooleanArray;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -31,9 +31,9 @@ import android.widget.ListView;
 
 /**
  * Fragment for alarms info
- * 
+ *
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- * 
+ *
  */
 
 public class AlarmsFragment extends AbstractListFragment implements LoaderManager.LoaderCallbacks<Alarm[]>
@@ -322,8 +322,8 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 
 	/**
 	 * Slect/unselect all the checkboxes
-	 * 
-	 * @param select true to select all, false to clear all 
+	 *
+	 * @param select true to select all, false to clear all
 	 */
 	private void selectAll(boolean select)
 	{

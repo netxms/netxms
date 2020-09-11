@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.netxms.ui.android.main.fragments;
 
@@ -19,8 +19,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 import android.util.SparseBooleanArray;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -36,9 +36,9 @@ import android.widget.ListView;
 
 /**
  * Fragment for last values info
- * 
+ *
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- * 
+ *
  */
 
 public class LastValuesFragment extends AbstractListFragment implements LoaderManager.LoaderCallbacks<DciValue[]>
@@ -225,7 +225,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 
 	/**
 	 * Show last value for table DCI
-	 * 
+	 *
 	 * @param idList	list of DCI to graph
 	 * @return
 	 */
@@ -245,7 +245,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 
 	/**
 	 * Draw graph for the specified time slot after confirmation of long task execution
-	 * 
+	 *
 	 * @param secsBack	seconds back since current time
 	 * @param idList	list of DCI to graph
 	 * @return	Always true
@@ -276,7 +276,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 
 	/**
 	 * Draw graph for the specified time slot
-	 * 
+	 *
 	 * @param secsBack	seconds back since current time
 	 * @param idList	list of DCI to graph
 	 * @return	Always true
@@ -329,7 +329,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 
 	/**
 	 * Draw pie chart for selected DCIs
-	 * 
+	 *
 	 * @return
 	 */
 	private boolean drawComparisonChart(Class<?> chartClass)

@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.netxms.ui.android.main.fragments;
 
@@ -10,12 +10,12 @@ import org.netxms.ui.android.R;
 import android.content.ComponentName;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 /**
  * Alarm browser in fragment style
- * 
+ *
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
  *
  */
@@ -44,7 +44,7 @@ public class AlarmBrowserFragment extends AbstractFragmentActivity
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see android.content.ServiceConnection#onServiceConnected(android.content.ComponentName, android.os.IBinder)
 	 */
 	@Override
