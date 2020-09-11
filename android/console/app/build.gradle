@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion "28.0.3"
 
     defaultConfig {
         applicationId "org.netxms.ui.android"
@@ -40,11 +39,12 @@ dependencies {
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation('org.simpleframework:simple-xml:2.7.+') {
+    implementation('org.simpleframework:simple-xml:2.7.1') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
     implementation 'ch.acra:acra:4.9.0'
     implementation 'org.achartengine:achartengine:1.2.0-nx-1'
+    implementation group: 'org.slf4j', name: 'slf4j-android', version: '1.7.30'
 }

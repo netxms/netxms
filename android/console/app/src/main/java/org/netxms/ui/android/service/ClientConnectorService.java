@@ -28,7 +28,6 @@ import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.activities.NodeBrowser;
 import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
 import org.netxms.ui.android.receivers.AlarmIntentReceiver;
-import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import org.netxms.ui.android.service.tasks.ExecObjectToolTask;
 
@@ -167,7 +166,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		super.onCreate();
 
-		Logger.setLoggingFacility(new AndroidLoggingFacility());
 		uiThreadHandler = new Handler(getMainLooper());
 		notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 
