@@ -96,11 +96,6 @@ public class NodePollerActivity extends AbstractClientActivity
 						public void setStreamId(long l)
 						{
 						}
-
-						@Override
-						public void onError()
-						{
-						}
 					});
 					onPollCompleted(true, null);
 				}
