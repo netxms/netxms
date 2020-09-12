@@ -17,9 +17,7 @@ import org.netxms.agent.android.helpers.SharedPrefs;
 import org.netxms.agent.android.helpers.TimeHelper;
 import org.netxms.agent.android.main.activities.HomeScreen;
 import org.netxms.agent.android.receivers.AlarmIntentReceiver;
-import org.netxms.agent.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.base.GeoLocation;
-import org.netxms.base.Logger;
 import org.netxms.mobile.agent.MobileAgentException;
 import org.netxms.mobile.agent.Session;
 
@@ -150,7 +148,6 @@ public class AgentConnectorService extends Service implements LocationListener
         else
             SharedPrefs.writeBoolean(sp, PERMISSIONS_GRANTED, true);
 
-		Logger.setLoggingFacility(new AndroidLoggingFacility());
 		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		configure();
