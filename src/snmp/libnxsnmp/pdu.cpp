@@ -1306,6 +1306,8 @@ void SNMP_PDU::signMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *secur
       case SNMP_AUTH_SHA512:
          CalculateMessageHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Finish, SHA512_DIGEST_SIZE, 128>(msg, msgLen, hashPos, signatureSize, securityContext, hash);
          break;
+      default:
+         break;
    }
 
 	// Update message hash
