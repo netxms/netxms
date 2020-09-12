@@ -275,6 +275,8 @@ void SNMP_SecurityContext::recalculateKeys()
          GenerateUserKey<SHA512HashForPattern, CalculateSHA512Hash, SHA512_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
          GenerateUserKey<SHA512HashForPattern, CalculateSHA512Hash, SHA512_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
          break;
+      default:
+         break;
 	}
 
 	m_validKeys = true;
