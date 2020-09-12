@@ -3970,7 +3970,13 @@ bool Node::confPollAgent(UINT32 rqId)
    }
    else
    {
-      if (!m_ipAddress.isValidUnicast())
+      if (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)
+      {
+         sendPollerMsg(rqId, POLLER_ERROR _T("   Direct agent connection is disabled and there are no active tunnels\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): direct agent connection is disabled and there are no active tunnels"), m_name);
+         return false;
+      }
+      if (!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback()))
       {
          sendPollerMsg(rqId, POLLER_ERROR _T("   Node primary IP is invalid and there are no active tunnels\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
@@ -3983,7 +3989,7 @@ bool Node::confPollAgent(UINT32 rqId)
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
    // Try to connect to agent
-   UINT32 rcc;
+   uint32_t rcc;
    if (!pAgentConn->connect(g_pServerKey, &rcc))
    {
       // If there are authentication problem, try default shared secret
