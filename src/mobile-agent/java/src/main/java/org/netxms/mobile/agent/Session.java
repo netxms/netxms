@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import java.security.GeneralSecurityException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.netxms.base.EncryptionContext;
 import org.netxms.base.GeoLocation;
-import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
@@ -36,12 +35,16 @@ import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.VersionInfo;
 import org.netxms.mobile.agent.constants.RCC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Communication session with NetXMS server.
  */
 public class Session
 {
+   public static final Logger logger = LoggerFactory.getLogger(Session.class);
+
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4747;
 	public static final int PROTOCOL_VERSION = 1;
@@ -89,7 +92,7 @@ public class Session
 			response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
 			response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
 			response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
-         Logger.debug("Session.setupEncryption", "Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
+         logger.debug("Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
 		}
 		catch(Exception e)
 		{
@@ -351,7 +354,7 @@ public class Session
 	 */
 	public void connect() throws IOException, UnknownHostException, MobileAgentException
 	{
-		Logger.info("Session.connect", "Connecting to " + connAddress + ":" + connPort);
+      logger.info("Connecting to " + connAddress + ":" + connPort);
 		try
 		{
 			connSocket = new Socket(connAddress, connPort);
@@ -359,14 +362,15 @@ public class Session
 			recvThread = new ReceiverThread();
 
 			// get server information
-			Logger.debug("Session.connect", "connection established, retrieving server info");
+         logger.debug("Connection established, retrieving server info");
 			NXCPMessage request = newMessage(NXCPCodes.CMD_GET_SERVER_INFO);
 			sendMessage(request);
 			NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 
 			if (response.getFieldAsInt32(NXCPCodes.VID_PROTOCOL_VERSION) != PROTOCOL_VERSION)
 			{
-				Logger.warning("Session.connect", "connection failed, server protocol version is " + response.getFieldAsInt32(NXCPCodes.VID_PROTOCOL_VERSION));
+            logger.warn(
+                  "Connection failed, server protocol version is " + response.getFieldAsInt32(NXCPCodes.VID_PROTOCOL_VERSION));
 				throw new MobileAgentException(RCC.BAD_PROTOCOL);
 			}
 			
@@ -382,7 +386,7 @@ public class Session
 			}
 
 			// Login to server
-			Logger.debug("Session.connect", "Connected to server version " + serverVersion + ", trying to login");
+         logger.debug("Connected to server version " + serverVersion + ", trying to login");
 			request = newMessage(NXCPCodes.CMD_LOGIN);
 			request.setField(NXCPCodes.VID_DEVICE_ID, connDeviceId);
 			request.setField(NXCPCodes.VID_LOGIN_NAME, connLoginName);
@@ -392,14 +396,14 @@ public class Session
 			sendMessage(request);
 			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
 			int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
-			Logger.debug("Session.connect", "CMD_LOGIN_RESP received, RCC=" + rcc);
+         logger.debug("CMD_LOGIN_RESP received, RCC=" + rcc);
 			if (rcc != RCC.SUCCESS)
 			{
-				Logger.warning("NXCSession.connect", "Login failed, RCC=" + rcc);
+            logger.warn("Login failed, RCC=" + rcc);
 				throw new MobileAgentException(rcc);
 			}
 
-			Logger.info("Session.connect", "succesfully connected and logged in");
+         logger.info("Succesfully connected and logged in");
 			isConnected = true;
 		}
 		finally
