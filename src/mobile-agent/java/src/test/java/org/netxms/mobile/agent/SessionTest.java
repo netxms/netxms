@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
  */
 package org.netxms.mobile.agent;
 
-import org.netxms.base.Logger;
-import org.netxms.base.LoggingFacility;
 import junit.framework.TestCase;
 
 /**
@@ -33,14 +31,6 @@ public class SessionTest extends TestCase
 {
 	protected Session connect(boolean useEncryption) throws Exception
 	{
-	   Logger.setLoggingFacility(new LoggingFacility() {       
-         @Override
-         public void writeLog(int level, String tag, String message, Throwable t)
-         {
-            System.out.println("[" + tag + "] " + message);
-         }
-      });
-	   
 		Session session = new Session(TestConstants.serverAddress, TestConstants.serverPort, TestConstants.DEVICE_ID, TestConstants.loginName, TestConstants.password, useEncryption);
 		session.connect();
 		return session;
