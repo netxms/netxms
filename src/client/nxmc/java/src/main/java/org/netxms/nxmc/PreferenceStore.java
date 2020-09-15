@@ -27,11 +27,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.Set;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.netxms.nxmc.services.PreferenceInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +42,8 @@ import org.slf4j.LoggerFactory;
  */
 public class PreferenceStore
 {
+   private static final Logger logger = LoggerFactory.getLogger(PreferenceStore.class);
+   private static final RGB DEFAULT_COLOR = new RGB(0, 0, 0);
    private static PreferenceStore instance = null;
 
    /**
@@ -48,6 +52,19 @@ public class PreferenceStore
    protected static void open(String stateDir)
    {
       instance = new PreferenceStore(new File(stateDir + File.separator + "nxmc.preferences"));
+      ServiceLoader<PreferenceInitializer> loader = ServiceLoader.load(PreferenceInitializer.class);
+      for(PreferenceInitializer pi : loader)
+      {
+         logger.debug("Calling preference initializer " + pi.toString());
+         try
+         {
+            pi.initializeDefaultPreferences(instance);
+         }
+         catch(Exception e)
+         {
+            logger.error("Exception in preference initializer", e);
+         }
+      }
    }
 
    /**
@@ -62,8 +79,8 @@ public class PreferenceStore
 
    private File storeFile;
    private Properties properties;
+   private Properties defaultValues;
    private Set<IPropertyChangeListener> changeListeners = new HashSet<IPropertyChangeListener>();
-   private Logger logger = LoggerFactory.getLogger(PreferenceStore.class);
 
    /**
     * Default constructor
@@ -71,7 +88,8 @@ public class PreferenceStore
    private PreferenceStore(File storeFile)
    {
       this.storeFile = storeFile;
-      properties = new Properties();
+      defaultValues = new Properties();
+      properties = new Properties(defaultValues);
       if (storeFile.exists())
       {
          FileReader reader = null;
@@ -351,6 +369,18 @@ public class PreferenceStore
    }
 
    /**
+    * Get property as color definition.
+    * 
+    * @param name property name
+    * @param defaultValue default value to be returned if property does not exist or cannot be parsed.
+    * @return property value as color definition or default value
+    */
+   public RGB getAsColor(String name)
+   {
+      return getAsColor(name, DEFAULT_COLOR);
+   }
+
+   /**
     * Set property.
     * 
     * @param name property name
@@ -433,5 +463,85 @@ public class PreferenceStore
    public void set(String name, RGB value)
    {
       set(name, Integer.toString(value.red) + "," + Integer.toString(value.green) + "," + Integer.toString(value.blue));
+   }
+
+   /**
+    * Set property default value.
+    *
+    * @param name property name
+    * @param value default value
+    */
+   public void setDefault(String name, String value)
+   {
+      defaultValues.setProperty(name, value);
+   }
+
+   /**
+    * Set property default value.
+    *
+    * @param name property name
+    * @param value default value
+    */
+   public void setDefault(String name, boolean value)
+   {
+      setDefault(name, Boolean.toString(value));
+   }
+
+   /**
+    * Set property default value.
+    *
+    * @param name property name
+    * @param value default value
+    */
+   public void setDefault(String name, int value)
+   {
+      setDefault(name, Integer.toString(value));
+   }
+
+   /**
+    * Set property default value.
+    *
+    * @param name property name
+    * @param value default value
+    */
+   public void setDefault(String name, long value)
+   {
+      setDefault(name, Long.toString(value));
+   }
+
+   /**
+    * Set property default value.
+    *
+    * @param name property name
+    * @param value default value
+    */
+   public void setDefault(String name, Point value)
+   {
+      setDefault(name, Integer.toString(value.x) + "," + Integer.toString(value.y));
+   }
+
+   /**
+    * Set property default value.
+    *
+    * @param name property name
+    * @param value default value
+    */
+   public void setDefault(String name, Collection<String> value)
+   {
+      defaultValues.setProperty(name + ".Count", Integer.toString(value.size()));
+      int index = 0;
+      for(String s : value)
+         defaultValues.setProperty(name + "." + Integer.toString(index), s);
+   }
+
+   /**
+    * Set property default value.
+    *
+    * @param name property name
+    * @param value default value
+    */
+   public void setDefault(String name, RGB value)
+   {
+      setDefault(name, Integer.toString(value.red) + "," + Integer.toString(value.green) + "," + Integer.toString(value.blue));
    }
 }
