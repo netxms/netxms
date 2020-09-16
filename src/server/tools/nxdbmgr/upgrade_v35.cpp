@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 35.15 to 35.16
+ */
+static bool H_UpgradeFromV15()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET event_name='SNMP_TRAP_FLOOD_ENDED' WHERE event_code=110")));
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade form 35.14 to 35.15
  */
 static bool H_UpgradeFromV14()
@@ -141,7 +151,7 @@ static bool H_UpgradeFromV8()
             _T("   2) Duration\r\n")
             _T("   3) Threshold")
             ));
-   CHK_EXEC(CreateEventTemplate(EVENT_SNMP_TRAP_FLOOD_ENDED, _T("SNMP_TRAP_FLOOD_DETECTED"),
+   CHK_EXEC(CreateEventTemplate(EVENT_SNMP_TRAP_FLOOD_ENDED, _T("SNMP_TRAP_FLOOD_ENDED"),
             SEVERITY_NORMAL, EF_LOG, _T("f2c41199-9338-4c9a-9528-d65835c6c271"),
             _T("SNMP trap flood ended"),
             _T("Generated after SNMP trap flood state is cleared.\r\n")
@@ -419,6 +429,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 15, 35, 16, H_UpgradeFromV15 },
    { 14, 35, 15, H_UpgradeFromV14 },
    { 13, 35, 14, H_UpgradeFromV13 },
    { 12, 35, 13, H_UpgradeFromV12 },
