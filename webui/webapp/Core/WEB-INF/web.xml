@@ -32,13 +32,20 @@
   </servlet-mapping>
 
   <filter>
-	<filter-name>security-filter</filter-name>
-	<filter-class>org.netxms.webui.filters.SecurityFilter</filter-class>
+    <filter-name>security-filter</filter-name>
+    <filter-class>org.netxms.webui.filters.SecurityFilter</filter-class>
   </filter>
 
   <filter-mapping>
-	<filter-name>security-filter</filter-name>
-	<url-pattern>/*</url-pattern>
+    <filter-name>security-filter</filter-name>
+    <url-pattern>/*</url-pattern>
   </filter-mapping>
+
+  <session-config>
+    <cookie-config>
+      <http-only>true</http-only>
+      <secure>true</secure>
+    </cookie-config>
+  </session-config>
 
 </web-app>
