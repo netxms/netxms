@@ -3898,7 +3898,6 @@ bool Node::confPollAgent(UINT32 rqId)
          }
          DBConnectionPoolReleaseConnection(hdb);
 
-
          for(int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
          {
             pAgentConn->setSharedSecret(secrets.get(i));
