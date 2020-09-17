@@ -1381,6 +1381,7 @@ typedef struct
 #define VID_USE_TEXT_PARSING        ((UINT32)709)
 #define VID_SYSLOG_PROXY            ((UINT32)710)
 #define VID_CIP_VENDOR_CODE         ((UINT32)711)
+#define VID_NAME_ON_MAP             ((UINT32)712)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

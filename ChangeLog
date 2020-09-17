@@ -3,6 +3,8 @@
 *
 
 - New instance discovery method "internal table"
+- Fixed issues:
+	NX-1911 (Separate object name for use on maps)
 
 
 *

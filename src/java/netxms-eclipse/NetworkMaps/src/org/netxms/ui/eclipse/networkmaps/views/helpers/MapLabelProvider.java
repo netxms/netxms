@@ -176,27 +176,23 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		dciValueProvider = LinkDciValueProvider.getInstance();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+    */
 	@Override
 	public String getText(Object element)
 	{
 		if (element instanceof NetworkMapObject)
 		{
 			AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
-			return (object != null) ? object.getObjectName() : null;
+         return (object != null) ? object.getNameOnMap() : null;
 		}
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
+    */
 	@Override
 	public Image getImage(Object element)
 	{
@@ -262,12 +258,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.gef4.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
+    */
 	@Override
 	public IFigure getFigure(Object element)
 	{

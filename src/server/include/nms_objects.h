@@ -876,6 +876,7 @@ protected:
    time_t m_timestamp;           // Last change time stamp
    SharedString m_alias;         // Object's alias
    SharedString m_comments;      // User comments
+   SharedString m_nameOnMap;     // Object's name on network map
    int m_status;
    int m_savedStatus;            // Object status in database
    int m_statusCalcAlg;          // Status calculation algorithm
@@ -986,6 +987,7 @@ public:
    time_t getTimeStamp() const { return m_timestamp; }
    SharedString getAlias() const { return GetAttributeWithLock(m_alias, m_mutexProperties); }
 	SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutexProperties); }
+   SharedString getNameOnMap() const { return GetAttributeWithLock(m_nameOnMap, m_mutexProperties); }
 
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
 	void setGeoLocation(const GeoLocation& geoLocation);
@@ -1041,6 +1043,7 @@ public:
    void resetStatus() { lockProperties(); m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); unlockProperties(); }
    void setAlias(const TCHAR *alias);
    void setComments(const TCHAR *comments);
+   void setNameOnMap(const TCHAR *name);
    void setCreationTime() { m_creationTime = time(nullptr); }
    time_t getCreationTime() { return m_creationTime; }
 
@@ -4341,7 +4344,7 @@ StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId);
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
 
-bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass);
+bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass);
 
 void DeleteUserFromAllObjects(UINT32 dwUserId);
 

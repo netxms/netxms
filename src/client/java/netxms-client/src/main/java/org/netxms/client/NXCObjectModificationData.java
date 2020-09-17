@@ -142,13 +142,15 @@ public class NXCObjectModificationData
    public static final int CHASSIS_PLACEMENT      = 84;
    public static final int ETHERNET_IP_PORT       = 85;
    public static final int ETHERNET_IP_PROXY      = 86;
-   public static final int ALIAS = 87;
+   public static final int ALIAS                  = 87;
+   public static final int NAME_ON_MAP            = 88;
 
    private Set<Integer> fieldSet;
    private long objectId;
    private String name;
    private String primaryName;
    private String alias;
+   private String nameOnMap;
    private AccessListElement[] acl;
    private boolean inheritAccessRights;
    private Map<String, CustomAttribute> customAttributes;
@@ -316,6 +318,27 @@ public class NXCObjectModificationData
    {
       this.alias = alias;
       fieldSet.add(ALIAS);
+   }
+
+   /**
+    * Get object's name on network map.
+    *
+    * @return object's name on network map
+    */
+   public String getNameOnMap()
+   {
+      return nameOnMap;
+   }
+
+   /**
+    * Set object's name on network map. Set to empty string to use object's name.
+    *
+    * @param name new object's name on network map
+    */
+   public void setNameOnMap(String name)
+   {
+      this.nameOnMap = name;
+      fieldSet.add(NAME_ON_MAP);
    }
 
    /**

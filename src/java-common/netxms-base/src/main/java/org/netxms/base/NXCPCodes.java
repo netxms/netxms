@@ -1151,6 +1151,7 @@ public class NXCPCodes
    public static final long VID_USE_TEXT_PARSING = 709;
    public static final long VID_SYSLOG_PROXY = 710;
    public static final long VID_CIP_VENDOR_CODE = 711;   
+   public static final long VID_NAME_ON_MAP = 712;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

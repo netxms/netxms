@@ -383,8 +383,8 @@ public:
  */
 typedef struct
 {
-   UINT32 dwUserId;
-   UINT32 dwAccessRights;
+   uint32_t userId;
+   uint32_t accessRights;
 } ACL_ELEMENT;
 
 /**
@@ -401,16 +401,20 @@ public:
    AccessList();
    ~AccessList();
 
-   bool getUserRights(UINT32 dwUserId, UINT32 *pdwAccessRights);
-   void addElement(UINT32 dwUserId, UINT32 dwAccessRights);
-   bool deleteElement(UINT32 dwUserId);
+   bool getUserRights(uint32_t userId, uint32_t *accessRights) const;
+   void addElement(uint32_t userId, uint32_t accessRights);
+   bool deleteElement(uint32_t userId);
    void deleteAll();
 
-   void enumerateElements(void (* pHandler)(UINT32, UINT32, void *), void *pArg);
+   void enumerateElements(void (*handler)(uint32_t, uint32_t, void*), void *context) const;
+   template<typename C> void enumerateElements(void (*handler)(uint32_t, uint32_t, C*), C *context) const
+   {
+      enumerateElements(reinterpret_cast<void (*)(uint32_t, uint32_t, void*)>(handler), context);
+   }
 
-   void fillMessage(NXCPMessage *pMsg);
+   void fillMessage(NXCPMessage *msg) const;
 
-   json_t *toJson();
+   json_t *toJson() const;
 };
 
 /**

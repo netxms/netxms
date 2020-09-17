@@ -180,20 +180,11 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Parameters for DeleteModuleDataCallback and SaveModuleDataCallback
- */
-struct ModuleDataDatabaseCallbackParams
-{
-   UINT32 id;
-   DB_HANDLE hdb;
-};
-
-/**
  * Callback for deleting module data from database
  */
-static EnumerationCallbackResult SaveModuleRuntimeDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveModuleRuntimeDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, DB_HANDLE> *context)
 {
-   return ((ModuleData *)value)->saveRuntimeData(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id) ? _CONTINUE : _STOP;
+   return const_cast<ModuleData*>(value)->saveRuntimeData(context->second, context->first) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -224,12 +215,10 @@ bool NetObj::saveRuntimeData(DB_HANDLE hdb)
    }
 
    // Save module data
-   if (success && (m_moduleData != NULL))
+   if (success && (m_moduleData != nullptr))
    {
-      ModuleDataDatabaseCallbackParams data;
-      data.id = m_id;
-      data.hdb = hdb;
-      success = (m_moduleData->forEach(SaveModuleRuntimeDataCallback, &data) == _CONTINUE);
+      std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
+      success = (m_moduleData->forEach(SaveModuleRuntimeDataCallback, &context) == _CONTINUE);
    }
 
    return success;
@@ -238,9 +227,9 @@ bool NetObj::saveRuntimeData(DB_HANDLE hdb)
 /**
  * Callback for deleting module data from database
  */
-static EnumerationCallbackResult DeleteModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult DeleteModuleDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, DB_HANDLE> *context)
 {
-   return ((ModuleData *)value)->deleteFromDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id) ? _CONTINUE : _STOP;
+   return const_cast<ModuleData*>(value)->deleteFromDatabase(context->second, context->first) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -277,12 +266,10 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
    }
 
    // Delete module data
-   if (success && (m_moduleData != NULL))
+   if (success && (m_moduleData != nullptr))
    {
-      ModuleDataDatabaseCallbackParams data;
-      data.id = m_id;
-      data.hdb = hdb;
-      success = (m_moduleData->forEach(DeleteModuleDataCallback, &data) == _CONTINUE);
+      std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
+      success = (m_moduleData->forEach(DeleteModuleDataCallback, &context) == _CONTINUE);
    }
 
    // Delete responsible users
@@ -303,21 +290,17 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 
    // Load access options
 	DB_STATEMENT hStmt = DBPrepare(hdb,
-	                          _T("SELECT name,status,is_deleted,")
-                             _T("inherit_access_rights,last_modified,status_calc_alg,")
-                             _T("status_prop_alg,status_fixed_val,status_shift,")
-                             _T("status_translation,status_single_threshold,")
-                             _T("status_thresholds,comments,is_system,")
-									  _T("location_type,latitude,longitude,location_accuracy,")
-									  _T("location_timestamp,guid,image,submap_id,country,city,")
-                             _T("street_address,postcode,maint_event_id,state_before_maint,")
-                             _T("maint_initiator,state,flags,creation_time,alias FROM object_properties ")
-                             _T("WHERE object_id=?"));
-	if (hStmt != NULL)
+         _T("SELECT name,status,is_deleted,inherit_access_rights,last_modified,status_calc_alg,")
+         _T("status_prop_alg,status_fixed_val,status_shift,status_translation,status_single_threshold,")
+         _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
+         _T("location_timestamp,guid,image,submap_id,country,city,street_address,postcode,maint_event_id,")
+         _T("state_before_maint,maint_initiator,state,flags,creation_time,alias,name_on_map ")
+         _T("FROM object_properties WHERE object_id=?"));
+	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			if (DBGetNumRows(hResult) > 0)
 			{
@@ -371,6 +354,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             m_flags = DBGetFieldULong(hResult, 0, 30);
             m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 31));
             m_alias = DBGetFieldAsSharedString(hResult, 0, 32);
+            m_nameOnMap = DBGetFieldAsSharedString(hResult, 0, 33);
 
 				success = true;
 			}
@@ -512,9 +496,9 @@ static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const C
 /**
  * Callback for saving module data in database
  */
-static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, DB_HANDLE> *context)
 {
-   return ((ModuleData *)value)->saveToDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id) ? _CONTINUE : _STOP;
+   return const_cast<ModuleData*>(value)->saveToDatabase(context->second, context->first) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -525,10 +509,8 @@ bool NetObj::saveModuleData(DB_HANDLE hdb)
    if (!(m_modified & MODIFY_MODULE_DATA) || (m_moduleData == nullptr))
       return true;
 
-   ModuleDataDatabaseCallbackParams data;
-   data.id = m_id;
-   data.hdb = hdb;
-   return m_moduleData->forEach(SaveModuleDataCallback, &data) == _CONTINUE;
+   std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
+   return m_moduleData->forEach(SaveModuleDataCallback, &context) == _CONTINUE;
 }
 
 /**
@@ -568,7 +550,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
       _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("image"), _T("submap_id"), _T("country"), _T("city"),
       _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
-      _T("creation_time"), _T("maint_initiator"), _T("alias"), nullptr
+      _T("creation_time"), _T("maint_initiator"), _T("alias"), _T("name_on_map"), nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -617,7 +599,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)m_creationTime);
    DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
    DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
-	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
+	DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_id);
 
    success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1106,24 +1089,14 @@ bool NetObj::loadACLFromDB(DB_HANDLE hdb)
 }
 
 /**
- * ACL enumeration parameters structure
- */
-struct SAVE_PARAM
-{
-   DB_HANDLE hdb;
-   UINT32 dwObjectId;
-};
-
-/**
  * Handler for ACL elements enumeration
  */
-static void EnumerationHandler(UINT32 dwUserId, UINT32 dwAccessRights, void *pArg)
+static void EnumerationHandler(uint32_t userId, uint32_t accessRights, std::pair<uint32_t, DB_HANDLE> *context)
 {
-   TCHAR szQuery[256];
-
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO acl (object_id,user_id,access_rights) VALUES (%d,%d,%d)"),
-           ((SAVE_PARAM *)pArg)->dwObjectId, dwUserId, dwAccessRights);
-   DBQuery(((SAVE_PARAM *)pArg)->hdb, szQuery);
+   TCHAR query[256];
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO acl (object_id,user_id,access_rights) VALUES (%u,%u,%u)"),
+            context->first, userId, accessRights);
+   DBQuery(context->second, query);
 }
 
 /**
@@ -1137,34 +1110,22 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM acl WHERE object_id=?"));
    if (success)
    {
-      SAVE_PARAM sp;
-      sp.dwObjectId = m_id;
-      sp.hdb = hdb;
-
+      std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
       lockACL();
-      m_accessList->enumerateElements(EnumerationHandler, &sp);
+      m_accessList->enumerateElements(EnumerationHandler, &context);
       unlockACL();
    }
    return success;
 }
 
 /**
- * Data for SendModuleDataCallback
- */
-struct SendModuleDataCallbackData
-{
-   NXCPMessage *msg;
-   UINT32 id;
-};
-
-/**
  * Callback for sending module data in NXCP message
  */
-static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, NXCPMessage*> *context)
 {
-   ((SendModuleDataCallbackData *)data)->msg->setField(((SendModuleDataCallbackData *)data)->id, key);
-   ((ModuleData *)value)->fillMessage(((SendModuleDataCallbackData *)data)->msg, ((SendModuleDataCallbackData *)data)->id + 1);
-   ((SendModuleDataCallbackData *)data)->id += 0x100000;
+   context->second->setField(context->first, key);
+   const_cast<ModuleData*>(value)->fillMessage(context->second, context->first + 1);
+   context->first += 0x100000;
    return _CONTINUE;
 }
 
@@ -1192,6 +1153,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 	pMsg->setField(VID_GUID, m_guid);
    pMsg->setField(VID_OBJECT_NAME, m_name);
    pMsg->setField(VID_ALIAS, m_alias);
+   pMsg->setField(VID_NAME_ON_MAP, m_nameOnMap);
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_status);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
@@ -1253,13 +1215,11 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       fieldId += 7;
    }
 
-   if (m_moduleData != NULL)
+   if (m_moduleData != nullptr)
    {
       pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
-      SendModuleDataCallbackData data;
-      data.msg = pMsg;
-      data.id = VID_MODULE_DATA_BASE;
-      m_moduleData->forEach(SendModuleDataCallback, &data);
+      std::pair<uint32_t, NXCPMessage*> context(VID_MODULE_DATA_BASE, pMsg);
+      m_moduleData->forEach(SendModuleDataCallback, &context);
    }
    else
    {
@@ -1369,9 +1329,10 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
    if (pRequest->isFieldExist(VID_ALIAS))
-   {
       m_alias = pRequest->getFieldAsSharedString(VID_ALIAS);
-   }
+
+   if (pRequest->isFieldExist(VID_NAME_ON_MAP))
+      m_nameOnMap = pRequest->getFieldAsSharedString(VID_NAME_ON_MAP);
 
    // Change object's status calculation/propagation algorithms
    if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
@@ -1804,6 +1765,17 @@ void NetObj::setAlias(const TCHAR *alias)
 {
    lockProperties();
    m_alias = alias;
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Set object's name on map
+ */
+void NetObj::setNameOnMap(const TCHAR *name)
+{
+   lockProperties();
+   m_nameOnMap = name;
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }

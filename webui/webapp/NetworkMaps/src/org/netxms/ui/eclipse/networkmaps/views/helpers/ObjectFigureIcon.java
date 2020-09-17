@@ -51,7 +51,7 @@ public class ObjectFigureIcon extends ObjectFigure
 		super(element, labelProvider);
 		
 		setLayoutManager(new BorderLayout());
-   	label = new Label(object.getObjectName());
+      label = new Label(object.getNameOnMap());
    	label.setFont(labelProvider.getLabelFont());
    	label.setLabelAlignment(PositionConstants.CENTER);
    	add(label, BorderLayout.BOTTOM);

@@ -5482,6 +5482,12 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_ALIAS, data.getAlias());
       }
 
+      // Object name on network map
+      if (data.isFieldSet(NXCObjectModificationData.NAME_ON_MAP))
+      {
+         msg.setField(NXCPCodes.VID_NAME_ON_MAP, data.getNameOnMap());
+      }
+
       // Primary IP
       if (data.isFieldSet(NXCObjectModificationData.PRIMARY_IP))
       {
