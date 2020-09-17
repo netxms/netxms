@@ -497,10 +497,21 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
             static_cast<Sensor*>(dataSourceObject)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
          break;
       case IDM_AGENT_TABLE:
+      case IDM_INTERNAL_TABLE:
          if (dataSourceObject->getObjectClass() == OBJECT_NODE)
-            static_cast<Node*>(dataSourceObject)->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+         {
+            if (dco->getInstanceDiscoveryMethod() == IDM_AGENT_TABLE)
+               static_cast<Node*>(dataSourceObject)->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+            else
+               static_cast<Node*>(dataSourceObject)->getInternalTable(dco->getInstanceDiscoveryData(), &instanceTable);
+         }
          else if (dataSourceObject->getObjectClass() == OBJECT_SENSOR)
-            static_cast<Sensor*>(dataSourceObject)->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+         {
+            if (dco->getInstanceDiscoveryMethod() == IDM_AGENT_TABLE)
+               static_cast<Sensor*>(dataSourceObject)->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+            else
+               static_cast<Sensor*>(dataSourceObject)->getInternalTable(dco->getInstanceDiscoveryData(), &instanceTable);
+         }
          if (instanceTable != nullptr)
          {
             TCHAR buffer[1024];

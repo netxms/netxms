@@ -50,7 +50,7 @@ public abstract class DataCollectionObject
    public static final int DCF_CACHE_MODE_MASK          = 0x3000;
    public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x4000;
    public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x8000;
-   
+
    // Instance discovery methods
    public static final int IDM_NONE = 0;
    public static final int IDM_AGENT_LIST = 1;
@@ -60,17 +60,18 @@ public abstract class DataCollectionObject
    public static final int IDM_SCRIPT = 5;
    public static final int IDM_WINPERF = 6;
    public static final int IDM_WEB_SERVICE = 7;
-   
+   public static final int IDM_INTERNAL_TABLE = 8;
+
    // Polling schedule types
    public static final int POLLING_SCHEDULE_DEFAULT  = 0;
    public static final int POLLING_SCHEDULE_CUSTOM   = 1;
    public static final int POLLING_SCHEDULE_ADVANCED = 2;
-   
+
    // Retention types
    public static final int RETENTION_DEFAULT = 0;
    public static final int RETENTION_CUSTOM  = 1;
    public static final int RETENTION_NONE    = 2;
-	
+
    @Internal
 	protected DataCollectionConfiguration owner;
 
