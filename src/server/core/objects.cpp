@@ -2587,12 +2587,12 @@ struct CreateObjectAccessSnapshot_CallbackData
 static void CreateObjectAccessSnapshot_Callback(NetObj *object, void *arg)
 {
    CreateObjectAccessSnapshot_CallbackData *data = (CreateObjectAccessSnapshot_CallbackData *)arg;
-   UINT32 accessRights = object->getUserRights(data->userId);
+   uint32_t accessRights = object->getUserRights(data->userId);
    if (accessRights != 0)
    {
       ACL_ELEMENT e;
-      e.dwUserId = object->getId();
-      e.dwAccessRights = accessRights;
+      e.userId = object->getId();
+      e.accessRights = accessRights;
       data->accessList->add(&e);
    }
 }
@@ -2600,7 +2600,7 @@ static void CreateObjectAccessSnapshot_Callback(NetObj *object, void *arg)
 /**
  * Create access snapshot for given user and object class
  */
-bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
+bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass)
 {
    ObjectIndex *index;
    switch(objClass)
@@ -2647,8 +2647,9 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
             for(int i = 0; (i < accessList.size()) && success; i++)
             {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, accessList.get(i)->dwUserId);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, accessList.get(i)->dwAccessRights);
+               auto e = accessList.get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->userId);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, e->accessRights);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);

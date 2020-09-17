@@ -127,6 +127,7 @@ public abstract class AbstractObject
 	protected UUID guid;
 	protected String objectName;
    protected String alias;
+   protected String nameOnMap;
 	protected int objectClass;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
@@ -212,6 +213,7 @@ public abstract class AbstractObject
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		objectName = msg.getFieldAsString(NXCPCodes.VID_OBJECT_NAME);
       alias = msg.getFieldAsString(NXCPCodes.VID_ALIAS);
+      nameOnMap = msg.getFieldAsString(NXCPCodes.VID_NAME_ON_MAP);
 		objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
@@ -421,11 +423,33 @@ public abstract class AbstractObject
 	}
 
    /**
-    * @return the alias
+    * Get object's alias.
+    *
+    * @return object's alias
     */
    public String getAlias()
    {
       return (alias != null) ? alias : "";
+   }
+
+   /**
+    * Get object's name on network map. If not set (empty or null) then object's name will be returned.
+    *
+    * @return object's name on network map
+    */
+   public String getNameOnMap()
+   {
+      return ((nameOnMap != null) && !nameOnMap.isEmpty()) ? nameOnMap : objectName;
+   }
+
+   /**
+    * Get object's name on network map as it is configured.
+    *
+    * @return object's name on network map as configured
+    */
+   public String getConfiguredNameOnMap()
+   {
+      return (nameOnMap != null) ? nameOnMap : "";
    }
 
    /**

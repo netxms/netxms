@@ -49,7 +49,7 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 
 		setLayoutManager(new BorderLayout());
 		
-		label = new Label(object.getObjectName());
+      label = new Label(object.getNameOnMap());
 		label.setFont(labelProvider.getLabelFont());
 		label.setLabelAlignment(PositionConstants.CENTER);
 		label.setIcon(labelProvider.getWorkbenchIcon(object));

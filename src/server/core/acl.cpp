@@ -43,14 +43,14 @@ AccessList::~AccessList()
 /**
  * Add element to list
  */
-void AccessList::addElement(UINT32 dwUserId, UINT32 dwAccessRights)
+void AccessList::addElement(uint32_t userId, uint32_t accessRights)
 {
    int i;
 
    for(i = 0; i < m_size; i++)
-      if (m_elements[i].dwUserId == dwUserId)    // Object already exist in list
+      if (m_elements[i].userId == userId)    // Object already exist in list
       {
-         m_elements[i].dwAccessRights = dwAccessRights;
+         m_elements[i].accessRights = accessRights;
          break;
       }
 
@@ -61,8 +61,8 @@ void AccessList::addElement(UINT32 dwUserId, UINT32 dwAccessRights)
          m_allocated += 16;
          m_elements = MemReallocArray(m_elements, m_allocated);
       }
-      m_elements[m_size].dwUserId = dwUserId;
-      m_elements[m_size].dwAccessRights = dwAccessRights;
+      m_elements[m_size].userId = userId;
+      m_elements[m_size].accessRights = accessRights;
       m_size++;
    }
 }
@@ -70,11 +70,11 @@ void AccessList::addElement(UINT32 dwUserId, UINT32 dwAccessRights)
 /**
  * Delete element from list
  */
-bool AccessList::deleteElement(UINT32 dwUserId)
+bool AccessList::deleteElement(uint32_t userId)
 {
    bool deleted = false;
    for(int i = 0; i < m_size; i++)
-      if (m_elements[i].dwUserId == dwUserId)
+      if (m_elements[i].userId == userId)
       {
          m_size--;
          memmove(&m_elements[i], &m_elements[i + 1], sizeof(ACL_ELEMENT) * (m_size - i));
@@ -89,16 +89,16 @@ bool AccessList::deleteElement(UINT32 dwUserId)
  * Returns true on success and stores access rights to specific location
  * If user doesn't have explicit rights or via group, returns false
  */
-bool AccessList::getUserRights(UINT32 dwUserId, UINT32 *pdwAccessRights)
+bool AccessList::getUserRights(uint32_t userId, uint32_t *pdwAccessRights) const
 {
    int i;
    bool found = false;
 
    // Check for explicit rights
    for(i = 0; i < m_size; i++)
-      if (m_elements[i].dwUserId == dwUserId)
+      if (m_elements[i].userId == userId)
       {
-         *pdwAccessRights = m_elements[i].dwAccessRights;
+         *pdwAccessRights = m_elements[i].accessRights;
          found = true;
          break;
       }
@@ -107,11 +107,11 @@ bool AccessList::getUserRights(UINT32 dwUserId, UINT32 *pdwAccessRights)
    {
       *pdwAccessRights = 0;   // Default: no access
       for(i = 0; i < m_size; i++)
-         if (m_elements[i].dwUserId & GROUP_FLAG)
+         if (m_elements[i].userId & GROUP_FLAG)
          {
-            if (CheckUserMembership(dwUserId, m_elements[i].dwUserId))
+            if (CheckUserMembership(userId, m_elements[i].userId))
             {
-               *pdwAccessRights |= m_elements[i].dwAccessRights;
+               *pdwAccessRights |= m_elements[i].accessRights;
                found = true;
             }
          }
@@ -123,39 +123,39 @@ bool AccessList::getUserRights(UINT32 dwUserId, UINT32 *pdwAccessRights)
 /**
  * Enumerate all elements
  */
-void AccessList::enumerateElements(void (* pHandler)(UINT32, UINT32, void *), void *pArg)
+void AccessList::enumerateElements(void (*handler)(uint32_t, uint32_t, void *), void *context) const
 {
    for(int i = 0; i < m_size; i++)
-      pHandler(m_elements[i].dwUserId, m_elements[i].dwAccessRights, pArg);
+      handler(m_elements[i].userId, m_elements[i].accessRights, context);
 }
 
 /**
  * Fill NXCP message with ACL's data
  */
-void AccessList::fillMessage(NXCPMessage *pMsg)
+void AccessList::fillMessage(NXCPMessage *msg) const
 {
-   pMsg->setField(VID_ACL_SIZE, m_size);
+   msg->setField(VID_ACL_SIZE, m_size);
 
-   UINT32 dwId1, dwId2;
+   uint32_t id1, id2;
    int i;
-   for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE; i < m_size; i++, dwId1++, dwId2++)
+   for(i = 0, id1 = VID_ACL_USER_BASE, id2 = VID_ACL_RIGHTS_BASE; i < m_size; i++, id1++, id2++)
    {
-      pMsg->setField(dwId1, m_elements[i].dwUserId);
-      pMsg->setField(dwId2, m_elements[i].dwAccessRights);
+      msg->setField(id1, m_elements[i].userId);
+      msg->setField(id2, m_elements[i].accessRights);
    }
 }
 
 /**
  * Serialize as JSON
  */
-json_t *AccessList::toJson()
+json_t *AccessList::toJson() const
 {
    json_t *root = json_array();
    for(int i = 0; i < m_size; i++)
    {
       json_t *e = json_object();
-      json_object_set_new(e, "userId", json_integer(m_elements[i].dwUserId));
-      json_object_set_new(e, "access", json_integer(m_elements[i].dwAccessRights));
+      json_object_set_new(e, "userId", json_integer(m_elements[i].userId));
+      json_object_set_new(e, "access", json_integer(m_elements[i].accessRights));
       json_array_append_new(root, e);
    }
    return root;

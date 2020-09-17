@@ -35,6 +35,7 @@ bool MajorSchemaUpgrade_V32();
 bool MajorSchemaUpgrade_V33();
 bool MajorSchemaUpgrade_V34();
 bool MajorSchemaUpgrade_V35();
+bool MajorSchemaUpgrade_V36();
 bool MajorSchemaUpgrade_V40();
 
 /**
@@ -118,6 +119,7 @@ static struct
    { 33, MajorSchemaUpgrade_V33 },
    { 34, MajorSchemaUpgrade_V34 },
    { 35, MajorSchemaUpgrade_V35 },
+   { 36, MajorSchemaUpgrade_V36 },
    { 40, MajorSchemaUpgrade_V40 },
    { 0, nullptr }
 };
@@ -130,7 +132,7 @@ void UpgradeDatabase()
    _tprintf(_T("Upgrading database...\n"));
 
    // Get database format version
-   INT32 major, minor;
+   int32_t major, minor;
 	if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
 	{
       _tprintf(_T("Unable to determine database schema version\n"));

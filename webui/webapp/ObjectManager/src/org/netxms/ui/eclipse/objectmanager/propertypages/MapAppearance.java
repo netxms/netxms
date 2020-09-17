@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "Map Appearance" property page for NetMS objects 
@@ -45,20 +46,21 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class MapAppearance extends PropertyPage
 {
 	private AbstractObject object;
+   private LabeledText nameOnMap;
 	private ImageSelector image;
 	private ObjectSelector drillDownObject = null;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		Composite dialogArea = new Composite(parent, SWT.NONE);
+      Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
 		if (object == null)	// Paranoid check
-			return dialogArea;
+         return dialogArea;
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -66,10 +68,19 @@ public class MapAppearance extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
+      // Name on maps
+      nameOnMap = new LabeledText(dialogArea, SWT.NONE);
+      nameOnMap.setLabel("Name on network maps (leave empty to use normal object name)");
+      nameOnMap.setText(object.getConfiguredNameOnMap());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      nameOnMap.setLayoutData(gd);
+
       // Image
       image = new ImageSelector(dialogArea, SWT.NONE);
       image.setLabel(Messages.get().MapAppearance_Image);
-      GridData gd = new GridData();
+      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       image.setLayoutData(gd);
@@ -88,9 +99,9 @@ public class MapAppearance extends PropertyPage
 	      gd.grabExcessHorizontalSpace = true;
 	      drillDownObject.setLayoutData(gd);
       }
-		return dialogArea;
+      return dialogArea;
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -98,11 +109,12 @@ public class MapAppearance extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
+      if (isApply)
+         setValid(false);
 		
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
-		data.setImage(image.getImageGuid());
+      data.setNameOnMap(nameOnMap.getText().trim());
+      data.setImage(image.getImageGuid());
 		if (drillDownObject != null)
 			data.setDrillDownObjectId(drillDownObject.getObjectId());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -136,9 +148,9 @@ public class MapAppearance extends PropertyPage
 		}.schedule();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -146,22 +158,23 @@ public class MapAppearance extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
    @Override
    protected void performDefaults()
    {
       super.performDefaults();
+      nameOnMap.setText("");
       image.setImageGuid(NXCommon.EMPTY_GUID, true);
       if (!(object instanceof NetworkMap))
          drillDownObject.setObjectId(0);

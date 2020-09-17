@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.12 to 40.13
+ */
+static bool H_UpgradeFromV12()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 1)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD name_on_map varchar(63)")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 1));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade form 40.11 to 40.12
  */
 static bool H_UpgradeFromV11()
@@ -350,6 +364,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 12, 40, 13, H_UpgradeFromV12 },
    { 11, 40, 12, H_UpgradeFromV11 },
    { 10, 40, 11, H_UpgradeFromV10 },
    { 9,  40, 10, H_UpgradeFromV9  },
@@ -370,7 +385,7 @@ static struct
  */
 bool MajorSchemaUpgrade_V40()
 {
-   INT32 major, minor;
+   int32_t major, minor;
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 

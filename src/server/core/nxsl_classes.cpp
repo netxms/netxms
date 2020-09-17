@@ -346,6 +346,19 @@ NXSL_METHOD_DEFINITION(NetObj, setMapImage)
 }
 
 /**
+ * setNameOnMap(text)
+ */
+NXSL_METHOD_DEFINITION(NetObj, setNameOnMap)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setNameOnMap(argv[0]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * NetObj::setStatusCalculation(type, ...)
  */
 NXSL_METHOD_DEFINITION(NetObj, setStatusCalculation)
@@ -518,6 +531,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, setCustomAttribute, -1);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
    NXSL_REGISTER_METHOD(NetObj, setMapImage, 1);
+   NXSL_REGISTER_METHOD(NetObj, setNameOnMap, 1);
    NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
    NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
    NXSL_REGISTER_METHOD(NetObj, unbind, 1);
@@ -634,6 +648,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (compareAttributeName(attr, "name"))
    {
       value = vm->createValue(object->getName());
+   }
+   else if (compareAttributeName(attr, "nameOnMap"))
+   {
+      value = vm->createValue(object->getNameOnMap());
    }
    else if (compareAttributeName(attr, "parents"))
    {

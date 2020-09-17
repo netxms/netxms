@@ -71,7 +71,7 @@ public class ObjectFigureLargeLabel extends ObjectFigure
       gd.verticalSpan = 3;
       setConstraint(icon, gd);
       
-		name = new Label(object.getObjectName());
+      name = new Label(object.getNameOnMap());
 		name.setFont(labelProvider.getTitleFont());
 		name.setLabelAlignment(PositionConstants.LEFT);
 		add(name);

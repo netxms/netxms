@@ -62,7 +62,7 @@ public class ObjectFloorPlan extends ObjectFigure
       setLayoutManager(new BorderLayout());      
       setSize(element.getWidth(), element.getHeight());
       
-      label = new Label(object.getObjectName());
+      label = new Label(object.getNameOnMap());
       label.setFont(labelProvider.getTitleFont());
       label.setLabelAlignment(PositionConstants.CENTER);
       add(label);
