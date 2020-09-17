@@ -3588,45 +3588,47 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       // Check node name
       sendPollerMsg(rqId, _T("Checking node name\r\n"));
-      UINT32 dwAddr = ntohl(_t_inet_addr(m_name));
-      if ((g_flags & AF_RESOLVE_NODE_NAMES) &&
-          (dwAddr != INADDR_NONE) &&
-          (dwAddr != INADDR_ANY) &&
-          isMyIP(dwAddr))
+      if (g_flags & AF_RESOLVE_NODE_NAMES)
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
-         sendPollerMsg(rqId, _T("Node name is an IP address and need to be resolved\r\n"));
-         poller->setStatus(_T("resolving name"));
-         if (resolveName(FALSE))
+         InetAddress addr = InetAddress::parse(m_name);
+         if (addr.isValidUnicast() && isMyIP(addr))
          {
-            sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
-            modified |= MODIFY_COMMON_PROPERTIES;
-         }
-         else
-         {
-            sendPollerMsg(rqId, POLLER_WARNING _T("Node name cannot be resolved\r\n"));
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name cannot be resolved"), m_name, m_id);
-         }
-      }
-      else
-      {
-         if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
-         {
-            sendPollerMsg(rqId, _T("Synchronizing node name with DNS\r\n"));
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
+            sendPollerMsg(rqId, _T("Node name is an IP address and need to be resolved\r\n"));
             poller->setStatus(_T("resolving name"));
-            if (resolveName(TRUE))
+            if (resolveName(false))
             {
                sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
                modified |= MODIFY_COMMON_PROPERTIES;
             }
+            else
+            {
+               sendPollerMsg(rqId, POLLER_WARNING _T("Node name cannot be resolved\r\n"));
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name cannot be resolved"), m_name, m_id);
+            }
          }
          else
          {
-            sendPollerMsg(rqId, _T("Node name is OK\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name cannot be interpreted as valid IP address"), m_name, m_id);
+            sendPollerMsg(rqId, _T("Node name cannot be interpreted as valid IP address\r\n"));
          }
+      }
+      else if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
+      {
+         sendPollerMsg(rqId, _T("Synchronizing node name with DNS\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
+         poller->setStatus(_T("resolving name"));
+         if (resolveName(TRUE))
+         {
+            sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
+            modified |= MODIFY_COMMON_PROPERTIES;
+         }
+      }
+      else
+      {
+         sendPollerMsg(rqId, _T("Node name is OK\r\n"));
       }
 
       POLL_CANCELLATION_CHECKPOINT();
