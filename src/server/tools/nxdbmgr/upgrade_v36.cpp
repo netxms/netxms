@@ -28,7 +28,6 @@
  */
 static bool H_UpgradeFromV1()
 {
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD name_on_map varchar(63)")));
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
    return true;
 }
@@ -38,6 +37,7 @@ static bool H_UpgradeFromV1()
  */
 static bool H_UpgradeFromV0()
 {
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD name_on_map varchar(63)")));
    CHK_EXEC(SetMinorSchemaVersion(1));
    return true;
 }
