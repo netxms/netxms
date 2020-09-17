@@ -81,6 +81,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       discoveryMethod.add(Messages.get().InstanceDiscovery_Script);
       discoveryMethod.add("Windows Performance Counters");
       discoveryMethod.add("Web Service");
+      discoveryMethod.add("Internal Table");
       discoveryMethod.select(dco.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override

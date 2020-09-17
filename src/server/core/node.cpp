@@ -5367,7 +5367,12 @@ StringMap *Node::getInstanceList(DCObject *dco)
          node->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
          break;
       case IDM_AGENT_TABLE:
-         if (node->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable) == DCE_SUCCESS)
+      case IDM_INTERNAL_TABLE:
+         if (dco->getInstanceDiscoveryMethod() == IDM_AGENT_TABLE)
+            node->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+         else
+            node->getInternalTable(dco->getInstanceDiscoveryData(), &instanceTable);
+         if (instanceTable != nullptr)
          {
             TCHAR buffer[1024];
             instances = new StringList();
