@@ -467,7 +467,7 @@ bool MajorSchemaUpgrade_V35()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while((major == 35) && (minor < DB_SCHEMA_VERSION_V35_MINOR))
+   while(major == 35)
    {
       // Find upgrade procedure
       int i;
