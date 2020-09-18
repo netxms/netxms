@@ -752,7 +752,8 @@ BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
 UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *pArgs, pid_t *pid);
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *pArgs);
 
-void StartParamProvidersPoller();
+void StartExternalParameterProviders();
+void StopExternalParameterProviders();
 bool AddParametersProvider(const TCHAR *line);
 LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
 void ListParametersFromExtProviders(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
@@ -784,7 +785,7 @@ UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
 
 bool WaitForProcess(const TCHAR *name);
 
-UINT32 UpgradeAgent(TCHAR *pszPkgFile);
+uint32_t UpgradeAgent(const TCHAR *pkgFile);
 
 void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int argc, const TCHAR **argv);
 void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...);

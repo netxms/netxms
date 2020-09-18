@@ -927,7 +927,7 @@ public:
 
    virtual bool execute() override { m_data.clear(); return ProcessExecutor::execute(); }
 
-   const StringMap *getData() const { return &m_data; }
+   const StringMap& getData() const { return m_data; }
 
    TCHAR getSeparator() const { return m_separator; }
    void setSeparator(TCHAR s) { m_separator = s; }
