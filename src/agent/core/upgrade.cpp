@@ -26,26 +26,20 @@
 /**
  * Upgrade agent from given package file
  */
-UINT32 UpgradeAgent(TCHAR *pszPkgFile)
+uint32_t UpgradeAgent(const TCHAR *pkgFile)
 {
-   TCHAR szCmdLine[1024];
-
+   TCHAR cmdLine[1024];
 #if defined(_WIN32)
-
-   // Start installation
-   _sntprintf(szCmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES /LOG /FORCECLOSEAPPLICATIONS /NORESTART"), pszPkgFile);
-   return ExecuteCommand(szCmdLine, NULL, NULL);
-
+   _sntprintf(cmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES /LOG /FORCECLOSEAPPLICATIONS /NORESTART"), pkgFile);
+   return ExecuteCommand(cmdLine, nullptr, nullptr);
 #else
-
-   _tchmod(pszPkgFile, 0700);   // Set execute permissions on package file
-   _sntprintf(szCmdLine, 1024, _T("\"%s\" version=") NETXMS_VERSION_STRING
-                               _T(" prefix=") PREFIX
+   _tchmod(pkgFile, 0700);   // Set execute permissions on package file
+   _sntprintf(cmdLine, 1024, _T("\"%s\" version=") NETXMS_VERSION_STRING
+                             _T(" prefix=") PREFIX
 #ifdef __DISABLE_ICONV
-										 _T(" opt=--disable-iconv")
+                             _T(" opt=--disable-iconv")
 #endif
-                               _T(" config=%s"), pszPkgFile, g_szConfigFile);
-   return ExecuteCommand(szCmdLine, NULL, NULL);
-
+                             _T(" config=%s"), pkgFile, g_szConfigFile);
+   return ExecuteCommand(szCmdLine, nullptr, nullptr);
 #endif
 }

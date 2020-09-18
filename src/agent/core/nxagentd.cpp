@@ -1273,7 +1273,7 @@ BOOL Initialize()
       }
    }
 
-	StartParamProvidersPoller();
+   StartExternalParameterProviders();
 
    // Agent start time
    g_tmAgentStartTime = time(nullptr);
@@ -1411,6 +1411,7 @@ void Shutdown()
       ThreadJoin(s_syslogReceiverThread);
    }
 
+   StopExternalParameterProviders();
    StopNotificationProcessor();
 	DestroySessionList();
 

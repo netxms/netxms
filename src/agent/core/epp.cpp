@@ -22,6 +22,8 @@
 
 #include "nxagentd.h"
 
+#define DEBUG_TAG _T("ext.provider")
+
 /**
  * External parameter provider
  */
@@ -44,6 +46,7 @@ public:
 	time_t getLastPollTime() { return m_lastPollTime; }
 	int getPollInterval() { return m_pollInterval; }
 	void poll();
+   void abort();
 	LONG getValue(const TCHAR *name, TCHAR *buffer);
 	void listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
@@ -81,9 +84,9 @@ LONG ParameterProvider::getValue(const TCHAR *name, TCHAR *buffer)
 	lock();
 
    const TCHAR *value = m_parameters->get(name);
-   if (value != NULL)
+   if (value != nullptr)
    {
-		nx_strncpy(buffer, value, MAX_RESULT_LENGTH);
+		_tcslcpy(buffer, value, MAX_RESULT_LENGTH);
 		rc = SYSINFO_RC_SUCCESS;
 	}
 
@@ -98,22 +101,30 @@ void ParameterProvider::poll()
 {
 	if (m_executor->execute())
 	{
-	   nxlog_debug(4, _T("ParamProvider::poll(): started command \"%s\""), m_executor->getCommand());
+	   nxlog_debug_tag(DEBUG_TAG, 4, _T("ParamProvider::poll(): started command \"%s\""), m_executor->getCommand());
 	   if (m_executor->waitForCompletion(g_eppTimeout * 1000))
 	   {
          lock();
          delete m_parameters;
-         m_parameters = new StringMap(*m_executor->getData());
+         m_parameters = new StringMap(m_executor->getData());
          unlock();
-         nxlog_debug(4, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_executor->getCommand(), (int)m_parameters->size());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_executor->getCommand(), (int)m_parameters->size());
 	   }
 	   else
 	   {
-         nxlog_debug(4, _T("ParamProvider::poll(): command \"%s\" execution timeout (%d seconds)"), m_executor->getCommand(), g_eppTimeout);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ParamProvider::poll(): command \"%s\" execution timeout (%d seconds)"), m_executor->getCommand(), g_eppTimeout);
          m_executor->stop();
 	   }
 	}
-	m_lastPollTime = time(NULL);
+	m_lastPollTime = time(nullptr);
+}
+
+/**
+ * Abort running process if any
+ */
+void ParameterProvider::abort()
+{
+   m_executor->stop();
 }
 
 /**
@@ -122,8 +133,8 @@ void ParameterProvider::poll()
 struct ParameterListCallbackData
 {
    NXCPMessage *msg;
-   UINT32 id;
-   UINT32 count;
+   uint32_t id;
+   uint32_t count;
 };
 
 /**
@@ -179,35 +190,59 @@ void ParameterProvider::listParameters(StringList *list)
  * Static data
  */
 static ObjectArray<ParameterProvider> s_providers(0, 8, Ownership::True);
+static THREAD s_pollerThread = INVALID_THREAD_HANDLE;
+static ParameterProvider* volatile s_runningProvider = nullptr;
 
 /**
  * Poller thread
  */
-static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
+static void PollerThread()
 {
-	while(!(g_dwFlags & AF_SHUTDOWN))
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("External parameters providers poller thread started"));
+   while(!(g_dwFlags & AF_SHUTDOWN))
 	{
-		ThreadSleep(1);
-		time_t now = time(NULL);
-		for(int i = 0; i < s_providers.size(); i++)
+      if (SleepAndCheckForShutdown(1))
+         break;
+		time_t now = time(nullptr);
+		for(int i = 0; (i < s_providers.size()) && !(g_dwFlags & AF_SHUTDOWN); i++)
 		{
 			ParameterProvider *p = s_providers.get(i);
-			if (now > p->getLastPollTime() + (time_t)p->getPollInterval())
-				p->poll();
+         if (now > p->getLastPollTime() + static_cast<time_t>(p->getPollInterval()))
+         {
+            InterlockedExchangeObjectPointer(&s_runningProvider, p);
+            s_runningProvider = p;
+            p->poll();
+            InterlockedExchangeObjectPointer(&s_runningProvider, static_cast<ParameterProvider*>(nullptr));
+         }
 		}
 	}
-	return THREAD_OK;
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("External parameters providers poller thread stopped"));
 }
 
 /**
  * Start poller thread
  */
-void StartParamProvidersPoller()
+void StartExternalParameterProviders()
 {
 	if (s_providers.size() > 0)
-		ThreadCreate(PollerThread, 0, NULL);
+		s_pollerThread = ThreadCreateEx(PollerThread);
 	else
-		DebugPrintf(2, _T("External parameters providers poller thread will not start"));
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("External parameters providers poller thread will not start"));
+}
+
+/**
+ * Stop poller thread
+ */
+void StopExternalParameterProviders()
+{
+   if (s_pollerThread != INVALID_THREAD_HANDLE)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Waiting for external parameters providers poller thread to stop"));
+      ParameterProvider *runningProvider = s_runningProvider;
+      if (runningProvider != nullptr)
+         runningProvider->abort();
+      ThreadJoin(s_pollerThread);
+   }
 }
 
 /**
@@ -220,9 +255,9 @@ bool AddParametersProvider(const TCHAR *line)
 	TCHAR buffer[1024];
 	int interval = 60;
 
-	nx_strncpy(buffer, line, 1024);
+	_tcslcpy(buffer, line, 1024);
 	TCHAR *ptr = _tcsrchr(buffer, _T(':'));
-	if (ptr != NULL)
+	if (ptr != nullptr)
 	{
 		*ptr = 0;
 		ptr++;
@@ -230,7 +265,7 @@ bool AddParametersProvider(const TCHAR *line)
 		interval = _tcstol(ptr, &eptr, 0);
 		if ((*eptr != 0) || (interval < 1))
 		{
-			DebugPrintf(2, _T("Invalid interval value given for parameters provider"));
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid interval value given for parameters provider"));
 			return false;
 		}
 	}

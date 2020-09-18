@@ -4,6 +4,7 @@
 
 - New instance discovery method "internal table"
 - Fixed issues:
+	NX-1416 (NetXMS Agents shutdown does not end ExternalParametersProviders)
 	NX-1911 (Separate object name for use on maps)
 
 
