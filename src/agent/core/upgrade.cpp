@@ -40,6 +40,6 @@ uint32_t UpgradeAgent(const TCHAR *pkgFile)
                              _T(" opt=--disable-iconv")
 #endif
                              _T(" config=%s"), pkgFile, g_szConfigFile);
-   return ExecuteCommand(szCmdLine, nullptr, nullptr);
+   return ExecuteCommand(cmdLine, nullptr, nullptr);
 #endif
 }

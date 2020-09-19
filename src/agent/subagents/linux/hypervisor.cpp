@@ -276,7 +276,7 @@ static bool GetVMwareVersionString(TCHAR *value)
    if (!pe.waitForCompletion(1000))
       return false;
 
-   const TCHAR *v = pe.getData()->get(_T("version"));
+   const TCHAR *v = pe.getData().get(_T("version"));
    if (v != NULL)
    {
       _tcslcpy(value, v, MAX_RESULT_LENGTH);
