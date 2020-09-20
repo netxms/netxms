@@ -398,8 +398,8 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken, NULL },
-		{ _T("DisableIPv4"), CT_BOOLEAN, 0, 0, DISABLE_IP_V4, 0, &connType, NULL },
-		{ _T("DisableIPv6"), CT_BOOLEAN, 0, 0, DISABLE_IP_V6, 0, &connType, NULL },
+		{ _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V4, 0, &connType, NULL },
+		{ _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V6, 0, &connType, NULL },
 		{ _T("Proxy"), CT_MB_STRING, 0, 0, sizeof(proxy.hostname), 0, proxy.hostname, NULL },
 		{ _T("ProxyPort"), CT_WORD, 0, 0, 0, 0, &proxy.port, NULL },
 		{ _T("ProxyType"), CT_MB_STRING, 0, 0, sizeof(protocol), 0, protocol, NULL },

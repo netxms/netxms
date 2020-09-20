@@ -105,7 +105,6 @@ void CConfigWizard::DefaultConfig(const TCHAR *installDir)
          { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, NULL, NULL },
          { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, NULL, NULL },
          { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, NULL, NULL },
-         { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, 1, 0, NULL, NULL },
          { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, NULL, NULL },
          { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
       };

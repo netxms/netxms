@@ -41,7 +41,7 @@ UINT32 g_timeout = 30;
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("VerifyPeer"), CT_BOOLEAN, 0, 0, NETSVC_AF_VERIFYPEER, 0, &g_flags },
+   { _T("VerifyPeer"), CT_BOOLEAN_FLAG_32, 0, 0, NETSVC_AF_VERIFYPEER, 0, &g_flags },
    { _T("CA"), CT_MB_STRING, 0, 0, 1024, 0, &g_certBundle },
    { _T("Timeout"), CT_WORD, 0, 0, 0, 0, &g_timeout },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }

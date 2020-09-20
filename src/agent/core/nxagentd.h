@@ -874,7 +874,7 @@ extern UINT16 g_sessionAgentPort;
 extern int32_t g_zoneUIN;
 extern uint32_t g_tunnelKeepaliveInterval;
 extern uint16_t g_syslogListenPort;
-extern TCHAR *g_trustedCACertificate;
+extern StringSet g_trustedRootCertificates;
 extern shared_ptr_store<Config> g_config;
 
 extern UINT32 g_acceptErrors;

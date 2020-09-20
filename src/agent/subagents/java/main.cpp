@@ -128,8 +128,8 @@ static TCHAR *s_userClasspath = NULL;
 static NX_CFG_TEMPLATE s_configTemplate[] =
 {
    { _T("JVM"), CT_STRING, 0, 0, MAX_PATH, 0,  s_jvmPath },
-   { _T("JVMOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &s_jvmOptions },
-   { _T("ClassPath"), CT_STRING_LIST, JAVA_CLASSPATH_SEPARATOR, 0, 0, 0, &s_userClasspath },
+   { _T("JVMOptions"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &s_jvmOptions },
+   { _T("ClassPath"), CT_STRING_CONCAT, JAVA_CLASSPATH_SEPARATOR, 0, 0, 0, &s_userClasspath },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

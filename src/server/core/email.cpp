@@ -82,25 +82,25 @@ static char *FindEOL(char *pszBuffer, size_t len)
 /**
  * Read line from socket
  */
-static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, size_t *pnBufPos, char *pszLine)
+static bool ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, size_t *pnBufPos, char *pszLine)
 {
    char *ptr;
    do
    {
       ptr = FindEOL(pszBuffer, *pnBufPos);
-      if (ptr == NULL)
+      if (ptr == nullptr)
       {
          ssize_t bytes = RecvEx(hSocket, &pszBuffer[*pnBufPos], SMTP_BUFFER_SIZE - *pnBufPos, 0, 30000);
          if (bytes <= 0)
-            return FALSE;
+            return false;
          *pnBufPos += bytes;
       }
-   } while(ptr == NULL);
+   } while(ptr == nullptr);
    *ptr = 0;
    strcpy(pszLine, pszBuffer);
    *pnBufPos -= (int)(ptr - pszBuffer + 1);
    memmove(pszBuffer, ptr + 1, *pnBufPos);
-   return TRUE;
+   return true;
 }
 
 /**

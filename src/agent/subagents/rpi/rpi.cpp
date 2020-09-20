@@ -43,8 +43,8 @@ static TCHAR *m_outputPins = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("DisableDHT22"), CT_BOOLEAN, 0, 0, 1, 0, &m_disableDHT22 },
-   { _T("InputPins"), CT_STRING_LIST, _T(','), 0, 0, 0, &m_inputPins },
-   { _T("OutputPins"), CT_STRING_LIST, _T(','), 0, 0, 0, &m_outputPins },
+   { _T("InputPins"), CT_STRING_CONCAT, _T(','), 0, 0, 0, &m_inputPins },
+   { _T("OutputPins"), CT_STRING_CONCAT, _T(','), 0, 0, 0, &m_outputPins },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

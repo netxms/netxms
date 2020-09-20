@@ -92,7 +92,7 @@ void UpdatePolicyInventory();
 
 void UpdateUserAgentsEnvironment();
 
-void ParseTunnelList(TCHAR *list);
+void ParseTunnelList(const StringSet& tunnels);
 
 #if !defined(_WIN32)
 void InitStaticSubagents();
@@ -204,7 +204,7 @@ UINT32 g_dcOfflineExpirationTime = 10; // 10 days
 int32_t g_zoneUIN = 0;
 uint32_t g_tunnelKeepaliveInterval = 30;
 uint16_t g_syslogListenPort = 514;
-TCHAR *g_trustedCACertificate = nullptr;
+StringSet g_trustedRootCertificates;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
 #else
@@ -232,7 +232,7 @@ static TCHAR *s_externalListsConfig = nullptr;
 static TCHAR *s_externalTablesConfig = nullptr;
 static TCHAR *s_externalSubAgentsList = nullptr;
 static TCHAR *s_appAgentsList = nullptr;
-static TCHAR *s_serverConnectionList = nullptr;
+static StringSet s_serverConnectionList;
 static uint32_t s_enabledCiphers = 0xFFFF;
 static THREAD s_sessionWatchdogThread = INVALID_THREAD_HANDLE;
 static THREAD s_listenerThread = INVALID_THREAD_HANDLE;
@@ -264,12 +264,12 @@ static pid_t s_pid;
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("Action"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList, nullptr },
-   { _T("ActionShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList, nullptr },
-   { _T("AppAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
-   { _T("BackgroundLogWriter"), CT_BOOLEAN, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_dwFlags, nullptr },
-   { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
-   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, nullptr },
+   { _T("Action"), CT_STRING_CONCAT, '\n', 0, 0, 0, &m_pszActionList, nullptr },
+   { _T("ActionShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &m_pszShellActionList, nullptr },
+   { _T("AppAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
+   { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_dwFlags, nullptr },
+   { _T("ControlServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
+   { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, nullptr },
    { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr },
    { _T("DataReconciliationBlockSize"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationBlockSize, nullptr },
    { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, nullptr },
@@ -277,50 +277,50 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DataWriterMaxTransactionSize"), CT_LONG, 0, 0, 0, 0, &g_dcWriterMaxTransactionSize, nullptr },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, s_dailyLogFileSuffix, nullptr },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
-   { _T("DebugTags"), CT_STRING_LIST, ',', 0, 0, 0, &s_debugTags, nullptr },
-   { _T("DisableIPv4"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, nullptr },
-   { _T("DisableIPv6"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, nullptr },
+   { _T("DebugTags"), CT_STRING_CONCAT, ',', 0, 0, 0, &s_debugTags, nullptr },
+   { _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, nullptr },
+   { _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, nullptr },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDir, nullptr },
-   { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, nullptr },
+   { _T("EnableActions"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, nullptr },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, nullptr },
-   { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, nullptr },
-   { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EnablePushConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_PUSH_CONNECTOR, 0, &g_dwFlags, nullptr },
-   { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EnableSNMPTrapProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EnableSSLTrace"), CT_BOOLEAN, 0, 0, AF_ENABLE_SSL_TRACE, 0, &g_dwFlags, nullptr },
-   { _T("EnableSyslogProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SYSLOG_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, nullptr },
-   { _T("EnableTCPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_TCP_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, nullptr },
+   { _T("EnableControlConnector"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, nullptr },
+   { _T("EnableProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, nullptr },
+   { _T("EnablePushConnector"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_PUSH_CONNECTOR, 0, &g_dwFlags, nullptr },
+   { _T("EnableSNMPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, nullptr },
+   { _T("EnableSNMPTrapProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, nullptr },
+   { _T("EnableSSLTrace"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SSL_TRACE, 0, &g_dwFlags, nullptr },
+   { _T("EnableSyslogProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SYSLOG_PROXY, 0, &g_dwFlags, nullptr },
+   { _T("EnableSubagentAutoload"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, nullptr },
+   { _T("EnableTCPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_TCP_PROXY, 0, &g_dwFlags, nullptr },
+   { _T("EnableWatchdog"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, nullptr },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_execTimeout, nullptr },
-   { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },
+   { _T("ExternalList"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },
    { _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, nullptr },
-   { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalParametersConfig, nullptr },
-   { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalShellExecParametersConfig, nullptr },
-   { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, nullptr },
+   { _T("ExternalParameter"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParametersConfig, nullptr },
+   { _T("ExternalParameterShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalShellExecParametersConfig, nullptr },
+   { _T("ExternalParametersProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, nullptr },
    { _T("ExternalParameterProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_eppTimeout, nullptr },
-   { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalSubAgentsList, nullptr },
-   { _T("ExternalTable"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalTablesConfig, nullptr },
+   { _T("ExternalSubagent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalSubAgentsList, nullptr },
+   { _T("ExternalTable"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalTablesConfig, nullptr },
    { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore, nullptr },
-   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags, nullptr },
+   { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags, nullptr },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },
    { _T("ListenPort"), CT_WORD, 0, 0, 0, 0, &g_wListenPort, nullptr },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &s_logHistorySize, nullptr },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &s_logRotationMode, nullptr },
-   { _T("LogUnresolvedSymbols"), CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags, nullptr },
+   { _T("LogUnresolvedSymbols"), CT_BOOLEAN_FLAG_32, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags, nullptr },
    { _T("LongRunningQueryThreshold"), CT_LONG, 0, 0, 0, 0, &g_longRunningQueryThreshold, nullptr },
-   { _T("MasterServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList, nullptr },
+   { _T("MasterServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszMasterServerList, nullptr },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_maxLogSize, nullptr },
    { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_maxCommSessions, nullptr },
    { _T("OfflineDataExpirationTime"), CT_LONG, 0, 0, 0, 0, &g_dcOfflineExpirationTime, nullptr },
    { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix, nullptr },
-   { _T("RequireAuthentication"), CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, nullptr },
-   { _T("RequireEncryption"), CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags, nullptr },
-   { _T("ServerConnection"), CT_STRING_LIST, '\n', 0, 0, 0, &s_serverConnectionList, nullptr },
-   { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList, nullptr },
+   { _T("RequireAuthentication"), CT_BOOLEAN_FLAG_32, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, nullptr },
+   { _T("RequireEncryption"), CT_BOOLEAN_FLAG_32, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags, nullptr },
+   { _T("ServerConnection"), CT_STRING_SET, 0, 0, 0, 0, &s_serverConnectionList, nullptr },
+   { _T("Servers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszServerList, nullptr },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, nullptr },
    { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, nullptr },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
@@ -328,14 +328,14 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, &g_szSNMPTrapListenAddress, nullptr },
    { _T("SNMPTrapPort"), CT_WORD, 0, 0, 0, 0, &g_snmpTrapPort, nullptr },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, nullptr },
-   { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, nullptr },
+   { _T("SubAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &m_pszSubagentList, nullptr },
    { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, nullptr },
    { _T("SystemName"), CT_STRING, 0, 0, MAX_OBJECT_NAME, 0, g_systemName, nullptr },
-   { _T("TrustedCACertificate"), CT_STRING_LIST, '\n', 0, 0, 0, &g_trustedCACertificate, nullptr },
+   { _T("TrustedRootCertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedRootCertificates, nullptr },
    { _T("TunnelKeepaliveInterval"), CT_LONG, 0, 0, 0, 0, &g_tunnelKeepaliveInterval, nullptr },
-   { _T("VerifyServerCeritifcate"), CT_BOOLEAN, 0, 0, AF_CHECK_SERVER_CERTIFICATE, 0, &g_dwFlags, nullptr },
+   { _T("VerifyServerCeritifcate"), CT_BOOLEAN_FLAG_32, 0, 0, AF_CHECK_SERVER_CERTIFICATE, 0, &g_dwFlags, nullptr },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, nullptr },
-   { _T("WriteLogAsJson"), CT_BOOLEAN, 0, 0, AF_JSON_LOG, 0, &g_dwFlags, nullptr },
+   { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_32, 0, 0, AF_JSON_LOG, 0, &g_dwFlags, nullptr },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr }, // for backward compatibility
    { _T("ZoneUIN"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
@@ -1043,8 +1043,7 @@ BOOL Initialize()
 			return FALSE;
 
 		// Parse outgoing server connection (tunnel) list
-      if (s_serverConnectionList != NULL)
-         ParseTunnelList(s_serverConnectionList);
+      ParseTunnelList(s_serverConnectionList);
 
 		// Parse server lists
 		if (m_pszMasterServerList != NULL)
@@ -1427,8 +1426,6 @@ void Shutdown()
       ThreadPoolDestroy(g_commThreadPool);
    }
    ThreadPoolDestroy(g_executorThreadPool);
-
-   MemFree(g_trustedCACertificate);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

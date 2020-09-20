@@ -144,7 +144,7 @@ public:
 
    void debugPrintf(int level, const TCHAR *format, ...);
 
-   static Tunnel *createFromConfig(TCHAR *config);
+   static Tunnel *createFromConfig(const TCHAR *config);
 };
 
 /**
@@ -519,12 +519,11 @@ static void SSLInfoCallback(const SSL *ssl, int where, int ret)
 }
 
 /**
- * Validate agent certificate
+ * Validate server certificate
  */
 static bool ValidateServerCertificate(X509 *cert)
 {
    bool valid = false;
-   //Load certificates
    X509_STORE *trustedCertificateStore = X509_STORE_new();
    if (trustedCertificateStore == nullptr)
    {
@@ -533,25 +532,21 @@ static bool ValidateServerCertificate(X509 *cert)
    }
 
    X509_LOOKUP *dirLookup = X509_STORE_add_lookup(trustedCertificateStore, X509_LOOKUP_hash_dir());
-   X509_LOOKUP *fileLookup = X509_STORE_add_lookup(trustedCertificateStore,X509_LOOKUP_file());
+   X509_LOOKUP *fileLookup = X509_STORE_add_lookup(trustedCertificateStore, X509_LOOKUP_file());
 
-   if((g_trustedCACertificate != NULL))
+   if (!g_trustedRootCertificates.isEmpty())
    {
-
-      TCHAR *item, *end;
-      for(item = end = g_trustedCACertificate; end != NULL && *item != 0; item = end + 1)
+      auto it = g_trustedRootCertificates.iterator();
+      while(it->hasNext())
       {
-         end = _tcschr(item, _T('\n'));
-         if (end != NULL)
-            *end = 0;
-         Trim(item);
+         const TCHAR *trustedRoot = it->next();
          NX_STAT_STRUCT st;
-         if (CALL_STAT(item, &st) != 0)
+         if (CALL_STAT(trustedRoot, &st) != 0)
             continue;
 
 #ifdef UNICODE
          char __buffer[MAX_PATH];
-         WideCharToMultiByteSysLocale(item, __buffer, MAX_PATH);
+         WideCharToMultiByteSysLocale(trustedRoot, __buffer, MAX_PATH);
 #else
 #define __buffer item
 #endif
@@ -566,6 +561,7 @@ static bool ValidateServerCertificate(X509 *cert)
          }
          nxlog_debug_tag(DEBUG_TAG, 7, _T("ValidateServerCertificate: %s '%hs' loaded"), S_ISDIR(st.st_mode) ? _T("directory") : _T("certificate"), __buffer);
       }
+      delete it;
    }
 
 #ifdef _WIN32
@@ -1238,11 +1234,12 @@ ssize_t Tunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 /**
  * Create tunnel object from configuration record
  */
-Tunnel *Tunnel::createFromConfig(TCHAR *config)
+Tunnel *Tunnel::createFromConfig(const TCHAR *config)
 {
+   StringBuffer sb(config);
    int port = AGENT_TUNNEL_PORT;
-   TCHAR *p = _tcschr(config, _T(':'));
-   if (p != NULL)
+   TCHAR *p = _tcschr(sb.getBuffer(), _T(':'));
+   if (p != nullptr)
    {
       *p = 0;
       p++;
@@ -1250,9 +1247,9 @@ Tunnel *Tunnel::createFromConfig(TCHAR *config)
       TCHAR *eptr;
       port = _tcstol(p, &eptr, 10);
       if ((port < 1) || (port > 65535))
-         return NULL;
+         return nullptr;
    }
-   return new Tunnel(config, port);
+   return new Tunnel(sb.cstr(), port);
 }
 
 /**
@@ -1483,30 +1480,26 @@ static ObjectArray<Tunnel> s_tunnels(0, 8, Ownership::True);
 /**
  * Parser server connection (tunnel) list
  */
-void ParseTunnelList(TCHAR *list)
+void ParseTunnelList(const StringSet& tunnels)
 {
 #ifdef _WITH_ENCRYPTION
-   TCHAR *curr, *next;
-   for(curr = next = list; curr != NULL && *curr != 0; curr = next + 1)
+   auto it = tunnels.constIterator();
+   while(it->hasNext())
    {
-      next = _tcschr(curr, _T('\n'));
-      if (next != NULL)
-         *next = 0;
-      StrStrip(curr);
-
-      Tunnel *t = Tunnel::createFromConfig(curr);
-      if (t != NULL)
+      const TCHAR *config = it->next();
+      Tunnel *t = Tunnel::createFromConfig(config);
+      if (t != nullptr)
       {
          s_tunnels.add(t);
          nxlog_debug_tag(DEBUG_TAG, 1, _T("Added server tunnel %s"), t->getHostname());
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), curr);
+         nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), config);
       }
    }
+   delete it;
 #endif
-   MemFree(list);
 }
 
 /**
