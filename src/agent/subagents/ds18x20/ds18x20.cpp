@@ -107,7 +107,7 @@ static bool AddSensorNameMapping(TCHAR *str)
 static TCHAR *s_sensorList = NULL;
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
 {
-	{ _T("Sensor"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &s_sensorList },
+	{ _T("Sensor"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &s_sensorList },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

@@ -75,7 +75,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ListenPortTCP"), CT_LONG, 0, 0, 0, 0, &g_tcpPort },
    { _T("ListenPortUDP"), CT_LONG, 0, 0, 0, 0, &g_udpPort },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_logFile },
-   { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags },
+   { _T("LogFailedSQLQueries"), CT_BOOLEAN_FLAG_32, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_logFile },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };

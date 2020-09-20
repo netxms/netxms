@@ -89,8 +89,8 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
 	{
 		{ _T("apikey"), CT_MB_STRING, 0, 0, sizeof(m_apikey), 0, m_apikey },	
 		{ _T("from"), CT_MB_STRING, 0, 0, sizeof(m_from), 0, m_from },	
-		{ _T("unicode"), CT_BOOLEAN, 0, 0, 1, 0, &flags },	
-		{ _T("blacklist"), CT_BOOLEAN, 0, 0, 2, 0, &flags },	
+		{ _T("unicode"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &flags },
+		{ _T("blacklist"), CT_BOOLEAN_FLAG_32, 0, 0, 2, 0, &flags },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 

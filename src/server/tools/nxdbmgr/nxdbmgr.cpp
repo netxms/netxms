@@ -63,7 +63,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
-   { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &s_moduleLoadList, NULL },
+   { _T("Module"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_moduleLoadList, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 static DB_DRIVER s_driver = NULL;

@@ -809,26 +809,37 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                   error(_T("Invalid number '%s' in configuration file %s at line %d\n"), value, entry->getFile(), entry->getLine());
                }
                break;
+            case CT_BOOLEAN_FLAG_32:
+               if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
+                  || !_tcsicmp(value, _T("1")))
+               {
+                  *static_cast<uint32_t*>(cfgTemplate[i].buffer) |= (uint32_t)cfgTemplate[i].bufferSize;
+               }
+               else
+               {
+                  *static_cast<uint32_t*>(cfgTemplate[i].buffer) &= ~((uint32_t)cfgTemplate[i].bufferSize);
+               }
+               break;
+            case CT_BOOLEAN_FLAG_64:
+               if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
+                  || !_tcsicmp(value, _T("1")))
+               {
+                  *static_cast<uint64_t*>(cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
+               }
+               else
+               {
+                  *static_cast<uint64_t*>(cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
+               }
+               break;
             case CT_BOOLEAN:
                if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
                   || !_tcsicmp(value, _T("1")))
                {
-                  *((uint32_t *)cfgTemplate[i].buffer) |= (uint32_t)cfgTemplate[i].bufferSize;
+                  *static_cast<bool*>(cfgTemplate[i].buffer) = true;
                }
                else
                {
-                  *((uint32_t *)cfgTemplate[i].buffer) &= ~((uint32_t)cfgTemplate[i].bufferSize);
-               }
-               break;
-            case CT_BOOLEAN64:
-               if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
-                  || !_tcsicmp(value, _T("1")))
-               {
-                  *((uint64_t *)cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
-               }
-               else
-               {
-                  *((uint64_t *)cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
+                  *static_cast<bool*>(cfgTemplate[i].buffer) = false;
                }
                break;
             case CT_STRING:
@@ -852,7 +863,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                strlcpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
 #endif
                break;
-            case CT_STRING_LIST:
+            case CT_STRING_CONCAT:
                *((TCHAR **)cfgTemplate[i].buffer) = MemAllocString(entry->getConcatenatedValuesLength() + 1);
                for(j = 0, curr = *((TCHAR **) cfgTemplate[i].buffer); j < entry->getValueCount(); j++)
                {
@@ -862,6 +873,14 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                   curr++;
                }
                *curr = 0;
+               break;
+            case CT_STRING_SET:
+               for (j = 0; j < entry->getValueCount(); j++)
+                  static_cast<StringSet*>(cfgTemplate[i].buffer)->add(entry->getValue(j));
+               break;
+            case CT_STRING_LIST:
+               for (j = 0; j < entry->getValueCount(); j++)
+                  static_cast<StringList*>(cfgTemplate[i].buffer)->add(entry->getValue(j));
                break;
             case CT_SIZE_BYTES:
                if ((cfgTemplate[i].overrideIndicator != nullptr) &&

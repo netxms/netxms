@@ -533,12 +533,12 @@ UINT32 s_poolMaxSize = 1024;
 UINT32 s_poolMinSize = 1;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("AutoConfigureTargets"), CT_BOOLEAN, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options, NULL },
+   { _T("AutoConfigureTargets"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options, NULL },
 	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &s_defaultPacketSize, NULL },
-   { _T("DefaultDoNotFragmentFlag"), CT_BOOLEAN, 0, 0, PING_OPT_DONT_FRAGMENT, 0, &s_options, NULL },
+   { _T("DefaultDoNotFragmentFlag"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_DONT_FRAGMENT, 0, &s_options, NULL },
    { _T("MaxTargetInactivityTime"), CT_LONG, 0, 0, 0, 0, &s_maxTargetInactivityTime, NULL },
 	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &s_pollsPerMinute, NULL },
-	{ _T("Target"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszTargetList, NULL },
+	{ _T("Target"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &m_pszTargetList, NULL },
    { _T("ThreadPoolMaxSize"), CT_LONG, 0, 0, 0, 0, &s_poolMaxSize, NULL },
    { _T("ThreadPoolMinSize"), CT_LONG, 0, 0, 0, 0, &s_poolMinSize, NULL },
 	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &s_timeout, NULL },

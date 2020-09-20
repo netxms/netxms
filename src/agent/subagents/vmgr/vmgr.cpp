@@ -31,7 +31,7 @@ StringObjectMap<HostConnections> g_connectionList(Ownership::True);
 static TCHAR *s_hostList = nullptr;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-	{ _T("Host"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &s_hostList },
+	{ _T("Host"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &s_hostList },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 

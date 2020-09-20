@@ -442,8 +442,8 @@ static void AddPredefinedCounters()
 static TCHAR *m_pszCounterList = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("Counter"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszCounterList },
-   { _T("EnableDefaultCounters"), CT_BOOLEAN, 0, 0, WPF_ENABLE_DEFAULT_COUNTERS, 0, &m_dwFlags },
+   { _T("Counter"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &m_pszCounterList },
+   { _T("EnableDefaultCounters"), CT_BOOLEAN_FLAG_32, 0, 0, WPF_ENABLE_DEFAULT_COUNTERS, 0, &m_dwFlags },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

@@ -93,7 +93,7 @@ private:
    char m_fromName[MAX_STRING_VALUE];
    char m_fromAddr[MAX_STRING_VALUE];
    char m_encoding[64];
-   int m_isHtml;
+   bool m_isHtml;
 
    SmtpDriver();
    UINT32 sendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8);
@@ -104,15 +104,12 @@ public:
    static SmtpDriver *createInstance(Config *config);
 };
 
-
-
 /**
  * Create driver instance
  */
 SmtpDriver *SmtpDriver::createInstance(Config *config)
 {
    SmtpDriver *driver = new SmtpDriver();
-
    NX_CFG_TEMPLATE configTemplate[] =
    {
       { _T("Server"), CT_STRING, 0, 0, sizeof(driver->m_server)/sizeof(TCHAR), 0, driver->m_server },
@@ -122,15 +119,15 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       { _T("FromName"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromName)/sizeof(TCHAR), 0, driver->m_fromName }, //NetXMS Server
       { _T("FromAddr"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromAddr)/sizeof(TCHAR), 0, driver->m_fromAddr }, //netxms@localhost
       { _T("MailEncoding"), CT_MB_STRING, 0, 0, sizeof(driver->m_encoding)/sizeof(TCHAR), 0, driver->m_encoding }, //utf8
-      { _T("IsHTML"), CT_BOOLEAN, 0, 0, 1, 0, &(driver->m_isHtml) },
-      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+      { _T("IsHTML"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_isHtml },
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
 
    if (!config->parseTemplate(_T("SMTP"), configTemplate))
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
       delete driver;
-      return NULL;
+      return nullptr;
    }
 
    return driver;
@@ -149,7 +146,6 @@ SmtpDriver::SmtpDriver()
    strcmp(m_fromAddr, "netxms@localhost");
    strcmp(m_encoding, "utf8");
    m_isHtml = false;
-
 }
 
 MAIL_ENVELOPE *SmtpDriver::prepareMail(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
@@ -175,8 +171,8 @@ MAIL_ENVELOPE *SmtpDriver::prepareMail(const TCHAR *recipient, const TCHAR *subj
    }
    else
    {
-      nx_strncpy(envelope->rcptAddr, recipient, MAX_RCPT_ADDR_LEN);
-      nx_strncpy(envelope->subject, subject, MAX_EMAIL_SUBJECT_LEN);
+      strlcpy(envelope->rcptAddr, recipient, MAX_RCPT_ADDR_LEN);
+      strlcpy(envelope->subject, subject, MAX_EMAIL_SUBJECT_LEN);
       envelope->text = strdup(body);
    }
 #endif
@@ -184,6 +180,7 @@ MAIL_ENVELOPE *SmtpDriver::prepareMail(const TCHAR *recipient, const TCHAR *subj
    envelope->isHtml = m_isHtml;
    return envelope;
 }
+
 /**
  * Find end-of-line character
  */
@@ -198,25 +195,25 @@ static char *FindEOL(char *pszBuffer, size_t len)
 /**
  * Read line from socket
  */
-static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, size_t *pnBufPos, char *pszLine)
+static bool ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, size_t *pnBufPos, char *pszLine)
 {
    char *ptr;
    do
    {
       ptr = FindEOL(pszBuffer, *pnBufPos);
-      if (ptr == NULL)
+      if (ptr == nullptr)
       {
          ssize_t bytes = RecvEx(hSocket, &pszBuffer[*pnBufPos], SMTP_BUFFER_SIZE - *pnBufPos, 0, 30000);
          if (bytes <= 0)
-            return FALSE;
+            return false;
          *pnBufPos += bytes;
       }
-   } while(ptr == NULL);
+   } while(ptr == nullptr);
    *ptr = 0;
    strcpy(pszLine, pszBuffer);
    *pnBufPos -= (int)(ptr - pszBuffer + 1);
    memmove(pszBuffer, ptr + 1, *pnBufPos);
-   return TRUE;
+   return true;
 }
 
 /**
@@ -496,7 +493,6 @@ UINT32 SmtpDriver::sendMail(const char *pszRcpt, const char *pszSubject, const c
 
    return (iState == STATE_FINISHED) ? SMTP_ERR_SUCCESS : SMTP_ERR_PROTOCOL_FAILURE;
 }
-
 
 /**
  * Driver send method

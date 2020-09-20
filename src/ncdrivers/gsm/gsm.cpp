@@ -146,8 +146,8 @@ GSMDriver::GSMDriver(Config *config)
       { _T("PortName"), CT_STRING, 0, 0, sizeof(portName) / sizeof(TCHAR), 0, portName },
       { _T("Speed"), CT_LONG, 0, 0, 0, 0, &portSpeed },
       { _T("StopBits"), CT_LONG, 0, 0, 0, 0, &stopBits },
-      { _T("TextMode"), CT_BOOLEAN, 0, 0, 1, 0, &mode },
-      { _T("UseQuotes"), CT_BOOLEAN, 0, 0, 2, 0, &mode },
+      { _T("TextMode"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &mode },
+      { _T("UseQuotes"), CT_BOOLEAN_FLAG_32, 0, 0, 2, 0, &mode },
       { _T("WriteDelay"), CT_LONG, 0, 0, 0, 0, &writeDelay },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
    };

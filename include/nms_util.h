@@ -202,17 +202,20 @@ inline WCHAR towupper(WCHAR c)
 /**
  * Token types for configuration loader
  */
-#define CT_LONG         0
-#define CT_STRING       1
-#define CT_STRING_LIST  2
-#define CT_END_OF_LIST  3
-#define CT_BOOLEAN      4
-#define CT_WORD         5
-#define CT_IGNORE       6
-#define CT_MB_STRING    7
-#define CT_BOOLEAN64    8
-#define CT_SIZE_BYTES   9   /* 64 bit integer, automatically converts K, M, G, T suffixes using 1024 as base) */
-#define CT_SIZE_UNITS   10  /* 64 bit integer, automatically converts K, M, G, T suffixes using 1000 as base) */
+#define CT_LONG            0
+#define CT_STRING          1
+#define CT_STRING_CONCAT   2   /* Concatenated string - each value concatenated to final string */
+#define CT_END_OF_LIST     3
+#define CT_BOOLEAN_FLAG_32 4   /* Boolean flag - set or clear bit in provided 32 bit uinteger */
+#define CT_WORD            5
+#define CT_IGNORE          6
+#define CT_MB_STRING       7
+#define CT_BOOLEAN_FLAG_64 8   /* Boolean flag - set or clear bit in provided 64 bit uinteger */
+#define CT_SIZE_BYTES      9   /* 64 bit integer, automatically converts K, M, G, T suffixes using 1024 as base) */
+#define CT_SIZE_UNITS      10  /* 64 bit integer, automatically converts K, M, G, T suffixes using 1000 as base) */
+#define CT_STRING_SET      11  /* Each value added to StringSet object */
+#define CT_STRING_LIST     12  /* Each value added to StringList object */
+#define CT_BOOLEAN         13  /* Data is pointer to bool variable which will be set to true or false */
 
 /**
  * Uninitialized value for override indicator
@@ -3498,10 +3501,10 @@ struct NX_CFG_TEMPLATE
 {
    TCHAR token[64];
    BYTE type;
-   BYTE separator;     // Separator character for lists
-   WORD listElements;  // Number of list elements, should be set to 0 before calling NxLoadConfig()
-   UINT64 bufferSize;  // Buffer size for strings or flag to be set for CT_BOOLEAN
-   UINT32 bufferPos;   // Should be set to 0
+   BYTE separator;         // Separator character for lists
+   uint16_t listElements;  // Number of list elements, should be set to 0 before calling NxLoadConfig()
+   uint64_t bufferSize;    // Buffer size for strings or flag to be set for CT_BOOLEAN
+   uint32_t bufferPos;     // Should be set to 0
    void *buffer;
    void *overrideIndicator;
 };

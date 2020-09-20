@@ -95,7 +95,7 @@ SMSEagleDriver::SMSEagleDriver(Config *config)
 		{ _T("port"), CT_LONG, 0, 0, 0, 0, &m_port },	
 		{ _T("login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },	
 		{ _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	
-		{ _T("https"), CT_BOOLEAN, 0, 0, 1, 0, &flag },	
+		{ _T("https"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &flag },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 

@@ -104,11 +104,11 @@ static pid_t m_pid;
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, NULL },
+   { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDailyLogFileSuffix, NULL },
 	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDir, NULL },
-   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
+   { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_listenAddress, NULL },
    { _T("ListenPort"), CT_WORD, 0, 0, 0, 0, &g_listenPort, NULL },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_logFile, NULL },

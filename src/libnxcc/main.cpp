@@ -83,7 +83,7 @@ static NX_CFG_TEMPLATE s_clusterConfigTemplate[] =
 {
    { _T("CommandTimeout"), CT_LONG, 0, 0, 0, 0, &g_nxccCommandTimeout, NULL },
    { _T("NodeId"), CT_LONG, 0, 0, 0, 0, &g_nxccNodeId, NULL },
-   { _T("PeerNode"), CT_STRING_LIST, '\n', 0, 0, 0, &s_peerNodeList, NULL },
+   { _T("PeerNode"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_peerNodeList, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 };
 
