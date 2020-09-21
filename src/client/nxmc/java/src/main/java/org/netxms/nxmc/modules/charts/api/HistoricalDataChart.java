@@ -20,11 +20,10 @@ package org.netxms.nxmc.modules.charts.api;
 
 import java.util.Date;
 import java.util.List;
+import org.eclipse.swt.events.MouseListener;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.widgets.Canvas;
 
 /**
  * Historical data chart interface
@@ -157,13 +156,6 @@ public interface HistoricalDataChart extends DataChart
     */
    public void addMouseListener(MouseListener listener);
    
-   /**
-    * Gets the plot area.
-    * 
-    * @return the plot area
-    */
-   public Canvas getPlotArea();
-
    /**
     * @return the useMultipliers
     */

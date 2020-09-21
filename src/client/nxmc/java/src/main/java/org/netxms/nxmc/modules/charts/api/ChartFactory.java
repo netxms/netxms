@@ -19,6 +19,10 @@
 package org.netxms.nxmc.modules.charts.api;
 
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.nxmc.modules.charts.widgets.BarGaugeWidget;
+import org.netxms.nxmc.modules.charts.widgets.CurrentValueWidget;
+import org.netxms.nxmc.modules.charts.widgets.DialChartWidget;
+import org.netxms.nxmc.modules.charts.widgets.LineChart;
 
 /**
  * Chart factory

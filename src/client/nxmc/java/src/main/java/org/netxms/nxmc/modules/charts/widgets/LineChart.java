@@ -209,7 +209,7 @@ public class LineChart extends Chart implements HistoricalDataChart
    					Date timestamp = new Date((long)xAxis.getDataCoordinate(e.x));
    					double value = yAxis.getDataCoordinate(e.y);
    					getPlotArea().setToolTipText(
-   					      series.getName() + "\n" + //$NON-NLS-1$
+                        series.getDescription() + "\n" + //$NON-NLS-1$
    					      DateFormatFactory.getDateTimeFormat().format(timestamp) + "\n" + //$NON-NLS-1$ 
    					      (useMultipliers ? DataFormatter.roundDecimalValue(value, cachedTickStep, 5) : Double.toString(value)));
    					tooltipShown = true;
@@ -1231,5 +1231,14 @@ public class LineChart extends Chart implements HistoricalDataChart
    public void modifyYBase(boolean modifyYBase)
    {
       this.modifyYBase = modifyYBase;
+   }
+
+   /**
+    * @see org.eclipse.swtchart.Chart#roundDecimalValue(double, double, int)
+    */
+   @Override
+   public String roundDecimalValue(double value, double step, int maxPrecision)
+   {
+      return DataFormatter.roundDecimalValue(value, step, maxPrecision);
    }
 }

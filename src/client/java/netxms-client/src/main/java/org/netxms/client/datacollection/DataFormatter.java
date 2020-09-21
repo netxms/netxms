@@ -85,7 +85,7 @@ public class DataFormatter
                for(j = i; (j < format.length) && !Character.isLetter(format[j]); j++)
                   ;
                
-               if(j+1 < format.length && (format[j] == 't' || format[j] == 'T') && Character.isLetter(format[j+1]))//t or T is prefix for date and time conversion characters
+               if (j + 1 < format.length && (format[j] == 't' || format[j] == 'T') && Character.isLetter(format[j + 1])) //t or T is prefix for date and time conversion characters
                   j++;
 
                boolean useMultipliers = false;
@@ -223,10 +223,10 @@ public class DataFormatter
    }
 
    /**
-    * Get rounded value for char labels
+    * Get rounded value for chart labels
     *
-    * @param value        to round
-    * @param step         of label
+    * @param value to round
+    * @param step of label
     * @param maxPrecision desired precision
     * @return rounded value
     */
@@ -246,12 +246,10 @@ public class DataFormatter
       }
 
       int precision;
-      if (step < 1 || i < 0)
+      if ((step < 1) || (i < 0))
          precision = (calculatePrecision(step) > maxPrecision) ? maxPrecision : calculatePrecision(step);
       else
-         precision = (calculatePrecision(step / multipliers[i]) > maxPrecision) ?
-               maxPrecision :
-               calculatePrecision(step / multipliers[i]);
+         precision = (calculatePrecision(step / multipliers[i]) > maxPrecision) ? maxPrecision : calculatePrecision(step / multipliers[i]);
 
       DecimalFormat df = new DecimalFormat();
       df.setMaximumFractionDigits(precision);
