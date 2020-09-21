@@ -1015,7 +1015,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
 #ifdef UNICODE
    char *un = MBStringFromWideString(m_hostname);
    CalculateSHA1Hash((BYTE *)un, strlen(un), addressHash);
-   free(un);
+   MemFree(un);
 #else
    CalculateSHA1Hash((BYTE *)m_hostname, strlen(m_hostname), addressHash);
 #endif
@@ -1048,7 +1048,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
       debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
       return false;
    }
-   rc = PEM_write_PrivateKey(f, key, EVP_des_ede3_cbc(), NULL, 0, 0, (void *)"nxagentd");
+   rc = PEM_write_PrivateKey(f, key, EVP_des_ede3_cbc(), nullptr, 0, 0, (void *)"nxagentd");
    fclose(f);
    if (rc != 1)
    {
