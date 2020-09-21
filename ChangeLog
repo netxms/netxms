@@ -4,7 +4,6 @@
 
 - SMTP implemented as a notification channel and e-mail actions replaced by notification actions
 - Added 'DefaultNotificationChannel.SMTP.Html' and 'DefaultNotificationChannel.SMTP.Text' server configuration parametes for default SMTP channel names used by internal functions
-- Added option to validate server certificate on agent
 
 
 *
@@ -12,6 +11,7 @@
 *
 
 - New instance discovery method "internal table"
+- Added option to validate server certificate on agent
 - Fixed issues:
 	NX-1416 (NetXMS Agents shutdown does not end ExternalParametersProviders)
 	NX-1911 (Separate object name for use on maps)
