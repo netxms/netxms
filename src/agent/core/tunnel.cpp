@@ -519,15 +519,15 @@ static void SSLInfoCallback(const SSL *ssl, int where, int ret)
 }
 
 /**
- * Validate server certificate
+ * Verify server certificate
  */
-static bool ValidateServerCertificate(X509 *cert)
+static bool VerifyServerCertificate(X509 *cert)
 {
    bool valid = false;
    X509_STORE *trustedCertificateStore = X509_STORE_new();
    if (trustedCertificateStore == nullptr)
    {
-      nxlog_write(NXLOG_INFO, _T("ValidateServerCertificate: cannot create certificate store"));
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("VerifyServerCertificate: cannot create certificate store"));
       return valid;
    }
 
@@ -559,36 +559,65 @@ static bool ValidateServerCertificate(X509 *cert)
          {
             added = X509_LOOKUP_load_file(fileLookup, mbTrustedRoot, X509_FILETYPE_PEM);
          }
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ValidateServerCertificate: trusted root %s \"%s\" loaded"), S_ISDIR(st.st_mode) ? _T("directory") : _T("certificate"), trustedRoot);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("VerifyServerCertificate: trusted root %s \"%s\" loaded"), S_ISDIR(st.st_mode) ? _T("directory") : _T("certificate"), trustedRoot);
       }
       delete it;
    }
 
 #ifdef _WIN32
-   //TODO: load default store from win api
-#else
+   HCERTSTORE  hStore = CertOpenSystemStore(NULL, L"ROOT");
+   if (hStore != nullptr)
+   {
+      PCCERT_CONTEXT context = nullptr;
+      while ((context = CertEnumCertificatesInStore(hStore, context)) != nullptr)
+      {
+         TCHAR certName[1024];
+         CertGetNameString(context, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, certName, 1024);
+
+         const unsigned char *in = context->pbCertEncoded;
+         X509 *cert = d2i_X509(nullptr, &in, context->cbCertEncoded);
+         if (cert != nullptr)
+         {
+            if (X509_STORE_add_cert(trustedCertificateStore, cert))
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("VerifyServerCertificate: added trusted root certificate \"%s\" from system store"), certName);
+            else
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("VerifyServerCertificate: cannot add trusted root certificate \"%s\" from system store"), certName);
+            X509_free(cert);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: cannot convert certificate \"%s\""), certName);
+         }
+      }
+      CertCloseStore(hStore, CERT_CLOSE_STORE_FORCE_FLAG);
+   }
+   else
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: cannot open certificate store \"ROOT\" (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+   }
+#else    /* _WIN32 */
    struct stat fileInfo;
    if (stat(DEFAULT_STORE, &fileInfo) == 0)
    {
       X509_LOOKUP_add_dir(dirLookup, DEFAULT_STORE, X509_FILETYPE_PEM);
    }
-#endif
+#endif   /* _WIN32 */
 
    X509_STORE_CTX *ctx = X509_STORE_CTX_new();
    if (ctx != nullptr)
    {
       X509_STORE_CTX_init(ctx, trustedCertificateStore, cert, nullptr);
-      int result = X509_verify_cert(ctx);
-      valid = (result == 1);
-      if (!valid)
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("ValidateServerCertificate: validation failed with reason: %hs"), X509_verify_cert_error_string(X509_STORE_CTX_get_error(ctx)));
-
+      if (X509_verify_cert(ctx))
+         valid = true;
+      else
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: verification failed (%hs)"), X509_verify_cert_error_string(X509_STORE_CTX_get_error(ctx)));
       X509_STORE_CTX_free(ctx);
    }
    else
    {
       TCHAR buffer[256];
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("ValidateServerCertificate: X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), buffer));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("VerifyServerCertificate: X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), buffer));
    }
    X509_STORE_free(trustedCertificateStore);
 
@@ -605,14 +634,14 @@ bool Tunnel::connectToServer()
    // Cleanup from previous connection attempt
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
-   if (m_ssl != NULL)
+   if (m_ssl != nullptr)
       SSL_free(m_ssl);
-   if (m_context != NULL)
+   if (m_context != nullptr)
       SSL_CTX_free(m_context);
 
    m_socket = INVALID_SOCKET;
-   m_context = NULL;
-   m_ssl = NULL;
+   m_context = nullptr;
+   m_ssl = nullptr;
 
    m_address = InetAddress::resolveHostName(m_hostname);
    if (!m_address.isValidUnicast())
@@ -739,9 +768,13 @@ bool Tunnel::connectToServer()
    bool isValid = true;
    if (g_dwFlags & AF_CHECK_SERVER_CERTIFICATE)
    {
-      isValid = ValidateServerCertificate(cert);
-      debugPrintf(3, _T("Certificate \"%hs\" for issuer %hs - validation %s"),
-            subj, issuer, isValid ? _T("successful") : _T("failed"));
+      debugPrintf(3, _T("Verifying server certificate"));
+      isValid = VerifyServerCertificate(cert);
+      debugPrintf(3, _T("Certificate \"%hs\" for issuer %hs - verification %s"), subj, issuer, isValid ? _T("successful") : _T("failed"));
+   }
+   else
+   {
+      debugPrintf(3, _T("Server certificate verification is disabled"));
    }
    OPENSSL_free(subj);
    OPENSSL_free(issuer);
