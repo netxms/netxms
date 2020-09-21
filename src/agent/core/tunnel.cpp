@@ -545,21 +545,21 @@ static bool ValidateServerCertificate(X509 *cert)
             continue;
 
 #ifdef UNICODE
-         char __buffer[MAX_PATH];
-         WideCharToMultiByteSysLocale(trustedRoot, __buffer, MAX_PATH);
+         char mbTrustedRoot[MAX_PATH];
+         WideCharToMultiByteSysLocale(trustedRoot, mbTrustedRoot, MAX_PATH);
 #else
-#define __buffer item
+         const char *mbTrustedRoot = trustedRoot;
 #endif
          int added = 0;
          if (S_ISDIR(st.st_mode))
          {
-            added = X509_LOOKUP_add_dir(dirLookup, __buffer, X509_FILETYPE_PEM);
+            added = X509_LOOKUP_add_dir(dirLookup, mbTrustedRoot, X509_FILETYPE_PEM);
          }
          else
          {
-            added = X509_LOOKUP_load_file(fileLookup, __buffer, X509_FILETYPE_PEM);
+            added = X509_LOOKUP_load_file(fileLookup, mbTrustedRoot, X509_FILETYPE_PEM);
          }
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ValidateServerCertificate: %s '%hs' loaded"), S_ISDIR(st.st_mode) ? _T("directory") : _T("certificate"), __buffer);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ValidateServerCertificate: trusted root %s \"%s\" loaded"), S_ISDIR(st.st_mode) ? _T("directory") : _T("certificate"), trustedRoot);
       }
       delete it;
    }
