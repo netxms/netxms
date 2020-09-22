@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <openssl/engine.h>
 #include <nxstat.h>
 
 #define DEBUG_TAG _T("tunnel")
@@ -94,6 +95,7 @@ class Tunnel
 private:
    TCHAR *m_hostname;
    uint16_t m_port;
+   TCHAR *m_certificate;
    InetAddress m_address;
    SOCKET m_socket;
    SSL_CTX *m_context;
@@ -112,7 +114,7 @@ private:
    int m_tlsHandshakeFailures;
    bool m_ignoreClientCertificate;
 
-   Tunnel(const TCHAR *hostname, uint16_t port);
+   Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate);
 
    bool connectToServer();
    int sslWrite(const void *data, size_t size);
@@ -126,6 +128,8 @@ private:
    X509_REQ *createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey);
    bool saveCertificate(X509 *cert, EVP_PKEY *key);
    bool loadCertificate();
+   bool loadCertificateFromFile();
+   bool loadCertificateFromStore();
 
    void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
@@ -150,13 +154,14 @@ public:
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const TCHAR *hostname, uint16_t port) : m_channels(Ownership::True)
+Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate) : m_channels(Ownership::True)
 {
    m_hostname = MemCopyString(hostname);
    m_port = port;
+   m_certificate = MemCopyString(certificate);
    m_socket = INVALID_SOCKET;
-   m_context = NULL;
-   m_ssl = NULL;
+   m_context = nullptr;
+   m_ssl = nullptr;
    m_sslLock = MutexCreate();
    m_writeLock = MutexCreate();
    m_stateLock = MutexCreate();
@@ -165,7 +170,7 @@ Tunnel::Tunnel(const TCHAR *hostname, uint16_t port) : m_channels(Ownership::Tru
    m_forceResolve = false;
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
-   m_queue = NULL;
+   m_queue = nullptr;
    m_channelLock = MutexCreate();
    m_tlsHandshakeFailures = 0;
    m_ignoreClientCertificate = false;
@@ -179,15 +184,16 @@ Tunnel::~Tunnel()
    disconnect();
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
-   if (m_ssl != NULL)
+   if (m_ssl != nullptr)
       SSL_free(m_ssl);
-   if (m_context != NULL)
+   if (m_context != nullptr)
       SSL_CTX_free(m_context);
    MutexDestroy(m_sslLock);
    MutexDestroy(m_writeLock);
    MutexDestroy(m_stateLock);
    MutexDestroy(m_channelLock);
    MemFree(m_hostname);
+   MemFree(m_certificate);
 }
 
 /**
@@ -262,7 +268,7 @@ void Tunnel::recvThread()
    {
       MessageReceiverResult result;
       NXCPMessage *msg = receiver.readMessage(1000, &result);
-      if (msg != NULL)
+      if (msg != nullptr)
       {
          if (nxlog_get_debug_level() >= 6)
          {
@@ -382,10 +388,20 @@ bool Tunnel::sendMessage(const NXCPMessage& msg)
 }
 
 /**
- * Load certificate for this tunnel
+ * Load certificate for this tunnel from file
  */
 bool Tunnel::loadCertificate()
 {
+   return ((m_certificate != nullptr) && !_tcsicmp(m_certificate, _T("capi"))) ? loadCertificateFromStore() : loadCertificateFromFile();
+}
+
+/**
+ * Load certificate for this tunnel from file
+ */
+bool Tunnel::loadCertificateFromFile()
+{
+   debugPrintf(6, _T("Loading certificate from file"));
+
    BYTE addressHash[SHA1_DIGEST_SIZE];
 #ifdef UNICODE
    char *un = MBStringFromWideString(m_hostname);
@@ -427,7 +443,7 @@ bool Tunnel::loadCertificate()
    X509 *cert = PEM_read_X509(f, NULL, NULL, NULL);
    fclose(f);
 
-   if (cert == NULL)
+   if (cert == nullptr)
    {
       debugPrintf(4, _T("Cannot load certificate from file \"%s\""), name);
       return false;
@@ -435,7 +451,7 @@ bool Tunnel::loadCertificate()
 
    _sntprintf(name, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
    f = _tfopen(name, _T("r"));
-   if (f == NULL)
+   if (f == nullptr)
    {
       debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
       X509_free(cert);
@@ -445,7 +461,7 @@ bool Tunnel::loadCertificate()
    EVP_PKEY *key = PEM_read_PrivateKey(f, NULL, NULL, (void *)"nxagentd");
    fclose(f);
 
-   if (key == NULL)
+   if (key == nullptr)
    {
       debugPrintf(4, _T("Cannot load private key from file \"%s\""), name);
       X509_free(cert);
@@ -473,6 +489,102 @@ bool Tunnel::loadCertificate()
    X509_free(cert);
    EVP_PKEY_free(key);
    return success;
+}
+
+/**
+ * Mutex for engine load
+ */
+#ifdef _WIN32
+static Mutex s_mutexEngineLoad;
+#endif
+
+/**
+ * Load certificate for this tunnel from Windows store
+ */
+bool Tunnel::loadCertificateFromStore()
+{
+#ifdef _WIN32
+   debugPrintf(6, _T("Loading certificate from system certificate store"));
+
+   s_mutexEngineLoad.lock();
+
+   ENGINE *e = ENGINE_by_id("capi");
+   if (e == nullptr)
+   {
+      e = ENGINE_by_id("dynamic");
+      if (e == nullptr)
+      {
+         debugPrintf(2, _T("Cannot create OpenSSL engine"));
+         s_mutexEngineLoad.unlock();
+         return false;
+      }
+
+      TCHAR engineLib[MAX_PATH];
+      GetNetXMSDirectory(nxDirLib, engineLib);
+      _tcscat(engineLib, _T("\\capi.dll"));
+#ifdef UNICODE
+      char engineLibA[MAX_PATH];
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, engineLib, -1, engineLibA, MAX_PATH, nullptr, nullptr);
+      ENGINE_ctrl_cmd_string(e, "SO_PATH", engineLibA, 0);
+#else
+      ENGINE_ctrl_cmd_string(e, "SO_PATH", engineLib, 0);
+#endif
+      ENGINE_ctrl_cmd_string(e, "ID", "capi", 0);
+      if (ENGINE_ctrl_cmd_string(e, "LOAD", nullptr, 0))
+      {
+         debugPrintf(6, _T("OpenSSL engine loaded (ID=%hs name=%hs)"), ENGINE_get_id(e), ENGINE_get_name(e));
+         if (ENGINE_init(e))
+         {
+            debugPrintf(6, _T("OpenSSL engine initialized"));
+         }
+         else
+         {
+            debugPrintf(2, _T("Cannot initialize OpenSSL engine"));
+            ENGINE_free(e);
+            s_mutexEngineLoad.lock();
+            return false;
+         }
+      }
+      else
+      {
+         debugPrintf(2, _T("Cannot load OpenSSL engine from \"%s\""), engineLib);
+         ENGINE_free(e);
+         s_mutexEngineLoad.lock();
+         return false;
+      }
+
+      if (!ENGINE_ctrl_cmd_string(e, "store_name", "MY", 0) ||
+         !ENGINE_ctrl_cmd_string(e, "store_flags", "1", 0))
+      {
+         debugPrintf(2, _T("Cannot select certificate store"));
+         ENGINE_finish(e);
+         ENGINE_free(e);
+         s_mutexEngineLoad.lock();
+         return false;
+      }
+
+      ENGINE_add(e);
+   }
+
+   s_mutexEngineLoad.unlock();
+
+   if (!SSL_CTX_set_client_cert_engine(m_context, e))
+   {
+      debugPrintf(2, _T("Cannot select engine in SSL context"));
+      ENGINE_free(e);
+      return false;
+   }
+
+   // Disable TLS 1.2+ because of this OpenSSL issue:
+   // https://github.com/openssl/openssl/issues/12859
+   SSL_CTX_set_options(m_context, SSL_CTX_get_options(m_context) | SSL_OP_NO_TLSv1_2 | SSL_OP_NO_TLSv1_3);
+
+   ENGINE_free(e);
+   return true;
+#else
+   debugPrintf(2, _T("Loading certificate from system store supported only on Windows platform"));
+   return false;
+#endif
 }
 
 /**
@@ -667,7 +779,7 @@ bool Tunnel::connectToServer()
 #else
    const SSL_METHOD *method = SSLv23_method();
 #endif
-   if (method == NULL)
+   if (method == nullptr)
    {
       debugPrintf(4, _T("Cannot obtain TLS method"));
       MutexUnlock(m_stateLock);
@@ -675,7 +787,7 @@ bool Tunnel::connectToServer()
    }
 
    m_context = SSL_CTX_new((SSL_METHOD *)method);
-   if (m_context == NULL)
+   if (m_context == nullptr)
    {
       debugPrintf(4, _T("Cannot create TLS context"));
       MutexUnlock(m_stateLock);
@@ -694,7 +806,7 @@ bool Tunnel::connectToServer()
    m_ignoreClientCertificate = false;  // reset ignore flag for next try
 
    m_ssl = SSL_new(m_context);
-   if (m_ssl == NULL)
+   if (m_ssl == nullptr)
    {
       debugPrintf(4, _T("Cannot create SSL object"));
       MutexUnlock(m_stateLock);
@@ -1080,9 +1192,9 @@ void Tunnel::processBindRequest(NXCPMessage *request)
    MemFree(org);
    MemFree(cn);
 
-   if (req != NULL)
+   if (req != nullptr)
    {
-      BYTE *buffer = NULL;
+      BYTE *buffer = nullptr;
       int len = i2d_X509_REQ(req, &buffer);
       if (len > 0)
       {
@@ -1266,12 +1378,25 @@ ssize_t Tunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 
 /**
  * Create tunnel object from configuration record
+ * Record format is address[:port][/certificate]
  */
 Tunnel *Tunnel::createFromConfig(const TCHAR *config)
 {
    StringBuffer sb(config);
+   
+   // Get certificate option
+   TCHAR *certificate = nullptr;
+   TCHAR *p = _tcschr(sb.getBuffer(), _T('/'));
+   if (p != nullptr)
+   {
+      *p = 0;
+      certificate = p + 1;
+      Trim(certificate);
+   }
+
+   // Get port option
    int port = AGENT_TUNNEL_PORT;
-   TCHAR *p = _tcschr(sb.getBuffer(), _T(':'));
+   p = _tcschr(sb.getBuffer(), _T(':'));
    if (p != nullptr)
    {
       *p = 0;
@@ -1282,7 +1407,7 @@ Tunnel *Tunnel::createFromConfig(const TCHAR *config)
       if ((port < 1) || (port > 65535))
          return nullptr;
    }
-   return new Tunnel(sb.cstr(), port);
+   return new Tunnel(sb.cstr(), port, certificate);
 }
 
 /**
