@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -24,6 +24,8 @@
 #include "libnetxms.h"
 #include "ice.h"
 #include <nxcpapi.h>
+
+#define DEBUG_TAG _T("crypto")
 
 /**
  * Constants
@@ -199,7 +201,14 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
 #endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS | OPENSSL_INIT_NO_LOAD_CONFIG | OPENSSL_INIT_ASYNC, NULL);
+   OPENSSL_init_crypto(
+      OPENSSL_INIT_LOAD_CRYPTO_STRINGS | 
+      OPENSSL_INIT_ADD_ALL_CIPHERS | 
+      OPENSSL_INIT_ADD_ALL_DIGESTS | 
+      OPENSSL_INIT_NO_LOAD_CONFIG |
+      OPENSSL_INIT_ASYNC |
+      OPENSSL_INIT_ENGINE_DYNAMIC,
+      NULL);
 #endif
 
    RAND_seed(random, 8192);
@@ -215,46 +224,46 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
 #endif
 
    // validate supported ciphers
-   nxlog_debug(1, _T("Validating ciphers"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Validating ciphers"));
    s_supportedCiphers &= dwEnabledCiphers;
    UINT32 cipherBit = 1;
    for (i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
       if ((s_supportedCiphers & cipherBit) == 0)
       {
-         nxlog_debug(1, _T("   %s disabled (config)"), s_cipherNames[i]);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("   %s disabled (config)"), s_cipherNames[i]);
          continue;
       }
       NXCPEncryptionContext *ctx = NXCPEncryptionContext::create(cipherBit);
       if (ctx != NULL)
       {
          delete ctx;
-         nxlog_debug(1, _T("   %s enabled"), s_cipherNames[i]);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("   %s enabled"), s_cipherNames[i]);
       }
       else
       {
          s_supportedCiphers &= ~cipherBit;
-         nxlog_debug(1, _T("   %s disabled (validation failed)"), s_cipherNames[i]);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("   %s disabled (validation failed)"), s_cipherNames[i]);
       }
    }
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   nxlog_write(NXLOG_INFO, _T("Crypto library initialized (%hs)"), OpenSSL_version(OPENSSL_VERSION));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Crypto library initialized (%hs)"), OpenSSL_version(OPENSSL_VERSION));
    if (OpenSSL_version_num() != OPENSSL_VERSION_NUMBER)
    {
-      nxlog_write(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
             OPENSSL_VERSION_NUMBER, OpenSSL_version_num());
    }
 #else
-   nxlog_write(NXLOG_INFO, _T("Crypto library initialized (%hs)"), SSLeay_version(SSLEAY_VERSION));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Crypto library initialized (%hs)"), SSLeay_version(SSLEAY_VERSION));
    if (SSLeay() != SSLEAY_VERSION_NUMBER)
    {
-      nxlog_write(NXLOG_WARNING, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Compile time OpenSSL version (%08x) does not match runtime OpenSSL version (%08x)"),
             SSLEAY_VERSION_NUMBER, SSLeay());
    }
 #endif
 #else
-   nxlog_write(NXLOG_WARNING, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
+   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
 #endif   /* _WITH_ENCRYPTION */
    return true;
 }
@@ -297,17 +306,17 @@ String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
 /**
  * Encrypt message
  */
-NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *NXCPEncryptMessage(NXCPEncryptionContext *pCtx, NXCP_MESSAGE *msg)
+NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *NXCPEncryptMessage(NXCPEncryptionContext *ctx, NXCP_MESSAGE *msg)
 {
-   return (pCtx != NULL) ? pCtx->encryptMessage(msg) : NULL;
+   return (ctx != nullptr) ? ctx->encryptMessage(msg) : nullptr;
 }
 
 /**
  * Decrypt message
  */
-bool LIBNETXMS_EXPORTABLE NXCPDecryptMessage(NXCPEncryptionContext *pCtx, NXCP_ENCRYPTED_MESSAGE *msg, BYTE *pDecryptionBuffer)
+bool LIBNETXMS_EXPORTABLE NXCPDecryptMessage(NXCPEncryptionContext *ctx, NXCP_ENCRYPTED_MESSAGE *msg, BYTE *pDecryptionBuffer)
 {
-   return (pCtx != NULL) ? pCtx->decryptMessage(msg, pDecryptionBuffer) : false;
+   return (ctx != nullptr) ? ctx->decryptMessage(msg, pDecryptionBuffer) : false;
 }
 
 /**
@@ -655,25 +664,25 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA *priv
             }
             else
             {
-               nxlog_debug(6, _T("NXCPEncryptionContext::create: IV decryption failed"));
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPEncryptionContext::create: IV decryption failed"));
                delete_and_null(ctx);
             }
          }
          else
          {
-            nxlog_debug(6, _T("NXCPEncryptionContext::create: session key decryption failed"));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPEncryptionContext::create: session key decryption failed"));
             delete_and_null(ctx);
          }
       }
       else
       {
-         nxlog_debug(6, _T("NXCPEncryptionContext::create: key length mismatch (remote: %d local: %d)"), (int)msg->getFieldAsUInt16(VID_KEY_LENGTH), ctx->m_keyLength);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPEncryptionContext::create: key length mismatch (remote: %d local: %d)"), (int)msg->getFieldAsUInt16(VID_KEY_LENGTH), ctx->m_keyLength);
          delete_and_null(ctx);
       }
    }
    else
    {
-      nxlog_debug(6, _T("NXCPEncryptionContext::create: initCipher(%d) call failed"), cipher);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPEncryptionContext::create: initCipher(%d) call failed"), cipher);
       delete_and_null(ctx);
    }
 	return ctx;
@@ -917,10 +926,10 @@ bool LIBNETXMS_EXPORTABLE ValidateMessageSignature(const void *message, size_t m
 void LIBNETXMS_EXPORTABLE LogOpenSSLErrorStack(int level)
 {
 #if defined(_WITH_ENCRYPTION) && WITH_OPENSSL
-   nxlog_debug(level, _T("OpenSSL error stack:"));
+   nxlog_debug_tag(DEBUG_TAG, level, _T("OpenSSL error stack:"));
    long err;
    char buffer[128];
    while((err = ERR_get_error()) != 0)
-      nxlog_debug(level, _T("   %hs"), ERR_error_string(err, buffer));
+      nxlog_debug_tag(DEBUG_TAG, level, _T("   %hs"), ERR_error_string(err, buffer));
 #endif
 }

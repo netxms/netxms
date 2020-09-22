@@ -56,6 +56,7 @@ Source: "..\..\..\Release\libpng.dll"; DestDir: "{app}\bin"; Flags: ignoreversio
 Source: "..\..\..\Release\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxzlib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x86\capi.dll"; DestDir: "{app}\lib"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x86\libcrypto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x86\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x86\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
