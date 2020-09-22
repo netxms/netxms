@@ -436,7 +436,7 @@ typedef struct
 #define CMD_GET_ADDR_LIST                 0x00BC
 #define CMD_SET_ADDR_LIST                 0x00BD
 #define CMD_RESET_COMPONENT               0x00BE
-#define CMD_GET_DCI_EVENTS_LIST           0x00BF
+#define CMD_GET_RELATED_EVENTS_LIST       0x00BF
 #define CMD_EXPORT_CONFIGURATION          0x00C0
 #define CMD_IMPORT_CONFIGURATION          0x00C1
 #define CMD_GET_TRAP_CFG_RO			      0x00C2

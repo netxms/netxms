@@ -45,6 +45,8 @@ static GenericAgentPolicy *CreatePolicy(uuid guid, const TCHAR *type, UINT32 own
 {
    if (!_tcsicmp(type, _T("FileDelivery")))
       return new FileDeliveryPolicy(guid, ownerId);
+   if (!_tcsicmp(type, _T("LogParserConfig")))
+      return new LogParserPolicy(guid, ownerId);
    return new GenericAgentPolicy(guid, type, ownerId);
 }
 
@@ -55,6 +57,8 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UI
 {
    if (!_tcsicmp(type, _T("FileDelivery")))
       return new FileDeliveryPolicy(name, ownerId);
+   if (!_tcsicmp(type, _T("LogParserConfig")))
+      return new LogParserPolicy(name, ownerId);
    return new GenericAgentPolicy(name, type, ownerId);
 }
 
@@ -328,6 +332,23 @@ void Template::createExportRecord(StringBuffer &xml)
 
    AutoBindTarget::createExportRecord(xml);
    xml.append(_T("\t\t</template>\n"));
+}
+
+/**
+ * Get list of events used by DCIs and policies
+ */
+HashSet<uint32_t> *Template::getRelatedEventsList() const
+{
+   HashSet<uint32_t> *eventList = super::getRelatedEventsList();
+
+   lockProperties();
+   for (int i = 0; i < m_policyList->size(); i++)
+   {
+      m_policyList->get(i)->getEventList(eventList);
+   }
+   unlockProperties();
+
+   return eventList;
 }
 
 /**

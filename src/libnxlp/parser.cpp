@@ -1031,3 +1031,14 @@ const TCHAR *LogParser::getStatusText() const
    };
    return texts[m_status];
 }
+
+/**
+ * Get all events used in this log parser
+ */
+void LogParser::getEventList(HashSet<uint32_t> *eventList) const
+{
+   for(int i = 0; i < m_rules->size(); i++)
+   {
+      eventList->put(m_rules->get(i)->getEventCode());
+   }
+}

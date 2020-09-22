@@ -45,7 +45,7 @@ struct HashSetEntry
 /**
  * Get pointer to key
  */
-#define GET_KEY(e) ((m_keylen <= 16) ? (e)->key.d : (e)->key.p)
+#define GET_KEY(m, e) (((m)->m_keylen <= 16) ? (e)->key.d : (e)->key.p)
 
 /**
  * Constructors
@@ -104,7 +104,7 @@ void HashSetBase::_put(const void *key)
       memcpy(entry->key.d, key, m_keylen);
    else
       entry->key.p = MemCopyBlock(key, m_keylen);
-   HASH_ADD_KEYPTR(hh, m_data, GET_KEY(entry), m_keylen, entry);
+   HASH_ADD_KEYPTR(hh, m_data, GET_KEY(this, entry), m_keylen, entry);
 }
 
 /**
@@ -132,7 +132,7 @@ EnumerationCallbackResult HashSetBase::forEach(EnumerationCallbackResult (*cb)(c
    HashSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (cb(GET_KEY(entry), userData) == _STOP)
+      if (cb(GET_KEY(this, entry), userData) == _STOP)
       {
          result = _STOP;
          break;
@@ -148,3 +148,115 @@ int HashSetBase::size() const
 {
    return HASH_COUNT(m_data);
 }
+
+/**
+ * Hash set iterator
+ */
+HashSetConstIterator::HashSetConstIterator(const HashSetBase *hashSet)
+{
+   m_hashSet = hashSet;
+   m_curr = NULL;
+   m_next = NULL;
+}
+
+/**
+ * Next element availability indicator
+ */
+bool HashSetConstIterator::hasNext()
+{
+   if (m_hashSet->m_data == NULL)
+      return false;
+
+   return (m_curr != NULL) ? (m_next != NULL) : true;
+}
+
+/**
+ * Get next element
+ */
+void *HashSetConstIterator::next()
+{
+   if (m_hashSet->m_data == NULL)
+      return NULL;
+
+   if (m_curr == NULL)  // iteration not started
+   {
+      m_curr = m_hashSet->m_data;
+   }
+   else
+   {
+      if (m_next == NULL)
+         return NULL;
+      m_curr = m_next;
+   }
+   m_next = static_cast<HashSetEntry*>(m_curr->hh.next);
+   return GET_KEY(m_hashSet, m_curr);
+}
+
+/**
+ * Hash set iterator
+ */
+HashSetIterator::HashSetIterator(HashSetBase *hashSet)
+{
+   m_hashSet = hashSet;
+   m_curr = NULL;
+   m_next = NULL;
+}
+
+/**
+ * Next element availability indicator
+ */
+bool HashSetIterator::hasNext()
+{
+   if (m_hashSet->m_data == NULL)
+      return false;
+
+   return (m_curr != NULL) ? (m_next != NULL) : true;
+}
+
+/**
+ * Get next element
+ */
+void *HashSetIterator::next()
+{
+   if (m_hashSet->m_data == NULL)
+      return NULL;
+
+   if (m_curr == NULL)  // iteration not started
+   {
+      m_curr = m_hashSet->m_data;
+   }
+   else
+   {
+      if (m_next == NULL)
+         return NULL;
+      m_curr = m_next;
+   }
+   m_next = static_cast<HashSetEntry*>(m_curr->hh.next);
+   return GET_KEY(m_hashSet, m_curr);
+}
+
+/**
+ * Remove current element
+ */
+void HashSetIterator::remove()
+{
+   if (m_curr == NULL)
+      return;
+
+   HASH_DEL(m_hashSet->m_data, m_curr);
+   DELETE_KEY(m_hashSet, m_curr);
+   MemFree(m_curr);
+}
+
+/**
+ * Remove current element without destroying it
+ */
+void HashSetIterator::unlink()
+{
+   if (m_curr == NULL)
+      return;
+
+   HASH_DEL(m_hashSet->m_data, m_curr);
+   MemFree(m_curr);
+}
+

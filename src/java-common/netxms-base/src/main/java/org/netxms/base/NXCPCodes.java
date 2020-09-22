@@ -214,7 +214,7 @@ public class NXCPCodes
 	public static final int CMD_GET_ADDR_LIST = 0x00BC;
 	public static final int CMD_SET_ADDR_LIST = 0x00BD;
 	public static final int CMD_RESET_COMPONENT = 0x00BE;
-	public static final int CMD_GET_DCI_EVENTS_LIST = 0x00BF;
+	public static final int CMD_GET_RELATED_EVENTS_LIST = 0x00BF;
 	public static final int CMD_EXPORT_CONFIGURATION = 0x00C0;
 	public static final int CMD_IMPORT_CONFIGURATION = 0x00C1;
 	public static final int CMD_GET_TRAP_CFG_RO = 0x00C2;

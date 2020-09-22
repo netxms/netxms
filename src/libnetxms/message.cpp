@@ -1322,6 +1322,22 @@ void NXCPMessage::setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<ui
 }
 
 /**
+ * set binary field to an array of UINT32s
+ */
+void NXCPMessage::setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_t>& data)
+{
+   uint32_t *buffer = static_cast<uint32_t*>(set(fieldId, NXCP_DT_BINARY, nullptr, false, data.size() * sizeof(uint32_t)));
+   if (buffer != nullptr)
+   {
+      buffer++;   // First UINT32 is a length field
+      ConstIterator<const uint32_t> *it = data.constIterator();
+      for(int i = 0; i < data.size(); i++)  // Convert UINT32s to network byte order
+         buffer[i] = htonl(*(it->next()));
+      delete it;
+   }
+}
+
+/**
  * get binary field as an array of 32 bit unsigned integers
  */
 size_t NXCPMessage::getFieldAsInt32Array(uint32_t fieldId, size_t numElements, uint32_t *buffer) const

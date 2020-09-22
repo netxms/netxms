@@ -1989,10 +1989,58 @@ public:
 struct HashSetEntry;
 
 /**
+ * Hash set base class
+ */
+class HashSetBase;
+
+/**
+ * Hash set const iterator
+ */
+class LIBNETXMS_EXPORTABLE HashSetConstIterator : public AbstractConstIterator
+{
+   DISABLE_COPY_CTOR(HashSetConstIterator)
+
+private:
+   const HashSetBase *m_hashSet;
+   HashSetEntry *m_curr;
+   HashSetEntry *m_next;
+
+public:
+   HashSetConstIterator(const HashSetBase *hashSet);
+
+   virtual bool hasNext() override;
+   virtual void *next() override;
+};
+
+/**
+ * Hash set iterator
+ */
+class LIBNETXMS_EXPORTABLE HashSetIterator : public AbstractIterator
+{
+   DISABLE_COPY_CTOR(HashSetIterator)
+
+private:
+   HashSetBase *m_hashSet;
+   HashSetEntry *m_curr;
+   HashSetEntry *m_next;
+
+public:
+   HashSetIterator(HashSetBase *hashSet);
+
+   virtual bool hasNext() override;
+   virtual void *next() override;
+   virtual void remove() override;
+   virtual void unlink() override;
+};
+
+/**
  * Hash set base class (for fixed size non-pointer keys)
  */
 class LIBNETXMS_EXPORTABLE HashSetBase
 {
+   friend class HashSetIterator;
+   friend class HashSetConstIterator;
+
 private:
    HashSetEntry *m_data;
    unsigned int m_keylen;
@@ -2030,6 +2078,9 @@ public:
    {
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void *, void *)>(cb), context);
    }
+
+   Iterator<const K> *iterator() { return new Iterator<const K>(new HashSetIterator(this)); }
+   ConstIterator<const K> *constIterator() const { return new ConstIterator<const K>(new HashSetConstIterator(this)); }
 };
 
 /**

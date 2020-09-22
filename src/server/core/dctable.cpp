@@ -1235,15 +1235,15 @@ void DCTable::updateFromImport(ConfigEntry *config)
 /**
  * Get list of used events
  */
-void DCTable::getEventList(IntegerArray<UINT32> *eventList)
+void DCTable::getEventList(HashSet<uint32_t> *eventList)
 {
    lock();
    if (m_thresholds != nullptr)
    {
       for(int i = 0; i < m_thresholds->size(); i++)
       {
-         eventList->add(m_thresholds->get(i)->getActivationEvent());
-         eventList->add(m_thresholds->get(i)->getDeactivationEvent());
+         eventList->put(m_thresholds->get(i)->getActivationEvent());
+         eventList->put(m_thresholds->get(i)->getDeactivationEvent());
       }
    }
    unlock();

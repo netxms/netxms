@@ -402,7 +402,7 @@ public:
 	virtual bool deleteAllData();
 	virtual bool deleteEntry(time_t timestamp);
 
-   virtual void getEventList(IntegerArray<UINT32> *eventList) = 0;
+   virtual void getEventList(HashSet<uint32_t> *eventList) = 0;
    virtual void createExportRecord(StringBuffer &xml) = 0;
    virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson();
@@ -529,7 +529,7 @@ public:
 	virtual bool deleteAllData() override;
    virtual bool deleteEntry(time_t timestamp) override;
 
-   virtual void getEventList(IntegerArray<UINT32> *eventList) override;
+   virtual void getEventList(HashSet<uint32_t> *eventList) override;
    virtual void createExportRecord(StringBuffer &str) override;
    virtual json_t *toJson() override;
 
@@ -769,7 +769,7 @@ public:
 	virtual bool deleteAllData() override;
    virtual bool deleteEntry(time_t timestamp) override;
 
-   virtual void getEventList(IntegerArray<UINT32> *eventList) override;
+   virtual void getEventList(HashSet<uint32_t> *eventList) override;
    virtual void createExportRecord(StringBuffer &xml) override;
    virtual json_t *toJson() override;
 

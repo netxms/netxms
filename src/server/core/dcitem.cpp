@@ -1822,15 +1822,15 @@ void DCItem::updateFromTemplate(DCObject *src)
 /**
  * Get list of used events
  */
-void DCItem::getEventList(IntegerArray<UINT32> *eventList)
+void DCItem::getEventList(HashSet<uint32_t> *eventList)
 {
    lock();
    if (m_thresholds != nullptr)
    {
       for(int i = 0; i < m_thresholds->size(); i++)
       {
-         eventList->add(m_thresholds->get(i)->getEventCode());
-         eventList->add(m_thresholds->get(i)->getRearmEventCode());
+         eventList->put(m_thresholds->get(i)->getEventCode());
+         eventList->put(m_thresholds->get(i)->getRearmEventCode());
       }
    }
    unlock();

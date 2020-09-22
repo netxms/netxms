@@ -7971,9 +7971,9 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long[] getDataCollectionEvents(long objectId) throws IOException, NXCException
+   public long[] getRelatedEvents(long objectId) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_EVENTS_LIST);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_RELATED_EVENTS_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());

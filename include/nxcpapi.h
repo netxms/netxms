@@ -142,6 +142,8 @@ public:
    void setFieldFromInt32Array(uint32_t fieldId, size_t numElements, const uint32_t *elements);
    void setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t>& data);
    void setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t> *data) { if (data != nullptr) { setFieldFromInt32Array(fieldId, *data); } else { set(fieldId, NXCP_DT_BINARY, NULL, false, 0); } }
+   void setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_t>& data);
+   void setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_t> *data)  { if (data != nullptr) { setFieldFromInt32Array(fieldId, *data); } else { set(fieldId, NXCP_DT_BINARY, NULL, false, 0); } };
    bool setFieldFromFile(uint32_t fieldId, const TCHAR *fileName);
 
    INT16 getFieldAsInt16(UINT32 fieldId) const;

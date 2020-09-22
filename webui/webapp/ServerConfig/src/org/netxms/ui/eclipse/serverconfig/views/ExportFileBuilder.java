@@ -1307,7 +1307,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 					final Map<Long, Script> scriptList = new HashMap<Long, Script>();
 					for(Long id : idList)
 					{
-						long[] e = session.getDataCollectionEvents(id);
+						long[] e = session.getRelatedEvents(id);
 						for(long c : e)
 						{
 							if (c >= 100000)

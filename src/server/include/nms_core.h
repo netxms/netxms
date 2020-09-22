@@ -667,7 +667,7 @@ private:
    void getAddrList(NXCPMessage *request);
    void setAddrList(NXCPMessage *request);
    void resetComponent(NXCPMessage *pRequest);
-   void getDCIEventList(NXCPMessage *request);
+   void getRelatedEventList(NXCPMessage *request);
    void getDCIScriptList(NXCPMessage *request);
 	void SendDCIInfo(NXCPMessage *pRequest);
    void sendPerfTabDCIList(NXCPMessage *pRequest);
@@ -1198,6 +1198,7 @@ void GetSysInfoStr(TCHAR *buffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
 
 InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname);
+bool EventNameResolver(const TCHAR *name, UINT32 *code);
 
 BOOL ExecCommand(TCHAR *pszCommand);
 bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);

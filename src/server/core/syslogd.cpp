@@ -561,21 +561,6 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
 }
 
 /**
- * Event name resolver
- */
-static bool EventNameResolver(const TCHAR *name, UINT32 *code)
-{
-	bool success = false;
-	shared_ptr<EventTemplate> event = FindEventTemplateByName(name);
-	if (event != nullptr)
-	{
-		*code = event->getCode();
-		success = true;
-	}
-	return success;
-}
-
-/**
  * Create syslog parser from config
  */
 static void CreateParserFromConfig()
