@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxlpapi.h>
 
 #define DEBUG_TAG _T("agent.policy")
 
@@ -566,6 +567,30 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    delete remoteFiles;
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): policy successfully deployed"), data->debugId);
+}
+
+/**
+ * Get event list used by policy
+ */
+void LogParserPolicy::getEventList(HashSet<uint32_t> *eventList) const
+{
+   TCHAR error[1024];
+   ObjectArray<LogParser> *parsers = LogParser::createFromXml((const char *)m_content, strlen(m_content), error, 1024, EventNameResolver);
+   if (parsers != nullptr)
+   {
+      for (int i = 0; i < parsers->size(); i++)
+      {
+         LogParser *parser = parsers->get(i);
+         parser->getEventList(eventList);
+         delete parser;
+         ConstIterator<const uint32_t> *it = eventList->constIterator();
+      }
+      delete parsers;
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("LogParserPolicy::getEventList: Cannot create parser from %s configuration"), m_name);
+   }
 }
 
 /**

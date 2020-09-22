@@ -168,6 +168,7 @@ public:
 
 	const TCHAR *getName() const { return m_name; }
 	bool isValid() const { return m_preg != NULL; }
+	UINT32 getEventCode() const { return m_eventCode; }
 
 	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *context);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
@@ -295,6 +296,7 @@ public:
    const TCHAR *getStatusText() const;
    bool isFilePreallocated() const { return m_preallocatedFile; }
    bool isDetectBrokenPrealloc() const { return m_detectBrokenPrealloc; }
+   void getEventList(HashSet<uint32_t> *eventList) const;
 
 	void setName(const TCHAR *name);
    void setFileName(const TCHAR *name);

@@ -1284,7 +1284,7 @@ public:
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userId) const;
    void setDCIModificationFlag() { m_dciListModified = true; }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId) const;
-   IntegerArray<UINT32> *getDCIEventsList() const;
+   virtual HashSet<uint32_t> *getRelatedEventsList() const;
    StringSet *getDCIScriptList() const;
    bool isDataCollectionSource(UINT32 nodeId) const;
 
@@ -1383,6 +1383,7 @@ public:
 
    virtual void updateFromImport(const ConfigEntry *config);
    virtual void createExportRecord(StringBuffer &xml, uint32_t recordId);
+   virtual void getEventList(HashSet<uint32_t> *eventList) const {}
 
    virtual json_t *toJson();
 
@@ -1403,6 +1404,19 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual void deploy(shared_ptr<AgentPolicyDeploymentData> data) override;
+};
+
+/**
+ * Log parser policy
+ */
+class NXCORE_EXPORTABLE LogParserPolicy : public GenericAgentPolicy
+{
+public:
+   LogParserPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("LogParserConfig"), ownerId) { }
+   LogParserPolicy(const TCHAR *name, uint32_t ownerId) : GenericAgentPolicy(name, _T("LogParserConfig"), ownerId) { }
+   virtual ~LogParserPolicy() { }
+
+   virtual void getEventList(HashSet<uint32_t> *eventList) const override;
 };
 
 /**
@@ -1448,6 +1462,7 @@ public:
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
 
    void createExportRecord(StringBuffer &xml);
+   virtual HashSet<uint32_t> *getRelatedEventsList() const override;
 
    bool hasPolicy(const uuid& guid) const;
    void fillPolicyListMessage(NXCPMessage *pMsg) const;

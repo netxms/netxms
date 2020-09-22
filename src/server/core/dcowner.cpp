@@ -867,28 +867,15 @@ void DataCollectionOwner::queueRemoveFromTarget(UINT32 targetId, bool removeDCI)
 /**
  * Get list of events used by DCIs
  */
-IntegerArray<UINT32> *DataCollectionOwner::getDCIEventsList() const
+HashSet<uint32_t> *DataCollectionOwner::getRelatedEventsList() const
 {
-   IntegerArray<UINT32> *eventList = new IntegerArray<UINT32>(64);
+   HashSet<uint32_t> *eventList = new HashSet<uint32_t>();
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       m_dcObjects->get(i)->getEventList(eventList);
    }
    unlockDciAccess();
-
-   // Clean list from duplicates
-   for(int i = 0; i < eventList->size(); i++)
-   {
-      for(int j = i + 1; j < eventList->size(); j++)
-      {
-         if (eventList->get(i) == eventList->get(j))
-         {
-            eventList->remove(j);
-            j--;
-         }
-      }
-   }
 
    return eventList;
 }

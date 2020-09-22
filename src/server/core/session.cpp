@@ -982,8 +982,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_DCI_THRESHOLDS:
          sendDCIThresholds(request);
          break;
-      case CMD_GET_DCI_EVENTS_LIST:
-         getDCIEventList(request);
+      case CMD_GET_RELATED_EVENTS_LIST:
+         getRelatedEventList(request);
          break;
       case CMD_GET_DCI_SCRIPT_LIST:
          getDCIScriptList(request);
@@ -9387,7 +9387,7 @@ void ClientSession::resetComponent(NXCPMessage *pRequest)
 /**
  * Get list of events used by template's or node's DCIs
  */
-void ClientSession::getDCIEventList(NXCPMessage *request)
+void ClientSession::getRelatedEventList(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -9400,7 +9400,7 @@ void ClientSession::getDCIEventList(NXCPMessage *request)
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            IntegerArray<UINT32> *eventList = static_cast<DataCollectionOwner&>(*object).getDCIEventsList();
+            HashSet<uint32_t> *eventList = static_cast<DataCollectionOwner&>(*object).getRelatedEventsList();
             msg.setField(VID_NUM_EVENTS, (UINT32)eventList->size());
             msg.setFieldFromInt32Array(VID_EVENT_LIST, eventList);
             delete eventList;

@@ -413,6 +413,21 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *host
 }
 
 /**
+ * Event name resolver
+ */
+bool EventNameResolver(const TCHAR *name, UINT32 *code)
+{
+   bool success = false;
+   shared_ptr<EventTemplate> event = FindEventTemplateByName(name);
+   if (event != nullptr)
+   {
+      *code = event->getCode();
+      success = true;
+   }
+   return success;
+}
+
+/**
  * Create object URL from NXCP message
  */
 ObjectUrl::ObjectUrl(NXCPMessage *msg, UINT32 baseId)
