@@ -12,6 +12,7 @@
 
 - New instance discovery method "internal table"
 - Added option to validate server certificate on agent
+- Fixed column sorting in Web Service Definition view
 - Fixed issues:
 	NX-1416 (NetXMS Agents shutdown does not end ExternalParametersProviders)
 	NX-1905 Log Parser policy in Template Agent Policies does not automatically include Events in Export Configuration Tool

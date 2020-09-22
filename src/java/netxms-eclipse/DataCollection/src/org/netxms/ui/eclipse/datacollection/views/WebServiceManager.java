@@ -62,6 +62,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.pages.WebServiceGeneral;
 import org.netxms.ui.eclipse.datacollection.dialogs.pages.WebServiceHeaders;
+import org.netxms.ui.eclipse.datacollection.views.helpers.WebServiceDefinitionComparator;
 import org.netxms.ui.eclipse.datacollection.views.helpers.WebServiceDefinitionFilter;
 import org.netxms.ui.eclipse.datacollection.views.helpers.WebServiceDefinitionLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -130,6 +131,7 @@ public class WebServiceManager extends ViewPart
       viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new WebServiceDefinitionLabelProvider());
+      viewer.setComparator(new WebServiceDefinitionComparator());
       filter = new WebServiceDefinitionFilter();
       viewer.addFilter(filter);
       WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WebServiceManager"); //$NON-NLS-1$
