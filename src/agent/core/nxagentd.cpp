@@ -333,7 +333,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SystemName"), CT_STRING, 0, 0, MAX_OBJECT_NAME, 0, g_systemName, nullptr },
    { _T("TrustedRootCertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedRootCertificates, nullptr },
    { _T("TunnelKeepaliveInterval"), CT_LONG, 0, 0, 0, 0, &g_tunnelKeepaliveInterval, nullptr },
-   { _T("VerifyServerCeritifcate"), CT_BOOLEAN_FLAG_32, 0, 0, AF_CHECK_SERVER_CERTIFICATE, 0, &g_dwFlags, nullptr },
+   { _T("VerifyServerCertificate"), CT_BOOLEAN_FLAG_32, 0, 0, AF_CHECK_SERVER_CERTIFICATE, 0, &g_dwFlags, nullptr },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_32, 0, 0, AF_JSON_LOG, 0, &g_dwFlags, nullptr },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr }, // for backward compatibility
