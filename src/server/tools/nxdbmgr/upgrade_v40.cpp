@@ -82,8 +82,8 @@ static bool H_UpgradeFromV9()
          _T("   4) Notification message")
          _T("' WHERE event_code=22")));
 
-   CHK_EXEC(CreateConfigParam(_T("DefaultNotificationChannel.SMTP.Html"), _T("SMTP-HTML"), _T("Default notification channel for SMTP HTML formatted messages"), nullptr, 'S', true, true, false, false));
-   CHK_EXEC(CreateConfigParam(_T("DefaultNotificationChannel.SMTP.Text"), _T("SMTP-Text"), _T("Default notification channel for SMTP Text formatted messages"), nullptr, 'S', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DefaultNotificationChannel.SMTP.Html"), _T("SMTP-HTML"), _T("Default notification channel for SMTP HTML formatted messages"), nullptr, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DefaultNotificationChannel.SMTP.Text"), _T("SMTP-Text"), _T("Default notification channel for SMTP Text formatted messages"), nullptr, 'S', true, false, false, false));
 
    TCHAR server[MAX_STRING_VALUE];
    TCHAR localHostName[MAX_STRING_VALUE];
