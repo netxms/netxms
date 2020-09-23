@@ -1124,10 +1124,8 @@ struct ConnectionRequest
 /**
  * Setup tunnel
  */
-static void SetupTunnel(void *arg)
+static void SetupTunnel(ConnectionRequest *request)
 {
-   ConnectionRequest *request = (ConnectionRequest *)arg;
-
    SSL_CTX *context = nullptr;
    SSL *ssl = nullptr;
    AgentTunnel *tunnel = nullptr;
