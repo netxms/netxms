@@ -437,7 +437,8 @@ public class TunnelManager extends ViewPart
                @Override
                public void run()
                {
-                  viewer.setInput(tunnels);
+                  if (!viewer.getControl().isDisposed())
+                     viewer.setInput(tunnels);
                }
             });
          }
