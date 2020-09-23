@@ -95,6 +95,8 @@ protected:
    VolatileCounter m_requestId;
    uint32_t m_nodeId;
    int32_t m_zoneUIN;
+   TCHAR *m_certificateSubject;
+   TCHAR *m_certificateIssuer;
    time_t m_certificateExpirationTime;
    AgentTunnelState m_state;
    time_t m_startTime;
@@ -114,6 +116,7 @@ protected:
    bool m_snmpProxy;
    bool m_snmpTrapProxy;
    bool m_syslogProxy;
+   bool m_extProvCertificate;
    RefCountHashMap<UINT32, AgentTunnelCommChannel> m_channels;
    MUTEX m_channelLock;
    
@@ -133,7 +136,8 @@ protected:
    uint32_t initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId);
 
 public:
-   AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN, time_t certificateExpirationTime);
+   AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
+            const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime);
    
    void start();
    void shutdown();
@@ -168,6 +172,7 @@ public:
    bool isSnmpTrapProxy() const { return m_snmpTrapProxy; }
    bool isSyslogProxy() const { return m_syslogProxy; }
    bool isUserAgentInstalled() const { return m_userAgentInstalled; }
+   bool isExtProvCertificate() const { return m_extProvCertificate; }   // Check if certificate is externally provisioned
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 

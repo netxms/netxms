@@ -280,7 +280,8 @@ static VolatileCounter s_nextTunnelId = 0;
  * Agent tunnel constructor
  */
 AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
-         uint32_t nodeId, int32_t zoneUIN, time_t certificateExpirationTime) : RefCountObject(), m_channels(Ownership::True)
+         uint32_t nodeId, int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer,
+         time_t certificateExpirationTime) : RefCountObject(), m_channels(Ownership::True)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -292,6 +293,8 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_requestId = 0;
    m_nodeId = nodeId;
    m_zoneUIN = zoneUIN;
+   m_certificateSubject = MemCopyString(certificateSubject);
+   m_certificateIssuer = MemCopyString(certificateIssuer);
    m_certificateExpirationTime = certificateExpirationTime;
    m_state = AGENT_TUNNEL_INIT;
    m_systemName = nullptr;
@@ -309,6 +312,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_snmpProxy = false;
    m_snmpTrapProxy = false;
    m_syslogProxy = false;
+   m_extProvCertificate = false;
 }
 
 /**
@@ -328,6 +332,8 @@ AgentTunnel::~AgentTunnel()
    MemFree(m_systemInfo);
    MemFree(m_agentVersion);
    MemFree(m_agentBuildTag);
+   MemFree(m_certificateIssuer);
+   MemFree(m_certificateSubject);
    MutexDestroy(m_channelLock);
    debugPrintf(4, _T("Tunnel destroyed"));
 }
@@ -549,6 +555,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       m_snmpProxy = request->getFieldAsBoolean(VID_SNMP_PROXY);
       m_snmpTrapProxy = request->getFieldAsBoolean(VID_SNMP_TRAP_PROXY);
       m_syslogProxy = request->getFieldAsBoolean(VID_SYSLOG_PROXY);
+      m_extProvCertificate = request->getFieldAsBoolean(VID_EXTPROV_CERTIFICATE);
       request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
       m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
       m_agentBuildTag = request->getFieldAsString(VID_AGENT_BUILD_TAG);
@@ -587,15 +594,21 @@ void AgentTunnel::setup(const NXCPMessage *request)
       debugPrintf(4, _T("   SNMP trap proxy..........: %s"), m_snmpTrapProxy ? _T("YES") : _T("NO"));
       debugPrintf(4, _T("   Syslog proxy.............: %s"), m_syslogProxy ? _T("YES") : _T("NO"));
       debugPrintf(4, _T("   User agent...............: %s"), m_userAgentInstalled ? _T("YES") : _T("NO"));
+      if (m_certificateExpirationTime != 0)
+      {
+         debugPrintf(4, _T("   Certificate expires at...: %s"), FormatTimestamp(m_certificateExpirationTime).cstr());
+         debugPrintf(4, _T("   Externally provisioned...: %s"), m_extProvCertificate ? _T("YES") : _T("NO"));
+         debugPrintf(4, _T("   Certificate subject......: %s"), CHECK_NULL(m_certificateSubject));
+         debugPrintf(4, _T("   Certificate issuer.......: %s"), CHECK_NULL(m_certificateIssuer));
+      }
 
       ExecuteTunnelHookScript(this);
       if (m_state == AGENT_TUNNEL_BOUND)
       {
-         debugPrintf(4, _T("   Certificate expires at...: %s"), FormatTimestamp(m_certificateExpirationTime).cstr());
          PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
                   m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
                   m_agentVersion, &m_agentId);
-         if (m_certificateExpirationTime - time(nullptr) <= 2592000) // 30 days
+         if (!m_extProvCertificate && (m_certificateExpirationTime - time(nullptr) <= 2592000)) // 30 days
          {
             debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
             incRefCount();
@@ -876,6 +889,9 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setFieldFromTime(baseId + 16, m_certificateExpirationTime);
    msg->setField(baseId + 17, m_hardwareId.value(), HARDWARE_ID_LENGTH);
    msg->setField(baseId + 18, m_syslogProxy);
+   msg->setField(baseId + 19, m_extProvCertificate);
+   msg->setField(baseId + 20, m_certificateIssuer);
+   msg->setField(baseId + 21, m_certificateSubject);
 }
 
 /**
@@ -1120,6 +1136,7 @@ static void SetupTunnel(void *arg)
    int32_t zoneUIN = 0;
    X509 *cert = nullptr;
    time_t certExpTime = 0;
+   StringBuffer certSubject, certIssuer;
 
    // Setup secure connection
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
@@ -1187,6 +1204,8 @@ retry:
    if (cert != nullptr)
    {
       certExpTime = GetCertificateExpirationTime(cert);
+      certSubject = GetCertificateSubjectString(cert);
+      certIssuer = GetCertificateIssuerString(cert);
       if (ValidateAgentCertificate(cert))
       {
          TCHAR ou[256], cn[256];
@@ -1246,7 +1265,8 @@ retry:
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate not provided"), request->addr.toString().cstr());
    }
 
-   tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN, certExpTime);
+   tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN,
+         !certSubject.isEmpty() ? certSubject.cstr() : nullptr, !certIssuer.isEmpty() ? certIssuer.cstr() : nullptr, certExpTime);
    RegisterTunnel(tunnel);
    tunnel->start();
    tunnel->decRefCount();

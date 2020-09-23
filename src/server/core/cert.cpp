@@ -252,19 +252,15 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
 }
 
 /**
- * Get CN from certificate
+ * Get field from X.509 name
  */
-bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size)
+static bool GetX509NameField(X509_NAME *name, int nid, TCHAR *buffer, size_t size)
 {
-   X509_NAME *subject = X509_get_subject_name(cert);
-   if (subject == nullptr)
-      return false;
-
-   int idx = X509_NAME_get_index_by_NID(subject, nid, -1);
+   int idx = X509_NAME_get_index_by_NID(name, nid, -1);
    if (idx == -1)
       return false;
 
-   X509_NAME_ENTRY *entry = X509_NAME_get_entry(subject, idx);
+   X509_NAME_ENTRY *entry = X509_NAME_get_entry(name, idx);
    if (entry == nullptr)
       return false;
 
@@ -285,6 +281,24 @@ bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size)
 }
 
 /**
+ * Get single field from certificate subject
+ */
+bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size)
+{
+   X509_NAME *subject = X509_get_subject_name(cert);
+   return (subject != nullptr) ? GetX509NameField(subject, nid, buffer, size) : false;
+}
+
+/**
+ * Get single field from certificate issuer
+ */
+bool GetCertificateIssuerField(X509 *cert, int nid, TCHAR *buffer, size_t size)
+{
+   X509_NAME *issuer = X509_get_issuer_name(cert);
+   return (issuer != nullptr) ? GetX509NameField(issuer, nid, buffer, size) : false;
+}
+
+/**
  * Get CN from certificate
  */
 bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size)
@@ -301,32 +315,32 @@ bool GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size)
 }
 
 /**
- * Get subject string (C=XX,O=org,OU=unit,CN=cn) from certificate
+ * Get subject/issuer/... string (C=XX,O=org,OU=unit,CN=cn) from certificate
  */
-String GetCertificateSubjectString(X509 *cert)
+template<bool (*GetField)(X509*, int, TCHAR*, size_t)> static inline String GetCertificateNameString(X509 *cert)
 {
    StringBuffer text;
    TCHAR buffer[256];
-   if (GetCertificateSubjectField(cert, NID_countryName, buffer, 256))
+   if (GetField(cert, NID_countryName, buffer, 256))
    {
       text.append(_T("C="));
       text.append(buffer);
    }
-   if (GetCertificateSubjectField(cert, NID_organizationName, buffer, 256))
+   if (GetField(cert, NID_organizationName, buffer, 256))
    {
       if (!text.isEmpty())
          text.append(_T(','));
       text.append(_T("O="));
       text.append(buffer);
    }
-   if (GetCertificateSubjectField(cert, NID_organizationalUnitName, buffer, 256))
+   if (GetField(cert, NID_organizationalUnitName, buffer, 256))
    {
       if (!text.isEmpty())
          text.append(_T(','));
       text.append(_T("OU="));
       text.append(buffer);
    }
-   if (GetCertificateSubjectField(cert, NID_commonName, buffer, 256))
+   if (GetField(cert, NID_commonName, buffer, 256))
    {
       if (!text.isEmpty())
          text.append(_T(','));
@@ -334,6 +348,22 @@ String GetCertificateSubjectString(X509 *cert)
       text.append(buffer);
    }
    return text;
+}
+
+/**
+ * Get subject string (C=XX,O=org,OU=unit,CN=cn) from certificate
+ */
+String GetCertificateSubjectString(X509 *cert)
+{
+   return GetCertificateNameString<GetCertificateSubjectField>(cert);
+}
+
+/**
+ * Get issuer string (C=XX,O=org,OU=unit,CN=cn) from certificate
+ */
+String GetCertificateIssuerString(X509 *cert)
+{
+   return GetCertificateNameString<GetCertificateSubjectField>(cert);
 }
 
 /**

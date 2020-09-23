@@ -96,6 +96,7 @@ private:
    TCHAR *m_hostname;
    uint16_t m_port;
    TCHAR *m_certificate;
+   char *m_pkeyPassword;
    InetAddress m_address;
    SOCKET m_socket;
    SSL_CTX *m_context;
@@ -114,7 +115,7 @@ private:
    int m_tlsHandshakeFailures;
    bool m_ignoreClientCertificate;
 
-   Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate);
+   Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword);
 
    bool connectToServer();
    int sslWrite(const void *data, size_t size);
@@ -154,11 +155,16 @@ public:
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate) : m_channels(Ownership::True)
+Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword) : m_channels(Ownership::True)
 {
    m_hostname = MemCopyString(hostname);
    m_port = port;
    m_certificate = MemCopyString(certificate);
+#ifdef UNICODE
+   m_pkeyPassword = UTF8StringFromWideString(pkeyPassword);
+#else
+   m_pkeyPassword = MemCopyStringA(pkeyPassword);
+#endif
    m_socket = INVALID_SOCKET;
    m_context = nullptr;
    m_ssl = nullptr;
@@ -194,6 +200,7 @@ Tunnel::~Tunnel()
    MutexDestroy(m_channelLock);
    MemFree(m_hostname);
    MemFree(m_certificate);
+   MemFree(m_pkeyPassword);
 }
 
 /**
@@ -392,7 +399,7 @@ bool Tunnel::sendMessage(const NXCPMessage& msg)
  */
 bool Tunnel::loadCertificate()
 {
-   return ((m_certificate != nullptr) && !_tcsicmp(m_certificate, _T("capi"))) ? loadCertificateFromStore() : loadCertificateFromFile();
+   return ((m_certificate != nullptr) && !_tcsicmp(m_certificate, _T("@store"))) ? loadCertificateFromStore() : loadCertificateFromFile();
 }
 
 /**
@@ -402,35 +409,45 @@ bool Tunnel::loadCertificateFromFile()
 {
    debugPrintf(6, _T("Loading certificate from file"));
 
-   BYTE addressHash[SHA1_DIGEST_SIZE];
+   const TCHAR *name;
+   TCHAR prefix[48], nameBuffer[MAX_PATH];
+   if (m_certificate == nullptr)
+   {
+      BYTE addressHash[SHA1_DIGEST_SIZE];
 #ifdef UNICODE
-   char *un = MBStringFromWideString(m_hostname);
-   CalculateSHA1Hash((BYTE *)un, strlen(un), addressHash);
-   MemFree(un);
+      char *un = MBStringFromWideString(m_hostname);
+      CalculateSHA1Hash((BYTE *)un, strlen(un), addressHash);
+      MemFree(un);
 #else
-   CalculateSHA1Hash((BYTE *)m_hostname, strlen(m_hostname), addressHash);
+      CalculateSHA1Hash((BYTE *)m_hostname, strlen(m_hostname), addressHash);
 #endif
 
-   TCHAR prefix[48];
-   BinToStr(addressHash, SHA1_DIGEST_SIZE, prefix);
+      BinToStr(addressHash, SHA1_DIGEST_SIZE, prefix);
+      _sntprintf(nameBuffer, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
+      name = nameBuffer;
+   }
+   else
+   {
+      name = m_certificate;
+      debugPrintf(4, _T("Using externally provisioned certificate \"%s\""), name);
+   }
 
-   TCHAR name[MAX_PATH];
-   _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
    FILE *f = _tfopen(name, _T("r"));
-   if (f == NULL)
+   if (f == nullptr)
    {
       debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
-      if (errno == ENOENT)
+      if ((errno == ENOENT) && (m_certificate == nullptr))
       {
          // Try fallback file
+         BYTE addressHash[SHA1_DIGEST_SIZE];
          m_address.buildHashKey(addressHash);
          BinToStr(addressHash, 18, prefix);
-         _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
+         _sntprintf(nameBuffer, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
 
-         f = _tfopen(name, _T("r"));
-         if (f == NULL)
+         f = _tfopen(nameBuffer, _T("r"));
+         if (f == nullptr)
          {
-            debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
+            debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), nameBuffer, _tcserror(errno));
             return false;
          }
       }
@@ -440,25 +457,29 @@ bool Tunnel::loadCertificateFromFile()
       }
    }
 
-   X509 *cert = PEM_read_X509(f, NULL, NULL, NULL);
-   fclose(f);
-
+   X509 *cert = PEM_read_X509(f, nullptr, nullptr, nullptr);
    if (cert == nullptr)
    {
       debugPrintf(4, _T("Cannot load certificate from file \"%s\""), name);
+      fclose(f);
       return false;
    }
 
-   _sntprintf(name, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
-   f = _tfopen(name, _T("r"));
-   if (f == nullptr)
+   // For externally provisioned certificate expect key to follow certificate in same PEM file
+   if (m_certificate == nullptr)
    {
-      debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
-      X509_free(cert);
-      return false;
+      fclose(f);
+      _sntprintf(nameBuffer, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
+      f = _tfopen(nameBuffer, _T("r"));
+      if (f == nullptr)
+      {
+         debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), nameBuffer, _tcserror(errno));
+         X509_free(cert);
+         return false;
+      }
    }
 
-   EVP_PKEY *key = PEM_read_PrivateKey(f, NULL, NULL, (void *)"nxagentd");
+   EVP_PKEY *key = PEM_read_PrivateKey(f, nullptr, nullptr, (void *)((m_pkeyPassword != nullptr) ? m_pkeyPassword : "nxagentd"));
    fclose(f);
 
    if (key == nullptr)
@@ -920,6 +941,7 @@ bool Tunnel::connectToServer()
    msg.setField(VID_SNMP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_PROXY) ? true : false);
    msg.setField(VID_SNMP_TRAP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY) ? true : false);
    msg.setField(VID_SYSLOG_PROXY, (g_dwFlags & AF_ENABLE_SYSLOG_PROXY) ? true : false);
+   msg.setField(VID_EXTPROV_CERTIFICATE, m_certificate != nullptr);
 
    TCHAR fqdn[256];
    if (GetLocalHostName(fqdn, 256, true))
@@ -1378,19 +1400,26 @@ ssize_t Tunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 
 /**
  * Create tunnel object from configuration record
- * Record format is address[:port][/certificate]
+ * Record format is address[:port][,certificate[,password]]
  */
 Tunnel *Tunnel::createFromConfig(const TCHAR *config)
 {
    StringBuffer sb(config);
    
    // Get certificate option
-   TCHAR *certificate = nullptr;
-   TCHAR *p = _tcschr(sb.getBuffer(), _T('/'));
+   TCHAR *certificate = nullptr, *password = nullptr;
+   TCHAR *p = _tcschr(sb.getBuffer(), _T(','));
    if (p != nullptr)
    {
       *p = 0;
       certificate = p + 1;
+      p = _tcschr(certificate, _T(','));
+      if (p != nullptr)
+      {
+         *p = 0;
+         password = p + 1;
+         Trim(password);
+      }
       Trim(certificate);
    }
 
@@ -1407,7 +1436,7 @@ Tunnel *Tunnel::createFromConfig(const TCHAR *config)
       if ((port < 1) || (port > 65535))
          return nullptr;
    }
-   return new Tunnel(sb.cstr(), port, certificate);
+   return new Tunnel(sb.cstr(), port, certificate, password);
 }
 
 /**

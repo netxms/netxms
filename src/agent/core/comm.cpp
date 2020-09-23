@@ -76,7 +76,7 @@ void InitSessionList()
 void DestroySessionList()
 {
    MutexDestroy(g_hSessionListAccess);
-   free(g_pSessionList);
+   MemFree(g_pSessionList);
 }
 
 /**
