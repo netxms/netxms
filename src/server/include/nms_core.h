@@ -1293,6 +1293,8 @@ bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size)
 bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size);
 bool GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size);
 String GetCertificateSubjectString(X509 *cert);
+bool GetCertificateIssuerField(X509 *cert, int nid, TCHAR *buffer, size_t size);
+String GetCertificateIssuerString(X509 *cert);
 time_t GetCertificateExpirationTime(const X509 *cert);
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);

@@ -114,8 +114,8 @@ public:
    const BYTE *getBinaryData() const { return m_data; }
    size_t getBinaryDataSize() const { return m_dataSize; }
 
-   bool isFieldExist(UINT32 fieldId) const { return find(fieldId) != NULL; }
-   int getFieldType(UINT32 fieldId) const;
+   bool isFieldExist(uint32_t fieldId) const { return find(fieldId) != nullptr; }
+   int getFieldType(uint32_t fieldId) const;
 
    void setField(UINT32 fieldId, INT16 value) { set(fieldId, NXCP_DT_INT16, &value, true); }
    void setField(UINT32 fieldId, UINT16 value) { set(fieldId, NXCP_DT_INT16, &value, false); }
@@ -127,7 +127,7 @@ public:
    void setField(UINT32 fieldId, bool value) { INT16 v = value ? 1 : 0; set(fieldId, NXCP_DT_INT16, &v, true); }
    void setField(UINT32 fieldId, const SharedString& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value.cstr()); }
    void setField(UINT32 fieldId, const String& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value.cstr()); }
-   void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
+   void setField(UINT32 fieldId, const TCHAR *value) { if (value != nullptr) set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
    void setField(UINT32 fieldId, const BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
    void setField(UINT32 fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
    void setField(UINT32 fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
@@ -184,12 +184,12 @@ public:
  */
 typedef struct
 {
-   void *msg;         // Pointer to message, either to NXCPMessage object or raw message
-   UINT64 sequence;   // Sequence number
-   UINT32 id;         // Message ID
-   UINT32 ttl;        // Message time-to-live in milliseconds
-   UINT16 code;       // Message code
-   UINT16 isBinary;   // 1 for binary (raw) messages
+   void *msg;           // Pointer to message, either to NXCPMessage object or raw message
+   uint64_t sequence;   // Sequence number
+   uint32_t id;         // Message ID
+   uint32_t ttl;        // Message time-to-live in milliseconds
+   uint16_t code;       // Message code
+   uint16_t isBinary;   // 1 for binary (raw) messages
 } WAIT_QUEUE_ELEMENT;
 
 /**

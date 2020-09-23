@@ -266,8 +266,8 @@ public:
 
    bool match(const InetAddress &addr, bool forceResolve);
 
-   bool isMaster() { return m_master; }
-   bool isControl() { return m_control; }
+   bool isMaster() const { return m_master; }
+   bool isControl() const { return m_control; }
 };
 
 /**

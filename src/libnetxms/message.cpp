@@ -595,10 +595,10 @@ bool NXCPMessage::getFieldAsBoolean(UINT32 fieldId) const
  *
  * @return field type or -1 if field with given ID does not exist
  */
-int NXCPMessage::getFieldType(UINT32 fieldId) const
+int NXCPMessage::getFieldType(uint32_t fieldId) const
 {
    NXCP_MESSAGE_FIELD *field = find(fieldId);
-   return (field != NULL) ? (int)field->type : -1;
+   return (field != nullptr) ? static_cast<int>(field->type) : -1;
 }
 
 /**
