@@ -24,6 +24,29 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.13 to 40.14
+ */
+static bool H_UpgradeFromV13()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 2)
+   {
+      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.TLS.MinVersion"), _T("2"), _T("Minimal version of TLS protocol used on agent tunnel connection"), nullptr, 'S', true, false, false, false));
+
+      static const TCHAR *batch =
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','0','1.0')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','1','1.1')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','2','1.2')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','3','1.3')\n")
+            _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 2));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade form 40.12 to 40.13
  */
 static bool H_UpgradeFromV12()
@@ -364,6 +387,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 13, 40, 14, H_UpgradeFromV13 },
    { 12, 40, 13, H_UpgradeFromV12 },
    { 11, 40, 12, H_UpgradeFromV11 },
    { 10, 40, 11, H_UpgradeFromV10 },

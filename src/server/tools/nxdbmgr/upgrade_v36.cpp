@@ -26,9 +26,28 @@
 /**
  * Upgrade from 36.1 to 40.0
  */
-static bool H_UpgradeFromV1()
+static bool H_UpgradeFromV2()
 {
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 36.1 to 36.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(CreateConfigParam(_T("AgentTunnels.TLS.MinVersion"), _T("2"), _T("Minimal version of TLS protocol used on agent tunnel connection."), nullptr, 'C', true, false, false, false));
+
+   static const TCHAR *batch =
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','0','1.0')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','1','1.1')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','2','1.2')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','3','1.3')\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(2));
    return true;
 }
 
@@ -53,7 +72,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 1,  40, 0,  H_UpgradeFromV1  },
+   { 1,  40, 0,  H_UpgradeFromV2  },
+   { 1,  36, 2,  H_UpgradeFromV1  },
    { 0,  36, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };

@@ -1121,6 +1121,27 @@ struct ConnectionRequest
    InetAddress addr;
 };
 
+static int DecodeTLSVersion(int version)
+{
+   int protoVersion = 0;
+   switch(version)
+   {
+      case 0:
+         protoVersion = TLS1_VERSION;
+         break;
+      case 1:
+         protoVersion = TLS1_1_VERSION;
+         break;
+      case 2:
+         protoVersion = TLS1_2_VERSION;
+         break;
+      case 3:
+         protoVersion = TLS1_3_VERSION;
+         break;
+   }
+   return protoVersion;
+}
+
 /**
  * Setup tunnel
  */
@@ -1135,6 +1156,7 @@ static void SetupTunnel(ConnectionRequest *request)
    X509 *cert = nullptr;
    time_t certExpTime = 0;
    StringBuffer certSubject, certIssuer;
+   int version;
 
    // Setup secure connection
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
@@ -1159,6 +1181,16 @@ static void SetupTunnel(ConnectionRequest *request)
 #else
    SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 #endif
+   version = ConfigReadInt(_T("AgentTunnels.TLS.MinVersion"), 2);
+   if (!SSL_CTX_set_min_proto_version(context, DecodeTLSVersion(version)))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot set minimal protocol version"), (const TCHAR *)request->addr.toString());
+      goto failure;
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel TLS protocol version set to 1.%d"), (const TCHAR *)request->addr.toString(), version);
+   }
    if (!SetupServerTlsContext(context))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot configure TLS context"), (const TCHAR *)request->addr.toString());

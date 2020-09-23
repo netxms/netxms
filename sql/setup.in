@@ -8,6 +8,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentDefaultSharedSecret','netxms','netxms',1,0,'S','String that will be used as a shared secret in case if agent will required authentication.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.ListenPort','4703','4703',1,1,'I','TCP port number to listen on for incoming agent tunnel connections.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.NewNodesContainer','','',1,0,'S','Name of the container where nodes created automatically for unbound tunnels will be placed. If empty or missing, such nodes will be created in infrastructure services root.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.TLS.MinVersion','2','2',1,0,'C','Minimal version of TLS protocol used on agent tunnel connection.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.UnboundTunnelTimeout','3600','3600',1,0,'I','Unbound agent tunnels inactivity timeout. If tunnel is not bound or closed after timeout, action defined by AgentTunnels.UnboundTunnelTimeoutAction parameter will be taken.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','0','0',1,0,'C','Action to be taken when unbound agent tunnel idle timeout expires.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentUpgradeWaitTime','600','600',1,0,'I','Maximum wait time in seconds for agent restart after upgrade. If agent cannot be contacted after this time period, upgrade process is considered as failed.','seconds');
@@ -268,6 +269,10 @@ INSERT INTO config_values (var_name,var_value) VALUES ('SNMP.Traps.ListenerPort'
 INSERT INTO config_values (var_name,var_value) VALUES ('SyslogListenPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('XMPPPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('AllowedCiphers','63');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','0','1.0');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','1','1.1');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','2','1.2');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','3','1.3');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','0','Reset tunnel');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','1','Generate event');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','2','Bind tunnel to existing node');
