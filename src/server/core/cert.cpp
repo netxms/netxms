@@ -363,7 +363,7 @@ String GetCertificateSubjectString(X509 *cert)
  */
 String GetCertificateIssuerString(X509 *cert)
 {
-   return GetCertificateNameString<GetCertificateSubjectField>(cert);
+   return GetCertificateNameString<GetCertificateIssuerField>(cert);
 }
 
 /**
