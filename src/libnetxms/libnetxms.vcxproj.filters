@@ -240,6 +240,9 @@
     <ClCompile Include="getoptw.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\base64.h">
