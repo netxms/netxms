@@ -7,9 +7,17 @@
 - Fixed column sorting in Web Service Definition view
 - Fixed issues:
 	NX-1416 (NetXMS Agents shutdown does not end ExternalParametersProviders)
-	NX-1905 Log Parser policy in Template Agent Policies does not automatically include Events in Export Configuration Tool
+	NX-1905 (Log Parser policy in Template Agent Policies does not automatically include Events in Export Configuration Tool)
+	NX-1907 (Add server configuration option to disable outdated SSL/TLS versions)
 	NX-1911 (Separate object name for use on maps)
 
+
+
+*
+* 3.5-CURRENT
+*
+- Fixed issues:
+	NX-1930 (NodeJS POST requests to NetXMS WebAPI fail with http error 500 internal error / error 46 )
 
 *
 * 3.5.90
