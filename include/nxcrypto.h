@@ -42,6 +42,21 @@
 #define OPENSSL_CONST
 #endif
 
+/**** Crypto helper functions ****/
+
+#ifdef __cplusplus
+
+bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size);
+bool LIBNETXMS_EXPORTABLE GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size);
+bool LIBNETXMS_EXPORTABLE GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size);
+String LIBNETXMS_EXPORTABLE GetCertificateSubjectString(X509 *cert);
+bool LIBNETXMS_EXPORTABLE GetCertificateIssuerField(X509 *cert, int nid, TCHAR *buffer, size_t size);
+String LIBNETXMS_EXPORTABLE GetCertificateIssuerString(X509 *cert);
+time_t LIBNETXMS_EXPORTABLE GetCertificateExpirationTime(const X509 *cert);
+X509_STORE LIBNETXMS_EXPORTABLE *CreateTrustedCertificatesStore(const StringSet& trustedCertificates, bool useSystemStore);
+
+#endif   /* __cplusplus */
+
 #else /* no encryption */
 
 // Prevent compilation errors on function prototypes

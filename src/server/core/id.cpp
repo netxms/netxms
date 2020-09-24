@@ -39,7 +39,7 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
             1, 10000, 10000, 1,
             1, 1, 1, 1,
             1, 1, 1, 1,
-            1, 1, 1
+            1, 1
          };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
          {
@@ -47,9 +47,9 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
             0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x3FFFFFFF,
             0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
             0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-            0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE,
+            0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
             0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-            0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+            0xFFFFFFFE, 0xFFFFFFFE
          };
 static uint64_t m_freeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
@@ -71,7 +71,6 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Scripts"),
    _T("Agent Configs"),
    _T("Graphs"),
-   _T("Certificates"),
    _T("Table Columns"),
    _T("Mapping Tables"),
    _T("DCI Summary Tables"),
@@ -395,16 +394,6 @@ bool InitIdTable()
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_GRAPH] = std::max(s_freeIdTable[IDG_GRAPH],
                                           DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
-   // Get first available certificate id
-   hResult = DBSelect(hdb, _T("SELECT max(cert_id) FROM certificates"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_CERTIFICATE] = std::max(s_freeIdTable[IDG_CERTIFICATE],
-                                                DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

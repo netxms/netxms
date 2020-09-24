@@ -244,10 +244,10 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
 		_T("CMD_SAVE_GRAPH"),
 		_T("CMD_DELETE_GRAPH"),
 		_T("CMD_GET_PERFTAB_DCI_LIST"),
-		_T("CMD_ADD_CA_CERTIFICATE"),
-		_T("CMD_DELETE_CERTIFICATE"),
-		_T("CMD_GET_CERT_LIST"),
-		_T("CMD_UPDATE_CERT_COMMENTS"),
+		_T("CMD_0x00C9"), // unused
+		_T("CMD_0x00CA"), // unused
+		_T("CMD_0x00CB"), // unused
+		_T("CMD_0x00CC"), // unused
 		_T("CMD_QUERY_L2_TOPOLOGY"),
 		_T("CMD_AUDIT_RECORD"),
 		_T("CMD_GET_AUDIT_LOG"),

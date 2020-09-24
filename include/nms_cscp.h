@@ -446,10 +446,10 @@ typedef struct
 #define CMD_SAVE_GRAPH		   		      0x00C6
 #define CMD_DELETE_GRAPH				      0x00C7
 #define CMD_GET_PERFTAB_DCI_LIST          0x00C8
-#define CMD_ADD_CA_CERTIFICATE		      0x00C9
-#define CMD_DELETE_CERTIFICATE		      0x00CA
-#define CMD_GET_CERT_LIST				      0x00CB
-#define CMD_UPDATE_CERT_COMMENTS		      0x00CC
+//#define CMD_ADD_CA_CERTIFICATE		      0x00C9
+//#define CMD_DELETE_CERTIFICATE		      0x00CA
+//#define CMD_GET_CERT_LIST				      0x00CB
+//#define CMD_UPDATE_CERT_COMMENTS		      0x00CC
 #define CMD_QUERY_L2_TOPOLOGY			      0x00CD
 #define CMD_AUDIT_RECORD                  0x00CE
 #define CMD_GET_AUDIT_LOG                 0x00CF

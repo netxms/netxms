@@ -1121,23 +1121,13 @@ struct ConnectionRequest
    InetAddress addr;
 };
 
+/**
+ * Convert internal TLS version code to OpenSSL version code
+ */
 static long DecodeTLSVersion(int version)
 {
    long protoVersion = 0;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-   switch(version)
-   {
-      case 3:
-         protoVersion = SSL_OP_NO_TLSv1_2;
-         /* no break */
-      case 2:
-         protoVersion |= SSL_OP_NO_TLSv1_1;
-         /* no break */
-      case 1:
-         protoVersion |= SSL_OP_NO_TLSv1;
-         /* no break */
-   }
-#else
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    switch(version)
    {
       case 0:
@@ -1152,6 +1142,19 @@ static long DecodeTLSVersion(int version)
       case 3:
          protoVersion = TLS1_3_VERSION;
          break;
+   }
+#else
+   switch(version)
+   {
+      case 3:
+         protoVersion = SSL_OP_NO_TLSv1_2;
+         /* no break */
+      case 2:
+         protoVersion |= SSL_OP_NO_TLSv1_1;
+         /* no break */
+      case 1:
+         protoVersion |= SSL_OP_NO_TLSv1;
+         /* no break */
    }
 #endif
    return protoVersion;
@@ -1173,6 +1176,9 @@ static void SetupTunnel(ConnectionRequest *request)
    StringBuffer certSubject, certIssuer;
    int version;
 
+   TCHAR debugPrefix[64];
+   request->addr.toString(debugPrefix);
+
    // Setup secure connection
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    const SSL_METHOD *method = TLS_method();
@@ -1181,14 +1187,14 @@ static void SetupTunnel(ConnectionRequest *request)
 #endif
    if (method == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot obtain TLS method"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot obtain TLS method"), debugPrefix);
       goto failure;
    }
 
    context = SSL_CTX_new((SSL_METHOD *)method);
    if (context == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot create TLS context"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot create TLS context"), debugPrefix);
       goto failure;
    }
 #ifdef SSL_OP_NO_COMPRESSION
@@ -1196,30 +1202,29 @@ static void SetupTunnel(ConnectionRequest *request)
 #else
    SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 #endif
+
    version = ConfigReadInt(_T("AgentTunnels.TLS.MinVersion"), 2);
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-   if (SSL_CTX_set_options(context, SSL_CTX_get_options(context) | DecodeTLSVersion(version))))
-#else
-   if (!SSL_CTX_set_min_proto_version(context, (int)DecodeTLSVersion(version)))
-#endif
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   if (!SSL_CTX_set_min_proto_version(context, static_cast<int>(DecodeTLSVersion(version))))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot set minimal protocol version"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot set minimal TLS version"), debugPrefix);
       goto failure;
    }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel TLS protocol version set to 1.%d"), (const TCHAR *)request->addr.toString(), version);
-   }
+#else
+   SSL_CTX_set_options(context, SSL_CTX_get_options(context) | DecodeTLSVersion(version));
+#endif
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): minimal TLS version set to 1.%d"), debugPrefix, version);
+
    if (!SetupServerTlsContext(context))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot configure TLS context"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot configure TLS context"), debugPrefix);
       goto failure;
    }
 
    ssl = SSL_new(context);
    if (ssl == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot create SSL object"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot create SSL object"), debugPrefix);
       goto failure;
    }
 
@@ -1238,13 +1243,12 @@ retry:
          poller.add(request->sock);
          if (poller.poll(REQUEST_TIMEOUT) > 0)
             goto retry;
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (timeout)"), (const TCHAR *)request->addr.toString());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (timeout)"), debugPrefix);
       }
       else
       {
          char buffer[128];
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (%hs)"),
-                     (const TCHAR *)request->addr.toString(), ERR_error_string(sslErr, buffer));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (%hs)"), debugPrefix, ERR_error_string(sslErr, buffer));
       }
       goto failure;
    }
@@ -1255,57 +1259,50 @@ retry:
       certExpTime = GetCertificateExpirationTime(cert);
       certSubject = GetCertificateSubjectString(cert);
       certIssuer = GetCertificateIssuerString(cert);
-      if (ValidateAgentCertificate(cert))
+      TCHAR ou[256], cn[256];
+      if (GetCertificateOU(cert, ou, 256) && GetCertificateCN(cert, cn, 256))
       {
-         TCHAR ou[256], cn[256];
-         if (GetCertificateOU(cert, ou, 256) && GetCertificateCN(cert, cn, 256))
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate OU=%s CN=%s"), request->addr.toString().cstr(), ou, cn);
+         uuid nodeGuid = uuid::parse(ou);
+         uuid tunnelGuid = uuid::parse(cn);
+         if (!nodeGuid.isNull() && !tunnelGuid.isNull())
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate OU=%s CN=%s"), request->addr.toString().cstr(), ou, cn);
-            uuid nodeGuid = uuid::parse(ou);
-            uuid tunnelGuid = uuid::parse(cn);
-            if (!nodeGuid.isNull() && !tunnelGuid.isNull())
+            shared_ptr<NetObj> node = FindObjectByGUID(nodeGuid, OBJECT_NODE);
+            if (node != nullptr)
             {
-               shared_ptr<NetObj> node = FindObjectByGUID(nodeGuid, OBJECT_NODE);
-               if (node != nullptr)
+               if (tunnelGuid.equals(static_cast<Node&>(*node).getTunnelId()))
                {
-                  if (tunnelGuid.equals(static_cast<Node&>(*node).getTunnelId()))
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"),
+                           request->addr.toString().cstr(), node->getName(), node->getId());
+                  if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"),
-                              request->addr.toString().cstr(), node->getName(), node->getId());
-                     if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
-                     {
-                        static_cast<Node&>(*node).clearNewTunnelBindFlag();
-                        static_cast<Node&>(*node).setRecheckCapsFlag();
-                        static_cast<Node&>(*node).forceConfigurationPoll();
-                     }
-                     nodeId = node->getId();
-                     zoneUIN = node->getZoneUIN();
+                     static_cast<Node&>(*node).clearNewTunnelBindFlag();
+                     static_cast<Node&>(*node).setRecheckCapsFlag();
+                     static_cast<Node&>(*node).forceConfigurationPoll();
                   }
-                  else
-                  {
-                     nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel ID %s is not valid for node %s [%d]"),
-                              request->addr.toString().cstr(), tunnelGuid.toString().cstr(), node->getName(), node->getId());
-                  }
+                  nodeId = node->getId();
+                  zoneUIN = node->getZoneUIN();
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Node with GUID %s not found"),
-                           request->addr.toString().cstr(), nodeGuid.toString().cstr());
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel ID %s is not valid for node %s [%d]"),
+                           request->addr.toString().cstr(), tunnelGuid.toString().cstr(), node->getName(), node->getId());
                }
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Certificate OU or CN is not a valid GUID"), request->addr.toString().cstr());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Node with GUID %s not found"),
+                        request->addr.toString().cstr(), nodeGuid.toString().cstr());
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Cannot get certificate OU and CN"), request->addr.toString().cstr());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Certificate OU or CN is not a valid GUID"), request->addr.toString().cstr());
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate validation failed"), request->addr.toString().cstr());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Cannot get certificate OU and CN"), request->addr.toString().cstr());
       }
       X509_free(cert);
    }

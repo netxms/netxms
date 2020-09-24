@@ -224,10 +224,10 @@ public class NXCPCodes
 	public static final int CMD_SAVE_GRAPH = 0x00C6;
 	public static final int CMD_DELETE_GRAPH = 0x00C7;
 	public static final int CMD_GET_PERFTAB_DCI_LIST = 0x00C8;
-	public static final int CMD_ADD_CA_CERTIFICATE = 0x00C9;
-	public static final int CMD_DELETE_CERTIFICATE = 0x00CA;
-	public static final int CMD_GET_CERT_LIST = 0x00CB;
-	public static final int CMD_UPDATE_CERT_COMMENTS = 0x00CC;
+	//public static final int CMD_ADD_CA_CERTIFICATE = 0x00C9;
+	//public static final int CMD_DELETE_CERTIFICATE = 0x00CA;
+	//public static final int CMD_GET_CERT_LIST = 0x00CB;
+	//public static final int CMD_UPDATE_CERT_COMMENTS = 0x00CC;
 	public static final int CMD_QUERY_L2_TOPOLOGY = 0x00CD;
 	public static final int CMD_AUDIT_RECORD = 0x00CE;
 	public static final int CMD_GET_AUDIT_LOG = 0x00CF;

@@ -24,13 +24,27 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.14 to 40.15
+ */
+static bool H_UpgradeFromV14()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 3)
+   {
+      CHK_EXEC(SQLQuery(_T("DROP TABLE certificates")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 3));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade form 40.13 to 40.14
  */
 static bool H_UpgradeFromV13()
 {
    if (GetSchemaLevelForMajorVersion(36) < 2)
    {
-      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.TLS.MinVersion"), _T("2"), _T("Minimal version of TLS protocol used on agent tunnel connection"), nullptr, 'S', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.TLS.MinVersion"), _T("2"), _T("Minimal version of TLS protocol used on agent tunnel connection"), nullptr, 'C', true, false, false, false));
 
       static const TCHAR *batch =
             _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','0','1.0')\n")
@@ -387,6 +401,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 14, 40, 15, H_UpgradeFromV14 },
    { 13, 40, 14, H_UpgradeFromV13 },
    { 12, 40, 13, H_UpgradeFromV12 },
    { 11, 40, 12, H_UpgradeFromV11 },
