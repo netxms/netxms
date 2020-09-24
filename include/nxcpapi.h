@@ -637,8 +637,8 @@ RSA LIBNETXMS_EXPORTABLE *RSAGenerateKey(int bits);
 #ifdef _WIN32
 BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, UINT32 dwMsgLen, const CERT_CONTEXT *pCert,
 												          BYTE *pBuffer, size_t bufferSize, UINT32 *pdwSigLen);
-#endif
+#endif   /* _WIN32 */
 
-#endif
+#endif   /* __cplusplus */
 
 #endif   /* _nxcpapi_h_ */

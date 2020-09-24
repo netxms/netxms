@@ -136,16 +136,15 @@
 #define IDG_SCRIPT            14
 #define IDG_AGENT_CONFIG      15
 #define IDG_GRAPH             16
-#define IDG_CERTIFICATE       17
-#define IDG_DCT_COLUMN        18
-#define IDG_MAPPING_TABLE     19
-#define IDG_DCI_SUMMARY_TABLE 20
-#define IDG_SCHEDULED_TASK    21
-#define IDG_ALARM_CATEGORY    22
-#define IDG_UA_MESSAGE        23
-#define IDG_RACK_ELEMENT      24
-#define IDG_PHYSICAL_LINK     25
-#define IDG_WEBSVC_DEFINITION 26
+#define IDG_DCT_COLUMN        17
+#define IDG_MAPPING_TABLE     18
+#define IDG_DCI_SUMMARY_TABLE 19
+#define IDG_SCHEDULED_TASK    20
+#define IDG_ALARM_CATEGORY    21
+#define IDG_UA_MESSAGE        22
+#define IDG_RACK_ELEMENT      23
+#define IDG_PHYSICAL_LINK     24
+#define IDG_WEBSVC_DEFINITION 25
 
 /**
  * Exit codes for console commands
@@ -677,10 +676,6 @@ private:
 	void sendGraphList(NXCPMessage *request);
 	void saveGraph(NXCPMessage *pRequest);
 	void deleteGraph(NXCPMessage *pRequest);
-	void addCACertificate(NXCPMessage *request);
-	void deleteCertificate(NXCPMessage *request);
-	void updateCertificateComments(NXCPMessage *request);
-	void getCertificateList(uint32_t requestId);
 	void queryL2Topology(NXCPMessage *pRequest);
    void queryInternalCommunicationTopology(NXCPMessage *pRequest);
    void getDependentNodes(NXCPMessage *request);
@@ -1283,19 +1278,11 @@ bool ValidateConfig(const Config& config, uint32_t flags, TCHAR *errorText, int 
 uint32_t ImportConfig(const Config& config, uint32_t flags);
 
 #ifdef _WITH_ENCRYPTION
-X509 *CertificateFromLoginMessage(NXCPMessage *pMsg);
+X509 *CertificateFromLoginMessage(const NXCPMessage *pMsg);
 bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge,
 									  const BYTE *signature, size_t sigLen, int mappingMethod,
 									  const TCHAR *mappingData);
-bool ValidateAgentCertificate(X509 *cert);
 void ReloadCertificates();
-bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size);
-bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size);
-bool GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size);
-String GetCertificateSubjectString(X509 *cert);
-bool GetCertificateIssuerField(X509 *cert, int nid, TCHAR *buffer, size_t size);
-String GetCertificateIssuerString(X509 *cert);
-time_t GetCertificateExpirationTime(const X509 *cert);
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);
 X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days);

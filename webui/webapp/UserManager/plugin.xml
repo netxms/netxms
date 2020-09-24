@@ -12,14 +12,6 @@
             name="%view.UserManager.name"
             restorable="true">
       </view>
-      <view
-            category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.usermanager.views.CertificateView"
-            icon="icons/certificate.png"
-            id="org.netxms.ui.eclipse.usermanager.views.CertificateView"
-            name="%view.CertificateManage.name"
-            restorable="true">
-      </view>
    </extension>
    
    <extension
@@ -43,11 +35,6 @@
             description="%command.ChangePasswd.description"
             id="org.netxms.ui.eclipse.usermanager.commands.change_password"
             name="%command.ChangePasswd.name">
-      </command>
-      <command
-            description="%command.CertificateManager.description"
-            id="org.netxms.ui.eclipse.usermanager.commands.open_certificate_manager"
-            name="%command.CertificateManager.name">
       </command>
    </extension>
 
@@ -73,17 +60,6 @@
            label="%action.ChangePasswd.label"
            menubarPath="tools/additions"
            tooltip="%action.ChangePasswd.tooltip">
-     </action>
-     <action
-           class="org.netxms.ui.eclipse.usermanager.actions.OpenCertificateManager"
-           definitionId="org.netxms.ui.eclipse.usermanager.commands.open_certificate_manager"
-           icon="icons/certificate.png"
-           id="org.netxms.ui.eclipse.usermanager.actions.certificate_manager"
-           label="%action.CertificateManager.label"
-           menubarPath="config/additions"
-           style="push"
-           toolbarPath="config/additions"
-           tooltip="%action.CertificateManager.tooltip">
      </action>
 	   </actionSet>
    </extension>
@@ -190,23 +166,6 @@
            activityId="org.netxms.ui.eclipse.usermanager.activity.UserManagement"
            isEqualityPattern="true"
            pattern="org.netxms.ui.eclipse.usermanager/org.netxms.ui.eclipse.usermanager.actions.open">
-     </activityPatternBinding>
-     <activity
-           id="org.netxms.ui.eclipse.usermanager.activity.CertificateManagement"
-           name="Certificate Management">
-        <enabledWhen>
-           <with
-                 variable="org.netxms.access.ServerConfig">
-              <equals
-                    value="true">
-              </equals>
-           </with>
-        </enabledWhen>
-     </activity>
-     <activityPatternBinding
-           activityId="org.netxms.ui.eclipse.usermanager.activity.CertificateManagement"
-           isEqualityPattern="true"
-           pattern="org.netxms.ui.eclipse.usermanager/org.netxms.ui.eclipse.usermanager.actions.certificate_manager">
      </activityPatternBinding>
   </extension>
 </plugin>

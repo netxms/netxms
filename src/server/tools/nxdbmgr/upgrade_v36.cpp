@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 36.2 to 36.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(SQLQuery(_T("DROP TABLE certificates")));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 36.1 to 36.2
  */
 static bool H_UpgradeFromV1()
@@ -63,6 +73,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 2,  36, 3,  H_UpgradeFromV2  },
    { 1,  36, 2,  H_UpgradeFromV1  },
    { 0,  36, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }

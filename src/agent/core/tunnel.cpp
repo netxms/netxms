@@ -30,10 +30,6 @@
 
 #ifdef _WITH_ENCRYPTION
 
-#ifndef _WIN32
-#define DEFAULT_STORE "/etc/ssl/certs"
-#endif
-
 /**
  * Check if server address is valid
  */
@@ -651,96 +647,48 @@ static void SSLInfoCallback(const SSL *ssl, int where, int ret)
    }
 }
 
+#if HAVE_X509_STORE_CTX_SET_VERIFY_CB
+
+/**
+ * Certificate verification callback
+ */
+static int CertVerifyCallback(int success, X509_STORE_CTX *ctx)
+{
+   if (!success)
+   {
+      X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
+      int error = X509_STORE_CTX_get_error(ctx);
+      int depth = X509_STORE_CTX_get_error_depth(ctx);
+      char subjectName[1024];
+      X509_NAME_oneline(X509_get_subject_name(cert), subjectName, 1024);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Certificate \"%hs\" verification error %d (%hs) at depth %d"),
+             subjectName, error, X509_verify_cert_error_string(error), depth);
+   }
+   return success;
+}
+
+#endif /* HAVE_X509_STORE_SET_VERIFY_CB */
+
 /**
  * Verify server certificate
  */
 static bool VerifyServerCertificate(X509 *cert)
 {
-   bool valid = false;
-   X509_STORE *trustedCertificateStore = X509_STORE_new();
+   X509_STORE *trustedCertificateStore = CreateTrustedCertificatesStore(g_trustedRootCertificates, true);
    if (trustedCertificateStore == nullptr)
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("VerifyServerCertificate: cannot create certificate store"));
-      return valid;
+      return false;
    }
 
-   X509_LOOKUP *dirLookup = X509_STORE_add_lookup(trustedCertificateStore, X509_LOOKUP_hash_dir());
-   X509_LOOKUP *fileLookup = X509_STORE_add_lookup(trustedCertificateStore, X509_LOOKUP_file());
-
-   if (!g_trustedRootCertificates.isEmpty())
-   {
-      auto it = g_trustedRootCertificates.iterator();
-      while(it->hasNext())
-      {
-         const TCHAR *trustedRoot = it->next();
-         NX_STAT_STRUCT st;
-         if (CALL_STAT(trustedRoot, &st) != 0)
-            continue;
-
-#ifdef UNICODE
-         char mbTrustedRoot[MAX_PATH];
-         WideCharToMultiByteSysLocale(trustedRoot, mbTrustedRoot, MAX_PATH);
-#else
-         const char *mbTrustedRoot = trustedRoot;
-#endif
-         int added = 0;
-         if (S_ISDIR(st.st_mode))
-         {
-            added = X509_LOOKUP_add_dir(dirLookup, mbTrustedRoot, X509_FILETYPE_PEM);
-         }
-         else
-         {
-            added = X509_LOOKUP_load_file(fileLookup, mbTrustedRoot, X509_FILETYPE_PEM);
-         }
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("VerifyServerCertificate: trusted root %s \"%s\" loaded"), S_ISDIR(st.st_mode) ? _T("directory") : _T("certificate"), trustedRoot);
-      }
-      delete it;
-   }
-
-#ifdef _WIN32
-   HCERTSTORE  hStore = CertOpenSystemStore(NULL, L"ROOT");
-   if (hStore != nullptr)
-   {
-      PCCERT_CONTEXT context = nullptr;
-      while ((context = CertEnumCertificatesInStore(hStore, context)) != nullptr)
-      {
-         TCHAR certName[1024];
-         CertGetNameString(context, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, certName, 1024);
-
-         const unsigned char *in = context->pbCertEncoded;
-         X509 *cert = d2i_X509(nullptr, &in, context->cbCertEncoded);
-         if (cert != nullptr)
-         {
-            if (X509_STORE_add_cert(trustedCertificateStore, cert))
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("VerifyServerCertificate: added trusted root certificate \"%s\" from system store"), certName);
-            else
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("VerifyServerCertificate: cannot add trusted root certificate \"%s\" from system store"), certName);
-            X509_free(cert);
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: cannot convert certificate \"%s\""), certName);
-         }
-      }
-      CertCloseStore(hStore, CERT_CLOSE_STORE_FORCE_FLAG);
-   }
-   else
-   {
-      TCHAR buffer[1024];
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: cannot open certificate store \"ROOT\" (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
-   }
-#else    /* _WIN32 */
-   struct stat fileInfo;
-   if (stat(DEFAULT_STORE, &fileInfo) == 0)
-   {
-      X509_LOOKUP_add_dir(dirLookup, DEFAULT_STORE, X509_FILETYPE_PEM);
-   }
-#endif   /* _WIN32 */
-
+   bool valid = false;
    X509_STORE_CTX *ctx = X509_STORE_CTX_new();
    if (ctx != nullptr)
    {
       X509_STORE_CTX_init(ctx, trustedCertificateStore, cert, nullptr);
+#if HAVE_X509_STORE_CTX_SET_VERIFY_CB
+      X509_STORE_CTX_set_verify_cb(ctx, CertVerifyCallback);
+#endif
       if (X509_verify_cert(ctx))
          valid = true;
       else

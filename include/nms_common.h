@@ -258,11 +258,14 @@ typedef int bool;
 #define HAVE_WCSDUP             1
 #define HAVE_WUTIME             1
 
-#define HAVE_LIBCURL            1
+#define HAVE_LIBCURL                      1
 
-#define HAVE_DIRENT_D_TYPE      1
+#define HAVE_DIRENT_D_TYPE                1
 
-#define HAVE_MOSQUITTO_THREADED_SET	1
+#define HAVE_MOSQUITTO_THREADED_SET       1
+
+#define HAVE_X509_STORE_SET_VERIFY_CB     1
+#define HAVE_X509_STORE_CTX_SET_VERIFY_CB 1
 
 #include <winsock2.h>
 #include <windows.h>
