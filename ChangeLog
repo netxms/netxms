@@ -1,4 +1,10 @@
 *
+* 3.5-CURRENT
+*
+- Fixed issues:
+	NX-1930 (NodeJS POST requests to NetXMS WebAPI fail with http error 500 internal error / error 46 )
+
+*
 * 3.5.90
 *
 
