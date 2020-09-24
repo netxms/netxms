@@ -435,7 +435,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		m_backgroundColor = DBGetFieldLong(hResult, 0, 9);
 		m_objectDisplayMode = DBGetFieldLong(hResult, 0, 10);
 
-      TCHAR *filter = DBGetField(hResult, 0, 12, nullptr, 0);
+      TCHAR *filter = DBGetField(hResult, 0, 11, nullptr, 0);
       setFilter(filter);
       MemFree(filter);
 
