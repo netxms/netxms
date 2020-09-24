@@ -195,6 +195,7 @@
     <ClCompile Include="cc_ucs2.cpp" />
     <ClCompile Include="cc_ucs4.cpp" />
     <ClCompile Include="cc_utf8.cpp" />
+    <ClCompile Include="cert.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="crypto.cpp" />
     <ClCompile Include="debug_tag_tree.cpp" />

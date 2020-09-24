@@ -258,7 +258,7 @@ X509_STORE LIBNETXMS_EXPORTABLE *CreateTrustedCertificatesStore(const StringSet&
    if (useSystemStore)
    {
 #ifdef _WIN32
-      HCERTSTORE  hStore = CertOpenSystemStore(nullptr, L"ROOT");
+      HCERTSTORE hStore = CertOpenSystemStore(0, L"ROOT");
       if (hStore != nullptr)
       {
          PCCERT_CONTEXT context = nullptr;
