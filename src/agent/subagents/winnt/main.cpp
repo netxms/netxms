@@ -88,35 +88,6 @@ void StartIOStatCollector();
 void StopIOStatCollector();
 
 /**
- * Optional imports
- */
-DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2) = NULL;
-
-/**
- * Windows XP/Windows Server 2003 flag
- */
-bool g_isWin5 = false;
-
-/**
- * Import symbols
- */
-static void ImportSymbols()
-{
-   HMODULE hModule;
-
-   // IPHLPAPI.DLL
-   hModule = LoadLibrary(_T("IPHLPAPI.DLL"));
-   if (hModule != NULL)
-   {
-      imp_GetIfEntry2 = (DWORD (__stdcall *)(PMIB_IF_ROW2))GetProcAddress(hModule, "GetIfEntry2");
-   }
-   else
-   {
-		AgentWriteLog(NXLOG_WARNING, _T("Unable to load IPHLPAPI.DLL"));
-   }
-}
-
-/**
  * Set or clear current privilege
  */
 static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
@@ -494,7 +465,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("WinNT"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL, NULL,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
    sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    s_parameters,
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -503,7 +474,7 @@ static NETXMS_SUBAGENT_INFO s_info =
    s_tables,
    sizeof(s_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
    s_actions,
-   0, NULL	// push parameters
+   0, nullptr	// push parameters
 };
 
 /**
@@ -512,15 +483,6 @@ static NETXMS_SUBAGENT_INFO s_info =
 DECLARE_SUBAGENT_ENTRY_POINT(WINNT)
 {
 	*ppInfo = &s_info;
-	ImportSymbols();
-
-   OSVERSIONINFO ver;
-   ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-   if (GetVersionEx(&ver))
-   {
-      if (ver.dwMajorVersion < 6)
-         g_isWin5 = true;
-   }
 	return true;
 }
 

@@ -227,23 +227,7 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
             if ((pAddr->Address.lpSockaddr->sa_family == AF_INET) || session->isIPv6Aware())
             {
                InetAddress addr = InetAddress::createFromSockaddr(pAddr->Address.lpSockaddr);
-               if (g_isWin5)
-               {
-                  for(IP_ADAPTER_PREFIX *p = iface->FirstPrefix; p != NULL; p = p->Next)
-                  {
-                     InetAddress prefix = InetAddress::createFromSockaddr(p->Address.lpSockaddr);
-                     prefix.setMaskBits(p->PrefixLength);
-                     if (prefix.contain(addr))
-                     {
-                        addr.setMaskBits(prefix.getMaskBits());
-                        break;
-                     }
-                  }
-               }
-               else
-               {
-                  addr.setMaskBits(pAddr->OnLinkPrefixLength);
-               }
+               addr.setMaskBits(pAddr->OnLinkPrefixLength);
                _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d(%u) %s %s"), iface->IfIndex, 
                           addr.toString(ipAddr), addr.getMaskBits(), iface->IfType, 
                           iface->Mtu & 0x7FFFFFFF, macAddr, iface->FriendlyName);
@@ -345,18 +329,17 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
       if (dwIndex != 0)
       {
 			int metric = CAST_FROM_POINTER(arg, int);
-			if (((metric == NETINFO_IF_SPEED) || 
-			     (metric == NETINFO_IF_PACKETS_IN_64) || 
-			     (metric == NETINFO_IF_PACKETS_OUT_64) || 
-			     (metric == NETINFO_IF_BYTES_IN_64) || 
-				  (metric == NETINFO_IF_BYTES_OUT_64)) &&
-			    (imp_GetIfEntry2 != NULL))
+			if ((metric == NETINFO_IF_SPEED) || 
+			    (metric == NETINFO_IF_PACKETS_IN_64) || 
+			    (metric == NETINFO_IF_PACKETS_OUT_64) || 
+			    (metric == NETINFO_IF_BYTES_IN_64) || 
+				 (metric == NETINFO_IF_BYTES_OUT_64))
 			{
 				MIB_IF_ROW2 info;
 
 				memset(&info, 0, sizeof(MIB_IF_ROW2));
 				info.InterfaceIndex = dwIndex;
-				if (imp_GetIfEntry2(&info) == NO_ERROR)
+				if (GetIfEntry2(&info) == NO_ERROR)
 				{
 					switch(metric)
 					{
@@ -498,6 +481,6 @@ LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value,
  */
 LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_int(value, (imp_GetIfEntry2 != NULL) ? 1 : 0);
+   ret_int(value, 1);
    return SYSINFO_RC_SUCCESS;
 }

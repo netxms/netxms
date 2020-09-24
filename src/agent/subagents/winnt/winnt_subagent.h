@@ -148,14 +148,4 @@ struct WINDOW_LIST
  */
 void ReadCPUVendorId();
 
-/**
- * Optional imports
- */
-extern DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2);
-
-/**
- * Windows XP flag
- */
-extern bool g_isWin5;
-
 #endif   /* _winnt_subagent_h_ */
