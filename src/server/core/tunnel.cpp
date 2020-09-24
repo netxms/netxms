@@ -1121,9 +1121,23 @@ struct ConnectionRequest
    InetAddress addr;
 };
 
-static int DecodeTLSVersion(int version)
+static long DecodeTLSVersion(int version)
 {
-   int protoVersion = 0;
+   long protoVersion = 0;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+   switch(version)
+   {
+      case 3:
+         protoVersion = SSL_OP_NO_TLSv1_2;
+         /* no break */
+      case 2:
+         protoVersion |= SSL_OP_NO_TLSv1_1;
+         /* no break */
+      case 1:
+         protoVersion |= SSL_OP_NO_TLSv1;
+         /* no break */
+   }
+#else
    switch(version)
    {
       case 0:
@@ -1139,6 +1153,7 @@ static int DecodeTLSVersion(int version)
          protoVersion = TLS1_3_VERSION;
          break;
    }
+#endif
    return protoVersion;
 }
 
@@ -1182,7 +1197,11 @@ static void SetupTunnel(ConnectionRequest *request)
    SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 #endif
    version = ConfigReadInt(_T("AgentTunnels.TLS.MinVersion"), 2);
-   if (!SSL_CTX_set_min_proto_version(context, DecodeTLSVersion(version)))
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+   if (SSL_CTX_set_options(context, SSL_CTX_get_options(context) | DecodeTLSVersion(version))))
+#else
+   if (!SSL_CTX_set_min_proto_version(context, (int)DecodeTLSVersion(version)))
+#endif
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot set minimal protocol version"), (const TCHAR *)request->addr.toString());
       goto failure;
