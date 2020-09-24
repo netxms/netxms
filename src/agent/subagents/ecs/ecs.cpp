@@ -30,7 +30,7 @@
 // max size of remote file (10mb)
 #define MAX_REMOTE_SIZE (10 * 1024 * 1024)
 
-static unsigned char *GetHttpUrl(char *url, int *size)
+static unsigned char *GetHttpUrl(char *url, size_t *size)
 {
 	char *ret = NULL;
 
@@ -174,9 +174,9 @@ static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Ab
 
 	if (!strnicmp(szArg, "http://", 7))
 	{
-		int contentSize;
+		size_t contentSize;
 		unsigned char *content = GetHttpUrl(szArg + 7, &contentSize);
-		if (content != NULL)
+		if (content != nullptr)
 		{
 			unsigned char hash[SHA1_DIGEST_SIZE]; // all hashes should fit (SHA1 == 20, MD5 == 16)
 			hashFunction(content, contentSize, hash);
@@ -190,7 +190,7 @@ static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Ab
   			ret_mbstring(pValue, hashText);
 			ret = SYSINFO_RC_SUCCESS;
 
-			free(content);
+			MemFree(content);
 		}
 	}
 
@@ -206,15 +206,15 @@ static LONG H_LoadTime(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
 	AgentGetParameterArgA(param, 1, url, 255);
 	if (!strnicmp(url, "http://", 7))
 	{
-		int contentSize;
-		INT64 startTime = GetCurrentTimeMs();
+		size_t contentSize;
+		int64_t startTime = GetCurrentTimeMs();
 		unsigned char *content = GetHttpUrl(url + 7, &contentSize);
-		if (content != NULL)
+		if (content != nullptr)
 		{
-			DWORD loadTime = (DWORD)(GetCurrentTimeMs() - startTime);
+			uint32_t loadTime = (uint32_t)(GetCurrentTimeMs() - startTime);
 			ret_uint(value, loadTime);
 			ret = SYSINFO_RC_SUCCESS;
-			free(content);
+			MemFree(content);
 		}
 	}
 
