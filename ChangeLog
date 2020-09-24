@@ -1,6 +1,8 @@
 *
 * 3.5-CURRENT
 *
+
+- Fixed network map filter script read form database 
 - Fixed issues:
 	NX-1930 (NodeJS POST requests to NetXMS WebAPI fail with http error 500 internal error / error 46 )
 
