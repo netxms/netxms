@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.CertificateMappingMethod;
 
 /**
  * NetXMS user object
@@ -35,13 +36,8 @@ public class User extends AbstractUserObject
 	public static final int AUTH_CERTIFICATE_OR_PASSWORD = 3;
 	public static final int AUTH_CERTIFICATE_OR_RADIUS = 4;
 	
-	// Certificate mapping methods
-	public static final int MAP_CERT_BY_SUBJECT = 0;
-	public static final int MAP_CERT_BY_PUBKEY  = 1;
-   public static final int MAP_CERT_BY_CN      = 2;
-	
 	private int authMethod;
-	private int certMappingMethod;
+   private CertificateMappingMethod certMappingMethod;
 	private String certMappingData;
 	private String fullName;
 	private Date lastLogin = null;
@@ -97,7 +93,7 @@ public class User extends AbstractUserObject
 		super(msg, USERDB_TYPE_USER);
 		authMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
 		fullName = msg.getFieldAsString(NXCPCodes.VID_USER_FULL_NAME);
-		certMappingMethod = msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD);
+      certMappingMethod = CertificateMappingMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD));
 		certMappingData = msg.getFieldAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
 		lastLogin = msg.getFieldAsDate(NXCPCodes.VID_LAST_LOGIN);
 		lastPasswordChange = msg.getFieldAsDate(NXCPCodes.VID_LAST_PASSWORD_CHANGE);
@@ -120,7 +116,7 @@ public class User extends AbstractUserObject
 		super.fillMessage(msg);
 		msg.setFieldInt16(NXCPCodes.VID_AUTH_METHOD, authMethod);
 		msg.setField(NXCPCodes.VID_USER_FULL_NAME, fullName);
-		msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, certMappingMethod);
+      msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, certMappingMethod.getValue());
 		msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, certMappingData);
 		msg.setFieldInt16(NXCPCodes.VID_MIN_PASSWORD_LENGTH, minPasswordLength);
 		msg.setFieldInt32(NXCPCodes.VID_DISABLED_UNTIL, (disabledUntil != null) ? (int)(disabledUntil.getTime() / 1000) : 0);
@@ -147,17 +143,21 @@ public class User extends AbstractUserObject
 	}
 
 	/**
-	 * @return the certMappingMethod
-	 */
-	public int getCertMappingMethod()
+    * Get certificate mapping method for certificate based authentication.
+    * 
+    * @return certificate mapping method for certificate based authentication
+    */
+   public CertificateMappingMethod getCertMappingMethod()
 	{
 		return certMappingMethod;
 	}
 
 	/**
-	 * @param certMappingMethod the certMappingMethod to set
-	 */
-	public void setCertMappingMethod(int certMappingMethod)
+    * Set certificate mapping method for certificate based authentication.
+    * 
+    * @param certMappingMethod certificate mapping method for certificate based authentication
+    */
+   public void setCertMappingMethod(CertificateMappingMethod certMappingMethod)
 	{
 		this.certMappingMethod = certMappingMethod;
 	}
@@ -194,9 +194,9 @@ public class User extends AbstractUserObject
 		this.fullName = fullName;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#clone()
-	 */
+   /**
+    * @see org.netxms.client.users.AbstractUserObject#clone()
+    */
 	@Override
 	public Object clone() throws CloneNotSupportedException
 	{

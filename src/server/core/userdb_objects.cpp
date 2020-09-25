@@ -489,7 +489,7 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
 	DBGetField(hResult, row, 10, m_fullName, MAX_USER_FULLNAME);
 	m_graceLogins = DBGetFieldLong(hResult, row, 11);
 	m_authMethod = DBGetFieldLong(hResult, row, 12);
-	m_certMappingMethod = DBGetFieldLong(hResult, row, 13);
+	m_certMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, row, 13));
 	m_certMappingData = DBGetField(hResult, row, 14, NULL, 0);
 	m_authFailures = DBGetFieldLong(hResult, row, 15);
 	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 16);
@@ -519,8 +519,8 @@ User::User() : UserDatabaseObject()
 	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
 	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
 	m_authMethod = AUTH_NETXMS_PASSWORD;
-	m_certMappingMethod = USER_MAP_CERT_BY_CN;
-	m_certMappingData = NULL;
+	m_certMappingMethod = MAP_CERTIFICATE_BY_CN;
+	m_certMappingData = nullptr;
 	m_authFailures = 0;
 	m_lastPasswordChange = 0;
 	m_minPasswordLength = -1;	// Use system-wide default
@@ -537,8 +537,8 @@ User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 	m_fullName[0] = 0;
 	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
 	m_authMethod = AUTH_NETXMS_PASSWORD;
-	m_certMappingMethod = USER_MAP_CERT_BY_CN;
-	m_certMappingData = NULL;
+	m_certMappingMethod = MAP_CERTIFICATE_BY_CN;
+	m_certMappingData = nullptr;
 	CalculatePasswordHash(_T(""), PWD_HASH_SHA256, &m_password);
 	m_authFailures = 0;
 	m_lastPasswordChange = 0;
@@ -764,7 +764,7 @@ void User::modifyFromMessage(NXCPMessage *msg)
 	   m_disabledUntil = (time_t)msg->getFieldAsUInt32(VID_DISABLED_UNTIL);
 	if (fields & USER_MODIFY_CERT_MAPPING)
 	{
-		m_certMappingMethod = msg->getFieldAsUInt16(VID_CERT_MAPPING_METHOD);
+		m_certMappingMethod = static_cast<CertificateMappingMethod>(msg->getFieldAsUInt16(VID_CERT_MAPPING_METHOD));
 		MemFree(m_certMappingData);
 		m_certMappingData = msg->getFieldAsString(VID_CERT_MAPPING_DATA);
 	}

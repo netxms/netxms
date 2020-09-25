@@ -1279,9 +1279,8 @@ uint32_t ImportConfig(const Config& config, uint32_t flags);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(const NXCPMessage *pMsg);
-bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge,
-									  const BYTE *signature, size_t sigLen, int mappingMethod,
-									  const TCHAR *mappingData);
+bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature,
+      size_t sigLen, CertificateMappingMethod mappingMethod, const TCHAR *mappingData);
 void ReloadCertificates();
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);
