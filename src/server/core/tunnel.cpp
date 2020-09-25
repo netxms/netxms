@@ -1263,6 +1263,7 @@ retry:
    cert = SSL_get_peer_certificate(ssl);
    if (cert != nullptr)
    {
+      bool nodeFound = false;
       certExpTime = GetCertificateExpirationTime(cert);
       certSubject = GetCertificateSubjectString(cert);
       certIssuer = GetCertificateIssuerString(cert);
@@ -1289,6 +1290,7 @@ retry:
                   }
                   nodeId = node->getId();
                   zoneUIN = node->getZoneUIN();
+                  nodeFound = true;
                }
                else
                {
@@ -1310,7 +1312,67 @@ retry:
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Cannot get certificate OU and CN"), request->addr.toString().cstr());
+         cn[0] = 0;
       }
+
+      // Attempt to lookup externally provisioned certificates
+      if (!nodeFound && ((cn[0] != 0) || GetCertificateCN(cert, cn, 256)))
+      {
+         s_certificateMappingsLock.lock();
+
+         CertificateMappingMethod method = MAP_CERTIFICATE_BY_CN;
+         shared_ptr<Node> node = s_certificateMappings.getShared(cn);
+         if (node == nullptr)
+         {
+            method = MAP_CERTIFICATE_BY_SUBJECT;
+            node = s_certificateMappings.getShared(certSubject);
+            if (node == nullptr)
+            {
+               method = MAP_CERTIFICATE_BY_PUBKEY;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+               EVP_PKEY *pkey = X509_get0_pubkey(cert);
+#else
+               EVP_PKEY *pkey = X509_get_pubkey(cert);
+#endif
+               if (pkey != nullptr)
+               {
+                  int pkeyLen = i2d_PublicKey(pkey, nullptr);
+                  auto buffer = MemAllocArray<unsigned char>(pkeyLen + 1);
+                  auto in = buffer;
+                  i2d_PublicKey(pkey, &in);
+
+                  TCHAR *pkeyText = MemAllocString(pkeyLen * 2 + 1);
+                  BinToStr(buffer, pkeyLen, pkeyText);
+
+                  node = s_certificateMappings.getShared(pkeyText);
+
+                  MemFree(pkeyText);
+                  MemFree(buffer);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+                  EVP_PKEY_free(pkey);
+#endif
+               }
+            }
+         }
+
+         s_certificateMappingsLock.unlock();
+
+         if ((node != nullptr) && (node->getAgentCertificateMappingMethod() == method))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d] using externally provisioned certificate"),
+                     request->addr.toString().cstr(), node->getName(), node->getId());
+            if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
+            {
+               static_cast<Node&>(*node).clearNewTunnelBindFlag();
+               static_cast<Node&>(*node).setRecheckCapsFlag();
+               static_cast<Node&>(*node).forceConfigurationPoll();
+            }
+            nodeId = node->getId();
+            zoneUIN = node->getZoneUIN();
+            static_cast<Node&>(*node).setTunnelId(uuid::NULL_UUID, certSubject);
+         }
+      }
+
       X509_free(cert);
    }
    else
@@ -1707,7 +1769,7 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
    while(it->hasNext())
    {
       AgentTunnel *t = it->next();
-      if (t->getCertificateExpirationTime() - now <= 2592000)  // 30 days
+      if (!t->isExtProvCertificate() && (t->getCertificateExpirationTime() - now <= 2592000))  // 30 days
       {
          t->incRefCount();
          processingList.add(t);

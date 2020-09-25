@@ -10,6 +10,7 @@
 * 3.6-CURRENT
 *
 
+- Support for externally provisioned agent certificates
 - New instance discovery method "internal table"
 - Added option to validate server certificate on agent
 - Fixed column sorting in Web Service Definition view
