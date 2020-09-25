@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -132,7 +133,7 @@ public class Authentication extends PropertyPage
 		comboMappingMethod.add(Messages.get().Authentication_Subject);
 		comboMappingMethod.add(Messages.get().Authentication_PublicKey);
       comboMappingMethod.add(Messages.get().Authentication_CommonName);
-		comboMappingMethod.select(object.getCertMappingMethod());
+      comboMappingMethod.select(object.getCertMappingMethod().getValue());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
@@ -182,7 +183,7 @@ public class Authentication extends PropertyPage
 		
 		// Authentication
 		object.setAuthMethod(comboAuthMethod.getSelectionIndex());
-		object.setCertMappingMethod(comboMappingMethod.getSelectionIndex());
+      object.setCertMappingMethod(CertificateMappingMethod.getByValue(comboMappingMethod.getSelectionIndex()));
 		object.setCertMappingData(textMappingData.getText());
 		
 		if (isApply)

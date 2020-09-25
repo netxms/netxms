@@ -323,18 +323,18 @@ static bool CheckCommonName(X509 *cert, const TCHAR *cn)
 /**
  * Validate user's certificate
  */
-bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature, size_t sigLen, int mappingMethod, const TCHAR *mappingData)
+bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature, size_t sigLen, CertificateMappingMethod mappingMethod, const TCHAR *mappingData)
 {
    bool bValid = false;
 
    String certSubject = GetCertificateSubjectString(cert);
 
-	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), certSubject.cstr(), login);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Validating certificate \"%s\" for user %s"), certSubject.cstr(), login);
 	s_certificateStoreLock.lock();
 
 	if (s_trustedCertificateStore == nullptr)
 	{
-		DbgPrintf(3, _T("Cannot validate user certificate because certificate store is not initialized"));
+	   nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot validate user certificate because certificate store is not initialized"));
 		s_certificateStoreLock.unlock();
 		return false;
 	}
@@ -351,7 +351,7 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 				bValid = (RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, const_cast<unsigned char*>(signature), static_cast<unsigned int>(sigLen), EVP_PKEY_get1_RSA(pKey)) != 0);
 				break;
 			default:
-				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject.cstr(), login);
+			   nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject.cstr(), login);
 				break;
 		}
 	}
@@ -365,12 +365,12 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 			X509_STORE_CTX_init(pStore, s_trustedCertificateStore, cert, nullptr);
 			bValid = (X509_verify_cert(pStore) != 0);
 			X509_STORE_CTX_free(pStore);
-			DbgPrintf(3, _T("Certificate \"%s\" for user %s - validation %s"), certSubject.cstr(), login, bValid ? _T("successful") : _T("failed"));
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("Certificate \"%s\" for user %s - validation %s"), certSubject.cstr(), login, bValid ? _T("successful") : _T("failed"));
 		}
 		else
 		{
 			TCHAR szBuffer[256];
-			DbgPrintf(3, _T("X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), szBuffer));
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), szBuffer));
 			bValid = false;
 		}
 	}
@@ -380,17 +380,17 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 	{
 		switch(mappingMethod)
 		{
-			case USER_MAP_CERT_BY_SUBJECT:
+			case MAP_CERTIFICATE_BY_SUBJECT:
 				bValid = (_tcsicmp(certSubject, CHECK_NULL_EX(mappingData)) == 0);
 				break;
-			case USER_MAP_CERT_BY_PUBKEY:
+			case MAP_CERTIFICATE_BY_PUBKEY:
 				bValid = CheckPublicKey(pKey, CHECK_NULL_EX(mappingData));
 				break;
-			case USER_MAP_CERT_BY_CN:
+			case MAP_CERTIFICATE_BY_CN:
             bValid = CheckCommonName(cert, ((mappingData != nullptr) && (*mappingData != 0)) ? mappingData : login);
 				break;
 			default:
-				DbgPrintf(3, _T("Invalid certificate mapping method %d for user %s"), mappingMethod, login);
+			   nxlog_debug_tag(DEBUG_TAG, 3, _T("Invalid certificate mapping method %d for user %s"), mappingMethod, login);
 				bValid = false;
 				break;
 		}

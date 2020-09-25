@@ -808,11 +808,14 @@ enum SessionState
 #define USER_MODIFY_GROUP_MEMBERSHIP   0x00001000
 
 /**
- * User certificate mapping methods
+ * Certificate mapping methods
  */
-#define USER_MAP_CERT_BY_SUBJECT    0
-#define USER_MAP_CERT_BY_PUBKEY     1
-#define USER_MAP_CERT_BY_CN         2
+enum CertificateMappingMethod
+{
+   MAP_CERTIFICATE_BY_SUBJECT = 0,
+   MAP_CERTIFICATE_BY_PUBKEY  = 1,
+   MAP_CERTIFICATE_BY_CN      = 2
+};
 
 /**
  * User database change notification types

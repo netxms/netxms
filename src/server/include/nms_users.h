@@ -53,18 +53,18 @@ typedef int ber_int_t;
 /**
  * LDAP entry (object)
  */
-class Entry
+class LDAP_Entry
 {
 public:
-   UINT32 m_type;
-   TCHAR* m_loginName;
-   TCHAR* m_fullName;
-   TCHAR* m_description;
-   TCHAR* m_id;
-   StringSet *m_memberList;
+   uint32_t m_type;
+   TCHAR *m_loginName;
+   TCHAR *m_fullName;
+   TCHAR *m_description;
+   TCHAR *m_id;
+   StringSet m_memberList;
 
-   Entry();
-   ~Entry();
+   LDAP_Entry();
+   ~LDAP_Entry();
 };
 
 #if WITH_LDAP
@@ -129,14 +129,14 @@ private:
    int m_action;
    int m_secure;
    int m_pageSize;
-   StringObjectMap<Entry> *m_userIdEntryList;
-   StringObjectMap<Entry> *m_userDnEntryList;
-   StringObjectMap<Entry> *m_groupIdEntryList;
-   StringObjectMap<Entry> *m_groupDnEntryList;
+   StringObjectMap<LDAP_Entry> *m_userIdEntryList;
+   StringObjectMap<LDAP_Entry> *m_userDnEntryList;
+   StringObjectMap<LDAP_Entry> *m_groupIdEntryList;
+   StringObjectMap<LDAP_Entry> *m_groupDnEntryList;
 
    void closeLDAPConnection();
    void initLDAP();
-   UINT32 loginLDAP();
+   uint32_t loginLDAP();
    void getAllSyncParameters();
    void compareGroupList();
    void compareUserLists();
@@ -158,7 +158,7 @@ public:
 #endif // WITH_LDAP
 
    void syncUsers();
-   UINT32 ldapUserLogin(const TCHAR *name, const TCHAR *password);
+   uint32_t ldapUserLogin(const TCHAR *name, const TCHAR *password);
 };
 
 #ifndef _nms_users_h_
@@ -296,7 +296,7 @@ protected:
    PasswordHash m_password;
    int m_graceLogins;
    int m_authMethod;
-	int m_certMappingMethod;
+   CertificateMappingMethod m_certMappingMethod;
 	TCHAR *m_certMappingData;
 	time_t m_disabledUntil;
 	time_t m_lastPasswordChange;
@@ -320,18 +320,18 @@ public:
 
    virtual json_t *toJson() const;
 
-	const TCHAR *getFullName() { return m_fullName; }
-	int getGraceLogins() { return m_graceLogins; }
-	int getAuthMethod() { return m_authMethod; }
-	int getCertMappingMethod() { return m_certMappingMethod; }
-	time_t getLastLoginTime() { return m_lastLogin; }
-	time_t getPasswordChangeTime() { return m_lastPasswordChange; }
-	const TCHAR *getCertMappingData() { return m_certMappingData; }
-	bool isIntruderLockoutActive() { return (m_flags & UF_INTRUDER_LOCKOUT) != 0; }
-	bool canChangePassword() { return (m_flags & UF_CANNOT_CHANGE_PASSWORD) == 0; }
-	int getMinMasswordLength() { return m_minPasswordLength; }
-	time_t getReEnableTime() { return m_disabledUntil; }
-   const TCHAR *getXmppId() { return m_xmppId; }
+	const TCHAR *getFullName() const { return m_fullName; }
+	int getGraceLogins() const { return m_graceLogins; }
+	int getAuthMethod() const { return m_authMethod; }
+	CertificateMappingMethod getCertMappingMethod() const { return m_certMappingMethod; }
+	time_t getLastLoginTime() const { return m_lastLogin; }
+	time_t getPasswordChangeTime() const { return m_lastPasswordChange; }
+	const TCHAR *getCertMappingData() const { return m_certMappingData; }
+	bool isIntruderLockoutActive() const { return (m_flags & UF_INTRUDER_LOCKOUT) != 0; }
+	bool canChangePassword()const  { return (m_flags & UF_CANNOT_CHANGE_PASSWORD) == 0; }
+	int getMinMasswordLength() const { return m_minPasswordLength; }
+	time_t getReEnableTime() const { return m_disabledUntil; }
+   const TCHAR *getXmppId() const { return m_xmppId; }
 
 	bool validatePassword(const TCHAR *password);
 	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }
@@ -438,17 +438,17 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
 UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id);
 uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData);
-UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id);
+uint32_t NXCORE_EXPORTABLE DetachLdapUser(uint32_t id);
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE *OpenUserDatabase();
 void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it);
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail = false);
-void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject);
-void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectMap<Entry> *entryListId, UINT32 m_action, bool isUser);
-void UpdateLDAPGroup(const TCHAR* dn, const Entry *ldapObject);
-void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject);
+void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject);
+void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Entry> *entryListDn, StringObjectMap<LDAP_Entry> *entryListId, uint32_t m_action, bool isUser);
+void UpdateLDAPGroup(const TCHAR* dn, const LDAP_Entry *ldapObject);
+void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject);
 void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId);
 void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);

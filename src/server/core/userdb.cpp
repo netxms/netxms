@@ -48,7 +48,7 @@ bool RadiusAuth(const TCHAR *pszLogin, const TCHAR *pszPasswd);
 /**
  * Static data
  */
-static HashMap<UINT32, UserDatabaseObject> s_userDatabase(Ownership::True);
+static HashMap<uint32_t, UserDatabaseObject> s_userDatabase(Ownership::True);
 static StringObjectMap<UserDatabaseObject> s_ldapNames(Ownership::False);
 static StringObjectMap<User> s_ldapUserId(Ownership::False);
 static StringObjectMap<Group> s_ldapGroupId(Ownership::False);
@@ -355,7 +355,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
 {
    RWLockReadLock(s_userDatabaseLock);
    User *user = s_users.get(login);
-   if ((user == NULL) || user->isDeleted())
+   if ((user == nullptr) || user->isDeleted())
    {
       // no such user
       RWLockUnlock(s_userDatabaseLock);
@@ -364,8 +364,8 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    user = new User(user);  // create copy for authentication
    RWLockUnlock(s_userDatabaseLock);
 
-   UINT32 dwResult = RCC_ACCESS_DENIED;
-   BOOL bPasswordValid = FALSE;
+   uint32_t rcc = RCC_ACCESS_DENIED;
+   bool passwordValid = false;
 
    *closeOtherSessions = false;
    *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
@@ -374,13 +374,13 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    {
       if (user->isDisabled())
       {
-         dwResult = RCC_ACCOUNT_DISABLED;
+         rcc = RCC_ACCOUNT_DISABLED;
          goto result;
       }
       LDAPConnection conn;
-      dwResult = conn.ldapUserLogin(user->getDn(), password);
-      if (dwResult == RCC_SUCCESS)
-         bPasswordValid = TRUE;
+      rcc = conn.ldapUserLogin(user->getDn(), password);
+      if (rcc == RCC_SUCCESS)
+         passwordValid = true;
       goto result;
    }
 
@@ -406,66 +406,65 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
          case AUTH_NETXMS_PASSWORD:
             if (sigLen == 0)
             {
-               bPasswordValid = user->validatePassword(password);
+               passwordValid = user->validatePassword(password);
             }
             else
             {
                // We got certificate instead of password
-               bPasswordValid = FALSE;
+               passwordValid = false;
             }
             break;
          case AUTH_RADIUS:
             if (sigLen == 0)
             {
-               bPasswordValid = RadiusAuth(login, password);
+               passwordValid = RadiusAuth(login, password);
             }
             else
             {
                // We got certificate instead of password
-               bPasswordValid = FALSE;
+               passwordValid = false;
             }
             break;
          case AUTH_CERTIFICATE:
-            if ((sigLen != 0) && (pCert != NULL))
+            if ((sigLen != 0) && (pCert != nullptr))
             {
 #ifdef _WITH_ENCRYPTION
-               bPasswordValid = ValidateUserCertificate(static_cast<X509*>(pCert), login, pChallenge,
-                                                        reinterpret_cast<const BYTE*>(password), sigLen,
-                                                        user->getCertMappingMethod(),
-                                                        user->getCertMappingData());
+               passwordValid = ValidateUserCertificate(static_cast<X509*>(pCert), login, pChallenge,
+                     reinterpret_cast<const BYTE*>(password), sigLen, user->getCertMappingMethod(),
+                     user->getCertMappingData());
 #else
-               bPasswordValid = FALSE;
+               passwordValid = false;
 #endif
             }
             else
             {
                // We got password instead of certificate
-               bPasswordValid = FALSE;
+               passwordValid = false;
             }
             break;
          default:
             nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Unsupported authentication method %d requested for user %s"), user->getAuthMethod(), login);
-            bPasswordValid = FALSE;
+            passwordValid = false;
             break;
       }
    }
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" already authenticated by SSO server"), user->getName());
-      bPasswordValid = TRUE;
+      passwordValid = true;
    }
 
 result:
    delete user;   // delete copy
    RWLockWriteLock(s_userDatabaseLock);
    user = s_users.get(login);
-   if ((user == NULL) || user->isDeleted() || (user->getId() != *pdwId))
+   if ((user == nullptr) || user->isDeleted() || (user->getId() != *pdwId))
    {
       // User was deleted while authenticating
       RWLockUnlock(s_userDatabaseLock);
       return RCC_ACCESS_DENIED;
    }
-   if (bPasswordValid)
+   if (passwordValid)
    {
       if (!user->isDisabled())
       {
@@ -480,7 +479,7 @@ result:
                   if (user->getGraceLogins() <= 0)
                   {
                      nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" has no grace logins left"), user->getName());
-                     dwResult = RCC_NO_GRACE_LOGINS;
+                     rcc = RCC_NO_GRACE_LOGINS;
                   }
                   else
                   {
@@ -504,7 +503,7 @@ result:
                      if (user->getGraceLogins() <= 0)
                      {
                         nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" has no grace logins left"), user->getName());
-                        dwResult = RCC_NO_GRACE_LOGINS;
+                        rcc = RCC_NO_GRACE_LOGINS;
                      }
                      else
                      {
@@ -524,18 +523,18 @@ result:
             *pbChangePasswd = false;
          }
 
-         if (dwResult != RCC_NO_GRACE_LOGINS)
+         if (rcc != RCC_NO_GRACE_LOGINS)
          {
             *pdwSystemRights = GetEffectiveSystemRights(user);
             *closeOtherSessions = (user->getFlags() & UF_CLOSE_OTHER_SESSIONS) != 0;
             *graceLogins = user->getGraceLogins();
             user->updateLastLogin();
-            dwResult = RCC_SUCCESS;
+            rcc = RCC_SUCCESS;
          }
       }
       else
       {
-         dwResult = RCC_ACCOUNT_DISABLED;
+         rcc = RCC_ACCOUNT_DISABLED;
       }
       *pbIntruderLockout = false;
    }
@@ -545,7 +544,7 @@ result:
       *pbIntruderLockout = user->isIntruderLockoutActive();
    }
    RWLockUnlock(s_userDatabaseLock);
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -884,7 +883,7 @@ static TCHAR *GenerateUniqueName(const TCHAR *oldName, uint32_t id)
 /**
  * Update/Add LDAP user
  */
-void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
+void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject)
 {
    RWLockWriteLock(s_userDatabaseLock);
 
@@ -1000,7 +999,7 @@ void UpdateLDAPUser(const TCHAR *dn, const Entry *ldapObject)
  * Goes through all existing LDAP entries and check that in newly gotten list they also exist.
  * If LDAP entries does not exists in new list - it will be disabled or removed depending on action parameter.
  */
-void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectMap<Entry> *entryListId, UINT32 m_action, bool isUser)
+void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Entry> *entryListDn, StringObjectMap<LDAP_Entry> *entryListId, uint32_t m_action, bool isUser)
 {
    RWLockWriteLock(s_userDatabaseLock);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
@@ -1012,7 +1011,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectM
 
       if (isUser ? ((object->getId() & GROUP_FLAG) == 0) : ((object->getId() & GROUP_FLAG) != 0))
 		{
-         if ((object->getLdapId() == NULL || !entryListId->contains(object->getLdapId())) && !entryListDn->contains(object->getDn()))
+         if (((object->getLdapId() == nullptr) || !entryListId->contains(object->getLdapId())) && !entryListDn->contains(object->getDn()))
          {
             if (m_action == USER_DELETE)
             {
@@ -1036,25 +1035,25 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectM
  * Synchronize new user/group list with old user/group list of given group.
  * Note: none LDAP users and groups will not be changed.
  */
-void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
+void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject)
 {
    // Check existing user/group with same DN
    UserDatabaseObject *object = NULL;
    RWLockWriteLock(s_userDatabaseLock);
 
-   if (ldapObject->m_id != NULL)
+   if (ldapObject->m_id != nullptr)
       object = s_ldapGroupId.get(ldapObject->m_id);
    else
       object = s_ldapNames.get(dn);
 
-   if ((object != NULL) && !object->isGroup())
+   if ((object != nullptr) && !object->isGroup())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Ignore LDAP object: %s"), dn);
       RWLockUnlock(s_userDatabaseLock);
       return;
    }
 
-   if (object == NULL)
+   if (object == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Unable to find LDAP object: %s"), dn);
       RWLockUnlock(s_userDatabaseLock);
@@ -1065,7 +1064,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), dn);
 
-   StringSet *newMembers = ldapObject->m_memberList;
+   const StringSet& newMembers = ldapObject->m_memberList;
    const IntegerArray<uint32_t>& oldMembers = group->getMembers();
 
    /**
@@ -1078,7 +1077,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
       if ((user == nullptr) || !user->isLDAPUser())
          continue;
 
-      if (!newMembers->contains(user->getDn()))
+      if (!newMembers.contains(user->getDn()))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: Remove from %s group deleted user: %s"), group->getDn(), user->getDn());
          group->deleteUser(user->getId());   // oldMembers is a reference to actual member list, Group::deleteUser will update it
@@ -1090,7 +1089,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
     * Go through newly received group member list checking each LDAP user/group by DN
     * with existing group member list and adding users/groups not existing in last list.
     */
-   Iterator<const TCHAR> *it = newMembers->iterator();
+   ConstIterator<const TCHAR> *it = newMembers.constIterator();
    while(it->hasNext())
    {
       const TCHAR *dn = it->next();
@@ -1111,7 +1110,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const Entry *ldapObject)
 /**
  * Update/Add LDAP group
  */
-void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, add users inside group, and delete removed from the group
+void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Entry *ldapObject) //no full name, add users inside group, and delete removed from the group
 {
    RWLockWriteLock(s_userDatabaseLock);
 
@@ -1123,11 +1122,11 @@ void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, a
    // Check existing user with same DN
    UserDatabaseObject *object = NULL;
 
-   if (ldapObject->m_id != NULL)
+   if (ldapObject->m_id != nullptr)
       object = s_ldapGroupId.get(ldapObject->m_id);
    else
       object = s_ldapNames.get(dn);
-   if ((object != NULL) && !object->isGroup())
+   if ((object != nullptr) && !object->isGroup())
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
@@ -1136,7 +1135,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const Entry *ldapObject) //no full name, a
       conflict = true;
    }
 
-   if ((object != NULL) && !conflict)
+   if ((object != nullptr) && !conflict)
    {
       Group *group = static_cast<Group*>(object);
       if (!group->isDeleted())

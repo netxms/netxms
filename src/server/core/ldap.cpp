@@ -46,26 +46,24 @@
 /**
  * LDAP entry constructor
  */
-Entry::Entry()
+LDAP_Entry::LDAP_Entry()
 {
    m_type = LDAP_DEFAULT;
-   m_loginName = NULL;
-   m_fullName = NULL;
-   m_description = NULL;
-   m_id = NULL;
-   m_memberList = new StringSet();
+   m_loginName = nullptr;
+   m_fullName = nullptr;
+   m_description = nullptr;
+   m_id = nullptr;
 }
 
 /**
  * LDAP entry destructor
  */
-Entry::~Entry()
+LDAP_Entry::~LDAP_Entry()
 {
    MemFree(m_loginName);
    MemFree(m_fullName);
    MemFree(m_description);
    MemFree(m_id);
-   delete m_memberList;
 }
 
 #if WITH_LDAP
@@ -84,9 +82,7 @@ static int ldap_create_control(const char *oid, BerElement *ber, int iscritical,
 #endif
 
 #if !HAVE_LDAP_CREATE_PAGE_CONTROL && !defined(_WIN32)
-int ldap_create_page_control(LDAP *ldap, ber_int_t pagesize,
-			     struct berval *cookie, char isCritical,
-			     LDAPControl **output)
+int ldap_create_page_control(LDAP *ldap, ber_int_t pagesize, struct berval *cookie, char isCritical, LDAPControl **output)
 {
 	BerElement *ber;
 	int rc;
@@ -307,12 +303,12 @@ void LDAPConnection::syncUsers()
    delete_and_null(m_userIdEntryList);
    delete_and_null(m_groupDnEntryList);
    delete_and_null(m_groupIdEntryList);
-   m_userDnEntryList = new StringObjectMap<Entry>(Ownership::True); //as unique string ID is used DN
-   m_userIdEntryList = new StringObjectMap<Entry>(Ownership::False); //as unique string ID is used id
-   m_groupDnEntryList= new StringObjectMap<Entry>(Ownership::True); //as unique string ID is used DN
-   m_groupIdEntryList= new StringObjectMap<Entry>(Ownership::False); //as unique string ID is used id
+   m_userDnEntryList = new StringObjectMap<LDAP_Entry>(Ownership::True); //as unique string ID is used DN
+   m_userIdEntryList = new StringObjectMap<LDAP_Entry>(Ownership::False); //as unique string ID is used id
+   m_groupDnEntryList= new StringObjectMap<LDAP_Entry>(Ownership::True); //as unique string ID is used DN
+   m_groupIdEntryList= new StringObjectMap<LDAP_Entry>(Ownership::False); //as unique string ID is used id
 
-   //Parse search base string. As separater is used ';' if this symbol is not escaped
+   // Parse search base string. As separator is used ';' if this symbol is not escaped
    LDAP_CHAR *tmp  = ldap_strdup(m_searchBase);
    LDAP_CHAR *separator = tmp;
    LDAP_CHAR *base = tmp;
@@ -380,14 +376,14 @@ void LDAPConnection::syncUsers()
       }
       ldap_msgfree(searchResult);
 
-      if ((separator != NULL) && ((size_t)(separator - tmp) < size))
+      if ((separator != nullptr) && ((size_t)(separator - tmp) < size))
       {
          separator++;
          base = separator;
       }
       else
       {
-         separator = NULL;
+         separator = nullptr;
       }
    }
 
@@ -548,7 +544,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
    nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): Found entry count: %d"), ldap_count_entries(m_ldapConn, searchResult));
    for (entry = ldap_first_entry(m_ldapConn, searchResult); entry != NULL; entry = ldap_next_entry(m_ldapConn, entry))
    {
-      Entry *ldapObject = new Entry();
+      LDAP_Entry *ldapObject = new LDAP_Entry();
       TCHAR *dn = dnFromMessage(entry);
       nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): Found DN: %s"), dn);
 
@@ -616,7 +612,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
             while(value != NULL)
             {
                nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): member: %s"), value);
-               ldapObject->m_memberList->addPreallocated(value);
+               ldapObject->m_memberList.addPreallocated(value);
                value = getAttrValue(entry, attribute, ++i);
             }
          }
@@ -627,7 +623,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
             //There are more members than can be provided in one request
 #if !defined(_WIN32) && defined(UNICODE)
             char *tmpDn = UTF8StringFromWideString(dn);
-            updateMembers(ldapObject->m_memberList, attribute, entry, tmpDn);
+            updateMembers(&ldapObject->m_memberList, attribute, entry, tmpDn);
             MemFree(tmpDn);
 #else
             updateMembers(ldapObject->m_memberList, attribute, entry, dn);
@@ -838,7 +834,7 @@ void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr,
 /**
  * Update user callback
  */
-static EnumerationCallbackResult UpdateUserCallback(const TCHAR *key, const Entry *value, LDAPConnection *connection)
+static EnumerationCallbackResult UpdateUserCallback(const TCHAR *key, const LDAP_Entry *value, LDAPConnection *connection)
 {
    UpdateLDAPUser(key, value);
    return _CONTINUE;
@@ -856,7 +852,7 @@ void LDAPConnection::compareUserLists()
 /**
  * Update group callback
  */
-static EnumerationCallbackResult UpdateGroupCallback(const TCHAR *key, const Entry *value, LDAPConnection *connection)
+static EnumerationCallbackResult UpdateGroupCallback(const TCHAR *key, const LDAP_Entry *value, LDAPConnection *connection)
 {
    UpdateLDAPGroup(key, value);
    return _CONTINUE;
@@ -865,7 +861,7 @@ static EnumerationCallbackResult UpdateGroupCallback(const TCHAR *key, const Ent
 /**
  * Update group callback
  */
-static EnumerationCallbackResult SyncGroupMembersCallback(const TCHAR *key, const Entry *value, LDAPConnection *connection)
+static EnumerationCallbackResult SyncGroupMembersCallback(const TCHAR *key, const LDAP_Entry *value, LDAPConnection *connection)
 {
    SyncLDAPGroupMembers(key, value);
    return _CONTINUE;
@@ -885,11 +881,11 @@ void LDAPConnection::compareGroupList()
  * Coverts given parameters to correct encoding, login to ldap and close connection.
  * This function should be used to check connection. As name should be given user dn.
  */
-UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
+uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 {
    getAllSyncParameters();
    initLDAP();
-   UINT32 result;
+   uint32_t result;
 #ifdef UNICODE
 #ifdef _WIN32
    _tcslcpy(m_userDN, name, MAX_CONFIG_VALUE);
@@ -912,7 +908,7 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 /**
  * Autentificate LDAP user
  */
- UINT32 LDAPConnection::loginLDAP()
+ uint32_t LDAPConnection::loginLDAP()
  {
    // Prevent empty password, bind against AD will succeed with
    // empty password by default.
@@ -928,7 +924,7 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    struct berval cred;
    cred.bv_val = m_userPassword;
    cred.bv_len = (int)strlen(m_userPassword);
-   int rc = ldap_sasl_bind_s(m_ldapConn, m_userDN, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
+   int rc = ldap_sasl_bind_s(m_ldapConn, m_userDN, LDAP_SASL_SIMPLE, &cred, nullptr, nullptr, nullptr);
 #endif
    if (rc == LDAP_SUCCESS)
       return RCC_SUCCESS;
@@ -942,15 +938,15 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
  */
 void LDAPConnection::closeLDAPConnection()
 {
-   if (m_ldapConn != NULL)
+   if (m_ldapConn != nullptr)
    {
       nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::closeLDAPConnection(): disconnect form LDAP server"));
 #ifdef _WIN32
       ldap_unbind_s(m_ldapConn);
 #else
-      ldap_unbind_ext(m_ldapConn, NULL, NULL);
+      ldap_unbind_ext(m_ldapConn, nullptr, nullptr);
 #endif
-      m_ldapConn = NULL;
+      m_ldapConn = nullptr;
    }
    else
    {
