@@ -10320,15 +10320,31 @@ void Node::setRoutingLoopEvent(const InetAddress& address, uint32_t nodeId, uint
  */
 void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
 {
+   bool updated = false;
+
    lockProperties();
-   m_tunnelId = tunnelId;
-   MemFree(m_agentCertSubject);
-   m_agentCertSubject = MemCopyString(certSubject);
-   setModified(MODIFY_NODE_PROPERTIES, false);
+   if (!m_tunnelId.equals(tunnelId) || _tcscmp(CHECK_NULL_EX(certSubject), CHECK_NULL_EX(m_agentCertSubject)))
+   {
+      m_tunnelId = tunnelId;
+      MemFree(m_agentCertSubject);
+      m_agentCertSubject = MemCopyString(certSubject);
+      setModified(MODIFY_NODE_PROPERTIES, false);
+      updated = true;
+   }
    unlockProperties();
 
-   TCHAR buffer[128];
-   nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Tunnel ID for node %s [%d] set to %s"), m_name, m_id, tunnelId.toString(buffer));
+   if (updated)
+   {
+      if (!tunnelId.isNull())
+      {
+         TCHAR buffer[128];
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Tunnel ID for node %s [%d] set to %s"), m_name, m_id, tunnelId.toString(buffer));
+      }
+      if (certSubject != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Agent certificate subject for node %s [%d] set to %s"), m_name, m_id, certSubject);
+      }
+   }
 }
 
 /**

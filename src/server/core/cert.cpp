@@ -340,7 +340,11 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 	}
 
 	// Validate signature
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   EVP_PKEY *pKey = X509_get0_pubkey(cert);
+#else
 	EVP_PKEY *pKey = X509_get_pubkey(cert);
+#endif
 	if (pKey != nullptr)
 	{
       BYTE hash[SHA1_DIGEST_SIZE];
@@ -395,6 +399,11 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 				break;
 		}
 	}
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	if (pKey != nullptr)
+	   EVP_PKEY_free(pkey);
+#endif
 
 	s_certificateStoreLock.unlock();
 	return bValid;
