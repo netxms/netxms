@@ -469,7 +469,7 @@ class LIBNXSL_EXPORTABLE NXSL_Value
    friend class ObjectMemoryPool<NXSL_Value>;
 
 protected:
-   UINT32 m_length;
+   uint32_t m_length;
    TCHAR m_stringValue[NXSL_SHORT_STRING_LENGTH];
    TCHAR *m_stringPtr;
 #ifdef UNICODE
@@ -480,16 +480,29 @@ protected:
    BYTE m_stringIsValid;
    union
    {
-      INT32 int32;
-      UINT32 uint32;
-      INT64 int64;
-      UINT64 uint64;
+      int32_t int32;
+      uint32_t uint32;
+      int64_t int64;
+      uint64_t uint64;
       double real;
       NXSL_Object *object;
 		NXSL_Iterator *iterator;
 		NXSL_Handle<NXSL_Array> *arrayHandle;
       NXSL_Handle<NXSL_HashMap> *hashMapHandle;
    } m_value;
+
+   template<typename T> T getValueAsIntegerType()
+   {
+      switch(m_dataType)
+      {
+         case NXSL_DT_INT32: return (T)m_value.int32;
+         case NXSL_DT_UINT32: return (T)m_value.uint32;
+         case NXSL_DT_INT64: return (T)m_value.int64;
+         case NXSL_DT_UINT64: return (T)m_value.uint64;
+         case NXSL_DT_REAL: return (T)m_value.real;
+         default: return 0;
+      }
+   }
 
    void updateNumber();
    void updateString();
@@ -510,10 +523,10 @@ protected:
    NXSL_Value(NXSL_Array *array);
    NXSL_Value(NXSL_Iterator *iterator);
    NXSL_Value(NXSL_HashMap *hashMap);
-   NXSL_Value(INT32 nValue);
-   NXSL_Value(INT64 nValue);
-   NXSL_Value(UINT32 uValue);
-   NXSL_Value(UINT64 uValue);
+   NXSL_Value(int32_t nValue);
+   NXSL_Value(int64_t nValue);
+   NXSL_Value(uint32_t uValue);
+   NXSL_Value(uint64_t uValue);
    NXSL_Value(double dValue);
    NXSL_Value(const TCHAR *value);
    NXSL_Value(const TCHAR *value, UINT32 len);
@@ -523,7 +536,7 @@ protected:
    ~NXSL_Value();
 
 public:
-   void set(INT32 value);
+   void set(int32_t value);
 
 	void setName(const char *name) { MemFree(m_name); m_name = MemCopyStringA(name); }
 	const char *getName() const { return m_name; }
@@ -553,16 +566,16 @@ public:
 #else
 	const char *getValueAsMBString() { return getValueAsCString(); }
 #endif
-   INT32 getValueAsInt32();
-   UINT32 getValueAsUInt32();
-   INT64 getValueAsInt64();
-   UINT64 getValueAsUInt64();
+   int32_t getValueAsInt32() { return getValueAsIntegerType<int32_t>(); }
+   uint32_t getValueAsUInt32() { return getValueAsIntegerType<uint32_t>(); }
+   int64_t getValueAsInt64() { return getValueAsIntegerType<int64_t>(); }
+   uint64_t getValueAsUInt64() { return getValueAsIntegerType<uint64_t>(); }
    double getValueAsReal();
    bool getValueAsBoolean() { return isTrue(); }
-   NXSL_Object *getValueAsObject() { return (m_dataType == NXSL_DT_OBJECT) ? m_value.object : NULL; }
-   NXSL_Array *getValueAsArray() { return (m_dataType == NXSL_DT_ARRAY) ? m_value.arrayHandle->getObject() : NULL; }
-   NXSL_HashMap *getValueAsHashMap() { return (m_dataType == NXSL_DT_HASHMAP) ? m_value.hashMapHandle->getObject() : NULL; }
-   NXSL_Iterator *getValueAsIterator() { return (m_dataType == NXSL_DT_ITERATOR) ? m_value.iterator : NULL; }
+   NXSL_Object *getValueAsObject() { return (m_dataType == NXSL_DT_OBJECT) ? m_value.object : nullptr; }
+   NXSL_Array *getValueAsArray() { return (m_dataType == NXSL_DT_ARRAY) ? m_value.arrayHandle->getObject() : nullptr; }
+   NXSL_HashMap *getValueAsHashMap() { return (m_dataType == NXSL_DT_HASHMAP) ? m_value.hashMapHandle->getObject() : nullptr; }
+   NXSL_Iterator *getValueAsIterator() { return (m_dataType == NXSL_DT_ITERATOR) ? m_value.iterator : nullptr; }
 
    void concatenate(const TCHAR *string, UINT32 len);
    
