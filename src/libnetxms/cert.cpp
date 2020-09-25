@@ -29,6 +29,13 @@
 
 #ifdef _WITH_ENCRYPTION
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+static inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
+{
+   return X509_get_notAfter(x);
+}
+#endif
+
 /**
  * Get field from X.509 name
  */
