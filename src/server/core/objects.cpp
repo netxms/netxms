@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms-regex.h>
+#include <agent_tunnel.h>
 
 /**
  * Global data
@@ -335,6 +336,8 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
 					      g_idxNodeByAddr.put(static_cast<Node&>(*object).getIpAddress(), object);
                }
             }
+            if (static_cast<Node&>(*object).getAgentCertificateMappingData() != nullptr)
+               UpdateAgentCertificateMappingIndex(static_pointer_cast<Node>(object), nullptr, static_cast<Node&>(*object).getAgentCertificateMappingData());
             break;
 			case OBJECT_CLUSTER:
             g_idxClusterById.put(object->getId(), object);
@@ -495,6 +498,8 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 				      g_idxNodeByAddr.remove(static_cast<const Node&>(object).getIpAddress());
             }
          }
+         if (static_cast<const Node&>(object).getAgentCertificateMappingData() != nullptr)
+            UpdateAgentCertificateMappingIndex(static_cast<const Node&>(object).self(), static_cast<const Node&>(object).getAgentCertificateMappingData(), nullptr);
          break;
 		case OBJECT_CLUSTER:
 			g_idxClusterById.remove(object.getId());

@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 36.3 to 40.0
+ * Upgrade from 36.4 to 40.0
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 36.3 to 36.4
  */
 static bool H_UpgradeFromV3()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_cert_mapping_method char(1)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_cert_mapping_data varchar(500)")));
+   CHK_EXEC(SetMinorSchemaVersion(4));
    return true;
 }
 
@@ -82,7 +93,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 3,  40, 0,  H_UpgradeFromV3  },
+   { 4,  40, 0,  H_UpgradeFromV4  },
+   { 3,  36, 4,  H_UpgradeFromV3  },
    { 2,  36, 3,  H_UpgradeFromV2  },
    { 1,  36, 2,  H_UpgradeFromV1  },
    { 0,  36, 1,  H_UpgradeFromV0  },

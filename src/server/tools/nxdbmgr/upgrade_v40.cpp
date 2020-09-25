@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.15 to 40.16
+ */
+static bool H_UpgradeFromV15()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 4)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_cert_mapping_method char(1)")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_cert_mapping_data varchar(500)")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 4));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade form 40.14 to 40.15
  */
 static bool H_UpgradeFromV14()
@@ -401,6 +416,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 15, 40, 16, H_UpgradeFromV15 },
    { 14, 40, 15, H_UpgradeFromV14 },
    { 13, 40, 14, H_UpgradeFromV13 },
    { 12, 40, 13, H_UpgradeFromV12 },

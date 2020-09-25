@@ -338,8 +338,8 @@ public:
 	void setPassword(const TCHAR *password, bool clearChangePasswdFlag);
 	void increaseAuthFailures();
 	void resetAuthFailures() { m_authFailures = 0; m_flags |= UF_MODIFIED; }
-	void updateLastLogin() { m_lastLogin = time(NULL); m_flags |= UF_MODIFIED; }
-	void updatePasswordChangeTime() { m_lastPasswordChange = time(NULL); m_flags |= UF_MODIFIED; }
+	void updateLastLogin() { m_lastLogin = time(nullptr); m_flags |= UF_MODIFIED; }
+	void updatePasswordChangeTime() { m_lastPasswordChange = time(nullptr); m_flags |= UF_MODIFIED; }
 	void setFullName(const TCHAR *fullName);
 	void enable();
 

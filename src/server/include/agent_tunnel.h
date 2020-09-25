@@ -207,4 +207,9 @@ enum class TunnelCapabilityFilter
  */
 int GetTunnelCount(TunnelCapabilityFilter filter);
 
+/**
+ * Update agent certificate mapping index for externally provisioned certificates
+ */
+void UpdateAgentCertificateMappingIndex(const shared_ptr<Node>& node, const TCHAR *oldValue, const TCHAR *newValue);
+
 #endif

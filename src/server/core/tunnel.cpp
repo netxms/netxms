@@ -50,6 +50,12 @@ static const TCHAR *s_eventParamNamesAgentIdMismatch[] =
    };
 
 /**
+ * Externally provisioned certificate mapping
+ */
+static SharedStringObjectMap<Node> s_certificateMappings;
+static Mutex s_certificateMappingsLock;
+
+/**
  * Tunnel registration
  */
 static RefCountHashMap<uint32_t, AgentTunnel> s_boundTunnels(Ownership::True);
@@ -244,28 +250,29 @@ void ShowAgentTunnels(CONSOLE_CTX console)
 
    ConsolePrintf(console,
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
-            _T("ID   | Node ID | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
-            _T("-----+---------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
+            _T("ID   | Node ID | EP  | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
+            _T("-----+---------+-----+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
    Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
    while(it->hasNext())
    {
       AgentTunnel *t = it->next();
       TCHAR ipAddrBuffer[64];
-      ConsolePrintf(console, _T("%4d | %7u | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
-               t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
+      ConsolePrintf(console, _T("%4d | %7u | %-3s | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
+               t->isExtProvCertificate() ? _T("YES") : _T("NO"), t->getAddress().toString(ipAddrBuffer), t->getSystemName(),
+               t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
    }
    delete it;
 
    ConsolePrintf(console,
             _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
-            _T("ID   | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
-            _T("-----+--------------------------+--------------------------+--------------------------+------------------+---------------+------------------------------------\n"));
+            _T("ID   | EP  | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
+            _T("-----+-----+--------------------------+--------------------------+--------------------------+------------------+---------------+------------------------------------\n"));
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
       const AgentTunnel *t = s_unboundTunnels.get(i);
       TCHAR ipAddrBuffer[64];
-      ConsolePrintf(console, _T("%4d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getAddress().toString(ipAddrBuffer),
-               t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
+      ConsolePrintf(console, _T("%4d | %-3s | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->isExtProvCertificate() ? _T("YES") : _T("NO"),
+               t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
    }
 
    s_tunnelListLock.unlock();
@@ -629,7 +636,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
  */
 uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
 {
-   if ((m_state != AGENT_TUNNEL_UNBOUND) || (m_bindRequestId != 0))
+   if ((m_state != AGENT_TUNNEL_UNBOUND) || (m_bindRequestId != 0) || m_extProvCertificate)
       return RCC_OUT_OF_STATE_REQUEST;
 
    shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
@@ -1753,10 +1760,10 @@ int GetTunnelCount(TunnelCapabilityFilter filter)
       {
          AgentTunnel *t = it->next();
          if ((filter == TunnelCapabilityFilter::AGENT_PROXY && t->isAgentProxy()) ||
-               (filter == TunnelCapabilityFilter::SNMP_PROXY && t->isSnmpProxy()) ||
-               (filter == TunnelCapabilityFilter::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||
-               (filter == TunnelCapabilityFilter::SYSLOG_PROXY && t->isSyslogProxy()) ||
-               (filter == TunnelCapabilityFilter::USER_AGENT && t->isUserAgentInstalled()))
+             (filter == TunnelCapabilityFilter::SNMP_PROXY && t->isSnmpProxy()) ||
+             (filter == TunnelCapabilityFilter::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||
+             (filter == TunnelCapabilityFilter::SYSLOG_PROXY && t->isSyslogProxy()) ||
+             (filter == TunnelCapabilityFilter::USER_AGENT && t->isUserAgentInstalled()))
          {
             count++;
          }
@@ -1766,4 +1773,17 @@ int GetTunnelCount(TunnelCapabilityFilter filter)
    }
 
    return count;
+}
+
+/**
+ * Update agent certificate mapping index for externally provisioned certificates
+ */
+void UpdateAgentCertificateMappingIndex(const shared_ptr<Node>& node, const TCHAR *oldValue, const TCHAR *newValue)
+{
+   s_certificateMappingsLock.lock();
+   if (oldValue != nullptr)
+      s_certificateMappings.remove(oldValue);
+   if (newValue != nullptr)
+      s_certificateMappings.set(newValue, node);
+   s_certificateMappingsLock.unlock();
 }
