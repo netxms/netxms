@@ -24,8 +24,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -33,6 +35,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCompressionMode;
+import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -56,8 +59,10 @@ public class Agent extends PropertyPage
    private Button radioAgentCompressionDefault;
    private Button radioAgentCompressionEnabled;
    private Button radioAgentCompressionDisabled;
+   private Combo certMappingMethod;
+   private LabeledText certMappingData;
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -140,6 +145,32 @@ public class Agent extends PropertyPage
       radioAgentCompressionDisabled.setText("Disabled");
       radioAgentCompressionDisabled.setSelection(node.getAgentCompressionMode() == AgentCompressionMode.DISABLED);
 
+      /* certificate mapping */
+      Group certificateMappingGroup = new Group(dialogArea, SWT.NONE);
+      certificateMappingGroup.setText("Certificate mapping");
+      layout = new GridLayout();
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.numColumns = 2;
+      certificateMappingGroup.setLayout(layout);
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(agentCompressionGroup, 0, SWT.BOTTOM);
+      certificateMappingGroup.setLayoutData(fd);
+
+      certMappingMethod = WidgetHelper.createLabeledCombo(certificateMappingGroup, SWT.DROP_DOWN | SWT.READ_ONLY, "Method",
+            new GridData(SWT.FILL, SWT.BOTTOM, false, false));
+      certMappingMethod.add("Subject");
+      certMappingMethod.add("Public key");
+      certMappingMethod.add("Common name");
+      certMappingMethod.select(node.getAgentCertificateMappingMethod().getValue());
+
+      certMappingData = new LabeledText(certificateMappingGroup, SWT.NONE);
+      certMappingData.setLabel("Mapping data");
+      if (node.getAgentCertificateMappingData() != null)
+         certMappingData.setText(node.getAgentCertificateMappingData());
+      certMappingData.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+
       return dialogArea;
    }
 
@@ -186,6 +217,7 @@ public class Agent extends PropertyPage
       md.setObjectFlags((agentForceEncryption.getSelection() ? AbstractNode.NF_FORCE_ENCRYPTION : 0) | 
                (agentTunnelOnly.getSelection() ? AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY : 0), 
             AbstractNode.NF_FORCE_ENCRYPTION | AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY);
+      md.setCertificateMapping(CertificateMappingMethod.getByValue(certMappingMethod.getSelectionIndex()), certMappingData.getText().trim());
 
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob(String.format("Updating agent communication settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
@@ -219,7 +251,7 @@ public class Agent extends PropertyPage
       return true;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
@@ -228,7 +260,7 @@ public class Agent extends PropertyPage
       return applyChanges(false);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performApply()
     */
    @Override
@@ -237,7 +269,7 @@ public class Agent extends PropertyPage
       applyChanges(true);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
    @Override
@@ -250,5 +282,7 @@ public class Agent extends PropertyPage
       agentProxy.setObjectId(0);
       agentSharedSecret.setText(""); //$NON-NLS-1$
       agentSharedSecret.getTextControl().setEnabled(false);
+      certMappingMethod.select(CertificateMappingMethod.COMMON_NAME.getValue());
+      certMappingData.setText("");
    }
 }

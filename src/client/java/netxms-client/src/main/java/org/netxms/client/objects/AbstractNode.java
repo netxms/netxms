@@ -32,6 +32,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
+import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.NodeType;
 import org.netxms.client.constants.RackOrientation;
@@ -177,6 +178,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    protected int cipState;
    protected String cipStateText;
    protected int cipVendorCode;
+   protected CertificateMappingMethod agentCertificateMappingMethod;
+   protected String agentCertificateMappingData;
+   protected String agentCertificateSubject;
 
 	/**
 	 * Create new node object.
@@ -274,6 +278,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       cipState = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATE);
       cipStateText = msg.getFieldAsString(NXCPCodes.VID_CIP_STATE_TEXT);
       cipVendorCode = msg.getFieldAsInt32(NXCPCodes.VID_CIP_VENDOR_CODE);
+      agentCertificateMappingMethod = CertificateMappingMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD));
+      agentCertificateMappingData = msg.getFieldAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
+      agentCertificateSubject = msg.getFieldAsString(NXCPCodes.VID_AGENT_CERT_SUBJECT);
       
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -1203,5 +1210,35 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    public int getCipVendorCode()
    {
       return cipVendorCode;
+   }
+
+   /**
+    * Get mapping method for agent certificate mapping.
+    * 
+    * @return mapping method for agent certificate mapping
+    */
+   public CertificateMappingMethod getAgentCertificateMappingMethod()
+   {
+      return agentCertificateMappingMethod;
+   }
+
+   /**
+    * Get mapping data for agent certificate mapping. Can be null if not set.
+    *
+    * @return mapping data for agent certificate mapping
+    */
+   public String getAgentCertificateMappingData()
+   {
+      return agentCertificateMappingData;
+   }
+
+   /**
+    * Get subject string for agent's certificate. Can be null if agent tunnel is not set.
+    *
+    * @return subject string for agent's certificate
+    */
+   public String getAgentCertificateSubject()
+   {
+      return agentCertificateSubject;
    }
 }

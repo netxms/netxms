@@ -2746,15 +2746,17 @@ private:
 	      m_agentConnection.reset();
 	}
 
-	void onSnmpProxyChange(UINT32 oldProxy);
+	void onSnmpProxyChange(uint32_t oldProxy);
    void onDataCollectionChangeAsyncCallback();
 
-	bool updateSystemHardwareProperty(SharedString &property, const TCHAR *value, const TCHAR *displayName, UINT32 requestId);
+	bool updateSystemHardwareProperty(SharedString &property, const TCHAR *value, const TCHAR *displayName, uint32_t requestId);
 
 protected:
    InetAddress m_ipAddress;
 	SharedString m_primaryHostName;
 	uuid m_tunnelId;
+	CertificateMappingMethod m_agentCertMappingMethod;
+   TCHAR *m_agentCertMappingData;
 	uint32_t m_capabilities;
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
@@ -2924,9 +2926,9 @@ protected:
    bool confPollSnmp(uint32_t requestId);
    bool confPollEthernetIP(uint32_t requestId);
    NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
-   bool updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId);
-   bool updateHardwareComponents(PollerInfo *poller, UINT32 requestId);
-   bool updateSoftwarePackages(PollerInfo *poller, UINT32 requestId);
+   bool updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestId);
+   bool updateHardwareComponents(PollerInfo *poller, uint32_t requestId);
+   bool updateSoftwarePackages(PollerInfo *poller, uint32_t requestId);
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
    void checkBridgeMib(SNMP_Transport *pTransport);
    void checkIfXTable(SNMP_Transport *pTransport);
@@ -3058,6 +3060,8 @@ public:
    SharedString getPrimaryHostName() const { return GetAttributeWithLock(m_primaryHostName, m_mutexProperties); }
    const uuid& getTunnelId() const { return m_tunnelId; }
    const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
+   CertificateMappingMethod getAgentCertificateMappingMethod() const { return m_agentCertMappingMethod; }
+   const TCHAR *getAgentCertificateMappingData() const { return m_agentCertMappingData; }
    uint32_t getRequiredPollCount() const { return m_requiredPollCount; }
    uint16_t getCipDeviceType() const { return m_cipDeviceType; }
    uint16_t getCipStatus() const { return m_cipStatus; }

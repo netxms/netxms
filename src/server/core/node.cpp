@@ -114,6 +114,8 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_lastSyslogMessageId = 0;
    m_lastAgentPushRequestId = 0;
    m_agentCertSubject = nullptr;
+   m_agentCertMappingMethod = MAP_CERTIFICATE_BY_CN;
+   m_agentCertMappingData = nullptr;
    m_agentVersion[0] = 0;
    m_platformName[0] = 0;
    m_sysDescription = nullptr;
@@ -232,6 +234,8 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_lastSyslogMessageId = 0;
    m_lastAgentPushRequestId = 0;
    m_agentCertSubject = nullptr;
+   m_agentCertMappingMethod = MAP_CERTIFICATE_BY_CN;
+   m_agentCertMappingData = nullptr;
    m_agentVersion[0] = 0;
    m_platformName[0] = 0;
    m_sysDescription = nullptr;
@@ -345,6 +349,7 @@ Node::~Node()
    MemFree(m_sysLocation);
    delete m_routingLoopEvents;
    MemFree(m_agentCertSubject);
+   MemFree(m_agentCertMappingData);
    delete m_icmpStatCollectors;
    MemFree(m_chassisPlacementConf);
 }
@@ -366,24 +371,17 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
-      _T("SELECT primary_name,primary_ip,snmp_version,secret,")
-      _T("agent_port,status_poll_type,snmp_oid,agent_version,")
-      _T("platform_name,poller_node_id,zone_guid,")
-      _T("proxy_node,snmp_proxy,required_polls,uname,")
-      _T("use_ifxtable,snmp_port,community,usm_auth_password,")
-      _T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
-      _T("down_since,boot_time,driver_name,icmp_proxy,")
-      _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
-      _T("physical_container_id,rack_image_front,rack_position,rack_height,")
-      _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-      _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
-      _T("port_rows,port_numbering_scheme,agent_comp_mode,")
-      _T("tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,")
-      _T("rack_orientation,rack_image_rear,agent_id,agent_cert_subject,")
-      _T("hypervisor_type,hypervisor_info,icmp_poll_mode,chassis_placement_config,")
-      _T("vendor,product_code,product_name,product_version,serial_number,")
-      _T("cip_device_type,cip_status,cip_state,eip_proxy,eip_port,")
-      _T("hardware_id,cip_vendor_code FROM nodes WHERE id=?"));
+      _T("SELECT primary_name,primary_ip,snmp_version,secret,agent_port,status_poll_type,snmp_oid,agent_version,")
+      _T("platform_name,poller_node_id,zone_guid,proxy_node,snmp_proxy,required_polls,uname,use_ifxtable,")
+      _T("snmp_port,community,usm_auth_password,usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
+      _T("down_since,boot_time,driver_name,icmp_proxy,agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
+      _T("physical_container_id,rack_image_front,rack_position,rack_height,last_agent_comm_time,syslog_msg_count,")
+      _T("snmp_trap_count,node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,port_rows,port_numbering_scheme,")
+      _T("agent_comp_mode,tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,rack_orientation,")
+      _T("rack_image_rear,agent_id,agent_cert_subject,hypervisor_type,hypervisor_info,icmp_poll_mode,")
+      _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
+      _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
+      _T("agent_cert_mapping_data FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -407,7 +405,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_ipAddress = DBGetFieldInetAddr(hResult, 0, 1);
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, 0, 2));
    DBGetField(hResult, 0, 3, m_agentSecret, MAX_SECRET_LENGTH);
-   m_agentPort = (WORD)DBGetFieldLong(hResult, 0, 4);
+   m_agentPort = static_cast<uint16_t>(DBGetFieldLong(hResult, 0, 4));
    m_iStatusPollType = DBGetFieldLong(hResult, 0, 5);
    m_snmpObjectId = DBGetField(hResult, 0, 6, nullptr, 0);
    if ((m_snmpObjectId != nullptr) && (*m_snmpObjectId == 0))
@@ -421,7 +419,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_requiredPollCount = DBGetFieldLong(hResult, 0, 13);
    m_sysDescription = DBGetField(hResult, 0, 14, nullptr, 0);
    m_nUseIfXTable = (BYTE)DBGetFieldLong(hResult, 0, 15);
-   m_snmpPort = (WORD)DBGetFieldLong(hResult, 0, 16);
+   m_snmpPort = static_cast<uint16_t>(DBGetFieldLong(hResult, 0, 16));
 
    // SNMP authentication parameters
    char snmpAuthObject[256], snmpAuthPassword[256], snmpPrivPassword[256];
@@ -531,6 +529,10 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetFieldByteArray2(hResult, 0, 68, hardwareId, HARDWARE_ID_LENGTH, 0);
    m_hardwareId = NodeHardwareId(hardwareId);
    m_cipVendorCode = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 69));
+   m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, 0, 70));
+   m_agentCertMappingData = DBGetField(hResult, 0, 71, nullptr, 0);
+   if ((m_agentCertMappingData != nullptr) && (m_agentCertMappingData[0] == 0))
+      MemFreeAndNull(m_agentCertMappingData);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -830,7 +832,7 @@ static bool SaveComponent(DB_STATEMENT hStmt, const Component *component)
 /**
  * Save ICMP statistics collector
  */
-static EnumerationCallbackResult SaveIcmpStatCollector(const TCHAR *target, const IcmpStatCollector *collector, std::pair<UINT32, DB_HANDLE> *context)
+static EnumerationCallbackResult SaveIcmpStatCollector(const TCHAR *target, const IcmpStatCollector *collector, std::pair<uint32_t, DB_HANDLE> *context)
 {
    return collector->saveToDatabase(context->second, context->first, target) ? _CONTINUE : _STOP;
 }
@@ -861,6 +863,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
+         _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"),
          nullptr
       };
 
@@ -881,6 +884,20 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
                break;
             default:
                icmpPollMode = _T("0");
+               break;
+         }
+
+         const TCHAR *agentCertMappingMethod;
+         switch(m_agentCertMappingMethod)
+         {
+            case MAP_CERTIFICATE_BY_CN:
+               agentCertMappingMethod = _T("2");
+               break;
+            case MAP_CERTIFICATE_BY_PUBKEY:
+               agentCertMappingMethod = _T("1");
+               break;
+            default:
+               agentCertMappingMethod = _T("0");
                break;
          }
 
@@ -963,7 +980,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_eipPort);
          DBBind(hStmt, 69, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
          DBBind(hStmt, 70, DB_SQLTYPE_INTEGER, m_cipVendorCode);
-         DBBind(hStmt, 71, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 71, DB_SQLTYPE_VARCHAR, agentCertMappingMethod, DB_BIND_STATIC);
+         DBBind(hStmt, 72, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC);
+         DBBind(hStmt, 73, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -1062,7 +1081,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_statistics WHERE object_id=?"));
       if (success && isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr) && !m_icmpStatCollectors->isEmpty())
       {
-         std::pair<UINT32, DB_HANDLE> context(m_id, hdb);
+         std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
          success = (m_icmpStatCollectors->forEach(SaveIcmpStatCollector, &context) == _CONTINUE);
       }
 
@@ -3166,7 +3185,7 @@ static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *c
 /**
  * Update hardware property
  */
-bool Node::updateSystemHardwareProperty(SharedString &property, const TCHAR *value, const TCHAR *displayName, UINT32 requestId)
+bool Node::updateSystemHardwareProperty(SharedString &property, const TCHAR *value, const TCHAR *displayName, uint32_t requestId)
 {
    bool modified = false;
    if (_tcscmp(property, value))
@@ -3182,7 +3201,7 @@ bool Node::updateSystemHardwareProperty(SharedString &property, const TCHAR *val
 /**
  * Update general system hardware information
  */
-bool Node::updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId)
+bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestId)
 {
    // Skip for EtherNet/IP devices because hardware information is updated
    // from identity message and if SNMP is present on device it may override
@@ -3279,7 +3298,7 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, UINT32 requestId)
 /**
  * Update list of hardware components for node
  */
-bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
+bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
 {
    if (!(m_capabilities & NC_IS_NATIVE_AGENT))
       return false;
@@ -3356,7 +3375,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
 /**
  * Update list of software packages for node
  */
-bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
+bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
 {
    static const TCHAR *eventParamNames[] = { _T("name"), _T("version"), _T("previousVersion") };
 
@@ -6978,6 +6997,10 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       pMsg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(static_cast<uint8_t>(m_cipState)));
       pMsg->setField(VID_CIP_VENDOR_CODE, m_cipVendorCode);
    }
+
+   pMsg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
+   pMsg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
+   pMsg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
 }
 
 /**
@@ -7293,13 +7316,28 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       }
    }
 
+   if (pRequest->isFieldExist(VID_CERT_MAPPING_METHOD))
+   {
+      m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(pRequest->getFieldAsInt16(VID_CERT_MAPPING_METHOD));
+      TCHAR *oldMappingData = m_agentCertMappingData;
+      m_agentCertMappingData = pRequest->getFieldAsString(VID_CERT_MAPPING_DATA);
+      if (m_agentCertMappingData != nullptr)
+      {
+         Trim(m_agentCertMappingData);
+         if (*m_agentCertMappingData == 0)
+            MemFreeAndNull(m_agentCertMappingData);
+      }
+      UpdateAgentCertificateMappingIndex(self(), oldMappingData, m_agentCertMappingData);
+      MemFree(oldMappingData);
+   }
+
    return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
  * Thread pool callback executed when SNMP proxy changes
  */
-void Node::onSnmpProxyChange(UINT32 oldProxy)
+void Node::onSnmpProxyChange(uint32_t oldProxy)
 {
    // resync data collection configuration with new proxy
    shared_ptr<NetObj> node = FindObjectById(m_snmpProxy, OBJECT_NODE);

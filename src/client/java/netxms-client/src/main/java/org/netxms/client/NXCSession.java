@@ -6051,6 +6051,12 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_ETHERNET_IP_PROXY, (int)data.getEtherNetIPProxy());
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.CERT_MAPPING))
+      {
+         msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, data.getCertificateMappingMethod().getValue());
+         msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, data.getCertificateMappingData());
+      }
+
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

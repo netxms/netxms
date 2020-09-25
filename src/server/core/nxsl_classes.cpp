@@ -1335,7 +1335,15 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
 
    NXSL_VM *vm = object->vm();
    auto node = SharedObjectFromData<Node>(object);
-   if (compareAttributeName(attr, "agentCertificateSubject"))
+   if (compareAttributeName(attr, "agentCertificateMappingData"))
+   {
+      value = vm->createValue(node->getAgentCertificateMappingData());
+   }
+   else if (compareAttributeName(attr, "agentCertificateMappingMethod"))
+   {
+      value = vm->createValue(static_cast<int32_t>(node->getAgentCertificateMappingMethod()));
+   }
+   else if (compareAttributeName(attr, "agentCertificateSubject"))
    {
       value = vm->createValue(node->getAgentCertificateSubject());
    }

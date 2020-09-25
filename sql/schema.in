@@ -334,6 +334,8 @@ CREATE TABLE nodes
   primary_ip varchar(48) not null,
   tunnel_id varchar(36) null,
   agent_cert_subject varchar(500) null,
+  agent_cert_mapping_method char(1) null,
+  agent_cert_mapping_data varchar(500) null,
   snmp_version integer not null,
   snmp_port integer not null,
   community varchar(127) null,

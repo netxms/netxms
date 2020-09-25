@@ -36,6 +36,7 @@ import org.netxms.base.MacAddress;
 import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
+import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RackOrientation;
@@ -144,6 +145,7 @@ public class NXCObjectModificationData
    public static final int ETHERNET_IP_PROXY      = 86;
    public static final int ALIAS                  = 87;
    public static final int NAME_ON_MAP            = 88;
+   public static final int CERT_MAPPING           = 89;
 
    private Set<Integer> fieldSet;
    private long objectId;
@@ -258,6 +260,8 @@ public class NXCObjectModificationData
    private String chassisPlacement;
    private int etherNetIPPort;
    private long etherNetIPProxy;
+   private CertificateMappingMethod certificateMappingMethod;
+   private String certificateMappingData;
 
    /**
     * Constructor for creating modification data for given object
@@ -2179,5 +2183,38 @@ public class NXCObjectModificationData
    {
       this.etherNetIPProxy = etherNetIPProxy;
       fieldSet.add(ETHERNET_IP_PROXY);
+   }
+
+   /**
+    * Set certificate mapping method and data.
+    *
+    * @param method mapping method
+    * @param data mapping data (method dependent, can be null)
+    */
+   public void setCertificateMapping(CertificateMappingMethod method, String data)
+   {
+      certificateMappingMethod = method;
+      certificateMappingData = data;
+      fieldSet.add(CERT_MAPPING);
+   }
+
+   /**
+    * Get certificate mapping method.
+    *
+    * @return certificate mapping method
+    */
+   public CertificateMappingMethod getCertificateMappingMethod()
+   {
+      return certificateMappingMethod;
+   }
+
+   /**
+    * Get certificate mapping data.
+    *
+    * @return certificate mapping data
+    */
+   public String getCertificateMappingData()
+   {
+      return certificateMappingData;
    }
 }
