@@ -40,72 +40,17 @@ NXSL_ValueManager::~NXSL_ValueManager()
 }
 
 /**
- * Assign value to correct number field
- */
-#define ASSIGN_NUMERIC_VALUE(x) \
-{ \
-   switch(m_dataType) \
-   { \
-      case NXSL_DT_INT32: \
-         m_value.int32 = (x); \
-         break; \
-      case NXSL_DT_UINT32: \
-         m_value.uint32 = (x); \
-         break; \
-      case NXSL_DT_INT64: \
-         m_value.int64 = (x); \
-         break; \
-      case NXSL_DT_UINT64: \
-         m_value.uint64 = (x); \
-         break; \
-      case NXSL_DT_REAL: \
-         m_value.real = (x); \
-         break; \
-      default: \
-         break; \
-   } \
-}
-
-/**
- * Retrieve correct number field
- */
-#define RETRIEVE_NUMERIC_VALUE(x, dt) \
-{ \
-   switch(m_dataType) \
-   { \
-      case NXSL_DT_INT32: \
-         x = (dt)m_value.int32; \
-         break; \
-      case NXSL_DT_UINT32: \
-         x = (dt)m_value.uint32; \
-         break; \
-      case NXSL_DT_INT64: \
-         x = (dt)m_value.int64; \
-         break; \
-      case NXSL_DT_UINT64: \
-         x = (dt)m_value.uint64; \
-         break; \
-      case NXSL_DT_REAL: \
-         x = (dt)m_value.real; \
-         break; \
-      default: \
-         x = 0; \
-         break; \
-   } \
-}
-
-/**
  * Create "null" value
  */
 NXSL_Value::NXSL_Value()
 {
    m_dataType = NXSL_DT_NULL;
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
-	m_name = NULL;
+	m_name = nullptr;
    m_stringIsValid = FALSE;
 }
 
@@ -229,77 +174,77 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
    m_dataType = NXSL_DT_ITERATOR;
    m_value.iterator = iterator;
 	iterator->incRefCount();
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
  * Create "int32" value
  */
-NXSL_Value::NXSL_Value(INT32 nValue)
+NXSL_Value::NXSL_Value(int32_t nValue)
 {
    m_dataType = NXSL_DT_INT32;
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
    m_value.int32 = nValue;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
  * Create "uint32" value
  */
-NXSL_Value::NXSL_Value(UINT32 uValue)
+NXSL_Value::NXSL_Value(uint32_t uValue)
 {
    m_dataType = NXSL_DT_UINT32;
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
    m_value.uint32 = uValue;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
  * Create "int64" value
  */
-NXSL_Value::NXSL_Value(INT64 nValue)
+NXSL_Value::NXSL_Value(int64_t nValue)
 {
    m_dataType = NXSL_DT_INT64;
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
    m_value.int64 = nValue;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
  * Create "uint64" value
  */
-NXSL_Value::NXSL_Value(UINT64 uValue)
+NXSL_Value::NXSL_Value(uint64_t uValue)
 {
    m_dataType = NXSL_DT_UINT64;
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
    m_value.uint64 = uValue;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
@@ -308,14 +253,14 @@ NXSL_Value::NXSL_Value(UINT64 uValue)
 NXSL_Value::NXSL_Value(double dValue)
 {
    m_dataType = NXSL_DT_REAL;
-   m_stringPtr = NULL;
+   m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = FALSE;
    m_value.real = dValue;
-	m_name = NULL;
+	m_name = nullptr;
 }
 
 /**
@@ -324,13 +269,13 @@ NXSL_Value::NXSL_Value(double dValue)
 NXSL_Value::NXSL_Value(const TCHAR *value)
 {
    m_dataType = NXSL_DT_STRING;
-	if (value != NULL)
+	if (value != nullptr)
 	{
 		m_length = (UINT32)_tcslen(value);
 		if (m_length < NXSL_SHORT_STRING_LENGTH)
 		{
 		   _tcscpy(m_stringValue, value);
-		   m_stringPtr = NULL;
+		   m_stringPtr = nullptr;
 		}
 		else
 		{
@@ -341,14 +286,14 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
 	{
 		m_length = 0;
 		m_stringValue[0] = 0;
-		m_stringPtr = NULL;
+		m_stringPtr = nullptr;
 	}
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = TRUE;
    updateNumber();
-   m_name = NULL;
+   m_name = nullptr;
 }
 
 #ifdef UNICODE
@@ -359,7 +304,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
 NXSL_Value::NXSL_Value(const char *value)
 {
    m_dataType = NXSL_DT_STRING;
-	if (value != NULL)
+	if (value != nullptr)
 	{
 		m_stringPtr = WideStringFromUTF8String(value);
 		m_length = (UINT32)_tcslen(m_stringPtr);
@@ -367,19 +312,19 @@ NXSL_Value::NXSL_Value(const char *value)
 		{
 		   _tcscpy(m_stringValue, m_stringPtr);
 		   MemFree(m_stringPtr);
-		   m_stringPtr = NULL;
+		   m_stringPtr = nullptr;
 		}
 	}
 	else
 	{
 		m_length = 0;
       m_stringValue[0] = 0;
-      m_stringPtr = NULL;
+      m_stringPtr = nullptr;
 	}
-	m_mbString = NULL;
+	m_mbString = nullptr;
    m_stringIsValid = TRUE;
    updateNumber();
-   m_name = NULL;
+   m_name = nullptr;
 }
 
 #endif
@@ -393,7 +338,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
    m_length = dwLen;
    if (m_length < NXSL_SHORT_STRING_LENGTH)
    {
-      if (value != NULL)
+      if (value != nullptr)
       {
          memcpy(m_stringValue, value, dwLen * sizeof(TCHAR));
          m_stringValue[dwLen] = 0;
@@ -402,12 +347,12 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
       {
          memset(m_stringValue, 0, (dwLen + 1) * sizeof(TCHAR));
       }
-      m_stringPtr = NULL;
+      m_stringPtr = nullptr;
    }
    else
    {
       m_stringPtr = (TCHAR *)MemAlloc((dwLen + 1) * sizeof(TCHAR));
-      if (value != NULL)
+      if (value != nullptr)
       {
          memcpy(m_stringPtr, value, dwLen * sizeof(TCHAR));
          m_stringPtr[dwLen] = 0;
@@ -418,11 +363,11 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
       }
    }
 #ifdef UNICODE
-	m_mbString = NULL;
+	m_mbString = nullptr;
 #endif
    m_stringIsValid = TRUE;
    updateNumber();
-   m_name = NULL;
+   m_name = nullptr;
 }
 
 /**
@@ -470,11 +415,11 @@ void NXSL_Value::dispose()
 /**
  * Set value to "int32"
  */
-void NXSL_Value::set(INT32 nValue)
+void NXSL_Value::set(int32_t value)
 {
    dispose();
    m_dataType = NXSL_DT_INT32;
-   m_value.int32 = nValue;
+   m_value.int32 = value;
 }
 
 /**
@@ -483,13 +428,13 @@ void NXSL_Value::set(INT32 nValue)
 void NXSL_Value::updateNumber()
 {
    const TCHAR *s = (m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr;
-   assert(s != NULL);   // For clang static analyzer
+   assert(s != nullptr);   // For clang static analyzer
    if (s[0] == 0)
       return;
 
    TCHAR *eptr;
-   INT64 nVal = _tcstoll(s, &eptr, 0);
-   if ((*eptr == 0) && ((UINT32)(eptr - s) == m_length))
+   int64_t nVal = _tcstoll(s, &eptr, 0);
+   if ((*eptr == 0) && ((uint32_t)(eptr - s) == m_length))
    {
       if ((nVal > _LL(2147483647)) || (nVal < _LL(-2147483648)))
       {
@@ -505,7 +450,7 @@ void NXSL_Value::updateNumber()
    else
    {
       double dVal = _tcstod(s, &eptr);
-      if ((*eptr == 0) && ((UINT32)(eptr - s) == m_length))
+      if ((*eptr == 0) && ((uint32_t)(eptr - s) == m_length))
       {
          m_dataType = NXSL_DT_REAL;
          m_value.real = dVal;
@@ -635,22 +580,22 @@ bool NXSL_Value::convert(int nDataType)
    switch(nDataType)
    {
       case NXSL_DT_INT32:
-         RETRIEVE_NUMERIC_VALUE(nInt32, INT32);
+         nInt32 = getValueAsIntegerType<int32_t>();
          m_dataType = nDataType;
          m_value.int32 = nInt32;
          break;
       case NXSL_DT_UINT32:
-         RETRIEVE_NUMERIC_VALUE(uInt32, UINT32);
+         uInt32 = getValueAsIntegerType<uint32_t>();
          m_dataType = nDataType;
          m_value.uint32 = uInt32;
          break;
       case NXSL_DT_INT64:
-         RETRIEVE_NUMERIC_VALUE(nInt64, INT64);
+         nInt64 = getValueAsIntegerType<int64_t>();
          m_dataType = nDataType;
          m_value.int64 = nInt64;
          break;
       case NXSL_DT_UINT64:
-         RETRIEVE_NUMERIC_VALUE(uInt64, UINT64);
+         uInt64 = getValueAsIntegerType<uint64_t>();
          m_dataType = nDataType;
          m_value.uint64 = uInt64;
          break;
@@ -730,56 +675,11 @@ const TCHAR *NXSL_Value::getValueAsString(UINT32 *pdwLen)
 }
 
 /**
- * Get value as 32 bit integer
- */
-INT32 NXSL_Value::getValueAsInt32()
-{
-   INT32 nVal;
-
-   RETRIEVE_NUMERIC_VALUE(nVal, INT32);
-   return nVal;
-}
-
-/**
- * Get value as unsigned 32 bit integer
- */
-UINT32 NXSL_Value::getValueAsUInt32()
-{
-   UINT32 uVal;
-
-   RETRIEVE_NUMERIC_VALUE(uVal, UINT32);
-   return uVal;
-}
-
-/**
- * Get value as 64 bit integer
- */
-INT64 NXSL_Value::getValueAsInt64()
-{
-   INT64 nVal;
-
-   RETRIEVE_NUMERIC_VALUE(nVal, INT64);
-   return nVal;
-}
-
-/**
- * Get value as unsigned 64 bit integer
- */
-UINT64 NXSL_Value::getValueAsUInt64()
-{
-   UINT64 uVal;
-
-   RETRIEVE_NUMERIC_VALUE(uVal, UINT64);
-   return uVal;
-}
-
-/**
  * Get value as real number
  */
 double NXSL_Value::getValueAsReal()
 {
    double dVal;
-
    switch(m_dataType)
    {
       case NXSL_DT_INT32:
@@ -792,7 +692,7 @@ double NXSL_Value::getValueAsReal()
          dVal = (double)m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         dVal = (double)((INT64)m_value.uint64);
+         dVal = (double)((int64_t)m_value.uint64);
          break;
       case NXSL_DT_REAL:
          dVal = m_value.real;
