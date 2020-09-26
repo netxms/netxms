@@ -402,7 +402,7 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 	if (pKey != nullptr)
-	   EVP_PKEY_free(pkey);
+	   EVP_PKEY_free(pKey);
 #endif
 
 	s_certificateStoreLock.unlock();
