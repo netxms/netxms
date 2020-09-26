@@ -626,7 +626,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
             updateMembers(&ldapObject->m_memberList, attribute, entry, tmpDn);
             MemFree(tmpDn);
 #else
-            updateMembers(ldapObject->m_memberList, attribute, entry, dn);
+            updateMembers(&ldapObject->m_memberList, attribute, entry, dn);
 #endif
          }
          ldap_memfreeA(attribute);
