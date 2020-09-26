@@ -26,7 +26,8 @@ static void TestCompiler()
    p = NXSLCompile(s_prog2, errorMessage, 256, &errorLine);
    AssertNull(p);
    AssertEquals(errorLine, 2);
-   AssertTrue(!_tcscmp(errorMessage, _T("Error in line 2: syntax error, unexpected '{'")));
+   // Some BISON versions may not report ", unexpected '{'" after "syntax error"
+   AssertTrue(!_tcsncmp(errorMessage, _T("Error in line 2: syntax error"), 29));
 
    EndTest();
 
@@ -38,7 +39,7 @@ static void TestCompiler()
 
    vm = NXSLCompileAndCreateVM(s_prog2, errorMessage, 256, new NXSL_Environment());
    AssertNull(vm);
-   AssertTrue(!_tcscmp(errorMessage, _T("Error in line 2: syntax error, unexpected '{'")));
+   AssertTrue(!_tcsncmp(errorMessage, _T("Error in line 2: syntax error"), 29));
 
    EndTest();
 }
