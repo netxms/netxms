@@ -24,11 +24,27 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 36.4 to 40.0
+ * Upgrade from 36.5 to 40.0
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 36.4 to 36.5
  */
 static bool H_UpgradeFromV4()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   if (GetSchemaLevelForMajorVersion(35) < 17)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SNMP.Traps.LogAll',need_server_restart=0,description='Log all SNMP traps (even those received from addresses not belonging to any known node).' WHERE var_name='LogAllSNMPTraps'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SNMP.Traps.AllowVarbindsConversion',need_server_restart=0 WHERE var_name='AllowTrapVarbindsConversion'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart=0 WHERE var_name='SNMP.Traps.ProcessUnmanagedNodes'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(35, 17));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(5));
    return true;
 }
 
@@ -93,7 +109,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 4,  40, 0,  H_UpgradeFromV4  },
+   { 5,  40, 0,  H_UpgradeFromV5  },
+   { 4,  36, 5,  H_UpgradeFromV4  },
    { 3,  36, 4,  H_UpgradeFromV3  },
    { 2,  36, 3,  H_UpgradeFromV2  },
    { 1,  36, 2,  H_UpgradeFromV1  },

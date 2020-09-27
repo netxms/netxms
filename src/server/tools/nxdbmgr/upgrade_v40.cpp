@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 40.16 to 40.17
+ */
+static bool H_UpgradeFromV16()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 5)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SNMP.Traps.LogAll',need_server_restart=0,description='Log all SNMP traps (even those received from addresses not belonging to any known node).' WHERE var_name='LogAllSNMPTraps'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SNMP.Traps.AllowVarbindsConversion',need_server_restart=0 WHERE var_name='AllowTrapVarbindsConversion'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart=0 WHERE var_name='SNMP.Traps.ProcessUnmanagedNodes'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 5));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade form 40.15 to 40.16
  */
 static bool H_UpgradeFromV15()
@@ -416,6 +432,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 16, 40, 17, H_UpgradeFromV16 },
    { 15, 40, 16, H_UpgradeFromV15 },
    { 14, 40, 15, H_UpgradeFromV14 },
    { 13, 40, 14, H_UpgradeFromV13 },

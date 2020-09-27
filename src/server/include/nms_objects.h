@@ -91,7 +91,7 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd();
 /**
  * "All zones" pseudo-ID
  */
-#define ALL_ZONES ((UINT32)0xFFFFFFFF)
+#define ALL_ZONES ((int32_t)-1)
 
 class AgentTunnel;
 class GenericAgentPolicy;
@@ -3658,7 +3658,7 @@ protected:
    typedef NetObj super;
 
 protected:
-   UINT32 m_uin;
+   int32_t m_uin;
    ObjectArray<ZoneProxy> *m_proxyNodes;
    BYTE m_proxyAuthKey[ZONE_PROXY_KEY_LENGTH];
 	InetAddressIndex *m_idxNodeByAddr;
@@ -3675,7 +3675,7 @@ protected:
 
 public:
    Zone();
-   Zone(UINT32 uin, const TCHAR *name);
+   Zone(int32_t uin, const TCHAR *name);
    virtual ~Zone();
 
    shared_ptr<Zone> self() const { return static_pointer_cast<Zone>(NObject::self()); }
@@ -3692,7 +3692,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   UINT32 getUIN() const { return m_uin; }
+   int32_t getUIN() const { return m_uin; }
 
    UINT32 getProxyNodeId(NetObj *object, bool backup = false);
 	bool isProxyNode(UINT32 nodeId) const;

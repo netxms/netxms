@@ -24,11 +24,23 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 35.16 to 36.0
+ * Upgrade from 35.17 to 36.0
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(SetMajorSchemaVersion(36, 0));
+   return true;
+}
+
+/**
+ * Upgrade form 35.16 to 35.17
  */
 static bool H_UpgradeFromV16()
 {
-   CHK_EXEC(SetMajorSchemaVersion(36, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SNMP.Traps.LogAll',need_server_restart=0,description='Log all SNMP traps (even those received from addresses not belonging to any known node).' WHERE var_name='LogAllSNMPTraps'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='SNMP.Traps.AllowVarbindsConversion',need_server_restart=0 WHERE var_name='AllowTrapVarbindsConversion'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart=0 WHERE var_name='SNMP.Traps.ProcessUnmanagedNodes'")));
+   CHK_EXEC(SetMinorSchemaVersion(17));
    return true;
 }
 
@@ -438,7 +450,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 16, 36, 0,  H_UpgradeFromV16 },
+   { 17, 36, 0,  H_UpgradeFromV17 },
+   { 16, 35, 17, H_UpgradeFromV16 },
    { 15, 35, 16, H_UpgradeFromV15 },
    { 14, 35, 15, H_UpgradeFromV14 },
    { 13, 35, 14, H_UpgradeFromV13 },
